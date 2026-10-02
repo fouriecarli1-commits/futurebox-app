@@ -48,6 +48,7 @@ import type { Join } from './videojoins';
 import { gradeCss, type Adjust } from './videoadjust';
 import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
 import { bitsFor, rateFor, sizeFor } from './videoquality';
+import { withSkip } from './videospan';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -212,6 +213,32 @@ export interface Edit {
    */
   readonly grade?: string;
   readonly fps?: number;
+  /**
+   * The two red lines, and whether the song comes with the cut.
+   *
+   * Carli, 4 October 2026: *"twee ekstra rooi lyne ... en ook die keuse van
+   * interlock net soos by probooth."*
+   *
+   * `span` is where the lines are, in film seconds, and is absent until she
+   * puts one down. `locked` is the interlock, and it is ON by default: a cut
+   * made to the music is the common case, and the surprising one is the film
+   * sliding against its own soundtrack.
+   *
+   * `underSkips` is what the interlock has already done, in SONG seconds —
+   * see `withSkip` in `videospan.ts` for why those two clocks cannot be the
+   * same number.
+   */
+  readonly span?: { readonly from: number; readonly to: number } | null;
+  readonly locked?: boolean;
+  /**
+   * The magnet, which can be off.
+   *
+   * On by default and rarely turned off, but it has to be possible: a line
+   * that will not go where the hand puts it is worse than no magnet, and it is
+   * the same argument the Pro Booth's Snap box settles the same way.
+   */
+  readonly magnet?: boolean;
+  readonly underSkips?: readonly { readonly from: number; readonly to: number }[];
   /** A song under the whole thing, and where in it to start. */
   readonly under?: Blob | null;
   readonly underFrom?: number;
@@ -459,6 +486,7 @@ export function cutFrom(edit: Edit): Cut {
     fps,
     bits: bitsFor(frame.width, frame.height, fps),
     ...(edit.underFrom ? { audioFrom: edit.underFrom } : {}),
+    ...(edit.underSkips?.length ? { audioSkips: edit.underSkips } : {}),
   };
 }
 
@@ -601,4 +629,109 @@ export function split(edit: Edit, id: string, at: number): Edit {
     ...edit,
     pieces: edit.pieces.flatMap((one) => (one.id === id ? [left, right] : [one])),
   };
+}
+
+/**
+ * Split whatever the playhead is standing on, where it is standing.
+ *
+ * Carli, 4 October 2026: *"'n funksie om bloot net waar die curser is te
+ * split."*
+ *
+ * `split` already existed and already took a film second — what it also took
+ * was the id of the piece to cut, which means the room had to work out which
+ * piece the playhead was in before it could ask. That is `atSecond`'s job, so
+ * it is done here once rather than at every call site.
+ *
+ * Returns the edit unchanged when the playhead is in nothing, or is within a
+ * breath of a cut that already exists. A split that makes a piece of four
+ * frames is a piece nobody wanted and one more thing to drag off again.
+ */
+export function splitHere(edit: Edit, second: number): Edit {
+  const here = atSecond(edit, second);
+  if (!here) return edit;
+  return split(edit, here.piece.id, second);
+}
+
+/**
+ * Take a span out of the film, and let everything after it close up.
+ *
+ * Carli, 4 October 2026: *"die oomblik wanneer 'n mens 'n stuk uit cut moet
+ * die video wat verder is die gaping toe maak en terug spring."*
+ *
+ * ── Which it does by construction, and that is worth saying ──────────────
+ *
+ * A piece's start is the sum of the lengths before it — `startsAt` computes
+ * it, nothing stores it. So there is no gap to close and no "ripple" mode to
+ * get wrong: shortening or removing a piece moves everything after it back by
+ * exactly that much, because that is what the arithmetic says.
+ *
+ * ── What this does have to get right ─────────────────────────────────────
+ *
+ * The three ways a span meets a piece, and all three happen on one cut:
+ *
+ *  · the piece is wholly inside the span — it goes;
+ *  · the span starts inside the piece and runs past its end — the piece keeps
+ *    its head;
+ *  · the span is wholly inside one piece — the piece keeps a head and a tail,
+ *    which is two pieces, not one with a hole in it.
+ *
+ * Measured in FILE seconds on the way in, because a piece at two times covers
+ * two seconds of material per second of film — the same multiplication `split`
+ * and `atSecond` each lost once, recorded in their own notes.
+ *
+ * A piece left shorter than `SHORTEST_PIECE` is dropped rather than kept: a
+ * sliver of a frame is a flash in the finished film and nothing in the room is
+ * big enough to grab it by.
+ */
+export function cutOut(edit: Edit, span: { from: number; to: number }): Edit {
+  const from = Math.max(0, Math.min(span.from, span.to));
+  const to = Math.max(span.from, span.to);
+  if (!(to - from > 0)) return edit;
+
+  const pieces: Piece[] = [];
+  let start = 0;
+  for (const piece of edit.pieces) {
+    const long = lengthOfPiece(piece);
+    const ends = start + long;
+    const fast = Math.max(0.1, Math.min(4, piece.speed ?? 1));
+    /* No overlap at all — kept whole, and that includes every piece after the
+       span: they are unchanged, and they move back because the pieces before
+       them got shorter. */
+    if (ends <= from || start >= to) {
+      pieces.push(piece);
+      start = ends;
+      continue;
+    }
+    const head = Math.max(0, from - start);
+    const tail = Math.max(0, ends - to);
+    if (head >= SHORTEST_PIECE) {
+      pieces.push({ ...piece, id: `${piece.id}-h`, to: piece.from + head * fast });
+    }
+    if (tail >= SHORTEST_PIECE) {
+      pieces.push({
+        ...piece,
+        id: `${piece.id}-t`,
+        from: piece.to - tail * fast,
+        /* The tail is a new start, so it opens on a straight cut rather than
+           keeping a transition that was built to arrive from the piece in
+           front of it — which is no longer the piece in front of it. */
+        join: head >= SHORTEST_PIECE ? 'cut' : piece.join,
+      });
+    }
+    start = ends;
+  }
+  /* ── The interlock ────────────────────────────────────────────────────
+
+     On, the song loses the same span, so every shot keeps the music it was
+     cut to. Off, the song plays straight through and the film is simply
+     shorter against it — which is right when the music is a bed rather than
+     something the cuts were made to.
+
+     Recorded only when there is a song to cut: a skip list on a film with no
+     track under it is a fact about nothing, and it would survive a track being
+     added later and silently chop the new one. */
+  const locked = edit.locked ?? true;
+  const next: Edit = { ...edit, pieces, span: null };
+  if (!locked || !edit.under) return next;
+  return { ...next, underSkips: withSkip(edit.underSkips ?? [], { from, to }) };
 }

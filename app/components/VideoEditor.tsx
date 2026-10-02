@@ -55,6 +55,8 @@ import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
+import { REACH, pullTo, reachOf } from '../lib/magnet';
+import { pointsOf, spanReady, tidy } from '../lib/videospan';
 import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
 } from '../lib/videopaint';
@@ -84,7 +86,7 @@ import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
-  move, runs, split, startsAt, trim,
+  cutOut, move, runs, split, splitHere, startsAt, trim,
   type Edit, type Piece,
 } from '../lib/videoedit';
 import {
@@ -742,6 +744,7 @@ export default function VideoEditor({
 
   const total = runs(edit);
 
+
   /* How wide the strip actually is, measured rather than assumed. A breakpoint
      guess would be wrong on every phone it was not written for, and the strip
      is not the window: it sits inside a card with its own padding. */
@@ -779,6 +782,31 @@ export default function VideoEditor({
 
   const step = stepFor(total, perSecond);
   const fades = fadesFor(edit);
+
+  /* ── The two red lines, and where they stick ──────────────────────────
+
+     Carli, 4 October 2026: *"Hier is die magneet funksie baie belangrik."*
+
+     The points are every cut in the film, both ends and the playhead — see
+     `pointsOf`. The reach is the Pro Booth's twelve pixels converted to
+     seconds on THIS axis, which is the whole argument in `magnet.ts`: a
+     tolerance in seconds is a different distance on a phone than on a desk and
+     a different one again on a long film than on a short one.
+
+     The magnet can be switched off, because a line that will not go where the
+     hand puts it is worse than no magnet — the same reason Snap can be off in
+     the booth. */
+  const span = edit.span ?? null;
+  const magnetOn = edit.magnet ?? true;
+  const stick = useCallback((second: number): number => {
+    const clamped = Math.max(0, Math.min(total, second));
+    if (!magnetOn) return clamped;
+    const wide = total * perSecond;
+    const within = reachOf(REACH, total, wide);
+    return pullTo(clamped, null, pointsOf(
+      edit.pieces.map((one) => startsAt(edit, one.id)), total, at,
+    ), within).at;
+  }, [edit, total, perSecond, at, magnetOn]);
 
   /* Recomputed as she builds, so the number on the button is never stale. Cheap
      — it walks the pieces once and adds up — and it has to be live, because the
@@ -2241,6 +2269,52 @@ export default function VideoEditor({
                     <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
                   </div>
 
+                  {/* ── The two red lines ─────────────────────────────
+
+                      Carli, 4 October 2026: *"Dit sal goed wees dat daar twee
+                      ekstra rooi lyne is waar mens 'n stuk kan uit cut."*
+
+                      Red, and the only red in this room, because they are the
+                      only thing in it that deletes. Everything else here is
+                      green or amber and reversible.
+
+                      Drawn under the playhead and over the blocks, with the
+                      span between them shaded so what will go is a shape
+                      rather than two lines somebody has to read as a pair.
+                      `pointer-events-none` like the playhead: tapping "on the
+                      line" has to reach the block underneath, and the lines
+                      are moved from the bench rather than dragged, so there is
+                      nothing to grab. */}
+                  {span && (
+                    <>
+                      <div
+                        data-editorspan
+                        aria-hidden
+                        style={{
+                          left: Math.min(span.from, total) * perSecond,
+                          width: Math.max(0, Math.min(span.to, total) - span.from) * perSecond,
+                        }}
+                        className="pointer-events-none absolute inset-y-0 bg-red-500/20"
+                      />
+                      <div
+                        data-editorspanin
+                        aria-hidden
+                        style={{ left: Math.min(span.from, total) * perSecond }}
+                        className="pointer-events-none absolute inset-y-0 w-0.5 bg-red-500"
+                      >
+                        <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-red-500" />
+                      </div>
+                      <div
+                        data-editorspanout
+                        aria-hidden
+                        style={{ left: Math.min(span.to, total) * perSecond }}
+                        className="pointer-events-none absolute inset-y-0 w-0.5 bg-red-500"
+                      >
+                        <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-red-500" />
+                      </div>
+                    </>
+                  )}
+
                   {/* The playhead. Drawn over the blocks and ignoring
                       pointers, so tapping "on the line" still reaches the
                       track underneath and moves it. */}
@@ -2478,6 +2552,124 @@ export default function VideoEditor({
 
         {bench === 'clip' && piece && (
           <div className="space-y-4">
+
+          {/* ── Cutting: the playhead, the two lines, and what goes ─────
+
+              Carli, 4 October 2026: *"Dit sal goed wees dat daar twee ekstra
+              rooi lyne is waar mens 'n stuk kan uit cut, en 'n funksie om bloot
+              net waar die curser is te split. Dan ook die oomblik wanneer 'n
+              mens 'n stuk uit cut moet die video wat verder is die gaping toe
+              maak en terug spring."*
+
+              Four buttons and two switches, in the order somebody works: put a
+              line down, put the other down, take what is between them out. The
+              split is beside them because it is the same gesture with one line
+              instead of two. */}
+          <div className="space-y-2">
+            <span className="block text-sm text-zinc-400">
+              {t('edit.cutting', 'Cutting')}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                data-editorsplithere
+                onClick={() => commit((was) => splitHere(was, at))}
+                className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-1.5"
+                style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+              >
+                <Scissors className="w-3.5 h-3.5" />
+                {t('edit.splitHere', 'Split here')}
+              </button>
+              <button
+                type="button"
+                data-editormarkin
+                onClick={() => commit((was) => ({
+                  ...was,
+                  span: tidy(stick(at), was.span?.to ?? stick(at) + 1),
+                }))}
+                className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                style={{ borderColor: 'rgba(239,68,68,0.55)', background: 'rgba(239,68,68,0.16)', color: '#fca5a5', boxShadow: RAISE }}
+              >
+                {t('edit.markIn', 'Line in')}
+              </button>
+              <button
+                type="button"
+                data-editormarkout
+                onClick={() => commit((was) => ({
+                  ...was,
+                  span: tidy(was.span?.from ?? 0, stick(at)),
+                }))}
+                className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                style={{ borderColor: 'rgba(239,68,68,0.55)', background: 'rgba(239,68,68,0.16)', color: '#fca5a5', boxShadow: RAISE }}
+              >
+                {t('edit.markOut', 'Line out')}
+              </button>
+            </div>
+
+            {spanReady(span) ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  data-editorcutspan
+                  onClick={() => commit((was) => cutOut(was, span))}
+                  className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-bold"
+                  style={{ borderColor: '#ef4444', background: 'rgba(239,68,68,0.3)', color: '#fee2e2', boxShadow: RAISE }}
+                >
+                  {t('edit.cutSpan', 'Cut this out')}
+                  {' · '}
+                  {(span.to - span.from).toFixed(1)}s
+                </button>
+                <button
+                  type="button"
+                  data-editorclearspan
+                  onClick={() => commit((was) => ({ ...was, span: null }))}
+                  className="min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold"
+                  style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+                >
+                  {t('edit.clearSpan', 'Take the lines off')}
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: INK_DIM }} data-editorspanhint>
+                {t('edit.spanHint', 'Put a line in and a line out, and what is between them comes out. The film closes up behind it.')}
+              </p>
+            )}
+
+            {/* The magnet and the interlock, named the way the booth names
+                them because they are the booth's own two ideas. */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                aria-pressed={magnetOn}
+                data-editormagnet
+                onClick={() => commit((was) => ({ ...was, magnet: !(was.magnet ?? true) }))}
+                className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                style={magnetOn ? {
+                  borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
+                } : {
+                  borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
+                }}
+              >
+                {t('edit.magnet', 'Magnet')}
+              </button>
+              <button
+                type="button"
+                aria-pressed={edit.locked ?? true}
+                data-editorinterlock
+                onClick={() => commit((was) => ({ ...was, locked: !(was.locked ?? true) }))}
+                title={t('edit.interlock.what', 'The song is cut where the picture is, so every shot keeps the music it was cut to.')}
+                className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                style={(edit.locked ?? true) ? {
+                  borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
+                } : {
+                  borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
+                }}
+              >
+                {t('edit.interlock', 'Interlock')}
+              </button>
+            </div>
+          </div>
+
           {/* Trim. Two numbers rather than a drag: a drag on a phone is a
               guess, and the thing somebody wants is usually "start half a
               second later", which is a number. */}

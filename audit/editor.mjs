@@ -982,6 +982,93 @@ try {
       (await filmLength()) === before,
       `${before} before the split, ${await filmLength()} after — a split that moves the total cut material away rather than in two`);
 
+    /* ── The two red lines, and the film closing up behind them ────────
+
+       Carli, 4 October 2026: *"twee ekstra rooi lyne is waar mens 'n stuk kan
+       uit cut ... die oomblik wanneer 'n mens 'n stuk uit cut moet die video
+       wat verder is die gaping toe maak en terug spring."*
+
+       `check:cutspan` holds the arithmetic — which pieces survive, which
+       clock a skip is recorded on. What a browser is for is the half that
+       cannot be unit-tested: that the lines are actually DRAWN where the
+       numbers say, and that the whole gesture works from a thumb. */
+    const spanWas = await filmLength();
+    await p.locator('[data-editortrack]').click({ position: { x: perSecond * 0.5, y: 30 } });
+    await p.waitForTimeout(400);
+    await p.locator('[data-editormarkin]').click();
+    await p.waitForTimeout(300);
+    await p.locator('[data-editortrack]').click({ position: { x: perSecond * 1.5, y: 30 } });
+    await p.waitForTimeout(400);
+    await p.locator('[data-editormarkout]').click();
+    await p.waitForTimeout(400);
+
+    check('both red lines are on the clock once both are put down',
+      (await p.locator('[data-editorspanin]').count()) === 1
+      && (await p.locator('[data-editorspanout]').count()) === 1,
+      `${await p.locator('[data-editorspanin]').count()} in,`
+      + ` ${await p.locator('[data-editorspanout]').count()} out`);
+
+    check('  and the span between them is shaded, so what will go is a shape',
+      (await p.locator('[data-editorspan]').count()) === 1,
+      'two lines somebody has to read as a pair is two lines; a filled band is'
+      + ' the piece that is about to be deleted');
+
+    /* Red, measured rather than read off a class name. It is the only red in
+       this room because it is the only thing in it that deletes, and a line
+       that came out green would say the opposite of what it does. */
+    const lineRed = await p.locator('[data-editorspanin]').evaluate((el) => {
+      const [r, g, b] = (getComputedStyle(el).backgroundColor.match(/\d+/g) ?? []).map(Number);
+      return { r, g, b };
+    });
+    check('  and the lines really are red',
+      lineRed.r > lineRed.g + 60 && lineRed.r > lineRed.b + 60,
+      `rgb(${lineRed.r}, ${lineRed.g}, ${lineRed.b})`);
+
+    const cutButton = p.locator('[data-editorcutspan]');
+    check('  and a span that is ready offers to cut itself out',
+      (await cutButton.count()) === 1,
+      'with the length on the button, so she knows what is about to go');
+
+    if (await cutButton.count()) {
+      await cutButton.click();
+      await p.waitForTimeout(700);
+      const spanNow = await filmLength();
+      check('cutting the span out makes the film shorter by about that much',
+        spanWas - spanNow > 0.5 && spanWas - spanNow < spanWas,
+        `${spanWas}s before, ${spanNow}s after — "die video wat verder is [moet]`
+        + ' die gaping toe maak en terug spring"');
+
+      check('  and the lines are put away with the span they cut',
+        (await p.locator('[data-editorspanin]').count()) === 0,
+        'two red lines still lying across a film that no longer has that span'
+        + ' is an invitation to press cut again and take the wrong seconds');
+
+      await p.locator('[data-editorundo]').click();
+      await p.waitForTimeout(600);
+      check('  and one press of Back puts the whole span back',
+        Math.abs((await filmLength()) - spanWas) < 0.2,
+        `${await filmLength()} against ${spanWas} — a cut is one gesture and`
+        + ' has to be one step');
+    }
+
+    /* The magnet and the interlock, which are switches rather than gestures:
+       that they are reachable and remember their state is all a browser can
+       say about them, and `check:cutspan` says what they DO. */
+    check('the magnet and the interlock are both on the bench',
+      (await p.locator('[data-editormagnet]').count()) === 1
+      && (await p.locator('[data-editorinterlock]').count()) === 1,
+      'both default to on — a cut made to the music is the common case, and a'
+      + ' line that will not go where the hand puts it is worse than no magnet');
+
+    const magnetWas = await p.locator('[data-editormagnet]').getAttribute('aria-pressed');
+    await p.locator('[data-editormagnet]').click();
+    await p.waitForTimeout(300);
+    check('  and the magnet really switches off',
+      (await p.locator('[data-editormagnet]').getAttribute('aria-pressed')) !== magnetWas,
+      `it read ${magnetWas} and reads ${await p.locator('[data-editormagnet]').getAttribute('aria-pressed')}`);
+    await p.locator('[data-editormagnet]').click();
+    await p.waitForTimeout(300);
+
     /* Scrubbing ACROSS the split, which is the case that was broken and
        invisible: two pieces cut out of one file share a Blob, so picking the
        second half does not change the viewer's `src` and `loadeddata` never

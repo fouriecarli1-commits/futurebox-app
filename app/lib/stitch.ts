@@ -68,6 +68,7 @@
 import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
 import { fontFor } from './videofonts';
 import { brushPath } from './videopaint';
+import { stretches } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 
 export interface Scene {
@@ -224,6 +225,19 @@ export interface Cut {
    * Defaults to 0, which is what every existing cut was made with.
    */
   readonly audioFrom?: number;
+  /**
+   * Stretches of the song to skip, in the song's own seconds.
+   *
+   * Carli, 4 October 2026: *"ook die keuse van interlock net soos by
+   * probooth."* With the interlock on, a span cut out of the picture is cut
+   * out of the music too, so every shot keeps the music it was cut to.
+   *
+   * In SONG time, not film time, because the film's clock has already lost
+   * those seconds by the time a cut reaches here — see `withSkip` in
+   * `videospan.ts`, which is where the arithmetic that keeps the two clocks
+   * apart lives.
+   */
+  readonly audioSkips?: readonly { readonly from: number; readonly to: number }[];
   /**
    * How loud the song sits under the film, 0 to 2. Absent is 1.
    *
@@ -729,6 +743,11 @@ export async function stitch(cut: Cut): Promise<Made> {
   let song: AudioBufferSourceNode | null = null;
   /** The song's level, and where its fade is drawn. */
   let songGain: GainNode | null = null;
+  /* Kept so a skipping song can be built from the same decoded buffer rather
+     than decoding it once per stretch, and so every stretch can be stopped
+     when the render ends. */
+  let songBuffer: AudioBuffer | null = null;
+  const songRuns: AudioBufferSourceNode[] = [];
   /* Either reason is enough to need a graph: a song laid under the film, or
      a single shot that was paid to speak. */
   const talks = cut.scenes.some((one) => one.sound);
@@ -741,9 +760,9 @@ export async function stitch(cut: Cut): Promise<Made> {
       destination = audioContext.createMediaStreamDestination();
       try {
         if (cut.audio) {
-          const buffer = await audioContext.decodeAudioData(await cut.audio.arrayBuffer());
+          songBuffer = await audioContext.decodeAudioData(await cut.audio.arrayBuffer());
           song = audioContext.createBufferSource();
-          song.buffer = buffer;
+          song.buffer = songBuffer;
           /* Through a gain rather than straight at the destination, so the
              level and the fade have somewhere to live. A song connected
              directly is a song that can only be as loud as it was recorded,
@@ -847,7 +866,32 @@ export async function stitch(cut: Cut): Promise<Made> {
     /* The second argument is the offset into the buffer, which is the whole
        reason `audioFrom` exists — the same call with no offset would play the
        intro under a window somebody deliberately dragged onto the chorus. */
-    song?.start(0, Math.max(0, cut.audioFrom ?? 0));
+    /* ── One source, or one per surviving stretch ─────────────────────
+
+       With no skips this is what it always was: start the whole track at the
+       offset somebody dragged onto the chorus.
+
+       With skips it is one `BufferSource` per stretch, each scheduled at the
+       film second it belongs at. A single source cannot jump a hole in the
+       middle of itself — `start(when, offset, duration)` plays one run — so a
+       skip HAS to be more than one node, and scheduling them all up front is
+       what keeps them sample-accurate against each other rather than drifting
+       by whatever the main thread was doing. */
+    const skips = cut.audioSkips ?? [];
+    if (song && songBuffer && skips.length > 0 && audioContext && songGain) {
+      song = null;
+      const begin = audioContext.currentTime;
+      for (const run of stretches(skips, Math.max(0, cut.audioFrom ?? 0), filmRuns)) {
+        if (!(run.long > 0)) continue;
+        const piece = audioContext.createBufferSource();
+        piece.buffer = songBuffer;
+        piece.connect(songGain);
+        piece.start(begin + run.at, run.from, run.long);
+        songRuns.push(piece);
+      }
+    } else {
+      song?.start(0, Math.max(0, cut.audioFrom ?? 0));
+    }
 
     for (let index = 0; index < cut.scenes.length; index += 1) {
       cut.onScene?.(index, cut.scenes.length);
@@ -1134,6 +1178,10 @@ export async function stitch(cut: Cut): Promise<Made> {
 
     recorder.stop();
     song?.stop();
+    /* Every scheduled stretch too. A source started with `start(when, …)` is
+       still pending when the render ends if its turn never came, and a pending
+       node holds the context open. */
+    for (const one of songRuns) { try { one.stop(); } catch { /* already done */ } }
     await finished;
   } catch {
     try {
