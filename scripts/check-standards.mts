@@ -100,7 +100,16 @@ const stated = (what: RegExp): number | null => {
   return WORDS[said.toLowerCase()] ?? Number(said);
 };
 
-const checks = [...readFileSync('package.json', 'utf8').matchAll(/"check:[a-z]+"/g)].length;
+/* `[a-z0-9]`, and the digit is not hypothetical: `check:heard2` exists, and
+   with `[a-z]+` this counter read 278 where there were 279 — so the number in
+   SAFETY-REVIEW.md was one short for as long as that check has existed, and
+   the rule that exists to keep the document honest was the thing lying.
+
+   Caught on 4 October by the count going the other way: the document was
+   corrected to 279 against a real 279, and this said the page claimed one too
+   many. A counter that is wrong by a constant looks right for ever, because
+   every reading agrees with the last one. */
+const checks = [...readFileSync('package.json', 'utf8').matchAll(/"check:[a-z0-9]+":/g)].length;
 const probes = readdirSync('audit').filter((one) => one.endsWith('.mjs')).length;
 
 for (const [what, real, said] of [

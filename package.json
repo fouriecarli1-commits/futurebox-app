@@ -22,7 +22,7 @@
     "check:longshot": "tsx scripts/check-longshot.mts",
     "check:realart": "tsx scripts/check-realart.mts",
     "check:feedlinks": "tsx scripts/check-feedlinks.mts",
-    "check:spotlight": "node audit/spotlight.mjs 3141",
+    "check:spotlight": "node audit/spotlight.mjs",
     "check:paidwalk": "node audit/paidback.mjs 3134",
     "check:realartwalk": "node audit/realart.mjs 3161",
     "check:sqlruns": "tsx scripts/check-sqlruns.mts",
@@ -217,7 +217,6 @@
     "check:notcut": "node audit/notcut.mjs",
     "check:twice": "node audit/twice.mjs",
     "check:masterclasses": "tsx scripts/check-masterclasses.mts",
-    "check:spotlight": "node audit/spotlight.mjs",
     "check:prompts": "tsx scripts/check-prompts.mts",
     "check:platformlink": "tsx scripts/check-platformlink.mts",
     "check:asdata": "tsx scripts/check-asdata.mts",
@@ -314,6 +313,7 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
     "tsx": "^4.23.13",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "yaml": "^2.9.1"
   }
 }

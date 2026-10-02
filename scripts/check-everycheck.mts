@@ -22,8 +22,35 @@
  * step each time that nobody was reminded of. That will happen again with the
  * sixty-second. So the rule is enforced where it cannot be forgotten, and the
  * failure names the script rather than saying coverage has dropped.
+ *
+ * ── And then the same lesson one level down, 4 October 2026 ──────────────
+ *
+ * This file read `.github/workflows/*.yml` as TEXT and looked for the name of
+ * each check in it. Every check was named, so it passed, every day, for four
+ * days — while GitHub could not read that file at all.
+ *
+ * On 30 September a step went in called:
+ *
+ *     - name: "Available" means it works, not that a value exists
+ *
+ * which is a YAML value that opens with a quote and then carries on past the
+ * closing one. GitHub rejected the whole workflow at startup. Every push since
+ * made a run that failed in zero seconds with no jobs in it, and this check
+ * went on saying all 278 were wired, because the string was in the file. It
+ * was: in a file nothing could parse.
+ *
+ * That is the exact failure this check exists to prevent — a check nobody runs
+ * — arrived at through the check that prevents it. "Named in the workflow" is
+ * ADJACENT to "run by the workflow", and the gap between them is a file that
+ * does not parse.
+ *
+ * So the workflow is parsed now, and the names are read out of the parsed
+ * steps rather than off the text. A file GitHub will not accept fails here,
+ * on this machine, before the push — which it has to, because a broken
+ * workflow is precisely the one fault CI can never report on itself.
  */
 import { readFileSync, readdirSync } from 'node:fs';
+import { parse } from 'yaml';
 import { from, upTo } from './order.mts';
 
 let failures = 0;
@@ -33,9 +60,36 @@ const check = (label: string, ok: boolean, detail = '') => {
 };
 
 const scripts = (JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> }).scripts;
-const workflow = readdirSync('.github/workflows')
+const files = readdirSync('.github/workflows').filter((one) => /\.ya?ml$/.test(one));
+const workflow = files
   .map((one) => readFileSync(`.github/workflows/${one}`, 'utf8'))
   .join('\n');
+
+/* ── Before anything else: can GitHub read it ──────────────────────────── */
+
+let broken = 0;
+for (const one of files) {
+  let why = '';
+  try {
+    const got = parse(readFileSync(`.github/workflows/${one}`, 'utf8')) as
+      { jobs?: Record<string, { steps?: unknown[] }> } | null;
+    if (!got || typeof got !== 'object') why = 'parsed to nothing';
+    else if (!got.jobs || Object.keys(got.jobs).length === 0) why = 'no jobs in it';
+  } catch (thrown) {
+    why = String(thrown).split('\n')[0];
+  }
+  if (why) broken += 1;
+  check(`.github/workflows/${one} is a workflow GitHub can read`, why === '', why
+    + ' — a workflow that does not parse is rejected at startup: the run appears,'
+    + ' finishes in zero seconds with no jobs in it, and reports a failure that'
+    + ' names nothing. Four days of pushes went that way in October');
+}
+
+if (broken) {
+  console.log(`\ncheck:everycheck — ${broken} workflow file(s) GitHub cannot read.`
+    + ' Nothing below is worth asking until that is fixed.\n');
+  process.exit(1);
+}
 
 const checks = Object.keys(scripts).filter((one) => one.startsWith('check:'));
 check('there are checks to check', checks.length > 40, `${checks.length}`);
