@@ -88,10 +88,19 @@ await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'app
 await p.route('**/api/taste*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ taste: [], ready: true }) }));
 await p.route('**/api/schedule*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ posts: [], ready: true, sends: true }) }));
 
-/* Owned or not, flipped part-way through the run — because the interesting
-   assertion is not what each state looks like, it is that paying moves you
-   from one to the other. */
-let owned = false;
+/* Nothing is owned, and nothing can be.
+ 
+   This used to flip part-way through the run so the probe could watch a
+   checkout move somebody from one state to the other. There is no checkout:
+   `ADDONS` in `app/lib/addons.ts` is an empty list, deliberately, and the
+   marketing desk comes with every paid plan.
+ 
+   The route is still answered rather than removed, because the app still asks
+   it — `addons.ts` keeps the id alive on purpose so a stray R199 renewal still
+   in flight at Paystack is recognised and ignored rather than misread as a plan
+   renewal. A probe that stopped answering would be testing a screen that had
+   given up waiting. */
+const owned = false;
 await p.route('**/api/addons*', (r) => r.fulfill({
   status: 200, contentType: 'application/json',
   body: JSON.stringify({
@@ -118,91 +127,46 @@ const room = p.locator('div.fixed.inset-0.z-50').first();
    into a room has changed twice — a dropdown, then a rail, then the studio's
    own front door — and every probe that spelled it out itself broke silently
    each time by finding no button and passing anyway. */
-/* Folded, because the first thing this file asks is what the add-on panel
-   looks like BEFORE anybody opens it — a name, a price and a chevron, and
-   no way to start a recurring charge from a panel that has not yet said
-   what the money buys. `toRoom` opens every fold in the room now, and that
-   includes this one, so the shut state it is here to check had already been
-   pressed away by the walk in. The room is opened by hand below, once the
-   two assertions about the shut state have been made. */
-await toRoom(p, af ? 'Advertensies' : 'Adverts', { folded: true });
-await p.waitForTimeout(1400);
+/* ── Rewritten 3 October 2026 ─────────────────────────────────────────────
 
-// ── Not bought ───────────────────────────────────────────────────────────
-/* Shut first: a name, a price and a chevron, and no way to start a recurring
-   charge from a panel that has not yet said what the money buys. */
-const collapsed = await room.innerText();
-check('shut, it names itself and its price',
-  /The marketing desk|Die bemarkingslessenaar/.test(collapsed) && /R\s?249/.test(collapsed),
-  collapsed.slice(0, 160).replace(/\n/g, ' / '));
-check('and shut, there is nothing to press that starts a monthly charge',
-  (await room.locator('button').filter({ hasText: af ? /Sluit die bemarkingslessenaar oop/ : /Unlock the marketing desk/ }).count()) === 0,
-  'a R249-a-month button is offered above a collapsed description');
+   Everything between here and the plan below used to walk a SALE: a folded
+   panel with a price on it, a sales screen, a checkout, and then the desk
+   opening once it was owned.
 
-/* Then open it, the way somebody deciding does. Everything below is the
-   opened panel. */
-await room.locator('button[aria-expanded="false"]')
-  .filter({ hasText: af ? /Die bemarkingslessenaar/ : /The marketing desk/ })
-  .first()
-  .click();
-await p.waitForTimeout(700);
-/* And the rest of the room with it, now that the shut state has been read.
-   Everything below is about what the sales screen says and whether the free
-   half still works, and both of those are inside cards. */
-await unfold(p);
-const shut = await room.innerText();
-check('the sales screen is there when it is not bought',
-  af ? /Die bemarkingslessenaar/.test(shut) : /The marketing desk/.test(shut),
-  shut.slice(0, 160).replace(/\n/g, ' / '));
-check('it names the price the server gave, not one typed into the page',
-  /R\s?249/.test(shut) && !/R\s?199/.test(shut),
-  (shut.match(/R\s?\d+/g) || ['no price']).join(' | '));
-check('and says it is monthly', af ? /per maand/.test(shut) : /a month/.test(shut));
+   None of that exists. Carli, 24 September 2026: *"Ek dink dieselfde met
+   advert, dit moenie 'n ekstra produk wees nie, eerder dit monotise en
+   krediete vra saam met die pakkette wat ons reeds het. Te veel aankoop punte
+   gaan mense afsit."* The marketing desk was R199 a month with its own
+   checkout; it is in every paid plan now, and what is made in it costs credits
+   out of the same wallet as a song.
 
-/* The line this whole screen turns on. */
-check('it says what stays free, so this does not read as something taken away',
-  af ? /bly oop op elke plan/.test(shut) : /stay open on every plan/.test(shut),
-  'the sales screen reads as a hostage note');
+   So this probe had been red since that day, asserting a price on a panel that
+   no longer names one. Nine days of a check failing for being out of date, in a
+   shard CI could not run anyway.
 
-check('it lists what is actually behind the lock',
-  (af ? /week se plasings/ : /week of posting/).test(shut) &&
-  (af ? /Die ry:/ : /The queue:/).test(shut),
-  'somebody is asked to pay without being told for what');
-
-/* And what it must never say. The queue reminds; it does not post. A sales
-   screen that promises posting is a refund request with a card number. */
-check('it does not promise to post for them',
-  !/(post|plaas) (for you|vir jou) (automatically|outomaties)/i.test(shut) &&
-  !/(automatic|outomatiese) (posting|plasing)/i.test(shut),
-  'the sales screen promises something this app cannot do');
-
-// The advert writer above it is untouched.
-check('the brief is still usable while it is locked',
-  await room.locator('textarea, input[type="text"]').first().isEditable(),
-  'locking the add-on locked the free half too');
-check('and the queue is not shown as a dead control',
-  af ? !/Sit dit in die ry/.test(shut) : !/Put it in the queue/.test(shut),
-  'a button that cannot work is on screen');
-
-await p.screenshot({ path: shot(`addon-shut-${af ? 'af' : 'en'}.png`), fullPage: true });
-
-// ── Bought ───────────────────────────────────────────────────────────────
-owned = true;
-/* Through the room's own reload rather than a page refresh, because what is
-   being tested is that coming back from a checkout opens the desk. */
-await toRoom(p, af ? 'Kanaal' : 'Channel');
-await p.waitForTimeout(1000);
+   What replaces it is the rule that is actually worth holding, and it is the
+   one `addons.ts` was written around: **there is nothing to buy beside a plan
+   and a top-up.** Two tills, and only two. An add-on checkout coming back is
+   the regression; the desk's own contents, which this file goes on to walk at
+   length, are the rest. */
 await toRoom(p, af ? 'Advertensies' : 'Adverts');
 await p.waitForTimeout(1600);
 
 const open = await room.innerText();
-check('paying opens the desk', af ? /Die mark, en die week/.test(open) : /The market, and the week/.test(open),
+check('the marketing desk is open on a paid plan, with nothing to buy first',
+  af ? /Die mark, en die week/.test(open) : /The market, and the week/.test(open),
   open.slice(0, 160).replace(/\n/g, ' / '));
-check('and the queue with it',
+check('  and the queue with it',
   af ? /Wanneer dit uitgaan/.test(open) : /When it goes out/.test(open));
-check('the sales screen is gone once it is owned',
-  af ? !/Sluit die bemarkingslessenaar oop/.test(open) : !/Unlock the marketing desk/.test(open),
-  'still being sold something they own');
+check('  and nothing in it starts a monthly charge',
+  (await room.locator('button').filter({
+    hasText: af ? /Sluit die bemarkingslessenaar oop|R\s?\d+\s*\/?\s*maand/ : /Unlock the marketing desk|R\s?\d+\s*(a|per)\s*month/,
+  }).count()) === 0,
+  'two tills in this app and only two — a plan, and a top-up when it runs out');
+check('  and no price is named inside the room at all',
+  !/R\s?199|R\s?249/.test(open),
+  'the add-on was R199 with its own Paystack subscription; a page still naming'
+  + ' it is a page selling something that cannot be bought');
 /* ── And the plan itself ─────────────────────────────────────────────────
    Stubbed, because the real one is a paid model call taking up to two
    minutes. What is being checked is the screen: that a week renders as days

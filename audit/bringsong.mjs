@@ -26,7 +26,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { dismissDoor, studio, unfold } from './enter.mjs';
+import { dismissDoor, studio, toRoom, unfold } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3071';
@@ -109,27 +109,22 @@ try {
      written; this probe has its own way in and never got the lesson. */
   await dismissDoor(p);
 
-  const intoRoom = async (name) => {
-    const door = p.locator('div.fixed.inset-0.z-\\[55\\] button');
-    if (!(await door.count())) {
-      const back = p.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
-      if (await back.count()) {
-        await back.click();
-        await door.first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);
-        await p.waitForTimeout(500);
-      }
-    }
-    const many = await door.count();
-    for (let i = 0; i < many; i += 1) {
-      const first = ((await door.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
-      if (first.toLowerCase().startsWith(name.toLowerCase())) {
-        await door.nth(i).click();
-        await p.waitForTimeout(1400);
-        return;
-      }
-    }
-    throw new Error(`no way into ${name}`);
-  };
+  /* ── The third copy of `toRoom`, deleted ────────────────────────────────
+
+     This was a hand-rolled walk into a room: find the door, press "All rooms"
+     if it is not showing, then match a button by its first line. Every one of
+     those steps is a line of `toRoom` in `enter.mjs`, and the comment eight
+     lines above this already said so — *"this probe has its own way in and
+     never got the lesson."*
+
+     It had not got the next one either. `toRoom` learnt, after `audit/addon.mjs`
+     opened the wrong room, that a button's HINT carries room names too — the
+     video desk's reads "Adverts, podcasts, social" — so matching the whole
+     button walks into the wrong place. This copy matched first lines, which is
+     that lesson; what it did not have is the RAIL path, so with a room already
+     open and no door showing it went looking for "All rooms", did not find it,
+     and threw "no way into Video desk" at a screen that had fifteen ways in. */
+  const intoRoom = (name) => toRoom(p, name);
 
   /* Through `studio()` rather than pressing the header button by hand.
  
