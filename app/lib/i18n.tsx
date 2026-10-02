@@ -824,11 +824,16 @@ export const STRINGS: Dict = {
   },
   /* ── The layer sheet ───────────────────────────────────────────────────
 
-     Carli, 2 October 2026, with two-and-thirty screens of Canva's editor:
-     *"Kyk asb na hierdie, hoe 'n video editor prakties lyk, asook die elemente
-     wat dit het."* Canva's Position sheet carries a rotation and an align
-     grid, and there are sheets of their own for Transparency and for Corner
-     rounding. These are those, for the words and for the mark alike.
+     Carli, 2 October 2026, having sent two-and-thirty screens of a video
+     editor: *"Kyk asb na hierdie, hoe 'n video editor prakties lyk, asook die
+     elemente wat dit het."* And the day after, the part that matters more:
+     *"Hierdie is hoe meeste video editing programme lyk."*
+
+     She is right, and it is the reason these are named after what they do
+     rather than after anybody's menu. Turned, how solid, how round, where it
+     sits, how fast it plays: these are the ordinary handles of a timeline
+     editor, the same in all of them, and that is exactly why they are safe to
+     build. See `check:ownwords`.
 
      "Gedraai" and not "rotasie": she gets the Afrikaans, and a sheet that says
      rotasie is a sheet written by somebody translating a menu. */
@@ -861,8 +866,8 @@ export const STRINGS: Dict = {
   /* The four arrows. One label for all four, read out by a screen reader
      beside the direction the arrow itself shows. */
   "edit.nudge": { en: "A little at a time", af: "Stukkie vir stukkie" },
-  /* Canva's Speed. "Hoe vinnig dit speel" and not "spoed", for the same reason
-     as "gedraai": it says what moving it does. */
+  /* "Hoe vinnig dit speel" and not "spoed", for the same reason as "gedraai":
+     it says what moving it does. */
   "edit.speed": { en: "How fast it plays", af: "Hoe vinnig dit speel" },
   "font.plain": { en: "Plain", af: "Gewoon" },
   "font.heavy": { en: "Heavy", af: "Swaar" },

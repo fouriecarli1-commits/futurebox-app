@@ -163,10 +163,10 @@ function penned(spot: Spot): Spot {
 /**
  * Where an align button puts a thing's CENTRE, on one axis.
  *
- * Carli, 2 October 2026, with Canva's Position sheet open. What Align does
- * there is move an element to an edge or to the middle on ONE axis and leave
- * the other where it was, and that is the behaviour somebody wants: "put it at
- * the top" should not also drag it sideways into the middle.
+ * Carli, 2 October 2026. What an align control does, wherever it appears, is
+ * move an element to an edge or to the middle on ONE axis and leave the other
+ * where it was — and that is the behaviour somebody wants: "put it at the top"
+ * should not also drag it sideways into the middle.
  *
  * The edge figures are READ OUT of `CORNER_AT` rather than typed again, so
  * "left" here and "top left" there are the same place. Two sets of numbers for
@@ -188,7 +188,7 @@ const ALIGNS = [
 /**
  * How far one nudge moves a thing, as a share of the frame.
  *
- * One percent. Canva nudges with the arrow keys; a phone has no arrow keys, so
+ * One percent. On a desk this is the arrow keys; a phone has no arrow keys, so
  * it is four buttons — and the reason they are here at all is the same reason
  * the zoom is: a drag on a 390-pixel preview cannot be landed on a round
  * number, and "a bit left" is most of what somebody actually wants.
@@ -1595,9 +1595,9 @@ export default function VideoEditor({
 
             {/* ── How fast it plays ────────────────────────────────────
 
-                Canva's clip toolbar has Speed, and it is the one control there
-                that changes how LONG the piece is as well as how it looks —
-                which is why `lengthOfPiece` divides by it. A four-second take
+                A clip's speed is the one control on it that changes how LONG
+                the piece is as well as how it looks — which is why
+                `lengthOfPiece` divides by it. A four-second take
                 at two times is two seconds of film, the strip draws it two
                 seconds wide, and the ruler under it still tells the truth.
 
@@ -1727,15 +1727,16 @@ export default function VideoEditor({
 
                 {/* ── Turned, faint, and round ───────────────────────────
 
-                    Carli, 2 October 2026, having sent two-and-thirty screens
-                    of Canva's editor: *"Kyk asb na hierdie, hoe 'n video
-                    editor prakties lyk, asook die elemente wat dit het."*
+                    Carli, 2 October 2026: *"Kyk asb na hierdie, hoe 'n video
+                    editor prakties lyk, asook die elemente wat dit het."* And
+                    the day after, correcting me: *"Hierdie is hoe meeste video
+                    editing programme lyk."*
 
-                    Four of those screens are one sheet — Position, with a
-                    rotation on it; Transparency; and Corner rounding. They are
-                    what makes a caption an element somebody is designing with
-                    rather than a subtitle the renderer decided on. All three
-                    were already in `drawCaption`; these are the handles. */}
+                    Turned, how solid, how round: the ordinary handles on
+                    anything sitting on a frame. They are what makes a caption
+                    an element somebody is designing with rather than a subtitle
+                    the renderer decided on. All three were already in
+                    `drawCaption`; these are the handles. */}
                 <label className="block space-y-1.5">
                   <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
                     <RotateCw className="w-3.5 h-3.5" />
@@ -2012,9 +2013,9 @@ export default function VideoEditor({
                 />
               </label>
 
-              {/* Canva calls this Layers. There are exactly two things on this
-                  canvas that are ours rather than hers — the mark and the
-                  words — so it is one switch rather than a list, and the
+              {/* Layer order. There are exactly two things on this canvas that
+                  are ours rather than hers — the mark and the words — so it is
+                  one switch rather than a list of layers, and the
                   default keeps what was always true: the mark last, over
                   everything. */}
               <button

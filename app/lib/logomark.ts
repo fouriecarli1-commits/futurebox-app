@@ -194,10 +194,11 @@ export function drawMark(
   /**
    * Turned, and how solid, in degrees and in a share of full.
    *
-   * Carli, 2 October 2026, with Canva's Position sheet open: every element
-   * there carries a rotation, an opacity and a place. Ours carried a place
-   * and nothing else, which is why a logo could be put where she wanted and
-   * then not quietened behind the picture or set at an angle.
+   * Carli, 2 October 2026. Anything sitting on a frame, in any editor with a
+   * timeline in it, carries three handles: where it is, how far it is turned,
+   * and how solid it is. Ours carried a place and nothing else, which is why a
+   * logo could be put where she wanted and then not quietened behind the
+   * picture or set at an angle.
    *
    * Rotated about its own CENTRE and not its corner, which is the only
    * rotation anybody means: turning a logo about its top-left corner swings

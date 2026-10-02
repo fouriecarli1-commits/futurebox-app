@@ -82,8 +82,8 @@ export interface Piece {
   /**
    * How fast this piece plays, as a multiple. One is as filmed.
    *
-   * Canva's Speed slider, and one of the two things on its clip toolbar that
-   * we had nothing for. It changes how LONG the piece is as well as how it
+   * A speed, which every clip toolbar carries and ours did not. It changes how
+   * LONG the piece is as well as how it
    * looks, which is why `lengthOfPiece` has to divide by it: a four-second
    * take at two times is two seconds of film, and a timeline that drew it as
    * four would be a ruler that lies.
@@ -154,8 +154,8 @@ export function lengthOfPiece(piece: Piece): number {
   /* Divided by the speed, and this is the line that makes the ruler honest.
      A four-second take at two times is two seconds OF FILM, and a timeline
      drawing it as four would put every block after it in the wrong place and
-     the playhead on the wrong frame. Canva's Speed slider changes a clip's
-     length on its timeline for the same reason. */
+     the playhead on the wrong frame. Any editor draws a sped-up clip shorter
+     on its timeline for the same reason. */
   const fast = Math.max(0.1, Math.min(4, piece.speed ?? 1));
   return Math.max(0, (piece.to - piece.from) / fast);
 }

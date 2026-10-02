@@ -476,9 +476,9 @@ try {
 
       /* ── Turned, faint, round, and nudged ──────────────────────────────
 
-         Carli, 2 October 2026, having sent two-and-thirty screens of Canva's
-         editor. Four of them are one sheet: Position, with a rotation on it,
-         plus Transparency and Corner rounding.
+         Carli, 2 October 2026, having sent two-and-thirty screens of a video
+         editor. Turned, how solid and how round are the ordinary handles on
+         anything sitting on a frame.
 
          Measured off the RENDERED element — the computed transform, the
          computed opacity, the computed radius, the bounding box — and not off
@@ -520,8 +520,9 @@ try {
         `the corner was ${round}px and is ${square}px`);
 
       /* Align, and the one thing about it that is worth checking: it moves ONE
-         axis. Canva's sheet does, and a "top" button that also slid the words
-         into the middle sideways would undo a placement she had just made. */
+         axis, which is what an align control does everywhere, and a "top"
+         button that also slid the words into the middle sideways would undo a
+         placement she had just made. */
       const spread = await p.locator('[data-editorviewer]').boundingBox();
       const placed = await onFilm.boundingBox();
       await p.locator('[data-editoralign="words:top"]').click();
@@ -628,7 +629,7 @@ try {
 
       /* ── Layers ─────────────────────────────────────────────────────────
 
-         Canva's Layers, and one switch rather than a list because exactly two
+         Layer order, and one switch rather than a list because exactly two
          things on this canvas are ours. Read off the computed `z-index` of both
          overlays rather than off the switch: a toggle that flips a flag and
          leaves the stacking alone is the kind of control that is green in a

@@ -166,9 +166,18 @@ spend an hour and a dozen paid generations on one.
 **Still not built:** versions. What is left is that, and WebCodecs when the
 checks can see it.
 
-## Three things worth stealing, from Kapwing
+## Three things worth having
 
-The studio's owner sent these. Each is a real idea and each is a different size.
+The studio's owner sent these after looking at what other editors do. Each is a
+real idea and each is a different size.
+
+They are written here as *what they do*, not as anybody's product, and that is
+deliberate — see `check:ownwords`. Carli, 3 October 2026: *"Ons kan onsself nie
+vasloop met legal in probleme met die uitleg en die tools wat ons bou nie."* A
+heading that said "worth stealing, from <a company>" was a note claiming
+deliberate copying of one named competitor, about controls that are in fact the
+common vocabulary of every timeline editor there has ever been. The controls are
+safe to build. The note was the liability.
 
 **Safe zones.** An overlay showing where TikTok's, Reels' and Shorts' own
 interface covers the frame, so a caption is not put where the platform will
@@ -183,11 +192,15 @@ project* rather than of one output. Medium, and it earns its place the moment
 a film has twelve scenes somebody has been arranging for an hour.
 
 **The canvas itself.** A general video editor — layers, text, transitions,
-subtitles. This is not a feature, it is a product, and Kapwing is a company
-that does only that. Worth taking the *shape* of and none of the scope: this
-app's version should stay a storyboard for AI scenes with a song under them,
-because that is a thing Kapwing does not do and a thing a general editor
-cannot be steered into being.
+subtitles. This is not a feature, it is a product, and there are companies that
+do only that. Worth taking the *shape* of and none of the scope: this app's
+version should stay a storyboard for AI scenes with a song under them, because
+that is the thing a general editor cannot be steered into being.
+
+*Updated 3 October 2026:* the cutting room now exists and is a real timeline, so
+the line above has moved rather than been abandoned — the room cuts her own
+footage, and the storyboard is still where AI scenes with a song under them get
+arranged. The two are separate rooms on purpose.
 
 ## The honest sequencing
 

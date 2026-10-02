@@ -152,10 +152,10 @@ export interface Scene {
   /**
    * Turned, how solid, and how round its band is.
    *
-   * Carli, 2 October 2026, with Canva's Position, Transparency and Corners
-   * sheets open: every element there carries these. Ours carried a place, a
-   * size and a face. The three below are what turns "words on a picture" into
-   * an element somebody is designing with.
+   * Carli, 2 October 2026. Turned, how solid, and how round its band is: the
+   * three handles any editor puts on something sitting on a frame. Ours carried
+   * a place, a size and a face. The three below are what turns "words on a
+   * picture" into an element somebody is designing with.
    */
   readonly captionTurn?: number;
   readonly captionSolid?: number;
@@ -250,8 +250,9 @@ export interface Cut {
   /**
    * Drawn UNDER the words rather than over them.
    *
-   * Canva calls this Layers, and it is one flag here because there are only
-   * two things on this canvas that are ours: the mark and the caption. The
+   * Layer order, which is a list in an editor with many layers and one flag
+   * here, because there are only two things on this canvas that are ours: the
+   * mark and the caption. The
    * default keeps what was always true — the mark last, over everything —
    * because a caption sliding over a logo is the fault the ordering comment
    * below was written for.
@@ -553,7 +554,7 @@ export function drawCaption(
   context.roundRect(
     Math.max(0, Math.min(width - boxWidth, middle - boxWidth / 2)),
     boxTop, boxWidth, boxHeight,
-    /* Canva's Corner rounding, as a share of the band's own height so it
+    /* Rounded as a share of the band's own height, so the setting
        means the same thing at any size. Zero is a square box, one is a
        lozenge; the default is what it has always been. */
     Math.round((set?.round ?? CAPTION_ROUND) * Math.min(size, boxHeight / 2)),
@@ -735,7 +736,7 @@ export async function stitch(cut: Cut): Promise<Made> {
          export is a recording, not a playback. */
       const talking = Boolean(cut.scenes[index].sound) && Boolean(audioContext && destination);
       video.muted = !talking;
-      /* Canva's Volume slider, per clip. Only meaningful where the clip is
+      /* A volume, per clip. Only meaningful where the clip is
          heard at all — `sound` is whether, this is how much — and the two are
          kept apart because somebody who wants a room quietly under a song
          should not have to choose between all of it and none. */
@@ -743,7 +744,7 @@ export async function stitch(cut: Cut): Promise<Made> {
          browser throws, and a thrown export over a slider is the worse
          trade. Carrying 0–2 anyway keeps one range across the app. */
       if (talking) video.volume = Math.max(0, Math.min(1, cut.scenes[index].loud ?? 1));
-      /* And Canva's Speed. Set before play, because a rate changed mid-play
+      /* And the speed. Set before play, because a rate changed mid-play
          is audible as a lurch, and read back into `lengthOfPiece` on the
          editor's side so the ruler and the film agree about how long this
          piece now is. */
@@ -865,8 +866,9 @@ export async function stitch(cut: Cut): Promise<Made> {
           };
           /* ── Which of the two is on top ──────────────────────────────
 
-             Canva calls this Layers. One flag rather than a list, because
-             exactly two things on this canvas are ours rather than hers.
+             Layer order — a list of layers in an editor that has many, one
+             flag here, because exactly two things on this canvas are ours
+             rather than hers.
 
              The DEFAULT keeps what was always true: the mark last, over
              everything. A caption that slid over the logo would be the worse
