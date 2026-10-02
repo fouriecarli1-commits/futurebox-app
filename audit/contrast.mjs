@@ -49,6 +49,35 @@ for (const name of ROOMS) {
 
   const result = await measure(page);
   score(name, result);
+
+  /* ── The cutting room keeps its words behind seven icons ──────────────
+
+     Every other room in this list is a page: open it and its words are on the
+     screen, so one measurement covers it. The cutting room is not. Since the
+     October rebuild it is a screen with a fixed bar at the foot, and all of
+     its words — every label, every hint, every button that is not Export —
+     live inside a bench that opens from one of those icons.
+
+     So this walked in, measured an empty floor, reported two nodes and passed,
+     while the labels inside the benches sat at 1.88:1. Carli found it with
+     four photographs and the words *"Niks is duidelik nie."*
+
+     That is this probe's own failure mode, not the room's: a measurement of
+     the part that happens to be visible, reported as a measurement of the
+     room. Each bench is opened and measured in turn now. */
+  if (name === 'Cutting room') {
+    const benches = await page.locator('[data-cutbench]').evaluateAll(
+      (all) => all.map((one) => one.getAttribute('data-cutbench')),
+    );
+    if (benches.length === 0) {
+      unreachable.push(`${name}: no benches found — if the bar is renamed, rename it here`);
+    }
+    for (const which of benches) {
+      await page.locator(`[data-cutbench="${which}"]`).click().catch(() => undefined);
+      await page.waitForTimeout(350);
+      score(`${name} · ${which}`, await measure(page));
+    }
+  }
 }
 
 /* ── The five tabs, which is where members actually are ─────────────────

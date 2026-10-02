@@ -54,6 +54,7 @@ import {
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
+import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import Note from './Note';
 import { BAR_HEIGHT } from './TabBar';
 import { useLang } from '../lib/i18n';
@@ -1424,12 +1425,22 @@ export default function VideoEditor({
                  time, in every probe and in every screenshot. */
               aria-pressed={asking2}
               onClick={() => setAsking2(true)}
-              className="min-h-[44px] rounded-xl border px-3 py-2.5 text-sm font-semibold inline-flex items-center gap-2"
+              className="min-h-[44px] rounded-xl border px-3.5 py-2.5 text-sm font-semibold inline-flex items-center gap-2 active:translate-y-px"
+              /* Depth, because Carli asked for it in those words: *"'n button
+                 moet diepte hê en lyk soos 'n knoppie wat 'n mens druk."* On a
+                 near-black panel a drop shadow is invisible, so it is a light
+                 edge along the top and a dark one along the bottom — the way a
+                 real key catches a room light — and the pair reversed on
+                 `:active` so the button actually moves. See `RAISE`/`PRESS`. */
               style={{
-                background: 'rgba(52,211,153,0.10)',
-                borderColor: 'rgba(16,185,129,0.35)',
-                color: '#6ee7b7',
+                background: 'rgba(52,211,153,0.14)',
+                borderColor: 'rgba(16,185,129,0.45)',
+                color: LIT,
+                boxShadow: RAISE,
               }}
+              onPointerDown={(e) => { e.currentTarget.style.boxShadow = PRESS; }}
+              onPointerUp={(e) => { e.currentTarget.style.boxShadow = RAISE; }}
+              onPointerLeave={(e) => { e.currentTarget.style.boxShadow = RAISE; }}
             >
               <Sparkles className="w-4 h-4" />
               {t('edit.ask', 'Ask')}
@@ -2288,6 +2299,7 @@ export default function VideoEditor({
               'It knows which room you are in and what is on the clock. Ask it what a tool does, or what to try next.',
             )}
             closeSays={t('edit.ask.shut', 'Close the copilot')}
+            look={CUT_LOOK}
             plain
             onClose={() => setAsking2(false)}
           >
@@ -3087,9 +3099,34 @@ export default function VideoEditor({
                       aria-pressed={on}
                       data-editorshape={one}
                       onClick={() => commit((was) => ({ ...was, shape: one }))}
-                      className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
-                        on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                      }`}
+                      className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                      /* The chosen one painted from the room's own palette
+                         rather than `text-emerald-300`.
+ 
+                         `emerald` maps onto the app's primary ramp, and the
+                         theme this app ships is light — so `emerald-300` is a
+                         mid green meant to sit on a pale card. On this room's
+                         near-black panel, under a ten-per-cent green fill, it
+                         measured 2.06:1. `audit/contrast.mjs` named it the
+                         moment it learnt to open a bench, and it was the one
+                         thing left below AA in the whole room.
+ 
+                         It is also why this cannot be fixed by the room's
+                         button rule in `globals.css`: that rule excludes
+                         anything carrying `bg-emerald`, on purpose, because a
+                         button that already declares an intent must keep it.
+                         A selected chip declares one, so it paints itself. */
+                      style={on ? {
+                        borderColor: LIT,
+                        background: 'rgba(52,211,153,0.16)',
+                        color: LIT,
+                        boxShadow: PRESS,
+                      } : {
+                        borderColor: 'rgba(16,185,129,0.45)',
+                        background: 'rgba(52,211,153,0.18)',
+                        color: INK,
+                        boxShadow: RAISE,
+                      }}
                     >
                       {one === 'tall' ? t('edit.tall', 'Tall') : one === 'wide' ? t('edit.wide', 'Wide') : t('edit.square', 'Square')}
                     </button>

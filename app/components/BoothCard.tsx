@@ -43,6 +43,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import Hint from './Hint';
 import { EDGE, INK, INK_DIM, LIT, PANEL, RAISED, COIN } from '../lib/boothlook';
+import type { Look } from '../lib/cutlook';
 
 /** The yellow coin, the same one the dock's icons carry. */
 export function Coin({ label }: { readonly label: string }): React.ReactElement {
@@ -171,6 +172,7 @@ export default function DeskSheet({
   closeSays,
   place,
   plain,
+  look,
   onClose,
   children,
 }: {
@@ -221,26 +223,46 @@ export default function DeskSheet({
    * first version of this made them close the desk to find out.
    */
   readonly place?: string;
+  /**
+   * The room's colours, for a room that is not the Pro Booth.
+   *
+   * This frame was written for the booth and imported the booth's palette
+   * directly: `RAISED` is `#141826` and `LIT` is `#38bdf8`. The cutting room
+   * then started using the frame, which is right — one way to open a panel,
+   * one way to close it — and inherited a blue-black body and a sky-blue
+   * heading icon inside a room painted green.
+   *
+   * Carli, 4 October 2026, with photographs: *"die hele kamer moet dieselfde
+   * lyk, tot bo."* Measured in a browser the bench body was rgb(20, 24, 38)
+   * sitting inside a room painted rgb(5, 24, 15).
+   *
+   * Passed in rather than imported, and defaulting to the booth's, so the
+   * booth needs no change and neither room can quietly take the other's.
+   */
+  readonly look?: Look;
   readonly onClose: () => void;
   readonly children: React.ReactNode;
 }): React.ReactElement {
+  const paint: Look = look ?? {
+    PANEL, RAISED, EDGE, INK, INK_DIM, LIT, COIN,
+  };
   return (
-    <div data-desk className="flex min-h-0 flex-1 flex-col" style={{ background: RAISED }}>
+    <div data-desk className="flex min-h-0 flex-1 flex-col" style={{ background: paint.RAISED }}>
       <header
         className="flex-shrink-0 border-b px-4 py-3"
-        style={{ borderColor: EDGE, background: PANEL }}
+        style={{ borderColor: paint.EDGE, background: paint.PANEL }}
       >
       <div className="flex items-center gap-2">
         {icon && (
-          <span className="flex-shrink-0" style={{ color: LIT }} aria-hidden>
+          <span className="flex-shrink-0" style={{ color: paint.LIT }} aria-hidden>
             {icon}
           </span>
         )}
-        <h2 className="min-w-0 flex-1 text-base font-black leading-tight" style={{ color: INK }}>
+        <h2 className="min-w-0 flex-1 text-base font-black leading-tight" style={{ color: paint.INK }}>
           {title}
         </h2>
         {place && (
-          <span className="flex-shrink-0 text-sm font-bold tabular-nums" style={{ color: LIT }}>
+          <span className="flex-shrink-0 text-sm font-bold tabular-nums" style={{ color: paint.LIT }}>
             {place}
           </span>
         )}
@@ -252,7 +274,7 @@ export default function DeskSheet({
           aria-label={closeSays}
           title={closeSays}
           className="-mr-2 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
-          style={{ color: INK_DIM }}
+          style={{ color: paint.INK_DIM }}
         >
           <X className="h-5 w-5" />
         </button>

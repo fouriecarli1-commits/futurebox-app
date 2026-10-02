@@ -540,6 +540,140 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
   color: rgb(var(--fb-ink));
 }
 
+/* ── The cutting room: the same lesson the booth learnt, one room later ──
+ *
+ * Carli, 4 October 2026, with four photographs of benches: *"Niks is duidelik
+ * nie."* And she was not being fussy — measured in a browser, the words inside
+ * every bench came out at **1.88:1** against the 4.5 that body text needs.
+ *
+ * ── Why, and it is the booth's bug exactly ───────────────────────────────
+ *
+ * `zinc` is remapped onto the surface family (see the top of
+ * `tailwind.config.js`). The theme this app ships is LIGHT, and a light theme
+ * INVERTS the ramp — so `text-zinc-400`, which on a pale page is a hint under
+ * a heading, resolves to rgb(74, 70, 63) — a dark warm grey. On a pale page
+ * that is correct and readable. On the cutting room's near-black floor it is
+ * invisible.
+ *
+ * The booth hit this in September and fixed it with the block above: redefine
+ * the surface variables for the room, and two thousand class names go on
+ * saying what they mean. The cutting room became a dark room on 1 October and
+ * never got the same block, so every `text-zinc-400` in it has been dark grey
+ * on dark green since.
+ *
+ * ── Why a probe did not catch it ─────────────────────────────────────────
+ *
+ * `audit/contrast.mjs` walks this room and reported 2 nodes below AA, not
+ * thirty. It never opened a bench. The room is a screen with a bar at the
+ * foot, and everything with words in it is behind one of seven icons — so the
+ * probe measured the empty floor and passed. It opens every bench now.
+ *
+ * ── The numbers ──────────────────────────────────────────────────────────
+ *
+ * The booth's own curve at this room's hue — green, 150ish, rather than the
+ * booth's 225 blue. 400/500/600 are deliberately bright for the same reason
+ * they are in the booth: in a room that fills the screen they are not
+ * decoration, they are the body text, and they have to clear 4.5 on PANEL.
+ */
+[data-cuttingroom] {
+  --fb-surface-50: 240 250 244;
+  --fb-surface-100: 223 242 230;
+  --fb-surface-200: 198 228 210;
+  --fb-surface-300: 170 208 185;
+  --fb-surface-400: 162 200 178;
+  --fb-surface-500: 143 184 160;
+  --fb-surface-600: 124 166 142;
+  --fb-surface-700: 56 82 66;
+  --fb-surface-800: 38 60 47;
+  --fb-surface-900: 23 42 31;
+  --fb-surface-950: 8 22 14;
+
+  /* The accent is left alone, unlike the booth's.
+ 
+     The booth turned its emerald blue because Carli asked for a black-and-blue
+     room. This room is the GREEN one — it carries the FutureBox green down the
+     whole page on purpose, at her own request on 30 September — so the app's
+     own primary ramp is already the right accent here. Changing it would be
+     taking the room's identity away in the name of consistency. */
+
+  --fb-page: 5 24 15;
+  --fb-ink: 236 253 245;
+  /* `bg-black/40` means a real inset in here, because the room really is dark. */
+  --fb-void: 2 10 6;
+  --fb-scrim: 1 6 4;
+
+  color: rgb(var(--fb-ink));
+}
+
+/* ── Buttons in a dark room ──────────────────────────────────────────────
+ *
+ * Carli, 4 October 2026, with a photograph of the "Bring it in" bench:
+ * *"Wanneer ek kliek op bring it in kan mens die skrif nie duidelik lees nie.
+ * Alles moet baie duidelik wees en 'n button moet diepte hê en lyk soos 'n
+ * knoppie wat 'n mens druk."*
+ *
+ * ── Why they were invisible ──────────────────────────────────────────────
+ *
+ * The rule above paints every bordered button `primary-500 / 0.09`. That is
+ * right everywhere it was written for: nine per cent green over a PALE page is
+ * a soft green key you can see from across the room, and it is why the app
+ * reads as one set of controls.
+ *
+ * Nine per cent green over rgb(5, 24, 15) is rgb(9, 41, 25). Against the panel
+ * it sits on, that is a difference of four values — a button the same colour
+ * as the wall. Measured on her screen and on mine: the fill was
+ * rgba(53, 208, 135, 0.09) and the button could not be made out at all.
+ *
+ * So the room restates the same rule at its own weight. Not a new look — the
+ * same transparent green, at the alpha a dark surface needs for it to be the
+ * same APPARENT step up off the panel that nine per cent is on a pale one.
+ *
+ * ── And the depth, which she asked for in those words ────────────────────
+ *
+ * On a near-black panel a drop shadow does nothing: a dark blur under a dark
+ * button on a dark surface is invisible, which is why every "just add a
+ * shadow" version of this looks identical to no shadow. Depth on a dark
+ * surface is two one-pixel inset edges — a light one along the top where a
+ * room light catches the key, a dark one along the bottom where the key's own
+ * body shades the panel. The EDGES carry it rather than the fill, which is
+ * what makes it survive being near-black on near-black.
+ *
+ * And it moves. A button that looks raised and does not sink is a picture of a
+ * button, so on `:active` the two edges swap and the whole thing drops a pixel.
+ *
+ * Written against the app's own selectors rather than a class, for the reason
+ * the rule above gives for doing the same: a rule you opt into is a rule the
+ * next button forgets. Scoped to this room, because the rest of the app is a
+ * pale flat page where this would look like a toy. */
+[data-cuttingroom] button[class*="border"]:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-transparent"]):not(:disabled),
+[data-cuttingroom] label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([class*="bg-amber"]) {
+  background-color: rgb(var(--fb-primary-500) / 0.18);
+  border-color: rgb(var(--fb-primary-500) / 0.45);
+  color: rgb(var(--fb-surface-100));
+  box-shadow:
+    0 1px 0 0 rgba(236, 253, 245, 0.16) inset,
+    0 -1px 0 0 rgba(0, 0, 0, 0.5) inset,
+    0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  transition: background-color 90ms ease, box-shadow 90ms ease, transform 90ms ease;
+}
+
+[data-cuttingroom] button[class*="border"]:not([class*="bg-gradient"]):not(:disabled):active,
+[data-cuttingroom] label[class*="border"][class*="cursor-pointer"]:active {
+  background-color: rgb(var(--fb-primary-500) / 0.26);
+  box-shadow:
+    0 1px 0 0 rgba(0, 0, 0, 0.5) inset,
+    0 -1px 0 0 rgba(236, 253, 245, 0.12) inset;
+  transform: translateY(1px);
+}
+
+/* A control that is off is flat. Depth says "press me", and a disabled button
+   saying that is the one lie a button can tell. */
+[data-cuttingroom] button:disabled {
+  box-shadow: none;
+}
+
+
+
 
 /* ── The gallery: the album art room, and everything around it ───────────
 

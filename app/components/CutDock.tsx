@@ -48,6 +48,7 @@ import {
 import { useLang } from '../lib/i18n';
 import { useSideways } from '../lib/sideways';
 import DeskSheet from './BoothCard';
+import { CUT_LOOK, EDGE, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 
 /** Which panel is out. `null` is all of them shut. */
 export type Bench = 'clip' | 'film' | 'folder' | 'looks' | 'words' | 'sound' | 'mark' | null;
@@ -55,32 +56,14 @@ export type Bench = 'clip' | 'film' | 'folder' | 'looks' | 'words' | 'sound' | '
 /* The room's own colours. Green rather than the booth's blue, and literal
    rather than themed, because the cutting room does not follow the theme — the
    same decision, for the same reason, as the booth's black. */
-/**
- * The surface the bar, the benches and the room's own floor are all painted.
+/* The room's colours live in `app/lib/cutlook.ts` now, not here.
  *
- * It was `#09120d`, which is rgb(9, 18, 13) — green by nine over red and by
- * five over blue, which is to say green in a colour picker and black to an
- * eye. That was tolerable while the room around it was a green gradient and
- * the bar was a dark band inside it. On 4 October the gradient came out (see
- * `page.tsx`, and Carli's *"Die hele kamer moet solid wees"*) and this colour
- * became the WHOLE room — at which point barely-green stopped being a detail
- * of the furniture and became the answer to "which room am I in".
- *
- * `audit/editor.mjs` has asked since 30 September that green lead red and blue
- * by more than six, and it caught this the first run after the gradient went:
- * the room passed as green while it was a gradient and failed the moment the
- * gradient was the only thing making it so. The probe reads the painted colour
- * rather than the class name, which is the only reason it could.
- *
- * rgb(5, 24, 15): nineteen over red, nine over blue. Still a near-black — it
- * has to be, the picture is the bright thing in this room — and now green
- * enough to be green.
- */
-const PANEL = '#05180f';
-const EDGE = 'rgba(16,185,129,0.22)';
-const INK = '#ecfdf5';
-const INK_DIM = 'rgba(236,253,245,0.52)';
-const LIT = '#34d399';
+ * They were five consts in this file, which was fine while the bar was the
+ * only thing painted with them. On 4 October the room became one surface and
+ * `DeskSheet` started being handed a palette, so there are two files that need
+ * the same green — and two copies of a colour is two colours the first time
+ * one of them moves. `cutlook.ts` carries the reasoning for each value,
+ * including why INK_DIM went from 0.52 to 0.72. */
 
 interface BenchSpec {
   readonly id: Exclude<Bench, null>;
@@ -263,6 +246,7 @@ export default function CutDock({
       )}
       closeSays={t('cut.shut', 'Close this bench')}
       place={place}
+      look={CUT_LOOK}
       onClose={() => onOpen(null)}
     >
       {children}

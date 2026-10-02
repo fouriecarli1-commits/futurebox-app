@@ -107,11 +107,44 @@ ok('  and the green in it actually leads, rather than merely being present',
       + ' of each before it will call a room green'
     : 'no colour to read');
 
-ok('  and the same colour the dock and the benches are painted',
-  /#05180f/i.test(WRAPPER)
-  && /#05180f/i.test(withoutComments(readFileSync('app/components/CutDock.tsx', 'utf8'))),
-  'the floor, the walls and the bar are one surface — three near-blacks reads as'
-  + ' three panels stacked, which is the look the rebuild was undoing');
+/* ── One source for the colour, not three files agreeing by hand ────────
+
+   The room, the bar and every bench are one surface. That was three literals
+   in three files until 4 October, which is three colours the first time one of
+   them moves — and one of them did move, from #09120d to #05180f, and the
+   check caught the file that had not been edited.
+
+   `app/lib/cutlook.ts` is the one place now. `page.tsx` still carries the
+   literal, because a background set in a style attribute cannot import, so
+   that one is held against the file that defines it. */
+
+const look = withoutComments(readFileSync('app/lib/cutlook.ts', 'utf8'));
+const PAINT = /export const PANEL = '(#[0-9a-fA-F]{6})'/.exec(look)?.[1] ?? '';
+
+ok('the cutting room has one file that says what colour it is',
+  PAINT !== '',
+  'app/lib/cutlook.ts no longer exports a PANEL — if the palette moves, move'
+  + ' this with it rather than letting the room go unmeasured');
+
+ok('  and page.tsx paints the room that exact colour',
+  PAINT !== '' && new RegExp(PAINT, 'i').test(WRAPPER),
+  `cutlook says ${PAINT}; the wrapper in page.tsx does not use it`);
+
+ok('  and the bar and the benches take their colours from that same file',
+  /from '\.\.\/lib\/cutlook'/.test(withoutComments(readFileSync('app/components/CutDock.tsx', 'utf8')))
+  && /look=\{CUT_LOOK\}/.test(withoutComments(readFileSync('app/components/CutDock.tsx', 'utf8'))),
+  'DeskSheet was written for the Pro Booth and imported its palette directly —'
+  + ' a blue-black body and a sky-blue heading icon inside a green room. It'
+  + ' takes a `look` now, and the cutting room has to hand it one');
+
+ok('  and the room restates the surface ramp for a dark room',
+  /\[data-cuttingroom\]\s*\{[^}]*--fb-surface-400/.test(
+    readFileSync('app/globals.css', 'utf8'),
+  ),
+  'zinc maps onto the surface family and the theme this app ships is light,'
+  + ' which inverts the ramp — so every text-zinc-400 in a dark room resolves'
+  + ' to a dark warm grey. Measured at 1.88:1 before this block existed, which'
+  + ' is what Carli meant by "niks is duidelik nie"');
 
 /* ── 2. Edge to edge, so the bar reads as a floor ─────────────────────── */
 
