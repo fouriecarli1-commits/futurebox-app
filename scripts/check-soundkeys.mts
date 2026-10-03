@@ -136,9 +136,11 @@ ok('  and the fold is one node everything passes through',
   /out\.channelCount = 1/.test(render)
   && /out\.channelCountMode = 'explicit'/.test(render)
   && /songGain\.connect\(out\)/.test(render)
-  && /createMediaElementSource\(video\)\.connect\(mixer \?\? destination\)/.test(render),
+  && /const into = mixer \?\? destination;/.test(render)
+  && /from\.connect\(into\)/.test(render) && /high\.connect\(into\)/.test(render),
   'the song and the talking shots both end in one place, which is what lets'
-  + ' mono be one node rather than a rule each of them has to remember');
+  + ' mono be one node rather than a rule each of them has to remember —'
+  + ' including the shot that went through the noise filters first');
 
 ok('nothing anywhere offers surround',
   !/surround/i.test(room.split('data-editormixpick')[1]?.split('</div>')[0] ?? 'surround'),

@@ -1255,6 +1255,11 @@ export default function VideoEditor({
       ? Math.max(0, Math.min(1, edit.duck))
       : 1;
     a.volume = Math.max(0, Math.min(1, (edit.underLoud ?? 1) * duck));
+    /* The rate and the repeat, so the preview is the mix. Both are clamped
+       the way `cutFrom` clamps them, because a preview held to a different
+       range from the film is a preview that lies at the edges. */
+    a.playbackRate = Math.max(0.5, Math.min(2, edit.underSpeed ?? 1));
+    a.loop = Boolean(edit.underLoop);
   }, [edit, piece?.sound, bedUrl]);
 
   /* ── Kept on the film's clock ──────────────────────────────────────────
@@ -4414,6 +4419,56 @@ export default function VideoEditor({
             </>
           )}
 
+            {/* ── Faster, slower, and round again ──────────────────────
+
+                Carli, 5 October 2026: *"Op die sound tracks moet mens die
+                spoed van die klank ook kan verstel."* And: *"Duplicate
+                funksie."*
+
+                The shots have had a speed since the slider was built; the bed
+                never did, so a song a few beats out of step with a cut could
+                be scrubbed along but never stretched to fit.
+
+                What it says on the label is the whole of it: this is a
+                playback rate, so the song comes back higher or lower as well
+                as shorter or longer. A browser has no time stretch worth
+                shipping, and a song that returns a semitone up with nothing
+                explaining it reads as the app being broken. */}
+            <div className="space-y-1.5" data-editorunderspeedbox>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-zinc-400">{t('edit.underSpeed', 'How fast the track plays')}</span>
+                <span className="text-sm tabular-nums" style={{ color: INK_DIM }} data-editorunderspeednow>
+                  {(edit.underSpeed ?? 1).toFixed(2)}&times;
+                </span>
+              </div>
+              <input
+                type="range" min={0.5} max={2} step={0.05}
+                value={edit.underSpeed ?? 1}
+                data-editorunderspeed
+                {...gesture}
+                onChange={(e) => slideFilm((was) => ({ ...was, underSpeed: Number(e.target.value) }))}
+                className="w-full accent-emerald-500"
+              />
+              <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
+                {t(
+                  'edit.underSpeedWhy',
+                  'This is a playback rate, so the song changes pitch as well as length. There is no stretch that keeps the key — if the song has to stay in tune, cut it with the red lines instead.',
+                )}
+              </p>
+              <button
+                type="button"
+                data-editorunderloop
+                aria-pressed={Boolean(edit.underLoop)}
+                onClick={() => commit((was) => ({ ...was, underLoop: !was.underLoop }))}
+                className="min-h-[44px] w-full rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                style={edit.underLoop
+                  ? { borderColor: 'rgba(16,185,129,0.6)', background: 'rgba(52,211,153,0.22)', color: INK }
+                  : { borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(52,211,153,0.08)', color: INK_DIM }}
+              >
+                {t('edit.underLoop', 'Play it again when the film is longer')}
+              </button>
+            </div>
+
             {/* ── Stereo, or folded to one ──────────────────────────────
 
                 She asked for "stereo, mono surround". Two of those three are
@@ -4422,6 +4477,40 @@ export default function VideoEditor({
                 channels, so there is no surround to offer. A button that
                 cannot do what it says is worse than a missing one, and it is
                 said here rather than left to be discovered after a render. */}
+          {/* ── Reduce noise, named for what it actually does ──────────
+
+              Carli, 5 October 2026: *"daar moet ook 'n reduce noise funksie
+              wees."*
+
+              Two filters, on the shots and not on the song: the noise is in
+              the room the camera was in, and cutting the top off a finished
+              record is damage. It is not a model that separates a voice from
+              a room — nothing in a browser is — so the label says what it
+              takes out rather than what the phrase usually promises. */}
+          <div className="space-y-1.5" data-editordenoise>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-zinc-400">{t('edit.denoise', 'Reduce noise on the shots')}</span>
+              <button
+                type="button"
+                data-editordenoiseon
+                aria-pressed={Boolean(edit.denoise)}
+                onClick={() => commit((was) => ({ ...was, denoise: !was.denoise }))}
+                className="min-h-[44px] rounded-xl border px-3 py-1.5 text-sm font-semibold"
+                style={edit.denoise
+                  ? { borderColor: 'rgba(16,185,129,0.6)', background: 'rgba(52,211,153,0.22)', color: INK }
+                  : { borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(52,211,153,0.08)', color: INK_DIM }}
+              >
+                {edit.denoise ? t('edit.duckOn', 'On') : t('edit.duckOff', 'Off')}
+              </button>
+            </div>
+            <p className="text-sm leading-snug" style={{ color: INK_DIM }} data-editordenoisewhy>
+              {t(
+                'edit.denoiseWhy',
+                'Takes out the rumble below a voice — traffic, handling, air conditioning — and the hiss above it. It cannot lift a voice out of a loud room; nothing in a browser can.',
+              )}
+            </p>
+          </div>
+
             <div className="space-y-1.5" data-editormix>
               <span className="block text-sm text-zinc-400">{t('edit.mix', 'How it comes out')}</span>
               <div className="flex flex-wrap gap-2">

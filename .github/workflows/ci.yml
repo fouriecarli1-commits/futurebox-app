@@ -311,6 +311,8 @@ jobs:
         run: npm run check:heardhere
       - name: "Solo, mute, the duck under a speaking shot, and the fold to mono"
         run: npm run check:soundkeys
+      - name: "The song's speed and repeat, reducing noise, and the booth's own listen"
+        run: npm run check:soundtools
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

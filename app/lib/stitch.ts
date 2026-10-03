@@ -319,6 +319,24 @@ export interface Cut {
    * for the one place surround is real, which is a song being taken down.
    */
   readonly mix?: 'stereo' | 'mono';
+  /**
+   * How fast the song plays, as a multiple. Absent is as recorded.
+   *
+   * A playback rate on the source, so it changes the pitch as well as the
+   * length. There is no time stretch in a browser worth having, and pretending
+   * otherwise would mean shipping one that sounds worse than this does.
+   */
+  readonly audioSpeed?: number;
+  /** Play the song again when the film outlasts it. */
+  readonly audioLoop?: boolean;
+  /**
+   * Roll the rumble and the hiss off the scenes that speak.
+   *
+   * Two filters: nothing below `NOISE_LOW`, nothing above `NOISE_HIGH`. Not a
+   * model that separates a voice from a room, and the room says so — see
+   * `denoise` in `lib/videoedit.ts`.
+   */
+  readonly denoise?: boolean;
   /** The song, laid under the whole thing. Optional: a silent film is allowed. */
   readonly audio?: Blob | null;
   /**
@@ -635,6 +653,22 @@ function wrapped(
  */
 export const DUCK_IN = 0.1;
 
+/**
+ * Where "reduce noise" stops and starts, in hertz.
+ *
+ * Eighty at the bottom: traffic, handling, footsteps and air conditioning
+ * live below it and a speaking voice has almost nothing there — the lowest
+ * note a bass voice reaches is about eighty-five, and the part of it anybody
+ * recognises is an octave up.
+ *
+ * Nine thousand at the top: hiss is broadband and keeps going, speech
+ * intelligibility is nearly all under four thousand, and a phone microphone
+ * has very little worth keeping above this. Lower would start to dull the
+ * consonants, which is the one thing a voice cannot spare.
+ */
+export const NOISE_LOW = 80;
+export const NOISE_HIGH = 9000;
+
 
 /**
  * How round the caption's band is by default, as a share of its own height.
@@ -905,6 +939,12 @@ export async function stitch(cut: Cut): Promise<Made> {
           songBuffer = await audioContext.decodeAudioData(await cut.audio.arrayBuffer());
           song = audioContext.createBufferSource();
           song.buffer = songBuffer;
+          /* A rate on the source, which changes the pitch with the length.
+             `cutFrom` only sends one when she has moved it off one. */
+          if (cut.audioSpeed) song.playbackRate.value = cut.audioSpeed;
+          /* And round again when the film outlasts the song, rather than
+             leaving the rest of it silent. */
+          if (cut.audioLoop) song.loop = true;
           /* Through a gain rather than straight at the destination, so the
              level and the fade have somewhere to live. A song connected
              directly is a song that can only be as loud as it was recorded,
@@ -1027,8 +1067,23 @@ export async function stitch(cut: Cut): Promise<Made> {
         if (!(run.long > 0)) continue;
         const piece = audioContext.createBufferSource();
         piece.buffer = songBuffer;
+        /* ── The rate, and the duration measured in the song's own time ──
+
+           `stretches` answers in FILM seconds: `at` is when this run starts
+           on the film's clock and `long` is how much film it covers. The
+           third argument of `start` is a duration in the BUFFER's time, so a
+           song played at one and a half consumes one and a half seconds of
+           itself per second of film.
+
+           Multiplying is the whole fix, and leaving it out is the kind of
+           fault that shows up as the song ending early on a sped-up film and
+           as nothing at all at one times — which is every test anybody writes
+           first. `check:soundtools` puts a rate through `songSecond` for the
+           same reason. */
+        const rate = cut.audioSpeed ?? 1;
+        if (rate !== 1) piece.playbackRate.value = rate;
         piece.connect(songGain);
-        piece.start(begin + run.at, run.from, run.long);
+        piece.start(begin + run.at, run.from, run.long * rate);
         songRuns.push(piece);
       }
     } else {
@@ -1086,7 +1141,32 @@ export async function stitch(cut: Cut): Promise<Made> {
       if (fast !== 1) video.playbackRate = fast;
       if (talking && audioContext && destination) {
         try {
-          audioContext.createMediaElementSource(video).connect(mixer ?? destination);
+          const from = audioContext.createMediaElementSource(video);
+          const into = mixer ?? destination;
+          if (cut.denoise) {
+            /* ── Reduce noise, named for what it is ────────────────────
+
+               Two filters in series and nothing more. It does not separate a
+               voice from a room — no browser has that to give — it rolls off
+               where a voice is not and noise is: below `NOISE_LOW`, where
+               traffic, handling and air conditioning live, and above
+               `NOISE_HIGH`, where hiss lives and a phone microphone has
+               almost nothing worth keeping.
+
+               Built per scene because `createMediaElementSource` is per
+               element, and a shot is an element. */
+            const low = audioContext.createBiquadFilter();
+            low.type = 'highpass';
+            low.frequency.value = NOISE_LOW;
+            const high = audioContext.createBiquadFilter();
+            high.type = 'lowpass';
+            high.frequency.value = NOISE_HIGH;
+            from.connect(low);
+            low.connect(high);
+            high.connect(into);
+          } else {
+            from.connect(into);
+          }
         } catch {
           // Already routed, or this browser will not have it. The shot plays
           // on silently rather than the export failing over one clip.

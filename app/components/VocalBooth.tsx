@@ -1423,6 +1423,36 @@ export default function VocalBooth({
             >
               {t('booth.startHere', 'Start them here')}
             </button>
+            {/* ── Listen to the words, again, for nothing ──────────────
+
+                Carli, 5 October 2026: *"Probooth moet ook button hê, listen to
+                the words (of is dit reeds binne recording?)"*
+
+                It was already inside. The booth measures where the singing
+                actually is every time it opens — `phrasesOf` on a guide vocal,
+                `vocalSpanOf` on a mix — and it costs nothing, because it
+                happens in this browser.
+
+                What it had no way to do was go BACK to that answer. `introAt`
+                and `wordsShift` are the two hand adjustments, and once either
+                has been moved the words stay where the hand left them for the
+                rest of the session. So the thing somebody reaches for when the
+                words drift was also the thing that could be causing it, with
+                nothing on the screen saying so.
+
+                Only offered once a hand has moved something: with nothing
+                moved it would be a button that does nothing. */}
+            {(introAt !== null || wordsShift !== 0) && (
+              <button
+                type="button"
+                data-boothlisten
+                onClick={() => { setIntroAt(null); setWordsShift(0); }}
+                className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-400 hover:text-emerald-300"
+              >
+                {t('booth.listenWords', 'Listen to the words')}
+                <span className="pl-1.5 text-zinc-500">{t('play.free', 'free')}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setPointing((on) => !on)}

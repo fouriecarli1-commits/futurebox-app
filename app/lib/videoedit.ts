@@ -325,6 +325,47 @@ export interface Edit {
    * fold for the one place surround is real: a song being taken down.
    */
   readonly mix?: 'stereo' | 'mono';
+  /**
+   * How fast the song under the film plays, as a multiple.
+   *
+   * Carli, 5 October 2026: *"Op die sound tracks moet mens die spoed van die
+   * klank ook kan verstel."*
+   *
+   * The shots have had this since the speed slider was built; the bed never
+   * did, so a song that is four beats-per-minute out of step with a cut could
+   * be scrubbed along but never stretched to fit.
+   *
+   * It changes the PITCH as well as the length — this is a playback rate, not
+   * a time stretch, and a browser has no time stretch to offer. Said out loud
+   * on the slider, because a song that comes back a semitone up and nothing
+   * explaining it is the kind of wrong that reads as the app being broken.
+   */
+  readonly underSpeed?: number;
+  /**
+   * Repeat the song when the film outlasts it.
+   *
+   * Carli: *"Duplicate funksie."* The song stops and the rest of the film is
+   * silent; this plays it again from wherever the bed was scrubbed to, as
+   * many times as the film needs.
+   */
+  readonly underLoop?: boolean;
+  /**
+   * Take the rumble and the hiss off the shots' own sound.
+   *
+   * Carli: *"daar moet ook 'n reduce noise funksie wees."*
+   *
+   * Two filters and nothing more, and it is named for what it does rather
+   * than for what the phrase usually promises. It is not a model that
+   * separates a voice from a room: it rolls off below `NOISE_LOW`, where
+   * traffic, handling and air conditioning live and almost no voice does,
+   * and above `NOISE_HIGH`, where tape and preamp hiss live and a phone
+   * microphone has nothing worth keeping anyway.
+   *
+   * On the shots and not on the song, because a song is a finished record and
+   * cutting the top off one is damage. The noise is in the room the camera
+   * was in.
+   */
+  readonly denoise?: boolean;
   /** Seconds of black fading up at the start, and down at the end. */
   readonly fadeIn?: number;
   readonly fadeOut?: number;
@@ -681,6 +722,16 @@ export function cutFrom(edit: Edit): Cut {
     scenes: told,
     audio: on.music ? edit.under ?? null : null,
     ...(edit.mix === 'mono' ? { mix: 'mono' as const } : {}),
+    /* Only when there is a song for them to act on, for the same reason the
+       duck is: a number on a cut that cannot use it is a number the renderer
+       has to decide to ignore. */
+    ...(edit.under && on.music && edit.underSpeed !== undefined && edit.underSpeed !== 1
+      ? { audioSpeed: Math.max(0.5, Math.min(2, edit.underSpeed)) } : {}),
+    ...(edit.under && on.music && edit.underLoop ? { audioLoop: true } : {}),
+    /* And only when a shot actually speaks: filtering silence is work for
+       nothing, and a flag the renderer has to look past is a flag that will
+       one day be looked past wrongly. */
+    ...(edit.denoise && on.shots && kept.some((one) => one.sound) ? { denoise: true } : {}),
     /* Only when there is both a song to duck and a shot to duck it for. A
        number on a cut that cannot use it is a number the renderer has to
        decide to ignore, and a renderer making decisions about the edit is
@@ -748,8 +799,16 @@ export function songSecond(edit: Edit, second: number): number | null {
   if (!edit.under) return null;
   const long = runs(edit);
   if (long <= 0) return null;
+  /* Times the rate, because `stretches` answers in FILM seconds and this has
+     to answer in the song's. A song at one and a half consumes one and a half
+     seconds of itself per second of film, and leaving the multiplication out
+     is a fault that is invisible at one times — which is every film made
+     before the speed existed, and every test anybody writes first. */
+  const rate = Math.max(0.5, Math.min(2, edit.underSpeed ?? 1));
   for (const run of stretches(edit.underSkips ?? [], edit.underFrom ?? 0, long)) {
-    if (second >= run.at && second < run.at + run.long) return run.from + (second - run.at);
+    if (second >= run.at && second < run.at + run.long) {
+      return run.from + (second - run.at) * rate;
+    }
   }
   return null;
 }

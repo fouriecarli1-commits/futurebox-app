@@ -803,6 +803,26 @@ export const STRINGS: Dict = {
     en: "Down to {pc}% while the shot talks",
     af: "Af tot {pc}% terwyl die skoot praat",
   },
+  "edit.underSpeed": {
+    en: "How fast the track plays",
+    af: "Hoe vinnig die baan speel",
+  },
+  "edit.underSpeedWhy": {
+    en: "This is a playback rate, so the song changes pitch as well as length. There is no stretch that keeps the key — if the song has to stay in tune, cut it with the red lines instead.",
+    af: "Dit is \u2019n terugspeeltempo, so die liedjie verander toonhoogte sowel as lengte. Daar is geen rek wat die toonaard hou nie \u2014 as die liedjie in toon moet bly, sny dit eerder met die rooi lyne.",
+  },
+  "edit.underLoop": {
+    en: "Play it again when the film is longer",
+    af: "Speel dit weer wanneer die film langer is",
+  },
+  "edit.denoise": {
+    en: "Reduce noise on the shots",
+    af: "Verminder geraas op die skote",
+  },
+  "edit.denoiseWhy": {
+    en: "Takes out the rumble below a voice — traffic, handling, air conditioning — and the hiss above it. It cannot lift a voice out of a loud room; nothing in a browser can.",
+    af: "Haal die gedreun onder \u2019n stem uit \u2014 verkeer, hantering, lugversorging \u2014 en die gesis daarbo. Dit kan nie \u2019n stem uit \u2019n lawaaierige vertrek lig nie; niks in \u2019n blaaier kan nie.",
+  },
   "edit.mix": { en: "How it comes out", af: "Hoe dit uitkom" },
   "edit.stereo": { en: "Stereo", af: "Stereo" },
   "edit.mono": { en: "Mono", af: "Mono" },
@@ -3098,6 +3118,10 @@ export const STRINGS: Dict = {
   "booth.ready": { en: "Ready", af: "Gereed" },
   "booth.noWords": { en: "This song has no words on it, so there is nothing to follow. Sing anyway \u2014 the waveform and the note still work.", af: "Hierdie liedjie het geen woorde nie, so daar is niks om te volg nie. Sing maar \u2014 die klankbaan en die noot werk steeds." },
   "booth.listening": { en: "Listening\u2026", af: "Luister\u2026" },
+  "booth.listenWords": {
+    en: "Listen to the words",
+    af: "Luister na die woorde",
+  },
   "booth.playAlong": { en: "Play it and follow the words", af: "Speel dit en volg die woorde" },
   "booth.wordsMeasured": {
     en: "The words are lined up with where the voice actually sings.",

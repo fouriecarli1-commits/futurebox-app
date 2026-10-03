@@ -126,12 +126,16 @@ ok('  and the stitcher only unmutes the scenes that ask',
   'unmuting every clip puts twelve generations of room tone under the song, which is'
   + ' why they were muted in the first place');
 ok('  through the same graph the song goes through, because a canvas carries pictures only',
-  /createMediaElementSource\(video\)\.connect\(mixer \?\? destination\)/.test(cutter),
+  /const from = audioContext\.createMediaElementSource\(video\);/.test(cutter)
+  && /const into = mixer \?\? destination;/.test(cutter)
+  && /high\.connect\(into\)/.test(cutter) && /from\.connect\(into\)/.test(cutter),
   'an unmuted element is still not on the recorded stream. Into `mixer` since'
   + ' 5 October, which is the one node the song also ends at — that is what'
   + ' lets the fold to mono be a single node rather than a rule each source'
   + ' has to remember, and `destination` is still the fallback when there is'
-  + ' no graph to build');
+  + ' no graph to build. Through two filters first when "reduce noise" is'
+  + ' on, and straight in when it is not — both ends arrive at the same'
+  + ' node, which is what keeps the mono fold one node');
 
 /* ── A rule that was here and is not ─────────────────────────────────
  *
