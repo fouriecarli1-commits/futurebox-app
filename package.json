@@ -126,6 +126,7 @@
     "check:blanker": "tsx scripts/check-blanker.mts",
     "check:launchmark": "tsx scripts/check-launchmark.mts",
     "check:filmkeep": "tsx scripts/check-filmkeep.mts",
+    "check:soundlanes": "tsx scripts/check-soundlanes.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",

@@ -90,7 +90,7 @@ import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
-  captionAt, cutOut, move, runs, split, splitHere, startsAt, trim, wordsReach,
+  captionAt, cutOut, cutSong, move, runs, split, splitHere, startsAt, trim, wordsReach,
   type Edit, type Piece,
 } from '../lib/videoedit';
 import {
@@ -554,10 +554,18 @@ export default function VideoEditor({
    * at a share, because a waveform needs less room than a row of thumbnails
    * and giving it the same would push the picture off the screen.
    *
-   * Floored at 34, which is where a wave stops being a wave and becomes a
-   * texture.
+   * Floored at 53, and the number moved from 34 on 5 October 2026 when the
+   * waves became things to press. 34 was the height at which a wave stops
+   * being a wave and becomes a texture — a fine floor for something only
+   * looked at. A block on this lane is `inset-y-1`, so a thumb's 44 pixels
+   * needs 52 of lane — plus the one the lane's own top border takes, which is
+   * why this is 53 and not 52. The probe measured 43 at 52 and said so.
+   *
+   * Found by `audit/editor.mjs` the moment the lane was made tappable: 25px,
+   * then 43. A lane somebody has to hit and cannot is worse than a lane
+   * nobody can press, because the second one at least looks like what it is.
    */
-  const soundTall = Math.max(34, Math.round(laneTall * 0.62));
+  const soundTall = Math.max(53, Math.round(laneTall * 0.62));
 
   /** Whether the copilot's sheet is over the room. */
   const [asking2, setAsking2] = useState(false);
@@ -679,6 +687,24 @@ export default function VideoEditor({
     });
   }, []);
   const [picked, setPicked] = useState<string>('');
+
+  /* ── Which lane the cutting controls are aimed at ───────────────────────
+
+     Carli, 5 October 2026: *"Die sound tracks onder videos moet ook geselect
+     kan word, sodat mens daardie tyd lyne ook kan split. Huidiglik kan mens
+     nie die musiek tydlyne select nie."*
+
+     The three lanes were not equals. The picture lane could be tapped, the
+     shots' sound lane was `pointer-events: none` — a picture of a wave — and
+     the music lane could be dragged along and nothing else. So "cut" could
+     only ever mean one thing, and the other two timelines were things to look
+     at.
+
+     `shots` picks the shot it belongs to rather than being a lane of its own
+     to cut: a shot's sound IS that shot, and splitting one of them without the
+     other would be two clips claiming the same seconds. The music is its own
+     lane and its own cut — see `cutSong`. */
+  const [lane, setLane] = useState<'film' | 'shots' | 'music'>('film');
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<{ url: string; blob: Blob; ext: string; seconds: number } | null>(null);
@@ -2577,7 +2603,7 @@ export default function VideoEditor({
                         type="button"
                         aria-pressed={on}
                         data-editorblock
-                        onClick={() => setPicked(one.id)}
+                        onClick={() => { setPicked(one.id); setLane('film'); }}
                         className="absolute top-1 bottom-1 overflow-hidden rounded-lg px-2 py-1 text-left"
                         style={{
                           left: from * perSecond,
@@ -2989,14 +3015,24 @@ export default function VideoEditor({
                     {t('edit.shotSound', 'The shots')}
                   </span>
                   {edit.pieces.filter((one) => one.sound).map((one) => (
-                    <div
+                    <button
+                      type="button"
                       key={one.id}
                       data-editorownsound={one.id}
+                      aria-pressed={lane === 'shots' && picked === one.id}
+                      /* Picks the SHOT, not a lane of its own. A shot's sound
+                         is that shot: splitting one without the other would be
+                         two clips claiming the same seconds. So tapping a wave
+                         puts every control that acts on a shot — Split in two
+                         among them — on the shot it belongs to. */
+                      onClick={() => { setPicked(one.id); setLane('shots'); }}
                       style={{
                         left: startsAt(edit, one.id) * perSecond,
                         width: Math.max(THINNEST, lengthOfPiece(one) * perSecond),
+                        ...(lane === 'shots' && picked === one.id
+                          ? { boxShadow: `inset 0 0 0 2px ${LIT}` } : {}),
                       }}
-                      className="pointer-events-none absolute inset-y-1 overflow-hidden rounded-md"
+                      className="absolute inset-y-1 overflow-hidden rounded-md"
                     >
                       <WaveBlock
                         sound={one.clip}
@@ -3010,7 +3046,7 @@ export default function VideoEditor({
                         from={one.from}
                         long={Math.max(0.01, one.to - one.from)}
                       />
-                    </div>
+                    </button>
                   ))}
                   {!edit.pieces.some((one) => one.sound) && (
                     <span className="absolute inset-y-0 right-2 flex items-center text-[11px]" style={{ color: INK_DIM }}>
@@ -3031,8 +3067,16 @@ export default function VideoEditor({
                   {edit.under ? (
                     <div
                       data-editorbed
-                      onPointerDown={(event) => scrubBed(event)}
-                      style={{ width: Math.max(0, total * perSecond) }}
+                      aria-pressed={lane === 'music'}
+                      /* Picked on the way down, before the drag: the bed has
+                         always been scrubbable and that gesture stays exactly
+                         as it was — what it did not do was tell the room that
+                         the song is what she is working on. */
+                      onPointerDown={(event) => { setLane('music'); scrubBed(event); }}
+                      style={{
+                        width: Math.max(0, total * perSecond),
+                        ...(lane === 'music' ? { boxShadow: 'inset 0 0 0 2px #38bdf8' } : {}),
+                      }}
                       className="absolute inset-y-1 left-0 cursor-ew-resize touch-none overflow-hidden rounded-lg border border-sky-500/40 bg-sky-500/10"
                     >
                       <WaveBlock
@@ -3338,7 +3382,22 @@ export default function VideoEditor({
             <span className="block text-sm text-zinc-400">
               {t('edit.cutting', 'Cutting')}
             </span>
+            {/* ── Which lane the lines are cutting ─────────────────────
+
+                Carli, 5 October 2026: *"Die sound tracks onder videos moet ook
+                geselect kan word, sodat mens daardie tyd lyne ook kan split."*
+
+                Said on the panel and not only shown by a ring on the lane:
+                these are the buttons that take something out, and "out of
+                what" is the one thing somebody must not have to guess at. */}
+            <p className="text-sm" style={{ color: INK_DIM }} data-editorlanesays>
+              {lane === 'music'
+                ? t('edit.cuttingMusic', 'The lines are cutting the music. The picture stays where it is.')
+                : t('edit.cuttingFilm', 'The lines are cutting the film. Tap the music lane to cut the song instead.')}
+            </p>
+
             <div className="flex flex-wrap gap-2">
+              {lane !== 'music' && (
               <button
                 type="button"
                 data-editorsplithere
@@ -3349,6 +3408,7 @@ export default function VideoEditor({
                 <Scissors className="w-3.5 h-3.5" />
                 {t('edit.splitHere', 'Split here')}
               </button>
+              )}
               <button
                 type="button"
                 data-editormarkin
@@ -3380,11 +3440,21 @@ export default function VideoEditor({
                 <button
                   type="button"
                   data-editorcutspan
-                  onClick={() => commit((was) => cutOut(was, span))}
-                  className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-bold"
+                  /* The same two lines, on whichever lane is picked. `cutSong`
+                     is the half of `cutOut` that the interlock has been doing
+                     since the lines were built — one answer to "what does the
+                     song do when something comes out of it", rather than a
+                     second mechanism beside it. */
+                  onClick={() => commit((was) => (lane === 'music'
+                    ? cutSong(was, span)
+                    : cutOut(was, span)))}
+                  disabled={lane === 'music' && !edit.under}
+                  className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-bold disabled:opacity-40"
                   style={{ borderColor: '#ef4444', background: 'rgba(239,68,68,0.3)', color: '#fee2e2', boxShadow: RAISE }}
                 >
-                  {t('edit.cutSpan', 'Cut this out')}
+                  {lane === 'music'
+                    ? t('edit.cutSong', 'Cut it out of the song')
+                    : t('edit.cutSpan', 'Cut this out')}
                   {' · '}
                   {(span.to - span.from).toFixed(1)}s
                 </button>

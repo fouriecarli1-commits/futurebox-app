@@ -640,6 +640,45 @@ export function cutFrom(edit: Edit): Cut {
   };
 }
 
+/**
+ * Take the span out of the SONG and leave the picture alone.
+ *
+ * ── What she asked for ───────────────────────────────────────────────────
+ *
+ * Carli, 5 October 2026: *"Die sound tracks onder videos moet ook geselect kan
+ * word, sodat mens daardie tyd lyne ook kan split. Huidiglik kan mens nie die
+ * musiek tydlyne select nie."*
+ *
+ * The music lane could be dragged along and nothing else. Cutting a stretch
+ * out of the song — so the rest of it moves up against a picture that has not
+ * changed — is the one edit a bed actually needs, and there was no way to ask
+ * for it.
+ *
+ * ── Why this is `withSkip` and not a second mechanism ────────────────────
+ *
+ * Because the interlock has been doing exactly this since the red lines were
+ * built: when she cuts a span out of the FILM with the interlock on, the song
+ * loses the same span through this same call. All that was missing was a way
+ * to ask for the song half on its own.
+ *
+ * So there is one answer to "what does the song do when something is taken out
+ * of it", and the renderer plays it the one way `stretches` already schedules.
+ * A second mechanism would be a second answer, and the two would disagree the
+ * first time either was touched.
+ */
+export function cutSong(edit: Edit, span: { from: number; to: number }): Edit {
+  /* Nothing to cut out of. A skip list on a film with no track under it is a
+     fact about nothing, and it would survive a track being added later and
+     silently chop the new one — the same reason `cutOut` only records one when
+     there is a song. */
+  if (!edit.under || span.to <= span.from) return edit;
+  return {
+    ...edit,
+    span: null,
+    underSkips: withSkip(edit.underSkips ?? [], { from: span.from, to: span.to }),
+  };
+}
+
 /* ── The edits themselves, as pure functions ──────────────────────────────
 
    Every one takes an edit and hands back a new one. Nothing is changed in

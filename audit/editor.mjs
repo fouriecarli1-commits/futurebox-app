@@ -582,7 +582,16 @@ try {
     /* A piece carrying its own sound is marked on the lane, which is the
        whole reason the lane is worth drawing with no bed in it: "why can I
        hear a room" should have an answer you can see. */
+    /* The switch is on the clip bench. Without opening it this block was
+       silently skipped — `soundOn.count()` is nought behind a shut drawer —
+       so the lane's own assertions had not run for days and nobody could tell
+       from a green line. */
+    await bench('clip');
+    await p.waitForTimeout(400);
     const soundOn = p.locator('[data-editorsound]');
+    check('a shot can be told to keep its own sound',
+      (await soundOn.count()) === 1,
+      'the switch the lane below is drawn from');
     if ((await soundOn.count()) === 1) {
       const before = await p.locator('[data-editorownsound]').count();
       await soundOn.click();
@@ -590,6 +599,39 @@ try {
       check('  and turning a piece’s own sound on marks it there',
         (await p.locator('[data-editorownsound]').count()) !== before,
         `${before} marks before, ${await p.locator('[data-editorownsound]').count()} after`);
+      /* ── And the wave can be pressed ────────────────────────────────
+
+         Carli, 5 October 2026: *"Die sound tracks onder videos moet ook
+         geselect kan word, sodat mens daardie tyd lyne ook kan split.
+         Huidiglik kan mens nie die musiek tydlyne select nie."*
+
+         The lane was `pointer-events: none` — a drawing of a wave under a
+         drawing of a film. A source rule can see the class is gone; only a
+         browser can say whether a press lands, which is the thing she tried
+         and the thing that did nothing.
+
+         Before the switch is turned back off, not after: the first version of
+         this looked for the wave having just removed it, found nothing, and
+         skipped every assertion below in silence. */
+      const wave = p.locator('[data-editorownsound]').first();
+      if (await wave.count()) {
+        await wave.click({ timeout: 4000 }).catch(() => undefined);
+        await p.waitForTimeout(400);
+        check('  and the wave itself can be pressed, which it could not before',
+          (await wave.getAttribute('aria-pressed')) === 'true',
+          'a lane nobody can tap is a picture of a lane');
+
+        await bench('clip');
+        await p.waitForTimeout(400);
+        check('    and it says the lines are cutting the film',
+          /film|rolprent/i.test((await p.locator('[data-editorlanesays]').innerText().catch(() => '')) || ''),
+          'these are the buttons that take something out, and "out of what" is'
+          + ' the one thing nobody should have to guess');
+
+        check('    and splitting a shot is offered while a shot is picked',
+          (await p.locator('[data-editorsplithere]').count()) === 1,
+          'the whole point of the wave picking its shot');
+      }
       await soundOn.click();
       await p.waitForTimeout(400);
     }
