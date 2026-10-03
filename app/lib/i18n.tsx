@@ -790,6 +790,19 @@ export const STRINGS: Dict = {
     en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
     af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
   },
+  "play.listenFree": {
+    en: "Listen to the words",
+    af: "Luister na die woorde",
+  },
+  "play.free": { en: "free", af: "gratis" },
+  "play.listenedOk": {
+    en: "Listened to the song and laid the words back on the singing.",
+    af: "Na die liedjie geluister en die woorde terug op die sang gel\u00ea.",
+  },
+  "play.listenedFlat": {
+    en: "The singing could not be made out in this file, so the words are spread evenly over its length.",
+    af: "Die sang kon nie in hierdie l\u00eaer uitgemaak word nie, so die woorde is gelykop oor sy lengte versprei.",
+  },
   "edit.cuttingMusic": {
     en: "The lines are cutting the music. The picture stays where it is.",
     af: "Die lyne sny die musiek. Die prent bly waar dit is.",

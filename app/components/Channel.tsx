@@ -51,7 +51,7 @@ import Sleeve from './Sleeve';
 import SongForm from './SongForm';
 import { heardHere, markHeard } from '../lib/heard';
 import { countWhenPlayed } from '../lib/played';
-import { exactFor, timeFor } from '../lib/lyrictime';
+import { exactFor, forget, timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import Card from './Card';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
@@ -1348,6 +1348,46 @@ export default function Channel({
              pressed, and a read from the database before anything drew
              would be a button that does nothing for a second. */
           songFile={() => readAudio(lyricsFor.track.id)}
+          /* ── Listening again, on this device, for nothing ────────────
+
+             Carli, 5 October 2026: *"By channel moet daar ook nie 'n listen to
+             words wees wat iets kos nie. Partykeer allign die woorde nie met
+             die lied nie, dan help dit om te kliek op listen to words."*
+
+             `forget` first, and that is the whole feature. `timeFor` has
+             always been able to find where the singing is in a song — an
+             AudioContext in this browser, costing nothing — but it remembers
+             its answer under the song's id and hands the same one back
+             forever. So a measurement taken before the file finished syncing,
+             or off a decode that came back short, was the answer she was stuck
+             with and there was no way to ask again.
+
+             This is that ask, and it says what it found: "listened and moved
+             them" and "could not hear the singing, so they are spread" look
+             identical on the first line and come apart by the third. */
+          listenFree={async () => {
+            const blob = await readAudio(lyricsFor.track.id);
+            if (!blob) {
+              return t(
+                'play.noFile',
+                'The file for this song is not on this device, so there is nothing to listen to.',
+              );
+            }
+            forget(lyricsFor.track.id);
+            const found = await timeFor(lyricsFor.track, blob);
+            if (!found.lines.length) {
+              return t('play.nothingHeard', 'Nothing could be made out in it.');
+            }
+            setLyricsFor((was) =>
+              was && was.track.id === lyricsFor.track.id ? { ...was, lines: found.lines } : was,
+            );
+            return found.how === 'phrases' || found.how === 'sung'
+              ? t('play.listenedOk', 'Listened to the song and laid the words back on the singing.')
+              : t(
+                  'play.listenedFlat',
+                  'The singing could not be made out in this file, so the words are spread evenly over its length.',
+                );
+          }}
           askWords={async () => {
             /* Read off this device rather than passed in: the words screen is
                opened from a card that may have been drawn before the audio

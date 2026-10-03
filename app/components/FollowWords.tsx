@@ -103,6 +103,7 @@ export default function FollowWords({
   onClose,
   askWords,
   wordCost,
+  listenFree,
   songFile,
   openFilming = false,
 }: {
@@ -152,6 +153,37 @@ export default function FollowWords({
   /** What that costs, so the press is informed. */
   wordCost?: number;
   /**
+   * Listen again on this device, free, and lay the words back on the singing.
+   *
+   * ── What she asked for ─────────────────────────────────────────────────
+   *
+   * Carli, 5 October 2026: *"By channel moet daar ook nie 'n listen to words
+   * wees wat iets kos nie. Partykeer allign die woorde nie met die lied nie,
+   * dan help dit om te kliek op listen to words."*
+   *
+   * The only listening on this screen was the paid one, and it was offered on
+   * exactly the song that cannot use it: it appears when there are NO words.
+   * Her case is the opposite — the words are there and they drift — and for
+   * that there was nothing to press at all.
+   *
+   * ── Why there is a free one to offer ───────────────────────────────────
+   *
+   * Because the app has always been able to do this and did it once, silently.
+   * `timeFor` measures where the singing actually is in the song with an
+   * AudioContext, in this browser, costing nothing — and then remembers the
+   * answer under the song's id. So a measurement taken before the file had
+   * finished syncing, or taken off a decode that came back short, is the
+   * answer she keeps getting forever with no way to ask again.
+   *
+   * This is that ask. It is not the transcriber and does not claim to be: it
+   * does not read the words, it finds the singing and puts the words she
+   * already has onto it.
+   *
+   * Returns a sentence to show, or null — the same shape as `askWords`, so the
+   * screen has one way of reporting a listen rather than two.
+   */
+  listenFree?: () => Promise<string | null>;
+  /**
    * The song itself, for mixing a clean copy onto the take.
    *
    * A function rather than a blob, because the file is read out of IndexedDB
@@ -174,6 +206,9 @@ export default function FollowWords({
   const [asking, setAsking] = useState(false);
   /** Why the last attempt to write the words out did not work. */
   const [wordProblem, setWordProblem] = useState<string | null>(null);
+  /** True while the free listen is running, and what it had to say after. */
+  const [listening, setListening] = useState(false);
+  const [listened, setListened] = useState<string | null>(null);
   const frame = useRef<number>(0);
 
   // Read from the element every frame rather than counting: a paused track, a
@@ -752,6 +787,42 @@ export default function FollowWords({
 
       <div className="relative px-6 pb-6 space-y-3">
         <div className="flex flex-wrap items-center justify-center gap-2">
+          {/* ── Listen again, on this device, for nothing ───────────────
+
+              Carli, 5 October 2026: *"Partykeer allign die woorde nie met die
+              lied nie, dan help dit om te kliek op listen to words."*
+
+              Beside the camera because that is where somebody standing in
+              front of drifting words is looking. Only when there ARE words:
+              with none, the button above is the one that applies, and two
+              buttons both saying "listen" would be two prices for one word.
+
+              It says free on it. Everything else on this screen that listens
+              costs credits, and a button that does not say so is a button
+              nobody presses twice. */}
+          {!filming && listenFree && lines.length > 0 && (
+            <button
+              type="button"
+              data-followlisten
+              disabled={listening}
+              onClick={() => {
+                setListening(true);
+                setListened(null);
+                void listenFree()
+                  .then((said) => setListened(said))
+                  .finally(() => setListening(false));
+              }}
+              className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 hover:border-emerald-500 flex items-center gap-2 disabled:opacity-50 ${INK}`}
+            >
+              {listening ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
+              {listening
+                ? t('play.listening', 'Listening to it…')
+                : t('play.listenFree', 'Listen to the words')}
+              {!listening && (
+                <span className={INK_DIM}>· {t('play.free', 'free')}</span>
+              )}
+            </button>
+          )}
           {!filming ? (
             <button
               type="button"
@@ -910,6 +981,14 @@ export default function FollowWords({
             </span>
           )}
         </div>
+
+        {/* What the free listen found, in her words. Said rather than left to
+            be guessed at: "it listened and moved them" and "it could not hear
+            the singing, so they are spread evenly" look identical on the first
+            line and come apart by the third. */}
+        {listened && (
+          <p data-followlistened className="text-sm text-center leading-snug text-sky-300">{listened}</p>
+        )}
 
         {problem && <p className="text-sm text-rose-400 text-center leading-snug">{problem}</p>}
 
