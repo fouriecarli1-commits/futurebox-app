@@ -241,8 +241,13 @@ ok('  and never draws a box at all when she picked none',
   /shape !== 'none'/.test(render),
   'a title card is words on the picture, and "no box" has to mean no box');
 
+/* `wordsNow.said` and not `piece` since 5 October: a caption may now run past
+   its own shot, so the words on the frame belong to whichever piece's caption
+   is up rather than to the selected one. The rule is still the same rule —
+   the preview resolves its colours through `paintFor`. */
 ok('the preview reads the same palette the renderer does',
-  /paintFor\(piece\.wordsInk/.test(room) && /paintFor\(piece\.wordsBack/.test(room),
+  /paintFor\(wordsNow\.said\.wordsInk/.test(room)
+  && /paintFor\(wordsNow\.said\.wordsBack/.test(room),
   'two tables of colours is two palettes the first time one is retuned');
 
 ok('  and shows the box at the renderer’s 62% too',

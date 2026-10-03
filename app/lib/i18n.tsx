@@ -790,6 +790,10 @@ export const STRINGS: Dict = {
     en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
     af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
   },
+  "edit.keptFull": {
+    en: "This device has no room left to keep the project, so it will not be here when you come back. Put the film together and save it now, or clear some space first.",
+    af: "Hierdie toestel het nie meer plek om die projek te hou nie, so dit sal nie hier wees wanneer jy terugkom nie. Sit die film nou saam en stoor dit, of maak eers plek skoon.",
+  },
   "edit.bring": {
     en: "Bring clips in",
     af: "Bring knipsels in",

@@ -222,6 +222,75 @@ export interface Scene {
   readonly captionInk?: string;
   readonly captionBack?: string;
   readonly captionBox?: 'none' | 'square' | 'round' | 'brush';
+  /**
+   * More than one caption over this scene, each with its own ends.
+   *
+   * ── Why this exists beside the single fields above ───────────────────
+   *
+   * Carli, 5 October 2026: *"As hy op sy eie tydlyn is moet hy ruimte hê om
+   * verby 'n ander video te kan stretch."*
+   *
+   * A caption may now outlive the shot it starts on. The fields above can
+   * only say "this scene's own words", so a line carried over from the shot
+   * before has nowhere to go — and a scene can need both: one arriving from
+   * earlier, and its own starting later.
+   *
+   * `from` and `to` are this scene's own seconds and may be NEGATIVE, which
+   * is what "it started before this shot did" means. Nothing else changes:
+   * the renderer still only ever draws one, because `wordsReach` stops each
+   * caption at the next one's start so two can never be up at once.
+   *
+   * The single fields stay because two other screens use them —
+   * `Storyboard.tsx` and `VideoCanvas.tsx` put one untimed caption on a
+   * scene, and making them build a list to say that would be ceremony. There
+   * is exactly one place that reads either, `captionsOf` below, so the two
+   * shapes cannot drift into two behaviours.
+   */
+  readonly captions?: readonly Caption[];
+}
+
+/** One caption over a scene, in that scene's own seconds. */
+export interface Caption {
+  readonly text: string;
+  /** May be negative: the caption came up before this scene did. */
+  readonly from?: number;
+  readonly to?: number;
+  readonly font?: string;
+  readonly size?: number;
+  readonly at?: Spot | null;
+  readonly turn?: number;
+  readonly solid?: number;
+  readonly round?: number;
+  readonly ink?: string;
+  readonly back?: string;
+  readonly box?: 'none' | 'square' | 'round' | 'brush';
+}
+
+/**
+ * The captions over one scene, however the scene chose to say it.
+ *
+ * The single place the two shapes meet. A scene carrying a list uses it; one
+ * carrying the older single fields is read as a list of one; a scene with
+ * neither has none.
+ */
+export function captionsOf(scene: Scene): readonly Caption[] {
+  if (scene.captions?.length) return scene.captions;
+  const said = scene.caption?.trim() ?? '';
+  if (!said) return [];
+  return [{
+    text: said,
+    from: scene.captionFrom,
+    to: scene.captionTo,
+    font: scene.captionFont,
+    size: scene.captionSize,
+    at: scene.captionAt,
+    turn: scene.captionTurn,
+    solid: scene.captionSolid,
+    round: scene.captionRound,
+    ink: scene.captionInk,
+    back: scene.captionBack,
+    box: scene.captionBox,
+  }];
 }
 
 export interface Cut {
@@ -1001,7 +1070,7 @@ export async function stitch(cut: Cut): Promise<Made> {
          slack is for rounding, not for a shape that is nearly right: an eight
          pixel band still wants filling. */
       const fills = (box.w * box.h) / (cut.width * cut.height);
-      const caption = cut.scenes[index].caption?.trim() ?? '';
+      const captions = captionsOf(cut.scenes[index]);
 
       await new Promise<void>((done) => {
         let stop = false;
@@ -1048,7 +1117,7 @@ export async function stitch(cut: Cut): Promise<Made> {
              face. Painted every frame because the frame under it is. */
           const painted = cut.scenes[index];
           const words = (): void => {
-            if (!caption) return;
+            if (!captions.length) return;
             /* ── Up for its own stretch, not for the whole shot ───────────
 
                `video.currentTime` is a position in the FILE, so the scene's own
@@ -1065,17 +1134,18 @@ export async function stitch(cut: Cut): Promise<Made> {
                and nowhere else, so the preview showed a shortened caption over
                the whole clip while the film it made was right, and the only
                way to find that out was to pay for the render and watch it. */
-            if (!wordsUp({ from: painted.captionFrom, to: painted.captionTo }, shown)) return;
-            drawCaption(context, caption, cut.width, cut.height, {
-              font: painted.captionFont,
-              size: painted.captionSize,
-              at: painted.captionAt,
-              ink: painted.captionInk,
-              back: painted.captionBack,
-              box: painted.captionBox,
-              turn: painted.captionTurn,
-              solid: painted.captionSolid,
-              round: painted.captionRound,
+            const up = captions.find((one) => wordsUp(one, shown));
+            if (!up) return;
+            drawCaption(context, up.text, cut.width, cut.height, {
+              font: up.font,
+              size: up.size,
+              at: up.at,
+              ink: up.ink,
+              back: up.back,
+              box: up.box,
+              turn: up.turn,
+              solid: up.solid,
+              round: up.round,
             });
           };
           const badge = (): void => {

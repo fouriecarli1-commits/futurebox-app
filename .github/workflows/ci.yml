@@ -301,6 +301,8 @@ jobs:
         run: npm run check:blanker
       - name: "The app opens with its name beside its icon, not the icon on its own"
         run: npm run check:launchmark
+      - name: "The cutting room keeps the project on the device, and says so when it cannot"
+        run: npm run check:filmkeep
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped
@@ -1192,7 +1194,7 @@ jobs:
           # camera, and `contrast` reads the computed colour of every piece of
           # text against what is actually painted behind it.
           - group: colour and camera
-            probes: check:selfie check:contrast check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom check:editor check:whereiwas check:backout check:launchwalk check:playlistname
+            probes: check:selfie check:contrast check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom check:editor check:whereiwas check:backout check:launchwalk check:playlistname check:filmwalk
     steps:
       - uses: actions/checkout@v4
 

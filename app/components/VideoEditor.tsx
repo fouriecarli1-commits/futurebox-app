@@ -56,7 +56,7 @@ import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
-import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan, wordsUp } from '../lib/videospan';
+import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import {
@@ -80,6 +80,7 @@ import {
 } from '../lib/logomark';
 import { fit } from '../lib/imagefile';
 import { myVideos, type MyVideo } from '../lib/filmed';
+import { keepFilm, loadFilm } from '../lib/filmkeep';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { check, type Plan } from '../lib/entitlements';
 import { CREDITS, perMinute } from '../lib/credits';
@@ -89,7 +90,7 @@ import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
-  cutOut, move, runs, split, splitHere, startsAt, trim,
+  captionAt, cutOut, move, runs, split, splitHere, startsAt, trim, wordsReach,
   type Edit, type Piece,
 } from '../lib/videoedit';
 import {
@@ -682,6 +683,48 @@ export default function VideoEditor({
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<{ url: string; blob: Blob; ext: string; seconds: number } | null>(null);
 
+  /* ── The project, kept between visits ───────────────────────────────────
+
+     Carli, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
+     perongeluk back gedruk en toe ek terug gaan was die projek weg."*
+
+     The edit lived in React state and nowhere else, so the phone's own Back
+     button threw away an afternoon of work and nothing anywhere said so —
+     from the room's point of view it was simply a new room with an empty
+     clock. See `lib/filmkeep.ts` for where it goes and why it is not the
+     database the songs are in.
+
+     `opening` is held until the first read answers, because the alternative is
+     the explanation page flashing up over a film that is about to appear —
+     which looks exactly like the fault being fixed. */
+  const [opening, setOpening] = useState(true);
+  const [kept, setKept] = useState<'full' | null>(null);
+
+  useEffect(() => {
+    let gone = false;
+    void loadFilm().then((had) => {
+      if (gone) return;
+      /* Only if there is something in it. An empty kept film must not land on
+         top of a clip she has brought in while this was still reading — the
+         read is a round trip to disk and she can be faster than it. */
+      if (had?.pieces.length) setEdit((now) => (now.pieces.length ? now : had));
+      setOpening(false);
+    });
+    return () => { gone = true; };
+  }, []);
+
+  /* Written a moment after she stops, not on every keystroke: a slider drag is
+     a few hundred changes and each one would be a transaction. The material
+     itself is written once — `keepFilm` only puts a Blob it has not already
+     got — so what this actually costs per save is kilobytes. */
+  useEffect(() => {
+    if (opening) return undefined;
+    const soon = setTimeout(() => {
+      void keepFilm(edit).then((how) => setKept(how === 'full' ? 'full' : null));
+    }, 900);
+    return () => clearTimeout(soon);
+  }, [edit, opening]);
+
   /* The one door. The room costs nothing to serve, so this is not about cost
      — it is that the plan cards say the editor comes with a paid plan, and a
      card that says so while the room opens for everybody is a card that
@@ -845,10 +888,20 @@ export default function VideoEditor({
      outline she can still take hold of. Anywhere else the room shows exactly
      what the film will. */
   const wordsNow = useMemo(() => {
-    if (!piece) return { up: false, ghost: false };
-    const into = at - startsAt(edit, piece.id);
-    const up = wordsUp({ from: piece.wordsFrom, to: piece.wordsTo }, into);
-    return { up, ghost: !up && bench === 'words' };
+    /* Across the whole film, not within the selected piece. The moment a
+       caption could outlive its own shot, "the piece under the playhead" and
+       "the piece whose words are up" stopped being the same thing — and a
+       preview that asks the first one shows nothing over every shot a caption
+       has been stretched across. */
+    const said = captionAt(edit, at);
+    if (said) return { said, ghost: false };
+    /* Nothing is up. On the words bench the selected piece's caption stays as
+       a faint outline so there is still something to colour, turn and place;
+       anywhere else the room shows exactly what the film will. */
+    if (bench === 'words' && piece && (piece.words ?? '').trim()) {
+      return { said: piece, ghost: true };
+    }
+    return { said: null, ghost: false };
   }, [piece, at, edit, bench]);
   const [running, setRunning] = useState(false);
   const strip = useRef<HTMLDivElement | null>(null);
@@ -1281,10 +1334,16 @@ export default function VideoEditor({
    * setting it directly — is still one step on the history rather than none at
    * all. Silently unrepeatable is worse than one step too many.
    */
-  const slide = useCallback((how: Partial<Omit<Piece, 'id'>>) => {
-    if (!piece) return;
-    if (beforeDrag.current === null) { commit((was) => change(was, piece.id, how)); return; }
-    setEdit((was) => change(was, piece.id, how));
+  const slide = useCallback((how: Partial<Omit<Piece, 'id'>>, onto?: string) => {
+    /* The piece this change lands on is usually the selected one, and since
+       captions can run past their own shot it is sometimes not: the words on
+       the frame may belong to a piece two cuts back, and dragging them has to
+       move THAT caption rather than silently writing a `wordsAt` onto whatever
+       happens to be picked. */
+    const id = onto ?? piece?.id;
+    if (!id) return;
+    if (beforeDrag.current === null) { commit((was) => change(was, id, how)); return; }
+    setEdit((was) => change(was, id, how));
   }, [piece, commit]);
 
   /** And the same, for a change to the film as a whole rather than a piece. */
@@ -1553,7 +1612,7 @@ export default function VideoEditor({
     const began = (() => {
       const piece = edit.pieces.find((one) => one.id === id);
       if (!piece) return null;
-      return wordsSpan(piece, lengthOfPiece(piece));
+      return wordsSpan(piece, lengthOfPiece(piece), wordsReach(edit, id));
     })();
 
     const move = (m: PointerEvent) => {
@@ -1568,7 +1627,11 @@ export default function VideoEditor({
            The MOVE uses `began` instead: it is a displacement from where the
            gesture started, and a displacement applied to a moving origin is
            the runaway described above. */
-        const had = wordsSpan(piece, long);
+        /* How far this caption may run before it would land on the next one —
+           read live, because a caption ahead of it can be dragged while this
+           gesture is not happening and the ceiling then changes. */
+        const reach = wordsReach(was, id);
+        const had = wordsSpan(piece, long, reach);
         /* Where the pointer is on the FILM's clock, turned into how far into
            this piece that is — the caption's clock is its own piece's. */
         const into = (m.clientX - box.left) / perSecond - startsAt(was, id);
@@ -1582,9 +1645,9 @@ export default function VideoEditor({
              like a throw. */
           /* `slidWords` owns this, so it can be given a sixty-second shot in
              `check:cutspan` and proved without a clamp in the way. */
-          want = slidWords(began ?? had, into - (grabbedAt - startsAt(was, id)), long);
+          want = slidWords(began ?? had, into - (grabbedAt - startsAt(was, id)), long, reach);
         }
-        const next = heldWords(want.from, want.to, long);
+        const next = heldWords(want.from, want.to, long, reach);
         return {
           ...was,
           pieces: was.pieces.map((one) => (one.id === id
@@ -2080,7 +2143,7 @@ export default function VideoEditor({
                   piece.fill ? 'object-cover' : 'object-contain'
                 }`}
               />
-              {(piece.words ?? '').trim().length > 0 && (wordsNow.up || wordsNow.ghost) && (
+              {wordsNow.said && (
                 <div
                   data-editorwordsdrag
                   data-editorwordsghost={wordsNow.ghost ? 'true' : undefined}
@@ -2090,14 +2153,14 @@ export default function VideoEditor({
                      note beside `beforeDrag` describes. One drag, one Back. */
                   onPointerDown={(event) => {
                     holding();
-                    dragOnFrame(event, (spot) => slide({ wordsAt: spot }), held);
+                    dragOnFrame(event, (spot) => slide({ wordsAt: spot }, wordsNow.said.id), held);
                   }}
                   style={{
-                    left: `${(piece.wordsAt?.x ?? WORDS_AT.x) * 100}%`,
-                    top: `${(piece.wordsAt?.y ?? WORDS_AT.y) * 100}%`,
-                    fontFamily: fontFor(piece.wordsFont).stack,
-                    fontWeight: fontFor(piece.wordsFont).weight,
-                    fontSize: Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                    left: `${(wordsNow.said.wordsAt?.x ?? WORDS_AT.x) * 100}%`,
+                    top: `${(wordsNow.said.wordsAt?.y ?? WORDS_AT.y) * 100}%`,
+                    fontFamily: fontFor(wordsNow.said.wordsFont).stack,
+                    fontWeight: fontFor(wordsNow.said.wordsFont).weight,
+                    fontSize: Math.max(9, (wordsNow.said.wordsSize ?? 0.048) * frameHeight),
                     maxWidth: '86%',
                     /* The centring is in the transform rather than in a
                        `-translate-x-1/2` class, because an inline `transform`
@@ -2105,17 +2168,17 @@ export default function VideoEditor({
                        Tailwind translate away — the words would have hung off to
                        the right of where they land in the film, which is the
                        quiet kind of wrong this preview exists to prevent. */
-                    transform: `translate(-50%, -50%) rotate(${piece.wordsTurn ?? 0}deg)`,
+                    transform: `translate(-50%, -50%) rotate(${wordsNow.said.wordsTurn ?? 0}deg)`,
                     /* Ghosted, not solid, when the playhead is past the
                        caption's own stretch — see `wordsNow`. */
-                    opacity: wordsNow.ghost ? 0.3 : (piece.wordsSolid ?? 1),
+                    opacity: wordsNow.ghost ? 0.3 : (wordsNow.said.wordsSolid ?? 1),
                     outline: wordsNow.ghost ? `1px dashed ${LIT}` : undefined,
                     outlineOffset: wordsNow.ghost ? 3 : undefined,
                     /* Approximate, and said so rather than implied: the renderer
                        rounds against the band's MEASURED height, and the band
                        here is a div that has not been measured. It moves the
                        right way and lands within a pixel or two of the film. */
-                    borderRadius: (piece.wordsBox ?? BOX_DEFAULT) === 'brush'
+                    borderRadius: (wordsNow.said.wordsBox ?? BOX_DEFAULT) === 'brush'
                       /* The brush is a painted path on the canvas and cannot be
                          a border radius. A lozenge is the closest an element
                          gets, and the preview says "a shape, not a box" rather
@@ -2123,20 +2186,20 @@ export default function VideoEditor({
                          real one; `check:videopaint` holds that they agree on
                          everything a radius CAN carry. */
                       ? '48% 44% 46% 50% / 60% 56% 58% 54%'
-                      : (piece.wordsRound ?? roundFor(piece.wordsBox ?? BOX_DEFAULT))
-                        * Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                      : (wordsNow.said.wordsRound ?? roundFor(wordsNow.said.wordsBox ?? BOX_DEFAULT))
+                        * Math.max(9, (wordsNow.said.wordsSize ?? 0.048) * frameHeight),
                     /* The same 62% the renderer paints the box at, so the
                        preview shows the picture through it exactly as the film
                        will. `none` draws nothing, which is a title card. */
-                    background: (piece.wordsBox ?? BOX_DEFAULT) === 'none'
+                    background: (wordsNow.said.wordsBox ?? BOX_DEFAULT) === 'none'
                       ? 'transparent'
-                      : tintOf(paintFor(piece.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT, 0.62),
-                    color: paintFor(piece.wordsInk ?? 'white')?.hex ?? INK_DEFAULT,
+                      : tintOf(paintFor(wordsNow.said.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT, 0.62),
+                    color: paintFor(wordsNow.said.wordsInk ?? 'white')?.hex ?? INK_DEFAULT,
                     zIndex: 2,
                   }}
                   className="absolute cursor-move touch-none select-none px-2 py-1 text-center leading-tight outline-dashed outline-1 outline-emerald-400/50"
                 >
-                  {piece.words}
+                  {wordsNow.said.words}
                   {/* The corner. Sits half outside the band so the whole of it is
                       grabbable without covering a letter, and `touch-none` so a
                       phone does not scroll the page instead. */}
@@ -2145,8 +2208,8 @@ export default function VideoEditor({
                     onPointerDown={(event) => {
                       holding();
                       grip(
-                        event, piece.wordsSize ?? 0.048,
-                        (size) => slide({ wordsSize: size }),
+                        event, wordsNow.said.wordsSize ?? 0.048,
+                        (size) => slide({ wordsSize: size }, wordsNow.said.id),
                         WORDS_SMALLEST, WORDS_LARGEST, held,
                       );
                     }}
@@ -2237,7 +2300,13 @@ export default function VideoEditor({
             The width is the honest part: a three-minute film is a
             three-minute strip. A timeline that squeezes to fit is a
             proportion bar wearing a ruler. */}
-        {edit.pieces.length === 0 ? (
+        {opening && edit.pieces.length === 0 ? (
+          /* Reading the kept project off the disk. Nothing is drawn here on
+             purpose: the explanation page flashing up over a film that is
+             about to appear looks exactly like the fault this was built to
+             end. It is one round trip and it is over in a blink. */
+          <div className="h-24" data-editoropeningwait />
+        ) : edit.pieces.length === 0 ? (
           /* ── What this room is, and the two ways in ────────────────────
 
               Carli, 4 October 2026: *"Die probooth se opening page het half 'n
@@ -2430,7 +2499,7 @@ export default function VideoEditor({
                       const said = (one.words ?? '').trim();
                       if (!said) return null;
                       const long = lengthOfPiece(one);
-                      const when = wordsSpan(one, long);
+                      const when = wordsSpan(one, long, wordsReach(edit, one.id));
                       const left = (startsAt(edit, one.id) + when.from) * perSecond;
                       const wide = Math.max(6, (when.to - when.from) * perSecond);
                       return (
@@ -3068,6 +3137,19 @@ export default function VideoEditor({
         {problem && (
           <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-400">
             {problem}
+          </p>
+        )}
+
+        {/* A save that could not happen. Said out loud and not swallowed:
+            this room keeps her project on the device, and the one moment she
+            has to know it is NOT keeping it is while there is still a film on
+            the clock to export. */}
+        {kept === 'full' && (
+          <p role="alert" data-editorkeptfull className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-300">
+            {t(
+              'edit.keptFull',
+              'This device has no room left to keep the project, so it will not be here when you come back. Put the film together and save it now, or clear some space first.',
+            )}
           </p>
         )}
 

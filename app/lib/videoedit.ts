@@ -48,7 +48,7 @@ import type { Join } from './videojoins';
 import { gradeCss, type Adjust } from './videoadjust';
 import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
 import { bitsFor, rateFor, sizeFor } from './videoquality';
-import { withSkip } from './videospan';
+import { withSkip, wordsSpan } from './videospan';
 import type { CoverFrom } from './videocover';
 
 /** A piece of video on the clock. */
@@ -314,6 +314,72 @@ export function runs(edit: Edit): number {
   return edit.pieces.reduce((all, one) => all + lengthOfPiece(one), 0);
 }
 
+/**
+ * How far a caption on this piece may run, in seconds from its piece's start.
+ *
+ * ── What she asked for ───────────────────────────────────────────────────
+ *
+ * Carli, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As hy
+ * op sy eie tydlyn is moet hy ruimte hê om verby 'n ander video te kan
+ * stretch."*
+ *
+ * A caption used to be clamped to its own piece, and that was never a decision
+ * anybody made: the piece was the only thing the span knew about. A lane of
+ * its own is only a lane if something on it can cross a cut — a line that
+ * carries over the next two shots is the ordinary case in anything with
+ * subtitles on it.
+ *
+ * ── Why it stops at the next caption and not at the end of the film ──────
+ *
+ * Because there is one words lane, and two captions on the same second is not
+ * a lane — it is two pieces of text drawn on top of each other in the same
+ * place on the frame, both unreadable. Stopping at the next one makes an
+ * overlap impossible rather than ugly, which is also what lets the renderer
+ * stay simple: at most one caption is ever up.
+ *
+ * The next caption's own start is included, so dragging this one all the way
+ * to the right leaves the two touching rather than overlapping by a frame.
+ */
+export function wordsReach(edit: Edit, id: string): number {
+  const mine = startsAt(edit, id);
+  if (!Number.isFinite(mine)) return 0;
+  let seen = false;
+  let at = 0;
+  for (const one of edit.pieces) {
+    const long = lengthOfPiece(one);
+    if (seen && (one.words ?? '').trim()) {
+      /* Where the NEXT caption comes up on the film, brought back onto this
+         piece's own clock, which is what the span is measured in. */
+      return Math.max(0, at + Math.max(0, one.wordsFrom ?? 0) - mine);
+    }
+    if (one.id === id) seen = true;
+    at += long;
+  }
+  return Math.max(0, at - mine);
+}
+
+/**
+ * Which caption is up at `second` on the film's clock, if any.
+ *
+ * The piece it belongs to, because the words and every one of their settings
+ * live on it. Needed the moment a caption could outlive its own shot: the
+ * piece under the playhead is no longer the piece whose words are on screen,
+ * and the preview that assumed it was showed nothing over the shots a caption
+ * had been stretched across.
+ */
+export function captionAt(edit: Edit, second: number): Piece | null {
+  let at = 0;
+  for (const one of edit.pieces) {
+    const long = lengthOfPiece(one);
+    if ((one.words ?? '').trim()) {
+      const when = wordsSpan(one, long, wordsReach(edit, one.id));
+      if (second >= at + when.from && second <= at + when.to) return one;
+    }
+    at += long;
+  }
+  return null;
+}
+
 /** Where a piece starts on the edit's own clock, in seconds. */
 export function startsAt(edit: Edit, id: string): number {
   let at = 0;
@@ -452,8 +518,8 @@ export function fadesFor(edit: Edit): { readonly in: number; readonly out: numbe
  * like" — which is the fault this repository keeps finding in other things.
  */
 export function cutFrom(edit: Edit): Cut {
-  const scenes: Scene[] = edit.pieces
-    .filter((one) => lengthOfPiece(one) > 0)
+  const kept = edit.pieces.filter((one) => lengthOfPiece(one) > 0);
+  const scenes: Scene[] = kept
     .map((one) => ({
       clip: one.clip,
       name: one.name,
@@ -471,29 +537,6 @@ export function cutFrom(edit: Edit): Cut {
       ...(gradeCss(filterCss(one.look), one.adjust)
         ? { grade: gradeCss(filterCss(one.look), one.adjust) }
         : {}),
-      ...(one.words ? { caption: one.words } : {}),
-      ...(one.words && one.wordsFont ? { captionFont: one.wordsFont } : {}),
-      ...(one.words && one.wordsSize ? { captionSize: one.wordsSize } : {}),
-      ...(one.words && one.wordsAt ? { captionAt: one.wordsAt } : {}),
-      ...(one.words && one.wordsTurn ? { captionTurn: one.wordsTurn } : {}),
-      ...(one.words && one.wordsSolid !== undefined ? { captionSolid: one.wordsSolid } : {}),
-      ...(one.words && one.wordsRound !== undefined ? { captionRound: one.wordsRound } : {}),
-      /* Resolved from a swatch id to a colour here, at the one place the edit
-         becomes a scene. An unknown id falls back to the default rather than to
-         the first swatch: a caption that quietly turns white is a caption
-         somebody can see is wrong, and one that quietly turns pink is not. */
-      ...(one.words && one.wordsInk
-        ? { captionInk: paintFor(one.wordsInk)?.hex ?? INK_DEFAULT } : {}),
-      ...(one.words && one.wordsBack
-        ? { captionBack: paintFor(one.wordsBack)?.hex ?? BACK_DEFAULT } : {}),
-      ...(one.words && one.wordsBox ? { captionBox: one.wordsBox } : {}),
-      ...(one.words && one.wordsFrom !== undefined ? { captionFrom: one.wordsFrom } : {}),
-      ...(one.words && one.wordsTo !== undefined ? { captionTo: one.wordsTo } : {}),
-      /* The shape decides the corner radius, so a square really is square.
-         Only when she has not set `wordsRound` by hand — a number she dragged
-         is hers, and a shape button overruling it would undo a gesture. */
-      ...(one.words && one.wordsBox && one.wordsRound === undefined
-        ? { captionRound: roundFor(one.wordsBox) } : {}),
       ...(one.speed && one.speed !== 1 ? { speed: one.speed } : {}),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),
       ...(one.fill ? { fill: true } : {}),
@@ -506,6 +549,75 @@ export function cutFrom(edit: Edit): Cut {
       ...(one.join && one.join !== 'cut' && one.joinFor ? { joinFor: one.joinFor } : {}),
     }));
 
+  /* ── The captions, laid out on the FILM and then cut up again ─────────
+
+     Carli, 5 October 2026: *"As hy op sy eie tydlyn is moet hy ruimte hê om
+     verby 'n ander video te kan stretch."*
+
+     A caption used to be a field on its own scene, which is the one shape that
+     cannot say "this line carries on over the next two shots". So each one is
+     put on the film's clock here, where both clocks are known, and then handed
+     to every scene it touches with ends measured in THAT scene's seconds —
+     negative at the front for one that started earlier.
+
+     The renderer still only ever draws one, because `wordsReach` stops each
+     caption where the next one begins. This loop could hand a scene two, and
+     that is deliberate: a scene can have a line arriving from before it AND
+     its own starting later in the same shot.
+
+     A swatch id becomes a colour here, at the one place an edit becomes a cut.
+     An unknown id falls back to the default rather than to the first swatch: a
+     caption that quietly turns white is one somebody can see is wrong, and one
+     that quietly turns pink is not. */
+  const starts: number[] = [];
+  let along = 0;
+  for (const one of kept) {
+    starts.push(along);
+    along += lengthOfPiece(one);
+  }
+
+  const bands = kept.flatMap((one, index) => {
+    const said = (one.words ?? '').trim();
+    if (!said) return [];
+    const when = wordsSpan(one, lengthOfPiece(one), wordsReach(edit, one.id));
+    return [{
+      from: starts[index] + when.from,
+      to: starts[index] + when.to,
+      said: {
+        text: said,
+        ...(one.wordsFont ? { font: one.wordsFont } : {}),
+        ...(one.wordsSize ? { size: one.wordsSize } : {}),
+        ...(one.wordsAt ? { at: one.wordsAt } : {}),
+        ...(one.wordsTurn ? { turn: one.wordsTurn } : {}),
+        ...(one.wordsSolid !== undefined ? { solid: one.wordsSolid } : {}),
+        ...(one.wordsInk ? { ink: paintFor(one.wordsInk)?.hex ?? INK_DEFAULT } : {}),
+        ...(one.wordsBack ? { back: paintFor(one.wordsBack)?.hex ?? BACK_DEFAULT } : {}),
+        ...(one.wordsBox ? { box: one.wordsBox } : {}),
+        /* The shape decides the corner radius, so a square really is square —
+           but only when she has not set one by hand. A number she dragged is
+           hers, and a shape button overruling it would undo a gesture. */
+        ...(one.wordsRound !== undefined
+          ? { round: one.wordsRound }
+          : one.wordsBox ? { round: roundFor(one.wordsBox) } : {}),
+      },
+    }];
+  });
+
+  const told: Scene[] = scenes.map((scene, index) => {
+    const begins = starts[index];
+    const ends = begins + lengthOfPiece(kept[index]);
+    const over = bands.filter((band) => band.to > begins && band.from < ends);
+    if (!over.length) return scene;
+    return {
+      ...scene,
+      captions: over.map((band) => ({
+        ...band.said,
+        from: band.from - begins,
+        to: band.to - begins,
+      })),
+    };
+  });
+
   const shape = SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall;
   /* The chosen grade applied HERE, at the one place an edit becomes a cut.
  
@@ -517,7 +629,7 @@ export function cutFrom(edit: Edit): Cut {
   const frame = sizeFor(shape, edit.grade);
   const fps = rateFor(edit.fps);
   return {
-    scenes,
+    scenes: told,
     audio: edit.under ?? null,
     width: frame.width,
     height: frame.height,

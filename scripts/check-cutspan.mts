@@ -31,7 +31,7 @@ import {
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { pullTo } from '../app/lib/magnet';
-import { cutOut, runs, splitHere, startsAt } from '../app/lib/videoedit';
+import { captionAt, cutFrom, cutOut, runs, splitHere, startsAt, wordsReach } from '../app/lib/videoedit';
 import type { Edit, Piece } from '../app/lib/videoedit';
 
 let bad = 0;
@@ -348,19 +348,149 @@ const stitch = withoutComments(readFileSync('app/lib/stitch.ts', 'utf8'));
 const room = withoutComments(readFileSync('app/components/VideoEditor.tsx', 'utf8'));
 
 ok('the renderer asks the shared question rather than its own',
-  /wordsUp\(\{ from: painted\.captionFrom, to: painted\.captionTo \}/.test(stitch)
+  /captions\.find\(\(one\) => wordsUp\(one, shown\)\)/.test(stitch)
   && !/captionFrom !== undefined/.test(stitch),
   'it had the right answer and kept it to itself for a day');
 
-ok('  and so does the room, off the playhead',
-  /wordsUp\(\{ from: piece\.wordsFrom, to: piece\.wordsTo \}/.test(room)
-  && /at - startsAt\(edit, piece\.id\)/.test(room),
-  'the preview has to measure from the same place the lane draws the block'
-  + ' from, or the words come up where the block does not');
+ok('  and the room asks one question for the whole film',
+  /const said = captionAt\(edit, at\)/.test(room),
+  'once a caption can outlive its own shot, "the piece under the playhead" and'
+  + ' "the piece whose words are up" stop being the same thing — and a preview'
+  + ' that asks the first shows nothing over every shot one is stretched'
+  + ' across');
 
-ok('  and the preview is gated on it, not merely computing it',
-  /wordsNow\.up \|\| wordsNow\.ghost/.test(room),
+ok('  and the preview is gated on the answer, not merely computing it',
+  /\{wordsNow\.said && \(/.test(room),
   'a number worked out and not used is the shape this bug already had once');
+
+/* ── Room to run past its own shot ─────────────────────────────────────────
+
+   Carli, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As hy
+   op sy eie tydlyn is moet hy ruimte hê om verby 'n ander video te kan
+   stretch."*
+
+   The old ceiling was never a decision: a caption was clamped to its own piece
+   because the piece was the only thing the span knew about. A lane of its own
+   is only a lane if something on it can cross a cut. */
+
+ok('a caption can be dragged past the end of its own shot',
+  wordsSpan({ wordsFrom: 1, wordsTo: 9 }, 4, 12).to === 9,
+  `${wordsSpan({ wordsFrom: 1, wordsTo: 9 }, 4, 12).to} on a four-second shot`
+  + ' with twelve seconds of film left to run');
+
+ok('  but it still has to start inside it',
+  wordsSpan({ wordsFrom: 9, wordsTo: 11 }, 4, 12).from === 4,
+  'a caption belongs to the shot it comes up on — that is what keeps it with'
+  + ' the shot when the shot is moved — and one that could begin before its'
+  + ' own picture would belong to nothing');
+
+ok('  and it stops where the film does',
+  wordsSpan({ wordsFrom: 0, wordsTo: 99 }, 4, 12).to === 12,
+  `${wordsSpan({ wordsFrom: 0, wordsTo: 99 }, 4, 12).to}`);
+
+ok('  and an untimed caption is still exactly its own shot',
+  wordsSpan({}, 4, 12).from === 0 && wordsSpan({}, 4, 12).to === 4,
+  'every caption ever typed would otherwise silently grow to the end of the'
+  + ' film the day this shipped');
+
+ok('dragging an end past the reach stops at it rather than refusing',
+  heldWords(0, 99, 4, 12).to === 12 && heldWords(0, 6, 4, 12).to === 6,
+  JSON.stringify(heldWords(0, 99, 4, 12)));
+
+ok('  and moving a long caption keeps its length',
+  slidWords({ from: 0, to: 8 }, 2, 4, 12).to - slidWords({ from: 0, to: 8 }, 2, 4, 12).from === 8,
+  JSON.stringify(slidWords({ from: 0, to: 8 }, 2, 4, 12)));
+
+/* ── And it stops where the next one starts ──────────────────────────────
+
+   One words lane, so two captions on the same second is not a lane: it is two
+   pieces of text drawn on top of each other in the same place on the frame,
+   both unreadable. `wordsReach` makes the overlap impossible rather than ugly,
+   which is also what lets the renderer stay simple — at most one is ever up. */
+
+const oneShot = (
+  id: string,
+  words?: string,
+  from?: number,
+  to?: number,
+): Piece => ({
+  id,
+  clip: new Blob(),
+  name: id,
+  from: 0,
+  to: 4,
+  ...(words ? { words } : {}),
+  ...(from !== undefined ? { wordsFrom: from } : {}),
+  ...(to !== undefined ? { wordsTo: to } : {}),
+});
+
+/* Three four-second shots. The first carries a caption stretched to nine
+   seconds — over the whole of the silent second shot and a second into the
+   third — and the third has its own caption starting two seconds in, so there
+   is a one-second gap between them where nothing is up. */
+const trio: Edit = {
+  pieces: [oneShot('a', 'one', 0, 9), oneShot('b'), oneShot('c', 'two', 2)],
+};
+
+ok('a caption reaches up to where the next one comes up',
+  wordsReach(trio, 'a') === 10,
+  `${wordsReach(trio, 'a')} — four of its own, four of the silent shot, and`
+  + ' two more to where the next caption begins');
+
+ok('  and never onto it',
+  wordsSpan(trio.pieces[0], 4, wordsReach(trio, 'a')).to <= 10,
+  'two captions on one second is two pieces of text in the same place on the'
+  + ' frame, both unreadable');
+
+ok('the last caption in a film reaches its end',
+  wordsReach(trio, 'c') === 4,
+  `${wordsReach(trio, 'c')} — nothing follows it, so the film is the ceiling`);
+
+/* ── And the FILM really carries it across the cut ─────────────────────────
+
+   The assertions above are about the edit. This one is about what the renderer
+   is handed, which is where the request actually lands: a caption that stops at
+   its own scene boundary in the cut is a caption she dragged across two shots
+   and that appears over one.
+
+   The renderer plays one scene at a time and only knows how far into THAT
+   scene it is, so a caption arriving from earlier reaches it with a negative
+   start. `cutFrom` is the one place that knows both clocks. */
+const told = cutFrom(trio);
+
+ok('the cut hands the stretched caption to the shot after it too',
+  told.scenes[1]?.captions?.length === 1
+  && told.scenes[1]?.captions?.[0]?.text === 'one',
+  `${told.scenes[1]?.captions?.length ?? 0} captions on the silent second shot`
+  + ' — this is the whole request, measured on what the renderer is given');
+
+ok('  with a start before the shot began, which is what carrying over means',
+  told.scenes[1]?.captions?.[0]?.from === -4
+  && told.scenes[1]?.captions?.[0]?.to === 5,
+  JSON.stringify(told.scenes[1]?.captions?.[0]));
+
+ok('a shot can be handed one arriving and one of its own',
+  told.scenes[2]?.captions?.length === 2
+  && told.scenes[2]?.captions?.[0]?.text === 'one'
+  && told.scenes[2]?.captions?.[1]?.text === 'two',
+  `${told.scenes[2]?.captions?.length ?? 0} — the case a single caption field`
+  + ' on a scene cannot express, and the reason there is a list');
+
+ok('  and the two never overlap',
+  (told.scenes[2]?.captions?.[0]?.to ?? 0) <= (told.scenes[2]?.captions?.[1]?.from ?? 0),
+  `${told.scenes[2]?.captions?.[0]?.to} then ${told.scenes[2]?.captions?.[1]?.from}`);
+
+ok('a caption that was never stretched still only reaches its own shot',
+  cutFrom({ pieces: [oneShot('x', 'solo'), oneShot('y')] })
+    .scenes[1]?.captions === undefined,
+  'every film already made would otherwise grow its captions to the end on'
+  + ' the day this shipped');
+
+ok('which caption is up is asked of the film, not of a piece',
+  captionAt(trio, 6)?.id === 'a' && captionAt(trio, 11)?.id === 'c'
+  && captionAt(trio, 9.5) === null,
+  'at six seconds the playhead is over the SECOND shot and the words are the'
+  + ' first shot\u2019s — the case the preview used to draw nothing for');
 
 if (bad) {
   console.error(`\ncheck:cutspan — ${bad} assertion(s) failed.\n`);

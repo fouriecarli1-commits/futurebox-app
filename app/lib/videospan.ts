@@ -180,9 +180,33 @@ export function stretches(
 export function wordsSpan(
   piece: { readonly wordsFrom?: number; readonly wordsTo?: number },
   pieceLong: number,
+  /**
+   * How far past its own piece this caption may run, in seconds from the
+   * piece's start.
+   *
+   * Carli, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As
+   * hy op sy eie tydlyn is moet hy ruimte hê om verby 'n ander video te kan
+   * stretch."*
+   *
+   * She is right, and the old ceiling was not a decision anybody made — the
+   * caption was clamped to its own piece because the piece was the only thing
+   * it knew about. A lane of its own is only a lane if something on it can
+   * cross a cut.
+   *
+   * The default is the piece, so every caller that has not been taught about
+   * the film behaves as it did. `wordsReach` in `videoedit.ts` works out the
+   * real one: up to where the NEXT caption starts, and no further, because a
+   * single lane with two things on the same second is not a lane.
+   */
+  reach: number = pieceLong,
 ): Span {
+  const roof = Math.max(pieceLong, reach);
+  /* The START still has to be inside its own piece. A caption belongs to the
+     shot it comes up on — that is what keeps it with the shot when the shot is
+     moved or something in front of it is cut — and one that could begin before
+     its own picture would belong to nothing. */
   const from = Math.max(0, Math.min(piece.wordsFrom ?? 0, pieceLong));
-  const to = Math.max(from, Math.min(piece.wordsTo ?? pieceLong, pieceLong));
+  const to = Math.max(from, Math.min(piece.wordsTo ?? pieceLong, roof));
   return { from, to };
 }
 
@@ -226,10 +250,25 @@ export const wordsUp = (
  */
 export const SHORTEST_WORDS = 0.5;
 
-/** A caption's ends, clamped inside its piece and kept readable. */
-export function heldWords(from: number, to: number, pieceLong: number): Span {
+/**
+ * A caption's ends: it starts inside its own piece, and may run on as far as
+ * `reach` lets it.
+ *
+ * The two ends are clamped against different ceilings on purpose. The start is
+ * held inside the piece, so a caption always belongs to the shot it comes up
+ * on. The end is held at `reach` — the start of the next caption, or the end
+ * of the film — so one caption can run over the shots that follow without ever
+ * landing on top of another.
+ */
+export function heldWords(
+  from: number,
+  to: number,
+  pieceLong: number,
+  reach: number = pieceLong,
+): Span {
+  const roof = Math.max(pieceLong, reach);
   const a = Math.max(0, Math.min(from, Math.max(0, pieceLong - SHORTEST_WORDS)));
-  const b = Math.min(pieceLong, Math.max(to, a + SHORTEST_WORDS));
+  const b = Math.min(roof, Math.max(to, a + SHORTEST_WORDS));
   return { from: a, to: b };
 }
 
@@ -257,8 +296,18 @@ export function heldWords(from: number, to: number, pieceLong: number): Span {
  * the finger has travelled since, in seconds. Neither is read from anything
  * that moves while the gesture runs.
  */
-export function slidWords(began: Span, by: number, pieceLong: number): Span {
+export function slidWords(
+  began: Span,
+  by: number,
+  pieceLong: number,
+  reach: number = pieceLong,
+): Span {
+  const roof = Math.max(pieceLong, reach);
   const wide = Math.max(0, began.to - began.from);
-  const first = Math.max(0, Math.min(began.from + by, pieceLong - wide));
-  return heldWords(first, first + wide, pieceLong);
+  /* Against two ceilings, as `heldWords` is: the start may not leave the
+     piece, and the end may not pass what the film leaves it. A caption longer
+     than its own shot would otherwise be pinned at nought and could not be
+     moved at all. */
+  const want = Math.max(0, Math.min(began.from + by, Math.min(pieceLong, roof - wide)));
+  return heldWords(want, want + wide, pieceLong, roof);
 }
