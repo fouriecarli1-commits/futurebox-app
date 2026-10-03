@@ -790,6 +790,18 @@ export const STRINGS: Dict = {
     en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
     af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
   },
+  "edit.markOff": {
+    en: "Take the logo off",
+    af: "Haal die logo af",
+  },
+  "edit.newProject": {
+    en: "New project",
+    af: "Nuwe projek",
+  },
+  "edit.newSure": {
+    en: "Really \u2014 put this film down",
+    af: "Rerig \u2014 sit hierdie film neer",
+  },
   "play.listenFree": {
     en: "Listen to the words",
     af: "Luister na die woorde",

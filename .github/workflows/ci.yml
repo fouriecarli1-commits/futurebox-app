@@ -307,6 +307,8 @@ jobs:
         run: npm run check:soundlanes
       - name: "Listening to a song's words again costs nothing, and really listens again"
         run: npm run check:listenfree
+      - name: "The song plays under the preview, a logo comes off, and a project can be put down"
+        run: npm run check:heardhere
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

@@ -48,7 +48,7 @@ import type { Join } from './videojoins';
 import { gradeCss, type Adjust } from './videoadjust';
 import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
 import { bitsFor, rateFor, sizeFor } from './videoquality';
-import { withSkip, wordsSpan } from './videospan';
+import { stretches, withSkip, wordsSpan } from './videospan';
 import type { CoverFrom } from './videocover';
 
 /** A piece of video on the clock. */
@@ -638,6 +638,46 @@ export function cutFrom(edit: Edit): Cut {
     ...(edit.underFrom ? { audioFrom: edit.underFrom } : {}),
     ...(edit.underSkips?.length ? { audioSkips: edit.underSkips } : {}),
   };
+}
+
+/**
+ * Where in the song the film is, at `second` on the film's clock.
+ *
+ * ── The fault ────────────────────────────────────────────────────────────
+ *
+ * Carli, 5 October 2026: *"Binne die video editor. Wanneer ek die musiek
+ * tydlyn in sit en ek druk play, dan hoor mens nie die klank binne die video
+ * nie."*
+ *
+ * The room never played the bed at all. The song was mixed in `stitch.ts`,
+ * when the film is put together, and the preview was the picture and nothing
+ * else — so laying a track under a film and pressing play gave silence, and
+ * the only way to hear what she had made was to pay for the render.
+ *
+ * ── Why the arithmetic lives here ────────────────────────────────────────
+ *
+ * Because the song does not run straight: it starts at `underFrom`, and every
+ * stretch cut out of it with the red lines makes it jump. `stretches` already
+ * works that out for the renderer, which schedules one source per run.
+ *
+ * So this asks `stretches` the same question the renderer asks and reads the
+ * answer back the other way round. A preview with its own copy of "where is
+ * the song now" is a preview that drifts from the film the first time either
+ * is touched — and the drift would be audible rather than visible, which is
+ * the kind nobody can point at.
+ *
+ * `null` when the film has run past the end of the song, which is a real
+ * answer: there is nothing to play, and a number there would be a position in
+ * a file that has ended.
+ */
+export function songSecond(edit: Edit, second: number): number | null {
+  if (!edit.under) return null;
+  const long = runs(edit);
+  if (long <= 0) return null;
+  for (const run of stretches(edit.underSkips ?? [], edit.underFrom ?? 0, long)) {
+    if (second >= run.at && second < run.at + run.long) return run.from + (second - run.at);
+  }
+  return null;
 }
 
 /**

@@ -991,6 +991,18 @@ try {
         Math.abs((now?.x ?? 0) - (was?.x ?? 0)) > 20 || Math.abs((now?.y ?? 0) - (was?.y ?? 0)) > 20,
         `it was at ${Math.round(was?.x ?? 0)},${Math.round(was?.y ?? 0)} and is at ${Math.round(now?.x ?? 0)},${Math.round(now?.y ?? 0)}`);
 
+      /* ── And off again ──────────────────────────────────────────
+
+         Carli, 5 October 2026: *"Daar is nie 'n knoppie om 'n logo uit te
+         haal en te delete nie."*
+
+         A one-way door until today, and a worse one since the room started
+         remembering the project: reloading the page used to clear a logo
+         chosen by mistake, and now it brings it back with everything else. */
+      check('  and there is a way to take the logo off again',
+        (await p.locator('[data-editormarkoff]').count()) === 1,
+        'the picker put one on and nothing took one off');
+
       check('  and a way back to a corner appears once it has been moved',
         (await p.locator('[data-editormarkreset]').count()) === 1,
         'a drag with no way back is a one-way door');
@@ -1489,6 +1501,115 @@ try {
       }
     }
 
+    /* ── The song under the preview, and the cursor over every lane ──────
+
+       Carli, 5 October 2026: *"Wanneer ek die musiek tydlyn in sit en ek druk
+       play, dan hoor mens nie die klank binne die video nie."* And: *"Daai
+       cursor moet oor die hele tydlyn strek en ook die klankbane vang en
+       speel."*
+
+       The bed was mixed in `stitch.ts` and nowhere else, so it existed only in
+       the finished file — press play and the room was silent. And the
+       playhead was drawn inside the picture lane, so it stopped at the bottom
+       of the blocks and said nothing about where the words or the music were
+       at that second.
+
+       A WAV written here rather than a file on disk: a header and a few
+       thousand samples is all this needs, and a fixture in the repository is
+       a second thing to keep in step. */
+    const song = await p.evaluate(() => {
+      const rate = 8000;
+      const long = 6;
+      const n = rate * long;
+      const bytes = new ArrayBuffer(44 + n * 2);
+      const view = new DataView(bytes);
+      const put = (at, text) => { for (let i = 0; i < text.length; i += 1) view.setUint8(at + i, text.charCodeAt(i)); };
+      put(0, 'RIFF'); view.setUint32(4, 36 + n * 2, true); put(8, 'WAVE');
+      put(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true); view.setUint32(24, rate, true);
+      view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+      put(36, 'data'); view.setUint32(40, n * 2, true);
+      for (let i = 0; i < n; i += 1) {
+        view.setInt16(44 + i * 2, Math.round(Math.sin((i / rate) * 220 * 2 * Math.PI) * 12000), true);
+      }
+      return Array.from(new Uint8Array(bytes));
+    });
+
+    await bench('sound');
+    await p.locator('[data-editorunder] input[type="file"]').setInputFiles({
+      name: 'bed.wav', mimeType: 'audio/wav', buffer: Buffer.from(song),
+    }).catch(() => undefined);
+    await p.waitForTimeout(1500);
+
+    check('a track put under the film is on the music lane',
+      (await p.locator('[data-editorbed]').count()) === 1,
+      'nothing below means anything without it');
+
+    check('  and the room has it to play, not only to draw',
+      (await p.locator('[data-editorbedsound]').count()) === 1,
+      '"dan hoor mens nie die klank binne die video nie" — the bed was mixed'
+      + ' at render time and nowhere else, so the only way to hear what she had'
+      + ' made was to pay for it');
+
+    if ((await p.locator('[data-editorbedsound]').count()) === 1) {
+      await p.locator('[data-editortrack]').click({ position: { x: 60, y: 20 } }).catch(() => undefined);
+      await p.waitForTimeout(600);
+      const where = await p.evaluate(() => {
+        const a = document.querySelector('[data-editorbedsound]');
+        const said = document.querySelector('[data-editorruns]')?.textContent ?? '';
+        return { song: a?.currentTime ?? -1, clock: Number.parseFloat(said) };
+      });
+      check('  and it is wound to where the playhead is standing',
+        Math.abs(where.song - where.clock) < 0.4,
+        `the song is at ${where.song?.toFixed(2)}s with the film at`
+        + ` ${where.clock?.toFixed(2)}s — played from the top it would sit at`
+        + ' nought wherever she scrubbed to');
+
+      /* Two samples while it runs rather than one at the end, and the film
+         is wound back first. The fixture film is two seconds long: measured
+         after a wait, the bed is correctly PAUSED because the film has
+         finished, and the probe would be reporting the right behaviour as a
+         fault. What is being asked is whether it moves while the film moves. */
+      await p.locator('[data-editorrewind]').click();
+      await p.waitForTimeout(400);
+      await p.locator('[data-editorplayall]').click();
+      await p.waitForTimeout(300);
+      const first = await p.evaluate(() => {
+        const a = document.querySelector('[data-editorbedsound]');
+        return { at: a?.currentTime ?? -1, paused: a?.paused ?? true };
+      });
+      await p.waitForTimeout(600);
+      const second = await p.evaluate(
+        () => document.querySelector('[data-editorbedsound]')?.currentTime ?? -1,
+      );
+      check('  and it really plays when the film does',
+        !first.paused && second > first.at + 0.2,
+        `${first.at?.toFixed(2)}s then ${second?.toFixed(2)}s — an element that`
+        + ' is seeked but never played is the same silence with a number on it');
+
+      await p.locator('[data-editorplayall]').click();
+      await p.waitForTimeout(700);
+      check('  and stops when the film stops',
+        await p.evaluate(() => document.querySelector('[data-editorbedsound]')?.paused ?? false),
+        'a bed still playing over a paused film is worse than no bed');
+    }
+
+    /* ── One cursor, across every lane ──────────────────────────────── */
+    const head = await p.locator('[data-editorplayhead]').boundingBox();
+    const pictureLane = await p.locator('[data-editortrack]').boundingBox();
+    const music = await p.locator('[data-editorsoundlane]').boundingBox();
+    check('the cursor runs across the whole clock, not only the picture lane',
+      !!head && !!pictureLane && (head.height ?? 0) > (pictureLane.height ?? 0) + 40,
+      `${Math.round(head?.height ?? 0)}px of cursor against a ${Math.round(pictureLane?.height ?? 0)}px`
+      + ' picture lane — a line that stops at the blocks says nothing about'
+      + ' where the words or the music are at that second');
+
+    check('  and reaches the music lane, which is the point of it',
+      !!head && !!music
+      && head.y <= music.y + 2 && head.y + head.height >= music.y + music.height - 2,
+      `cursor ${Math.round(head?.y ?? 0)}–${Math.round((head?.y ?? 0) + (head?.height ?? 0))},`
+      + ` music lane ${Math.round(music?.y ?? 0)}–${Math.round((music?.y ?? 0) + (music?.height ?? 0))}`);
+
     const grip2 = p.locator('[data-editorlanegrip]');
     check('the clock has a grip for its own height',
       (await grip2.count()) === 1,
@@ -1521,8 +1642,18 @@ try {
       await grip2.hover();
       await p.waitForTimeout(200);
       const now = await grip2.boundingBox();
+      /* Clamped into the window rather than aimed two hundred pixels up from
+         wherever the grip happens to be.
+
+         `hover` scrolls the grip into view, and after the clock has been made
+         taller it lands near the top: the old aim of `y - 200` was then off
+         the top of the window, the pointer stopped being delivered partway,
+         and the clock shrank by eighteen pixels instead of to its floor. The
+         probe reported a working grip as broken, which is the direction that
+         gets a check switched off. */
+      const upTo = Math.max(2, (now?.y ?? 0) - 200);
       await p.mouse.down();
-      await p.mouse.move((now?.x ?? 0) + (now?.width ?? 0) / 2, (now?.y ?? 0) - 200, { steps: 12 });
+      await p.mouse.move((now?.x ?? 0) + (now?.width ?? 0) / 2, upTo, { steps: 12 });
       await p.mouse.up();
       await p.waitForTimeout(400);
       check('  and back up makes it small again, so the picture gets the room',
@@ -2138,6 +2269,48 @@ try {
 
   const wide = await p.evaluate(() => document.documentElement.scrollWidth);
   const seen = p.viewportSize()?.width ?? 0;
+  /* ── Putting the project down ────────────────────────────────────────
+
+     Carli, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,
+     new project, om die huidige project weg te vat en met 'n nuwe een te
+     begin."*
+
+     Last in the walk because it empties the clock, and the press that undoes
+     it is the one being checked: it goes through `commit`, so one Back brings
+     the whole thing back. A Start over that could not be taken back would be
+     the fault of 5 October with a button on it. */
+  await bench('folder');
+  await p.waitForTimeout(400);
+  const over = p.locator('[data-editornewproject]');
+  check('there is a way to start a new project',
+    (await over.count()) === 1,
+    'beside the way in, which is where somebody stands when they have'
+    + ' finished one thing');
+
+  if ((await over.count()) === 1) {
+    const had = await p.locator('[data-editorblock]').count();
+    await over.click();
+    await p.waitForTimeout(300);
+    check('  and one press does not do it',
+      (await p.locator('[data-editorblock]').count()) === had,
+      'a mis-tap on a phone is one press, and the thing behind this one is an'
+      + ' afternoon');
+
+    await over.click();
+    await p.waitForTimeout(700);
+    check('  and the second press really empties the clock',
+      (await p.locator('[data-editorblock]').count()) === 0,
+      `${await p.locator('[data-editorblock]').count()} blocks left`);
+
+    await p.locator('[data-editorundo]').click();
+    await p.waitForTimeout(800);
+    check('  and one press of Back brings the whole project back',
+      (await p.locator('[data-editorblock]').count()) === had,
+      `${await p.locator('[data-editorblock]').count()} of ${had} blocks — the`
+      + ' material is still on the pieces in memory, so this is a history step'
+      + ' like any other rather than a door that locks behind her');
+  }
+
   check('the video desk still fits its own window with the editor on it',
     wide <= seen + 1,
     `${wide}px inside a ${seen}px window — something in the editor pushes the page sideways`);

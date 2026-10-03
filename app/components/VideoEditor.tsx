@@ -90,7 +90,8 @@ import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
-  captionAt, cutOut, cutSong, move, runs, split, splitHere, startsAt, trim, wordsReach,
+  captionAt, cutOut, cutSong, move, runs, songSecond, split, splitHere, startsAt, trim,
+  wordsReach,
   type Edit, type Piece,
 } from '../lib/videoedit';
 import {
@@ -705,6 +706,22 @@ export default function VideoEditor({
      other would be two clips claiming the same seconds. The music is its own
      lane and its own cut — see `cutSong`. */
   const [lane, setLane] = useState<'film' | 'shots' | 'music'>('film');
+
+  /* ── Starting over ──────────────────────────────────────────────────────
+
+     Carli, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,
+     new project, om die huidige project weg te vat en met 'n nuwe een te
+     begin."*
+
+     It became necessary the day the room started remembering. Before that,
+     leaving and coming back WAS a new project — badly, by losing the old one.
+     Now the film is still there when she comes back, which is right, and there
+     was no other way to put it down.
+
+     Two presses and not a dialog. The second press is the confirmation and the
+     button says so in between; a mis-tap on a phone is one press, and the
+     thing behind this one is an afternoon. */
+  const [starting, setStarting] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<{ url: string; blob: Blob; ext: string; seconds: number } | null>(null);
@@ -1112,7 +1129,66 @@ export default function VideoEditor({
        the slider means one thing everywhere. Louder than the material needs a
        gain node, which this preview does not have and the Pro Booth does. */
     v.volume = Math.max(0, Math.min(1, piece?.loud ?? 1));
+    /* The element's own `muted={!piece.sound}` already keeps a silent shot
+       silent here, which is right and stays where it is. */
   }, [piece?.speed, piece?.loud, source]);
+
+  /* ── The song, under the preview ────────────────────────────────────────
+
+     Carli, 5 October 2026: *"Wanneer ek die musiek tydlyn in sit en ek druk
+     play, dan hoor mens nie die klank binne die video nie."*
+
+     The bed was mixed in `stitch.ts` and nowhere else, so it existed only in
+     the finished file: laying a track under a film and pressing play gave
+     silence, and the only way to hear what she had made was to pay for the
+     render. Everything this room is for — matching a cut to a drum hit,
+     hearing whether a caption lands on the line — needs the song in the
+     preview.
+
+     An element rather than the renderer's audio graph. The graph is built for
+     writing a file and schedules one source per surviving stretch; this has to
+     follow a playhead somebody is dragging about, and an element that can be
+     seeked is the right shape for that. */
+  const bed = useRef<HTMLAudioElement | null>(null);
+  const [bedUrl, setBedUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!edit.under) { setBedUrl(null); return undefined; }
+    const url = URL.createObjectURL(edit.under);
+    setBedUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [edit.under]);
+
+  useEffect(() => {
+    const a = bed.current;
+    if (!a) return;
+    /* The same clamp the picture gets, and for the same reason: an element's
+       `volume` throws above one, while the slider's range is kept at 0–2
+       everywhere so it means one thing across the app. */
+    a.volume = Math.max(0, Math.min(1, edit.underLoud ?? 1));
+  }, [edit.underLoud, bedUrl]);
+
+  /* ── Kept on the film's clock ──────────────────────────────────────────
+
+     The song does not run straight: it starts at `underFrom`, and every
+     stretch cut out of it with the red lines makes it jump. `songSecond` asks
+     `stretches` — the same function the renderer schedules from — so the
+     preview and the film cannot disagree about where the song is.
+
+     Corrected rather than driven. `at` changes a few times a second while the
+     film plays, and setting `currentTime` on every one of those would stutter
+     the audio; so the element is left to run and is only pulled back when it
+     has drifted further than a quarter of a second, which is also exactly
+     what a skip or a scrub looks like. */
+  useEffect(() => {
+    const a = bed.current;
+    if (!a || !bedUrl) return;
+    const want = songSecond(edit, at);
+    if (want === null) { a.pause(); return; }
+    if (Number.isFinite(a.duration) && want > a.duration) { a.pause(); return; }
+    if (Math.abs(a.currentTime - want) > 0.25) a.currentTime = want;
+    if (running) { if (a.paused) void a.play().catch(() => undefined); }
+    else a.pause();
+  }, [at, running, edit, bedUrl]);
 
   /* A waiting seek, landed the moment the element can take one. */
   useEffect(() => {
@@ -2158,6 +2234,10 @@ export default function VideoEditor({
                 src={source ?? undefined}
                 playsInline
                 muted={!piece.sound}
+                /* And the song under it, on the same clock. Hidden because it
+                   is not a player — it is the bed, following the playhead so
+                   the preview sounds like the film. See the effect beside
+                   `songSecond` for why it is corrected rather than driven. */
                 /* Through `gradeCss`, which is the same function `cutFrom`
                    runs — so a dial moved here changes the picture she is
                    judging and the film that comes out, in that order and by
@@ -2169,6 +2249,9 @@ export default function VideoEditor({
                   piece.fill ? 'object-cover' : 'object-contain'
                 }`}
               />
+              {bedUrl && (
+                <audio ref={bed} data-editorbedsound src={bedUrl} preload="auto" className="hidden" />
+              )}
               {wordsNow.said && (
                 <div
                   data-editorwordsdrag
@@ -2845,62 +2928,7 @@ export default function VideoEditor({
                     <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
                   </div>
 
-                  {/* ── The two red lines ─────────────────────────────
-
-                      Carli, 4 October 2026: *"Dit sal goed wees dat daar twee
-                      ekstra rooi lyne is waar mens 'n stuk kan uit cut."*
-
-                      Red, and the only red in this room, because they are the
-                      only thing in it that deletes. Everything else here is
-                      green or amber and reversible.
-
-                      Drawn under the playhead and over the blocks, with the
-                      span between them shaded so what will go is a shape
-                      rather than two lines somebody has to read as a pair.
-                      `pointer-events-none` like the playhead: tapping "on the
-                      line" has to reach the block underneath, and the lines
-                      are moved from the bench rather than dragged, so there is
-                      nothing to grab. */}
-                  {span && (
-                    <>
-                      <div
-                        data-editorspan
-                        aria-hidden
-                        style={{
-                          left: Math.min(span.from, total) * perSecond,
-                          width: Math.max(0, Math.min(span.to, total) - span.from) * perSecond,
-                        }}
-                        className="pointer-events-none absolute inset-y-0 bg-red-500/20"
-                      />
-                      <div
-                        data-editorspanin
-                        aria-hidden
-                        style={{ left: Math.min(span.from, total) * perSecond }}
-                        className="pointer-events-none absolute inset-y-0 w-0.5 bg-red-500"
-                      >
-                        <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-red-500" />
-                      </div>
-                      <div
-                        data-editorspanout
-                        aria-hidden
-                        style={{ left: Math.min(span.to, total) * perSecond }}
-                        className="pointer-events-none absolute inset-y-0 w-0.5 bg-red-500"
-                      >
-                        <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-red-500" />
-                      </div>
-                    </>
-                  )}
-
-                  {/* The playhead. Drawn over the blocks and ignoring
-                      pointers, so tapping "on the line" still reaches the
-                      track underneath and moves it. */}
-                  <div
-                    data-editorplayhead
-                    style={{ left: Math.min(at, total) * perSecond }}
-                    className="pointer-events-none absolute inset-y-0 w-0.5 bg-emerald-400"
-                  >
-                    <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                  </div>
+                </div>
                 </div>
 
                 {/* ── The grip that makes the clock taller ──────────────
@@ -2928,25 +2956,47 @@ export default function VideoEditor({
                     event.preventDefault();
                     setLaneTall((was) => Math.max(SHORTEST_LANE, Math.min(TALLEST_LANE, was + by)));
                   }}
+                  /* ── Listened for on the window, not on the grip ──────
+
+                     Every other drag in this room holds the pointer on the
+                     thing being dragged: a caption block stays under the
+                     finger, so listeners on the node see the whole gesture.
+                     This one is different in a way that is easy to miss — the
+                     grip MOVES as the clock changes height, by exactly the
+                     amount of the drag, so the pointer is off it after the
+                     first few pixels.
+
+                     `setPointerCapture` is meant to cover that and did not:
+                     `audit/editor.mjs` measured a drag of a hundred and forty
+                     pixels moving the clock eighteen, and a trace of it
+                     showed the height changing on the FIRST pointermove and
+                     never again.
+
+                     The window hears every move there is. It costs two
+                     listeners for the length of a gesture and it cannot lose
+                     one. */
                   onPointerDown={(event) => {
-                    const node = event.currentTarget;
+                    /* Stops the browser starting its own gesture on this press.
+                       Without it Chromium began one after the first move and
+                       fired `pointercancel` at the window, which ended the
+                       resize eighteen pixels into a hundred-and-forty-pixel
+                       drag — once, every time, measured. */
+                    event.preventDefault();
                     const startY = event.clientY;
                     const startTall = laneTall;
-                    node.setPointerCapture(event.pointerId);
                     const move = (m: PointerEvent) => {
                       setLaneTall(Math.max(SHORTEST_LANE, Math.min(
                         TALLEST_LANE, startTall + (m.clientY - startY),
                       )));
                     };
                     const done = () => {
-                      node.removeEventListener('pointermove', move);
-                      node.removeEventListener('pointerup', done);
-                      node.removeEventListener('pointercancel', done);
-                      try { node.releasePointerCapture(event.pointerId); } catch { /* gone */ }
+                      window.removeEventListener('pointermove', move);
+                      window.removeEventListener('pointerup', done);
+                      window.removeEventListener('pointercancel', done);
                     };
-                    node.addEventListener('pointermove', move);
-                    node.addEventListener('pointerup', done);
-                    node.addEventListener('pointercancel', done);
+                    window.addEventListener('pointermove', move);
+                    window.addEventListener('pointerup', done);
+                    window.addEventListener('pointercancel', done);
                   }}
                   className="mt-1 flex h-9 cursor-ns-resize touch-none items-center justify-center gap-2 rounded-lg"
                   style={{ background: 'rgba(52,211,153,0.10)' }}
@@ -3103,8 +3153,85 @@ export default function VideoEditor({
                     </span>
                   )}
                 </div>
+
+                {/* ── The cursor, over every lane ─────────────────────────
+
+                    Carli, 5 October 2026: *"Daai cursor moet oor die hele
+                    tydlyn strek en ook die klankbane vang en speel."*
+
+                    It was drawn inside the picture lane, so it stopped at the
+                    bottom of the blocks and said nothing about where the words
+                    or the music were at that second — which is most of what a
+                    person is reading a stack of lanes FOR. Lining a drum hit
+                    up against a cut needs one line through both.
+
+                    Up here instead of in the track, because this is the
+                    element every lane is measured against: they all start at
+                    its left edge and are drawn at the same `perSecond`, so one
+                    line across it is in the right place on all of them by
+                    construction rather than by three sums agreeing.
+
+                    Still `pointer-events-none`, and that matters more now than
+                    it did: the line crosses every lane, and one that swallowed
+                    a press would make a vertical stripe of the whole clock
+                    dead to the touch. */}
+                {/* ── The two red lines ─────────────────────────────
+
+                    Carli, 4 October 2026: *"Dit sal goed wees dat daar twee
+                    ekstra rooi lyne is waar mens 'n stuk kan uit cut."*
+
+                    Red, and the only red in this room, because they are the
+                    only thing in it that deletes. Everything else here is
+                    green or amber and reversible.
+
+                    Drawn under the playhead and over the blocks, with the
+                    span between them shaded so what will go is a shape
+                    rather than two lines somebody has to read as a pair.
+                    `pointer-events-none` like the playhead: tapping "on the
+                    line" has to reach the block underneath, and the lines
+                    are moved from the bench rather than dragged, so there is
+                    nothing to grab. */}
+                {span && (
+                  <>
+                    <div
+                      data-editorspan
+                      aria-hidden
+                      style={{
+                        left: Math.min(span.from, total) * perSecond,
+                        width: Math.max(0, Math.min(span.to, total) - span.from) * perSecond,
+                      }}
+                      className="pointer-events-none absolute inset-y-0 bg-red-500/20"
+                    />
+                    <div
+                      data-editorspanin
+                      aria-hidden
+                      style={{ left: Math.min(span.from, total) * perSecond }}
+                      className="pointer-events-none absolute inset-y-0 w-0.5 bg-red-500"
+                    >
+                      <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-red-500" />
+                    </div>
+                    <div
+                      data-editorspanout
+                      aria-hidden
+                      style={{ left: Math.min(span.to, total) * perSecond }}
+                      className="pointer-events-none absolute inset-y-0 w-0.5 bg-red-500"
+                    >
+                      <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-red-500" />
+                    </div>
+                  </>
+                )}
+
+                {/* The playhead. Drawn over the blocks and ignoring
+                    pointers, so tapping "on the line" still reaches the
+                    track underneath and moves it. */}
+                <div
+                  data-editorplayhead
+                  style={{ left: Math.min(at, total) * perSecond }}
+                  className="pointer-events-none absolute inset-y-0 w-0.5 bg-emerald-400"
+                >
+                  <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                </div>
               </div>
-            </div>
 
             {/* Playing the whole film in place, rather than only on export.
                 It hops the viewer from piece to piece as the clock runs,
@@ -3297,6 +3424,45 @@ export default function VideoEditor({
               onChange={(event) => { void bringIn(event.target.files); event.target.value = ''; }}
             />
           </label>
+
+          {/* ── And putting this one down ──────────────────────────────
+
+              Beside the way in, because that is where somebody stands when
+              they have finished one thing and want to start the next.
+
+              Through `commit`, so it is a history step like everything else:
+              one press of Back brings the whole project back. The material is
+              still in memory on the pieces, so the save that follows puts it
+              straight back on the disk — which is the difference between a
+              button that is safe to press and one that is not. */}
+          {edit.pieces.length > 0 && (
+            <button
+              type="button"
+              data-editornewproject
+              onClick={() => {
+                if (!starting) { setStarting(true); return; }
+                setStarting(false);
+                commit(() => NOTHING);
+                setMark(null);
+                setMarkName('');
+                setMade(null);
+                setPicked('');
+                setAt(0);
+                setRunning(false);
+                setBench(null);
+              }}
+              onBlur={() => setStarting(false)}
+              className="min-h-[44px] rounded-xl border px-3.5 py-2.5 text-sm font-semibold inline-flex items-center gap-2"
+              style={starting
+                ? { borderColor: '#ef4444', background: 'rgba(239,68,68,0.22)', color: '#fecaca' }
+                : { borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.12)', color: INK }}
+            >
+              <Trash2 className="w-4 h-4" />
+              {starting
+                ? t('edit.newSure', 'Really — put this film down')
+                : t('edit.newProject', 'New project')}
+            </button>
+          )}
 
           {/* ── Or something already in her channel ──────────────────────
 
@@ -4185,6 +4351,31 @@ export default function VideoEditor({
             </label>
             {mark && (
               <>
+              {/* ── And off again ───────────────────────────────────────
+
+                  Carli, 5 October 2026: *"Daar is nie 'n knoppie om 'n logo
+                  uit te haal en te delete nie."*
+
+                  A one-way door: the picker put a logo on and nothing took it
+                  off, so a mark chosen by mistake was on the film until the
+                  page was reloaded — which, since 5 October, no longer loses
+                  the project and therefore no longer clears it either. The two
+                  changes together turned a nuisance into a trap.
+
+                  The size, the turn and the fade are left where they are. She
+                  set those by eye and a second logo almost always wants the
+                  same treatment; clearing them would make every replacement
+                  start from the defaults. */}
+              <button
+                type="button"
+                data-editormarkoff
+                onClick={() => { setMark(null); setMarkName(''); }}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-300 inline-flex items-center gap-2 hover:border-rose-500 hover:text-rose-300"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('edit.markOff', 'Take the logo off')}
+              </button>
+
               {/* Bigger and smaller. A logo that cannot be resized is a logo
                   drawn for one video: the mark that reads on a wide advert is
                   twice the size of the one that reads on a vertical clip. */}
