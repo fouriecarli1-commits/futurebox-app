@@ -79,6 +79,7 @@ import {
   type Corner, type Spot,
 } from '../lib/logomark';
 import { fit } from '../lib/imagefile';
+import { accessToken } from '../lib/cloud';
 import { myVideos, type MyVideo } from '../lib/filmed';
 import { keepFilm, loadFilm } from '../lib/filmkeep';
 import { downloadBlob, safeFilename } from '../lib/library';
@@ -1967,9 +1968,28 @@ export default function VideoEditor({
          retried is one charge rather than two. */
       const ref = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       try {
+        /* ── The token, without which this was never payable ──────────
+
+           Carli, 5 October 2026, with a photograph: *"Wanneer ek die video
+           wil export sê dit so. Al is ek in geteken"* — over "Sign in first
+           — credits belong to an account."
+
+           She was signed in. This call sent a content type and nothing else,
+           and `callerFrom` reads the `Authorization` header and only that —
+           there is no cookie session in this app. So the route could not see
+           anybody, answered 401, and the room printed the route's own
+           sentence, which was true about the request and wrong about her.
+
+           Every other paid call in the app carries this. `check:paidcall`
+           now walks the routes that charge and the calls that reach them, so
+           a fourth one cannot be written without it. */
+        const token = await accessToken();
         const answer = await fetch('/api/madehere', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           /* What is IN the film, as counts — never a price.
  
              The route runs `billFor` on these itself, which is the same

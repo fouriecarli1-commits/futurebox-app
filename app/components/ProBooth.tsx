@@ -1432,9 +1432,19 @@ export default function ProBooth({
    */
   const payFor = useCallback(async (length: number): Promise<boolean> => {
     try {
+      /* `callerFrom` reads the `Authorization` header and nothing else —
+         there is no cookie session here — so without this the route cannot
+         see a signed-in person and answers "Sign in first". It did, for as
+         long as this call has existed, and the sentence it printed was true
+         about the request and wrong about her. Found in the cutting room on
+         5 October 2026; this call had the identical hole. */
+      const token = await accessToken();
       const answer = await fetch('/api/madehere', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ kind: 'mix', seconds: length, ref: signature(length) }),
       });
       if (answer.ok) return true;

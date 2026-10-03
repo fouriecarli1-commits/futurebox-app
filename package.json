@@ -131,6 +131,7 @@
     "check:heardhere": "tsx scripts/check-heardhere.mts",
     "check:soundkeys": "tsx scripts/check-soundkeys.mts",
     "check:soundtools": "tsx scripts/check-soundtools.mts",
+    "check:paidcall": "tsx scripts/check-paidcall.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",

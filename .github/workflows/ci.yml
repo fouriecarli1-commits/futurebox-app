@@ -313,6 +313,8 @@ jobs:
         run: npm run check:soundkeys
       - name: "The song's speed and repeat, reducing noise, and the booth's own listen"
         run: npm run check:soundtools
+      - name: "Every call that spends credits says who is spending"
+        run: npm run check:paidcall
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

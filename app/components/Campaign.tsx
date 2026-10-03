@@ -35,6 +35,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X } from 'lucide-react';
+import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { matchByTitle, useCopilotOps } from '../lib/copilotactions';
@@ -416,9 +417,16 @@ export default function Campaign({
     setBusy(true);
     setProblem(null);
     try {
+      /* The same hole the two "made here" calls had: `callerFrom` reads the
+         `Authorization` header and nothing else, so a signed-in person was
+         told to sign in. This desk's whole paid step was unreachable. */
+      const token = await accessToken();
       const response = await fetch('/api/campaign', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           what,
           who,
