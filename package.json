@@ -248,6 +248,7 @@
     "check:legalpage": "node audit/legalpage.mjs",
     "check:editor": "node audit/editor.mjs",
     "check:launchwalk": "node audit/launchmark.mjs",
+    "check:playlistname": "node audit/playlistname.mjs",
     "check:whereiwas": "node audit/whereiwas.mjs",
     "check:backout": "node audit/backout.mjs",
     "check:stitch": "node audit/stitch.mjs",

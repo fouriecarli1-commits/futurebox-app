@@ -99,6 +99,23 @@ export default function Channel({
   const [lists, setLists] = useState<Playlist[]>([]);
   const [openList, setOpenList] = useState<string | null>(null);
 
+  /* ── Which playlist is being renamed ────────────────────────────────────
+
+     Carli, 4 October 2026: *"Wanneer mens 'n new playlist add, dan moet daar
+     darem 'n button wees wat sê rename."*
+
+     The name has always been editable. It was a bare `<input>` with no border,
+     no label and the page's own background, sitting where a heading sits — so
+     it read as the playlist's title, which is exactly what it looked like, and
+     there was nothing anywhere to suggest a cursor would land in it. A control
+     nobody can see is not a control.
+
+     So the title is a title now, and renaming is a button that says Rename.
+     Holding the id rather than a flag because the panel can switch lists
+     underneath it: a boolean would leave the next playlist opened in a state
+     she never asked for. */
+  const [renaming, setRenaming] = useState<string | null>(null);
+
   /* Open a playlist they named. Matched on its name the same way songs are
      matched on their titles, and left alone when nothing is close. */
   useCopilotOps('channels', {
@@ -598,6 +615,10 @@ export default function Channel({
               const made = newPlaylist(t('chan.newName', 'New playlist'));
               update(lists.concat(made));
               setOpenList(made.id);
+              /* Straight into the rename. A list called "New playlist" is a
+                 list she is about to name, and this is the one moment she is
+                 certainly thinking about what it is called. */
+              setRenaming(made.id);
             }}
             className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
           >
@@ -631,13 +652,53 @@ export default function Channel({
         {list && (
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
             <div className="flex items-center gap-2">
-              <input
-                value={list.name}
-                onChange={(event) =>
-                  update(lists.map((one) => (one.id === list.id ? { ...one, name: event.target.value } : one)))
-                }
-                className="flex-1 min-w-0 bg-transparent text-sm font-bold text-white focus:outline-none"
-              />
+              {renaming === list.id ? (
+                <input
+                  data-listname
+                  autoFocus
+                  value={list.name}
+                  onChange={(event) =>
+                    update(lists.map((one) => (one.id === list.id ? { ...one, name: event.target.value } : one)))
+                  }
+                  /* Enter finishes it, because a field with no visible Save is
+                     a field somebody presses Enter in. Escape and leaving it
+                     do the same — there is nothing to cancel, the name is
+                     already saved on every keystroke. */
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === 'Escape') setRenaming(null); }}
+                  onBlur={() => setRenaming(null)}
+                  className="flex-1 min-w-0 min-h-[44px] rounded-lg border border-emerald-500 bg-zinc-950 px-2.5 text-sm font-bold text-white focus:outline-none"
+                />
+              ) : (
+                <span data-listtitle className="flex-1 min-w-0 truncate text-sm font-bold text-white">
+                  {list.name}
+                </span>
+              )}
+              <button
+                type="button"
+                data-listrename
+                /* Keeps the focus in the field while this is pressed, so the
+                   input's own `onBlur` does not fire first and hand the click
+                   a state where nothing is being renamed — which would read as
+                   Done turning renaming back ON. Found by the probe below
+                   pressing Done and watching the field stay. */
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  if (renaming === list.id) { setRenaming(null); return; }
+                  /* An empty name is not a name. If she cleared it and walked
+                     away, the chip above this panel would be a blank button —
+                     so it goes back to what a new list is called rather than
+                     staying nothing. */
+                  if (!list.name.trim()) {
+                    update(lists.map((one) => (one.id === list.id
+                      ? { ...one, name: t('chan.newName', 'New playlist') } : one)));
+                  }
+                  setRenaming(list.id);
+                }}
+                className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm font-semibold flex items-center gap-1.5 flex-shrink-0"
+              >
+                {renaming === list.id ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                {renaming === list.id ? t('chan.renameDone', 'Done') : t('chan.rename', 'Rename')}
+              </button>
               <button
                 type="button"
                 onClick={() => void play(list.trackIds[0], list.trackIds.slice(1))}

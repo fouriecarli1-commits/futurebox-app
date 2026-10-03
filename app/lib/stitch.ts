@@ -68,7 +68,7 @@
 import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
 import { fontFor } from './videofonts';
 import { brushPath } from './videopaint';
-import { stretches } from './videospan';
+import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 
 export interface Scene {
@@ -1060,8 +1060,12 @@ export async function stitch(cut: Cut): Promise<Made> {
                Undefined ends mean the whole shot, which is what a caption did
                before it could be timed. */
             const shown = (video.currentTime - view.from) / fast;
-            if (painted.captionFrom !== undefined && shown < painted.captionFrom) return;
-            if (painted.captionTo !== undefined && shown > painted.captionTo) return;
+            /* The one copy of "are the words up yet", shared with the room's
+               preview — see `wordsUp`. This gate used to be written out here
+               and nowhere else, so the preview showed a shortened caption over
+               the whole clip while the film it made was right, and the only
+               way to find that out was to pay for the render and watch it. */
+            if (!wordsUp({ from: painted.captionFrom, to: painted.captionTo }, shown)) return;
             drawCaption(context, caption, cut.width, cut.height, {
               font: painted.captionFont,
               size: painted.captionSize,

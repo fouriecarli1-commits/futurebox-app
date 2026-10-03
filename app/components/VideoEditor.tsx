@@ -56,7 +56,7 @@ import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
-import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
+import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan, wordsUp } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import {
@@ -759,6 +759,7 @@ export default function VideoEditor({
   /** Which video's file is being pulled down, so its own card can say so. */
   const [pulling, setPulling] = useState<string | null>(null);
 
+
   const [asking, setAsking] = useState(false);
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
 
@@ -814,6 +815,41 @@ export default function VideoEditor({
      is seeked to — is worked out from it by `atSecond`, so there is one
      answer to "where are we" rather than one per control. */
   const [at, setAt] = useState(0);
+
+  /* ── Whether the words are up where the playhead is standing ───────────
+
+     Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+     hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
+
+     She had dragged a caption in to half its clip and this room went on
+     drawing it over all of it. The FILM was right — `stitch.ts` has gated on
+     the caption's ends since the lane was built — so the room was lying about
+     a film that was correct, and the only way to find that out was to pay for
+     the render and watch it.
+
+     `wordsUp` is now the one answer and `stitch.ts` asks it too, because a
+     preview and a renderer that each decide for themselves is how the two
+     came apart in the first place.
+
+     `at` is the film's clock and `startsAt` is where this piece begins on it,
+     so the difference is seconds into the piece — the same number the
+     renderer works out from the file's position, and the same one the lane
+     draws the block from.
+
+     ── And a ghost rather than nothing, while she is setting them ────────
+
+     Hidden outright, the words bench becomes unusable the moment a caption is
+     shortened: the colour, the face, the box and the position are all set by
+     looking at the thing, and there would be nothing to look at. So on that
+     bench, and only there, a caption whose moment has passed stays as a faint
+     outline she can still take hold of. Anywhere else the room shows exactly
+     what the film will. */
+  const wordsNow = useMemo(() => {
+    if (!piece) return { up: false, ghost: false };
+    const into = at - startsAt(edit, piece.id);
+    const up = wordsUp({ from: piece.wordsFrom, to: piece.wordsTo }, into);
+    return { up, ghost: !up && bench === 'words' };
+  }, [piece, at, edit, bench]);
   const [running, setRunning] = useState(false);
   const strip = useRef<HTMLDivElement | null>(null);
 
@@ -2044,9 +2080,10 @@ export default function VideoEditor({
                   piece.fill ? 'object-cover' : 'object-contain'
                 }`}
               />
-              {(piece.words ?? '').trim().length > 0 && (
+              {(piece.words ?? '').trim().length > 0 && (wordsNow.up || wordsNow.ghost) && (
                 <div
                   data-editorwordsdrag
+                  data-editorwordsghost={wordsNow.ghost ? 'true' : undefined}
                   /* Through `holding`/`held` and `slide`, not `tweak`: a drag
                      across the frame is a few hundred pointermoves, and one of
                      them per history step was the other half of the fault the
@@ -2069,7 +2106,11 @@ export default function VideoEditor({
                        the right of where they land in the film, which is the
                        quiet kind of wrong this preview exists to prevent. */
                     transform: `translate(-50%, -50%) rotate(${piece.wordsTurn ?? 0}deg)`,
-                    opacity: piece.wordsSolid ?? 1,
+                    /* Ghosted, not solid, when the playhead is past the
+                       caption's own stretch — see `wordsNow`. */
+                    opacity: wordsNow.ghost ? 0.3 : (piece.wordsSolid ?? 1),
+                    outline: wordsNow.ghost ? `1px dashed ${LIT}` : undefined,
+                    outlineOffset: wordsNow.ghost ? 3 : undefined,
                     /* Approximate, and said so rather than implied: the renderer
                        rounds against the band's MEASURED height, and the band
                        here is a div that has not been measured. It moves the

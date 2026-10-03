@@ -1279,6 +1279,174 @@ try {
     await p.locator('[data-editorundo]').click();
     await p.waitForTimeout(400);
 
+    /* ── The words are on the frame only where their block is ───────────
+
+       Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+       hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
+
+       The FILM was right the whole time — `stitch.ts` has gated on the
+       caption's ends since the lane was built — so the only way to find out
+       that the room was lying was to pay for a render and watch it.
+
+       Set up on the LONGEST piece rather than on whatever the walk is standing
+       on, and that is not tidiness: by this point the selection is a
+       four-hundredth-of-a-second sliver left behind by the split test, and a
+       caption on it is forty thousandths of a second on a lane a thousand
+       pixels long. No sample could land inside it, so the rule measured
+       nothing while reporting a failure. */
+    const picture = await p.locator('[data-editorblock]').evaluateAll(
+      (all) => all
+        .map((el, index) => ({ index, wide: el.getBoundingClientRect().width }))
+        .sort((a, b) => b.wide - a.wide)[0] ?? null,
+    );
+    if (picture) {
+      await p.locator('[data-editorblock]').nth(picture.index).click();
+      await p.waitForTimeout(400);
+      await bench('words');
+      await p.locator('[data-editorwords]').fill('Net hier');
+      await p.waitForTimeout(500);
+
+      /* The widest block on the lane, which is the one just made: a caption
+         typed and not yet dragged covers its whole piece, and this is the
+         longest piece there is. Taken by width rather than by being first in
+         the markup — the lane draws them in the film's order, and the piece
+         this walk is on is not the first one. */
+      const widest = await p.locator('[data-editorwordsblock]').evaluateAll(
+        (all) => all
+          .map((el) => ({ id: el.getAttribute('data-editorwordsblock'), wide: el.getBoundingClientRect().width }))
+          .sort((a, b) => b.wide - a.wide)[0] ?? null,
+      );
+      const block = p.locator(`[data-editorwordsblock="${widest?.id}"]`);
+      const mine = p.locator(`[data-editorwordsto="${widest?.id}"]`);
+      const was = await block.boundingBox();
+
+      /* A quarter of its own width, so the block stays big enough for the
+         sampling below to land both inside it and outside it. */
+      await mine.hover();
+      await p.waitForTimeout(150);
+      const pull = await mine.boundingBox();
+      await p.mouse.move((pull?.x ?? 0) + (pull?.width ?? 0) / 2, (pull?.y ?? 0) + (pull?.height ?? 0) / 2);
+      await p.mouse.down();
+      await p.mouse.move(
+        (pull?.x ?? 0) + (pull?.width ?? 0) / 2 - (was?.width ?? 0) / 4,
+        (pull?.y ?? 0) + (pull?.height ?? 0) / 2,
+        { steps: 10 },
+      );
+      await p.mouse.up();
+      await p.waitForTimeout(500);
+
+      const now = await block.boundingBox();
+      check('a caption dragged in really is narrower than its own shot',
+        (now?.width ?? 0) < (was?.width ?? 0) - 10,
+        `${Math.round(was?.width ?? 0)}px before, ${Math.round(now?.width ?? 0)}px`
+        + ' after — nothing below is worth measuring if this did not happen');
+
+      /* ── Nothing is assumed about where a press lands ─────────────────
+
+         The clock is not an empty strip: the picture blocks sit inside it and
+         can swallow a press, so a click meant for one second can select a
+         piece and scrub nowhere. An assertion that depends on landing where it
+         aimed reports the room broken when it is the aim that missed — which
+         is how the first version of this failed on correct code.
+
+         So the clock is read back after every press and a sample that did not
+         land where it was sent is dropped rather than counted. The seconds are
+         turned into pixels with the lane's OWN `perSecond`, off the element
+         that draws the blocks, so the two sides of the comparison are in one
+         coordinate system rather than in two that happen to line up today. */
+      const perSecond = Number(await p.locator('[data-editortrack]').getAttribute('data-persecond'));
+      const origin = await p.locator('[data-editorwordslane]').evaluate((el) => {
+        const style = getComputedStyle(el);
+        return el.getBoundingClientRect().left
+          + Number.parseFloat(style.borderLeftWidth || '0')
+          + Number.parseFloat(style.paddingLeft || '0');
+      });
+      const trackAt = await p.locator('[data-editortrack]').boundingBox();
+      const onFilmNow = p.locator('[data-editorwordsdrag]');
+      const total = Number.parseFloat((await clockText()).split('/')[1]);
+
+      /* Shut the drawer before sampling. It slides up over the foot of the
+         room and takes the presses meant for the clock — and with it shut the
+         room shows exactly what the film will, which is the thing being
+         measured. The ghost is a words-bench affordance and gets its own
+         assertion below. */
+      await p.locator('[data-cutbench="words"]').click().catch(() => undefined);
+      await p.waitForTimeout(400);
+
+      let sawUp = 0;
+      let sawDown = 0;
+      let agreed = 0;
+      let landed = 0;
+      let outside = null;
+      let disagreed = '';
+      for (let step = 1; step <= 39 && Number.isFinite(total) && perSecond > 0; step += 1) {
+        const want = (total * step) / 40;
+        const landOn = Math.max(1, Math.min(want * perSecond, (trackAt?.width ?? 0) - 2));
+        const pressed = await p.locator('[data-editortrack]')
+          .click({ position: { x: landOn, y: 30 }, timeout: 4000 })
+          .then(() => true, () => false);
+        if (!pressed) continue;
+        await p.waitForTimeout(220);
+        const second = Number.parseFloat(await clockText());
+        if (!Number.isFinite(second) || Math.abs(second - want) > 0.12) continue;
+        landed += 1;
+
+        /* The blocks read back in SECONDS, not in pixels. The lane is a
+           thousand pixels wide and the fixture film is two seconds long, so
+           the whole film is eighty pixels of it: a margin wide enough to keep
+           a rounding out of the answer, written in pixels, swallows most of
+           the film. In seconds the clock's own tenth is the only rounding
+           there is. */
+        const spans = await p.locator('[data-editorwordsblock]').evaluateAll(
+          (all, from) => all.map((el) => {
+            const box = el.getBoundingClientRect();
+            return [(box.left - from.origin) / from.perSecond, (box.right - from.origin) / from.perSecond];
+          }),
+          { origin, perSecond },
+        );
+        const EDGE = 0.11;
+        if (spans.some(([from, to]) => Math.abs(second - from) < EDGE || Math.abs(second - to) < EDGE)) continue;
+
+        const shouldShow = spans.some(([from, to]) => second > from && second < to);
+        const showing = (await onFilmNow.count()) === 1;
+        if (showing === shouldShow) agreed += 1;
+        else if (!disagreed) {
+          disagreed = `at ${second.toFixed(2)}s of ${total.toFixed(2)}s the lane says`
+            + ` ${shouldShow ? 'up' : 'down'} and the picture says ${showing ? 'up' : 'down'}`;
+        }
+        if (shouldShow) sawUp += 1; else sawDown += 1;
+        if (!shouldShow) outside = second;
+      }
+
+      check('  and the words are on the frame exactly where that block is',
+        !disagreed && sawUp > 0 && sawDown > 0,
+        disagreed || `${agreed} of ${landed} places agree, ${sawUp} inside a`
+        + ` caption and ${sawDown} outside one — the whole request: a caption`
+        + ' dragged in to part of a clip is off the screen for the rest of it');
+
+      /* ── And a ghost to take hold of while she is setting them ───────
+
+         Hidden outright, the words bench is unusable the moment a caption is
+         shortened: the colour, the face, the box and the position are all set
+         by looking at the thing, and past its own moment there would be
+         nothing to look at. So on that bench, and only there, it stays as a
+         faint outline. Measured at a second the sweep above has already
+         proved the caption is NOT up at. */
+      if (outside !== null) {
+        await bench('words');
+        await p.waitForTimeout(300);
+        await p.locator('[data-editortrack]')
+          .click({ position: { x: Math.max(1, outside * perSecond), y: 30 }, timeout: 4000 })
+          .catch(() => undefined);
+        await p.waitForTimeout(300);
+        check('  and on the words bench it stays as a ghost she can still take hold of',
+          (await onFilmNow.count()) === 1
+          && (await onFilmNow.getAttribute('data-editorwordsghost')) === 'true',
+          `${await onFilmNow.count()} on the frame at ${outside?.toFixed(2)}s —`
+          + ' hidden outright, there is nothing to colour, turn or place');
+      }
+    }
+
     const grip2 = p.locator('[data-editorlanegrip]');
     check('the clock has a grip for its own height',
       (await grip2.count()) === 1,

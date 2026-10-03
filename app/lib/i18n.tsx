@@ -458,6 +458,8 @@ export const STRINGS: Dict = {
   "chan.playlists": { en: "Playlists", af: "Speellyste" },
   "chan.new": { en: "New", af: "Nuwe" },
   "chan.newName": { en: "New playlist", af: "Nuwe speellys" },
+  "chan.rename": { en: "Rename", af: "Hernoem" },
+  "chan.renameDone": { en: "Done", af: "Klaar" },
   "chan.noLists": { en: "None yet. A playlist plays straight through, which is what makes it worth building.", af: "Nog niks nie. \u2019n Speellys speel deur, en dis wat dit die moeite werd maak." },
   "chan.playAll": { en: "Play it through", af: "Speel dit deur" },
   "chan.empty": { en: "Nothing in it yet \u2014 add songs from below.", af: "Nog niks daarin nie \u2014 sit liedjies van onder af by." },

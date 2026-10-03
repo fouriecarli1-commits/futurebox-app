@@ -26,8 +26,10 @@
  */
 import {
   SHORTEST_SPAN, SHORTEST_WORDS, heldWords, pointsOf, spanReady, stretches,
-  slidWords, tidy, withSkip, wordsSpan,
+  slidWords, tidy, withSkip, wordsSpan, wordsUp,
 } from '../app/lib/videospan';
+import { readFileSync } from 'node:fs';
+import { withoutComments } from './prose.mts';
 import { pullTo } from '../app/lib/magnet';
 import { cutOut, runs, splitHere, startsAt } from '../app/lib/videoedit';
 import type { Edit, Piece } from '../app/lib/videoedit';
@@ -303,6 +305,62 @@ ok('  and it stops at the end of its shot rather than sliding past it',
 ok('  and at the start, the same way',
   slidWords(began, -999, SHOT).from === 0 && slidWords(began, -999, SHOT).to === 4,
   JSON.stringify(slidWords(began, -999, SHOT)));
+
+/* ── When the words are up, asked once and answered once ───────────────────
+
+   Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+   hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
+
+   She had dragged a caption's block in to half its clip and the room went on
+   drawing the words over all of it. The export was right the whole time: the
+   gate existed, written out inside `stitch.ts` and nowhere else, so the only
+   way to find out that the room was lying was to pay for a render and watch
+   it.
+
+   One predicate now, asked by both. The rules below are about the predicate;
+   the two after them are about there being no second copy of it, because a
+   second copy is the whole fault. */
+
+ok('a caption is up inside its own stretch',
+  wordsUp({ from: 2, to: 5 }, 3)
+  && wordsUp({ from: 2, to: 5 }, 2)
+  && wordsUp({ from: 2, to: 5 }, 5),
+  'both ends count as up — a caption that blinks off on the frame its own'
+  + ' block ends is a caption that is one frame short of what she drew');
+
+ok('  and down outside it',
+  !wordsUp({ from: 2, to: 5 }, 1.9) && !wordsUp({ from: 2, to: 5 }, 5.1),
+  'this is the whole request: a caption dragged in to half the clip is not on'
+  + ' screen for the other half');
+
+ok('a caption that was never timed is up for the whole shot',
+  wordsUp({}, 0) && wordsUp({}, 999),
+  'typed before the lane existed, or typed and never dragged — absent is not'
+  + ' nought, and reading it as nought would blank every untimed caption in'
+  + ' every film anybody has already made');
+
+ok('  and one end on its own leaves the other open',
+  wordsUp({ from: 3 }, 999) && !wordsUp({ from: 3 }, 2)
+  && wordsUp({ to: 3 }, 0) && !wordsUp({ to: 3 }, 4),
+  'a caption that comes up late and never goes down is a real thing to want');
+
+const stitch = withoutComments(readFileSync('app/lib/stitch.ts', 'utf8'));
+const room = withoutComments(readFileSync('app/components/VideoEditor.tsx', 'utf8'));
+
+ok('the renderer asks the shared question rather than its own',
+  /wordsUp\(\{ from: painted\.captionFrom, to: painted\.captionTo \}/.test(stitch)
+  && !/captionFrom !== undefined/.test(stitch),
+  'it had the right answer and kept it to itself for a day');
+
+ok('  and so does the room, off the playhead',
+  /wordsUp\(\{ from: piece\.wordsFrom, to: piece\.wordsTo \}/.test(room)
+  && /at - startsAt\(edit, piece\.id\)/.test(room),
+  'the preview has to measure from the same place the lane draws the block'
+  + ' from, or the words come up where the block does not');
+
+ok('  and the preview is gated on it, not merely computing it',
+  /wordsNow\.up \|\| wordsNow\.ghost/.test(room),
+  'a number worked out and not used is the shape this bug already had once');
 
 if (bad) {
   console.error(`\ncheck:cutspan — ${bad} assertion(s) failed.\n`);

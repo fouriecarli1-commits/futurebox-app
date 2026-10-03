@@ -187,6 +187,37 @@ export function wordsSpan(
 }
 
 /**
+ * Is a caption up at `into` seconds into its own piece?
+ *
+ * ── Why this is a function and not two lines twice ───────────────────────
+ *
+ * Because it was two lines once, in `stitch.ts`, and NOWHERE in the room.
+ *
+ * Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+ * hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
+ *
+ * She had dragged a caption's block in to half the clip and the room went on
+ * showing the words over all of it. The export was right the whole time —
+ * which is the worst shape this can take, because the only way to find out
+ * what the film really does is to pay for it and watch it. The preview simply
+ * drew the caption whenever there was one and never asked the clock.
+ *
+ * So the question lives here now and both of them ask it. A preview and a
+ * renderer that each decide for themselves when words are up is two answers
+ * to the same question, and this is what the second one costs.
+ *
+ * Both ends are optional and an absent end means that side is open —
+ * `undefined` on both is "the whole shot", which is what a caption did before
+ * it could be timed and is still right for one that was typed and not dragged.
+ */
+export const wordsUp = (
+  ends: { readonly from?: number; readonly to?: number },
+  into: number,
+): boolean =>
+  (ends.from === undefined || into >= ends.from)
+  && (ends.to === undefined || into <= ends.to);
+
+/**
  * The shortest a caption can be dragged to.
  *
  * Half a second, not a frame. A caption is something somebody has to READ, and
