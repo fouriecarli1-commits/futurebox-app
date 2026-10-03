@@ -90,7 +90,8 @@ import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
-  captionAt, cutOut, cutSong, move, runs, songSecond, split, splitHere, startsAt, trim,
+  captionAt, cutOut, cutSong, heard, move, runs, songSecond, split, splitHere, startsAt,
+  trim,
   wordsReach,
   type Edit, type Piece,
 } from '../lib/videoedit';
@@ -707,6 +708,78 @@ export default function VideoEditor({
      lane and its own cut — see `cutSong`. */
   const [lane, setLane] = useState<'film' | 'shots' | 'music'>('film');
 
+  /* ── Solo and mute, the pair every desk has ─────────────────────────────
+
+     Carli, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
+     mute, net soos in probooth die s, m."*
+
+     Drawn here as one component rather than twice inline, because the two
+     lanes have to behave identically: a solo that means "only this" on one
+     lane and "also this" on the other is a desk nobody can read.
+
+     Solo is a radio and mute is a switch — pressing solo on the lane that is
+     already soloed clears it, which is what every desk does and what makes
+     the button its own way out. */
+  const Keys = ({ which }: { which: 'shots' | 'music' }): React.ReactElement => {
+    const on = heard(edit);
+    const soloed = edit.solo === which;
+    const muted = which === 'music' ? Boolean(edit.underMute) : Boolean(edit.shotsMute);
+    const key = (
+      label: string,
+      lit: boolean,
+      colour: string,
+      press: (was: Edit) => Edit,
+      mark: string,
+      said: string,
+    ): React.ReactElement => (
+      <button
+        type="button"
+        data-editorkey={mark}
+        aria-pressed={lit}
+        aria-label={said}
+        title={said}
+        /* Stopped here, because these sit ON the lane and the lane is a
+           press target of its own: without this, muting the music would
+           also scrub the bed to wherever the button happens to be. */
+        onClick={(event) => { event.stopPropagation(); commit(press); }}
+        onPointerDown={(event) => event.stopPropagation()}
+        /* A thumb-sized press with a small key drawn inside it. The key is
+           six by six because that is what a desk looks like; the button is
+           eleven because that is what a thumb needs, and `audit/editor.mjs`
+           measures every control in this room against exactly that. Making
+           the KEY forty-four pixels would put two slabs across a lane that is
+           fifty-three tall. */
+        className="flex h-11 w-11 items-center justify-center"
+      >
+        <span
+          className="flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-black leading-none"
+          style={lit
+            ? { background: colour, color: '#07140d' }
+            : { background: 'rgba(255,255,255,0.07)', color: INK_DIM, boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.3)' }}
+        >
+          {label}
+        </span>
+      </button>
+    );
+    return (
+      <span className="pointer-events-auto z-20 -my-2 inline-flex items-center gap-0.5">
+        {key('S', soloed, '#fbbf24',
+          (was) => ({ ...was, solo: was.solo === which ? null : which }),
+          `solo-${which}`, t('edit.solo', 'Solo this lane'))}
+        {key('M', muted, '#f87171',
+          (was) => (which === 'music'
+            ? { ...was, underMute: !was.underMute }
+            : { ...was, shotsMute: !was.shotsMute }),
+          `mute-${which}`, t('edit.mute', 'Mute this lane'))}
+        {!on[which] && (
+          <span className="text-[10px] font-bold uppercase" style={{ color: '#f87171' }}>
+            {t('edit.offAir', 'off')}
+          </span>
+        )}
+      </span>
+    );
+  };
+
   /* ── Starting over ──────────────────────────────────────────────────────
 
      Carli, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,
@@ -1164,8 +1237,25 @@ export default function VideoEditor({
     /* The same clamp the picture gets, and for the same reason: an element's
        `volume` throws above one, while the slider's range is kept at 0–2
        everywhere so it means one thing across the app. */
-    a.volume = Math.max(0, Math.min(1, edit.underLoud ?? 1));
-  }, [edit.underLoud, bedUrl]);
+    const on = heard(edit);
+    /* Muted rather than turned to nought, so a lane switched off is switched
+       off rather than quiet — and `heard` is the same function `cutFrom`
+       asks, so the silence in this room is the silence in the film. */
+    a.muted = !on.music;
+    /* ── And it steps back while a shot is speaking ───────────────────
+
+       Carli, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
+       sagter gaan elke keer wanneer die praat stem in kom."*
+
+       The same multiplication the renderer does, against the same flag — a
+       preview that ducked on something else would be a mix balanced against
+       a film that does not exist. */
+    const speaking = Boolean(piece?.sound) && on.shots;
+    const duck = speaking && edit.duck !== undefined
+      ? Math.max(0, Math.min(1, edit.duck))
+      : 1;
+    a.volume = Math.max(0, Math.min(1, (edit.underLoud ?? 1) * duck));
+  }, [edit, piece?.sound, bedUrl]);
 
   /* ── Kept on the film's clock ──────────────────────────────────────────
 
@@ -2233,7 +2323,10 @@ export default function VideoEditor({
                 data-editorviewer
                 src={source ?? undefined}
                 playsInline
-                muted={!piece.sound}
+                /* `heard` as well as the shot's own switch: a muted shots
+                   lane is muted here too, or she balances a mix against
+                   something that is not the mix. */
+                muted={!piece.sound || !heard(edit).shots}
                 /* And the song under it, on the same clock. Hidden because it
                    is not a player — it is the bed, following the playhead so
                    the preview sounds like the film. See the effect beside
@@ -2929,7 +3022,6 @@ export default function VideoEditor({
                   </div>
 
                 </div>
-                </div>
 
                 {/* ── The grip that makes the clock taller ──────────────
 
@@ -3061,8 +3153,9 @@ export default function VideoEditor({
                   style={{ height: soundTall }}
                   data-editorshotlane
                 >
-                  <span className="pointer-events-none absolute left-2 top-0.5 z-10 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                  <span className="pointer-events-none absolute left-2 top-0.5 z-20 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
                     {t('edit.shotSound', 'The shots')}
+                    <Keys which="shots" />
                   </span>
                   {edit.pieces.filter((one) => one.sound).map((one) => (
                     <button
@@ -3111,8 +3204,9 @@ export default function VideoEditor({
                   style={{ height: soundTall }}
                   data-editorsoundlane
                 >
-                  <span className="pointer-events-none absolute left-2 top-0.5 z-10 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                  <span className="pointer-events-none absolute left-2 top-0.5 z-20 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
                     {t('edit.musicLane', 'The music')}
+                    <Keys which="music" />
                   </span>
                   {edit.under ? (
                     <div
@@ -3232,6 +3326,7 @@ export default function VideoEditor({
                   <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
                 </div>
               </div>
+            </div>
 
             {/* Playing the whole film in place, rather than only on export.
                 It hops the viewer from piece to piece as the clock runs,
@@ -4249,6 +4344,7 @@ export default function VideoEditor({
           </label>
 
           {edit.under && (
+            <>
             <label className="flex items-center gap-2">
               <span className="text-sm text-zinc-400">{t('edit.underLoud', 'How loud the track sits')}</span>
               <input
@@ -4260,7 +4356,99 @@ export default function VideoEditor({
                 className="w-32 accent-emerald-500"
               />
             </label>
+
+            {/* ── The music steps back while a shot speaks ──────────────
+
+                Carli, 5 October 2026: *"Dit moet ook die funksie en button in
+                hê wanneer 'n video praat, dan moet die musiek sagter gaan elke
+                keer wanneer die praat stem in kom."*
+
+                Keyed on the shot's own "keep its sound" switch rather than on
+                listening for a voice inside the clip, and that is a decision:
+                she sets that switch, she can see it on the lane, so the music
+                steps back exactly where she expects and nowhere else. A
+                detector would duck on a door slam and not on a whisper, with
+                nothing on the screen explaining either. */}
+            <div className="space-y-1.5" data-editorduck>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-zinc-400">
+                  {t('edit.duck', 'Music steps back when a shot speaks')}
+                </span>
+                <button
+                  type="button"
+                  data-editorduckon
+                  aria-pressed={edit.duck !== undefined}
+                  onClick={() => commit((was) => (was.duck === undefined
+                    ? { ...was, duck: 0.35 }
+                    : { ...was, duck: undefined }))}
+                  className="min-h-[44px] rounded-xl border px-3 py-1.5 text-sm font-semibold"
+                  style={edit.duck !== undefined
+                    ? { borderColor: 'rgba(16,185,129,0.6)', background: 'rgba(52,211,153,0.22)', color: INK }
+                    : { borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(52,211,153,0.08)', color: INK_DIM }}
+                >
+                  {edit.duck !== undefined ? t('edit.duckOn', 'On') : t('edit.duckOff', 'Off')}
+                </button>
+              </div>
+              {edit.duck !== undefined && (
+                <>
+                  <input
+                    type="range"
+                    min={0}
+                    max={0.9}
+                    step={0.05}
+                    value={edit.duck}
+                    data-editorduckdeep
+                    onChange={(e) => slideFilm((was) => ({ ...was, duck: Number(e.target.value) }))}
+                    onPointerDown={holding}
+                    onPointerUp={held}
+                    className="w-full accent-emerald-500"
+                  />
+                  <span className="block text-sm" style={{ color: INK_DIM }} data-editorducknow>
+                    {t('edit.duckTo', 'Down to {pc}% while the shot talks')
+                      .replace('{pc}', String(Math.round(edit.duck * 100)))}
+                  </span>
+                </>
+              )}
+            </div>
+
+            </>
           )}
+
+            {/* ── Stereo, or folded to one ──────────────────────────────
+
+                She asked for "stereo, mono surround". Two of those three are
+                real here and the third is not: the file this browser writes
+                is a stereo webm and `MediaRecorder` cannot be asked for six
+                channels, so there is no surround to offer. A button that
+                cannot do what it says is worse than a missing one, and it is
+                said here rather than left to be discovered after a render. */}
+            <div className="space-y-1.5" data-editormix>
+              <span className="block text-sm text-zinc-400">{t('edit.mix', 'How it comes out')}</span>
+              <div className="flex flex-wrap gap-2">
+                {(['stereo', 'mono'] as const).map((one) => (
+                  <button
+                    key={one}
+                    type="button"
+                    data-editormixpick={one}
+                    aria-pressed={(edit.mix ?? 'stereo') === one}
+                    onClick={() => commit((was) => ({ ...was, mix: one }))}
+                    className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                    style={(edit.mix ?? 'stereo') === one
+                      ? { borderColor: 'rgba(16,185,129,0.6)', background: 'rgba(52,211,153,0.22)', color: INK }
+                      : { borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(52,211,153,0.08)', color: INK_DIM }}
+                  >
+                    {one === 'stereo' ? t('edit.stereo', 'Stereo') : t('edit.mono', 'Mono')}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm leading-snug" style={{ color: INK_DIM }} data-editornosurround>
+                {t(
+                  'edit.noSurround',
+                  'No surround: the file this browser writes has two channels and cannot be asked for six. Mono puts the same thing on both sides, which is what a phone speaker plays anyway.',
+                )}
+              </p>
+            </div>
+
           {/* Fades. Clamped by `fadesFor`, which also stops the two of them
               together being longer than the film — a two-second fade each end
               on a three-second cut is a cut nobody ever sees. */}

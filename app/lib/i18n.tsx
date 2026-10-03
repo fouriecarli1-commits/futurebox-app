@@ -790,6 +790,26 @@ export const STRINGS: Dict = {
     en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
     af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
   },
+  "edit.solo": { en: "Solo this lane", af: "Solo hierdie baan" },
+  "edit.mute": { en: "Mute this lane", af: "Demp hierdie baan" },
+  "edit.offAir": { en: "off", af: "af" },
+  "edit.duck": {
+    en: "Music steps back when a shot speaks",
+    af: "Musiek tree terug wanneer \u2019n skoot praat",
+  },
+  "edit.duckOn": { en: "On", af: "Aan" },
+  "edit.duckOff": { en: "Off", af: "Af" },
+  "edit.duckTo": {
+    en: "Down to {pc}% while the shot talks",
+    af: "Af tot {pc}% terwyl die skoot praat",
+  },
+  "edit.mix": { en: "How it comes out", af: "Hoe dit uitkom" },
+  "edit.stereo": { en: "Stereo", af: "Stereo" },
+  "edit.mono": { en: "Mono", af: "Mono" },
+  "edit.noSurround": {
+    en: "No surround: the file this browser writes has two channels and cannot be asked for six. Mono puts the same thing on both sides, which is what a phone speaker plays anyway.",
+    af: "Geen surround nie: die l\u00eaer wat hierdie blaaier skryf het twee kanale en kan nie vir ses gevra word nie. Mono sit dieselfde ding op altwee kante, wat in elk geval is wat \u2019n foon se luidspreker speel.",
+  },
   "edit.markOff": {
     en: "Take the logo off",
     af: "Haal die logo af",

@@ -280,6 +280,51 @@ export interface Edit {
   readonly underFrom?: number;
   /** How loud the song is against the pieces, 0 to 2. */
   readonly underLoud?: number;
+  /**
+   * The two sound lanes, switched off and soloed.
+   *
+   * Carli, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
+   * mute, net soos in probooth die s, m."*
+   *
+   * The same pair the Pro Booth's desk carries, and the same rule: solo wins
+   * over mute, because solo is the louder statement — somebody who has
+   * soloed the music is listening to the music, and a mute left on another
+   * lane from ten minutes ago must not be the reason they hear nothing.
+   * `heard` below is the one place that resolves the two.
+   */
+  readonly underMute?: boolean;
+  readonly shotsMute?: boolean;
+  readonly solo?: 'shots' | 'music' | null;
+  /**
+   * How far the music drops while a shot is speaking, as a multiplier.
+   *
+   * Carli, 5 October 2026: *"Dit moet ook die funksie en button in hê wanneer
+   * 'n video praat, dan moet die musiek sagter gaan elke keer wanneer die
+   * praat stem in kom."*
+   *
+   * Keyed on the shot's own `sound` switch rather than on listening for a
+   * voice inside the clip, and that is a decision rather than a shortcut.
+   * `sound` is exactly the flag that says THIS SHOT TALKS — she sets it, she
+   * can see it on the lane, and the duck therefore happens where she expects
+   * it to and nowhere else. A detector would duck on a door slam and not on a
+   * whisper, and there would be nothing on the screen explaining either.
+   *
+   * Absent is no ducking at all, so every film already made sounds the way it
+   * did.
+   */
+  readonly duck?: number;
+  /**
+   * Stereo, or folded to mono.
+   *
+   * Carli asked for "stereo, mono surround". Two of those three are real
+   * here: the file this browser writes is a webm with a stereo track, and
+   * mono is that track with both sides the same. Surround is not something
+   * `MediaRecorder` can be asked for — there is no six-channel webm at the
+   * end of this — so it is not offered. A button that cannot do what it says
+   * is worse than a missing one, and `lib/channels.ts` already holds the
+   * fold for the one place surround is real: a song being taken down.
+   */
+  readonly mix?: 'stereo' | 'mono';
   /** Seconds of black fading up at the start, and down at the end. */
   readonly fadeIn?: number;
   readonly fadeOut?: number;
@@ -540,7 +585,10 @@ export function cutFrom(edit: Edit): Cut {
       ...(one.speed && one.speed !== 1 ? { speed: one.speed } : {}),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),
       ...(one.fill ? { fill: true } : {}),
-      ...(one.sound ? { sound: true } : {}),
+      /* A shot speaks only if the shots lane is being heard at all. Resolved
+         here, where the edit becomes a cut, so the mute on the lane is the
+         same mute in the film — see `heard`. */
+      ...(one.sound && heard(edit).shots ? { sound: true } : {}),
       /* The hard cut is the default everywhere, so it is not carried: a scene
          with no `join` and a scene with `join: 'cut'` render the same, and
          sending the second one would put a field on every scene of every film
@@ -628,9 +676,18 @@ export function cutFrom(edit: Edit): Cut {
      would have a caption sized for one frame drawn into another. */
   const frame = sizeFor(shape, edit.grade);
   const fps = rateFor(edit.fps);
+  const on = heard(edit);
   return {
     scenes: told,
-    audio: edit.under ?? null,
+    audio: on.music ? edit.under ?? null : null,
+    ...(edit.mix === 'mono' ? { mix: 'mono' as const } : {}),
+    /* Only when there is both a song to duck and a shot to duck it for. A
+       number on a cut that cannot use it is a number the renderer has to
+       decide to ignore, and a renderer making decisions about the edit is
+       the thing `cutFrom` exists to prevent. */
+    ...(edit.duck !== undefined && edit.under && on.music && on.shots
+      && kept.some((one) => one.sound)
+      ? { duck: Math.max(0, Math.min(1, edit.duck)) } : {}),
     width: frame.width,
     height: frame.height,
     fps,
@@ -638,6 +695,23 @@ export function cutFrom(edit: Edit): Cut {
     ...(edit.underFrom ? { audioFrom: edit.underFrom } : {}),
     ...(edit.underSkips?.length ? { audioSkips: edit.underSkips } : {}),
   };
+}
+
+/**
+ * Which of the two sound lanes is actually heard.
+ *
+ * Mute and solo in one place, because they are one question and answering it
+ * twice is how a preview and a film end up disagreeing about silence — the
+ * hardest kind of disagreement to notice, since both of them are quiet.
+ *
+ * Solo beats mute. Somebody who has soloed the music is listening to the
+ * music, and a mute left on the other lane ten minutes ago must not be the
+ * reason they hear nothing.
+ */
+export function heard(edit: Edit): { readonly music: boolean; readonly shots: boolean } {
+  if (edit.solo === 'music') return { music: true, shots: false };
+  if (edit.solo === 'shots') return { music: false, shots: true };
+  return { music: !edit.underMute, shots: !edit.shotsMute };
 }
 
 /**

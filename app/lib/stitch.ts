@@ -295,6 +295,30 @@ export function captionsOf(scene: Scene): readonly Caption[] {
 
 export interface Cut {
   readonly scenes: readonly Scene[];
+  /**
+   * How far the song drops while a scene is speaking, as a multiplier.
+   *
+   * Carli, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
+   * sagter gaan elke keer wanneer die praat stem in kom."*
+   *
+   * Ramped rather than switched, over `DUCK_IN`: a song that drops to a
+   * third between one frame and the next is a fault somebody can hear, and
+   * the thing being imitated — a hand on a fader — takes about a tenth of a
+   * second.
+   *
+   * Absent is no ducking, so every film made before this sounds the way it
+   * did.
+   */
+  readonly duck?: number;
+  /**
+   * `mono` folds the finished track to one channel on both sides.
+   *
+   * There is no `surround`, and that is not an omission: `MediaRecorder`
+   * writes a stereo webm and cannot be asked for six channels, so a button
+   * offering it would be a button that lies. `lib/channels.ts` holds the fold
+   * for the one place surround is real, which is a song being taken down.
+   */
+  readonly mix?: 'stereo' | 'mono';
   /** The song, laid under the whole thing. Optional: a silent film is allowed. */
   readonly audio?: Blob | null;
   /**
@@ -602,6 +626,17 @@ function wrapped(
 }
 
 /**
+ * How quickly the song steps back when a shot starts speaking, in seconds.
+ *
+ * A time constant rather than a duration: `setTargetAtTime` is most of the
+ * way there in about three of them, so a tenth here is the third of a second
+ * a hand on a fader takes. Shorter reads as a glitch and longer loses the
+ * first words of the line it is making room for.
+ */
+export const DUCK_IN = 0.1;
+
+
+/**
  * How round the caption's band is by default, as a share of its own height.
  *
  * Named because two places need it: the renderer below, and the slider in the
@@ -835,6 +870,8 @@ export async function stitch(cut: Cut): Promise<Made> {
      than decoding it once per stretch, and so every stretch can be stopped
      when the render ends. */
   let songBuffer: AudioBuffer | null = null;
+  /* Where every sound in the film meets, so the fold to mono is one node. */
+  let mixer: GainNode | null = null;
   const songRuns: AudioBufferSourceNode[] = [];
   /* Either reason is enough to need a graph: a song laid under the film, or
      a single shot that was paid to speak. */
@@ -846,6 +883,23 @@ export async function stitch(cut: Cut): Promise<Made> {
     if (Ctx) {
       audioContext = new Ctx();
       destination = audioContext.createMediaStreamDestination();
+      /* ── Everything through one place ──────────────────────────────
+
+         The song and the talking shots both end here, which is what lets
+         `mono` be one node rather than a rule each of them has to remember.
+
+         A gain told to take ONE channel explicitly is how the Web Audio
+         graph folds: the down-mix happens on the way in, and the stereo
+         destination then carries the same signal on both sides. That is what
+         mono is — not silence on the right. */
+      const out = audioContext.createGain();
+      if (cut.mix === 'mono') {
+        out.channelCount = 1;
+        out.channelCountMode = 'explicit';
+        out.channelInterpretation = 'speakers';
+      }
+      out.connect(destination);
+      mixer = out;
       try {
         if (cut.audio) {
           songBuffer = await audioContext.decodeAudioData(await cut.audio.arrayBuffer());
@@ -859,7 +913,7 @@ export async function stitch(cut: Cut): Promise<Made> {
           songGain = audioContext.createGain();
           songGain.gain.value = Math.max(0, Math.min(2, cut.audioLoud ?? 1));
           song.connect(songGain);
-          songGain.connect(destination);
+          songGain.connect(out);
         }
       } catch {
         // A song that will not decode is a film without one, not a failure.
@@ -996,6 +1050,25 @@ export async function stitch(cut: Cut): Promise<Made> {
          takes the sound away from the speakers, which is what we want — the
          export is a recording, not a playback. */
       const talking = Boolean(cut.scenes[index].sound) && Boolean(audioContext && destination);
+      /* ── The music steps back while the shot speaks ────────────────
+
+         Carli, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
+         sagter gaan elke keer wanneer die praat stem in kom."*
+
+         Ramped over `DUCK_IN` rather than switched: a song that drops to a
+         third between one frame and the next is a fault somebody can hear,
+         and the thing being imitated is a hand on a fader.
+
+         `setTargetAtTime` and not `linearRampToValueAtTime`, because the
+         ramps have to be scheduled one scene at a time as the film plays and
+         a linear ramp needs both ends known in advance. The constant is a
+         time constant, so the level is most of the way there in about three
+         of them. */
+      if (songGain && audioContext && cut.duck !== undefined) {
+        const base = Math.max(0, Math.min(2, cut.audioLoud ?? 1));
+        const want = talking ? base * Math.max(0, Math.min(1, cut.duck)) : base;
+        songGain.gain.setTargetAtTime(want, audioContext.currentTime, DUCK_IN);
+      }
       video.muted = !talking;
       /* A volume, per clip. Only meaningful where the clip is
          heard at all — `sound` is whether, this is how much — and the two are
@@ -1013,7 +1086,7 @@ export async function stitch(cut: Cut): Promise<Made> {
       if (fast !== 1) video.playbackRate = fast;
       if (talking && audioContext && destination) {
         try {
-          audioContext.createMediaElementSource(video).connect(destination);
+          audioContext.createMediaElementSource(video).connect(mixer ?? destination);
         } catch {
           // Already routed, or this browser will not have it. The shot plays
           // on silently rather than the export failing over one clip.

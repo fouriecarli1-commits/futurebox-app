@@ -309,6 +309,8 @@ jobs:
         run: npm run check:listenfree
       - name: "The song plays under the preview, a logo comes off, and a project can be put down"
         run: npm run check:heardhere
+      - name: "Solo, mute, the duck under a speaking shot, and the fold to mono"
+        run: npm run check:soundkeys
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

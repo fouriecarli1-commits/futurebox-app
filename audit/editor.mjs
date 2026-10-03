@@ -1594,6 +1594,53 @@ try {
         'a bed still playing over a paused film is worse than no bed');
     }
 
+    /* ── Solo and mute, pressed ─────────────────────────────────────
+
+       Carli, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
+       mute, net soos in probooth die s, m."*
+
+       A source rule can see the buttons exist. What a browser is for here is
+       the thing that nearly went wrong: they sit ON the music lane, which is
+       itself a press target, so a mute that also scrubbed the bed would look
+       like a working mute and quietly move the song. */
+    const mute = p.locator('[data-editorkey="mute-music"]');
+    check('the music lane has a mute on it',
+      (await mute.count()) === 1,
+      'the same pair the Pro Booth\u2019s desk has');
+
+    if ((await mute.count()) === 1) {
+      const bedWas = (await p.locator('[data-editorbed]').innerText().catch(() => '')) || '';
+      await mute.click();
+      await p.waitForTimeout(500);
+      check('  and pressing it really mutes the song in the preview',
+        await p.evaluate(() => document.querySelector('[data-editorbedsound]')?.muted ?? false),
+        'a lane muted in the room and loud in the film is the one mistake in'
+        + ' this room nobody can see');
+
+      check('    without dragging the bed out from under the film',
+        ((await p.locator('[data-editorbed]').innerText().catch(() => '')) || '') === bedWas,
+        `"${bedWas}" became "${(await p.locator('[data-editorbed]').innerText().catch(() => '')) || ''}"`
+        + ' — these keys sit on a lane that scrubs, and a press that did both'
+        + ' would look like a working mute');
+
+      await mute.click();
+      await p.waitForTimeout(400);
+      check('    and pressing it again brings it back',
+        !(await p.evaluate(() => document.querySelector('[data-editorbedsound]')?.muted ?? true)),
+        'a switch with no way out is a door');
+
+      const solo = p.locator('[data-editorkey="solo-shots"]');
+      if (await solo.count()) {
+        await solo.click();
+        await p.waitForTimeout(500);
+        check('  and soloing the shots silences the music',
+          await p.evaluate(() => document.querySelector('[data-editorbedsound]')?.muted ?? false),
+          'solo means only that one');
+        await solo.click();
+        await p.waitForTimeout(400);
+      }
+    }
+
     /* ── One cursor, across every lane ──────────────────────────────── */
     const head = await p.locator('[data-editorplayhead]').boundingBox();
     const pictureLane = await p.locator('[data-editortrack]').boundingBox();
@@ -1609,6 +1656,26 @@ try {
       && head.y <= music.y + 2 && head.y + head.height >= music.y + music.height - 2,
       `cursor ${Math.round(head?.y ?? 0)}–${Math.round((head?.y ?? 0) + (head?.height ?? 0))},`
       + ` music lane ${Math.round(music?.y ?? 0)}–${Math.round((music?.y ?? 0) + (music?.height ?? 0))}`);
+
+    /* ── And stops there ──────────────────────────────────────────────
+
+       The half the first version of this left out, and it cost a release.
+       Every rule above asks whether the cursor is LONG ENOUGH; none asked
+       whether it was too long, so a line that ran the whole height of the
+       page — past the Ask button at the top and through the app's own bar at
+       the bottom — passed all of them.
+
+       It happened because the cursor was moved into a wrapper it was not
+       actually inside: one stray closing tag earlier in the file put its
+       nearest positioned ancestor at the page rather than at the clock. The
+       markup compiled, this probe went green, and Carli sent a photograph of
+       a green line down her whole screen. */
+    const clockBox = await p.locator('[data-editorstrip]').boundingBox();
+    check('  and stops at the bottom of the clock rather than running down the page',
+      !!head && !!clockBox
+      && head.y >= clockBox.y - 2 && head.y + head.height <= clockBox.y + clockBox.height + 2,
+      `cursor ${Math.round(head?.y ?? 0)}-${Math.round((head?.y ?? 0) + (head?.height ?? 0))}`
+      + ` against a clock of ${Math.round(clockBox?.y ?? 0)}-${Math.round((clockBox?.y ?? 0) + (clockBox?.height ?? 0))}`);
 
     const grip2 = p.locator('[data-editorlanegrip]');
     check('the clock has a grip for its own height',

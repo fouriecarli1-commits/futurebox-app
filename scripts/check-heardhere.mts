@@ -95,9 +95,10 @@ ok('  and stopped when the film is stopped',
   'a bed still playing over a paused film is worse than no bed');
 
 ok('  at the loudness she set for it',
-  /a\.volume = Math\.max\(0, Math\.min\(1, edit\.underLoud \?\? 1\)\)/.test(room),
+  /a\.volume = Math\.max\(0, Math\.min\(1, \(edit\.underLoud \?\? 1\) \* duck\)\)/.test(room),
   'the slider that says how loud the track sits has to say it here as well,'
-  + ' or she balances a mix against something that is not the mix');
+  + ' or she balances a mix against something that is not the mix. Times the'
+  + ' duck since 5 October — `check:soundkeys` holds that half');
 
 /* ── A logo can come off again ─────────────────────────────────────────── */
 

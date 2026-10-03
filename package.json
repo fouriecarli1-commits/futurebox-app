@@ -129,6 +129,7 @@
     "check:soundlanes": "tsx scripts/check-soundlanes.mts",
     "check:listenfree": "tsx scripts/check-listenfree.mts",
     "check:heardhere": "tsx scripts/check-heardhere.mts",
+    "check:soundkeys": "tsx scripts/check-soundkeys.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",
