@@ -6,6 +6,8 @@ import { SiteFooter } from './components/SiteFooter';
 import Watchdog from './components/Watchdog';
 import BlankGuard from './components/BlankGuard';
 import Blankscreen from './components/Blankscreen';
+import LaunchMark from './components/LaunchMark';
+import { startupImages } from './lib/splash';
 import { SITE_URL } from './lib/brand';
 
 export const metadata: Metadata = {
@@ -62,7 +64,27 @@ export const metadata: Metadata = {
   /* The short form here and only here: an icon on a home screen has room for
      about twelve characters, and a label that wraps or truncates is worse than
      the owner's own short form of their own name. */
-  appleWebApp: { capable: true, title: APP_SHORT, statusBarStyle: 'black-translucent' },
+  /* ── And the picture it opens with ───────────────────────────────────
+
+     Carli, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
+     huidiglik net met die app icon, maar ek sal wil hê die woorde futurebox
+     moet saam launch."*
+
+     She described iOS's own opening screen, which is the icon on
+     `background_color` and nothing else — the operating system has the icon
+     and the ground and has never had the wordmark. `startupImage` is the only
+     way to hand it one, and the files are drawn by `scripts/splash.mts` with
+     the mark and the words on them.
+
+     The list comes from `app/lib/splash.ts` rather than being typed here: a
+     query that misses the device by one pixel is not a slightly wrong splash,
+     it is no splash at all, and nothing anywhere would report it. */
+  appleWebApp: {
+    capable: true,
+    title: APP_SHORT,
+    statusBarStyle: 'black-translucent',
+    startupImage: startupImages(),
+  },
 };
 
 /* Painted by the operating system before any of our CSS has run — the bar at
@@ -89,6 +111,11 @@ export default function RootLayout({
           <BlankGuard />
           {/* The one thing the watchdog cannot do: be seen. */}
           <Blankscreen />
+          {/* First in the markup so it is painted first, and the only thing
+              on the screen for the moment an app launched from its own icon
+              has nothing else to show. It takes itself away with a CSS
+              animation and never covers a tap — see the component. */}
+          <LaunchMark />
           {children}
           <SiteFooter />
         </LanguageProvider>

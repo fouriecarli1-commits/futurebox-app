@@ -299,6 +299,8 @@ jobs:
         run: npm run check:editoropen
       - name: "A comment opener inside a string is text, so no check reads a file with a hole in it"
         run: npm run check:blanker
+      - name: "The app opens with its name beside its icon, not the icon on its own"
+        run: npm run check:launchmark
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped
@@ -1190,7 +1192,7 @@ jobs:
           # camera, and `contrast` reads the computed colour of every piece of
           # text against what is actually painted behind it.
           - group: colour and camera
-            probes: check:selfie check:contrast check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom check:editor check:whereiwas check:backout
+            probes: check:selfie check:contrast check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom check:editor check:whereiwas check:backout check:launchwalk
     steps:
       - uses: actions/checkout@v4
 

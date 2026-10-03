@@ -901,3 +901,94 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
     transform: none;
   }
 }
+
+/* ══ The screen an installed app opens with ══════════════════════════════
+
+   Carli, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
+   huidiglik net met die app icon, maar ek sal wil hê die woorde futurebox moet
+   saam met die icon/logo launch."*
+
+   The look is declared once, unconditionally, and only `display` is gated —
+   so there is one copy of what the launch screen looks like, and the question
+   of WHEN it shows is one line. Two copies of the look is how the gated one
+   and the ungated one end up different.
+
+   See `app/components/LaunchMark.tsx` for why there is no JavaScript in any
+   of this, and `scripts/splash.mjs` for the half of the answer that iOS
+   paints before our HTML exists. */
+[data-launchmark] {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  /* The manifest's `background_color` and this are the same token, so the
+     system screen and ours are one colour and the hand-over is invisible. */
+  background: rgb(var(--fb-page));
+  /* Never in the way, not even while it is on the screen: a tap in the first
+     moment goes to the app underneath rather than to a picture. */
+  pointer-events: none;
+  /* Takes itself away. 620ms still, then fades — and `visibility` at the end
+     so there is nothing left, in the layer or in the accessibility tree,
+     whether or not any JavaScript ever ran. */
+  animation: fb-launch-done 760ms 620ms forwards ease-out;
+}
+
+@keyframes fb-launch-done {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+[data-launchmarktile] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 1.5rem;
+  /* The same gradient the landing page and the app icon are drawn with —
+     emerald-500 to cyan-400 — so the thing on the home screen and the thing
+     that opens are one picture. */
+  background-image: linear-gradient(to top right, rgb(16, 185, 129), rgb(34, 211, 238));
+  box-shadow: 0 0 60px rgba(16, 185, 129, 0.25);
+}
+
+[data-launchmarktile] > svg {
+  width: 3rem;
+  height: 3rem;
+  color: rgb(var(--fb-on-accent));
+}
+
+[data-launchmarkword] {
+  font-size: 2.25rem;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: rgb(var(--fb-ink));
+}
+
+/* The one word in the app's own accent, exactly as `Landing.tsx` draws it. */
+[data-launchmarkword] > span {
+  color: rgb(var(--fb-primary-400));
+}
+
+/* ── When it shows ───────────────────────────────────────────────────────
+
+   Only when the app was opened from its own icon. In a browser tab there is
+   no system splash to cover and no launch to brand — and the landing page
+   draws this same mark at four times the size a moment later, so a tab would
+   get the brand twice.
+
+   `minimal-ui` and `fullscreen` are here because an installed app is served
+   whichever of the three the platform feels like giving it, and a screen that
+   appears on one phone and not the next is worse than none. */
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  [data-launchmark] {
+    display: flex;
+  }
+}
