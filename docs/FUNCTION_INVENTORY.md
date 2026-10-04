@@ -47,9 +47,21 @@ library big enough to need its own room is a library nobody visits. It is what t
 desk's start frame picks from and where the brand kit's logo lives, which is what
 unblocked both.
 
-**Still open:** audio and video files. Nothing yet keeps a piece of music somebody brought
-in from outside, and the makes list is per-room history rather than a library you file
-into.
+~~**Still open:** audio and video files.~~ — **closed** on 5 October 2026. `app/lib/brought.ts`
+is the same bargain for sound and video: details in localStorage, bytes in the same IndexedDB
+store, a star that means keep. It is NOT `assets.ts` with another `kind`, and the reason is the
+one decision that matters: a picture is tens of kilobytes and twenty of them is a count worth
+capping, while a minute of phone video is tens of megabytes and twelve of those is most of a
+browser's quota. So this shelf is capped in BYTES first and by count second, and a file larger
+than half the budget is refused rather than allowed to evict everything on its way in.
+
+Filed as material goes past rather than behind a button — a shelf somebody has to remember to
+put things on is a shelf with nothing on it — and drawn as a strip on the two benches where
+clips and songs are brought in, for the same reason the pictures are a strip: a library big
+enough to need its own room is a library nobody visits.
+
+The makes list is still per-room history, and that is deliberate: it is a record of what this
+app made, which is a different thing from a shelf of what was carried in.
 
 ### 3. There is no search — **closed**
 

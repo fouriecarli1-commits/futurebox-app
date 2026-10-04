@@ -81,6 +81,7 @@ import {
 import { fit } from '../lib/imagefile';
 import { accessToken } from '../lib/cloud';
 import { broughtIn, cameFromChannel, madeHere, mustOwn, type Came } from '../lib/filmrights';
+import { broughtFrom, fileIt, loadBrought, posterOf, readBrought, starBrought, type Brought } from '../lib/brought';
 import { myVideos, type MyVideo } from '../lib/filmed';
 import { keepFilm, loadFilm } from '../lib/filmkeep';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
@@ -723,6 +724,108 @@ export default function VideoEditor({
      Solo is a radio and mute is a switch — pressing solo on the lane that is
      already soloed clears it, which is what every desk does and what makes
      the button its own way out. */
+  /* ── The shelf, drawn where things are brought in ───────────────────────
+
+     `docs/FUNCTION_INVENTORY.md`: *"Still open: audio and video files. Nothing
+     yet keeps a piece of music somebody brought in from outside."*
+
+     A strip where material is used rather than a room of its own, for the
+     reason `assets.ts` gives about the pictures: a library big enough to need
+     its own room is a library nobody visits. Same component for the clips and
+     for the songs, because a shelf that behaves differently in two benches is
+     two shelves to learn. */
+  const Shelf = ({ kind }: { kind: 'audio' | 'video' }): React.ReactElement => {
+    const all = (shelf ?? []).filter((one) => one.kind === kind);
+    return (
+      <div className="space-y-2" data-editorshelf={kind}>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="block text-sm text-zinc-400">
+            {kind === 'video'
+              ? t('edit.shelfClips', 'Clips you brought in before')
+              : t('edit.shelfSongs', 'Songs you brought in before')}
+          </span>
+          <button
+            type="button"
+            data-editorshelfload
+            onClick={() => setShelf(loadBrought())}
+            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600"
+          >
+            <RefreshCw className="w-4 h-4" />
+            {shelf === null ? t('edit.channelLook', 'Look') : t('edit.channelAgain', 'Again')}
+          </button>
+        </div>
+        {shelf !== null && all.length === 0 && (
+          <p className="text-sm text-zinc-400" data-editorshelfnone>
+            {t('edit.shelfNone', 'Nothing on the shelf yet. Anything you bring in is kept here, on this device, so you do not have to find it again.')}
+          </p>
+        )}
+        {all.length > 0 && (
+          <ul className="space-y-2">
+            {all.map((one) => (
+              <li key={one.id} className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  data-editorshelfpick={one.kind}
+                  disabled={pulling === one.id}
+                  onClick={() => {
+                    setPulling(one.id);
+                    void readBrought(one.id)
+                      .then((blob) => {
+                        if (!blob) {
+                          setProblem(t('edit.shelfGone', 'That file is not on this device any more.'));
+                          setShelf(loadBrought());
+                          return undefined;
+                        }
+                        const named = new File([blob], `${one.name}.${one.mime.split('/')[1] ?? 'bin'}`, { type: one.mime });
+                        if (kind === 'video') return bringIn([named], 'device');
+                        commit((was) => ({
+                          ...was,
+                          under: named,
+                          underCame: 'device' as const,
+                          underName: one.name,
+                        }));
+                        return undefined;
+                      })
+                      .finally(() => setPulling(null));
+                  }}
+                  className="min-h-[44px] flex-1 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600 disabled:opacity-60"
+                >
+                  {pulling === one.id
+                    ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                    : one.thumb
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      ? <img src={one.thumb} alt="" className="h-8 w-8 flex-shrink-0 rounded object-cover" />
+                      : <ListMusic className="w-4 h-4 flex-shrink-0" />}
+                  <span className="min-w-0 flex-1 truncate font-semibold">{one.name}</span>
+                  {one.seconds > 0 && (
+                    <span className="flex-shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
+                  )}
+                </button>
+                {/* Starred means eviction never takes it. The shelf is capped
+                    in bytes, so something has to go when a new file arrives —
+                    this is how she says which things must not. */}
+                <button
+                  type="button"
+                  data-editorshelfstar={one.id}
+                  aria-pressed={Boolean(one.favourite)}
+                  aria-label={t('edit.shelfKeep', 'Keep this one')}
+                  title={t('edit.shelfKeep', 'Keep this one')}
+                  onClick={() => setShelf(starBrought(one.id, !one.favourite))}
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border"
+                  style={one.favourite
+                    ? { borderColor: '#fbbf24', color: '#fbbf24', background: 'rgba(251,191,36,0.12)' }
+                    : { borderColor: 'rgba(16,185,129,0.3)', color: INK_DIM }}
+                >
+                  <Sparkles className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
   const Keys = ({ which }: { which: 'shots' | 'music' }): React.ReactElement => {
     const on = heard(edit);
     const soloed = edit.solo === which;
@@ -934,6 +1037,8 @@ export default function VideoEditor({
   const [pulling, setPulling] = useState<string | null>(null);
   /** Her own songs on this device, for putting one under the film. */
   const [mine, setMine] = useState<readonly Track[] | null>(null);
+  /** The shelf of things carried in from outside. See `lib/brought.ts`. */
+  const [shelf, setShelf] = useState<readonly Brought[] | null>(null);
 
 
   const [asking, setAsking] = useState(false);
@@ -1418,6 +1523,23 @@ export default function VideoEditor({
         if (!Number.isFinite(length) || length <= 0) {
           setProblem(t('edit.unreadable', 'That file could not be read as video.'));
           continue;
+        }
+        /* ── Filed as it goes by ─────────────────────────────────────
+
+           `docs/FUNCTION_INVENTORY.md` has carried this gap since the picture
+           library was built: nothing kept a clip or a song somebody brought
+           in, so the file that opens every advert was found on the phone
+           again every single time.
+
+           Filed here rather than behind a button, because a shelf somebody
+           has to remember to put things on is a shelf with nothing on it. Not
+           awaited and not allowed to fail the bring: the clip is already on
+           the clock, and a full disk must not take it off again. */
+        if (came === 'device') {
+          void posterOf(file).then((thumb) => fileIt(
+            { ...broughtFrom(file, 'video', file.name, length, 'videoedit'), ...(thumb ? { thumb } : {}) },
+            file,
+          )).catch(() => undefined);
         }
         next = add(next, {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -3613,6 +3735,8 @@ export default function VideoEditor({
             </button>
           )}
 
+          <Shelf kind="video" />
+
           {/* ── Or something already in her channel ──────────────────────
 
               Carli, 4 October 2026: *"die button wat sê bring it in, or
@@ -4398,11 +4522,18 @@ export default function VideoEditor({
                     underCame: 'device' as const,
                     underName: file.name.replace(/\.[^.]+$/, ''),
                   }));
+                  /* Onto the shelf as it passes, so the next film does not
+                     send her back to the phone for the same song. */
+                  void lengthOf(file)
+                    .then((long) => fileIt(broughtFrom(file, 'audio', file.name, long, 'videoedit'), file))
+                    .catch(() => undefined);
                 }
                 e.target.value = '';
               }}
             />
           </label>
+
+          <Shelf kind="audio" />
 
           {/* ── Or a song this app made ──────────────────────────────────
 

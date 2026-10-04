@@ -2342,6 +2342,48 @@ try {
 
   const wide = await p.evaluate(() => document.documentElement.scrollWidth);
   const seen = p.viewportSize()?.width ?? 0;
+  /* ── The shelf of things carried in ──────────────────────────────────
+
+     `docs/FUNCTION_INVENTORY.md` has carried this gap since the picture
+     library was built: nothing kept a clip or a song somebody brought in, so
+     the file that opens every advert was found on the phone again every time.
+
+     Measured end to end rather than as "the strip is drawn", because the
+     round trip is the feature: the clip this walk brought in at the start
+     should be ON the shelf by now, filed as it went past, and pressing it
+     should put a second copy on the clock. */
+  await bench('folder');
+  await p.waitForTimeout(400);
+  await p.locator('[data-editorshelfload]').first().click({ timeout: 4000 }).catch(() => undefined);
+  await p.waitForTimeout(700);
+
+  const onShelf = p.locator('[data-editorshelfpick="video"]');
+  check('the clip brought in earlier is on the shelf',
+    (await onShelf.count()) >= 1,
+    'filed as it went past, not behind a button — a shelf somebody has to'
+    + ' remember to put things on is a shelf with nothing on it');
+
+  if ((await onShelf.count()) >= 1) {
+    const had = await p.locator('[data-editorblock]').count();
+    await onShelf.first().click();
+    await p.waitForTimeout(2500);
+    check('  and pressing it puts it back on the clock',
+      (await p.locator('[data-editorblock]').count()) === had + 1,
+      `${had} blocks became ${await p.locator('[data-editorblock]').count()} —`
+      + ' the round trip is the whole feature');
+
+    check('  and it can be starred, so eviction never takes it',
+      (await p.locator('[data-editorshelfstar]').first().count()) === 1,
+      'the shelf is capped in bytes, so something has to go when a new file'
+      + ' arrives; this is how she says which things must not');
+
+    await p.locator('[data-editorundo]').click();
+    await p.waitForTimeout(700);
+    check('  and one press of Back takes the copy off again',
+      (await p.locator('[data-editorblock]').count()) === had,
+      'a history step like any other');
+  }
+
   /* ── Putting the project down ────────────────────────────────────────
 
      Carli, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,

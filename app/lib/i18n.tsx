@@ -803,6 +803,26 @@ export const STRINGS: Dict = {
     en: "Down to {pc}% while the shot talks",
     af: "Af tot {pc}% terwyl die skoot praat",
   },
+  "edit.shelfClips": {
+    en: "Clips you brought in before",
+    af: "Knipsels wat jy voorheen ingebring het",
+  },
+  "edit.shelfSongs": {
+    en: "Songs you brought in before",
+    af: "Liedjies wat jy voorheen ingebring het",
+  },
+  "edit.shelfNone": {
+    en: "Nothing on the shelf yet. Anything you bring in is kept here, on this device, so you do not have to find it again.",
+    af: "Nog niks op die rak nie. Enigiets wat jy inbring word hier gehou, op hierdie toestel, sodat jy dit nie weer hoef te soek nie.",
+  },
+  "edit.shelfGone": {
+    en: "That file is not on this device any more.",
+    af: "Daardie l\u00eaer is nie meer op hierdie toestel nie.",
+  },
+  "edit.shelfKeep": {
+    en: "Keep this one",
+    af: "Hou hierdie een",
+  },
   "edit.underMine": {
     en: "Or a song you made here",
     af: "Of \u2019n liedjie wat jy hier gemaak het",

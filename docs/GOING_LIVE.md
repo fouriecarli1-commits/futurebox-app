@@ -188,8 +188,12 @@ browser rather than reading the code:
 
 **Still open, and why**
 
-- **No library for audio or video brought in from outside.** The history is per-room, not a place
-  you file things into.
+- ~~No library for audio or video brought in from outside~~ — **closed**. `app/lib/brought.ts`:
+  a shelf for sound and video carried in, capped in bytes rather than by count because a minute
+  of phone video is tens of megabytes, filed automatically as material goes past, and drawn as a
+  strip on the benches where clips and songs are brought in. `check:brought` holds the eviction
+  rule, which is the part that loses somebody's work when it is wrong and is invisible until
+  after it has.
 - ~~No transcripts room and no speaker archive~~ — **closed**, though not as a room. Transcription
   with speaker labels now sits on a published episode beside the dub, which is where the other thing
   you do to a finished episode already lives. A fourteenth rail entry for something nobody sets out

@@ -317,6 +317,8 @@ jobs:
         run: npm run check:paidcall
       - name: "The film says what came from this app, and claims no copyright check"
         run: npm run check:filmrights
+      - name: "The shelf for brought-in sound and video, and what eviction may never take"
+        run: npm run check:brought
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped
