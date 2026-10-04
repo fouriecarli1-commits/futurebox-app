@@ -22,6 +22,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { CREDITS } from '../lib/credits';
 import { ArrowRight, CalendarDays, Loader2, Download, FileDown, Target, Users, Compass, Radar, Gauge } from 'lucide-react';
 import SaysDone from './SaysDone';
 import { useLang } from '../lib/i18n';
@@ -270,6 +271,20 @@ export default function MarketPlan({
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
           {plan ? t('plan.again', 'Work it out again') : t('plan.go', 'Work out the plan')}
+          {/* ── The price, on the button that spends ────────────────────
+
+              This room showed no number anywhere and took seventy-five
+              credits per press — `docs/FUNCTION_INVENTORY.md` has listed it
+              as one of the rooms missing the counter since the inventory was
+              written.
+
+              A charge somebody meets afterwards is a surprise, and a
+              surprise about money is what makes people stop trusting a room.
+              `CREDITS.marketPlan` is the same number the route charges, read
+              from the same file, so the two cannot drift. */}
+          <span data-planprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
+            {CREDITS.marketPlan} {t('plan.credits', 'credits')}
+          </span>
         </button>
         {/* ── Both of the two below say they did it ────────────────────
 

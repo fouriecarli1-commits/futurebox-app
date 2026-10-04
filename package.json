@@ -135,6 +135,7 @@
     "check:filmrights": "tsx scripts/check-filmrights.mts",
     "check:brought": "tsx scripts/check-brought.mts",
     "check:onthisdevice": "tsx scripts/check-onthisdevice.mts",
+    "check:priceonit": "tsx scripts/check-priceonit.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",

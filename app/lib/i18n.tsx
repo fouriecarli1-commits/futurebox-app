@@ -1829,7 +1829,12 @@ export const STRINGS: Dict = {
   "ads.again": { en: "Write three more", af: "Skryf nog drie" },
   "ads.write": { en: "Write the adverts", af: "Skryf die advertensies" },
   "ads.needWhat": { en: "Say what you are advertising first.", af: "Sê eers wat jy adverteer." },
-  "ads.free": { en: "Writing these is free.", af: "Om hierdie te skryf is gratis." },
+  /* "ads.free" is gone, and deliberately not left as an unused key: it read
+     "Writing these is free", and writing these has cost forty credits since
+     30 September. A key nobody renders is a sentence waiting to be rendered
+     again by somebody looking for a label. */
+  "ads.credits": { en: "credits", af: "krediete" },
+  "plan.credits": { en: "credits", af: "krediete" },
   "ads.copy": { en: "Copy the words", af: "Kopieer die woorde" },
   "ads.shot": { en: "The shot", af: "Die toneel" },
   "ads.spoken": { en: "Said aloud", af: "Hardop gesê" },

@@ -36,6 +36,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
+import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { matchByTitle, useCopilotOps } from '../lib/copilotactions';
@@ -822,10 +823,28 @@ export default function Campaign({
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {ads.length ? t('ads.again', 'Write three more') : t('ads.write', 'Write the adverts')}
+            {/* ── The price, on the button that spends ──────────────────
+
+                This said *"Writing these is free."* It has not been free
+                since 30 September, when `CREDITS.adLines` went to forty —
+                and the sentence beside it argued the case for free out of a
+                belief that text does not make the bill. Eight finished
+                advert lines against a brief is the biggest Anthropic call in
+                this app; `credits.ts` works the number out and says so.
+
+                The label never caught up, and for a while nothing made it
+                obvious: this room's call carried no token, so `charge`
+                answered 401 and the writing failed rather than billing. The
+                token went on on 5 October, which turned a broken step into a
+                working one with "free" written under it.
+
+                Every other paid press in this app carries its number — the
+                room's own earlier comment says so, in these words: "each
+                says its own price at its own button". */}
+            <span data-adsprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
+              {CREDITS.adLines} {t('ads.credits', 'credits')}
+            </span>
           </button>
-          {/* Writing is text, and text is not what makes the bill. The video
-              and the voice are, and each says its own price at its own button. */}
-          <span className="text-xs text-zinc-500">{t('ads.free', 'Writing these is free.')}</span>
         </div>
 
         {problem && (

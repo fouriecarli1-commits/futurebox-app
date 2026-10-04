@@ -106,7 +106,7 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 | | |
 |---|---|
 | ✅ | Lanes, recording against the song, keeping a mix |
-| ✖ | **No cost shown anywhere in it** — one of seven rooms still missing the counter |
+| ✅ | The price is on the button that spends it, read from `credits.ts` at both ends. `check:priceonit` holds every room that reaches a charging route — 19 routes, 13 rooms |
 | ✖ | No copilot operations registered. It is the room with the least assistance and the most controls |
 
 ### Music video
@@ -130,7 +130,7 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 | | |
 |---|---|
 | ✅ | Finds the hook in a song, cuts 15 or 30 seconds, the copilot picks the song and the length |
-| ✖ | **No cost shown** |
+| ✅ | The price is on the button that spends it, read from `credits.ts` at both ends. `check:priceonit` holds every room that reaches a charging route — 19 routes, 13 rooms |
 | ✖ | No caption written for the clip, though the copilot's own seeds offer it — an operation that does not exist |
 
 ### Your voice
@@ -155,7 +155,7 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 | | |
 |---|---|
 | ✅ | Released music, playlists, sharing, the sound trainer; the copilot opens a playlist |
-| ✖ | **No cost shown** |
+| ✅ | The price is on the button that spends it, read from `credits.ts` at both ends. `check:priceonit` holds every room that reaches a charging route — 19 routes, 13 rooms |
 | ✖ | **The sound trainer is buried here.** `rail.sound` — "Soundboard · Every genre, with audio" — exists in the copy and there is no such room. It sits inside the channel, where nobody looking for it would go |
 
 ### Live
@@ -163,14 +163,14 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 | | |
 |---|---|
 | ✅ | One room, everybody in it, a running order, announcing elsewhere; the copilot writes what you say |
-| ✖ | **No cost shown** |
+| ✅ | The price is on the button that spends it, read from `credits.ts` at both ends. `check:priceonit` holds every room that reaches a charging route — 19 routes, 13 rooms |
 
 ### Collab
 
 | | |
 |---|---|
 | ✅ | The radar, the finder, real direct messages, a shared room. **Beyond the reference**, which has a sidebar card saying "invite team members" |
-| ✖ | **No cost shown** |
+| ✅ | The price is on the button that spends it, read from `credits.ts` at both ends. `check:priceonit` holds every room that reaches a charging route — 19 routes, 13 rooms |
 | ✖ | No roles or permissions, and no attribution on a shared generation — who made it, with what settings, at what cost |
 
 ### Adverts
