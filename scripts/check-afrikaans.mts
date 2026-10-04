@@ -82,6 +82,10 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* The name a finished film goes up under when no clip on the clock has one.
+     "Film" is the Afrikaans word for a film, and the alternative — "Rolprent"
+     — is what the 1950s called it. */
+  'Film',
   /* Colour names, from the caption palette added on 4 October. Both of these
      are the same word in Afrikaans — "Amber" is amber and "Sand" is sand — and
      the honest alternative would be renaming a colour to dodge a check. */

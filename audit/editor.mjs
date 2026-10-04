@@ -2338,6 +2338,27 @@ try {
     check('  and a way to save it',
       (await p.locator('[data-editorsave]').count()) === 1);
 
+    /* ── And a way to her channel ──────────────────────────────────────
+
+       Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
+       channel toe gaan is dit nie daar nie."*
+
+       She was right and so was the Channel. What this room hands back is a
+       blob the browser made, which only ever existed on the phone, and the
+       Channel lists the `videos` table — nothing had uploaded it, so no row
+       existed, so there was nothing to show. Save it writes to the downloads
+       folder and tells the server nothing, and it was the only button here.
+
+       Asked by the words on it rather than by a data attribute, because this
+       is `KeepVideo` and that component's whole point is that the button
+       says what happened to the film; a button rendered with no label is a
+       button she cannot find. */
+    const toChannel = p.locator('[data-editormade] button', { hasText: /keep it on my account/i });
+    check('  and a way to put it in her channel',
+      (await toChannel.count()) === 1,
+      'a finished film that can only be downloaded is a finished film that is'
+      + ' not in the Channel, which is where she went looking for it');
+
   /* ── Nothing the room adds breaks the page it sits on ──────────────── */
 
   const wide = await p.evaluate(() => document.documentElement.scrollWidth);

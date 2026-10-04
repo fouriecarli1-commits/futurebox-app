@@ -231,6 +231,21 @@ export const SHAPES: Readonly<Record<string, Shape>> = {
   square: { width: 1080, height: 1080 },
 };
 
+/**
+ * The same three shapes in the words the rest of the app uses.
+ *
+ * `videos` carries an aspect as `9:16`, and this room carries a shape as
+ * `tall`, because a room that works in pixels needs the pixels. One mapping,
+ * here beside the shapes, so a fourth shape cannot be added without the
+ * question of what it is called on the way out being answered in the same
+ * place.
+ */
+export const ASPECTS: Readonly<Record<string, '9:16' | '16:9' | '1:1'>> = {
+  tall: '9:16',
+  wide: '16:9',
+  square: '1:1',
+};
+
 /** An edit, whole. */
 export interface Edit {
   readonly pieces: readonly Piece[];

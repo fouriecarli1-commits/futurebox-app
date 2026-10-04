@@ -927,6 +927,14 @@ export const STRINGS: Dict = {
     en: "This device has no room left to keep the project, so it will not be here when you come back. Put the film together and save it now, or clear some space first.",
     af: "Hierdie toestel het nie meer plek om die projek te hou nie, so dit sal nie hier wees wanneer jy terugkom nie. Sit die film nou saam en stoor dit, of maak eers plek skoon.",
   },
+  "edit.keptOff": {
+    en: "This device is not keeping the project, so nothing from this session will be here when you come back. Put the film together and keep it in your channel before you leave this room.",
+    af: "Hierdie toestel hou nie die projek nie, so niks van hierdie sessie sal hier wees wanneer jy terugkom nie. Sit die film saam en hou dit in jou kanaal voor jy hierdie kamer verlaat.",
+  },
+  "edit.filmName": {
+    en: "Film",
+    af: "Film",
+  },
   "edit.bring": {
     en: "Bring clips in",
     af: "Bring knipsels in",

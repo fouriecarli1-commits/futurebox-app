@@ -46,7 +46,7 @@
  * and duplicated again still shares one copy.
  */
 
-import { NOTHING, type Edit, type Piece } from './videoedit';
+import type { Edit, Piece } from './videoedit';
 
 const DB_NAME = 'futurebox-film';
 const FILM = 'film';
@@ -54,7 +54,31 @@ const STUFF = 'stuff';
 const ONLY = 'current';
 
 /** What a save did, in a word the room can show. */
-export type Kept = 'kept' | 'full' | 'off';
+export type Kept = 'kept' | 'held' | 'full' | 'off';
+
+/**
+ * What a read found, which is three things and not two.
+ *
+ * Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
+ * channel toe gaan is dit nie daar nie. Toe ek terug na die editor gaan is
+ * dit ook nie meer daar nie."*
+ *
+ * The second half of that was this type being missing. `loadFilm` answered
+ * `null` for "nothing was ever kept" AND for "the read failed", so the room
+ * could not tell an empty disk from a disk it could not read. It opened with
+ * an empty clock either way — and nine hundred milliseconds later the save
+ * wrote that empty clock over the real film and deleted every clip the empty
+ * film did not point at, which is all of them.
+ *
+ * `none` is a first visit and is not a failure. `broke` is a failure, and the
+ * room's answer to it is to stop writing and say so, because the film on the
+ * disk may be perfectly good and this session is the thing that must not land
+ * on top of it.
+ */
+export type Found =
+  | { readonly how: 'had'; readonly edit: Edit }
+  | { readonly how: 'none' }
+  | { readonly how: 'broke' };
 
 /**
  * Which key each Blob was stored under.
@@ -111,7 +135,7 @@ function openDb(): Promise<IDBDatabase> {
  * a browser with no IndexedDB at all, which is a private window on some
  * phones.
  */
-export async function keepFilm(edit: Edit): Promise<Kept> {
+export async function keepFilm(edit: Edit, anyway = false): Promise<Kept> {
   if (typeof indexedDB === 'undefined') return 'off';
   let db: IDBDatabase | null = null;
   try {
@@ -131,24 +155,51 @@ export async function keepFilm(edit: Edit): Promise<Kept> {
     if (edit.under) wanted.set(keyOf(edit.under), edit.under);
 
     const live = db;
+    let held = false;
     await new Promise<void>((resolve, reject) => {
       const tx = live.transaction([FILM, STUFF], 'readwrite');
       const stuff = tx.objectStore(STUFF);
-      stuff.getAllKeys().onsuccess = (event) => {
-        const already = new Set(
-          ((event.target as IDBRequest<IDBValidKey[]>).result ?? []).map(String),
-        );
-        /* Only what is new, and only what is still referenced. A clip taken
-           off the clock has to go, or the disk fills with material from films
-           she finished weeks ago. */
-        for (const [key, blob] of wanted) if (!already.has(key)) stuff.put(blob, key);
-        for (const key of already) if (!wanted.has(key)) stuff.delete(key);
+      const film = tx.objectStore(FILM);
+
+      /* ── The one write this function will refuse ─────────────────────────
+
+         An empty film going down deletes every clip, because the write and
+         the delete are the same transaction. So an empty film is never
+         allowed on top of a film that has shots in it unless somebody said
+         `anyway` — which only New project does, through `forgetFilm`.
+
+         It is read HERE, inside the readwrite transaction, and not in a
+         `loadFilm` beforehand: a look in one transaction and a write in the
+         next leaves room for a second save to land between them, which is
+         this guard being present and not holding.
+
+         What this buys is that the fault she hit is survivable. A read that
+         goes wrong costs a session; before this it cost the material. */
+      const standing = film.get(ONLY);
+      standing.onsuccess = () => {
+        const was = (standing.result as Thin | undefined) ?? null;
+        if (!anyway && edit.pieces.length === 0 && (was?.pieces?.length ?? 0) > 0) {
+          held = true;
+          return;
+        }
+        stuff.getAllKeys().onsuccess = (event) => {
+          const already = new Set(
+            ((event.target as IDBRequest<IDBValidKey[]>).result ?? []).map(String),
+          );
+          /* Only what is new, and only what is still referenced. A clip taken
+             off the clock has to go, or the disk fills with material from
+             films she finished weeks ago. */
+          for (const [key, blob] of wanted) if (!already.has(key)) stuff.put(blob, key);
+          for (const key of already) if (!wanted.has(key)) stuff.delete(key);
+        };
+        film.put(thin, ONLY);
       };
-      tx.objectStore(FILM).put(thin, ONLY);
+
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error ?? new Error('save'));
       tx.onabort = () => reject(tx.error ?? new Error('abort'));
     });
+    if (held) return 'held';
     return 'kept';
   } catch (why) {
     return (why as DOMException)?.name === 'QuotaExceededError' ? 'full' : 'off';
@@ -160,14 +211,20 @@ export async function keepFilm(edit: Edit): Promise<Kept> {
 /**
  * Take the project back out.
  *
- * `null` for "there was nothing", which is a first visit and is not a
- * failure. A film whose material has gone — the browser evicted the database
- * under storage pressure, which it may do — comes back as the pieces that
- * still have their clips rather than as an exception: half a film is worth
- * more than none, and the room shows what is there.
+ * `none` for "there was nothing", which is a first visit and is not a
+ * failure. `broke` for a read that could not happen, which IS one, and the
+ * difference between those two is the whole second half of her report — see
+ * `Found` above.
+ *
+ * A film whose material has gone — the browser evicted the database under
+ * storage pressure, which it may do — comes back as the pieces that still
+ * have their clips rather than as a failure: half a film is worth more than
+ * none, and the room shows what is there.
  */
-export async function loadFilm(): Promise<Edit | null> {
-  if (typeof indexedDB === 'undefined') return null;
+export async function loadFilm(): Promise<Found> {
+  /* A private window on some phones. Not a first visit: nothing will be kept
+     this session either, and the room has to be able to say so. */
+  if (typeof indexedDB === 'undefined') return { how: 'broke' };
   let db: IDBDatabase | null = null;
   try {
     db = await openDb();
@@ -178,7 +235,7 @@ export async function loadFilm(): Promise<Edit | null> {
       asked.onsuccess = () => resolve((asked.result as Thin) ?? null);
       asked.onerror = () => reject(asked.error ?? new Error('read'));
     });
-    if (!thin) return null;
+    if (!thin) return { how: 'none' };
 
     const stuff = await new Promise<Map<string, Blob>>((resolve, reject) => {
       const tx = live.transaction(STUFF, 'readonly');
@@ -215,18 +272,29 @@ export async function loadFilm(): Promise<Edit | null> {
     };
     delete (edit as { coverAt?: unknown }).coverAt;
     delete (edit as { underAt?: unknown }).underAt;
-    return edit;
+    return { how: 'had', edit };
   } catch {
-    /* A database that cannot be opened is a room that opens empty, which is
-       what it did before any of this existed. It is not worth a sentence on
-       the screen; a FAILED SAVE is, and that one answers rather than throws. */
-    return null;
+    /* A database that cannot be read is NOT a first visit, and the room must
+       not treat it as one. It opens with an empty clock either way, but on
+       this branch the film on the disk may be perfectly good, so the room
+       stops writing and says out loud that it is not keeping anything. */
+    return { how: 'broke' };
   } finally {
     db?.close();
   }
 }
 
-/** Throw the kept project away. Used when she empties the clock herself. */
-export async function forgetFilm(): Promise<void> {
-  await keepFilm(NOTHING);
-}
+/* There was a `forgetFilm()` here, which called `keepFilm(NOTHING, true)` so
+   that New project could empty the disk on the press.
+ *
+ * It is gone on purpose. With it there, the room had TWO ways to write an
+ * empty film — one through this door with `anyway` hardcoded, one through the
+ * ordinary save — and the browser walk that proves New project really empties
+ * the disk went through this door. So the room's own rule for when an empty
+ * film is deliberate was never being exercised by anything: breaking it left
+ * every check green. That is the exact shape of a check that passes because
+ * it measures something next to the thing.
+ *
+ * One door now. The room says whether it means it, the walk proves the room
+ * says it right, and `anyway` has one caller instead of a spare entrance with
+ * the guard already disarmed. */

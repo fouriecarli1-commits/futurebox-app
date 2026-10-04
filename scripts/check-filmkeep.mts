@@ -35,6 +35,30 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 const keep = withoutComments(readFileSync('app/lib/filmkeep.ts', 'utf8'));
 const room = withoutComments(readFileSync('app/components/VideoEditor.tsx', 'utf8'));
 const library = withoutComments(readFileSync('app/lib/library.ts', 'utf8'));
+const keepvid = withoutComments(readFileSync('app/components/KeepVideo.tsx', 'utf8'));
+const cut = withoutComments(readFileSync('app/lib/videoedit.ts', 'utf8'));
+
+/**
+ * Every shape has a name on the way out, and no name is invented.
+ *
+ * A fourth shape added to `SHAPES` and not to `ASPECTS` would hand the
+ * uploader `undefined` and the Channel a row it cannot lay out, which is a
+ * film that looks wrong rather than a film that is missing — quieter, and
+ * still her work not arriving the way she left it.
+ */
+function shapesAndAspectsAgree(): boolean {
+  const keysOf = (what: string): string[] => {
+    const at = cut.indexOf(`export const ${what}`);
+    if (at < 0) return [];
+    const body = cut.slice(cut.indexOf('{', at) + 1, cut.indexOf('};', at));
+    return [...body.matchAll(/^\s*(\w+):/gm)].map((one) => one[1]);
+  };
+  const shapes = keysOf('SHAPES');
+  const aspects = keysOf('ASPECTS');
+  return shapes.length > 0
+    && shapes.length === aspects.length
+    && shapes.every((one) => aspects.includes(one));
+}
 
 /* ── Where it is kept ──────────────────────────────────────────────────── */
 
@@ -84,7 +108,7 @@ ok('  and still do after the project has been reopened',
    exact shape of a check that is green because it measures nothing. */
 ok('a save answers rather than throws',
   /Promise<Kept>/.test(keep)
-  && /export type Kept = 'kept' \| 'full' \| 'off'/.test(keep)
+  && /export type Kept = 'kept' \| 'held' \| 'full' \| 'off'/.test(keep)
   && /catch \(why\) \{/.test(keep),
   'the room has to be able to tell a full disk from a private window, and a'
   + ' thrown error up an effect is neither');
@@ -99,6 +123,73 @@ ok('  and the room says so on the screen',
   'a room that quietly stopped keeping her work tells her at exactly the'
   + ' moment it told her last time — by opening empty');
 
+/* ── An empty film cannot land on a film ───────────────────────────────── */
+
+/* Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor... Toe ek
+   terug na die editor gaan is dit ook nie meer daar nie."*
+
+   The first version of the keeping had the loss built into it. `loadFilm`
+   answered `null` for BOTH "nothing was ever kept" and "the read failed", the
+   room could not tell them apart, so a failed read opened an empty clock —
+   and nine hundred milliseconds later the save wrote that empty clock over
+   the real film AND deleted every clip nothing in it pointed at. One bad read
+   and the material was gone off the disk for good.
+
+   So two separate rules, either of which alone would have stopped it. */
+
+ok('an empty film never replaces a kept film that has shots in it',
+  /anyway/.test(keep)
+  && /standing/.test(keep)
+  && /edit\.pieces\.length === 0/.test(keep)
+  && /return 'held'/.test(keep),
+  'the write and the delete are the same transaction, so an empty film going'
+  + ' down takes the material with it — this is the rule that makes a bad'
+  + ' save survivable instead of permanent');
+
+ok('  and the standing film is read inside the same transaction',
+  before(keep, "const standing = film.get(ONLY)", "film.put(thin, ONLY)")
+  && /readwrite/.test(keep),
+  'read it in its own transaction first and two saves can interleave between'
+  + ' the look and the write, which is the guard being there and not holding');
+
+ok('  and an empty clock she made herself still empties the disk',
+  /const everHad = useRef\(false\)/.test(room)
+  && /if \(edit\.pieces\.length\) everHad\.current = true;/.test(room)
+  && /const meant = edit\.pieces\.length === 0 && everHad\.current;/.test(room)
+  && /keepFilm\(edit, meant\)/.test(room),
+  'a guard with no exception resurrects the clip she deleted on her next'
+  + ' visit. "Has this room had a film in it since it opened" separates the'
+  + ' two cases and needs nothing remembered in eleven handlers: a bad read'
+  + ' opens the room empty and it never had one');
+
+ok('  and there is only one door that can say it',
+  !/keepFilm\([A-Za-z]*, true\)/.test(keep)
+  && !/forgetFilm/.test(keep)
+  && (keep.match(/anyway/g) ?? []).length > 0
+  && (room.match(/keepFilm\(/g) ?? []).length === 1,
+  'there used to be a `forgetFilm()` with `anyway` hardcoded, and the browser'
+  + ' walk proving New project empties the disk went through it — so the'
+  + ' room\'s own rule for a deliberate empty film was exercised by nothing,'
+  + ' and breaking it left every check green');
+
+ok('a read that failed is told apart from nothing ever kept',
+  /export type Found =/.test(keep)
+  && /how: 'broke'/.test(keep)
+  && /how: 'none'/.test(keep),
+  'one `null` for both is the whole fault: the room cannot tell an empty disk'
+  + ' from a disk it could not read, so it treats a film it cannot see as a'
+  + ' film that is not there');
+
+ok('  and the room stops keeping anything after a read that failed',
+  /if \(opening \|\| broke\) return undefined;/.test(room),
+  'the stored film may be perfectly good — writing this session over it on a'
+  + ' read that went wrong is how a lost session becomes a lost film');
+
+ok('  and says so, while there is still a film to save',
+  /data-editorkeptoff/.test(room),
+  'a room that has silently stopped keeping her work tells her at the same'
+  + ' moment it told her last time: by opening empty');
+
 /* ── The way back in ───────────────────────────────────────────────────── */
 
 ok('the room reads the kept project when it opens',
@@ -106,7 +197,8 @@ ok('the room reads the kept project when it opens',
   'the whole request');
 
 ok('  and never over a clip she has already brought in',
-  /setEdit\(\(now\) => \(now\.pieces\.length \? now : had\)\)/.test(room),
+  /setEdit\(\(now\) => \(now\.pieces\.length \? now : had\)\)/.test(room)
+  && /found\.how === 'had' \? found\.edit : null/.test(room),
   'the read is a round trip to disk and she can be faster than it; a restore'
   + ' that lands on top of a new clip is the same loss wearing the other mask');
 
@@ -117,15 +209,45 @@ ok('  and holds the explanation page until the read answers',
   + ' appear, looks exactly like the fault being fixed');
 
 ok('  and nothing is written before the first read is done',
-  /if \(opening\) return undefined;/.test(room)
+  /if \(opening \|\| broke\) return undefined;/.test(room)
   && before(room, 'void loadFilm()', 'const soon = setTimeout'),
   'a save that beats the load writes an empty film over the real one — the'
   + ' fault would then be permanent rather than a lost session');
 
 ok('saving waits until she stops',
-  /setTimeout\(\(\) => \{\s*void keepFilm\(edit\)/.test(room),
+  /setTimeout\(\(\) => \{[^}]*void keepFilm\(edit, meant\)/.test(room),
   'a slider drag is a few hundred changes, and a transaction each is a room'
   + ' that stutters');
+
+/* ── And out the other side ────────────────────────────────────────────── */
+
+/* Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
+   channel toe gaan is dit nie daar nie."*
+
+   Correct, and for the same reason the music videos were missing in
+   September: what comes out of this room is a blob that only ever existed on
+   the phone. The Channel lists the `videos` table. Nothing had uploaded it,
+   so no row existed, so the room had nothing to show — and the only button
+   under the finished film was Save it, which writes to the downloads folder
+   and tells the server nothing. */
+
+ok('the finished film can be kept in her channel',
+  /<KeepVideo/.test(room) && /import KeepVideo from '\.\/KeepVideo'/.test(room),
+  'a film that can only be downloaded is a film that is not in the Channel,'
+  + ' which is where she went looking for it');
+
+ok('  and it goes up as made here, not as something a camera took',
+  before(room, 'data-editormade', '<KeepVideo')
+  && /keepFilmed\(blob, title, seconds, 'made', aspect\)/.test(keepvid),
+  'the rights panel reads that word off the row — a film the desk made is not'
+  + ' a filmed take, and the two carry different obligations');
+
+ok('  and at the shape the FILM came out, not the first clip\'s',
+  /aspect=\{ASPECTS\[edit\.shape \?\? 'tall'\]/.test(room)
+  && /export const ASPECTS/.test(cut)
+  && shapesAndAspectsAgree(),
+  'a tall film cut from wide clips is a tall film; reading the clip would put'
+  + ' a 16:9 row on a 9:16 video and the Channel would letterbox it');
 
 if (bad) {
   console.error(`\ncheck:filmkeep — ${bad} assertion(s) failed.\n`);

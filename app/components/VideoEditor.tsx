@@ -54,6 +54,7 @@ import {
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
+import KeepVideo from './KeepVideo';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
@@ -92,7 +93,7 @@ import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
 import {
-  NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
+  ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
   captionAt, cutOut, cutSong, heard, move, runs, songSecond, split, splitHere, startsAt,
   trim,
@@ -933,11 +934,21 @@ export default function VideoEditor({
      which looks exactly like the fault being fixed. */
   const [opening, setOpening] = useState(true);
   const [kept, setKept] = useState<'full' | null>(null);
+  /* A read that could not happen, which is not the same as nothing kept.
+     Carli, 5 October 2026: *"Toe ek terug na die editor gaan is dit ook nie
+     meer daar nie."* `loadFilm` used to answer the same `null` for both, so
+     the room opened empty on a bad read and then saved that empty clock over
+     the real film — taking the material with it, because the write and the
+     delete are one transaction. Now it knows, and on `broke` it stops writing
+     and says so. */
+  const [broke, setBroke] = useState(false);
 
   useEffect(() => {
     let gone = false;
-    void loadFilm().then((had) => {
+    void loadFilm().then((found) => {
       if (gone) return;
+      if (found.how === 'broke') setBroke(true);
+      const had = found.how === 'had' ? found.edit : null;
       /* Only if there is something in it. An empty kept film must not land on
          top of a clip she has brought in while this was still reading — the
          read is a round trip to disk and she can be faster than it. */
@@ -947,17 +958,36 @@ export default function VideoEditor({
     return () => { gone = true; };
   }, []);
 
+  /* ── Whether an empty clock is a decision or a symptom ──────────────────
+
+     `keepFilm` refuses to write an empty film over a film that has shots in
+     it, because that write deletes the material in the same transaction. The
+     refusal needs one exception and exactly one: an empty clock she made
+     herself, by taking the last clip off or by pressing New project. Without
+     it the room would resurrect a clip she deleted on the next visit.
+
+     This is what tells them apart, and it needs nothing from the editing code
+     — no flag to remember to set in the right branch of eleven handlers. An
+     empty film is deliberate if and only if this room has HAD a film in it
+     since it opened. A read that went wrong opens the room empty and it never
+     had one, so the guard holds and her material stays on the disk. */
+  const everHad = useRef(false);
+  useEffect(() => {
+    if (edit.pieces.length) everHad.current = true;
+  }, [edit.pieces.length]);
+
   /* Written a moment after she stops, not on every keystroke: a slider drag is
      a few hundred changes and each one would be a transaction. The material
      itself is written once — `keepFilm` only puts a Blob it has not already
      got — so what this actually costs per save is kilobytes. */
   useEffect(() => {
-    if (opening) return undefined;
+    if (opening || broke) return undefined;
     const soon = setTimeout(() => {
-      void keepFilm(edit).then((how) => setKept(how === 'full' ? 'full' : null));
+      const meant = edit.pieces.length === 0 && everHad.current;
+      void keepFilm(edit, meant).then((how) => setKept(how === 'full' ? 'full' : null));
     }, 900);
     return () => clearTimeout(soon);
-  }, [edit, opening]);
+  }, [edit, opening, broke]);
 
   /* The one door. The room costs nothing to serve, so this is not about cost
      — it is that the plan cards say the editor comes with a paid plan, and a
@@ -3595,6 +3625,20 @@ export default function VideoEditor({
           </p>
         )}
 
+        {/* And a read that could not happen. Same place, same reason, and the
+            wording covers both ways it happens: a private window, which will
+            keep nothing this session either, and a database that would not
+            open, where the film on the disk may be fine and this room has
+            deliberately stopped writing rather than land on top of it. */}
+        {broke && (
+          <p role="alert" data-editorkeptoff className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-300">
+            {t(
+              'edit.keptOff',
+              'This device is not keeping the project, so nothing from this session will be here when you come back. Put the film together and keep it in your channel before you leave this room.',
+            )}
+          </p>
+        )}
+
         {/* The finished film, outside the benches on purpose: a film that
             arrived behind a panel somebody has to reopen is a film they are
             not sure they got. */}
@@ -3626,6 +3670,35 @@ export default function VideoEditor({
               <Download className="w-4 h-4" />
               {t('edit.save', 'Save it')}
             </button>
+
+            {/* ── And into her channel ──────────────────────────────────
+
+                Carli, 5 October 2026: *"Ek het nou 'n video gemaak op
+                editor. Toe ek channel toe gaan is dit nie daar nie."*
+
+                The room was right and so was she. What comes out of here is
+                a blob the browser made, and it only ever existed on the
+                phone; the Channel lists the `videos` table. Nothing had
+                uploaded it, so no row existed, so there was nothing to show.
+                The only button under the finished film wrote to the downloads
+                folder and told the server nothing.
+
+                The same component the composer's desk has used since
+                September, so the upload path, the four-and-a-half-megabyte
+                request-body limit it works around, and the button that says
+                what happened to it are one piece of code and not two.
+
+                Beside Save it rather than instead of it: a copy in her
+                phone's files and a row on her account are different wants. */}
+            <KeepVideo
+              blob={made.blob}
+              title={edit.pieces[0]?.name ?? t('edit.filmName', 'Film')}
+              seconds={made.seconds}
+              /* The FILM's shape, which is the shape it actually came out in
+                 — not the shape of whatever clip happens to be first on the
+                 clock. */
+              aspect={ASPECTS[edit.shape ?? 'tall'] ?? '9:16'}
+            />
           </div>
         )}
       </div>
