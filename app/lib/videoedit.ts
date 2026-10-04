@@ -50,6 +50,7 @@ import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './
 import { bitsFor, rateFor, sizeFor } from './videoquality';
 import { stretches, withSkip, wordsSpan } from './videospan';
 import type { CoverFrom } from './videocover';
+import type { Came } from './filmrights';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -58,6 +59,20 @@ export interface Piece {
   readonly clip: Blob;
   /** For the strip, and for a progress line that says which one is laying. */
   readonly name: string;
+  /**
+   * Where this shot came from: filmed here, made here, or carried in.
+   *
+   * Carli, 5 October 2026: *"Copyright check for export."* This app cannot
+   * check copyright and does not claim to — see `lib/filmrights.ts` — but it
+   * does know which parts of a film came out of itself, and a piece made from
+   * a file off a phone used to be indistinguishable from one taken out of her
+   * own channel.
+   *
+   * Absent counts as carried in, and that direction is deliberate: a film made
+   * before this existed has nothing on it, and the safe reading of "I do not
+   * know" is "I cannot vouch for it".
+   */
+  readonly came?: Came;
   /** Where in the piece's own material it starts and stops, in seconds. */
   readonly from: number;
   readonly to: number;
@@ -277,6 +292,9 @@ export interface Edit {
   readonly underSkips?: readonly { readonly from: number; readonly to: number }[];
   /** A song under the whole thing, and where in it to start. */
   readonly under?: Blob | null;
+  /** Where that song came from, and what it is called. See `Piece.came`. */
+  readonly underCame?: Came;
+  readonly underName?: string;
   readonly underFrom?: number;
   /** How loud the song is against the pieces, 0 to 2. */
   readonly underLoud?: number;

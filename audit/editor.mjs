@@ -2288,6 +2288,12 @@ try {
     console.error('TRACE billgo count', await p.locator('[data-editorbillgo]').count(),
       'make disabled', await p.locator('[data-editormake]').isDisabled().catch(() => 'err'),
       'bill', await p.locator('[data-editorbill]').count());
+    /* Every clip in this walk came off the device, so the bill now asks her
+       to say she has the right to use it before the film can be made. That
+       gate is asserted on its own further down; here it is simply the door
+       this walk has to go through, the way she would. */
+    await p.locator('[data-editorrightsown] input').check().catch(() => undefined);
+    await p.waitForTimeout(300);
     await p.locator('[data-editorbillgo]').click();
     await p.waitForTimeout(2500);
     console.error('TRACE after go: made', await p.locator('[data-editormade]').count(),
@@ -2376,6 +2382,47 @@ try {
       `${await p.locator('[data-editorblock]').count()} of ${had} blocks — the`
       + ' material is still on the pieces in memory, so this is a history step'
       + ' like any other rather than a door that locks behind her');
+  }
+
+  /* ── What is in the film, before the money ───────────────────────────
+
+     Carli, 5 October 2026: *"Copyright check for export."*
+
+     It is not a copyright check and the room says so. What a browser is for
+     here is the half a source rule cannot reach: that the tick is actually in
+     the way. A warning she can press past is a warning, and the difference
+     between a gate and a notice is one `disabled` attribute. */
+  await bench('folder');
+  await p.waitForTimeout(300);
+  await p.locator('[data-editormake]').click({ timeout: 4000 }).catch(() => undefined);
+  await p.waitForTimeout(800);
+  const rightsBill = p.locator('[data-editorbill]');
+  if (await rightsBill.count()) {
+    check('the bill says what is in the film and where it came from',
+      (await p.locator('[data-editorrights]').count()) === 1,
+      'before the render rather than after the takedown');
+
+    const brought = await p.locator('[data-editorrightsbrought]').count();
+    if (brought) {
+      check('  and the film cannot be made until she says it is hers',
+        await p.locator('[data-editorbillgo]').isDisabled(),
+        'every clip in this walk came off the device, so the tick is in the'
+        + ' way — a warning she can press past is a warning');
+
+      await p.locator('[data-editorrightsown] input').check();
+      await p.waitForTimeout(400);
+      check('    and ticking it lets her through',
+        !(await p.locator('[data-editorbillgo]').isDisabled()),
+        'a gate with no way out is a door');
+
+      check('  and it says in words that nothing was checked',
+        /not a copyright check/i.test(
+          (await p.locator('[data-editorrightswhy]').innerText().catch(() => '')) || '',
+        ),
+        'the sentence that makes this a note rather than an assurance');
+    }
+    await p.locator('[data-editorbillno]').click().catch(() => undefined);
+    await p.waitForTimeout(300);
   }
 
   check('the video desk still fits its own window with the editor on it',

@@ -136,7 +136,12 @@ ok('picking one fetches the file itself',
   'the room decodes and paints frames; a title and an id are not a video');
 
 ok('  turns it into a File the room already knows how to read',
-  /new File\(\[blob\]/.test(room) && /bringIn\(\[new File/.test(room),
+  /new File\(\[blob\]/.test(room)
+  && /await bringIn\(\s*\[new File/.test(room)
+  /* And told where it came from, since 5 October: the same `File` arrives
+     here off a phone and out of her own channel, and the bill has to be able
+     to tell them apart. */
+  && /cameFromChannel\(one\.filmed\)/.test(room),
   'so the length, the `holds` ceiling and the history step all come from the'
   + ' one path, and a clip from the channel cannot be trimmed differently'
   + ' from a clip off the phone');

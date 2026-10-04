@@ -49,7 +49,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
-  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw,
+  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic,
 } from 'lucide-react';
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
@@ -80,9 +80,11 @@ import {
 } from '../lib/logomark';
 import { fit } from '../lib/imagefile';
 import { accessToken } from '../lib/cloud';
+import { broughtIn, cameFromChannel, madeHere, mustOwn, type Came } from '../lib/filmrights';
 import { myVideos, type MyVideo } from '../lib/filmed';
 import { keepFilm, loadFilm } from '../lib/filmkeep';
-import { downloadBlob, safeFilename } from '../lib/library';
+import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
+import { readAudio } from '../lib/trackaudio';
 import { check, type Plan } from '../lib/entitlements';
 import { CREDITS, perMinute } from '../lib/credits';
 import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
@@ -796,6 +798,18 @@ export default function VideoEditor({
      button says so in between; a mis-tap on a phone is one press, and the
      thing behind this one is an afternoon. */
   const [starting, setStarting] = useState(false);
+
+  /* ── Whether she has said the brought-in material is hers to use ─────────
+
+     Carli, 5 October 2026: *"Copyright check for export."*
+
+     Held here and not on the edit, and not remembered between films: it is a
+     statement about THIS film on THIS day, and a tick that survived a new
+     project would be a tick nobody made. Cleared whenever what is in the film
+     changes, below. */
+  const [owns, setOwns] = useState(false);
+  const brought = useMemo(() => broughtIn(edit), [edit]);
+  useEffect(() => { setOwns(false); }, [brought.length]);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<{ url: string; blob: Blob; ext: string; seconds: number } | null>(null);
@@ -918,6 +932,8 @@ export default function VideoEditor({
   const [channel, setChannel] = useState<MyVideo[] | null>(null);
   /** Which video's file is being pulled down, so its own card can say so. */
   const [pulling, setPulling] = useState<string | null>(null);
+  /** Her own songs on this device, for putting one under the film. */
+  const [mine, setMine] = useState<readonly Track[] | null>(null);
 
 
   const [asking, setAsking] = useState(false);
@@ -1377,7 +1393,14 @@ export default function VideoEditor({
      need a second copy of the length check, the decode, or the `holds` note
      below — a second copy is how the two ways in end up disagreeing about
      what a clip is. */
-  const bringIn = useCallback(async (files: FileList | readonly File[] | null) => {
+  const bringIn = useCallback(async (
+    files: FileList | readonly File[] | null,
+    /* Where this material came from, carried from the door rather than
+       guessed at later: a file off a phone and a video out of her own channel
+       arrive here as the same `File`, and by the time the bill is drawn there
+       is nothing left to tell them apart. See `lib/filmrights.ts`. */
+    came: Came = 'device',
+  ) => {
     if (!files?.length) return;
     setProblem('');
     setBusy('bring');
@@ -1399,6 +1422,7 @@ export default function VideoEditor({
         next = add(next, {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           clip: file,
+          came,
           name: file.name.replace(/\.[^.]+$/, ''),
           from: 0,
           to: length,
@@ -1452,7 +1476,12 @@ export default function VideoEditor({
       const blob = await response.blob();
       const kind = blob.type || 'video/mp4';
       const ext = kind.includes('webm') ? 'webm' : 'mp4';
-      await bringIn([new File([blob], `${one.title || 'video'}.${ext}`, { type: kind })]);
+      /* Out of her own channel, so the rights panel can say so rather than
+         asking her to vouch for her own work. */
+      await bringIn(
+        [new File([blob], `${one.title || 'video'}.${ext}`, { type: kind })],
+        cameFromChannel(one.filmed),
+      );
     } catch {
       setProblem(t(
         'edit.channelfailed',
@@ -4362,11 +4391,87 @@ export default function VideoEditor({
               type="file" accept="audio/*" className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) commit((was) => ({ ...was, under: file }));
+                if (file) {
+                  commit((was) => ({
+                    ...was,
+                    under: file,
+                    underCame: 'device' as const,
+                    underName: file.name.replace(/\.[^.]+$/, ''),
+                  }));
+                }
                 e.target.value = '';
               }}
             />
           </label>
+
+          {/* ── Or a song this app made ──────────────────────────────────
+
+              Without this the rights panel has to treat every bed as carried
+              in, including her own record downloaded and brought back — and a
+              panel that asks her to vouch for her own work is a panel she
+              learns to tick without reading, which is the one thing it must
+              not become.
+
+              Read off this device rather than from the server: these are the
+              songs already in her library, which is where a bed comes from. */}
+          <div className="space-y-2" data-editorunderchannel>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="block text-sm text-zinc-400">
+                {t('edit.underMine', 'Or a song you made here')}
+              </span>
+              <button
+                type="button"
+                data-editorundermineload
+                onClick={() => setMine(loadTracks())}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600"
+              >
+                <RefreshCw className="w-4 h-4" />
+                {mine === null ? t('edit.channelLook', 'Look') : t('edit.channelAgain', 'Again')}
+              </button>
+            </div>
+            {mine !== null && mine.length === 0 && (
+              <p className="text-sm text-zinc-400" data-editorunderminenone>
+                {t('edit.underMineNone', 'No songs on this device yet. Make one in the studio and it appears here.')}
+              </p>
+            )}
+            {mine !== null && mine.length > 0 && (
+              <ul className="space-y-2">
+                {mine.slice(0, 12).map((one) => (
+                  <li key={one.id}>
+                    <button
+                      type="button"
+                      data-editorunderminepick
+                      disabled={pulling === one.id}
+                      onClick={() => {
+                        setPulling(one.id);
+                        void readAudio(one.id)
+                          .then((blob) => {
+                            if (!blob) {
+                              setProblem(t('edit.underMineGone', 'That song is not on this device any more.'));
+                              return;
+                            }
+                            commit((was) => ({
+                              ...was,
+                              under: blob,
+                              underCame: 'made' as const,
+                              underName: one.title,
+                            }));
+                          })
+                          .finally(() => setPulling(null));
+                      }}
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600 disabled:opacity-60"
+                    >
+                      {pulling === one.id
+                        ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                        : <ListMusic className="w-4 h-4 flex-shrink-0" />}
+                      <span className="min-w-0 flex-1 truncate font-semibold">{one.title}</span>
+                      <span className="flex-shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           {edit.under && (
             <>
@@ -5115,15 +5220,90 @@ export default function VideoEditor({
                   )}
                 </div>
               ) : (
+                <>
+                {/* ── What is in it, and what this app can vouch for ──────
+
+                    Carli, 5 October 2026: *"Copyright check for export."*
+
+                    It is not a copyright check and it does not say it is. A
+                    real one means fingerprinting against the rights databases
+                    the platforms license, and this app has no such service —
+                    a button saying "no copyright problems" would be FutureBox
+                    telling somebody in writing that their video is safe to
+                    post, on no evidence.
+
+                    What it does is the one thing this app genuinely knows:
+                    which parts came out of itself and which were carried in.
+                    Named, before the render rather than after the takedown.
+
+                    The tick is only in the way when there IS something
+                    carried in. A film made entirely here asks her nothing,
+                    which is what keeps the tick meaning something on the film
+                    where it does appear. */}
+                <div className="space-y-2 rounded-xl border px-3 py-2.5" data-editorrights
+                     style={{ borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(52,211,153,0.06)' }}>
+                  <span className="block text-sm font-bold" style={{ color: INK }}>
+                    {t('edit.rights', 'What is in this film')}
+                  </span>
+                  {madeHere(edit) > 0 && (
+                    <p className="text-sm" style={{ color: INK_DIM }} data-editorrightsmine>
+                      {t('edit.rightsMine', '{n} made here — yours, and the bill is the proof.')
+                        .replace('{n}', String(madeHere(edit)))}
+                    </p>
+                  )}
+                  {brought.length === 0 ? (
+                    <p className="text-sm" style={{ color: INK_DIM }} data-editorrightsclean>
+                      {t('edit.rightsClean', 'Nothing in it came from anywhere else.')}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm" style={{ color: INK }} data-editorrightsbrought>
+                        {t(
+                          'edit.rightsBrought',
+                          'FutureBox cannot tell who owns these — it has never seen them before:',
+                        )}
+                      </p>
+                      <ul className="space-y-0.5 pl-1">
+                        {brought.map((one) => (
+                          <li key={one.id} className="truncate text-sm" style={{ color: INK_DIM }}>
+                            {one.kind === 'song' ? '\u266a' : '\u25b8'} {one.what}
+                          </li>
+                        ))}
+                      </ul>
+                      <label className="flex items-start gap-2 pt-1" data-editorrightsown>
+                        <input
+                          type="checkbox"
+                          checked={owns}
+                          onChange={(event) => setOwns(event.target.checked)}
+                          className="mt-1 h-5 w-5 flex-shrink-0 accent-emerald-500"
+                        />
+                        <span className="text-sm leading-snug" style={{ color: INK }}>
+                          {t(
+                            'edit.rightsOwn',
+                            'I have the right to use what I brought in, and I know FutureBox has not checked it.',
+                          )}
+                        </span>
+                      </label>
+                      <p className="text-sm leading-snug" style={{ color: INK_DIM }} data-editorrightswhy>
+                        {t(
+                          'edit.rightsWhy',
+                          'This is not a copyright check. Nothing here listens to your film against the rights databases the platforms use — a video can pass this and still be taken down.',
+                        )}
+                      </p>
+                    </>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   data-editorbillgo
-                  disabled={busy !== null}
+                  disabled={busy !== null || (mustOwn(edit) && !owns)}
                   onClick={() => { setAsking(false); void preview(); }}
                   className="min-h-[44px] w-full rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 disabled:opacity-40"
                 >
                   {t('edit.billGo', 'Yes, put it together')}
                 </button>
+                </>
               )}
 
               <button

@@ -803,6 +803,42 @@ export const STRINGS: Dict = {
     en: "Down to {pc}% while the shot talks",
     af: "Af tot {pc}% terwyl die skoot praat",
   },
+  "edit.underMine": {
+    en: "Or a song you made here",
+    af: "Of \u2019n liedjie wat jy hier gemaak het",
+  },
+  "edit.underMineNone": {
+    en: "No songs on this device yet. Make one in the studio and it appears here.",
+    af: "Nog geen liedjies op hierdie toestel nie. Maak een in die ateljee en dit verskyn hier.",
+  },
+  "edit.underMineGone": {
+    en: "That song is not on this device any more.",
+    af: "Daardie liedjie is nie meer op hierdie toestel nie.",
+  },
+  "edit.rights": {
+    en: "What is in this film",
+    af: "Wat in hierdie film is",
+  },
+  "edit.rightsMine": {
+    en: "{n} made here \u2014 yours, and the bill is the proof.",
+    af: "{n} hier gemaak \u2014 joune, en die rekening is die bewys.",
+  },
+  "edit.rightsClean": {
+    en: "Nothing in it came from anywhere else.",
+    af: "Niks daarin kom van elders nie.",
+  },
+  "edit.rightsBrought": {
+    en: "FutureBox cannot tell who owns these \u2014 it has never seen them before:",
+    af: "FutureBox kan nie s\u00ea wie hierdie besit nie \u2014 dit het hulle nog nooit gesien nie:",
+  },
+  "edit.rightsOwn": {
+    en: "I have the right to use what I brought in, and I know FutureBox has not checked it.",
+    af: "Ek het die reg om te gebruik wat ek ingebring het, en ek weet FutureBox het dit nie nagegaan nie.",
+  },
+  "edit.rightsWhy": {
+    en: "This is not a copyright check. Nothing here listens to your film against the rights databases the platforms use \u2014 a video can pass this and still be taken down.",
+    af: "Dit is nie \u2019n kopieregtoets nie. Niks hier luister na jou film teen die regtedatabasisse wat die platforms gebruik nie \u2014 \u2019n video kan hierdeur kom en steeds afgehaal word.",
+  },
   "edit.underSpeed": {
     en: "How fast the track plays",
     af: "Hoe vinnig die baan speel",
