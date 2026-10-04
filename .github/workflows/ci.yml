@@ -319,6 +319,8 @@ jobs:
         run: npm run check:filmrights
       - name: "The shelf for brought-in sound and video, and what eviction may never take"
         run: npm run check:brought
+      - name: "A room that keeps her work on this device says so, in both languages"
+        run: npm run check:onthisdevice
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

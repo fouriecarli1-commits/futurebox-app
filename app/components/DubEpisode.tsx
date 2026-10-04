@@ -250,7 +250,7 @@ export default function DubEpisode({
             {expected > 0
               ? `${t('dub.expect', 'They expect about')} ${Math.max(1, Math.round(expected / 60))} ${t('dub.minutes', 'minutes')}. `
               : ''}
-            {t('dub.leave', 'You can close this and come back — it keeps going on their side.')}
+            {t('dub.leave', 'You can close this and come back on this device — it keeps going on their side, and the ticket to collect it is kept here. On another phone this app cannot fetch it.')}
           </p>
         </div>
       )}

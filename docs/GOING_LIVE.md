@@ -204,5 +204,23 @@ browser rather than reading the code:
   that stops us publishing to them, described in `app/data/social.ts`.
 - ~~`next@16`~~ — **done**. It was not two advisories; see §1.
 
-And two things that are true and not yet said everywhere they apply: that the work lives on this
-device, and that publishing to the ad platforms is not connected.
+~~And two things that are true and not yet said everywhere they apply: that the work lives on this
+device, and that publishing to the ad platforms is not connected.~~ — **closed** on 5 October 2026.
+
+`check:onthisdevice` names the seven stores that keep a copy on one device, finds every room that
+writes to one, and fails on a room that does not tell her where the work went. Twelve rooms write;
+all twelve say so.
+
+Two gaps were real. The Video Editor had just learnt to keep the project and never mentioned it —
+everything about this app is shaped like a cloud app, so the assumption somebody arrives with is
+that their work is on a server. And the dub rooms said *"You can close this and come back — it
+keeps going on their side"*, which is true about the dub and wrong about what to do with it: the
+ticket this app needs to collect a finished dub is in localStorage on the device that started it,
+and the credits are already spent. That one was worse than silent.
+
+The check also holds the pair in both languages — a line that says where the work is in English and
+not in Afrikaans is the sentence missing for the reader most likely to need it, and `check:afrikaans`
+cannot see it because both halves are present and translated. It is the FACT that goes missing.
+
+The publishing half was already said where it applies: the queue says it reminds rather than posts,
+and the share row says which single one of its buttons really publishes.

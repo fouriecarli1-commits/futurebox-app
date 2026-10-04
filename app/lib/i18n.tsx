@@ -787,8 +787,8 @@ export const STRINGS: Dict = {
 
      "Video Editor" in both languages, which is her own word in both. */
   "edit.what": {
-    en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
-    af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
+    en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting. The project is kept on this device too, so it is here when you come back \u2014 and not on another phone.",
+    af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie. Die projek word ook op hierdie toestel gehou, so dit is hier wanneer jy terugkom \u2014 en nie op \u2019n ander foon nie.",
   },
   "edit.solo": { en: "Solo this lane", af: "Solo hierdie baan" },
   "edit.mute": { en: "Mute this lane", af: "Demp hierdie baan" },
@@ -1726,9 +1726,20 @@ export const STRINGS: Dict = {
   "dub.working": { en: "Dubbing it\u2026", af: "Klank dit oor\u2026" },
   "dub.expect": { en: "They expect about", af: "Hulle verwag ongeveer" },
   "dub.minutes": { en: "minutes", af: "minute" },
+  /* ── "on this device", and it is not a decoration ──────────────────────
+
+     This read "You can close this and come back — it keeps going on their
+     side", which is true about the dub and wrong about what she should do
+     with it. The ticket that lets this app collect a finished dub is written
+     to localStorage HERE. The job really does keep running on the supplier's
+     side; it is this app, on her other phone, that will never go and fetch
+     it — and she has paid credits for it.
+
+     A sentence that is true about the supplier and silent about the ticket is
+     the most expensive kind of half-truth in this app. */
   "dub.leave": {
-    en: "You can close this and come back \u2014 it keeps going on their side.",
-    af: "Jy kan dit toemaak en later terugkom \u2014 dit gaan aan hulle kant voort.",
+    en: "You can close this and come back on this device \u2014 it keeps going on their side, and the ticket to collect it is kept here. On another phone this app cannot fetch it.",
+    af: "Jy kan dit toemaak en op hierdie toestel terugkom \u2014 dit gaan aan hulle kant voort, en die kaartjie om dit te gaan haal word hier gehou. Op \u2019n ander foon kan hierdie toep dit nie gaan haal nie.",
   },
   "dub.itFailed": { en: "The dub failed.", af: "Die oorklanking het misluk." },
   "dub.refunded": { en: "The credits for it have been put back.", af: "Die krediete daarvoor is teruggesit." },
