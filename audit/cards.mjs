@@ -60,6 +60,19 @@ const NEEDS = {
      so the room says so instead of drawing. A zero with no reason beside it
      is a claim nobody can check. */
   'Album art': 'the art tables; without them the gallery is empty and the room says so',
+  /* ── A different KIND of reason, and worth saying so ──────────────────
+
+     Every line above is "this room needs data the probe deliberately runs
+     without". This one is not. The cutting room has no cards because it was
+     built with benches instead — a dock along the bottom with one panel open
+     at a time, which is what Carli asked for when she asked for the room to
+     BE the screen. No amount of data makes a card appear here.
+
+     Kept in the same list because the rule it answers is the same — a zero
+     with no reason beside it is a claim nobody can check — but the reason is
+     a design decision rather than a missing table, and a reader should not
+     have to guess which. */
+  'Video Editor': 'benches rather than cards, by design — the dock holds one panel at a time',
 };
 
 
@@ -172,7 +185,7 @@ try {
      them out made the total wrong in a commit message before anybody noticed.
      It is not a studio room, so it is measured on its own terms: the bars are
      on the page rather than inside the room overlay. */
-  await bar.locator('button').filter({ hasText: 'Spotlight' }).first().click().catch(() => undefined);
+  await pressTab(p, 'Spotlight').catch(() => undefined);
   await p.waitForTimeout(1600);
   const onSpotlight = await p.locator('section > div > button[aria-expanded]').allInnerTexts().catch(() => []);
   rows.push({ room: 'Spotlight', count: onSpotlight.length, titles: onSpotlight.map((one) => one.trim()) });

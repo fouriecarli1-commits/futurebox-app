@@ -291,6 +291,58 @@ Almal met `Authorization: Bearer <access_token>` en
 
 | `GET /tones/{id}` | **een** toon. Publieke tone vir enige ingetekende persoon; privates net vir die eienaar of iemand wat dit gefavourite het |
 
+| `PUT /tones/{id}/favorite` | favourite namens die persoon. **Idempotent** — 200 of dit nou geskep is of al bestaan het. Net publieke tone, of tone wat hy besit |
+
+Daardie `PUT` maak iets moontlik wat ek 'n uur gelede gesê het ons nie kan
+doen nie: ons kán van ons kant af favourite. En dit is meer werd as dit
+lyk — 'n **privaat** toon is net leesbaar vir die eienaar of iemand wat dit
+gefavourite het, so 'n favourite is nie 'n sentiment nie, dit is hoe toegang
+behou word. Wanneer sy 'n amp op 'n baan sit, is dit die oomblik om dit te
+favourite, anders is dit môre dalk weg.
+
+Idempotent beteken ons hoef nie eers te vra of dit al gedoen is nie. En
+`DELETE` op dieselfde adres haal dit af — ook idempotent, 204 of dit daar
+was of nie.
+
+## Die endpoint wat ons NIE moet gebruik nie
+
+Daar is 'n `Search Tones`. Hul eie woorde daaroor:
+
+> *"This endpoint is heavily rate-limited by default... We highly recommend
+> using the Select OAuth flow for tone browsing and search rather than this
+> endpoint."*
+
+Dit maak die Select-keuse meer as gerieflik — dit is wat hulle wil hê, en 'n
+eie bladerder sou teen 'n plafon loop wat hulle met opset laag gestel het.
+
+Dit los ook ontwerpvereiste 4 netjies op. Die drie oortjies — Created,
+Favorited, Downloaded — is gewone endpoints teen die gewone 100 per minuut,
+so dít wys ons self. Vir enigiets anders stuur ons haar deur Select, wat
+presies is wat die vereiste vra: *"Always provide a clear, persistent path
+to browse the full TONE3000 catalog via the Select flow. Suggested and
+recent tones are a starting point, not a substitute."*
+
+Met ander woorde: die vereiste en die plafon sê dieselfde ding.
+
+Vir die rekord dra `GET /tones/search` wel 'n ryk stel filters — `query`,
+`sort`, `gears`, `sizes`, `tags`, `makes`, `creators`, `format`,
+`architecture`, `calibrated`, `verified`, en `page_size` tot **25**. Ek skryf
+hulle nie hier uit nie, want ons gaan dit nie gebruik nie, en 'n lys
+parameters vir 'n endpoint wat ons vermy is ruis wat eendag soos 'n plan sal
+lees. As dit ooit nodig word, staan dit op hul bladsy.
+
+## Trending
+
+`GET /tones/trending` — die top **10**, dieselfde voer as die trending-bane
+op hul tuisblad. **Nie gepagineer nie**, hoogstens tien, met 'n opsionele
+gear-filter.
+
+Dit is goedkoop en dit is presies wat ontwerpvereiste 4 se *"query and render
+trending and latest tones from the API to help users discover new tones"*
+vra. Tien tone op die amp-kieser se eerste skerm, met die blywende "Browse
+TONE3000"-knoppie daaronder, is die hele vereiste nagekom sonder om naby die
+soek-endpoint te kom.
+
 Daardie laaste reël stem ooreen met wat Load Tone se stap 2 sê, en dit is
 'n ding om te onthou as 'n amp môre nie laai nie: die toon het nie
 verdwyn nie, die **favourite** is dalk weg.
@@ -303,7 +355,38 @@ substring op die **titel**, wat met `gear` kombineer.
 `GET /user` is wat ontwerpvereiste 4 se *"the signed-in user's avatar and
 username"* voed, en `GET /tones/created` is die **Created**-oortjie.
 
+## Die hele ketting, end tot end
+
+Niks blokkeer meer nie:
+
+1. **Select** — sy word na TONE3000 gestuur met `prompt=select_tone`,
+   `menubar=true`, `preview=true` en haar taal in `locale`. Hulle hanteer
+   aanmelding, blaai en keuse.
+2. **Die callback** kom by 'n roete van ons uit met `code`, `state` en
+   `tone_id`. Die `state` word eerste getoets; `canceled=true` is 'n derde
+   uitkoms wat steeds 'n `code` kan dra.
+3. **Die ruil** gebeur bediener-kant. Die tokens bly daar.
+4. **`GET /tones/{id}`** gee die titel, gear type, formaat, prentjie en die
+   maker — die ses velde wat vereiste 5 op die baan wil hê.
+5. **`GET /models?tone_id={id}`** gee die modelle in die regte volgorde, elk
+   met sy `model_url`.
+6. **Ons bediener haal die `model_url`** met die Bearer-token en stuur die
+   lêer deur. `lib/nam.ts` laat dit loop.
+7. **`PUT /tones/{id}/favorite`** op die oomblik dat sy die amp op 'n baan
+   sit, want 'n favourite is hoe toegang tot 'n privaat toon behou word.
+
 ---
+
+## Wat ons doelbewus nie aanteken nie
+
+Hul bladsy gaan voort met `Makes`, `Tags` en die res — katalogus-hulpmiddels
+om 'n **eie bladerder** mee te bou. Ons bou nie een nie, en hulle beveel self
+aan om dit nie te doen nie. Hulle staan op hul bladsy as ons ooit van plan
+verander.
+
+Dit is met opset en nie uit luiheid nie: 'n repo vol parameters vir
+endpoints wat niemand roep nie, lees oor 'n jaar soos 'n plan wat iemand
+gehad het.
 
 ## Wat nog ontbreek voor ek kan bou
 
@@ -311,12 +394,54 @@ Die geplakte helfte eindig by die authorize-parameters. Nog nodig:
 
 1. ~~Die token exchange~~ — **gekry.**
 2. ~~Die callback~~ — **gekry.** Die `tone_id` kom in die adres terug.
-3. **Die toon-endpoints** — 'n toon se besonderhede lees, en die **model-lêer
+3b. **Die aflaai, en die antwoord is `model_url`.** Daar is 'n
+   `Download Tone` wat 'n zip van al die modelle gee, maar dit is **net vir
+   goedgekeurde vennote** — ander kliënte kry 'n `403`. Hulle sê self dit is
+   nie wat ons wil hê nie: *"For nearly all integrations, download individual
+   models via the `model_url` field from List Models instead: it gives you
+   per-model control and works for every API client."*
+
+   Een ding uit die zip se dokumentasie is wél vir ons van belang, al
+   gebruik ons dit nie: *"For tones with format nam, the archive contains
+   **A2 files only**."* Saam met die `architecture`-verstek wat A2
+   **uitsluit**, sê dit dat A1 en A2 twee werklik verskillende lêers is en
+   dat 'n mens moet weet watter een jou runtime kan laai. Dit is die eerste
+   vraag wat ek aan `lib/nam.ts` moet stel voor ek 'n reël skryf.
+
+   Per-model beheer is presies wat ontwerpvereiste 6 vra — die model-kieser
+   binne 'n tone pack. Een zip sou dit nie gee nie.
+
+3c. **En die lêer self verg die token.** `GET /models/{id}` gee 'n `Model`,
+   en hulle sê uitdruklik: *"The `model_url` field is a pre-built download
+   URL. Pass your access token as a Bearer token when fetching it."*
+
+   Dit is nie 'n detail nie, dit besleg die argitektuur. Die zip se adres was
+   tydelik en sonder outentisering; hierdie een is nie. Die browser hou geen
+   token nie — dit is die hele punt van die besluit hierbo — dus kan die
+   browser nie self die `.nam` gaan haal nie. Ons bediener haal dit en stuur
+   dit deur.
+
+   Dit is presies die vorm wat `lib/nam.ts` klaar wil hê: dit neem 'n
+   lêer-inhoud, nie 'n adres nie. En dit beteken die seam se `call()` moet 'n
+   token per persoon kan dra, nie net een uit die omgewing nie — die
+   uitbreiding wat ek vroeër genoem het, nou bevestig deur twee verskillende
+   endpoints.
+
+3. ~~Die `List Models`-endpoint~~ — **gekry.**
+   `GET /models?tone_id={id}`, met `page`, `page_size` (verstek 10, maks
+   **300**) en `architecture`. Gee `PaginatedResponse<Model[]>`, in dieselfde
+   volgorde as die toon se bladsy — die eienaar se posisie, dan nuutste eerste
+   — en elke `Model` dra sy `model_url`.
+
+   Daardie volgorde is nie toevallig nie: dit is die volgorde waarin die
+   model-kieser van ontwerpvereiste 6 hulle moet wys.
+
+3d. ~~Die ander toon-endpoints~~ — 'n toon se besonderhede lees, en die **model-lêer
    self aflaai** sodat `lib/nam.ts` dit kan laat loop. Dit is die een sonder
    wat niks werk nie.
-4. ~~Die CRUD API agter Favorites, Created en Downloaded~~ — **gekry.**
-   Dit is drie lees-endpoints, nie 'n CRUD nie, wat ook beteken ons kan nie
-   van ons kant af favourite nie. Of daar 'n skryf-endpoint is, is nog oop.
+4. ~~Die CRUD API agter Favorites, Created en Downloaded~~ — **gekry**, en
+   dit is wel 'n CRUD: daar is 'n skryf-endpoint. Ek het 'n paragraaf
+   gelede geskryf dat dit net lees is; dit was verkeerd.
 4b. ~~Session Management~~ — **gekry.**
 5. **Die example app repository** wat hulle noem — die skakel daarna.
 6. Die **API Terms of Service**, woordeliks.
