@@ -238,6 +238,16 @@ die een wat ons gestuur het nie. Dit is 'n reël wat 'n `check:` werd is
 sodra dit gebou is, want dit breek stil — die baan kry 'n amp wat werk, net
 nie die een wat sy gekies het nie.
 
+**En een ding wat Load Tone nie het nie:** `preview`. Select neem dit;
+Load Tone nie. Dit maak sin vir die gewone pad — daar is niks om te oudisie
+as ons reeds weet watter toon ons wil hê nie — maar dit geld ook vir die
+**plaasvervanger-blaai**. As haar amp weg is en sy moet 'n ander kies, kan
+sy dit nie hoor nie, terwyl sy dit in Select wel kan.
+
+Dit is 'n klein gat op die slegste oomblik: sy het 'n amp verloor en moet
+blind kies. Die moeite werd om vir hulle te noem, want dit lyk soos 'n
+oorsig eerder as 'n besluit.
+
 **Dit is die een wat ons tweede nodig gaan hê**, en nie dadelik nie: dit is
 hoe 'n amp wat sy gister op 'n baan gesit het môre weer laai. `lib/amps.ts`
 hou die capture, maar 'n toon wat die maker intussen privaat gemaak het, is
