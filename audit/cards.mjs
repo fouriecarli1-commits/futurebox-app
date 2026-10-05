@@ -24,7 +24,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { pressTab, dismissDoor } from './enter.mjs';
 import { agreeAndSubmit, launchOptions } from './where.mjs';
 import { ROOMS } from './rooms.mjs';
 
@@ -109,11 +109,12 @@ try {
   await dismissDoor(p);
   await p.waitForTimeout(900);
 
-  const bar = p.locator('nav[aria-label]').first();
   const door = p.locator('div.fixed.inset-0.z-\\[55\\] button');
   const intoRoom = async (name) => {
-    await bar.locator('button').filter({ hasText: 'Make' }).first().click();
-    await p.waitForTimeout(1100);
+    /* The Video Editor is seventh of fourteen in `ROOMS` and takes the app's
+       bar away — so from the eighth room on, this was pressing a bar the app
+       had correctly removed. See `pressTab` in enter.mjs. */
+    await pressTab(p, 'Make');
     const many = await door.count();
     for (let i = 0; i < many; i += 1) {
       const first = ((await door.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();

@@ -11,7 +11,7 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { dismissDoor, toRoom } from './enter.mjs';
+import { dismissDoor, studioDoor, toRoom } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3015);
 const af = process.argv[3] === 'af';
@@ -161,8 +161,12 @@ async function intoTheDesk() {
   /* The welcome door, which did not exist when this probe was written and
      covers the header at `z-[55]`. */
   await dismissDoor(p);
-  await p.locator('header button').filter({ hasText: /Studio/i }).first().waitFor({ timeout: 40000 });
-  await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
+  /* Through the shared helper, which dismisses the welcome door first. The
+     button is found and reported visible — the door at z-55 is painted over
+     it, and Playwright's idea of visible does not account for that, so the
+     click retried for thirty seconds against an overlay. `enter.mjs` has
+     handled this since the day it was written. */
+  await studioDoor(p);
   await p.waitForTimeout(1800);
   const room = p.locator('div.fixed.inset-0.z-50').first();
   await toRoom(p, af ? 'Videolessenaar' : 'Video desk');

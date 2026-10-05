@@ -410,6 +410,60 @@ export async function studioDoor(page) {
 }
 
 /**
+ * Press one of the five tabs on the app's own bar.
+ *
+ * ── Why this is a helper and not two lines ───────────────────────────────
+ *
+ * Because the two lines are wrong, and they were wrong in three probes at
+ * once — `writing`, `wide` and `afrikaans` all timed out here on 5 October
+ * 2026, which is a third of the red in CI from one mistake written three
+ * times.
+ *
+ * The bar is at `z-95` and the studio's front door is a full-screen overlay
+ * at `z-55`... which sounds like the bar wins, and on the screen it does.
+ * Playwright calls the button visible, because visibility does not account
+ * for what is painted over it, and then spends thirty seconds retrying a
+ * click the door keeps intercepting. The failure reads as "the button is not
+ * there", which is why all three looked like missing markup.
+ *
+ * The trap is specific to this bar: pressing Make is what OPENS the door, so
+ * a probe that walks several rooms presses it once successfully and then
+ * presses it again into an overlay it just raised itself. `afrikaans` has
+ * called `dismissDoor` since it was written and still failed, for exactly
+ * that reason — once at the start is not the same as once per press.
+ */
+export async function pressTab(page, label) {
+  await dismissDoor(page);
+
+  /* ── And the room that took the bar away ──────────────────────────────
+     Carli, 4 October 2026, about the cutting room: she asked for the room to
+     BE the screen. So `roomOwnsScreen` drops the app's bar entirely there,
+     and `check:underbar` holds it that way — "the app's bar is away while
+     the room IS the screen".
+     `writing` and `wide` walk every room in `ROOMS` in order, and the Video
+     Editor is seventh of fourteen. From the eighth room onwards they were
+     pressing a bar that the app had correctly removed, so the locator
+     resolved to nothing and Playwright waited thirty seconds for an element
+     that will never exist. Both probes were written before that room did.
+     The way a person leaves a room that owns the screen is the arrow in its
+     corner, which every room carries. */
+  const bar = page.locator('nav[aria-label]').first();
+  if (!(await bar.count()) || !(await bar.isVisible().catch(() => false))) {
+    const back = page.locator('[data-backout]:visible').first();
+    if (await back.count()) {
+      await back.click();
+      await page.waitForTimeout(900);
+      await dismissDoor(page);
+    }
+  }
+
+  await page.locator('nav[aria-label]').first()
+    .locator('button').filter({ hasText: label }).first()
+    .click();
+  await page.waitForTimeout(1100);
+}
+
+/**
  * Into a room, the way a person gets there.
  *
  * Rooms used to be reached from a dropdown on a phone and a rail on a desk,

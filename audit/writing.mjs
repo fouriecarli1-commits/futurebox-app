@@ -40,6 +40,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions } from './where.mjs';
+import { pressTab } from './enter.mjs';
 import { ROOMS } from './rooms.mjs';
 
 const PORT = process.argv[2] || '3170';
@@ -94,11 +95,12 @@ try {
      signal, because it is on every signed-in screen and no signed-out one. */
   await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 });
 
-  const bar = p.locator('nav[aria-label]').first();
   const door = p.locator('div.fixed.inset-0.z-\\[55\\] button');
   const intoRoom = async (name) => {
-    await bar.locator('button').filter({ hasText: 'Make' }).first().click();
-    await p.waitForTimeout(1100);
+    /* Through the shared helper: pressing Make is what opens the door, so the
+       second room walked presses into an overlay this probe raised itself.
+       See `pressTab` in enter.mjs. */
+    await pressTab(p, 'Make');
     const many = await door.count();
     for (let i = 0; i < many; i += 1) {
       const first = ((await door.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();

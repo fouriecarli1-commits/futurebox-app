@@ -191,7 +191,13 @@ await p.route('**/api/plan*', (r) => r.fulfill({
 }));
 /* The brief first. The plan refuses without it, and rightly — a market read
    of nothing is a page of generalities. That refusal is checked below. */
-await room.locator('button').filter({ hasText: af ? /^Werk die plan uit$/ : /^Work out the plan$/ }).first().click();
+/* Anchored at the start only. Both ends was right until 5 October 2026,
+   when the price went onto that button — seventy-five credits, which
+   `check:priceonit` now requires of every room that spends — so the label
+   is no longer the whole of the button's text. The opening anchor still
+   does what the closing one was there for: not matching a different,
+   longer button. */
+await room.locator('button').filter({ hasText: af ? /^Werk die plan uit/ : /^Work out the plan/ }).first().click();
 await p.waitForTimeout(700);
 check('it refuses to plan for a brief that is empty, and says which field',
   af ? /Sê eers in die opdrag hierbo/.test(await room.innerText())
@@ -199,7 +205,7 @@ check('it refuses to plan for a brief that is empty, and says which field',
   'an empty brief produces a page of generalities instead of a refusal');
 
 await room.locator('#ads-what').fill('A one-person leather workshop in Paarl. Handmade bags, made to order.');
-await room.locator('button').filter({ hasText: af ? /^Werk die plan uit$/ : /^Work out the plan$/ }).first().click();
+await room.locator('button').filter({ hasText: af ? /^Werk die plan uit/ : /^Work out the plan/ }).first().click();
 await p.waitForTimeout(1800);
 const planned = await room.innerText();
 

@@ -49,7 +49,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, pressTab } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3082';
@@ -224,14 +224,13 @@ try {
     check(`${lang}: and it is still ${lang} after signing in`, after === lang, after);
     await read('after signing in');
 
-    const bar = p.locator('nav[aria-label]').first();
     const TABS = lang === 'af'
       ? { make: 'Maak', library: 'Kanaal', you: 'Jy', live: 'Live', spotlight: 'Kollig' }
       : { make: 'Make', library: 'Channel', you: 'You', live: 'Live', spotlight: 'Spotlight' };
-    const press = async (name) => {
-      await bar.locator('button').filter({ hasText: name }).first().click();
-      await p.waitForTimeout(1200);
-    };
+    /* `dismissDoor` above runs once; this runs per press, which is the
+       difference that made this probe red. Pressing Maak opens the door, so
+       the next press lands under it. See `pressTab` in enter.mjs. */
+    const press = async (name) => { await pressTab(p, name); };
 
     await press(TABS.make);
     const doorButtons = p.locator('div.fixed.inset-0.z-\\[55\\] button');
