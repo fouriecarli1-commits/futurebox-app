@@ -128,6 +128,20 @@ ok('  and the auth header goes on last',
   + ' silently replaces the real one, and the failure reads as the supplier'
   + ' rejecting us rather than as our own bug');
 
+ok('  a person\'s own token can be carried, and wins over the account key',
+  /asPerson\?: string/.test(seam)
+  && /headers\.set\(supplier\.keyHeader, asPerson \?\? supplier\.key\(\)\)/.test(seam),
+  'every supplier so far is one account we pay for, with one key in the'
+  + ' environment. TONE3000 is not: each member signs in to their own and the'
+  + ' token reads THEIR favourites and THEIR private tones. Sending ours'
+  + ' alongside theirs would be asking two questions at once');
+
+ok('  and the seam still does not know who is asking',
+  !/callerFrom|caller\.id|request/.test(seam),
+  'the route knows, and hands the token down. A credentials layer that'
+  + ' reaches for the request is a credentials layer that has become a'
+  + ' second router');
+
 ok('  and the key is read by its literal name, never a computed one',
   !/sk_|xi_[a-z0-9]{8}/.test(seam)
   && /key: \(\) => process\.env\.[A-Z_]+/.test(seam)

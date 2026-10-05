@@ -204,9 +204,41 @@ export function call(
   what: Capability,
   path: string,
   init: RequestInit = {},
+  /**
+   * A token belonging to the PERSON rather than to us.
+   *
+   * ── Why this exists ──────────────────────────────────────────────────
+   *
+   * Every supplier so far is one account we pay for: one key in the
+   * environment, the same on every request, and `supplier.key()` is the
+   * whole story.
+   *
+   * TONE3000 is not that. Each member signs in to their own TONE3000
+   * account through OAuth, and the token that comes back is theirs — it
+   * reads their favourites, their private tones, and the model files they
+   * are allowed to have. Two members making the same request carry
+   * different tokens, and `docs/TONE3000-API.md` records two separate
+   * endpoints that say so: the model file itself needs one.
+   *
+   * Passed in rather than read, because this layer has no idea who is
+   * asking. The route does — `callerFrom` already answers that — so the
+   * route fetches the person's token and hands it here.
+   *
+   * ── What it does NOT do ──────────────────────────────────────────────
+   *
+   * It does not make the supplier portable. Routing and credentials are
+   * layer one; translating one supplier's request and response shapes into
+   * another's is layer two and is per capability. A token argument is the
+   * smallest part of that, and it is here because two endpoints needed it,
+   * not because the rest is done.
+   */
+  asPerson?: string,
 ): Promise<Response> {
   const supplier = serves(what);
   const headers = new Headers(init.headers);
-  headers.set(supplier.keyHeader, supplier.key());
+  /* Theirs wins when there is one. A supplier serving per-person tokens has
+     no account key worth sending, and sending ours alongside would be
+     asking two questions at once. */
+  headers.set(supplier.keyHeader, asPerson ?? supplier.key());
   return fetch(`${supplier.base}${path}`, { ...init, headers });
 }
