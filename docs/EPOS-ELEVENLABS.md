@@ -8,6 +8,12 @@ ceiling is, want ek wil groot gaan en baie kliënte aanneem."*
 waarop jy vantevore geskryf het. Die sperdatum hieronder staan as 19 Oktober
 2026 — omtrent twee weke — en jy kan dit skuif, solank daar **een** is.
 
+## Gestuur
+
+Carli het dit op **5 Oktober 2026** gestuur. Die sperdatum in die brief is
+**19 Oktober 2026**. As daar niks teen daardie datum is nie, geld die laaste
+afdeling van hierdie lêer.
+
 ## Hoekom daar 'n datum in staan
 
 Nie om te dreig nie. 'n Sperdatum sonder 'n gevolg is 'n versoek wat twee keer

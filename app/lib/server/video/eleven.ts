@@ -65,7 +65,7 @@
  */
 
 import { noteCost } from '../eleven.ts';
-import { call as askSupplier } from '../suppliers';
+import { call as askSupplier, ready } from '../suppliers';
 import type { Progress, Provider, StartRequest, Started } from './types.ts';
 
 /* The path only — the host and the key belong to whoever serves
@@ -73,7 +73,7 @@ import type { Progress, Provider, StartRequest, Started } from './types.ts';
    client is how this capability went uncounted. */
 const BASE = '/v1/flows/video';
 
-const key = (): string => process.env.ELEVENLABS_API_KEY ?? '';
+const key = (): string => (ready('filmshot') ? 'set' : '');
 
 /**
  * Model ids, overridable because these move.

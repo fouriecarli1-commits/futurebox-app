@@ -67,7 +67,23 @@ for (const file of FILES) {
      `withoutComments`, not `code`. `check:earsopen` learnt the same thing the
      hard way: `code()` blanks string bodies, so a check looking FOR a URL
      reads every file as having none. */
-  if (!/api\.elevenlabs\.io/.test(withoutComments(raw))) continue;
+  /* ── How a file is known to reach them, 5 October 2026 ───────────────
+
+     By the host, until `suppliers.ts` made one door out and no caller wrote
+     a host again. Overnight this check could see exactly one file — the door
+     — and complained that IT was not filing costs, which is not its job.
+     Every real caller had walked out of the population without a word.
+
+     The door is the better signal anyway, and stricter: a call now names the
+     capability it is for, so "reaches ElevenLabs" is a thing the source
+     states rather than a URL somebody happened to spell. The host is kept as
+     well, so a raw call written again is still caught. */
+  const seen = withoutComments(raw);
+  if (!/api\.elevenlabs\.io/.test(seen) && !/\bcall\(\s*'[a-z]+'/.test(seen)
+    && !/askSupplier\(\s*'[a-z]+'/.test(seen)) continue;
+  /* The door itself. It has no idea what a call is worth and nothing to
+     file — the capability's own caller does that. */
+  if (file.endsWith('lib/server/suppliers.ts')) continue;
   if (file === HOME) continue;
   callers += 1;
 

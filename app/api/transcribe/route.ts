@@ -22,7 +22,7 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
-import { call } from '@/app/lib/server/suppliers';
+import { call, ready } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { CREDITS, perMinute } from '@/app/lib/credits';
@@ -106,7 +106,8 @@ function turnsFrom(words: readonly Timed[]): Turn[] {
   return turns;
 }
 
-async function ask(key: string, file: Blob, model: string, diarize: boolean): Promise<Response> {
+/* No key parameter: the seam puts it on. See `lib/server/suppliers.ts`. */
+async function ask(file: Blob, model: string, diarize: boolean): Promise<Response> {
   const body = new FormData();
   body.append('file', file, diarize ? 'episode.mp3' : 'song.mp3');
   body.append('model_id', model);
@@ -132,7 +133,10 @@ export async function POST(request: Request): Promise<Response> {
   const flood = refuseIfTooMany('transcribe', request, GENERATION);
   if (flood) return flood;
 
-  const key = process.env.ELEVENLABS_API_KEY;
+  /* Whether the supplier for `transcribe` is configured — asked of the seam
+     rather than of the environment, so one file knows which variable
+     holds which supplier's key. */
+  const key = ready('transcribe');
   if (!key) {
     return Response.json(
       { error: 'no_key', message: 'Reading the words off a song is not switched on for this app yet.' },
@@ -218,7 +222,7 @@ export async function POST(request: Request): Promise<Response> {
   let raw = '';
   for (const model of MODELS) {
     try {
-      upstream = await ask(key, file, model, diarize);
+      upstream = await ask(file, model, diarize);
     } catch {
       await paid.refund();
       return Response.json(

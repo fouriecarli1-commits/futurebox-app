@@ -309,6 +309,8 @@ jobs:
         run: npm run check:recommend
       - name: "A room that records into its history shows it, and the cap is bytes"
         run: npm run check:history
+      - name: "One door out to a supplier, and nobody writing their own host"
+        run: npm run check:seam
       - name: "All three lanes can be picked, and the lines cut the one that is"
         run: npm run check:soundlanes
       - name: "Listening to a song's words again costs nothing, and really listens again"

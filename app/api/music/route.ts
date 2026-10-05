@@ -23,7 +23,7 @@
  */
 
 import { noteCost } from '@/app/lib/server/eleven';
-import { call } from '@/app/lib/server/suppliers';
+import { call, ready } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
@@ -122,7 +122,10 @@ export async function POST(request: Request): Promise<Response> {
   // make is not a function of what it happens to be configured with, and a
   // gate that can only be exercised on a fully configured install is a gate
   // nobody can test.
-  const key = process.env.ELEVENLABS_API_KEY;
+  /* Whether the supplier for `music` is configured — asked of the seam
+     rather than of the environment, so one file knows which variable
+     holds which supplier's key. */
+  const key = ready('music');
   if (!key) {
     // The same shape app/api/songwriter uses, so the client handles both alike.
     return Response.json(
@@ -338,5 +341,5 @@ export async function POST(request: Request): Promise<Response> {
 
 /** Whether a key is set, so the studio can offer the real thing or not. */
 export async function GET(): Promise<Response> {
-  return Response.json({ available: Boolean(process.env.ELEVENLABS_API_KEY) });
+  return Response.json({ available: ready('music') });
 }

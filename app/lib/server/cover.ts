@@ -26,14 +26,14 @@
  */
 
 import { noteCost } from './eleven.ts';
-import { call as askSupplier } from './suppliers';
+import { call as askSupplier, ready } from './suppliers';
 
 /* The path only — the host and the key belong to whoever serves
    `coverart`. See `lib/server/suppliers.ts`: this file having its own
    client is how this capability went uncounted. */
 const BASE = '/v1/flows/image';
 
-const key = (): string => process.env.ELEVENLABS_API_KEY ?? '';
+const key = (): string => (ready('coverart') ? 'set' : '');
 
 const MODEL = process.env.ELEVEN_IMAGE_MODEL || 'gemini-3.1-flash-lite-image';
 

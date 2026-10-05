@@ -32,6 +32,7 @@
  */
 
 import crypto from 'node:crypto';
+import { call, ready } from '@/app/lib/server/suppliers';
 import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { SAY_RULES, asRules, locators } from '@/app/lib/server/sayit';
 
@@ -51,7 +52,9 @@ export const maxDuration = 60;
    that it reaches ElevenLabs with its own `fetch` and imports nothing that
    gives it away, so it sat in neither the covered list nor the exemptions.
    Not excused — invisible. An exemption anybody can read is the difference. */
-const BASE = 'https://api.elevenlabs.io/v1';
+/* The path only. The host and the key belong to whoever serves `pronounce`
+   — see `lib/server/suppliers.ts`. */
+const BASE = '/v1';
 const NAME = 'FutureBox Afrikaans';
 
 function sameSecret(given: string, wanted: string): boolean {
@@ -83,8 +86,7 @@ async function readBack(response: Response): Promise<unknown> {
  */
 async function byName(apiKey: string): Promise<string | undefined> {
   try {
-    const listed = await fetch(`${BASE}/pronunciation-dictionaries?page_size=100`, {
-      headers: { 'xi-api-key': apiKey },
+    const listed = await call('pronounce', `${BASE}/pronunciation-dictionaries?page_size=100`, {
       cache: 'no-store',
     });
     if (!listed.ok) return undefined;
@@ -127,7 +129,7 @@ export async function GET(request: Request): Promise<Response> {
  
      Found on 22 September 2026, and only because `check:brake` was
      widened: it read the supplier IMPORT to decide which routes it
-     covers, and this one calls `api.elevenlabs.io` with its own fetch.
+     covers, and this one used to call the supplier with its own fetch.
      So it was in neither the covered list nor the exemptions — not
      excused, just invisible.
  
@@ -139,10 +141,11 @@ export async function GET(request: Request): Promise<Response> {
   const flood = refuseIfTooMany('eleven-dictionary', request, EXPENSIVE);
   if (flood) return flood;
 
-  const apiKey = process.env.ELEVENLABS_API_KEY ?? '';
+  /* Asked of the seam, not the environment — see `suppliers.ts`. */
+  const apiKey = ready('pronounce') ? 'set' : '';
   if (!apiKey) {
     return Response.json(
-      { ok: false, why: 'ELEVENLABS_API_KEY is not set, so nothing can be asked.' },
+      { ok: false, why: 'The supplier for pronunciation is not configured, so nothing can be asked.' },
       { status: 503 },
     );
   }
@@ -178,9 +181,9 @@ export async function GET(request: Request): Promise<Response> {
     const to = id
       ? `${BASE}/pronunciation-dictionaries/${encodeURIComponent(id)}/set-rules`
       : `${BASE}/pronunciation-dictionaries/add-from-rules`;
-    const response = await fetch(to, {
+    const response = await call('pronounce', to, {
       method: 'POST',
-      headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(id ? { rules } : { name: NAME, rules }),
     });
     return { to, response, answer: await readBack(response) };

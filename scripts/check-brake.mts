@@ -140,7 +140,17 @@ const REPORTS_ONLY: Record<string, string> = {
  * not the thing being policed here — that is its own argument — but it
  * cannot also be a way out of this.
  */
-const SUPPLIER = /from '@\/app\/lib\/server\/(eleven|kits|musicai)'|api\.elevenlabs\.io|api\.kits\.ai|api\.music\.ai/;
+/* ── And the door, 5 October 2026 ──────────────────────────────────────
+
+   `suppliers.ts` made one way out to a supplier, and no route writes a host
+   any more. That is better, and it silently shrank this check: `align` and
+   the pronunciation route matched only by host, so losing their host took
+   them out of `spenders` and out of every brake rule below them. A check
+   measuring less than it did, with nothing red to say so.
+
+   The canary underneath is what caught it, which is the argument for keeping
+   a rule that only ever guards another rule's reach. */
+const SUPPLIER = /from '@\/app\/lib\/server\/(eleven|kits|musicai|suppliers)'|\bcall\(\s*'[a-z]+'|api\.elevenlabs\.io|api\.kits\.ai|api\.music\.ai/;
 
 const walk = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
@@ -176,12 +186,22 @@ ok('there are supplier routes to check', spenders.length > 10, `${spenders.lengt
    Lowered rather than propped up with a second import nobody needs, and
    written down because quietly relaxing a threshold to get green is the
    move this whole repository exists to make impossible. */
-const byHost = spenders.filter(
-  (path) => !/from '@\/app\/lib\/server\/(eleven|kits|musicai)'/.test(readFileSync(path, 'utf8')),
-);
-ok('  including the ones that call a supplier without the module',
-  byHost.length >= 1,
-  `${byHost.length} found — the host pattern has stopped matching, so going around`
+/* ── What the canary watches now ──────────────────────────────────────
+
+   It used to watch that the HOST half of `SUPPLIER` still matched something,
+   because the day it matched nothing, every route reaching a supplier with
+   its own `fetch` walked out of this check without a word.
+
+   That day came, and on purpose: `check:seam` now forbids a host anywhere
+   but `suppliers.ts`, so the host half is expected to match nothing. The
+   fear it guarded has not gone away though — it moved. A route reaches a
+   supplier through the door now, so what has to keep matching something is
+   the DOOR half. Nought there means the same thing it always did: a way out
+   of this check that nobody is watching. */
+const byDoor = spenders.filter((path) => /\bcall\(\s*'[a-z]+'/.test(readFileSync(path, 'utf8')));
+ok('  including the ones that reach a supplier through the door',
+  byDoor.length >= 1,
+  `${byDoor.length} found — nothing reaches the door any more, so going around`
   + ' the module is a way out of this check again');
 
 const unbraked: string[] = [];

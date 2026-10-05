@@ -40,8 +40,13 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 const source = readFileSync('app/lib/server/eleven.ts', 'utf8');
 
 /* ── 1. The request is bounded, and does not grow with the membership ──── */
+/* The path, not the host: `suppliers.ts` owns the host as of 5 October, and
+   this rule looked for a URL that the seam had correctly taken away. What it
+   actually guards is that the PAGINATED listing is the one asked, and `/v2`
+   is what makes it paginated — so the version in the path is the real
+   subject and the host never was. */
 ok('the paginated listing is asked first',
-  /https:\/\/api\.elevenlabs\.io\/v2\/voices\?/.test(source));
+  /['`]\/v2\/voices\?/.test(source));
 ok('and it asks for a page rather than everything',
   /page_size=\$\{ASK_FOR\}/.test(source));
 ok('for premade voices only, which is the only kind this list shows',
@@ -82,7 +87,7 @@ ok('for long enough to matter on a hot path', forMs >= 10 * 60 * 1000, `${forMs}
 ok('the unbounded v1 listing is kept as a fallback',
   /await askVoices\(`\$\{BASE\}\/voices`\)/.test(source));
 ok('and it is second, so it only runs when the paginated one fails',
-  before(source, "askVoices(\n    `https://api.elevenlabs.io/v2/voices", 'await askVoices(`${BASE}/voices`)'),
+  before(source, 'askVoices(\n    `/v2/voices', 'await askVoices(`${BASE}/voices`)'),
   'the paginated listing is gone, so every member past 500 voices is invisible again');
 ok('the file says the v2 shape was never observed from here',
   /documented rather than observed|from their documentation and not from a response/.test(source));

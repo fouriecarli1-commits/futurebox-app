@@ -44,7 +44,7 @@
  */
 
 import { noteCost } from '@/app/lib/server/eleven';
-import { call } from '@/app/lib/server/suppliers';
+import { call, ready } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { CREDITS, perMinute } from '@/app/lib/credits';
@@ -109,7 +109,10 @@ export async function POST(request: Request): Promise<Response> {
   const flood = refuseIfTooMany('stems', request, GENERATION);
   if (flood) return flood;
 
-  const key = process.env.ELEVENLABS_API_KEY;
+  /* Whether the supplier for `stems` is configured — asked of the seam
+     rather than of the environment, so one file knows which variable
+     holds which supplier's key. */
+  const key = ready('stems');
   if (!key) {
     return Response.json(
       { error: 'no_key', message: 'Separating the voice is not switched on for this app yet.' },

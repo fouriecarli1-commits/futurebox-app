@@ -41,7 +41,7 @@
  */
 
 /**
- * The fifteen things this app buys from somebody else.
+ * The sixteen things this app buys from somebody else.
  *
  * It was counted as thirteen on the morning of 5 October, off the files that
  * import `eleven.ts`. Two were missed, and the way they were missed is the
@@ -86,12 +86,14 @@ export type Capability =
   /** A cover picture from a prompt. */
   | 'coverart'
   /** A moving shot from a prompt. */
-  | 'filmshot';
+  | 'filmshot'
+  /** How a word she cares about is said. */
+  | 'pronounce';
 
 export const CAPABILITIES: readonly Capability[] = [
   'speak', 'dialogue', 'voiceswap', 'clone', 'voicelist', 'transcribe',
   'align', 'music', 'stems', 'cleanup', 'dub', 'usage', 'finetune',
-  'coverart', 'filmshot',
+  'coverart', 'filmshot', 'pronounce',
 ];
 
 /** How a supplier wants to be told who is calling. */
@@ -99,9 +101,26 @@ export interface Supplier {
   readonly id: string;
   /** What to call them in a sentence somebody reads. */
   readonly name: string;
+  /** The host, with no path on it. See the note on ElevenLabs' entry. */
   readonly base: string;
-  /** The environment variable the key lives in. Never the key itself. */
+  /**
+   * The environment variable the key lives in, as a NAME — for the switch-on
+   * page, and so `check:envdoc` can see that something reads it.
+   */
   readonly keyFrom: string;
+  /**
+   * And the reader, which names the variable literally.
+   *
+   * It would be shorter to write `process.env[supplier.keyFrom]` and drop
+   * this. `check:envdoc` refuses that, and it is right to: a variable read
+   * through a computed name is invisible to every rule that asks "is this one
+   * written down where she works from", and the way that fails is a feature
+   * that quietly takes the off path on a machine where nobody set it.
+   *
+   * So the name is here for the documentation and the literal read is here
+   * for the code, and they sit two lines apart where they cannot drift.
+   */
+  readonly key: () => string;
   /** The header they want it in. */
   readonly keyHeader: string;
   /** What this supplier is able to serve. */
@@ -119,13 +138,19 @@ export const SUPPLIERS: readonly Supplier[] = [
   {
     id: 'elevenlabs',
     name: 'ElevenLabs',
-    base: 'https://api.elevenlabs.io/v1',
+    /* The host only. The version belongs to the path, because one
+       supplier serves more than one — ElevenLabs' voice catalogue is
+       v2 while everything else is v1. Written with the version on it
+       first, which doubled every path to `/v1/v1/…`; `check:readmodel`
+       caught it by executing the model read rather than reading it. */
+    base: 'https://api.elevenlabs.io',
     keyFrom: 'ELEVENLABS_API_KEY',
+    key: () => process.env.ELEVENLABS_API_KEY ?? '',
     keyHeader: 'xi-api-key',
     serves: [
       'speak', 'dialogue', 'voiceswap', 'clone', 'voicelist', 'transcribe',
       'align', 'music', 'stems', 'cleanup', 'dub', 'usage', 'finetune',
-      'coverart', 'filmshot',
+      'coverart', 'filmshot', 'pronounce',
     ],
   },
 ];
@@ -133,21 +158,26 @@ export const SUPPLIERS: readonly Supplier[] = [
 /**
  * Who serves this capability.
  *
- * An environment variable can move one capability to another supplier —
- * `SUPPLIER_STEMS=musicai` — but only to a supplier that DECLARES it serves
- * it. A name that is not in `SUPPLIERS`, or one that is but does not serve
- * this, falls back rather than failing a member's press: a typo in an
- * environment variable must not take a room off the air.
+ * ── Why there is no environment override here ────────────────────────────
  *
- * `check:seam` is what stops that fallback becoming a hiding place — it
- * fails the build when a capability has no supplier at all.
+ * The first draft had one: `SUPPLIER_STEMS=musicai` would move a single
+ * capability to another supplier without a deploy. It read well and it could
+ * not work. Routing is layer one; a second supplier also needs layer two —
+ * the translation between two request and response shapes — and without it
+ * that variable would have sent ElevenLabs' request body to Music.ai's host
+ * and called the failure theirs.
+ *
+ * A switch that looks like it works and does not is worse than no switch,
+ * because somebody will reach for it on the day something is already wrong.
+ * It comes back with layer two, when there is a second supplier to switch to
+ * and an adapter that knows how to speak to it.
+ *
+ * `check:envdoc` is what turned this up, within the hour, by refusing a
+ * variable read through a computed name. The rule is about documentation and
+ * it caught a design fault — which is the argument for keeping rules that
+ * seem narrower than the thing they protect.
  */
 export function serves(what: Capability): Supplier {
-  const asked = process.env[`SUPPLIER_${what.toUpperCase()}`];
-  if (asked) {
-    const named = SUPPLIERS.find((one) => one.id === asked && one.serves.includes(what));
-    if (named) return named;
-  }
   const only = SUPPLIERS.find((one) => one.serves.includes(what));
   if (!only) throw new Error(`no supplier serves ${what}`);
   return only;
@@ -155,7 +185,7 @@ export function serves(what: Capability): Supplier {
 
 /** Whether the supplier for this capability is configured at all. */
 export function ready(what: Capability): boolean {
-  return Boolean(process.env[serves(what).keyFrom]);
+  return Boolean(serves(what).key());
 }
 
 /**
@@ -177,6 +207,6 @@ export function call(
 ): Promise<Response> {
   const supplier = serves(what);
   const headers = new Headers(init.headers);
-  headers.set(supplier.keyHeader, process.env[supplier.keyFrom] ?? '');
+  headers.set(supplier.keyHeader, supplier.key());
   return fetch(`${supplier.base}${path}`, { ...init, headers });
 }

@@ -15,19 +15,25 @@
  */
 
 import { batches, type Turn } from '../dialogue.ts';
+import { call, ready } from './suppliers';
 import { noteSpend } from './elevencost.ts';
 import { watchEleven } from './spendwatch';
 import { joinPcm } from '../pcmwav.ts';
 import { locators, sayItRight } from './sayit';
 
-const BASE = 'https://api.elevenlabs.io/v1';
+/* The path, not the host. Where this call goes and which key it carries now
+   belong to `suppliers.ts`, because twenty-one calls each building their own
+   URL is how two whole capabilities went uncounted — see the note there. */
+const BASE = '/v1';
 
 export function configured(): boolean {
-  return Boolean(process.env.ELEVENLABS_API_KEY);
+  return ready('usage');
 }
 
-function key(): string {
-  return process.env.ELEVENLABS_API_KEY ?? '';
+/* Kept as a yes-or-no, because the VALUE now belongs to the seam and
+   nothing outside it needs to hold one. See `suppliers.ts`. */
+function key(): boolean {
+  return ready('usage');
 }
 
 /* ── What ElevenLabs will actually charge ────────────────────────────────── */
@@ -106,9 +112,8 @@ function text(value: unknown): string | null {
  *   causing the outage it exists to prevent.
  */
 export async function bill(signal?: AbortSignal): Promise<{ ok: true; bill: Bill } | Upstream> {
-  const response = await fetch(`${BASE}/user/subscription`, {
-    headers: { 'xi-api-key': key() },
-    /* Their number now, not one from the last deploy. This is money. */
+  const response = await call('usage', `${BASE}/user/subscription`, {
+        /* Their number now, not one from the last deploy. This is money. */
     cache: 'no-store',
     ...(signal ? { signal } : {}),
   });
@@ -230,9 +235,8 @@ export interface KeyGuard {
 export async function keyGuards(): Promise<
   { ok: true; keys: KeyGuard[] } | { ok: false; status: number; message: string }
 > {
-  const response = await fetch(`${BASE}/service-accounts`, {
-    headers: { 'xi-api-key': key() },
-    cache: 'no-store',
+  const response = await call('usage', `${BASE}/service-accounts`, {
+        cache: 'no-store',
   });
   if (!response.ok) {
     return {
@@ -414,10 +418,9 @@ export async function cloneVoice(
   // a clone learns the room as readily as it learns the voice.
   form.append('remove_background_noise', 'true');
 
-  const response = await fetch(`${BASE}/voices/add`, {
+  const response = await call('clone', `${BASE}/voices/add`, {
     method: 'POST',
-    headers: { 'xi-api-key': key() },
-    body: form,
+        body: form,
   });
   noteCost(response, 'clone', billed);
   if (!response.ok) return complain(response);
@@ -470,11 +473,11 @@ export async function speak(
   billed?: number,
 ): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
   const voiceSettings = settings(how);
-  const response = await fetch(
+  const response = await call('speak', 
     `${BASE}/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`,
     {
       method: 'POST',
-      headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
         model_id: modelId,
@@ -546,11 +549,11 @@ export async function speakTimed(
   billed?: number,
 ): Promise<{ ok: true; audio: ArrayBuffer; alignment: unknown } | Upstream> {
   const voiceSettings = settings(how);
-  const response = await fetch(
+  const response = await call('speak', 
     `${BASE}/text-to-speech/${encodeURIComponent(voiceId)}/with-timestamps?output_format=mp3_44100_128`,
     {
       method: 'POST',
-      headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
         model_id: modelId,
@@ -634,11 +637,11 @@ export async function speakStream(
   billed?: number,
 ): Promise<{ ok: true; body: ReadableStream<Uint8Array> } | Upstream> {
   const voiceSettings = settings(how);
-  const response = await fetch(
+  const response = await call('speak', 
     `${BASE}/text-to-speech/${encodeURIComponent(voiceId)}/stream?output_format=mp3_44100_128`,
     {
       method: 'POST',
-      headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
         model_id: modelId,
@@ -690,9 +693,9 @@ export async function restage(
   if (voiceSettings) form.append('voice_settings', JSON.stringify(voiceSettings));
   if (removeNoise) form.append('remove_background_noise', 'true');
 
-  const response = await fetch(
+  const response = await call('voiceswap', 
     `${BASE}/speech-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`,
-    { method: 'POST', headers: { 'xi-api-key': key() }, body: form },
+    { method: 'POST', body: form },
   );
   noteCost(response, 'voice-change', billed);
   if (!response.ok) return complain(response);
@@ -756,9 +759,9 @@ async function sayTurns(
   languageCode?: string,
   dictionary = true,
 ): Promise<Response> {
-  return fetch(`${BASE}/text-to-dialogue?output_format=pcm_${DIALOGUE_RATE}`, {
+  return call('dialogue', `${BASE}/text-to-dialogue?output_format=pcm_${DIALOGUE_RATE}`, {
     method: 'POST',
-    headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       inputs: turns.map((turn) => ({ text: turn.text, voice_id: turn.voiceId })),
       model_id: modelId,
@@ -920,10 +923,9 @@ export async function dub(
   // costs 3 000 credits a minute rather than 2 000 — see the note above.
   form.append('watermark', 'false');
 
-  const response = await fetch(`${BASE}/dubbing`, {
+  const response = await call('dub', `${BASE}/dubbing`, {
     method: 'POST',
-    headers: { 'xi-api-key': key() },
-    body: form,
+        body: form,
   });
   noteCost(response, 'dub', billed);
   if (!response.ok) return complain(response);
@@ -944,9 +946,8 @@ export interface DubState {
 }
 
 export async function dubState(id: string): Promise<{ ok: true; state: DubState } | Upstream> {
-  const response = await fetch(`${BASE}/dubbing/${encodeURIComponent(id)}`, {
-    headers: { 'xi-api-key': key() },
-  });
+  const response = await call('dub', `${BASE}/dubbing/${encodeURIComponent(id)}`, {
+      });
   if (!response.ok) return complain(response);
   const body = (await response.json()) as {
     status?: string;
@@ -981,9 +982,9 @@ export async function dubbed(
   id: string,
   language: string,
 ): Promise<{ ok: true; audio: ArrayBuffer; type: string } | Upstream> {
-  const response = await fetch(
+  const response = await call('dub', 
     `${BASE}/dubbing/${encodeURIComponent(id)}/audio/${encodeURIComponent(language)}`,
-    { headers: { 'xi-api-key': key() } },
+    {},
   );
   if (!response.ok) return complain(response);
   const said = (response.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
@@ -1126,15 +1127,14 @@ async function dubTranscriptIn(
   language: string,
   format: 'json' | 'srt' | 'webvtt',
 ): Promise<Response> {
-  const headers = { 'xi-api-key': key() };
-  const now = await fetch(
+  const now = await call('dub', 
     `${BASE}/dubbing/${encodeURIComponent(id)}/transcripts/${encodeURIComponent(language)}/format/${format}`,
-    { headers },
+    {},
   );
   if (now.status !== 404 && now.status !== 405) return now;
-  return fetch(
+  return call('dub', 
     `${BASE}/dubbing/${encodeURIComponent(id)}/transcript/${encodeURIComponent(language)}?format_type=${format}`,
-    { headers },
+    {},
   );
 }
 
@@ -1280,7 +1280,7 @@ export function elevenModelsFrom(body: unknown): ElevenModel[] | null {
 export async function elevenModels(): Promise<ElevenModel[] | null> {
   if (models && Date.now() - models.at < MODELS_FOR_MS) return models.models;
   try {
-    const response = await fetch(`${BASE}/models`, { headers: { 'xi-api-key': key() } });
+    const response = await call('voicelist', `${BASE}/models`, {});
     if (!response.ok) return models?.models ?? null;
     const read = elevenModelsFrom(await response.json());
     if (!read) return models?.models ?? null;
@@ -1374,10 +1374,9 @@ export async function isolate(
   const form = new FormData();
   form.append('audio', audio, 'take.webm');
 
-  const response = await fetch(`${BASE}/audio-isolation`, {
+  const response = await call('cleanup', `${BASE}/audio-isolation`, {
     method: 'POST',
-    headers: { 'xi-api-key': key() },
-    body: form,
+        body: form,
   });
   noteCost(response, 'isolate', billed);
   if (!response.ok) return complain(response);
@@ -1386,10 +1385,9 @@ export async function isolate(
 
 /** Removes a clone from the account, for when somebody withdraws consent. */
 export async function forgetVoice(voiceId: string): Promise<boolean> {
-  const response = await fetch(`${BASE}/voices/${encodeURIComponent(voiceId)}`, {
+  const response = await call('clone', `${BASE}/voices/${encodeURIComponent(voiceId)}`, {
     method: 'DELETE',
-    headers: { 'xi-api-key': key() },
-  });
+      });
   return response.ok;
 }
 
@@ -1540,7 +1538,7 @@ function shapeVoices(list: readonly WireVoice[]): StockVoice[] {
 
 async function askVoices(url: string): Promise<StockVoice[] | null> {
   try {
-    const response = await fetch(url, { headers: { 'xi-api-key': key() } });
+    const response = await call('voicelist', url, {});
     if (!response.ok) return null;
     const data = (await response.json()) as { voices?: WireVoice[] };
     if (!Array.isArray(data.voices)) return null;
@@ -1559,7 +1557,7 @@ export async function stockVoices(): Promise<StockVoice[]> {
   /* Bounded, and premade only. `category` and `page_size` are theirs; if
      either is not accepted the request fails and v1 answers instead. */
   const v2 = await askVoices(
-    `https://api.elevenlabs.io/v2/voices?category=premade&page_size=${ASK_FOR}`,
+    `/v2/voices?category=premade&page_size=${ASK_FOR}`,
   );
   if (v2) {
     stock = { voices: v2, at: Date.now(), way: 'v2' };
@@ -1658,10 +1656,9 @@ export async function createFinetune(
   form.append('visibility', 'private');
   form.append('model_id', modelId);
 
-  const response = await fetch(`${BASE}/music/finetunes`, {
+  const response = await call('finetune', `${BASE}/music/finetunes`, {
     method: 'POST',
-    headers: { 'xi-api-key': key() },
-    body: form,
+        body: form,
   });
   if (!response.ok) return complain(response);
 
@@ -1680,19 +1677,17 @@ export async function createFinetune(
  * is both slower and a way to hand somebody a row that is not theirs.
  */
 export async function finetuneStatus(id: string): Promise<Finetune | null> {
-  const response = await fetch(`${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
-    headers: { 'xi-api-key': key() },
-  });
+  const response = await call('finetune', `${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
+      });
   if (!response.ok) return null;
   return toFinetune((await response.json()) as Record<string, unknown>);
 }
 
 /** Removes a finetune from the account, for when somebody deletes theirs. */
 export async function dropFinetune(id: string): Promise<boolean> {
-  const response = await fetch(`${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
+  const response = await call('finetune', `${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
     method: 'DELETE',
-    headers: { 'xi-api-key': key() },
-  });
+      });
   return response.ok;
 }
 
@@ -1802,9 +1797,8 @@ export function voiceRoomFrom(body: Record<string, unknown>): VoiceRoom | null {
 export async function voiceRoom(): Promise<VoiceRoom | null> {
   if (room && Date.now() - room.at < ROOM_FOR_MS) return room.room;
   try {
-    const response = await fetch(`${BASE}/user/subscription`, {
-      headers: { 'xi-api-key': key() },
-      cache: 'no-store',
+    const response = await call('usage', `${BASE}/user/subscription`, {
+            cache: 'no-store',
     });
     if (!response.ok) return null;
     const body = (await response.json()) as Record<string, unknown> | null;

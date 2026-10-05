@@ -187,10 +187,21 @@ const wire = readFileSync('app/lib/server/eleven.ts', 'utf8');
  *  bodies has a `}),` inside it that would end the slice early — which is
  *  how a check comes to read half a call and pass. */
 function callAt(source: string, index: number): string {
-  const opens = source.lastIndexOf('fetch(', index);
+  /* `fetch(` or `call(`. Every outbound call went through the door on
+     5 October — see `lib/server/suppliers.ts` — and this looked backwards
+     for `fetch(` only, so it found nothing and reported that
+     text-to-dialogue sends no pronunciation rules when it does. A scanner
+     that cannot find the call reads as a product fault, which is the worst
+     way for a check to be wrong. Both are accepted so a raw `fetch` written
+     again is still caught rather than quietly skipped. */
+  const before = source.slice(0, index);
+  const starts = [...before.matchAll(/\b(?:call|fetch)\(/g)];
+  if (!starts.length) return '';
+  const last = starts[starts.length - 1];
+  const opens = last.index ?? -1;
   if (opens === -1) return '';
   let depth = 0;
-  for (let at = opens + 'fetch'.length; at < source.length; at += 1) {
+  for (let at = opens + last[0].length - 1; at < source.length; at += 1) {
     if (source[at] === '(') depth += 1;
     else if (source[at] === ')') {
       depth -= 1;
