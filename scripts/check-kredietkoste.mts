@@ -81,6 +81,28 @@ const ADS_CALL = paid({ input: 500, output: 8_000, cacheRead: 0, cacheWrite: 0 }
 const CUTOUT_PER_5S = 0.0225 * 5 * RAND_PER_USD;
 
 /**
+ * Music.ai reading a song — chords, key, tempo — per minute of audio.
+ *
+ * $0.07, and for once that is a MEASURED number rather than a published
+ * one. Carli opened the Chords and Beat Mapping workflow on 5 October 2026
+ * and their own editor printed `Estimated (per minute) $0.07` beside a run
+ * that finished in 7.44 seconds and came back with `Eb major` and `bpm 76`.
+ *
+ * It matters that it is measured. `docs/DIENSTE-EN-KOSTE.md` said of
+ * `CREDITS.read`: *"Die presiese koers kon nie hiervandaan nagegaan word nie
+ * — music.ai is ook geblokkeer"* — the host is refused from the build
+ * environment, so this number could not be looked up, only guessed at and
+ * set deliberately high. This row is the guess finally meeting a rate.
+ *
+ * Only `read`. The stem workflow's own estimate was not on that screen and
+ * is not inferred from this one: a different workflow is a different set of
+ * modules and a different price, and a cost check built on an inferred rate
+ * is the adjacent measurement this file exists to prevent. `CREDITS.parts`
+ * stays unheld until somebody reads its estimate off the same editor.
+ */
+const SONGREAD_PER_MIN = 0.07 * RAND_PER_USD;
+
+/**
  * The worst rand-per-credit any tier gets.
  *
  * Bulk tiers give more credits for each rand, so the cheapest credit in the
@@ -140,6 +162,18 @@ const priced: { what: string; credits: number; cost: number; product?: boolean; 
   /* `readCost` is one credit per 150 characters with a floor of two, so one
      credit is what 150 characters must cover. */
   { what: 'reading 150 characters', credits: 1, cost: 150 * CHAR },
+  /* Not the line above. That one is a voice reading text aloud; this one is
+     Music.ai reading a song for its chords, key and tempo. Two different
+     suppliers and two different bills under one English word, which is
+     worth the sentence.
+
+     Printed here for the multiple, and held by the rule below rather than by
+     this row. A minute costs R1.12, so even ONE credit at R1.49 clears the
+     floor: this row cannot fail at any price the app can charge, and a row
+     that cannot fail is a row that reassures without asserting. Breaking
+     `read` to 1 credit and watching it still say `ok` is how that was
+     found. */
+  { what: 'reading a song, per minute (Music.ai)', credits: CREDITS.read, cost: SONGREAD_PER_MIN },
   /* The three rooms that used to be sold separately, or not at all. Entering
      them is included in every paid plan; generating in them is these. */
   { product: true, what: 'a marketing plan', credits: CREDITS.marketPlan, cost: PLAN_CALL },
@@ -174,6 +208,32 @@ for (const one of priced) {
   }
 }
 
+/**
+ * The order of the three per-minute jobs, which the floor cannot see.
+ *
+ * `credits.ts` says of the song read: *"Deliberately not lower than
+ * `stems`: it is a heavier job than splitting a voice off."* That was a
+ * decision, and nothing held it. The floor cannot: a minute of reading costs
+ * R1.12, so every price the app can charge clears it, and the row above says
+ * `ok` at one credit as loudly as at six.
+ *
+ * This is what can actually break. Reprice stems upward, or read downward,
+ * and the sentence in `credits.ts` becomes false while every other number
+ * in this file stays green.
+ */
+console.log('');
+say(
+  CREDITS.read >= CREDITS.stems,
+  `reading a song (${CREDITS.read}) is priced at or above splitting it (${CREDITS.stems})`
+  + ' — credits.ts calls the read the heavier job, and the cost floor is too'
+  + ' far below both to notice if that stopped being true',
+);
+say(
+  CREDITS.parts >= CREDITS.stems,
+  `named parts (${CREDITS.parts}) are priced at or above two-way stems (${CREDITS.stems})`
+  + ' — more stems out of the same minute is more of their work, not less',
+);
+
 /* Reported, not asserted — see the header. Two numbers, forty-three times
    apart, and no invoice yet to say which is real. */
 console.log('');
@@ -186,7 +246,10 @@ console.log(
 );
 
 if (bad > 0) {
-  console.log(`\ncheck:kredietkoste — ${bad} action(s) sell below what they cost us.`);
+  console.log(
+    `\ncheck:kredietkoste — ${bad} price(s) do not hold: below what they cost`
+    + ' us, or out of the order credits.ts states.',
+  );
   process.exitCode = 1;
 } else {
   console.log('\ncheck:kredietkoste — every credit price covers its own upstream bill.');

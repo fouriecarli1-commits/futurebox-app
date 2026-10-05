@@ -154,10 +154,27 @@ wat jy in hulle paneel skep: `MUSIC_AI_WORKFLOW_READ` en
 `https://futurebox.studio/api/analyse/setup?key=<POST_SECRET>` oop. Dit lys
 die werkvloeie wat werklik op die rekening is en sê watter kodes gestel is.
 
-**Wat dit kos:** per minuut klank per werkvloei-loop. Die presiese koers kon
-nie hiervandaan nagegaan word nie — music.ai is ook geblokkeer — so
-`CREDITS.read = 6` en `CREDITS.parts = 8` is met opset hoog gestel. Dit is die
-eerste twee getalle om teen 'n regte faktuur te toets.
+**Wat dit kos:** per minuut klank per werkvloei-loop.
+
+**Die lees-werkvloei is nou gemeet: $0.07 per minuut, R1.12.** Carli het op
+5 Oktober 2026 die *Chords and Beat Mapping*-werkvloei in hul eie
+redigeerder oopgemaak en dit het `Estimated (per minute) $0.07` gewys langs
+'n loop wat in 7,44 sekondes klaar was en met `Eb major` en `bpm 76`
+teruggekom het. Dit is 'n **gemete** getal, nie 'n gepubliseerde een nie —
+die host is van hier af geblokkeer, so dit kon nooit opgesoek word nie.
+
+Daarmee is `CREDITS.read = 6` vir die eerste keer toetsbaar:
+R8.94 teen R1.12 is **8.0x**. Dit is hoër as enigiets anders in die tabel
+behalwe video — die app se eie bande is 3x vir roetinewerk en 6x vir 'n
+produk. Dit is nie verkeerd nie, dit is 'n **prysbesluit** wat nou vir die
+eerste keer sigbaar is in plaas van 'n plekhouer. Dit is joune om te hou of
+te laat sak.
+
+**`CREDITS.parts = 8` bly ongetoets.** Die stem-werkvloei se eie skatting was
+nie op daardie skerm nie, en dit word **nie** uit hierdie een afgelei: 'n
+ander werkvloei is ander modules en 'n ander prys. Om een koers uit 'n ander
+te raai, is presies die meting-langsaan wat hierdie repo bly uitvang. Dit
+bly oop tot iemand sy skatting van dieselfde redigeerder af lees.
 
 ### 9. Sangstem-omskakeling — **toegemaak, 7 September 2026**
 
