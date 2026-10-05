@@ -152,10 +152,17 @@ try {
       const b = lum(behind(el));
       return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
     };
+    /* Asked for by name. This took the biggest `<p>` on the page and called
+       it the sung line, which was true until the launch wordmark put a
+       bigger one on screen — the probe then measured the word FUTUREBOX,
+       found two lyric lines more readable than it, and reported the room as
+       broken. The room marks the line it is singing; a probe that infers it
+       from font size is measuring a coincidence. */
+    const marked = document.querySelector('[data-sungline]');
     const lines = Array.from(document.querySelectorAll('p')).filter((el) => el.innerText.trim());
-    const sung = lines
-      .map((el) => ({ el, size: parseFloat(getComputedStyle(el).fontSize) }))
-      .sort((a, b) => b.size - a.size)[0];
+    const sung = marked
+      ? { el: marked, size: parseFloat(getComputedStyle(marked).fontSize) }
+      : null;
     if (!sung) return null;
     return {
       text: sung.el.innerText.trim(),

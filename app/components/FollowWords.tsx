@@ -769,6 +769,14 @@ export default function FollowWords({
                  `LiveChannel` carries this same note and the same fix. */
               <p
                 key={`${index}-${line.start}`}
+                /* Named rather than inferred. `audit/selfie.mjs` found the
+                   sung line by taking the biggest `<p>` on the page, which
+                   was true until the launch wordmark put a bigger one there
+                   on 5 October 2026 — and the probe then measured the app's
+                   own name and reported the lyric as unreadable. The room
+                   knows which line is being sung; nothing else should have
+                   to guess. */
+                {...(now ? { 'data-sungline': '' } : {})}
                 className={`transition-all duration-300 leading-tight ${
                   now ? 'text-3xl sm:text-5xl font-black' : 'text-xl sm:text-2xl text-zinc-700'
                 }`}

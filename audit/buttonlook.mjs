@@ -140,6 +140,36 @@ const flatOnes = async (allowed) =>
        * parent is itself painted. An unpainted tablist gives no box to
        * inherit and still fails, and a bare button anywhere else is
        * untouched. */
+      /* ── And the cutting room's own bench row, 5 October 2026 ──────
+       *
+       * Seven buttons in the Video Editor came back flat: the two beside the
+       * transport and the five underneath. That row's own comment says what
+       * it is — "the five, which replace the app's own bar" — and the app's
+       * own bar is the FIRST thing on the allowed list above, for exactly
+       * this reason: a box each would be a second bar.
+       *
+       * So this is the same case, not a new one. It is written here rather
+       * than as a fourth label pattern because a label pattern goes stale the
+       * day a bench is renamed, and because the thing that makes the row safe
+       * is structural: the benches live in a `[data-cutdock]`, they are 52
+       * pixels tall, and one of them is always lit.
+       *
+       * The condition was "some bench in the dock is lit", and running it
+       * proved that wrong in the useful direction: when the room opens no
+       * bench is chosen, nothing is lit, and the rule correctly reported
+       * seven captions. The fix belonged in the room, not here — the rows
+       * are painted now, the way the app's own bar is.
+       *
+       * So the condition is the painted row, which is the same shape as
+       * `inPaintedTrack` above and for the same reason: the ROW carries the
+       * box and the tabs sit on it. An unpainted row gives nothing to
+       * inherit and still fails. */
+      const row = one.closest('[data-cutbenchrow]');
+      const inLitBenchRow =
+        one.hasAttribute('data-cutbench') &&
+        row !== null &&
+        alpha(getComputedStyle(row).backgroundColor) > 0.05;
+
       const track = one.closest('[role="tablist"]');
       const inPaintedTrack =
         one.getAttribute('role') === 'tab' &&
@@ -148,7 +178,7 @@ const flatOnes = async (allowed) =>
           alpha(getComputedStyle(track).backgroundColor) > 0.05);
 
       const how = (one.className || '').toString().slice(0, 120);
-      if (!bordered && !filled && !inPaintedTrack) out.push({ label: label.slice(0, 40), why: 'no border and no fill', how });
+      if (!bordered && !filled && !inPaintedTrack && !inLitBenchRow) out.push({ label: label.slice(0, 40), why: 'no border and no fill', how });
       else if (box.height < thumb) {
         out.push({ label: label.slice(0, 40), why: `${Math.round(box.height)}px tall`, how });
       }

@@ -38,7 +38,7 @@
  * reading it in Afrikaans, which is exactly what §W was about.
  */
 import { spawn } from 'node:child_process';
-import { enter, studio, unfold } from './enter.mjs';
+import { dismissDoor, enter, studio, unfold } from './enter.mjs';
 
 const PORT = 3322;
 const HERE = `http://localhost:${PORT}`;
@@ -101,7 +101,23 @@ try {
     const door = room.locator('button').filter({ hasText: where }).first();
     check(`${name}: the room is reachable by its Afrikaans name`, (await door.count()) === 1);
     if (!(await door.count())) continue;
-    await door.click();
+    /* ── Whichever surface is actually on top ─────────────────────────
+       The studio's front door is `z-[55]` and the rail underneath it is
+       `z-50`. When the door is up it is painted over the rail, and
+       Playwright calls the rail's button visible because visibility does
+       not account for what is on top — so the click retried for thirty
+       seconds and the failure read as a missing room.
+       The first attempt at this called `dismissDoor`, which was wrong twice
+       over: that closes the WELCOME door, not this one, and its button
+       leaves the studio for Spotlight — so the rail went away entirely and
+       the locator then found nothing at all. One wrong fix, two different
+       failures.
+       The door carries the same room buttons, so the answer is to press
+       whichever surface is in front. */
+    const onDoor = page.locator('div.fixed.inset-0.z-\\[55\\] button')
+      .filter({ hasText: where }).first();
+    const press = (await onDoor.count()) ? onDoor : door;
+    await press.click();
     await page.waitForTimeout(1200);
     /* Every room opens as its own table of contents, so the button that asks
        for writing is inside a card nobody has opened. Unfolded here for the

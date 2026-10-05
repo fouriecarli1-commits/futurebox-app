@@ -327,7 +327,7 @@ export default function CutDock({
         >
           <div className="flex w-full flex-col items-center gap-1">{transport}</div>
           <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
-          <div className="grid w-full grid-cols-2 gap-1">
+          <div data-cutbenchrow="" className="grid w-full grid-cols-2 gap-1" style={{ background: PANEL }}>
             {[...UPPER, ...LOWER].map((spec) => (
               <BenchButton
                 key={spec.id}
@@ -381,14 +381,36 @@ export default function CutDock({
             dan mooi dat alles mooi allign en netjies is."* Four pixels is not
             visible as four pixels; it is visible as a bar that does not line
             up with the room. */}
-        <div className="flex items-center justify-center gap-1 px-3 pt-2">
+        {/* ── The row is the box ─────────────────────────────────────
+
+            `check:buttonlook` found seven buttons here with no border and no
+            fill — these two and the five below. It is right: when the room
+            opens no bench is chosen, so nothing is lit, and seven unlit tabs
+            with no surface behind them read as captions rather than controls.
+            That check exists because exactly that drift happened once before
+            to two load-bearing buttons.
+
+            The answer is not a box each — this row replaces the app's own
+            bar, and a box per tab would be a second bar, which is why the
+            app's five tabs are exempt from that rule too. The answer is what
+            the app's bar already does: paint the row. One surface, seven
+            tabs on it, the chosen one lit. */}
+        <div
+          data-cutbenchrow=""
+          className="flex items-center justify-center gap-1 px-3 pt-2"
+          style={{ background: PANEL }}
+        >
           <BenchButton spec={UPPER[0]} open={open} onOpen={onOpen} t={t} dim={noClip} />
           {transport}
           <BenchButton spec={UPPER[1]} open={open} onOpen={onOpen} t={t} />
         </div>
 
         {/* ── The five, which replace the app's own bar ─────────────────── */}
-        <div className="flex items-stretch gap-1 px-3 pb-2 pt-1">
+        <div
+          data-cutbenchrow=""
+          className="flex items-stretch gap-1 px-3 pb-2 pt-1"
+          style={{ background: PANEL }}
+        >
           {LOWER.map((spec) => (
             <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} />
           ))}

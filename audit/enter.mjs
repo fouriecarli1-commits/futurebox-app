@@ -47,7 +47,19 @@ export async function enter({
   const note = (s) => { if (!problems.includes(s)) problems.push(s); };
   page.on('console', (m) => {
     const text = m.text();
-    if (m.type() === 'error' && !OFFSITE.test(text)) note(`console: ${text.slice(0, 240)}`);
+    if (m.type() !== 'error' || OFFSITE.test(text)) return;
+    /* ── The one console error worth dropping ─────────────────────────
+       "Failed to load resource: the server responded with a status of 404 ()"
+       is Chromium's own line and it carries NO URL, so `OFFSITE` — which
+       reads the text — cannot tell an off-site miss from one of ours. That
+       is exactly how `boothwalk` came to fail in CI and pass here: something
+       off-site answered 404 on the runner, and the probe reported "the room
+       throws" with nothing anybody could act on.
+       Nothing is lost by dropping it. The `response` handler below notes
+       every status at or above 400 from the app's own origin, WITH the path
+       on it — which is the version of this message that can be fixed. */
+    if (/^Failed to load resource/.test(text)) return;
+    note(`console: ${text.slice(0, 240)}`);
   });
   page.on('pageerror', (e) => note(`pageerror: ${String(e).slice(0, 240)}`));
   page.on('requestfailed', (r) => {
@@ -402,7 +414,29 @@ export async function studioDoor(page) {
      is also what a person does. The first call returns quietly when there
      is no door, so it costs one timeout and nothing else. */
   await dismissDoor(page);
-  await page.locator('header button').filter({ hasText: /Studio/i }).first().click();
+
+  /* ── When the studio is already open ──────────────────────────────────
+     This pressed the header's Studio button unconditionally, which is right
+     from the landing page and wrong from inside the studio: that overlay is
+     `div.fixed.inset-0.z-50`, the header is behind it, and Playwright calls
+     the button visible because visibility does not account for what is
+     painted over it. Thirty seconds, then a failure that reads as a missing
+     button. `cast` found this.
+     From inside, the way to the door is the way a person takes — the back
+     out of the room — not a header nobody can reach. */
+  const studioUp = await page.locator('div.fixed.inset-0.z-50').count();
+  if (studioUp) {
+    const card = page.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
+    const back = (await card.count()) && (await card.isVisible().catch(() => false))
+      ? card
+      : page.locator('[data-backout]:visible').first();
+    if (await back.count()) {
+      await back.click().catch(() => undefined);
+      await page.waitForTimeout(900);
+    }
+  } else {
+    await page.locator('header button').filter({ hasText: /Studio/i }).first().click();
+  }
   await page.waitForTimeout(800);
   const door = page.locator('div.fixed.inset-0.z-\\[55\\]').first();
   await door.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {});
@@ -433,7 +467,18 @@ export async function studioDoor(page) {
  * that reason — once at the start is not the same as once per press.
  */
 export async function pressTab(page, label) {
-  await dismissDoor(page);
+  /* Only when a door is actually standing there. `dismissDoor` waits eight
+     seconds for one to appear, which is right at the start of a run — the
+     door draws after two fetches settle, so asking too early gets "no" and
+     then it lands under the next click.
+     It is wrong per press. `afrikaans` presses this twenty-eight times, and
+     the first version of this helper paid the full eight seconds on every
+     press with no door, which turned a three-minute probe into one that ran
+     past seven and looked hung. `count()` answers now; the wait is only
+     worth paying when there is something to wait for. */
+  if (await page.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).count()) {
+    await dismissDoor(page);
+  }
 
   /* ── And the room that took the bar away ──────────────────────────────
      Carli, 4 October 2026, about the cutting room: she asked for the room to

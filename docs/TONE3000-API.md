@@ -400,13 +400,79 @@ GET /tones/{toneId}            → die toon self, nie toegedraai nie
 GET /models?tone_id={toneId}   → { data: [ … ] }
 ```
 
-Die een is kaal en die ander is in 'n `data` toegedraai. Dit is 'n klein
+Die een is kaal en die ander is 'n
+`PaginatedResponse<T>` — `{ data, page, page_size, total, total_pages }`. Dit is 'n klein
 verskil en presies die soort wat 'n uur kos: `models.map(...)` op die
 tweede gee `undefined is not a function`, en die foutboodskap wys na ons
 kode eerder as na die vorm.
 
 Albei dra `Authorization: Bearer <access_token>`, en die token kom uit die
 ruil wat bediener-kant gebeur.
+
+## Die ses velde wat op die skerm moet wees, en waar hulle sit
+
+Ontwerpvereistes 4, 5 en 6 vra ses dinge per toon. Hier is hulle op `Tone`:
+
+| vereiste | veld |
+|---|---|
+| tone image | `images: str[] \| null` |
+| gear title | `title` |
+| gear type | `gear` — die `Gear`-enum |
+| format (NAM of IR) | `format` |
+| creator (username en avatar) | `user: EmbeddedUser` |
+| die maker se beskrywing | `description: str \| null` |
+
+Verder dra dit `license`, `url`, die tellings, en **`is_favorite`** — of die
+ingetekende persoon dit al gefavourite het. Daardie een is nuttig: ons hoef
+nie te raai of die `PUT` nodig is nie, en ons kan die toestand wys.
+
+Die per-argitektuur-tellings — `a1_models_count`, `a2_models_count`,
+`custom_models_count` — kom **altyd** terug, so ons kan self uitwerk wat
+sigbaar sou wees sonder 'n tweede oproep.
+
+### Drie valle in hierdie tipe
+
+**`images` is 'n ARRAY en kan null wees.** Die vereiste sê "tone image",
+enkelvoud. Ons neem `images?.[0]`, en daar moet iets wees om te teken as dit
+leeg is — dieselfde probleem as die maker se avatar, en dieselfde antwoord
+nodig.
+
+**`is_public` is `boolean | null`** — drie toestande, nie twee nie. `!is_public`
+is **waar** vir `null`, so die gewone toets behandel "onbekend" as
+"privaat". Of dit reg is hang af van wat null beteken, en dit weet ons nie.
+Dit is die vorm van fout wat `loadFilm` se `null` was: een waarde vir twee
+verskillende dinge.
+
+**`description` kan null wees**, en vereiste 6 sê wys dit *"where space
+allows"*. Twee redes om niks te teken nie, en hulle lyk op die skerm
+dieselfde — die kamer moet nie 'n leë blok los waar 'n beskrywing sou wees
+nie.
+
+## Die model, wat die lêer is
+
+```
+Model { id, model_url, name, size, tone_id,
+        architecture_version: Architecture | null }
+```
+
+`architecture_version` is **null vir nie-NAM** (bv. 'n IR). Ons stuur
+`format=nam` aan Select, dus behoort elke model wat ons sien een te hê — en
+'n null daar sou beteken ons het iets gekry wat ons nie gevra het nie, wat
+die moeite werd is om te merk eerder as te ignoreer.
+
+`name` is wat die model-kieser van vereiste 6 wys. `size` is die
+CPU-waarskuwing wat ons eers hier sien.
+
+## Hul voorbeeld-kliënt
+
+Daar is 'n `src/tone3000-client.ts` — nul afhanklikhede, dek PKCE, al die
+OAuth-vloeie, outomatiese verfris en geoutentiseerde versoeke. Drie demo-apps
+daarby, een per vloei; "Acme Inc" is die Select-een.
+
+Dit is **inspirasie en nie 'n sjabloon nie**, om die rede wat hierbo staan:
+dit is 'n kliënt-kant helper wat die tokens in die browser hou. Die PKCE-
+berekening en die vorm van die oproepe is die moeite werd om te lees; die
+plek waar dit die tokens bêre, is presies wat ons anders doen.
 
 ## Die maker, en sy twee nulle
 
@@ -566,60 +632,54 @@ Dit is met opset en nie uit luiheid nie: 'n repo vol parameters vir
 endpoints wat niemand roep nie, lees oor 'n jaar soos 'n plan wat iemand
 gehad het.
 
-## Wat nog ontbreek voor ek kan bou
+## Die kommersiële terme — lees hierdie een eerste
 
-Die geplakte helfte eindig by die authorize-parameters. Nog nodig:
+Dit is die belangrikste afdeling op hul hele bladsy, en dit is nie tegnies
+nie.
 
-1. ~~Die token exchange~~ — **gekry.**
-2. ~~Die callback~~ — **gekry.** Die `tone_id` kom in die adres terug.
-3b. **Die aflaai, en die antwoord is `model_url`.** Daar is 'n
-   `Download Tone` wat 'n zip van al die modelle gee, maar dit is **net vir
-   goedgekeurde vennote** — ander kliënte kry 'n `403`. Hulle sê self dit is
-   nie wat ons wil hê nie: *"For nearly all integrations, download individual
-   models via the `model_url` field from List Models instead: it gives you
-   per-model control and works for every API client."*
+**Gratis vlak:** net vir 'n **nie-kommersiële** produk. Hul definisie is
+streng — *"free and open software or hardware with no paid product, or
+upsell"*. Oopbron-projekte, DIY-pedale, navorsing. **FutureBox is nie een
+van hulle nie.** Daardie vlak mag ook net die prompt-vloeie en die begrensde
+lyste gebruik.
 
-   Een ding uit die zip se dokumentasie is wél vir ons van belang, al
-   gebruik ons dit nie: *"For tones with format nam, the archive contains
-   **A2 files only**."* Saam met die `architecture`-verstek wat A2
-   **uitsluit**, sê dit dat A1 en A2 twee werklik verskillende lêers is en
-   dat 'n mens moet weet watter een jou runtime kan laai. Dit is die eerste
-   vraag wat ek aan `lib/nam.ts` moet stel voor ek 'n reël skryf.
+**Kommersieel:** *"If you charge for your product, or your product promotes
+or accompanies a paid product, a commercial agreement is required."*
+FutureBox verkoop krediete. Ons is kommersieel, sonder twyfel, en 'n
+ooreenkoms is nodig.
 
-   Per-model beheer is presies wat ontwerpvereiste 6 vra — die model-kieser
-   binne 'n tone pack. Een zip sou dit nie gee nie.
+En dan die reël wat die plan verander:
 
-3c. **En die lêer self verg die token.** `GET /models/{id}` gee 'n `Model`,
-   en hulle sê uitdruklik: *"The `model_url` field is a pre-built download
-   URL. Pass your access token as a Bearer token when fetching it."*
+> *"Commercial integrations must be reviewed and signed off by TONE3000
+> before they are publicly published or announced."*
 
-   Dit is nie 'n detail nie, dit besleg die argitektuur. Die zip se adres was
-   tydelik en sonder outentisering; hierdie een is nie. Die browser hou geen
-   token nie — dit is die hele punt van die besluit hierbo — dus kan die
-   browser nie self die `.nam` gaan haal nie. Ons bediener haal dit en stuur
-   dit deur.
+**Ons mag dit nie uitstuur of aankondig voor hulle dit nagegaan het nie.**
+Nie 'n versoek nie, 'n voorwaarde. Dit beteken:
 
-   Dit is presies die vorm wat `lib/nam.ts` klaar wil hê: dit neem 'n
-   lêer-inhoud, nie 'n adres nie. En dit beteken die seam se `call()` moet 'n
-   token per persoon kan dra, nie net een uit die omgewing nie — die
-   uitbreiding wat ek vroeër genoem het, nou bevestig deur twee verskillende
-   endpoints.
+- bou kan aangaan, en moet, want hulle vra 'n skermopname van 'n werkende
+  integrasie voor hulle kan teken
+- maar die **vrystelling** van hierdie funksie hang van hulle af, en die
+  tydsduur is hulle s'n, nie ons s'n nie
+- en dit moet in enige tydlyn staan wat iemand anders lees, want 'n funksie
+  wat klaar is en nie uit mag nie, lyk van buite af soos 'n funksie wat nie
+  klaar is nie
 
-3. ~~Die `List Models`-endpoint~~ — **gekry.**
-   `GET /models?tone_id={id}`, met `page`, `page_size` (verstek 10, maks
-   **300**) en `architecture`. Gee `PaginatedResponse<Model[]>`, in dieselfde
-   volgorde as die toon se bladsy — die eienaar se posisie, dan nuutste eerste
-   — en elke `Model` dra sy `model_url`.
+Hul eerste e-pos het dit half gesê — *"we're happy to waive them in exchange
+for promotional support"* — en dié bladsy sê wat dit formeel beteken. Die
+waiver **is** die kommersiële ooreenkoms wat hulle aanbied; die sign-off is
+bykomend en nie opsioneel nie.
 
-   Daardie volgorde is nie toevallig nie: dit is die volgorde waarin die
-   model-kieser van ontwerpvereiste 6 hulle moet wys.
+## Wat nog ontbreek
 
-3d. ~~Die ander toon-endpoints~~ — 'n toon se besonderhede lees, en die **model-lêer
-   self aflaai** sodat `lib/nam.ts` dit kan laat loop. Dit is die een sonder
-   wat niks werk nie.
-4. ~~Die CRUD API agter Favorites, Created en Downloaded~~ — **gekry**, en
-   dit is wel 'n CRUD: daar is 'n skryf-endpoint. Ek het 'n paragraaf
-   gelede geskryf dat dit net lees is; dit was verkeerd.
-4b. ~~Session Management~~ — **gekry.**
-5. **Die example app repository** wat hulle noem — die skakel daarna.
-6. Die **API Terms of Service**, woordeliks.
+Niks tegnies nie. Die dokumentasie is volledig afgeskryf: die drie
+integrasies, die hele OAuth-ketting, session management, elke endpoint wat
+ons gaan roep, die enums en die tipes.
+
+Oor:
+
+- die **API Terms of Service**, woordeliks — nie om te bou nie, om te
+  **bevestig**, wat hulle in hul e-pos gevra het
+- die skakel na die **example app repository**
+- twee vrae aan hulle: die `architecture`-een hierbo, en die lisensie-een
+- en 'n antwoord uit ons eie kant: watter `gears` die booth werklik wil hê
+- **die kommersiële ooreenkoms self**, en hoe hul sign-off-proses werk
