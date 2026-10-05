@@ -82,37 +82,51 @@ browser. Dit beteken nie hy hoort op 'n skermskoot op Twitter nie — maar as
 hy uitlek is dit nie 'n noodgeval nie, en jy hoef nie bang te wees om hom te
 hanteer nie.
 
-### 1.4 Registreer 'n `redirect_uri`
+### 1.4 Vul **Allowed Redirect URIs** in
 
 Dit is die adres waarheen TONE3000 haar terugstuur ná sy 'n toon gekies het.
-Hul dokumentasie sê: as daar een geregistreer is, word **slegs** daardie een
-aanvaar. Dit is 'n goeie reël en dit beteken 'n tikfout hier lyk later soos
-'n gebreekte aanmelding.
+Die veld heet **Allowed Redirect URIs**, een per reël, opsioneel, hoogstens
+tien, en dit staan op dieselfde bladsy as die sleutels.
 
-Registreer presies hierdie, een per reël as hulle meer as een toelaat:
+**Vul hom in, al is hy opsioneel.** Hul eie hulpteks daaronder sê: *"If no
+URIs are set, any redirect URI will be accepted."* Leeg beteken enigiemand
+mag 'n OAuth-vloei met ons `client_id` begin en die kode na hul eie bladsy
+laat stuur. Die `client_id` is **publiek** — dit is die punt daarvan — dus is
+dit nie teoreties nie: iemand bou 'n bladsy wat lyk soos *"teken by TONE3000
+in via FutureBox"* en die kode kom by hulle uit. Hierdie veld is die slot
+daarvoor en dit kos twee reëls.
+
+Die reëls wat in die boksie staan voordat jy tik, is **voorbeelde**
+(`app.example.com`), nie inhoud nie. Tik oor hulle.
 
 ```
 https://futurebox.studio/api/tone3000/callback
-```
-
-En as hulle 'n tweede toelaat, ook hierdie een, want dit is waar die app
-loop tot die domein aangeheg is:
-
-```
 https://futurebox-app.vercel.app/api/tone3000/callback
 ```
+
+Die tweede een is nie oorbodig nie: dit is waar die app werklik loop tot die
+domein by Vercel aangeheg is, en sonder hom breek die aanmelding presies in
+die tydperk waarin jy dit die eerste keer gaan toets.
 
 Drie dinge wat hier stil verkeerd gaan:
 
 - **`https`, nie `http`** nie.
 - **Geen skuinsstreep aan die einde** nie. `…/callback/` en `…/callback` is
-  vir 'n OAuth-bediener twee verskillende dinge.
+  vir 'n OAuth-bediener twee verskillende adresse.
 - **Nie `www.`** voor `futurebox.studio` nie, tensy dit is waarheen jou
   domein werklik wys.
 
-Daardie roete bestaan nog nie in die app nie — ek bou hom sodra die
-`client_id` daar is. Die registrasie kan egter nou gebeur; 'n geregistreerde
-adres wat nog niks ontvang nie, breek niks.
+Twee dinge uit hul hulpteks wat later saak maak:
+
+- **`http://localhost` en `http://127.0.0.1` is altyd toegelaat**, selfs met
+  'n streng lys. Ontwikkeling bly werk.
+- **Hoogstens tien.** Dit beteken Vercel se **preview**-ontplooiings, wat
+  elkeen 'n eie gegenereerde adres kry, gaan **nie** vir OAuth werk nie. Dit
+  is in orde — 'n mens toets die aanmelding op production of op localhost —
+  en dit staan hier sodat dit later nie soos 'n fout lyk nie.
+
+Daardie roete bestaan nog nie in die app nie. Die registrasie kan nou gebeur;
+'n geregistreerde adres wat nog niks ontvang nie, breek niks.
 
 ### 1.5 Vra die drie vrae saam
 

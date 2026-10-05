@@ -84,6 +84,7 @@ export const ORDER = [
   'livevideo',
   'liveflags',
   'pairs',
+  'tone3000',
 ] as const;
 
 /**
@@ -202,6 +203,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Jou eie Kits.AI minute, los van die huis s\u2019n. Sonder dit trek elke aflaai aan dieselfde teller.',
   afrikaans:
     'Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat dit hoor. Sonder dit is die knoppie daar en die verslag gaan nooit \u00eerens heen nie.',
+  tone3000:
+    'Die TONE3000-aanmelding: \u2019n handdruk wat loop, en die tokens daarna. Albei is service_role alleen en het met opset geen leesbeleid nie \u2014 \u2019n refresh token is blywende toegang tot iemand anders se TONE3000-rekening, en \u2019n blaaier wat hom kan lees maak die hele rede om hom bediener-kant te hou ongedaan. Sonder dit stuur die Browse TONE3000-knoppie haar weg en niks weet wie terugkom nie.',
 };
 
 /**

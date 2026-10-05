@@ -87,7 +87,7 @@ export default function KeepVideo({
         {state === 'busy'
           ? t('keepvid.busy', 'Keeping it…')
           : state === 'kept'
-            ? t('keepvid.kept', 'Kept — it is in the live room now')
+            ? t('keepvid.kept', 'Kept — it is in your channel now')
             : t('keepvid.do', 'Keep it on my account')}
       </button>
       {problem && <p className="w-full text-sm text-rose-400 leading-relaxed">{problem}</p>}

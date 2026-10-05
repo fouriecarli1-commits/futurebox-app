@@ -207,6 +207,12 @@ ok(`every processor that receives personal data is named on the privacy page (${
  * silent, so the map is checked against the schema below as well.
  */
 const KEPT: Record<string, string> = {
+  /* One sentence covers both: the handshake row and the token it produces.
+     The token is the part that needed saying — it is lasting access to
+     somebody else's account at another company, which is not what a person
+     expects "signed in with TONE3000" to mean unless the page says so. */
+  tone3000_pending: 'TONE3000',
+  tone3000_tokens: 'TONE3000',
   cast_members: 'photograph',
   pairs: 'work together',
   pair_links: 'work together',

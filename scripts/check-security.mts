@@ -56,7 +56,16 @@ function walk(dir: string, out: string[] = [], match = /\.tsx?$/): string[] {
    somebody switches off. */
 for (const file of walk('supabase', [], /\.sql$/)) {
   const sql = readFileSync(file, 'utf8');
-  const tables = [...sql.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?([a-z_]+)/gi)]
+  /* `[a-z0-9_]` and not `[a-z_]`. The first version had no digits in it, which
+     was invisible while no table had one. `tone3000_pending` reads as `tone`,
+     and then the search for its `alter table` finds nothing — a false alarm,
+     which is the harmless direction.
+
+     The other direction is not harmless. A table `foo2` with no RLS, in a
+     file that enables RLS on a table `foo`, is read as `foo`, finds that
+     line, and PASSES. An unprotected table slipping through the one check
+     standing between the anon key and everybody's rows. */
+  const tables = [...sql.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?([a-z_][a-z0-9_]*)/gi)]
     .map((m) => m[1].toLowerCase());
   for (const table of new Set(tables)) {
     const on = new RegExp(`alter\\s+table\\s+(public\\.)?${table}\\s+enable\\s+row\\s+level\\s+security`, 'i');

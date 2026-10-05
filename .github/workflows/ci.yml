@@ -315,6 +315,8 @@ jobs:
         run: npm run check:roomwalk
       - name: "The handshake to their window really hashes its own secret, and all four ways back are told apart"
         run: npm run check:tone3000
+      - name: "The callback answers at the address she registered, and every way back lands her in the app"
+        run: npm run check:tone3000route
       - name: "All three lanes can be picked, and the lines cut the one that is"
         run: npm run check:soundlanes
       - name: "Listening to a song's words again costs nothing, and really listens again"

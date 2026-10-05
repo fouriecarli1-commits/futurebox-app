@@ -214,7 +214,34 @@ the workflows actually on the account and says which slugs are set.
 **Broken until then:** chords, key, tempo and named stems. Everything else in
 the studio works without it.
 
-### 10. Spotify, for the chart beside ours on Spotlight
+### 10. TONE3000, for the amp sounds in the booth
+
+`NEXT_PUBLIC_TONE3000_CLIENT_ID`, the publishable key from their settings
+page. One value, and it is the only one: our flow is OAuth with PKCE, which
+exists so a client that cannot keep a secret can do it safely. Their secret
+key belongs to Full API Access, which we did not choose, and nothing here
+reads it.
+
+The `NEXT_PUBLIC_` prefix is right on this one and would be a mistake on a
+secret — it bakes the value into the JavaScript every visitor downloads.
+This value is published by design.
+
+**Also needed, and not a variable:** two addresses typed into **Allowed
+Redirect URIs** on their settings page, one per line —
+`https://futurebox.studio/api/tone3000/callback` and
+`https://futurebox-app.vercel.app/api/tone3000/callback`. Left empty, their
+own help text says any redirect URI is accepted, which means anybody holding
+our (public) client id can have the code sent to their own page.
+`check:tone3000route` asserts the route answers at exactly those strings,
+because rename the folder and nothing here would otherwise say a word.
+
+**Broken until then:** the Browse TONE3000 button has nowhere to send her.
+Everything else in the booth works without it.
+
+**How to tell:** press Browse TONE3000. Either their window opens or the
+button says it is not set up; there is no half-state.
+
+### 11. Spotify, for the chart beside ours on Spotlight
 
 `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`, from
 developer.spotify.com — create an app, copy the two values, no callback URL
@@ -236,7 +263,7 @@ hard-coded playlist id, which is the version that fails honestly rather than
 silently if they rename or retire it. If the bar never appears with the keys
 set, that search is the first thing to look at.
 
-### 11. Kits.AI — the model that actually sings
+### 12. Kits.AI — the model that actually sings
 
 `KITS_API_KEY`, from kits.ai → the API Access page → generate a token. It goes
 in Vercel and nowhere else. **Never in the repository**, and if it has ever been
@@ -356,7 +383,7 @@ rather than "that did not work" — send me that sentence and it is a five-minut
 fix. **R640 a month buys nothing until one conversion has actually come back**,
 so make one the day you pay.
 
-### 12. The two engines behind a flag — and one of them is settled
+### 13. The two engines behind a flag — and one of them is settled
 
 **`ELEVEN_SEEDANCE_READY` — leave it empty. It is not for sale on Pro.**
 
@@ -390,7 +417,7 @@ request comes back refused.
 
 ## Paperwork, on its own clock
 
-### 13. CIPC — registered, and what to type where
+### 14. CIPC — registered, and what to type where
 
 **Done: CIPC issued `2026/714071/07` on 5 September 2026**, for the enterprise
 name `futureboxstudio`. The `/07` suffix is a private company, so the page's
@@ -488,13 +515,13 @@ the serial — CIPC serials have had four to seven digits over the years, so a
 shorter one is somebody's real company. Read the number back off the page once
 after you set it.
 
-### 14. The trademark
+### 15. The trademark
 
 CIPC's register, classes 9 and 42. A registered domain and a registered company
 are neither of them a trademark, and this is the part that decides whether you
 can trade under the name at all. EUIPO and USPTO are free and take minutes.
 
-### 15. POPIA
+### 16. POPIA
 
 An information officer registered with the Information Regulator, and
 `FUTUREBOX_LEGAL_INFORMATION_OFFICER` set. You process personal data of South
@@ -737,7 +764,7 @@ pair), `KLINGAI_BASE_URL`, `KLING_MODEL`, `KLING_SOUND` and
 **Leave all of them unset.** With no key the video engine reports itself
 unavailable and no screen offers it, which is the state you want.
 
-### 12. The pronunciation test read — optional, and only for you
+### The pronunciation test read — optional, and only for you
 
 `ELEVEN_TEST_VOICE` holds the voice id that `/api/eleven/pronounce` reads the
 Afrikaans pronunciation test in. Optional: without it the route asks for the

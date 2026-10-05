@@ -132,6 +132,7 @@
     "check:seam": "tsx scripts/check-seam.mts",
     "check:roomwalk": "tsx scripts/check-roomwalk.mts",
     "check:tone3000": "tsx scripts/check-tone3000.mts",
+    "check:tone3000route": "tsx scripts/check-tone3000route.mts",
     "check:soundlanes": "tsx scripts/check-soundlanes.mts",
     "check:listenfree": "tsx scripts/check-listenfree.mts",
     "check:heardhere": "tsx scripts/check-heardhere.mts",

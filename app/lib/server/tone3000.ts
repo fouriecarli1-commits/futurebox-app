@@ -27,8 +27,20 @@
 
 import { createHash, randomBytes } from 'node:crypto';
 
-/** Where their OAuth lives. The API host itself belongs to `suppliers.ts`. */
+/**
+ * Where their OAuth lives.
+ *
+ * The API host itself belongs to `suppliers.ts`. These two are the sign-in,
+ * which is a different concern: no account credential passes through them,
+ * they happen before any capability exists, and routing identity through a
+ * capability router would be forcing it. Worth knowing that they share a
+ * host with the API, so the day a TONE3000 entry lands in `SUPPLIERS`,
+ * `check:seam` will see this file writing that host and say so. That is the
+ * rule working, and the answer is a named exemption with this reason — not a
+ * quiet edit to the rule.
+ */
 const AUTHORIZE = 'https://www.tone3000.com/api/v1/oauth/authorize';
+export const TOKEN = 'https://www.tone3000.com/api/v1/oauth/token';
 
 /**
  * What the cutting room asks for.

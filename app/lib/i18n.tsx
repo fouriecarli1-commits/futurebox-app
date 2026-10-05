@@ -2252,7 +2252,7 @@ export const STRINGS: Dict = {
   "cards.unreadable": { en: "That picture could not be read.", af: "Daardie prent kon nie gelees word nie." },
   "keepvid.do": { en: "Keep it on my account", af: "Hou dit op my rekening" },
   "keepvid.busy": { en: "Keeping it\u2026", af: "Hou dit\u2026" },
-  "keepvid.kept": { en: "Kept \u2014 it is in the live room now", af: "Gehou \u2014 dit is nou in die live-kamer" },
+  "keepvid.kept": { en: "Kept \u2014 it is in your channel now", af: "Gehou \u2014 dit is nou in jou channel" },
   "pics.noRoom": { en: "That picture is in the shot, but there was no room to keep it on this device.", af: "Daardie prent is in die skoot, maar daar was nie plek om dit op hierdie toestel te hou nie." },
   "pics.read": { en: "That file could not be read.", af: "Daardie lêer kon nie gelees word nie." },
   "pics.gone": { en: "That picture is no longer on this device.", af: "Daardie prent is nie meer op hierdie toestel nie." },
