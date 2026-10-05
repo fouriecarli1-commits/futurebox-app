@@ -399,9 +399,30 @@ preview=true,        ← sy moet kan hóór voor sy kies
 locale=<haar taal>   ← hulle ignoreer Accept-Language
 ```
 
-`gears` bly oop tot ons weet watter die booth werklik wil hê — `amp`,
-`cab`, `amp-cab` en `pedal` is die waarskynlike stel; `outboard`, `space` en
-`experimental` is dalk ook sinvol vir 'n stem-baan.
+`gears=amp_amp-cab_pedal` — en dit is uit die kode beantwoord, nie geraai
+nie.
+
+ProBooth se amp-afdeling sê self waarvoor dit is: *"most of what a guitar
+recorded on a phone needs, which is something to stop it sounding like a
+phone."* Dit is 'n kitaar-funksie. Die drie gears wat dit bedien is die kop,
+die kop-met-kas, en die pedale wat voor hulle staan.
+
+**`cab` en `space` word uitgelaat, en nie uit keuse nie.** Daardie twee is
+IR-vormig, en ons kan vandag geen IR laai nie. Maar dit is nader as wat dit
+lyk: `lib/fx.ts` se reverb is *"a convolver over a generated impulse"* — die
+`ConvolverNode` staan dus reeds daar en word met 'n **gemaakte** impuls
+gevoed. Om 'n egte kas-IR te laai is daardie selfde node met 'n gedekodeerde
+lêer in plaas van 'n gegenereerde een.
+
+Dus: nie 'n nuwe enjin nie, 'n ander invoer. Wanneer dit gedoen is, kom
+`format=ir` by en saam met dit `cab` en `space` — en dan het 'n kitaar op 'n
+foon 'n egte kas eerder as 'n benadering.
+
+**`outboard`** is kompressors en EQ, wat eerder by 'n **stem**-baan hoort as
+by 'n kitaar s'n. Die moeite werd wanneer die booth se stem-kant daardie
+soort verwerking kry; nie nou nie.
+
+**`experimental`** laat ons uit tot iemand vra.
 
 ## Die twee oproepe, met hul presiese vorms
 
@@ -691,5 +712,4 @@ Oor:
   **bevestig**, wat hulle in hul e-pos gevra het
 - die skakel na die **example app repository**
 - twee vrae aan hulle: die `architecture`-een hierbo, en die lisensie-een
-- en 'n antwoord uit ons eie kant: watter `gears` die booth werklik wil hê
 - **die kommersiële ooreenkoms self**, en hoe hul sign-off-proses werk
