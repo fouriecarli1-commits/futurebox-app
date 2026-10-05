@@ -249,6 +249,20 @@ export const ASPECTS: Readonly<Record<string, '9:16' | '16:9' | '1:1'>> = {
 /** An edit, whole. */
 export interface Edit {
   readonly pieces: readonly Piece[];
+  /**
+   * What the film is called.
+   *
+   * On the edit rather than asked for at the end, so it is kept with the
+   * project and is the same name in all three places the film has one: the
+   * file that downloads, the row in her channel, and the strip she is looking
+   * at while she works.
+   *
+   * Absent falls back to the first clip's name, which is a camera's filename
+   * and is a poor title — the whole reason this field exists. Her channel
+   * filling up with `VID_20261005_123456` is the shape of a feature that
+   * works and nobody wants to use.
+   */
+  readonly title?: string;
   /** Absent is tall: most of what leaves this app is watched on a phone. */
   readonly shape?: keyof typeof SHAPES;
   /**

@@ -989,6 +989,21 @@ export default function VideoEditor({
     return () => clearTimeout(soon);
   }, [edit, opening, broke]);
 
+  /* ── What the film is called, in one place ──────────────────────────────
+
+     Three things need this name — the file that downloads, the row that goes
+     into her channel, and the title on the cover — and before today each of
+     them reached for `edit.pieces[0]?.name`, which is a camera's filename. A
+     channel full of `VID_20261005_123456` is a feature that works and nobody
+     wants to use.
+
+     Worked out here rather than at each press, so the three cannot drift: the
+     film she downloads and the film in her channel are the same film and have
+     to carry the same name. */
+  const filmName = (edit.title ?? '').trim()
+    || edit.pieces[0]?.name
+    || t('edit.filmName', 'Film');
+
   /* The one door. The room costs nothing to serve, so this is not about cost
      — it is that the plan cards say the editor comes with a paid plan, and a
      card that says so while the room opens for everybody is a card that
@@ -3657,7 +3672,7 @@ export default function VideoEditor({
               type="button"
               data-editorsave
               onClick={() => {
-                const name = safeFilename(edit.pieces[0]?.name ?? 'film', made.ext);
+                const name = safeFilename(filmName, made.ext);
                 downloadBlob(made.blob, name);
                 /* And the cover beside it. "Wanneer die video ge-export word"
                    is the whole request — a cover that is only ever on screen
@@ -3692,7 +3707,7 @@ export default function VideoEditor({
                 phone's files and a row on her account are different wants. */}
             <KeepVideo
               blob={made.blob}
-              title={edit.pieces[0]?.name ?? t('edit.filmName', 'Film')}
+              title={filmName}
               seconds={made.seconds}
               /* The FILM's shape, which is the shape it actually came out in
                  — not the shape of whatever clip happens to be first on the
@@ -5236,6 +5251,36 @@ export default function VideoEditor({
                 </label>
               </div>
             </div>
+
+            {/* ── What it is called ──────────────────────────────────────
+
+                Here rather than under the finished film, for two reasons.
+                She can name it while the film is still being cut, which is
+                when she knows what it is; and it lives on the edit, so it is
+                kept with the project and comes back with it.
+
+                The placeholder is the name it will actually go up under if
+                she types nothing, rather than a prompt — so the field answers
+                its own question before she touches it. */}
+            <label className="block space-y-1.5">
+              <span className="block text-sm text-zinc-400">
+                {t('edit.filmTitle', 'What the film is called')}
+              </span>
+              <input
+                type="text"
+                data-editorfilmtitle
+                value={edit.title ?? ''}
+                placeholder={edit.pieces[0]?.name ?? t('edit.filmName', 'Film')}
+                onChange={(event) => commit((was) => ({ ...was, title: event.target.value }))}
+                className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 placeholder:text-zinc-600"
+              />
+              <span className="block text-sm" style={{ color: INK_DIM }}>
+                {t(
+                  'edit.filmTitleWhy',
+                  'The name on the file you save and on the film in your channel.',
+                )}
+              </span>
+            </label>
 
             {/* ── What the file is written at ────────────────────────────
 

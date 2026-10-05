@@ -935,6 +935,14 @@ export const STRINGS: Dict = {
     en: "Film",
     af: "Film",
   },
+  "edit.filmTitle": {
+    en: "What the film is called",
+    af: "Wat die film genoem word",
+  },
+  "edit.filmTitleWhy": {
+    en: "The name on the file you save and on the film in your channel.",
+    af: "Die naam op die lêer wat jy stoor en op die film in jou kanaal.",
+  },
   "edit.bring": {
     en: "Bring clips in",
     af: "Bring knipsels in",

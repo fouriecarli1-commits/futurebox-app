@@ -105,6 +105,14 @@ if (!made) {
   await p.locator('[data-editorwords]').fill('Onthou my');
   await p.waitForTimeout(1800);
 
+  /* A name for it, because the film needs one in three places — the file
+     she saves, the row in her channel, and here — and a name that is not kept
+     with the project is a name she types twice. */
+  await p.locator('[data-cutbench="film"]').click().catch(() => undefined);
+  await p.waitForTimeout(600);
+  await p.locator('[data-editorfilmtitle]').fill('Onthou my — die film');
+  await p.waitForTimeout(1800);
+
   /* ── The press that lost it ─────────────────────────────────────────
 
      A reload rather than the phone's Back, and it is the harder case: Back
@@ -128,6 +136,14 @@ if (!made) {
     (await p.locator('[data-editoropening]').count()) === 0,
     'the room asking what it is for, over a film, is the fault wearing the'
     + ' other mask');
+
+  await p.locator('[data-cutbench="film"]').click().catch(() => undefined);
+  await p.waitForTimeout(600);
+  check('  and the name she gave the film came back too',
+    ((await p.locator('[data-editorfilmtitle]').inputValue().catch(() => '')) || '') === 'Onthou my — die film',
+    `"${(await p.locator('[data-editorfilmtitle]').inputValue().catch(() => '')) || ''}" —`
+    + ' a name that is not kept is a name she types again every visit, and the'
+    + ' film goes into her channel as the camera filename until she does');
 
   await p.locator('[data-cutbench="words"]').click().catch(() => undefined);
   await p.waitForTimeout(700);

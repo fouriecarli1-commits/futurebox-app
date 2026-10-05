@@ -242,6 +242,31 @@ ok('  and it goes up as made here, not as something a camera took',
   'the rights panel reads that word off the row — a film the desk made is not'
   + ' a filmed take, and the two carry different obligations');
 
+ok('  and under a name she set, in all three places the film has one',
+  /readonly title\?: string;/.test(cut)
+  && /data-editorfilmtitle/.test(room)
+  && /const filmName = \(edit\.title \?\? ''\)\.trim\(\)/.test(room)
+  && /title=\{filmName\}/.test(room)
+  && /safeFilename\(filmName, made\.ext\)/.test(room)
+  && (room.match(/edit\.pieces\[0\]\?\.name/g) ?? []).length === 2,
+  'the file she saves and the row in her channel are the same film and have'
+  + ' to carry the same name. Before this each press reached for the first'
+  + " clip's own filename, so her channel would fill with VID_20261005_123456"
+  + ' — a feature that works and nobody wants to use. The two remaining'
+  + ' readings are the fallback and the placeholder, which are the same fact');
+
+/* Three plain facts and not one clever line. The first draft of this rule
+   leaned on `before(cut, …)` over a string that lives in the OTHER file, so
+   it answered false, so the clause was true whatever either file said. */
+ok('  and the name is kept with the project',
+  /readonly title\?: string;/.test(cut)
+  && /interface Thin extends Omit<Edit, 'pieces' \| 'cover' \| 'under'>/.test(keep)
+  && /const thin: Thin = \{\s*\.\.\.edit,/.test(keep),
+  'the thin film is the edit with the blobs swapped out and spread whole, so'
+  + ' a field added to the edit is kept without filmkeep.ts being touched —'
+  + ' which is only true while `Thin` derives from `Edit` instead of listing'
+  + ' its fields, and while the spread is still there');
+
 ok('  and at the shape the FILM came out, not the first clip\'s',
   /aspect=\{ASPECTS\[edit\.shape \?\? 'tall'\]/.test(room)
   && /export const ASPECTS/.test(cut)
