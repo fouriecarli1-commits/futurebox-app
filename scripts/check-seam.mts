@@ -32,7 +32,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { withoutComments } from './prose.mts';
-import { CAPABILITIES, SUPPLIERS, serves, type Capability } from '../app/lib/server/suppliers';
+import {
+  CAPABILITIES, SUPPLIERS, authFor, call, callGiven, serves, type Capability,
+} from '../app/lib/server/suppliers';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -128,13 +130,115 @@ ok('  and the auth header goes on last',
   + ' silently replaces the real one, and the failure reads as the supplier'
   + ' rejecting us rather than as our own bug');
 
+/* The next few open the door for real rather than reading it. A regex on
+   `headers.set(...)` was what stood here, and it said nothing about what
+   actually lands in the header — which is the whole question. */
+const sent: { url: string; headers: Headers }[] = [];
+const real = globalThis.fetch;
+globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+  sent.push({ url: String(url), headers: new Headers(init?.headers) });
+  return new Response('{}');
+}) as typeof globalThis.fetch;
+try {
+  process.env.ELEVENLABS_API_KEY = 'ours';
+  await call('speak', '/v1/text-to-speech');
+  await call('speak', '/v1/text-to-speech', {}, 'theirs');
+} finally {
+  globalThis.fetch = real;
+}
+
 ok('  a person\'s own token can be carried, and wins over the account key',
   /asPerson\?: string/.test(seam)
-  && /headers\.set\(supplier\.keyHeader, asPerson \?\? supplier\.key\(\)\)/.test(seam),
+  && sent[0]?.headers.get('xi-api-key') === 'ours'
+  && sent[1]?.headers.get('xi-api-key') === 'theirs',
   'every supplier so far is one account we pay for, with one key in the'
   + ' environment. TONE3000 is not: each member signs in to their own and the'
   + ' token reads THEIR favourites and THEIR private tones. Sending ours'
   + ' alongside theirs would be asking two questions at once');
+
+ok('  and the key arrives with its scheme in front of it, not bare',
+  authFor({ keyPrefix: 'Bearer ', key: () => 'ours' }) === 'Bearer ours'
+  && authFor({ keyPrefix: 'Bearer ', key: () => 'ours' }, 'theirs') === 'Bearer theirs'
+  && authFor({ keyPrefix: '', key: () => 'ours' }) === 'ours',
+  'ElevenLabs has no scheme and TONE3000 wants `Authorization: Bearer'
+  + ' <token>`. Sent bare there, the 401 that comes back talks about the'
+  + ' token, so the hour goes on the token instead of on the one missing'
+  + ' word in front of it. This is exercised with a scheme that is NOT'
+  + " empty on purpose: the first version read the real supplier's header"
+  + " back, whose scheme is '', and passed with the scheme deleted from the"
+  + ' door — green, and measuring nothing');
+
+ok('  and both doors compose the header in one place, which fetches once',
+  (seam.match(/headers\.set\(/g) ?? []).length === 1
+  && (seam.match(/\bfetch\(/g) ?? []).length === 1
+  && /headers\.set\(supplier\.keyHeader, authFor\(supplier, asPerson\)\)/.test(seam),
+  'the arithmetic above is only worth something if the doors actually go'
+  + ' through it — a second place that joins the two strings itself is a'
+  + ' second place to forget the scheme, and a second fetch is a second'
+  + ' place to forget the header entirely');
+
+ok('  and a supplier using Authorization has to say which scheme',
+  SUPPLIERS.every((one) => one.keyHeader.toLowerCase() !== 'authorization'
+    || /^\S+ $/.test(one.keyPrefix)),
+  'this rule is here before the supplier that needs it, which is the only'
+  + ' order in which it is worth anything: on the day the TONE3000 entry is'
+  + ' written, a bare token in that header does not compile past this check');
+
+const throws = (go: () => unknown): boolean => {
+  try {
+    void go();
+    return false;
+  } catch {
+    return true;
+  }
+};
+
+ok('  and a whole address handed to the path door is refused',
+  ['https://x.amazonaws.com/t.zip', 'http://x/t.zip', '//x/t.zip']
+    .every((one) => throws(() => call('speak', one))),
+  'their download endpoint answers with a temporary link to a zip on'
+  + " somebody else's storage and says no auth header is needed. This door"
+  + ' always adds one, so a whole address through it sends a member\'s'
+  + ' TONE3000 token to a host that is not TONE3000, and nothing downstream'
+  + ' would complain');
+
+/* ── The second door, for an address the supplier itself handed back ───── */
+
+const own = SUPPLIERS[0].base;
+sent.length = 0;
+const real2 = globalThis.fetch;
+globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+  sent.push({ url: String(url), headers: new Headers(init?.headers) });
+  return new Response('{}');
+}) as typeof globalThis.fetch;
+try {
+  await callGiven('speak', `${own}/v1/models/x.nam`, {}, 'theirs');
+} finally {
+  globalThis.fetch = real2;
+}
+
+ok("an address the supplier gave us is fetched with our credential on it",
+  sent[0]?.url === `${own}/v1/models/x.nam`
+  && sent[0]?.headers.get('xi-api-key') === 'theirs',
+  'TONE3000 `Model.model_url` is fetched WITH the Bearer token — their own'
+  + ' sample does that, and step 6 of the chain depends on it. The first'
+  + ' version of this seam refused every whole address, which made that'
+  + ' step unreachable through the only place allowed to write the header:'
+  + ' a check faithfully guarding a rule that was wrong');
+
+ok('  but only when it is on the supplier\'s own host',
+  ['https://x.amazonaws.com/t.zip', 'https://tone3000.com.evil.test/t',
+    'http://api.elevenlabs.io/v1/x']
+    .every((one) => throws(() => callGiven('speak', one))),
+  'the signed zip link and the model url are both whole addresses from the'
+  + ' same supplier with OPPOSITE rules, and nothing in the string says'
+  + ' which is which. The origin does. A scheme that does not match counts'
+  + " too: http where the base is https is somebody else's wire");
+
+ok('  and a path handed to that door is refused as well',
+  ['/v1/models/x.nam', 'v1/models/x.nam'].every((one) => throws(() => callGiven('speak', one))),
+  'the two doors are not interchangeable, and a path that silently became'
+  + ' `https://base/v1/...` here would make the origin test meaningless');
 
 ok('  and the seam still does not know who is asking',
   !/callerFrom|caller\.id|request/.test(seam),

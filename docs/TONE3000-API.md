@@ -54,9 +54,19 @@ seam — `app/lib/server/suppliers.ts` is reeds die enigste plek wat 'n host en
 
 ```
 keyFrom: 'TONE3000_SECRET_KEY',
-key: () => `Bearer ${process.env.TONE3000_SECRET_KEY ?? ''}`,
+key: () => process.env.TONE3000_SECRET_KEY ?? '',
 keyHeader: 'Authorization',
+keyPrefix: 'Bearer ',
 ```
+
+Die `Bearer ` staan in sy eie veld en nie binne-in `key()` nie. Dit was eers
+so geskryf, en dit lyk korter: die skema saam met die sleutel, een plek, klaar.
+Dit is verkeerd omdat dit die skema in die **sleutel** se waarde wegsteek, en
+'n per-persoon-token loop nie deur `key()` nie — hy kom as 'n argument in. So
+'n lid se token sou **sonder** `Bearer ` gestuur word terwyl ons eie een dit
+dra, en dit is die een pad wat ons nie kan toets voordat daar 'n lid is nie.
+`check:seam` weier nou 'n verskaffer wat `Authorization` gebruik sonder 'n
+eie `keyPrefix`.
 
 Die `client_id` is 'n ander ding en mag wel in die browser wees.
 
@@ -427,8 +437,8 @@ soort verwerking kry; nie nou nie.
 ## Die twee oproepe, met hul presiese vorms
 
 ```
-GET /tones/{toneId}            → die toon self, nie toegedraai nie
-GET /models?tone_id={toneId}   → { data: [ … ] }
+GET /tones/{toneId}                              → die toon self, nie toegedraai nie
+GET /models?tone_id={toneId}&page=&page_size=    → { data: [ … ] }
 ```
 
 Die een is kaal en die ander is 'n
@@ -439,6 +449,57 @@ kode eerder as na die vorm.
 
 Albei dra `Authorization: Bearer <access_token>`, en die token kom uit die
 ruil wat bediener-kant gebeur.
+
+En `/models` is **gepagineer**, wat die tweede stil een is. 'n Toon met meer
+modelle as een bladsy gee net die eerste bladsy; niks faal nie, die lys is
+net kort, en ontwerpvereiste 6 se model-kieser wys dan 'n toon met party van
+sy modelle weg. Ons loop die bladsye tot `total_pages`.
+
+Daardie `Bearer` is een woord en dit het die seam verander. Ons `call()` het
+die sleutel **kaal** in die header geskryf, wat reg is vir ElevenLabs se
+`xi-api-key: <key>` en stilweg verkeerd vir hierdie een. 'n Kaal token in
+`Authorization` gee 'n 401 waarvan die boodskap oor die **token** praat, so
+die uur gaan op die token — wat heeltemal in orde was — in plaas van op die
+een ontbrekende woord voor hom. Elke verskaffer sê nou sy eie skema
+(`keyPrefix`), en `check:seam` weier 'n verskaffer wat `Authorization`
+gebruik sonder om te sê watter een. Daardie reël staan daar **voor** die
+TONE3000-inskrywing, wat die enigste orde is waarin hy iets werd is.
+
+## Aflaai — die endpoint wat die lêer self gee
+
+```
+GET /tones/{toneId}/download?filenames=name        → { url, expires_at, filename }
+GET /tones/{toneId}/download?filenames=id
+```
+
+Dit is nie `GET /models?tone_id=` nie. Daardie een gee die **beskrywings**
+van 'n toon se modelle; hierdie een gee 'n **pad na die grepe**. Ons het
+albei nodig en hulle doen nie dieselfde ding nie.
+
+Vier dinge hieraan, en al vier kan 'n uur kos.
+
+**1. Die `url` mag ons sleutel nooit sien nie.** Dit is 'n tydelike,
+voorafgetekende skakel na berging, en hulle sê dit self langs die kode: *"url
+is a temporary link to the zip archive, no auth header needed"*. Ons seam se
+`call()` **voeg altyd 'n header by**. 'n Hele adres wat daardeur gaan, stuur
+'n lid se TONE3000-token na 'n host wat nie TONE3000 is nie, en niks
+stroom-af sou kla nie. Daarom weier die deur nou 'n absolute URL hardop, en
+die tweede oproep is 'n **kaal `fetch`** en moet dit bly.
+
+**2. Dit is 'n zip, nie 'n `.nam` nie.** `lib/nam.ts` laai een vaslegging;
+'n toon kan meer as een model dra, en daarom is dit 'n argief. Iets moet dit
+oopmaak, en dit is nog nie geskryf nie.
+
+**3. `filenames=id` is die veiliger een.** Die verstek is `name`, en 'n naam
+kom van die mens wat die toon opgelaai het. Name binne 'n argief kan
+dupliseer, en 'n naam wat `../` dra is **zip-slip** — 'n inskrywing wat
+buite die vouer uitpak waar ons hom uitpak. Ons vra `id`, en ons vertrou in
+elk geval nie 'n inskrywing se pad nie.
+
+**4. `expires_at` beteken ons mag die `url` nie stoor nie.** 'n Projek wat
+die skakel bêre, bêre 'n skakel wat môre dood is, en die fout lyk soos 'n
+toon wat verdwyn het eerder as soos 'n skakel wat verval het. Ons stoor die
+**toon se id** en vra weer.
 
 ## Die ses velde wat op die skerm moet wees, en waar hulle sit
 
@@ -620,9 +681,22 @@ hierop by Select filter nie — die parameter bestaan net op die soek-endpoint
 foon loop en een wat hakkel. Ons sien dit eers op die `Model` ná die keuse,
 wat beteken die kamer moet dit kan hanteer eerder as voorkom.
 
-**Architecture:** `'1'`, `'2'`, `'custom'` — **stringe, nie getalle nie.**
-'n `2` in plaas van `'2'` is die soort ding wat stil deurgaan en dan die
-verkeerde stel modelle gee.
+**Architecture:** hul eie voorbeeldkode sê `1 | 2 | 'custom'` — **getalle**
+vir die twee weergawes en 'n string vir custom.
+
+Ek het hier eers geskryf dis alles stringe, en gewaarsku dat 'n `2` in plaas
+van `'2'` stil deurgaan en die verkeerde stel modelle gee. Dit was
+**verkeerd**, en dit was in elk geval 'n waarskuwing oor niks: dit is 'n
+query-parameter, dus is `?architecture=2` en `?architecture=${'2'}` dieselfde
+grepe op die draad. Dit is 'n reël wat 'n uur kos om na te jaag en niks
+beskerm nie, en daarom staan hy nie meer hier nie.
+
+Waar die verskil wél kan byt is die **ander kant**. `Model` se
+`architecture_version` kom as `Architecture` terug. As die navraag `2` vat en
+die antwoord `'2'` gee, dan is `model.architecture_version === 2` vals
+terwyl dit soos waar lyk, en die kamer kies die verkeerde pad op 'n toon wat
+niks verkeerd het nie. Dit is 'n vergelyking in **ons** kode, nie 'n
+parameter aan hulle nie, en dit is 'n derde vraag werd.
 
 Die skeiers verskil per parameter, en dit is 'n strik:
 

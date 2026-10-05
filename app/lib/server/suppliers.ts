@@ -123,6 +123,19 @@ export interface Supplier {
   readonly key: () => string;
   /** The header they want it in. */
   readonly keyHeader: string;
+  /**
+   * What goes in front of the key inside that header, scheme and space.
+   *
+   * ElevenLabs wants `xi-api-key: <key>` and has none. TONE3000 wants
+   * `Authorization: Bearer <token>`, and sending the token bare there gets a
+   * 401 whose message is about the token — so the hour goes on the token,
+   * which was fine, instead of on the one missing word in front of it.
+   *
+   * It is stated per supplier rather than worked out from the header name,
+   * because `Authorization` carries `Basic` and `Digest` too and guessing
+   * right today is guessing wrong the day somebody uses one of those.
+   */
+  readonly keyPrefix: string;
   /** What this supplier is able to serve. */
   readonly serves: readonly Capability[];
 }
@@ -147,6 +160,8 @@ export const SUPPLIERS: readonly Supplier[] = [
     keyFrom: 'ELEVENLABS_API_KEY',
     key: () => process.env.ELEVENLABS_API_KEY ?? '',
     keyHeader: 'xi-api-key',
+    /* Their own header, so there is no scheme to name. */
+    keyPrefix: '',
     serves: [
       'speak', 'dialogue', 'voiceswap', 'clone', 'voicelist', 'transcribe',
       'align', 'music', 'stems', 'cleanup', 'dub', 'usage', 'finetune',
@@ -181,6 +196,25 @@ export function serves(what: Capability): Supplier {
   const only = SUPPLIERS.find((one) => one.serves.includes(what));
   if (!only) throw new Error(`no supplier serves ${what}`);
   return only;
+}
+
+/**
+ * What goes in the auth header: the scheme, then the key or the person's token.
+ *
+ * This is two strings joined and it is exported anyway, because the only
+ * supplier today has an EMPTY scheme — so a check that opens the door and
+ * reads the header back cannot tell whether the scheme was applied or
+ * quietly dropped. `'' + key` is `key` either way. Pulled out here, the
+ * joining can be exercised with a scheme that is not empty, before the
+ * supplier that needs one exists. The first version of that assertion
+ * passed with the scheme deleted from the door, which is exactly the
+ * green-but-adjacent fault this repo keeps finding.
+ */
+export function authFor(
+  supplier: Pick<Supplier, 'keyPrefix' | 'key'>,
+  asPerson?: string,
+): string {
+  return supplier.keyPrefix + (asPerson ?? supplier.key());
 }
 
 /** Whether the supplier for this capability is configured at all. */
@@ -235,10 +269,93 @@ export function call(
   asPerson?: string,
 ): Promise<Response> {
   const supplier = serves(what);
+  /**
+   * A whole address is not a path, and this door must refuse one.
+   *
+   * TONE3000's `GET /tones/{id}/download` answers with a temporary link to a
+   * zip on somebody else's storage, and their own note beside it says no auth
+   * header is needed. This door always adds one. So an absolute URL handed in
+   * here sends a member's TONE3000 token to a host that is not TONE3000 —
+   * which is not untidiness, it is a credential going somewhere it was never
+   * meant to go, and nothing downstream would complain. The second fetch is a
+   * bare `fetch` and has to stay one.
+   */
+  if (whole(path)) {
+    throw new Error('call() takes a path, not a URL — see callGiven');
+  }
+  return send(supplier, `${supplier.base}${path}`, init, asPerson);
+}
+
+/** Whether this is a whole address rather than a path under a base. */
+function whole(it: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:/i.test(it) || it.startsWith('//');
+}
+
+/**
+ * A whole address the SUPPLIER gave us, fetched with our credential on it.
+ *
+ * ── Why this is a second door and not a flag ─────────────────────────────
+ *
+ * TONE3000 hands back two kinds of address and they have OPPOSITE rules.
+ *
+ * `Model.model_url` is fetched WITH `Authorization: Bearer <token>` — their
+ * own sample does exactly that, and step 6 of the chain in
+ * `docs/TONE3000-API.md` depends on it.
+ *
+ * The `url` from `GET /tones/{id}/download` must NEVER see it. It is a
+ * temporary signed link to a zip on storage, and their note beside it says
+ * no auth header is needed. Sending a member's token there puts it on a host
+ * that is not the supplier, and nothing downstream complains.
+ *
+ * `call()` refusing every whole address was the first attempt and it was too
+ * blunt: it made `model_url` unreachable through the only place allowed to
+ * write that header, so the chain the doc already describes could not be
+ * built. A boolean argument was the second idea and is worse — the dangerous
+ * value reads as `true` at a call site and nobody looks twice.
+ *
+ * So the rule is the ORIGIN. A supplier-given address is fetched with our
+ * credential only when it is on the supplier's own host; anything else is
+ * refused out loud, which is the right direction to fail in. The signed zip
+ * needs no door at all: it is a bare `fetch`, writing no host and no header.
+ *
+ * Not yet known: whether `model_url` lives on `www.tone3000.com` or on their
+ * storage. If it is storage, this throws the first time rather than leaking,
+ * and the message says why. That is the question to ask them, not a thing to
+ * assume — see the open questions in `docs/TONE3000-API.md`.
+ */
+export function callGiven(
+  what: Capability,
+  url: string,
+  init: RequestInit = {},
+  asPerson?: string,
+): Promise<Response> {
+  const supplier = serves(what);
+  if (!whole(url)) {
+    throw new Error('callGiven() takes a whole address, not a path — see call');
+  }
+  if (new URL(url).origin !== new URL(supplier.base).origin) {
+    throw new Error(
+      `callGiven() refuses ${new URL(url).origin}: not ${supplier.name}'s own host`,
+    );
+  }
+  return send(supplier, url, init, asPerson);
+}
+
+/**
+ * The only place a credential is written and the only place anything is
+ * fetched. Both doors come through here so there is one line to get right.
+ */
+function send(
+  supplier: Supplier,
+  url: string,
+  init: RequestInit,
+  asPerson?: string,
+): Promise<Response> {
   const headers = new Headers(init.headers);
   /* Theirs wins when there is one. A supplier serving per-person tokens has
      no account key worth sending, and sending ours alongside would be
-     asking two questions at once. */
-  headers.set(supplier.keyHeader, asPerson ?? supplier.key());
-  return fetch(`${supplier.base}${path}`, { ...init, headers });
+     asking two questions at once. Set AFTER the caller's own headers are
+     merged in, so a caller cannot replace it with whatever it had. */
+  headers.set(supplier.keyHeader, authFor(supplier, asPerson));
+  return fetch(url, { ...init, headers });
 }
