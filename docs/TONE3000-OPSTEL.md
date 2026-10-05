@@ -37,39 +37,49 @@ met `support@tone3000.com` oor die fooie, en *"where do I find my client ID
 and secret key?"* is een reël by daardie draad. Dit is vinniger as om 'n
 halfuur deur menu's te krap, en dit is 'n vraag wat hulle elke week kry.
 
-### 1.3 Kopieer **een** ding: die `client_id`
+### 1.3 Daar is drie sleutels op daardie bladsy. Een gaan in Vercel.
 
-Dit is al. Daar is **geen secret key** vir ons nie.
+| Wat | Wat dit is | Waarheen |
+|---|---|---|
+| **publishable key** | dit **is** die `client_id` — dieselfde ding, twee name. Hulle noem hom publishable key op die skerm; OAuth en ons kode noem hom `client_id`. Die blywende identifiseerder van die toepassing, veilig in 'n browser | **Vercel**, as `NEXT_PUBLIC_TONE3000_CLIENT_ID` |
+| **secret key** (`t3k_cs_…`) | *"Treat it like a database password"* — hul eie woorde; slegs bediener-kant | **nog nêrens nie** — sien hieronder |
+| **legacy API key** | 'n enkele lang-lewende sleutel uit 'n ouer stelsel, van voor OAuth | **nêrens nie** |
 
-> **Hierdie afdeling het eers vir twee sleutels gevra en dit was verkeerd.**
-> Carli het gesoek en niks gevind, en sy het reg gesoek — daar is niks om te
-> vind nie.
+> **Hierdie afdeling het 'n draai gevat en albei foute is myne.**
 >
-> Ons vloei is OAuth 2.0 **met PKCE**, en PKCE bestaan juis sodat 'n app wat
-> nie 'n geheim kan bewaar nie, hierdie vloei veilig kan doen. Die hele punt
-> daarvan is dat daar geen geheim is nie. Hierdie doc se eie afdeling oor die
-> token-ruil sê dit sedert die eerste dag: *"die ruil gebruik net die
-> publishable key. Geen geheim nie."* Die kode wat ek gebou het stuur ook
-> niks anders nie — `tradeFor()` stuur `grant_type`, `code`,
-> `code_verifier`, `redirect_uri` en `client_id`, en dis dit.
+> Eers het hy vir die geheim gevra asof die vloei hom nodig het. Dit is
+> verkeerd: ons vloei is OAuth met **PKCE**, wat juis bestaan sodat 'n kliënt
+> wat **nie** 'n geheim kan bewaar nie, hierdie vloei veilig kan doen. Die
+> ruil stuur `grant_type`, `code`, `code_verifier`, `redirect_uri` en
+> `client_id`, en niks anders nie.
 >
-> Die `t3k_cs_…`-sleutel is werklik — hy hoort net aan **Full API Access**,
-> die integrasie waar 'n mens sy eie bladerder bou en bediener-tot-bediener
-> praat sonder dat iemand inteken. Ons het **Select** gekies, wat die werk in
-> die helfte sny, en daarmee saam kom geen geheim nie. Hy is nie op jou
-> settings-bladsy nie omdat hulle hom nie vir hierdie vloei uitgee nie.
->
-> As jy hom ooit **wel** daar sien, moenie hom in Vercel sit nie — sê vir my,
-> want dan beteken dit ons rekening is vir 'n ander integrasie opgestel as
-> die een wat ek gebou het, en dit is 'n gesprek met hulle en nie 'n
-> veranderlike nie.
+> Toe Carli niks kon vind nie, het ek gesê die geheim bestaan nie vir hierdie
+> vloei nie en hulle gee hom nie uit nie. Ook verkeerd — **hy is op die
+> bladsy**. Wat waar bly is dat ons hom vandag nie gebruik nie; wat ek as
+> feit geskryf het en net aangeneem het, is dat hulle hom nie gee nie.
 
-Die `client_id` is nie 'n geheim nie. Hul eie dokumentasie noem hom die
-**publishable key** en sê hy is veilig in kliëntkode, in 'n mobiele app en in
-'n browser. Hy is die blywende identifiseerder van die toepassing.
+**Hoekom die geheim nog nie in Vercel gaan nie.** Niks lees hom. 'n Geheim
+hoort op presies soveel plekke as wat hom nodig het, en dit is nou nul. Hy
+word nodig op die dag dat ons **trending tone wys voordat iemand ingeteken
+het** — ontwerpvereiste 4 se *"query and render trending and latest tones"*
+op die amp-kieser se eerste skerm. Op daardie oomblik is daar nog geen
+persoon se token nie, en dan is 'n bediener-kant-sleutel die regte
+gereedskap. Dit is een plak op daardie dag.
 
-Dit beteken nie hy hoort op 'n skermskoot op Twitter nie — maar as hy
-uitlek, is dit nie 'n noodgeval nie, en jy hoef nie bang te wees om hom te
+**Hoekom die legacy key nêrens gaan nie.** Met 'n rekening-sleutel lyk elke
+lid se oproep soos **een** rekening. TONE3000 se hele model is per persoon —
+haar favourites, haar privaat tone, haar avatar en gebruikersnaam op die
+skerm, wat ontwerpvereiste 4 letterlik vra. Met een sleutel is daar geen
+ingetekende persoon nie. Dit raak ook die gesprek met hulle: hul kommersiële
+terme sê kommersiële integrasies word nagegaan en goedgekeur, en een rekening
+se sleutel wat die werk van honderde kliënte doen, is die vorm wat sleg lees
+in daardie gesprek. En "legacy" is hul eie woord vir *ons gaan hiervan
+ontslae raak*.
+
+Die `client_id` is nie 'n geheim nie. Hul dokumentasie noem hom die
+**publishable key** en sê hy is veilig in kliëntkode, 'n mobiele app en 'n
+browser. Dit beteken nie hy hoort op 'n skermskoot op Twitter nie — maar as
+hy uitlek is dit nie 'n noodgeval nie, en jy hoef nie bang te wees om hom te
 hanteer nie.
 
 ### 1.4 Registreer 'n `redirect_uri`
@@ -202,7 +212,8 @@ en al vier maniere om uit hul venster terug te kom.
 ## Die kort lysie, as jy net dit wil hê
 
 - [ ] Teken in op TONE3000 met die rekening uit die fooi-gesprek
-- [ ] Settings → kopieer die `client_id` (net dié een; daar is geen geheim)
+- [ ] Settings → kopieer die **publishable key**. Die secret key en die
+      legacy API key bly waar hulle is.
 - [ ] Registreer `https://futurebox.studio/api/tone3000/callback` (en die
       `vercel.app`-een as hulle 'n tweede toelaat)
 - [ ] Vra die drie vrae in dieselfde e-pos
@@ -211,4 +222,5 @@ en al vier maniere om uit hul venster terug te kom.
 - [ ] Deployments → Redeploy
 - [ ] Sê vir my, en ek bou die callback-roete
 
-**En as jy nêrens 'n geheim kry nie, is dit reg.** Daar is nie een nie.
+**Die secret key bly op hul bladsy tot iets hom lees, en die legacy API key
+gaan nêrens nie.** Net die publishable key gaan in Vercel.

@@ -50,12 +50,16 @@ in 'n mobiele binary of enigiets wat 'n toestel bereik nie.
 
 ### Maar ons kry nooit een nie, en dit is belangrik
 
-Carli het op haar settings-bladsy gaan soek en niks gevind. Sy het reg
-gesoek — daar is niks om te vind nie, en my eerste opstel-gids het verkeerdelik
-vir een gevra.
+Haar settings-bladsy dra **drie** sleutels: 'n publishable key, 'n secret key
+en 'n legacy API key. Ek het eers gesê die geheim bestaan nie vir hierdie
+vloei nie en hulle gee hom nie uit nie. Dit was 'n aanname wat ek as feit
+geskryf het — hy is daar. Wat waar bly is dat ons hom **nie gebruik nie**.
 
 Die secret key hoort aan **Full API Access**: bediener-tot-bediener, ons eie
-bladerder, niemand teken in nie. Ons het **Select** gekies. Daardie vloei is
+bladerder, niemand teken in nie. Hy word eers vir ons nuttig op die dag dat
+ons trending tone wys **voordat** iemand ingeteken het, want dan is daar nog
+geen persoon se token nie. Tot dan lees niks hom, en hy hoort op geen ander
+plek as hul eie bladsy nie. Ons het **Select** gekies. Daardie vloei is
 OAuth met PKCE, en PKCE bestaan juis sodat 'n kliënt wat **nie** 'n geheim kan
 bewaar nie, die vloei veilig kan doen. Die afdeling oor die ruil hieronder sê
 dit al: net die publishable key, geen geheim nie.
