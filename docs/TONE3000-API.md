@@ -377,6 +377,184 @@ Niks blokkeer meer nie:
 
 ---
 
+## Die Select-oproep soos ons dit gaan stuur
+
+```
+client_id, redirect_uri, response_type=code,
+code_challenge, code_challenge_method=S256, state,
+prompt=select_tone,
+format=nam,          ← lib/nam.ts laat NAM-captures loop
+menubar=true,        ← hulle beveel dit aan vir in-app browsers
+preview=true,        ← sy moet kan hóór voor sy kies
+locale=<haar taal>   ← hulle ignoreer Accept-Language
+```
+
+`gears` bly oop tot ons weet watter die booth werklik wil hê — `amp`,
+`cab`, `amp-cab` en `pedal` is die waarskynlike stel; `outboard`, `space` en
+`experimental` is dalk ook sinvol vir 'n stem-baan.
+
+## Die twee oproepe, met hul presiese vorms
+
+```
+GET /tones/{toneId}            → die toon self, nie toegedraai nie
+GET /models?tone_id={toneId}   → { data: [ … ] }
+```
+
+Die een is kaal en die ander is in 'n `data` toegedraai. Dit is 'n klein
+verskil en presies die soort wat 'n uur kos: `models.map(...)` op die
+tweede gee `undefined is not a function`, en die foutboodskap wys na ons
+kode eerder as na die vorm.
+
+Albei dra `Authorization: Bearer <access_token>`, en die token kom uit die
+ruil wat bediener-kant gebeur.
+
+## Die maker, en sy twee nulle
+
+```
+EmbeddedUser {
+  id, username, display_name | null, is_verified,
+  avatar_url | null, url
+}
+```
+
+Dit is die tipe wat ontwerpvereistes 4, 5 en 6 se *"Creator (username and
+avatar)"* voed, en albei velde wat ons wil wys kan **null** wees.
+
+**`display_name` is net gestel vir 'n geverifieerde maker.** Hul eie nota sê
+val terug op `username` wanneer dit null is. Maklik om te mis, en die gevolg
+is 'n leë naam onder 'n toon.
+
+**`avatar_url` kan ook null wees** — en die vereiste sê uitdruklik "username
+**and** avatar". Daar moet dus iets wees om te teken wanneer daar geen prent
+is nie: 'n voorletter, of 'n merk. 'n Gebreekte-prent-ikoontjie is nie 'n
+avatar nie, en dit is wat 'n mens kry as niemand hieraan dink nie.
+
+`url` is die maker se bladsy op TONE3000 — die "traffic" wat die
+oorspronklike brief aan hulle belowe het dat hulle sou behou.
+
+## Die lisensie, wat 'n besigheidsvraag is en nie 'n tegniese een nie
+
+Elke toon dra 'n `License`, en die stel is:
+
+`t3k` · `cco` · `cc-by` · `cc-by-sa` · `cc-by-nc` · `cc-by-nc-sa` ·
+`cc-by-nd` · `cc-by-nc-nd`
+
+**Drie daarvan is NonCommercial** (`-nc`) en **twee is NoDerivatives**
+(`-nd`).
+
+FutureBox is 'n betaalde produk. 'n Lid neem 'n opname op deur 'n amp-capture
+wat `cc-by-nc` is, en verkoop daardie liedjie — of ons vra krediete vir die
+render. Of dit toegelaat is, is 'n vraag wat iemand moet beantwoord voordat
+dit gebeur, nie daarna nie.
+
+Dieselfde vraag het al een keer in hierdie repo skeefgeloop. `check:musiclicence`
+bestaan presies hierom, en sy eie geskiedenis sê dit het 'n **bewering**
+afgedwing eerder as 'n beperking en dit toe met 'n rooi build verdedig.
+
+Drie dinge volg hieruit, en nie een is opsioneel nie:
+
+1. **Die lisensie moet gelees en gestoor word**, saam met die capture op die
+   baan. `lib/amps.ts` hou vandag 'n naam. Dit moet die maker **en** die
+   lisensie hou, want dit is wat later bepaal of 'n liedjie verkoop mag word.
+2. **Die lisensie moet op die skerm wees** waar sy kies. Die
+   ontwerpvereistes lys dit nie onder die ses velde nie — dit is hul reël,
+   nie ons s'n nie, en ons het 'n eie verpligting.
+3. **Ons moet hulle vra.** Nie of die lisensies beteken wat hulle sê nie,
+   maar wat hulle verwag van 'n betaalde app: filter ons die NonCommercial
+   tone uit, of wys ons hulle met 'n waarskuwing, of hanteer hul API Terms
+   dit reeds?
+
+Konsep vir daardie vraag:
+
+> FutureBox is a paid product — members buy credits and some sell what they
+> make. Tones carry CC licences including `-nc` and `-nd` variants. What do
+> you expect an integration like ours to do: filter non-commercial tones out
+> of the Select catalogue, surface the licence to the user and let them
+> decide, or does something in your API Terms already cover downstream
+> commercial use? We would rather ask than assume.
+
+Dit is 'n vraag wat 'n mens **voor** die integrasie stel, nie wanneer iemand
+se liedjie reeds verkoop is nie.
+
+## Een vraag vir hulle, uit ons eie kode
+
+`architecture` neem **een** waarde: `1`, `2` of `custom`. Weglaat gee die
+erfenis-stel — A1 plus Custom — en sluit **A2-only** tone uit. `2` gee net
+A2.
+
+Ons enjin is `@opendaw/nam-wasm`, wat **hulle eie WASM-poort** van
+NeuralAmpModelerCore is, en `lib/nam.ts` se eie kommentaar sê dit lees
+*"both the original A1 files and the newer A2 ones"*.
+
+Daar is dus **geen waarde wat alles gee** nie, terwyl ons alles kan laai.
+Weglaat verloor die A2-only tone; `2` verloor die A1-only tone. Die
+erfenis-verstek bestaan om API-gebruikers te beskerm wat **nie** A2 kan laai
+nie — en ons is nie een van hulle nie.
+
+Dit is 'n goeie vraag om saam met die compliance-antwoord te stuur:
+
+> Our engine is your own nam-wasm port, so we read A1, A2 and Custom. The
+> `architecture` parameter takes a single value and omitting it excludes
+> A2-only tones. Is there a way to request all three, or should we run two
+> flows? We'd rather not hide half your catalogue from users who can load it.
+
+## Die enums, wat ons wél nodig het
+
+Nie om 'n bladerder mee te bou nie — om **Select te beperk**. Ons gee
+`gears` en `format` saam met `prompt=select_tone` en dan sien sy net wat
+`lib/nam.ts` kan laai.
+
+Twee waardes is verouderd en dit is maklik om hulle verkeerd te stuur:
+
+- **`full-rig`** is 'n alias vir `amp-cab` en word by stoor genormaliseer.
+- **`ir` as 'n Gear** word uit `gears` gestroop, en `format=ir` word afgelei
+  as geen formaat gegee is nie ('n uitdruklike `format` wen). Ons moet dus
+  nooit `ir` in `gears` stuur nie — dit hoort in `format`.
+
+**Gear:** `amp`, `amp-cab`, `pedal`, `outboard`, `cab`, `space`,
+`experimental` — plus die twee verouderdes, `full-rig` (alias vir `amp-cab`)
+en `ir` (gestroop; gebruik `format=ir`).
+
+**Format:** `nam`, `ir`, `aida-x`, `aa-snapshot`, `proteus`.
+
+**Size:** `standard`, `lite`, `feather`, `nano`, `custom`. Ons kan **nie**
+hierop by Select filter nie — die parameter bestaan net op die soek-endpoint
+— maar dit raak ons: dit is die verskil tussen 'n amp wat in 'n browser op 'n
+foon loop en een wat hakkel. Ons sien dit eers op die `Model` ná die keuse,
+wat beteken die kamer moet dit kan hanteer eerder as voorkom.
+
+**Architecture:** `'1'`, `'2'`, `'custom'` — **stringe, nie getalle nie.**
+'n `2` in plaas van `'2'` is die soort ding wat stil deurgaan en dan die
+verkeerde stel modelle gee.
+
+Die skeiers verskil per parameter, en dit is 'n strik:
+
+- `gears`, `tags`, `makes` → **onderstreep** (`amp_amp-cab_pedal`)
+- `sizes` → **koppelteken** (`standard-lite-feather`)
+- `creators` → **komma**, omdat gebruikersname self `_` en `-` kan bevat
+
+Komma-geskei is elders verouderd. Drie skeiers in een API, met waardes wat
+self koppeltekens dra.
+
+## Hulle sê vir ons wanneer ons dit verkeerd doen
+
+Op 'n verouderde vorm antwoord hulle met headers eerder as net 'n stil
+normalisering:
+
+- `Deprecation: true` (RFC 8594)
+- `Link: …; rel="deprecation"`
+- `X-Tone3000-Deprecations:` die spesifieke soorte, bv.
+  `legacy_platform_key,legacy_ir_gear_value`
+
+Dit is 'n geskenk, en dit hoort in 'n `check:`. 'n Verouderde parameter werk
+vandag en hou stilweg op werk eendag; 'n header wat dit **nou** sê, is iets
+'n build kan lees. Wanneer die integrasie staan: enige antwoord met
+`Deprecation: true` laat die probe val, met die `X-Tone3000-Deprecations`-lys
+in die boodskap.
+
+Die verouderdes self: `?platform=` → `?format=`, `?gear=` → `?gears=`,
+`gears=ir` → `format=ir`, en `gears=full-rig` → `gears=amp-cab`.
+
 ## Wat ons doelbewus nie aanteken nie
 
 Hul bladsy gaan voort met `Makes`, `Tags` en die res — katalogus-hulpmiddels
