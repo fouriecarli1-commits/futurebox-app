@@ -313,6 +313,8 @@ jobs:
         run: npm run check:seam
       - name: "A probe that walks every room uses the shared way in"
         run: npm run check:roomwalk
+      - name: "The handshake to their window really hashes its own secret, and all four ways back are told apart"
+        run: npm run check:tone3000
       - name: "All three lanes can be picked, and the lines cut the one that is"
         run: npm run check:soundlanes
       - name: "Listening to a song's words again costs nothing, and really listens again"
