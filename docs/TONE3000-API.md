@@ -181,6 +181,68 @@ Dit is dieselfde reël wat `callerFrom` en `suppliers.ts` al dra: niks wat 'n
 toestel bereik, hou 'n sleutel nie. Dit kos ons een ekstra roete en dit haal
 'n hele klas fout weg.
 
+## Select, stap vir stap
+
+**1.** Die authorize-adres met `prompt=select_tone`. Die katalogus kan beperk
+word met `gears`, `format` en `architecture`, en die filter word dan
+**gesluit** op ons keuse — die persoon sien net wat ons app kan laai. Vir
+ons: NAM-modelle wat `lib/nam.ts` kan laat loop.
+
+Let op `architecture`: weglaat gee die **erfenis**-stel, A1 plus Custom, en
+sluit **A2 uit**. Dit is met opset — API-gebruikers van voor A2 kry nie
+modelle wat hulle nie kan laai nie. Ons moet dus uitvind wat ons NAM-weergawe
+kan laai en dit uitdruklik vra, eerder as om die verstek te vat en te wonder
+hoekom helfte van die katalogus ontbreek.
+
+**2.** Hulle hanteer aanmelding, blaai en keuse. Die persoon sien die hele
+publieke katalogus **plus sy eie private tone**.
+
+**3.** Die callback dra `code`, `state` en `tone_id`.
+
+**En die geval wat 'n mens misloop:** as `menubar` aan is en die persoon druk
+toemaak, kom `canceled=true` terug **in plaas van** 'n `tone_id`. Daar is dan
+twee subgevalle:
+
+- hy het al ingeteken → daar **is** 'n `code`, en dit kan steeds vir tokens
+  geruil word
+- hy het toegemaak voor aanmelding → **geen** `code`
+
+Dit is drie uitkomste waar 'n mens twee sou kode: gekies, gekanselleer-maar-
+ingeteken, en weggeloop. Die middelste een is die een wat stilweg verkeerd
+loop — 'n app wat `canceled` sien en net terugkeer, gooi 'n geldige token weg
+en vra die persoon môre weer om in te teken.
+
+**4.** Ruil die `code` vir 'n token, en gebruik dan die `tone_id` om die
+toon se besonderhede en **die model se aflaai-adresse** te kry.
+
+## Load Tone
+
+Vir wanneer ons reeds weet watter toon ons wil hê. Ons gee 'n `tone_id` met
+`prompt=load_tone`; hulle verifieer toegang. As die toon privaat of
+uitgevee is, kan die persoon 'n plaasvervanger kies, en ons kry die uitslag
+so of so.
+
+Wie deurkom sonder om te blaai: **publieke** tone, tone wat die persoon
+**besit**, en tone wat hy **gefavourite** het. Dit is die moeite werd om te
+weet — 'n toon wat sy nie gefavourite het nie, kan môre 'n blaai-skerm wees
+eerder as 'n laai.
+
+**En die val:** as sy 'n plaasvervanger kies, kom daardie een se `tone_id`
+in die callback terug — **nie die een wat ons gevra het nie.** Hul eie
+woorde: *"The tone_id in the callback will be the newly selected tone, not
+the one you originally requested."*
+
+'n App wat aanneem die antwoord is die vraag, stoor die verkeerde amp op die
+baan. Die reël is dus: **lees altyd die `tone_id` uit die callback**, nooit
+die een wat ons gestuur het nie. Dit is 'n reël wat 'n `check:` werd is
+sodra dit gebou is, want dit breek stil — die baan kry 'n amp wat werk, net
+nie die een wat sy gekies het nie.
+
+**Dit is die een wat ons tweede nodig gaan hê**, en nie dadelik nie: dit is
+hoe 'n amp wat sy gister op 'n baan gesit het môre weer laai. `lib/amps.ts`
+hou die capture, maar 'n toon wat die maker intussen privaat gemaak het, is
+'n lêer wat nie meer laai nie — en hierdie vloei is hul antwoord daarop.
+
 ## Verfris
 
 Dieselfde token-endpoint, met `grant_type=refresh_token`, die
@@ -214,6 +276,33 @@ oproep moet kan aanvaar eerder as een uit die omgewing te lees. Dit is 'n
 klein uitbreiding van `call()` en dit is die eerste egte toets of daardie
 laag reg ontwerp is.
 
+## Die endpoints, soos hulle kom
+
+Almal met `Authorization: Bearer <access_token>` en
+`Content-Type: application/json`, teen `https://www.tone3000.com/api/v1`.
+
+| endpoint | wat dit gee |
+|---|---|
+| `GET /user` | die ingetekende persoon. Tipe: `User` |
+| `GET /users` | mense met publieke inhoud. `PaginatedResponse<PublicUser[]>`. Sorteer met `sort` (verstek `tones`), met `page`, `page_size` (maks **10**) en `query` oor die gebruikersnaam |
+| `GET /tones/created` | tone wat die persoon **gemaak** het. `PaginatedResponse<Tones[]>` |
+| `GET /tones/favorited` | tone wat hy **gefavourite** het. Dieselfde vorm |
+| `GET /tones/downloaded` | tone wat hy **afgelaai** het. Duplikate word saamgevou, so elke toon verskyn een keer |
+
+| `GET /tones/{id}` | **een** toon. Publieke tone vir enige ingetekende persoon; privates net vir die eienaar of iemand wat dit gefavourite het |
+
+Daardie laaste reël stem ooreen met wat Load Tone se stap 2 sê, en dit is
+'n ding om te onthou as 'n amp môre nie laai nie: die toon het nie
+verdwyn nie, die **favourite** is dalk weg.
+
+Al drie tone-lyste neem dieselfde navrae: `page`, `page_size` (verstek 10,
+maks **100** — tien keer meer as die gebruikerslys), `gear` (een waarde, bv.
+`amp-cab`; weglaat gee alle tipes), en `query`, 'n hoofletter-onafhanklike
+substring op die **titel**, wat met `gear` kombineer.
+
+`GET /user` is wat ontwerpvereiste 4 se *"the signed-in user's avatar and
+username"* voed, en `GET /tones/created` is die **Created**-oortjie.
+
 ---
 
 ## Wat nog ontbreek voor ek kan bou
@@ -225,8 +314,9 @@ Die geplakte helfte eindig by die authorize-parameters. Nog nodig:
 3. **Die toon-endpoints** — 'n toon se besonderhede lees, en die **model-lêer
    self aflaai** sodat `lib/nam.ts` dit kan laat loop. Dit is die een sonder
    wat niks werk nie.
-4. **Die CRUD API** agter Favorites, Created en Downloaded, wat
-   ontwerpvereiste 4 noem.
+4. ~~Die CRUD API agter Favorites, Created en Downloaded~~ — **gekry.**
+   Dit is drie lees-endpoints, nie 'n CRUD nie, wat ook beteken ons kan nie
+   van ons kant af favourite nie. Of daar 'n skryf-endpoint is, is nog oop.
 4b. ~~Session Management~~ — **gekry.**
 5. **Die example app repository** wat hulle noem — die skakel daarna.
 6. Die **API Terms of Service**, woordeliks.
