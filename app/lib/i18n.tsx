@@ -935,6 +935,39 @@ export const STRINGS: Dict = {
     en: "Film",
     af: "Film",
   },
+  /* ── What this room would pick, and why ───────────────────────────────
+
+     Every one of these is a sentence with her own numbers in it, so the
+     Afrikaans has to keep the {placeholders} in the same order a person reads
+     them — "4 van jou 7" and not "van jou 7, 4". */
+  "advise.shape.tall": {
+    en: "{most} of your {all} measured clips were shot upright, so a tall film crops none of them.",
+    af: "{most} van jou {all} gemete knipsels is regop geskiet, so ’n lang film sny niks van hulle af nie.",
+  },
+  "advise.shape.wide": {
+    en: "{most} of your {all} measured clips are wider than they are tall, so a wide film crops none of them.",
+    af: "{most} van jou {all} gemete knipsels is breër as wat hulle hoog is, so ’n wye film sny niks van hulle af nie.",
+  },
+  "advise.shape.square": {
+    en: "{most} of your {all} measured clips are square, so a square film uses all of the picture.",
+    af: "{most} van jou {all} gemete knipsels is vierkantig, so ’n vierkantige film gebruik die hele prent.",
+  },
+  "advise.grade.top": {
+    en: "{name} writes about {mb} MB for a film this long, which uploads easily and is the one every platform wants.",
+    af: "{name} skryf omtrent {mb} MB vir ’n film so lank, wat maklik oplaai en die een is wat elke platform wil hê.",
+  },
+  "advise.grade.down": {
+    en: "{top} would write about {big} MB for a film this long. {name} writes about {mb} MB and is still sharp on a phone.",
+    af: "{top} sou omtrent {big} MB skryf vir ’n film so lank. {name} skryf omtrent {mb} MB en is steeds skerp op ’n foon.",
+  },
+  "advise.grade.none": {
+    en: "Even {name} writes about {mb} MB for a film this long, so this is the smallest file there is — or make the film shorter.",
+    af: "Selfs {name} skryf omtrent {mb} MB vir ’n film so lank, so dit is die kleinste lêer wat daar is — of maak die film korter.",
+  },
+  "pick.already": {
+    en: "That is what I would pick",
+    af: "Dit is wat ek sou kies",
+  },
   "edit.filmTitle": {
     en: "What the film is called",
     af: "Wat die film genoem word",

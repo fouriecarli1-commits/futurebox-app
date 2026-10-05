@@ -37,10 +37,33 @@
  *
  * It clears when the person changes the field themselves, because at that
  * moment the sentence is about a choice that is no longer being made.
+ *
+ * ── Two kinds of question, one button ────────────────────────────────────
+ *
+ * Added 5 October 2026. Most of what this button sits beside is a matter of
+ * taste — which voice, which look — and a model reading the brief is the only
+ * thing that can answer those, so it asks `/api/recommend`.
+ *
+ * Some fields are not taste. "How big a picture" has an arithmetic answer:
+ * the film's length and shape and rate give the file's size, and the size
+ * decides. "Which way up" is a count of the clips on the clock. Asking a
+ * model which way up a film should be, when the clips can be counted, would
+ * be slower, different each time, and able to be wrong about something
+ * countable — the worst trade available.
+ *
+ * So `advice` is the other mode: a value and a reason worked out locally by
+ * `lib/recommend.ts`, shown without a round trip. Same button, same place,
+ * same words, because a person does not care which of the two it was.
+ *
+ * `advice` of `null` renders nothing, and that branch matters: a rule with
+ * nothing to read off — no measured clips, no film on the clock — must offer
+ * no recommendation rather than fall back to a default and present the
+ * fallback as a reading.
  */
 
 import React, { useState } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { reads, type Advice } from '../lib/recommend';
 import { useLang } from '../lib/i18n';
 
 export interface RecommendOption {
@@ -53,16 +76,20 @@ export interface RecommendOption {
 export default function Recommend({
   what,
   context,
-  options,
+  options = [],
   onPick,
   hint,
   className = '',
+  advice,
+  now,
+  mark,
 }: {
   /** What is being chosen, in words: "a voice to read this". */
-  what: string;
+  what?: string;
   /** The material the choice is about — the script, the brief, the song. */
   context?: string;
-  options: RecommendOption[];
+  /** The things to choose between. Not used in the worked-out mode. */
+  options?: RecommendOption[];
   /** Called with the chosen id. The field is set by the caller, not by this. */
   onPick: (id: string) => void;
   /**
@@ -73,15 +100,31 @@ export default function Recommend({
    */
   hint?: string;
   className?: string;
+  /**
+   * A recommendation already worked out, for a field whose answer is
+   * arithmetic rather than taste. See the note above. `null` renders nothing.
+   */
+  advice?: Advice<string> | null;
+  /** What the field is set to, so the sentence can say she is already right. */
+  now?: string;
+  /** For a probe to find this one. */
+  mark?: string;
 }): React.ReactElement | null {
   const { t, lang } = useLang();
   const [busy, setBusy] = useState(false);
   const [why, setWhy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
+  const worked = advice !== undefined;
+
+  /* A rule with nothing to read off gives no advice, and the button has to go
+     with it: a "Pick for me" that falls back to a default is a default
+     wearing a measurement's clothes. */
+  if (worked && !advice) return null;
+
   // Nothing to choose between is not a failure, it is a field that does not
   // need this. It renders nothing rather than a button that cannot help.
-  if (options.length < 2) return null;
+  if (!worked && options.length < 2) return null;
 
   const ask = async () => {
     if (busy) return;
@@ -111,12 +154,20 @@ export default function Recommend({
     }
   };
 
+  /* The worked-out line, with its facts in it. Built here rather than in
+     `lib/recommend.ts` because the sentence is the translated one and the
+     rule has no business knowing which language the room is in. */
+  const line = advice ? reads(advice, t(advice.says[0], advice.says[1])) : null;
+  const already = !!advice && advice.value === now;
+
   return (
     <span className={`inline-flex flex-col items-start gap-1 ${className}`}>
       <button
         type="button"
-        onClick={() => void ask()}
-        disabled={busy}
+        data-recommend={mark}
+        onClick={() => (advice ? onPick(advice.value) : void ask())}
+        disabled={busy || already}
+        aria-disabled={busy || already}
         /* A box, because it is a button.
 
            It was green text with a sparkle beside it, which reads as a link —
@@ -127,14 +178,23 @@ export default function Recommend({
         className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/5 px-2.5 py-1.5 text-sm font-semibold text-emerald-300 hover:text-emerald-200 hover:border-emerald-500/70 disabled:opacity-50 transition-colors"
       >
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-        {t('pick.forMe', 'Pick for me')}
+        {already ? t('pick.already', 'That is what I would pick') : t('pick.forMe', 'Pick for me')}
       </button>
+      {/* Worked out rather than asked for, so the reason is there before the
+          press — which is the half she can actually use. The hint about what
+          the button is going to do would be describing a sentence already on
+          the screen. */}
+      {line && (
+        <span className="text-xs text-zinc-400 leading-relaxed max-w-md" data-recommendwhy={mark}>
+          {line}
+        </span>
+      )}
       {/* Before: what it will do. After: what it did and why.
 
           The two never show at once — once there is a reason on screen the
           explanation has been demonstrated, and leaving both would be the app
           talking about itself twice. */}
-      {!why && !problem && (
+      {!worked && !why && !problem && (
         <span className="text-xs text-zinc-500 leading-relaxed max-w-md">
           {hint ??
             `${t('pick.hintA', 'Reads what you have written and chooses')} ${what}, ${t(

@@ -60,6 +60,17 @@ export interface Piece {
   /** For the strip, and for a progress line that says which one is laying. */
   readonly name: string;
   /**
+   * The picture the material actually holds, measured when it came in.
+   *
+   * Absent on a clip that arrived before this was recorded, and on one the
+   * browser could not decode — so anything reading it has to cope with not
+   * knowing, rather than assuming a default and calling the assumption a
+   * measurement. That distinction is the whole point of it: the room could
+   * only ever offer a DEFAULT shape, and a default dressed up as a reading is
+   * worse than no reading. See `lib/recommend.ts`.
+   */
+  readonly shot?: { readonly width: number; readonly height: number };
+  /**
    * Where this shot came from: filmed here, made here, or carried in.
    *
    * Carli, 5 October 2026: *"Copyright check for export."* This app cannot

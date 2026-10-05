@@ -143,7 +143,8 @@ work is read off.
 | ✅ | The price is on the button that spends it, read from `credits.ts` at both ends |
 | ✖ | **No history of finished films.** A film exported and then neither saved nor kept is gone from the room — the only copies are the ones she asked for |
 | ✖ | **The shape is not read off the material.** A film cut from upright clips still opens tall because tall is the default, not because anything measured the clips |
-| ✖ | No `Recommend` on the shape, the picture size or the frame rate — the three fields where a wrong answer costs upload time or detail, and the app has `Recommend` nowhere |
+| ✅ | `Recommend` on the shape and on the picture size, worked out locally rather than asked of a model: the shape is a count of the measured clips, the picture size is the sharpest rung whose file still uploads easily, and each one shows the reason with her own numbers in it. `check:recommend` calls every rule twice and fails one whose answer does not move |
+| ◇ | No `Recommend` on the frame rate. Deliberate: thirty is right for every film this room can make, so a rule would answer thirty whatever it was given — a button that looks like it considered the film and did not |
 
 ### Sound trainer
 
@@ -182,7 +183,7 @@ work is read off.
 |---|---|
 | ✅ | Clone once, read anything, change a recording into it; costs on all three; the copilot writes the script |
 | ✖ | **No voice library.** The reference has thousands with search, filters by use case and language, verified creators, search-by-audio, and curated collections. We have your own clones and a stock list |
-| ✖ | No `Recommend` on the voice picker — the reference's single strongest AI affordance, and we still have it nowhere |
+| ~~✖~~ | ~~No `Recommend` on the voice picker — the reference's single strongest AI affordance, and we still have it nowhere~~ — **stale, and it was stale when it was written here twice over.** `VoiceLab.tsx` has carried `Recommend` on the voice picker since it was built, as do the video desk and the video panel |
 | ✖ | No per-voice settings (stability, similarity, style) exposed, and no plain-language labels for them |
 
 ### Podcast
@@ -247,7 +248,8 @@ work is read off.
 ## The order to do them in
 
 1. ~~**Cost on the seven rooms still missing it** — ProBooth, Booth, Hooks, Channel, Live, Collab, the theme studio.~~ — **done.** `check:priceonit` reads the charging routes out of the handlers rather than off a list, finds the rooms that call them, and fails on a room that spends without a number on the press: 19 routes, 13 rooms, all 13 saying what it costs.
-2. **`Recommend` on every consequential field.** Still at zero across the whole app. One shared component, a value and a one-line reason.
+2. **`Recommend` on every consequential field.** ~~Still at zero across the whole app.~~ — **the "zero" was wrong.** `app/components/Recommend.tsx` already sat beside the voice picker, the video desk's scene and the video panel's, asking `/api/recommend` for the taste questions. What was missing was the other kind: a field whose answer is arithmetic rather than opinion. The cutting room's shape and picture size have it as of 5 October 2026, through the same component, worked out locally — a model asked which way up a film should be, when the clips can be counted, is slower, different each time, and able to be wrong about something countable.
+   Still open: the fields nothing has looked at yet — the hook length, the voice settings once they are exposed, and the advert platforms. Each one needs an answer that can be read off something, and a field with nothing to read it off must keep getting no button rather than a default with a lightbulb beside it.
 3. **History per room.** Unblocks comparison, reassurance, and not losing work.
 4. **The asset library.** Unblocks reference images, brand kits, start frames.
 5. **Surface the soundboard.** The room's copy already exists.

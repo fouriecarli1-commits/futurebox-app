@@ -67,6 +67,8 @@ import {
   GRADES, GRADE_DEFAULT, RATES, bitsFor, gradeFor, rateFor, sizeFor, weighs,
 } from '../lib/videoquality';
 import Note from './Note';
+import Recommend from './Recommend';
+import { gradeAdvice, shapeAdvice } from '../lib/recommend';
 import { useOwnScreen } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
@@ -74,7 +76,7 @@ import { DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
 import {
   FONTS, PLAIN_FONT, fontFor, WORDS_LARGEST, WORDS_SMALLEST,
 } from '../lib/videofonts';
-import { canStitch, CAPTION_ROUND, lengthOf, stitch } from '../lib/stitch';
+import { canStitch, CAPTION_ROUND, lengthOf, measure, stitch } from '../lib/stitch';
 import {
   loadMark, MARK_LARGEST, MARK_OPACITY, MARK_SHARE, MARK_SMALLEST,
   type Corner, type Spot,
@@ -1202,6 +1204,20 @@ export default function VideoEditor({
 
   const total = runs(edit);
 
+  /* ── What this room would pick, and why ─────────────────────────────────
+
+     Both read off what is already on the clock, so they cost nothing and are
+     the same answer every time for the same film. `shapeSays` is `null` until
+     a clip has been measured, and `Recommend` renders nothing on a `null` —
+     see the note in `lib/recommend.ts` on why a fallback must not be dressed
+     up as a reading. */
+  const shapeSays = useMemo(() => shapeAdvice(edit.pieces), [edit.pieces]);
+  const gradeSays = useMemo(
+    () => gradeAdvice(total, SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall, rateFor(edit.fps)),
+    [total, edit.shape, edit.fps],
+  );
+
+
 
   /* How wide the strip actually is, measured rather than assumed. A breakpoint
      guess would be wrong on every phone it was not written for, and the strip
@@ -1564,7 +1580,13 @@ export default function VideoEditor({
           ));
           continue;
         }
-        const length = await lengthOf(file);
+        /* Measured rather than guessed, and the picture comes free with the
+           length: `loadedmetadata` is the moment both are readable. Nothing
+           in this app knew the shape of its own material until today, which
+           is why the room could only offer a DEFAULT shape — see
+           `lib/recommend.ts`. */
+        const seen = await measure(file);
+        const length = seen.seconds;
         if (!Number.isFinite(length) || length <= 0) {
           setProblem(t('edit.unreadable', 'That file could not be read as video.'));
           continue;
@@ -1591,6 +1613,9 @@ export default function VideoEditor({
           clip: file,
           came,
           name: file.name.replace(/\.[^.]+$/, ''),
+          ...(seen.width > 0 && seen.height > 0
+            ? { shot: { width: seen.width, height: seen.height } }
+            : {}),
           from: 0,
           to: length,
           /* What the material actually holds, so a trim can be dragged back out
@@ -5161,6 +5186,26 @@ export default function VideoEditor({
                   );
                 })}
               </div>
+              {/* ── Which way up, counted off the clips ─────────────────
+
+                  `docs/FUNCTION_INVENTORY.md`, second in the order of work:
+                  Recommend on the consequential fields. This one was not
+                  possible until today, because nothing in the app knew the
+                  shape of its own material — the room could offer tall as a
+                  DEFAULT and nothing else, and a default presented as a
+                  reading is worse than no reading at all.
+
+                  Counted rather than asked of a model: the clips are on the
+                  clock and can be counted, and a model asked a countable
+                  question is slower, different each time, and able to be
+                  wrong about it. It shows nothing at all when no clip on the
+                  clock has been measured. */}
+              <Recommend
+                mark="shape"
+                advice={shapeSays}
+                now={edit.shape ?? 'tall'}
+                onPick={(id) => commit((was) => ({ ...was, shape: id }))}
+              />
             </div>
 
             {/* ── The cover ──────────────────────────────────────────────
@@ -5323,6 +5368,18 @@ export default function VideoEditor({
               <span className="block text-sm" style={{ color: INK_DIM }}>
                 {t(gradeFor(edit.grade).what[0], gradeFor(edit.grade).what[1])}
               </span>
+              {/* Arithmetic, not taste: the length, the shape and the rate
+                  give the file's size, and the size is what decides. The
+                  sentence carries both numbers — what this rung costs and
+                  what the sharpest one would — so somebody who would rather
+                  have the detail can overrule it with the figure in front of
+                  them. */}
+              <Recommend
+                mark="grade"
+                advice={gradeSays}
+                now={edit.grade ?? GRADE_DEFAULT}
+                onPick={(id) => commit((was) => ({ ...was, grade: id }))}
+              />
             </div>
 
             <div className="space-y-1.5">

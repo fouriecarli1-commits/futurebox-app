@@ -791,6 +791,60 @@ try {
       await p.locator('[data-editorshape="tall"]').click();
       await p.waitForTimeout(500);
 
+      /* ── What the room would pick, with the count in it ──────────────
+
+         `docs/FUNCTION_INVENTORY.md`, second in the order of work. The risk
+         in building this was never that it would be missing — it is that it
+         would be there and say nothing: a constant sentence reads exactly
+         like a measurement.
+
+         `check:recommend` calls the rules twice to prove their answers move.
+         What it cannot see is whether the sentence reaches the screen with
+         her numbers in it, so that is asked here: a digit in the line, and
+         the shape really set by the press. */
+      const why = p.locator('[data-recommendwhy="shape"]');
+      check('  the room says which way up it would make the film',
+        (await why.count()) === 1,
+        'the field where the room knows something she does not: it has'
+        + ' measured the clips and she has not counted them');
+
+      const said = ((await why.innerText().catch(() => '')) || '').trim();
+      check('    and the reason it gives has her own numbers in it',
+        /\d/.test(said),
+        `"${said}" — a sentence with no number in it cannot be checked by the`
+        + ' person reading it, which is the only thing that separates advice'
+        + ' from a slogan');
+
+      /* The fixture this walk records is a 320×240 canvas, so the honest
+         answer is WIDE — and the first version of these three lines assumed
+         upright and failed on a rule that was reading the material correctly.
+         Which is the point of measuring rather than defaulting: the room now
+         disagrees with the room's own default, out loud, because the clips
+         say so.
+
+         Set to tall first, so the press has somewhere to move from. */
+      await p.locator('[data-editorshape="tall"]').click();
+      await p.waitForTimeout(400);
+      check('    and it is pressable while the film is set some other way',
+        (await p.locator('[data-recommend="shape"]').getAttribute('aria-disabled')) !== 'true',
+        'nothing below this means anything if the button was already spent');
+
+      await p.locator('[data-recommend="shape"]').click();
+      await p.waitForTimeout(500);
+      check('    and pressing it really sets the shape',
+        (await p.locator('[data-editorshape="wide"]').getAttribute('aria-pressed')) === 'true',
+        'the clip this walk records is 320×240, so wide is the answer — and a'
+        + " room that recommends its own default whatever the material is is"
+        + ' a room that measured nothing');
+
+      check('    and it then says she is already there rather than staying pressable',
+        (await p.locator('[data-recommend="shape"]').getAttribute('aria-disabled')) === 'true',
+        'a Pick for me that stays live on the value it recommends reads as a'
+        + ' button that did nothing');
+
+      await p.locator('[data-editorshape="tall"]').click();
+      await p.waitForTimeout(400);
+
       /* And filling the frame crops rather than bars. Read off the computed
          `object-fit` of the element the bars belong to, because that is the one
          thing that decides whether there are bars at all. */

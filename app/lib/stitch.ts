@@ -838,7 +838,21 @@ export function windowOf(scene: Scene, duration: number): { from: number; to: nu
 }
 
 /** A blob's length, which a recorded webm will not admit to without a seek. */
-export async function lengthOf(blob: Blob): Promise<number> {
+/**
+ * How long a clip runs, and how big a picture it holds.
+ *
+ * The size comes free: `loadedmetadata` is the moment `videoWidth` becomes
+ * readable, and this function was already waiting for it and throwing the
+ * number away. Nothing in the app knew the shape of its own material, which
+ * is why the cutting room could only offer a DEFAULT shape rather than read
+ * one off the clips — see `lib/recommend.ts`.
+ *
+ * Zeroes for a file the browser could not decode, so a caller can tell "not
+ * a video" from "a video that is 320 wide".
+ */
+export async function measure(
+  blob: Blob,
+): Promise<{ seconds: number; width: number; height: number }> {
   const video = document.createElement('video');
   const url = URL.createObjectURL(blob);
   video.src = url;
@@ -857,8 +871,17 @@ export async function lengthOf(blob: Blob): Promise<number> {
       setTimeout(done, 1200);
     });
   }
+  const out = {
+    seconds: Number.isFinite(video.duration) ? video.duration : 0,
+    width: video.videoWidth || 0,
+    height: video.videoHeight || 0,
+  };
   URL.revokeObjectURL(url);
-  return Number.isFinite(video.duration) ? video.duration : 0;
+  return out;
+}
+
+export async function lengthOf(blob: Blob): Promise<number> {
+  return (await measure(blob)).seconds;
 }
 
 export async function stitch(cut: Cut): Promise<Made> {
