@@ -26,10 +26,26 @@ These cost more than any single missing feature, because each one is missing ele
 Was: a generation you liked and did not immediately download was gone, and somebody who
 made four videos and preferred the second had no way back to it.
 
-Now `app/lib/makes.ts` and `History.tsx`, in the foot of every room that produces
-something: the newest two dozen per room, details in localStorage and files in IndexedDB
+Now `app/lib/makes.ts` and `History.tsx`: details in localStorage and files in IndexedDB
 beside the songs. The star means "never evicted" rather than "I liked this", which is
 what makes the cap safe to have.
+
+~~in the foot of every room that produces something~~ — **that was not true when it was
+written.** Counted on 5 October 2026: four rooms recorded into it and four showed it, and
+the cutting room — which makes a whole film and charges for it — did neither, so a film
+exported and not downloaded in the same minute was gone. It has both halves now, and
+`check:history` reads the two sets out of the components and fails on a room that records
+into a history nothing displays. The rooms still without one are named in the order of
+work below.
+
+The cap was also wrong, and in the way that matters. Two dozen per room was written for
+clips and readings, where a count is a fine proxy for size; the cutting room's output is a
+stitched film, and two dozen of those is nearly two gigabytes. So the thing built to stop
+her losing work would have filled her phone instead — and failed the NEXT write, silently,
+while she was saving something else. The budget is 250 MB per room now, with the count kept
+as a second ceiling, a film over half the budget refused rather than allowed to evict
+everything, and the refusal said on the screen. `roomFor` is pure and `check:history`
+executes it: eviction is the half that loses work and it is invisible until after it has.
 
 Still on this device only, and every room says so.
 
@@ -250,7 +266,7 @@ work is read off.
 1. ~~**Cost on the seven rooms still missing it** — ProBooth, Booth, Hooks, Channel, Live, Collab, the theme studio.~~ — **done.** `check:priceonit` reads the charging routes out of the handlers rather than off a list, finds the rooms that call them, and fails on a room that spends without a number on the press: 19 routes, 13 rooms, all 13 saying what it costs.
 2. **`Recommend` on every consequential field.** ~~Still at zero across the whole app.~~ — **the "zero" was wrong.** `app/components/Recommend.tsx` already sat beside the voice picker, the video desk's scene and the video panel's, asking `/api/recommend` for the taste questions. What was missing was the other kind: a field whose answer is arithmetic rather than opinion. The cutting room's shape and picture size have it as of 5 October 2026, through the same component, worked out locally — a model asked which way up a film should be, when the clips can be counted, is slower, different each time, and able to be wrong about something countable.
    Still open: the fields nothing has looked at yet — the hook length, the voice settings once they are exposed, and the advert platforms. Each one needs an answer that can be read off something, and a field with nothing to read it off must keep getting no button rather than a default with a lightbulb beside it.
-3. **History per room.** Unblocks comparison, reassurance, and not losing work.
+3. **History per room.** Five rooms have one: the video desk, the song panel, Hooks, the adverts desk and the cutting room. ~~Unblocks comparison, reassurance, and not losing work.~~ — the rooms still without one, each of which makes something somebody would want back: **ProBooth** (a mix), **the Booth** (a take), **Your voice** (a reading), **Podcast** (an episode), **Album art** (generated art) and the two dub paths. `check:history` cannot catch these — it holds that a room which RECORDS also shows, and these record nothing — so they are named here instead of being counted.
 4. **The asset library.** Unblocks reference images, brand kits, start frames.
 5. **Surface the soundboard.** The room's copy already exists.
 6. **The voice library.**

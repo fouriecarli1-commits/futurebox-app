@@ -128,6 +128,7 @@
     "check:filmkeep": "tsx scripts/check-filmkeep.mts",
     "check:inventory": "tsx scripts/check-inventory.mts",
     "check:recommend": "tsx scripts/check-recommend.mts",
+    "check:history": "tsx scripts/check-history.mts",
     "check:soundlanes": "tsx scripts/check-soundlanes.mts",
     "check:listenfree": "tsx scripts/check-listenfree.mts",
     "check:heardhere": "tsx scripts/check-heardhere.mts",

@@ -2413,6 +2413,35 @@ try {
       'a finished film that can only be downloaded is a finished film that is'
       + ' not in the Channel, which is where she went looking for it');
 
+    /* ── And it is in the room's own history ───────────────────────────
+
+       `docs/FUNCTION_INVENTORY.md` called a history in every room that
+       produces something closed. Counted on 5 October 2026 it was four
+       rooms, and this one — which makes a whole film and charges for it —
+       had neither half, so a film exported and not downloaded in the same
+       minute was gone.
+
+       Walked rather than read, because the write goes through IndexedDB and
+       a `rememberMake` that is called and silently refuses looks exactly
+       like one that worked. */
+    await p.locator('[data-historyopen="videoedit"]').click();
+    await p.waitForTimeout(700);
+    check('  and the film is in the room\'s own history',
+      (await p.locator('[data-historyitem="videoedit"]').count()) >= 1,
+      'a film exported and not downloaded in the same minute used to be gone,'
+      + ' and the room charged for it');
+
+    check('    and the history did not quietly refuse to keep it',
+      (await p.locator('[data-editorbigfilm]').count()) === 0,
+      'a film over half the room\'s budget is refused on purpose and says so'
+      + ' — this one is a two-second canvas recording, so a refusal here would'
+      + ' mean the budget is being counted wrongly');
+
+    check('    and it says the cap it actually keeps',
+      /\d+ MB or \d+ per room/.test((await p.locator('[data-history="videoedit"]').innerText().catch(() => '')) || ''),
+      'it said "the newest two dozen per room" until the budget became bytes,'
+      + ' and a cap she plans around has to be the one the code keeps');
+
   /* ── Nothing the room adds breaks the page it sits on ──────────────── */
 
   const wide = await p.evaluate(() => document.documentElement.scrollWidth);

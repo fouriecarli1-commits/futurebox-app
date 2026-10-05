@@ -31,7 +31,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Star, ChevronDown, Download, Pause, Play, Trash2, RotateCcw, Clock } from 'lucide-react';
 import { downloadBlob, safeFilename } from '../lib/library';
-import { favouriteMake, forgetMake, loadMakes, makeBlob, type Make } from '../lib/makes';
+import {
+  KEEP_BYTES_PER_SURFACE, KEEP_PER_SURFACE,
+  favouriteMake, forgetMake, loadMakes, makeBlob, type Make,
+} from '../lib/makes';
 import type { SurfaceId } from '../lib/surfaces';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
@@ -144,7 +147,7 @@ export default function History({
   };
 
   return (
-    <section className="border-t border-zinc-800 pt-4 space-y-3">
+    <section data-history={surface ?? 'all'} className="border-t border-zinc-800 pt-4 space-y-3">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         {/* A button that looks like one.
 
@@ -160,6 +163,7 @@ export default function History({
             pressed rather than only after. */}
         <button
           type="button"
+          data-historyopen={surface ?? 'all'}
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white"
@@ -189,14 +193,20 @@ export default function History({
 
       {open && (
         <>
+          {/* The real cap, in the real numbers, read off the file that sets
+              them. It said "the newest two dozen per room" until 5 October
+              2026, which stopped being true the day the budget became bytes
+              — and a sentence on the screen promising a cap the code does not
+              keep is worse than no sentence, because she plans around it. */}
           <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'history.note',
-              'Kept on this device, and the newest two dozen per room. A star means keep it — starred ones are never the ones dropped to make space.',
-            )}</Note>
+              'Kept on this device: up to {mb} MB or {n} per room, whichever comes first. A star means keep it — starred ones are never the ones dropped to make space.',
+            ).replace('{mb}', String(Math.round(KEEP_BYTES_PER_SURFACE / (1024 * 1024))))
+              .replace('{n}', String(KEEP_PER_SURFACE))}</Note>
 
           <ul className="space-y-2">
             {shown.map((make) => (
-              <li key={make.id} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
+              <li key={make.id} data-historyitem={make.surface} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-zinc-200 truncate">{make.title}</p>

@@ -307,6 +307,8 @@ jobs:
         run: npm run check:inventory
       - name: "A recommendation names the fact it read and moves when that moves"
         run: npm run check:recommend
+      - name: "A room that records into its history shows it, and the cap is bytes"
+        run: npm run check:history
       - name: "All three lanes can be picked, and the lines cut the one that is"
         run: npm run check:soundlanes
       - name: "Listening to a song's words again costs nothing, and really listens again"

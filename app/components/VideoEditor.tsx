@@ -68,6 +68,8 @@ import {
 } from '../lib/videoquality';
 import Note from './Note';
 import Recommend from './Recommend';
+import History from './History';
+import { makeBlob, makeId, rememberMake } from '../lib/makes';
 import { gradeAdvice, shapeAdvice } from '../lib/recommend';
 import { useOwnScreen } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
@@ -919,6 +921,13 @@ export default function VideoEditor({
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<{ url: string; blob: Blob; ext: string; seconds: number } | null>(null);
+  /* True when the film was too big for the room's history to keep. Said out
+     loud: a history that quietly did not keep something is worse than no
+     history, because she stops checking. */
+  const [bigFilm, setBigFilm] = useState(false);
+  /* Bumped on every export, so the history below reloads and the film she has
+     just made is in it without her having to leave the room and come back. */
+  const [madeCount, setMadeCount] = useState(0);
 
   /* ── The project, kept between visits ───────────────────────────────────
 
@@ -2242,6 +2251,39 @@ export default function VideoEditor({
       if (made_.current) URL.revokeObjectURL(made_.current);
       made_.current = URL.createObjectURL(result.blob);
       setMade({ url: made_.current, blob: result.blob, ext: result.ext, seconds: result.seconds });
+
+      /* ── Into the room's own history ───────────────────────────────────
+
+         `docs/FUNCTION_INVENTORY.md` called "a history in every room that
+         produces something" closed. Measured on 5 October 2026 it was four
+         rooms, and this one — which makes a whole film and charges for it —
+         was not among them. A film exported and not downloaded in the same
+         minute was gone.
+
+         Not awaited: the film is on the screen and she can save it, and a
+         full disk must not hold up the thing she is looking at. What the
+         answer decides is only whether to say it was not kept — see
+         `data-editorbigfilm`. A stitched film can be bigger than half the
+         room's budget, and a history that silently did not keep something is
+         this fault wearing the other mask. */
+      const kind = result.ext === 'webm' || result.ext === 'mp4' ? 'video' : 'clip';
+      void rememberMake(
+        {
+          id: makeId('videoedit'),
+          surface: 'videoedit',
+          kind,
+          title: filmName,
+          note: `${edit.pieces.length} ${edit.pieces.length === 1 ? 'shot' : 'shots'}`,
+          createdAt: new Date().toISOString(),
+          seconds: Math.round(result.seconds),
+          ext: result.ext,
+          credits: bill.total,
+        },
+        result.blob,
+      ).then((put) => {
+        setBigFilm(!put);
+        if (put) setMadeCount((was) => was + 1);
+      }).catch(() => undefined);
     } catch {
       setProblem(t('edit.failed', 'That could not be put together just now.'));
     } finally {
@@ -3679,6 +3721,21 @@ export default function VideoEditor({
           </p>
         )}
 
+        {/* And a film the room's history could not keep. A stitched film can
+            be bigger than half the budget for one room, and the honest answer
+            is to refuse it rather than evict everything else — but refusing
+            silently is this whole piece of work wearing the other mask: she
+            would stop checking the history, which is the only reason it is
+            worth having. */}
+        {bigFilm && (
+          <p role="alert" data-editorbigfilm className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-300">
+            {t(
+              'edit.bigFilm',
+              'This film is too big to keep in the room\u2019s history, so it will not be below when you come back. Save it or keep it in your channel now.',
+            )}
+          </p>
+        )}
+
         {/* The finished film, outside the benches on purpose: a film that
             arrived behind a panel somebody has to reopen is a film they are
             not sure they got. */}
@@ -3741,6 +3798,31 @@ export default function VideoEditor({
             />
           </div>
         )}
+
+        {/* ── Everything this room has made ────────────────────────────
+
+            In the foot, which is where it is in every other room that has
+            one, so it is in the same place whichever door she came through.
+
+            `onUseAgain` brings the film back on to the clock as a single
+            shot, which is the useful thing to do with a finished film: it is
+            how a cut from last week becomes the opening of this week's. The
+            project it was cut from is kept separately — see `filmkeep.ts` —
+            and this is the OUTPUT, so bringing one back does not disturb
+            what is on the clock beyond adding to it. */}
+        <History
+          surface="videoedit"
+          reloadKey={madeCount}
+          onUseAgain={(make) => {
+            void makeBlob(make.id).then((blob) => {
+              if (!blob) return;
+              const file = new File([blob], `${make.title}.${make.ext ?? 'webm'}`, {
+                type: blob.type || 'video/webm',
+              });
+              void bringIn([file], 'made');
+            });
+          }}
+        />
       </div>
 
       {/* ── The copilot, over the room ──────────────────────────────────

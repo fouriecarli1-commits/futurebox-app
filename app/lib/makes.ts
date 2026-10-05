@@ -53,6 +53,14 @@ export interface Make {
   readonly favourite?: boolean;
   /** For `text`, which is small enough to live here rather than in a blob. */
   readonly text?: string;
+  /**
+   * How big the file is, recorded when it was written.
+   *
+   * Because a count is the wrong cap for a room whose output is a whole film.
+   * See `roomFor` below: twenty-four readings is a few megabytes and
+   * twenty-four stitched films is most of a phone.
+   */
+  readonly bytes?: number;
 }
 
 const KEY = 'futurebox.makes.v1';
@@ -64,7 +72,87 @@ const KEY = 'futurebox.makes.v1';
  * to be an archive. An archive is a promise about somebody's storage that this
  * cannot keep — see the note about failing writes.
  */
-const KEEP_PER_SURFACE = 24;
+export const KEEP_PER_SURFACE = 24;
+
+/**
+ * And how many bytes, per room, which is the cap that actually binds.
+ *
+ * ── Why a count was not enough ───────────────────────────────────────────
+ *
+ * Twenty-four was written for clips, readings and sets of adverts: tens of
+ * kilobytes to a few megabytes each, where a count is a fine proxy for size.
+ * The cutting room's output is a whole stitched film — a two-minute upright
+ * film at 1080p is about eighty megabytes — so twenty-four of those is nearly
+ * two gigabytes, which is most of a browser's quota and all of some phones.
+ *
+ * And the way that fails is the way this file's own opening note warns about:
+ * the quota runs out on the NEXT write, silently, at the moment somebody is
+ * saving something. Filling her phone to avoid losing a film is a worse
+ * outcome than losing the film.
+ *
+ * So the budget is bytes, the count stays as a second ceiling, and `roomFor`
+ * honours both. Two hundred and fifty megabytes is three or four films, or
+ * every reading and clip a working week produces.
+ */
+export const KEEP_BYTES_PER_SURFACE = 250 * 1024 * 1024;
+
+/**
+ * And the largest single thing worth keeping, which is half the budget.
+ *
+ * The same rule `brought.ts` arrived at for the same reason: without it one
+ * enormous film evicts everything else in the room and then sits there as the
+ * only thing in the history. A file bigger than this is not kept at all, and
+ * the caller is told so — see `rememberMake`'s answer.
+ */
+export const MOST_ONE_MAKE = KEEP_BYTES_PER_SURFACE / 2;
+
+/** What the things in one room's history add up to. */
+export function usedBytes(here: readonly Make[]): number {
+  return here.reduce((all, one) => all + (one.bytes ?? 0), 0);
+}
+
+/**
+ * Who goes, so that one more fits — pure, with the writing kept out of it.
+ *
+ * Eviction is the part of a history that loses somebody's work, and it is
+ * invisible until after it has: a history that drops the wrong thing looks
+ * exactly like one that is working, right up to the moment she goes looking
+ * for the film she starred. So the decision is a function with no storage in
+ * it and `check:history` executes it, the way `check:brought` does `roomFor`.
+ *
+ * Starred things are never dropped. If the starred ones alone are over the
+ * budget, nothing is dropped and the arriving file is refused rather than
+ * something she asked to keep being taken — that is what the star promises.
+ */
+export function roomFor(
+  here: readonly Make[],
+  coming: Make,
+): { readonly drop: readonly Make[]; readonly fits: boolean } {
+  const size = coming.bytes ?? 0;
+  if (size > MOST_ONE_MAKE) return { drop: [], fits: false };
+
+  /* Oldest first among the ones nobody asked to keep, which is the order they
+     are given up in. */
+  const goable = here
+    .filter((one) => !one.favourite && one.id !== coming.id)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+  const drop: Make[] = [];
+  const left = () => here.filter((one) => !drop.some((gone) => gone.id === one.id) && one.id !== coming.id);
+
+  /* Both ceilings, and the loop stops when there is nothing left it may take
+     rather than when the sums come right — otherwise a room full of starred
+     films is an endless loop. */
+  for (const one of goable) {
+    if (left().length + 1 <= KEEP_PER_SURFACE
+      && usedBytes(left()) + size <= KEEP_BYTES_PER_SURFACE) break;
+    drop.push(one);
+  }
+
+  const fits = left().length + 1 <= KEEP_PER_SURFACE
+    && usedBytes(left()) + size <= KEEP_BYTES_PER_SURFACE;
+  return { drop, fits };
+}
 
 export function loadMakes(surface?: SurfaceId): Make[] {
   if (typeof window === 'undefined') return [];
@@ -95,26 +183,32 @@ function write(makes: readonly Make[]): void {
  * files go with the details — an orphan blob in IndexedDB is invisible and
  * still counts against the quota, which is the worst kind of leak.
  */
-export async function rememberMake(make: Make, blob?: Blob): Promise<void> {
-  if (blob) await putAudio(make.id, blob);
+/**
+ * Put one away.
+ *
+ * Answers whether it was kept, rather than throwing or going quiet: a file too
+ * big for the budget is a real case — one stitched film can be bigger than
+ * half the room's allowance — and the room has to be able to say so instead of
+ * leaving her to find an empty history later.
+ *
+ * The size is read off the blob rather than taken on trust, so the budget is
+ * counted in the bytes actually written.
+ */
+export async function rememberMake(make: Make, blob?: Blob): Promise<boolean> {
+  const sized: Make = blob ? { ...make, bytes: blob.size } : make;
 
   const all = loadMakes();
-  const next = [make, ...all.filter((one) => one.id !== make.id)];
+  const here = all.filter((one) => one.surface === sized.surface);
+  const { drop, fits } = roomFor(here, sized);
+  if (!fits) return false;
 
-  const here = next.filter((one) => one.surface === make.surface);
-  const over = here.length - KEEP_PER_SURFACE;
-  const dropped: Make[] = [];
-  if (over > 0) {
-    // Oldest first among the ones nobody asked to keep.
-    const candidates = here
-      .filter((one) => !one.favourite)
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-    dropped.push(...candidates.slice(0, over));
-  }
+  if (blob) await putAudio(sized.id, blob);
 
-  const dropping = new Set(dropped.map((one) => one.id));
+  const next = [sized, ...all.filter((one) => one.id !== sized.id)];
+  const dropping = new Set(drop.map((one) => one.id));
   write(next.filter((one) => !dropping.has(one.id)));
-  await Promise.all(dropped.filter((one) => one.kind !== 'text').map((one) => deleteAudio(one.id)));
+  await Promise.all(drop.filter((one) => one.kind !== 'text').map((one) => deleteAudio(one.id)));
+  return true;
 }
 
 export async function forgetMake(id: string): Promise<void> {

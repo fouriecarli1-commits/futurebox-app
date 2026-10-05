@@ -488,8 +488,8 @@ export const STRINGS: Dict = {
   },
   "history.title": { en: "Made here before", af: "Hier gemaak voorheen" },
   "history.note": {
-    en: "Kept on this device, and the newest two dozen per room. A star means keep it — starred ones are never the ones dropped to make space.",
-    af: "Op hierdie toestel gehou, en die nuutste twee dosyn per kamer. ’n Ster beteken hou dit — gesterde items word nooit weggegooi om plek te maak nie.",
+    en: "Kept on this device: up to {mb} MB or {n} per room, whichever comes first. A star means keep it — starred ones are never the ones dropped to make space.",
+    af: "Op hierdie toestel gehou: tot {mb} MB of {n} per kamer, wat ook eerste kom. ’n Sterretjie beteken hou dit — die een met ’n sterretjie word nooit weggegooi om plek te maak nie.",
   },
   "history.onlyKept": { en: "Only the kept ones", af: "Net die gehoude" },
   "history.keep": { en: "Keep this one", af: "Hou hierdie een" },
@@ -967,6 +967,10 @@ export const STRINGS: Dict = {
   "pick.already": {
     en: "That is what I would pick",
     af: "Dit is wat ek sou kies",
+  },
+  "edit.bigFilm": {
+    en: "This film is too big to keep in the room’s history, so it will not be below when you come back. Save it or keep it in your channel now.",
+    af: "Hierdie film is te groot om in die kamer se geskiedenis te hou, so dit sal nie onder wees wanneer jy terugkom nie. Stoor dit of hou dit in jou kanaal, nou.",
   },
   "edit.filmTitle": {
     en: "What the film is called",
