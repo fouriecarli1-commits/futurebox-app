@@ -421,6 +421,23 @@ export const CREDITS = {
    * What replaces it is the rule the rest of this file already ran on:
    * **entering a room is included, generating in it costs credits.** The Pro
    * Booth, the video editor and the advert desk come with every paid plan.
+   *
+   * Carli said it again on 5 October 2026 — *"Onthou dat ons probooth ook
+   * moet monotize, nie te duur nie"* — and the answer is that it already is,
+   * under this rule, out of this wallet. What was NOT held anywhere was the
+   * other half: a route that reaches a supplier and charges nothing. Twelve
+   * do, every one on purpose, and until `check:gratis` was written nothing
+   * compared those twelve against the routes that exist. A free feature
+   * rarely arrives as a decision to give something away — it arrives as
+   * somebody adding a route, calling a supplier, and nobody counting.
+   *
+   * The TONE3000 amps are the first thing since that rule which costs us
+   * NOTHING per use: she signs in to her own account, and the capture runs
+   * in her browser through `lib/nam.ts`. By the same rule that keeps the
+   * browser sketch and the device's own cuts free, loading an amp is free.
+   * Putting a price on it would be a purchase point with no bill behind it,
+   * which is the thing her own sentence about *"te veel aankoop punte"*
+   * rules out.
    * Inside them the model calls are priced here, out of the same wallet as a
    * song, and the free versions of all three stay free — the ordinary booth,
    * the browser sketch, and every cut, fade and caption the device does by
