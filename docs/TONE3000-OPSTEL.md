@@ -37,25 +37,40 @@ met `support@tone3000.com` oor die fooie, en *"where do I find my client ID
 and secret key?"* is een reël by daardie draad. Dit is vinniger as om 'n
 halfuur deur menu's te krap, en dit is 'n vraag wat hulle elke week kry.
 
-### 1.3 Kopieer **twee** dinge, en weet watter is watter
+### 1.3 Kopieer **een** ding: die `client_id`
 
-| Wat | Hoe dit lyk | Hoe gevaarlik |
-|---|---|---|
-| **`client_id`** | 'n gewone identifiseerder | **Veilig.** Mag in die browser wees. Dit oorleef selfs as die geheim herroep word. |
-| **secret key** | begin met **`t3k_cs_`** | **Soos 'n databasis-wagwoord** — hul eie woorde. Slegs bediener-kant. |
+Dit is al. Daar is **geen secret key** vir ons nie.
 
-Die `t3k_cs_`-voorvoegsel is hoe jy hulle uitmekaar ken as jy later nie
-seker is nie.
+> **Hierdie afdeling het eers vir twee sleutels gevra en dit was verkeerd.**
+> Carli het gesoek en niks gevind, en sy het reg gesoek — daar is niks om te
+> vind nie.
+>
+> Ons vloei is OAuth 2.0 **met PKCE**, en PKCE bestaan juis sodat 'n app wat
+> nie 'n geheim kan bewaar nie, hierdie vloei veilig kan doen. Die hele punt
+> daarvan is dat daar geen geheim is nie. Hierdie doc se eie afdeling oor die
+> token-ruil sê dit sedert die eerste dag: *"die ruil gebruik net die
+> publishable key. Geen geheim nie."* Die kode wat ek gebou het stuur ook
+> niks anders nie — `tradeFor()` stuur `grant_type`, `code`,
+> `code_verifier`, `redirect_uri` en `client_id`, en dis dit.
+>
+> Die `t3k_cs_…`-sleutel is werklik — hy hoort net aan **Full API Access**,
+> die integrasie waar 'n mens sy eie bladerder bou en bediener-tot-bediener
+> praat sonder dat iemand inteken. Ons het **Select** gekies, wat die werk in
+> die helfte sny, en daarmee saam kom geen geheim nie. Hy is nie op jou
+> settings-bladsy nie omdat hulle hom nie vir hierdie vloei uitgee nie.
+>
+> As jy hom ooit **wel** daar sien, moenie hom in Vercel sit nie — sê vir my,
+> want dan beteken dit ons rekening is vir 'n ander integrasie opgestel as
+> die een wat ek gebou het, en dit is 'n gesprek met hulle en nie 'n
+> veranderlike nie.
 
-**Waar hierdie twee NIE gaan nie:**
+Die `client_id` is nie 'n geheim nie. Hul eie dokumentasie noem hom die
+**publishable key** en sê hy is veilig in kliëntkode, in 'n mobiele app en in
+'n browser. Hy is die blywende identifiseerder van die toepassing.
 
-- Nie in 'n WhatsApp of 'n e-pos aan my nie. Ek het hulle **nie** nodig om te
-  bou — alles wat ek tot nou gebou het, is rekenkunde en het geen sleutel
-  gesien nie.
-- Nie in 'n lêer in die repo nie. Nie in 'n `.env` op die skootrekenaar nie.
-- Die geheim nie in enigiets wat 'n foon bereik nie.
-
-Hulle gaan **net** in Vercel in, in Deel 2.
+Dit beteken nie hy hoort op 'n skermskoot op Twitter nie — maar as hy
+uitlek, is dit nie 'n noodgeval nie, en jy hoef nie bang te wees om hom te
+hanteer nie.
 
 ### 1.4 Registreer 'n `redirect_uri`
 
@@ -121,23 +136,21 @@ in 'n lêer en een in 'n paneel nie.
 3. Bo: **Settings**.
 4. Links: **Environment Variables**.
 
-### 2.2 Sit die twee in
+### 2.2 Sit die een in
 
-Vir **elkeen**: naam links, waarde regs, dan **Save**.
+Naam links, waarde regs, dan **Save**.
 
 | Naam | Waarde | Watter environments |
 |---|---|---|
-| `TONE3000_SECRET_KEY` | die `t3k_cs_…`-sleutel | **Production** en **Preview** |
 | `NEXT_PUBLIC_TONE3000_CLIENT_ID` | die `client_id` | **Production** en **Preview** |
 
-Twee dinge oor daardie tabel:
-
 **Die `NEXT_PUBLIC_`-voorvoegsel is nie versiering nie.** In Next.js beteken
-dit *"hierdie een mag in die browser beland"*. Daarom staan hy op die
-`client_id`, wat veilig is, en **nooit** op die geheim nie. As jy ooit
-`NEXT_PUBLIC_` voor 'n geheim sit, word hy in die JavaScript ingebak wat
-elke besoeker aflaai, en dan is hy nie meer 'n geheim nie — hy is publiek en
-jy weet dit nie.
+dit *"hierdie een mag in die browser beland"*. Dit hoort hier omdat die
+`client_id` juis 'n publishable key is. Dieselfde voorvoegsel voor 'n egte
+geheim sou hom in die JavaScript inbak wat elke besoeker aflaai — dan is hy
+publiek en niks sê vir jou so nie. Ons het hier nie een om verkeerd te
+hanteer nie, maar die reël is die moeite werd om te ken vir die volgende
+verskaffer.
 
 **Development mag jy uitlaat.** Dit is die environment vir 'n plaaslike
 `vercel dev`, en jy werk nie so nie.
@@ -189,14 +202,13 @@ en al vier maniere om uit hul venster terug te kom.
 ## Die kort lysie, as jy net dit wil hê
 
 - [ ] Teken in op TONE3000 met die rekening uit die fooi-gesprek
-- [ ] Settings → kopieer die `client_id` en die `t3k_cs_…`-geheim
+- [ ] Settings → kopieer die `client_id` (net dié een; daar is geen geheim)
 - [ ] Registreer `https://futurebox.studio/api/tone3000/callback` (en die
       `vercel.app`-een as hulle 'n tweede toelaat)
 - [ ] Vra die drie vrae in dieselfde e-pos
-- [ ] Vercel → Settings → Environment Variables → `TONE3000_SECRET_KEY`
-- [ ] Vercel → dieselfde plek → `NEXT_PUBLIC_TONE3000_CLIENT_ID`
+- [ ] Vercel → Settings → Environment Variables →
+      `NEXT_PUBLIC_TONE3000_CLIENT_ID`
 - [ ] Deployments → Redeploy
 - [ ] Sê vir my, en ek bou die callback-roete
 
-**Die geheim gaan nêrens anders as in Vercel nie.** Nie in 'n e-pos aan my
-nie, nie in die repo nie, nie in 'n `.env` op die skootrekenaar nie.
+**En as jy nêrens 'n geheim kry nie, is dit reg.** Daar is nie een nie.

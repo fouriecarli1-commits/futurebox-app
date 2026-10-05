@@ -48,27 +48,43 @@ die herroeping van die geheim.
 password."* Slegs bediener-kant, as `Authorization: Bearer t3k_cs_…`. Nooit
 in 'n mobiele binary of enigiets wat 'n toestel bereik nie.
 
-Vir ons beteken dit: die geheim gaan in **Vercel**, en dit gaan deur die
-seam — `app/lib/server/suppliers.ts` is reeds die enigste plek wat 'n host en
-'n sleutel-header skryf. 'n TONE3000-inskrywing daar lyk soos:
+### Maar ons kry nooit een nie, en dit is belangrik
 
-```
-keyFrom: 'TONE3000_SECRET_KEY',
-key: () => process.env.TONE3000_SECRET_KEY ?? '',
-keyHeader: 'Authorization',
-keyPrefix: 'Bearer ',
-```
+Carli het op haar settings-bladsy gaan soek en niks gevind. Sy het reg
+gesoek — daar is niks om te vind nie, en my eerste opstel-gids het verkeerdelik
+vir een gevra.
 
-Die `Bearer ` staan in sy eie veld en nie binne-in `key()` nie. Dit was eers
-so geskryf, en dit lyk korter: die skema saam met die sleutel, een plek, klaar.
-Dit is verkeerd omdat dit die skema in die **sleutel** se waarde wegsteek, en
-'n per-persoon-token loop nie deur `key()` nie — hy kom as 'n argument in. So
-'n lid se token sou **sonder** `Bearer ` gestuur word terwyl ons eie een dit
-dra, en dit is die een pad wat ons nie kan toets voordat daar 'n lid is nie.
-`check:seam` weier nou 'n verskaffer wat `Authorization` gebruik sonder 'n
-eie `keyPrefix`.
+Die secret key hoort aan **Full API Access**: bediener-tot-bediener, ons eie
+bladerder, niemand teken in nie. Ons het **Select** gekies. Daardie vloei is
+OAuth met PKCE, en PKCE bestaan juis sodat 'n kliënt wat **nie** 'n geheim kan
+bewaar nie, die vloei veilig kan doen. Die afdeling oor die ruil hieronder sê
+dit al: net die publishable key, geen geheim nie.
 
-Die `client_id` is 'n ander ding en mag wel in die browser wees.
+Dit het 'n gevolg wat verder gaan as een ontbrekende veranderlike.
+
+**TONE3000 het geen rekening-sleutel nie.** Elke oproep dra 'n **persoon** se
+token, wat uit háár aanmelding kom. Die seam se vorm neem tot nou aan dat elke
+verskaffer een sleutel in die omgewing het — `key()` lewer hom en `ready(what)`
+is `Boolean(serves(what).key())`. Vir TONE3000 is daar niks vir `key()` om te
+lewer nie, wat beteken `ready('…')` sou **vir altyd vals** wees terwyl die
+verskaffer heeltemal werk. Dit is 'n kamer wat stil van die lug af bly, wat
+presies die soort stilte is waarvoor die checks hier bestaan.
+
+Dus is die TONE3000-inskrywing **nie** net 'n ry in `SUPPLIERS` nie. Hy het 'n
+manier nodig om te sê *"my geloofsbriewe kom per persoon"*, en `ready()` moet
+daardie geval beantwoord met iets anders as 'n leë sleutel. Dit word geskryf
+saam met die inskrywing, met 'n check wat dit uitvoer — nie nou geraai nie.
+
+Wat wel vasstaan: hul header is `Authorization` en die skema is `Bearer `, en
+daardie skema hoort in `keyPrefix` en **nie** binne-in `key()` nie. Dit was
+eers binne-in geskryf, wat korter lyk. Dit is verkeerd omdat 'n per-persoon-token
+nie deur `key()` loop nie — hy kom as 'n argument in. Ons eie sleutel sou
+`Bearer ` dra en elke lid se token nie, op die een pad wat 'n mens nie kan
+toets voordat daar 'n lid is nie. `check:seam` weier nou 'n verskaffer wat
+`Authorization` gebruik sonder sy eie `keyPrefix`.
+
+Die `client_id` is 'n ander ding: 'n publishable key, veilig in 'n browser, en
+die enigste ding wat sy in Vercel hoef te sit.
 
 ## Die authorize-oproep
 
