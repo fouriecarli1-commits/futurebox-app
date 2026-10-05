@@ -303,6 +303,8 @@ jobs:
         run: npm run check:launchmark
       - name: "The cutting room keeps the project on the device, and says so when it cannot"
         run: npm run check:filmkeep
+      - name: "Every room the app opens is in the document the order of work is read off"
+        run: npm run check:inventory
       - name: "All three lanes can be picked, and the lines cut the one that is"
         run: npm run check:soundlanes
       - name: "Listening to a song's words again costs nothing, and really listens again"

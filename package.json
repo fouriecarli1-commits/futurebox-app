@@ -126,6 +126,7 @@
     "check:blanker": "tsx scripts/check-blanker.mts",
     "check:launchmark": "tsx scripts/check-launchmark.mts",
     "check:filmkeep": "tsx scripts/check-filmkeep.mts",
+    "check:inventory": "tsx scripts/check-inventory.mts",
     "check:soundlanes": "tsx scripts/check-soundlanes.mts",
     "check:listenfree": "tsx scripts/check-listenfree.mts",
     "check:heardhere": "tsx scripts/check-heardhere.mts",

@@ -125,6 +125,49 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 | ✖ | No start frame, end frame or reference image — the reference takes all three, and we take none, because there is nowhere to keep an image (gap 2) |
 | ✖ | No history, no favourites |
 
+### Video Editor
+
+Built after the first pass of this document and missing from it until 5 October 2026, which is what
+`check:inventory` now exists to stop: the largest room in the app was not in the list the order of
+work is read off.
+
+| | |
+|---|---|
+| ✅ | Clips brought in from the phone or pulled out of her own channel; trims, splits, order, fades and transitions; the clock scrubs and the cursor runs the length of every lane |
+| ✅ | Words on screen with font, size, colour, box and position, timed per shot, and able to run past the shot they belong to when they are on their own line |
+| ✅ | Looks and adjustments, a logo mark with a corner and an opacity, and a cover frame lifted out of the film itself |
+| ✅ | A song underneath with speed, loop, noise reduction, duplicate, mute and solo per lane, a mono fold, and ducking under a shot that speaks |
+| ✅ | The shape, the picture size and the frame rate, with the file's size in megabytes shown before the press rather than after it |
+| ✅ | The project is kept on the device between visits — the material, the trims, the words and the name — and a device that cannot keep it says so while there is still a film to save. `check:filmkeep` and `audit/filmkeep.mjs`, which breaks the read on purpose |
+| ✅ | The finished film downloads **and** goes into her channel, under a name she sets, which is the same name in both places |
+| ✅ | The price is on the button that spends it, read from `credits.ts` at both ends |
+| ✖ | **No history of finished films.** A film exported and then neither saved nor kept is gone from the room — the only copies are the ones she asked for |
+| ✖ | **The shape is not read off the material.** A film cut from upright clips still opens tall because tall is the default, not because anything measured the clips |
+| ✖ | No `Recommend` on the shape, the picture size or the frame rate — the three fields where a wrong answer costs upload time or detail, and the app has `Recommend` nowhere |
+
+### Sound trainer
+
+| | |
+|---|---|
+| ✅ | Trains a sound of your own on finished tracks already in your channel, which is a few ticks rather than a file dialogue — and is the honest answer to where a music model's training data came from |
+| ✅ | Recordings brought in from outside, with the ownership asked for in words and stored with the finetune, because it is a heavier claim and reads as one |
+| ✅ | The cost and the wait are shown before the press, and a trained sound can be forgotten |
+| ✅ | It has a door of its own in the rail. The Channel's entry below used to say there was no such room; that was true when it was written and is not now |
+| ✖ | No history: what a sound was trained on is not shown again afterwards, so a sound you are unhappy with cannot be compared with its own training set |
+| ✖ | Fewer than three songs and the room offers nothing — correctly, since three is the floor — but it does not say which three of yours would be the better set |
+
+### Album art
+
+| | |
+|---|---|
+| ✅ | A crate you flick through, one sleeve at a time, with the spine showing and `1 / 1` pressed into the corner: unique, sold once, and the room shows it rather than claiming it |
+| ✅ | The artist is on the back of the sleeve, in their own words, with the one button under them |
+| ✅ | Bidding opens at R200 in steps of R20 over 36 hours, R500 for a one-off, 70/30 on the profit. `check:artmarket` holds every cent across 2007 prices |
+| ✅ | A commission conversation with no text box anywhere — one button and one of your own songs; the artist answers with a price and one of four windows. There is no column in the schema to put a message in |
+| ✅ | A buyer may generate art or buy ours and may not upload their own: the only file input is on the artist's desk, and `/api/artmarket` refuses an upload from anybody without an approved artist row |
+| ✅ | The credit travels with the song into the channel and into Live |
+| ✖ | No way for a buyer to see what a piece looked like on their own song before buying it — the sleeve is the artwork, not the artwork on their record |
+
 ### Hooks
 
 | | |
@@ -156,7 +199,7 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 |---|---|
 | ✅ | Released music, playlists, sharing, the sound trainer; the copilot opens a playlist |
 | ✅ | The price is on the button that spends it, read from `credits.ts` at both ends. `check:priceonit` holds every room that reaches a charging route — 19 routes, 13 rooms |
-| ✖ | **The sound trainer is buried here.** `rail.sound` — "Soundboard · Every genre, with audio" — exists in the copy and there is no such room. It sits inside the channel, where nobody looking for it would go |
+| ~~✖~~ | ~~**The sound trainer is buried here.** `rail.sound` — "Soundboard · Every genre, with audio" — exists in the copy and there is no such room. It sits inside the channel, where nobody looking for it would go~~ — **closed, and this line was stale before anybody noticed.** The trainer has its own door in the rail and its own section above. Walked in a browser on 5 October 2026 rather than read off the code |
 
 ### Live
 
@@ -203,7 +246,7 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 
 ## The order to do them in
 
-1. **Cost on the seven rooms still missing it** — ProBooth, Booth, Hooks, Channel, Live, Collab, the theme studio. Cheapest, and it is a promise the app already makes everywhere else.
+1. ~~**Cost on the seven rooms still missing it** — ProBooth, Booth, Hooks, Channel, Live, Collab, the theme studio.~~ — **done.** `check:priceonit` reads the charging routes out of the handlers rather than off a list, finds the rooms that call them, and fails on a room that spends without a number on the press: 19 routes, 13 rooms, all 13 saying what it costs.
 2. **`Recommend` on every consequential field.** Still at zero across the whole app. One shared component, a value and a one-line reason.
 3. **History per room.** Unblocks comparison, reassurance, and not losing work.
 4. **The asset library.** Unblocks reference images, brand kits, start frames.
