@@ -29,7 +29,13 @@ export async function POST(request: Request): Promise<Response> {
   const asked = new URL(request.url).searchParams.get('taal');
   const locale = asked === 'af' || asked === 'en' ? asked : undefined;
 
-  const made = await begin(request, caller.id, locale);
+  /* The room she is standing in, so the callback can put her back in it.
+     TONE3000 hand back only `state`, `code` and `tone_id`, so anything we
+     want on the far side has to be remembered on this one. */
+  const made = await begin(
+    request, caller.id, locale,
+    new URL(request.url).searchParams.get('room') ?? undefined,
+  );
   if ('why' in made) return Response.json({ ready: true, why: made.why }, { status: 502 });
 
   return Response.json({ ready: true, url: made.url });

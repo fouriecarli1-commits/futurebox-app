@@ -89,6 +89,46 @@ ok('  and a refusal says only which kind, never whose',
   + ' belonging to somebody else" is a message written for whoever is'
   + ' testing the lock');
 
+/* ── The room she came from, which only this side can remember ────────── */
+
+ok('a chosen tone carries the room she pressed the button in',
+  landing({ how: 'chose', toneId: '42', room: 'booth' }).room === 'booth'
+  && landing({ how: 'left', room: 'booth' }).room === 'booth',
+  'TONE3000 hand back `state`, `code` and `tone_id` and nothing else, so a'
+  + ' callback that does not remember this returns her to the studio with a'
+  + ' tone and no sign of the track she chose it for. Paystack carries its'
+  + ' room in the address because we build that address; this one is built'
+  + ' by somebody else');
+
+ok('  and the two outcomes with nothing to show do not move her',
+  !('room' in landing({ how: 'gone' }))
+  && !('room' in landing({ how: 'refused', why: 'state' })),
+  'walking her into a room to tell her nothing happened is worse than'
+  + ' leaving her where she is');
+
+ok('  and `landing` is NOT where a bad room is caught',
+  intoApp(
+    at('futurebox.studio'),
+    landing({ how: 'chose', toneId: '1', room: 'nonsense_room' } as Parameters<typeof landing>[0]),
+  ).includes('nonsense_room'),
+  'stated as a fact rather than wished away. `landing` passes through what'
+  + ' it is handed; the resolving happens in `begin` on the way in and in'
+  + ' `finish` on the way out, which the next two assertions hold. Writing'
+  + ' this one as "a bad room never reaches the address" would have been a'
+  + ' green line about a guard that is not there');
+
+ok('  and `finish` resolves the room rather than trusting its own column',
+  /resolveSurfaceId\(data\.room/.test(readFileSync('app/lib/server/tone3000session.ts', 'utf8')),
+  'the row is ours, but the value is about to be interpolated into a'
+  + ' redirect. A column somebody can reach is a column somebody can set, so'
+  + ' it is checked where it is used and not where it was written');
+
+ok('  and `begin` resolves it before it is stored as well',
+  /resolveSurfaceId\(room \?\? ''\)/.test(readFileSync('app/lib/server/tone3000session.ts', 'utf8')),
+  'whatever arrives on the start route becomes a real room id or nothing —'
+  + ' a value that makes a round trip through somebody else\'s service is'
+  + ' not a value to keep raw');
+
 ok('  and every outcome lands her on our own origin',
   ['chose', 'left', 'gone', 'refused'].every((how) => {
     const said = landing({ how, toneId: '1', why: 'x' } as Parameters<typeof landing>[0]);

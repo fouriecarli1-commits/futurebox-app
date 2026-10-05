@@ -49,6 +49,20 @@ create table if not exists public.tone3000_pending (
   -- Die PKCE-verifier. Terwyl hierdie ry leef, is hy so geheim soos 'n
   -- wagwoord: wie hom en die `code` het, kan die tokens gaan haal.
   verifier   text not null,
+  /**
+   * Which room she was standing in when she pressed the button.
+   *
+   * TONE3000 hand back `state`, `code` and `tone_id` and nothing else, so a
+   * callback that does not remember this cannot put her back where she was —
+   * she returns to the studio instead of to the booth, with the tone she
+   * chose and no sign of the track she chose it for.
+   *
+   * Paystack's return carries its room in the address because we build that
+   * address ourselves. This one is built by somebody else, so the room has to
+   * wait here instead. Nullable: a handshake started from somewhere with no
+   * room is not an error, it just lands her at the front.
+   */
+  room       text,
   created_at timestamptz not null default now()
 );
 

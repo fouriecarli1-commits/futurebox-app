@@ -28,6 +28,7 @@
  */
 
 import { admin } from './account';
+import { resolveSurfaceId } from '../surfaces';
 import { wrote } from './wrote';
 import { cameBack, pkce, selectUrl, tradeFor, TOKEN, type CameBack } from './tone3000';
 
@@ -85,6 +86,15 @@ export async function begin(
   request: Request,
   owner: string,
   locale?: string,
+  /**
+   * The room she pressed the button in, so the callback can put her back.
+   *
+   * Resolved here rather than stored raw: whatever arrives becomes a real
+   * room id or nothing. The value makes a round trip through somebody else's
+   * service and comes back into an address we redirect a browser to, so the
+   * one thing it must not be is a string we never looked at.
+   */
+  room?: string,
 ): Promise<{ readonly url: string } | { readonly why: string }> {
   const client = admin();
   if (!client) return { why: 'database' };
@@ -93,7 +103,12 @@ export async function begin(
   const made = pkce();
   const { error } = await client
     .from('tone3000_pending')
-    .insert({ state: made.state, owner, verifier: made.verifier });
+    .insert({
+      state: made.state,
+      owner,
+      verifier: made.verifier,
+      room: resolveSurfaceId(room ?? '') ?? null,
+    });
   if (error) return { why: 'database' };
 
   return {
@@ -108,8 +123,8 @@ export async function begin(
 
 /** What the callback worked out, for the route to turn into a redirect. */
 export type Landed =
-  | { readonly how: 'chose'; readonly toneId: string }
-  | { readonly how: 'left' }
+  | { readonly how: 'chose'; readonly toneId: string; readonly room?: string }
+  | { readonly how: 'left'; readonly room?: string }
   | { readonly how: 'gone' }
   | { readonly how: 'refused'; readonly why: string };
 
@@ -127,8 +142,12 @@ export type Landed =
  * somebody else" would be a message written for whoever is testing the lock.
  */
 export function landing(landed: Landed): Record<string, string> {
-  if (landed.how === 'chose') return { t3k: 'ja', tone: landed.toneId };
-  if (landed.how === 'left') return { t3k: 'af' };
+  /* The room rides along on the two outcomes that have something to show.
+     Not on `gone` or `refused`: moving her into a room to tell her nothing
+     happened is worse than leaving her where she is. */
+  const back: Record<string, string> = 'room' in landed && landed.room ? { room: landed.room } : {};
+  if (landed.how === 'chose') return { t3k: 'ja', tone: landed.toneId, ...back };
+  if (landed.how === 'left') return { t3k: 'af', ...back };
   if (landed.how === 'gone') return { t3k: 'weg' };
   return { t3k: 'no', why: landed.why };
 }
@@ -161,7 +180,7 @@ export async function finish(
      it without the error, the code or the tone being looked at. */
   const { data } = await client
     .from('tone3000_pending')
-    .select('owner, verifier')
+    .select('owner, verifier, room')
     .eq('state', state)
     .maybeSingle();
   if (!data) return { how: 'refused', why: 'state' };
@@ -205,5 +224,12 @@ export async function finish(
   });
   if (error) return { how: 'refused', why: 'database' };
 
-  return read.how === 'chose' ? { how: 'chose', toneId: read.toneId } : { how: 'left' };
+  /* Resolved AGAIN on the way out, not trusted because we wrote it. The row
+     is ours, but a value that is about to be interpolated into a redirect is
+     checked where it is used — a column somebody can reach is a column
+     somebody can set. */
+  const room = resolveSurfaceId(data.room ?? '') ?? undefined;
+  return read.how === 'chose'
+    ? { how: 'chose', toneId: read.toneId, room }
+    : { how: 'left', room };
 }
