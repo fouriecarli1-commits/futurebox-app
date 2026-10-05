@@ -23,6 +23,7 @@
  */
 
 import { noteCost } from '@/app/lib/server/eleven';
+import { call } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
@@ -43,7 +44,11 @@ export const dynamic = 'force-dynamic';
  */
 export const maxDuration = 300;
 
-const ENDPOINT = 'https://api.elevenlabs.io/v1/music';
+/* The path only. The host and the key belong to the supplier that
+   serves `music` — see `lib/server/suppliers.ts` for why a call that
+   builds its own host cannot be moved without finding every one of
+   them first. */
+const ENDPOINT = '/v1/music';
 
 /**
  * What the engine is asked to hand back, and why it is not a named format.
@@ -237,7 +242,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const ask = (format: string) => fetch(`${ENDPOINT}?output_format=${format}`, {
     method: 'POST',
-    headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildRequest(body)),
   });
 

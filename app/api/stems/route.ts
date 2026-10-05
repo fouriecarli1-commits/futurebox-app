@@ -44,6 +44,7 @@
  */
 
 import { noteCost } from '@/app/lib/server/eleven';
+import { call } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { CREDITS, perMinute } from '@/app/lib/credits';
@@ -59,7 +60,11 @@ export const dynamic = 'force-dynamic';
 /** Separation is slow on a long song, and their own docs say so. */
 export const maxDuration = 300;
 
-const ENDPOINT = 'https://api.elevenlabs.io/v1/music/stem-separation';
+/* The path only. The host and the key belong to the supplier that
+   serves `stems` — see `lib/server/suppliers.ts` for why a call that
+   builds its own host cannot be moved without finding every one of
+   them first. */
+const ENDPOINT = '/v1/music/stem-separation';
 const OUTPUT_FORMAT = 'mp3_44100_128';
 /** Vocals and everything else. Six stems costs twice as much and answers nothing extra. */
 const VARIATION = 'two_stems_v1';
@@ -224,7 +229,6 @@ export async function POST(request: Request): Promise<Response> {
   try {
     upstream = await fetch(`${ENDPOINT}?output_format=${OUTPUT_FORMAT}`, {
       method: 'POST',
-      headers: { 'xi-api-key': key },
       body: outgoing,
     });
   } catch {

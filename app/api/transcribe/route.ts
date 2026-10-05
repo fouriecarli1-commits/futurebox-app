@@ -22,6 +22,7 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
+import { call } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { CREDITS, perMinute } from '@/app/lib/credits';
@@ -34,7 +35,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-const ENDPOINT = 'https://api.elevenlabs.io/v1/speech-to-text';
+/* The path only. The host and the key belong to the supplier that
+   serves `transcribe` — see `lib/server/suppliers.ts` for why a call that
+   builds its own host cannot be moved without finding every one of
+   them first. */
+const ENDPOINT = '/v1/speech-to-text';
 /** Their newest transcriber, with the older one as a fallback for older plans. */
 const MODELS = ['scribe_v2', 'scribe_v1'];
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -116,7 +121,7 @@ async function ask(key: string, file: Blob, model: string, diarize: boolean): Pr
      happened, and in a lyric sheet it is noise. */
   body.append('diarize', diarize ? 'true' : 'false');
   body.append('tag_audio_events', diarize ? 'true' : 'false');
-  return fetch(ENDPOINT, { method: 'POST', headers: { 'xi-api-key': key }, body });
+  return call('transcribe', ENDPOINT, { method: 'POST', body });
 }
 
 export async function POST(request: Request): Promise<Response> {

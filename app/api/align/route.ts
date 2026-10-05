@@ -59,6 +59,7 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
+import { call } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { CREDITS, perMinute } from '@/app/lib/credits';
@@ -71,7 +72,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-const ENDPOINT = 'https://api.elevenlabs.io/v1/forced-alignment';
+/* The path only. The host and the key belong to the supplier that
+   serves `align` — see `lib/server/suppliers.ts` for why a call that
+   builds its own host cannot be moved without finding every one of
+   them first. */
+const ENDPOINT = '/v1/forced-alignment';
 /**
  * Their limit is a gigabyte; ours is the platform's.
  *
@@ -190,7 +195,7 @@ export async function POST(request: Request): Promise<Response> {
     const body = new FormData();
     body.append('file', file, 'song.wav');
     body.append('text', text);
-    upstream = await fetch(ENDPOINT, { method: 'POST', headers: { 'xi-api-key': key }, body });
+    upstream = await call('align', ENDPOINT, { method: 'POST', body });
   } catch {
     await paid.refund();
     return Response.json(

@@ -65,9 +65,13 @@
  */
 
 import { noteCost } from '../eleven.ts';
+import { call as askSupplier } from '../suppliers';
 import type { Progress, Provider, StartRequest, Started } from './types.ts';
 
-const BASE = 'https://api.elevenlabs.io/v1/flows/video';
+/* The path only — the host and the key belong to whoever serves
+   `filmshot`. See `lib/server/suppliers.ts`: this file having its own
+   client is how this capability went uncounted. */
+const BASE = '/v1/flows/video';
 
 const key = (): string => process.env.ELEVENLABS_API_KEY ?? '';
 
@@ -129,9 +133,9 @@ async function call(
 ): Promise<Envelope | null> {
   if (!key()) return null;
   try {
-    const response = await fetch(BASE + path, {
+    const response = await askSupplier('filmshot', BASE + path, {
       ...init,
-      headers: { 'xi-api-key': key(), 'content-type': 'application/json', ...(init?.headers ?? {}) },
+      headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) },
     });
     /* ── The only ElevenLabs calls in this app that were not counted ──────
  

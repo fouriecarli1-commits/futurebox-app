@@ -26,8 +26,12 @@
  */
 
 import { noteCost } from './eleven.ts';
+import { call as askSupplier } from './suppliers';
 
-const BASE = 'https://api.elevenlabs.io/v1/flows/image';
+/* The path only — the host and the key belong to whoever serves
+   `coverart`. See `lib/server/suppliers.ts`: this file having its own
+   client is how this capability went uncounted. */
+const BASE = '/v1/flows/image';
 
 const key = (): string => process.env.ELEVENLABS_API_KEY ?? '';
 
@@ -58,9 +62,9 @@ async function call(
 ): Promise<Envelope | null> {
   if (!key()) return null;
   try {
-    const response = await fetch(BASE + path, {
+    const response = await askSupplier('coverart', BASE + path, {
       ...init,
-      headers: { 'xi-api-key': key(), 'content-type': 'application/json', ...(init?.headers ?? {}) },
+      headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) },
     });
     /* A cover is the cheapest thing on the desk and was still the second of
        two ElevenLabs paths charging this account without writing down what it
