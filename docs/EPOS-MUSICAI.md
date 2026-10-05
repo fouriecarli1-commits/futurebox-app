@@ -1,5 +1,170 @@
 # Epos aan Music.ai — API-vermoëns en 'n kwotasie
 
+> ## ⬇ STUUR HIERDIE EEN
+>
+> Carli, 5 Oktober 2026, oor ElevenLabs: *"Hulle antwoord my nie, en ek sal
+> nie so kan besigheid doen nie."*
+>
+> Hierdie lêer het **twee** briewe gedra: 'n eerste kontak met volumes wat te
+> hoog was, en 'n opvolg van 23 September wat hulle regstel. Dit was reg
+> **as** die eerste een al gestuur is.
+>
+> As nog niks gestuur is nie, is twee briewe verkeerd: die een hieronder is
+> hulle saamgevoeg, met die **reggestelde** volumes in, plus wat ons op
+> 5 Oktober uitgevind het oor waarvoor ons hulle nou werklik nodig het.
+> Die twee oorspronklikes staan onder dit as geskiedenis.
+>
+> **Vul drie plekhouers in voor jy stuur** — hulle staan met opset nie in
+> hierdie lêer nie: jou naam, jou rol, en die kontak-e-pos.
+
+---
+
+**Subject:** FutureBox Studio — API capabilities, and a quotation at our real volumes
+
+Hi Danny,
+
+I'm building FutureBox Studio, a creative studio for music, voice and video
+aimed at independent artists and small businesses in South Africa. We're
+approaching launch, Music.ai is already integrated and running, and I'd like
+two things: to understand the full extent of what's available over the API,
+and a quotation against volumes that are honest rather than flattering.
+
+## Where we are
+
+Our integration is built and running against your documented API: `GET /upload`
+for the signed pair, `POST /v1/job`, `GET /v1/job/{id}`, `GET /v1/application`,
+and `GET /v1/workflow` to list what an account carries. We read a job's
+`result` generically — every key that comes back is handled, whether it's a
+JSON document or a file — so adding a new workflow on our side is a
+configuration change rather than a development one.
+
+That means the constraint isn't our code. It's knowing what to point it at.
+
+## What I'd like to understand
+
+**1. The template workflow catalogue.** Your documentation mentions template
+workflows provided by the platform, and I've seen `music-ai/stems-vocals-accompaniment`
+used as an example. Is there a published list of the `music-ai/…` workflows?
+And are they available to every account as-is, or does each one still need to
+be created in the account's own dashboard first? Our integration currently
+assumes the latter and refuses to run until a slug is configured, which is
+safe but means nothing works on day one.
+
+**2. The module catalogue.** Since custom workflows chain modules, the list of
+modules is really the list of what's possible. Is that available outside the
+dashboard's builder?
+
+**3. Output shapes.** For each workflow, what keys come back in `result` and in
+what format — particularly for anything that returns structured data rather
+than audio files.
+
+## What we need, specifically
+
+In order of how much they matter to us:
+
+**a. Singing voice conversion.** This is our single biggest gap. The path we
+want is: generate a song, split the vocal off, re-sing that vocal in the
+member's own trained voice, mix it back. Every step but the third is built.
+Speech-to-speech models handle talking well and singing badly, so we need a
+model trained for singing. Do you offer singing voice conversion over the API,
+and can a member's own voice be trained as a model? If so, what does training
+require — how much clean audio, and how long does it take?
+
+**b. Lyric and speech alignment with word-level timing.** We put words on
+screen in time with the music, for singing along and for subtitles on video.
+I can see syllable alignment on your public pricing; what I'd like to know is
+the full shape of what comes back, and whether it handles **Afrikaans** as
+well as English. Our members are South African and most of what moves through
+this app is in Afrikaans — that one answer matters more to us than the price.
+
+**c. Named stems.** Not just vocals and accompaniment — drums, bass, guitar,
+keys separately, named, so each can land on its own lane in our booth.
+
+**d. Reading a recording.** Chords, key, tempo and section boundaries. We use
+this to set a session's tempo and key in the multitrack booth, to place the
+metronome and the bar grid, and to let somebody jump between sections.
+
+**e. Transcription.** Same question as (b) on Afrikaans.
+
+**f. Guitar and amp tone.** We run neural amp captures in the browser already.
+Anything on the audio-processing side — amp or cabinet simulation, tone
+matching, re-amping, impulse responses — would sit directly in a room we're
+building now.
+
+**g. Anything else you'd point a product like this at.** We would rather be
+told about something useful than discover it in a year.
+
+Items (b), (c) and (e) carry more weight for us than they did a month ago,
+and I'll be straight about why: we currently buy those from another supplier
+and that relationship isn't working — repeated emails, no replies. I'm not
+shopping you against them on price. I'm asking whether you'd be a supplier we
+can reach when something is wrong, because that has turned out to matter more
+to me than any feature on either list.
+
+## Commercial
+
+- What is the pricing model — per job, per minute of audio, or a monthly
+  commitment? Are there volume tiers, and **is there a minimum monthly
+  commitment?** At our size that question decides more than the rate does.
+- Are there limits we should design around: maximum file length or size,
+  concurrent jobs, rate limits?
+- How long are uploaded files retained on your side, and is there a way to
+  delete a file after a job completes? This matters beyond preference: our
+  privacy policy makes specific commitments about what happens to a member's
+  voice recording, and I'd rather those commitments match your behaviour than
+  be written around it.
+- **Do you have a data processing agreement?** We process personal data under
+  South Africa's POPI Act, which requires a written agreement with each
+  operator. This one is not a nice-to-have for us — we can't go live without
+  it.
+- Which region do jobs run in? Our members are in South Africa and round-trip
+  latency is worth knowing about.
+
+## Volumes
+
+So you can quote against something real. Our member targets are 365 by month
+two and 2 000 by month four — but these workflows are **multitrack booth**
+work, used by somebody tracking a session properly, not by somebody generating
+a song from a prompt. Realistically that's a small professional slice:
+
+| | by month 2 (365 members) | by month 4 (2 000 members) |
+|---|---|---|
+| low (5% of members) | ~130 min | ~700 min |
+| **expected (8%)** | **~200 min** | **~1 100 min** |
+| high (15%) | ~380 min | ~2 100 min |
+
+A couple of hundred minutes a month to start. I'd rather give you the
+assumption than a confident-looking number: the 8% is our own estimate and not
+something we have measured, so if your pricing has thresholds, tell me where
+they sit and I'll tell you which side of them we land on.
+
+At this size we're a small customer, and I'd rather be a small customer you're
+glad to have than one who quoted big and delivered small.
+
+The workflow list and the module catalogue matter more to us than the price
+does, because they decide what we can build at all.
+
+Happy to get on a call if that's easier than writing it out.
+
+Best regards,
+
+[JOU NAAM]
+[JOU ROL], FutureBoxStudio (Pty) Ltd
+[KONTAK-E-POS]
+South Africa
+
+---
+---
+
+# Geskiedenis — die twee oorspronklike briewe
+
+Gehou omdat hulle wys hoe die getalle verander het en hoekom. **Moenie
+hierdie twee stuur as jy die een hierbo gestuur het nie.**
+
+---
+
+## Die oorspronklike eerste kontak
+
 Konsep vir Carli om te stuur. **Vul die drie plekhouers in waar jy dit stuur —
 hulle staan met opset nie in hierdie lêer nie:** jou naam en rol onderaan, die
 maatskappy se adres, en die kontak-e-pos.
