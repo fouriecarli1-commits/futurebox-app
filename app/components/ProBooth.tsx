@@ -1243,7 +1243,15 @@ export default function ProBooth({
         });
         if (!response.ok) {
           const said = (await response.json().catch(() => ({}))) as { message?: string };
-          setProblem(said.message ?? t('pro.deRoomFailed', 'The room could not be taken off that lane.'));
+          /* The status when there are no words. Carli pressed this on
+             6 October and got the bare sentence, which means the refusal
+             carried no `message` at all — a `charge()` that answered with
+             only an `error`, or an engine that refused without one. Those
+             are different problems: a 402 is credits, a 413 is the file, a
+             500 is theirs. One number ends the guessing, and it is only
+             shown when the sentence could not be. */
+          setProblem(said.message
+            ?? `${t('pro.deRoomFailed', 'The room could not be taken off that lane.')} (${response.status})`);
           return;
         }
         const cleaned = await readInto(await response.blob(), rate);
