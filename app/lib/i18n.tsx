@@ -1636,6 +1636,8 @@ export const STRINGS: Dict = {
   "post.bringIn": { en: "Bring a picture in", af: "Bring \u2019n prent in" },
   "post.takeOut": { en: "Take it out", af: "Haal dit uit" },
   "post.behind": { en: "Behind", af: "Agter" },
+  "post.clearOff": { en: "Take the background off", af: "Haal die agtergrond af" },
+  "post.clearOn": { en: "Nothing behind it", af: "Niks agter dit" },
   "post.words": { en: "Words", af: "Woorde" },
   "post.addWords": { en: "Add words", af: "Sit woorde by" },
   "post.theWords": { en: "The words", af: "Die woorde" },

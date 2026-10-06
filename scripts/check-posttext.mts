@@ -20,7 +20,11 @@ import {
   POST_SIZES, clashes, fitText, moveInside, sizeById, wrap,
   type Box, type Measure,
 } from '../app/lib/posttext';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { ALL, boxOf } from '../app/lib/safezones';
+import { withoutComments } from './prose.mts';
+import { from, upTo } from './order.mts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -177,6 +181,44 @@ ok('  and it is the one shaped like the frame they were measured against',
   `${story.width}×${story.height} against the 1080×1920 those numbers were read for`);
 ok('  and every shape says what it is for, in both languages',
   POST_SIZES.every((one) => one.what.en.length > 20 && one.what.af.length > 20));
+
+/* ── Nothing behind it ────────────────────────────────────────────────────
+ 
+   She asked for transparency in the same breath as text and nice fonts, and
+   it is the one feature here that can work perfectly and still be unusable,
+   because a transparent post and a black post look identical on screen.
+ 
+   So the studio draws a checkerboard — but ONLY as a guide, in the same
+   branch the safe-zone bands live in, because `draw(sheet, false)` is what
+   the download uses. A checkerboard that drifts out of that branch bakes
+   itself into every transparent post ever exported, and nothing on screen
+   changes to say so.
+ 
+   Read out of the screen's own source rather than asserted about the engine,
+   because this is a drawing-order fault and the engine never sees it. */
+const studio = withoutComments(readFileSync(join('app', 'components', 'PostStudio.tsx'), 'utf8'));
+
+ok('nothing behind it is the absence of a fill, not a dark colour',
+  /useState<string \| null>\(/.test(studio) && /if \(back\) \{/.test(studio),
+  'a colour named "transparent" fills opaque black on a canvas; the fill has'
+  + ' to be skipped, which is what setting width or height already leaves');
+
+/* The checkerboard sits after `else if (guides)` and before the end of that
+   block. Finding the branch rather than the word is the point: the word can
+   be anywhere, the branch is where it has to be. */
+const board = upTo(from(studio, '} else if (guides) {'), '\n    }');
+ok('  and the checkerboard that proves it is drawn only as a guide',
+  board.includes('fillRect') && /#3f3f46|#27272a/.test(board),
+  'it is outside the `guides` branch, so every transparent post exports with'
+  + ' a grey checkerboard baked into it');
+
+ok('  and the download is a PNG, which is the only part that keeps the alpha',
+  /toBlob\([^)]*'image\/png'\)/.test(studio),
+  "a JPEG turns every transparent background black and the screen does not"
+  + ' change, so this would be found by a member and not by us');
+
+ok('  and the background can be put back without hunting for the colour again',
+  /setLastColour/.test(studio) && /back \?\? lastColour/.test(studio));
 
 if (bad) {
   console.error(`\ncheck:posttext — ${bad} assertion(s) failed.\n`);

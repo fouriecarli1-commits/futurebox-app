@@ -103,7 +103,14 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
   const { t, lang } = useLang();
   const [size, setSize] = useState<PostSize>(POST_SIZES[0]);
   const [picture, setPicture] = useState<HTMLImageElement | null>(null);
-  const [back, setBack] = useState('#111113');
+  /* `null` is nothing behind it, and not a colour that happens to be dark.
+ 
+     Her words: *"transparency"*, in the list beside text and nice fonts. A
+     post with no background is what gets layered over somebody else's video
+     or dropped onto a story with the platform's own picture showing through,
+     and a black square is the one thing it must not quietly become. */
+  const [back, setBack] = useState<string | null>('#111113');
+  const [lastColour, setLastColour] = useState('#111113');
   const [words, setWords] = useState<Words[]>([]);
   const [post, setPost] = useState(freshId);
   const [busy, setBusy] = useState(false);
@@ -137,8 +144,28 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
     if (!ctx) return;
     to.width = size.width;
     to.height = size.height;
-    ctx.fillStyle = back;
-    ctx.fillRect(0, 0, size.width, size.height);
+    /* Setting width or height clears the canvas to transparent, so "nothing
+       behind it" is the absence of this fill rather than a colour. */
+    if (back) {
+      ctx.fillStyle = back;
+      ctx.fillRect(0, 0, size.width, size.height);
+    } else if (guides) {
+      /* A checkerboard, and only on screen — `draw(sheet, false)` is what the
+         download uses, exactly as the safe-zone bands are.
+ 
+         Without it there is no way to tell a transparent post from a black
+         one: both preview as a dark square, the export differs, and she would
+         find out when a layered post came back with a black box behind it.
+         The feature would have worked and been unusable, which is worse than
+         it not being there. */
+      const step = Math.round(size.width / 24);
+      for (let y = 0; y < size.height; y += step) {
+        for (let x = 0; x < size.width; x += step) {
+          ctx.fillStyle = ((x / step) + (y / step)) % 2 === 0 ? '#3f3f46' : '#27272a';
+          ctx.fillRect(x, y, step, step);
+        }
+      }
+    }
 
     if (picture) {
       /* Covered, not stretched. A photograph squashed into a square is the
@@ -353,12 +380,29 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
             <span className={MIKRO}>{t('post.behind', 'Behind')}</span>
             <input
               type="color"
-              value={back}
-              onChange={(event) => setBack(event.target.value)}
+              data-postbehind
+              value={back ?? lastColour}
+              onChange={(event) => {
+                setLastColour(event.target.value);
+                setBack(event.target.value);
+              }}
               className="h-9 w-12 rounded border border-zinc-700 bg-zinc-950"
               aria-label={t('post.behind', 'Behind')}
             />
           </label>
+          {/* Turning it off remembers the colour, so coming back is one press
+              and not a hunt for the same dark grey again. */}
+          <button
+            type="button"
+            data-postclear
+            aria-pressed={back === null}
+            onClick={() => setBack(back === null ? lastColour : null)}
+            className={back === null ? VUL.replace('w-full ', '') : LEEG}
+          >
+            {back === null
+              ? t('post.clearOn', 'Nothing behind it')
+              : t('post.clearOff', 'Take the background off')}
+          </button>
         </div>
 
         {/* ── The words ─────────────────────────────────────────────────── */}
