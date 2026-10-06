@@ -1045,6 +1045,13 @@ jobs:
       - name: No screen posts a whole recording onto a request body
         run: npm run check:bodylimit
 
+      # A cover is generated on the spot or bought from an artist. Her
+      # decision, and a commercial one, which is why it needs a rule: it
+      # reads like a missing feature rather than a choice, and eleven
+      # screens now take a member's own photograph.
+      - name: A member's own picture cannot become album art
+        run: npm run check:ownart
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the
