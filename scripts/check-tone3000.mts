@@ -26,6 +26,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { withoutComments } from './prose.mts';
 import { cameBack, pkce, renewWith, selectUrl, tradeFor, WANTS } from '../app/lib/server/tone3000';
+import { captureWith } from '../app/lib/server/tone3000session';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -175,6 +176,100 @@ ok('nothing here reads a secret',
   'the publishable key is handed in and the secret belongs to the seam.'
   + ' This file is arithmetic, and arithmetic needs no credentials — which'
   + ' is also why it could be written and held before any exist');
+
+/* ── Bringing the chosen capture back ──────────────────────────────────── */
+
+/**
+ * A stored zip, built by hand.
+ *
+ * Stored and not deflated, so the bytes are the file and this needs no
+ * library. `unzip` in `server/zip.ts` is used by the stems route and by
+ * this, and until now nothing executed it at all.
+ */
+function zipOf(name: string, body: string): Buffer {
+  const nameBytes = Buffer.from(name, 'utf8');
+  const data = Buffer.from(body, 'utf8');
+  const crcTable: number[] = [];
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    crcTable[n] = c >>> 0;
+  }
+  let crc = 0xFFFFFFFF;
+  for (const byte of data) crc = crcTable[(crc ^ byte) & 0xFF] ^ (crc >>> 8);
+  crc = (crc ^ 0xFFFFFFFF) >>> 0;
+
+  const local = Buffer.alloc(30);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt32LE(crc, 14);
+  local.writeUInt32LE(data.length, 18);
+  local.writeUInt32LE(data.length, 22);
+  local.writeUInt16LE(nameBytes.length, 26);
+
+  const central = Buffer.alloc(46);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(20, 6);
+  central.writeUInt32LE(crc, 16);
+  central.writeUInt32LE(data.length, 20);
+  central.writeUInt32LE(data.length, 24);
+  central.writeUInt16LE(nameBytes.length, 28);
+  central.writeUInt32LE(0, 42);
+
+  const localPart = Buffer.concat([local, nameBytes, data]);
+  const centralPart = Buffer.concat([central, nameBytes]);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(1, 8);
+  end.writeUInt16LE(1, 10);
+  end.writeUInt32LE(centralPart.length, 12);
+  end.writeUInt32LE(localPart.length, 16);
+  return Buffer.concat([localPart, centralPart, end]);
+}
+
+const SIGNED = 'https://storage.example.test/t/abc.zip?sig=xyz';
+const NAM = '{"version":"0.5.2","architecture":"WaveNet"}';
+const asked: { url: string; auth: string | null }[] = [];
+const realFetch = globalThis.fetch;
+globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+  const where = String(url);
+  asked.push({ url: where, auth: new Headers(init?.headers).get('authorization') });
+  if (where.includes('/download')) {
+    return new Response(JSON.stringify({ url: SIGNED, expires_at: 'later', filename: 'a.zip' }));
+  }
+  /* A view over the bytes, not the Buffer itself: TypeScript does not accept
+     a Node Buffer as a BodyInit, and the sweep caught it where the app build
+     did not — `check:types` reads scripts/ as well. */
+  return new Response(new Uint8Array(zipOf('1234.nam', NAM)));
+}) as typeof globalThis.fetch;
+
+let brought: Awaited<ReturnType<typeof captureWith>>;
+try {
+  brought = await captureWith('HER-TOKEN', '42');
+} finally {
+  globalThis.fetch = realFetch;
+}
+
+ok('the chosen tone comes back as a capture the amp can load',
+  brought.how === 'got' && brought.nam === NAM,
+  JSON.stringify(brought).slice(0, 140));
+
+ok('  and the tone is asked for with HER token',
+  asked[0]?.auth === 'Bearer HER-TOKEN' && asked[0]?.url.includes('/tones/42/download'),
+  'every call to them is on the member\'s own sign-in, never on an account'
+  + ' key — there is no account key for this supplier');
+
+ok('  and the signed link is fetched BARE',
+  asked[1]?.url === SIGNED && asked[1]?.auth === null,
+  'their own note beside that endpoint says no auth header is needed, and'
+  + ' the link points at storage. A header here puts a member\'s TONE3000'
+  + ' token on a host that is not TONE3000, and nothing downstream would'
+  + ' complain. This is the assertion the whole two-door seam exists for');
+
+ok('  and the files are asked for by id, not by name',
+  asked[0]?.url.includes('filenames=id'),
+  'a name inside that archive comes from whoever uploaded the tone: two can'
+  + ' share one, and a name carrying ../ is zip-slip');
 
 if (bad) {
   console.error(`\ncheck:tone3000 — ${bad} assertion(s) failed.\n`);

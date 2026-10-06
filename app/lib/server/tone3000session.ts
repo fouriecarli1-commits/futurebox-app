@@ -30,7 +30,10 @@
 import { admin } from './account';
 import { resolveSurfaceId } from '../surfaces';
 import { wrote } from './wrote';
-import { cameBack, pkce, selectUrl, tradeFor, TOKEN, type CameBack } from './tone3000';
+import {
+  API, cameBack, downloadPath, pkce, selectUrl, tradeFor, TOKEN, type CameBack,
+} from './tone3000';
+import { pick, unzip } from './zip';
 
 /**
  * The publishable key, read by its literal name.
@@ -232,4 +235,74 @@ export async function finish(
   return read.how === 'chose'
     ? { how: 'chose', toneId: read.toneId, room }
     : { how: 'left', room };
+}
+
+
+/**
+ * The chosen tone, as a capture `lib/nam.ts` can load.
+ *
+ * ── Two addresses from one supplier, with opposite rules ─────────────────
+ *
+ * `GET /tones/{id}/download` answers with `{ url, expires_at, filename }`,
+ * and that `url` is a temporary signed link to a zip on storage. Their own
+ * note beside it says no auth header is needed — and sending one there would
+ * put a member's TONE3000 token on a host that is not TONE3000, where
+ * nothing downstream would complain. So the second fetch is BARE. It is the
+ * reason `suppliers.ts` has two doors and the reason `call()` refuses a
+ * whole address: the rule is written where it can be enforced rather than
+ * remembered here.
+ *
+ * ── And it is a zip, not a capture ───────────────────────────────────────
+ *
+ * A tone can carry more than one model, so what comes back is an archive.
+ * `lib/nam.ts` loads one `.nam`. The first one is taken, and an archive with
+ * no `.nam` in it is said rather than silently handed on as an empty file.
+ */
+export type Fetched =
+  | { readonly how: 'got'; readonly name: string; readonly nam: string }
+  | { readonly how: 'no'; readonly why: string };
+
+export async function captureFor(owner: string, toneId: string): Promise<Fetched> {
+  const client = admin();
+  if (!client) return { how: 'no', why: 'database' };
+
+  const { data } = await client
+    .from('tone3000_tokens')
+    .select('access, dies_at')
+    .eq('owner', owner)
+    .maybeSingle();
+  if (!data?.access) return { how: 'no', why: 'signin' };
+  /* Said rather than attempted. An expired token comes back as a 401 whose
+     message is about authorisation, which reads like our own key being wrong
+     — and the answer is for her to sign in to TONE3000 again, which only
+     this branch can say. Renewal is `renewWith()` and is not wired yet. */
+  if (new Date(data.dies_at).getTime() <= Date.now()) return { how: 'no', why: 'expired' };
+
+  return captureWith(data.access, toneId);
+}
+
+/**
+ * The two fetches and the unzip, with the token handed in.
+ *
+ * Split from `captureFor` so a check can open it. The rule worth proving is
+ * which call carries the credential and which must not, and a function that
+ * reads the database first cannot be opened without one — so the part that
+ * matters would have been held by reading the source rather than running it.
+ */
+export async function captureWith(access: string, toneId: string): Promise<Fetched> {
+  const told = await fetch(`${API}${downloadPath(toneId)}`, {
+    headers: { Authorization: `Bearer ${access}` },
+  });
+  if (!told.ok) return { how: 'no', why: told.status === 404 ? 'gone' : 'refused' };
+  const said = await told.json().catch(() => null) as { url?: string } | null;
+  if (!said?.url) return { how: 'no', why: 'refused' };
+
+  /* Bare. No Authorization, no supplier door — see the note above. */
+  const zipped = await fetch(said.url);
+  if (!zipped.ok) return { how: 'no', why: 'store' };
+
+  const entries = unzip(Buffer.from(await zipped.arrayBuffer()));
+  const found = pick(entries, ['.nam']);
+  if (!found) return { how: 'no', why: 'nonam' };
+  return { how: 'got', name: found.name, nam: found.bytes.toString('utf8') };
 }

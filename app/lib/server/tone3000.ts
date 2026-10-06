@@ -42,6 +42,21 @@ import { createHash, randomBytes } from 'node:crypto';
 const AUTHORIZE = 'https://www.tone3000.com/api/v1/oauth/authorize';
 export const TOKEN = 'https://www.tone3000.com/api/v1/oauth/token';
 
+/** Their API, which is where a tone and its files are asked for. */
+export const API = 'https://www.tone3000.com/api/v1';
+
+/**
+ * Where a tone's files are asked for.
+ *
+ * `filenames=id` and not the default `name`. A name inside that archive comes
+ * from whoever uploaded the tone: two files can share one, and a name
+ * carrying `../` is zip-slip — an entry that unpacks outside the folder it is
+ * unpacked into. Ids collide with nothing and carry nothing.
+ */
+export function downloadPath(toneId: string): string {
+  return `/tones/${encodeURIComponent(toneId)}/download?filenames=id`;
+}
+
 /**
  * What the cutting room asks for.
  *
