@@ -254,6 +254,7 @@
     "checks": "tsx scripts/run-source-checks.mts",
     "check:everycheck": "tsx scripts/check-everycheck.mts",
     "check:songwindow": "node audit/songwindow.mjs",
+    "check:coverwall": "tsx scripts/check-coverwall.mts",
     "check:boothback": "node audit/boothback.mjs",
     "check:boothwalk": "node audit/boothwalk.mjs",
     "check:whitescreen": "node audit/whitescreen.mjs",

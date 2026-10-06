@@ -1023,6 +1023,14 @@ jobs:
       - name: The art market's money adds up, and the share is on profit
         run: npm run check:artmarket
 
+      # And the wall the market stands behind. Carli, 6 October: a cover is
+      # generated on the spot or bought, and a member's own picture is not an
+      # option — otherwise nobody buys art. It held by accident until this:
+      # one route writes a cover, its bytes come off the engine rather than
+      # off the request, and a bought piece is a reference rather than a copy.
+      - name: A member's own picture cannot become a cover
+        run: npm run check:coverwall
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the
