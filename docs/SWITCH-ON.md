@@ -205,9 +205,17 @@ things follow, and the second one needs doing by hand:
 
 ### 9. Music.ai
 
-`MUSIC_AI_API_KEY`, then `MUSIC_AI_WORKFLOW_READ` and
-`MUSIC_AI_WORKFLOW_STEMS` — slugs you create in their dashboard, which this app
-cannot guess.
+`MUSIC_AI_API_KEY`, then `MUSIC_AI_WORKFLOW_READ`,
+`MUSIC_AI_WORKFLOW_STEMS` and `MUSIC_AI_WORKFLOW_ALIGN` — slugs you create in
+their dashboard, which this app cannot guess.
+
+The third one is named before anything uses it, on purpose. `/api/align` runs
+on ElevenLabs today and alignment is one of the three things Music.ai would
+take over — see `docs/WEG-VAN-ELEVENLABS.md`. Switching a working feature's
+supplier is not work to do against a slug that does not exist, but naming it
+now means three workflows get made in one trip to their dashboard instead of
+two and then a third later. Leave it unset until then; nothing reads it and
+nothing breaks.
 **How to tell:** `https://<your app>/api/analyse/setup?key=<POST_SECRET>` lists
 the workflows actually on the account and says which slugs are set.
 

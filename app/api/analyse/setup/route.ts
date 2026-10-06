@@ -21,7 +21,10 @@
  */
 
 import crypto from 'node:crypto';
-import { configured, listWorkflows, looksLikeVoiceConversion, slugFor, whoAmI } from '@/app/lib/server/musicai';
+import {
+  WORKFLOWS, configured, listWorkflows, looksLikeVoiceConversion, slugFor, whoAmI,
+  type Flow,
+} from '@/app/lib/server/musicai';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -81,10 +84,17 @@ export async function GET(request: Request): Promise<Response> {
     /* What is set now, beside what exists — so the difference between "not
        configured" and "configured wrongly" is visible in one screen rather
        than being worked out from a failing job. */
-    using: {
-      MUSIC_AI_WORKFLOW_READ: slugFor('read') || null,
-      MUSIC_AI_WORKFLOW_STEMS: slugFor('stems') || null,
-    },
+    /* Built from `WORKFLOWS` rather than typed out, so a slug added to the
+       map cannot be missing from the one screen that exists to say which
+       slugs are set. The list was written by hand and `align` would have
+       been invisible here the day it was added — which is the whole failure
+       this page is for, one level up. */
+    using: Object.fromEntries(
+      (Object.keys(WORKFLOWS) as Flow[]).map((one) => [
+        `MUSIC_AI_WORKFLOW_${one.toUpperCase()}`,
+        slugFor(one) || null,
+      ]),
+    ),
     yourWorkflows: workflows.map((one) => ({ slug: one.slug, name: one.name })),
     next:
       workflows.length === 0

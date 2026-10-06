@@ -76,11 +76,44 @@ export interface Workflow {
 export const WORKFLOWS = {
   read: () => process.env.MUSIC_AI_WORKFLOW_READ ?? '',
   stems: () => process.env.MUSIC_AI_WORKFLOW_STEMS ?? '',
+  /**
+   * Lyric alignment — where each word actually falls in the song.
+   *
+   * Here before anything calls it, and that is the point. `/api/align` runs
+   * on ElevenLabs today and `docs/WEG-VAN-ELEVENLABS.md` has alignment as
+   * one of the three things Music.ai would take over. Switching a working
+   * feature's supplier is layer-two work — the request and response shapes
+   * differ and the seam says so about itself — and it is not work to do
+   * against a slug that does not exist yet.
+   *
+   * What this buys today is one trip to their dashboard instead of two.
+   * Carli has to make a workflow for each of these by hand; naming the
+   * third one now means she makes three while she is in there rather than
+   * coming back for it the week the ElevenLabs deadline lands.
+   *
+   * Their catalogue has `Lyric Transcription and Alignment` and `Subtitle
+   * Transcription and Alignment` — the second aligns "by line, word, or
+   * syllable", which is the shape `lib/lyrictime.ts` wants.
+   */
+  align: () => process.env.MUSIC_AI_WORKFLOW_ALIGN ?? '',
 } as const;
 
-export type Which = keyof typeof WORKFLOWS;
+/** Every workflow this account needs a slug for. */
+export type Flow = keyof typeof WORKFLOWS;
 
-export function slugFor(which: Which): string {
+/**
+ * The two jobs the analyse room can ask for.
+ *
+ * Deliberately NOT `keyof typeof WORKFLOWS`. It was, and adding `align` to
+ * the slug map made the room's price table fail to compile — which is the
+ * type system saying the right thing: a slug existing is not the same as a
+ * job the room can run, and had the two stayed one name, naming the third
+ * workflow would have silently opened a second alignment path beside
+ * `/api/align` with no price behind it.
+ */
+export type Which = 'read' | 'stems';
+
+export function slugFor(which: Flow): string {
   return WORKFLOWS[which]();
 }
 

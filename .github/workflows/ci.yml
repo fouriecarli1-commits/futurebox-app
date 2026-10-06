@@ -319,6 +319,8 @@ jobs:
         run: npm run check:tone3000route
       - name: "Nothing reaches a supplier for free by accident"
         run: npm run check:gratis
+      - name: "Every Music.ai workflow this app names is one she can actually set"
+        run: npm run check:werkvloeie
       - name: "All three lanes can be picked, and the lines cut the one that is"
         run: npm run check:soundlanes
       - name: "Listening to a song's words again costs nothing, and really listens again"

@@ -134,6 +134,7 @@
     "check:tone3000": "tsx scripts/check-tone3000.mts",
     "check:tone3000route": "tsx scripts/check-tone3000route.mts",
     "check:gratis": "tsx scripts/check-gratis.mts",
+    "check:werkvloeie": "tsx scripts/check-werkvloeie.mts",
     "check:soundlanes": "tsx scripts/check-soundlanes.mts",
     "check:listenfree": "tsx scripts/check-listenfree.mts",
     "check:heardhere": "tsx scripts/check-heardhere.mts",
