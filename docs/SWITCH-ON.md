@@ -627,7 +627,16 @@ krediet weg as vantevore, en die prys moet verander.
 
 Die bladsy dra geen teks, klank of naam nie — net getalle en hulle versoek-id's
 — so dit is veilig om in 'n gesprek te plak. Dit weier sonder `POST_SECRET`.
-| `ANTHROPIC_API_KEY` | The copilot in every room. |
+
+### Die laaste vier, en drie van hulle het niks nodig nie
+
+Hierdie vier rye het lank sonder 'n tabelkop gestaan, wat beteken hulle is as
+gewone teks met pype tussen gewys in plaas van 'n tabel — op die een bladsy
+waarvan jy werk.
+
+| Variable | What it is |
+|---|---|
+| `ANTHROPIC_API_KEY` | The copilot in every room. Set already, if the copilot answers you. |
 | `NEXT_PUBLIC_BUILD_SHA` | **Niks om te stel nie.** `next.config.mjs` bak dit in uit Vercel se eie `VERCEL_GIT_COMMIT_SHA`, sodat `/oops` kan sê watter weergawe op die foon is. |
 | `NEXT_PUBLIC_BUILT_AT` | **Niks om te stel nie.** Dieselfde plek, die dag waarop gebou is. |
 | `PROBE` | **Niks om te stel nie, en moet nooit op Vercel gestel word nie.** `PROBE=1` laat `*.probe.tsx` as bladsye tel, sodat die blaaierseine iewers het om 'n komponent te monteer. 'n Produksiebou kan hulle nie sien nie. |

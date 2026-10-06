@@ -114,7 +114,62 @@ export type Flow = keyof typeof WORKFLOWS;
 export type Which = 'read' | 'stems';
 
 export function slugFor(which: Flow): string {
-  return WORKFLOWS[which]();
+  /* Trimmed, because the value gets here by being pasted into a web form.
+     A slug never legitimately begins or ends with a space, and a stray one
+     is otherwise a job that fails at their end under a name that looks
+     right in every screen we have. */
+  return WORKFLOWS[which]().trim();
+}
+
+/** A variable, the slug it holds, and whether that slug is really there. */
+export interface SlugSetting {
+  /** The slug as set, or null when the variable is empty. */
+  readonly slug: string | null;
+  /** What the account calls that workflow, when it is on the account. */
+  readonly name: string | null;
+  /** False for a slug that is set but not among the account's workflows. */
+  readonly onAccount: boolean;
+}
+
+/**
+ * What is set, matched against what the account actually has.
+ *
+ * Saying which slugs are set is half the question. The half that bites is a
+ * slug that IS set and is not a workflow on the account — a typo, a renamed
+ * workflow, a value pasted into the wrong variable — because nothing notices
+ * until a job runs, and by then the credits are taken and the failure comes
+ * back under a name nobody created.
+ *
+ * That is not a hypothetical. A workflow saved without being given a name
+ * comes out of their dashboard as `untitled-workflow-` and seven hex
+ * characters, so two of them are the same words a few characters apart, in
+ * the middle. Both are valid slugs. Swapped, every job still starts and the
+ * wrong one runs.
+ *
+ * So the account's own list is the authority and this is the join. Built from
+ * `WORKFLOWS` rather than a written-out list of names, so a slug added to the
+ * map cannot be missing from the one screen that exists to report them.
+ */
+export function whatIsSet(workflows: readonly Workflow[]): Record<string, SlugSetting> {
+  const bySlug = new Map(workflows.map((one) => [one.slug, one]));
+  return Object.fromEntries(
+    (Object.keys(WORKFLOWS) as Flow[]).map((one) => {
+      const slug = slugFor(one);
+      const found = slug ? bySlug.get(slug) : undefined;
+      return [`MUSIC_AI_WORKFLOW_${one.toUpperCase()}`, {
+        slug: slug || null,
+        name: found?.name ?? null,
+        onAccount: Boolean(found),
+      }];
+    }),
+  );
+}
+
+/** The variables holding a slug this account does not have. */
+export function wrongSlugs(set: Record<string, SlugSetting>): string[] {
+  return Object.entries(set)
+    .filter(([, one]) => one.slug !== null && !one.onAccount)
+    .map(([name]) => name);
 }
 
 async function call<T>(
