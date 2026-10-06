@@ -1582,11 +1582,35 @@ export default function ProBooth({
       const said = await answer.json().catch(() => null) as
         { nam?: string; name?: string; why?: string } | null;
       if (!answer.ok || !said?.nam) {
-        /* HER TONE3000 sign-in, not ours, and the thing to do about it is
-           to go back through their door — which no other refusal means. */
-        setT3kSaid(said?.why === 'signin' || said?.why === 'expired'
-          ? t('pro.t3kAgain', 'Sign in to TONE3000 again to bring this amp in.')
-          : t('pro.t3kGone', 'That amp could not be brought in.'));
+        /* ── Why, and not just that ───────────────────────────────────
+ 
+           This said "That amp could not be brought in" for six different
+           refusals. Carli pressed it on 6 October, got that sentence, and
+           neither of us could tell an amp with no NAM file in it from
+           TONE3000 refusing the download from our own database being
+           unreachable — three problems with three different answers, and
+           one of them is "pick a different amp", which she could have done
+           in ten seconds if anything had said so.
+ 
+           The route has carried `why` since it was written. The screen was
+           throwing it away. Her TONE3000 sign-in keeps its own line because
+           it is the only one whose answer is to go back through their
+           door. */
+        setT3kSaid(
+          said?.why === 'signin' || said?.why === 'expired'
+            ? t('pro.t3kAgain', 'Sign in to TONE3000 again to bring this amp in.')
+            : said?.why === 'nonam'
+              ? t('pro.t3kNoNam', 'That one has no NAM capture in it — it may be in another format, like AIDA-X. Pick an amp whose files list a .nam.')
+              : said?.why === 'gone'
+                ? t('pro.t3kNoFile', 'TONE3000 has no file to download for that amp.')
+                : said?.why === 'store'
+                  ? t('pro.t3kStore', 'The file was found and would not download. Worth one more try.')
+                  : said?.why === 'refused'
+                    ? t('pro.t3kRefused', 'TONE3000 refused the download. Try another amp; if it keeps happening, sign in to TONE3000 again.')
+                    : said?.why === 'database'
+                      ? t('pro.t3kOurs', 'Something on our side could not be reached. Try again in a moment.')
+                      : t('pro.t3kGone', 'That amp could not be brought in.'),
+        );
         return;
       }
       const name = ampName(said.nam);
@@ -4355,19 +4379,40 @@ function LaneRow({
 
           Two places to cut the same lane would also be two places to
           disagree about where the cut is. */}
+      {/* ── The word, which this did not have ─────────────────────────
+ 
+          Carli, 6 October 2026: *"Daai drie strepies ekstra funksies is
+          darem baie weggesteek."*
+ 
+          She is right, and the fault was not where the drawer sits. Behind
+          this one button are the cleaners, the whole tone stack and the amp
+          — and it carried a slider icon and nothing else. A `title` and an
+          `aria-label` are not a label: the first needs a mouse resting on
+          it, which a phone does not have, and the second is for a screen
+          reader. Somebody looking at the screen saw three stripes.
+ 
+          The order inside stays as it is. Cleaners, then tone, then amp is
+          the order the sound actually runs through, and that is not a
+          preference to shuffle for findability. What was wrong is that
+          nothing said the drawer was there.
+ 
+          `data-tonedrawer` so a probe can say the word is on it rather than
+          that a button exists. */}
       <button
         type="button"
+        data-tonedrawer=""
         onClick={() => setOpen((was) => !was)}
         aria-expanded={open}
         title={t('pro.tone', 'Tone')}
         aria-label={t('pro.tone', 'Tone')}
-        className={`flex-shrink-0 p-2.5 sm:p-1.5 rounded-lg border ${
+        className={`flex-shrink-0 flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2 sm:px-2 sm:py-1 rounded-lg border text-xs font-bold ${
           isClean(lane.tone)
-            ? 'border-zinc-800 text-zinc-600 hover:text-zinc-300'
+            ? 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
             : 'border-emerald-500/50 text-emerald-400'
         }`}
       >
-        <Sliders className="w-4 h-4" />
+        <Sliders className="w-4 h-4 flex-shrink-0" />
+        {t('pro.tone', 'Tone')}
       </button>
 
       {/* Sized by what is in it, not by a number that was right once.

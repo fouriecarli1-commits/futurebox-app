@@ -437,6 +437,18 @@ try {
      reason about the door that turned out to be wrong — see
      `audit/boothback.mjs`, which walks the way back. This is the other
      half: that the way OUT is in the room, where somebody can press it. */
+  /* The word on the drawer, not just the drawer.
+     Carli found the cleaners, the tone stack and the amp all behind one
+     unlabelled slider icon: "darem baie weggesteek". A title and an
+     aria-label are not a label — one needs a mouse, the other a screen
+     reader — so this asks for the text a person can actually see. */
+  const drawer = p.locator('[data-tonedrawer]').first();
+  const onIt = ((await drawer.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
+  check('the drawer that holds the amp says what it is',
+    af ? /Toon/.test(onIt) : /Tone/.test(onIt),
+    `the button reads "${onIt}" — everything in here is behind it, and an icon`
+    + ' on its own is a feature nobody finds');
+
   check('the amp row offers a capture off this phone',
     (await p.locator('input[type="file"][accept*="nam"]').count()) > 0,
     'the file picker is how a .nam already on the device gets in');
