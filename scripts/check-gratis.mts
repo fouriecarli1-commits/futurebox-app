@@ -56,6 +56,12 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 const SPENDS = [
   'server/suppliers', 'server/eleven', 'server/musicai', 'server/kits',
   'server/cover', 'server/video/eleven', 'server/sayit',
+  /* TONE3000 costs us nothing and is here anyway. "Spends" is the wrong
+     word for it and the right list: the question this file asks is whether
+     a route reaching OUT is accounted for, and a supplier that is free
+     today is a supplier whose terms can change. Left out, the three
+     TONE3000 routes would be invisible to the one rule that counts them. */
+  'server/tone3000session',
 ];
 
 /**
@@ -137,6 +143,18 @@ const FREE: Record<string, string> = {
   'app/api/kits/face/route.ts':
     'the picture for a singing voice, passed through this app rather than'
     + ' linked, for the same policy reason as the voice sample',
+  'app/api/tone3000/start/route.ts':
+    'sends her to TONE3000 to choose an amp. Their fees are waived for us and'
+    + ' she signs in with her OWN account, so there is no bill behind any of'
+    + " this — and the capture runs in her browser through lib/nam.ts, not on"
+    + ' anything we pay for',
+  'app/api/tone3000/callback/route.ts':
+    'where they send her back. It trades a code for tokens on her behalf and'
+    + ' spends nothing doing it',
+  'app/api/tone3000/tone/route.ts':
+    'fetches the capture she chose, on her own token. Free for the same'
+    + ' reason as the two above: this supplier has no account key and sends'
+    + ' us no invoice',
   'app/api/kits/setup/route.ts':
     'lists what is on the Kits account. A setup page on a secret',
 };

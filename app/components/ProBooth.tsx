@@ -4035,6 +4035,34 @@ function LaneRow({
     onChange({ amped: { name, audio } });
   };
 
+  /* ── The door out to TONE3000 is NOT here yet, on purpose ────────────
+ 
+     The server side is finished and held by checks: `/api/tone3000/start`
+     sends her, the callback brings her back with a tone id and the room she
+     left, and `/api/tone3000/tone` turns that id into a `.nam`.
+ 
+     What is missing is where the capture LANDS. `runThrough` above puts an
+     amp on THIS lane, and the return journey has no lane: she leaves, their
+     page loads, she comes back on a fresh page, and the lane she pressed on
+     may not exist any more. Remembering a lane id across that is remembering
+     something that can go stale while she is away.
+ 
+     The answer is the shelf below — she comes back, the amp is on it, and
+     one press puts it on any lane — and the shelf is owned a level above
+     this row. That move is the next piece of work.
+ 
+     A button was written here and taken back out rather than shipped
+     half-wired: until the capture has somewhere to land, "Browse TONE3000"
+     sends her out and brings her back to nothing.
+     `docs/FUNCTION_INVENTORY.md` says it plainly — a button that looks like
+     it does something and does not is worse than no button.
+ 
+     Taken out with it: a split of this function into a text-taking half.
+     It was written for the return journey and nothing else used it, and a
+     refactor whose only caller has been removed is a shape kept for a
+     feature that does not exist. `check:ampshelf` reads THIS function for
+     the run-it-before-you-keep-it rule and the size rule, and the split
+     moved both out of its reach — which is how it was noticed. */
   const bringAmp = async (file: File) => {
     setAmping(true);
     setAmpFailed('');
