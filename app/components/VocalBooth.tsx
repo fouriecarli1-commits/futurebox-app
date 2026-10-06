@@ -189,6 +189,29 @@ export default function VocalBooth({
   const [deskOpen, setDeskOpen] = useState(false);
   /** The multitrack view, over this one. */
   const [proOpen, setProOpen] = useState(false);
+
+  /* ── Back from TONE3000, which lands on THIS room and not on the pro
+        screen that reads it ────────────────────────────────────────────
+ 
+     Their callback sends her to `/?t3k=…&room=booth`, and `booth` is this
+     room. The amp row, and everything that knows what to do with a tone
+     id, is inside `ProBooth` — a screen behind the Lanes and mixing
+     button. So she came back, the room opened, and nothing read the
+     address, because the only reader was not on the screen.
+ 
+     Found by `audit/t3kback.mjs` walking a cold page with the query on it,
+     which is what a redirect from another site actually is. No source
+     check could have seen it: both halves were correct on their own and
+     the fault was that one of them never mounted.
+ 
+     Opened here rather than moving the reader out, because the pro screen
+     is where an amp belongs and because coming back to the lanes is what
+     she was doing when she left. The plan gate still applies — `proAllowed`
+     below — and a member without one lands in the room with the amp
+     waiting for the day they have a plan, rather than on a blank screen. */
+  useEffect(() => {
+    if (new URL(window.location.href).searchParams.get('t3k')) setProOpen(true);
+  }, []);
   const [guideLevel, setGuideLevel] = useState(0.7);
   const [backingLevel, setBackingLevel] = useState(0.85);
   const [takeLevel, setTakeLevel] = useState(1);

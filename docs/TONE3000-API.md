@@ -395,6 +395,46 @@ substring op die **titel**, wat met `gear` kombineer.
 `GET /user` is wat ontwerpvereiste 4 se *"the signed-in user's avatar and
 username"* voed, en `GET /tones/created` is die **Created**-oortjie.
 
+## Die een hop wat nog ontbreek, en hoe dit gevind is
+
+Alles behalwe die **laaste treë terug** is gebou en onder checks: die
+handdruk, die callback, die kamer wat onthou word, en die roete wat 'n
+toon-id in 'n `.nam` verander.
+
+Wat nie werk nie: **om haar binne-in die kamer te laat land ná sy terugkom.**
+
+'n Koue bladsy op `/?t3k=ja&tone=…&room=booth` sit haar voor die
+**studio-deur** met die booth se kaart, nie in die kamer nie. `goToRoom` op
+'n koue bladsy wys 'n kamer eerder as om hom oop te maak, en ná 'n volle
+bladsy-laai is die liedjie waaraan sy gewerk het ook nie meer gekies nie —
+so `VocalBooth`, en die `ProBooth`-skerm daarbinne wat die toon lees, monteer
+nooit.
+
+Die **Browse TONE3000**-knoppie is geskryf, gestuur, en weer uitgehaal
+presies hieroor. 'n Deur wat na 'n kamer-kieser terugkeer, is die
+"erger as geen knoppie"-geval.
+
+**Hoe dit gevind is, en wat die volgende persoon moet herbou.** 'n Probe wat
+`/?t3k=ja&tone=42&room=booth` **koud** oopmaak — wat is wat 'n herleiding van
+'n ander webwerf af werklik is — met 'n liedjie gesaai soos
+`audit/boothwalk.mjs` dit doen, en `/api/tone3000/tone` gestub. Hy het vier
+dinge gemeet:
+
+1. maak die booth oop
+2. 'n vaslegging wat die enjin nie kan lees nie, word **benoem** en nie
+   stilweg gehou nie
+3. die toon word van die adres **afgehaal**
+4. `?t3k=af` — sy het hul venster toegemaak sonder om te kies — word **gesê**
+   en nie verswyg nie
+
+Al vier faal vandag, en almal om dieselfde rede: die leser monteer nie.
+
+Die probe self is **weggegooi** en nie gehou nie, want
+`check:everycheck` weier 'n probe wat nie in CI is nie — *"a check nobody
+runs is not a safety net, it is a claim that there is one."* Hy is reg. Die
+bevinding is hier; die probe word saam met die regmaak herskryf, en dan gaan
+hy CI toe.
+
 ## Die hele ketting, end tot end
 
 Niks blokkeer meer nie:

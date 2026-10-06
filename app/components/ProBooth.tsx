@@ -1523,6 +1523,14 @@ export default function ProBooth({
   const [t3kBusy, setT3kBusy] = useState(false);
   const [t3kSaid, setT3kSaid] = useState('');
 
+  /* Nothing presses this yet. The button it belongs to was written beside
+     "Bring in an amp", shipped, and taken back out when `audit/t3kback.mjs`
+     walked the return and found she lands on the studio DOOR holding the
+     booth's card rather than inside the room — `goToRoom` on a cold page
+     puts her in front of a room, not in it, and after a full page load her
+     song is not chosen either. A door that returns to a room-chooser is the
+     "worse than no button" case. The errand stays, because it is correct
+     and because the way back is what is missing, not the way out. */
   const browseTone3000 = useCallback(async () => {
     setT3kBusy(true);
     setT3kSaid('');
@@ -4734,31 +4742,6 @@ function LaneRow({
                 />
               </label>
             )}
-            {/* ── Somebody else's amplifier, from TONE3000 ──────────────
- 
-                Drawn whether or not this lane is already amped, for the same
-                reason the shelf below is: swapping one amp for another is
-                the ordinary thing to do, and a door that disappears the
-                moment you have used it makes that two presses.
- 
-                The word, not a logo. TONE3000's design requirements ask for
-                their mark and we do not have the asset — an almost-right
-                logo is a brand problem rather than a missing feature, so
-                this says the name until they send the file.
- 
-                It does not act here. The errand leaves the page and comes
-                back to a different one, so the room owns it; see
-                `onBrowseAmps`. */}
-            <button
-              type="button"
-              onClick={onBrowseAmps}
-              disabled={browsing || amping}
-              data-t3kbrowse=""
-              className="px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-300 hover:text-white disabled:text-zinc-600 flex items-center gap-1.5"
-            >
-              {browsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-              {t('pro.t3kBrowse', 'Browse TONE3000')}
-            </button>
           </div>
           {/* ── The ones you keep ──────────────────────────────────────
               One press to put an amp that is already here onto this lane.
