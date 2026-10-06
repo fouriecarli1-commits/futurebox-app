@@ -165,9 +165,13 @@ try {
     reads - before >= 2,
     `${reads - before} read(s) — one read is the wall from before she paid`);
 
-  /* ── And the two things she said were missing ─────────────────────── */
-  check('the countdown is on the piece', /\d+u \d+m|\d+m (left|oor)/i.test(words),
-    words.replace(/\s+/g, ' ').slice(0, 160));
+  /* ── And the thing she said was missing ───────────────────────────── */
+  /* A countdown was the other half of this, and it was one of the two
+     things she reported as missing after a payment: she came back and the
+     clock was gone. There is no clock on a fixed-price wall, so the rule
+     that held it is not rewritten — it is gone with the auction. What it
+     was really guarding is below: that she comes back to the PIECE and not
+     to a room she has to find her way into again. */
 
   /* The sheet is already open — the till carried the piece back and the room
      opened it, which is the whole of her second complaint. So this no longer
@@ -175,7 +179,7 @@ try {
      its own sheet times out, which is how this step first failed after the
      fix landed. It reads what is on screen. */
   const onSheet = await p.locator('body').innerText();
-  check('the bid button is there, not the R50 pass again',
+  check('she comes back to the piece, at its price, with no buy-in in sight',
     /R280/.test(onSheet) && !/R50/.test(onSheet),
     onSheet.replace(/\s+/g, ' ').slice(0, 200));
 

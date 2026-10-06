@@ -35,7 +35,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { CREDITS, TIER_CREDITS, dubCost, videoCost } from '../app/lib/credits';
+import { creditsSaid, CREDITS, TIER_CREDITS, dubCost, videoCost } from '../app/lib/credits';
 import { ADDONS } from '../app/lib/addons';
 import { TIER_SPECS, type Tier } from '../app/lib/plans';
 
@@ -290,6 +290,37 @@ for (const tier of ['maker', 'studio', 'label'] as const) {
     TIER_SPECS[tier].songs === songs && TIER_SPECS[tier].videos === videos,
     `the fields say ${TIER_SPECS[tier].songs} songs and ${TIER_SPECS[tier].videos}`
     + ` videos, the sentence beside them says ${songs} and ${videos}`);
+}
+
+/* ── "1 credit", not "1 credits" ───────────────────────────────────────
+
+   This app had no flat price of exactly one until the post studio, so every
+   screen that printed an amount said `${n} credits` and was right every
+   time. The first one-credit price made it wrong in both languages — "1
+   credits" and "1 krediete" — on a button somebody presses to pay.
+
+   Executed rather than grepped: the function is given a translator that
+   answers with the key, so what is asserted is WHICH word it reaches for,
+   and then the dictionary is read to check both words are really there and
+   really differ. A singular that resolves to the plural would pass the
+   first half on its own. */
+{
+  const say = (key: string) => key;
+  ok('one credit is said in the singular',
+    creditsSaid(1, say) === '1 credits.one', creditsSaid(1, say));
+  ok('  and two in the plural',
+    creditsSaid(2, say) === '2 credits.credits', creditsSaid(2, say));
+
+  const words = readFileSync('app/lib/i18n.tsx', 'utf8');
+  const said = (key: string, tongue: string): string =>
+    new RegExp(`"${key}":\\s*\\{[^}]*${tongue}:\\s*"([^"]*)"`).exec(words)?.[1] ?? '';
+  for (const tongue of ['en', 'af'] as const) {
+    const one = said('credits.one', tongue);
+    const many = said('credits.credits', tongue);
+    ok(`  and ${tongue} has both words, and they differ — "${one}" / "${many}"`,
+      one.length > 0 && many.length > 0 && one !== many,
+      'a singular that resolves to the plural is the bug with an extra step');
+  }
 }
 
 if (failures) {

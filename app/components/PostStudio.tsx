@@ -49,7 +49,7 @@ import {
   type Box, type Measure, type PostSize,
 } from '../lib/posttext';
 import { ALL, boxOf } from '../lib/safezones';
-import { CREDITS } from '../lib/credits';
+import { CREDITS, creditsSaid } from '../lib/credits';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import { barClearance } from './TabBar';
@@ -448,7 +448,7 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
             {busy
               ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
               : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
-                  {t('post.save', 'Save the picture')} · {CREDITS.postOut} {t('video.credits', 'credits')}
+                  {t('post.save', 'Save the picture')} · {creditsSaid(CREDITS.postOut, t)}
                 </span>}
           </button>
           <p className="text-[12px] leading-relaxed text-zinc-500">

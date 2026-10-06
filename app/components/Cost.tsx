@@ -48,7 +48,7 @@
 
 import React from 'react';
 import { Clock } from 'lucide-react';
-import { perMinute } from '../lib/credits';
+import { creditsSaid, perMinute } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 
 export default function Cost({
@@ -80,7 +80,7 @@ export default function Cost({
   } else if (credits === 0) {
     price = t('cost.free', 'Costs nothing');
   } else if (typeof credits === 'number') {
-    price = `${credits} ${t('credits.credits', 'credits')}`;
+    price = creditsSaid(credits, t);
   }
 
   if (!price && !waitMinutes) return null;

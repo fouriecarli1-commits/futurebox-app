@@ -1,4 +1,22 @@
 /**
+ * "1 credit", not "1 credits".
+ *
+ * The app had no price of exactly one until `postOut`, so every screen that
+ * prints an amount said `${n} credits` and was right every time. The first
+ * flat one-credit price made it wrong, in both languages — "1 credits" and
+ * "1 krediete" — on a button somebody presses to pay.
+ *
+ * One place rather than an `n === 1` at each call site, because there are
+ * several and the next one would be written the short way.
+ *
+ * @param say the translator, passed in so this file stays free of React and
+ *            can be read by the server and by a check.
+ */
+export function creditsSaid(n: number, say: (key: string, fallback: string) => string): string {
+  return `${n} ${n === 1 ? say('credits.one', 'credit') : say('credits.credits', 'credits')}`;
+}
+
+/**
  * Credits — one currency across everything that costs money to make.
  *
  * The scale is built backwards from what each thing actually costs, so that a

@@ -3014,6 +3014,7 @@ export const STRINGS: Dict = {
   "make.ownSoundSeePlans": { en: "See the plans", af: "Kyk na die planne" },
   "make.ownSoundSongs": { en: "of your songs", af: "van jou liedjies" },
 
+  "credits.one": { en: "credit", af: "krediet" },
   "credits.credits": { en: "credits", af: "krediete" },
   "pay.freeAlways": { en: "Always free", af: "Altyd gratis" },
 
