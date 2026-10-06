@@ -59,6 +59,7 @@
 
 import { partsOf, timelineOf, alignTo, fitInto, type Part, type TimedLine } from './timeline';
 import { phrasesOf } from './phrases';
+import { attach } from './workfile';
 import type { Track } from './library';
 
 export type Timing = 'aligned' | 'heard' | 'phrases' | 'sung' | 'spread' | 'none';
@@ -322,7 +323,13 @@ export async function alignedFor(
 
   try {
     const body = new FormData();
-    body.append('file', audio, 'song.wav');
+    /* A whole song, so it goes through storage. The platform refuses a
+       request body past about four and a half megabytes before the route
+       runs, and a song is a WAV of minutes — the refusal is a bare 413 with
+       no JSON in it, which reads on screen as the alignment simply not
+       working. `/api/align` has taken a storage key since it was written. */
+    const put = await attach(body, audio, 'file', 'song.wav');
+    if (!put.ok) return { lines: [], how: 'none' as const, why: put.why };
     body.append('text', text);
     body.append('seconds', String(Math.max(0, Math.round(track.seconds || 0))));
     const answer = await fetcher(body);
@@ -448,7 +455,13 @@ export async function heardFor(
 
   try {
     const body = new FormData();
-    body.append('file', audio, 'song.wav');
+    /* A whole song, so it goes through storage. The platform refuses a
+       request body past about four and a half megabytes before the route
+       runs, and a song is a WAV of minutes — the refusal is a bare 413 with
+       no JSON in it, which reads on screen as the alignment simply not
+       working. `/api/align` has taken a storage key since it was written. */
+    const put = await attach(body, audio, 'file', 'song.wav');
+    if (!put.ok) return { lines: [], how: 'none' as const, why: put.why };
     /* The length, so the route bills what the song is rather than what a
        browser claims. It measures a WAV from its own header; for anything else
        this is the only number there is. */

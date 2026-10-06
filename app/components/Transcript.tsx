@@ -36,6 +36,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FileText, Loader2, Copy, Check, Users } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
+import { attach } from '../lib/workfile';
 import { CREDITS, perMinute } from '../lib/credits';
 import Cost from './Cost';
 import Note from './Note';
@@ -119,7 +120,28 @@ export default function Transcript({
       const blob = await audio.blob();
 
       const body = new FormData();
-      body.append('file', blob, 'episode.mp3');
+      /* ── Through storage, because an episode is long ──────────────────
+ 
+         This appended the whole episode onto the form. The platform refuses
+         a request body past about four and a half megabytes before the
+         route runs, and an mp3 is roughly a megabyte a minute — so every
+         episode over about four minutes came back as a bare 413 with no
+         JSON in it, which reads on screen as the transcript simply not
+         working. `/api/transcribe` has taken a storage key since it was
+         written. */
+      const put = await attach(body, blob, 'file', 'episode.mp3');
+      /* Said here and not thrown. The catch below answers every throw with
+         "could not fetch the episode", which is a different cause: the
+         episode was fetched, and storage refused it on size. A reason that
+         reaches a `catch` is a reason nobody reads. */
+      /* Said here and not thrown. The catch below answers every throw with
+         "could not fetch the episode", which is a different cause: the
+         episode was fetched, and storage refused it on size. A reason that
+         reaches a `catch` is a reason nobody reads. */
+      if (!put.ok) {
+        setProblem(put.why);
+        return;
+      }
       body.append('seconds', String(seconds));
       body.append('speakers', 'yes');
 

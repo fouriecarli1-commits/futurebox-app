@@ -69,16 +69,37 @@ for (const file of FILES) {
     const guard = new RegExp(`!\\s*${held}\\s*\\.\\s*ok`).test(window);
     if (!guard) continue;
 
-    if (new RegExp(`${held}\\s*\\.\\s*why`).test(window)) continue;
+    const said = new RegExp(`${held}\\s*\\.\\s*why`).test(window);
+
+    /* Carried, not reported.
+ 
+       `if (!put.ok) throw new Error(put.why)` reads `.why` and so passed the
+       rule above — while the sentence went nowhere. Transcript's `try` ends in
+       a bare `catch` that answers every throw with "Could not fetch the
+       episode to read it.", so an episode storage refused on size told the
+       member the fetch had failed. The episode was fetched. That is the same
+       wrong-cause fault this file exists for, wearing the one disguise the
+       first version of the rule could not see through.
+ 
+       A reason handed to `throw` is a reason whose landing place is somewhere
+       else in the file, or in a caller, or nowhere — this check cannot follow
+       it and will not pretend to. So the reason has to be reported here. */
+    const thrown = new RegExp(`throw\\s[^;]*${held}\\s*\\.\\s*why`).test(window);
+    if (said && !thrown) continue;
 
     bad += 1;
     console.log(
-      `  ✗   ${file}:${at} — \`${held}\` failed and something other than ` +
-        `\`${held}.why\` is reported. ` +
-        `${(lines[at - 1] ?? '').trim().slice(0, 80)}\n` +
-        `      A storage refusal on size and a missing session are different ` +
-        `things; one constant sentence for both tells a signed-in member to ` +
-        `sign in.`,
+      thrown
+        ? `  ✗   ${file}:${at} — \`${held}.why\` is thrown, not reported. ` +
+            `${(lines[at - 1] ?? '').trim().slice(0, 80)}\n` +
+            `      Whatever catches it answers with its own sentence, so the ` +
+            `reason the upload gave is lost on the way. Say it here.`
+        : `  ✗   ${file}:${at} — \`${held}\` failed and something other than ` +
+            `\`${held}.why\` is reported. ` +
+            `${(lines[at - 1] ?? '').trim().slice(0, 80)}\n` +
+            `      A storage refusal on size and a missing session are different ` +
+            `things; one constant sentence for both tells a signed-in member to ` +
+            `sign in.`,
     );
   }
 }

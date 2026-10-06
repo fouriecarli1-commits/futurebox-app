@@ -53,6 +53,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Loader2, Mic, Square } from 'lucide-react';
 import { promptsFor, type PromptCard } from '../data/prompts';
 import { CREDITS, perMinute } from '../lib/credits';
+import { attach } from '../lib/workfile';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { MAX_BYTES, fit } from '../lib/imagefile';
@@ -140,7 +141,16 @@ export default function PromptCards({
     setBusy(card.id);
     try {
       const form = new FormData();
-      form.append('file', clip, 'said.webm');
+      /* Through storage if it is big. A spoken card is seconds long and will
+         almost always go straight onto the form — but "almost always" is the
+         shape of a bug that waits for the one person who talks for five
+         minutes, and the platform's refusal is a bare 413 with nothing in it
+         to read. `attach` decides; this call site does not have to. */
+      const put = await attach(form, clip, 'file', 'said.webm');
+      if (!put.ok) {
+        setProblem(put.why);
+        return;
+      }
       form.append('seconds', String(Math.max(1, Math.round(howLong))));
       /* Signed. `callerFrom` reads the Authorization header and nothing else —
          no cookie, no session — so an unsigned post to a route that charges is

@@ -1233,7 +1233,24 @@ export default function ProBooth({
         /* The piece that plays, like every other paid lane action — a trimmed
            lane is not billed for what was cut off it. */
         const piece = pieceOf(lane, ctx);
-        form.append('audio', encodeWav(piece), 'lane.wav');
+        /* ── Through storage when it is big, which a lane always is ──────
+ 
+           This appended the WAV straight onto the form, and a lane is a WAV:
+           a minute and a bit at 44.1 kHz is over six megabytes, and the
+           platform refuses a request body past about four and a half before
+           this route ever runs. The refusal is a BARE 413 with no JSON in
+           it, so the screen could not even read a reason and fell back to
+           "The room could not be taken off that lane."
+ 
+           Carli hit exactly that on 6 October, on a 1:12 lane. `runThrough`
+           two hundred lines up has used `attach` since it was written, and
+           `/api/voice/clean` has taken a storage key for just as long — the
+           road existed and this one call was not on it. */
+        const put = await attach(form, encodeWav(piece), 'audio', 'lane.wav');
+        if (!put.ok) {
+          setProblem(put.why);
+          return;
+        }
         form.append('seconds', String(Math.round(piece.duration)));
         const token = await accessToken();
         const response = await fetch('/api/voice/clean', {

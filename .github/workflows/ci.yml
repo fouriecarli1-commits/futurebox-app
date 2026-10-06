@@ -1038,6 +1038,13 @@ jobs:
       - name: A post's words fit, and are not under the platform's furniture
         run: npm run check:posttext
 
+      # The four-and-a-half megabyte wall at the edge. A lane is a WAV and an
+      # episode is an mp3, so most of what this app sends is over it — and the
+      # platform refuses before the route runs, with a bare 413 that carries
+      # no reason for a screen to read. Every client lets `attach` decide.
+      - name: No screen posts a whole recording onto a request body
+        run: npm run check:bodylimit
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the
