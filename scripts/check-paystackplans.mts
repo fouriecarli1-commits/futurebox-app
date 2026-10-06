@@ -42,6 +42,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { ADDONS } from '../app/lib/addons';
+import { addonOfPlan, tierOfPlan } from '../app/lib/server/paystack';
 
 const problems: string[] = [];
 const check = (what: string, ok: boolean, saw = '') => {
@@ -181,6 +182,54 @@ for (const one of named(guide)) {
     'the guide sends her to a script that does not produce the code it names',
   );
 }
+
+/* ── An UNSET code must match nothing ───────────────────────────────────
+
+   Carli, 6 October 2026: *"daar is nie 'n paystack marketing nie"*. She never
+   created the plan, so `PAYSTACK_PLAN_MARKETING` is empty — and empty is the
+   state these two functions have to survive.
+
+   A one-off charge carries no plan at all, so `planOfCharge` hands them `''`.
+   Compare that against an unset code and `'' === ''` is true: an ordinary
+   once-off payment would be read as a renewal of a withdrawn add-on, or of a
+   membership tier, and answered by granting or withholding the wrong thing.
+
+   Both functions open with `if (!code) return null`, and that one line is
+   the whole defence. Nothing asserted it. */
+
+const held = {
+  marketing: process.env.PAYSTACK_PLAN_MARKETING,
+  maker: process.env.PAYSTACK_PLAN_MAKER,
+  studio: process.env.PAYSTACK_PLAN_STUDIO,
+  label: process.env.PAYSTACK_PLAN_LABEL,
+};
+delete process.env.PAYSTACK_PLAN_MARKETING;
+delete process.env.PAYSTACK_PLAN_MAKER;
+delete process.env.PAYSTACK_PLAN_STUDIO;
+delete process.env.PAYSTACK_PLAN_LABEL;
+
+const emptyAddon = addonOfPlan('');
+const emptyTier = tierOfPlan('');
+
+for (const [name, was] of Object.entries(held)) {
+  const key = `PAYSTACK_PLAN_${name.toUpperCase()}`;
+  if (was === undefined) delete process.env[key];
+  else process.env[key] = was;
+}
+
+check(
+  'a charge with no plan code is not read as the withdrawn add-on, with the code unset',
+  emptyAddon === null,
+  `addonOfPlan('') answered ${JSON.stringify(emptyAddon)} — an unset code is the empty`
+  + ' string, so without the guard every once-off payment matches it and is'
+  + ' answered as an add-on renewal',
+);
+check(
+  '  nor as a membership renewal',
+  emptyTier === null,
+  `tierOfPlan('') answered ${JSON.stringify(emptyTier)} — the same hole, pointed at`
+  + " somebody's plan: a once-off charge would read as a tier renewing",
+);
 
 if (problems.length > 0) {
   console.error(`check:paystackplans — a plan code nobody creates:\n${problems.join('\n')}`);

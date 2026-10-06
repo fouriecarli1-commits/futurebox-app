@@ -428,6 +428,24 @@ try {
        : /not a model of a named amplifier/.test(tone),
     'the room implies it is modelling somebody else’s amp');
 
+  /* ── Both ways to get a real capture in ──────────────────────────────
+     A file off this phone, and TONE3000's library. They are the same
+     errand with a different cupboard, so they stand together: a person
+     who has found one has found the other.
+
+     The TONE3000 button was shipped and pulled twice, both times with a
+     reason about the door that turned out to be wrong — see
+     `audit/boothback.mjs`, which walks the way back. This is the other
+     half: that the way OUT is in the room, where somebody can press it. */
+  check('the amp row offers a capture off this phone',
+    (await p.locator('input[type="file"][accept*="nam"]').count()) > 0,
+    'the file picker is how a .nam already on the device gets in');
+  const browse = p.locator('[data-browsetone]').first();
+  check('  and a way out to TONE3000 beside it',
+    (await browse.count()) > 0 && await browse.isVisible().catch(() => false),
+    'Browse TONE3000 is the only way in for somebody who does not already'
+    + ' have a capture file, which is almost everybody');
+
   // ── Nothing costs anything unless it says so ────────────────────────
   check('the split control names its price',
     Boolean(await p.locator('[aria-label*="plit"], [aria-label*="kei"]').first().getAttribute('title')),

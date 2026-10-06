@@ -395,74 +395,65 @@ substring op die **titel**, wat met `gear` kombineer.
 `GET /user` is wat ontwerpvereiste 4 se *"the signed-in user's avatar and
 username"* voed, en `GET /tones/created` is die **Created**-oortjie.
 
-## Die een hop wat nog ontbreek, en hoe dit gevind is
+## Die laaste hop, en hoekom hy twee keer verkeerd verklaar is
 
-Alles behalwe die **laaste treë terug** is gebou en onder checks: die
+Alles behalwe die **laaste treë terug** was lankal gebou en onder checks: die
 handdruk, die callback, die kamer wat onthou word, en die roete wat 'n
-toon-id in 'n `.nam` verander.
+toon-id in 'n `.nam` verander. Die terugkoms self het nie gewerk nie, en die
+rede is twee keer verkeerd opgeskryf voor sy gevind is.
 
-Wat nie werk nie: **om haar binne-in die kamer te laat land ná sy terugkom.**
+**Eerste verklaring (verkeerd).** Dat 'n koue bladsy op
+`/?t3k=ja&tone=…&room=booth` haar by die **studio-deur** sit. 'n Probe wat
+eers in die booth gegaan het soos 'n mens doen, het `[data-atdoor]` getel en
+**nul** gekry. Die deur was nooit die probleem nie.
 
-'n Koue bladsy op `/?t3k=ja&tone=…&room=booth` sit haar voor die
-**studio-deur** met die booth se kaart, nie in die kamer nie. `goToRoom` op
-'n koue bladsy wys 'n kamer eerder as om hom oop te maak, en ná 'n volle
-bladsy-laai is die liedjie waaraan sy gewerk het ook nie meer gekies nie —
-so `VocalBooth`, en die `ProBooth`-skerm daarbinne wat die toon lees, monteer
-nooit.
+**Tweede verklaring (waar, maar nie die hele storie nie).** Dat die terugkoms
+**ongetoets** is, omdat albei probes nie tot in die lanes kon kom nie.
 
-Die **Browse TONE3000**-knoppie is geskryf, gestuur, en weer uitgehaal
-presies hieroor. 'n Deur wat na 'n kamer-kieser terugkeer, is die
-"erger as geen knoppie"-geval.
+**Die werklike oorsaak.** Die probes kon nie by die lanes kom nie om presies
+dieselfde rede as wat **sy** nie daar kon kom nie. 'n Volle bladsy-laai — en
+'n herleiding van 'n ander webwerf af ís 'n volle bladsy-laai — het die
+**kamer** herstel maar nie die **liedjie** waarop sy besig was nie. Daardie
+liedjie het in React-state gewoon, en React-state is juis die ding wat 'n
+weggegooide bladsy verloor. Sonder 'n gekose liedjie monteer `VocalBooth`
+nooit, en sonder `VocalBooth` monteer die `ProBooth`-skerm nie, en dit is die
+enigste ding wat die adres lees.
 
-**Hoe dit gevind is, en wat die volgende persoon moet herbou.** 'n Probe wat
-`/?t3k=ja&tone=42&room=booth` **koud** oopmaak — wat is wat 'n herleiding van
-'n ander webwerf af werklik is — met 'n liedjie gesaai soos
-`audit/boothwalk.mjs` dit doen, en `/api/tone3000/tone` gestub. Hy het vier
-dinge gemeet:
+Een fout met twee gesigte: die probe wat nie kon inkom nie, en die mens wat
+nie kon inkom nie, was dieselfde fout.
 
-1. maak die booth oop
-2. 'n vaslegging wat die enjin nie kan lees nie, word **benoem** en nie
-   stilweg gehou nie
-3. die toon word van die adres **afgehaal**
-4. `?t3k=af` — sy het hul venster toegemaak sonder om te kies — word **gesê**
-   en nie verswyg nie
+### Wat dit regmaak
 
-Al vier faal vandag — **maar nie om die rede wat ek eers geskryf het nie.**
+`app/lib/singingon.ts` — dieselfde vorm as `lib/whereiwas.ts`, en die helfte
+daarvan wat nooit klaargemaak is nie. `whereiwas` onthou die **kamer** in
+`sessionStorage`; hierdie onthou die **liedjie-id**. Saam beteken hulle dat
+'n bladsy wat weggegooi is — deur Android, deur 'n herlaai, of deur 'n reis
+na TONE3000 toe en terug — terugkom waar sy was.
 
-### Die regstelling, en wat werklik vasstaan
+Dit is nie 'n TONE3000-regstelling nie. Dit is Carli se eie klagte van
+30 September (*"Hy gooi jou heeltemal uit en vergeet waarmee hy besig was"*),
+waarvan net die eerste helfte beantwoord is. Die reis na TONE3000 was bloot
+die eerste ding wat die ander helfte onmisbaar gemaak het.
 
-Ek het geskryf dat die terugkoms by die **deur** land. Dit is **nie waar**
-nie. 'n Tweede probe, wat eers in die booth gegaan het soos 'n mens doen,
-het `[data-atdoor]` getel en **nul** gekry:
+### Wat nou gemeet word, en wat nie
 
-> `ok  coming back from TONE3000 does not put her at the door`
+`audit/boothback.mjs`, in CI. Dit loop in by die voordeur met 'n regte
+liedjie op die toestel, kies die liedjie, gooi die bladsy weg, en meet:
 
-Dit is dieselfde reël wat Carli drie keer oor Paystack gerapporteer het
-(*"Na betaling gooi hy my uit die kamer"*), en dit **hou** vir hierdie
-landing ook. Die deur is nie die probleem nie.
+1. sy is terug **in die booth, op die liedjie**
+2. `?t3k=af` — sy het hul venster toegemaak sonder om te kies — bereik die
+   skerm wat dit lees en word **gesê**, nie verswyg nie
+3. die navraag word **van die adres afgehaal** agter haar
+4. `?t3k=ja&tone=…` word gehaal, en 'n vaslegging wat die enjin nie kan lees
+   nie, word **benoem** eerder as stilweg op die rak gesit
+5. die **Browse TONE3000**-knoppie is in die kamer
 
-Wat dan wel? **Ek weet nie.** Albei probes kon nie tot in die
-**lanes** kom nie — hulle het by die studio-deur met ProBooth se kaart bly
-staan, terwyl `audit/boothwalk.mjs` met oënskynlik dieselfde stappe wel
-inkom. Daardie verskil is nog nie verstaan nie, en tot dit is, is enige
-gevolgtrekking oor die landing 'n meting van die probe se eie posisie.
+**Wat dit NIE bewys nie, en dit moet eerlik staan:** 'n egte vaslegging wat
+op die rak land. Daarvoor is 'n geldige `.nam` nodig, en een wat ek self
+opmaak, is 'n fikstuur wat haarself toets. Dieselfde gaping bestaan reeds vir
+die lêer-kieser langs hom, wat dieselfde `loads()` loop.
 
-**Die knoppie bly dus uit — omdat die terugkoms ONGETOETS is, nie omdat hy
-stukkend is nie.** Dit is 'n ander sin as die een in die vorige commit, en
-die verskil maak saak: die een is versigtigheid, die ander was 'n aanspraak
-sonder bewys.
-
-**Wat die volgende persoon eerste moet oplos**, voor enigiets anders: hoe 'n
-probe in die ProBooth-lanes kom. `boothwalk` doen dit — `studio()`,
-`toRoom(page, 'ProBooth')`, ná 'n `reload()` met 'n gesaaide liedjie — en 'n
-kopie van daardie presiese stappe bly by die deur staan. Tot dit verstaan is,
-kan niks oor hierdie kamer se gedrag gemeet word nie.
-
-Die probe self is **weggegooi** en nie gehou nie, want
-`check:everycheck` weier 'n probe wat nie in CI is nie — *"a check nobody
-runs is not a safety net, it is a claim that there is one."* Hy is reg. Die
-bevinding is hier; die probe word saam met die regmaak herskryf, en dan gaan
-hy CI toe.
+**Die knoppie is terug in die kamer** — met bewys, nie hoop nie.
 
 ## Die hele ketting, end tot end
 

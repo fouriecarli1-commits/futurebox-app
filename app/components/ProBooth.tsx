@@ -1523,21 +1523,19 @@ export default function ProBooth({
   const [t3kBusy, setT3kBusy] = useState(false);
   const [t3kSaid, setT3kSaid] = useState('');
 
-  /* Nothing presses this yet. The button it belongs to was written beside
-     "Bring in an amp", shipped, and taken back out.
- 
-     The reason given at the time was that the return lands at the studio
-     door. That was WRONG and is corrected in `docs/TONE3000-API.md`: a
-     probe that went into the booth first counted `data-atdoor` and got
-     zero. The door is not the problem.
- 
-     What is true is narrower and is why the button is still out: the
-     return is UNTESTED. Two probes failed to reach the lanes at all —
-     they stopped at the studio door holding this room's card, while
-     `audit/boothwalk.mjs` gets in with what look like the same steps —
-     so nothing measured the landing itself. Out for want of proof, not
-     for a known fault. The errand below is correct either way; what is
-     missing is a way to watch the way back. */
+  /* The errand behind "Browse TONE3000", which was shipped, pulled twice,
+     and is back.
+
+     Both pulls were written as findings about the door. Neither was. The
+     first said the return landed at the studio door; a probe that went into
+     the booth first counted `data-atdoor` and got zero. The second said the
+     return was untested, which was true and was not the whole of it: the
+     reason no probe could reach these lanes is the reason SHE could not
+     reach them either — a full page load restored the room and not the song
+     she was on, so `VocalBooth` never mounted and neither did this screen.
+
+     `lib/singingon.ts` is that fault, fixed for the room rather than for the
+     journey, and `audit/boothback.mjs` now walks the whole way back. */
   const browseTone3000 = useCallback(async () => {
     setT3kBusy(true);
     setT3kSaid('');
@@ -4215,21 +4213,15 @@ function LaneRow({
      sends her, the callback brings her back with a tone id and the room she
      left, and `/api/tone3000/tone` turns that id into a `.nam`.
  
-     What is missing is where the capture LANDS. `runThrough` above puts an
+     Where the capture LANDS was the hard part. `runThrough` above puts an
      amp on THIS lane, and the return journey has no lane: she leaves, their
      page loads, she comes back on a fresh page, and the lane she pressed on
      may not exist any more. Remembering a lane id across that is remembering
      something that can go stale while she is away.
- 
-     The answer is the shelf below — she comes back, the amp is on it, and
-     one press puts it on any lane — and the shelf is owned a level above
-     this row. That move is the next piece of work.
- 
-     A button was written here and taken back out rather than shipped
-     half-wired: until the capture has somewhere to land, "Browse TONE3000"
-     sends her out and brings her back to nothing.
-     `docs/FUNCTION_INVENTORY.md` says it plainly — a button that looks like
-     it does something and does not is worse than no button.
+
+     So it lands on the shelf below — storage rather than state, which every
+     lane row reads — and one press puts it on any lane. `takeTone` writes it
+     there, proving it first with the same rule this function follows.
  
      Taken out with it: a split of this function into a text-taking half.
      It was written for the return journey and nothing else used it, and a
@@ -4749,6 +4741,36 @@ function LaneRow({
                 />
               </label>
             )}
+            {/* ── Out to their screens ──────────────────────────────────
+
+                Beside "Bring in an amp" because it is the same errand with
+                a different cupboard: one reads a file off this phone, the
+                other fetches one off TONE3000's. Outside the amped/not-amped
+                choice above, because what comes back lands on the SHELF
+                rather than on this lane — so it is as useful on a lane that
+                already has an amp, where swapping is the thing somebody is
+                actually doing.
+
+                Shipped, pulled, and now back with proof rather than hope.
+                `audit/boothback.mjs` walks the whole way: into the booth on
+                a real song, the page thrown away, the landing address, and
+                the sentence this room says when it gets there. Two earlier
+                probes could not reach these lanes at all, which is the only
+                reason this button spent a day out of the room.
+
+                Their logo is still not here. The design requirements ask
+                for the mark and we do not have the asset; an almost-right
+                logo is a brand problem rather than a missing feature. */}
+            <button
+              type="button"
+              data-browsetone=""
+              onClick={onBrowseAmps}
+              disabled={browsing || amping}
+              className="px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white disabled:text-zinc-600"
+            >
+              {browsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+              {t('pro.t3kBrowse', 'Browse TONE3000')}
+            </button>
           </div>
           {/* ── The ones you keep ──────────────────────────────────────
               One press to put an amp that is already here onto this lane.

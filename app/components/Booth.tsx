@@ -61,6 +61,7 @@ import { keepMix, takeId } from '../lib/takekeep';
 import { useLang } from '../lib/i18n';
 import { EDGE, INK, INK_DIM, LIT, PANEL, RAISED, VOID } from '../lib/boothlook';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
+import { forgetSong, noteSong, songIWasOn } from '../lib/singingon';
 import * as cloud from '../lib/cloud';
 import VocalBooth from './VocalBooth';
 
@@ -172,7 +173,33 @@ export default function Booth({
        you made — but the booth is exactly where somebody wants them: this is
        the room you sing on top of something in. */
     const given = loadUploads();
-    setTracks([...local, ...given]);
+    const here = [...local, ...given];
+    setTracks(here);
+
+    /* ── Back on the song she was on ──────────────────────────────────────
+
+       `whereiwas` brings the tab back to this ROOM after Android discards it
+       — and after any full page load, which is what coming back from another
+       site is. It cannot bring back the song, because the song lives in React
+       state and React state is the thing that was thrown away. So she arrived
+       in the booth standing at the picker, which is most of the way back and
+       still reads as the app forgetting what she was doing.
+
+       Done from the LOCAL list rather than after the cloud sync below: a song
+       that is on this device can be reopened now, and waiting on a network
+       round trip to put somebody back where they were is a room that blinks.
+       A song only the cloud knows about is not reopened, which is right — its
+       audio is not on this device to sing over either.
+
+       Forgotten when it is not found, so a deleted song does not sit in the
+       tab trying to reopen for the rest of the session. */
+    const was = songIWasOn();
+    if (was) {
+      const found = here.find((one) => one.id === was);
+      if (found) void openOn(found);
+      else forgetSong();
+    }
+
     if (!cloud.configured()) return;
     let live = true;
     // Same as the make screen: what is on the device shows first, and a song
@@ -212,6 +239,9 @@ export default function Booth({
           return;
         }
         setOpen({ track: source, music, take });
+        /* The id she CHOSE, not the source it opened on: restoring replays
+           this same function, which is what decides between the two. */
+        noteSong(track.id);
         return;
       }
       const music = await readAudio(track.id);
@@ -220,6 +250,7 @@ export default function Booth({
         return;
       }
       setOpen({ track, music, take: null });
+      noteSong(track.id);
     } finally {
       setOpening(null);
     }
@@ -259,6 +290,7 @@ export default function Booth({
     setTracks(next);
     saveTracks(next);
     setOpen(null);
+    forgetSong();
     setStatus(t('take.kept', 'Your take is in your channel.'));
     onMade(sung);
     void cloud.pushTrack(sung, mixed);
@@ -327,7 +359,7 @@ export default function Booth({
           startTake={open.take}
           onKeep={(mixed, doubled, take) => keep(open.track, mixed, doubled, take)}
           onSplit={() => markSplit(open.track)}
-          onClose={() => setOpen(null)}
+          onClose={() => { setOpen(null); forgetSong(); }}
         />
       )}
 
