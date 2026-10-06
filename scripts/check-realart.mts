@@ -38,7 +38,7 @@
  * The walk is `check:realartwalk`, which presses it.
  */
 import { readFileSync } from 'node:fs';
-import { START_RAND } from '../app/data/artmarket';
+import { ART_RAND } from '../app/data/artmarket';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -84,8 +84,10 @@ ok('the real-art option exists in the dictionary', line.length > 0);
 for (const [tongue, word] of [['en', /artist/i], ['af', /kunstenaar/i]] as const) {
   const said = new RegExp(`${tongue}: "([^"]*)"`).exec(line)?.[1] ?? '';
   ok(`  and says in ${tongue} that a person makes it`, word.test(said), said);
-  ok(`  and says in ${tongue} what it opens at`, said.includes(`R${START_RAND}`),
-    `${said} — the market opens at R${START_RAND}`);
+  /* What it COSTS, not what it opens at. The wall was an auction and this
+     line said "from R200"; a fixed price has no "from". */
+  ok(`  and says in ${tongue} what it costs`, said.includes(`R${ART_RAND}`),
+    `${said} — a piece on the wall is R${ART_RAND}`);
 }
 
 /* ── 4: the song reaches the shelf, not just a state ─────────────────── */
@@ -108,7 +110,7 @@ ok('  and remounts that drawer when the song arrives after it', /key=\{forSong \
   'startOpen is read at mount only, so a late hand-off lands in a shut fold');
 
 console.log(
-  `\n  Both rooms reach the artists through one panel, and the option opens at R${START_RAND}.`,
+  `\n  Both rooms reach the artists through one panel, and the option costs R${ART_RAND}.`,
 );
 
 if (failures) {

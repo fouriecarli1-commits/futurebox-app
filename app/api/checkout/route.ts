@@ -22,7 +22,7 @@ import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { planCode } from '@/app/lib/server/paystack';
 import { mayTopUp, packById } from '@/app/lib/credits';
-import { ART_RAND, BIDDER_RAND } from '@/app/data/artmarket';
+import { ART_RAND } from '@/app/data/artmarket';
 import { langOf, roomToSell } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
@@ -41,7 +41,6 @@ type Want =
   /* A commissioned one-off, at the price its artist named. */
   | { kind: 'commission'; offer: string }
   /* The once-off R50 that makes somebody a bidder. */
-  | { kind: 'bidpass'; work: string };
 
 /**
  * What this costs, decided on the server.
@@ -118,41 +117,11 @@ async function priceOf(want: Want, who: string): Promise<{ cents: number; label:
     return { cents: ART_RAND * 100, label: `Album art: ${work.title}` };
   }
 
-  /* ── The bidder's pass ─────────────────────────────────────────────
+  /* The bidder's pass stood here: R50, per piece, before somebody was
+     allowed to bid. It existed to keep a person who pushes a price and
+     walks away out of an auction, and there is no price to push on a wall
+     where everything is R280. */
 
-     Carli: *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want
-     anders kan enige random mens die prys opstoot."*
-
-     Fifty rand, once, from `app/data/artmarket.ts` like every other
-     amount in this app — never from the request. Refused to somebody who
-     already has it, so a second press cannot charge twice. */
-  if (want.kind === 'bidpass') {
-    const db = admin();
-    if (!db) return null;
-    /* Per piece. Carli, 20 September 2026: *"R50 buy in is per piece. Dit
-       is nie vir elke bidding nie."* So the work is part of the question:
-       already bought into THIS one is refused, already bought into
-       another one is not. */
-    const work = String(want.work ?? '');
-    if (!work) return null;
-    /* And it has to be a piece somebody could still bid on. A buy-in
-       charged against a sold piece, or against a work id somebody
-       invented, is R50 taken for nothing. */
-    const { data: piece } = await db
-      .from('art_works')
-      .select('id, sold_to')
-      .eq('id', work)
-      .maybeSingle();
-    if (!piece || (piece as { sold_to: string | null }).sold_to) return null;
-    const { data } = await db
-      .from('art_bidders')
-      .select('owner')
-      .eq('owner', who)
-      .eq('work', work)
-      .maybeSingle();
-    if (data) return null;
-    return { cents: BIDDER_RAND * 100, label: 'Buy-in to bid' };
-  }
 
   /* And a commission, at the price its artist named and the buyer is
      looking at. Only an offer still standing — one already paid for, or
@@ -282,7 +251,7 @@ export async function POST(request: Request): Promise<Response> {
      already checked, so the room follows from it. Null for a plan or a
      pack of credits, which really do belong on the front page. */
   const back =
-    want.kind === 'art' || want.kind === 'commission' || want.kind === 'bidpass'
+    want.kind === 'art' || want.kind === 'commission'
       ? 'albumart'
       : null;
   /* ── And WHICH piece ──────────────────────────────────────────────────
@@ -354,7 +323,7 @@ export async function POST(request: Request): Promise<Response> {
              above was changed to take a work, and the webhook was changed
              to demand one. This line was not, and the comment went on
              asserting the old arrangement over the top of it. */
-          work: want.kind === 'art' || want.kind === 'bidpass' ? want.work : null,
+          work: want.kind === 'art' ? want.work : null,
           offer: want.kind === 'commission' ? want.offer : null,
           label: price.label,
         },

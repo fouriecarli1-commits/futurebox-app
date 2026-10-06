@@ -167,8 +167,11 @@ try {
     'the panel offered only the machine, which is the whole of what she asked about');
 
   const says = await page.locator('[data-realart]').first().innerText().catch(() => '');
-  check('  and it says who makes it and what it starts at',
-    /artist|kunstenaar/i.test(says) && /R200/.test(says), says.replace(/\s+/g, ' '));
+  /* What it COSTS, not what it starts at. The wall was an auction opening at
+     R200 and this line said "from R200"; it is one price now and the word
+     "from" was the part that had to go. */
+  check('  and it says who makes it and what it costs',
+    /artist|kunstenaar/i.test(says) && /R280/.test(says), says.replace(/\s+/g, ' '));
 
   /* ── Pass two: a song that already has one ────────────────────────────
      Somebody looking at a drawn cover they are not happy with is exactly who

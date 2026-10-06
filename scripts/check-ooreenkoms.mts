@@ -27,7 +27,7 @@
  * invoice after payment, and both parties signing.
  */
 import { readFileSync } from 'node:fs';
-import { split, START_RAND, UNIQUE_RAND, ARTIST_SHARE, BIDDER_RAND } from '../app/data/artmarket';
+import { split, wallSplit, ART_RAND, ARTIST_RAND, UNIQUE_RAND, ARTIST_SHARE } from '../app/data/artmarket';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -77,33 +77,26 @@ for (const paper of PAPERS) {
   }
   ok(`  and every row matches what the app actually pays`, wrong === 0, said.join(' ;; '));
 
-  /* ── The two floors ───────────────────────────────────────────────────── */
-  ok(`  and the floor in it is R${START_RAND}`, new RegExp(`R${START_RAND}\\b`).test(text),
-    'the agreement names a different starting price from the app');
+  /* ── The wall's own row, to the cent ──────────────────────────────────
+     One line in each paper, and it is the whole of the wall's arithmetic.
+     Re-derived rather than read: the paper does not get to hold its own
+     numbers, which is the reason this file exists. */
+  const wall = wallSplit();
+  ok(`  and the wall's row is R${ART_RAND} / R${wall.gateway.toFixed(2)} / R${wall.artist.toFixed(2)} / R${wall.house.toFixed(2)}`,
+    new RegExp(`\\|\\s*R${ART_RAND}\\s*\\|\\s*R${wall.gateway.toFixed(2)}\\s*\\|\\s*\\*\\*R${wall.artist.toFixed(2)}\\*\\*\\s*\\|\\s*R${wall.house.toFixed(2)}\\s*\\|`).test(text),
+    'the signed table does not match what the wall actually pays');
+  ok(`  and it says the artist is paid R${ARTIST_RAND} clean`,
+    new RegExp(`R${ARTIST_RAND}\\b`).test(text),
+    'an artist can read this and not know what they are paid');
   ok(`  and the commission guide is R${UNIQUE_RAND}`, new RegExp(`R${UNIQUE_RAND}\\b`).test(text),
     'the agreement names a different commission price from the app');
   ok('  and the share is stated as 70/30', /70%/.test(text) && /30%/.test(text),
     `the app splits ${ARTIST_SHARE * 100}/${100 - ARTIST_SHARE * 100} and the paper does not say so`);
 
-  /* ── The buy-in, and who it does not belong to ───────────────────
-     Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in
-     nie, net vir die wen prys."*
-
-     This is the clause an artist would otherwise discover on a statement:
-     twelve people paid R50 to bid on their piece and none of that R600 is
-     theirs. The table above says nothing about it — a buy-in is not a
-     sale and never appears as a row — so the sentence has to be held
-     here, or a reword that drops it costs nothing and is found by an
-     argument. */
-  ok(`  and it names the R${BIDDER_RAND} buy-in`,
-    new RegExp(`R${BIDDER_RAND}\\b`).test(text),
-    'the agreement does not mention the buy-in at all');
-  ok('    and says it is per piece, not once for the room',
-    /(per werk|per piece)/i.test(text),
-    'the agreement reads as a once-off buy-in, which is the rule she corrected');
-  ok('    and says the artist gets none of it',
-    /(kry\s+niks\s+daarvan\s+nie|receives\s+none\s+of\s+it)/i.test(text),
-    'an artist can read this agreement and believe the buy-in is shared 70/30');
+  /* Three rules about the R50 buy-in stood here: that the paper named it,
+     that it said per piece, and that it said the artist gets none of it.
+     The fee is gone with the auction it protected, and a signed document
+     that still described it would be a charge nobody can make. */
 
   /* ── The three things she asked for in so many words ────────────────────
      *"betalings maandelliks aan die einde van 'n kalender maand"*, *"die
@@ -138,7 +131,7 @@ if (failures) {
   process.exit(1);
 }
 console.log(
-  '\ncheck:ooreenkoms — both agreements pay exactly what the app pays, name the same two floors,'
+  '\ncheck:ooreenkoms — both agreements pay exactly what the app pays, carry the wall row to the cent,'
   + ' pay at the end of a calendar month, ask for the invoice after the money, and carry nothing'
   + ' off the CIPC certificate.',
 );

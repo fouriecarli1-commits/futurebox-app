@@ -31,16 +31,18 @@
 import { gatewayFee } from '../lib/plans';
 
 /**
- * Where the bidding opens on every piece.
+ * The floor the database puts on `art_works.rand`.
  *
- * Carli, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
- * moet op die bee, en die hoogste bee wen die art binne 36 hours."*
+ * That column was where the bidding OPENED, with a `rand >= 200` constraint
+ * behind it, and it is not a price any more: the wall is `ART_RAND` and a
+ * commission is whatever its artist offered. The column cannot be null, so a
+ * commission row carries this as a placeholder and its real price in
+ * `paid_rand`.
  *
- * So this is not a price. It is the floor a first bid has to clear, and
- * what is actually paid is whatever the highest bid is when the clock runs
- * out. `split()` below works on that number, not on this one.
+ * Kept as a named number rather than a literal 200 in a route, because the
+ * constraint and the value it has to clear are two halves of one fact.
  */
-export const START_RAND = 200;
+export const ROW_FLOOR = 200;
 
 /**
  * What a piece on the wall costs. One price, no bidding.
@@ -66,8 +68,7 @@ export const START_RAND = 200;
  *
  * The bidder fee, the 36-hour clock, the opening bid and the whole idea of
  * a price that is not known until it closes all go with it. A buyer sees
- * one number and pays it. `START_RAND` above stays only until the wall
- * stops speaking of a floor; it is not what anybody pays.
+ * one number and pays it.
  */
 export const ART_RAND = 280;
 
@@ -85,78 +86,9 @@ export const ART_RAND = 280;
  */
 export const ARTIST_RAND = 200;
 
-/**
- * How long a piece is open for bids, from the FIRST bid.
- *
- * Carli: *"Die beeing begin wanneer iemand begin bee."* It used to run
- * from the moment a piece was hung, which meant a work that went up on a
- * Tuesday morning and that nobody saw until Wednesday had already closed.
- * A piece with no bids waits, for as long as it has to.
- */
-export const AUCTION_HOURS = 36;
 
-/**
- * What it costs to be allowed to bid on a piece. Per piece, every time.
- *
- * Carli: *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want
- * anders kan enige random mens die prys opstoot."*
- *
- * She is right, and it is the old reason an auction house asks you to
- * register: a bid is a promise to pay, and a promise that costs nothing
- * is worth nothing. One person who finds it funny to run a R200 piece up
- * to R4000 and then vanish has cost the artist the sale and the buyer the
- * work, and there is no way to undo it afterwards.
- *
- * ── Per piece, and I built it wrong first ────────────────────────────────
- *
- * This was once-and-for-all, and the comment that stood here argued for
- * that: a fee per auction is a tollgate, it said. Carli, 20 September
- * 2026: *"Jy het dit ook verkeerd R50 buy in is per piece. Dit is nie vir
- * elke bidding nie."*
- *
- * Her reading is the stronger one and the argument I had written against
- * it was the wrong way round. A once-off R50 buys somebody the right to
- * push every price in the room for the rest of their life — the exact
- * person the fee exists to stop, admitted permanently for the price of
- * one piece. Per work, the promise is renewed against each piece, which
- * is what makes it a promise about THAT piece.
- *
- * It is also the auction house's own rule: a paddle is per sale, and a
- * deposit is per lot for the lots that need one.
- */
-export const BIDDER_RAND = 50;
 
-/**
- * The least a new bid must beat the standing one by.
- *
- * Without it an auction is decided by whoever is willing to type
- * R200.01, which is not an auction — it is a queue with extra steps, and
- * it wastes everybody's attention for one cent. Twenty rand is small
- * enough not to lock somebody out of a R200 piece and big enough that
- * each bid means something.
- */
-export const BID_STEP = 20;
 
-/**
- * A bid in the last few minutes pushes the end out by the same few.
- *
- * Otherwise the whole thirty-six hours is theatre and the auction is
- * really one second long: everybody who wants it waits for the end and
- * the fastest connection wins. Extending on a late bid is what makes the
- * clock mean what it says — the piece goes to whoever values it most,
- * not to whoever refreshed at the right moment.
- */
-export const SNIPE_MINUTES = 5;
-
-/** The least a bid may be, given what is already standing. */
-export function nextBid(standing: number | null): number {
-  return standing === null ? START_RAND : standing + BID_STEP;
-}
-
-/** When a piece first bid on now stops taking bids. */
-export function endsAt(from: Date = new Date()): string {
-  return new Date(from.getTime() + AUCTION_HOURS * 60 * 60 * 1000).toISOString();
-}
 
 /**
  * What a commissioned, one-off piece costs. Her number.

@@ -21,8 +21,7 @@
  */
 
 import {
-  split, START_RAND, UNIQUE_RAND, ARTIST_SHARE, WINDOWS,
-  AUCTION_HOURS, BID_STEP, SNIPE_MINUTES, BIDDER_RAND, endsAt, nextBid,
+  split, UNIQUE_RAND, ARTIST_SHARE, WINDOWS,
   ART_RAND, ARTIST_RAND, wallSplit,
 } from '../app/data/artmarket';
 import { gatewayFee } from '../app/lib/plans';
@@ -38,7 +37,8 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 
 /* ── Her numbers, as she said them ────────────────────────────────────── */
 
-ok('a piece starts at R200', START_RAND === 200, `${START_RAND}`);
+ok(`a piece on the wall is R${ART_RAND}`, ART_RAND === 280, `${ART_RAND}`);
+ok(`  and the artist is paid R${ARTIST_RAND} of it`, ARTIST_RAND === 200, `${ARTIST_RAND}`);
 ok('a one-off costs R500', UNIQUE_RAND === 500, `${UNIQUE_RAND}`);
 ok('the artist takes 70%', ARTIST_SHARE === 0.7, `${ARTIST_SHARE}`);
 
@@ -59,13 +59,13 @@ ok('the artist takes 70%', ARTIST_SHARE === 0.7, `${ARTIST_SHARE}`);
  * is a cycle that fails at module init rather than at build. So this is
  * what stops the card drifting from the till. */
 const plansFile = readFileSync('app/lib/plans.ts', 'utf8');
-const cards = [...plansFile.matchAll(/'Album art by real artists — bidding opens at R(\d+), or R(\d+) to take a piece outright\. On every plan, paid per piece\.'/g)];
+const cards = [...plansFile.matchAll(/'Album art by real artists — R(\d+) a piece, or R(\d+) to commission one\. On every plan, paid per piece\.'/g)];
 ok('every plan card says the album art room is there', cards.length === 4,
   `${cards.length} of 4 — a room that takes money and appears on no plan is a room nobody knows about`);
 ok('  and quotes the prices the till actually charges',
-  cards.every((one) => Number(one[1]) === START_RAND && Number(one[2]) === UNIQUE_RAND),
+  cards.every((one) => Number(one[1]) === ART_RAND && Number(one[2]) === UNIQUE_RAND),
   `cards say ${cards.map((one) => `R${one[1]}/R${one[2]}`).join(', ')};`
-  + ` the till charges R${START_RAND}/R${UNIQUE_RAND}`);
+  + ` the till charges R${ART_RAND}/R${UNIQUE_RAND}`);
 ok(
   'and an artist picks from four windows, not a typed date',
   WINDOWS.map((one) => one.days).join(',') === '2,4,6,14',
@@ -230,23 +230,11 @@ ok('and the request table has nowhere to put a message either',
    R200 stopped being a price that day and became a floor. That is a small
    sentence and a large change: every place that reads `rand` as "what this
    costs" is now wrong, and the one that matters is the till. */
-ok('bidding opens at the floor and not a cent under',
-  nextBid(null) === START_RAND, `the first bid may be R${nextBid(null)}`);
-ok('  and each bid after it has to beat the last by a real amount',
-  nextBid(START_RAND) === START_RAND + BID_STEP && BID_STEP >= 10,
-  `the step is R${BID_STEP} — under ten rand an auction is decided by whoever types R200.01`);
-ok('  and the clock runs for 36 hours', AUCTION_HOURS === 36, `${AUCTION_HOURS} hours`);
-
-/* Worked with a pencil: 36 hours is 129,600,000 milliseconds. */
-{
-  const from = new Date('2026-09-20T12:00:00.000Z');
-  const shuts = new Date(endsAt(from)).getTime() - from.getTime();
-  ok('  and it is measured from when the piece is hung',
-    shuts === 129_600_000, `${shuts} ms rather than 129600000`);
-}
-
-ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
-  'without it the thirty-six hours is theatre and the auction is one second long');
+/* Five rules stood here — the opening floor, the bid step, the thirty-six
+   hour clock measured to the millisecond, and the late-bid extension — and
+   every one of them described a sale that no longer happens. They are not
+   rewritten, they are gone: a wall with one price has nothing to open at,
+   step by, run out, or extend. */
 
 /* ── The till charges the WINNING bid ─────────────────────────────────────
 
@@ -371,15 +359,10 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
      signed agreements, where the person it concerns will read it. A
      buyer needs to know the R50 is not part of the price, which the
      line still says, and nothing more. */
-  const why = words.indexOf('"art.passWhy"');
-  const pass = why < 0 ? '' : words.slice(why, why + 1600);
-  ok("    and the buyer is told the R50 is not part of the price",
-    /not part of what you pay/i.test(pass) && /nie deel van wat jy .* betaal nie/i.test(pass),
-    'somebody could read the R50 as a deposit against the work');
-  ok("      and is not told the artist's terms, which are not theirs to read",
-    !/goes to the artist|na die kunstenaar/i.test(pass),
-    'the buyer is being shown how the studio and the artist split the money');
-  ok(`    and it is R${BIDDER_RAND} on both sides`, BIDDER_RAND === 50, `${BIDDER_RAND}`);
+  /* Three rules about the R50 buy-in stood here: that the buyer was told
+     it is not part of the price, that they were not shown the artist's
+     terms, and that the number agreed on both sides. The fee is gone with
+     the auction it protected. */
 }
 
 /* ── Every sheet has a way out, and it clears the tab bar ────────────────
@@ -560,65 +543,14 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     `${narrow.join(', ')} — a painter is one kind of artist, and this room is for all of them`);
 }
 
-/* ── The buy-in is PER PIECE ─────────────────────────────────────────────
+/* Four rules held the buy-in in its four homes — the table's key, the
+   route's read, its refusal, and the till — because "once for the room" is
+   the simpler thing to write at every one of them and would have slid back
+   without anybody meaning it. The fee is gone with the auction, so they are
+   gone with the fee. `supabase/albumart.sql` still carries `art_bidders`
+   and the rows in it: dropping a table is irreversible and nothing reads
+   it, which is the safer of the two mistakes. */
 
-   Carli, 20 September 2026: *"Jy het dit ook verkeerd R50 buy in is per
-   piece. Dit is nie vir elke bidding nie."*
-
-   I built it once-and-for-all and wrote a paragraph arguing for that. Her
-   reading is the stronger one: a once-off R50 buys the right to push every
-   price in the room for the rest of somebody's life — the exact person the
-   fee exists to stop, admitted permanently for the price of one piece.
-
-   This is the kind of rule that slides back without anybody meaning it,
-   because "once" is the simpler thing to write at every one of the four
-   places it lives. So all four are held here: the table's key, the read,
-   the refusal, and the till. A screen showing the right words over a
-   once-off charge would look completely correct.
-
-   `check:ooreenkoms` holds the same rule in both signed agreements. */
-{
-  const sql = readFileSync('supabase/albumart.sql', 'utf8');
-  ok('the buy-in is keyed to the person AND the piece',
-    /primary key \(owner, work\)/.test(sql),
-    'art_bidders is still one row per person — one R50 and they may bid on everything, forever');
-
-  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
-  ok('  and a bid is refused unless they bought into THAT piece',
-    /\.from\('art_bidders'\)[\s\S]{0,240}?\.eq\('work', work\.id\)/.test(route),
-    'the bid check asks only whether they have ever bought in, which is the rule she corrected');
-  ok('  and each sleeve says whether this person may bid on it',
-    /mineToBid: boughtIn\.has\(one\.id\)/.test(route),
-    'the room is told once for the whole wall, so every piece looks the same as the first');
-
-  const till = readFileSync('app/api/checkout/route.ts', 'utf8');
-  const at = till.indexOf("want.kind === 'bidpass'");
-  const branch = at < 0 ? '' : till.slice(at, at + 1400);
-  ok('  and the till charges it against a named piece',
-    /\.eq\('work', work\)/.test(branch),
-    'a second R50 is refused for the wrong reason, or taken for no piece at all');
-  /* The REFUSAL, not merely the word. `/sold_to/` passed on a branch that
-     fetched the column and then ignored it — which is the version that
-     charges R50 to bid on a piece that sold yesterday, and it went green.
-     A check that cannot fail on the bug it is named after is §AC. */
-  ok('    which has to be a piece that is still for sale',
-    /if \(!piece \|\|[\s\S]{0,80}?\.sold_to\) return null;/.test(branch),
-    'R50 can be charged to bid on a piece that is already sold, or on a work id somebody invented');
-
-  const hook = readFileSync('app/api/payments/webhook/route.ts', 'utf8');
-  const hat = hook.indexOf("meta.kind === 'bidpass'");
-  const hbranch = hat < 0 ? '' : hook.slice(hat, hat + 1400);
-  ok('  and the webhook writes it against that piece',
-    /onConflict: 'owner,work'/.test(hbranch) && /meta\.work/.test(hbranch),
-    'the payment lands as a room-wide pass again, whatever the till charged for');
-
-  const words = readFileSync('app/lib/i18n.tsx', 'utf8');
-  const wat = words.indexOf('"art.passWhy"');
-  const said = wat < 0 ? '' : words.slice(wat, wat + 1600);
-  ok('  and the room says so before anybody pays',
-    /once for that piece/i.test(said) && /een keer vir daardie werk/i.test(said),
-    'somebody pays R50 believing it covers the whole room, in one language or both');
-}
 
 /* ── A failed read says which column is missing ──────────────────────────
 
@@ -648,21 +580,12 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     'the route works it out and nothing shows it — the answer stays in a server log');
 }
 
-/* ── An artist may not bid up their own work ──────────────────────────────
-   The one rule an auction cannot do without. One comparison, and without
-   it every price in this room is a number somebody invented. */
-{
-  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
-  ok('an artist cannot bid on their own work',
-    /your_own/.test(route),
-    'nothing stops a seller bidding their own piece up');
-  ok('  and a bid is refused once the clock has run out',
-    /error: 'over'/.test(route),
-    'a stale page can bid on an auction that ended ten minutes ago');
-  ok('  and the clock is read off the row, not off the request',
-    /work\.ends_at \? new Date\(work\.ends_at\)/.test(route),
-    'the end time is being taken from whatever the browser sent');
-}
+/* Three rules stood here about bidding: that an artist could not bid their
+   own work up, that a bid after the clock ran out was refused, and that the
+   clock was read off the row rather than off the request. All three are
+   about an auction. What survives the change is the one that is not — an
+   artist cannot BUY their own piece off the wall either, and that is held
+   in the till's rules above. */
 
 /* ── The wall's fixed price, which is not a share at all ───────────────── */
 
@@ -716,7 +639,12 @@ const till = readFileSync('app/api/checkout/route.ts', 'utf8');
    an empty block passes every "does not contain" rule in this section. A
    rule that reads nothing agrees with everything. */
 const artAt = till.indexOf("want.kind === 'art'");
-const art = till.slice(artAt, till.indexOf("'bidpass'", artAt));
+/* To the COMMISSION branch, which is the next one along. It used to end at
+   `'bidpass'` and that branch has been deleted, so the slice ran to the end
+   of the file and swallowed the commission — whose price IS read off its
+   row, correctly, and tripped the rule below. An end marker that can be
+   deleted is an end marker that silently widens. */
+const art = till.slice(artAt, till.indexOf("want.kind === 'commission'", artAt));
 const selects = art.split('\n').filter((one) => /\.select\(/.test(one)).join(' ');
 
 ok('the till prices a piece from the wall price, not from the row',
@@ -736,7 +664,7 @@ ok('  and no longer asks who won',
 
 const hook = withoutComments(readFileSync('app/api/payments/webhook/route.ts', 'utf8'));
 const grantAt = hook.indexOf("meta.kind === 'art'");
-const grant = hook.slice(grantAt, hook.indexOf("'bidpass'", grantAt));
+const grant = hook.slice(grantAt, hook.indexOf("meta.kind === 'commission'", grantAt));
 ok(`the two money blocks were actually found (${art.length}, ${grant.length} characters)`,
   art.length > 200 && grant.length > 200,
   'an empty slice passes every "does not contain" rule below it, which is how'

@@ -140,9 +140,9 @@ try {
       /sold once|one only|1 of 1|never appear|never again|een keer verkoop|nooit weer/i.test(shut),
       'the room stops promising the one thing it is built to promise');
 
-    check('the starting price is on the screen before anything is pressed',
-      /R\s?200/.test(shut),
-      'R200 is behind a fold — a price somebody meets after they have decided');
+    check('the price is on the screen before anything is pressed',
+      /R\s?280/.test(shut),
+      'R280 is behind a fold — a price somebody meets after they have decided');
 
     /* ── The panels, on the tab that has them ────────────────────────
 

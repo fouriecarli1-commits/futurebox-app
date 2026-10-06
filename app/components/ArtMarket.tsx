@@ -95,8 +95,8 @@ import {
   ART_MAX_BYTES,
   ART_SIDE,
   ART_SIZE_SAID,
-  AUCTION_HOURS,
-  START_RAND,
+  ART_RAND,
+  ARTIST_RAND,
   UNIQUE_RAND,
   WINDOWS,
   split,
@@ -231,21 +231,13 @@ interface AnyArtist {
 interface WallPiece {
   readonly id: string;
   readonly title: string;
-  /** Where the bidding opened. What gets paid is `top`. */
-  readonly rand: number;
-  /** The standing highest bid, or null when nobody has bid yet. */
-  readonly top: number | null;
-  readonly bids: number;
-  /** The least a new bid may be. */
-  readonly next: number;
-  readonly endsAt: string | null;
-  /** False until somebody has bid. A piece with no bids waits. */
-  readonly started: boolean;
-  readonly over: boolean;
-  readonly wonByMe: boolean;
-  /** Whether this person has bought into THIS piece. Per piece, her rule. */
-  readonly mineToBid: boolean;
-  readonly leadingMe: boolean;
+  /* Nine fields stood here and all nine belonged to the auction: where the
+     bidding opened, the standing bid, how many there had been, the next
+     step, the clock, whether it had started, whether it was over, whether
+     this person had won it, whether they had paid the buy-in, and whether
+     they were leading. A piece on the wall costs `ART_RAND` and that is
+     the whole of it — the price is not even sent, because a screen that
+     receives a price eventually prints one that is not the wall's. */
   readonly artist: string;
   readonly by: string;
   readonly url: string | null;
@@ -290,8 +282,6 @@ interface Market {
   readonly artists: readonly Artist[];
   /** Everybody, waiting room included. Owner only; null for the rest. */
   readonly everyArtist: readonly AnyArtist[] | null;
-  /** Whether this person has paid the once-off pass and may bid. */
-  readonly bidderRand: number;
   /** True when OWNER_EMAIL is unset, so nobody is the owner. See the route. */
   readonly noOwner: boolean;
   readonly wall: readonly WallPiece[];
@@ -307,65 +297,6 @@ interface Market {
 const STEPS: readonly OfferState[] = ['offered', 'paid', 'accepted', 'delivered'];
 
 /* ───────────────────────────────────────────────────────────── the clock ── */
-
-/**
- * How long is left, counted down on the screen.
- *
- * Her rule: *"die hoogste bee wen die art binne 36 hours."* A deadline
- * shown as a date is a deadline somebody works out; shown as "4h 12m" it
- * is a deadline somebody acts on, which is the entire point of putting a
- * clock on an auction.
- *
- * It ticks every thirty seconds rather than every second. A second hand
- * on a thirty-six hour clock is a re-render a minute for nothing, and
- * under a minute the words carry it instead of the number.
- */
-function Countdown({
-  endsAt,
-  started,
-  over,
-  t,
-}: {
-  readonly endsAt: string | null;
-  /** False until somebody has bid. Not started is not over. */
-  readonly started?: boolean;
-  readonly over: boolean;
-  readonly t: (key: string) => string;
-}): React.ReactElement | null {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const beat = window.setInterval(() => setNow(Date.now()), 30_000);
-    return () => window.clearInterval(beat);
-  }, []);
-
-  /* Her rule: *"Die beeing begin wanneer iemand begin bee."* A piece
-     nobody has bid on has no clock at all, and that state is worth
-     naming — silence here reads as a clock that failed to load. */
-  if (!endsAt) {
-    return started === false
-      ? <span className={`${MIKRO} shrink-0 normal-case tracking-normal`}>{t('art.notStarted')}</span>
-      : null;
-  }
-  const left = new Date(endsAt).getTime() - now;
-  if (over || left <= 0) return <span className={MIKRO}>{t('art.over')}</span>;
-
-  const hours = Math.floor(left / 3_600_000);
-  const minutes = Math.floor((left % 3_600_000) / 60_000);
-  /* Under an hour it goes amber, because at that point the number is no
-     longer information — it is a reason to press something. */
-  const soon = left < 3_600_000;
-  return (
-    <span
-      className={`shrink-0 rounded-[8px] px-2 py-1 text-[11px] font-bold ${
-        soon ? 'bg-amber-500/15 text-amber-400' : 'bg-[var(--leeg)] text-[color:var(--ink-2)]'
-      }`}
-    >
-      {hours > 0 ? `${hours}u ${minutes}m` : `${minutes}m`} {t('art.left')}
-    </span>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────── uploading ── */
 
 /**
  * Put one blob in the private bucket, and give back where it landed.
@@ -1036,24 +967,15 @@ export default function ArtMarket(): React.ReactElement {
                       {piece.by}
                     </span>
                     <span className="mt-2.5 flex items-center justify-between gap-2">
-                      {/* The standing bid, not a price. Everything here
-                          is an auction: `rand` is where it opened, and
-                          this is what somebody would have to beat. */}
+                      {/* The price, and it is the same on every sleeve.
+                          A standing bid and a clock stood here, with two
+                          badges under them for "you are leading" and
+                          "you won it" — four pieces of state that only a
+                          sale decided by a clock can have. */}
                       <span className="text-[17px] font-bold text-[color:var(--aksent)]">
-                        R{piece.top ?? piece.rand}
+                        R{ART_RAND}
                       </span>
-                      <Countdown endsAt={piece.endsAt} started={piece.started} over={piece.over} t={t} />
                     </span>
-                    {piece.leadingMe && !piece.over && (
-                      <span className="mt-2 block rounded-lg bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-400">
-                        {t('art.youLead')}
-                      </span>
-                    )}
-                    {piece.wonByMe && (
-                      <span className="mt-2 block rounded-lg bg-amber-500/15 px-2 py-1 text-[11px] font-semibold text-amber-400">
-                        {t('art.youWon')}
-                      </span>
-                    )}
                   </span>
                 </button>
               ))}
@@ -1278,21 +1200,6 @@ export default function ArtMarket(): React.ReactElement {
           artist={market?.artists.find((one) => one.id === sheet.artist) ?? null}
           onClose={() => setSheet(null)}
           onBuy={() => void pay({ kind: 'art', work: sheet.id })}
-          onBid={(rand) =>
-            void doIt({ what: 'bid', work: sheet.id, rand }).then((ok) => {
-              /* Only on a real yes. `doIt` already put the refusal on screen
-                 when it was a no, and saying both would be worse than saying
-                 neither. */
-              if (ok) {
-                setSaid(
-                  `${t('art.bidIn', 'Your bid is in at')} R${rand}. ` +
-                    t('art.bidTop', 'You are the top bidder until somebody goes higher.'),
-                );
-              }
-            })
-          }
-          onPass={() => void pay({ kind: 'bidpass', work: sheet.id })}
-          bidderRand={market?.bidderRand ?? 50}
           onArtist={(artist) => {
             setSheet(null);
             setProfile(artist);
@@ -1403,9 +1310,6 @@ function WorkSheet({
   artist,
   onClose,
   onBuy,
-  onBid,
-  onPass,
-  bidderRand,
   onArtist,
   t,
 }: {
@@ -1413,10 +1317,7 @@ function WorkSheet({
   readonly artist: Artist | null;
   readonly onClose: () => void;
   readonly onBuy: () => void;
-  readonly onBid: (rand: number) => void;
   /** Take the once-off pass that makes somebody a bidder. */
-  readonly onPass: () => void;
-  readonly bidderRand: number;
   readonly onArtist: (artist: Artist) => void;
   readonly t: (key: string) => string;
 }): React.ReactElement {
@@ -1468,21 +1369,24 @@ function WorkSheet({
               bidder needs in the order they need them. */}
           <div className="mt-4 flex items-end justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-3">
             <div>
-              <p className={MIKRO}>{piece.top === null ? t('art.opensAt') : t('art.standing')}</p>
+              <p className={MIKRO}>{t('art.priceIs')}</p>
               <p className="pt-1 text-[24px] font-bold leading-none text-[color:var(--aksent)]">
-                R{piece.top ?? piece.rand}
+                R{ART_RAND}
               </p>
-              {piece.bids > 0 && (
-                <p className={`${MIKRO} pt-1.5`}>
-                  {piece.bids} {piece.bids === 1 ? t('art.oneBid') : t('art.manyBids')}
-                </p>
-              )}
             </div>
-            <Countdown endsAt={piece.endsAt} started={piece.started} over={piece.over} t={t} />
           </div>
 
+          {/* ── Said before the button, not after ───────────────────────
+ 
+              Carli: *"die kliente in die app moet dit weet en dit moet
+              iewers staan."* A piece sells once, and a buyer has to be
+              able to read that before they decide, not discover it in a
+              clause afterwards. It stands directly under the price,
+              which is the one line on this card everybody reads. */}
           <p className="pt-4 text-[14px] leading-relaxed">{t('art.oneOnly')}</p>
-          <p className="pt-2 text-[13px] leading-relaxed text-[color:var(--gedemp)]">{t('art.howBidding')}</p>
+          <p className="pt-2 text-[13px] leading-relaxed text-[color:var(--gedemp)]">
+            {t('art.howFixed')}
+          </p>
 
           <ul className="space-y-2 pt-4">
             {[t('art.get.1'), t('art.get.2'), t('art.get.3'), t('art.get.4')].map((one) => (
@@ -1497,33 +1401,17 @@ function WorkSheet({
         </div>
 
         <div className="shrink-0 border-t border-[var(--lyn)] px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
-          {/* Three states and one button, because at any moment there is
-              exactly one thing to do: bid, pay for what you won, or
-              nothing at all because somebody else won it. */}
-          {piece.wonByMe ? (
-            <button type="button" onClick={onBuy} className={VUL}>
-              {t('art.payWin')} · R{piece.top ?? piece.rand}
-            </button>
-          ) : piece.over ? (
-            <p className={`${MIKRO} py-3 text-center normal-case tracking-normal`}>{t('art.wentToSomebody')}</p>
-          ) : piece.mineToBid ? (
-            <button type="button" onClick={() => onBid(piece.next)} className={VUL}>
-              {t('art.bid')} · R{piece.next}
-            </button>
-          ) : (
-            /* ── The pass, before the bid ────────────────────────────
-               Carli: *"elke persoon sal 'n R50 by in moet hê om te mag
-               bee, want anders kan enige random mens die prys
-               opstoot."* Said here, in front of the button it replaces,
-               rather than as a refusal after somebody has already
-               decided what to bid. */
-            <>
-              <p className="pb-3 text-[13px] leading-relaxed text-[color:var(--ink-2)]">{t('art.passWhy')}</p>
-              <button type="button" onClick={onPass} className={VUL}>
-                {t('art.takePass')} · R{bidderRand}
-              </button>
-            </>
-          )}
+          {/* ── One button ──────────────────────────────────────────
+ 
+              There were three, and which one you got depended on where
+              the clock was: bid, pay for what you won, or a sentence
+              saying somebody else won it. A fixed price has one state —
+              the piece is here and it costs R280 — and a sold piece is
+              not on the wall at all, so there is nothing to say about
+              one. */}
+          <button type="button" onClick={onBuy} className={VUL}>
+            {t('art.buyIt')} · R{ART_RAND}
+          </button>
         </div>
       </div>
     </div>
@@ -1618,7 +1506,7 @@ function ArtistSheet({
                   {piece.title}
                 </p>
                 <button type="button" className={`${LEEG} mt-1.5 w-full`} onClick={() => onBuy(piece)}>
-                  R{piece.top ?? piece.rand}
+                  R{ART_RAND}
                 </button>
               </div>
             ))}
@@ -1950,9 +1838,7 @@ function BringArtist({
   /** Which artist a piece is being hung for, and what it is called. */
   const [hanging, setHanging] = useState('');
   const [title, setTitle] = useState('');
-  const [rand, setRand] = useState(String(START_RAND));
 
-  const money = useMemo(() => split(Number(rand) || START_RAND), [rand]);
 
   const start = (who: AnyArtist | null): void => {
     setOpen(who ? who.id : 'new');
@@ -2058,22 +1944,17 @@ function BringArtist({
                     <span className={MIKRO}>{t('art.pieceName')}</span>
                     <input value={title} onChange={(event) => setTitle(event.target.value)} className={VELD} />
                   </label>
-                  <label className="block max-w-[220px]">
-                    <span className={MIKRO}>
-                      {t('art.price')} R{START_RAND}
-                    </span>
-                    <input
-                      type="number"
-                      min={START_RAND}
-                      value={rand}
-                      onChange={(event) => setRand(event.target.value)}
-                      className={VELD}
-                    />
-                  </label>
+                  {/* ── What the wall pays, not what a sum works out to ───
+ 
+                      A price box stood above this and the artist typed an
+                      opening bid into it. There is nothing to type now: the
+                      wall is R280 and the artist is paid R200, the same on
+                      every piece, every month — a number somebody can hold
+                      against a bank statement without doing arithmetic. */}
                   <p className="text-[13px] leading-relaxed">
                     {t('art.theyGet')}{' '}
-                    <strong className="text-[color:var(--ink)]">R{money.artist.toFixed(2)}</strong>{' '}
-                    {t('art.afterFees')} R{money.gateway.toFixed(2)}.
+                    <strong className="text-[color:var(--ink)]">R{ARTIST_RAND}</strong>{' '}
+                    {t('art.ofWall')} R{ART_RAND}.
                   </p>
                   <label className={`${VUL} cursor-pointer`}>
                     {busy ? t('art.uploading') : t('art.choose')}
@@ -2096,7 +1977,6 @@ function BringArtist({
                             title,
                             path: made.path,
                             preview: made.preview,
-                            rand: Number(rand) || START_RAND,
                           });
                           setTitle('');
                         }
@@ -2397,10 +2277,7 @@ function ArtistDesk({
   readonly t: (key: string) => string;
 }): React.ReactElement {
   const [title, setTitle] = useState('');
-  const [rand, setRand] = useState(String(START_RAND));
   const [busy, setBusy] = useState(false);
-
-  const money = useMemo(() => split(Number(rand) || START_RAND), [rand]);
 
   return (
     <div className="space-y-9">
@@ -2411,30 +2288,19 @@ function ArtistDesk({
           <span className={MIKRO}>{t('art.pieceName')}</span>
           <input value={title} onChange={(event) => setTitle(event.target.value)} className={VELD} />
         </label>
-        <label className="block">
-          <span className={MIKRO}>
-            {t('art.price')} R{START_RAND}
-          </span>
-          <input
-            type="number"
-            min={START_RAND}
-            value={rand}
-            onChange={(event) => setRand(event.target.value)}
-            className={VELD}
-          />
-        </label>
-        {/* What they take home, said before they set the price rather than
-            discovered on a statement. The gateway comes off first and 70/30
-            is on what is left — `split` is the one place that lives. */}
+        {/* ── What they take home, before they choose a file ─────────
+ 
+            A price box stood here and the artist typed an opening bid into
+            it, with a sum under it working out 70% of the profit at that
+            number. Neither survives a fixed price: the wall is R280, the
+            artist is R200, and the same two numbers appear on every piece.
+ 
+            Still said BEFORE the upload rather than discovered on a
+            statement, which was the reason this paragraph existed. */}
         <p className="text-[14px] leading-relaxed">
-          {t('art.youGet')} <strong className="text-[color:var(--ink)]">R{money.artist.toFixed(2)}</strong>{' '}
-          {t('art.afterFees')} R{money.gateway.toFixed(2)}.
+          {t('art.youGet')} <strong className="text-[color:var(--ink)]">R{ARTIST_RAND}</strong>{' '}
+          {t('art.ofWall')} R{ART_RAND}.
         </p>
-        {/* Carli: *"Die kunstenaar kry nie geld vir die by in nie, net vir
-            die wen prys."* Both halves of that on the one screen where the
-            artist could get it wrong: the number above is a floor, and the
-            buy-in is a door fee that never reaches them. */}
-        <p className={`${MIKRO} normal-case tracking-normal leading-relaxed`}>{t('art.paidOnWin')}</p>
         <label className={`${VUL} cursor-pointer`}>
           {busy ? t('art.uploading') : t('art.choose')}
           <input
@@ -2455,7 +2321,6 @@ function ArtistDesk({
                   title,
                   path: made.path,
                   preview: made.preview,
-                  rand: Number(rand) || START_RAND,
                 });
                 setTitle('');
               }

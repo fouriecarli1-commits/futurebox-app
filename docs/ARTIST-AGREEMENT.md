@@ -103,22 +103,22 @@ buyer may not resell or re-license the work as an artwork in its own right.
 
 ## 5. Prices and commissions
 
-**Off the wall it is an auction.** The Artist sets the opening bid, with a
-floor of **R200** per work. From there buyers bid against each other, and the
-**highest bid when the clock stops takes the work**.
+**From the wall there is one price.** Every piece on the wall costs **R280**,
+and the Artist is paid **R200** of it. The same two numbers on every piece,
+every month. There is nothing to bid on, no clock, and no door fee.
 
-The clock runs for **36 hours** from the moment the work is hung. Each new bid
-must beat the last by at least **R20**. A bid in the final five minutes pushes
-the clock out by five, so a work is not won on a fast connection.
+The Artist does **not** set the price. It is the Studio's price for the wall,
+and it is on every piece before a buyer presses anything.
 
-The Artist may **not bid on their own work**, and may not ask anybody else to
-do so on their behalf. It is the one rule without which an auction means
-nothing, and the app refuses it too.
+The Artist may **not buy their own work off the wall**. The app refuses it
+too: it is R280 out and R200 back, and that is not a sale.
 
-What is paid is the winning bid, not the opening one. The profit in clause 6
-is computed on that amount.
+**The size of a piece.** Every artwork must be **3000 × 3000 pixels**, square,
+and up to **8 MB**. That is the size every music shop asks for, so the piece
+can go out on a real release exactly as it is. The app refuses a file that is
+not that shape, and says so before you choose one.
 
-**Commissions.** A buyer may ask an artist for a one-off work for a
+**Commissions.** A buyer may ask an artist for a one-off piece for a
 particular song. The app lets the buyer say only two things — *"I want unique
 art"* and which of their own songs it is for. The Artist answers with a price
 and one of four windows: **2 days, 4 days, 6 days or 2 weeks**. The guide
@@ -126,29 +126,47 @@ price for a commission is **R500**.
 
 The clock starts when the buyer presses *accept*, not when the price was
 offered. A commission is delivered to that one buyer and to nobody else, and
-clause 4 applies to it exactly as to any other work.
+clause 4 applies to it exactly as it does to any other work.
 
-**No conversation off the platform.** The app's messages are deliberately
+**If a commission does not arrive in time.** If the Artist does not deliver
+within the window they chose themselves, the **full amount is refunded to the
+buyer within 7 days**, and the Artist is paid nothing for that piece. The
+window is the Artist's own choice out of four, precisely so that it is a
+promise that can be kept.
+
+The refund is made by the Studio through the payment provider. Today that is
+**a person and not a button**: the app shows a late commission and tells both
+parties, but the money itself is sent back by hand.
+
+**No conversation outside the app.** The app's messages are deliberately
 buttons only: there is nowhere to type. The Artist undertakes not to exchange
-contact details with a buyer in order to do a sale outside FutureBox. This is
-the one thing this agreement treats as a material breach.
+contact details with a buyer in order to make a sale outside FutureBox. This
+is the one thing this agreement treats as a material breach.
 
-## 6. How the money is split
+## 6. What gets paid
 
-The card fee comes off the **winning bid** first. What is left is the
-**profit**, and the profit is split **70% to the Artist and 30% to the
-Studio**.
+**Two different sums, because these are two different sales.**
 
-**The buy-in does not count here.** To be allowed to bid on a piece, a buyer
-pays the Studio **R50**, **per piece**. It is a door fee, there to stop
-somebody who is not serious from running a price up and walking away, and it
-applies to each work separately: a buyer who wants to bid on three works pays
-it three times. It is not part of the price of a work, it is not deducted from
-a winning bid, and **the Artist receives none of it**. The Artist is paid on
-the winning bid and on nothing else.
+**From the wall there is no sum.** The buyer pays **R280**, the Artist gets
+**R200**, and the card fee comes out of the Studio's side. That is the whole
+arrangement:
 
-The table below shows a few amounts. It is not a price list — it is what comes
-out at different winning bids.
+| Buyer pays | Card fee | Artist receives | Studio keeps |
+|---|---|---|---|
+| R280 | R11.80 | **R200.00** | R68.20 |
+
+The R200 is **clean**. Not R200 less a share of the card fee, and not a
+percentage that happens to come to R200. It is the same number on every
+piece, every month, and it can be held against a bank statement without
+doing a sum.
+
+**A commission works differently**, because the price is the Artist's own.
+The card fee comes off first. What is left is the **profit**, and the profit
+is split **70% to the Artist and 30% to the Studio**.
+
+The table below shows a few amounts for a commission. It is not a price list
+— it is what comes
+out at different commission prices.
 
 This is deliberately on the profit and not on the sticker price. A "70%"
 computed on the sticker price pays the Artist 70% of money that never
@@ -157,7 +175,7 @@ arrived — on a R200 piece that is R6.30 of somebody else's money, every time.
 The card fee is **3.5% of the payment plus R2**. That is what the payment
 provider charges and the Studio keeps none of it.
 
-| Winning bid | Card fee | Profit | Artist receives (70%) | Studio keeps (30%) |
+| Commission price | Card fee | Profit | Artist receives (70%) | Studio keeps (30%) |
 |---|---|---|---|---|
 | R200 | R9.00 | R191.00 | **R133.70** | R57.30 |
 | R250 | R10.75 | R239.25 | **R167.47** | R71.78 |

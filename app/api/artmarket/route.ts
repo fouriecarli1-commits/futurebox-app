@@ -41,8 +41,7 @@ import { wrote } from '../../lib/server/wrote';
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import {
-  ART_MAX_BYTES, BID_STEP, BIDDER_RAND, SNIPE_MINUTES, START_RAND, UNIQUE_RAND, WINDOWS,
-  endsAt, nextBid, split,
+  ART_MAX_BYTES, ART_RAND, ARTIST_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split,
 } from '@/app/data/artmarket';
 
 export const runtime = 'nodejs';
@@ -264,136 +263,24 @@ export async function GET(request: Request): Promise<Response> {
      does not check, which is the failure this whole path is for. */
   const works = (workRows ?? []) as unknown as WorkRow[];
 
-  /* ── The standing bids ───────────────────────────────────────────────
-     One read for the whole wall, from a view, so "who is leading" has one
-     answer rather than one per screen. */
-  const { data: topRows, error: topError } = await client.from('art_top_bids').select('work, top, bids');
-  /* A failed read here is the worst kind: `?? []` would make every piece
-     show its OPENING bid as the standing one, which is a wrong price on
-     the screen where the money is decided — and it would look completely
-     normal. `check:couldnotask` caught this the first time it ran over
-     the auction. */
-  if (topError) {
-    say('bids', topError);
-    return Response.json(
-      {
-        error: 'not_read',
-        message: 'The bids could not be read just now. Nothing is shown rather than the wrong amount.',
-        which: 'bids',
-      },
-      { status: 503 },
-    );
-  }
-  const tops = new Map(
-    ((topRows ?? []) as { work: string; top: number; bids: number }[]).map((one) => [
-      one.work,
-      { top: one.top, bids: one.bids },
-    ]),
-  );
+  /* A read of `art_top_bids` stood here — one query for the whole wall so
+     that "who is leading" had a single answer. There is no leading on a
+     wall with one price. */
 
-  /* ── Closing the clock, without a cron ───────────────────────────────
-
-     Carli: *"die hoogste bee wen die art binne 36 hours."*
-
-     There is no scheduler behind this app that runs every minute, and
-     adding one for this would be a second thing to keep alive. So an
-     auction closes the next time anybody looks: a work whose `ends_at`
-     has passed and that has a leading bid gets `won_by` written, once.
-
-     `.is('won_by', null)` makes it conditional, so two people opening the
-     room in the same second cannot write it twice — and the read below
-     uses what the write returned rather than what was read a moment ago,
-     because between those two the clock may have run out.
-
-     The honest limit: nothing happens until somebody opens the room. A
-     piece whose clock ended at three in the morning is decided at the
-     first visit after that, not at three. Nobody is worse off — the
-     winner is whoever had the highest bid when the clock ran out, and
-     that is a fact about the past. */
-  const nowAt = Date.now();
-  for (const one of works) {
-    if (one.sold_to || one.won_by || !one.ends_at) continue;
-    if (new Date(one.ends_at).getTime() > nowAt) continue;
-    const leading = tops.get(one.id);
-    if (!leading) continue;
-    const { data: highest } = await client
-      .from('art_bids')
-      .select('bidder')
-      .eq('work', one.id)
-      .order('rand', { ascending: false })
-      .order('at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    const winner = (highest as { bidder: string } | null)?.bidder;
-    if (!winner) continue;
-    const { data: closed } = await client
-      .from('art_works')
-      .update({ won_by: winner, won_at: new Date().toISOString() })
-      .eq('id', one.id)
-      .is('won_by', null)
-      .is('sold_to', null)
-      .select('id');
-    if (((closed ?? []) as unknown[]).length > 0) one.won_by = winner;
-  }
-
+  /* The clock that closed an auction stood here, and it closed one the next
+     time anybody opened the room, because there is no scheduler behind this
+     app. There is no clock now: a piece on the wall is R280 until somebody
+     buys it, and the only thing that ends is the sale. */
   /* ── The wall ───────────────────────────────────────────────────────
      Unsold pieces by an approved artist. Sold pieces leave the wall
      entirely rather than being greyed out: her rule is that a piece is
      sold ONCE, and a sold piece still hanging there with a line through
      it is an invitation to ask whether it really is. */
-  /* Whether the caller is the one leading, per work. Their own bids only:
-     everybody else's are nobody's business, and a leaderboard is how an
-     auction turns into a fight. */
-  const { data: mineRows, error: mineError } = await client
-    .from('art_bids')
-    .select('work, rand')
-    .eq('bidder', caller.id);
-  /* And this one decides whether somebody is told they are winning. An
-     empty list on a failed read tells a person who IS leading that they
-     are not, which is how they lose a piece they thought they had. */
-  if (mineError) {
-    say('my bids', mineError);
-    return Response.json(
-      { error: 'not_read', message: 'Your bids could not be read just now.', which: 'my bids' },
-      { status: 503 },
-    );
-  }
-  const myBest = new Map<string, number>();
-  for (const one of (mineRows ?? []) as { work: string; rand: number }[]) {
-    myBest.set(one.work, Math.max(myBest.get(one.work) ?? 0, one.rand));
-  }
-
-  /* Which pieces this person has already bought into.
-
-     Read up front, so a sleeve can say "buy in" in place of "bid" rather
-     than letting somebody settle on an amount and be refused at the end
-     of it.
-
-     A set of work ids and not one boolean, because Carli's rule is per
-     piece: *"R50 buy in is per piece. Dit is nie vir elke bidding
-     nie."* One row per person per work. */
-  const { data: passRows, error: passError } = await client
-    .from('art_bidders')
-    .select('work')
-    .eq('owner', caller.id);
-  /* Refused rather than read as an empty list. An empty list here tells
-     somebody who HAS bought into a piece that they have not, and sends
-     them to pay a second R50 for it. `check:couldnotask` is about
-     exactly this shape of mistake. */
-  if (passError) {
-    say('buy-ins', passError);
-    const missing = await missingFrom(client, 'art_bidders', ['owner', 'work']);
-    return Response.json(
-      {
-        error: 'not_read',
-        message: 'Your buy-ins could not be read just now.',
-        which: 'buy-ins',
-        missing,
-      },
-      { status: 503 },
-    );
-  }
-  const boughtIn = new Set(((passRows ?? []) as { work: string }[]).map((one) => one.work));
+  /* Two reads stood here and both belonged to the auction: the caller's own
+     standing bids, so a sleeve could say "you are winning", and which pieces
+     they had paid the R50 buy-in on, so it could say "buy in" instead of
+     "bid". Neither question exists on a wall where every piece has one price
+     and one button. */
 
   const wall = await Promise.all(
     works
@@ -403,24 +290,19 @@ export async function GET(request: Request): Promise<Response> {
         title: one.title,
         /* The opening bid, which is what `rand` means now. What will be
            paid is `top`, when the clock runs out. */
-        rand: one.rand,
-        top: tops.get(one.id)?.top ?? null,
-        bids: tops.get(one.id)?.bids ?? 0,
-        next: nextBid(tops.get(one.id)?.top ?? null),
-        endsAt: one.ends_at ?? null,
-        /* Over, and who it went to — said as two booleans rather than an
-           id, because the browser has no business knowing who else bid. */
-        /* Not started is not over. A piece nobody has bid on has no
-           clock at all, and waits. */
-        started: Boolean(one.ends_at),
-        over: Boolean(one.won_by) || (one.ends_at ? new Date(one.ends_at).getTime() <= nowAt : false),
-        wonByMe: one.won_by === caller.id,
-        /* Whether this person may bid on THIS piece. Carli: *"R50 buy in
-           is per piece. Dit is nie vir elke bidding nie."* Per sleeve and
-           not once for the room, so somebody who bought into one work
-           still meets the gate on the next. */
-        mineToBid: boughtIn.has(one.id),
-        leadingMe: (myBest.get(one.id) ?? 0) > 0 && (myBest.get(one.id) ?? 0) === (tops.get(one.id)?.top ?? -1),
+        /* ── One price, and it is the wall's ────────────────────────
+ 
+           `rand` on the row is where the bidding used to open — a number
+           the ARTIST typed — and it is not sent any more, because a
+           screen that receives it will eventually print it. The price is
+           `ART_RAND`, which the screen imports from the same file this
+           route does, so there is one number and no chance of two.
+ 
+           Gone with the auction: the standing bid, the bid count, the
+           next step, the clock, whether it had started, whether it was
+           over, whether the caller won it, whether they had paid the
+           buy-in, and whether they were leading. Nine fields that only a
+           sale decided by a clock could need. */
         artist: one.artist,
         by: byId.get(one.artist)?.name ?? '',
         /* ── The marked one, never the master ────────────────────────
@@ -621,10 +503,9 @@ export async function GET(request: Request): Promise<Response> {
 
   return Response.json({
     owing,
-    /* Her R50, once. See `app/data/artmarket.ts`. */
-    /* Her R50, per piece. Each sleeve on the wall carries `mineToBid`;
-       this is only what it costs, for the room's own copy. */
-    bidderRand: BIDDER_RAND,
+    /* `bidderRand` stood here: the R50 somebody paid to be allowed to bid
+       on a piece. It protected an auction from a person who pushes a price
+       and walks away, and there is no price to push now. */
     /* The gallery shows approved artists only. An application in the
        waiting room is between that person and the owner. */
     artists: artists
@@ -676,7 +557,11 @@ export async function GET(request: Request): Promise<Response> {
        an unapproved application is visible, to the person who made it, so
        "we are looking at it" is a state they can see rather than silence. */
     me: mine ? { id: mine.id, name: mine.name, about: mine.about, place: mine.place, approved: mine.approved } : null,
-    startRand: START_RAND,
+    /* What a piece on the wall costs, said once by the room rather than
+       per sleeve. `startRand` was the floor a first BID had to clear and
+       meant nothing on its own; this is what a buyer actually pays. */
+    artRand: ART_RAND,
+    artistRand: ARTIST_RAND,
     uniqueRand: UNIQUE_RAND,
   });
 }
@@ -824,10 +709,19 @@ export async function POST(request: Request): Promise<Response> {
       if (!title) {
         return Response.json({ error: 'no_title', message: 'Give the piece a name.' }, { status: 400 });
       }
-      /* The floor is the floor. An artist may ask more than R200 and may
-         not ask less, and the database says so too — `rand >= 200` — so
-         this is the polite refusal rather than the only one. */
-      const rand = Math.max(START_RAND, Math.round(Number(body.rand) || START_RAND));
+      /* ── The artist no longer names a price ──────────────────────
+ 
+         This read `body.rand` and clamped it to a R200 floor, because a
+         piece on the wall opened at a price its artist chose and buyers
+         bid up from there. On a wall where everything is R280 there is
+         nothing for an artist to choose: the price belongs to the wall.
+ 
+         Written as `ART_RAND` rather than left out, because the column is
+         `not null` with a `rand >= 200` constraint behind it — and
+         because the row should say what the piece was listed at. What the
+         request says about a price is now ignored entirely, which is the
+         point: a field a browser can send is a price a browser can set. */
+      const rand = ART_RAND;
       /* The marked preview, checked to be this artist's own file for the
          same reason the master is: without it, an artist could name
          somebody else's picture as the preview for their own work. */
@@ -835,10 +729,11 @@ export async function POST(request: Request): Promise<Response> {
       if (preview && !preview.startsWith(`${artist.id}/`)) {
         return Response.json({ error: 'not_yours', message: 'That is not a file you uploaded.' }, { status: 403 });
       }
-      /* No clock yet. Carli: *"Die beeing begin wanneer iemand begin
-         bee."* A piece that goes up on a Tuesday and that nobody sees
-         until Wednesday had already closed under the old rule. `ends_at`
-         stays null until the first bid, which is what starts it. */
+      /* `ends_at` stays null, and stays null for ever now. It was when
+         the bidding on this piece would stop, written by the first bid
+         rather than by the hanging, so a work nobody saw on a Tuesday
+         had not already closed by Wednesday. There is no clock on a
+         fixed price: a piece hangs until somebody buys it. */
       const { error } = await client
         .from('art_works')
         .insert({ artist: artist.id, title, path, preview, rand });
@@ -1079,7 +974,11 @@ export async function POST(request: Request): Promise<Response> {
         artist: artist.id,
         title: (ask as RequestRow).song_title || 'Commission',
         path,
-        rand: START_RAND,
+        /* A placeholder, because this row is a COMMISSION and its real
+           price is the one its artist offered and the buyer accepted.
+           The column cannot be null and carries a `rand >= 200` floor;
+           `paid_rand` below is the number the payout statement reads. */
+        rand: ROW_FLOOR,
         paid_rand: (offer as OfferRow).rand,
         sold_to: (ask as RequestRow).buyer,
         sold_at: new Date().toISOString(),
@@ -1134,121 +1033,6 @@ export async function POST(request: Request): Promise<Response> {
        A browser that can write its own bid is an auction without rules,
        which is why `art_bids` has row level security on and no policy at
        all. */
-    case 'bid': {
-      const { data: found } = await client
-        .from('art_works')
-        .select('id, artist, rand, ends_at, won_by, sold_to')
-        .eq('id', String(body.work ?? ''))
-        .maybeSingle();
-      const work = (found ?? null) as WorkRow | null;
-      if (!work) {
-        return Response.json({ error: 'no_work', message: 'There is no such piece.' }, { status: 404 });
-      }
-      if (work.sold_to || work.won_by) {
-        return Response.json({ error: 'over', message: 'The bidding on that piece is over.' }, { status: 409 });
-      }
-      /* ── You have to be a bidder ─────────────────────────────────
-         *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want
-         anders kan enige random mens die prys opstoot."* A bid is a
-         promise to pay, and a promise that costs nothing is worth
-         nothing. Checked here and nowhere else: a browser that can bid
-         without this is the thing the fee exists to stop. */
-      const { data: pass } = await client
-        .from('art_bidders')
-        .select('owner')
-        .eq('owner', caller.id)
-        .eq('work', work.id)
-        .maybeSingle();
-      if (!pass) {
-        return Response.json(
-          { error: 'no_pass', message: 'Buy in on this piece first.', rand: BIDDER_RAND },
-          { status: 402 },
-        );
-      }
-
-      /* The clock, read from the row rather than from the request. A
-         browser with a slow phone and an old page would otherwise be
-         bidding on an auction that ended ten minutes ago.
-
-         Null means nobody has bid yet, which is not "over" — it is "not
-         started", and this bid is what starts it. */
-      const closes = work.ends_at ? new Date(work.ends_at).getTime() : null;
-      if (closes !== null && closes <= Date.now()) {
-        return Response.json({ error: 'over', message: 'The bidding on that piece is over.' }, { status: 409 });
-      }
-      /* An artist may not bid their own work up. This is the one rule an
-         auction cannot do without, and it costs one comparison. */
-      const { data: they } = await client
-        .from('art_artists')
-        .select('owner')
-        .eq('id', work.artist)
-        .maybeSingle();
-      if ((they as { owner: string | null } | null)?.owner === caller.id) {
-        return Response.json(
-          { error: 'your_own', message: 'You cannot bid on your own work.' },
-          { status: 403 },
-        );
-      }
-
-      const { data: standing } = await client.from('art_top_bids').select('top').eq('work', work.id).maybeSingle();
-      const top = (standing as { top: number } | null)?.top ?? null;
-      const least = Math.max(nextBid(top), work.rand);
-      const rand = Math.round(Number(body.rand) || 0);
-      if (rand < least) {
-        return Response.json(
-          { error: 'too_low', message: `The next bid is R${least}.`, least },
-          { status: 409 },
-        );
-      }
-
-      const { error } = await client.from('art_bids').insert({ work: work.id, bidder: caller.id, rand });
-      if (error) {
-        return Response.json({ error: 'not_saved', message: 'That bid did not go through.' }, { status: 500 });
-      }
-
-      if (closes === null) {
-        /* ── The first bid starts the clock ──────────────────────────
-           `.is('ends_at', null)` makes it the FIRST bid that does it and
-           not the second: two people bidding in the same second would
-           otherwise each set a clock, and the later one would quietly
-           give the piece another thirty-six hours.
-
-           ── Both filters were missing, 24 September 2026 ────────────
-
-           This comment described `.is('ends_at', null)` and the statement
-           under it had neither that nor `.eq('id', work.id)`. An update
-           with no filter is an update to EVERY ROW, so the first bid on
-           any one piece set the same closing time on every piece in the
-           market — every artwork in the shop suddenly counting down to a
-           deadline nobody had bid on. The snipe branch below had the same
-           hole, and pushed every auction out by fifteen minutes on any
-           late bid anywhere.
-
-           It survived because the paragraph above it was right. Nothing
-           reads a comment, and the one rule this describes was the one
-           rule not written down. `check:unfiltered` now refuses an update
-           or a delete that names no row. */
-        wrote(await client
-          .from('art_works')
-          .update({ ends_at: endsAt() })
-          .eq('id', work.id)
-          .is('ends_at', null), 'the artwork listing');
-      } else if (closes - Date.now() < SNIPE_MINUTES * 60 * 1000) {
-        /* ── The late bid pushes the end out ─────────────────────────
-           Otherwise the thirty-six hours is theatre and the auction is
-           really one second long: everybody waits for the end and the
-           fastest connection wins.
-
-           Scoped to this piece — see the note above. Without the `.eq` it
-           pushed out every auction in the market. */
-        wrote(await client
-          .from('art_works')
-          .update({ ends_at: new Date(Date.now() + SNIPE_MINUTES * 60 * 1000).toISOString() })
-          .eq('id', work.id), 'the artwork listing');
-      }
-      return Response.json({ bid: rand, next: rand + BID_STEP });
-    }
-
     /* ── Bring an artist in, or change one ───────────────────────────
 
        Carli: *"Ek het nou reeds 'n kunstenaar wat ek wil in sit."*

@@ -651,12 +651,8 @@ export const STRINGS: Dict = {
      page stacks them and makes you scroll. */
   "art.tab.works": { en: "Works", af: "Werke" },
 
-  /* ── The auction ───────────────────────────────────────────────────────
-     Carli: *"Die R200 is die begin vir 'n bee rate, mense moet op die bee,
-     en die hoogste bee wen die art binne 36 hours."* R200 is not a price
-     any more — it is where the bidding opens. */
-  "art.bid": { en: "Bid", af: "Bie" },
-  "art.notStarted": { en: "No bids yet", af: "Nog geen bodde" },
+  /* The auction's words stood here. R280 IS a price again, and the only
+     thing a buyer does is press buy. */
 
   /* ── The R50 buy-in, per piece ───────────────────────────────
      Carli: *"elke persoon sal 'n R50 by in moet hê om te mag bee, want
@@ -1530,7 +1526,7 @@ export const STRINGS: Dict = {
      Carli: *"Die bladsy moet ook beskryf wat hierdie is, dit is nie net
      album art nie, dit is album art created by real artists, human made."*
      One line and not a hero paragraph: made by a person, not a machine,
-     sold once, from R200.
+     sold once, R280.
 
      "Created", never the narrower word. Carli, twice: *"Die woorde moet
      ook nie sê painted by hand nie, maar created by hand (omdat daar
@@ -1542,13 +1538,14 @@ export const STRINGS: Dict = {
      "By real artists" has moved up into the heading, so this line no
      longer repeats it. */
   /* This one line carries the whole proposition, and `check:artroom`
-     holds two of its three facts — the opening bid and the sold-once
-     rule — because both have to be readable before anything is pressed.
-     The rewrite for the auction dropped the words "sold once" and the
-     probe caught it on the next run. */
+     holds two of its three facts — the price and the sold-once rule —
+     because both have to be readable before anything is pressed. A
+     rewrite once dropped the words "sold once" and the probe caught it
+     on the next run; the move to a fixed price dropped the price itself,
+     and it caught that too. */
   "art.whatThisIs": {
-    en: "Created by hand, not generated. Bidding opens at R200 and runs 36 hours from the first bid — the highest bid takes it, and every piece is sold once and never again.",
-    af: "Met die hand geskep, nie gegenereer nie. Die bod maak oop by R200 en loop 36 uur vanaf die eerste bod — die hoogste bod vat dit, en elke werk word een keer verkoop en nooit weer nie.",
+    en: "Created by hand, not generated. R280 a piece, and every piece is sold once and never again.",
+    af: "Met die hand geskep, nie gegenereer nie. R280 ’n stuk, en elke werk word een keer verkoop en nooit weer nie.",
   },
   "art.marked": {
     en: "The picture here carries a mark. The clean file, 3000 × 3000, goes to the buyer alone.",
@@ -1628,6 +1625,10 @@ export const STRINGS: Dict = {
   },
 
   /* One piece, raised over the wall as a sheet. */
+  "art.ofWall": { en: "of the", af: "van die" },
+  "art.priceIs": { en: "Price", af: "Prys" },
+  "art.buyIt": { en: "Buy it", af: "Koop dit" },
+  "art.howFixed": { en: "One price, one buyer. Press buy and it is yours \u2014 there is nothing to bid on and no clock to watch.", af: "Een prys, een koper. Druk koop en dit is joune \u2014 daar is niks om op te bie nie en geen klok om dop te hou nie." },
   "art.oneOnly": {
     en: "This piece is sold once. When you buy it, it leaves the gallery and it is yours alone — nobody else can put it on a song.",
     af: "Hierdie kunswerk word een keer verkoop. As jy dit koop, verlaat dit die galery en is dit net joune — niemand anders kan dit op ’n liedjie sit nie.",
@@ -2562,7 +2563,7 @@ export const STRINGS: Dict = {
   "cover.alt": { en: "Cover art for this song", af: "Omslagkuns vir hierdie liedjie" },
   "cover.failed": { en: "The cover could not be made.", af: "Die omslag kon nie gemaak word nie." },
   "cover.slow": { en: "That is taking longer than usual. Try again in a moment.", af: "Dit vat langer as gewoonlik. Probeer netnou weer." },
-  "cover.real": { en: "Real art by an artist \u2014 from R200", af: "Regte kuns deur \u2019n kunstenaar \u2014 vanaf R200" },
+  "cover.real": { en: "Real art by an artist \u2014 R280", af: "Regte kuns deur \u2019n kunstenaar \u2014 R280" },
   "cover.realWhy": { en: "A one-off piece painted by a person, sold once and never again. It opens the art wall with this song already chosen, so whatever you win goes straight onto it.", af: "\u2019n Enkelstuk wat deur \u2019n mens geskilder is, een keer verkoop en nooit weer nie. Dit maak die kunsmuur oop met hierdie liedjie reeds gekies, sodat wat jy ook al wen dadelik daarop gaan." },
   "canvas.another": { en: "Press again for another", af: "Druk weer vir nog een" },
   "canvas.ideas": { en: "ideas", af: "idees" },

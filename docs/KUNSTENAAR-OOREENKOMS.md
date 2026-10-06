@@ -108,21 +108,22 @@ herlisensieer nie.
 
 ## 5. Pryse en bestellings
 
-**Van die muur af is dit 'n veiling.** Die Kunstenaar stel die openingsbod,
-met 'n vloer van **R200** per werk. Van daar af bie kopers teen mekaar, en die
-**hoogste bod wanneer die klok stop, vat die werk**.
+**Van die muur af is dit een prys.** Elke werk op die muur kos **R280**, en
+die Kunstenaar word **R200** daarvan betaal. Dieselfde twee getalle op elke
+stuk, elke maand. Daar is niks om op te bie nie, geen klok nie, en geen
+deurfooi nie.
 
-Die klok loop **36 uur** vandat die werk opgehang word. Elke nuwe bod moet die
-vorige een met ten minste **R20** klop. 'n Bod in die laaste vyf minute stoot
-die klok vyf minute verder, sodat 'n werk nie op 'n vinnige verbinding gewen
-word nie.
+Die Kunstenaar stel **nie** die prys nie. Dit is die Studio se prys vir die
+muur, en dit staan op elke stuk voordat 'n koper druk.
 
-Die Kunstenaar mag **nie op sy of haar eie werk bie nie**, en mag niemand
-anders vra om dit te doen nie. Dit is die een reël waarsonder 'n veiling niks
-beteken nie, en die app weier dit ook.
+Die Kunstenaar mag **nie sy of haar eie werk van die muur af koop nie**. Die
+app weier dit ook: dit is R280 uit en R200 terug, en dit is nie 'n verkoop
+nie.
 
-Wat betaal word, is die wenbod — nie die openingsbod nie. Die wins in klousule
-6 word op daardie bedrag bereken.
+**Die grootte van 'n werk.** Elke kunswerk moet **3000 × 3000 pixels** wees,
+vierkantig, en tot **8 MB**. Dit is die grootte wat elke musiekwinkel vra, so
+die werk kan net so op 'n regte vrystelling uitgaan. Die app weier 'n lêer wat
+nie daardie vorm het nie, en sê so voor jy kies.
 
 **Bestellings.** 'n Koper kan 'n kunstenaar vra vir 'n eenmalige werk vir 'n
 spesifieke liedjie. Die app laat die koper net twee dinge sê — *"ek wil unieke
@@ -134,27 +135,45 @@ Die horlosie begin loop wanneer die koper *aanvaar* druk, nie wanneer die prys
 aangebied is nie. 'n Bestelling word aan daardie een koper gelewer en aan
 niemand anders nie, en klousule 4 geld daarop net soos op enige ander werk.
 
+**As 'n bestelling nie betyds kom nie.** Lewer die Kunstenaar nie binne die
+tydvenster wat hy of sy self gekies het nie, word die **volle bedrag binne 7
+dae aan die koper terugbetaal**, en die Kunstenaar word niks vir daardie stuk
+betaal nie. Die tydvenster is die Kunstenaar se eie keuse uit vier, juis sodat
+dit 'n belofte is wat gehou kan word.
+
+Die terugbetaling word deur die Studio by die betaaldiens gedoen. Dit is
+vandag **'n mens en nie 'n knoppie nie**: die app wys 'n laat bestelling en sê
+dit vir altwee partye, maar die geld self word met die hand teruggestuur.
+
 **Geen gesprek buite die app nie.** Die app se boodskappe is met opset net
 knoppies: daar is geen plek om te tik nie. Die Kunstenaar onderneem om nie
 kontakbesonderhede met 'n koper te ruil om 'n verkoop buite FutureBox om te
 doen nie. Dit is die een ding wat hierdie ooreenkoms as 'n wesenlike
 verbreking behandel.
 
-## 6. Winsverdeling
+## 6. Wat betaal word
 
-Die kaartfooi kom eerste van die **wenbod** af. Wat oorbly is die **wins**, en
-die wins word **70% aan die Kunstenaar en 30% aan die Studio** verdeel.
+**Twee verskillende somme, want dit is twee verskillende verkope.**
 
-**Die buy-in tel nie hier nie.** Om op 'n werk te mag bie, betaal 'n koper
-**R50** aan die Studio, **per werk**. Dit is 'n deurfooi wat keer dat iemand
-wat nie ernstig is nie 'n prys opstoot en wegloop, en dit geld vir elke stuk
-afsonderlik: 'n koper wat op drie werke wil bie, betaal dit drie keer. Dit is
-nie deel van die prys van 'n werk nie, dit word nie van 'n wenbod afgetrek
-nie, en **die Kunstenaar kry niks daarvan nie**. Die Kunstenaar word op die
-wenbod betaal en op niks anders nie.
+**Van die muur af is daar nie 'n som nie.** Die koper betaal **R280**, die
+Kunstenaar kry **R200**, en die kaartfooi kom uit die Studio se kant. Dit is
+die hele reëling:
 
-Die tabel hieronder wys 'n paar bedrae. Dit is nie 'n pryslys nie — dit is wat
-by verskillende wenbodde uitkom.
+| Koper betaal | Kaartfooi | Kunstenaar kry | Studio hou |
+|---|---|---|---|
+| R280 | R11.80 | **R200.00** | R68.20 |
+
+Die R200 is **skoon**. Nie R200 min 'n deel van die kaartfooi nie, en nie 'n
+persentasie wat toevallig op R200 uitkom nie. Dit is dieselfde getal op elke
+stuk, elke maand, en dit kan teen 'n bankstaat gehou word sonder om 'n som te
+doen.
+
+**'n Bestelling werk anders**, want die prys is die Kunstenaar se eie. Die
+kaartfooi kom eerste af. Wat oorbly is die **wins**, en die wins word **70%
+aan die Kunstenaar en 30% aan die Studio** verdeel.
+
+Die tabel hieronder wys 'n paar bedrae vir 'n bestelling. Dit is nie 'n
+pryslys nie — dit is wat by verskillende bestellingspryse uitkom.
 
 Dit is met opset op die wins en nie op die plakkerprys nie. 'n "70%" wat op
 die plakkerprys bereken word, betaal die Kunstenaar 70% van geld wat nooit
@@ -164,7 +183,7 @@ elke keer.
 Die kaartfooi is **3,5% van die betaling plus R2**. Dit is wat die
 betaaldiens hef en die Studio hou niks daarvan nie.
 
-| Wenbod | Kaartfooi | Wins | Kunstenaar kry (70%) | Studio hou (30%) |
+| Bestellingsprys | Kaartfooi | Wins | Kunstenaar kry (70%) | Studio hou (30%) |
 |---|---|---|---|---|
 | R200 | R9.00 | R191.00 | **R133.70** | R57.30 |
 | R250 | R10.75 | R239.25 | **R167.47** | R71.78 |

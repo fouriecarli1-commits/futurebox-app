@@ -142,7 +142,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          checks. `check:artmarket` holds these two numbers against
          `START_RAND` and `UNIQUE_RAND`, so the card still cannot drift
          from what the till charges. */
-      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
          24 September 2026. Carli: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die
@@ -180,7 +180,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The copilot, uncapped',
       'Post to your own channels',
       'Every workshop',
-      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
          24 September 2026. Carli: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die
@@ -237,7 +237,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Everything in Maker, and three cloned voices',
       'Ask FutureBox to boost a collab',
       'The full radar — every item, every reason',
-      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
          24 September 2026. Carli: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die
@@ -278,7 +278,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Everything in Studio, and ten cloned voices',
       'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',
-      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
          24 September 2026. Carli: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die

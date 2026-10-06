@@ -83,9 +83,15 @@ ok('  and still says a payment happened', /paid=1/.test(callback), callback);
 
 /* Worked out from the kind, never read off the request. `want.kind` is
    already checked; a `room` in the body is not. */
+/* Two kinds now, not three. `bidpass` was the R50 that bought the right to
+   bid, and it came back to the wall like the other two; it went with the
+   auction on 6 October 2026. What this rule is really about has not moved:
+   the room is worked out from what was BOUGHT and never read off the
+   request. */
 ok('  and works the room out from what was bought',
-  /want\.kind === 'bidpass'/.test(till) && /'albumart'/.test(till),
-  'the three album-art kinds are the ones that must come back to the wall');
+  /want\.kind === 'art'/.test(till) && /want\.kind === 'commission'/.test(till)
+  && /'albumart'/.test(till),
+  'the album-art kinds are the ones that must come back to the wall');
 ok('  rather than taking a room name off the request',
   !/body\.room|asked\.room|want\.room/.test(till),
   'a room name that arrives over the wire is one somebody chose, and this is the till');

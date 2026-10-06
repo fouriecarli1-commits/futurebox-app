@@ -60,7 +60,13 @@ const hook = strip(readFileSync('app/api/payments/webhook/route.ts', 'utf8'));
 const kinds = [...new Set(
   [...till.matchAll(/\{\s*kind:\s*'([a-z]+)'/g)].map((one) => one[1]),
 )].sort();
-ok('the till still declares the payment kinds this can read', kinds.length >= 5,
+/* Four, since the auction went. It was five with `bidpass` on it, and the
+   number is a floor rather than a count for the reason this block exists:
+   it has to notice a kind being ADDED without this contract being looked
+   at again, which is exactly how `bidpass` slipped through. Lowering it
+   when one goes is the honest move; raising it when one arrives is not
+   this rule's job, because the rules below read the list itself. */
+ok('the till still declares the payment kinds this can read', kinds.length >= 4,
   `${kinds.length} found: ${kinds.join(', ')}`);
 
 /**
