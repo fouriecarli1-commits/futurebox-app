@@ -22,7 +22,7 @@ import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { planCode } from '@/app/lib/server/paystack';
 import { mayTopUp, packById } from '@/app/lib/credits';
-import { BIDDER_RAND } from '@/app/data/artmarket';
+import { ART_RAND, BIDDER_RAND } from '@/app/data/artmarket';
 import { langOf, roomToSell } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
@@ -74,33 +74,48 @@ async function priceOf(want: Want, who: string): Promise<{ cents: number; label:
     if (!db) return null;
     const { data } = await db
       .from('art_works')
-      .select('title, rand, won_by, sold_to')
+      .select('title, artist, sold_to')
       .eq('id', want.work)
       .maybeSingle();
     const work = data as
-      | { title: string; rand: number; won_by: string | null; sold_to: string | null }
+      | { title: string; artist: string; sold_to: string | null }
       | null;
     if (!work || work.sold_to) return null;
 
-    /* ── It is an auction, so the price is the winning bid ───────────
+    /* ── One price, and it is not on the row ────────────────────────
 
-       Carli: *"Die R200 is die begin vir 'n bee rate … die hoogste bee
-       wen die art binne 36 hours."* `rand` on the row is where the
-       bidding OPENED. Charging it would sell a piece that went to R900
-       for R200, which is the artist's money.
+       Carli, 6 October 2026: *"Ek dink ons moet 'n vaste rate van R280
+       vra vir 'n kunswerk."*
 
-       And only the winner may pay. `won_by` is written once, by the
-       route, when the clock runs out — never from a request — so this
-       is a comparison against a fact and not against a claim. */
-    if (work.won_by !== who) return null;
-    const { data: standing } = await db
-      .from('art_top_bids')
-      .select('top')
-      .eq('work', want.work)
+       The price is `ART_RAND` and it is read from the file that owns it,
+       never from the row. `rand` on `art_works` is where the bidding used
+       to open — a number an ARTIST put there — and charging it would let
+       the person who uploads a piece decide what a buyer pays. The wall
+       has one price for everything on it, which is the whole shape of the
+       change: a buyer sees one number before they press and pays that
+       number.
+
+       Everything the auction needed here is gone with it: the winner
+       check, the standing bid, and the reason to look at the row's own
+       price at all. What is left is the rule that outlives the auction —
+       a sold piece is not for sale again.
+
+       The sold-once GUARANTEE is still the partial unique index in
+       `supabase/albumart.sql`. This is the polite refusal that stops most
+       of them reaching it, and two people pressing buy in the same second
+       are not looking at a screen. */
+    const { data: they } = await db
+      .from('art_artists')
+      .select('owner')
+      .eq('id', work.artist)
       .maybeSingle();
-    const top = (standing as { top: number } | null)?.top ?? null;
-    if (top === null || top < work.rand) return null;
-    return { cents: Math.round(top * 100), label: `Album art: ${work.title}` };
+    /* An artist buying their own piece off the wall is not a sale, it is
+       R280 out and R200 back. The auction refused it for a different
+       reason — bidding your own work up — and the refusal is still right
+       under a fixed price, for the plainer one. */
+    if ((they as { owner: string | null } | null)?.owner === who) return null;
+
+    return { cents: ART_RAND * 100, label: `Album art: ${work.title}` };
   }
 
   /* ── The bidder's pass ─────────────────────────────────────────────

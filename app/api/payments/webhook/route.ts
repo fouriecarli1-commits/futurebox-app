@@ -311,28 +311,35 @@ export async function POST(request: Request): Promise<Response> {
     if (!store) return new Response('no database', { status: 200 });
     const { data, error } = await store
       .from('art_works')
-      /* `paid_rand` is what the artist is paid on, and it is written
-         here because here is the only place that knows it: `rand` on the
-         row is the OPENING bid, and what the winner actually paid is the
-         amount on the charge. A piece that opened at R200 and closed at
-         R900 would otherwise have paid its artist R133.70. */
+      /* `paid_rand` is what actually arrived, read off the charge rather
+         than off the price list.
+ 
+         Under the auction it had to be: `rand` on the row was the opening
+         bid and the sale could close anywhere above it. The wall has one
+         price now, so the two agree — and this still reads the charge,
+         because the charge is the fact. If they ever disagree, the money
+         that arrived is the true number and a row that says otherwise is
+         the bug. */
       .update({
         sold_to: owner,
         sold_at: new Date().toISOString(),
         paid_rand: Math.round(cents / 100),
       })
       .eq('id', meta.work)
+      /* The whole guarantee, and all of it that is left.
+ 
+         `.eq('won_by', owner)` stood here too, because under the auction
+         only the winner could pay. There is no winner now — whoever pays
+         for an unsold piece owns it — so that condition would refuse
+         every legitimate sale on the new wall. What it was really doing
+         is done by the line above: a piece sells once, to whoever got
+         there. */
       .is('sold_to', null)
-      /* And the payer has to be the person who won it. The till checks
-         this too, but a charge arrives here minutes later and carries
-         only what it was started with — so the last word belongs to the
-         row, where `won_by` was written when the clock ran out. */
-      .eq('won_by', owner)
       .select('id, title');
     const sold = (data ?? []) as { id: string; title: string }[];
     if (error || sold.length === 0) {
       console.error(
-        `[artmarket] paid for a piece that was already sold, or by somebody who did not win it.`
+        `[artmarket] paid for a piece that was already sold.`
         + ` work=${meta.work} owner=${owner} reference=${reference} — this needs a refund.`,
       );
       return new Response('already sold', { status: 200 });

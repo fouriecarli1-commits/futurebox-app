@@ -27,6 +27,7 @@ import {
 } from '../app/data/artmarket';
 import { gatewayFee } from '../app/lib/plans';
 import { readFileSync, readdirSync } from 'node:fs';
+import { withoutComments } from './prose.mts';
 import { join } from 'node:path';
 
 let failures = 0;
@@ -255,31 +256,18 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
 
    Read off the route rather than asserted about it: the rule is which
    column the price comes from, and only the source can say. */
-{
-  const till = readFileSync('app/api/checkout/route.ts', 'utf8');
-  const at = till.indexOf("want.kind === 'art'");
-  const branch = at < 0 ? '' : till.slice(at, at + 1800);
-  ok('the till prices a piece at the winning bid, not the opening one',
-    /art_top_bids/.test(branch),
-    'the art branch of /api/checkout no longer reads the standing bid');
-  ok('  and only the person who won it may pay',
-    /won_by !== who/.test(branch),
-    'anybody who can name a work id can buy it out from under the winner');
-}
+/* ── The wall's price comes from the wall, not from the artist ──────
 
-/* And the split is computed on what was actually paid, which is now a bid
-   and not a fixed number. A worked case: a piece that opened at R200 and
-   went to R900. */
-{
-  const won = split(900);
-  ok('  and the artist is paid on the bid, not on the opening price',
-    Math.abs(won.artist - 606.55) < 0.005,
-    `R${won.artist.toFixed(2)} on a R900 winning bid`);
-  ok('    which is far more than the opening price would have paid',
-    won.artist > split(START_RAND).artist * 4,
-    `R${won.artist.toFixed(2)} against R${split(START_RAND).artist.toFixed(2)}`,
-  );
-}
+   Carli, 6 October 2026: *"Ek dink ons moet 'n vaste rate van R280 vra vir
+   'n kunswerk."* The auction's two rules here — charge the winning bid, and
+   only the winner may pay — described a sale that no longer exists, and a
+   rule that describes a feature nobody has is worse than none: it goes red
+   on correct code and teaches whoever sees it to delete rules.
+
+   What replaces them is the danger a fixed price creates. `art_works.rand`
+   was the OPENING bid, put there by the artist. On a wall with one price it
+   is not a price at all, and charging it would let whoever uploads a piece
+   decide what a buyer pays. */
 
 /* ── The STATEMENT is on what was paid, not on the opening bid ──────
 
@@ -711,6 +699,54 @@ ok('  and nothing on the wall is a percentage any more',
   'the artist\'s amount is the same number on every piece, every month, and'
   + ' can be counted against a bank statement without doing a sum');
 
+/* ── The till charges the wall's price, not the artist's ──────────────
+
+   The one place a mistake here costs real money to a real person, and the
+   only reason it is a grep: the decision lives inside a route that reads a
+   database, so it cannot be called from here the way `wallSplit()` can.
+
+   Under the auction, `art_works.rand` was the OPENING bid and the sale
+   closed above it. Under a fixed price that column is a number an ARTIST
+   typed, and charging it would let whoever uploads a piece decide what a
+   buyer pays — on a wall whose whole promise is one price on everything. */
+const till = readFileSync('app/api/checkout/route.ts', 'utf8');
+/* Both ends searched FROM the start of the block. `bidpass` is named in the
+   type union at the top of each file as well, so searching the whole string
+   found it BEFORE the art branch and sliced backwards — an empty block, and
+   an empty block passes every "does not contain" rule in this section. A
+   rule that reads nothing agrees with everything. */
+const artAt = till.indexOf("want.kind === 'art'");
+const art = till.slice(artAt, till.indexOf("'bidpass'", artAt));
+const selects = art.split('\n').filter((one) => /\.select\(/.test(one)).join(' ');
+
+ok('the till prices a piece from the wall price, not from the row',
+  /ART_RAND \* 100/.test(art),
+  'the number a buyer is charged must come from `data/artmarket.ts`, the same'
+  + ' file the screens read');
+
+ok('  and never reads a price off the work itself',
+  !/\brand\b/.test(selects),
+  '`art_works.rand` is a number an artist typed. On a wall with one price it'
+  + ` is not a price at all, and selecting it here is how it becomes one — ${selects}`);
+
+ok('  and no longer asks who won',
+  !/won_by/.test(art) && !/art_top_bids/.test(art),
+  'there is no winner on a fixed-price wall. Left in, every legitimate sale'
+  + ' is refused at the till');
+
+const hook = withoutComments(readFileSync('app/api/payments/webhook/route.ts', 'utf8'));
+const grantAt = hook.indexOf("meta.kind === 'art'");
+const grant = hook.slice(grantAt, hook.indexOf("'bidpass'", grantAt));
+ok(`the two money blocks were actually found (${art.length}, ${grant.length} characters)`,
+  art.length > 200 && grant.length > 200,
+  'an empty slice passes every "does not contain" rule below it, which is how'
+  + ' the first version of these rules reported a webhook it had never read');
+
+ok('the sale is granted to whoever paid for an unsold piece',
+  /\.is\('sold_to', null\)/.test(grant) && !/\.eq\('won_by'/.test(grant),
+  'sell-once is `.is(sold_to, null)` and that is the whole guarantee now.'
+  + ' Requiring a winner as well refuses every sale the new wall can make');
+
 if (failures) {
   console.error(
     '\ncheck:artmarket — a share computed on the sticker price pays an artist out of money'
@@ -719,7 +755,8 @@ if (failures) {
   process.exit(1);
 }
 console.log(
-  `\ncheck:artmarket — bidding opens at R${START_RAND} in steps of R${BID_STEP} over ${AUCTION_HOURS} hours,`
-  + ` R${UNIQUE_RAND} for a one-off, 70/30 on the profit, and every cent accounted for`
-  + ` across ${PRICES.length} prices.`,
+  `\ncheck:artmarket — the wall is R${ART_RAND} with R${ARTIST_RAND} to the artist, charged`
+  + ' from the price list and not from the row; a piece sells once, to whoever'
+  + ` paid; R${UNIQUE_RAND} for a commission with 70/30 on the profit; and every cent`
+  + ` accounted for across ${PRICES.length} prices.`,
 );
