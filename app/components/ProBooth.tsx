@@ -303,7 +303,21 @@ export default function ProBooth({
      Chords, key, tempo and sections, read by a service rather than guessed
      here. The answer is kept per lane: reading is paid for and a second press
      on the same lane should show what the first one bought. */
-  const [known, setKnown] = useState<Record<string, { tempo: number | null; key: string | null; spans: Span[] }>>({});
+  /* `saw` is what the workflow actually called its outputs.
+ 
+     Carli ran the read on 6 October with all three slugs confirmed against
+     her account, and got "nothing in the answer was a tempo, a key or a list
+     of chords" — the workflow ran, and what came back was in a shape this app
+     did not recognise. From here that is unfixable: the answer was thrown
+     away and only the verdict kept.
+ 
+     Music.ai hand back a map of output name to value, and for most workflows
+     that value is a LINK to a file rather than the number itself. If that is
+     what happened, the names will say so in one press instead of an evening
+     of guessing. */
+  const [known, setKnown] = useState<Record<string, {
+    tempo: number | null; key: string | null; spans: Span[]; saw: string[];
+  }>>({});
   /* Which lane is being read right now. Named apart from the master's
      `reading` deliberately: two different things called the same word in one
      file is how the wrong one gets set. */
@@ -1144,7 +1158,15 @@ export default function ProBooth({
         }
         setKnown((was) => ({
           ...was,
-          [lane.id]: { tempo: tempoIn(got.data), key: keyIn(got.data), spans: spansIn(got.data) },
+          [lane.id]: {
+            tempo: tempoIn(got.data),
+            key: keyIn(got.data),
+            spans: spansIn(got.data),
+            /* The names only, and a word for the shape of each — never the
+               values. A link from a supplier can carry a signature on it. */
+            saw: Object.entries(got.data as Record<string, unknown>).map(([name, value]) =>
+              (typeof value === 'string' && /^https?:\/\//.test(value) ? `${name} (link)` : name)),
+          },
         }));
       } catch {
         setProblem(t('pro.readFailed', 'That lane could not be read.'));
@@ -1580,7 +1602,7 @@ export default function ProBooth({
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const said = await answer.json().catch(() => null) as
-        { nam?: string; name?: string; why?: string } | null;
+        { nam?: string; name?: string; why?: string; theirStatus?: number } | null;
       if (!answer.ok || !said?.nam) {
         /* ── Why, and not just that ───────────────────────────────────
  
@@ -1604,9 +1626,15 @@ export default function ProBooth({
               : said?.why === 'gone'
                 ? t('pro.t3kNoFile', 'TONE3000 has no file to download for that amp.')
                 : said?.why === 'store'
-                  ? t('pro.t3kStore', 'The file was found and would not download. Worth one more try.')
+                  ? `${t('pro.t3kStore', 'The file was found and would not download. Worth one more try.')}${said?.theirStatus ? ` (${said.theirStatus})` : ''}`
                   : said?.why === 'refused'
-                    ? t('pro.t3kRefused', 'TONE3000 refused the download. Try another amp; if it keeps happening, sign in to TONE3000 again.')
+                    /* Their code on the end. A bare number in a sentence a
+                       member reads is not pretty, and it is the difference
+                       between an evening of guessing and one message: a 401
+                       is a sign-in that is not what we think it is, a 403 a
+                       permission never asked for, a 429 too many tries, a
+                       500 their bad minute. Only shown where it exists. */
+                    ? `${t('pro.t3kRefused', 'TONE3000 refused the download. Try another amp; if it keeps happening, sign in to TONE3000 again.')}${said?.theirStatus ? ` (${said.theirStatus})` : ''}`
                     : said?.why === 'database'
                       ? t('pro.t3kOurs', 'Something on our side could not be reached. Try again in a moment.')
                       : t('pro.t3kGone', 'That amp could not be brought in.'),
@@ -4165,7 +4193,7 @@ function LaneRow({
   onRead: () => void;
   onParts: () => void;
   reading: boolean;
-  found?: { tempo: number | null; key: string | null; spans: Span[] };
+  found?: { tempo: number | null; key: string | null; spans: Span[]; saw: string[] };
   onUseTempo: (bpm: number, key: string | null) => void;
   /**
    * Out to TONE3000 to choose an amp, which is a room-level errand.
@@ -4577,6 +4605,12 @@ function LaneRow({
                a bug to report. */
             <span className="text-xs text-amber-400 leading-snug">
               {t('pro.readUnknown', 'It read the song, but nothing in the answer was a tempo, a key or a list of chords. That is a workflow that returns something else.')}
+              {found.saw.length > 0 && (
+                <>
+                  {' '}
+                  {t('pro.readSaw', 'What came back:')} {found.saw.join(', ')}
+                </>
+              )}
             </span>
           )}
         </div>

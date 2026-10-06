@@ -260,7 +260,17 @@ export async function finish(
  */
 export type Fetched =
   | { readonly how: 'got'; readonly name: string; readonly nam: string }
-  | { readonly how: 'no'; readonly why: string };
+  /**
+   * `status` is THEIR status code, carried out rather than swallowed.
+   *
+   * "TONE3000 refused the download" is six words that cover a 401, a 403, a
+   * 429 and a 500 — a sign-in that is not what we think it is, a scope we
+   * never asked for, too many tries, and their server having a bad minute.
+   * Four different problems, four different answers, and from here they all
+   * read the same. Carli hit this on 6 October with the whole journey
+   * otherwise working.
+   */
+  | { readonly how: 'no'; readonly why: string; readonly status?: number };
 
 export async function captureFor(owner: string, toneId: string): Promise<Fetched> {
   const client = admin();
@@ -293,13 +303,15 @@ export async function captureWith(access: string, toneId: string): Promise<Fetch
   const told = await fetch(`${API}${downloadPath(toneId)}`, {
     headers: { Authorization: `Bearer ${access}` },
   });
-  if (!told.ok) return { how: 'no', why: told.status === 404 ? 'gone' : 'refused' };
+  if (!told.ok) {
+    return { how: 'no', why: told.status === 404 ? 'gone' : 'refused', status: told.status };
+  }
   const said = await told.json().catch(() => null) as { url?: string } | null;
   if (!said?.url) return { how: 'no', why: 'refused' };
 
   /* Bare. No Authorization, no supplier door — see the note above. */
   const zipped = await fetch(said.url);
-  if (!zipped.ok) return { how: 'no', why: 'store' };
+  if (!zipped.ok) return { how: 'no', why: 'store', status: zipped.status };
 
   const entries = unzip(Buffer.from(await zipped.arrayBuffer()));
   const found = pick(entries, ['.nam']);

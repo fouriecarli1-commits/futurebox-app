@@ -52,7 +52,7 @@ export async function GET(request: Request): Promise<Response> {
        would read as OUR sign-in, and the room would send her to the wrong
        door. */
     const status = got.why === 'signin' || got.why === 'expired' ? 409 : 502;
-    return Response.json({ ready: true, why: got.why }, { status });
+    return Response.json({ ready: true, why: got.why, theirStatus: got.status }, { status });
   }
 
   return Response.json({ ready: true, name: got.name, nam: got.nam });

@@ -2213,6 +2213,7 @@ export const STRINGS: Dict = {
   "pro.read": { en: "Read the chords, key and tempo", af: "Lees die akkoorde, toonsoort en tempo" },
   "pro.readFailed": { en: "That lane could not be read.", af: "Daardie baan kon nie gelees word nie." },
   "pro.useTempo": { en: "Set the session to this", af: "Stel die sessie hierop" },
+  "pro.readSaw": { en: "What came back:", af: "Wat teruggekom het:" },
   "pro.readUnknown": { en: "It read the song, but nothing in the answer was a tempo, a key or a list of chords. That is a workflow that returns something else.", af: "Dit het die liedjie gelees, maar niks in die antwoord was ’n tempo, ’n toonsoort of ’n lys akkoorde nie. Dit is ’n werkvloei wat iets anders teruggee." },
   "pro.parts": { en: "Split into named parts", af: "Verdeel in benoemde dele" },
   "pro.stemsWhere": { en: "Eight bars of something, in this song\u2019s key and tempo. To take a lane you already have apart instead, open it under Track controls \u2014 the scissors lift the voice off it, and the layers split it into named parts.", af: "Agt mate van iets, in hierdie liedjie se toonaard en tempo. Om \u2019n baan wat jy reeds het uitmekaar te haal, maak hom eerder oop onder Baankontroles \u2014 die skêr haal die stem daarvan af, en die lae verdeel hom in benoemde dele." },
