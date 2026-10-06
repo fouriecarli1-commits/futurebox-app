@@ -234,6 +234,24 @@ The `NEXT_PUBLIC_` prefix is right on this one and would be a mistake on a
 secret — it bakes the value into the JavaScript every visitor downloads.
 This value is published by design.
 
+**Die terugkeeradres, en hoekom `www` 'n ander adres is.** By TONE3000, onder
+**Allowed Redirect URIs**, moet hierdie staan:
+
+    https://futurebox.studio/api/tone3000/callback
+    https://www.futurebox.studio/api/tone3000/callback
+
+Altwee. Op 6 Oktober 2026 het die reis op haar foon gefaal met hul eie
+woorde — *"redirect_uri not registered for this client"*, met
+`received_redirect_uri: https://www.futurebox.studio/...`. Sy was op die
+`www`-adres; net die een sonder was geregistreer. Vir OAuth is dit twee
+verskillende plekke, en die kontrole wat dit weier is die kontrole wat keer
+dat iemand anders 'n aantekening afvang.
+
+Die app bou daardie adres uit die versoek eerder as uit 'n vaste waarde, wat
+reg is: 'n vaste een sou van een van die adresse af stilweg verkeerd werk.
+Daarom moet albei op hul lys wees — of, beter, moet item 5 se aanstuurings
+staan sodat daar net **een** adres is om te registreer.
+
 **Also needed, and not a variable:** two addresses typed into **Allowed
 Redirect URIs** on their settings page, one per line —
 `https://futurebox.studio/api/tone3000/callback` and

@@ -96,7 +96,17 @@ export async function GET(request: Request): Promise<Response> {
   return Response.json({
     working: look.why === 'ok',
     why: look.why,
-    next: NEXT[look.why],
+    /* The deeper answer wins when it disagrees.
+ 
+       `search-refused` reads as "their policy, nothing to fix here" — which
+       is true when the catalogue is open and only the search is shut. When
+       even a plain album comes back 403 it is not their policy at all, it is
+       an access level she can change, and the top line was telling her to
+       stop looking while the line below it told her where. One page, two
+       answers, and the wrong one first. */
+    next: access && access.catalogue !== 200 && access.token
+      ? access.reading
+      : NEXT[look.why],
     ...(look.status ? { theirStatus: look.status } : {}),
     ...(look.saw ? { saw: look.saw } : {}),
     chart: look.chart
