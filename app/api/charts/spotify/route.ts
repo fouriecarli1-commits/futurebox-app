@@ -31,7 +31,7 @@
  */
 
 import crypto from 'node:crypto';
-import { spotifyWhy, type SpotifyWhy } from '@/app/lib/server/spotify';
+import { probeAccess, spotifyWhy, type SpotifyWhy } from '@/app/lib/server/spotify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -88,6 +88,11 @@ export async function GET(request: Request): Promise<Response> {
   if (!given || !sameSecret(given, wanted)) return new Response('no', { status: 404 });
 
   const look = await spotifyWhy();
+  /* When they refuse, ask WHICH refusal it is. Three different worlds hide
+     behind one 403 and only one of them has a way forward; see `probeAccess`.
+     Skipped when the chart came back, because there is nothing to diagnose
+     about a thing that worked. */
+  const access = look.why === 'ok' ? null : await probeAccess();
   return Response.json({
     working: look.why === 'ok',
     why: look.why,
@@ -97,5 +102,6 @@ export async function GET(request: Request): Promise<Response> {
     chart: look.chart
       ? { name: look.chart.name, url: look.chart.url, songs: look.chart.rows.length }
       : null,
+    ...(access ? { access } : {}),
   });
 }

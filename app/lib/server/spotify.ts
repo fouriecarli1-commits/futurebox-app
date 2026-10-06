@@ -146,6 +146,112 @@ async function spotifyLook(): Promise<SpotifyLook> {
   }
 }
 
+/**
+ * Which of three worlds a refusal puts us in.
+ *
+ * A 403 on the search says Spotify will not serve that endpoint to this app.
+ * It does NOT say whether the app may call anything at all, and those are
+ * different problems with different answers:
+ *
+ *   everything refused  → an access-level problem on her side. A new app
+ *                         starts restricted, and that is a dashboard setting
+ *                         rather than something to code around.
+ *   catalogue works,
+ *   search refused      → the search endpoint specifically. Their chart could
+ *                         still be reachable by id, which is a real way
+ *                         forward rather than a guess.
+ *   catalogue works,
+ *   the chart refused   → their own editorial playlists are behind the line
+ *                         they have been drawing for new apps. Nothing here
+ *                         can fix that, and the honest move is to leave the
+ *                         bar off.
+ *
+ * Only reachable from the guarded page. The id below is Spotify's published
+ * Top 50 Global, used HERE as a probe and deliberately not in the chart path
+ * above — a pinned id fails silently the day they retire it, which is why
+ * that path searches instead.
+ */
+const TOP_50_GLOBAL = '37i9dQZEVXbMDoHDwVN2tF';
+
+export interface Access {
+  readonly token: boolean;
+  /** Plain catalogue: an album by id. Nothing editorial, nothing personal. */
+  readonly catalogue: number | 'threw' | null;
+  readonly search: number | 'threw' | null;
+  readonly theirChart: number | 'threw' | null;
+  readonly reading: string;
+}
+
+export async function probeAccess(): Promise<Access> {
+  const id = (process.env.SPOTIFY_CLIENT_ID ?? '').trim();
+  const secret = (process.env.SPOTIFY_CLIENT_SECRET ?? '').trim();
+  const nothing: Access = {
+    token: false, catalogue: null, search: null, theirChart: null,
+    reading: 'No keys are set, so there is nothing to ask.',
+  };
+  if (!id || !secret) return nothing;
+
+  let token = '';
+  try {
+    const auth = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`,
+      },
+      body: 'grant_type=client_credentials',
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!auth.ok) {
+      return { ...nothing, reading: `The key pair was refused (${auth.status}).` };
+    }
+    token = ((await auth.json()) as { access_token?: string }).access_token ?? '';
+  } catch {
+    return { ...nothing, reading: 'The token call fell over.' };
+  }
+  if (!token) return { ...nothing, reading: 'They accepted the keys and sent no token.' };
+
+  const bearer = { Authorization: `Bearer ${token}` };
+  const status = async (url: string): Promise<number | 'threw'> => {
+    try {
+      return (await fetch(url, { headers: bearer, signal: AbortSignal.timeout(8000) })).status;
+    } catch {
+      return 'threw';
+    }
+  };
+
+  /* An album every account can see, so a refusal here is about the APP and
+     not about what is being asked for. */
+  const catalogue = await status('https://api.spotify.com/v1/albums/4aawyAB9vmqN3uQ7FjRGTy');
+  const search = await status(
+    'https://api.spotify.com/v1/search?type=playlist&limit=1&q=' + encodeURIComponent('Top 50 Global'),
+  );
+  const theirChart = await status(`https://api.spotify.com/v1/playlists/${TOP_50_GLOBAL}`);
+
+  const fine = (one: number | 'threw'): boolean => one === 200;
+  let reading: string;
+  if (!fine(catalogue)) {
+    reading = `Even a plain album came back ${catalogue}. This app is not allowed to`
+      + ' read anything, which is an access level on the Spotify dashboard rather'
+      + ' than anything to change here. Open developer.spotify.com → your app and'
+      + ' look at what mode it is in.';
+  } else if (fine(theirChart)) {
+    reading = 'The catalogue is open and their Top 50 Global can be read BY ID,'
+      + ` while the search came back ${search}. That is a way forward: the chart`
+      + ' path can ask for the playlist directly instead of searching for it.';
+  } else if (fine(search)) {
+    reading = `The search works and their own chart came back ${theirChart}.`
+      + ' Their editorial playlists are behind the line they have been drawing'
+      + ' for new apps. Nothing here can fix that.';
+  } else {
+    reading = `The catalogue is open, the search came back ${search} and their`
+      + ` chart came back ${theirChart}. Both of the ways to their list are shut`
+      + ' to this app, which is their policy and not a fault here. The bar stays'
+      + " off rather than showing a stranger's playlist as Spotify's chart.";
+  }
+  return { token: true, catalogue, search, theirChart, reading };
+}
+
 /** The chart alone, for the public route. The reason is not a visitor's. */
 export async function spotifyChart(): Promise<{ name: string; url: string; rows: ChartRow[] } | null> {
   return (await spotifyLook()).chart;
