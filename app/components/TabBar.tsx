@@ -189,7 +189,14 @@ export default function TabBar({
               type="button"
               aria-current={on ? 'page' : undefined}
               onClick={() => onGo(tab.id)}
-              className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 transition-colors ${
+              /* `min-w-0` because `flex-1` alone will not shrink a tab below
+                 its own content, and the pill inside is a fixed 56px. Five of
+                 those plus the padding is exactly 320, so on a 320-pixel
+                 phone — an SE, an older Android — the last tab hung 4px off
+                 the right edge and the bar could not be reached there.
+                 Nothing changes at 360 and up; there is room. Found by
+                 `audit/widecover.mjs` while looking for something else. */
+              className={`flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 transition-colors ${
                 on ? 'text-emerald-300' : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
@@ -197,7 +204,7 @@ export default function TabBar({
                   tab you are on. It is the thing this app is for, and a row of
                   five identical icons says the opposite. */}
               <span
-                className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${
+                className={`flex h-8 w-14 max-w-full items-center justify-center rounded-full transition-colors ${
                   middle
                     ? on
                       ? 'bg-emerald-500 text-onAccent'

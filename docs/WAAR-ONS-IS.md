@@ -87,6 +87,37 @@ Daar is ook 'n lys wat vir jou sê wat **nog kort** in die lewende databasis:
 en vertel net wat ontbreek. Ek het hom vanaand bygewerk, so hy ken die twee
 nuwe tabelle.
 
+## Die cover art-fout — ek kon dit nie reproduseer nie
+
+Jy het gesê: *"Die oomblik wanneer ek op 'n liedjie se cover art druk, dan
+gooi dit die skerm wyd uit."*
+
+Ek het 'n probe geskryf wat presies dit doen — die liedjielys oopmaak, Cover
+art druk, en dan **meet** of iets by die rand verbyloop. By 390, 360 én 320
+pixels, in Make en in Channel, met een liedjie en met sewentien, en in albei
+helftes van die paneel (een met 'n omslag, een sonder): **niks loop oor nie.**
+
+Ek stuur dus nie 'n CSS-raaiskoot aan 'n kamer wat ek nie kan sien nie. Vier
+vraaggies sou dit vir my oplos, en elkeen is 'n ja of 'n nee:
+
+1. **Skuif die bladsy regtig** as jy jou duim sywaarts trek, of lyk dit net
+   afgesny en beweeg niks?
+2. Gebeur dit by **elke** liedjie, of net by sommige? (As net by sommige, is
+   dit waarskynlik 'n lang titel.)
+3. Gaan dit weg as jy Cover art **weer** druk om toe te maak?
+4. Die balk bo in jou skermskoot het 'n **X en drie kolletjies** — dit is nie
+   gewone Chrome nie, dit is 'n blaaier *binne-in* 'n ander app. Uit watter
+   app het jy die skakel oopgemaak? Daardie blaaiers meet die skermwydte soms
+   anders, en as dit die oorsaak is, soek ek op die verkeerde plek.
+
+'n Skermopname van twee sekondes — druk, en trek dan jou duim sywaarts — sou
+al vier tegelyk antwoord.
+
+**Een ding het die probe wel gevind**, terwyl hy joune gesoek het: op 'n
+**320-pixel** foon (ouer Androids, 'n iPhone SE) pas die onderste balk nie —
+die "You"-oortjie hang 4px oor die rand en kan nie gedruk word nie. Dit is
+reggemaak, en by 360 en wyer verander niks.
+
 ## Wat ek intussen doen
 
 Die TONE3000-aanmelding is klaar gebou: twee tabelle, twee roetes, en 'n

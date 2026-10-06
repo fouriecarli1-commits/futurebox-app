@@ -218,6 +218,7 @@
     "check:back": "node audit/backbutton.mjs",
     "check:simple": "node audit/simplemode.mjs",
     "check:wide": "node audit/wide.mjs",
+    "check:widecover": "node audit/widecover.mjs 3197 360 Make",
     "check:songscreen": "node audit/songscreen.mjs",
     "check:hookfile": "node audit/hookfile.mjs",
     "check:collabbooth": "node audit/collabbooth.mjs",
