@@ -427,7 +427,36 @@ dinge gemeet:
 4. `?t3k=af` — sy het hul venster toegemaak sonder om te kies — word **gesê**
    en nie verswyg nie
 
-Al vier faal vandag, en almal om dieselfde rede: die leser monteer nie.
+Al vier faal vandag — **maar nie om die rede wat ek eers geskryf het nie.**
+
+### Die regstelling, en wat werklik vasstaan
+
+Ek het geskryf dat die terugkoms by die **deur** land. Dit is **nie waar**
+nie. 'n Tweede probe, wat eers in die booth gegaan het soos 'n mens doen,
+het `[data-atdoor]` getel en **nul** gekry:
+
+> `ok  coming back from TONE3000 does not put her at the door`
+
+Dit is dieselfde reël wat Carli drie keer oor Paystack gerapporteer het
+(*"Na betaling gooi hy my uit die kamer"*), en dit **hou** vir hierdie
+landing ook. Die deur is nie die probleem nie.
+
+Wat dan wel? **Ek weet nie.** Albei probes kon nie tot in die
+**lanes** kom nie — hulle het by die studio-deur met ProBooth se kaart bly
+staan, terwyl `audit/boothwalk.mjs` met oënskynlik dieselfde stappe wel
+inkom. Daardie verskil is nog nie verstaan nie, en tot dit is, is enige
+gevolgtrekking oor die landing 'n meting van die probe se eie posisie.
+
+**Die knoppie bly dus uit — omdat die terugkoms ONGETOETS is, nie omdat hy
+stukkend is nie.** Dit is 'n ander sin as die een in die vorige commit, en
+die verskil maak saak: die een is versigtigheid, die ander was 'n aanspraak
+sonder bewys.
+
+**Wat die volgende persoon eerste moet oplos**, voor enigiets anders: hoe 'n
+probe in die ProBooth-lanes kom. `boothwalk` doen dit — `studio()`,
+`toRoom(page, 'ProBooth')`, ná 'n `reload()` met 'n gesaaide liedjie — en 'n
+kopie van daardie presiese stappe bly by die deur staan. Tot dit verstaan is,
+kan niks oor hierdie kamer se gedrag gemeet word nie.
 
 Die probe self is **weggegooi** en nie gehou nie, want
 `check:everycheck` weier 'n probe wat nie in CI is nie — *"a check nobody

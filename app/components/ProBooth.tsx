@@ -1524,13 +1524,20 @@ export default function ProBooth({
   const [t3kSaid, setT3kSaid] = useState('');
 
   /* Nothing presses this yet. The button it belongs to was written beside
-     "Bring in an amp", shipped, and taken back out when `audit/t3kback.mjs`
-     walked the return and found she lands on the studio DOOR holding the
-     booth's card rather than inside the room — `goToRoom` on a cold page
-     puts her in front of a room, not in it, and after a full page load her
-     song is not chosen either. A door that returns to a room-chooser is the
-     "worse than no button" case. The errand stays, because it is correct
-     and because the way back is what is missing, not the way out. */
+     "Bring in an amp", shipped, and taken back out.
+ 
+     The reason given at the time was that the return lands at the studio
+     door. That was WRONG and is corrected in `docs/TONE3000-API.md`: a
+     probe that went into the booth first counted `data-atdoor` and got
+     zero. The door is not the problem.
+ 
+     What is true is narrower and is why the button is still out: the
+     return is UNTESTED. Two probes failed to reach the lanes at all —
+     they stopped at the studio door holding this room's card, while
+     `audit/boothwalk.mjs` gets in with what look like the same steps —
+     so nothing measured the landing itself. Out for want of proof, not
+     for a known fault. The errand below is correct either way; what is
+     missing is a way to watch the way back. */
   const browseTone3000 = useCallback(async () => {
     setT3kBusy(true);
     setT3kSaid('');
