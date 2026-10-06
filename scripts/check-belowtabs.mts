@@ -167,6 +167,10 @@ const KNOWN: readonly string[] = [
   'app/components/Account.tsx',
   'app/components/ArtMarket.tsx',
   'app/components/OutOfCredits.tsx',
+  /* The post studio, 6 October 2026. Written down rather than counted, so
+     that it dropping out of the scan is a failure rather than a smaller
+     number nobody reads. */
+  'app/components/PostStudio.tsx',
   'app/components/PostToLive.tsx',
   'app/components/ProBooth.tsx',
   'app/components/RoomScreen.tsx',

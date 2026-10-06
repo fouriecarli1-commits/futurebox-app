@@ -29,11 +29,12 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Video as VideoIcon, Loader2, Download, Languages, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap, Type } from 'lucide-react';
+import { Video as VideoIcon, Image as ImageIcon, Loader2, Download, Languages, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap, Type } from 'lucide-react';
 import {
   SCENES, spokenLines, looksUnquoted, LENGTHS, GENRES, type Scene, type Genre,
 } from '../lib/videoscenes';
 import { engines, probeVideoEngine, type EngineAspect, type VideoEngine } from '../lib/engines';
+import PostStudio from './PostStudio';
 import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import KeepVideo from './KeepVideo';
@@ -193,6 +194,9 @@ export default function VideoCanvas({
   const { t } = useLang();
 
   const [engine, setEngine] = useState<VideoEngine | null>(null);
+  /* The post studio, over this desk. See the button below for why it is here
+     and not in a room of its own. */
+  const [postOpen, setPostOpen] = useState(false);
   const ready = engine === null ? null : engine.available;
   const [scene, setScene] = useState<Scene | null>(null);
   /** Which of a kind's scaffolds is showing, so "another" can walk them. */
@@ -582,7 +586,29 @@ export default function VideoCanvas({
             'Describe a shot and the engine makes it. Pick a kind of video to start from — everything it writes is yours to rewrite.',
           )}
         </p>
+        {/* ── A still, beside the moving ones ───────────────────────────
+ 
+            Carli: *"Dit is vir plasings vir sosiale media en kan ook in die
+            video editor ingesit word."* So it lives on this desk rather than
+            in a room of its own: a post and a clip are the same errand, and
+            what comes out of it is a picture the editor next door can take.
+ 
+            A still is not a cover. What is made here cannot become a song's
+            album art — see `check:coverwall` — because her own rule is that
+            album art is generated on the spot or bought, and a tool that
+            quietly became a third way would close the art market. */}
+        <button
+          type="button"
+          data-openpost
+          onClick={() => setPostOpen(true)}
+          className="mt-3 inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-300 hover:text-white"
+        >
+          <ImageIcon className="h-3.5 w-3.5" />
+          {t('canvas.makePost', 'Make a post')}
+        </button>
       </div>
+
+      {postOpen && <PostStudio onClose={() => setPostOpen(false)} />}
 
       {/* ── Is this thing plugged in ───────────────────────────────────
           Written for the person who set the keys up, in the place they

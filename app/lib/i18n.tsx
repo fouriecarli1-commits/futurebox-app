@@ -1625,6 +1625,36 @@ export const STRINGS: Dict = {
   },
 
   /* One piece, raised over the wall as a sheet. */
+  /* ── The post studio ───────────────────────────────────────────────────
+     Carli: *"Dit is vir plasings vir sosiale media en kan ook in die video
+     editor ingesit word."* The words here are a maker's words, not a
+     designer's: "shape" rather than "aspect ratio", "behind" rather than
+     "background", "the words" rather than "typography". */
+  "post.title": { en: "Make a post", af: "Maak \u2019n plasing" },
+  "post.close": { en: "Close", af: "Maak toe" },
+  "post.shape": { en: "Shape", af: "Vorm" },
+  "post.bringIn": { en: "Bring a picture in", af: "Bring \u2019n prent in" },
+  "post.takeOut": { en: "Take it out", af: "Haal dit uit" },
+  "post.behind": { en: "Behind", af: "Agter" },
+  "post.words": { en: "Words", af: "Woorde" },
+  "post.addWords": { en: "Add words", af: "Sit woorde by" },
+  "post.theWords": { en: "The words", af: "Die woorde" },
+  "post.removeWords": { en: "Remove these words", af: "Haal hierdie woorde weg" },
+  "post.ink": { en: "Colour", af: "Kleur" },
+  "post.spot.top": { en: "Top", af: "Bo" },
+  "post.spot.middle": { en: "Middle", af: "Middel" },
+  "post.spot.bottom": { en: "Bottom", af: "Onder" },
+  "post.noWordsYet": { en: "Nothing written yet. The words are drawn as real text, so they are spelt exactly as you type them.", af: "Nog niks geskryf nie. Die woorde word as regte teks geteken, so hulle word presies gespel soos jy hulle tik." },
+  "post.covered": { en: "Some of your words are where the app prints its own caption and buttons. They are moved clear in the saved file; the shaded bands show where.", af: "Van jou woorde is waar die app sy eie onderskrif en knoppies oor druk. Hulle word in die gestoorde l\u00eaer uit die pad geskuif; die skaduwee-bande wys waar." },
+  "post.save": { en: "Save the picture", af: "Stoor die prent" },
+  "post.saved": { en: "Saved to your device.", af: "Op jou toestel gestoor." },
+  "post.noExport": { en: "That could not be exported.", af: "Dit kon nie uitgevoer word nie." },
+  "post.badFile": { en: "That file could not be read as a picture.", af: "Daardie l\u00eaer kon nie as \u2019n prent gelees word nie." },
+  "post.tooMany": { en: "That picture is too large to open on a phone. A photo straight off a camera often is.", af: "Daardie prent is te groot om op \u2019n foon oop te maak. \u2019n Foto reguit van \u2019n kamera af is dikwels so." },
+  "post.startFresh": { en: "Start a new post", af: "Begin \u2019n nuwe plasing" },
+  "post.freeUntil": { en: "Making it costs nothing. The credit is for taking it off the device, and the same post saved twice is charged once.", af: "Om dit te maak kos niks. Die krediet is om dit van die toestel af te neem, en dieselfde plasing wat twee keer gestoor word, word een keer gehef." },
+  "canvas.makePost": { en: "Make a post", af: "Maak \u2019n plasing" },
+
   "art.ofWall": { en: "of the", af: "van die" },
   "art.priceIs": { en: "Price", af: "Prys" },
   "art.buyIt": { en: "Buy it", af: "Koop dit" },
