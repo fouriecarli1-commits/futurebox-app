@@ -34,6 +34,7 @@
  */
 
 import { admin, metered } from '@/app/lib/server/account';
+import { spotifyChart } from '@/app/lib/server/spotify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,71 +79,7 @@ const whole = (value: unknown): number => {
  * no user's data at all. Empty when no key is set, which is the honest answer
  * and the one the screen is written to show.
  */
-async function spotifyChart(): Promise<{ name: string; url: string; rows: ChartRow[] } | null> {
-  const id = process.env.SPOTIFY_CLIENT_ID;
-  const secret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!id || !secret) return null;
 
-  try {
-    const auth = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`,
-      },
-      body: 'grant_type=client_credentials',
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!auth.ok) return null;
-    const token = ((await auth.json()) as { access_token?: string }).access_token;
-    if (!token) return null;
-    const bearer = { Authorization: `Bearer ${token}` };
-
-    /* Searched, not pinned to an id. Only a playlist Spotify themselves own
-       counts as their chart — anybody may name a playlist "Top 50 - South
-       Africa", and one of those is a stranger's list, not a chart. */
-    const found = await fetch(
-      'https://api.spotify.com/v1/search?type=playlist&limit=10&market=ZA&q=' +
-        encodeURIComponent('Top 50 South Africa'),
-      { headers: bearer, signal: AbortSignal.timeout(8000) },
-    );
-    if (!found.ok) return null;
-    const lists = ((await found.json()) as {
-      playlists?: { items?: Array<{ id?: string; name?: string; owner?: { id?: string }; external_urls?: { spotify?: string } }> };
-    }).playlists?.items ?? [];
-    const theirs = lists.find(
-      (one) => one?.owner?.id === 'spotify' && /south africa/i.test(String(one?.name ?? '')),
-    );
-    if (!theirs?.id) return null;
-
-    const tracks = await fetch(
-      `https://api.spotify.com/v1/playlists/${encodeURIComponent(theirs.id)}/tracks?limit=${HOW_MANY}&market=ZA`,
-      { headers: bearer, signal: AbortSignal.timeout(8000) },
-    );
-    if (!tracks.ok) return null;
-    const items = ((await tracks.json()) as {
-      items?: Array<{ track?: { id?: string; name?: string; artists?: Array<{ name?: string }>; external_urls?: { spotify?: string } } }>;
-    }).items ?? [];
-
-    return {
-      name: String(theirs.name ?? 'Spotify'),
-      url: String(theirs.external_urls?.spotify ?? ''),
-      rows: items
-        .map((one, at) => ({
-          ref: String(one?.track?.external_urls?.spotify ?? one?.track?.id ?? ''),
-          title: String(one?.track?.name ?? ''),
-          by: (one?.track?.artists ?? []).map((a) => String(a?.name ?? '')).filter(Boolean).join(', '),
-          /* Their position, not a play count. Named `count` because the screen
-             draws one shape; the screen knows not to print "plays" for these. */
-          count: at + 1,
-          recent: 0,
-        }))
-        .filter((one) => one.title),
-    };
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(): Promise<Response> {
   if (!metered()) {

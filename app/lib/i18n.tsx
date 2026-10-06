@@ -4124,7 +4124,7 @@ export const STRINGS: Dict = {
   "chart.podsEmpty": { en: "No episode has been opened enough to chart yet. Same counting as the music: one person, one show, one day.", af: "Geen episode is nog genoeg oopgemaak om op die lys te kom nie. Dieselfde telling as die musiek: een mens, een program, een dag." },
   "chart.plays": { en: "plays", af: "luisterbeurte" },
   "chart.window": { en: "Counted over the last {days} days, one play per person per song per day.", af: "Getel oor die laaste {days} dae, een luisterbeurt per mens per liedjie per dag." },
-  "chart.spotify": { en: "What South Africa is playing on Spotify", af: "Wat Suid-Afrika op Spotify speel" },
+  "chart.spotify": { en: "What the world is playing on Spotify", af: "Wat die w\u00eareld op Spotify speel" },
   "chart.spotifyWhat": { en: "Spotify\u2019s own chart, read from their public API and opening on their pages. It is theirs, not ours, and it is not where the AI chart above comes from \u2014 nothing in their data says what was made with AI.", af: "Spotify se eie lys, gelees uit hulle openbare API en maak op hulle bladsye oop. Dit is hulle s\u2019n, nie ons s\u2019n nie, en dit is nie waar die AI-lys hierbo vandaan kom nie \u2014 niks in hulle data s\u00ea wat met AI gemaak is nie." },
   "chart.radar": { en: "The AI trends radar", af: "Die AI-tendense radar" },
   "chart.radarWhat": { en: "What is moving this week, scored before it is shown \u2014 who published it, whether the headline describes or baits, and whether there is anything in it you could check.", af: "Wat hierdie week beweeg, met punte voor dit gewys word \u2014 wie dit geskryf het, of die opskrif beskryf en of dit net lok, en of daar iets in staan wat jy kan nagaan." },

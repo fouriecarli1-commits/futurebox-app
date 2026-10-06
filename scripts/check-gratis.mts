@@ -62,6 +62,11 @@ const SPENDS = [
      today is a supplier whose terms can change. Left out, the three
      TONE3000 routes would be invisible to the one rule that counts them. */
   'server/tone3000session',
+  /* Spotify, for the same reason as TONE3000 above: free today, reaching
+     out all the same. It was invisible here until 6 October because the
+     call lived inside `app/api/charts/route.ts` with no import to read —
+     a supplier with no seam is a supplier this rule cannot see. */
+  'server/spotify',
 ];
 
 /**
@@ -157,6 +162,16 @@ const FREE: Record<string, string> = {
     + ' us no invoice',
   'app/api/kits/setup/route.ts':
     'lists what is on the Kits account. A setup page on a secret',
+  'app/api/charts/route.ts':
+    "Spotify's public chart beside our own on Spotlight. Client credentials"
+    + ' against a free endpoint — no account of ours is touched and no'
+    + ' invoice exists to split. Charging a visitor to look at a chart would'
+    + ' also be the first paywall on a page whose whole job is to be looked'
+    + ' at',
+  'app/api/charts/spotify/route.ts':
+    'says which of the six ways the Spotify bar can fail to appear actually'
+    + ' happened. A setup page on a secret, and the only one of these whose'
+    + ' code path has never run where it was built',
 };
 
 /* ── Walk ──────────────────────────────────────────────────────────────── */

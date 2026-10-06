@@ -256,20 +256,47 @@ developer.spotify.com — create an app, copy the two values, no callback URL
 needed. This uses the client-credentials flow, which reads public things and
 touches nobody's account, yours included.
 
-**Broken until then:** the "What South Africa is playing on Spotify" bar does
+On their **Create app** form, leave every box under "Which API/SDKs are you
+planning to use?" unticked. Web API is greyed out because it is always
+included; the rest are a browser player, advertising and two mobile SDKs, and
+ticking one asks for something we do not use.
+
+**It is the GLOBAL chart, not the South African one.** Carli, 6 October 2026:
+*"ek vra vir international playlist nie south african nie. dit is beter."*
+The reasoning is hers and it is right — the bar above it already counts what
+South Africa is playing *here*, which is the chart that is actually ours. Two
+local charts side by side is two answers to one question; the world's is the
+thing this app cannot count for itself.
+
+**Broken until then:** the "What the world is playing on Spotify" bar does
 not appear at all. Everything else on Spotlight works without it — our own
 Top 10 is counted here and needs nothing but `supabase/charts.sql`.
 
-**How to tell:** open Spotlight. The bar is either there or it is not; there
-is no half-state and no error to read.
+**How to tell:** open Spotlight. The bar is either there or it is not.
 
-**One thing I could not check from where this was built:** the outbound call
-to Spotify is blocked in that environment, so the code path has never run
-against the real API. It finds their chart by searching for a playlist named
-"Top 50 … South Africa" **owned by Spotify themselves** rather than by a
-hard-coded playlist id, which is the version that fails honestly rather than
-silently if they rename or retire it. If the bar never appears with the keys
-set, that search is the first thing to look at.
+**And when it is not:**
+
+    https://futurebox.studio/api/charts/spotify?key=<POST_SECRET>
+
+Six different things make that bar fail to appear and from the outside they
+are one blank space. That page names which one, and what to do about it. It
+carries no song, no name and no key — only which step failed and Spotify's
+own status code — so it is safe to paste into a conversation.
+
+**The answer to watch for is `not-found`.** It means the search worked and
+nothing it returned is owned by Spotify themselves, and the page prints what
+it *did* return. Spotify have been narrowing what a newly created app may
+read, and their own editorial playlists are among the things that have moved
+behind that line. If every row under `saw` belongs to somebody else, their
+chart is simply not being handed to this app — that is a Spotify decision and
+there is nothing here to fix. The bar stays off rather than showing a
+stranger's playlist as Spotify's chart, which is the right answer to a wrong
+situation.
+
+**One thing that could not be checked from where this was built:** the
+outbound call to Spotify is blocked in that environment, so this code path
+has never run against their real API. The first time it runs is in
+production, which is exactly why the page above exists.
 
 ### 12. Kits.AI — the model that actually sings
 
