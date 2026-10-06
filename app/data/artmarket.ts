@@ -43,6 +43,49 @@ import { gatewayFee } from '../lib/plans';
 export const START_RAND = 200;
 
 /**
+ * What a piece on the wall costs. One price, no bidding.
+ *
+ * ── Why the auction is gone ──────────────────────────────────────────────
+ *
+ * Carli, 6 October 2026: *"Dit is prohibited in Suid-Afrika om te bet op die
+ * album art in ons app. Dit is baie sad, maar dit beteken ons sal daardie
+ * funksie moet verander. Ek dink ons moet 'n vaste rate van R280 vra vir 'n
+ * kunswerk. Die kunstenaar kry dan R200 van die bedrag."*
+ *
+ * Recorded as her decision, and one note beside it that she asked for: an
+ * auction is not ordinarily *betting* in South African law. The National
+ * Gambling Act is about games of chance; selling a painting to the highest
+ * bidder is a SALE, and auctions are regulated under section 45 of the
+ * Consumer Protection Act — conduct rules rather than a prohibition. If the
+ * premise turns out to be an assumption rather than advice, the auction was
+ * not unlawful. The decision stands either way, because a fixed price is
+ * simpler and kinder to the artist, and this comment is here so the reason
+ * is not misremembered later.
+ *
+ * ── What a fixed price changes beyond the number ─────────────────────────
+ *
+ * The bidder fee, the 36-hour clock, the opening bid and the whole idea of
+ * a price that is not known until it closes all go with it. A buyer sees
+ * one number and pays it. `START_RAND` above stays only until the wall
+ * stops speaking of a floor; it is not what anybody pays.
+ */
+export const ART_RAND = 280;
+
+/**
+ * What the artist is paid for a piece from the wall. Fixed, and clean.
+ *
+ * *"Die kunstenaar kry dan R200 van die bedrag."* Read plainly: the artist
+ * gets two hundred rand, full stop — not two hundred less a share of the
+ * card fee, and not a percentage that happens to come to two hundred.
+ *
+ * So the gateway fee comes out of the HOUSE's side. At 3.5% plus R2 that is
+ * R11.80 on R280, leaving the studio R68.20. Written here rather than left
+ * to be worked out, because the difference between R200 and R188.20 is the
+ * kind of thing an artist finds on a bank statement and never forgets.
+ */
+export const ARTIST_RAND = 200;
+
+/**
  * How long a piece is open for bids, from the FIRST bid.
  *
  * Carli: *"Die beeing begin wanneer iemand begin bee."* It used to run
@@ -164,6 +207,33 @@ export interface Split {
  * cent more than came in, which is a shortfall that grows quietly and is
  * discovered by a bank.
  */
+/**
+ * The wall's split, which has no arithmetic worth calling a share.
+ *
+ * One price, one fixed payment to the artist, and the house carries the
+ * card fee out of what is left. Kept as a function rather than three
+ * constants so `check:ooreenkoms` can hold the signed table against
+ * something that is executed, the way it held the auction's.
+ *
+ * `split()` below still serves a commission, which is a different deal: a
+ * price the artist names and a share of what is left. Two ways to sell is
+ * two sums, and folding them into one function to look tidy would be the
+ * thing this repo keeps catching — a number that is right for one caller
+ * and quietly wrong for the other.
+ */
+export function wallSplit(): Split {
+  const cents = ART_RAND * 100;
+  const gateway = Math.min(cents, Math.round(gatewayFee(ART_RAND) * 100));
+  const artist = ARTIST_RAND * 100;
+  return {
+    paid: cents / 100,
+    gateway: gateway / 100,
+    profit: (cents - gateway) / 100,
+    artist: artist / 100,
+    house: (cents - gateway - artist) / 100,
+  };
+}
+
 export function split(paid: number): Split {
   const cents = Math.max(0, Math.round(paid * 100));
   /* The gateway cannot take more than came in.

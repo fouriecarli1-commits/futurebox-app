@@ -23,6 +23,7 @@
 import {
   split, START_RAND, UNIQUE_RAND, ARTIST_SHARE, WINDOWS,
   AUCTION_HOURS, BID_STEP, SNIPE_MINUTES, BIDDER_RAND, endsAt, nextBid,
+  ART_RAND, ARTIST_RAND, wallSplit,
 } from '../app/data/artmarket';
 import { gatewayFee } from '../app/lib/plans';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -674,6 +675,41 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     /work\.ends_at \? new Date\(work\.ends_at\)/.test(route),
     'the end time is being taken from whatever the browser sent');
 }
+
+/* ── The wall's fixed price, which is not a share at all ───────────────── */
+
+/**
+ * Carli, 6 October 2026, moving the wall off an auction: *"Ek dink ons moet
+ * 'n vaste rate van R280 vra vir 'n kunswerk. Die kunstenaar kry dan R200
+ * van die bedrag."*
+ *
+ * Held here the day the arithmetic was written, before anything calls it.
+ * The plan and the open question are in `docs/KUNSMARK-VASTE-PRYS.md`; what
+ * matters for a check is that the sum is executed rather than described, so
+ * the signed table it will go into has something true behind it.
+ */
+const wall = wallSplit();
+ok('the wall is one price, and it adds up to the cent',
+  Math.round((wall.gateway + wall.artist + wall.house) * 100) === Math.round(wall.paid * 100)
+  && wall.paid === ART_RAND,
+  `R${wall.paid}: fee R${wall.gateway.toFixed(2)} + artist R${wall.artist.toFixed(2)}`
+  + ` + studio R${wall.house.toFixed(2)}`);
+
+ok(`  and the artist gets R${ARTIST_RAND} clean, not R${ARTIST_RAND} less a share of the fee`,
+  wall.artist === ARTIST_RAND,
+  'read plainly, "die kunstenaar kry R200 van die bedrag" is two hundred'
+  + ' rand, full stop. The difference between R200 and R188.20 is the kind of'
+  + ' thing an artist finds on a bank statement and never forgets');
+
+ok('  and the card fee comes out of the studio\'s side',
+  Math.round(wall.house * 100) === Math.round((ART_RAND - ARTIST_RAND) * 100) - Math.round(wall.gateway * 100),
+  `the studio keeps R${wall.house.toFixed(2)} of its R${ART_RAND - ARTIST_RAND},`
+  + ' which is where the fee lands');
+
+ok('  and nothing on the wall is a percentage any more',
+  wall.artist === ARTIST_RAND && ART_RAND > ARTIST_RAND,
+  'the artist\'s amount is the same number on every piece, every month, and'
+  + ' can be counted against a bank statement without doing a sum');
 
 if (failures) {
   console.error(
