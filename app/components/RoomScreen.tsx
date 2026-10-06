@@ -573,10 +573,40 @@ export default function RoomScreen({
             ) : one.video ? (
               <video
                 ref={(element) => {
-                  if (element) videos.current.set(one.id, element);
-                  else videos.current.delete(one.id);
+                  if (!element) { videos.current.delete(one.id); return; }
+                  videos.current.set(one.id, element);
+                  /* ── The address is set ONCE, not on every render ──────
+ 
+                     Carli, 6 October 2026: *"Video speel nogsteeds nie in
+                     live room nie."* Nogsteeds, after four fixes.
+ 
+                     This read `src={one.video}` in the markup, which looks
+                     harmless and is the whole bug. `/api/live` mints that
+                     address with `createSignedUrl` on EVERY request, and a
+                     Supabase signature carries the moment it was issued —
+                     so the same file on the same row comes back under a
+                     different url every few seconds. The room refreshes
+                     every eight. React dutifully rewrote the attribute each
+                     time, and setting `src` makes a browser throw its
+                     buffer away and start the file again, for ever.
+ 
+                     The audio path had exactly this fault and it was found
+                     in September: the long note in `start` above is about
+                     signed urls changing under it. The fix there was to
+                     stop setting `src` in JavaScript and to key the effect
+                     on the post id instead of the url — and neither of
+                     those touches an `src` written in the markup. So the
+                     video kept the bug while the fix that was meant to
+                     cover it read as though it had been covered.
+ 
+                     Keyed on the POST, like everything else here. A post
+                     with the same id is the same film, whatever address it
+                     arrives under this second. */
+                  if (one.video && element.dataset.forPost !== one.id) {
+                    element.dataset.forPost = one.id;
+                    element.src = one.video;
+                  }
                 }}
-                src={one.video}
                 data-roomvideo=""
                 playsInline
                 loop

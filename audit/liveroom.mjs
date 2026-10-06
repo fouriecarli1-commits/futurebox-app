@@ -172,6 +172,9 @@ try {
      can be exercised for real rather than described. Everything else is the
      stub: the room needs a Supabase project and this environment has none. */
   let refused = null;
+/** Bumped on every answer, so no two carry the same film address. */
+let signed = 0;
+
   await p.route('**/api/live*', async (route) => {
     if (route.request().method() === 'POST') {
       const sent = JSON.parse(route.request().postData() ?? '{}');
@@ -208,7 +211,20 @@ try {
         ready: true,
         signedIn: true,
         here: 3,
-        posts: POSTS,
+        /* ── Re-signed on every answer, the way the real route does ──────
+ 
+           `/api/live` mints the film's address with `createSignedUrl` on
+           EVERY request, and a Supabase signature carries the moment it was
+           issued — so the same file on the same row comes back under a
+           different url every few seconds. This stub handed back the same
+           string for ever, which is why it could not see the fault Carli
+           reported five times: `RoomScreen` bound that address straight into
+           the markup, React rewrote the attribute on each refresh, and a
+           browser throws its buffer away whenever `src` is set. A stub that
+           is steadier than production is a stub that tests a different app. */
+        posts: POSTS.map((one) => (one.video
+          ? { ...one, video: `${one.video.split('?')[0]}?sig=${(signed += 1)}` }
+          : one)),
         says: [
           { id: 's1', by: 'Riaan', body: 'Hierdie een is lekker.', at: '2026-09-06T09:00:00.000Z', mine: false },
           { id: 's2', by: 'You', body: 'Dankie! Nog een kom nou.', at: '2026-09-06T09:01:00.000Z', mine: true },
@@ -261,7 +277,7 @@ try {
     return { type, base64: btoa(binary) };
   });
   check('the probe could make a clip for the room to play', Boolean(film?.base64));
-  await p.route('**/probe-room-film.webm', (route) =>
+  await p.route('**/probe-room-film.webm*', (route) =>
     route.fulfill({
       status: 200,
       contentType: film?.type ?? 'video/webm',
@@ -673,6 +689,34 @@ try {
     check('  and the film itself plays, not the empty song element',
       rolling.ready > 0 && (!rolling.paused || rolling.time > 0),
       JSON.stringify(rolling));
+
+    /* ── And it is still playing after the room refreshes under it ───────
+ 
+       Carli, five times, most recently 6 October 2026: *"Video speel
+       nogsteeds nie in live room nie."*
+ 
+       The room asks the server again every eight seconds and the answer
+       carries a NEW address for the same film — see the note on the stub
+       above. Measured in the first second, as everything here was, a film
+       that reloads every eight looks exactly like a film that plays. So
+       this waits past one refresh and asks two things: did the picture keep
+       moving, and is the element still pointed at what it was pointed at. */
+    const was = await clip.evaluate((el) => ({ at: el.currentTime, src: el.currentSrc }));
+    await p.waitForTimeout(11_000);
+    const now = await clip.evaluate((el) => ({ at: el.currentTime, src: el.currentSrc }));
+    check('  and it keeps the same file when the room refreshes under it',
+      now.src === was.src,
+      `the address changed under it: …${was.src.slice(-26)} -> …${now.src.slice(-26)}.`
+      + ' An `src` bound in the markup is rewritten on every refresh, and'
+      + ' setting `src` makes the browser throw the buffer away');
+    /* `>` and not `>=`. Written with `>=` it passed on 0.00 -> 0.00 while the
+       film sat frozen at the start — a rule that accepts "no progress" as
+       progress, which is the whole fault wearing the assertion's own words. */
+    check('  and the picture keeps moving across the refresh',
+      now.at > was.at,
+      `currentTime went ${was.at.toFixed(2)} -> ${now.at.toFixed(2)} over 11s —`
+      + ' going backwards is the file starting again, which is what she sees'
+      + ' as a video that does not play');
     void press;
   }
 
