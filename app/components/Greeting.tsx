@@ -262,7 +262,19 @@ export default function Greeting({
               this because it walks the ROOMS and the door is not one — the
               same subset fault this repo keeps finding, and the check is
               wider now. */}
-          <span className="block text-sm font-bold leading-tight text-white">
+          {/* `break-words` on top of the wrapping.
+ 
+              Wrapping happens between WORDS, and Afrikaans builds compounds:
+              `Videolessenaar` is one fourteen-letter word with nowhere to
+              break, so it did not wrap — it ran ten pixels out of the card,
+              which is what Carli photographed. English never showed it
+              because "Video desk" is two words.
+ 
+              `break-words` breaks a word only when it has to, so nothing
+              that already fits changes shape. Found by the fit measuring in
+              `audit/afrikaans.mjs`, which walks both languages and compares
+              the same box in each. */}
+          <span className="block break-words text-sm font-bold leading-tight text-white">
             {roomName(id)}
           </span>
           {/* The floor under the line is what keeps a row of cards the same

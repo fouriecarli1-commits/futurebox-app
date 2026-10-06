@@ -71,6 +71,15 @@ const PORT = process.argv[2] || '3082';
  * was tolerating was fixed, which is the only reason it ever should.
  */
 const CEILING = Number(process.argv[3] ?? 18);
+/**
+ * Afrikaans-only overflows allowed.
+ *
+ * A ceiling rather than a flat zero, for the same reason `CEILING` above is
+ * one: what matters is that the number goes DOWN. Set to what the app has on
+ * the day the measuring was added, so the next one to appear fails the build
+ * instead of being noticed on a phone at two in the morning.
+ */
+const AF_FIT_CEILING = Number(process.argv[4] ?? 0);
 
 const problems = [];
 const check = (label, ok, detail = '') => {
@@ -153,6 +162,8 @@ try {
 
     await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
     const said = new Map();
+    /** Every box whose words are wider than it is, keyed by screen and place. */
+    const fits = new Map();
     const onScreen = () =>
       p.evaluate(() => {
         /* Only what is actually in front of the reader.
@@ -169,7 +180,26 @@ try {
         for (let el = middle; el && el !== document.body; el = el.parentElement) {
           if (getComputedStyle(el).position === 'fixed') root = el;
         }
+        /**
+         * Where an element sits, so the same box can be found in the other
+         * language.
+         *
+         * The words differ between the two walks — that is the point of the
+         * walks — so the words cannot be the key. The position in the tree
+         * can: the same button is the same chain of nth-child steps whatever
+         * it says.
+         */
+        const where = (el) => {
+          const steps = [];
+          for (let at = el; at && at !== root; at = at.parentElement) {
+            const kin = at.parentElement ? [...at.parentElement.children].indexOf(at) : 0;
+            steps.unshift(`${at.tagName}:${kin}`);
+          }
+          return steps.join('>');
+        };
+
         const out = [];
+        const tight = [];
         for (const el of root.querySelectorAll('*')) {
           if (el.children.length > 0) continue;
           const text = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
@@ -179,13 +209,42 @@ try {
           const style = getComputedStyle(el);
           if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') continue;
           out.push(text);
+
+          /* Does the word fit the box it is in?
+ 
+             `scrollWidth` past `clientWidth` means the text is wider than the
+             space it was given — cut off, or spilling. Two things are left
+             out because they are deliberate: an ellipsis, which is a designed
+             truncation and says so in the style, and anything inside a strip
+             that scrolls sideways on purpose. */
+          if (style.textOverflow === 'ellipsis') continue;
+          let rides = false;
+          for (let at = el; at && at !== root; at = at.parentElement) {
+            const how = getComputedStyle(at).overflowX;
+            if (how === 'auto' || how === 'scroll') { rides = true; break; }
+          }
+          if (rides) continue;
+          const over = el.scrollWidth - el.clientWidth;
+          if (over > 1) {
+            tight.push({
+              at: where(el),
+              over,
+              text: text.slice(0, 48),
+              /* Named, not just counted. A probe that says six boxes are too
+                 tight and not which ones sends somebody reading components
+                 by eye, which is the thing probes exist to replace. */
+              what: `${el.tagName}.${(el.className || '').toString().slice(0, 70)}`,
+            });
+          }
         }
-        return out;
+        return { out, tight };
       });
     const read = async (where) => {
       const lines = said.get(where) ?? new Set();
-      for (const line of await onScreen()) lines.add(line);
+      const { out, tight } = await onScreen();
+      for (const line of out) lines.add(line);
       said.set(where, lines);
+      for (const one of tight) fits.set(`${where}|${one.at}`, one);
     };
 
     const html = await p.evaluate(() => document.documentElement.lang);
@@ -256,11 +315,11 @@ try {
     }
     await p.screenshot({ path: shot(`afrikaans-${lang}.png`) });
     await context.close();
-    return said;
+    return { said, fits };
   };
 
-  const english = await walk('en');
-  const afrikaans = await walk('af');
+  const { said: english, fits: fitsEn } = await walk('en');
+  const { said: afrikaans, fits: fitsAf } = await walk('af');
 
   /* ── The diff ────────────────────────────────────────────────────────── */
   const same = new Map();
@@ -285,6 +344,40 @@ try {
   console.log('');
   check(`no more untranslated lines than the ceiling (${CEILING})`,
     total <= CEILING, `${total} lines across ${same.size} screens`);
+
+  /* ── And whether the Afrikaans FITS ──────────────────────────────────── */
+
+  /**
+   * Carli, 6 October 2026, with a photograph of the room grid: *"Hier is 'n
+   * afrikaanse woord wat oor die button gaan. Toets die hele app en of alles
+   * mooi inpas in afrikaans."*
+   *
+   * This walk already visits every room in both languages, so the measuring
+   * belongs here rather than in a second walk of the same rooms.
+   *
+   * What is compared is the SAME BOX in both, keyed by its place in the tree
+   * — the words are the one thing that differs on purpose, so the words
+   * cannot be the key. A box too tight in both languages is a layout fault
+   * and belongs to `audit/wide.mjs`. A box that holds its words in English
+   * and not in Afrikaans is this one, because Afrikaans compounds —
+   * `Klankafrigter`, `Videolessenaar` — are simply longer, and a layout built
+   * while reading English does not know that yet.
+   */
+  const onlyAf = [...fitsAf.entries()]
+    .filter(([key]) => !fitsEn.has(key))
+    .map(([, one]) => one)
+    .sort((a, b) => b.over - a.over);
+
+  console.log(`  ${fitsAf.size} box(es) too tight in Afrikaans, ${fitsEn.size} in English;`
+    + ` ${onlyAf.length} of them Afrikaans only.\n`);
+  for (const one of onlyAf.slice(0, 25)) {
+    console.log(`  +${String(one.over).padStart(3)}px  ${one.text}\n           ${one.what}`);
+  }
+  if (onlyAf.length) console.log('');
+
+  check(`no more Afrikaans-only overflows than the ceiling (${AF_FIT_CEILING})`,
+    onlyAf.length <= AF_FIT_CEILING,
+    `${onlyAf.length} box(es) hold their words in English and not in Afrikaans`);
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }
