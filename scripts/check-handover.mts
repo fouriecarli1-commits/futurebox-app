@@ -155,6 +155,15 @@ const PLAIN: Readonly<Record<string, string>> = {
      no use for one. */
   'videoedit|onClick': 'the door from the video desk: the cutting room takes files from the device, not a brief from the desk',
   'live|onClick': 'the front page pointing at the room where members’ real work is, now that the invented card is gone. It is "go and look", not "here is the thing you asked for"',
+  /* The one door here that carries nothing BECAUSE the far side reads the
+     address itself.
+ 
+     She comes back from TONE3000 on `/?t3k=…&room=booth`, and the tone id
+     means nothing out here — only the booth knows what to do with it. So
+     this opens the room and the room reads the rest, which also means one
+     place clears the address instead of two. A handoff would be a second
+     reader of the same query and a second chance to clear it wrongly. */
+  '*|backFromTone3000': 'back from TONE3000: it opens the room she left, and the room reads the tone off the address itself',
 };
 
 const unexplained = doors.filter((one) => !one.carries && !(one.key in PLAIN));

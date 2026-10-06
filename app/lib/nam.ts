@@ -114,6 +114,33 @@ export function trimFor(loudnessDb: number | null): number {
  * not a NAM capture, or a newer architecture than this engine reads — and it
  * has to reach the screen rather than come back as silence.
  */
+/**
+ * Whether this engine can read a capture at all.
+ *
+ * The one line inside `through` that decides it — `loadModel` — with no
+ * audio around it. A capture arriving from somewhere other than a lane
+ * still has to be proved before it is kept, and the lane's own audio is not
+ * what proves it: `through` needs a buffer because it is rendering, not
+ * because the reading needs one.
+ *
+ * Written for the TONE3000 return, where there is no lane to render
+ * against — she leaves the booth, chooses on their page, and comes back on
+ * a fresh page where the lane she pressed on may be gone.
+ */
+export async function loads(modelJson: string): Promise<boolean> {
+  const nam = await namEngine();
+  const id = nam.createInstance();
+  try {
+    return nam.loadModel(id, modelJson);
+  } catch {
+    /* A capture this engine cannot read throws rather than answering, and
+       either way the answer is the same word. */
+    return false;
+  } finally {
+    nam.destroyInstance(id);
+  }
+}
+
 export async function through(
   ctx: BaseAudioContext,
   buffer: AudioBuffer,

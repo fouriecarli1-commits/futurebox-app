@@ -2805,6 +2805,16 @@ export const STRINGS: Dict = {
   "booth.withAi": { en: "The AI singer is on this backing \u2014 sing along with it.", af: "Die AI-sanger is op hierdie begeleiding \u2014 sing saam met hom." },
   "booth.withAiWhy": { en: "An unsplit song plays as it was made, voice and all, which is what makes it a guide. On headphones your take comes back with only your voice on it. Out loud, the microphone hears the AI singer too \u2014 split the song below to take that voice out of the backing.", af: "\u2019n Ongesplitste liedjie speel soos dit gemaak is, stem en al, en dit is juis wat dit \u2019n gids maak. Met oorfone kom jou opname terug met net jou stem op. Hardop hoor die mikrofoon die AI-sanger ook \u2014 skei die liedjie hieronder om daardie stem uit die begeleiding te haal." },
   "pro.ampBring": { en: "Bring in an amp", af: "Bring \u2019n versterker in" },
+  /* TONE3000 is a company's name and stays itself in both languages, the
+     same rule the other suppliers follow. The sentences around it do not. */
+  "pro.t3kBrowse": { en: "Browse TONE3000", af: "Blaai deur TONE3000" },
+  "pro.t3kNo": { en: "TONE3000 could not be reached just now.", af: "TONE3000 kon nie nou bereik word nie." },
+  "pro.t3kAgain": { en: "Sign in to TONE3000 again to bring this amp in.", af: "Teken weer by TONE3000 in om hierdie versterker in te bring." },
+  "pro.t3kGone": { en: "That amp could not be brought in.", af: "Daardie versterker kon nie ingebring word nie." },
+  "pro.t3kNoLoad": { en: "That capture did not load as an amp here.", af: "Daardie vaslegging het nie hier as \u2019n versterker gelaai nie." },
+  "pro.t3kGot": { en: "It is on your amp shelf. Put it on a track.", af: "Dit is op jou versterker-rak. Sit dit op \u2019n baan." },
+  "pro.t3kNone": { en: "No amp was chosen.", af: "Geen versterker is gekies nie." },
+  "pro.t3kClose": { en: "Close", af: "Maak toe" },
   "pro.amping": { en: "Running it through\u2026", af: "Stuur dit deur\u2026" },
   "pro.ampOff": { en: "Take it off", af: "Haal dit af" },
   "pro.ampFailed": { en: "That file did not load as an amp.", af: "Daardie l\u00eaer het nie as \u2019n versterker gelaai nie." },

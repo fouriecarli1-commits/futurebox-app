@@ -1022,6 +1022,28 @@ export default function FutureBoxHome() {
     window.history.replaceState(null, '', `${here.pathname}${here.search}${here.hash}`);
   }, [goToRoom, copilotBus]);
 
+  /* ── Back from TONE3000 ──────────────────────────────────────────────
+ 
+     Their callback lands her on `/?t3k=…&room=booth`, and the room named
+     there is the one she pressed the button in. This only OPENS it: the
+     room reads the rest off the address itself and clears it, because the
+     tone id means nothing out here and a second reader would be a second
+     place to get the clearing wrong.
+ 
+     The studio overlay before the room, in that order. `goToRoom` chooses
+     which room is drawn and does not open the studio over the home page —
+     the Paystack landing above learned that the hard way, and its note
+     says so. */
+  const backFromTone3000 = useCallback(() => {
+    const here = new URL(window.location.href);
+    if (!here.searchParams.get('t3k')) return;
+    const room = resolveSurfaceId(here.searchParams.get('room') ?? '');
+    if (!room) return;
+    setUploadModalOpen(true);
+    goToRoom(room);
+  }, [goToRoom]);
+  useEffect(() => { backFromTone3000(); }, [backFromTone3000]);
+
   /* And after the room has actually been drawn.
 
      Every way into a room runs through `goToRoom`, but not every way *out of

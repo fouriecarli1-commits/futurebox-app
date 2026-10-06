@@ -41,6 +41,7 @@ import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepses
 import { encodeWav } from '../lib/wav';
 import { LAYOUTS, layoutById, type Layout } from '../lib/channels';
 import { knownLatency } from '../lib/mixdown';
+import { loads } from '../lib/nam';
 import {
   COUNT_INS, DEFAULT_METER, DIVISIONS, FASTEST, SLOWEST, barSeconds, countInSeconds,
   displayOf, paceOf, placeAt, sane, sayPlace, snapped,
@@ -100,7 +101,7 @@ export default function ProBooth({
   onKeep: (mixed: Blob) => void | Promise<void>;
   onClose: () => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { lang, t } = useLang();
 
   /* The booth itself. It is a full-screen overlay above the room, and until
      now it was not a layer at all — so Back closed the room underneath it. */
@@ -1506,6 +1507,121 @@ export default function ProBooth({
      file the mixer approved. A second render with its own numbers would be
      a silently different song. */
   const [saving, setSaving] = useState(false);
+
+  /* ── TONE3000: out to their screens, and back to the shelf ───────────
+ 
+     Their Select flow is their sign-in, their browser and their player —
+     their own words are *"zero auth UI or tone browser to build"* — so
+     three of their seven design requirements are met by not building
+     something.
+ 
+     The journey LEAVES this page. She goes to their site, chooses, and
+     comes back on a fresh load, which is why none of this can live on a
+     lane: the lane she pressed on may be gone by then. What comes back
+     lands on the SHELF, which is storage rather than state, so every lane
+     row sees it and one press puts it on any of them. */
+  const [t3kBusy, setT3kBusy] = useState(false);
+  const [t3kSaid, setT3kSaid] = useState('');
+
+  const browseTone3000 = useCallback(async () => {
+    setT3kBusy(true);
+    setT3kSaid('');
+    try {
+      const token = await accessToken();
+      /* The route answers with the address rather than a redirect: a
+         redirect a `fetch` receives is one the page cannot usefully
+         follow, and the room should decide where it opens anyway. */
+      const answer = await fetch(`/api/tone3000/start?room=booth&taal=${lang}`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const said = await answer.json().catch(() => null) as { url?: string } | null;
+      if (!answer.ok || !said?.url) {
+        setT3kSaid(t('pro.t3kNo', 'TONE3000 could not be reached just now.'));
+        setT3kBusy(false);
+        return;
+      }
+      window.location.assign(said.url);
+    } catch {
+      setT3kSaid(t('pro.t3kNo', 'TONE3000 could not be reached just now.'));
+      setT3kBusy(false);
+    }
+  }, [lang, t]);
+
+  /**
+   * The tone she chose, proved and put on the shelf.
+   *
+   * Proved with `loads`, which is the one line inside `through` that decides
+   * whether this engine can read a capture, without any audio around it. A
+   * shelf that fills with files that will not load is worse than no shelf:
+   * every one is a press that fails later with nothing on the row to say
+   * which. The same rule the file picker has followed since it was written.
+   */
+  const takeTone = useCallback(async (toneId: string) => {
+    if (!toneId) return;
+    setT3kBusy(true);
+    setT3kSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch(`/api/tone3000/tone?tone=${encodeURIComponent(toneId)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const said = await answer.json().catch(() => null) as
+        { nam?: string; name?: string; why?: string } | null;
+      if (!answer.ok || !said?.nam) {
+        /* HER TONE3000 sign-in, not ours, and the thing to do about it is
+           to go back through their door — which no other refusal means. */
+        setT3kSaid(said?.why === 'signin' || said?.why === 'expired'
+          ? t('pro.t3kAgain', 'Sign in to TONE3000 again to bring this amp in.')
+          : t('pro.t3kGone', 'That amp could not be brought in.'));
+        return;
+      }
+      const name = ampName(said.nam);
+      if (!(await loads(said.nam))) {
+        setT3kSaid(t('pro.t3kNoLoad', 'That capture did not load as an amp here.'));
+        return;
+      }
+      await rememberAmp({
+        id: ampId(),
+        name,
+        from: said.name ?? `${toneId}.nam`,
+        bytes: said.nam.length,
+        createdAt: new Date().toISOString(),
+      }, said.nam);
+      setT3kSaid(t('pro.t3kGot', 'It is on your amp shelf. Put it on a track.'));
+    } catch {
+      setT3kSaid(t('pro.t3kGone', 'That amp could not be brought in.'));
+    } finally {
+      setT3kBusy(false);
+    }
+  }, [t]);
+
+  /* ── Coming back from their page ─────────────────────────────────────
+ 
+     Read off the address rather than handed down a bus. The callback puts
+     `?t3k=ja&tone=…` on the way back in, and this room is the only thing
+     that knows what to do with a tone id — so it reads it where it lands
+     and takes it off the address afterwards, or a refresh would fetch the
+     same capture again.
+ 
+     `af` is her closing their window while already signed in, which is
+     their third outcome and not a failure: there is simply no tone. It is
+     said plainly rather than left as silence, because silence after a
+     journey reads as something broken. */
+  useEffect(() => {
+    const here = new URL(window.location.href);
+    const how = here.searchParams.get('t3k');
+    if (!how) return;
+    const tone = here.searchParams.get('tone') ?? '';
+    here.searchParams.delete('t3k');
+    here.searchParams.delete('tone');
+    here.searchParams.delete('why');
+    here.searchParams.delete('room');
+    window.history.replaceState(null, '', `${here.pathname}${here.search}${here.hash}`);
+    if (how === 'ja' && tone) void takeTone(tone);
+    else if (how === 'af') setT3kSaid(t('pro.t3kNone', 'No amp was chosen.'));
+    else if (how === 'no') setT3kSaid(t('pro.t3kNo', 'TONE3000 could not be reached just now.'));
+  }, [takeTone, t]);
   /* Returns whether the file was written, because the button says so now:
      save it → rendering it… → saved. The render is the slow part — a whole
      mix, offline — so a press with no answer is a press somebody makes
@@ -2290,6 +2406,8 @@ export default function ProBooth({
             onUseTempo={(bpm, root) =>
               setMeter((was) => sane({ ...was, bpm, key: root ?? was.key }))
             }
+            onBrowseAmps={() => void browseTone3000()}
+            browsing={t3kBusy}
             busy={busy}
           />
         ))}
@@ -3870,6 +3988,34 @@ export default function ProBooth({
         </p>
       )}
 
+      {/* The TONE3000 errand's own line, beside the room's and not inside
+          it. `problem` is what the mix and the money say; this is what
+          happened on somebody else's site, and folding the two together
+          would mean a tone that could not be fetched reads like a mix that
+          could not be paid for.
+
+          Dismissable, because it is the only message here that arrives
+          without her pressing anything — she comes back from their page and
+          it is already on the screen. */}
+      {t3kSaid && (
+        <p
+          role="status"
+          data-t3ksaid=""
+          className="flex-shrink-0 flex items-start gap-2 border-t px-5 py-2 text-sm font-semibold leading-snug"
+          style={{ borderColor: EDGE, background: PANEL, color: '#6ee7b7' }}
+        >
+          <span className="min-w-0 flex-1">{t3kSaid}</span>
+          <button
+            type="button"
+            onClick={() => setT3kSaid('')}
+            aria-label={t('pro.t3kClose', 'Close')}
+            className="min-h-[24px] flex-shrink-0 text-zinc-400 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </p>
+      )}
+
       {/* ── The marked piece, and the button that opens its tools ──────
 
           Carli: *"highlight daai gedeelte met 'n button wat op pop met
@@ -3963,6 +4109,8 @@ function LaneRow({
   reading,
   found,
   onUseTempo,
+  onBrowseAmps,
+  browsing,
   busy,
 }: {
   lane: Lane;
@@ -3982,6 +4130,17 @@ function LaneRow({
   reading: boolean;
   found?: { tempo: number | null; key: string | null; spans: Span[] };
   onUseTempo: (bpm: number, key: string | null) => void;
+  /**
+   * Out to TONE3000 to choose an amp, which is a room-level errand.
+   *
+   * Handed down rather than done here because the journey leaves the page:
+   * she goes to their site, signs in, picks, and comes back on a FRESH page
+   * where this lane may not exist. The room owns what happens on the way
+   * back, and the shelf — which is storage, not state — is where the
+   * capture lands, so one press afterwards puts it on any lane.
+   */
+  onBrowseAmps: () => void;
+  browsing: boolean;
   busy: boolean;
 }): React.ReactElement {
   const { t } = useLang();
@@ -4575,6 +4734,31 @@ function LaneRow({
                 />
               </label>
             )}
+            {/* ── Somebody else's amplifier, from TONE3000 ──────────────
+ 
+                Drawn whether or not this lane is already amped, for the same
+                reason the shelf below is: swapping one amp for another is
+                the ordinary thing to do, and a door that disappears the
+                moment you have used it makes that two presses.
+ 
+                The word, not a logo. TONE3000's design requirements ask for
+                their mark and we do not have the asset — an almost-right
+                logo is a brand problem rather than a missing feature, so
+                this says the name until they send the file.
+ 
+                It does not act here. The errand leaves the page and comes
+                back to a different one, so the room owns it; see
+                `onBrowseAmps`. */}
+            <button
+              type="button"
+              onClick={onBrowseAmps}
+              disabled={browsing || amping}
+              data-t3kbrowse=""
+              className="px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-300 hover:text-white disabled:text-zinc-600 flex items-center gap-1.5"
+            >
+              {browsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+              {t('pro.t3kBrowse', 'Browse TONE3000')}
+            </button>
           </div>
           {/* ── The ones you keep ──────────────────────────────────────
               One press to put an amp that is already here onto this lane.
