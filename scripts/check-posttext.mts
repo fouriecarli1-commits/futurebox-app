@@ -220,6 +220,56 @@ ok('  and the download is a PNG, which is the only part that keeps the alpha',
 ok('  and the background can be put back without hunting for the colour again',
   /setLastColour/.test(studio) && /back \?\? lastColour/.test(studio));
 
+/* ── The faces ────────────────────────────────────────────────────────────
+ 
+   She asked for nice fonts. What was here was three system stacks, and the
+   note above them said "loaded by the page already, so nothing is fetched" —
+   true, and the whole problem: Georgia is not on most Android phones, so
+   Serif handed back the same sans and two choices drew one picture.
+ 
+   What a source rule can hold is that nobody types a family name again. A
+   hand-written `'Bebas Neue, sans-serif'` builds, deploys, and renders as the
+   default on every phone — `audit/postwalk.mjs` measures each face against a
+   family that cannot exist and catches exactly that, but only once somebody
+   runs a browser. This is the cheap half. */
+const faces = withoutComments(readFileSync(join('app', 'lib', 'postfaces.ts'), 'utf8'));
+
+/* Read as TEXT, not imported.
+ 
+   `next/font/google` is a build-time macro: importing it outside the Next
+   compiler throws, so a rule about this list cannot hold the list itself —
+   which is also the reason the browser walk matters more here than usual. */
+const rows = upTo(from(faces, 'export const FACES'), '];')
+  .split('\n')
+  .filter((line) => line.includes('css:'));
+
+ok(`every face is a self-hosted one, not a name typed in (${rows.length})`,
+  rows.length >= 3 && rows.every((line) => /\.style\.fontFamily/.test(line)),
+  rows.filter((line) => !/\.style\.fontFamily/.test(line)).join(' | ')
+  + ' — a family typed as a string builds and deploys and is the browser'
+  + " default on any phone without it; `next/font` downloads it at build"
+  + ' time and serves it from this origin');
+
+ok('  and each one says the weight it is drawn at',
+  rows.length > 0 && rows.every((line) => /weight:\s*[1-9]00\b/.test(line)),
+  'a poster face has one weight, 400 — measured at 700 and drawn at 400 the'
+  + ' ruler gets a synthesised bold and the line overflows once drawn');
+
+/* Distinct FAMILIES, read off which font each row names. One family listed
+   three times under three labels is the fault this whole section is about,
+   in its most direct form. */
+const families = rows.map((line) => (/(\w+)\.style\.fontFamily/.exec(line) ?? [])[1] ?? line);
+ok('  and they are three families, not one family three times',
+  new Set(families).size === rows.length, families.join(', '));
+
+/* The export draws after the download, or the file she paid for is in the
+   fallback face. The press is where it matters: on mount there is time, and
+   on a quick press there is not. */
+ok('  and the export waits for them before it draws',
+  /await faceReady\(\);\s*\n\s*const sheet = document\.createElement/.test(studio),
+  'a credit is already spent by that line; a race between the download and a'
+  + ' quick press hands her a file in the wrong face and charges for it');
+
 if (bad) {
   console.error(`\ncheck:posttext — ${bad} assertion(s) failed.\n`);
   process.exit(1);

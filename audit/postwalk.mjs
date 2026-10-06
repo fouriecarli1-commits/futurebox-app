@@ -102,6 +102,94 @@ try {
     `${ink} bright pixels — a canvas that is mounted and blank passes every`
     + ' test anybody writes about the DOM');
 
+  /* ── The faces are really different faces ────────────────────────────
+ 
+     She asked for nice fonts. What was there was three system stacks, and on
+     most Android phones Georgia is not installed — so "Serif" handed back the
+     same sans the page was already using, the control worked, the state
+     changed, the canvas redrew, and the picture was identical.
+ 
+     Nothing a rule reading source can see. `ctx.font = '700 48px X'` is a
+     string assignment that succeeds whether or not X exists, and a canvas
+     substitutes silently. So this measures the only thing that cannot lie:
+     the WIDTH of the same words in each face. Two faces that measure the
+     same width are one face with two names.
+ 
+     `document.fonts.check` is read alongside it, because a width that
+     differs tells us the faces differ and a check that says false tells us
+     WHY when they do not. */
+  const faces = await page.evaluate(async () => {
+    const ctx = document.createElement('canvas').getContext('2d');
+    /* Long and mixed on purpose: two different faces can agree on the width
+       of a short word by luck, and the whole assertion below is a comparison
+       of widths. */
+    const SAMPLE = 'Karoo pad, 48 myl — WAGTING op die wind';
+    /* A family that cannot exist, so a request for it is a request for the
+       browser's default. This is the ruler everything else is read against. */
+    const ABSENT = '"NoSuchFaceAnywhere7391"';
+
+    const wide = (shorthand) => {
+      ctx.font = shorthand;
+      return Math.round(ctx.measureText(SAMPLE).width);
+    };
+
+    const out = [];
+    for (const el of Array.from(document.querySelectorAll('[data-postface]'))) {
+      const style = getComputedStyle(el);
+      const first = style.fontFamily.split(',')[0].trim().replace(/^["']|["']$/g, '');
+      const weight = style.fontWeight;
+      /* The face alone, backed only by the absent one, so there is nothing
+         for it to fall through to but the default. */
+      const alone = wide(`${weight} 64px "${first}", ${ABSENT}`);
+      out.push({
+        id: el.getAttribute('data-postface'),
+        first,
+        width: wide(`${weight} 64px ${style.fontFamily}`),
+        alone,
+        floor: wide(`${weight} 64px ${ABSENT}`),
+      });
+    }
+    return out;
+  });
+
+  check(`the post offers more than one face (${faces.length})`, faces.length >= 3,
+    'the chips are gone, so nothing below is measuring anything');
+
+  const widths = faces.map((one) => one.width);
+  check('  and each one draws the same words at its own width',
+    new Set(widths).size === faces.length,
+    faces.map((one) => `${one.id} ${one.width}px`).join(', ')
+    + ' — two faces that measure the same width are one face with two names,'
+    + ' which is what three system stacks are on a phone that has one of them');
+
+  /* Both halves are needed and neither is enough.
+ 
+     `next/font` emits a metric-adjusted local fallback beside each face —
+     "Inter Fallback", "Anton Fallback" — whose whole purpose is to measure
+     like the real one. So three different widths can be three fallbacks and
+     prove nothing about the download. And a loaded face proves nothing about
+     whether the canvas is using it. Together they do. */
+  /* Both halves are needed and neither is enough.
+ 
+     `next/font` emits a metric-adjusted local fallback beside each face —
+     "Inter Fallback", "Anton Fallback" — whose whole purpose is to measure
+     like the real one. So three different widths can be three stand-ins and
+     prove nothing about the download.
+ 
+     And `document.fonts.check` cannot do this half. It was tried first and
+     it is BLIND to the likeliest mistake of all: asked about a family that
+     does not exist anywhere, it answers true, because all it reports is
+     whether matching @font-face rules are still loading — and a name nobody
+     declared has none. A face set to "Bebas Neue" with no Bebas Neue in the
+     build passed it. So the ruler is a family that cannot exist: a face that
+     measures the same as THAT is a face the browser does not have. */
+  const missing = faces.filter((one) => one.alone === one.floor);
+  check('  and each face is really on the device, not a stand-in for it',
+    missing.length === 0,
+    missing.map((one) => `${one.id} wants ${one.first}`).join(', ')
+    + ' — backed by nothing, it measures exactly as wide as a family that'
+    + ' cannot exist, which is the browser quietly handing back its default');
+
   /* ── The bands, on the shape that has them ───────────────────────────── */
 
   const clash = () => page.locator('[data-postclash]').count();

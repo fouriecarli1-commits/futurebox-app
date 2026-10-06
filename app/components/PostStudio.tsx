@@ -53,6 +53,7 @@ import { CREDITS, creditsSaid } from '../lib/credits';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import { barClearance } from './TabBar';
+import { FACES, faceOf, faceReady, type FaceId } from '../lib/postfaces';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
@@ -61,12 +62,6 @@ const VUL = 'w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-b
 const LEEG = 'rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-300';
 const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100';
 
-/** The faces on offer. Loaded by the page already, so nothing is fetched. */
-const FACES = [
-  { id: 'sans', name: 'Sans', css: 'system-ui, sans-serif' },
-  { id: 'serif', name: 'Serif', css: 'Georgia, "Times New Roman", serif' },
-  { id: 'mono', name: 'Mono', css: 'ui-monospace, "Courier New", monospace' },
-] as const;
 
 /** Where a block of words sits, as three choices rather than a drag. */
 const SPOTS = [
@@ -78,7 +73,7 @@ const SPOTS = [
 interface Words {
   readonly id: string;
   readonly text: string;
-  readonly face: (typeof FACES)[number]['id'];
+  readonly face: FaceId;
   readonly spot: (typeof SPOTS)[number]['id'];
   readonly ink: string;
 }
@@ -133,8 +128,15 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
   /* A ruler the layout can use, from the canvas that will do the drawing.
      `lib/posttext.ts` takes this rather than guessing an average glyph
      width — which is what makes its answers the same as what appears. */
-  const measureWith = (ctx: CanvasRenderingContext2D, face: string): Measure => (text, px) => {
-    ctx.font = `700 ${px}px ${face}`;
+  const measureWith = (ctx: CanvasRenderingContext2D, face: string, weight: number): Measure => (text, px) => {
+    /* The same weight the draw will use, and not a hard 700.
+ 
+       A poster face has one weight, 400. Measuring it at 700 and drawing it
+       at 400 asks the canvas for a face that does not exist, gets a
+       synthesised bold back for the measurement only, and the two answers
+       differ by a few per cent — which is a line that fitted while being
+       measured and overflows once drawn. */
+    ctx.font = `${weight} ${px}px ${face}`;
     return ctx.measureText(text).width;
   };
 
@@ -179,10 +181,10 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
 
     for (const one of words) {
       if (!one.text.trim()) continue;
-      const face = FACES.find((f) => f.id === one.face)?.css ?? FACES[0].css;
+      const chosen = faceOf(one.face);
       const box = moveInside(boxFor(one), size);
-      const fit = fitText(one.text, box, size, measureWith(ctx, face));
-      ctx.font = `700 ${fit.px}px ${face}`;
+      const fit = fitText(one.text, box, size, measureWith(ctx, chosen.css, chosen.weight));
+      ctx.font = `${chosen.weight} ${fit.px}px ${chosen.css}`;
       ctx.fillStyle = one.ink;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
@@ -216,9 +218,24 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
     }
   };
 
+  /* Downloaded, then drawn again.
+ 
+     A canvas asked for a face the browser does not have yet substitutes one
+     without a word — so the first picture she sees, and the first she could
+     export, would be in the fallback. `facesIn` exists only to force the
+     frame again once they are really in; the draw effect below has no
+     dependency list and runs on every render, so a state change is the
+     redraw. */
+  const [facesIn, setFacesIn] = useState(false);
+  useEffect(() => {
+    let left = false;
+    void faceReady().then(() => { if (!left) setFacesIn(true); });
+    return () => { left = true; };
+  }, []);
+
   useEffect(() => {
     if (canvas.current) draw(canvas.current, true);
-  });
+  }, [facesIn, size, picture, words, back]);
 
   /** Whether anything she has written lands under the platform's furniture. */
   const covered = useMemo(
@@ -283,6 +300,14 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
         setSaid(why.message ?? `${t('post.noExport', 'That could not be exported.')} (${answer.status})`);
         return;
       }
+      /* Asked again here even though the screen already asked on mount.
+ 
+         The credit is already spent by this line. A race between the font
+         download and a quick press would hand her a file in the fallback
+         face and charge her for it, and `document.fonts.load` on something
+         already loaded returns immediately — so this costs nothing in the
+         case that is not the bug. */
+      await faceReady();
       const sheet = document.createElement('canvas');
       draw(sheet, false);
       const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, 'image/png'));
@@ -413,7 +438,7 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
               type="button"
               data-addwords
               onClick={() => setWords((was) => [...was, {
-                id: freshId(), text: '', face: 'sans', spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
+                id: freshId(), text: '', face: FACES[0].id, spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
               }])}
               className={`${LEEG} inline-flex items-center gap-1.5`}
             >
@@ -447,10 +472,15 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
                     type="button"
                     onClick={() => setWords((was) => was.map((w) => (
                       w.id === one.id ? { ...w, face: face.id } : w)))}
-                    style={{ fontFamily: face.css }}
+                    /* At its own weight, so the chip is a sample and not a
+                       label. A poster face shown at 700 is synthesised bold
+                       in the button and drawn at 400 on the canvas — two
+                       different shapes for one choice. */
+                    style={{ fontFamily: face.css, fontWeight: face.weight }}
+                    data-postface={face.id}
                     className={`${LEEG} ${one.face === face.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
                   >
-                    {face.name}
+                    {t(`post.face.${face.id}`, face.name)}
                   </button>
                 ))}
                 {SPOTS.map((spot) => (
