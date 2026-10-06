@@ -305,6 +305,44 @@ export const CREDITS = {
    * once per reference — so that is one mix and one charge, not two.
    */
   mixOut: 1,
+  /**
+   * Taking a finished post off the device: one picture, one credit.
+   *
+   * ── Why anything, when it costs us nothing to run ───────────────────────
+   *
+   * Carli, 6 October 2026, on whether the image tools need a watermark:
+   *
+   *   "Onthou dat alles wat ons bied krediete kos, elke keer wanneer iets
+   *    afgelaai word kos dit krediete, so 'n watermerk sal nie nodig wees
+   *    nie, want hulle sal nie kan export sonder krediete nie."
+   *
+   * That is the business decided, and it is the better of the two answers.
+   * A watermark makes every post worse to pay for itself. A credit on the
+   * way out leaves the picture clean and asks for the thing the plan is
+   * already sold on — which is also what makes a free plan a real trial
+   * rather than a free design studio.
+   *
+   * ── Why ONE, and not three ──────────────────────────────────────────────
+   *
+   * A post is made in one sitting and exported several times — once it is
+   * right, once with the date fixed, once in the other shape. At three a
+   * mistake costs more than the work; at one, an evening of ten exports is
+   * ten credits, which is a tenth of Maker's month for a night's output.
+   * It is a gate, not a toll.
+   *
+   * `spend_credits` takes a charge once per reference, as it does for
+   * `mixOut`, so exporting the same post twice without changing it is one
+   * charge rather than two.
+   *
+   * ── What this cannot do, said plainly ───────────────────────────────────
+   *
+   * The picture is drawn in the browser, so somebody determined can take a
+   * screenshot of it. Nothing here pretends otherwise. The charge is the
+   * honest path's price, not a lock, and the thing it really prevents is a
+   * free account used as an unlimited design tool — which a screenshot at
+   * phone resolution is not.
+   */
+  postOut: 1,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /**

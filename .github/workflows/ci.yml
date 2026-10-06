@@ -1031,6 +1031,13 @@ jobs:
       - name: A member's own picture cannot become a cover
         run: npm run check:coverwall
 
+      # Words on a post: broken into lines that fit, at the largest size the
+      # box allows, and never under the caption bar a platform draws over a
+      # story. The text is drawn as text rather than asked of an image model,
+      # which is why it is spelt correctly.
+      - name: A post's words fit, and are not under the platform's furniture
+        run: npm run check:posttext
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the

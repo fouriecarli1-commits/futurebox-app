@@ -89,6 +89,13 @@ for (const { what, says } of MUST_BE_ON_EVERY_CARD) {
 
 /** Priced things that are deliberately not on the cards, and why. */
 const NAMED_ELSEWHERE: Record<string, string> = {
+  /* Priced before the screen that spends it exists, deliberately. Carli set
+     the rule on 6 October — "elke keer wanneer iets afgelaai word kos dit
+     krediete" — and a price agreed while the feature is being designed is a
+     price nobody has to argue about later. It goes on the cards the day the
+     post studio opens; until then a card naming a button nobody can press is
+     the worse of the two mistakes. */
+  postOut: 'the post studio is not open yet; it goes on the cards with the room',
   song: 'the headline of every card, as credits and as songs',
   halfSong: 'the same price twice; the card counts full songs',
   video: 'the headline of every card, as music videos',

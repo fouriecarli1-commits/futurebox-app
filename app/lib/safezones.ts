@@ -106,6 +106,16 @@ const EVERYWHERE: Zone = {
   },
 };
 
+/**
+ * The strictest zone, by name.
+ *
+ * Exported because it is the right default for anything laying something out
+ * blind: safe on all three is safe wherever it is posted. `zoneById('all')`
+ * answers the same question and answers it as `Zone | undefined`, which makes
+ * every caller handle a case that cannot happen.
+ */
+export const ALL: Zone = EVERYWHERE;
+
 export const ZONES: readonly Zone[] = [...PLATFORMS, EVERYWHERE];
 
 export function zoneById(id: string): Zone | undefined {
