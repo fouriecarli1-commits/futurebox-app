@@ -51,9 +51,13 @@ const NEXT: Record<SpotifyWhy, string> = {
     'SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET is not set in Vercel. Set both, then redeploy —'
     + ' a value saved without a redeploy changes nothing.',
   'token-refused':
-    'Spotify refused the key pair. Check both values against developer.spotify.com → your app →'
-    + ' Settings, and that the secret was copied in full. A 400 here is almost always a'
-    + ' mistyped secret.',
+    'Spotify refused the key pair, before any chart was asked for. In order of'
+    + ' how often it is each one: the two values are in the wrong variables (the'
+    + ' Client ID is shown openly, the secret is behind "View client secret");'
+    + ' the secret was not copied in full; or it was pasted with a space on the'
+    + ' end. Open developer.spotify.com → your app → Settings, copy both again,'
+    + ' and redeploy. A space either side is trimmed here now, so that one will'
+    + ' not bite twice.',
   'no-token': 'Spotify accepted the keys and returned no token, which is theirs to explain.',
   'search-refused':
     'The search was refused. A 403 on a new app means Spotify are not serving this endpoint to it,'

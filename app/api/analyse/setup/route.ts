@@ -44,7 +44,7 @@ function sameSecret(given: string, wanted: string): boolean {
  * not have, and the failure comes back from their end with the credits
  * already taken.
  */
-function nextStep(have: number, wrong: readonly string[]): string {
+function nextStep(have: number, wrong: readonly string[], unset: readonly string[]): string {
   if (have === 0) {
     return 'This account has no workflows yet. Make one in the Music.ai dashboard first.';
   }
@@ -54,7 +54,22 @@ function nextStep(have: number, wrong: readonly string[]): string {
       + ' around it — into that variable in Vercel and redeploy. Until then'
       + ' the room charges for the job and the job fails at their end.';
   }
-  return 'Copy a slug into MUSIC_AI_WORKFLOW_READ in Vercel, then redeploy.';
+  if (unset.length > 0) {
+    return `${unset.join(', ')} is empty. Copy the matching slug from`
+      + ' `yourWorkflows` below into it in Vercel, then redeploy.';
+  }
+  /* The answer this page did not have on 6 October 2026, which is the day
+     Carli got everything right and was told to go and do it.
+
+     Three branches were written — no workflows, a wrong slug, and a default
+     that assumed something was still missing — and the state where nothing
+     is left to do was the one nobody wrote. So the page that exists to say
+     how the supplier is configured answered a correct configuration with an
+     instruction. Being told to do work you have already done is worse than
+     silence: it reads as the work not having taken. */
+  return 'Every slug is set and every one of them is a workflow on this'
+    + ' account. There is nothing left to do here — open the analyse controls'
+    + ' in the Pro Booth and read a lane.';
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -92,6 +107,7 @@ export async function GET(request: Request): Promise<Response> {
   const singing = workflows.filter(looksLikeVoiceConversion);
   const set = whatIsSet(workflows);
   const wrong = wrongSlugs(set);
+  const unset = Object.entries(set).filter(([, one]) => one.slug === null).map(([name]) => name);
   return Response.json({
     ready: true,
     account: account.name,
@@ -110,6 +126,6 @@ export async function GET(request: Request): Promise<Response> {
        can run it on inputs this page will never see. */
     using: set,
     yourWorkflows: workflows.map((one) => ({ slug: one.slug, name: one.name })),
-    next: nextStep(workflows.length, wrong),
+    next: nextStep(workflows.length, wrong, unset),
   });
 }

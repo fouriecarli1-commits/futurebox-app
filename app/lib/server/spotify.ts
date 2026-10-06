@@ -62,8 +62,13 @@ export interface SpotifyLook {
  * two answers to one question; the world's is the thing we cannot count.
  */
 async function spotifyLook(): Promise<SpotifyLook> {
-  const id = process.env.SPOTIFY_CLIENT_ID;
-  const secret = process.env.SPOTIFY_CLIENT_SECRET;
+  /* Trimmed, for the reason `slugFor` is trimmed in `musicai.ts`: these
+     values reach us by being pasted into a web form, and Vercel keeps what it
+     is given. Neither of these ever legitimately begins or ends with a space,
+     and a stray one is a 400 from Spotify that reads exactly like a wrong
+     secret — which is an evening spent re-copying a value that was right. */
+  const id = (process.env.SPOTIFY_CLIENT_ID ?? '').trim();
+  const secret = (process.env.SPOTIFY_CLIENT_SECRET ?? '').trim();
   if (!id || !secret) return { chart: null, why: 'no-keys' };
 
   try {
