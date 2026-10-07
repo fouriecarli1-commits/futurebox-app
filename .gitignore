@@ -40,6 +40,7 @@ public/nam/
 app/blowup/page.tsx
 app/buildon/page.tsx
 app/collabroom/page.tsx
+app/cutcheck/page.tsx
 app/heard/page.tsx
 app/mixprobe/page.tsx
 app/probe-hint/page.tsx

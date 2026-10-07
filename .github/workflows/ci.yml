@@ -1081,6 +1081,12 @@ jobs:
       - name: The words-in-a-picture reader is served by this app
         run: npm run check:ocr
 
+      # The background remover asks for a file chosen by its model number,
+      # and asking for one that is not here aborts the WebAssembly from
+      # inside itself — the button spins and the screen blames the picture.
+      - name: The background remover asks only for files that are here
+        run: npm run check:cutout
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the
@@ -1278,7 +1284,7 @@ jobs:
       matrix:
         include:
           - group: doors
-            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:grabtext check:whitescreen check:roomtop check:greeting check:langtrip check:underbar
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:grabtext check:cutwalk check:whitescreen check:roomtop check:greeting check:langtrip check:underbar
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: rooms

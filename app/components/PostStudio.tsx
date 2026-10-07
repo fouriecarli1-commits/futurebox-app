@@ -62,6 +62,7 @@ import {
   AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
 } from '../lib/postlook';
 import { canRead, readWords, tidy, type Readable } from '../lib/ocr';
+import { cutOut } from '../lib/cutout';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
@@ -162,6 +163,12 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
      progress on it looks broken rather than busy. */
   const [reading, setReading] = useState<number | null>(null);
   const [grabbed, setGrabbed] = useState<string | null>(null);
+  /* Cutting the background out. `whole` holds the picture as it was brought
+     in, so the cut is never a one-way door — a member who cuts a photograph
+     and does not like it has nothing to go back to otherwise but the camera
+     roll, and the file they picked may have been a crop they made elsewhere. */
+  const [cutting, setCutting] = useState<number | null>(null);
+  const [whole, setWhole] = useState<HTMLImageElement | null>(null);
   /* `null` is nothing behind it, and not a colour that happens to be dark.
  
      Her words: *"transparency"*, in the list beside text and nice fonts. A
@@ -452,7 +459,13 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
       return;
     }
     const img = new Image();
-    img.onload = () => { setPicture(img); setCrop(MIDDLE); setLook(PLAIN); URL.revokeObjectURL(img.src); };
+    img.onload = () => {
+      setPicture(img);
+      setCrop(MIDDLE);
+      setLook(PLAIN);
+      setWhole(null);
+      URL.revokeObjectURL(img.src);
+    };
     img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
     img.src = made.preview;
   };
@@ -572,6 +585,39 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
       setGrabbed(tidy(got.text));
     } finally {
       setReading(null);
+    }
+  };
+
+  /**
+   * Take the background out, leaving the person.
+   *
+   * The result replaces the picture as an `<img>` so that everything already
+   * built — the crop, the zoom, the look, the export — goes on working
+   * without knowing anything happened. A separate "cut-out layer" would have
+   * meant every one of those learning about it.
+   */
+  const cutBackground = async (): Promise<void> => {
+    if (!picture || cutting !== null) return;
+    setSaid('');
+    setCutting(0);
+    try {
+      const cut = await cutOut(picture, (part) => setCutting(part));
+      if (!cut.ok) {
+        setSaid(cut.why === 'nobody'
+          ? t('post.cutNobody', 'No person could be found in this picture. This looks for people, and knows nothing about objects.')
+          : t('post.cutFailed', 'The background could not be taken out of that picture.'));
+        return;
+      }
+      const made = new Image();
+      made.onload = () => {
+        setWhole(picture);
+        setPicture(made);
+        setSaid(t('post.cutDone', 'The background is out. Take the background colour off as well for a see-through picture.'));
+      };
+      made.onerror = () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.'));
+      made.src = cut.canvas.toDataURL('image/png');
+    } finally {
+      setCutting(null);
     }
   };
 
@@ -913,6 +959,52 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
             <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
               {t('post.lookFree', 'All of this happens on your own device and costs nothing, however many times you change it.')}
             </p>
+          </div>
+        )}
+
+        {/* ── The background, taken out ──────────────────────────────────
+ 
+            Carli, 7 October 2026: *"BG remover"*. It looks for a PERSON —
+            the model is very good at somebody against anything and knows
+            nothing about a guitar — so it refuses with a reason rather than
+            handing back an empty frame. A fully transparent picture and a
+            deleted picture look the same on a phone.
+ 
+            Beside the background colour on purpose: cut the person out, take
+            the colour off, and the post is a person on nothing. */}
+        {picture && (
+          <div
+            data-postcut
+            className="flex flex-wrap items-center gap-2 rounded-xl border p-3"
+            style={asRoom
+              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+          >
+            <p className={MIKRO}>{t('post.cut', 'Background')}</p>
+            <button
+              type="button"
+              data-postcutgo
+              disabled={cutting !== null}
+              onClick={() => void cutBackground()}
+              className={`${LEEG} disabled:opacity-40`}
+            >
+              {cutting !== null
+                ? `${Math.round(cutting * 100)}%`
+                : t('post.cutGo', 'Take the background out')}
+            </button>
+            {whole && (
+              <button
+                type="button"
+                data-postcutback
+                onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
+                className={LEEG}
+              >
+                {t('post.cutBack', 'Put it back')}
+              </button>
+            )}
+            <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+              {t('post.cutWhat', 'This looks for people. It runs on your own device and costs nothing; the first time takes a moment while it downloads.')}
+            </span>
           </div>
         )}
 

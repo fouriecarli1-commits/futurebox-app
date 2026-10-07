@@ -58,13 +58,27 @@ member who only reads English never fetches the Afrikaans data.
 
 The honest limit: printed text well, handwriting badly, and the room says so.
 
-### Background remover, for people
-`@imgly/background-removal` and MediaPipe's selfie segmentation both run in the browser. The
-MediaPipe one is small and fast and only knows people; the imgly one handles more and is
-heavier. Either costs us nothing per use.
+### ~~Background remover, for people~~ — done, 7 October 2026
 
-**This is the one to do next after text**, because it pairs with the transparent background that
-already exists: take the background off a photograph, and the picture is a person on nothing.
+MediaPipe's selfie segmentation, in `app/lib/cutout.ts`, self-hosted in `public/segment/`.
+
+**6 MB, and that was a choice.** Google's current Tasks API ships a 13 MB WebAssembly bundle
+because it carries hands, face and pose alongside segmentation. This older solution is 6 MB for
+the same answer. It is deprecated — and self-hosting freezes it, so it will go on working exactly
+as it does today whatever Google does next. Six megabytes still matters when members are on
+prepaid data, so nothing is fetched until the button is pressed.
+
+**It looks for a person, and says so.** It refuses with a reason when it finds nobody rather than
+handing back an empty frame: a fully transparent picture and a deleted picture look identical on
+a dark phone screen. And the cut can be undone, because the file somebody picked may itself have
+been a crop they made elsewhere.
+
+**The one thing no machine here can prove is that it finds a real person.** Nothing that can be
+drawn into a canvas is one — a flat rectangle, a gradient and a drawn figure all come back as
+nobody, correctly. `audit/cutout.mjs` proves the model loads, runs and answers under this app's
+own policy, and that a mask keeps exactly what it covers. Whether the mask is a good one needs a
+photograph and Carli's eyes. **This is the one item on this page waiting on her rather than on
+me.**
 
 ### Magic eraser, for small things
 Classical inpainting — the Telea or Navier-Stokes method — removes a small object by growing the
@@ -102,7 +116,7 @@ back from it, the way `app/lib/credits.ts` already does for the engines we use.
 ## The order I would do them in
 
 1. ~~Grab text~~ — done.
-2. **Background remover for people** — free, and it completes the transparency work already here.
+2. ~~Background remover for people~~ — done.
 3. **Magic eraser (classical)** — free, honest about its limits.
 4. **Make it bigger (Lanczos)** — free, small.
 5. Then the paid four, one at a time, each with its price decided first.

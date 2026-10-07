@@ -58,10 +58,39 @@ const route = withoutComments(readFileSync(join('app', 'api', 'post', 'export', 
 
 /* ── One place makes a file ──────────────────────────────────────────────── */
 
-const makers = (studio.match(/\.toBlob\(|\.toDataURL\(/g) ?? []).length;
-ok(`the studio turns the canvas into a file in one place (${makers})`, makers === 1,
-  'every one of them is a road out, and a road added beside the paid one is'
-  + ' the watermark decision reversed by nobody');
+/**
+ * Every way of turning a canvas into a file, and why each one is allowed.
+ *
+ * The rule was a count of one, which was right until the background remover
+ * arrived: it makes a cut-out canvas and hands it to an `<img>` so the crop,
+ * the look and the export go on working without knowing anything happened.
+ * That is a second `toDataURL` and it is NOT a road out — the data URL never
+ * leaves the page, there is no anchor and no element anybody can save from.
+ *
+ * Raising the count to two would have made this rule useless, because the
+ * next one would raise it to three. So each maker is named with the reason
+ * it does not leave, in the shape `check:handover` already uses for doors
+ * that carry nothing: the point is not that the list is right, it is that
+ * adding a way to make a file makes somebody say which kind it is, once, in
+ * writing.
+ */
+const INSIDE: Readonly<Record<string, string>> = {
+  'cut.canvas.toDataURL': 'the background remover handing its result to an <img> so the'
+    + ' crop, the look and the export go on working — it stays in the page, there is'
+    + ' no anchor and nothing anybody can save from',
+};
+
+const makers = studio.match(/[\w.]*\.(?:toBlob|toDataURL)\(/g) ?? [];
+const leaving = makers.filter((one) => !Object.keys(INSIDE).some((kept) => one.startsWith(kept)));
+ok(`the studio makes a file that can leave in one place (${leaving.length} of ${makers.length})`,
+  leaving.length === 1,
+  `${makers.join(', ')} — every unnamed one is a road out, and a road added`
+  + ' beside the paid one is the watermark decision reversed by nobody');
+
+/* And a reason left behind for a maker that is gone is a reason that will be
+   read as cover for the next one with a similar name. */
+const stale = Object.keys(INSIDE).filter((kept) => !makers.some((one) => one.startsWith(kept)));
+ok('  and no reason is left behind for one that is gone', stale.length === 0, stale.join(', '));
 
 /* And that place asks the route BEFORE it draws. Read as a slice rather than
    by "both strings appear", which is true of any order. */

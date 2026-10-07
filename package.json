@@ -266,6 +266,8 @@
     "check:postlook": "tsx scripts/check-postlook.mts",
     "check:ocr": "tsx scripts/check-ocr.mts",
     "check:grabtext": "node audit/grabtext.mjs",
+    "check:cutout": "tsx scripts/check-cutout.mts",
+    "check:cutwalk": "node audit/cutout.mjs",
     "check:boothback": "node audit/boothback.mjs",
     "check:boothwalk": "node audit/boothwalk.mjs",
     "check:whitescreen": "node audit/whitescreen.mjs",
@@ -340,6 +342,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
+    "@mediapipe/tasks-vision": "^1.1.0",
     "@opendaw/nam-wasm": "^1.2.0",
     "@supabase/supabase-js": "^2.45.4",
     "lucide-react": "^0.441.0",
@@ -359,6 +362,7 @@
     "tailwindcss": "^3.4.11",
     "tsx": "^4.23.13",
     "typescript": "^5.6.2",
-    "yaml": "^2.9.1"
+    "yaml": "^2.9.1",
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747"
   }
 }
