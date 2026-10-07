@@ -71,6 +71,9 @@ import {
   LEAST as CROP_LEAST, WHOLE as ALL_OF_IT, cropped, cutTo, gripAt, moveBox,
   pullCorner, toShape, type Box as CropBox, type Grip,
 } from '../lib/cropbox';
+import {
+  FORMATS, SCALES, formatOf, holdsClear, nameFor, type FileKind, type Scale,
+} from '../lib/postfile';
 import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
@@ -363,6 +366,15 @@ export default function PostStudio({
      the WHOLE photograph with the box over it — which is what every editor
      does, and the only way to drag a corner you cannot see. */
   const [cropBox, setCropBox] = useState<CropBox | null>(null);
+
+  /* ── What kind of file, and how big ────────────────────────────────────
+ 
+     Carli, 7 October 2026: *"Ook die formaat van export?"* It was a PNG at
+     the post's own size, always, with no choice. `lib/postfile.ts` carries
+     the two formats, why the other four were left out, and the one thing
+     about JPEG that has to be said out loud. */
+  const [kind, setKind] = useState<FileKind>('png');
+  const [scale, setScale] = useState<Scale>(1);
   const grip = useRef<Grip>(null);
   /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
      button that opens it — see the note on the cutting room's. */
@@ -423,12 +435,18 @@ export default function PostStudio({
      gesture handlers have to agree about where the picture is to the pixel. */
   const WHOLE_VIEW = { basis: 'whole', zoom: 1, x: 0, y: 0 } as const;
 
-  const draw = (to: HTMLCanvasElement, guides: boolean): void => {
+  const draw = (to: HTMLCanvasElement, guides: boolean, times = 1): void => {
     const ctx = to.getContext('2d');
     if (!ctx) return;
+    /* On the screen, small enough to be quick. On the way out, the post's own
+       size — or twice it, when she has asked for twice it.
+ 
+       `times` is only ever read on the export path: the preview is drawn at
+       whatever fits and a 2x preview would be two megapixels redrawn on every
+       keystroke for a picture nobody is looking at closely. */
     const want = guides
       ? Math.min(1, PREVIEW_LONGEST / Math.max(size.width, size.height))
-      : 1;
+      : times;
     /* The canvas is sized first and the scale read back OUT of it.
  
        Taking the scale as given and rounding the canvas to it leaves the
@@ -838,8 +856,35 @@ export default function PostStudio({
        case that is not the bug. */
     await faceReady();
     const sheet = document.createElement('canvas');
-    draw(sheet, false);
-    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, 'image/png'));
+    const how = formatOf(kind);
+    draw(sheet, false, scale);
+    /* ── A JPEG is written onto something, because it cannot be written onto
+           nothing ─────────────────────────────────────────────────────────
+ 
+       The canvas is transparent where she took the background off, and
+       `toBlob` with `image/jpeg` composites that onto BLACK — not white, and
+       not the colour she last had behind it. A post of a person cut out,
+       saved as a JPG, comes back on a black rectangle with no warning.
+ 
+       So the flattening is done here, visibly and in a colour that was
+       chosen: whatever she last had behind the picture, or white if she never
+       set one. The screen says this will happen before she presses, but the
+       press has to be right whether or not she read it. */
+    if (!how.clear && !back) {
+      const onto = document.createElement('canvas');
+      onto.width = sheet.width;
+      onto.height = sheet.height;
+      const ctx = onto.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = lastColour || '#ffffff';
+        ctx.fillRect(0, 0, onto.width, onto.height);
+        ctx.drawImage(sheet, 0, 0);
+        sheet.width = onto.width;
+        sheet.height = onto.height;
+        sheet.getContext('2d')?.drawImage(onto, 0, 0);
+      }
+    }
+    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, how.type, how.quality));
     if (!blob) setSaid(t('post.noExport', 'That could not be exported.'));
     return blob;
   };
@@ -861,7 +906,7 @@ export default function PostStudio({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `futurebox-${size.id}.png`;
+      a.download = nameFor(size.id, kind, scale);
       a.click();
       URL.revokeObjectURL(url);
       setSaid(t('post.saved', 'Saved to your device.'));
@@ -1390,8 +1435,6 @@ export default function PostStudio({
           : t('post.clearOff', 'Take the background off')}
       </button>
     </div>
-
-    {cropStart}
     {/* ── The background, taken out ──────────────────────────────────
  
         Carli, 7 October 2026: *"BG remover"*. It looks for a PERSON —
@@ -1613,6 +1656,22 @@ export default function PostStudio({
       </div>
       <p className="pt-2 text-[13px] leading-relaxed text-zinc-500">{size.what[lang]}</p>
     </div>
+
+    {/* ── Cutting it down, with the frame and not with the picture ──────
+ 
+        Carli, 7 October 2026: *"Ek dink wel cutting moet by The frame wees
+        nie picture nie. Jy moet prakties dink oor waar funksies hoort."*
+ 
+        It was on the picture's bench, on the reasoning that a crop changes
+        the photograph itself while the frame only chooses what shows through
+        — which is true, and is the wrong way to decide. Somebody looking for
+        a crop looks where the shapes and the framing are, because that is
+        what they are thinking about. The picture's bench is where you go to
+        bring one in or take something out of it.
+ 
+        The reasoning that put it in the wrong place was about what the code
+        does. Where a tool goes is about what the person is doing. */}
+    {cropStart}
     {/* ── Which part of it shows ─────────────────────────────────────
  
         Carli, 7 October 2026, having found the screen: *"Waar edit ek 'n
@@ -2006,8 +2065,78 @@ export default function PostStudio({
       {' '}
       <strong style={asRoom ? { color: INK } : undefined}>{creditsSaid(CREDITS.postOut, t)}</strong>
       {' '}
-      {t('post.priceTwo', '\u2014 the same one credit whether you save it to your phone or put it on a film, and the same post is only ever charged once.')}
+      {t('post.priceTwo', '\u2014 the same whether you save it to your phone or put it on a film, whichever kind of file you choose, and the same post is only ever charged once.')}
     </p>
+    {/* ── What kind of file, and how big ────────────────────────────────
+ 
+        Carli, 7 October 2026: *"Ook die formaat van export?"* — and, of the
+        four that were offered back: *"los PDF en SVG uit."* `lib/postfile.ts`
+        carries why those four are out.
+ 
+        Above the button and not behind it. A choice that only appears once
+        you have pressed Save is a choice made after the credit is spent. */}
+    <div className="space-y-2">
+      <p className={MIKRO}>{t('post.kind', 'What kind of file')}</p>
+      <div className={RY}>
+        {FORMATS.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            data-postkind={one.id}
+            aria-pressed={kind === one.id}
+            onClick={() => setKind(one.id)}
+            className={`${LEEG} ${kind === one.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+          >
+            {t(one.name[0], one.name[1])}
+          </button>
+        ))}
+      </div>
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {t(formatOf(kind).what[0], formatOf(kind).what[1])}
+      </p>
+      {/* ── The one that catches people ────────────────────────────────
+ 
+          JPEG has three channels. There is no flag and no quality that
+          brings the fourth back, so a see-through post saved as a JPG comes
+          out on a solid colour — and `toBlob` picks BLACK for it, not white.
+          The export flattens onto a colour that was chosen rather than
+          letting the browser decide; this says so before the press. */}
+      {!holdsClear(kind, back === null) && (
+        <p
+          data-postkindwarn
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-relaxed text-amber-300"
+        >
+          {t(
+            'post.kindNoClear',
+            'This picture has nothing behind it, and a JPG cannot hold that. It will come out on a solid colour. Save it as a PNG to keep it see-through.',
+          )}
+        </p>
+      )}
+    </div>
+
+    <div className="space-y-2">
+      <p className={MIKRO}>{t('post.howBig', 'How big')}</p>
+      <div className={RY}>
+        {SCALES.map((one) => (
+          <button
+            key={one}
+            type="button"
+            data-postscale={one}
+            aria-pressed={scale === one}
+            onClick={() => setScale(one)}
+            className={`${LEEG} ${scale === one ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+          >
+            {one}× · {size.width * one}×{size.height * one}
+          </button>
+        ))}
+      </div>
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {scale === 1
+          ? t('post.howBigOne', 'The size the platforms ask for. This is the one you want nearly every time.')
+          : t('post.howBigTwo', 'Twice the size, for printing it or for a screen bigger than a phone. A much bigger file.')}
+      </p>
+    </div>
+
     <div className="space-y-2">
       <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
         {busy

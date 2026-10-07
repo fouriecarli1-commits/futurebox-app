@@ -662,9 +662,12 @@ try {
     return img ? { width: Number(img.dataset.w), height: Number(img.dataset.h) } : null;
   });
 
-  await bench('pic');
+  /* On the FRAME's bench, not the picture's. Carli, 7 October 2026: *"Ek dink
+     wel cutting moet by The frame wees nie picture nie."* Somebody looking
+     for a crop looks where the shapes are. */
+  await bench('frame');
   const before = await sizeOfPicture();
-  check('the room offers to cut the photograph down',
+  check('the room offers to cut the photograph down, where the shapes are',
     (await page.locator('[data-postcropstart]').count()) > 0,
     'there is no crop in this room, only a frame to look through');
 
@@ -723,6 +726,48 @@ try {
       (await page.locator('[data-postcropbar]:visible').count()) === 0,
       'a crop bar that stays up is a room that thinks it is still cropping');
   }
+
+  /* ── What kind of file, and the one warning that has to reach her ────
+ 
+     Carli, 7 October 2026: *"Ook die formaat van export?"* Two formats now,
+     and the whole reason this is a browser assertion rather than a source
+     one is the clash between them: JPEG has three channels, so a see-through
+     post saved as a JPG comes out on a solid colour and no setting undoes
+     it. `check:postfile` holds that `holdsClear` says so; this holds that the
+     ROOM says so, on the screen, before the credit is spent. */
+  await bench('save');
+  check('the room offers more than one kind of file',
+    (await page.locator('[data-postkind="png"]').count()) > 0
+    && (await page.locator('[data-postkind="jpg"]').count()) > 0,
+    'one format and no choice, which is what she asked about');
+  check('  and more than one size',
+    (await page.locator('[data-postscale="2"]').count()) > 0);
+
+  await page.locator('[data-postkind="jpg"]').first().click();
+  await page.waitForTimeout(300);
+  check('  JPG with a background behind it says nothing, because there is nothing to say',
+    (await page.locator('[data-postkindwarn]:visible').count()) === 0,
+    'a warning that is always up is a warning nobody reads');
+
+  /* The background off, which is the state that clashes. */
+  await bench('pic');
+  await page.locator('[data-postclear]').first().click();
+  await page.waitForTimeout(400);
+  await bench('save');
+  check('  and JPG on a see-through post warns her before the press',
+    (await page.locator('[data-postkindwarn]:visible').count()) > 0,
+    'she took the background out, chose the one format that cannot hold it,'
+    + ' and the room let her pay for a picture on a black rectangle');
+
+  await page.locator('[data-postkind="png"]').first().click();
+  await page.waitForTimeout(300);
+  check('    and the warning goes once she picks the format that can hold it',
+    (await page.locator('[data-postkindwarn]:visible').count()) === 0);
+
+  /* Put back, so nothing below this is measured against a transparent post. */
+  await bench('pic');
+  await page.locator('[data-postclear]').first().click();
+  await page.waitForTimeout(400);
 
   await bench('tone');
   const asShot = await mean();

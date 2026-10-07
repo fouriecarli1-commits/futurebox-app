@@ -145,10 +145,19 @@ ok('the preview is drawn smaller than the frame it stands for',
   'right-click on a canvas offers "Save image as…" and hands over the exact'
   + ' file — the preview being the finished picture is a free road out');
 
+/* `draw(sheet, false, scale)` since 7 October: Carli asked for a choice of
+   size on the way out — *"Ook die formaat van export?"* — so the un-guided
+   draw takes a multiplier. The flag that separates preview from file is still
+   `guides`, which is what this rule is about; the third argument only says
+   how many times the post's own size, and is never passed on the preview. */
 ok('  and the full size is what the file is drawn at',
-  /draw\(sheet, false\)/.test(studio) && /const want = guides/.test(studio),
+  /draw\(sheet, false, scale\)/.test(studio) && /const want = guides/.test(studio),
   'the guides flag is what separates the two, so the file must be the'
   + ' un-guided draw and nothing else');
+ok('    and the preview never asks for a multiple of it',
+  !/draw\([^,]+, true, /.test(studio),
+  'a 2x preview is two megapixels redrawn on every keystroke, and a preview'
+  + ' drawn at the file\u2019s size is the file, which is a free road out');
 
 /* ── And the charge is real ──────────────────────────────────────────────── */
 

@@ -1093,6 +1093,12 @@ jobs:
       - name: No gesture can put the crop box somewhere that draws nothing
         run: npm run check:cropbox
 
+      # `toBlob` given a type it does not know writes a PNG and says
+      # nothing, so a typo ships a PNG named .jpg. And a see-through post
+      # saved as a JPEG comes back on black, which no setting undoes.
+      - name: Every export format is one the canvas really writes
+        run: npm run check:postfile
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever

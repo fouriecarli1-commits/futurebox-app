@@ -93,6 +93,11 @@ const SAME_IN_BOTH = new Set([
   /* Picture sizes. "480p" is 480p in every language, and translating a
      standard's own name would make it harder to recognise, not easier. */
   '480p', '720p', '1080p',
+  /* File formats, for the same reason, and more so: these are the letters on
+     the end of the file name. A picture saved as a "PNG" is a .png whatever
+     language the room was in, and renaming the button would leave somebody
+     looking for a format that does not exist. */
+  'PNG', 'JPG',
   /* The room's own name, hers in both languages. Carli, 4 October 2026, asked
      directly which name she meant: *"Nee, Video Editor."* "Video-redigeerder"
      is the dictionary answer and is not what anybody in this country calls it. */

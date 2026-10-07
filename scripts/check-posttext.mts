@@ -212,10 +212,33 @@ ok('  and the checkerboard that proves it is drawn only as a guide',
   'it is outside the `guides` branch, so every transparent post exports with'
   + ' a grey checkerboard baked into it');
 
-ok('  and the download is a PNG, which is the only part that keeps the alpha',
-  /toBlob\([^)]*'image\/png'\)/.test(studio),
-  "a JPEG turns every transparent background black and the screen does not"
-  + ' change, so this would be found by a member and not by us');
+/* ── The alpha, which one of the two formats cannot hold ───────────────
+ 
+   This was "the download is a PNG", and it was right while PNG was the only
+   thing the room wrote. Carli asked for a choice on 7 October — *"Ook die
+   formaat van export?"* — so JPEG is offered on purpose, and the rule has to
+   become the thing it was protecting rather than the implementation that
+   happened to protect it.
+ 
+   A JPEG does not turn transparency black because somebody chose JPEG. It
+   does it because `toBlob` composites alpha onto black without a word, and
+   the screen does not change — so it would be found by a member and not by
+   us. Three things stand between her and that now, and all three are
+   asserted: the format that keeps alpha is still there and still the one the
+   room starts on, the export never hands a transparent canvas to a format
+   that cannot hold it, and the screen says so before the credit is spent. */
+ok('  and a format that keeps the alpha is still offered, and is the one it starts on',
+  /useState<FileKind>\('png'\)/.test(studio) && /formatOf\(kind\)/.test(studio),
+  'the room starting on the lossy one is every see-through post flattened by'
+  + ' default, which is the old fault with a choice in front of it');
+ok('    and a format that cannot hold it is never handed a see-through canvas',
+  /if \(!how\.clear && !back\) \{/.test(studio) && /ctx\.fillStyle = lastColour/.test(studio),
+  'toBlob composites alpha onto BLACK — not white, and not the colour she last'
+  + ' had behind it — so the flattening has to be done here, in a colour that'
+  + ' was chosen');
+ok('    and the screen says so before the credit is spent',
+  /holdsClear\(kind, back === null\)/.test(studio) && /data-postkindwarn/.test(studio),
+  'a warning after the press is a warning about money already gone');
 
 ok('  and the background can be put back without hunting for the colour again',
   /setLastColour/.test(studio) && /back \?\? lastColour/.test(studio));
