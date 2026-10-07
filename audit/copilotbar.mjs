@@ -51,9 +51,13 @@ try {
        over a room can put the box she types into behind the bar just as easily
        as a pane below one can, and nothing else at this width would notice.
        Skipping the room would have been a green run that stopped looking. */
-    const ask = page.locator('[data-editorask]');
+    /* Two rooms now. The photo editor took the same shape on 7 October, for
+       the same reason and in the same words, so it opens its copilot the same
+       way. A probe that knew about one of them reported the other as having
+       lost its copilot entirely. */
+    const ask = page.locator('[data-editorask], [data-postask]');
     if (await ask.count()) {
-      await ask.click();
+      await ask.first().click();
       await page.waitForTimeout(600);
     }
     /* Playwright finds the scroller, because two hand-rolled attempts did not.

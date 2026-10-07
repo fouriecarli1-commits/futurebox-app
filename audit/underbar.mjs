@@ -120,11 +120,32 @@ try {
        Without this the probe reported the cutting room as broken for doing
        exactly what it was asked to do, which is the kind of failure that gets
        a probe switched off. */
+    /* ── And it is the bar of THIS room, not the last one ──────────────
+ 
+       A room that claims the screen stays MOUNTED under the door and under
+       whatever is opened next — that is the subject of the last assertion in
+       this file. So `querySelector` can hand back a bar belonging to a room
+       nobody is looking at: on 7 October the photo editor was reported as
+       failing with "the room's own bar ends at 223 in a 844px window", and
+       223 was the cutting room's bar, drawn behind it, while the photo
+       editor's own was exactly on the bottom edge.
+ 
+       So: what is PAINTED at the foot of the screen, which is the question
+       this whole probe is built on, with the tallest-reaching bar as the
+       fallback when nothing of the kind is painted there — because that is
+       the real fault this assertion exists to catch and it still has to be
+       reported as itself. */
     const instead = await page.evaluate(() => {
-      const own = document.querySelector('[data-cutdock], [data-boothdock]');
-      if (!own) return null;
+      const view = window.innerHeight;
+      const docks = Array.from(document.querySelectorAll('[data-cutdock], [data-boothdock]'));
+      if (docks.length === 0) return null;
+      const at = document.elementFromPoint(Math.round(window.innerWidth / 2), view - 2);
+      const painted = at ? at.closest('[data-cutdock], [data-boothdock]') : null;
+      const own = painted ?? docks
+        .reduce((best, one) => (one.getBoundingClientRect().bottom
+          > best.getBoundingClientRect().bottom ? one : best));
       const r = own.getBoundingClientRect();
-      return { bottom: Math.round(r.bottom), view: window.innerHeight };
+      return { bottom: Math.round(r.bottom), view };
     });
 
     if (!found.open && instead) {
@@ -158,8 +179,11 @@ try {
 
      So: into the room that claims the screen, back out to the door, and the
      bar has to be there. */
-  const claiming = ROOMS.find((one) => one === 'Video Editor');
-  if (claiming) {
+  /* Both of them. The photo editor claims the screen too since 7 October, and
+     a room that holds the claim after she has walked out of it takes the
+     whole app's navigation away — which is what Carli reported about the
+     cutting room, so it is not hypothetical in either. */
+  for (const claiming of ROOMS.filter((one) => one === 'Video Editor' || one === 'Photo Editor')) {
     try {
       await toRoom(page, claiming);
       await page.waitForTimeout(700);
@@ -172,7 +196,7 @@ try {
       await page.waitForTimeout(900);
       const after = await page.evaluate(() => ({
         bar: !!document.querySelector('nav.fixed.bottom-0'),
-        room: !!document.querySelector('[data-videoeditor]'),
+        room: !!document.querySelector('[data-videoeditor], [data-poststudio]'),
       }));
       check(`${claiming}: and it comes back the moment she steps out`,
         after.bar === true,
@@ -197,4 +221,7 @@ if (problems.length) {
   problems.forEach((one) => console.error(`  · ${one}`));
   process.exit(1);
 }
-console.log('\ncheck:underbar — twelve rooms, and the bar is standing on none of them.');
+/* Counted off `ROOMS` rather than written out. It said "twelve rooms" while
+   it walked fifteen, which is the same fault as a probe measuring a subset:
+   a sentence about a number nobody re-counts. */
+console.log(`\ncheck:underbar — ${ROOMS.length} rooms, and the bar is standing on none of them.`);

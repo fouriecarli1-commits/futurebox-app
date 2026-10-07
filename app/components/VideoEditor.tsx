@@ -56,6 +56,7 @@ import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import KeepVideo from './KeepVideo';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
+import { BAR, BAR_TIGHT, ROW2, ROW3, ROW5, SLIDE } from '../lib/benchbar';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
@@ -71,7 +72,7 @@ import Recommend from './Recommend';
 import History from './History';
 import { makeBlob, makeId, rememberMake } from '../lib/makes';
 import { gradeAdvice, shapeAdvice } from '../lib/recommend';
-import { useOwnScreen } from '../lib/fullroom';
+import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
 import { DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
@@ -593,63 +594,18 @@ export default function VideoEditor({
   const [asking2, setAsking2] = useState(false);
 
   /* ── How tall the room is, measured rather than guessed ─────────────────
-
-     The room is a fixed-height column with a bar at its foot, which is the
-     whole shape of the October rebuild. To be that, it needs a height — and
-     the height is the screen less whatever is above it less the app's own bar.
-
-     "Whatever is above it" was a constant: `calc(100dvh - 7.5rem)`. It is not
-     a constant. The header over this room is a back arrow, a search and an
-     "All rooms / Cutting room" card, and how tall that stack is depends on the
-     width, the language and whether the card is folded. Measured on a 390x844
-     phone the room started 155 pixels down, so 7.5rem of allowance left it
-     ending 93 pixels below the bottom of the screen — and what was down there
-     was the lower half of the bar: Bring it in, Looks, Words, Sound, Your mark.
-
-     Two probes said so and neither could say why, because neither could see
-     the guess: `audit/underbar.mjs` reported five controls under the tab bar,
-     and the screenshot showed the icon row sliced through the middle.
-
-     So it is read off the element. One number, recomputed when the window
-     changes size or the layout above it moves, and correct by construction at
-     every width rather than at the one somebody measured. */
-  const shell = useRef<HTMLDivElement | null>(null);
-  const [tall, setTall] = useState<number | null>(null);
-
-  useEffect(() => {
-    const box = shell.current;
-    if (!box) return undefined;
-    const fit = (): void => {
-      const top = box.getBoundingClientRect().top;
-      /* `visualViewport` rather than `innerHeight` where it exists: on a phone
-         the address bar coming and going changes one and not the other, and
-         the one that matches what she can see is the visual viewport. */
-      const screen = window.visualViewport?.height ?? window.innerHeight;
-      /* The bar measured, not assumed, for the same reason the top is. On a
-         phone with a home indicator it is the bar's height plus the safe area,
-         and the safe area is a number only the device knows. */
-      /* Nought when there is no bar, not `BAR_HEIGHT`.
  
-         This room claims the screen, so the app's bar is not drawn while it is
-         open and the space under it is the room's. The fallback is only for the
-         frame before the bar would have mounted in a room that does not claim
-         it — reserving 64 pixels for a bar that is not there is how a room ends
-         up with a strip of nothing along the bottom. */
-      const bar = document.querySelector('nav.fixed.bottom-0');
-      const under = bar ? bar.getBoundingClientRect().height : 0;
-      setTall(Math.max(320, Math.round(screen - top - under)));
-    };
-    fit();
-    const watch = new ResizeObserver(fit);
-    watch.observe(document.body);
-    window.addEventListener('resize', fit);
-    window.visualViewport?.addEventListener('resize', fit);
-    return () => {
-      watch.disconnect();
-      window.removeEventListener('resize', fit);
-      window.visualViewport?.removeEventListener('resize', fit);
-    };
-  }, []);
+     The room is a fixed-height column with a bar at its foot, which is the
+     whole shape of the October rebuild. To be that, it needs a height — the
+     screen, less whatever is above it, less the app's own bar.
+ 
+     It was measured here, in forty lines with the story of getting it wrong
+     twice. The photo editor became the second room of this shape on 7 October
+     and copying the arithmetic would be two rooms to correct the next time it
+     is wrong, so it lives in `lib/fullroom.ts` and carries the story with it.
+ 
+     `audit/underbar.mjs` is what proves it, in a browser, in both rooms. */
+  const { shell, tall } = useRoomHeight();
 
   /* ── Taking it back ─────────────────────────────────────────────────────
  
@@ -2409,8 +2365,8 @@ export default function VideoEditor({
          first measurement lands, so the room is the right shape on the frame
          it is painted rather than snapping a moment later. */
       style={{
-        height: tall === null ? 'calc(100dvh - 7.5rem)' : tall,
-        maxHeight: tall === null ? 'calc(100dvh - 7.5rem)' : tall,
+        height: tall === null ? ROOM_HEIGHT_GUESS : tall,
+        maxHeight: tall === null ? ROOM_HEIGHT_GUESS : tall,
       }}
     >
       {/* ── The one press that spends, where every editor puts it ─────────
@@ -4280,7 +4236,7 @@ export default function VideoEditor({
                     data-editorjoinfor
                     {...gesture}
                     onChange={(e) => slide({ joinFor: Number(e.target.value) })}
-                    className="w-full accent-emerald-500"
+                    className={`${SLIDE} accent-emerald-500`}
                   />
                   {/* What it will REALLY be, not what the slider says. A
                       join is capped at half the piece it arrives on, so a
@@ -4322,7 +4278,7 @@ export default function VideoEditor({
               data-editorspeed
               {...gesture}
               onChange={(e) => slide({ speed: Number(e.target.value) })}
-              className="w-full accent-emerald-500"
+              className={`${SLIDE} accent-emerald-500`}
             />
             <span className="block text-sm text-zinc-500" data-editorspeednow>
               {`${(piece.speed ?? 1).toFixed(2)}×`}
@@ -4352,7 +4308,7 @@ export default function VideoEditor({
                     data-editorloud
                     {...gesture}
                     onChange={(e) => slide({ loud: Number(e.target.value) })}
-                    className="w-32 accent-emerald-500"
+                    className="h-11 w-32 cursor-pointer accent-emerald-500"
                   />
                 </label>
               )}
@@ -4509,7 +4465,7 @@ export default function VideoEditor({
                     onChange={(e) => slide({
                       adjust: { ...NO_ADJUST, ...piece.adjust, [dial.id]: Number(e.target.value) },
                     })}
-                    className="w-full accent-emerald-500"
+                    className={`${SLIDE} accent-emerald-500`}
                   />
                 </label>
               );
@@ -4646,7 +4602,7 @@ export default function VideoEditor({
                   data-editorwordssize
                   {...gesture}
                   onChange={(e) => slide({ wordsSize: Number(e.target.value) })}
-                  className="w-full accent-emerald-500"
+                  className={`${SLIDE} accent-emerald-500`}
                 />
               </label>
 
@@ -4673,7 +4629,7 @@ export default function VideoEditor({
                   data-editorwordsturn
                   {...gesture}
                   onChange={(e) => slide({ wordsTurn: Number(e.target.value) })}
-                  className="w-full accent-emerald-500"
+                  className={`${SLIDE} accent-emerald-500`}
                 />
                 <span className="block text-sm text-zinc-500" data-editorwordsturnnow>
                   {`${Math.round(piece.wordsTurn ?? 0)}°`}
@@ -4690,7 +4646,7 @@ export default function VideoEditor({
                   data-editorwordssolid
                   {...gesture}
                   onChange={(e) => slide({ wordsSolid: Number(e.target.value) })}
-                  className="w-full accent-emerald-500"
+                  className={`${SLIDE} accent-emerald-500`}
                 />
               </label>
 
@@ -4704,7 +4660,7 @@ export default function VideoEditor({
                   data-editorwordsround
                   {...gesture}
                   onChange={(e) => slide({ wordsRound: Number(e.target.value) })}
-                  className="w-full accent-emerald-500"
+                  className={`${SLIDE} accent-emerald-500`}
                 />
               </label>
 
@@ -4840,7 +4796,7 @@ export default function VideoEditor({
                 data-editorunderloud
                 {...gesture}
                 onChange={(e) => slideFilm((was) => ({ ...was, underLoud: Number(e.target.value) }))}
-                className="w-32 accent-emerald-500"
+                className="h-11 w-32 cursor-pointer accent-emerald-500"
               />
             </label>
 
@@ -4888,7 +4844,7 @@ export default function VideoEditor({
                     onChange={(e) => slideFilm((was) => ({ ...was, duck: Number(e.target.value) }))}
                     onPointerDown={holding}
                     onPointerUp={held}
-                    className="w-full accent-emerald-500"
+                    className={`${SLIDE} accent-emerald-500`}
                   />
                   <span className="block text-sm" style={{ color: INK_DIM }} data-editorducknow>
                     {t('edit.duckTo', 'Down to {pc}% while the shot talks')
@@ -4929,7 +4885,7 @@ export default function VideoEditor({
                 data-editorunderspeed
                 {...gesture}
                 onChange={(e) => slideFilm((was) => ({ ...was, underSpeed: Number(e.target.value) }))}
-                className="w-full accent-emerald-500"
+                className={`${SLIDE} accent-emerald-500`}
               />
               <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
                 {t(
@@ -4995,7 +4951,8 @@ export default function VideoEditor({
 
             <div className="space-y-1.5" data-editormix>
               <span className="block text-sm text-zinc-400">{t('edit.mix', 'How it comes out')}</span>
-              <div className="flex flex-wrap gap-2">
+              {/* Two across, one width each — they were 74 and 67. */}
+              <div className={ROW2}>
                 {(['stereo', 'mono'] as const).map((one) => (
                   <button
                     key={one}
@@ -5003,7 +4960,7 @@ export default function VideoEditor({
                     data-editormixpick={one}
                     aria-pressed={(edit.mix ?? 'stereo') === one}
                     onClick={() => commit((was) => ({ ...was, mix: one }))}
-                    className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                    className={`${BAR} border`}
                     style={(edit.mix ?? 'stereo') === one
                       ? { borderColor: 'rgba(16,185,129,0.6)', background: 'rgba(52,211,153,0.22)', color: INK }
                       : { borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(52,211,153,0.08)', color: INK_DIM }}
@@ -5032,7 +4989,7 @@ export default function VideoEditor({
                 data-editorfadein
                 {...gesture}
                 onChange={(e) => slideFilm((was) => ({ ...was, fadeIn: Number(e.target.value) }))}
-                className="w-full accent-emerald-500"
+                className={`${SLIDE} accent-emerald-500`}
               />
               <span className="block text-sm text-zinc-500">{seconds(fades.in)}</span>
             </label>
@@ -5044,7 +5001,7 @@ export default function VideoEditor({
                 data-editorfadeout
                 {...gesture}
                 onChange={(e) => slideFilm((was) => ({ ...was, fadeOut: Number(e.target.value) }))}
-                className="w-full accent-emerald-500"
+                className={`${SLIDE} accent-emerald-500`}
               />
               <span className="block text-sm text-zinc-500">{seconds(fades.out)}</span>
             </label>
@@ -5150,7 +5107,7 @@ export default function VideoEditor({
                   value={markShare}
                   data-editormarksize
                   onChange={(e) => setMarkShare(Number(e.target.value))}
-                  className="w-full accent-emerald-500"
+                  className={`${SLIDE} accent-emerald-500`}
                 />
               </label>
 
@@ -5168,7 +5125,7 @@ export default function VideoEditor({
                   value={markTurn}
                   data-editormarkturn
                   onChange={(e) => setMarkTurn(Number(e.target.value))}
-                  className="w-full accent-emerald-500"
+                  className={`${SLIDE} accent-emerald-500`}
                 />
                 <span className="block text-sm text-zinc-500" data-editormarkturnnow>
                   {`${Math.round(markTurn)}°`}
@@ -5184,7 +5141,7 @@ export default function VideoEditor({
                   value={markSolid}
                   data-editormarksolid
                   onChange={(e) => setMarkSolid(Number(e.target.value))}
-                  className="w-full accent-emerald-500"
+                  className={`${SLIDE} accent-emerald-500`}
                 />
               </label>
 
@@ -5255,7 +5212,10 @@ export default function VideoEditor({
             {/* ── The shape, which changes what you are looking at ────── */}
             <div className="space-y-1.5">
               <span className="text-sm text-zinc-400">{t('edit.shape', 'Shape')}</span>
-              <div className="flex gap-2">
+              {/* Three across rather than a flex, so "Tall", "Wide" and
+                  "Square" are one width instead of 53, 63 and 77 — see
+                  `lib/benchbar.ts`. */}
+              <div className={ROW3}>
                 {(Object.keys(SHAPES) as (keyof typeof SHAPES)[]).map((one) => {
                   const on = (edit.shape ?? 'tall') === one;
                   return (
@@ -5265,7 +5225,7 @@ export default function VideoEditor({
                       aria-pressed={on}
                       data-editorshape={one}
                       onClick={() => commit((was) => ({ ...was, shape: one }))}
-                      className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                      className={`${BAR} border`}
                       /* The chosen one painted from the room's own palette
                          rather than `text-emerald-300`.
  
@@ -5370,13 +5330,15 @@ export default function VideoEditor({
                 </p>
               )}
 
-              <div className="flex flex-wrap gap-2">
+              {/* Two across: "Take this frame" and "Bring one in" came out
+                  152 and 132 wide beside each other. */}
+              <div className={ROW2}>
                 <button
                   type="button"
                   data-editorcovershot
                   disabled={!piece}
                   onClick={() => { void takeCover(); }}
-                  className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-40"
+                  className={`${BAR} border disabled:opacity-40`}
                   style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
                 >
                   <ImageIcon className="w-3.5 h-3.5" />
@@ -5384,7 +5346,7 @@ export default function VideoEditor({
                 </button>
                 <label
                   data-editorcoverbring
-                  className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                  className={`${BAR} border cursor-pointer`}
                   style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -5455,7 +5417,8 @@ export default function VideoEditor({
               <span className="block text-sm text-zinc-400">
                 {t('edit.grade', 'How big a picture')}
               </span>
-              <div className="flex flex-wrap gap-2">
+              {/* Three across — 480p, 720p and 1080p were 62, 62 and 70. */}
+              <div className={ROW3}>
                 {GRADES.map((one) => {
                   const on = (edit.grade ?? GRADE_DEFAULT) === one.id;
                   return (
@@ -5466,7 +5429,7 @@ export default function VideoEditor({
                       data-editorgrade={one.id}
                       title={t(one.what[0], one.what[1])}
                       onClick={() => commit((was) => ({ ...was, grade: one.id }))}
-                      className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                      className={`${BAR} border`}
                       style={on ? {
                         borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
                       } : {
@@ -5499,7 +5462,9 @@ export default function VideoEditor({
               <span className="block text-sm text-zinc-400">
                 {t('edit.fps', 'Frames a second')}
               </span>
-              <div className="flex flex-wrap gap-2">
+              {/* Five across, with the smaller words, so the row fills the
+                  pop-out instead of leaving a ragged tail of five chips. */}
+              <div className={ROW5}>
                 {RATES.map((one) => {
                   const on = rateFor(edit.fps) === one;
                   return (
@@ -5509,7 +5474,7 @@ export default function VideoEditor({
                       aria-pressed={on}
                       data-editorfps={one}
                       onClick={() => commit((was) => ({ ...was, fps: one }))}
-                      className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold tabular-nums"
+                      className={`${BAR_TIGHT} border tabular-nums`}
                       style={on ? {
                         borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
                       } : {

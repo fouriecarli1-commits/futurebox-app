@@ -1865,7 +1865,29 @@ export default function FutureBoxHome() {
   /* The rooms that hold the copilot themselves, so the third column is not
      drawn below them as well. The voice studio puts it inside a pane of its
      own; the cutting room puts it behind a button on the dock. */
-  const copilotInside = studioTab === 'voice_studio' || studioTab === 'videoedit';
+  /* `photo` joined these on 7 October, when the photo editor became a room
+     with its own bar at the foot. A room of that shape has a page that does
+     not scroll, so a column under it is a screenful nobody reaches — and,
+     worse, it makes the page scroll again and the room's own bar can be
+     scrolled off the bottom. `audit/underbar.mjs` found exactly that. */
+  const copilotInside = studioTab === 'voice_studio' || studioTab === 'videoedit'
+    || studioTab === 'photo';
+
+  /* ── The rooms that ARE the screen ──────────────────────────────────────
+ 
+     A room with its own bar at the foot claims the screen (`useOwnScreen`),
+     so the app's tab bar steps aside and the room is a fixed-height column
+     from the header down to the bottom edge. Nothing of the page's own can go
+     under it: there is no page under it.
+ 
+     The "Next" strip below was the thing that did. It is the right idea
+     everywhere else — a finished piece of work naming its next step rather
+     than ending in silence — but in one of these rooms it adds 125 pixels
+     below a column that already reaches the bottom of the screen, which makes
+     the page scroll and the room's own bar scrollable off the bottom.
+     `audit/underbar.mjs` measured this room's bar 137 pixels above where it
+     had just been. A room of this shape names its next step inside itself. */
+  const roomIsScreen = studioTab === 'videoedit' || studioTab === 'photo';
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -4234,6 +4256,13 @@ export default function FutureBoxHome() {
                   asRoom
                   onClose={() => goToRoom('canvas')}
                   onIntoFilm={setPostCover}
+                  /* Inside, as a sheet off the bar, rather than in a column
+                     below the room — see `copilotInside`. */
+                  copilot={copilotPane}
+                  /* The room list is drawn over this room without unmounting
+                     it, so the room has to be told rather than left to assume
+                     it is still the screen. See `atDoor`. */
+                  atDoor={atDoor}
                 />
               </div>
             )}
@@ -4621,6 +4650,9 @@ export default function FutureBoxHome() {
                 {(() => {
                   const onward = SURFACES[studioTab].next;
                   if (!onward) return null;
+                  /* Not under a room that is the screen — see
+                     `roomIsScreen`. */
+                  if (roomIsScreen) return null;
                   return (
                     /* Its own clearance, for the same reason the copilot pane
                        above has one: this is the last thing in the middle

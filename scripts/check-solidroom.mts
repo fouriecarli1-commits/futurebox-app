@@ -269,17 +269,44 @@ ok('  and the copilot drops its own card inside it',
      that is 155 pixels, not 120 — so the bottom row of the bar was off the
      screen and `audit/underbar.mjs` named all five controls on it.
 
-   The height is read off the element now. This holds that it still is. */
+   The height is read off the element now. This holds that it still is.
+
+   It is read in `lib/fullroom.ts` rather than in this room, since 7 October,
+   because the photo editor became the second room of this shape and a second
+   copy of the arithmetic is a second room to correct the next time it is
+   wrong. So the assertions are in two halves: the hook does the measuring,
+   and the room uses the hook. Both are needed — a room that stopped calling
+   it would pass a check that only read the hook. */
+
+const tallness = withoutComments(readFileSync('app/lib/fullroom.ts', 'utf8'));
 
 ok('the room measures its own height rather than assuming one',
-  /getBoundingClientRect\(\)\.top/.test(room) && /visualViewport/.test(room),
+  /getBoundingClientRect\(\)\.top/.test(tallness) && /visualViewport/.test(tallness)
+  && /useRoomHeight\(\)/.test(room),
   'a constant allowance for what sits above the room is a guess, and the guess'
   + ' was 35 pixels out at the first width it was checked at');
 
 ok('  and takes the app bar off it by measuring that too',
-  /nav\.fixed\.bottom-0/.test(room),
+  /nav\.fixed\.bottom-0/.test(tallness),
   'the bar is BAR_HEIGHT plus the device safe area, and only the device knows'
   + ' the second number');
+
+/* And it is measured inside whatever scrolls, not against the viewport.
+ 
+   `getBoundingClientRect().top` on its own is a feedback loop: scroll the page
+   and the room's top goes negative, so the height comes out bigger, so the
+   page gets longer. The photo editor measured 784 standing still and 921 after
+   `audit/underbar.mjs` scrolled it to the end — and with it 137 pixels taller,
+   its own bar could be scrolled off the bottom of the screen. */
+ok('  and measures inside whatever scrolls, so scrolling cannot grow the room',
+  /scroller\.scrollTop/.test(tallness) && /overflowY/.test(tallness),
+  'a top read off the viewport goes negative the moment anything scrolls, and'
+  + ' a height computed from it grows the page it was measured against');
+
+ok('  and the photo editor is the same shape, measured the same way',
+  /useRoomHeight\(\)/.test(withoutComments(readFileSync('app/components/PostStudio.tsx', 'utf8'))),
+  'Carli asked for the same bar in that room on 7 October — a room with a bar'
+  + ' at its foot and no height is a room that grows a page under itself');
 
 ok('  and sets a height, not only a minimum',
   /height:\s*tall === null/.test(room) && /maxHeight:\s*tall === null/.test(room),

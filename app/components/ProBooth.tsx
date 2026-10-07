@@ -40,6 +40,7 @@ import { decodeAt, shapeOf } from '../lib/takes';
 import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepsession';
 import { encodeWav } from '../lib/wav';
 import { LAYOUTS, layoutById, type Layout } from '../lib/channels';
+import { BAR, ROW2, STACK } from '../lib/benchbar';
 import { knownLatency } from '../lib/mixdown';
 import { loads } from '../lib/nam';
 import {
@@ -2263,7 +2264,7 @@ export default function ProBooth({
                 max={0}
                 value={clickDb}
                 onChange={(event) => setClickDb(Number(event.target.value))}
-                className="h-9 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
+                className="h-11 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
                 aria-label={t('pro.clickLevel', 'Click level')}
               />
               <span className="w-12 text-right text-xs tabular-nums" style={{ color: INK_DIM }}>
@@ -2566,7 +2567,11 @@ export default function ProBooth({
         <p className="text-sm font-semibold" style={{ color: INK_DIM }}>
           {t('mix.layout', 'How it comes out')}
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        {/* One under the other, all three the same size. They were 74, 67
+            and 148 wide in a wrapping flex, and "Surround (matrix)" is long
+            enough that three across would wrap it onto two lines and make
+            that row taller than every other control in the desk. */}
+        <div className={STACK}>
           {LAYOUTS.map((one) => (
             <button
               key={one.id}
@@ -2574,7 +2579,7 @@ export default function ProBooth({
               data-layout={one.id}
               onClick={() => setLayout(layoutById(one.id))}
               aria-pressed={layout === one.id}
-              className={`min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold ${
+              className={`${BAR} border ${
                 layout === one.id
                   ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
                   : 'border-zinc-700 bg-zinc-900 text-zinc-200'
@@ -2664,7 +2669,7 @@ export default function ProBooth({
               setMaster((was) => ({ ...was, gain: Number(event.target.value) / 100 }));
               setStale(true);
             }}
-            className="h-9 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
+            className="h-11 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
             aria-label={t('pro.masterLevel', 'Level')}
           />
           <span className="w-10 text-right text-sm tabular-nums" style={{ color: INK_DIM }}>
@@ -3485,12 +3490,23 @@ export default function ProBooth({
           card now, and a card inside a card is a box somebody has to look
           through. It kept the room's chrome from when it was a pinned strip
           at the foot of the screen. */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* ── Two across, one width each ───────────────────────────────
+ 
+          Carli, 7 October 2026: *"bars binne pop outs moet ewe groot en lank
+          wees"*. This was `flex flex-wrap`, which gives every button the width
+          of its own words: "Play" came out 81, "Click" 85 and "Back to the
+          start" 140, three in a row with a ragged right edge, and the row
+          after it starting wherever the last one happened to end.
+ 
+          A grid of two gives each one the same column whatever it says. The
+          one that makes the song spans both, because it is the thing this
+          row is for. See `lib/benchbar.ts`. */}
+      <div className={`${ROW2} items-center`}>
         {recording ? (
           <button
             type="button"
             onClick={() => void stopRecording()}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-bold flex items-center gap-2"
+            className={`${BAR} border border-red-500 bg-red-500/20 text-red-300`}
           >
             <Square className="w-4 h-4 fill-current" />
             {/* Not "Stop".
@@ -3506,7 +3522,7 @@ export default function ProBooth({
             type="button"
             onClick={() => void record()}
             disabled={busy}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-50"
+            className={`${BAR} bg-emerald-500 text-onAccent disabled:opacity-50`}
           >
             <Circle className="w-4 h-4 fill-current" />
             {t('pro.record', 'Record a lane')}
@@ -3542,7 +3558,7 @@ export default function ProBooth({
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+            className={`${BAR} border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
           >
             <Mic2 className="w-4 h-4" />
             {t('pro.toWords', 'Sing with the words')}
@@ -3553,7 +3569,7 @@ export default function ProBooth({
           type="button"
           onClick={() => (playing ? stopPlaying() : play(at))}
           disabled={busy || recording || !heard.length}
-          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+          className={`${BAR} border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
         >
           {playing ? <Square className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           {playing ? t('pro.stopPlaying', 'Stop') : t('pro.play', 'Play')}
@@ -3588,7 +3604,7 @@ export default function ProBooth({
             'pro.clickWhat',
             'The metronome you record against. How often it clicks and how loud it is are here too — a click you cannot hear over the song is a click that is not doing its job.',
           )}
-          className={`min-h-[44px] px-3.5 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50 ${
+          className={`${BAR} border disabled:opacity-50 ${
             clicking
               ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
               : 'bg-zinc-900 border-zinc-700 text-zinc-200'
@@ -3605,7 +3621,7 @@ export default function ProBooth({
             setAt(0);
           }}
           disabled={recording}
-          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold disabled:opacity-50"
+          className={`${BAR} border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
         >
           {t('pro.toStart', 'Back to the start')}
         </button>
@@ -3621,7 +3637,7 @@ export default function ProBooth({
             Counted from one, and in the time signature that is actually set:
             bar 2 arrives after four beats in 4/4 and after three in a waltz.
             See `placeAt` in lib/tempo.ts. */}
-        <span className="text-sm text-zinc-500 tabular-nums px-1">
+        <span className="col-span-2 px-1 text-sm tabular-nums text-zinc-500">
           {clock(at)} / {clock(total)}
           <span className="ml-2 text-zinc-400">
             {t('pro.barShort', 'bar')} {sayPlace(placeAt(at, meter))}
@@ -3640,7 +3656,7 @@ export default function ProBooth({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy || recording}
-          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+          className={`${BAR} border border-zinc-700 bg-zinc-900 text-zinc-200 disabled:opacity-50`}
         >
           <Plus className="w-4 h-4" />
           {t('pro.bringIn', 'Bring audio in')}
@@ -3663,13 +3679,12 @@ export default function ProBooth({
           }}
         />
 
-        <span className="flex-1" />
 
         <button
           type="button"
           onClick={() => void keep()}
           disabled={busy || recording || !heard.length}
-          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40"
+          className={`${BAR} col-span-2 bg-emerald-500 text-onAccent disabled:opacity-40`}
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {/* Not "Mix it down".
@@ -3725,7 +3740,7 @@ export default function ProBooth({
             So the short form is printed and the long form is behind the
             mark, which is the shape the rest of the app uses: enough on
             the screen to decide with, the rest for whoever wants it. */}
-        <p className="w-full text-[11px] leading-snug" style={{ color: INK_DIM }}>
+        <p className="col-span-2 text-[11px] leading-snug" style={{ color: INK_DIM }}>
           {t('pro.wordsWhereShort', 'The words and the AI voice are in ProBooth. Your lanes are saved.')}
           <Hint className="ml-1">
           {t(
@@ -3734,7 +3749,7 @@ export default function ProBooth({
           )}
           </Hint>
         </p>
-        <p className="w-full text-[11px] leading-snug" style={{ color: INK_DIM }}>
+        <p className="col-span-2 text-[11px] leading-snug" style={{ color: INK_DIM }}>
           {heard.length
             ? t('pro.keepWhatShort', 'Every lane you can hear becomes one song, in your Library.')
             : t('pro.keepNone', 'Record a take or bring audio in, and this makes one song out of all of it.')}
@@ -4377,14 +4392,14 @@ function LaneRow({
         <input
           value={lane.name}
           onChange={(event) => onChange({ name: event.target.value.slice(0, 40) })}
-          className="w-full bg-transparent py-1.5 sm:py-0 text-sm font-semibold text-zinc-200 outline-none focus:text-white"
+          className="min-h-[44px] w-full bg-transparent text-sm font-semibold text-zinc-200 outline-none focus:text-white"
           aria-label={t('pro.laneName', 'Lane name')}
         />
         <div className="flex items-center gap-1 min-w-0">
           <button
             type="button"
             onClick={() => onChange({ muted: !lane.muted })}
-            className={`px-2 py-1.5 sm:py-0.5 min-w-[34px] sm:min-w-0 min-h-[34px] sm:min-h-0 rounded text-[11px] font-bold border ${
+            className={`min-h-[44px] min-w-[44px] rounded text-[11px] font-bold border ${
               lane.muted ? 'bg-red-500/20 border-red-500 text-red-300' : 'bg-zinc-950 border-zinc-700 text-zinc-500'
             }`}
           >
@@ -4393,7 +4408,7 @@ function LaneRow({
           <button
             type="button"
             onClick={() => onChange({ soloed: !lane.soloed })}
-            className={`px-2 py-1.5 sm:py-0.5 min-w-[34px] sm:min-w-0 min-h-[34px] sm:min-h-0 rounded text-[11px] font-bold border ${
+            className={`min-h-[44px] min-w-[44px] rounded text-[11px] font-bold border ${
               lane.soloed
                 ? 'bg-amber-500/20 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
@@ -4407,7 +4422,7 @@ function LaneRow({
             max={150}
             value={Math.round(lane.gain * 100)}
             onChange={(event) => onChange({ gain: Number(event.target.value) / 100 })}
-            className="flex-1 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+            className="flex-1 accent-emerald-500 h-11 touch-manipulation"
             aria-label={t('pro.level', 'Level')}
           />
           <span className="text-[11px] text-zinc-500 tabular-nums w-8 text-right">
@@ -4501,7 +4516,7 @@ function LaneRow({
  
              A stated width contributes itself to the measurement, which is
              what a content-sized box needs from every child in it. */
-          className="w-24 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+          className="w-24 accent-emerald-500 h-11 touch-manipulation"
           aria-label={t('pro.pan', 'Where it sits, left to right')}
         />
         <span className="text-[11px] text-zinc-600">R</span>
@@ -4522,7 +4537,7 @@ function LaneRow({
           value={Number(lane.at.toFixed(2))}
           onChange={(event) => onChange({ at: Number(event.target.value) })}
           disabled={lane.backing}
-          className="w-16 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-300 tabular-nums disabled:opacity-40"
+          className="w-16 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-2 sm:py-1 min-h-[44px] text-sm text-zinc-300 tabular-nums disabled:opacity-40"
           aria-label={t('pro.startsAt', 'Starts at')}
         />
         <span className="text-[11px] text-zinc-600">s</span>
@@ -4618,7 +4633,7 @@ function LaneRow({
             <button
               type="button"
               onClick={() => onUseTempo(found.tempo as number, found.key)}
-              className="px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-xs font-bold text-emerald-300"
+              className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-xs font-bold text-emerald-300"
             >
               {t('pro.useTempo', 'Set the session to this')}
             </button>
@@ -4708,7 +4723,7 @@ function LaneRow({
                 onClick={() => onChange({
                   clean: { ...(lane.clean ?? NOTHING_OFF), [key]: !on },
                 })}
-                className={`min-h-[38px] rounded-lg border px-3 py-2 text-xs font-bold ${
+                className={`min-h-[44px] rounded-lg border px-3 py-2 text-xs font-bold ${
                   on
                     ? 'border-emerald-500 bg-emerald-500/15 text-white'
                     : 'border-zinc-700 bg-zinc-950 text-zinc-500 hover:text-zinc-200'
@@ -4725,7 +4740,7 @@ function LaneRow({
             type="button"
             onClick={onDeRoom}
             disabled={busy}
-            className="min-h-[38px] rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white disabled:opacity-40"
+            className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white disabled:opacity-40"
           >
             {t('pro.deRoom', 'Take the room off')}
           </button>
@@ -4746,7 +4761,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.drive * 100)}
               onChange={(event) => onChange({ tone: { ...tone, drive: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+              className="w-28 accent-emerald-500 h-11 touch-manipulation"
               aria-label={t('pro.drive', 'Drive')}
             />
           </label>
@@ -4758,7 +4773,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.colour * 100)}
               onChange={(event) => onChange({ tone: { ...tone, colour: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+              className="w-28 accent-emerald-500 h-11 touch-manipulation"
               aria-label={t('pro.colour', 'Colour')}
             />
           </label>
@@ -4770,7 +4785,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.mix * 100)}
               onChange={(event) => onChange({ tone: { ...tone, mix: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+              className="w-28 accent-emerald-500 h-11 touch-manipulation"
               aria-label={t('pro.blend', 'Blend')}
             />
           </label>
@@ -4778,7 +4793,7 @@ function LaneRow({
             type="button"
             onClick={() => onChange({ tone: { ...tone, cabinet: !tone.cabinet } })}
             aria-pressed={tone.cabinet}
-            className={`px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 rounded-lg border text-xs font-bold ${
+            className={`px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border text-xs font-bold ${
               tone.cabinet
                 ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
@@ -4789,7 +4804,7 @@ function LaneRow({
           <button
             type="button"
             onClick={() => onChange({ tone: CLEAN })}
-            className="px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-500 hover:text-white"
+            className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-500 hover:text-white"
           >
             {t('pro.clean', 'Straight')}
           </button>
@@ -4814,19 +4829,19 @@ function LaneRow({
             <span className="text-xs text-zinc-500">{t('pro.amp', 'Amp')}</span>
             {lane.amped ? (
               <>
-                <span className="px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-xs font-bold min-w-0 truncate max-w-[12rem]">
+                <span className="px-2.5 py-2 sm:py-1 min-h-[44px] rounded-lg bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-xs font-bold min-w-0 truncate max-w-[12rem]">
                   {lane.amped.name}
                 </span>
                 <button
                   type="button"
                   onClick={() => onChange({ amped: undefined })}
-                  className="px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-white"
+                  className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-white"
                 >
                   {t('pro.ampOff', 'Take it off')}
                 </button>
               </>
             ) : (
-              <label className={`px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 ${
+              <label className={`px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 ${
                 amping ? 'text-zinc-600' : 'text-zinc-300 hover:text-white cursor-pointer'
               }`}>
                 {amping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
@@ -4870,7 +4885,7 @@ function LaneRow({
               data-browsetone=""
               onClick={onBrowseAmps}
               disabled={browsing || amping}
-              className="px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white disabled:text-zinc-600"
+              className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white disabled:text-zinc-600"
             >
               {browsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
               {t('pro.t3kBrowse', 'Browse TONE3000')}
@@ -4902,7 +4917,7 @@ function LaneRow({
                       aria-pressed={on}
                       title={one.from}
                       data-useamp={one.id}
-                      className={`min-h-[32px] px-2.5 py-1.5 rounded-lg border text-xs font-bold max-w-[10rem] truncate disabled:opacity-50 ${
+                      className={`min-h-[44px] px-2.5 py-1.5 rounded-lg border text-xs font-bold max-w-[10rem] truncate disabled:opacity-50 ${
                         on
                           ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
                           : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:text-white hover:border-zinc-500'
@@ -4917,7 +4932,7 @@ function LaneRow({
                       onClick={() => setShelf(favouriteAmp(one.id, !one.favourite))}
                       aria-pressed={Boolean(one.favourite)}
                       aria-label={t('pro.ampKeep', 'Keep this amp on the shelf')}
-                      className={`min-h-[32px] px-1.5 rounded-lg border border-zinc-700 bg-zinc-950 ${
+                      className={`min-h-[44px] px-1.5 rounded-lg border border-zinc-700 bg-zinc-950 ${
                         one.favourite ? 'text-amber-300' : 'text-zinc-600 hover:text-zinc-300'
                       }`}
                     >
@@ -4927,7 +4942,7 @@ function LaneRow({
                       type="button"
                       onClick={() => void forgetAmp(one.id).then(() => setShelf(loadAmps()))}
                       aria-label={t('pro.ampForget', 'Take this amp off this device')}
-                      className="min-h-[32px] px-1.5 rounded-lg border border-rose-500/25 bg-rose-500/[0.06] text-zinc-600 hover:text-rose-300 hover:border-rose-500/50"
+                      className="min-h-[44px] px-1.5 rounded-lg border border-rose-500/25 bg-rose-500/[0.06] text-zinc-600 hover:text-rose-300 hover:border-rose-500/50"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>

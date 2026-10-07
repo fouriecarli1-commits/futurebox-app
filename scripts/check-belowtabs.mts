@@ -101,6 +101,28 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
       /<ArrowLeft className="h-4 w-4" \/>/.test(s) &&
       /\|\| roomOwnsScreen\)/.test(readFileSync('app/page.tsx', 'utf8')),
   },
+  /* The photo editor, 7 October 2026, for the same reason and with the same
+     conditions.
+ 
+     Carli asked for its tools along the bottom — *"Die editing tools moet ook
+     onder in 'n bar wees"* — and the app's bar is along the bottom. It
+     reserved the strip with `barClearance` while it was one long scroll, which
+     was right then; with a bar of its own, 64 pixels of padding under that bar
+     would be a strip of nothing and the bar would still be the second one on
+     the screen. So the room claims the screen, as the booth and the cutting
+     room do.
+ 
+     `holds` does the same real work as the booth's: claim, honoured, and a way
+     out. The way out as a ROOM is the header the rail draws over every room,
+     which `audit/roomtop.mjs` holds; `data-backout` is the overlay form's own,
+     and the one this file can read. */
+  'app/components/PostStudio.tsx': {
+    why: 'the bar is hidden while this room is open, and the room keeps its own way out',
+    holds: (s) =>
+      /useOwnScreen\(!atDoor\)/.test(s) &&
+      /data-backout/.test(s) &&
+      /\|\| roomOwnsScreen\)/.test(readFileSync('app/page.tsx', 'utf8')),
+  },
   'app/components/SongScreen.tsx': {
     why: 'full-bleed video; padding would letterbox it — controls unverified, see the note',
     holds: () => true,

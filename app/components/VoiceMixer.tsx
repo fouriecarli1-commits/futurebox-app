@@ -138,7 +138,7 @@ function Ratio({
           max={100}
           value={value === null ? 50 : Math.round(value * 100)}
           onChange={(event) => onChange(Number(event.target.value) / 100)}
-          className="w-32 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+          className="h-11 w-32 cursor-pointer accent-emerald-500 touch-manipulation"
           aria-label={label}
         />
         <span className="w-16 text-right text-xs tabular-nums text-zinc-500">
@@ -191,7 +191,7 @@ export default function VoiceMixer({
               type="button"
               aria-pressed={on}
               onClick={() => set({ [key_]: toggle(list, name) } as Partial<VoiceSettings>)}
-              className={`min-h-[38px] rounded-xl border px-3 py-2 text-xs font-semibold ${
+              className={`min-h-[44px] rounded-xl border px-3 py-2 text-xs font-semibold ${
                 on
                   ? 'border-emerald-500 bg-emerald-500/15 text-white'
                   : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200'
@@ -261,7 +261,7 @@ export default function VoiceMixer({
         <button
           type="button"
           onClick={() => onChange(DEFAULT_SETTINGS)}
-          className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-emerald-500 hover:text-white"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-emerald-500 hover:text-white"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           {t('mix.reset', 'Back to the standard settings')}

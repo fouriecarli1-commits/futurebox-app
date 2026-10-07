@@ -43,7 +43,9 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Download, Image as ImageIcon, Loader2, Plus, Trash2, X } from 'lucide-react';
+import {
+  Crop as CropIcon, Download, Image as ImageIcon, Loader2, Plus, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, X,
+} from 'lucide-react';
 import {
   POST_SIZES, clashes, fitText, moveInside, sizeById,
   type Box, type Measure, type PostSize,
@@ -52,7 +54,10 @@ import { ALL, boxOf } from '../lib/safezones';
 import { CREDITS, creditsSaid } from '../lib/credits';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
-import { barClearance } from './TabBar';
+import RoomDock, { type Bench, type BenchSpec } from './CutDock';
+import DeskSheet from './BoothCard';
+import { CUT_LOOK } from '../lib/cutlook';
+import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { FACES, faceOf, faceReady, type FaceId } from '../lib/postfaces';
 import {
   MIDDLE, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP,
@@ -68,8 +73,32 @@ import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
 const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500';
-const VUL = 'w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-black disabled:opacity-40';
-const LEEG = 'rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-300';
+
+/* ── One control, one row ─────────────────────────────────────────────────
+ 
+   Carli, 7 October 2026: *"bars binne pop outs moet ewe groot en lank wees,
+   en alles moet baie eenvoudig en maklik wees."*
+ 
+   Measured before changing anything, the picture bench held controls 34, 36
+   and 44 pixels tall and 48, 106, 145 and 164 wide — six controls, six sizes.
+   Every one had been written on its own, and each was reasonable on its own.
+ 
+   So there is one control now and one row. The row is a GRID rather than a
+   wrapping flex, which is the whole of "ewe lank": a flex row sizes every
+   button to its own text, so four buttons are four widths and the ragged
+   right-hand edge is what reads as untidy. A grid gives each one the same
+   column whatever it says.
+ 
+   44 is the floor the rest of the app already uses for a thumb — see
+   `globals.css` under `pointer: coarse`. */
+const KNOP = 'inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl'
+  + ' border border-zinc-700 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 text-center';
+const RY = 'grid grid-cols-2 gap-2';
+const RY3 = 'grid grid-cols-3 gap-2';
+
+const VUL = 'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl'
+  + ' bg-emerald-500 px-4 text-sm font-bold text-black disabled:opacity-40';
+const LEEG = KNOP;
 const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100';
 
 
@@ -122,9 +151,83 @@ const INK = '#d7f5e4';
 const INK_DIM = 'rgba(215,245,228,0.62)';
 const RAISE = '0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.35)';
 
+/**
+ * The photo editor's benches, in the shape the cutting room's bar takes.
+ *
+ * Six, not nine. Taking a thing out and painting a thing out are both things
+ * you do to the picture; the shape and which part of it shows are both the
+ * frame. Nine tabs on a bar is a menu, which is the thing a bar is for
+ * avoiding.
+ *
+ * The order is the order of the work: get a picture, set the frame, set how
+ * it reads, read what is on it, write on it, take it away.
+ */
+const POST_UPPER: readonly BenchSpec[] = [
+  {
+    id: 'pic',
+    icon: <ImageIcon className="h-5 w-5" />,
+    label: ['post.benchPic', 'The picture'],
+    what: [
+      'post.benchPicWhat',
+      'Bring one in, take the background out, or paint over something small to take it away. All of it on your own device, for nothing.',
+    ],
+  },
+  {
+    id: 'frame',
+    icon: <CropIcon className="h-5 w-5" />,
+    label: ['post.benchFrame', 'The frame'],
+    what: [
+      'post.benchFrameWhat',
+      'The shape it comes out in, and which part of the picture shows: drag it, go closer, fill the frame or fit the whole thing.',
+    ],
+  },
+  {
+    id: 'tone',
+    icon: <SlidersHorizontal className="h-5 w-5" />,
+    label: ['post.benchTone', 'How it reads'],
+    what: [
+      'post.benchToneWhat',
+      'Brightness, contrast, colour, warmth and blur, with one press that lifts a flat photograph and one that puts it back exactly as it came.',
+    ],
+  },
+] as const;
+
+const POST_LOWER: readonly BenchSpec[] = [
+  {
+    id: 'read',
+    icon: <ScanText className="h-5 w-5" />,
+    label: ['post.benchRead', 'Read it'],
+    what: [
+      'post.benchReadWhat',
+      'The words already in the picture, read on your own device. Put them on the post or copy them out.',
+    ],
+  },
+  {
+    id: 'text',
+    icon: <Type className="h-5 w-5" />,
+    label: ['post.benchText', 'Words'],
+    what: [
+      'post.benchTextWhat',
+      'What it says, in one of three faces, in a colour, at the top, the middle or the bottom.',
+    ],
+  },
+  {
+    id: 'save',
+    icon: <Download className="h-5 w-5" />,
+    label: ['post.benchSave', 'Take it out'],
+    what: [
+      'post.benchSaveWhat',
+      'Save the picture to your device, or send it next door as a film\u2019s cover. The same one credit either way, and only once per post.',
+    ],
+    paid: true,
+  },
+] as const;
+
 const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
-export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
+export default function PostStudio({
+  onClose, onIntoFilm, asRoom = false, copilot, atDoor = false,
+}: {
   readonly onClose: () => void;
   /**
    * Drawn as a room of its own rather than a sheet over whatever was behind.
@@ -137,6 +240,42 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
    * — the dark green floor, the raised controls, the same ink — because the
    * two are the same kind of work on two kinds of material.
    */
+  /**
+   * The copilot, brought inside instead of drawn in a column below.
+   *
+   * The same decision the cutting room made on 4 October, and it had to be
+   * made here the moment this became a room with a bar at its foot. A room
+   * that is a fixed-height column with a bar under it has a page that does
+   * not scroll — so a 22rem pane underneath it is a second screenful nobody
+   * reaches, AND it makes the page scroll again, which means the room (bar
+   * and all) can be scrolled off the bottom of the screen.
+   *
+   * `audit/underbar.mjs` is what said so: it scrolls everything that scrolls
+   * to the end before it looks, and found this room's bar 621 pixels above
+   * where it had just been measured. `copilotInside` in `app/page.tsx` keeps
+   * the column from being drawn twice.
+   */
+  /**
+   * Whether something is drawn over this room.
+   *
+   * The room claims the whole screen while it is open, which is what sends
+   * the app's own bar away. It stays MOUNTED when the room list is opened
+   * over it, so without this it goes on holding the screen while she is
+   * looking at a different thing entirely — and the bar is missing from the
+   * door and from every tab she reaches through it.
+   *
+   * Carli reported exactly that about the cutting room on 4 October: *"Die
+   * res van die app se harde buttons onder het verdwyn."* Written in here on
+   * the day this room started claiming the screen, rather than waiting to be
+   * told about it a second time. `audit/underbar.mjs` walks out of the room
+   * and looks.
+   *
+   * Named `atDoor` rather than the cutting room's `covered`, because this
+   * room already has a `covered` of its own and it means something else
+   * entirely: whether her words land under the platform's furniture.
+   */
+  readonly atDoor?: boolean;
+  readonly copilot?: React.ReactNode;
   readonly asRoom?: boolean;
   /**
    * Hand the finished picture to the film being cut on the desk below.
@@ -197,6 +336,11 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
   const [post, setPost] = useState(freshId);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
+  /** Which bench is open on the bar. */
+  const [bench, setBench] = useState<Bench>(null);
+  /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
+     button that opens it — see the note on the cutting room's. */
+  const [asking, setAsking] = useState(false);
   const canvas = useRef<HTMLCanvasElement | null>(null);
 
   /* ── The phone's own back button ──────────────────────────────────────
@@ -823,31 +967,816 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
     }
   };
 
+  /* ── This room is the screen while it is open ───────────────────────────
+ 
+     Carli asked for the tools along the bottom, and the app's own tab bar is
+     along the bottom too. Two bars stacked is the fault the booth had in
+     September — *"daai buttons vervang die harde buttons van die hele app"* —
+     and here it was worse than untidy: the app's bar is `fixed bottom-0
+     z-[95]` and this room's bar was under it, so the lower three benches
+     (Words, Read and Save) were behind it.
+ 
+     So the room claims the screen and `app/page.tsx` stops drawing the tab bar
+     for as long as it is open. The way out is the header the rail draws above
+     every room — a back arrow and "All rooms" — which is why this room has no
+     close button of its own when it IS a room.
+ 
+     `check:belowtabs` holds this to the same three conditions as the Pro
+     Booth's exemption, and `audit/underbar.mjs` asks a browser — both while
+     she is in the room and after she has walked out of it, which is what
+     `atDoor` is for. */
+  useOwnScreen(!atDoor);
+
+  /* ── And it is a column of a measured height ────────────────────────────
+ 
+     A scroller that takes what is left, with the bar under it. `min-h-screen`
+     was the first version and it is wrong by exactly the height of the header
+     above the room: the column was a screen tall STARTING 155 pixels down, so
+     its last 155 pixels — the bar — hung below the bottom of the phone.
+ 
+     The same arithmetic the cutting room needs, so it is the same hook. */
+  const { shell, tall } = useRoomHeight();
+
   const SKIN = asRoom
-    ? 'min-h-screen overflow-y-auto'
-    : 'fixed inset-0 z-[60] overflow-y-auto bg-zinc-950';
+    ? 'flex flex-col overflow-hidden'
+    : 'fixed inset-0 z-[60] flex flex-col overflow-hidden bg-zinc-950';
+
+
+  /* ── The benches ──────────────────────────────────────────────────────
+ 
+     Carli, 7 October 2026: *"Die photo editor moet ook netjies wees. Die
+     editing tools moet ook onder in 'n bar wees ... en alles moet baie
+     eenvoudig en maklik wees."*
+ 
+     It was one scroll of nine panels, seven hundred lines of it, and the
+     picture she was working on slid off the top the moment she opened
+     anything. Now the picture stays on the glass and every tool is behind
+     the same bar the cutting room uses — the same component, so the two
+     rooms cannot space their bars differently.
+ 
+     Six benches rather than nine panels. Taking a thing out and painting a
+     thing out are both "the picture"; the shape and which part of it shows
+     are both "the frame". */
+  const picBench = (
+    <div className="space-y-4">
+    {/* ── The picture ───────────────────────────────────────────────── */}
+    <div className={RY}>
+      <label className={`${LEEG} cursor-pointer inline-flex items-center gap-1.5`}>
+        <ImageIcon className="h-3.5 w-3.5" />
+        {t('post.bringIn', 'Bring a picture in')}
+        <input
+          type="file"
+          accept={ACCEPTS}
+          data-postpicture
+          className="sr-only"
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            event.target.value = '';
+            void bringIn(file);
+          }}
+        />
+      </label>
+      {picture && (
+        <button type="button" onClick={() => setPicture(null)} className={LEEG}>
+          {t('post.takeOut', 'Take it out')}
+        </button>
+      )}
+      {/* The swatch fills its column like everything else.
+ 
+          It was a 48-pixel chip beside a caption — 36 tall where every other
+          control in the bench is 44 — which made it the one thing in the row
+          that did not read as a control. */}
+      <label className={`${KNOP} cursor-pointer`}>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          {t('post.behind', 'Behind')}
+        </span>
+        <input
+          type="color"
+          data-postbehind
+          value={back ?? lastColour}
+          onChange={(event) => {
+            setLastColour(event.target.value);
+            setBack(event.target.value);
+          }}
+          className="h-6 w-8 rounded border border-zinc-700 bg-zinc-950"
+          aria-label={t('post.behind', 'Behind')}
+        />
+      </label>
+      {/* Turning it off remembers the colour, so coming back is one press
+          and not a hunt for the same dark grey again. */}
+      <button
+        type="button"
+        data-postclear
+        aria-pressed={back === null}
+        onClick={() => setBack(back === null ? lastColour : null)}
+        className={back === null ? VUL.replace('w-full ', '') : LEEG}
+      >
+        {back === null
+          ? t('post.clearOn', 'Nothing behind it')
+          : t('post.clearOff', 'Take the background off')}
+      </button>
+    </div>
+    {/* ── The background, taken out ──────────────────────────────────
+ 
+        Carli, 7 October 2026: *"BG remover"*. It looks for a PERSON —
+        the model is very good at somebody against anything and knows
+        nothing about a guitar — so it refuses with a reason rather than
+        handing back an empty frame. A fully transparent picture and a
+        deleted picture look the same on a phone.
+ 
+        Beside the background colour on purpose: cut the person out, take
+        the colour off, and the post is a person on nothing. */}
+    {picture && (
+      <div
+        data-postcut
+        className="flex flex-wrap items-center gap-2 rounded-xl border p-3"
+        style={asRoom
+          ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+          : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+      >
+        <p className={MIKRO}>{t('post.cut', 'Background')}</p>
+        <button
+          type="button"
+          data-postcutgo
+          disabled={cutting !== null}
+          onClick={() => void cutBackground()}
+          className={`${LEEG} disabled:opacity-40`}
+        >
+          {cutting !== null
+            ? `${Math.round(cutting * 100)}%`
+            : t('post.cutGo', 'Take the background out')}
+        </button>
+        {/* How hard the cut edge is.
+ 
+            Carli, 7 October 2026, with a photograph of herself cut out:
+            *"Its not looking perfect."* The model answers at 256 square
+            whatever it is given, so on a phone photograph one mask pixel
+            is a block ten or more across and the edge comes out as a
+            staircase.
+ 
+            A choice rather than a number I picked, because how an edge
+            reads depends on the picture, on how much of the frame the
+            person fills and on their hair — and one value chosen from one
+            screenshot is a guess that costs her a day to disprove. */}
+        {EDGES.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            data-postedge={one.id}
+            aria-pressed={edge === one.id}
+            onClick={() => cutAgain(one.id)}
+            className={`${LEEG} ${edge === one.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+          >
+            {one.id === 'tight'
+              ? t('post.edgeTight', 'Hard edge')
+              : one.id === 'soft'
+                ? t('post.edgeSoft', 'Soft edge')
+                : t('post.edgeNormal', 'Normal edge')}
+          </button>
+        ))}
+        {whole && (
+          <button
+            type="button"
+            data-postcutback
+            onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
+            className={LEEG}
+          >
+            {t('post.cutBack', 'Put it back')}
+          </button>
+        )}
+        <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+          {t('post.cutWhat', 'This looks for people. It runs on your own device and costs nothing; the first time takes a moment while it downloads.')}
+        </span>
+      </div>
+    )}
+    {/* ── Taking something small out ─────────────────────────────────
+ 
+        Carli, 7 October 2026: *"magic eraser"*. This grows the pixels
+        around a gap inwards over it, which is arithmetic and costs us
+        nothing. It is not *"magic grab"* — nothing here imagines what
+        was behind — and the sentence under the button says so, because
+        the difference is the whole of what somebody should expect.
+ 
+        The painting happens on the WHOLE picture rather than on the
+        cropped preview: she can see what she is covering, and the map
+        from thumb to pixel is one scale instead of the inverse of a
+        crop. */}
+    {picture && (
+      <div
+        data-postrub
+        data-span={(() => { const m = smear.current; if (!m || !picture) return 'none';
+          const w = picture.naturalWidth || picture.width; let a=1e9,b=-1,n=0;
+          for (let i=0;i<m.length;i++) if (m[i]) { n++; const x=i%w; if(x<a)a=x; if(x>b)b=x; }
+          return JSON.stringify({ w, n, a, b, smeared }); })()}
+        className="space-y-2 rounded-xl border p-3"
+        style={asRoom
+          ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+          : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+      >
+        <div className="space-y-2">
+          <p className={MIKRO}>{t('post.rub', 'Take something out')}</p>
+          <div className={RY3}>
+            <button
+              type="button"
+              data-postrubmode
+              aria-pressed={rubbing}
+              onClick={() => {
+                setSaid('');
+                smear.current = null;
+                setSmeared(0);
+                setRubbing((was) => !was);
+              }}
+              className={rubbing ? VUL.replace('w-full ', '') : LEEG}
+            >
+              {rubbing ? t('post.rubStop', 'Done painting') : t('post.rubStart', 'Paint over it')}
+            </button>
+            {/* Always drawn while painting, disabled until there is
+                something to do.
+ 
+                They appeared when the first stroke landed, which pushed
+                the canvas down the page — so the second stroke went
+                somewhere other than where the thumb was aimed. A control
+                that moves the thing you are working on, the moment you
+                start working on it, is the worst kind of layout shift:
+                it only happens once you are committed. */}
+            {rubbing && (
+              <>
+                <button
+                  type="button"
+                  data-postrubgo
+                  disabled={smeared <= 0}
+                  onClick={rubOut}
+                  className={`${LEEG} disabled:opacity-40`}
+                >
+                  {t('post.rubGo', 'Take it out')}
+                </button>
+                <button
+                  type="button"
+                  data-postrubclear
+                  disabled={smeared <= 0}
+                  onClick={() => { smear.current = null; setSmeared(0); drawRub(); }}
+                  className={`${LEEG} disabled:opacity-40`}
+                >
+                  {t('post.rubClear', 'Start the painting again')}
+                </button>
+              </>
+            )}
+            {whole && !rubbing && (
+              <button
+                type="button"
+                data-postrubback
+                onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
+                className={LEEG}
+              >
+                {t('post.cutBack', 'Put it back')}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {rubbing && (
+          <>
+            <canvas
+              ref={rubCanvas}
+              data-postrubcanvas
+              onPointerDown={(event) => {
+                rubbingNow.current = true;
+                /* A new stroke starts from nowhere, or lifting the thumb
+                   and putting it down somewhere else would paint a line
+                   across everything in between. */
+                lastRub.current = null;
+                event.currentTarget.setPointerCapture(event.pointerId);
+                rubAt(event);
+              }}
+              onPointerMove={(event) => { if (rubbingNow.current) rubAt(event); }}
+              onPointerUp={(event) => {
+                rubbingNow.current = false;
+                lastRub.current = null;
+                if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+                }
+              }}
+              onPointerCancel={() => { rubbingNow.current = false; lastRub.current = null; }}
+              className="w-full rounded-xl border border-zinc-800"
+              style={{ touchAction: 'none', cursor: 'crosshair' }}
+            />
+            <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+              {smeared > TOO_MUCH
+                ? t('post.rubTooMuch', 'That is too much of the picture to take out this way. This grows the edges of a gap inwards, which works for something small.')
+                : t('post.rubHow', 'Drag over the thing you want gone. It is good at something small against a plain background, and it smears where there was a pattern behind it.')}
+            </p>
+          </>
+        )}
+
+        {!rubbing && (
+          <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+            {t('post.rubWhat', 'Grows the picture around a gap inwards over it. Good for a bin, a sign or a stranger at the edge; it cannot imagine what was behind something.')}
+          </p>
+        )}
+      </div>
+    )}
+    </div>
+  );
+
+  const frameBench = (
+    <div className="space-y-4">
+    {/* ── The shape, first, because it changes everything under it ───── */}
+    <div>
+      <p className={MIKRO}>{t('post.shape', 'Shape')}</p>
+      <div className={`mt-2 ${RY}`}>
+        {POST_SIZES.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            onClick={() => setSize(one)}
+            className={`${LEEG} ${one.id === size.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+          >
+            {one.name} · {one.width}×{one.height}
+          </button>
+        ))}
+      </div>
+      <p className="pt-2 text-[13px] leading-relaxed text-zinc-500">{size.what[lang]}</p>
+    </div>
+    {/* ── Which part of it shows ─────────────────────────────────────
+ 
+        Carli, 7 October 2026, having found the screen: *"Waar edit ek 'n
+        foto?"* This is the half that was missing. A phone photograph is
+        4:3 and a story is 9:16, so something always falls off — and
+        until now the app chose what, every time, with no way to argue.
+ 
+        Only drawn when there is a picture. A zoom slider over an empty
+        frame is a control for nothing. */}
+    {picture && at && (
+      <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+        <p className={MIKRO}>{t('post.framing', 'What shows')}</p>
+
+        <div className={RY3}>
+          {(['fill', 'whole'] as const).map((one) => (
+            <button
+              key={one}
+              type="button"
+              data-postbasis={one}
+              aria-pressed={crop.basis === one}
+              onClick={() => setCrop((was) => ({ ...was, basis: one, x: 0, y: 0 }))}
+              className={`${LEEG} ${crop.basis === one ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+            >
+              {one === 'fill'
+                ? t('post.fill', 'Fill the frame')
+                : t('post.whole', 'The whole picture')}
+            </button>
+          ))}
+          {/* Back to the middle, at the basis. Everything a drag and a
+              slider can get wrong, in one press — which is what somebody
+              wants after pushing a picture somewhere they did not mean. */}
+          <button
+            type="button"
+            data-postcentre
+            onClick={() => setCrop((was) => ({ ...was, zoom: ZOOM_MIN, x: 0, y: 0 }))}
+            className={LEEG}
+          >
+            {t('post.centre', 'Centre it')}
+          </button>
+        </div>
+
+        <label className="block space-y-1">
+          <span className="text-[12px] text-zinc-400">
+            {t('post.closer', 'How close')}
+            {' · '}
+            <span data-postzoomnow>{`${crop.zoom.toFixed(2)}x`}</span>
+          </span>
+          <input
+            type="range"
+            data-postzoom
+            min={ZOOM_MIN}
+            max={ZOOM_MAX}
+            step={ZOOM_STEP}
+            value={crop.zoom}
+            onChange={(event) => setCrop((was) => zoomTo(was, Number(event.target.value)))}
+            className="w-full"
+            aria-label={t('post.closer', 'How close')}
+          />
+        </label>
+
+        <p className="text-[12px] leading-relaxed text-zinc-500">
+          {movable
+            ? t('post.dragIt', 'Drag the picture above to choose what shows.')
+            : t('post.noDrag', 'The whole picture fits, so there is nothing to move. Go closer to choose a part of it.')}
+        </p>
+
+        {gaps && (
+          <p data-postgap className="text-[12px] leading-relaxed text-amber-300">
+            {t('post.gap', 'Some of the frame is background rather than photograph. That is what “the whole picture” does — with the background off, it is the picture on nothing.')}
+          </p>
+        )}
+      </div>
+    )}
+    </div>
+  );
+
+  const toneBench = (
+    <div className="space-y-4">
+    {/* ── How it reads ───────────────────────────────────────────────
+ 
+        Carli, 7 October 2026, listing what a modern editor has: *"auto
+        focus, blur ... Dit is alles code wat ons oor tyd kan develop om
+        ons editing tools te upgrade."*
+ 
+        This is the half of that list which runs on the phone for
+        nothing. The other half — taking an item out and putting another
+        in, a real upscaler, motion on a still — needs an engine and a
+        price per use, and the price is hers.
+ 
+        No "sharpen". A canvas filter has none, and raising contrast and
+        calling it focus would be a control that lies about what it did:
+        nothing recovers a photograph that was soft when it was taken.
+        `AUTO` is honest about being a lift. */}
+    {picture && (
+      <div
+        data-postlook
+        className="space-y-3 rounded-xl border p-3"
+        style={asRoom
+          ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+          : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+      >
+        <div className="space-y-2">
+          <p className={MIKRO}>{t('post.look', 'How it reads')}</p>
+          <div className={RY3}>
+            <button
+              type="button"
+              data-postauto
+              onClick={() => setLook(AUTO)}
+              className={LEEG}
+            >
+              {t('post.auto', 'Lift it')}
+            </button>
+            <button
+              type="button"
+              data-postplain
+              disabled={!touched(look)}
+              onClick={() => setLook(PLAIN)}
+              className={`${LEEG} disabled:opacity-40`}
+            >
+              {t('post.asShot', 'As it came')}
+            </button>
+          </div>
+        </div>
+
+        {([
+          ['bright', t('post.bright', 'Brightness')],
+          ['contrast', t('post.contrast', 'Contrast')],
+          ['colour', t('post.colour', 'Colour')],
+          ['warmth', t('post.warmth', 'Warmth')],
+          ['blur', t('post.blur', 'Blur')],
+        ] as const).map(([key, name]) => (
+          <label key={key} className="block space-y-1">
+            <span className="text-[12px]" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+              {name}
+            </span>
+            <input
+              type="range"
+              data-postlookslider={key}
+              min={RANGES[key].min}
+              max={RANGES[key].max}
+              step={RANGES[key].step}
+              value={look[key]}
+              onChange={(event) => setLook((was) => ({ ...was, [key]: Number(event.target.value) }))}
+              className="w-full"
+              aria-label={name}
+            />
+          </label>
+        ))}
+
+        <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+          {t('post.lookFree', 'All of this happens on your own device and costs nothing, however many times you change it.')}
+        </p>
+      </div>
+    )}
+    </div>
+  );
+
+  const readBench = (
+    <div className="space-y-4">
+    {/* ── The words already in the picture ───────────────────────────
+ 
+        Carli, 7 October 2026: *"grab text"*, in the list of what a
+        modern editor has. The engine is Tesseract compiled to
+        WebAssembly and it runs on her own phone — it calls nobody, needs
+        no key, and costs us nothing however many times it is pressed.
+        See `lib/ocr.ts` for why every file is served from this app and
+        not a CDN.
+ 
+        It reads the PICTURE as it was brought in, not the canvas: the
+        canvas carries her words, her crop and her blur, and feeding
+        those back to an engine that reads letters would have it read its
+        own output. */}
+    {picture && (
+      <div
+        data-postgrab
+        className="space-y-2 rounded-xl border p-3"
+        style={asRoom
+          ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+          : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+      >
+        <div className="space-y-2">
+          <p className={MIKRO}>{t('post.grab', 'Words in the picture')}</p>
+          <div className={RY3}>
+            {(['eng', 'afr'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-postgrablang={one}
+                disabled={reading !== null}
+                onClick={() => void grabText(one)}
+                className={`${LEEG} disabled:opacity-40`}
+              >
+                {reading !== null
+                  ? `${Math.round(reading * 100)}%`
+                  : one === 'eng'
+                    ? t('post.grabEn', 'Read English')
+                    : t('post.grabAf', 'Read Afrikaans')}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {grabbed !== null && grabbed.length > 0 && (
+          <>
+            <textarea
+              data-postgrabbed
+              readOnly
+              rows={Math.min(6, grabbed.split('\n').length + 1)}
+              value={grabbed}
+              className={`${VELD} font-mono text-[12px]`}
+            />
+            <div className={RY3}>
+              <button
+                type="button"
+                data-postgrabuse
+                onClick={() => {
+                  setWords((was) => [...was, {
+                    id: freshId(), text: grabbed, face: FACES[0].id,
+                    spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
+                  }]);
+                  setGrabbed(null);
+                  /* And open the bench the words landed on.
+ 
+                     The room is benches rather than one scroll now, so "Put
+                     it on the picture" put them somewhere she was not
+                     looking: the words appear on the canvas, and the box to
+                     fix what the reader got wrong is behind a different tab.
+                     A read nobody can edit is a read nobody wanted. */
+                  setBench('text');
+                }}
+                className={LEEG}
+              >
+                {t('post.grabUse', 'Put it on the picture')}
+              </button>
+              <button
+                type="button"
+                data-postgrabcopy
+                onClick={() => { void navigator.clipboard?.writeText(grabbed).catch(() => {}); }}
+                className={LEEG}
+              >
+                {t('post.grabCopy', 'Copy it')}
+              </button>
+            </div>
+          </>
+        )}
+
+        {grabbed !== null && grabbed.length === 0 && (
+          <p className="text-[12px] leading-relaxed text-amber-300" data-postgrabnone>
+            {t('post.grabNone', 'No words could be made out in this picture. It reads printed text well and handwriting badly.')}
+          </p>
+        )}
+
+        <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+          {t('post.grabFree', 'The reading happens on your own device and costs nothing. The first time takes a moment while the reader downloads.')}
+        </p>
+      </div>
+    )}
+    </div>
+  );
+
+  const textBench = (
+    <div className="space-y-4">
+    {/* ── The words ─────────────────────────────────────────────────── */}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className={MIKRO}>{t('post.words', 'Words')}</p>
+        <button
+          type="button"
+          data-addwords
+          onClick={() => setWords((was) => [...was, {
+            id: freshId(), text: '', face: FACES[0].id, spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
+          }])}
+          className={`${LEEG} inline-flex items-center gap-1.5`}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          {t('post.addWords', 'Add words')}
+        </button>
+      </div>
+
+      {words.length === 0 && (
+        <p className="text-[13px] leading-relaxed text-zinc-500">
+          {t('post.noWordsYet', 'Nothing written yet. The words are drawn as real text, so they are spelt exactly as you type them.')}
+        </p>
+      )}
+
+      {words.map((one) => (
+        <div key={one.id} className="space-y-2 rounded-xl border border-zinc-800 p-3">
+          <label className="block">
+            <span className={MIKRO}>{t('post.theWords', 'The words')}</span>
+            <textarea
+              rows={2}
+              value={one.text}
+              onChange={(event) => setWords((was) => was.map((w) => (
+                w.id === one.id ? { ...w, text: event.target.value } : w)))}
+              className={VELD}
+            />
+          </label>
+          <div className={RY}>
+            {FACES.map((face) => (
+              <button
+                key={face.id}
+                type="button"
+                onClick={() => setWords((was) => was.map((w) => (
+                  w.id === one.id ? { ...w, face: face.id } : w)))}
+                /* At its own weight, so the chip is a sample and not a
+                   label. A poster face shown at 700 is synthesised bold
+                   in the button and drawn at 400 on the canvas — two
+                   different shapes for one choice. */
+                style={{ fontFamily: face.css, fontWeight: face.weight }}
+                data-postface={face.id}
+                className={`${LEEG} ${one.face === face.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+              >
+                {t(`post.face.${face.id}`, face.name)}
+              </button>
+            ))}
+            {SPOTS.map((spot) => (
+              <button
+                key={spot.id}
+                type="button"
+                onClick={() => setWords((was) => was.map((w) => (
+                  w.id === one.id ? { ...w, spot: spot.id } : w)))}
+                className={`${LEEG} ${one.spot === spot.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+              >
+                {t(`post.spot.${spot.id}`, spot.id)}
+              </button>
+            ))}
+            <input
+              type="color"
+              value={one.ink}
+              onChange={(event) => setWords((was) => was.map((w) => (
+                w.id === one.id ? { ...w, ink: event.target.value } : w)))}
+              className="h-9 w-12 rounded border border-zinc-700 bg-zinc-950"
+              aria-label={t('post.ink', 'Colour')}
+            />
+            <button
+              type="button"
+              onClick={() => setWords((was) => was.filter((w) => w.id !== one.id))}
+              aria-label={t('post.removeWords', 'Remove these words')}
+              className={LEEG}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+    </div>
+  );
+
+  const saveBench = (
+    <div className="space-y-4">
+    {/* ── What it costs, before the work and not only on the button ──
+ 
+        Carli, 7 October 2026: *"Remember to monetize and nothing is free
+        in this app."*
+ 
+        Nothing here is free to take away: a picture off this screen
+        costs a credit whether it goes to the phone or next door onto a
+        film, and `check:postpaid` holds that there is no third road. But
+        the price lived only on the Save button at the foot, which is the
+        cutting room's fault in reverse — that room shows an itemised
+        bill before it charges, and this one let somebody build a post
+        and meet the price at the end.
+ 
+        Said once, at the top, in the room's own words. */}
+    <p
+      data-postprice
+      className="rounded-xl border px-3 py-2.5 text-[13px] leading-relaxed"
+      style={asRoom
+        ? { borderColor: 'rgba(16,185,129,0.35)', background: 'rgba(52,211,153,0.10)', color: INK_DIM, boxShadow: RAISE }
+        : { borderColor: 'rgb(39,39,42)', background: 'rgb(24,24,27)' }}
+    >
+      {t('post.price', 'Building a picture here costs nothing. Taking one out costs')}
+      {' '}
+      <strong style={asRoom ? { color: INK } : undefined}>{creditsSaid(CREDITS.postOut, t)}</strong>
+      {' '}
+      {t('post.priceTwo', '\u2014 the same one credit whether you save it to your phone or put it on a film, and the same post is only ever charged once.')}
+    </p>
+    <div className="space-y-2">
+      <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
+        {busy
+          ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+          : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
+              {t('post.save', 'Save the picture')} · {creditsSaid(CREDITS.postOut, t)}
+            </span>}
+      </button>
+      {/* ── And into the film next door ─────────────────────────────
+ 
+          Carli: *"kan ook in die video editor ingesit word."* The editor
+          is the room under this desk, so this is a hand-over and not a
+          download — but it goes through the same charge, because the
+          editor cuts and exports on the device for nothing and a free
+          road out would undo the reason there is no watermark.
+ 
+          Charged once per post, so a post she already saved is free to
+          put into a film. The button says so rather than making her
+          find out. */}
+      {onIntoFilm && (
+        <button
+          type="button"
+          onClick={() => void intoFilm()}
+          disabled={busy}
+          data-postintofilm
+          className={LEEG}
+        >
+          {t('post.intoFilm', 'Use it as the film\u2019s cover')}
+          {' · '}
+          {creditsSaid(CREDITS.postOut, t)}
+        </button>
+      )}
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {t('post.freeUntil', 'Making it costs nothing. The credit is for taking it off the device, and the same post saved twice is charged once.')}
+      </p>
+      <button
+        type="button"
+        onClick={() => { setPost(freshId()); setWords([]); setPicture(null); setSaid(''); }}
+        className={LEEG}
+      >
+        {t('post.startFresh', 'Start a new post')}
+      </button>
+    </div>
+    </div>
+  );
+
+  const benchFor: Record<string, React.ReactNode> = {
+    pic: picBench,
+    frame: frameBench,
+    tone: toneBench,
+    read: readBench,
+    text: textBench,
+    save: saveBench,
+  };
 
   return (
     <div
+      ref={shell}
       className={`${SKIN} text-zinc-100`}
       data-poststudio
       data-postroom={asRoom ? 'yes' : 'no'}
-      style={asRoom ? { background: FLOOR, color: INK } : undefined}
+      style={{
+        ...(asRoom ? { background: FLOOR, color: INK } : {}),
+        /* Only as a room: the overlay form is `fixed inset-0` and already
+           has the screen. */
+        ...(asRoom
+          ? {
+            height: tall === null ? ROOM_HEIGHT_GUESS : tall,
+            maxHeight: tall === null ? ROOM_HEIGHT_GUESS : tall,
+          }
+          : {}),
+      }}
     >
-      {/* ── Room under the last thing, for the bar ────────────────────────
+      {/* ── The picture, which never leaves the glass ──────────────────
  
-          This sheet scrolls, and the app's tab bar sits over the bottom of
-          whatever is behind it. A plain `env(safe-area-inset-bottom)` is the
-          phone's chin and not the bar, so the last control in a long post —
-          the Save button — ended under it. `barClearance` is the bar's own
-          height plus that inset, exported from the file that draws the bar,
-          so the two cannot drift. `check:belowtabs` refused this screen
-          without it. */}
-      <div className="mx-auto max-w-2xl space-y-5 p-4" style={{ paddingBottom: barClearance(16) }}>
+          The one thing a photo editor must not do is hide the photograph
+          behind the control you are using on it. The cutting room already
+          knows this — its sheet is capped so the frame stays visible — and
+          this room now works the same way. */}
+      <div className="mx-auto flex w-full max-w-2xl min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">
             {asRoom ? t('rail.photo', 'Photo Editor') : t('post.title', 'Make a post')}
           </h2>
+          {/* ── The copilot, as a button ─────────────────────────────
+ 
+              Carli asked for this shape in the cutting room — *"Die copilot
+              kan ook net 'n button wees wat uit pop"* — and the reason is the
+              same here: in a room that is a screen with a bar at its foot,
+              a column underneath is a screenful nobody scrolls to. */}
+          {copilot ? (
+            <button
+              type="button"
+              data-postask
+              aria-pressed={asking}
+              onClick={() => setAsking(true)}
+              className={`${LEEG} w-auto px-3`}
+            >
+              <Sparkles className="h-4 w-4" />
+              {t('post.ask', 'Ask')}
+            </button>
+          ) : null}
           {/* A room is left by the menu, like every other room. A close
               button here would be a second way out that only this room has,
               and the one it leads back to depends on how you arrived. */}
@@ -856,52 +1785,6 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
               <X className="h-4 w-4" />
             </button>
           )}
-        </div>
-
-        {/* ── What it costs, before the work and not only on the button ──
- 
-            Carli, 7 October 2026: *"Remember to monetize and nothing is free
-            in this app."*
- 
-            Nothing here is free to take away: a picture off this screen
-            costs a credit whether it goes to the phone or next door onto a
-            film, and `check:postpaid` holds that there is no third road. But
-            the price lived only on the Save button at the foot, which is the
-            cutting room's fault in reverse — that room shows an itemised
-            bill before it charges, and this one let somebody build a post
-            and meet the price at the end.
- 
-            Said once, at the top, in the room's own words. */}
-        <p
-          data-postprice
-          className="rounded-xl border px-3 py-2.5 text-[13px] leading-relaxed"
-          style={asRoom
-            ? { borderColor: 'rgba(16,185,129,0.35)', background: 'rgba(52,211,153,0.10)', color: INK_DIM, boxShadow: RAISE }
-            : { borderColor: 'rgb(39,39,42)', background: 'rgb(24,24,27)' }}
-        >
-          {t('post.price', 'Building a picture here costs nothing. Taking one out costs')}
-          {' '}
-          <strong style={asRoom ? { color: INK } : undefined}>{creditsSaid(CREDITS.postOut, t)}</strong>
-          {' '}
-          {t('post.priceTwo', '\u2014 the same one credit whether you save it to your phone or put it on a film, and the same post is only ever charged once.')}
-        </p>
-
-        {/* ── The shape, first, because it changes everything under it ───── */}
-        <div>
-          <p className={MIKRO}>{t('post.shape', 'Shape')}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {POST_SIZES.map((one) => (
-              <button
-                key={one.id}
-                type="button"
-                onClick={() => setSize(one)}
-                className={`${LEEG} ${one.id === size.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
-              >
-                {one.name} · {one.width}×{one.height}
-              </button>
-            ))}
-          </div>
-          <p className="pt-2 text-[13px] leading-relaxed text-zinc-500">{size.what[lang]}</p>
         </div>
 
         <canvas
@@ -933,631 +1816,48 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
           </p>
         )}
 
-        {/* ── The picture ───────────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-2">
-          <label className={`${LEEG} cursor-pointer inline-flex items-center gap-1.5`}>
-            <ImageIcon className="h-3.5 w-3.5" />
-            {t('post.bringIn', 'Bring a picture in')}
-            <input
-              type="file"
-              accept={ACCEPTS}
-              data-postpicture
-              className="sr-only"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null;
-                event.target.value = '';
-                void bringIn(file);
-              }}
-            />
-          </label>
-          {picture && (
-            <button type="button" onClick={() => setPicture(null)} className={LEEG}>
-              {t('post.takeOut', 'Take it out')}
-            </button>
-          )}
-          <label className="inline-flex items-center gap-2">
-            <span className={MIKRO}>{t('post.behind', 'Behind')}</span>
-            <input
-              type="color"
-              data-postbehind
-              value={back ?? lastColour}
-              onChange={(event) => {
-                setLastColour(event.target.value);
-                setBack(event.target.value);
-              }}
-              className="h-9 w-12 rounded border border-zinc-700 bg-zinc-950"
-              aria-label={t('post.behind', 'Behind')}
-            />
-          </label>
-          {/* Turning it off remembers the colour, so coming back is one press
-              and not a hunt for the same dark grey again. */}
-          <button
-            type="button"
-            data-postclear
-            aria-pressed={back === null}
-            onClick={() => setBack(back === null ? lastColour : null)}
-            className={back === null ? VUL.replace('w-full ', '') : LEEG}
-          >
-            {back === null
-              ? t('post.clearOn', 'Nothing behind it')
-              : t('post.clearOff', 'Take the background off')}
-          </button>
-        </div>
-
-        {/* ── Which part of it shows ─────────────────────────────────────
- 
-            Carli, 7 October 2026, having found the screen: *"Waar edit ek 'n
-            foto?"* This is the half that was missing. A phone photograph is
-            4:3 and a story is 9:16, so something always falls off — and
-            until now the app chose what, every time, with no way to argue.
- 
-            Only drawn when there is a picture. A zoom slider over an empty
-            frame is a control for nothing. */}
-        {picture && at && (
-          <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-            <p className={MIKRO}>{t('post.framing', 'What shows')}</p>
-
-            <div className="flex flex-wrap gap-2">
-              {(['fill', 'whole'] as const).map((one) => (
-                <button
-                  key={one}
-                  type="button"
-                  data-postbasis={one}
-                  aria-pressed={crop.basis === one}
-                  onClick={() => setCrop((was) => ({ ...was, basis: one, x: 0, y: 0 }))}
-                  className={`${LEEG} ${crop.basis === one ? 'border-emerald-500/60 text-emerald-400' : ''}`}
-                >
-                  {one === 'fill'
-                    ? t('post.fill', 'Fill the frame')
-                    : t('post.whole', 'The whole picture')}
-                </button>
-              ))}
-              {/* Back to the middle, at the basis. Everything a drag and a
-                  slider can get wrong, in one press — which is what somebody
-                  wants after pushing a picture somewhere they did not mean. */}
-              <button
-                type="button"
-                data-postcentre
-                onClick={() => setCrop((was) => ({ ...was, zoom: ZOOM_MIN, x: 0, y: 0 }))}
-                className={LEEG}
-              >
-                {t('post.centre', 'Centre it')}
-              </button>
-            </div>
-
-            <label className="block space-y-1">
-              <span className="text-[12px] text-zinc-400">
-                {t('post.closer', 'How close')}
-                {' · '}
-                <span data-postzoomnow>{`${crop.zoom.toFixed(2)}x`}</span>
-              </span>
-              <input
-                type="range"
-                data-postzoom
-                min={ZOOM_MIN}
-                max={ZOOM_MAX}
-                step={ZOOM_STEP}
-                value={crop.zoom}
-                onChange={(event) => setCrop((was) => zoomTo(was, Number(event.target.value)))}
-                className="w-full"
-                aria-label={t('post.closer', 'How close')}
-              />
-            </label>
-
-            <p className="text-[12px] leading-relaxed text-zinc-500">
-              {movable
-                ? t('post.dragIt', 'Drag the picture above to choose what shows.')
-                : t('post.noDrag', 'The whole picture fits, so there is nothing to move. Go closer to choose a part of it.')}
-            </p>
-
-            {gaps && (
-              <p data-postgap className="text-[12px] leading-relaxed text-amber-300">
-                {t('post.gap', 'Some of the frame is background rather than photograph. That is what “the whole picture” does — with the background off, it is the picture on nothing.')}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* ── How it reads ───────────────────────────────────────────────
- 
-            Carli, 7 October 2026, listing what a modern editor has: *"auto
-            focus, blur ... Dit is alles code wat ons oor tyd kan develop om
-            ons editing tools te upgrade."*
- 
-            This is the half of that list which runs on the phone for
-            nothing. The other half — taking an item out and putting another
-            in, a real upscaler, motion on a still — needs an engine and a
-            price per use, and the price is hers.
- 
-            No "sharpen". A canvas filter has none, and raising contrast and
-            calling it focus would be a control that lies about what it did:
-            nothing recovers a photograph that was soft when it was taken.
-            `AUTO` is honest about being a lift. */}
-        {picture && (
-          <div
-            data-postlook
-            className="space-y-3 rounded-xl border p-3"
-            style={asRoom
-              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
-              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className={MIKRO}>{t('post.look', 'How it reads')}</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  data-postauto
-                  onClick={() => setLook(AUTO)}
-                  className={LEEG}
-                >
-                  {t('post.auto', 'Lift it')}
-                </button>
-                <button
-                  type="button"
-                  data-postplain
-                  disabled={!touched(look)}
-                  onClick={() => setLook(PLAIN)}
-                  className={`${LEEG} disabled:opacity-40`}
-                >
-                  {t('post.asShot', 'As it came')}
-                </button>
-              </div>
-            </div>
-
-            {([
-              ['bright', t('post.bright', 'Brightness')],
-              ['contrast', t('post.contrast', 'Contrast')],
-              ['colour', t('post.colour', 'Colour')],
-              ['warmth', t('post.warmth', 'Warmth')],
-              ['blur', t('post.blur', 'Blur')],
-            ] as const).map(([key, name]) => (
-              <label key={key} className="block space-y-1">
-                <span className="text-[12px]" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
-                  {name}
-                </span>
-                <input
-                  type="range"
-                  data-postlookslider={key}
-                  min={RANGES[key].min}
-                  max={RANGES[key].max}
-                  step={RANGES[key].step}
-                  value={look[key]}
-                  onChange={(event) => setLook((was) => ({ ...was, [key]: Number(event.target.value) }))}
-                  className="w-full"
-                  aria-label={name}
-                />
-              </label>
-            ))}
-
-            <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-              {t('post.lookFree', 'All of this happens on your own device and costs nothing, however many times you change it.')}
-            </p>
-          </div>
-        )}
-
-        {/* ── Taking something small out ─────────────────────────────────
- 
-            Carli, 7 October 2026: *"magic eraser"*. This grows the pixels
-            around a gap inwards over it, which is arithmetic and costs us
-            nothing. It is not *"magic grab"* — nothing here imagines what
-            was behind — and the sentence under the button says so, because
-            the difference is the whole of what somebody should expect.
- 
-            The painting happens on the WHOLE picture rather than on the
-            cropped preview: she can see what she is covering, and the map
-            from thumb to pixel is one scale instead of the inverse of a
-            crop. */}
-        {picture && (
-          <div
-            data-postrub
-            data-span={(() => { const m = smear.current; if (!m || !picture) return 'none';
-              const w = picture.naturalWidth || picture.width; let a=1e9,b=-1,n=0;
-              for (let i=0;i<m.length;i++) if (m[i]) { n++; const x=i%w; if(x<a)a=x; if(x>b)b=x; }
-              return JSON.stringify({ w, n, a, b, smeared }); })()}
-            className="space-y-2 rounded-xl border p-3"
-            style={asRoom
-              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
-              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className={MIKRO}>{t('post.rub', 'Take something out')}</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  data-postrubmode
-                  aria-pressed={rubbing}
-                  onClick={() => {
-                    setSaid('');
-                    smear.current = null;
-                    setSmeared(0);
-                    setRubbing((was) => !was);
-                  }}
-                  className={rubbing ? VUL.replace('w-full ', '') : LEEG}
-                >
-                  {rubbing ? t('post.rubStop', 'Done painting') : t('post.rubStart', 'Paint over it')}
-                </button>
-                {/* Always drawn while painting, disabled until there is
-                    something to do.
- 
-                    They appeared when the first stroke landed, which pushed
-                    the canvas down the page — so the second stroke went
-                    somewhere other than where the thumb was aimed. A control
-                    that moves the thing you are working on, the moment you
-                    start working on it, is the worst kind of layout shift:
-                    it only happens once you are committed. */}
-                {rubbing && (
-                  <>
-                    <button
-                      type="button"
-                      data-postrubgo
-                      disabled={smeared <= 0}
-                      onClick={rubOut}
-                      className={`${LEEG} disabled:opacity-40`}
-                    >
-                      {t('post.rubGo', 'Take it out')}
-                    </button>
-                    <button
-                      type="button"
-                      data-postrubclear
-                      disabled={smeared <= 0}
-                      onClick={() => { smear.current = null; setSmeared(0); drawRub(); }}
-                      className={`${LEEG} disabled:opacity-40`}
-                    >
-                      {t('post.rubClear', 'Start the painting again')}
-                    </button>
-                  </>
-                )}
-                {whole && !rubbing && (
-                  <button
-                    type="button"
-                    data-postrubback
-                    onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
-                    className={LEEG}
-                  >
-                    {t('post.cutBack', 'Put it back')}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {rubbing && (
-              <>
-                <canvas
-                  ref={rubCanvas}
-                  data-postrubcanvas
-                  onPointerDown={(event) => {
-                    rubbingNow.current = true;
-                    /* A new stroke starts from nowhere, or lifting the thumb
-                       and putting it down somewhere else would paint a line
-                       across everything in between. */
-                    lastRub.current = null;
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                    rubAt(event);
-                  }}
-                  onPointerMove={(event) => { if (rubbingNow.current) rubAt(event); }}
-                  onPointerUp={(event) => {
-                    rubbingNow.current = false;
-                    lastRub.current = null;
-                    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-                      event.currentTarget.releasePointerCapture(event.pointerId);
-                    }
-                  }}
-                  onPointerCancel={() => { rubbingNow.current = false; lastRub.current = null; }}
-                  className="w-full rounded-xl border border-zinc-800"
-                  style={{ touchAction: 'none', cursor: 'crosshair' }}
-                />
-                <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
-                  {smeared > TOO_MUCH
-                    ? t('post.rubTooMuch', 'That is too much of the picture to take out this way. This grows the edges of a gap inwards, which works for something small.')
-                    : t('post.rubHow', 'Drag over the thing you want gone. It is good at something small against a plain background, and it smears where there was a pattern behind it.')}
-                </p>
-              </>
-            )}
-
-            {!rubbing && (
-              <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-                {t('post.rubWhat', 'Grows the picture around a gap inwards over it. Good for a bin, a sign or a stranger at the edge; it cannot imagine what was behind something.')}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* ── The background, taken out ──────────────────────────────────
- 
-            Carli, 7 October 2026: *"BG remover"*. It looks for a PERSON —
-            the model is very good at somebody against anything and knows
-            nothing about a guitar — so it refuses with a reason rather than
-            handing back an empty frame. A fully transparent picture and a
-            deleted picture look the same on a phone.
- 
-            Beside the background colour on purpose: cut the person out, take
-            the colour off, and the post is a person on nothing. */}
-        {picture && (
-          <div
-            data-postcut
-            className="flex flex-wrap items-center gap-2 rounded-xl border p-3"
-            style={asRoom
-              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
-              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
-          >
-            <p className={MIKRO}>{t('post.cut', 'Background')}</p>
-            <button
-              type="button"
-              data-postcutgo
-              disabled={cutting !== null}
-              onClick={() => void cutBackground()}
-              className={`${LEEG} disabled:opacity-40`}
-            >
-              {cutting !== null
-                ? `${Math.round(cutting * 100)}%`
-                : t('post.cutGo', 'Take the background out')}
-            </button>
-            {/* How hard the cut edge is.
- 
-                Carli, 7 October 2026, with a photograph of herself cut out:
-                *"Its not looking perfect."* The model answers at 256 square
-                whatever it is given, so on a phone photograph one mask pixel
-                is a block ten or more across and the edge comes out as a
-                staircase.
- 
-                A choice rather than a number I picked, because how an edge
-                reads depends on the picture, on how much of the frame the
-                person fills and on their hair — and one value chosen from one
-                screenshot is a guess that costs her a day to disprove. */}
-            {EDGES.map((one) => (
-              <button
-                key={one.id}
-                type="button"
-                data-postedge={one.id}
-                aria-pressed={edge === one.id}
-                onClick={() => cutAgain(one.id)}
-                className={`${LEEG} ${edge === one.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
-              >
-                {one.id === 'tight'
-                  ? t('post.edgeTight', 'Hard edge')
-                  : one.id === 'soft'
-                    ? t('post.edgeSoft', 'Soft edge')
-                    : t('post.edgeNormal', 'Normal edge')}
-              </button>
-            ))}
-            {whole && (
-              <button
-                type="button"
-                data-postcutback
-                onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
-                className={LEEG}
-              >
-                {t('post.cutBack', 'Put it back')}
-              </button>
-            )}
-            <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-              {t('post.cutWhat', 'This looks for people. It runs on your own device and costs nothing; the first time takes a moment while it downloads.')}
-            </span>
-          </div>
-        )}
-
-        {/* ── The words already in the picture ───────────────────────────
- 
-            Carli, 7 October 2026: *"grab text"*, in the list of what a
-            modern editor has. The engine is Tesseract compiled to
-            WebAssembly and it runs on her own phone — it calls nobody, needs
-            no key, and costs us nothing however many times it is pressed.
-            See `lib/ocr.ts` for why every file is served from this app and
-            not a CDN.
- 
-            It reads the PICTURE as it was brought in, not the canvas: the
-            canvas carries her words, her crop and her blur, and feeding
-            those back to an engine that reads letters would have it read its
-            own output. */}
-        {picture && (
-          <div
-            data-postgrab
-            className="space-y-2 rounded-xl border p-3"
-            style={asRoom
-              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
-              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className={MIKRO}>{t('post.grab', 'Words in the picture')}</p>
-              <div className="flex flex-wrap gap-2">
-                {(['eng', 'afr'] as const).map((one) => (
-                  <button
-                    key={one}
-                    type="button"
-                    data-postgrablang={one}
-                    disabled={reading !== null}
-                    onClick={() => void grabText(one)}
-                    className={`${LEEG} disabled:opacity-40`}
-                  >
-                    {reading !== null
-                      ? `${Math.round(reading * 100)}%`
-                      : one === 'eng'
-                        ? t('post.grabEn', 'Read English')
-                        : t('post.grabAf', 'Read Afrikaans')}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {grabbed !== null && grabbed.length > 0 && (
-              <>
-                <textarea
-                  data-postgrabbed
-                  readOnly
-                  rows={Math.min(6, grabbed.split('\n').length + 1)}
-                  value={grabbed}
-                  className={`${VELD} font-mono text-[12px]`}
-                />
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    data-postgrabuse
-                    onClick={() => {
-                      setWords((was) => [...was, {
-                        id: freshId(), text: grabbed, face: FACES[0].id,
-                        spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
-                      }]);
-                      setGrabbed(null);
-                    }}
-                    className={LEEG}
-                  >
-                    {t('post.grabUse', 'Put it on the picture')}
-                  </button>
-                  <button
-                    type="button"
-                    data-postgrabcopy
-                    onClick={() => { void navigator.clipboard?.writeText(grabbed).catch(() => {}); }}
-                    className={LEEG}
-                  >
-                    {t('post.grabCopy', 'Copy it')}
-                  </button>
-                </div>
-              </>
-            )}
-
-            {grabbed !== null && grabbed.length === 0 && (
-              <p className="text-[12px] leading-relaxed text-amber-300" data-postgrabnone>
-                {t('post.grabNone', 'No words could be made out in this picture. It reads printed text well and handwriting badly.')}
-              </p>
-            )}
-
-            <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-              {t('post.grabFree', 'The reading happens on your own device and costs nothing. The first time takes a moment while the reader downloads.')}
-            </p>
-          </div>
-        )}
-
-        {/* ── The words ─────────────────────────────────────────────────── */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className={MIKRO}>{t('post.words', 'Words')}</p>
-            <button
-              type="button"
-              data-addwords
-              onClick={() => setWords((was) => [...was, {
-                id: freshId(), text: '', face: FACES[0].id, spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
-              }])}
-              className={`${LEEG} inline-flex items-center gap-1.5`}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('post.addWords', 'Add words')}
-            </button>
-          </div>
-
-          {words.length === 0 && (
-            <p className="text-[13px] leading-relaxed text-zinc-500">
-              {t('post.noWordsYet', 'Nothing written yet. The words are drawn as real text, so they are spelt exactly as you type them.')}
-            </p>
-          )}
-
-          {words.map((one) => (
-            <div key={one.id} className="space-y-2 rounded-xl border border-zinc-800 p-3">
-              <label className="block">
-                <span className={MIKRO}>{t('post.theWords', 'The words')}</span>
-                <textarea
-                  rows={2}
-                  value={one.text}
-                  onChange={(event) => setWords((was) => was.map((w) => (
-                    w.id === one.id ? { ...w, text: event.target.value } : w)))}
-                  className={VELD}
-                />
-              </label>
-              <div className="flex flex-wrap items-center gap-2">
-                {FACES.map((face) => (
-                  <button
-                    key={face.id}
-                    type="button"
-                    onClick={() => setWords((was) => was.map((w) => (
-                      w.id === one.id ? { ...w, face: face.id } : w)))}
-                    /* At its own weight, so the chip is a sample and not a
-                       label. A poster face shown at 700 is synthesised bold
-                       in the button and drawn at 400 on the canvas — two
-                       different shapes for one choice. */
-                    style={{ fontFamily: face.css, fontWeight: face.weight }}
-                    data-postface={face.id}
-                    className={`${LEEG} ${one.face === face.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
-                  >
-                    {t(`post.face.${face.id}`, face.name)}
-                  </button>
-                ))}
-                {SPOTS.map((spot) => (
-                  <button
-                    key={spot.id}
-                    type="button"
-                    onClick={() => setWords((was) => was.map((w) => (
-                      w.id === one.id ? { ...w, spot: spot.id } : w)))}
-                    className={`${LEEG} ${one.spot === spot.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
-                  >
-                    {t(`post.spot.${spot.id}`, spot.id)}
-                  </button>
-                ))}
-                <input
-                  type="color"
-                  value={one.ink}
-                  onChange={(event) => setWords((was) => was.map((w) => (
-                    w.id === one.id ? { ...w, ink: event.target.value } : w)))}
-                  className="h-9 w-12 rounded border border-zinc-700 bg-zinc-950"
-                  aria-label={t('post.ink', 'Colour')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setWords((was) => was.filter((w) => w.id !== one.id))}
-                  aria-label={t('post.removeWords', 'Remove these words')}
-                  className={LEEG}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {said && <p data-postsaid className="text-[13px] leading-relaxed text-emerald-400">{said}</p>}
-
-        <div className="space-y-2">
-          <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
-            {busy
-              ? <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-              : <span className="inline-flex items-center gap-2"><Download className="h-4 w-4" />
-                  {t('post.save', 'Save the picture')} · {creditsSaid(CREDITS.postOut, t)}
-                </span>}
-          </button>
-          {/* ── And into the film next door ─────────────────────────────
- 
-              Carli: *"kan ook in die video editor ingesit word."* The editor
-              is the room under this desk, so this is a hand-over and not a
-              download — but it goes through the same charge, because the
-              editor cuts and exports on the device for nothing and a free
-              road out would undo the reason there is no watermark.
- 
-              Charged once per post, so a post she already saved is free to
-              put into a film. The button says so rather than making her
-              find out. */}
-          {onIntoFilm && (
-            <button
-              type="button"
-              onClick={() => void intoFilm()}
-              disabled={busy}
-              data-postintofilm
-              className={LEEG}
-            >
-              {t('post.intoFilm', 'Use it as the film\u2019s cover')}
-              {' · '}
-              {creditsSaid(CREDITS.postOut, t)}
-            </button>
-          )}
-          <p className="text-[12px] leading-relaxed text-zinc-500">
-            {t('post.freeUntil', 'Making it costs nothing. The credit is for taking it off the device, and the same post saved twice is charged once.')}
-          </p>
-          <button
-            type="button"
-            onClick={() => { setPost(freshId()); setWords([]); setPicture(null); setSaid(''); }}
-            className={LEEG}
-          >
-            {t('post.startFresh', 'Start a new post')}
-          </button>
-        </div>
       </div>
+
+      {/* ── The copilot, over the room ────────────────────────────────
+ 
+          The same sheet the benches use, so it opens and closes with the same
+          word as everything else in the room, and capped so the bar
+          underneath it stays reachable. */}
+      {copilot && asking && (
+        <div className="flex min-h-0 max-h-[72dvh] flex-col">
+          <DeskSheet
+            icon={<Sparkles className="h-4 w-4" />}
+            title={t('post.ask.title', 'Ask the copilot')}
+            what={t(
+              'post.ask.what',
+              'It knows which room you are in. Ask it what a tool does, or what to try next on this picture.',
+            )}
+            closeSays={t('post.ask.shut', 'Close the copilot')}
+            look={CUT_LOOK}
+            plain
+            onClose={() => setAsking(false)}
+          >
+            {/* `Copilot.tsx`'s root is `h-full min-h-0`, so it needs a parent
+                with a height to be full of. */}
+            <div className="flex min-h-0 flex-1 flex-col">{copilot}</div>
+          </DeskSheet>
+        </div>
+      )}
+
+      <RoomDock
+        open={bench}
+        onOpen={setBench}
+        playing={false}
+        onPlay={() => undefined}
+        onSkip={() => undefined}
+        transport={false}
+        upper={POST_UPPER}
+        lower={POST_LOWER}
+        paidLine={t('post.paidHere', 'Everything here is free. Taking the picture out is the one press that spends, and it says the price before it does.')}
+      >
+        {bench ? benchFor[bench] : null}
+      </RoomDock>
     </div>
   );
 }

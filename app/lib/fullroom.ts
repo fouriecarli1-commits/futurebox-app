@@ -28,7 +28,8 @@
  * still has it.
  */
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import type { MutableRefObject } from 'react';
 
 let claims = 0;
 const watchers = new Set<() => void>();
@@ -76,4 +77,111 @@ export function useOwnScreen(on = true): void {
  */
 export function useOwnedScreen(): boolean {
   return useSyncExternalStore(subscribe, ownsScreen, () => false);
+}
+
+/* ── How tall a room with a bar at its foot is ────────────────────────────
+ *
+ * A room whose tools live along the bottom is a fixed-height column: a
+ * scroller that takes what is left, and a bar under it. To be that, it needs
+ * a height — and the height is the screen, less whatever is above it, less
+ * the app's own bar if it is drawn.
+ *
+ * This was written inside `VideoEditor.tsx`, with the whole story of getting
+ * it wrong. Shortened here; the long version is worth keeping and is below.
+ *
+ *   "Whatever is above it" was a constant: `calc(100dvh - 7.5rem)`. It is not
+ *   a constant. The header over the cutting room is a back arrow, a search and
+ *   an "All rooms / Cutting room" card, and how tall that stack is depends on
+ *   the width, the language and whether the card is folded. Measured on a
+ *   390x844 phone the room started 155 pixels down, so 7.5rem of allowance
+ *   left it ending 93 pixels below the bottom of the screen — and what was
+ *   down there was the lower half of the bar: Bring it in, Looks, Words,
+ *   Sound, Your mark. Two probes said so and neither could say why, because
+ *   neither could see the guess.
+ *
+ * It is shared rather than copied because the photo editor became the second
+ * room of this shape on 7 October, and a second copy of this arithmetic is a
+ * second room that ends 93 pixels below the screen the first time one of them
+ * is corrected.
+ */
+
+
+/** The value to paint on the frame before the first measurement lands. */
+export const ROOM_HEIGHT_GUESS = 'calc(100dvh - 7.5rem)';
+
+/**
+ * A ref to put on the room's outer column, and the height to give it.
+ *
+ * `null` until it has been measured once, so the caller can fall back to
+ * `ROOM_HEIGHT_GUESS` for that frame rather than painting a room with no
+ * height at all — which, in a flex column, grows a page under itself instead
+ * of scrolling.
+ */
+export function useRoomHeight(): {
+  readonly shell: MutableRefObject<HTMLDivElement | null>;
+  readonly tall: number | null;
+} {
+  const shell = useRef<HTMLDivElement | null>(null);
+  const [tall, setTall] = useState<number | null>(null);
+
+  const fit = useCallback((): void => {
+    const box = shell.current;
+    if (!box) return;
+    /* ── Measured where the room sits, not where it has been scrolled to ──
+ 
+       `getBoundingClientRect().top` alone is a feedback loop. If anything on
+       the page scrolls, the room's top goes negative, the height comes out
+       bigger, the page gets longer, and it can be scrolled further still: the
+       photo editor measured 784 standing still and 921 after being scrolled
+       to the end.
+ 
+       So the top is taken inside whatever scrolls around it — the element's
+       own offset in that container's content — which does not move when the
+       container is scrolled. With nothing scrolled the two agree, which is why
+       the cutting room never showed this. */
+    let scroller: HTMLElement | null = box.parentElement;
+    while (scroller) {
+      const how = getComputedStyle(scroller).overflowY;
+      if ((how === 'auto' || how === 'scroll')
+        && scroller.scrollHeight > scroller.clientHeight + 1) break;
+      scroller = scroller.parentElement;
+    }
+    const top = scroller
+      ? box.getBoundingClientRect().top
+        - scroller.getBoundingClientRect().top + scroller.scrollTop
+      : box.getBoundingClientRect().top;
+    /* `visualViewport` rather than `innerHeight` where it exists: on a phone
+       the address bar coming and going changes one and not the other, and the
+       one that matches what she can see is the visual viewport. */
+    const screen = scroller
+      ? scroller.clientHeight
+      : (window.visualViewport?.height ?? window.innerHeight);
+    /* The bar measured, not assumed, for the same reason the top is. On a
+       phone with a home indicator it is the bar's height plus the safe area,
+       and the safe area is a number only the device knows.
+ 
+       Nought when there is no bar, not `BAR_HEIGHT`: a room that claims the
+       screen is not drawn under one, and reserving 64 pixels for a bar that is
+       not there is how a room ends up with a strip of nothing along the
+       bottom. */
+    const bar = document.querySelector('nav.fixed.bottom-0');
+    const under = bar ? bar.getBoundingClientRect().height : 0;
+    setTall(Math.max(320, Math.round(screen - top - under)));
+  }, []);
+
+  useEffect(() => {
+    if (!shell.current) return undefined;
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(document.body);
+    window.addEventListener('resize', fit);
+    window.visualViewport?.addEventListener('resize', fit);
+    return () => {
+      watch.disconnect();
+      window.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('resize', fit);
+    };
+  }, [fit]);
+
+  return { shell, tall };
 }

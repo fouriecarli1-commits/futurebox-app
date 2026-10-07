@@ -51,7 +51,15 @@ import DeskSheet from './BoothCard';
 import { CUT_LOOK, EDGE, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 
 /** Which panel is out. `null` is all of them shut. */
-export type Bench = 'clip' | 'film' | 'folder' | 'looks' | 'words' | 'sound' | 'mark' | null;
+export type Bench =
+  /* The cutting room's. */
+  | 'clip' | 'film' | 'folder' | 'looks' | 'words' | 'sound' | 'mark'
+  /* The photo editor's. One union rather than a generic parameter: the ids
+     are a closed set either way, and a type that has to be threaded through
+     `DeskSheet` and every handler to say the same thing is a cost paid on
+     every line for nothing. */
+  | 'pic' | 'frame' | 'tone' | 'read' | 'text' | 'save'
+  | null;
 
 /* The room's own colours. Green rather than the booth's blue, and literal
    rather than themed, because the cutting room does not follow the theme — the
@@ -65,7 +73,7 @@ export type Bench = 'clip' | 'film' | 'folder' | 'looks' | 'words' | 'sound' | '
  * one of them moves. `cutlook.ts` carries the reasoning for each value,
  * including why INK_DIM went from 0.52 to 0.72. */
 
-interface BenchSpec {
+export interface BenchSpec {
   readonly id: Exclude<Bench, null>;
   readonly icon: React.ReactNode;
   /** The i18n key and the English, as `t` takes them. */
@@ -201,6 +209,10 @@ export default function CutDock({
   onSkip,
   place,
   noClip = false,
+  upper = UPPER,
+  lower = LOWER,
+  transport: hasTransport = true,
+  paidLine,
   children,
 }: {
   readonly open: Bench;
@@ -213,10 +225,27 @@ export default function CutDock({
   readonly place?: string;
   /** Nothing on the clock yet, so "This shot" has nothing to show. */
   readonly noClip?: boolean;
+  /**
+   * The benches, so a second room can have this exact bar.
+   *
+   * Carli, 7 October 2026: *"Die editing tools moet ook onder in 'n bar wees
+   * ... Dieselfde met video editor, asook probooth. Pop out bars moet netjies
+   * gespasieer wees."* The way to make two rooms space their bars the same is
+   * not to space them the same twice; it is for there to be one bar.
+   *
+   * Both default to the cutting room's own, so its call site did not change
+   * and could not drift.
+   */
+  readonly upper?: readonly BenchSpec[];
+  readonly lower?: readonly BenchSpec[];
+  /** The play and skip controls. A room with nothing to play has none. */
+  readonly transport?: boolean;
+  /** What the sheet says above a bench that spends. */
+  readonly paidLine?: string;
   readonly children?: React.ReactNode;
 }): React.ReactElement {
   const { t } = useLang();
-  const here = [...UPPER, ...LOWER].find((spec) => spec.id === open);
+  const here = [...upper, ...lower].find((spec) => spec.id === open);
   const sideways = useSideways();
 
   /* ── The bench takes half the screen, not all of it ─────────────────────
@@ -240,7 +269,7 @@ export default function CutDock({
       what={t(here.what[0], here.what[1])}
       paid={here.paid}
       paidSays={t('dock.paidSays', 'Some of this costs credits.')}
-      paidLine={t(
+      paidLine={paidLine ?? t(
         'cut.paidHere',
         'All of the cutting is free. Putting the finished film together is the one press that spends, and it shows the bill before it does.',
       )}
@@ -325,10 +354,14 @@ export default function CutDock({
           className="flex-shrink-0 flex flex-col items-center gap-1 overflow-y-auto px-1 py-2"
           style={{ background: PANEL, borderLeft: `1px solid ${EDGE}`, width: 96 }}
         >
-          <div className="flex w-full flex-col items-center gap-1">{transport}</div>
-          <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
+          {hasTransport ? (
+            <>
+              <div className="flex w-full flex-col items-center gap-1">{transport}</div>
+              <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
+            </>
+          ) : null}
           <div data-cutbenchrow="" className="grid w-full grid-cols-2 gap-1" style={{ background: PANEL }}>
-            {[...UPPER, ...LOWER].map((spec) => (
+            {[...upper, ...lower].map((spec) => (
               <BenchButton
                 key={spec.id}
                 spec={spec}
@@ -397,12 +430,24 @@ export default function CutDock({
             tabs on it, the chosen one lit. */}
         <div
           data-cutbenchrow=""
-          className="flex items-center justify-center gap-1 px-3 pt-2"
+          className={`flex gap-1 px-3 pt-2 ${hasTransport ? 'items-center justify-center' : 'items-stretch'}`}
           style={{ background: PANEL }}
         >
-          <BenchButton spec={UPPER[0]} open={open} onOpen={onOpen} t={t} dim={noClip} />
-          {transport}
-          <BenchButton spec={UPPER[1]} open={open} onOpen={onOpen} t={t} />
+          {/* With a transport, a bench either side of it. Without one — a room
+              with nothing to play — the benches share the row evenly, like
+              the row below, so the two rows line up instead of one being
+              centred around a gap where the play button is not. */}
+          {hasTransport ? (
+            <>
+              <BenchButton spec={upper[0]} open={open} onOpen={onOpen} t={t} dim={noClip} />
+              {transport}
+              {upper[1] ? <BenchButton spec={upper[1]} open={open} onOpen={onOpen} t={t} /> : null}
+            </>
+          ) : (
+            upper.map((spec) => (
+              <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} />
+            ))
+          )}
         </div>
 
         {/* ── The five, which replace the app's own bar ─────────────────── */}
@@ -411,7 +456,7 @@ export default function CutDock({
           className="flex items-stretch gap-1 px-3 pb-2 pt-1"
           style={{ background: PANEL }}
         >
-          {LOWER.map((spec) => (
+          {lower.map((spec) => (
             <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} />
           ))}
         </div>

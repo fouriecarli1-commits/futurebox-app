@@ -73,6 +73,18 @@ try {
     + " be refused by this app's connect-src, so these have to be ours");
 
   /* A picture with words in it, made here. */
+  /* ── The bench with the picture row on it, opened first ───────────────
+ 
+     The room's tools live behind a bar along the bottom since 7 October —
+     Carli: *"Die editing tools moet ook onder in 'n bar wees."* So the file
+     input is not in the page until the bench holding it is open, and a walk
+     written against the old long scroll fell over on `null.files` with no
+     clue that the room had simply changed shape. */
+  const pic = page.locator('[data-cutbench="pic"]').first();
+  if (await pic.count()) {
+    await pic.click();
+    await page.waitForTimeout(600);
+  }
   const put = await page.evaluate(async (words) => {
     /* Measured, then sized to fit with a margin.
  
@@ -109,6 +121,14 @@ try {
   }, WANT);
   check('a picture with words in it can be brought in', put === true);
   await page.waitForTimeout(1200);
+
+  /* And the reader is its own bench. The picture comes in on one and is read
+     on another, which is the room's shape now rather than one long scroll. */
+  const readTab = page.locator('[data-cutbench="read"]').first();
+  if (await readTab.count()) {
+    await readTab.click();
+    await page.waitForTimeout(600);
+  }
 
   const grab = page.locator('[data-postgrabbed]').first();
   check('the room offers to read the words',

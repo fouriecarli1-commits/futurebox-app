@@ -59,6 +59,13 @@ export const DOORS = {
 export const ROOMS = [
   'Make a song', 'Studio', 'ProBooth', 'Your voice', 'Sound trainer', 'Video desk',
   'Video Editor',
+  /* Added 7 October 2026, the day it was asked to be as tidy as the other
+     two. It had a `DOORS` entry from the day it was built and no entry here,
+     so every probe keyed off this list — a11y, boxes, buttons, cards, deep,
+     shots, underbar, walk, wide, writing — was walking fourteen rooms and
+     printing a verdict about the app. Exactly the fault the note at the top
+     of this file is about, which is why the list is written down. */
+  'Photo Editor',
   'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar', 'Album art',
 ];
 
@@ -82,6 +89,10 @@ export const ROOMS_AF = {
   'Sound trainer': 'Klankafrigter',
   'Video desk': 'Videolessenaar',
   'Video Editor': 'Video Editor',
+  /* The door says "Foto Editor" in Afrikaans — `rail.photo`. Read off the
+     door rather than translated, which is what `notcut` is for: it failed on
+     this the first time, with the name it could not find. */
+  'Photo Editor': 'Foto Editor',
   Hooks: 'Hooks',
   Channel: 'Kanaal',
   Live: 'Live',

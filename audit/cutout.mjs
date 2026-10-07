@@ -178,6 +178,18 @@ try {
     + ' wasm from inside and the button spins until a timeout, which reads as'
     + ' the picture being at fault');
 
+  /* ── The bench with the picture row on it, opened first ───────────────
+ 
+     The room's tools live behind a bar along the bottom since 7 October —
+     Carli: *"Die editing tools moet ook onder in 'n bar wees."* So the file
+     input is not in the page until the bench holding it is open, and a walk
+     written against the old long scroll fell over on `null.files` with no
+     clue that the room had simply changed shape. */
+  const pic = page.locator('[data-cutbench="pic"]').first();
+  if (await pic.count()) {
+    await pic.click();
+    await page.waitForTimeout(600);
+  }
   await page.evaluate(async () => {
     const c = document.createElement('canvas');
     c.width = 480;

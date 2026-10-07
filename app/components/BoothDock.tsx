@@ -123,6 +123,11 @@ function DeskButton({
          panel that has taken the room. */
       onClick={() => onOpen(on ? null : spec.id)}
       aria-pressed={on}
+      /* Named for `audit/tidybars.mjs`, which opens every desk in turn and
+         measures the controls inside it. Without a hook per desk the probe
+         would have to find the buttons by the words on them, and the words
+         are translated. */
+      data-boothdesk={spec.id}
       /* The name AND the sentence, because a screen reader gets one string
          and "Stems" on its own is no more use to it than the icon is to an
          eye. The price warning is part of it for the same reason. */
@@ -388,7 +393,7 @@ export default function BoothDock({
 
         <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
 
-        <div className="grid w-full grid-cols-2 gap-1">
+        <div data-boothdeskrow="" className="grid w-full grid-cols-2 gap-1">
           {[...UPPER, ...LOWER].map((spec) => (
             <DeskButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} tall />
           ))}
@@ -427,7 +432,7 @@ export default function BoothDock({
       >
 
       {/* ── The transport, with a desk either side ────────────────────── */}
-      <div className="flex items-center justify-center gap-1 px-2 pt-2">
+      <div data-boothdeskrow="" className="flex items-center justify-center gap-1 px-2 pt-2">
         <DeskButton spec={UPPER[0]} open={open} onOpen={onOpen} t={t} />
 
         <button
@@ -467,6 +472,7 @@ export default function BoothDock({
 
       {/* ── The four, which replace the app's own bar ─────────────────── */}
       <div
+        data-boothdeskrow=""
         className="flex items-stretch gap-1 px-2 pb-2 pt-1"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >

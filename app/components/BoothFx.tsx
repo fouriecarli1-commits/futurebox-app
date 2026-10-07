@@ -158,7 +158,7 @@ function Dial({
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         aria-label={label}
-        className="min-h-[32px] w-full"
+        className="h-11 w-full cursor-pointer"
         style={{ accentColor: lit(hue) }}
       />
     </label>
@@ -207,7 +207,7 @@ function Unit({
           type="button"
           onClick={onToggle}
           aria-pressed={on}
-          className="min-h-[32px] flex-shrink-0 rounded-lg px-3 text-xs font-black"
+          className="min-h-[44px] min-w-[52px] flex-shrink-0 rounded-lg px-3 text-xs font-black"
           style={{
             background: on ? lit(hue, 0.9) : 'rgba(255,255,255,0.08)',
             color: on ? '#05060a' : INK_DIM,
@@ -441,7 +441,7 @@ export default function BoothFx({
             ['flip', t('fx.flip', 'Upside down')],
             ['mono', t('fx.mono', 'Both sides as one')],
           ] as const).map(([key, label]) => (
-            <label key={key} className="flex min-h-[32px] items-center gap-2 text-[11px]" style={{ color: INK_DIM }}>
+            <label key={key} className="flex min-h-[44px] items-center gap-2 text-[11px]" style={{ color: INK_DIM }}>
               <input
                 type="checkbox"
                 checked={(fx.utility ?? FX_DEFAULTS.utility)[key]}

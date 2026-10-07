@@ -73,6 +73,10 @@ const NEEDS = {
      a design decision rather than a missing table, and a reader should not
      have to guess which. */
   'Video Editor': 'benches rather than cards, by design — the dock holds one panel at a time',
+  /* And the photo editor, 7 October 2026, for exactly the same reason and in
+     exactly the same words: *"Die editing tools moet ook onder in 'n bar
+     wees."* It was nine cards down one scroll until that morning. */
+  'Photo Editor': 'benches rather than cards, by design — the dock holds one panel at a time',
 };
 
 
@@ -238,7 +242,7 @@ try {
   const unexplained = rows.filter((one) => one.count === 0 && !NEEDS[one.room]);
   check('every room still on zero has a reason printed beside it',
     unexplained.length === 0,
-    unexplained.map((one) => one.room).join(', ') || 'all four accounted for');
+    unexplained.map((one) => one.room).join(', ') || 'every zero accounted for');
 
   /* ── And that a card starts shut and really folds ───────────────────
  

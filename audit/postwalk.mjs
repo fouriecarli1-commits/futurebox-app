@@ -86,11 +86,56 @@ try {
     'a second way out that only this room has, going somewhere that depends'
     + ' on how you arrived');
 
+
+  /**
+   * Open a bench on the room's bar.
+   *
+   * Carli, 7 October 2026: *"Die editing tools moet ook onder in 'n bar
+   * wees."* Every control in this room is behind one of six benches now, so
+   * a walk that reaches straight for a button is a walk that times out —
+   * which is what this one did, on `data-addwords`, the moment the bar
+   * arrived. Reaching for a control without opening the thing it lives in is
+   * also what a person would do, so the failure was fair.
+   */
+  let openBench = null;
+  const bench = async (which) => {
+    const tab = page.locator(`[data-cutbench="${which}"]`).first();
+    if ((await tab.count()) === 0) return false;
+    /* Pressing the bench that is already open CLOSES it — which is right in
+       the room and wrong in a walk that asks for the same bench twice in a
+       row. Asking for what is already open timed out looking for a control
+       it had just shut away. */
+    if (openBench === which) return true;
+    await tab.click();
+    openBench = which;
+    await page.waitForTimeout(500);
+    return true;
+  };
+
+  /** And shut whatever is open, because the sheet is drawn OVER the picture.
+   *
+   * The sheet is portalled out of the room now so it can be capped against
+   * the screen rather than the room's own box, which means it sits above the
+   * canvas rather than below it. A drag aimed at the picture with a bench
+   * open lands on the sheet: the pan read 47536 → 47536, exactly unchanged,
+   * which is the signature of a gesture that never reached the thing it was
+   * aimed at. In the room she does the same — looks at the picture, then
+   * opens a tool — so closing it first is also what a person does. */
+  const shut = async () => {
+    if (openBench === null) return;
+    const tab = page.locator(`[data-cutbench="${openBench}"]`).first();
+    if (await tab.count()) await tab.click();
+    openBench = null;
+    await page.waitForTimeout(400);
+  };
+
   /* ── It draws ────────────────────────────────────────────────────────── */
 
+  check('the bar offers its benches', await bench('text'),
+    'the room has no bar, so every control below is unreachable');
   await page.locator('[data-addwords]').first().click();
   await page.waitForTimeout(300);
-  await page.locator('[data-poststudio] textarea').first().fill('Karoo pad');
+  await page.locator('textarea').first().fill('Karoo pad');
   await page.waitForTimeout(600);
 
   /**
@@ -213,7 +258,8 @@ try {
     'nothing is printed over a feed post, and a warning drawn where it is'
     + ' false teaches somebody to ignore it where it is true');
 
-  const story = page.locator('[data-poststudio] button').filter({ hasText: /Story/ }).first();
+  await bench('frame');
+  const story = page.locator('button').filter({ hasText: /Story/ }).first();
   check('  and there is a story to choose', (await story.count()) > 0);
   await story.click();
   await page.waitForTimeout(700);
@@ -230,6 +276,7 @@ try {
      Carli: *"Remember to monetize and nothing is free in this app."* The
      cutting room shows an itemised bill before it charges; this room let
      somebody build a whole post and meet the price at the foot of it. */
+  await bench('save');
   const priced = ((await page.locator('[data-postprice]').first().innerText().catch(() => '')) ?? '')
     .replace(/\s+/g, ' ');
   check('the room says what taking a picture out costs, before the work',
@@ -237,6 +284,7 @@ try {
     `${priced || 'nothing at the top of the room'} — a price met at the end is`
     + ' a price somebody has already spent time to reach');
 
+  await bench('save');
   const save = page.locator('[data-postexport]').first();
   const said = ((await save.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
   check('the save button names what it costs', /\d/.test(said) && /credit|krediet/i.test(said),
@@ -259,6 +307,7 @@ try {
      a rule that reads source, because both halves come out of the same
      function and differ only by the argument it is called with. */
 
+  await bench('pic');
   await page.locator('[data-postclear]').first().click();
   await page.waitForTimeout(500);
 
@@ -288,8 +337,12 @@ try {
     `${ground ? ground.seeThrough : '?'} see-through pixels on screen`);
 
   /* And now the file. */
+  /* Back to the bench the save button lives on. It was found under `save`
+     and pressed after three other benches had been opened over it, which is
+     a locator pointing at something no longer in the room. */
+  await bench('save');
   const coming = page.waitForEvent('download', { timeout: 15000 }).catch(() => null);
-  await save.click();
+  await page.locator('[data-postexport]').first().click();
   const got = await coming;
   check('  and pressing save really hands over a file', got !== null,
     'the till was stubbed as paid, so a press that produces no download is'
@@ -363,6 +416,7 @@ try {
  
      Made in the page rather than kept as a file in this repo: a binary
      fixture is a thing to go stale, and a 4:3 picture is two fillRects. */
+  await bench('pic');
   const put = await page.evaluate(async () => {
     const c = document.createElement('canvas');
     c.width = 400;
@@ -386,8 +440,11 @@ try {
     x.fillStyle = '#ffff00';
     x.fillRect(188, 0, 24, 300);
     const blob = await new Promise((done) => c.toBlob(done, 'image/png'));
-    const input = document.querySelector('[data-postpicture] input[type=file]')
-      ?? document.querySelector('[data-poststudio] input[type=file]');
+    /* Not prefixed with `[data-poststudio]`. The bar's sheet is portalled
+       out of the room's own element, so a selector scoped to the room finds
+       nothing the moment a control moves onto a bench. */
+    const input = document.querySelector('input[data-postpicture]')
+      ?? document.querySelector('input[type=file]');
     if (!input || !blob) return false;
     const holder = new DataTransfer();
     holder.items.add(new File([blob], 'half.png', { type: 'image/png' }));
@@ -427,6 +484,7 @@ try {
      green pixels in a picture that had no green in it and passed every
      time. An assertion that cannot fail is worse than none, because it is
      read as cover. */
+  await bench('pic');
   await page.locator('[data-postbehind]').first().fill('#00ff00');
   await page.waitForTimeout(500);
 
@@ -440,6 +498,7 @@ try {
     `${middle?.green} background pixels — in "fill" the photograph covers the`
     + ' frame, and a gap on a transparent post is an invisible wedge');
 
+  await bench('frame');
   check('the canvas says it can be dragged',
     (await page.locator('[data-postcanvas][data-postmovable="yes"]').count()) > 0,
     '740 pixels fall off each side of this picture and the screen reports'
@@ -454,13 +513,34 @@ try {
      same drag in isolation moved the picture from half red to two-thirds
      blue. So the point is scrolled into view and then held well inside both
      the canvas and the screen. */
+  await shut();
   await page.locator('[data-postcanvas]').first().scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
   let pulled = null;
   const box = await page.locator('[data-postcanvas]').first().boundingBox();
-  if (box) {
-    const high = Math.min(box.y + box.height - 20, 844 - 160);
-    const y = Math.max(box.y + 20, high);
+  /* ── Aimed at the middle of what is actually on the screen ──────────────
+ 
+     `844 - 160` was an allowance for the dock, and on 7 October the room
+     became a fixed-height column: the canvas is taller than the strip it
+     scrolls inside, so part of it is off the top as well as behind the bar,
+     and a point computed from the canvas's own box can be either. The drag
+     then landed half on the picture and moved it 3 per cent — "blue went
+     47536 → 46054", which read as the pan being broken when the pan was fine.
+ 
+     So the band is the canvas clipped to the screen above the room's own bar,
+     and the drag is aimed at the middle of that. Measured, not allowed for. */
+  const onGlass = await page.evaluate(() => {
+    const glass = document.querySelector('[data-postcanvas]');
+    const dock = document.querySelector('[data-cutdock]');
+    if (!glass) return null;
+    const r = glass.getBoundingClientRect();
+    const floor = dock ? dock.getBoundingClientRect().top : window.innerHeight;
+    const top = Math.max(r.top, 0);
+    const bottom = Math.min(r.bottom, floor);
+    return bottom - top < 40 ? null : { middle: Math.round((top + bottom) / 2) };
+  });
+  if (box && onGlass) {
+    const y = onGlass.middle;
     await page.mouse.move(box.x + box.width * 0.8, y);
     await page.mouse.down();
     /* Step by step rather than one `steps:` move. Each pointermove is one
@@ -492,6 +572,9 @@ try {
      third time in this one block that the walk was wrong about the code
      rather than the other way round, and all three were the same mistake:
      measuring a change against a reading taken somewhere else. */
+  /* And the bench open again — the drag above needed it shut, and Centre and
+     the zoom live on it. */
+  await bench('frame');
   await page.locator('[data-postcentre]').first().click();
   await page.waitForTimeout(400);
   const was = await colours();
@@ -560,6 +643,7 @@ try {
     return { r: +(r / n).toFixed(3), g: +(g / n).toFixed(3), b: +(b / n).toFixed(3) };
   });
 
+  await bench('tone');
   const asShot = await mean();
   await page.locator('[data-postauto]').first().click();
   await page.waitForTimeout(500);
@@ -644,6 +728,7 @@ try {
      comparable and the assertion was arithmetic on nothing. */
   const bandBefore = await band('[data-postcanvas]');
 
+  await bench('pic');
   await page.locator('[data-postrubmode]').first().click();
   await page.waitForTimeout(600);
   const rub = page.locator('[data-postrubcanvas]').first();
@@ -674,6 +759,12 @@ try {
        aimed. The room now keeps those buttons drawn and disabled so nothing
        moves — and this re-reads anyway, because a walk that depends on the
        layout never shifting is a walk that will lie again. */
+    /* The brush lives inside the bar's sheet now, which is capped and
+       scrolls on its own, so part of it can be off the bottom of the screen
+       — and a drag aimed at a point that is not showing lands on whatever
+       is. */
+    await rub.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
     for (const across of [0.47, 0.5, 0.53]) {
       const box = await rub.boundingBox();
       await page.mouse.move(box.x + box.width * across, box.y + box.height * 0.1);
@@ -715,10 +806,11 @@ try {
   }
 
   /* Back to where the rest of the walk expects to be. */
+  await bench('frame');
   await page.locator('[data-postbasis="fill"]').first().click();
   await page.locator('[data-postcentre]').first().click();
-  await page.locator('[data-poststudio] [data-postpicture] ~ button, [data-poststudio] button')
-    .filter({ hasText: /Take it out|Haal dit uit/ }).first().click()
+  await page.locator('button').filter({ hasText: /^Take it out$|^Haal dit uit$/ })
+    .first().click()
     .catch(() => {});
   await page.waitForTimeout(600);
 
@@ -752,6 +844,7 @@ try {
      Measured in the editor and not in the studio. A confirmation sentence
      is the studio agreeing with itself; the cover appearing downstairs is
      the only thing that says the hand-over happened. */
+  await bench('save');
   const into = page.locator('[data-postintofilm]').first();
   check('the post offers to become the film\u2019s cover', (await into.count()) > 0,
     'the only way into the editor is a download and a re-import');
@@ -800,7 +893,24 @@ try {
   const covered = await page.evaluate(() => {
     const bar = document.querySelector('nav[aria-label]');
     const sheet2 = document.querySelector('[data-poststudio]');
-    if (!bar || !sheet2) return ['no bar or no sheet'];
+    if (!sheet2) return ['no sheet'];
+    /* ── No app bar is the answer here now, not a missing measurement ─────
+ 
+       The photo editor claims the screen since 7 October — Carli asked for
+       its tools along the bottom, and two bars stacked is the fault the booth
+       had in September. So nothing CAN be stranded under a bar that is not
+       drawn, and what has to be true instead is that the room's own bar is
+       down there and reaches the bottom edge. `audit/underbar.mjs` asks that
+       question of every room, in both states, and this one defers to it
+       rather than reporting a room doing the right thing as broken. */
+    if (!bar) {
+      const dock = document.querySelector('[data-cutdock]');
+      if (!dock) return ['no app bar AND no bar of the room’s own'];
+      const r = dock.getBoundingClientRect();
+      return r.bottom >= window.innerHeight - 1
+        ? []
+        : [`the room’s own bar ends at ${Math.round(r.bottom)} of ${window.innerHeight}`];
+    }
     const over = bar.getBoundingClientRect();
     const out = [];
     for (const el of Array.from(sheet2.querySelectorAll('button, input, textarea, label'))) {
@@ -847,8 +957,8 @@ try {
       await again.click();
       await page.waitForTimeout(1200);
       const said = await page.evaluate(() => {
-        const el = document.querySelector('[data-poststudio]');
-        return el ? (el.textContent ?? '') : '';
+        /* The room AND whatever the bar has portalled out of it. */
+        return document.body.textContent ?? '';
       });
       check('pressing it says where the picture went',
         /cutting room|snykamer/i.test(said),
