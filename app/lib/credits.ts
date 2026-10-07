@@ -17,6 +17,36 @@ export function creditsSaid(n: number, say: (key: string, fallback: string) => s
 }
 
 /**
+ * ── The floor under every price that leaves this app ─────────────────────
+ *
+ * Carli, 7 October 2026: *"alles in die app wat na 'n outside supplier toe
+ * gaan moet darem een krediet meer vra as wat die supplier aan ons eis, sodat
+ * ons ook op daardie manier geld maak."*
+ *
+ * So: whatever an outside supplier bills us for one press, the app charges
+ * that **and one whole credit more**. Not a multiple — a multiple of a small
+ * number is still a small number — but one credit of real margin, in rand,
+ * on top of the bill.
+ *
+ * It is a floor and not a target, and nearly every price below clears it many
+ * times over. What it catches is the next price set by reading a supplier's
+ * page and adding nothing, which is how an action ends up sold for about what
+ * it cost. `check:kredietkoste` holds every supplier-backed price to it and
+ * prints the least each one may sell for.
+ *
+ * Two things it deliberately does not govern:
+ *
+ *   · Anything that runs on her own phone. The background remover, the
+ *     eraser, the reader, the crop and the looks bill nobody, so there is no
+ *     supplier figure to be a credit above. Those are free, and the charge in
+ *     that room is on the finished picture — see `postOut`.
+ *   · An internal rate that nobody is ever charged on its own. `readCost` is
+ *     one credit per 150 characters with a floor of two, so the smallest real
+ *     charge is two credits for 300 characters; the rule is measured on that,
+ *     because 150 characters is not a press.
+ */
+
+/**
  * Credits — one currency across everything that costs money to make.
  *
  * The scale is built backwards from what each thing actually costs, so that a
@@ -340,13 +370,36 @@ export const CREDITS = {
    * already sold on — which is also what makes a free plan a real trial
    * rather than a free design studio.
    *
-   * ── Why ONE, and not three ──────────────────────────────────────────────
+   * ── Two, and why not three and not one ─────────────────────────────────
+   *
+   * Carli, 7 October 2026: *"Om 'n foto te download 2 krediete."* Her number,
+   * and the right end of the range.
    *
    * A post is made in one sitting and exported several times — once it is
    * right, once with the date fixed, once in the other shape. At three a
-   * mistake costs more than the work; at one, an evening of ten exports is
-   * ten credits, which is a tenth of Maker's month for a night's output.
-   * It is a gate, not a toll.
+   * mistake costs more than the work. At two, an evening of ten exports is
+   * twenty credits, which is a fifth of Maker's month for a night's output,
+   * and the tools that made the picture cost nothing. It is a gate, not a
+   * toll.
+   *
+   * It was one until that morning, on the reasoning above with ten exports at
+   * ten credits. The reasoning did not change; the number did, because the
+   * room it charges for grew a background remover, an eraser and a reader
+   * since — all of them free to run, and all of them paid for here.
+   *
+   * ── And the tools stay free, which is the other half of the decision ────
+   *
+   * She asked whether every function should cost two as well. They do not,
+   * and the reason is worth keeping: the background remover, the eraser, the
+   * reader, the crop and the looks all run on her own phone and bill nobody.
+   * One picture using three of them and then exporting would have been eight
+   * credits — nearly a whole song — for one post, and the thing people do
+   * when a tool costs money is not use the tool. The charge sits on the
+   * finished picture and the room stays worth opening.
+   *
+   * The paid ones are the ones that leave the device: the upscaler, magic
+   * grab, picture-to-video. Those are governed by the supplier-plus-one rule
+   * at the top of this file, not by this number.
    *
    * `spend_credits` takes a charge once per reference, as it does for
    * `mixOut`, so exporting the same post twice without changing it is one
@@ -360,7 +413,7 @@ export const CREDITS = {
    * free account used as an unlimited design tool — which a screenshot at
    * phone resolution is not.
    */
-  postOut: 1,
+  postOut: 2,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /**

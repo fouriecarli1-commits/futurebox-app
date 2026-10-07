@@ -157,7 +157,7 @@ ok('the route charges, once per post', /charge\(request, CREDITS\.postOut/.test(
   'without the post id as the reference, saving a post twice is two charges'
   + ' and putting a saved post into a film is a third');
 
-ok(`  and the price is ${CREDITS.postOut} credit, not nothing`, CREDITS.postOut >= 1,
+ok(`  and the price is ${CREDITS.postOut} credits, not nothing`, CREDITS.postOut >= 1,
   'a charge of zero passes every rule above and collects nothing');
 
 if (bad) {

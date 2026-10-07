@@ -38,7 +38,7 @@
  * It is reported instead of asserted, and it stays that way until a real
  * invoice settles it. See `docs/PRYSVOORSTEL.md` §6.
  */
-import { CREDITS, TIER_CREDITS } from '../app/lib/credits.ts';
+import { CREDITS, TIER_CREDITS, readCost } from '../app/lib/credits.ts';
 import { TIER_SPECS, RAND_PER_USD } from '../app/lib/plans.ts';
 import { paid } from '../app/data/aiprices.ts';
 
@@ -118,6 +118,30 @@ console.log(`Everything below is priced against R${WORST.toFixed(3)} — the che
 
 /** Below this, an action is losing money outright. */
 const FLOOR = 1;
+
+/**
+ * And one whole credit of margin on top of that, which is Carli's rule.
+ *
+ * Carli, 7 October 2026: *"alles in die app wat na 'n outside supplier toe
+ * gaan moet darem een krediet meer vra as wat die supplier aan ons eis, sodat
+ * ons ook op daardie manier geld maak."*
+ *
+ * `FLOOR` only says an action is not sold below cost. A job costing R1.60 and
+ * charged one credit (R1.49 at the cheapest tier) fails that; a job costing
+ * R1.40 charged one credit passes it with nine cents in it, which is not a
+ * business, it is a rounding error. Her rule puts a floor under the MARGIN
+ * rather than under the price: whatever the supplier bills, the app charges
+ * that and one credit more.
+ *
+ * Expressed in rand because that is what the two sides have in common — the
+ * supplier bills rand and a credit sells for rand — and against `WORST`, the
+ * cheapest credit anybody gets, because that member presses the same button.
+ *
+ * It is a floor and not a target. Nearly everything in this file clears it
+ * many times over; what it catches is the next price set by looking at a
+ * supplier's page and adding nothing.
+ */
+const OVER_SUPPLIER = WORST;
 /** Below this it is not losing money but has no room in it. */
 const THIN = 1.8;
 
@@ -148,7 +172,26 @@ const THIN = 1.8;
  */
 const PRODUCT = 6;
 
-const priced: { what: string; credits: number; cost: number; product?: boolean; decided?: string }[] = [
+const priced: {
+  what: string;
+  credits: number;
+  cost: number;
+  product?: boolean;
+  decided?: string;
+  /**
+   * A rate rather than a press.
+   *
+   * Carli's supplier-plus-one rule is about what somebody is CHARGED for one
+   * action. A row that prices an internal unit — 150 characters of reading —
+   * is not an action: nobody is ever billed for 150 characters on its own,
+   * because `readCost` has a floor of two credits. Held against the smallest
+   * real charge instead, which is its own row below.
+   *
+   * Marked rather than left out, because the multiple it prints is still the
+   * thing to look at when the supplier's rate moves.
+   */
+  rate?: boolean;
+}[] = [
   { product: true, decided: 'Carli, 24 Sept: the plan is prepaid capacity, so a dearer song adds nothing to margin. See credits.ts',
     what: 'a two-minute song', credits: CREDITS.song, cost: 2 * MUSIC_PER_MIN },
   { product: true, decided: 'half of the song, same decision',
@@ -161,7 +204,11 @@ const priced: { what: string; credits: number; cost: number; product?: boolean; 
   { product: true, what: 'dubbing, per minute', credits: CREDITS.dub, cost: DUB_PER_MIN },
   /* `readCost` is one credit per 150 characters with a floor of two, so one
      credit is what 150 characters must cover. */
-  { what: 'reading 150 characters', credits: 1, cost: 150 * CHAR },
+  { rate: true, what: 'reading 150 characters (a rate, not a press)', credits: 1, cost: 150 * CHAR },
+  /* And the smallest thing anybody is actually charged for a read, which is
+     what Carli's rule governs: `readCost` is `Math.max(2, ...)`, so two
+     credits buys up to 300 characters and nothing smaller can be billed. */
+  { what: 'the smallest read anybody is charged (300 characters)', credits: readCost(300), cost: 300 * CHAR },
   /* Not the line above. That one is a voice reading text aloud; this one is
      Music.ai reading a song for its chords, key and tempo. Two different
      suppliers and two different bills under one English word, which is
@@ -190,6 +237,12 @@ for (const one of priced) {
   const line = `${one.what}: ${one.credits} credits = R${sold.toFixed(2)}, costs R${one.cost.toFixed(2)} — ${over.toFixed(1)}x`;
   if (over < FLOOR) {
     say(false, `${line}  ← SOLD BELOW COST`);
+  } else if (!one.rate && sold < one.cost + OVER_SUPPLIER) {
+    /* Above cost but not by a whole credit — see `OVER_SUPPLIER`. */
+    say(false,
+      `${line}  ← UNDER THE SUPPLIER-PLUS-ONE RULE:`
+      + ` R${(one.cost + OVER_SUPPLIER).toFixed(2)} is the least this may sell for,`
+      + ` which is ${Math.ceil((one.cost + OVER_SUPPLIER) / WORST)} credit(s)`);
   } else if (over < THIN) {
     say(true, `${line}  (thin, but above cost)`);
   } else if (one.product && over < PRODUCT && one.decided) {
@@ -252,5 +305,9 @@ if (bad > 0) {
   );
   process.exitCode = 1;
 } else {
-  console.log('\ncheck:kredietkoste — every credit price covers its own upstream bill.');
+  console.log(
+    '\ncheck:kredietkoste — every credit price covers its own upstream bill,'
+    + ' and every one that goes to an outside supplier charges at least a whole'
+    + ' credit more than that supplier bills us.',
+  );
 }

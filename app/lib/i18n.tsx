@@ -1648,7 +1648,7 @@ export const STRINGS: Dict = {
   "post.benchTextWhat": { en: "What it says, in one of three faces, in a colour, at the top, the middle or the bottom.", af: "Wat dit s\u00ea, in een van drie lettertipes, in \u2019n kleur, bo, in die middel of onder." },
   "post.benchSave": { en: "Take it out", af: "Neem dit uit" },
   "post.benchSaveWhat": { en: "Save the picture to your device, or send it next door as a film\u2019s cover. The same one credit either way, and only once per post.", af: "Stoor die prent op jou toestel, of stuur dit langsaan as \u2019n film se voorblad. Dieselfde een krediet in elk geval, en net een keer per prent." },
-  "post.paidHere": { en: "Everything here is free. Taking the picture out is the one press that spends, and it says the price before it does.", af: "Alles hier is verniet. Om die prent uit te neem is die een druk wat bestee, en dit s\u00ea die prys voor dit dit doen." },
+  "post.paidHere": { en: "Every tool in this room is free. Taking the picture out is the one press that spends, and it says the price before it does.", af: "Elke stuk gereedskap in hierdie kamer is verniet. Om die prent uit te neem is die een druk wat bestee, en dit s\u00ea die prys voor dit dit doen." },
   "post.look": { en: "How it reads", af: "Hoe dit lees" },
   "post.grab": { en: "Words in the picture", af: "Woorde in die prent" },
   "post.cut": { en: "Background", af: "Agtergrond" },
@@ -1728,7 +1728,7 @@ export const STRINGS: Dict = {
   "post.badFile": { en: "That file could not be read as a picture.", af: "Daardie l\u00eaer kon nie as \u2019n prent gelees word nie." },
   "post.tooMany": { en: "That picture is too large to open on a phone. A photo straight off a camera often is.", af: "Daardie prent is te groot om op \u2019n foon oop te maak. \u2019n Foto reguit van \u2019n kamera af is dikwels so." },
   "post.startFresh": { en: "Start a new post", af: "Begin \u2019n nuwe plasing" },
-  "post.freeUntil": { en: "Making it costs nothing. The credit is for taking it off the device, and the same post saved twice is charged once.", af: "Om dit te maak kos niks. Die krediet is om dit van die toestel af te neem, en dieselfde plasing wat twee keer gestoor word, word een keer gehef." },
+  "post.freeUntil": { en: "Every tool in this room is free — they all run on your own phone. The credits are for taking the picture off the device, and the same post saved twice is charged once.", af: "Elke stuk gereedskap in hierdie kamer is verniet \u2014 hulle werk alles op jou eie foon. Die krediete is om die prent van die toestel af te neem, en dieselfde plasing wat twee keer gestoor word, word een keer gehef." },
   "canvas.makePost": { en: "Make a post", af: "Maak \u2019n plasing" },
 
   "art.ofWall": { en: "of the", af: "van die" },
