@@ -104,8 +104,17 @@ try {
     /* Pressing the bench that is already open CLOSES it — which is right in
        the room and wrong in a walk that asks for the same bench twice in a
        row. Asking for what is already open timed out looking for a control
-       it had just shut away. */
-    if (openBench === which) return true;
+       it had just shut away.
+ 
+       Asked of the page, not of this variable. Two of the room's own buttons
+       close the bench behind them — Start cutting and Start drawing both do,
+       so the corners of the picture can be reached — and the walk's record of
+       what is open then says "pic" about a room showing no bench at all. The
+       next `bench('pic')` returned true, the file input was not in the page,
+       and three assertions about the eraser failed about a fixture that had
+       never been brought back. */
+    const sheetUp = (await page.locator('[data-desk]').count()) > 0;
+    if (openBench === which && sheetUp) return true;
     await tab.click();
     openBench = which;
     await page.waitForTimeout(500);
@@ -417,7 +426,9 @@ try {
      Made in the page rather than kept as a file in this repo: a binary
      fixture is a thing to go stale, and a 4:3 picture is two fillRects. */
   await bench('pic');
-  const put = await page.evaluate(async () => {
+  /** The fixture, brought in. Reusable, because two of the cutting tools
+      below genuinely destroy it and the ones after them need it back. */
+  const bringTheFixtureIn = () => page.evaluate(async () => {
     const c = document.createElement('canvas');
     c.width = 400;
     c.height = 300;
@@ -452,6 +463,7 @@ try {
     input.dispatchEvent(new Event('change', { bubbles: true }));
     return true;
   });
+  const put = await bringTheFixtureIn();
   check('a picture off the phone can be brought in', put === true,
     'the file input is not where this walk looks for it');
   await page.waitForTimeout(1200);
@@ -809,6 +821,97 @@ try {
     check('      and the bar goes away once it is done',
       (await page.locator('[data-postcropbar]:visible').count()) === 0,
       'a crop bar that stays up is a room that thinks it is still cropping');
+  }
+
+  /* ── Drawing round a thing, which is the third way to cut one out ────
+ 
+     Carli, 7 October 2026: *"Gaan aan met die free-hand cut."*
+ 
+     The picture is square by now — the crop above made it so — and it is
+     still half red and half blue, so tracing round the blue half and
+     keeping it is a reading nothing else can produce: red to nought, blue
+     still there. A lasso that silently did nothing would leave both.
+ 
+     `check:lasso` holds the arithmetic. What a browser has to answer is that
+     the finger reaches the path, the path reaches the mask, and the mask
+     reaches the picture. */
+  await bench('pic');
+  check('the room offers to draw round something',
+    (await page.locator('[data-postdrawstart]').count()) > 0,
+    'two ways to cut something out, both of which need the thing to be a'
+    + ' person or to be small');
+
+  if ((await page.locator('[data-postdrawstart]').count()) > 0) {
+    await page.locator('[data-postdrawstart]').first().click();
+    await page.waitForTimeout(600);
+    check('  and the bar to draw with is on the screen',
+      (await page.locator('[data-postdrawbar]:visible').count()) > 0,
+      'the bench closes so the picture can be traced, so a Keep button behind'
+      + ' it is a Keep button nobody can press');
+    check('    with nothing to press until there is a shape',
+      await page.locator('[data-postdrawkeep]').first().isDisabled(),
+      'a tap is not a shape, and cutting along one leaves a photograph of'
+      + ' nothing');
+
+    /* Round the blue half. The picture is square and drawn to the full width
+       of the glass, centred, so its own middle band is the canvas's middle
+       band and the right half of that is blue. */
+    const glass = await page.locator('[data-postcanvas]').first().boundingBox();
+    if (glass) {
+      const midY = glass.y + glass.height / 2;
+      const high = glass.width / 2 - 20;
+      const path = [
+        [glass.x + glass.width * 0.56, midY - high],
+        [glass.x + glass.width * 0.98, midY - high],
+        [glass.x + glass.width * 0.98, midY + high],
+        [glass.x + glass.width * 0.56, midY + high],
+        [glass.x + glass.width * 0.56, midY - high],
+      ];
+      await page.mouse.move(path[0][0], path[0][1]);
+      await page.mouse.down();
+      /* Walked in steps rather than jumped from corner to corner. The path
+         records a point only every six thousandths of the picture, so a
+         single move along one side is two points and the shape comes out a
+         line — which is the walk's own fault and would read as the tool
+         being broken. */
+      for (let leg = 1; leg < path.length; leg += 1) {
+        const [fromX, fromY] = path[leg - 1];
+        const [toX, toY] = path[leg];
+        for (let step = 1; step <= 12; step += 1) {
+          await page.mouse.move(
+            fromX + ((toX - fromX) * step) / 12,
+            fromY + ((toY - fromY) * step) / 12,
+          );
+        }
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(500);
+
+      check('  and tracing round something makes a shape to act on',
+        !(await page.locator('[data-postdrawkeep]').first().isDisabled()),
+        'the finger went round the picture and the room still thinks there is'
+        + ' no shape, so the path is not reaching it');
+
+      await page.locator('[data-postdrawkeep]').first().click();
+      await page.waitForTimeout(1200);
+      const left = await colours();
+      check('    and keeping it really drops everything outside it',
+        left !== null && left.blue > 1000 && left.red < 200,
+        `red ${left?.red}, blue ${left?.blue} — traced round the blue half and`
+        + ' kept it, so red should be gone; both still there is a cut that'
+        + ' drew a line and changed no pixels');
+      check('      and the bar goes away once it is done',
+        (await page.locator('[data-postdrawbar]:visible').count()) === 0);
+    }
+
+    /* And the fixture back, because the two tools above really do destroy
+       it — which is the point of them — and three assertions below need a
+       picture with a red half, a blue half and a yellow seam in it. The
+       first run without this reported the eraser broken, and the eraser was
+       fine: the thing it was aimed at had been cut away. */
+    await bench('pic');
+    await bringTheFixtureIn();
+    await page.waitForTimeout(1200);
   }
 
   /* ── What kind of file, and the one warning that has to reach her ────

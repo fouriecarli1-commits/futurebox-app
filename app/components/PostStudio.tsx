@@ -44,7 +44,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Crop as CropIcon, Download, Image as ImageIcon, Loader2, Plus, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, X,
+  Crop as CropIcon, Download, Image as ImageIcon, Lasso, Loader2, Plus, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, X,
 } from 'lucide-react';
 import {
   POST_SIZES, clashes, fitText, moveInside, sizeById,
@@ -74,6 +74,9 @@ import {
 import {
   FORMATS, SCALES, formatOf, holdsClear, nameFor, type FileKind, type Scale,
 } from '../lib/postfile';
+import {
+  cutAlong, trace, whyNot, worthCutting, type Path as Traced,
+} from '../lib/lasso';
 import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
@@ -376,6 +379,22 @@ export default function PostStudio({
   const [kind, setKind] = useState<FileKind>('png');
   const [scale, setScale] = useState<Scale>(1);
   const grip = useRef<Grip>(null);
+
+  /* ── Drawing round a thing, which is the third way to cut one out ──────
+ 
+     Carli, 7 October 2026: *"Gaan aan met die free-hand cut."*
+ 
+     `cutout.ts` finds a person and knows nothing about a guitar; `erase.ts`
+     grows the picture over something small and cannot invent what was behind
+     something big. This one works on anything, because the person holding
+     the phone already knows where the edges are. `lib/lasso.ts` carries the
+     comparison and the arithmetic.
+ 
+     `null` is not tracing. A path is — and it is held in shares of the
+     picture, like the crop box, so it still means the same thing if the
+     picture is replaced underneath it. */
+  const [traced, setTraced] = useState<Traced | null>(null);
+  const tracingNow = useRef(false);
   /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
      button that opens it — see the note on the cutting room's. */
   const [asking, setAsking] = useState(false);
@@ -502,7 +521,7 @@ export default function PostStudio({
          at zoom 1 is contain, so every edge of it is on the glass and every
          corner of the box can be reached. A crop dragged over a picture whose
          edges are off the screen is a crop you cannot see the result of. */
-      const at = place(picture, size, cropBox ? WHOLE_VIEW : crop);
+      const at = place(picture, size, cropBox || traced ? WHOLE_VIEW : crop);
       /* The look goes on the PICTURE and comes off again before anything is
          written. Words under a blur are not a style, they are a mistake, and
          a filter left set would put every one of them through it. */
@@ -619,9 +638,68 @@ export default function PostStudio({
       }
     }
 
+    /* ── The traced path, over everything, and never on the file ───────
+ 
+        Drawn on the one surface for the same reason the crop box is: an
+        overlay in HTML has to be positioned against a canvas whose size on
+        screen is whatever the phone gives it, and the two disagree by a pixel
+        or two at every width — which on a line somebody is following with a
+        finger is the line not being where the finger is.
+ 
+        Shaded once there is a shape, so what is being thrown away is visible
+        while she is still drawing it rather than after she has pressed. */
+    if (guides && picture && traced && traced.length > 0) {
+      const at = place(picture, size, WHOLE_VIEW);
+      const on = (dot: { readonly x: number; readonly y: number }) => ({
+        x: at.left + dot.x * at.width,
+        y: at.top + dot.y * at.height,
+      });
+      const line = () => {
+        ctx.beginPath();
+        const head = on(traced[0]);
+        ctx.moveTo(head.x, head.y);
+        for (const dot of traced.slice(1)) {
+          const put = on(dot);
+          ctx.lineTo(put.x, put.y);
+        }
+      };
+
+      if (traced.length >= 3) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.58)';
+        ctx.beginPath();
+        ctx.rect(0, 0, size.width, size.height);
+        line();
+        ctx.closePath();
+        ctx.fill('evenodd');
+        ctx.restore();
+      }
+
+      /* Two strokes, dark under light, so the line is visible on a white
+         wall and on a black jacket. One colour is a line that disappears
+         over half the photographs anybody owns. */
+      line();
+      if (traced.length >= 3) ctx.closePath();
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+      ctx.lineWidth = Math.max(4, size.width / 150);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+      ctx.lineWidth = Math.max(2, size.width / 300);
+      ctx.stroke();
+
+      /* Where it started, so she can see what she is coming back to. */
+      const head = on(traced[0]);
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, Math.max(5, size.width / 120), 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.fill();
+    }
+
     /* The guides last, over everything, and never on the exported file —
        `draw(…, false)` is what the download uses. */
-    if (guides && size.furniture && !cropBox) {
+    if (guides && size.furniture && !cropBox && !traced) {
       const safe = boxOf(ALL);
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
       ctx.fillRect(0, 0, size.width, safe.top * size.height);
@@ -660,7 +738,7 @@ export default function PostStudio({
      one colour and half another rather than a photograph. */
   useEffect(() => {
     if (canvas.current) draw(canvas.current, true);
-  }, [facesIn, size, picture, words, back, crop, look, cropBox]);
+  }, [facesIn, size, picture, words, back, crop, look, cropBox, traced]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
 
@@ -704,6 +782,18 @@ export default function PostStudio({
   };
 
   const grab = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (traced) {
+      const put = shareAt(event);
+      if (!put) return;
+      tracingNow.current = true;
+      /* A new stroke starts the shape again rather than joining on to the
+         last one. Lifting a thumb and putting it down somewhere else would
+         draw a straight line across everything in between — the same
+         decision the eraser made, for the same reason. */
+      setTraced([{ x: put.x, y: put.y }]);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      return;
+    }
     if (cropBox) {
       const put = shareAt(event);
       if (!put) return;
@@ -723,6 +813,13 @@ export default function PostStudio({
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (traced) {
+      if (!tracingNow.current) return;
+      const put = shareAt(event);
+      if (!put) return;
+      setTraced((now) => (now ? trace(now, put) : now));
+      return;
+    }
     if (cropBox) {
       const put = shareAt(event);
       const held = grip.current;
@@ -755,6 +852,7 @@ export default function PostStudio({
   const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     lastAt.current = null;
     grip.current = null;
+    tracingNow.current = false;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -1037,6 +1135,53 @@ export default function PostStudio({
   };
 
   /**
+   * The picture cut along what she drew: keep what is inside, or lose it.
+   *
+   * Replaces the picture, for the same reason the crop does — a selection
+   * held beside the picture would have to be applied by the export, the
+   * reader, the hand-over and both other cutting tools, and the one that
+   * forgot would work on the uncut photograph.
+   *
+   * The mask and the compositing are in `lib/lasso.ts`; what is here is the
+   * sentence she reads when the shape is not one.
+   */
+  const cutRound = (keep: boolean): void => {
+    const path = traced;
+    if (!picture || !path) return;
+    const why = whyNot(path);
+    if (why !== null) {
+      setSaid(why === 'all'
+        ? t('post.drewAll', 'That is the whole picture. Draw round the part you want.')
+        : t('post.drewLittle', 'Draw right round the thing, with your finger on the picture. A tap is not a shape.'));
+      return;
+    }
+    const of = {
+      width: picture.naturalWidth || picture.width,
+      height: picture.naturalHeight || picture.height,
+    };
+    const made = cutAlong(picture, path, keep, of);
+    if (!made) {
+      setSaid(t('post.drewLittle', 'Draw right round the thing, with your finger on the picture. A tap is not a shape.'));
+      return;
+    }
+    asPicture(
+      made,
+      (one) => {
+        setPicture(one);
+        setTraced(null);
+        /* Not the mask from the background remover: that one belongs to a
+           picture that no longer exists, and changing the edge after this
+           would put the old cut back. */
+        lastMask.current = null;
+        setSaid(keep
+          ? t('post.drewKept', 'Kept what you drew round. Put a colour behind it, or leave it see-through.')
+          : t('post.drewGone', 'Taken out. There is nothing behind it \u2014 put a colour behind the picture if you want one.'));
+      },
+      () => setSaid(t('post.drewFailed', 'That could not be cut out.')),
+    );
+  };
+
+  /**
    * The same cut, with a different edge.
    *
    * From the mask that is already in hand, so it is instant. Asking the model
@@ -1283,6 +1428,91 @@ export default function PostStudio({
      While it is open the bench closes itself, so the glass is the whole
      photograph with the box over it. There is nothing to set in a panel: the
      tool is the gesture, and the two buttons are "do it" and "don't". */
+  /** The way into the free-hand cut, on the picture's own bench. */
+  const traceStart = picture ? (
+    <div className="space-y-2">
+      <p className={MIKRO}>{t('post.drawRound', 'Draw around something')}</p>
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {t(
+          'post.drawRoundWhy',
+          'Trace round anything with your finger and keep it, or take it out. Slower than the other two, and it works on anything \u2014 a guitar, a dog, a bottle \u2014 not only on people.',
+        )}
+      </p>
+      <button
+        type="button"
+        data-postdrawstart
+        onClick={() => { setTraced([]); setBench(null); setSaid(''); }}
+        className={LEEG}
+      >
+        <Lasso className="h-3.5 w-3.5" />
+        {t('post.drawRoundStart', 'Start drawing')}
+      </button>
+    </div>
+  ) : null;
+
+  /**
+   * And the part over the bar, for the length of one gesture.
+   *
+   * The same shape as the crop's strip and for the same reason: the gesture
+   * is on the picture, a bench open over the bottom of the glass covers the
+   * part she is tracing, so starting closes it — and a panel somebody cannot
+   * see is a button somebody cannot press.
+   */
+  const traceStrip = picture && traced ? (
+    <div
+      data-postdrawbar
+      className="flex-shrink-0 space-y-2 border-t px-4 py-3"
+      style={asRoom
+        ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
+        : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
+    >
+      <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+        {worthCutting(traced)
+          ? t('post.drawReady', 'Now keep what you drew round, or take it out. Draw again to start the shape over.')
+          : t('post.drawHow', 'Put your finger on the picture and trace right round the thing. Lift it when you get back to where you started.')}
+      </p>
+      <div className={RY}>
+        <button
+          type="button"
+          data-postdrawkeep
+          disabled={!worthCutting(traced)}
+          onClick={() => cutRound(true)}
+          className={`${VUL} disabled:opacity-40`}
+        >
+          {t('post.drawKeep', 'Keep this')}
+        </button>
+        <button
+          type="button"
+          data-postdrawdrop
+          disabled={!worthCutting(traced)}
+          onClick={() => cutRound(false)}
+          className={`${LEEG} disabled:opacity-40`}
+        >
+          {t('post.drawDrop', 'Take this out')}
+        </button>
+      </div>
+      <div className={RY}>
+        <button
+          type="button"
+          data-postdrawagain
+          disabled={traced.length === 0}
+          onClick={() => { setTraced([]); setSaid(''); }}
+          className={`${LEEG} disabled:opacity-40`}
+        >
+          {t('post.drawAgain', 'Start the shape over')}
+        </button>
+        <button
+          type="button"
+          data-postdrawstop
+          onClick={() => { setTraced(null); setSaid(''); }}
+          className={LEEG}
+        >
+          {t('post.drawStop', 'Leave it')}
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   /** The part that lives on the bench: the way in, and what it is for. */
   const cropStart = picture ? (
     <div className="space-y-2">
@@ -1634,6 +1864,14 @@ export default function PostStudio({
         )}
       </div>
     )}
+
+    {/* ── The third way, under the two that are quicker ─────────────────
+ 
+        Order on purpose: the model first because it is one press, the
+        eraser second because it is two, and this last because it is the
+        slow one. Somebody who reaches the bottom of this bench is somebody
+        the first two could not help, which is exactly who this is for. */}
+    {traceStart}
     </div>
   );
 
@@ -2270,8 +2508,8 @@ export default function PostStudio({
             /* `none` while cropping as well as while panning. A corner drag
                that the page treats as a scroll moves the room instead of the
                box, and on a phone that reads as the handle not working. */
-            touchAction: movable || cropBox ? 'none' : 'auto',
-            cursor: cropBox ? 'crosshair' : movable ? 'grab' : 'default',
+            touchAction: movable || cropBox || traced ? 'none' : 'auto',
+            cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
           }}
         />
 
@@ -2304,6 +2542,7 @@ export default function PostStudio({
       </div>
 
       {cropStrip}
+      {traceStrip}
 
       {/* ── The copilot, over the room ────────────────────────────────
  

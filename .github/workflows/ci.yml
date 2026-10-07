@@ -1099,6 +1099,12 @@ jobs:
       - name: Every export format is one the canvas really writes
         run: npm run check:postfile
 
+      # A finger traced round something at the edge leaves the picture on
+      # nearly every stroke, and a signed area makes the tool work for one
+      # hand and not the other. Neither throws anywhere.
+      - name: A traced path stays inside the picture, whichever way round
+        run: npm run check:lasso
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever
