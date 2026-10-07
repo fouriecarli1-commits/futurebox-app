@@ -45,8 +45,25 @@
  * two features belong on the same screen.
  */
 
-/** How close in, as a multiple of the basis. 1 is the basis itself. */
-export const ZOOM_MIN = 1;
+/**
+ * How close in, as a multiple of the basis. 1 is the basis itself.
+ *
+ * ── Below one, since 7 October ───────────────────────────────────────────
+ *
+ * Carli: *"Die foto moet ook kan shrink onder 1.00 dit moet ook gedrag kan
+ * word soos mens die behoefte het."*
+ *
+ * It was 1, and 1 meant "the picture at least fills the frame" — so the
+ * smallest a photograph could be was edge to edge, and a post of a small
+ * picture on a colour, or on nothing, was not possible at all. That is an
+ * ordinary thing to want: a square photo in the middle of a story, a logo on
+ * a background, a picture with room around it for words.
+ *
+ * A fifth, not a tenth. At 0.1 a 4000-pixel photograph is 100 pixels in a
+ * 1080 frame and the slider's useful range is all squeezed into its left-hand
+ * end; a fifth is small enough for anything anybody actually posts.
+ */
+export const ZOOM_MIN = 0.2;
 export const ZOOM_MAX = 4;
 export const ZOOM_STEP = 0.05;
 
@@ -85,6 +102,22 @@ const held = (n: number, low: number, high: number): number =>
   Math.min(high, Math.max(low, Number.isFinite(n) ? n : low));
 
 /**
+ * The zoom, with a nonsense value landing on the basis rather than the floor.
+ *
+ * `held` falls back to its LOW end, which was the right answer while the low
+ * end was 1: the basis and the floor were the same number, so a corrupt zoom
+ * drew the picture exactly covering the frame.
+ *
+ * On 7 October the floor became a fifth, so Carli could shrink a picture
+ * inside the frame — and `held`'s fallback silently became "draw it at a
+ * fifth". `check:postcrop` caught it the same minute: 972 placements where
+ * `fill` showed background through, every one of them a NaN zoom. A value
+ * nobody can read should land on the ordinary case, not on the extreme.
+ */
+const saneZoom = (n: number): number =>
+  (Number.isFinite(n) ? Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, n)) : 1);
+
+/**
  * Where a picture lands in a frame, and how much room it has to move.
  *
  * Everything the screen draws comes from here, so the screen cannot place a
@@ -101,14 +134,32 @@ export function place(picture: Size, frame: Size, crop: Crop): Placed {
      between the two bases. */
   const basis = crop.basis === 'fill' ? Math.max(across, down) : Math.min(across, down);
 
-  const scale = basis * held(crop.zoom, ZOOM_MIN, ZOOM_MAX);
+  const scale = basis * saneZoom(crop.zoom);
   const width = wide * scale;
   const height = tall * scale;
 
-  /* Slack is never negative: a picture narrower than the frame has nowhere
-     to go, and `Math.max(0, …)` is what makes the stored fraction safe. */
-  const slackX = Math.max(0, (width - frame.width) / 2);
-  const slackY = Math.max(0, (height - frame.height) / 2);
+  /* ── The room to move, which exists in BOTH directions ────────────────
+ 
+     This was `Math.max(0, (width - frame.width) / 2)`: the picture may be
+     pushed about only while it is bigger than the frame, because the thing
+     being protected was the frame staying covered.
+ 
+     That is right for `fill` and wrong for everything else. Carli, 7 October
+     2026: *"Die foto moet ook kan shrink onder 1.00 dit moet ook gedrag kan
+     word soos mens die behoefte het."* A picture SMALLER than the frame has
+     exactly as much room to move — it is just that moving it slides it about
+     inside the frame instead of sliding the frame about inside it. Nailed to
+     the centre, a small picture can only ever be a small picture in the
+     middle, which is not a layout anybody chose.
+ 
+     So: the distance between the two, whichever is bigger, halved. At a
+     fraction of 1 the picture's edge meets the frame's edge in both cases —
+     the far edge of the photograph when it is the larger, its own edge when
+     it is the smaller — and neither can be pushed past that. The pan is
+     still a share of whatever room there happens to be, so there is still no
+     stored number that can be out of range. */
+  const slackX = Math.abs(width - frame.width) / 2;
+  const slackY = Math.abs(height - frame.height) / 2;
 
   return {
     left: (frame.width - width) / 2 + held(crop.x, -1, 1) * slackX,
@@ -120,7 +171,14 @@ export function place(picture: Size, frame: Size, crop: Crop): Placed {
   };
 }
 
-/** Whether there is anything to drag. Nothing to pan is not a broken drag. */
+/**
+ * Whether there is anything to drag. Nothing to pan is not a broken drag.
+ *
+ * True of a picture smaller than the frame as well, since `slackX` became the
+ * distance between the two rather than the overhang. The only thing with
+ * nowhere to go now is a picture that matches the frame exactly, which is
+ * also the only case where a drag would genuinely do nothing.
+ */
 export const canMove = (at: Placed): boolean => at.slackX > 0.5 || at.slackY > 0.5;
 
 /**
@@ -145,7 +203,7 @@ export function moveBy(crop: Crop, at: Placed, byX: number, byY: number): Crop {
 
 /** Closer in or further out, with the ends respected. */
 export const zoomTo = (crop: Crop, to: number): Crop =>
-  ({ ...crop, zoom: held(to, ZOOM_MIN, ZOOM_MAX) });
+  ({ ...crop, zoom: saneZoom(to) });
 
 /**
  * Whether the picture leaves any of the frame uncovered.

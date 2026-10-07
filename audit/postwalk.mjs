@@ -612,6 +612,90 @@ try {
     (await page.locator('[data-postgap]').count()) > 0,
     'background where a photograph was expected, with nothing saying why');
 
+  /* ── Smaller than the frame, and movable while it is ─────────────────
+ 
+     Carli, 7 October 2026: *"Die foto moet ook kan shrink onder 1.00 dit moet
+     ook gedrag kan word soos mens die behoefte het."*
+ 
+     Two separate things, and the second is the one that was missing for a
+     reason worth catching: the slack was the picture's OVERHANG, so a
+     picture smaller than the frame had none and was nailed to the middle.
+     The slider's floor and the drag are both checked, because a slider that
+     goes below one over a picture that cannot then be placed anywhere is
+     half a feature. */
+  await page.locator('[data-postzoom]').first().fill('0.4');
+  await page.waitForTimeout(600);
+  const shrunk = await colours();
+  check('the picture can be made smaller than the frame',
+    shrunk !== null && whole !== null && shrunk.green > whole.green,
+    `${whole?.green} → ${shrunk?.green} background pixels — the slider's floor`
+    + ' is still at one, so its whole left-hand half does nothing');
+
+  check('  and the screen still offers to move it',
+    (await page.locator('[data-postcanvas][data-postmovable="yes"]').count()) > 0,
+    'a small picture nailed to the middle can only ever be a small picture in'
+    + ' the middle, which is not a layout anybody chose');
+
+  await shut();
+  await page.locator('[data-postcanvas]').first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const smallBox = await page.locator('[data-postcanvas]').first().boundingBox();
+  const smallBand = await page.evaluate(() => {
+    const glass = document.querySelector('[data-postcanvas]');
+    const dock = document.querySelector('[data-cutdock]');
+    if (!glass) return null;
+    const r = glass.getBoundingClientRect();
+    const floor = dock ? dock.getBoundingClientRect().top : window.innerHeight;
+    const top = Math.max(r.top, 0);
+    const bottom = Math.min(r.bottom, floor);
+    return bottom - top < 40 ? null : { middle: Math.round((top + bottom) / 2) };
+  });
+  let moved = null;
+  if (smallBox && smallBand) {
+    const y = smallBand.middle;
+    await page.mouse.move(smallBox.x + smallBox.width * 0.5, y);
+    await page.mouse.down();
+    for (let step = 1; step <= 10; step += 1) {
+      await page.mouse.move(smallBox.x + smallBox.width * (0.5 - 0.04 * step), y);
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(500);
+    moved = await page.evaluate(() => {
+      /* Where the photograph sits on the glass, read as the first and last
+         column holding any of it. Colour counts cannot answer this one: a
+         small picture dragged sideways shows the same pixels, just
+         somewhere else. */
+      const el = document.querySelector('[data-postcanvas]');
+      const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+      let first = -1;
+      let last = -1;
+      for (let x = 0; x < el.width; x += 1) {
+        for (let y = 0; y < el.height; y += 1) {
+          const i = (y * el.width + x) * 4;
+          const red = d[i] > 170 && d[i + 1] < 90 && d[i + 2] < 90;
+          const blue = d[i + 2] > 170 && d[i] < 90 && d[i + 1] < 90;
+          if (red || blue) {
+            if (first < 0) first = x;
+            last = x;
+            break;
+          }
+        }
+      }
+      return { first, last, width: el.width };
+    });
+  }
+  check('  and dragging a small picture really moves it inside the frame',
+    moved !== null && moved.first >= 0 && moved.first < Math.round(moved.width * 0.12),
+    `the photograph sits between ${moved?.first} and ${moved?.last} of`
+    + ` ${moved?.width} — dragged to the left edge it should start at nought,`
+    + ' and a picture still centred is one nailed to the middle');
+
+  await bench('frame');
+  await page.locator('[data-postcentre]').first().click();
+  await page.locator('[data-postzoom]').first().fill('1');
+  await page.locator('[data-postbasis="fill"]').first().click();
+  await page.waitForTimeout(500);
+
   /* ── How it reads, which is free and on the device ───────────────────
  
      Carli, 7 October 2026, listing a modern editor's tools. Half of that

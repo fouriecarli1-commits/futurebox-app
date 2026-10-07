@@ -64,11 +64,25 @@ const MAD = [0, 1, -1, 10, -10, 999, Number.NaN, Number.POSITIVE_INFINITY, Numbe
 const FRAMES: readonly Size[] = [STORY, SQUARE, { width: 1920, height: 1080 }];
 const PICTURES: readonly Size[] = [PHOTO, { width: 3024, height: 4032 }, { width: 1000, height: 1000 }, { width: 50, height: 4000 }];
 
+/* ── At one and above. Below one is a choice now, not a leak ──────────
+ 
+   This swept every zoom including `ZOOM_MIN`, and said `fill` never shows
+   background. That was true while `ZOOM_MIN` was 1 — `fill` scales the
+   picture until it covers, and a multiple of one or more of that still
+   covers.
+ 
+   Carli, 7 October 2026: *"Die foto moet ook kan shrink onder 1.00."* Below
+   one it does not cover, and that is the whole point of being allowed below
+   one: a small photograph on a colour, with room around it for words. So the
+   rule splits — above one it still may not leak, below one it must, and the
+   screen must be told either way. A single rule over both would have had to
+   be weakened to pass, and a weakened rule is the one that stops catching
+   the wedge down the side of a transparent post. */
 let leaks = 0;
 let tried = 0;
 for (const frame of FRAMES) {
   for (const picture of PICTURES) {
-    for (const zoom of [ZOOM_MIN, 1.37, 2, ZOOM_MAX, 0, -5, Number.NaN]) {
+    for (const zoom of [1, 1.37, 2, ZOOM_MAX, 999, Number.NaN]) {
       for (const x of MAD) {
         for (const y of MAD) {
           tried += 1;
@@ -79,9 +93,25 @@ for (const frame of FRAMES) {
     }
   }
 }
-ok(`fill leaves no part of the frame uncovered, in ${tried} placements`, leaks === 0,
+ok(`fill at one and above leaves no part of the frame uncovered, in ${tried} placements`,
+  leaks === 0,
   `${leaks} of them showed background through — which on a transparent post is`
   + ' an invisible wedge down one side until it is over somebody’s video');
+
+/* And shrinking really shrinks, rather than being clamped back to covering.
+   `ZOOM_MIN` moved from 1 to a fifth; a `held()` left at the old floor would
+   make every value below one behave as one, and the slider would simply stop
+   doing anything on its left-hand half. */
+const small = place(PHOTO, STORY, { basis: 'fill', zoom: ZOOM_MIN, x: 0, y: 0 });
+const atOne = place(PHOTO, STORY, { basis: 'fill', zoom: 1, x: 0, y: 0 });
+ok('  and below one it really is smaller',
+  small.width < atOne.width * 0.5,
+  `${Math.round(small.width)} against ${Math.round(atOne.width)} at one — a floor`
+  + ' left at 1 makes the whole left half of the slider do nothing');
+ok('    and the screen is told the rest is background',
+  showsThrough(small, STORY),
+  'a picture smaller than the frame with nothing said about it is a'
+  + ' see-through wedge she finds out about afterwards');
 
 /* And the reason it cannot: the stored pan is a share, not a distance. */
 const far = place(PHOTO, STORY, { basis: 'fill', zoom: 1, x: 999, y: 999 });
@@ -97,28 +127,48 @@ ok('the whole picture fits inside the frame with nothing lost',
   fits.width <= STORY.width + 0.5 && fits.height <= STORY.height + 0.5,
   `${Math.round(fits.width)}x${Math.round(fits.height)}`);
 ok('  and the screen is told the rest is background', showsThrough(fits, STORY));
-ok('  and there is nothing to drag, because there is no slack', !canMove(fits),
-  'a drag that cannot move anything reads as a broken drag');
 
-/* And the DRAWING has to agree with that sentence.
+/* ── A letterboxed picture can be moved, and cannot be pushed out ─────
  
-   `Math.max(0, …)` on the slack looked load-bearing and nothing here was
-   testing it: negative slack still produced a bounded, sane-looking pan
-   inside the letterbox, so breaking it on purpose changed the behaviour and
-   failed nothing. That is a rule missing rather than a bug found — the
-   screen says "the whole picture fits, so there is nothing to move", and a
-   pan that moves it anyway makes that sentence a lie. Centred means centred,
-   at every value the pan can hold. */
-const stuck = MAD.map((one) => place(PHOTO, STORY, { basis: 'whole', zoom: 1, x: one, y: one }));
-ok('  and no pan value can shift a picture that has nowhere to go',
-  stuck.every((one) => near(one.left, fits.left) && near(one.top, fits.top)),
-  /* Both axes in the message. The first version printed only the ones whose
-     `left` had moved, and the break it was written for moved `top` — so it
-     failed with an empty detail line, which is a failure nobody can act on. */
-  stuck.filter((one) => !near(one.left, fits.left) || !near(one.top, fits.top))
-    .map((one) => `${Math.round(one.left)},${Math.round(one.top)}`).join(' | ')
-    + ` against ${Math.round(fits.left)},${Math.round(fits.top)} — the screen`
-    + ' says it cannot be moved');
+   This said "there is nothing to drag, because there is no slack", and the
+   slack was `Math.max(0, overhang)` — nought for a picture smaller than the
+   frame, so it was nailed to the middle.
+ 
+   Carli, 7 October 2026: *"dit moet ook gedrag kan word soos mens die
+   behoefte het."* A picture smaller than the frame has exactly as much room
+   to move as one bigger than it; moving it slides it about INSIDE the frame
+   instead of sliding the frame about inside it, and nailed to the centre it
+   can only ever be a small picture in the middle.
+ 
+   So the invariant that replaces "cannot be moved" is "cannot be pushed
+   out". That is the one that was really being protected: a stored pan that
+   means more than the room available is how a picture ends up half off the
+   edge of a post. Every value the pan can hold, including the ones that are
+   not numbers. */
+ok('  and it CAN be dragged, because a small picture has room inside the frame',
+  canMove(fits),
+  'nailed to the middle, a picture smaller than the frame can only ever be a'
+  + ' small picture in the middle, which is not a layout anybody chose');
+
+const shifted = MAD.map((one) => place(PHOTO, STORY, { basis: 'whole', zoom: 1, x: one, y: one }));
+const held = shifted.filter((one) => one.left < -0.5 || one.top < -0.5
+  || one.left + one.width > STORY.width + 0.5
+  || one.top + one.height > STORY.height + 0.5);
+ok('    and no pan value can push it outside the frame',
+  held.length === 0,
+  held.map((one) => `${Math.round(one.left)},${Math.round(one.top)} `
+    + `${Math.round(one.width)}x${Math.round(one.height)}`).join(' | ')
+  + ` in ${STORY.width}x${STORY.height} — a pan that means more than the room`
+  + ' there is, is a picture half off the edge of a post');
+
+/* And it reaches the edge, rather than stopping somewhere short of it: a
+   pan of 1 is "as far as it goes", and a small picture's as-far-as-it-goes
+   is its own edge against the frame's. */
+const corner = place(PHOTO, STORY, { basis: 'whole', zoom: 1, x: -1, y: -1 });
+ok('    and a pan of one really reaches the edge',
+  near(corner.left, 0) && near(corner.top, 0),
+  `${Math.round(corner.left)},${Math.round(corner.top)} — stopping short means`
+  + ' a corner of the frame she can never put the picture into');
 
 /* ── Zoom is a multiple of the basis, in both bases ─────────────────────── */
 
