@@ -62,7 +62,7 @@ import {
   AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
 } from '../lib/postlook';
 import { canRead, readWords, tidy, type Readable } from '../lib/ocr';
-import { cutOut } from '../lib/cutout';
+import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
@@ -170,6 +170,10 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
      roll, and the file they picked may have been a crop they made elsewhere. */
   const [cutting, setCutting] = useState<number | null>(null);
   const [whole, setWhole] = useState<HTMLImageElement | null>(null);
+  /* The model's answer and the picture it was asked about, kept so the edge
+     can be changed without six megabytes and a second of waiting. */
+  const lastMask = useRef<{ readonly mask: HTMLCanvasElement; readonly of: HTMLImageElement } | null>(null);
+  const [edge, setEdge] = useState<EdgeId>('normal');
   /* Painting over the thing to take out.
  
      `rubbing` is the mode; `smear` is one byte per pixel OF THE PICTURE, not
@@ -608,6 +612,47 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
    * without knowing anything happened. A separate "cut-out layer" would have
    * meant every one of those learning about it.
    */
+  /**
+   * A canvas handed back as the picture.
+   *
+   * Three places needed this — the background remover, changing its edge, and
+   * the eraser — and each had its own `toDataURL`. `check:postpaid` counts
+   * every way the studio turns a canvas into a file, because every one of
+   * them is a possible road off the device, and it had grown an exception
+   * for each. Three exceptions with the same reason is a helper that has not
+   * been written yet.
+   *
+   * Nothing here leaves the page: the data URL becomes an `<img>` which
+   * becomes the picture, so the crop, the look and the paid export all go on
+   * working without knowing anything happened.
+   */
+  const asPicture = (made: HTMLCanvasElement, then: (one: HTMLImageElement) => void, failed: () => void): void => {
+    const img = new Image();
+    img.onload = () => then(img);
+    img.onerror = failed;
+    img.src = made.toDataURL('image/png');
+  };
+
+  /**
+   * The same cut, with a different edge.
+   *
+   * From the mask that is already in hand, so it is instant. Asking the model
+   * again would be six megabytes of engine and a second of waiting to change
+   * a number it has no opinion about.
+   */
+  const cutAgain = (how: EdgeId): void => {
+    setEdge(how);
+    const had = lastMask.current;
+    if (!had) return;
+    const wide = had.of.naturalWidth || had.of.width;
+    const tall = had.of.naturalHeight || had.of.height;
+    asPicture(
+      maskOnto(had.of, had.mask, wide, tall, edgeOf(how)),
+      (one) => setPicture(one),
+      () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')),
+    );
+  };
+
   /* ── Painting over the thing to take out ───────────────────────────── */
 
   /** The picture drawn whole, with whatever has been painted over it in red. */
@@ -691,12 +736,9 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
     if (!picture || !mask) return;
     const wide = picture.naturalWidth || picture.width;
     const tall = picture.naturalHeight || picture.height;
-    /* `rubbed`, not `sheet`.
- 
-       The export's canvas is called `sheet` and that one IS the road out of
-       this app. Two canvases with the same name, one of which leaves and one
-       of which does not, is the sort of thing a rule about roads out has to
-       guess at — and so does the next person reading it. */
+    /* `rubbed`, not `sheet`. The export's canvas is called `sheet` and that
+       one IS the road out of this app; two canvases with one name, one of
+       which leaves, is a thing the next reader has to guess at. */
     const rubbed = document.createElement('canvas');
     rubbed.width = wide;
     rubbed.height = tall;
@@ -712,17 +754,14 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
       return;
     }
     ctx.putImageData(done.pixels, 0, 0);
-    const made = new Image();
-    made.onload = () => {
+    asPicture(rubbed, (one) => {
       setWhole(picture);
-      setPicture(made);
+      setPicture(one);
       smear.current = null;
       setSmeared(0);
       setRubbing(false);
       setSaid(t('post.rubDone', 'Taken out. If it smeared, the thing behind it had a pattern \u2014 put it back and try a smaller patch.'));
-    };
-    made.onerror = () => setSaid(t('post.rubFailed', 'That could not be taken out.'));
-    made.src = rubbed.toDataURL('image/png');
+    }, () => setSaid(t('post.rubFailed', 'That could not be taken out.')));
   };
 
   const cutBackground = async (): Promise<void> => {
@@ -730,21 +769,19 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
     setSaid('');
     setCutting(0);
     try {
-      const cut = await cutOut(picture, (part) => setCutting(part));
+      const cut = await cutOut(picture, (part) => setCutting(part), edgeOf(edge));
       if (!cut.ok) {
         setSaid(cut.why === 'nobody'
           ? t('post.cutNobody', 'No person could be found in this picture. This looks for people, and knows nothing about objects.')
           : t('post.cutFailed', 'The background could not be taken out of that picture.'));
         return;
       }
-      const made = new Image();
-      made.onload = () => {
+      lastMask.current = { mask: cut.mask, of: picture };
+      asPicture(cut.canvas, (one) => {
         setWhole(picture);
-        setPicture(made);
+        setPicture(one);
         setSaid(t('post.cutDone', 'The background is out. Take the background colour off as well for a see-through picture.'));
-      };
-      made.onerror = () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.'));
-      made.src = cut.canvas.toDataURL('image/png');
+      }, () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')));
     } finally {
       setCutting(null);
     }
@@ -1248,6 +1285,34 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
                 ? `${Math.round(cutting * 100)}%`
                 : t('post.cutGo', 'Take the background out')}
             </button>
+            {/* How hard the cut edge is.
+ 
+                Carli, 7 October 2026, with a photograph of herself cut out:
+                *"Its not looking perfect."* The model answers at 256 square
+                whatever it is given, so on a phone photograph one mask pixel
+                is a block ten or more across and the edge comes out as a
+                staircase.
+ 
+                A choice rather than a number I picked, because how an edge
+                reads depends on the picture, on how much of the frame the
+                person fills and on their hair — and one value chosen from one
+                screenshot is a guess that costs her a day to disprove. */}
+            {EDGES.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                data-postedge={one.id}
+                aria-pressed={edge === one.id}
+                onClick={() => cutAgain(one.id)}
+                className={`${LEEG} ${edge === one.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+              >
+                {one.id === 'tight'
+                  ? t('post.edgeTight', 'Hard edge')
+                  : one.id === 'soft'
+                    ? t('post.edgeSoft', 'Soft edge')
+                    : t('post.edgeNormal', 'Normal edge')}
+              </button>
+            ))}
             {whole && (
               <button
                 type="button"

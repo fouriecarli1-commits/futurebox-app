@@ -61,6 +61,12 @@ const route = withoutComments(readFileSync(join('app', 'api', 'post', 'export', 
 /**
  * Every way of turning a canvas into a file, and why each one is allowed.
  *
+ * This list was three entries long and all three said the same thing, which
+ * is a helper that had not been written yet: the background remover, changing
+ * its edge and the eraser each had their own `toDataURL` handing a canvas back
+ * as the picture. They go through one `asPicture` now and this is one line.
+ * The rule earned its keep by making that obvious.
+ *
  * The rule was a count of one, which was right until the background remover
  * arrived: it makes a cut-out canvas and hands it to an `<img>` so the crop,
  * the look and the export go on working without knowing anything happened.
@@ -75,15 +81,11 @@ const route = withoutComments(readFileSync(join('app', 'api', 'post', 'export', 
  * writing.
  */
 const INSIDE: Readonly<Record<string, string>> = {
-  'cut.canvas.toDataURL': 'the background remover handing its result to an <img> so the'
-    + ' crop, the look and the export go on working — it stays in the page, there is'
-    + ' no anchor and nothing anybody can save from',
-  'rubbed.toDataURL': 'the eraser handing its result back as the picture, the same way'
-    + ' and for the same reason. Named `rubbed` and not `sheet` because the export\u2019s'
-    + ' canvas is `sheet` and that one does leave — two canvases with one name is a'
-    + ' thing this rule, and the next reader, would have to guess at',
+  'made.toDataURL': 'the one helper that hands a canvas back as the picture — the'
+    + ' background remover, changing its edge, and the eraser all go through it. The'
+    + ' data URL becomes an <img> which becomes the picture, so it never leaves the'
+    + ' page: no anchor, and nothing anybody can save from',
 };
-
 const makers = studio.match(/[\w.]*\.(?:toBlob|toDataURL)\(/g) ?? [];
 const leaving = makers.filter((one) => !Object.keys(INSIDE).some((kept) => one.startsWith(kept)));
 ok(`the studio makes a file that can leave in one place (${leaving.length} of ${makers.length})`,

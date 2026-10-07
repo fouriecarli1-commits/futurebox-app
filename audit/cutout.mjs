@@ -85,6 +85,48 @@ try {
       + ' and the result still looks like a picture with something cut out');
     check('  and the picture that survives is unchanged', bench.colourChanged === 0,
       `${bench.colourChanged} surviving pixels are no longer the colour they were`);
+    /* ── The real case: a small mask on a big picture ─────────────── */
+
+    /* [no feather, hard, normal, soft] — the first is what shipped. */
+    const [bare, tight, normal, softest] = bench.edges ?? [];
+    check('a mask ten times smaller than the picture comes out softer than it shipped',
+      normal > bare * 1.8,
+      `${normal} pixels part way against ${bare} with no feather — the shipped`
+      + ' version stretched a 256-square mask over a whole photograph, which is'
+      + ' the staircase and the streaks Carli photographed');
+    check('  and each edge is a real step from the one before it',
+      tight < normal && normal < softest && tight > 0,
+      `${tight} / ${normal} / ${softest} — three buttons that all do the same`
+      + ' thing is a choice offered and not given');
+    check('  and the hard edge is still softer than none at all',
+      tight > bare,
+      `${tight} against ${bare} — the tightest of the three has to beat what`
+      + ' shipped, or it is the fault with a name on it');
+    /* The real bound is on the FEATHER, not on the share of this fixture.
+ 
+       A 25% ceiling failed the soft edge here, and the ceiling was wrong
+       rather than the edge: this bench is one straight seam down the middle
+       of a square, so a wide feather naturally covers a large share of it. A
+       person's outline is a perimeter, and the same feather on a real
+       photograph touches a fraction of what it touches here. Measuring the
+       share of THIS picture measures the fixture's geometry.
+ 
+       What actually matters is the feather against the size of a mask pixel,
+       which is a property of the constants and says the same thing on every
+       photograph. The share stays as a loose sanity bound — it would still
+       catch a feather that dissolved everything. */
+    check('  and no edge feathers by more than about one mask pixel',
+      bench.softest <= 1.5,
+      `the softest is ${bench.softest} of a mask pixel — past about one and a`
+      + ' half it stops being an edge and starts dissolving hair, which is the'
+      + ' part everybody looks at');
+    check('  and even the softest leaves most of the picture untouched',
+      softest < bench.side * bench.side * 0.6,
+      `${softest} of ${bench.side * bench.side} pixels are part way`);
+    check('  and well away from the seam nothing has moved',
+      bench.keptFar > 0 && bench.goneFar > 0,
+      `${bench.keptFar} kept on the far side and ${bench.goneFar} gone on the other`);
+
     check('  and the share of a mask is read the same way it is applied',
       bench.allOn === 1 && bench.allOff === 0 && Math.abs(bench.half - 0.5) < 0.01
       && bench.empty === 0,

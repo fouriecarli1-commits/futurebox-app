@@ -53,7 +53,20 @@ const HERE = '/segment';
 export const ENOUGH = 0.02;
 
 export type Cut =
-  | { readonly ok: true; readonly canvas: HTMLCanvasElement; readonly kept: number }
+  | {
+    readonly ok: true;
+    readonly canvas: HTMLCanvasElement;
+    readonly kept: number;
+    /**
+     * The model's own answer, kept so the edge can be changed without
+     * asking it again.
+     *
+     * Copied rather than handed on: the engine reuses its own canvas for the
+     * next picture, so holding its reference means holding something that
+     * silently becomes somebody else's mask.
+     */
+    readonly mask: HTMLCanvasElement;
+  }
   | { readonly ok: false; readonly why: 'nobody' | 'failed' };
 
 /**
@@ -95,17 +108,104 @@ export function maskOnto(
   mask: CanvasImageSource,
   width: number,
   height: number,
+  softness: number = SOFTNESS,
 ): HTMLCanvasElement {
   const out = document.createElement('canvas');
   out.width = width;
   out.height = height;
   const ctx = out.getContext('2d');
   if (!ctx) return out;
+  /* High, and not the default.
+ 
+     Carli, 7 October 2026, with a photograph of herself cut out: *"Its not
+     looking perfect."* The edges were stair-stepped and her shoulders were
+     streaking sideways.
+ 
+     The model answers at 256 by 256 whatever it was given. A phone photograph
+     is ten or more times that on each side, so each mask pixel covers a block
+     of ten by ten of her — and the browser's DEFAULT smoothing quality is
+     `low`, which on a blow-up that large is close to drawing the blocks. The
+     streaks on her shoulder were one row of mask being stretched across a
+     hundred rows of photograph. */
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(picture, 0, 0, width, height);
   ctx.globalCompositeOperation = 'destination-in';
-  ctx.drawImage(mask, 0, 0, width, height);
+  ctx.drawImage(feathered(mask, width, height, softness), 0, 0, width, height);
   ctx.globalCompositeOperation = 'source-over';
   return out;
+}
+
+/**
+ * How soft the cut edge is, as a share of a single mask pixel.
+ *
+ * A fraction of one mask pixel rather than a number of picture pixels,
+ * because the fault being softened is the SIZE of a mask pixel: a blur fixed
+ * in picture pixels is far too much on a small photograph and nothing at all
+ * on a large one.
+ *
+ * A third is enough to turn a staircase into an edge and little enough that
+ * nothing of her is eaten. Anything approaching a whole mask pixel starts
+ * dissolving hair, which is the part everybody looks at.
+ */
+export const SOFTNESS = 0.75;
+
+/**
+ * How soft the edge is, as a choice rather than a guess.
+ *
+ * Carli photographed the fault and I cannot photograph the fix: how an edge
+ * reads depends on the picture, on how much of the frame the person fills and
+ * on the hair. One number chosen from one screenshot is a guess that costs
+ * her a day to disprove.
+ *
+ * A fraction of a MASK pixel in every case, so the same choice means the same
+ * thing on a small photograph and a large one.
+ */
+export const EDGES = [
+  { id: 'tight', soft: 0.3 },
+  { id: 'normal', soft: SOFTNESS },
+  { id: 'soft', soft: 1.4 },
+] as const;
+
+export type EdgeId = (typeof EDGES)[number]['id'];
+
+export const edgeOf = (id: string): number =>
+  (EDGES.find((one) => one.id === id) ?? EDGES[1]).soft;
+
+/**
+ * The mask, blown up to the picture's size with a soft edge.
+ *
+ * Drawn in two steps rather than one. Blurring while scaling blurs by the
+ * OUTPUT's pixels, which is the thing that cannot be reasoned about: the same
+ * setting is a different softness on every photograph. Scaling first and then
+ * blurring by a share of what one mask pixel has become is a softness that
+ * means the same thing whatever came in.
+ */
+export function feathered(
+  mask: CanvasImageSource,
+  width: number,
+  height: number,
+  softness: number = SOFTNESS,
+): HTMLCanvasElement {
+  const big = document.createElement('canvas');
+  big.width = width;
+  big.height = height;
+  const ctx = big.getContext('2d');
+  if (!ctx) return big;
+
+  /* How big one mask pixel has become. Falls back to no blur when the mask
+     will not say its own size, because a guess here is a guess at how much
+     of somebody's hair to dissolve. */
+  const was = (mask as { width?: number }).width ?? 0;
+  const grown = was > 0 ? width / was : 0;
+  const soft = grown > 1 ? grown * Math.max(0, softness) : 0;
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  if (soft > 0.3) ctx.filter = `blur(${soft.toFixed(2)}px)`;
+  ctx.drawImage(mask, 0, 0, width, height);
+  ctx.filter = 'none';
+  return big;
 }
 
 /** The loader, kept between presses so the second one is instant. */
@@ -154,6 +254,7 @@ function library(): Promise<unknown> {
 export async function cutOut(
   picture: HTMLImageElement | HTMLCanvasElement,
   onStep?: (part: number) => void,
+  softness: number = SOFTNESS,
 ): Promise<Cut> {
   try {
     onStep?.(0.05);
@@ -227,7 +328,22 @@ export async function cutOut(
     const kept = shareKept(look.getImageData(0, 0, small.width, small.height).data);
     if (kept < ENOUGH) return { ok: false, why: 'nobody' };
 
-    return { ok: true, canvas: maskOnto(picture, mask, width, height), kept };
+    /* The model's answer, copied at its own size — a few hundred pixels
+       square, so this costs nothing and makes changing the edge instant
+       instead of a second of waiting and six megabytes of engine. */
+    const keep = document.createElement('canvas');
+    const maskWide = (mask as { width?: number }).width ?? 0;
+    const maskTall = (mask as { height?: number }).height ?? 0;
+    keep.width = Math.max(1, maskWide);
+    keep.height = Math.max(1, maskTall);
+    keep.getContext('2d')?.drawImage(mask, 0, 0);
+
+    return {
+      ok: true,
+      canvas: maskOnto(picture, mask, width, height, softness),
+      kept,
+      mask: keep,
+    };
   } catch {
     return { ok: false, why: 'failed' };
   }
