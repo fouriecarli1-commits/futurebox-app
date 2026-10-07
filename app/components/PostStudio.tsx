@@ -61,6 +61,7 @@ import {
 import {
   AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
 } from '../lib/postlook';
+import { canRead, readWords, tidy, type Readable } from '../lib/ocr';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
@@ -156,6 +157,11 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
      crop because the two are different questions: which part, and how it
      reads. Reset with the picture, like the crop. */
   const [look, setLook] = useState<Look>(PLAIN);
+  /* Reading the words out of the picture. `part` is nought to one while the
+     engine loads — the first press fetches megabytes and a screen with no
+     progress on it looks broken rather than busy. */
+  const [reading, setReading] = useState<number | null>(null);
+  const [grabbed, setGrabbed] = useState<string | null>(null);
   /* `null` is nothing behind it, and not a colour that happens to be dark.
  
      Her words: *"transparency"*, in the list beside text and nice fonts. A
@@ -538,6 +544,37 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
     }
   };
 
+  /**
+   * Read the words in the picture she brought in.
+   *
+   * The PICTURE, not the canvas. The canvas carries her own words, her crop
+   * and her blur — handing that to an engine that reads letters would have
+   * it read her captions back to her, and a blurred picture would read as
+   * nothing at all. `picture` is the file as it arrived.
+   */
+  const grabText = async (lang: Readable): Promise<void> => {
+    if (!picture) return;
+    setSaid('');
+    setGrabbed(null);
+    if (!canRead()) {
+      setSaid(t('post.grabOld', 'This browser is too old to read words out of a picture.'));
+      return;
+    }
+    setReading(0);
+    try {
+      const got = await readWords(picture, lang, (part) => setReading(part));
+      if (!got.ok) {
+        setSaid(got.why === 'unsupported'
+          ? t('post.grabOld', 'This browser is too old to read words out of a picture.')
+          : t('post.grabFailed', 'The words could not be read out of that picture.'));
+        return;
+      }
+      setGrabbed(tidy(got.text));
+    } finally {
+      setReading(null);
+    }
+  };
+
   /** The same picture, handed next door instead of onto the device. */
   const intoFilm = async (): Promise<void> => {
     if (!onIntoFilm) return;
@@ -875,6 +912,97 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
 
             <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
               {t('post.lookFree', 'All of this happens on your own device and costs nothing, however many times you change it.')}
+            </p>
+          </div>
+        )}
+
+        {/* ── The words already in the picture ───────────────────────────
+ 
+            Carli, 7 October 2026: *"grab text"*, in the list of what a
+            modern editor has. The engine is Tesseract compiled to
+            WebAssembly and it runs on her own phone — it calls nobody, needs
+            no key, and costs us nothing however many times it is pressed.
+            See `lib/ocr.ts` for why every file is served from this app and
+            not a CDN.
+ 
+            It reads the PICTURE as it was brought in, not the canvas: the
+            canvas carries her words, her crop and her blur, and feeding
+            those back to an engine that reads letters would have it read its
+            own output. */}
+        {picture && (
+          <div
+            data-postgrab
+            className="space-y-2 rounded-xl border p-3"
+            style={asRoom
+              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className={MIKRO}>{t('post.grab', 'Words in the picture')}</p>
+              <div className="flex flex-wrap gap-2">
+                {(['eng', 'afr'] as const).map((one) => (
+                  <button
+                    key={one}
+                    type="button"
+                    data-postgrablang={one}
+                    disabled={reading !== null}
+                    onClick={() => void grabText(one)}
+                    className={`${LEEG} disabled:opacity-40`}
+                  >
+                    {reading !== null
+                      ? `${Math.round(reading * 100)}%`
+                      : one === 'eng'
+                        ? t('post.grabEn', 'Read English')
+                        : t('post.grabAf', 'Read Afrikaans')}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {grabbed !== null && grabbed.length > 0 && (
+              <>
+                <textarea
+                  data-postgrabbed
+                  readOnly
+                  rows={Math.min(6, grabbed.split('\n').length + 1)}
+                  value={grabbed}
+                  className={`${VELD} font-mono text-[12px]`}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    data-postgrabuse
+                    onClick={() => {
+                      setWords((was) => [...was, {
+                        id: freshId(), text: grabbed, face: FACES[0].id,
+                        spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
+                      }]);
+                      setGrabbed(null);
+                    }}
+                    className={LEEG}
+                  >
+                    {t('post.grabUse', 'Put it on the picture')}
+                  </button>
+                  <button
+                    type="button"
+                    data-postgrabcopy
+                    onClick={() => { void navigator.clipboard?.writeText(grabbed).catch(() => {}); }}
+                    className={LEEG}
+                  >
+                    {t('post.grabCopy', 'Copy it')}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {grabbed !== null && grabbed.length === 0 && (
+              <p className="text-[12px] leading-relaxed text-amber-300" data-postgrabnone>
+                {t('post.grabNone', 'No words could be made out in this picture. It reads printed text well and handwriting badly.')}
+              </p>
+            )}
+
+            <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+              {t('post.grabFree', 'The reading happens on your own device and costs nothing. The first time takes a moment while the reader downloads.')}
             </p>
           </div>
         )}

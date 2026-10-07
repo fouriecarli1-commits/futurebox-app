@@ -42,13 +42,21 @@ the same principle applies to a button.
 
 ## Next, and still free: runs on the phone, costs us nothing
 
-### Grab text
-Tesseract.js is a real OCR engine compiled to WebAssembly. It runs entirely in the browser with
-no key and no call out, so it costs us nothing per use. The cost is **size**: roughly 4 MB of
-engine plus a language file, which must be fetched on demand when she presses the button and
-never bundled into the app's first load. English and Afrikaans are both available.
+### ~~Grab text~~ — done, 7 October 2026
 
-The honest limit: it reads printed text well and handwriting badly.
+Tesseract compiled to WebAssembly, English and Afrikaans, in `app/lib/ocr.ts`.
+
+**Everything is served by this app**, which was not a preference. The policy in
+`next.config.mjs` is `connect-src 'self'` and `default-src 'self'` with no `blob:` — and
+Tesseract's defaults break on both, fetching its core and language data from a CDN and wrapping
+its worker in a blob URL. Either is refused by the browser with a console line nobody reads and
+a button that spins for ever. `audit/grabtext.mjs` proved it by turning the blob worker back on:
+*"Refused to create a worker from blob:"*.
+
+6.6 MB sits in `public/ocr/` and none of it is downloaded until somebody presses the button. A
+member who only reads English never fetches the Afrikaans data.
+
+The honest limit: printed text well, handwriting badly, and the room says so.
 
 ### Background remover, for people
 `@imgly/background-removal` and MediaPipe's selfie segmentation both run in the browser. The
@@ -93,7 +101,7 @@ back from it, the way `app/lib/credits.ts` already does for the engines we use.
 
 ## The order I would do them in
 
-1. **Grab text** — free, self-contained, nothing else depends on it.
+1. ~~Grab text~~ — done.
 2. **Background remover for people** — free, and it completes the transparency work already here.
 3. **Magic eraser (classical)** — free, honest about its limits.
 4. **Make it bigger (Lanczos)** — free, small.

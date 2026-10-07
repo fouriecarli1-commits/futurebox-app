@@ -1,7 +1,9 @@
 {
   "name": "futurebox",
   "version": "0.1.0",
-  "engines": { "node": ">=22.0.0" },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -262,6 +264,8 @@
     "check:postpaid": "tsx scripts/check-postpaid.mts",
     "check:postcrop": "tsx scripts/check-postcrop.mts",
     "check:postlook": "tsx scripts/check-postlook.mts",
+    "check:ocr": "tsx scripts/check-ocr.mts",
+    "check:grabtext": "node audit/grabtext.mjs",
     "check:boothback": "node audit/boothback.mjs",
     "check:boothwalk": "node audit/boothwalk.mjs",
     "check:whitescreen": "node audit/whitescreen.mjs",
@@ -342,6 +346,7 @@
     "next": "^16.3.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "tesseract.js": "^7.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
