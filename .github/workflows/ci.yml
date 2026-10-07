@@ -1118,6 +1118,12 @@ jobs:
       - name: No real person's private details are written in this repository
         run: npm run check:privateinfo
 
+      # A quarter turn of a 4:3 photograph is 3:4, and a canvas sized the
+      # old way crops the two ends off it with no warning. Enlarging past
+      # what a phone's canvas holds comes back blank rather than throwing.
+      - name: A turn swaps the sides, and nothing is enlarged past the ceiling
+        run: npm run check:postwork
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever

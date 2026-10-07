@@ -739,6 +739,47 @@ try {
     return { r: +(r / n).toFixed(3), g: +(g / n).toFixed(3), b: +(b / n).toFixed(3) };
   });
 
+  const sizeOfPicture = () => page.evaluate(() => {
+    /* The picture itself, not the canvas: the canvas is the frame and stays
+       1080x1920 whatever is cut away. */
+    const img = document.querySelector('[data-postpicturesize]');
+    return img ? { width: Number(img.dataset.w), height: Number(img.dataset.h) } : null;
+  });
+
+  /* On the FRAME's bench, not the picture's. Carli, 7 October 2026: *"Ek dink
+     wel cutting moet by The frame wees nie picture nie."* Somebody looking
+     for a crop looks where the shapes are. */
+  /* ── Turning it, which is the one somebody does first ───────────────
+ 
+     Carli's list, 7 October 2026: *"Prent editor om nog canva funksies in te
+     bring."*
+     A quarter turn of a 4:3 photograph is 3:4, and a canvas sized the old way
+     crops the two ends off it without a word — so the reading is the
+     picture's own size, swapped. */
+  await bench('frame');
+  const upright = await sizeOfPicture();
+  if ((await page.locator('[data-postturnright]').count()) > 0 && upright) {
+    await page.locator('[data-postturnright]').first().click();
+    await page.waitForTimeout(900);
+    const sideways = await sizeOfPicture();
+    check('a quarter turn really swaps the sides of the photograph',
+      sideways !== null
+        && sideways.width === upright.height && sideways.height === upright.width,
+      `${upright.width}x${upright.height} turned once is ${sideways?.width}x${sideways?.height}`
+      + ' — a canvas sized the old way crops the two ends off it');
+    /* And back, so nothing below this is measured against a sideways
+       photograph. Three more presses rather than an undo, because four
+       quarter turns coming back to the start is the thing worth proving. */
+    for (let i = 0; i < 3; i += 1) {
+      await page.locator('[data-postturnright]').first().click();
+      await page.waitForTimeout(500);
+    }
+    const round = await sizeOfPicture();
+    check('  and four of them come back to where it started',
+      round !== null && round.width === upright.width && round.height === upright.height,
+      `${round?.width}x${round?.height} against ${upright.width}x${upright.height}`);
+  }
+
   /* ── Cutting the photograph down, which is not framing it ───────────
  
      Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
@@ -751,16 +792,6 @@ try {
      Cut really replaces the photograph with the part inside it. The third is
      the one that matters — a crop tool that looks right and leaves the
      picture alone is the exact failure the pan had in September. */
-  const sizeOfPicture = () => page.evaluate(() => {
-    /* The picture itself, not the canvas: the canvas is the frame and stays
-       1080x1920 whatever is cut away. */
-    const img = document.querySelector('[data-postpicturesize]');
-    return img ? { width: Number(img.dataset.w), height: Number(img.dataset.h) } : null;
-  });
-
-  /* On the FRAME's bench, not the picture's. Carli, 7 October 2026: *"Ek dink
-     wel cutting moet by The frame wees nie picture nie."* Somebody looking
-     for a crop looks where the shapes are. */
   await bench('frame');
   const before = await sizeOfPicture();
   check('the room offers to cut the photograph down, where the shapes are',

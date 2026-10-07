@@ -44,7 +44,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Crop as CropIcon, Download, Image as ImageIcon, Lasso, Loader2, Plus, Redo2, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, Undo2, X,
+  Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import {
   POST_SIZES, clashes, fitText, moveInside, sizeById,
@@ -78,6 +78,10 @@ import {
   cutAlong, trace, whyNot, worthCutting, type Path as Traced,
 } from '../lib/lasso';
 import { makeBack } from '../lib/postback';
+import {
+  BIGGER, SHARPEN, bigger, nextQuarter, sharpened, sizeOf, tooBig, turned,
+  type Sharpness, type Times,
+} from '../lib/postwork';
 import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
@@ -1236,6 +1240,76 @@ export default function PostStudio({
     );
   };
 
+  /* ── Straightening, sharpening and enlarging ───────────────────────────
+ 
+     Carli's list, 7 October 2026: *"Prent editor om nog canva funksies in te
+     bring."* These three are the ones every editor has and this one did not,
+     and all three run on the phone for nothing. `lib/postwork.ts` carries
+     why the enlarger is not called an upscaler.
+ 
+     One shape for all three, because they are the same shape: take the
+     picture, make a new canvas from it, remember the old one so it can be
+     put back, and say in her words what the step was. */
+  const insteadOf = (
+    what: string,
+    made: HTMLCanvasElement | null,
+    failed: string,
+  ): void => {
+    if (!made) {
+      setSaid(failed);
+      return;
+    }
+    before(what);
+    asPicture(
+      made,
+      (one) => {
+        setPicture(one);
+        /* The mask belongs to the picture that was there a moment ago, and
+           every one of these three makes a new one. Changing the cut edge
+           afterwards would put the old cut on the new picture. */
+        lastMask.current = null;
+        setSaid('');
+      },
+      () => setSaid(failed),
+    );
+  };
+
+  const turnIt = (by: number): void => {
+    if (!picture) return;
+    insteadOf(
+      t('post.stepTurn', 'turning it'),
+      turned(picture, nextQuarter(0, by)),
+      t('post.turnFailed', 'That could not be turned.'),
+    );
+  };
+
+  const flipIt = (): void => {
+    if (!picture) return;
+    insteadOf(
+      t('post.stepFlip', 'flipping it'),
+      turned(picture, 0, true),
+      t('post.turnFailed', 'That could not be turned.'),
+    );
+  };
+
+  const sharpenIt = (how: Sharpness): void => {
+    if (!picture) return;
+    insteadOf(
+      t('post.stepSharpen', 'sharpening it'),
+      sharpened(picture, how),
+      t('post.sharpenFailed', 'That could not be sharpened.'),
+    );
+  };
+
+  const enlargeIt = (times: Times): void => {
+    if (!picture) return;
+    insteadOf(
+      t('post.stepBigger', 'making it bigger'),
+      bigger(picture, times),
+      t('post.biggerFailed', 'That is already as big as a phone can hold.'),
+    );
+  };
+
   /**
    * The same cut, with a different edge.
    *
@@ -1933,6 +2007,48 @@ export default function PostStudio({
         slow one. Somebody who reaches the bottom of this bench is somebody
         the first two could not help, which is exactly who this is for. */}
     {traceStart}
+
+    {/* ── Making a small picture bigger ────────────────────────────────
+ 
+        Only when it IS small, which is the whole reason this exists. A
+        photograph off a phone is already four times the size of any post,
+        and offering to enlarge it would be offering to make a file four
+        times larger for nothing. A picture smaller than the post is the
+        case somebody actually has — something saved off a message, a logo,
+        an old photograph — and it is the case where the post comes out
+        soft and nobody can say why. */}
+    {picture && (() => {
+      const of = sizeOf(picture);
+      if (of.width >= size.width && of.height >= size.height) return null;
+      return (
+        <div className="space-y-2">
+          <p className={MIKRO}>{t('post.makeBigger', 'Make it bigger')}</p>
+          <p className="text-[12px] leading-relaxed text-zinc-500">
+            {t('post.makeBiggerWhy', 'This picture is')}
+            {` ${of.width}\u00d7${of.height}, `}
+            {t(
+              'post.makeBiggerThan',
+              'which is smaller than the post. Enlarging it stops it coming out soft \u2014 it cannot add detail that was never there, and nothing here calls that an upscaler.',
+            )}
+          </p>
+          <div className={RY3}>
+            {BIGGER.map((times) => (
+              <button
+                key={times}
+                type="button"
+                data-postbigger={times}
+                disabled={tooBig(of, times)}
+                onClick={() => enlargeIt(times)}
+                className={`${LEEG} disabled:opacity-40`}
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+                {`${times}\u00d7`}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    })()}
     </div>
   );
 
@@ -1970,6 +2086,32 @@ export default function PostStudio({
  
         The reasoning that put it in the wrong place was about what the code
         does. Where a tool goes is about what the person is doing. */}
+    {/* ── Straightening it, which is a framing question ────────────────
+ 
+        With the shape and the crop, because somebody whose photograph came
+        out of the camera sideways is thinking about how it SITS in the
+        frame — the same thought as choosing a shape. It changes the
+        photograph, as the crop does, and it is one press to take back. */}
+    {picture && (
+      <div className="space-y-2">
+        <p className={MIKRO}>{t('post.turn', 'Turn it')}</p>
+        <div className={RY3}>
+          <button type="button" data-postturnleft onClick={() => turnIt(-1)} className={LEEG}>
+            <RotateCcw className="h-3.5 w-3.5" />
+            {t('post.turnLeft', 'Left')}
+          </button>
+          <button type="button" data-postturnright onClick={() => turnIt(1)} className={LEEG}>
+            <RotateCw className="h-3.5 w-3.5" />
+            {t('post.turnRight', 'Right')}
+          </button>
+          <button type="button" data-postflip onClick={flipIt} className={LEEG}>
+            <FlipHorizontal className="h-3.5 w-3.5" />
+            {t('post.flip', 'Mirror')}
+          </button>
+        </div>
+      </div>
+    )}
+
     {cropStart}
     {/* ── Which part of it shows ─────────────────────────────────────
  
@@ -2093,6 +2235,41 @@ export default function PostStudio({
               {t('post.asShot', 'As it came')}
             </button>
           </div>
+        </div>
+
+        {/* ── Sharpening, which is not one of the sliders ───────────────
+ 
+            With the looks, because somebody who thinks a photograph is a
+            bit soft is thinking about how it READS — the same thought as
+            brightness and contrast. Not a slider beside them, though: the
+            sliders are live and free, redrawn on every drag, and this one
+            writes a new photograph and costs a step of history. Three
+            rungs and a press, so it is clear which kind of thing it is. */}
+        <div className="space-y-2">
+          <p className={MIKRO}>{t('post.sharpen', 'Sharper')}</p>
+          <div className={RY3}>
+            {(Object.keys(SHARPEN) as Sharpness[]).map((how) => (
+              <button
+                key={how}
+                type="button"
+                data-postsharpen={how}
+                onClick={() => sharpenIt(how)}
+                className={LEEG}
+              >
+                {how === 'gentle'
+                  ? t('post.sharpGentle', 'A little')
+                  : how === 'normal'
+                    ? t('post.sharpNormal', 'Normal')
+                    : t('post.sharpStrong', 'A lot')}
+              </button>
+            ))}
+          </div>
+          <p className="text-[12px] leading-relaxed text-zinc-500">
+            {t(
+              'post.sharpenWhy',
+              'Brings out edges that came out soft. It cannot put back detail that was never in the photograph \u2014 too much turns grain into speckle, and the way back is one press.',
+            )}
+          </p>
         </div>
 
         {([

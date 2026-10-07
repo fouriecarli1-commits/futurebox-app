@@ -122,10 +122,32 @@ for (const root of WHERE) {
            them contains the five letters of a company's name. An unbounded
            match reported eighty-four hits in one file and would have been
            switched off within the hour. */
-        if (new RegExp(`(^|[^a-z])${rival}([^a-z]|$)`, 'i').test(line)) {
-          found.push(`${path}:${i + 1}  ${line.trim().slice(0, 100)}`);
-          return;
-        }
+        if (!new RegExp(`(^|[^a-z])${rival}([^a-z]|$)`, 'i').test(line)) continue;
+        /* ── Except inside something she actually said ────────────────
+ 
+           This codebase records a design decision by quoting the person who
+           asked for it, verbatim and with the date, which is the most
+           useful thing a comment can say. On 7 October she wrote *"Prent
+           editor om nog canva funksies in te bring"* — a sentence naming a
+           rival, in her own words, about what she wants built.
+ 
+           Reporting that is the rule firing at the one case it is not for.
+           The habit being stopped is writing a competitor's menu down as
+           the REASON for a decision; a dated quotation is the opposite — it
+           is the record of who asked, and paraphrasing it to dodge a check
+           would be misquoting her.
+ 
+           Narrow on purpose, and narrowed again once it was tested: the
+           first version wanted only the name and a quotation mark, and
+           `Carli said "do it like <rival>" so we copied the sheet` walked
+           straight through it. The line has to carry the attribution in the
+           form this codebase actually uses — the name, the date and the
+           quotation — which is three things to write on purpose rather than
+           one to write by accident. */
+        if (/\bCarli\b/.test(line) && /\b(19|20)\d{2}\b/.test(line)
+          && /[“”"]/.test(line)) continue;
+        found.push(`${path}:${i + 1}  ${line.trim().slice(0, 100)}`);
+        return;
       }
     });
   }
