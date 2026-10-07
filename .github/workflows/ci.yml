@@ -1087,6 +1087,13 @@ jobs:
       - name: The background remover asks only for files that are here
         run: npm run check:cutout
 
+      # The eraser grows the picture around a gap inwards over it. Every
+      # pixel it writes is ours, so the test is known pixels in and known
+      # pixels out — and above all that nothing outside the mask is ever
+      # written, which is invisible on a phone and in every post she makes.
+      - name: The eraser fills a gap and touches nothing else
+        run: npm run check:erase
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the

@@ -63,6 +63,7 @@ import {
 } from '../lib/postlook';
 import { canRead, readWords, tidy, type Readable } from '../lib/ocr';
 import { cutOut } from '../lib/cutout';
+import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
@@ -169,6 +170,17 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
      roll, and the file they picked may have been a crop they made elsewhere. */
   const [cutting, setCutting] = useState<number | null>(null);
   const [whole, setWhole] = useState<HTMLImageElement | null>(null);
+  /* Painting over the thing to take out.
+ 
+     `rubbing` is the mode; `smear` is one byte per pixel OF THE PICTURE, not
+     of the frame. The brush is painted on a view of the whole photograph
+     rather than on the cropped preview, so the mapping from thumb to pixel
+     is one uniform scale instead of the inverse of a crop — and she can see
+     what she is erasing, which a crop by definition hides part of. */
+  const [rubbing, setRubbing] = useState(false);
+  const smear = useRef<Uint8Array | null>(null);
+  const [smeared, setSmeared] = useState(0);
+  const rubCanvas = useRef<HTMLCanvasElement | null>(null);
   /* `null` is nothing behind it, and not a colour that happens to be dark.
  
      Her words: *"transparency"*, in the list beside text and nice fonts. A
@@ -596,6 +608,123 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
    * without knowing anything happened. A separate "cut-out layer" would have
    * meant every one of those learning about it.
    */
+  /* ── Painting over the thing to take out ───────────────────────────── */
+
+  /** The picture drawn whole, with whatever has been painted over it in red. */
+  const drawRub = (): void => {
+    const to = rubCanvas.current;
+    if (!to || !picture) return;
+    const ctx = to.getContext('2d');
+    if (!ctx) return;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    /* Shown at most 540 across, like the preview and for the same reason:
+       what is on screen is never the deliverable. */
+    const scale = Math.min(1, 540 / Math.max(wide, tall));
+    to.width = Math.max(1, Math.round(wide * scale));
+    to.height = Math.max(1, Math.round(tall * scale));
+    ctx.drawImage(picture, 0, 0, to.width, to.height);
+
+    const mask = smear.current;
+    if (!mask) return;
+    /* The mask is in PICTURE pixels and this canvas is a fraction of that, so
+       it is drawn through a small canvas of its own at full picture size and
+       scaled down in one go — a per-pixel loop at this size would be slow on
+       every single stroke. */
+    const paint = document.createElement('canvas');
+    paint.width = wide;
+    paint.height = tall;
+    const over = paint.getContext('2d');
+    if (!over) return;
+    const sheet = over.createImageData(wide, tall);
+    for (let i = 0; i < mask.length; i += 1) {
+      if (!mask[i]) continue;
+      const p = i * 4;
+      sheet.data[p] = 255;
+      sheet.data[p + 1] = 60;
+      sheet.data[p + 2] = 60;
+      sheet.data[p + 3] = 150;
+    }
+    over.putImageData(sheet, 0, 0);
+    ctx.drawImage(paint, 0, 0, to.width, to.height);
+  };
+
+  useEffect(() => { if (rubbing) drawRub(); });
+
+  const rubAt = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (!picture) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    if (box.width <= 0) return;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    if (!smear.current || smear.current.length !== wide * tall) {
+      smear.current = new Uint8Array(wide * tall);
+    }
+    /* Screen to picture in one step, because the whole photograph is on
+       screen: no crop to invert and no zoom to undo. */
+    const x = ((event.clientX - box.left) / box.width) * wide;
+    const y = ((event.clientY - box.top) / box.height) * tall;
+    /* The brush is a share of the picture rather than a number of pixels, so
+       it covers the same amount of a photograph whatever size it came at. */
+    const radius = Math.max(6, Math.max(wide, tall) * 0.025);
+    /* FROM the last point, not just AT this one.
+ 
+       One disc per pointer event leaves unmasked specks between the discs —
+       twenty pixels apart at any ordinary speed — and those specks are
+       pixels of the thing being removed. `erase` then grows them back over
+       the hole, faithfully, and the feature appears to do nothing at all. */
+    const was = lastRub.current;
+    if (was) stroke(smear.current, wide, tall, was.x, was.y, x, y, radius);
+    else stroke(smear.current, wide, tall, x, y, x, y, radius);
+    lastRub.current = { x, y };
+    setSmeared(shareOf(smear.current));
+    drawRub();
+  };
+
+  const rubbingNow = useRef(false);
+  /** Where the thumb was a moment ago, so a stroke is a line and not a dot. */
+  const lastRub = useRef<{ readonly x: number; readonly y: number } | null>(null);
+
+  /** Take out what has been painted over. */
+  const rubOut = (): void => {
+    const mask = smear.current;
+    if (!picture || !mask) return;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    /* `rubbed`, not `sheet`.
+ 
+       The export's canvas is called `sheet` and that one IS the road out of
+       this app. Two canvases with the same name, one of which leaves and one
+       of which does not, is the sort of thing a rule about roads out has to
+       guess at — and so does the next person reading it. */
+    const rubbed = document.createElement('canvas');
+    rubbed.width = wide;
+    rubbed.height = tall;
+    const ctx = rubbed.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(picture, 0, 0);
+    const pixels = ctx.getImageData(0, 0, wide, tall);
+    const done = erase(pixels, mask);
+    if (!done.ok) {
+      setSaid(done.why === 'toomuch'
+        ? t('post.rubTooMuch', 'That is too much of the picture to take out this way. This grows the edges of a gap inwards, which works for something small.')
+        : t('post.rubNothing', 'Paint over the thing you want gone first.'));
+      return;
+    }
+    ctx.putImageData(done.pixels, 0, 0);
+    const made = new Image();
+    made.onload = () => {
+      setWhole(picture);
+      setPicture(made);
+      smear.current = null;
+      setSmeared(0);
+      setRubbing(false);
+      setSaid(t('post.rubDone', 'Taken out. If it smeared, the thing behind it had a pattern \u2014 put it back and try a smaller patch.'));
+    };
+    made.onerror = () => setSaid(t('post.rubFailed', 'That could not be taken out.'));
+    made.src = rubbed.toDataURL('image/png');
+  };
+
   const cutBackground = async (): Promise<void> => {
     if (!picture || cutting !== null) return;
     setSaid('');
@@ -959,6 +1088,133 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
             <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
               {t('post.lookFree', 'All of this happens on your own device and costs nothing, however many times you change it.')}
             </p>
+          </div>
+        )}
+
+        {/* ── Taking something small out ─────────────────────────────────
+ 
+            Carli, 7 October 2026: *"magic eraser"*. This grows the pixels
+            around a gap inwards over it, which is arithmetic and costs us
+            nothing. It is not *"magic grab"* — nothing here imagines what
+            was behind — and the sentence under the button says so, because
+            the difference is the whole of what somebody should expect.
+ 
+            The painting happens on the WHOLE picture rather than on the
+            cropped preview: she can see what she is covering, and the map
+            from thumb to pixel is one scale instead of the inverse of a
+            crop. */}
+        {picture && (
+          <div
+            data-postrub
+            data-span={(() => { const m = smear.current; if (!m || !picture) return 'none';
+              const w = picture.naturalWidth || picture.width; let a=1e9,b=-1,n=0;
+              for (let i=0;i<m.length;i++) if (m[i]) { n++; const x=i%w; if(x<a)a=x; if(x>b)b=x; }
+              return JSON.stringify({ w, n, a, b, smeared }); })()}
+            className="space-y-2 rounded-xl border p-3"
+            style={asRoom
+              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className={MIKRO}>{t('post.rub', 'Take something out')}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-postrubmode
+                  aria-pressed={rubbing}
+                  onClick={() => {
+                    setSaid('');
+                    smear.current = null;
+                    setSmeared(0);
+                    setRubbing((was) => !was);
+                  }}
+                  className={rubbing ? VUL.replace('w-full ', '') : LEEG}
+                >
+                  {rubbing ? t('post.rubStop', 'Done painting') : t('post.rubStart', 'Paint over it')}
+                </button>
+                {/* Always drawn while painting, disabled until there is
+                    something to do.
+ 
+                    They appeared when the first stroke landed, which pushed
+                    the canvas down the page — so the second stroke went
+                    somewhere other than where the thumb was aimed. A control
+                    that moves the thing you are working on, the moment you
+                    start working on it, is the worst kind of layout shift:
+                    it only happens once you are committed. */}
+                {rubbing && (
+                  <>
+                    <button
+                      type="button"
+                      data-postrubgo
+                      disabled={smeared <= 0}
+                      onClick={rubOut}
+                      className={`${LEEG} disabled:opacity-40`}
+                    >
+                      {t('post.rubGo', 'Take it out')}
+                    </button>
+                    <button
+                      type="button"
+                      data-postrubclear
+                      disabled={smeared <= 0}
+                      onClick={() => { smear.current = null; setSmeared(0); drawRub(); }}
+                      className={`${LEEG} disabled:opacity-40`}
+                    >
+                      {t('post.rubClear', 'Start the painting again')}
+                    </button>
+                  </>
+                )}
+                {whole && !rubbing && (
+                  <button
+                    type="button"
+                    data-postrubback
+                    onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
+                    className={LEEG}
+                  >
+                    {t('post.cutBack', 'Put it back')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {rubbing && (
+              <>
+                <canvas
+                  ref={rubCanvas}
+                  data-postrubcanvas
+                  onPointerDown={(event) => {
+                    rubbingNow.current = true;
+                    /* A new stroke starts from nowhere, or lifting the thumb
+                       and putting it down somewhere else would paint a line
+                       across everything in between. */
+                    lastRub.current = null;
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    rubAt(event);
+                  }}
+                  onPointerMove={(event) => { if (rubbingNow.current) rubAt(event); }}
+                  onPointerUp={(event) => {
+                    rubbingNow.current = false;
+                    lastRub.current = null;
+                    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                      event.currentTarget.releasePointerCapture(event.pointerId);
+                    }
+                  }}
+                  onPointerCancel={() => { rubbingNow.current = false; lastRub.current = null; }}
+                  className="w-full rounded-xl border border-zinc-800"
+                  style={{ touchAction: 'none', cursor: 'crosshair' }}
+                />
+                <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+                  {smeared > TOO_MUCH
+                    ? t('post.rubTooMuch', 'That is too much of the picture to take out this way. This grows the edges of a gap inwards, which works for something small.')
+                    : t('post.rubHow', 'Drag over the thing you want gone. It is good at something small against a plain background, and it smears where there was a pattern behind it.')}
+                </p>
+              </>
+            )}
+
+            {!rubbing && (
+              <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+                {t('post.rubWhat', 'Grows the picture around a gap inwards over it. Good for a bin, a sign or a stranger at the edge; it cannot imagine what was behind something.')}
+              </p>
+            )}
           </div>
         )}
 

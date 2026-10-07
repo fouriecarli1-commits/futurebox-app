@@ -78,6 +78,10 @@ const INSIDE: Readonly<Record<string, string>> = {
   'cut.canvas.toDataURL': 'the background remover handing its result to an <img> so the'
     + ' crop, the look and the export go on working — it stays in the page, there is'
     + ' no anchor and nothing anybody can save from',
+  'rubbed.toDataURL': 'the eraser handing its result back as the picture, the same way'
+    + ' and for the same reason. Named `rubbed` and not `sheet` because the export\u2019s'
+    + ' canvas is `sheet` and that one does leave — two canvases with one name is a'
+    + ' thing this rule, and the next reader, would have to guess at',
 };
 
 const makers = studio.match(/[\w.]*\.(?:toBlob|toDataURL)\(/g) ?? [];

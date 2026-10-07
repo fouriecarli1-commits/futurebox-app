@@ -372,6 +372,19 @@ try {
     x.fillRect(0, 0, 200, 300);
     x.fillStyle = '#0000ff';
     x.fillRect(200, 0, 200, 300);
+    /* A third colour, down the seam, for the eraser to be aimed at. Narrow
+       enough that taking it out is something small — which is what this
+       eraser is for and what it is honest about being for.
+ 
+       YELLOW, and that is not a free choice. It was green first, and green is
+       already what this walk paints behind the picture to prove that `fill`
+       leaves no gap — so a green band in the picture was counted as
+       background and failed an assertion three hundred lines earlier. A
+       fixture colour has to collide with none of the sentinels already in
+       use: yellow is neither red nor blue nor green to any of the readings
+       here. */
+    x.fillStyle = '#ffff00';
+    x.fillRect(188, 0, 24, 300);
     const blob = await new Promise((done) => c.toBlob(done, 'image/png'));
     const input = document.querySelector('[data-postpicture] input[type=file]')
       ?? document.querySelector('[data-poststudio] input[type=file]');
@@ -599,6 +612,107 @@ try {
 
   await page.locator('[data-postplain]').first().click();
   await page.waitForTimeout(400);
+
+  /* ── Taking something out ────────────────────────────────────────────
+ 
+     Carli, 7 October 2026: *"magic eraser"*. `check:erase` walks the
+     arithmetic with known pixels. What it cannot say is whether a thumb
+     dragged across a canvas reaches the right pixels of the photograph —
+     the brush is painted on a view of the whole picture and the mask is in
+     the PICTURE's own coordinates, and a mapping that is out by a scale
+     factor erases the wrong part of the photograph and looks, on a phone,
+     like the eraser simply being bad.
+ 
+     So the fixture has a third colour in a known place: a green band down
+     the middle of the red and blue halves. Paint over the green, press, and
+     the green has to be gone while the red and blue are still there. */
+  /** How much of the band is on a canvas. Yellow collides with nothing. */
+  const band = (which) => page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el || !el.getContext) return -1;
+    const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+    let seen = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 170 && d[i + 1] > 170 && d[i + 2] < 90) seen += 1;
+    }
+    return seen;
+  }, which);
+
+  /* Read off the SAME canvas before and after. The first version read the
+     brush's own view before and the post's preview after — two canvases at
+     two sizes showing two different framings, so the numbers were never
+     comparable and the assertion was arithmetic on nothing. */
+  const bandBefore = await band('[data-postcanvas]');
+
+  await page.locator('[data-postrubmode]').first().click();
+  await page.waitForTimeout(600);
+  const rub = page.locator('[data-postrubcanvas]').first();
+  check('painting over something opens a view of the whole picture',
+    (await rub.count()) > 0,
+    'the brush has nowhere to paint, so nothing below is measuring anything');
+
+  if ((await rub.count()) > 0) {
+    check('  and the thing to take out is in the picture', bandBefore > 100,
+      `${bandBefore} band pixels on the post — the fixture has a band down the`
+      + ' middle for the eraser to be aimed at');
+
+    /* Three passes, covering the band and a little either side.
+ 
+       One pass down the middle left a two-pixel rim of the band unpainted —
+       and the gap is filled from whatever is around it, so it filled with
+       more band. 3811 bytes genuinely changed and the picture looked
+       identical, which read as the eraser doing nothing.
+ 
+       The app was right and the test was painting too little. It is also
+       the thing a person will get wrong first, so the room now says it:
+       cover ALL of it. */
+    /* The box is read again before EVERY stroke.
+ 
+       Reading it once was wrong twice over: the buttons used to appear when
+       the first stroke landed, which pushed the canvas down the page, so
+       strokes two and three went somewhere other than where they were
+       aimed. The room now keeps those buttons drawn and disabled so nothing
+       moves — and this re-reads anyway, because a walk that depends on the
+       layout never shifting is a walk that will lie again. */
+    for (const across of [0.47, 0.5, 0.53]) {
+      const box = await rub.boundingBox();
+      await page.mouse.move(box.x + box.width * across, box.y + box.height * 0.1);
+      await page.mouse.down();
+      for (let step = 1; step <= 12; step += 1) {
+        await page.mouse.move(box.x + box.width * across, box.y + box.height * (0.1 + 0.066 * step));
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(150);
+    }
+    await page.waitForTimeout(500);
+
+    check('    and the drag can be pressed into the picture',
+      (await page.locator('[data-postrubgo]').count()) > 0,
+      'nothing was painted, so the thumb never reached the mask');
+
+    await page.locator('[data-postrubgo]').first().click();
+    await page.waitForTimeout(2500);
+
+    const after = await colours();
+    check('  the painted band is gone from the picture',
+      after !== null && after.red > 1000 && after.blue > 1000,
+      `red ${after?.red}, blue ${after?.blue} — the halves either side of the`
+      + ' band have to survive, or the mapping from thumb to pixel is out and'
+      + ' it erased somewhere else');
+
+    const bandAfter = await band('[data-postcanvas]');
+    check('    with most of it gone where the thumb went',
+      bandBefore > 0 && bandAfter < bandBefore * 0.5,
+      `${bandAfter} band pixels remain against ${bandBefore} before — a mapping`
+      + ' out by a scale factor erases the wrong part of the photograph and'
+      + ' reads, on a phone, as the eraser simply being bad');
+
+    check('    and it can be put back', (await page.locator('[data-postrubback]').count()) > 0,
+      'an erase with no way back, on a photograph that may itself have been a'
+      + ' crop made somewhere else');
+    await page.locator('[data-postrubback]').first().click();
+    await page.waitForTimeout(600);
+  }
 
   /* Back to where the rest of the walk expects to be. */
   await page.locator('[data-postbasis="fill"]').first().click();

@@ -80,11 +80,22 @@ own policy, and that a mask keeps exactly what it covers. Whether the mask is a 
 photograph and Carli's eyes. **This is the one item on this page waiting on her rather than on
 me.**
 
-### Magic eraser, for small things
-Classical inpainting — the Telea or Navier-Stokes method — removes a small object by growing the
-surrounding pixels inwards. It is a loop over a region, not a model, so it is free and fast. It
-is good at a litter bin, a sign, a blemish; it is bad at anything with structure behind it,
-where it smears. Worth having and worth being honest about in the room.
+### ~~Magic eraser, for small things~~ — done, 7 October 2026
+
+`app/lib/erase.ts`. Paint over something small; the picture around the gap grows inwards over it,
+a ring at a time from every edge at once, then a few smoothing passes over only what it wrote.
+
+Good at a bin against a wall, a sign against a sky, a stranger at the edge of a beach. Bad at
+anything with structure behind it, where it smears — and the room says so, because this is
+arithmetic and not the *"magic grab"* on her list. Nothing here imagines what was behind
+anything.
+
+**The bug that would have shipped looking like the feature not working:** one brush disc per
+pointer event leaves unmasked specks twenty pixels apart, those specks are pixels of the thing
+being erased, and the fill grows them straight back over the hole. A stroke is a line of discs
+overlapping by half a radius. It was found by the shape of the arithmetic, not by looking: the
+first ring of a solid 45-by-258 hole should be about six hundred pixels and it was twelve
+hundred, which is a region full of holes.
 
 ### A plain upscaler
 Lanczos resampling makes a picture bigger without the blockiness of a naive stretch. It costs
@@ -117,7 +128,7 @@ back from it, the way `app/lib/credits.ts` already does for the engines we use.
 
 1. ~~Grab text~~ — done.
 2. ~~Background remover for people~~ — done.
-3. **Magic eraser (classical)** — free, honest about its limits.
+3. ~~Magic eraser (classical)~~ — done.
 4. **Make it bigger (Lanczos)** — free, small.
 5. Then the paid four, one at a time, each with its price decided first.
 
