@@ -13,7 +13,8 @@ import {
   Crown, Zap, RefreshCw, Send, Mail, Check, Star, Loader2,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
-  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors} from 'lucide-react';
+  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors,
+  Image as ImageIcon} from 'lucide-react';
 import {
   TRACK_FLAVOURS,
 } from './data/studio';
@@ -34,6 +35,7 @@ import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
 import VideoEditor from './components/VideoEditor';
 import VideoCanvas from './components/VideoCanvas';
+import PostStudio from './components/PostStudio';
 import Copilot, { type CopilotAction } from './components/Copilot';
 import type { Canvas } from './components/MakeMusic';
 import type { Track } from './lib/library';
@@ -697,6 +699,7 @@ export default function FutureBoxHome() {
     booth: { label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
     canvas: { label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
     videoedit: { label: t('rail.videoedit'), hint: t('rail.videoedit.hint'), icon: Scissors },
+    photo: { label: t('rail.photo'), hint: t('rail.photo.hint'), icon: ImageIcon },
     hooks_feed: { label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
     channels: { label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
     collab: { label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
@@ -1857,7 +1860,7 @@ export default function FutureBoxHome() {
 
      The balance is not lost: nothing in this room spends without showing the
      bill first, and the bill carries the balance. */
-  const bareRoom = studioTab === 'videoedit';
+  const bareRoom = studioTab === 'videoedit' || studioTab === 'photo';
 
   /* The rooms that hold the copilot themselves, so the third column is not
      drawn below them as well. The voice studio puts it inside a pane of its
@@ -4159,14 +4162,6 @@ export default function FutureBoxHome() {
                   onUpgrade={() => setPricingModalOpen(true)}
                   onGoTo={goToRoom}
                   songId={videoSong}
-                  /* A post, handed to the film in the cutting room.
- 
-                     Held here because the desk and the cutting room are two
-                     different tabs of the studio: the desk makes the
-                     picture, the editor takes it, and neither is mounted
-                     when the other is. One piece of state above both is the
-                     whole wire, and it survives the walk between them. */
-                  onPostToFilm={setPostCover}
                 />
                 {/* ── The editor, under the desk it belongs to ──────────────
  
@@ -4215,6 +4210,34 @@ export default function FutureBoxHome() {
                 Carli: *"Daardie studio kan dan ook regdeur die hele bladsy
                 die futurebox groen kleure hê … sodat daardie kamer ook anders
                 lyk."* */}
+            {/* ── The photo editor ────────────────────────────────────────
+ 
+                Carli, 7 October 2026: *"add next to it Photo Editor. Then
+                make the photo editor the same look as the video editor."*
+ 
+                It was a sheet off the video desk, which is not a room: no
+                card in the menu, nothing pointing at it, and findable only
+                by somebody who already knew. It is in `surfaces.ts` under
+                "Show it" now, which is also what makes Hooks a half card
+                beside it — that grid gives the whole row to a last odd card,
+                so a fourth room in the stage fixed the shape by existing.
+ 
+                `bare` for the same reason the cutting room is bare: the
+                room draws its own floor to the edges. */}
+            {studioTab === 'photo' && (
+              <div
+                data-photoroom
+                className="-m-3 md:-m-5 rounded-none"
+                style={{ background: '#05180f' }}
+              >
+                <PostStudio
+                  asRoom
+                  onClose={() => goToRoom('canvas')}
+                  onIntoFilm={setPostCover}
+                />
+              </div>
+            )}
+
             {studioTab === 'videoedit' && (
               /* ── Solid, and edge to edge ───────────────────────────────
 

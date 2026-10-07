@@ -105,10 +105,33 @@ const boxFor = (one: Words): Box => ({
  * twice is one credit. Changing the words is the same post; starting a new
  * one is not.
  */
+/* ── The cutting room's colours ───────────────────────────────────────────
+ 
+   Taken from `VideoEditor.tsx` rather than guessed at, so the two rooms are
+   the same room with different work in them. The floor is the one Carli
+   picked for the cutting room; INK and INK_DIM are its text, and RAISE is
+   what lifts a control off the floor instead of a border drawn round it. */
+const FLOOR = '#05180f';
+const INK = '#d7f5e4';
+const INK_DIM = 'rgba(215,245,228,0.62)';
+const RAISE = '0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.35)';
+
 const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
-export default function PostStudio({ onClose, onIntoFilm }: {
+export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
   readonly onClose: () => void;
+  /**
+   * Drawn as a room of its own rather than a sheet over whatever was behind.
+   *
+   * Carli, 7 October 2026: *"Make hooks the same shape as video desk and add
+   * next to it Photo Editor. Then make the photo editor the same look as the
+   * video editor."* A sheet off the video desk is not a room: it is absent
+   * from the menu, nothing points at it, and the only way to find it was to
+   * already know it was there. As a room it takes the cutting room's colours
+   * — the dark green floor, the raised controls, the same ink — because the
+   * two are the same kind of work on two kinds of material.
+   */
+  readonly asRoom?: boolean;
   /**
    * Hand the finished picture to the film being cut on the desk below.
    *
@@ -151,7 +174,7 @@ export default function PostStudio({ onClose, onIntoFilm }: {
      `check:backlayers` refused this screen on its first sweep, which is the
      second time today a check has caught something in it that only a person
      holding a phone would have found. */
-  useBackLayer(true, onClose);
+  useBackLayer(!asRoom, onClose);
 
   /* A ruler the layout can use, from the canvas that will do the drawing.
      `lib/posttext.ts` takes this rather than guessing an average glyph
@@ -514,8 +537,17 @@ export default function PostStudio({ onClose, onIntoFilm }: {
     }
   };
 
+  const SKIN = asRoom
+    ? 'min-h-screen overflow-y-auto'
+    : 'fixed inset-0 z-[60] overflow-y-auto bg-zinc-950';
+
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto bg-zinc-950 text-zinc-100" data-poststudio>
+    <div
+      className={`${SKIN} text-zinc-100`}
+      data-poststudio
+      data-postroom={asRoom ? 'yes' : 'no'}
+      style={asRoom ? { background: FLOOR, color: INK } : undefined}
+    >
       {/* ── Room under the last thing, for the bar ────────────────────────
  
           This sheet scrolls, and the app's tab bar sits over the bottom of
@@ -527,11 +559,46 @@ export default function PostStudio({ onClose, onIntoFilm }: {
           without it. */}
       <div className="mx-auto max-w-2xl space-y-5 p-4" style={{ paddingBottom: barClearance(16) }}>
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-bold">{t('post.title', 'Make a post')}</h2>
-          <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className={LEEG}>
-            <X className="h-4 w-4" />
-          </button>
+          <h2 className="text-lg font-bold">
+            {asRoom ? t('rail.photo', 'Photo Editor') : t('post.title', 'Make a post')}
+          </h2>
+          {/* A room is left by the menu, like every other room. A close
+              button here would be a second way out that only this room has,
+              and the one it leads back to depends on how you arrived. */}
+          {!asRoom && (
+            <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className={LEEG}>
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
+
+        {/* ── What it costs, before the work and not only on the button ──
+ 
+            Carli, 7 October 2026: *"Remember to monetize and nothing is free
+            in this app."*
+ 
+            Nothing here is free to take away: a picture off this screen
+            costs a credit whether it goes to the phone or next door onto a
+            film, and `check:postpaid` holds that there is no third road. But
+            the price lived only on the Save button at the foot, which is the
+            cutting room's fault in reverse — that room shows an itemised
+            bill before it charges, and this one let somebody build a post
+            and meet the price at the end.
+ 
+            Said once, at the top, in the room's own words. */}
+        <p
+          data-postprice
+          className="rounded-xl border px-3 py-2.5 text-[13px] leading-relaxed"
+          style={asRoom
+            ? { borderColor: 'rgba(16,185,129,0.35)', background: 'rgba(52,211,153,0.10)', color: INK_DIM, boxShadow: RAISE }
+            : { borderColor: 'rgb(39,39,42)', background: 'rgb(24,24,27)' }}
+        >
+          {t('post.price', 'Building a picture here costs nothing. Taking one out costs')}
+          {' '}
+          <strong style={asRoom ? { color: INK } : undefined}>{creditsSaid(CREDITS.postOut, t)}</strong>
+          {' '}
+          {t('post.priceTwo', '\u2014 the same one credit whether you save it to your phone or put it on a film, and the same post is only ever charged once.')}
+        </p>
 
         {/* ── The shape, first, because it changes everything under it ───── */}
         <div>

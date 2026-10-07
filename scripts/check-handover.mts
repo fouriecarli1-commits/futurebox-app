@@ -154,6 +154,12 @@ const PLAIN: Readonly<Record<string, string>> = {
      carried the desk's shot list would be putting a brief in a room that has
      no use for one. */
   'videoedit|onClick': 'the door from the video desk: the cutting room takes files from the device, not a brief from the desk',
+  /* The photo editor's way back. It is `onClose` only because the studio
+     keeps that prop for the sheet it used to be; as a room it is "the room
+     this one sits beside", and it carries nothing because there is nothing
+     to carry — a finished picture goes to the CUTTING room, by its own
+     button, and that hand-over carries the file and is charged for. */
+  'canvas|onClose': 'the photo editor stepping back to the video desk: the picture itself goes to the cutting room by its own door, which does carry',
   'live|onClick': 'the front page pointing at the room where members’ real work is, now that the invented card is gone. It is "go and look", not "here is the thing you asked for"',
   /* The one door here that carries nothing BECAUSE the far side reads the
      address itself.

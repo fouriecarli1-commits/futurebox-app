@@ -63,14 +63,28 @@ try {
   /* ── The way in ──────────────────────────────────────────────────────── */
 
   const door = page.locator('[data-openpost]').first();
-  check('the video desk offers a post', (await door.count()) > 0,
+  check('the video desk points at the photo editor', (await door.count()) > 0,
     'the still that goes beside the moving ones has no way in');
-  if ((await door.count()) === 0) throw new Error('no way into the post studio');
+  if ((await door.count()) === 0) throw new Error('no way into the photo editor');
   await door.click();
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(1500);
 
   const sheet = page.locator('[data-poststudio]').first();
   check('  and it opens', (await sheet.count()) > 0);
+  /* A ROOM, not a sheet over the desk.
+ 
+     A sheet has no card in the menu and nothing points at it; the only way
+     to find it was to know it was there. The two are told apart here rather
+     than taken on trust, because a sheet painted in the room's colours looks
+     identical in a screenshot and behaves differently under the phone's back
+     button. */
+  check('  as a room of its own, in the cutting room\u2019s colours',
+    (await page.locator('[data-poststudio][data-postroom="yes"]').count()) > 0,
+    'it is still a sheet painted to look like a room');
+  check('    with no close button of its own, because a room is left by the menu',
+    (await page.locator('[data-poststudio] [data-backout]').count()) === 0,
+    'a second way out that only this room has, going somewhere that depends'
+    + ' on how you arrived');
 
   /* ── It draws ────────────────────────────────────────────────────────── */
 
@@ -210,6 +224,18 @@ try {
     + ' something you otherwise find out after posting');
 
   /* ── The price, before the press ─────────────────────────────────────── */
+
+  /* The bill before the work, not only on the button.
+ 
+     Carli: *"Remember to monetize and nothing is free in this app."* The
+     cutting room shows an itemised bill before it charges; this room let
+     somebody build a whole post and meet the price at the foot of it. */
+  const priced = ((await page.locator('[data-postprice]').first().innerText().catch(() => '')) ?? '')
+    .replace(/\s+/g, ' ');
+  check('the room says what taking a picture out costs, before the work',
+    /\d/.test(priced) && /credit|krediet/i.test(priced),
+    `${priced || 'nothing at the top of the room'} — a price met at the end is`
+    + ' a price somebody has already spent time to reach');
 
   const save = page.locator('[data-postexport]').first();
   const said = ((await save.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
@@ -552,7 +578,24 @@ try {
      cannot tell apart from a control in transit. */
   await page.evaluate(() => {
     const sheet2 = document.querySelector('[data-poststudio]');
+    /* The LAST control in the room, brought into view.
+ 
+       Scrolling to the bottom of the page was right while this was a
+       full-screen sheet and wrong the moment it became a room: the copilot
+       is drawn below the room, so the bottom of the page is the bottom of
+       the copilot and the room's own last button sits wherever it sits.
+       "Stranded" means it cannot be got out from under the bar, not that it
+       happens to be under it at some scroll position — so the thing to do
+       is what a person would do, and scroll to it. */
     if (sheet2) sheet2.scrollTop = sheet2.scrollHeight;
+    const controls = sheet2 ? sheet2.querySelectorAll('button, input, textarea, label') : [];
+    const last = controls[controls.length - 1];
+    /* `center`, not `end`. `end` parks the element's bottom edge on the
+       viewport's bottom edge by definition, which puts it under a bar that
+       overlays the foot of the screen no matter how much clearance the room
+       leaves — so it reported the last button stranded at every possible
+       padding. Stranded means no scroll position clears it. */
+    if (last) last.scrollIntoView({ block: 'center' });
   });
   await page.waitForTimeout(400);
 
@@ -580,14 +623,13 @@ try {
   check('nothing in the sheet is stranded under the tab bar',
     covered.length === 0, covered.slice(0, 5).join(', '));
 
-  /* ── And it can be left ──────────────────────────────────────────────── */
+  /* ── And it is a room somebody can find ─────────────────────────────── */
 
-  await page.locator('[data-poststudio] [data-backout]').first().click();
-  await page.waitForTimeout(600);
-  check('it closes, and the desk is still behind it',
-    (await page.locator('[data-poststudio]').count()) === 0
-    && (await page.locator('[data-openpost]').count()) > 0,
-    'closing the post should leave the video desk, not the whole studio');
+  const named = await page.evaluate(() => Array.from(document.querySelectorAll('button, a'))
+    .map((el) => (el.textContent ?? '').replace(/\s+/g, ' ').trim())
+    .filter((text) => /Photo Editor|Foto Editor/i.test(text)).length);
+  check('the photo editor is named somewhere a person can press', named > 0,
+    'a room nothing points at is a sheet with extra steps');
 
 
   /* ── And then, from a clean start, the hand-over ─────────────────────
@@ -601,9 +643,7 @@ try {
      sentence in the studio is the studio agreeing with itself. The cover
      appearing downstairs is the only thing that says the hand-over
      happened — and if it did not, she was charged for nothing. */
-  if ((await page.locator('[data-openpost]').count()) > 0) {
-    await page.locator('[data-openpost]').first().click();
-    await page.waitForTimeout(700);
+  {
     const again = page.locator('[data-postintofilm]').first();
     if ((await again.count()) > 0) {
       await again.click();
@@ -617,8 +657,7 @@ try {
         'it has to NAME the room. It said "below this desk" at first, which'
         + ' is where the button is and not where the editor is, so she went'
         + ' looking down a page for something that was never on it');
-      await page.locator('[data-poststudio] [data-backout]').first().click();
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(400);
 
       /* Through the door, then behind the bar.
  
@@ -632,11 +671,11 @@ try {
  
          So: into the cutting room, then open the dock's film bench, which
          is where the cover panel lives and until then is not in the DOM. */
-      const door = page.locator('[data-tocutting]').first();
-      if ((await door.count()) > 0) {
-        await door.click();
-        await page.waitForTimeout(1400);
-      }
+      /* Through the menu, because the door on the video desk is on the
+         video desk — and the photo editor is its own room now, so the walk
+         is no longer standing next to that button when it needs it. */
+      await toRoom(page, 'Video Editor');
+      await page.waitForTimeout(1400);
       const film = page.locator('[data-cutbench="film"]').first();
       if ((await film.count()) > 0) {
         await film.click();
@@ -678,6 +717,6 @@ if (problems.length) {
   process.exit(1);
 }
 console.log(
-  '\ncheck:postwalk — the post studio opens on the video desk, draws what is'
+  '\ncheck:postwalk — the photo editor is a room of its own, draws what is typed, lets her choose which part of a photo shows, says its price first, and hands the picture to a film.'
   + ' typed, warns where a platform covers it, names its price, and can be left.',
 );

@@ -141,6 +141,28 @@ Legend: **✅ have** · **✖ missing** · **◇ deliberate** (missing, and we c
 | ✖ | No start frame, end frame or reference image — the reference takes all three, and we take none, because there is nowhere to keep an image (gap 2) |
 | ✖ | No history, no favourites |
 
+### Photo Editor
+
+A sheet off the video desk until 7 October 2026, when Carli asked *"Waar edit ek 'n foto?"* and then
+*"add next to it Photo Editor."* A sheet is not a room: no card in the menu, nothing pointing at it,
+findable only by somebody who already knew. It is in `surfaces.ts` under **Show it** now, which is
+also what gave Hooks a half card beside it — that grid hands the whole row to a last odd card, so a
+fourth room in the stage fixed the shape by existing.
+
+| | |
+|---|---|
+| ✅ | Four shapes — square, story, portrait, wide — with the safe zones of a 9:16 frame measured on the one that has platform furniture over it |
+| ✅ | A picture off the phone through `lib/imagefile.ts`, which reads the dimensions out of the header before any decode, so a 200-megapixel camera photo cannot kill the tab |
+| ✅ | Which part of it shows: drag to move, a slider to go closer, fill the frame or fit the whole picture, and centre it to undo all three. The pan is stored as a share of the slack rather than a distance, so no value — including NaN — can leave the frame uncovered. `check:postcrop` proves it over 6804 placements |
+| ✅ | Words in three real self-hosted faces, in a colour, at top, middle or bottom, with a warning where they land under a platform's own caption and buttons |
+| ✅ | A background colour, or no background at all: a checkerboard on screen so transparency can be SEEN, and never in the exported file. `audit/postwalk.mjs` reads the downloaded PNG's alpha |
+| ✅ | The price is said at the top of the room before the work and again on the button that spends it |
+| ✅ | One road out and it is paid: saving to the device and handing the picture to the cutting room as a film's cover both charge, once per post, so the free on-device film export is not a free road off the phone. `check:postpaid` |
+| ✅ | It cannot make album art, and that is a decision rather than a gap: a cover is generated on the spot or bought from an artist. `check:ownart` holds it against eleven screens that take a member's picture |
+| ✖ | **No crop by hand, no rotate, no filters.** The frame is chosen by moving and zooming; there is no free-form crop box, no straightening and no brightness or colour adjustment |
+| ✖ | **No removing or inserting an object.** It needs an engine and a price per use, and the price is Carli's to set |
+| ✖ | **Words sit in three places, not anywhere.** No free drag for text, and no rotation on it |
+
 ### Video Editor
 
 Built after the first pass of this document and missing from it until 5 October 2026, which is what

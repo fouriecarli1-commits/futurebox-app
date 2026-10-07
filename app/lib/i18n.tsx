@@ -1636,6 +1636,8 @@ export const STRINGS: Dict = {
   "post.bringIn": { en: "Bring a picture in", af: "Bring \u2019n prent in" },
   "post.takeOut": { en: "Take it out", af: "Haal dit uit" },
   "post.framing": { en: "What shows", af: "Wat wys" },
+  "post.price": { en: "Building a picture here costs nothing. Taking one out costs", af: "Om \u2019n prent hier te bou kos niks. Om een uit te neem kos" },
+  "post.priceTwo": { en: "\u2014 the same one credit whether you save it to your phone or put it on a film, and the same post is only ever charged once.", af: "\u2014 dieselfde een krediet of jy dit op jou foon stoor of op \u2019n film sit, en dieselfde prent word net een keer gehef." },
   "post.fill": { en: "Fill the frame", af: "Vul die raam" },
   "post.whole": { en: "The whole picture", af: "Die hele prent" },
   "post.centre": { en: "Centre it", af: "Sit dit in die middel" },
@@ -2555,6 +2557,8 @@ export const STRINGS: Dict = {
      not mean. A cutting room is what it is, and what every editor has been
      called since film was film. */
   "rail.videoedit": { en: "Video Editor", af: "Video Editor" },
+  "rail.photo": { en: "Photo Editor", af: "Foto Editor" },
+  "rail.photo.hint": { en: "Stills for social, with words on them", af: "Stille vir sosiaal, met woorde daarop" },
   "rail.videoedit.hint": { en: "Your own footage, on a clock", af: "Jou eie opnames, op \u2019n klok" },
 
   // ── The video desk ────────────────────────────────────────────────

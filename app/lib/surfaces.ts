@@ -40,6 +40,7 @@ export const SURFACE_IDS = [
   "booth",
   "canvas",
   "videoedit",
+  "photo",
   "hooks_feed",
   "channels",
   "collab",
@@ -434,6 +435,43 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       {
         en: "Why does putting it together take as long as the film?",
         af: "Hoekom vat dit so lank soos die film om dit saam te sit?",
+      },
+    ],
+  },
+  photo: {
+    id: "photo",
+    stage: "show",
+    /* Beside the cutting room, not inside it.
+
+       Carli, 7 October 2026: *"Make hooks the same shape as video desk and
+       add next to it Photo Editor."* It was a sheet off the video desk, and
+       a sheet is not a room: it has no place in the menu, nothing points at
+       it, and the only way to find it was to already know it was there — in
+       a room about moving pictures. A still is its own kind of work. */
+    next: {
+      to: "videoedit",
+      en: "Put it on a film",
+      af: "Sit dit op \u2019n film",
+    },
+    purpose:
+      "The photo editor: one still, made for social media. Bring a picture in, choose which part of it shows by dragging and going closer, fill the frame or fit the whole picture, put words on it in one of three faces, set what is behind it or take the background off for a see-through PNG. Making it costs nothing; taking it off the device costs a credit, charged once per post, and that same credit covers sending it to the cutting room as a film's cover. It cannot make album art: a cover is generated on the spot or bought from an artist, and that is a decision about paying artists rather than a missing feature.",
+    helps: {
+      en: "I can tell you what each control does and what a shape is for, but the picture is yours \u2014 nothing in this room asks me to make one.",
+      af: "Ek kan jou s\u00ea wat elke kontrole doen en waarvoor \u2019n vorm is, maar die prent is joune \u2014 niks in hierdie kamer vra my om een te maak nie.",
+    },
+    can: [],
+    seeds: [
+      {
+        en: "Which shape should I use for a story?",
+        af: "Watter vorm moet ek vir \u2019n storie gebruik?",
+      },
+      {
+        en: "How do I choose which part of my photo shows?",
+        af: "Hoe kies ek watter deel van my foto wys?",
+      },
+      {
+        en: "What does taking the background off do?",
+        af: "Wat doen dit as ek die agtergrond afhaal?",
       },
     ],
   },

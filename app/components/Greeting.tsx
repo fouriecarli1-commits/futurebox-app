@@ -39,6 +39,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Sparkles, Sliders, Mic, Video, Clapperboard, Smartphone, ListMusic,
   Handshake, Radio, Mic2, AudioWaveform, Megaphone, Palette, ArrowRight, Scissors,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { habitOf, suggest, partOfDay, type Habit } from '../lib/habits';
@@ -63,6 +64,7 @@ const ICONS: Record<SurfaceId, typeof Sparkles> = {
   booth: Mic,
   canvas: Clapperboard,
   videoedit: Scissors,
+  photo: ImageIcon,
   hooks_feed: Smartphone,
   channels: ListMusic,
   collab: Handshake,
@@ -80,6 +82,7 @@ const RAIL_KEY: Record<SurfaceId, string> = {
   booth: 'rail.booth',
   canvas: 'rail.canvas',
   videoedit: 'rail.videoedit',
+  photo: 'rail.photo',
   hooks_feed: 'rail.hooks',
   channels: 'rail.channel',
   collab: 'rail.collab',

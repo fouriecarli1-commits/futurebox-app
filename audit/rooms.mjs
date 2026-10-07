@@ -40,6 +40,7 @@ export const DOORS = {
   sound: 'Sound trainer',
   canvas: 'Video desk',
   videoedit: 'Video Editor',
+  photo: 'Photo Editor',
   hooks_feed: 'Hooks',
   channels: 'Channel',
   live: 'Live',
