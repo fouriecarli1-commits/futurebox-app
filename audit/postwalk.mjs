@@ -717,6 +717,7 @@ if (problems.length) {
   process.exit(1);
 }
 console.log(
-  '\ncheck:postwalk — the photo editor is a room of its own, draws what is typed, lets her choose which part of a photo shows, says its price first, and hands the picture to a film.'
-  + ' typed, warns where a platform covers it, names its price, and can be left.',
+  '\ncheck:postwalk — the photo editor is a room of its own, draws what is typed,'
+  + ' lets her choose which part of a photo shows, warns where a platform covers'
+  + ' her words, says its price before the work, and hands the picture to a film.',
 );
