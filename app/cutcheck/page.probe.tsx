@@ -24,7 +24,7 @@
  * for the walk to read.
  */
 import React, { useEffect, useState } from 'react';
-import { EDGES, SOFTNESS, feathered, maskOnto, shareKept } from '../lib/cutout';
+import { EDGES, SOFTNESS, blurBehind, feathered, maskOnto, shareKept } from '../lib/cutout';
 
 const SIDE = 200;
 
@@ -201,7 +201,47 @@ export default function CutCheck(): React.ReactElement {
     const half = new Uint8ClampedArray(400);
     for (let i = 0; i < half.length; i += 4) half[i] = i < half.length / 2 ? 255 : 0;
 
+    /* ── And the blur that keeps the person sharp ─────────────────────
+ 
+       A picture of fine vertical stripes, and a mask over the left half.
+       Stripes because a blur is only visible as a loss of difference
+       between neighbouring pixels, and flat colour has none to lose — a
+       blur over red is red, and every reading of it would pass.
+ 
+       So: the spread of values down a row, left and right. Behind the mask
+       it must collapse; in front of it the stripes must survive exactly. */
+    const striped = document.createElement('canvas');
+    striped.width = SIDE;
+    striped.height = SIDE;
+    const bars = striped.getContext('2d');
+    if (!bars) return;
+    for (let x = 0; x < SIDE; x += 1) {
+      bars.fillStyle = x % 4 < 2 ? '#ffffff' : '#000000';
+      bars.fillRect(x, 0, 1, SIDE);
+    }
+    const behind = blurBehind(striped, mask, SIDE, SIDE, 6, 0);
+    const readBehind = behind.getContext('2d', { willReadFrequently: true });
+    if (!readBehind) return;
+    const blurred = readBehind.getImageData(0, 0, SIDE, SIDE).data;
+    const spread = (from: number, to: number): number => {
+      let low = 255;
+      let high = 0;
+      const row = Math.floor(SIDE / 2);
+      for (let x = from; x < to; x += 1) {
+        const v = blurred[(row * SIDE + x) * 4];
+        if (v < low) low = v;
+        if (v > high) high = v;
+      }
+      return high - low;
+    };
+    /* Well inside each half, so the feather at the seam is not what is
+       being read. */
+    const sharpSide = spread(4, SIDE / 2 - 12);
+    const softSide = spread(SIDE / 2 + 12, SIDE - 4);
+
     setSaid(JSON.stringify({
+      sharpSide,
+      softSide,
       keptLeft,
       keptRight,
       colourChanged,

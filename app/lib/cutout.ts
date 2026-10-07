@@ -401,3 +401,94 @@ export async function cutOut(
     return { ok: false, why: 'failed' };
   }
 }
+
+/**
+ * How far behind the person goes out of focus.
+ *
+ * As a share of the picture's shorter side, for the reason every radius in
+ * this app is: eight pixels is a strong blur on a thumbnail and almost
+ * nothing on a photograph off a camera.
+ */
+export const BEHIND = [
+  { id: 'soft', share: 0.004 },
+  { id: 'misty', share: 0.010 },
+  { id: 'gone', share: 0.022 },
+] as const;
+export type BehindId = (typeof BEHIND)[number]['id'];
+
+export const behindOf = (id: string, of: { readonly width: number; readonly height: number }): number =>
+  Math.max(1, Math.min(of.width, of.height)
+    * (BEHIND.find((one) => one.id === id)?.share ?? BEHIND[1].share));
+
+/**
+ * The person kept sharp and everything behind them put out of focus.
+ *
+ * ── Why this is here and not a filter ────────────────────────────────────
+ *
+ * Carli listed "auto focus, blur" among the tools a modern editor has. The
+ * blur that `postlook.ts` already had is the whole picture, which is a mood;
+ * this is the one people actually mean by it — the thing a phone's portrait
+ * mode does, where the subject stays sharp and the room behind them does not.
+ *
+ * ── Built out of the two pieces that already exist ───────────────────────
+ *
+ * The mask is the one the background remover already fetched, and `maskOnto`
+ * is the same feathering that cut-out uses. So this is a blurred copy of the
+ * photograph with the sharp person drawn back on top of it, and the edge
+ * between them is the edge that was already measured, argued about and
+ * photographed twice.
+ *
+ * Nothing new to get wrong, and nothing new to download: the model is already
+ * in hand by the time this can be pressed.
+ *
+ * ── The one thing that is not obvious ────────────────────────────────────
+ *
+ * The blurred copy is drawn from a canvas that is BIGGER than the frame and
+ * then cropped back, because `filter: blur()` samples transparency outside
+ * the edges of the source and leaves a pale band all the way round. Drawing
+ * the picture oversized and taking the middle out is the standard answer and
+ * the only one that does not need a second pass.
+ */
+export function blurBehind(
+  picture: CanvasImageSource,
+  mask: CanvasImageSource,
+  width: number,
+  height: number,
+  radius: number,
+  softness: number = SOFTNESS,
+): HTMLCanvasElement {
+  const out = document.createElement('canvas');
+  out.width = width;
+  out.height = height;
+  const ctx = out.getContext('2d');
+  if (!ctx) return out;
+
+  /* The margin is the blur's own reach. Anything less and the band is
+     narrower rather than gone, which is the version that ships. */
+  const edge = Math.ceil(radius * 3);
+  const wide = document.createElement('canvas');
+  wide.width = width + edge * 2;
+  wide.height = height + edge * 2;
+  const over = wide.getContext('2d');
+  if (!over) return out;
+  /* Stretched to cover the margin rather than mirrored into it. A mirror is
+     the better answer for a photograph being blurred on its own; here the
+     margin is thrown away a line later, and the only thing it has to be is
+     opaque. */
+  over.drawImage(picture, 0, 0, wide.width, wide.height);
+
+  const soft = document.createElement('canvas');
+  soft.width = wide.width;
+  soft.height = wide.height;
+  const blur = soft.getContext('2d');
+  if (!blur) return out;
+  blur.filter = `blur(${radius}px)`;
+  blur.drawImage(wide, 0, 0);
+  blur.filter = 'none';
+
+  ctx.drawImage(soft, edge, edge, width, height, 0, 0, width, height);
+  /* And the person, sharp, on top — through the same feather the cut-out
+     uses, so the two tools cannot disagree about where somebody's edge is. */
+  ctx.drawImage(maskOnto(picture, mask, width, height, softness), 0, 0);
+  return out;
+}

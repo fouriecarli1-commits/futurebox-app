@@ -82,7 +82,10 @@ import {
   BIGGER, SHARPEN, bigger, nextQuarter, sharpened, sizeOf, tooBig, turned,
   type Sharpness, type Times,
 } from '../lib/postwork';
-import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
+import {
+  BEHIND, EDGES, behindOf, blurBehind, cutOut, edgeOf, maskOnto,
+  type BehindId, type EdgeId,
+} from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
@@ -1466,6 +1469,62 @@ export default function PostStudio({
     }
   };
 
+  /**
+   * The person kept sharp, and the room behind them put out of focus.
+   *
+   * Carli's list of modern tools, 7 October 2026: *"auto focus, blur"*. The
+   * blur the room already had is the whole picture, which is a mood; this is
+   * the one people mean by it — what a phone's portrait mode does.
+   *
+   * The same model as the background remover, and the same mask: if she has
+   * already taken a background out of this picture the answer is in hand and
+   * this is instant, and if she has not it is the one download either tool
+   * would have made. `blurBehind` in `lib/cutout.ts` carries why it is built
+   * out of pieces that already exist rather than out of a new filter.
+   */
+  const blurTheBack = async (how: BehindId): Promise<void> => {
+    if (!picture || cutting !== null) return;
+    setSaid('');
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    const had = lastMask.current;
+    /* Only when it is this very picture's mask. A mask kept from before a
+       crop, a turn or an enlargement is the right shape for a photograph
+       that is no longer on the glass. */
+    const mask = had && had.of === picture ? had.mask : null;
+    const put = (from: HTMLCanvasElement): void => {
+      before(t('post.stepBehind', 'blurring what is behind'));
+      asPicture(
+        from,
+        (one) => {
+          setWhole(picture);
+          setPicture(one);
+          setSaid(t('post.behindDone', 'The room behind you is out of focus. Everything in front of it is as sharp as it was.'));
+        },
+        () => setSaid(t('post.behindFailed', 'That could not be put out of focus.')),
+      );
+    };
+
+    if (mask) {
+      put(blurBehind(picture, mask, wide, tall, behindOf(how, { width: wide, height: tall }), edgeOf(edge)));
+      return;
+    }
+    setCutting(0);
+    try {
+      const cut = await cutOut(picture, (part) => setCutting(part), edgeOf(edge));
+      if (!cut.ok) {
+        setSaid(cut.why === 'nobody'
+          ? t('post.cutNobody', 'No person could be found in this picture. This looks for people, and knows nothing about objects.')
+          : t('post.behindFailed', 'That could not be put out of focus.'));
+        return;
+      }
+      lastMask.current = { mask: cut.mask, of: picture };
+      put(blurBehind(picture, cut.mask, wide, tall, behindOf(how, { width: wide, height: tall }), edgeOf(edge)));
+    } finally {
+      setCutting(null);
+    }
+  };
+
   /** The same picture, handed next door instead of onto the device. */
   const intoFilm = async (): Promise<void> => {
     if (!onIntoFilm) return;
@@ -1871,6 +1930,42 @@ export default function PostStudio({
         <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
           {t('post.cutWhat', 'This looks for people. It runs on your own device and costs nothing; the first time takes a moment while it downloads.')}
         </span>
+        {/* ── And the other thing to do with the same mask ──────────────
+ 
+            Carli's list, 7 October 2026: *"auto focus, blur"*. Beside taking
+            the background OUT, because it is the same model, the same mask
+            and the same edge — and because somebody standing here looking at
+            a photograph of a person is already thinking about what to do
+            with what is behind them.
+ 
+            Instant when she has already cut one out of this picture: the
+            answer is in hand and nothing is downloaded twice. */}
+        <p className={`${MIKRO} pt-1`}>{t('post.behind2', 'Or put it out of focus')}</p>
+        <div className={RY3}>
+          {BEHIND.map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              data-postbehindblur={one.id}
+              disabled={cutting !== null}
+              onClick={() => void blurTheBack(one.id)}
+              className={`${LEEG} disabled:opacity-40`}
+            >
+              {one.id === 'soft'
+                ? t('post.behindSoft', 'A little')
+                : one.id === 'misty'
+                  ? t('post.behindMisty', 'Misty')
+                  : t('post.behindGone', 'Gone')}
+            </button>
+          ))}
+        </div>
+        <p className="text-[12px] leading-relaxed text-zinc-500">
+          {t(
+            'post.behindWhy',
+            'Keeps the person sharp and puts the room behind them out of focus \u2014 what a phone\u2019s portrait mode does. Same model as taking the background out, so it looks for people.',
+          )}
+        </p>
+
       </div>
     )}
     {/* ── Taking something small out ─────────────────────────────────

@@ -134,6 +134,26 @@ try {
       + ' portrait photograph has mask pixels taller than they are wide, and a'
       + ' feather measured on the width alone barely blurs vertically at all');
 
+    /* ── And the blur that keeps the person sharp ─────────────────────
+ 
+       Carli's list, 7 October 2026: *"auto focus, blur"*. Measured on
+       vertical stripes, because a blur is only visible as a loss of
+       difference between neighbouring pixels and flat colour has none to
+       lose: a blur over red is red, and every reading of it would pass.
+ 
+       What is read is the spread of values along a row, well inside each
+       half so the feather at the seam is not what is being measured. */
+    check('putting the background out of focus leaves the person untouched',
+      bench.sharpSide === 255,
+      `the stripes behind the mask span ${bench.sharpSide} of 255 — anything`
+      + ' under that is the blur reaching into the thing it is supposed to'
+      + ' keep sharp, which is a face going soft');
+    check('  and really does blur what is behind',
+      bench.softSide < 60,
+      `the stripes outside it still span ${bench.softSide} of 255 — a blur`
+      + ' that leaves the difference between neighbouring pixels is a filter'
+      + ' that ran and did nothing');
+
     check('  and no edge feathers by more than a few mask pixels',
       bench.softest <= 3.5,
       `the softest is ${bench.softest} of a mask pixel — past about one and a`
