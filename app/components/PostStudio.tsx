@@ -44,7 +44,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Crop as CropIcon, Download, Image as ImageIcon, Lasso, Loader2, Plus, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, X,
+  Crop as CropIcon, Download, Image as ImageIcon, Lasso, Loader2, Plus, Redo2, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import {
   POST_SIZES, clashes, fitText, moveInside, sizeById,
@@ -77,6 +77,7 @@ import {
 import {
   cutAlong, trace, whyNot, worthCutting, type Path as Traced,
 } from '../lib/lasso';
+import { makeBack } from '../lib/postback';
 import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
@@ -393,6 +394,55 @@ export default function PostStudio({
      `null` is not tracing. A path is — and it is held in shares of the
      picture, like the crop box, so it still means the same thing if the
      picture is replaced underneath it. */
+  /* ── One step back, from anything that destroys the photograph ────────
+ 
+     Five of this room's tools replace the picture outright, on purpose —
+     the crop, the background remover, the eraser, and both directions of
+     the free-hand cut. Until tonight the only way back was `Start a new
+     post` and bringing the file in again, which makes every one of them a
+     thing you think twice about pressing. A tool you think twice about
+     pressing is a tool that does not get used.
+ 
+     `lib/postback.ts` carries the ceiling and why it is bytes rather than
+     steps: a decoded phone photograph is 48 MB of pixels, and eight of them
+     is the tab being killed with no message at all.
+ 
+     A ref, not state: the history is not drawn, and putting it in state
+     would redraw the whole room on every remembered step. What IS drawn is
+     the sentence on the button, and that comes out of `told`, which is
+     bumped whenever the history moves. */
+  const history = useRef(makeBack<HTMLImageElement>());
+  const [told, setTold] = useState(0);
+
+  /** Remember the picture as it is, then let the caller replace it. */
+  const before = (what: string): void => {
+    history.current.remember(what, picture);
+    setTold((n) => n + 1);
+  };
+
+  const stepBack = (): void => {
+    const shot = history.current.undo(picture);
+    if (!shot) return;
+    setPicture(shot.picture);
+    /* The mask belongs to a picture that is no longer on the glass, and
+       changing the cut edge after stepping back would put the old cut on
+       the new picture. */
+    lastMask.current = null;
+    setTraced(null);
+    setCropBox(null);
+    setTold((n) => n + 1);
+    setSaid(t('post.undone', 'Put back.'));
+  };
+
+  const stepOn = (): void => {
+    const shot = history.current.redo(picture);
+    if (!shot) return;
+    setPicture(shot.picture);
+    lastMask.current = null;
+    setTold((n) => n + 1);
+    setSaid('');
+  };
+
   const [traced, setTraced] = useState<Traced | null>(null);
   const tracingNow = useRef(false);
   /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
@@ -891,6 +941,9 @@ export default function PostStudio({
     }
     const img = new Image();
     img.onload = () => {
+      /* A step like any other, so bringing the wrong one in on top of work
+         already done is one press to take back rather than a lost evening. */
+      before(t('post.stepBring', 'bringing a picture in'));
       setPicture(img);
       setCrop(MIDDLE);
       setLook(PLAIN);
@@ -1121,6 +1174,7 @@ export default function PostStudio({
        rectangle of pixels, not a resize, so there is nothing to interpolate
        and the cut is exactly what was on the glass. */
     ctx.drawImage(picture, cut.x, cut.y, cut.width, cut.height, 0, 0, cut.width, cut.height);
+    before(t('post.stepCrop', 'cutting it down'));
     asPicture(
       made,
       (one) => {
@@ -1164,6 +1218,7 @@ export default function PostStudio({
       setSaid(t('post.drewLittle', 'Draw right round the thing, with your finger on the picture. A tap is not a shape.'));
       return;
     }
+    before(keep ? t('post.stepKeep', 'keeping what you drew round') : t('post.stepDrop', 'taking out what you drew round'));
     asPicture(
       made,
       (one) => {
@@ -1302,6 +1357,7 @@ export default function PostStudio({
       return;
     }
     ctx.putImageData(done.pixels, 0, 0);
+    before(t('post.stepRub', 'rubbing something out'));
     asPicture(rubbed, (one) => {
       setWhole(picture);
       setPicture(one);
@@ -1325,6 +1381,7 @@ export default function PostStudio({
         return;
       }
       lastMask.current = { mask: cut.mask, of: picture };
+      before(t('post.stepCut', 'taking the background out'));
       asPicture(cut.canvas, (one) => {
         setWhole(picture);
         setPicture(one);
@@ -1626,7 +1683,11 @@ export default function PostStudio({
         />
       </label>
       {picture && (
-        <button type="button" onClick={() => setPicture(null)} className={LEEG}>
+        <button
+          type="button"
+          onClick={() => { before(t('post.stepOut', 'taking the picture out')); setPicture(null); }}
+          className={LEEG}
+        >
           {t('post.takeOut', 'Take it out')}
         </button>
       )}
@@ -2412,7 +2473,18 @@ export default function PostStudio({
       </p>
       <button
         type="button"
-        onClick={() => { setPost(freshId()); setWords([]); setPicture(null); setSaid(''); }}
+        onClick={() => {
+          /* A new post is a new photograph, so the steps that were about the
+             old one are not steps she could sensibly take back. */
+          history.current.clear();
+          setTold((n) => n + 1);
+          setPost(freshId());
+          setWords([]);
+          setPicture(null);
+          setTraced(null);
+          setCropBox(null);
+          setSaid('');
+        }}
         className={LEEG}
       >
         {t('post.startFresh', 'Start a new post')}
@@ -2459,6 +2531,52 @@ export default function PostStudio({
           <h2 className="text-lg font-bold">
             {asRoom ? t('rail.photo', 'Photo Editor') : t('post.title', 'Make a post')}
           </h2>
+          {/* ── One step back, where it can always be reached ───────────
+ 
+              In the room's header rather than on a bench, because the tools
+              it undoes are on five different benches and a button you have
+              to go and find is a button you find after you have decided to
+              live with the mistake.
+ 
+              It says what it undoes, in the title and to a screen reader:
+              "Put back taking the background out" is a different promise
+              from "Undo", and the difference matters when four destructive
+              things have happened in a row. */}
+          {picture !== null || told > 0 ? (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                data-postundo
+                disabled={history.current.undoable() === null}
+                onClick={stepBack}
+                title={history.current.undoable()
+                  ? `${t('post.undo', 'Put back')} \u2014 ${history.current.undoable()}`
+                  : t('post.undoNone', 'Nothing to put back yet')}
+                aria-label={history.current.undoable()
+                  ? `${t('post.undo', 'Put back')} \u2014 ${history.current.undoable()}`
+                  : t('post.undoNone', 'Nothing to put back yet')}
+                className={`${LEEG} w-auto px-3 disabled:opacity-35`}
+              >
+                <Undo2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                data-postredo
+                disabled={history.current.redoable() === null}
+                onClick={stepOn}
+                title={history.current.redoable()
+                  ? `${t('post.redo', 'Do it again')} \u2014 ${history.current.redoable()}`
+                  : t('post.redoNone', 'Nothing to do again')}
+                aria-label={history.current.redoable()
+                  ? `${t('post.redo', 'Do it again')} \u2014 ${history.current.redoable()}`
+                  : t('post.redoNone', 'Nothing to do again')}
+                className={`${LEEG} w-auto px-3 disabled:opacity-35`}
+              >
+                <Redo2 className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
+
           {/* ── The copilot, as a button ─────────────────────────────
  
               Carli asked for this shape in the cutting room — *"Die copilot

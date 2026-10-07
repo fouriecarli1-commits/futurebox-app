@@ -145,7 +145,18 @@ const silent: string[] = [];
 let filing = 0;
 for (const file of walk('app/components')) {
   const text = withoutComments(readFileSync(file, 'utf8'));
-  if (!every.some((write) => text.includes(write))) continue;
+  /* ── A bare call, not a method on something else ──────────────────
+ 
+     The tokens are the names these store modules export — `remember(`,
+     `fileIt(`, `keepFilm(` — and `includes` matched them anywhere, method
+     calls included. The photo editor's undo stack has a `remember` of its
+     own, in memory, about a picture nobody is filing anywhere, and this
+     rule reported the room as filing something and saying nothing about
+     where it went. A store function is called by its own name; a method is
+     called after a dot. */
+  const calls = (write: string): boolean =>
+    new RegExp(`(^|[^.\\w])${write.replace('(', '\\(')}`, 'm').test(text);
+  if (!every.some(calls)) continue;
   filing += 1;
   const keys = [...text.matchAll(/t\(\s*'([^']+)'/g)].map((hit) => hit[1]);
   /* Through the dictionary keys only. The first version also accepted the

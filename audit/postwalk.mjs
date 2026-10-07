@@ -823,6 +823,39 @@ try {
       'a crop bar that stays up is a room that thinks it is still cropping');
   }
 
+  /* ── One step back, from the thing that just destroyed the picture ──
+ 
+     The crop above really did replace the photograph: 400x300 became
+     300x300. So this is the first moment in the walk where there is
+     something worth taking back, and the reading is unambiguous — the
+     picture's own size, which nothing else on the screen changes. */
+  const undo = page.locator('[data-postundo]');
+  check('the room offers to put back what a tool just destroyed',
+    (await undo.count()) > 0 && !(await undo.first().isDisabled()),
+    'five tools in this room replace the photograph outright, and the only'
+    + ' way back was bringing the file in again');
+  if ((await undo.count()) > 0 && !(await undo.first().isDisabled())) {
+    await undo.first().click();
+    await page.waitForTimeout(900);
+    const putBack = await sizeOfPicture();
+    check('  and one press really puts the photograph back',
+      putBack !== null && before !== null
+        && putBack.width === before.width && putBack.height === before.height,
+      `${putBack?.width}x${putBack?.height}, and it was ${before?.width}x${before?.height}`
+      + ' before the crop — a button that changes a label and not a picture');
+
+    const again = page.locator('[data-postredo]');
+    check('    and the way forward is offered once she has stepped back',
+      (await again.count()) > 0 && !(await again.first().isDisabled()));
+    await again.first().click();
+    await page.waitForTimeout(900);
+    const onAgain = await sizeOfPicture();
+    check('      and doing it again lands where undo was standing',
+      onAgain !== null && onAgain.width === 300 && onAgain.height === 300,
+      `${onAgain?.width}x${onAgain?.height} — redo has to hand back the state`
+      + ' undo was handed, or the two walk apart');
+  }
+
   /* ── Drawing round a thing, which is the third way to cut one out ────
  
      Carli, 7 October 2026: *"Gaan aan met die free-hand cut."*

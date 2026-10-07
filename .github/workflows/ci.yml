@@ -1105,6 +1105,13 @@ jobs:
       - name: A traced path stays inside the picture, whichever way round
         run: npm run check:lasso
 
+      # Five of the photo editor's tools replace the photograph outright,
+      # so the only way back was bringing the file in again. A decoded
+      # phone photograph is 48 MB of pixels and eight of them is the tab
+      # being killed, so the ceiling is bytes and not steps.
+      - name: One step back, without holding more pixels than a phone has
+        run: npm run check:postback
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever
