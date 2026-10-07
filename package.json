@@ -267,6 +267,7 @@
     "check:ocr": "tsx scripts/check-ocr.mts",
     "check:grabtext": "node audit/grabtext.mjs",
     "check:cutout": "tsx scripts/check-cutout.mts",
+    "check:privateinfo": "tsx scripts/check-privateinfo.mts",
     "check:cropbox": "tsx scripts/check-cropbox.mts",
     "check:postback": "tsx scripts/check-postback.mts",
     "check:lasso": "tsx scripts/check-lasso.mts",

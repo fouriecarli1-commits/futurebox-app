@@ -24,7 +24,7 @@ ones.
 | **Row-level security is on**, with per-owner policies across the tables. Collab messages are checked twice: in the route and in the policy, so the promise survives somebody later writing a route that forgets. | `supabase/*.sql` |
 | **No secret reaches the browser.** Searched the built client bundle for every secret's name — service role key, Anthropic, ElevenLabs, Paystack, the IP salt, the owner list. Zero hits. | `grep` over `.next/static` after a production build |
 | **Security headers are served**: a real Content-Security-Policy with an allow-list rather than a wildcard, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, and a `Permissions-Policy` that grants only camera and microphone, to self. | `curl -I` against the running app |
-| **Abuse of the free tier is defended.** Normalised email keys (so `a.n.r.e+one@gmail.com` and `anre@gmail.com` are one allowance), salted IP hashes rather than stored addresses, and per-day ceilings on the free tier only. | `supabase/abuse.sql` |
+| **Abuse of the free tier is defended.** Normalised email keys (so `s.a.m+one@gmail.com` and `sam@gmail.com` are one allowance), salted IP hashes rather than stored addresses, and per-day ceilings on the free tier only. | `supabase/abuse.sql` |
 | **Model inputs are screened at the door**, in our own words, before they reach a vendor. | `app/lib/moderation.ts`, used by the copilot, the ad writer and the video routes |
 | **No `dangerouslySetInnerHTML`, no `eval`, no `new Function`** anywhere in the app. | `grep` over `app/` |
 

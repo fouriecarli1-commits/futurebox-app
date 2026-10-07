@@ -13,7 +13,7 @@
 -- card and is not the problem this solves.
 --
 --   * `email_key` — the address with the tricks taken out. Gmail ignores dots
---     and everything after a plus, so a.n.r.e+one@gmail.com and anre@gmail.com
+--     and everything after a plus, so s.a.m+one@gmail.com and sam@gmail.com
 --     are one inbox and are now one allowance.
 --   * `ip_hash` — a salted hash of the address the request came from, so a
 --     hundred fresh accounts from one machine share one ceiling. Hashed rather

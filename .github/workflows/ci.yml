@@ -1112,6 +1112,12 @@ jobs:
       - name: One step back, without holding more pixels than a phone has
         run: npm run check:postback
 
+      # Nothing off the CIPC certificate and no real mailbox in the repo.
+      # An address removed in a later commit is still in every clone taken
+      # before it, so care is not enough — this is the rule written down.
+      - name: No real person's private details are written in this repository
+        run: npm run check:privateinfo
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever

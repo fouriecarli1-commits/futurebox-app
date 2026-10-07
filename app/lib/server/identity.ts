@@ -40,7 +40,7 @@ const DOTLESS = ['gmail.com', 'googlemail.com'];
 /**
  * One inbox, one string.
  *
- * `a.n.r.e+test@googlemail.com` and `anre@gmail.com` are the same person's
+ * `s.a.m+test@googlemail.com` and `sam@gmail.com` are the same person's
  * inbox, and this returns the same key for both. Plus-addressing is stripped
  * everywhere because every provider that supports it treats the suffix as
  * routing rather than as part of the address; dots are only stripped where the
