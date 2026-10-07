@@ -643,6 +643,87 @@ try {
     return { r: +(r / n).toFixed(3), g: +(g / n).toFixed(3), b: +(b / n).toFixed(3) };
   });
 
+  /* ── Cutting the photograph down, which is not framing it ───────────
+ 
+     Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
+     nie."* `lib/cropbox.ts` carries why that is a different tool from the
+     framing above, and `check:cropbox` holds the arithmetic — no gesture can
+     put the box outside the picture, inside out, or down to nothing.
+ 
+     What a browser has to answer is the half arithmetic cannot: that the
+     gesture reaches the box at all, that the box is drawn, and that pressing
+     Cut really replaces the photograph with the part inside it. The third is
+     the one that matters — a crop tool that looks right and leaves the
+     picture alone is the exact failure the pan had in September. */
+  const sizeOfPicture = () => page.evaluate(() => {
+    /* The picture itself, not the canvas: the canvas is the frame and stays
+       1080x1920 whatever is cut away. */
+    const img = document.querySelector('[data-postpicturesize]');
+    return img ? { width: Number(img.dataset.w), height: Number(img.dataset.h) } : null;
+  });
+
+  await bench('pic');
+  const before = await sizeOfPicture();
+  check('the room offers to cut the photograph down',
+    (await page.locator('[data-postcropstart]').count()) > 0,
+    'there is no crop in this room, only a frame to look through');
+
+  if ((await page.locator('[data-postcropstart]').count()) > 0 && before) {
+    const asIs = await colours();
+    await page.locator('[data-postcropstart]').first().click();
+    await page.waitForTimeout(600);
+
+    check('  and the bar to cut with is on the screen, not behind a tab',
+      (await page.locator('[data-postcropbar]:visible').count()) > 0,
+      'the bench closes so the corners can be reached, so a Cut button behind'
+      + ' it is a Cut button nobody can press');
+
+    /* Measured AFTER the box has been made smaller, not merely after the
+       crop opens.
+ 
+       The first version read the glass the moment cutting started and
+       compared it with the moment before — and the box starts as the whole
+       picture, so nothing is shaded and the only difference is the picture
+       being drawn whole instead of filling the frame. It passed at a one per
+       cent change, which is a reading of the letterboxing and not of the
+       shading. Square on a 4:3 photograph throws away a quarter of it, and a
+       quarter of a photograph going dark is not a one per cent change. */
+    const whole = await colours();
+    await page.locator('[data-postcropshape="square"]').first().click();
+    await page.waitForTimeout(500);
+    const shaded = await colours();
+    const lit = (one) => (one ? one.red + one.blue : 0);
+    check('  and the glass shades what is being thrown away',
+      shaded !== null && whole !== null && lit(shaded) < lit(whole) * 0.85,
+      `${lit(whole)} → ${lit(shaded)} bright pixels — square throws a quarter of`
+      + ' a 4:3 photograph away, so a reading that barely moves is a box'
+      + ' nobody is drawing');
+
+    await page.locator('[data-postcropdo]').first().click();
+    await page.waitForTimeout(1200);
+
+    const after = await sizeOfPicture();
+    check('  and pressing Cut really cuts the photograph',
+      after !== null && (after.width < before.width || after.height < before.height),
+      `${before.width}x${before.height} → ${after?.width}x${after?.height} — the`
+      + ' picture is the size it was, so the press changed a number and not a'
+      + ' photograph');
+    check('    to the shape that was asked for',
+      after !== null && Math.abs(after.width - after.height) <= 2,
+      `${after?.width}x${after?.height} — square was pressed`);
+
+    const kept = await colours();
+    check('    and what is left is still the middle of the picture',
+      kept !== null && kept.red > 1000 && kept.blue > 1000,
+      `red ${kept?.red}, blue ${kept?.blue} — a square out of the middle of a`
+      + ' half-red half-blue photograph holds some of each; one of them at'
+      + ' nought means the cut was taken from the wrong place');
+
+    check('      and the bar goes away once it is done',
+      (await page.locator('[data-postcropbar]:visible').count()) === 0,
+      'a crop bar that stays up is a room that thinks it is still cropping');
+  }
+
   await bench('tone');
   const asShot = await mean();
   await page.locator('[data-postauto]').first().click();

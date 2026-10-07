@@ -67,6 +67,10 @@ import {
   AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
 } from '../lib/postlook';
 import { canRead, readWords, tidy, wordsAtAll, type Readable } from '../lib/ocr';
+import {
+  LEAST as CROP_LEAST, WHOLE as ALL_OF_IT, cropped, cutTo, gripAt, moveBox,
+  pullCorner, toShape, type Box as CropBox, type Grip,
+} from '../lib/cropbox';
 import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
@@ -196,10 +200,20 @@ const POST_LOWER: readonly BenchSpec[] = [
   {
     id: 'read',
     icon: <ScanText className="h-5 w-5" />,
-    label: ['post.benchRead', 'Read it'],
+    /* ── Not "Read it", which nobody could work out ──────────────────
+ 
+       Carli, 7 October 2026: *"Ek weet nogsteeds nie wat is die read it
+       funksie in die photo editor nie."* — the second time she had asked.
+ 
+       "Read" is the wrong word in an app with three rooms that read things
+       ALOUD: it sounds like a voice, not like a camera. What it does is take
+       the words that are printed inside a photograph — a poster, a sign, a
+       label, a page — and hand them back as text. "Grab the words" says
+       that, and it says it in two words a thumb can read on a bar. */
+    label: ['post.benchRead', 'Grab the words'],
     what: [
       'post.benchReadWhat',
-      'The words already in the picture, read on your own device. Put them on the post or copy them out.',
+      'Words printed inside the photograph \u2014 a poster, a sign, a label, a page \u2014 turned into text you can use, on your own device. Put them on the post or copy them out.',
     ],
   },
   {
@@ -338,6 +352,18 @@ export default function PostStudio({
   const [said, setSaid] = useState('');
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
+  /* ── Cutting the photograph down, which is not the same as framing it ───
+ 
+     Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
+     nie."* `postcrop.ts` chooses which part of a photograph shows through a
+     frame; this cuts the rest of the photograph away for good. `cropbox.ts`
+     carries the difference and why both belong here.
+ 
+     `null` is not cropping. A box is, and while there is one the glass shows
+     the WHOLE photograph with the box over it — which is what every editor
+     does, and the only way to drag a corner you cannot see. */
+  const [cropBox, setCropBox] = useState<CropBox | null>(null);
+  const grip = useRef<Grip>(null);
   /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
      button that opens it — see the note on the cutting room's. */
   const [asking, setAsking] = useState(false);
@@ -391,6 +417,12 @@ export default function PostStudio({
    * picture — just not a deliverable one. `measureText` ignores the
    * transform, which is what makes the text fit identically at both sizes.
    */
+  /* The whole photograph, centred, at its own proportions — what the glass
+     shows while a crop is being dragged. A constant rather than a literal at
+     each of the three places that need it, because the draw and the two
+     gesture handlers have to agree about where the picture is to the pixel. */
+  const WHOLE_VIEW = { basis: 'whole', zoom: 1, x: 0, y: 0 } as const;
+
   const draw = (to: HTMLCanvasElement, guides: boolean): void => {
     const ctx = to.getContext('2d');
     if (!ctx) return;
@@ -446,8 +478,13 @@ export default function PostStudio({
     if (picture) {
       /* Placed, not stretched, and placed by the one function that also
          reports how far it can move — so the screen cannot draw it in one
-         spot and offer a drag that means another. */
-      const at = place(picture, size, crop);
+         spot and offer a drag that means another.
+ 
+         While she is cropping, the whole photograph instead: `basis: 'whole'`
+         at zoom 1 is contain, so every edge of it is on the glass and every
+         corner of the box can be reached. A crop dragged over a picture whose
+         edges are off the screen is a crop you cannot see the result of. */
+      const at = place(picture, size, cropBox ? WHOLE_VIEW : crop);
       /* The look goes on the PICTURE and comes off again before anything is
          written. Words under a blur are not a style, they are a mistake, and
          a filter left set would put every one of them through it. */
@@ -497,9 +534,76 @@ export default function PostStudio({
       ctx.shadowBlur = 0;
     }
 
+    /* ── The crop box, over everything, and never on the exported file ───
+ 
+        Drawn here rather than as HTML over the canvas, for the same reason
+        the words are drawn here: one surface. An overlay in HTML has to be
+        positioned against a canvas whose size on screen is whatever the
+        phone gives it, and the two then disagree by a pixel or two at every
+        width — which on a corner handle is the difference between grabbing it
+        and grabbing the picture.
+ 
+        Dimmed outside rather than outlined inside. What somebody needs to see
+        is what they are THROWING AWAY, and a thin line asks them to work out
+        which side of it they are keeping. */
+    if (guides && picture && cropBox) {
+      const at = place(picture, size, WHOLE_VIEW);
+      const box = {
+        left: at.left + cropBox.left * at.width,
+        top: at.top + cropBox.top * at.height,
+        width: (cropBox.right - cropBox.left) * at.width,
+        height: (cropBox.bottom - cropBox.top) * at.height,
+      };
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.62)';
+      ctx.beginPath();
+      ctx.rect(0, 0, size.width, size.height);
+      ctx.rect(box.left, box.top, box.width, box.height);
+      ctx.fill('evenodd');
+      ctx.restore();
+
+      /* Thirds, because a crop is a composition and the one thing a grid
+         actually helps with is putting a horizon or a face off centre. */
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+      ctx.lineWidth = Math.max(1, size.width / 540);
+      for (let n = 1; n <= 2; n += 1) {
+        ctx.beginPath();
+        ctx.moveTo(box.left + (box.width * n) / 3, box.top);
+        ctx.lineTo(box.left + (box.width * n) / 3, box.top + box.height);
+        ctx.moveTo(box.left, box.top + (box.height * n) / 3);
+        ctx.lineTo(box.left + box.width, box.top + (box.height * n) / 3);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+      ctx.lineWidth = Math.max(2, size.width / 270);
+      ctx.strokeRect(box.left, box.top, box.width, box.height);
+
+      /* The corners, drawn as a thumb's worth of bracket rather than a dot.
+         A dot says "there is something here"; a bracket says which corner it
+         belongs to, and it is the shape every phone's own cropper uses. */
+      const arm = Math.max(14, Math.min(box.width, box.height) / 4);
+      const thick = Math.max(4, size.width / 135);
+      ctx.lineWidth = thick;
+      ctx.lineCap = 'butt';
+      const corners: readonly (readonly [number, number, number, number])[] = [
+        [box.left, box.top, 1, 1],
+        [box.left + box.width, box.top, -1, 1],
+        [box.left, box.top + box.height, 1, -1],
+        [box.left + box.width, box.top + box.height, -1, -1],
+      ];
+      for (const [x, y, dx, dy] of corners) {
+        ctx.beginPath();
+        ctx.moveTo(x + dx * arm, y + (dy * thick) / 2);
+        ctx.lineTo(x + (dx * thick) / 2, y + (dy * thick) / 2);
+        ctx.lineTo(x + (dx * thick) / 2, y + dy * arm);
+        ctx.stroke();
+      }
+    }
+
     /* The guides last, over everything, and never on the exported file —
        `draw(…, false)` is what the download uses. */
-    if (guides && size.furniture) {
+    if (guides && size.furniture && !cropBox) {
       const safe = boxOf(ALL);
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
       ctx.fillRect(0, 0, size.width, safe.top * size.height);
@@ -538,7 +642,7 @@ export default function PostStudio({
      one colour and half another rather than a photograph. */
   useEffect(() => {
     if (canvas.current) draw(canvas.current, true);
-  }, [facesIn, size, picture, words, back, crop, look]);
+  }, [facesIn, size, picture, words, back, crop, look, cropBox]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
 
@@ -558,13 +662,63 @@ export default function PostStudio({
      previous one, so an edge simply stops it. */
   const lastAt = useRef<{ readonly x: number; readonly y: number } | null>(null);
 
+  /**
+   * A point on the glass, as a share of the photograph.
+   *
+   * Three conversions, and the middle one is the one that gets forgotten: the
+   * canvas is drawn at 540 on its longest edge and SHOWN at whatever width the
+   * phone gives it, so neither of those is the number to divide by — the box
+   * on screen is. Then frame units into the placed picture, then into shares.
+   */
+  const shareAt = (
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ): { readonly x: number; readonly y: number } | null => {
+    if (!picture) return null;
+    const on = event.currentTarget.getBoundingClientRect();
+    if (on.width <= 0) return null;
+    const per = size.width / on.width;
+    const where = place(picture, size, WHOLE_VIEW);
+    if (where.width <= 0 || where.height <= 0) return null;
+    return {
+      x: ((event.clientX - on.left) * per - where.left) / where.width,
+      y: ((event.clientY - on.top) * per - where.top) / where.height,
+    };
+  };
+
   const grab = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (cropBox) {
+      const put = shareAt(event);
+      if (!put) return;
+      /* `reach` in shares, worked out from how big the picture is drawn, so a
+         corner is as easy to grab on a 390-pixel phone as on a desk screen.
+         Twenty-two frame units is about a fingertip at this preview size. */
+      const where = place(picture!, size, WHOLE_VIEW);
+      grip.current = gripAt(cropBox, put.x, put.y, 22 / Math.max(1, Math.min(where.width, where.height)));
+      if (grip.current === null) return;
+      lastAt.current = { x: put.x, y: put.y };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      return;
+    }
     if (!movable) return;
     lastAt.current = { x: event.clientX, y: event.clientY };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (cropBox) {
+      const put = shareAt(event);
+      const held = grip.current;
+      if (!put || !held) return;
+      if (held === 'inside') {
+        const was = lastAt.current;
+        if (!was) return;
+        lastAt.current = put;
+        setCropBox((now) => (now ? moveBox(now, put.x - was.x, put.y - was.y) : now));
+        return;
+      }
+      setCropBox((now) => (now ? pullCorner(now, held, put.x, put.y) : now));
+      return;
+    }
     const was = lastAt.current;
     if (!was || !at) return;
     const box = event.currentTarget.getBoundingClientRect();
@@ -582,6 +736,7 @@ export default function PostStudio({
 
   const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     lastAt.current = null;
+    grip.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -782,6 +937,58 @@ export default function PostStudio({
     img.onload = () => then(img);
     img.onerror = failed;
     img.src = made.toDataURL('image/png');
+  };
+
+  /**
+   * The crop, applied: the picture becomes the part inside the box.
+   *
+   * ── Why it replaces the picture rather than being remembered ──────────
+   *
+   * A crop held as state alongside the picture would have to be applied by
+   * every other thing in this room — the background remover, the eraser, the
+   * reader, the export, the hand-over to the cutting room — and the one that
+   * forgot would quietly work on the uncropped photograph. Six places to get
+   * right instead of one.
+   *
+   * So the cut is taken once, here, and what comes out is an ordinary
+   * picture. Everything downstream is already written to work on whatever
+   * picture it is given, and the undo is `Start again` with the file, which
+   * is honest about what it is rather than pretending to a history this room
+   * does not keep.
+   *
+   * The pan and zoom go back to the middle with it. They were chosen against
+   * the old edges of the photograph, and keeping them would move the framing
+   * she had just set by exactly the amount she cropped.
+   */
+  const cutItDown = (): void => {
+    const box = cropBox;
+    if (!picture || !box) return;
+    if (!cropped(box)) {
+      setCropBox(null);
+      return;
+    }
+    const of = { width: picture.naturalWidth || picture.width, height: picture.naturalHeight || picture.height };
+    const cut = cutTo(box, of);
+    const made = document.createElement('canvas');
+    made.width = cut.width;
+    made.height = cut.height;
+    const ctx = made.getContext('2d');
+    if (!ctx) return;
+    /* No smoothing to set and no filter: this is a one-to-one copy of a
+       rectangle of pixels, not a resize, so there is nothing to interpolate
+       and the cut is exactly what was on the glass. */
+    ctx.drawImage(picture, cut.x, cut.y, cut.width, cut.height, 0, 0, cut.width, cut.height);
+    asPicture(
+      made,
+      (one) => {
+        setPicture(one);
+        setCropBox(null);
+        setCrop(MIDDLE);
+        lastMask.current = null;
+        setSaid(t('post.cutDownDone', 'Cut down. The rest of the photograph is gone — bring it in again to start over.'));
+      },
+      () => setSaid(t('post.cutDownFailed', 'That could not be cut down.')),
+    );
   };
 
   /**
@@ -1017,6 +1224,113 @@ export default function PostStudio({
      Six benches rather than nine panels. Taking a thing out and painting a
      thing out are both "the picture"; the shape and which part of it shows
      are both "the frame". */
+  /* ── Cutting it down ───────────────────────────────────────────────────
+ 
+     Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
+     nie."*
+ 
+     On the picture's own bench rather than the frame's, because what it
+     changes is the photograph and not how the photograph is shown. A crop
+     next to "Fill the frame" would read as a third way of framing; next to
+     "Take the background out" and "Rub something out" it reads as what it is
+     — one of the things you do TO a picture.
+ 
+     While it is open the bench closes itself, so the glass is the whole
+     photograph with the box over it. There is nothing to set in a panel: the
+     tool is the gesture, and the two buttons are "do it" and "don't". */
+  /** The part that lives on the bench: the way in, and what it is for. */
+  const cropStart = picture ? (
+    <div className="space-y-2">
+      <p className={MIKRO}>{t('post.cutDown', 'Cut it down')}</p>
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {t(
+          'post.cutDownWhy',
+          'Keep part of the photograph and throw the rest away for good. Different from the frame: this changes the picture itself, so what you cut off is gone.',
+        )}
+      </p>
+      <button
+        type="button"
+        data-postcropstart
+        onClick={() => { setCropBox(ALL_OF_IT); setBench(null); }}
+        className={LEEG}
+      >
+        <CropIcon className="h-3.5 w-3.5" />
+        {t('post.cutDownStart', 'Start cutting')}
+      </button>
+    </div>
+  ) : null;
+
+  /**
+   * And the part that lives in the room, over the bar.
+   *
+   * ── Why not on the bench with everything else ─────────────────────────
+   *
+   * Because the gesture is on the picture. A bench open over the bottom of
+   * the glass covers the two lower corners of the box — the two you reach for
+   * first — so starting a crop closes the bench, and a panel somebody cannot
+   * see is a Cut button somebody cannot press. The strip is the one piece of
+   * this room that is not behind a tab, for the length of one gesture.
+   *
+   * Above the bar rather than over the picture, so it covers nothing it is
+   * about.
+   */
+  const cropStrip = picture && cropBox ? (
+    <div
+      data-postcropbar
+      className="flex-shrink-0 space-y-2 border-t px-4 py-3"
+      style={asRoom
+        ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
+        : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
+    >
+      <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+        {t(
+          'post.cutDownHow',
+          'Drag the corners on the picture to say how much you are keeping. Everything shaded is thrown away.',
+        )}
+      </p>
+      {/* The three shapes a post actually goes out in, so somebody who knows
+          what they are posting does not have to get 9:16 right with a thumb.
+          Snapped around the middle of the box she has already set, and never
+          growing it — see `toShape`. */}
+      <div className={RY3}>
+        {([
+          ['square', 1, t('post.cutSquare', 'Square')],
+          ['tall', 9 / 16, t('post.cutTall', 'Tall')],
+          ['wide', 16 / 9, t('post.cutWide', 'Wide')],
+        ] as const).map(([id, want, says]) => (
+          <button
+            key={id}
+            type="button"
+            data-postcropshape={id}
+            onClick={() => setCropBox((now) => (now && picture
+              ? toShape(now, {
+                width: picture.naturalWidth || picture.width,
+                height: picture.naturalHeight || picture.height,
+              }, want)
+              : now))}
+            className={LEEG}
+          >
+            {says}
+          </button>
+        ))}
+      </div>
+      <div className={RY}>
+        <button type="button" data-postcropdo onClick={cutItDown} className={VUL}>
+          <CropIcon className="h-4 w-4" />
+          {t('post.cutDownDo', 'Cut to this')}
+        </button>
+        <button
+          type="button"
+          data-postcropstop
+          onClick={() => setCropBox(null)}
+          className={LEEG}
+        >
+          {t('post.cutDownStop', 'Leave it')}
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   const picBench = (
     <div className="space-y-4">
     {/* ── The picture ───────────────────────────────────────────────── */}
@@ -1076,6 +1390,8 @@ export default function PostStudio({
           : t('post.clearOff', 'Take the background off')}
       </button>
     </div>
+
+    {cropStart}
     {/* ── The background, taken out ──────────────────────────────────
  
         Carli, 7 October 2026: *"BG remover"*. It looks for a PERSON —
@@ -1479,6 +1795,23 @@ export default function PostStudio({
       >
         <div className="space-y-2">
           <p className={MIKRO}>{t('post.grab', 'Words in the picture')}</p>
+          {/* ── Said on the screen, not behind the mark ──────────────────
+ 
+              Carli asked what this was twice — *"Ek weet nogsteeds nie wat is
+              die read it funksie in die photo editor nie"* — and both times
+              the answer was sitting behind the question mark on the bar. A
+              tool nobody can name is a tool nobody presses, so the sentence
+              is printed. One line, above the two buttons, where somebody
+              deciding whether to press is already looking. */}
+          <p
+            className="text-[12px] leading-relaxed"
+            style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}
+          >
+            {t(
+              'post.grabWhy',
+              'Photograph a poster, a sign, a label or a page, and this turns the words printed in it into text — to put on the picture, or to copy out. It all happens on your own phone.',
+            )}
+          </p>
           <div className={RY3}>
             {(['eng', 'afr'] as const).map((one) => (
               <button
@@ -1805,10 +2138,32 @@ export default function PostStudio({
                puts her thumb on the picture, pulls, and the page refuses to
                move, which reads as the app being frozen. With no slack
                there is nothing to drag, so the page gets the gesture. */
-            touchAction: movable ? 'none' : 'auto',
-            cursor: movable ? 'grab' : 'default',
+            /* `none` while cropping as well as while panning. A corner drag
+               that the page treats as a scroll moves the room instead of the
+               box, and on a phone that reads as the handle not working. */
+            touchAction: movable || cropBox ? 'none' : 'auto',
+            cursor: cropBox ? 'crosshair' : movable ? 'grab' : 'default',
           }}
         />
+
+        {/* ── The photograph's own size, for a probe to read ────────────
+ 
+            The canvas is the FRAME and stays 1080x1920 whatever is cut away,
+            so nothing on the screen says how big the photograph itself is —
+            and "did Cut really cut it" is exactly that question.
+ 
+            A hidden span rather than an attribute on the canvas, because the
+            canvas's own `width` and `height` mean something else already and
+            a second meaning on the same element is how a probe comes to
+            measure the wrong one. */}
+        {picture && (
+          <span
+            hidden
+            data-postpicturesize
+            data-w={picture.naturalWidth || picture.width}
+            data-h={picture.naturalHeight || picture.height}
+          />
+        )}
 
         {covered && (
           <p data-postclash className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-relaxed text-amber-300">
@@ -1818,6 +2173,8 @@ export default function PostStudio({
 
         {said && <p data-postsaid className="text-[13px] leading-relaxed text-emerald-400">{said}</p>}
       </div>
+
+      {cropStrip}
 
       {/* ── The copilot, over the room ────────────────────────────────
  

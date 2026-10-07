@@ -1087,6 +1087,12 @@ jobs:
       - name: The background remover asks only for files that are here
         run: npm run check:cutout
 
+      # A crop box that leaves the picture, turns inside out or rounds to
+      # nothing all draw the same thing: a blank where a photograph was.
+      # None of the four is caught by a type; all four are arithmetic.
+      - name: No gesture can put the crop box somewhere that draws nothing
+        run: npm run check:cropbox
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever

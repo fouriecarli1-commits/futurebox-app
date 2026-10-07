@@ -267,6 +267,7 @@
     "check:ocr": "tsx scripts/check-ocr.mts",
     "check:grabtext": "node audit/grabtext.mjs",
     "check:cutout": "tsx scripts/check-cutout.mts",
+    "check:cropbox": "tsx scripts/check-cropbox.mts",
     "check:cutwalk": "node audit/cutout.mjs",
     "check:tidybars": "node audit/tidybars.mjs",
     "check:erase": "tsx scripts/check-erase.mts",
