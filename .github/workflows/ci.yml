@@ -1137,6 +1137,12 @@ jobs:
       - name: A capture that may not be sold through says so
         run: npm run check:amplicence
 
+      # A template that lands its words under the platform's caption is
+      # worse than no template: it is the app's own suggestion, in the
+      # app's own voice, coming out covered.
+      - name: No template puts its words where the platform prints its own
+        run: npm run check:posttemplates
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever

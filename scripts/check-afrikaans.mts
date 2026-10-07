@@ -98,6 +98,12 @@ const SAME_IN_BOTH = new Set([
      language the room was in, and renaming the button would leave somebody
      looking for a format that does not exist. */
   'PNG', 'JPG',
+  /* A place and a word that is Afrikaans already, both on a post template.
+     "Aandklas, Stellenbosch" is a venue and a town — translating a place
+     name is how a template tells somebody to drive somewhere that is not
+     there — and "DANKIE" is the Afrikaans, printed in English on purpose
+     because that is what people in this country put on that post. */
+  'Aandklas, Stellenbosch', 'DANKIE',
   /* The room's own name, hers in both languages. Carli, 4 October 2026, asked
      directly which name she meant: *"Nee, Video Editor."* "Video-redigeerder"
      is the dictionary answer and is not what anybody in this country calls it. */

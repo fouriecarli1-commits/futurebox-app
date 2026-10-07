@@ -845,6 +845,83 @@ try {
       `${round?.width}x${round?.height} against ${upright.width}x${upright.height}`);
   }
 
+  /* ── Somewhere to start, which the empty room needed most ───────────
+ 
+     Carli's list, 7 October 2026: *"Video, etc templates."*
+ 
+     `check:posttemplates` holds that none of them puts words where a
+     platform prints its own. What a browser has to answer is that pressing
+     one really makes a post — the shape, the look and the words, all three —
+     because a template that sets the words and not the shape is the half
+     that looks like it worked. */
+  /* Square first, and on purpose. The walk is in a story by the time it
+     gets here, and the template it is about to press chooses a story — so
+     measured as it stood, the shape assertion passed whether the template
+     set anything or not. The same shape of green that the turn assertion
+     had an hour earlier. */
+  await bench('frame');
+  /* Remembered, because the walk below this is measured against whatever
+     shape it was already standing in — and forcing it back to square left
+     the free-hand cut tracing round a picture drawn somewhere else. */
+  const shapeWas = await page.evaluate(() => {
+    const on = document.querySelector('[data-postshape][aria-pressed="true"]');
+    return on ? on.getAttribute('data-postshape') : null;
+  });
+  await page.locator('[data-postshape="square"]').first().click();
+  await page.waitForTimeout(500);
+  await bench('text');
+  if ((await page.locator('[data-posttemplate="show"]').count()) > 0) {
+    const was = await page.evaluate(() => {
+      const el = document.querySelector('[data-postcanvas]');
+      return el ? { w: el.width, h: el.height } : null;
+    });
+    check('  and the walk is standing in a different shape before it presses',
+      was !== null && Math.abs(was.w / was.h - 1) < 0.01,
+      `${was ? (was.w / was.h).toFixed(3) : '?'} — a template that chooses the`
+      + ' shape the room is already in proves nothing about templates');
+    await page.locator('[data-posttemplate="show"]').first().click();
+    await page.waitForTimeout(900);
+    const now = await page.evaluate(() => {
+      const el = document.querySelector('[data-postcanvas]');
+      const boxes = document.querySelectorAll('[data-desk] textarea');
+      return {
+        shape: el ? el.width / el.height : 0,
+        lines: boxes.length,
+        says: [...boxes].map((one) => one.value.trim()).filter(Boolean),
+      };
+    });
+    check('a template really sets the shape',
+      was !== null && Math.abs(now.shape - 1080 / 1920) < 0.01,
+      `${now.shape.toFixed(3)} against 0.563 — it was ${was ? (was.w / was.h).toFixed(3) : '?'}`
+      + ' before; a template that sets the words and not the shape is the half'
+      + ' that looks like it worked');
+    check('  and really puts the words on it',
+      now.lines >= 2 && now.says.length >= 2,
+      `${now.lines} boxes holding ${JSON.stringify(now.says)}`);
+    check('    and they are sentences, not keys',
+      now.says.every((one) => !one.startsWith('post.')),
+      `${JSON.stringify(now.says)} — a missing translation on a template is`
+      + ' the app writing its own key onto somebody\u2019s post');
+
+    /* Put back, because everything below this is measured against the
+       fixture's own shape and its own words. */
+    await page.locator('[data-postundo]').first().click().catch(() => undefined);
+    await page.waitForTimeout(400);
+    await bench('frame');
+    if (shapeWas) {
+      await page.locator(`[data-postshape="${shapeWas}"]`).first().click();
+      await page.waitForTimeout(500);
+    }
+    /* And the look, which a template also sets. The show template darkens
+       the picture to 0.86 and the readings below this one sort pixels into
+       "red enough" and "blue enough" buckets — so a template left on put the
+       free-hand cut's blue under the threshold and reported the cut as
+       having kept nothing. */
+    await bench('tone');
+    await page.locator('[data-postplain]').first().click();
+    await page.waitForTimeout(500);
+  }
+
   /* ── Cutting the photograph down, which is not framing it ───────────
  
      Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
@@ -964,7 +1041,22 @@ try {
      `check:lasso` holds the arithmetic. What a browser has to answer is that
      the finger reaches the path, the path reaches the mask, and the mask
      reaches the picture. */
+  /* ── On a fixture brought in fresh, and that is not laziness ────────
+ 
+     Everything above this has been cutting the photograph about on purpose:
+     a crop to 300x300, a turn and back, an undo, a redo, a template that
+     changed the shape and the look. Each of those is a thing worth proving
+     and together they are a picture whose colours are in places this
+     assertion would have to re-derive.
+ 
+     A reading that has to be re-derived is a reading nobody can check. So
+     the free-hand cut gets the fixture as it was made — half red, half blue,
+     400x300 — and traces the blue half of it, which makes "red to nought"
+     mean exactly what it says. */
   await bench('pic');
+  await bringTheFixtureIn();
+  await page.waitForTimeout(1200);
+
   check('the room offers to draw round something',
     (await page.locator('[data-postdrawstart]').count()) > 0,
     'two ways to cut something out, both of which need the thing to be a'
@@ -982,19 +1074,44 @@ try {
       'a tap is not a shape, and cutting along one leaves a photograph of'
       + ' nothing');
 
-    /* Round the blue half. The picture is square and drawn to the full width
-       of the glass, centred, so its own middle band is the canvas's middle
-       band and the right half of that is blue. */
-    const glass = await page.locator('[data-postcanvas]').first().boundingBox();
-    if (glass) {
-      const midY = glass.y + glass.height / 2;
-      const high = glass.width / 2 - 20;
+    /* ── Round the blue half, wherever the blue half actually is ───────
+ 
+       Computed rather than assumed. The first version said "the picture is
+       square and drawn to the full width of the glass", which was true of
+       the walk as it stood that hour and stopped being true the moment a
+       template above it changed the shape — and the failure read as the cut
+       keeping nothing, which is a statement about the tool and was a
+       statement about the walk.
+ 
+       While a trace is being drawn the room shows the WHOLE picture,
+       contained in the frame, so the drawn rectangle follows from the two
+       sizes and nothing else. */
+    const where = await page.evaluate(() => {
+      const el = document.querySelector('[data-postcanvas]');
+      const of = document.querySelector('[data-postpicturesize]');
+      if (!el || !of) return null;
+      const box = el.getBoundingClientRect();
+      const wide = Number(of.dataset.w);
+      const tall = Number(of.dataset.h);
+      const scale = Math.min(box.width / wide, box.height / tall);
+      const w = wide * scale;
+      const h = tall * scale;
+      return {
+        left: box.left + (box.width - w) / 2,
+        top: box.top + (box.height - h) / 2,
+        width: w,
+        height: h,
+      };
+    });
+    if (where) {
+      const midY = where.top + where.height / 2;
+      const high = where.height / 2 - 8;
       const path = [
-        [glass.x + glass.width * 0.56, midY - high],
-        [glass.x + glass.width * 0.98, midY - high],
-        [glass.x + glass.width * 0.98, midY + high],
-        [glass.x + glass.width * 0.56, midY + high],
-        [glass.x + glass.width * 0.56, midY - high],
+        [where.left + where.width * 0.56, midY - high],
+        [where.left + where.width * 0.98, midY - high],
+        [where.left + where.width * 0.98, midY + high],
+        [where.left + where.width * 0.56, midY + high],
+        [where.left + where.width * 0.56, midY - high],
       ];
       await page.mouse.move(path[0][0], path[0][1]);
       await page.mouse.down();
@@ -1026,7 +1143,8 @@ try {
       const left = await colours();
       check('    and keeping it really drops everything outside it',
         left !== null && left.blue > 1000 && left.red < 200,
-        `red ${left?.red}, blue ${left?.blue} — traced round the blue half and`
+        `red ${left?.red}, blue ${left?.blue}, picture ${JSON.stringify(await sizeOfPicture())},`
+        + ` traced in ${JSON.stringify(where)} — traced round the blue half and`
         + ' kept it, so red should be gone; both still there is a cut that'
         + ' drew a line and changed no pixels');
       check('      and the bar goes away once it is done',

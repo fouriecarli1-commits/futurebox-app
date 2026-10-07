@@ -47,8 +47,8 @@ import {
   Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import {
-  POST_SIZES, clashes, fitText, moveInside, sizeById,
-  type Box, type Measure, type PostSize,
+  POST_SIZES, SPOTS, boxFor as boxOfSpot, clashes, fitText, moveInside, sizeById,
+  type Measure, type PostSize, type SpotId,
 } from '../lib/posttext';
 import { ALL, boxOf } from '../lib/safezones';
 import { CREDITS, creditsSaid } from '../lib/credits';
@@ -79,6 +79,7 @@ import {
 } from '../lib/lasso';
 import { makeBack } from '../lib/postback';
 import { usePlain, useSetPlain } from '../lib/plainmode';
+import { TEMPLATES, type Template } from '../lib/posttemplates';
 import {
   BIGGER, SHARPEN, bigger, nextQuarter, sharpened, sizeOf, tooBig, turned,
   type Sharpness, type Times,
@@ -131,26 +132,19 @@ const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-
 const PREVIEW_LONGEST = 540;
 
 /** Where a block of words sits, as three choices rather than a drag. */
-const SPOTS = [
-  { id: 'top', y: 0.08 },
-  { id: 'middle', y: 0.42 },
-  { id: 'bottom', y: 0.74 },
-] as const;
+/* The spots and the box both live in `lib/posttext.ts` now, beside
+   `clashes`, because a box drawn here and a rule about it there is two
+   places to be wrong about one rectangle — and they were. Every line of
+   words on a story was over the safe right margin, so the room's own
+   warning was on for every story that had any words at all. */
 
 interface Words {
   readonly id: string;
   readonly text: string;
   readonly face: FaceId;
-  readonly spot: (typeof SPOTS)[number]['id'];
+  readonly spot: SpotId;
   readonly ink: string;
 }
-
-const boxFor = (one: Words): Box => ({
-  x: 0.08,
-  y: SPOTS.find((s) => s.id === one.spot)?.y ?? 0.42,
-  w: 0.84,
-  h: 0.18,
-});
 
 /**
  * One post, one id, for as long as it is open.
@@ -617,7 +611,7 @@ export default function PostStudio({
     for (const one of words) {
       if (!one.text.trim()) continue;
       const chosen = faceOf(one.face);
-      const box = moveInside(boxFor(one), size);
+      const box = moveInside(boxOfSpot(one.spot, size), size);
       const fit = fitText(one.text, box, size, measureWith(ctx, chosen.css, chosen.weight));
       ctx.font = `${chosen.weight} ${fit.px}px ${chosen.css}`;
       ctx.fillStyle = one.ink;
@@ -926,7 +920,7 @@ export default function PostStudio({
 
   /** Whether anything she has written lands under the platform's furniture. */
   const covered = useMemo(
-    () => words.some((one) => one.text.trim() && clashes(boxFor(one), size)),
+    () => words.some((one) => one.text.trim() && clashes(boxOfSpot(one.spot, size), size)),
     [words, size],
   );
 
@@ -1284,6 +1278,34 @@ export default function PostStudio({
       },
       () => setSaid(failed),
     );
+  };
+
+  /**
+   * A whole post, in one press, for the thing she is actually making.
+   *
+   * Carli's list, 7 October 2026: *"Video, etc templates."* The empty room is
+   * the hardest screen in this app — a picture, a shape, three fonts and a
+   * blank text box is twenty decisions before the first word. This is a
+   * shape, a look and the words already in place; everything in it is hers
+   * the moment she touches it. `lib/posttemplates.ts` has the six.
+   *
+   * The picture is left exactly as it is. Somebody who has brought one in and
+   * spent two minutes cutting a person out of it does not want a template to
+   * take it away, and somebody who has not can bring one in afterwards.
+   */
+  const startFrom = (one: Template): void => {
+    const shape = POST_SIZES.find((size) => size.id === one.size);
+    if (shape) setSize(shape);
+    if (one.look) setLook((was) => ({ ...was, ...one.look }));
+    setWords(one.words.map((word) => ({
+      id: freshId(),
+      text: t(word.says[0], word.says[1]),
+      face: word.face,
+      spot: word.spot,
+      ink: word.ink,
+    })));
+    setBench('text');
+    setSaid(t('post.tplDone', 'There it is. Change any of it \u2014 the words, the shape, where they sit.'));
   };
 
   const turnIt = (by: number): void => {
@@ -2171,6 +2193,12 @@ export default function PostStudio({
           <button
             key={one.id}
             type="button"
+            /* Named for the walks. The shape is the one thing in this room
+               that can be read straight off the canvas, so it is what a
+               probe checks a template really set — and it could only find
+               the button by the words on it, which are translated. */
+            data-postshape={one.id}
+            aria-pressed={one.id === size.id}
             onClick={() => setSize(one)}
             className={`${LEEG} ${one.id === size.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
           >
@@ -2538,6 +2566,39 @@ export default function PostStudio({
 
   const textBench = (
     <div className="space-y-4">
+    {/* ── Somewhere to start ────────────────────────────────────────────
+ 
+        Carli's list, 7 October 2026: *"Video, etc templates."* On the words'
+        bench, because a template is mostly words in the right places, and
+        because this is the bench somebody opens when they have a picture and
+        no idea what to put on it.
+ 
+        First on it, above the empty text box, since the whole point is to be
+        met before the blank page is. */}
+    <div className="space-y-2">
+      <p className={MIKRO}>{t('post.templates', 'Start from something')}</p>
+      <div className={RY}>
+        {TEMPLATES.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            data-posttemplate={one.id}
+            onClick={() => startFrom(one)}
+            title={t(one.what[0], one.what[1])}
+            className={LEEG}
+          >
+            {t(one.name[0], one.name[1])}
+          </button>
+        ))}
+      </div>
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {t(
+          'post.templatesWhy',
+          'A shape, a look and the words already in place, for the thing you are actually posting. Change every part of it afterwards \u2014 none of it is locked.',
+        )}
+      </p>
+    </div>
+
     {/* ── The words ─────────────────────────────────────────────────── */}
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">

@@ -229,3 +229,54 @@ export function moveInside(box: Box, size: PostSize, zone: Zone = ALL): Box {
     y: Math.min(Math.max(box.y, safe.top), safe.top + safe.height - box.h),
   };
 }
+
+/** Where on the picture a line of words sits. */
+export const SPOTS = [
+  { id: 'top', y: 0.08 },
+  { id: 'middle', y: 0.42 },
+  /* ── A fourth, added 7 October 2026 ───────────────────────────────────
+ 
+     Three spots and a story left exactly one of them usable. `top` at 0.08
+     is above the deepest top margin of 0.094, so a line there is under the
+     platform's own header; `bottom` at 0.74 runs to 0.92, well into the
+     caption. Only `middle` was safe, which made every story a one-line post.
+ 
+     `lower` at 0.58 ends at 0.76, inside the safe band of 0.797 — so a story
+     can carry a heading and a line under it, which is what a story is for.
+     Found by `check:posttemplates`, which was about to offer a template that
+     put its own words where the platform prints its own. */
+  { id: 'lower', y: 0.58 },
+  { id: 'bottom', y: 0.74 },
+] as const;
+
+export type SpotId = (typeof SPOTS)[number]['id'];
+
+/**
+ * The box a line of words is drawn in.
+ *
+ * ── Why the sides move when the platform has furniture ───────────────────
+ *
+ * It was `x: 0.08, w: 0.84` for every shape, which puts the right-hand edge
+ * at 0.92. The deepest right margin across the three platforms is 0.111, so
+ * the safe edge is 0.889 — and **every** line of words on a story was over
+ * it, horizontally, whatever spot it was in.
+ *
+ * Which meant the room's own warning — "some of your words are where the app
+ * prints its own caption and buttons" — was on for every story that had any
+ * words at all. A warning that is always on is a warning nobody reads, and
+ * the next real one scrolls past with it. Found by `check:posttemplates`,
+ * which asked whether a template it was about to offer would land under the
+ * furniture and got "yes, all of them, always".
+ *
+ * So on a shape the platforms draw over, the sides come in to the safe
+ * margins. The vertical is left alone on purpose: the bottom quarter of a
+ * story really is where the caption goes, and a line placed there really is
+ * covered. That one is information, and it is the one the warning is for.
+ */
+export function boxFor(spot: SpotId, size: PostSize, zone: Zone = ALL): Box {
+  const y = SPOTS.find((one) => one.id === spot)?.y ?? 0.42;
+  if (!size.furniture) return { x: 0.08, y, w: 0.84, h: 0.18 };
+  const safe = boxOf(zone);
+  const x = Math.max(0.08, safe.left);
+  return { x, y, w: Math.min(0.84, safe.left + safe.width - x), h: 0.18 };
+}
