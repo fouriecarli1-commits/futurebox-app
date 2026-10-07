@@ -78,6 +78,7 @@ import {
   cutAlong, trace, whyNot, worthCutting, type Path as Traced,
 } from '../lib/lasso';
 import { makeBack } from '../lib/postback';
+import { usePlain, useSetPlain } from '../lib/plainmode';
 import {
   BIGGER, SHARPEN, bigger, nextQuarter, sharpened, sizeOf, tooBig, turned,
   type Sharpness, type Times,
@@ -384,6 +385,14 @@ export default function PostStudio({
      the post's own size, always, with no choice. `lib/postfile.ts` carries
      the two formats, why the other four were left out, and the one thing
      about JPEG that has to be said out loud. */
+  /* ── Simple, or every choice there is ────────────────────────────────
+ 
+     Carli's list, 7 October 2026: *"Simple en advances opsies."* Every tool
+     is in both; what simple hides is the rungs. `lib/plainmode.ts` carries
+     why that distinction is the whole design. */
+  const plain = usePlain();
+  const setPlain = useSetPlain();
+
   const [kind, setKind] = useState<FileKind>('png');
   const [scale, setScale] = useState<Scale>(1);
   const grip = useRef<Grip>(null);
@@ -1757,7 +1766,7 @@ export default function PostStudio({
           what they are posting does not have to get 9:16 right with a thumb.
           Snapped around the middle of the box she has already set, and never
           growing it — see `toShape`. */}
-      <div className={RY3}>
+      <div className={plain ? 'hidden' : RY3}>
         {([
           ['square', 1, t('post.cutSquare', 'Square')],
           ['tall', 9 / 16, t('post.cutTall', 'Tall')],
@@ -1901,7 +1910,10 @@ export default function PostStudio({
             reads depends on the picture, on how much of the frame the
             person fills and on their hair — and one value chosen from one
             screenshot is a guess that costs her a day to disprove. */}
-        {EDGES.map((one) => (
+        {/* Not in simple: the middle edge is right on most photographs,
+            and somebody who has just pressed one button does not want to be
+            asked a question about hair. `Everything` brings them back. */}
+        {!plain && EDGES.map((one) => (
           <button
             key={one.id}
             type="button"
@@ -1941,8 +1953,8 @@ export default function PostStudio({
             Instant when she has already cut one out of this picture: the
             answer is in hand and nothing is downloaded twice. */}
         <p className={`${MIKRO} pt-1`}>{t('post.behind2', 'Or put it out of focus')}</p>
-        <div className={RY3}>
-          {BEHIND.map((one) => (
+        <div className={plain ? RY : RY3}>
+          {(plain ? BEHIND.filter((one) => one.id === 'misty') : BEHIND).map((one) => (
             <button
               key={one.id}
               type="button"
@@ -1951,11 +1963,13 @@ export default function PostStudio({
               onClick={() => void blurTheBack(one.id)}
               className={`${LEEG} disabled:opacity-40`}
             >
-              {one.id === 'soft'
-                ? t('post.behindSoft', 'A little')
-                : one.id === 'misty'
-                  ? t('post.behindMisty', 'Misty')
-                  : t('post.behindGone', 'Gone')}
+              {plain
+                ? t('post.behindPlain', 'Blur behind me')
+                : one.id === 'soft'
+                  ? t('post.behindSoft', 'A little')
+                  : one.id === 'misty'
+                    ? t('post.behindMisty', 'Misty')
+                    : t('post.behindGone', 'Gone')}
             </button>
           ))}
         </div>
@@ -2126,8 +2140,8 @@ export default function PostStudio({
               'which is smaller than the post. Enlarging it stops it coming out soft \u2014 it cannot add detail that was never there, and nothing here calls that an upscaler.',
             )}
           </p>
-          <div className={RY3}>
-            {BIGGER.map((times) => (
+          <div className={plain ? RY : RY3}>
+            {(plain ? BIGGER.filter((times) => times === 2) : BIGGER).map((times) => (
               <button
                 key={times}
                 type="button"
@@ -2137,7 +2151,7 @@ export default function PostStudio({
                 className={`${LEEG} disabled:opacity-40`}
               >
                 <Maximize2 className="h-3.5 w-3.5" />
-                {`${times}\u00d7`}
+                {plain ? t('post.biggerPlain', 'Bigger') : `${times}\u00d7`}
               </button>
             ))}
           </div>
@@ -2342,8 +2356,8 @@ export default function PostStudio({
             rungs and a press, so it is clear which kind of thing it is. */}
         <div className="space-y-2">
           <p className={MIKRO}>{t('post.sharpen', 'Sharper')}</p>
-          <div className={RY3}>
-            {(Object.keys(SHARPEN) as Sharpness[]).map((how) => (
+          <div className={plain ? RY : RY3}>
+            {(plain ? ['normal'] as Sharpness[] : Object.keys(SHARPEN) as Sharpness[]).map((how) => (
               <button
                 key={how}
                 type="button"
@@ -2351,11 +2365,13 @@ export default function PostStudio({
                 onClick={() => sharpenIt(how)}
                 className={LEEG}
               >
-                {how === 'gentle'
-                  ? t('post.sharpGentle', 'A little')
-                  : how === 'normal'
-                    ? t('post.sharpNormal', 'Normal')
-                    : t('post.sharpStrong', 'A lot')}
+                {plain
+                  ? t('post.sharpPlain', 'Sharpen it')
+                  : how === 'gentle'
+                    ? t('post.sharpGentle', 'A little')
+                    : how === 'normal'
+                      ? t('post.sharpNormal', 'Normal')
+                      : t('post.sharpStrong', 'A lot')}
               </button>
             ))}
           </div>
@@ -2803,6 +2819,25 @@ export default function PostStudio({
           <h2 className="text-lg font-bold">
             {asRoom ? t('rail.photo', 'Photo Editor') : t('post.title', 'Make a post')}
           </h2>
+          {/* ── Simple, or everything ────────────────────────────────────
+ 
+              In words rather than behind a gear, because the way to the rest
+              of the app should not be a thing to be discovered. It says what
+              it will GIVE you, not what mode you are in: "Everything" is a
+              promise, "Simple mode is on" is a status nobody reads. */}
+          <button
+            type="button"
+            data-postsimple
+            aria-pressed={!plain}
+            onClick={() => setPlain(!plain)}
+            title={plain
+              ? t('post.showAllWhat', 'Show every setting there is')
+              : t('post.showLessWhat', 'One button per tool, at the setting that is right most of the time')}
+            className={`${LEEG} w-auto px-3`}
+          >
+            {plain ? t('post.showAll', 'Everything') : t('post.showLess', 'Simple')}
+          </button>
+
           {/* ── One step back, where it can always be reached ───────────
  
               In the room's header rather than on a bench, because the tools

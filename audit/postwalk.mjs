@@ -468,6 +468,71 @@ try {
     'the file input is not where this walk looks for it');
   await page.waitForTimeout(1200);
 
+  /* ── Simple, or every choice there is ───────────────────────────────
+ 
+     Carli's list, 7 October 2026: *"Simple en advances opsies."*
+ 
+     The thing worth proving is the distinction the design turns on: every
+     TOOL is in both modes and only the RUNGS come and go. A mode that
+     quietly takes a tool away is how somebody comes to believe the app
+     cannot do a thing it does, and they do not come back to check.
+ 
+     Counted on the picture's bench, which holds the most of both. */
+  await bench('pic');
+  const toolsNow = () => page.evaluate(() => {
+    const sheet = document.querySelector('[data-desk]');
+    if (!sheet) return null;
+    const names = ['postpicture', 'postcutgo', 'postbehindblur', 'postrubmode',
+      'postdrawstart', 'postbigger', 'postclear'];
+    const out = {};
+    for (const name of names) out[name] = sheet.querySelectorAll(`[data-${name}]`).length;
+    return out;
+  });
+  const simple = await toolsNow();
+  const switcher = page.locator('[data-postsimple]');
+  check('the room offers every setting there is, for somebody who wants them',
+    (await switcher.count()) > 0,
+    'one mode, and it is whichever one the last person to add a control chose');
+
+  if ((await switcher.count()) > 0 && simple) {
+    const saysFirst = (await switcher.first().innerText()).trim();
+    await switcher.first().click();
+    await page.waitForTimeout(600);
+    await bench('pic');
+    const everything = await toolsNow();
+    check('  and pressing it really brings more choices out',
+      everything !== null
+        && Object.values(everything).reduce((a, b) => a + b, 0)
+          > Object.values(simple).reduce((a, b) => a + b, 0),
+      `${JSON.stringify(simple)} against ${JSON.stringify(everything)} — a`
+      + ' switch that changes a word and no controls');
+    check('    without taking a single tool away',
+      everything !== null
+        && Object.entries(simple).every(([name, had]) => had === 0 || everything[name] > 0),
+      `${JSON.stringify(simple)} against ${JSON.stringify(everything)} — hiding a`
+      + ' tool is how somebody learns the app cannot do a thing it does');
+    check('    and the switch now offers the way back',
+      (await switcher.first().innerText()).trim() !== saysFirst,
+      `it still says "${saysFirst}" — a one-way switch is a trap`);
+
+    await switcher.first().click();
+    await page.waitForTimeout(600);
+    await bench('pic');
+    const backAgain = await toolsNow();
+    check('      and pressing it again puts them away',
+      JSON.stringify(backAgain) === JSON.stringify(simple),
+      `${JSON.stringify(backAgain)} against ${JSON.stringify(simple)}`);
+
+    /* And left on Everything for the rest of the walk, which is about the
+       controls rather than about the mode. Simple is the room's default, so
+       a walk that did not say this would be measuring the simple surface
+       and reporting it as the room — and the crop's shape snaps, which are
+       a rung, would not be in the page to press. */
+    await switcher.first().click();
+    await page.waitForTimeout(600);
+  }
+
+
   /** How much red and blue is on screen, and how much is neither. */
   const colours = () => page.evaluate(() => {
     const el = document.querySelector('[data-postcanvas]');
