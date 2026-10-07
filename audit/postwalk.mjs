@@ -516,6 +516,90 @@ try {
     (await page.locator('[data-postgap]').count()) > 0,
     'background where a photograph was expected, with nothing saying why');
 
+  /* ── How it reads, which is free and on the device ───────────────────
+ 
+     Carli, 7 October 2026, listing a modern editor's tools. Half of that
+     list runs on the phone for nothing and this is it; the other half needs
+     an engine and a price per use.
+ 
+     Measured as colour again, with the half-red half-blue picture: a lift
+     changes the pixels, and "as it came" puts them back exactly. "Exactly"
+     is the assertion worth having — a reset that lands near the original is
+     a reset that has quietly kept something. */
+  /* The MEAN, not the colour counts.
+ 
+     `colours()` sorts pixels into buckets — red enough, blue enough — and a
+     lift of four per cent brightness moves values without moving anything
+     between buckets, so it reported the lift doing nothing. The right
+     instrument for "did the picture change" is the average, which moves
+     whenever any pixel does. The counts are the right instrument for "which
+     part is showing", which is a different question and the one they were
+     written for. */
+  const mean = () => page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    if (!(el instanceof HTMLCanvasElement)) return null;
+    const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+    const n = d.length / 4;
+    return { r: +(r / n).toFixed(3), g: +(g / n).toFixed(3), b: +(b / n).toFixed(3) };
+  });
+
+  const asShot = await mean();
+  await page.locator('[data-postauto]').first().click();
+  await page.waitForTimeout(500);
+  const lifted = await mean();
+  check('one press lifts the picture',
+    lifted !== null && asShot !== null
+      && (lifted.r !== asShot.r || lifted.g !== asShot.g || lifted.b !== asShot.b),
+    `${JSON.stringify(asShot)} → ${JSON.stringify(lifted)} — the lift changed`
+    + ' nothing, which is a button wired to a state nobody draws');
+
+  await page.locator('[data-postplain]').first().click();
+  await page.waitForTimeout(500);
+  const back = await mean();
+  check('  and "as it came" puts it back exactly',
+    back !== null && asShot !== null
+      && back.r === asShot.r && back.g === asShot.g && back.b === asShot.b,
+    `${JSON.stringify(back)} against ${JSON.stringify(asShot)} — a reset that`
+    + ' lands near the original is one that has quietly kept something');
+
+  /* The one that cannot be seen by looking: a blur must not reach the words.
+ 
+     The filter is set on the context to draw the picture and has to come off
+     before anything is written. Left on, every letter goes through it — and
+     a blurred post with blurred words looks deliberate enough that nobody
+     reports it. Counted as bright pixels, which is what the words are. */
+  const sharpWords = await page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+    let bright = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 230 && d[i + 1] > 230 && d[i + 2] > 230) bright += 1;
+    }
+    return bright;
+  });
+  await page.locator('[data-postlookslider="blur"]').first().fill('20');
+  await page.waitForTimeout(600);
+  const blurredWords = await page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+    let bright = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 230 && d[i + 1] > 230 && d[i + 2] > 230) bright += 1;
+    }
+    return bright;
+  });
+  check('a blur on the picture leaves the words alone',
+    sharpWords > 100 && Math.abs(blurredWords - sharpWords) < sharpWords * 0.15,
+    `${sharpWords} solid white pixels became ${blurredWords} — the filter is`
+    + ' still set when the words are drawn, so every letter went through it');
+
+  await page.locator('[data-postplain]').first().click();
+  await page.waitForTimeout(400);
+
   /* Back to where the rest of the walk expects to be. */
   await page.locator('[data-postbasis="fill"]').first().click();
   await page.locator('[data-postcentre]').first().click();

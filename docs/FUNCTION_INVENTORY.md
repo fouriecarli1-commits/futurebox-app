@@ -159,8 +159,9 @@ fourth room in the stage fixed the shape by existing.
 | ✅ | The price is said at the top of the room before the work and again on the button that spends it |
 | ✅ | One road out and it is paid: saving to the device and handing the picture to the cutting room as a film's cover both charge, once per post, so the free on-device film export is not a free road off the phone. `check:postpaid` |
 | ✅ | It cannot make album art, and that is a decision rather than a gap: a cover is generated on the spot or bought from an artist. `check:ownart` holds it against eleven screens that take a member's picture |
-| ✖ | **No crop by hand, no rotate, no filters.** The frame is chosen by moving and zooming; there is no free-form crop box, no straightening and no brightness or colour adjustment |
-| ✖ | **No removing or inserting an object.** It needs an engine and a price per use, and the price is Carli's to set |
+| ✅ | Brightness, contrast, colour, warmth and blur, with a one-press lift and an exact way back to the picture as it came. All on the device and free however many times she changes it; the blur is scaled with the canvas so the preview is the same strength as the file. `check:postlook` |
+| ✖ | **No crop box by hand, no rotate, no sharpen.** The frame is chosen by moving and zooming rather than by dragging a box; there is no straightening; and there is no sharpen because a canvas filter has none and a fake one would be a control that lies |
+| ✖ | **No removing or inserting an object, no AI upscaler, no motion on a still, no background remover, no text grab.** The free four — grab text, background remover for people, a classical eraser, a plain Lanczos enlarger — need no engine and are next. The paid four need a price per use, which is Carli's to set. `docs/EDITING-TOOLS.md` is the order and the reasoning |
 | ✖ | **Words sit in three places, not anywhere.** No free drag for text, and no rotation on it |
 
 ### Video Editor

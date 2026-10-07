@@ -1067,6 +1067,14 @@ jobs:
       - name: Which part of a photo shows, and how close
         run: npm run check:postcrop
 
+      # The half of a modern editor's tools that runs on the phone for
+      # nothing: brightness, contrast, colour, warmth, blur and a one-press
+      # lift. A blur is set in device pixels, so the same number is nearly
+      # four times as strong on a 540-wide preview as in a 1920 file — the
+      # picture she approves would not be the picture she gets.
+      - name: The free half of the editing tools
+        run: npm run check:postlook
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the

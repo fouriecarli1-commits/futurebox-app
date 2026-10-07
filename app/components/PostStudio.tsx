@@ -58,6 +58,9 @@ import {
   MIDDLE, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP,
   canMove, moveBy, place, showsThrough, zoomTo, type Crop,
 } from '../lib/postcrop';
+import {
+  AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
+} from '../lib/postlook';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
@@ -149,6 +152,10 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
      pixels. Reset with every new picture: the spot that was right for the
      last photograph means nothing on this one. */
   const [crop, setCrop] = useState<Crop>(MIDDLE);
+  /* What the picture looks like. Free, on the device, and separate from the
+     crop because the two are different questions: which part, and how it
+     reads. Reset with the picture, like the crop. */
+  const [look, setLook] = useState<Look>(PLAIN);
   /* `null` is nothing behind it, and not a colour that happens to be dark.
  
      Her words: *"transparency"*, in the list beside text and nice fonts. A
@@ -268,7 +275,30 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
          reports how far it can move — so the screen cannot draw it in one
          spot and offer a drag that means another. */
       const at = place(picture, size, crop);
+      /* The look goes on the PICTURE and comes off again before anything is
+         written. Words under a blur are not a style, they are a mistake, and
+         a filter left set would put every one of them through it. */
+      ctx.filter = filterFor(look, to.width / size.width);
       ctx.drawImage(picture, at.left, at.top, at.width, at.height);
+      ctx.filter = 'none';
+
+      const wash = warmWash(look);
+      if (wash) {
+        /* Clipped to the picture, not the frame. A warm wash over the
+           background as well would tint the colour she chose behind it,
+           which is a control reaching past what it says it does. */
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(
+          Math.max(0, at.left), Math.max(0, at.top),
+          Math.min(at.width, size.width), Math.min(at.height, size.height),
+        );
+        ctx.clip();
+        ctx.globalCompositeOperation = wash.how;
+        ctx.fillStyle = wash.ink;
+        ctx.fillRect(0, 0, size.width, size.height);
+        ctx.restore();
+      }
     }
 
     for (const one of words) {
@@ -335,7 +365,7 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
      one colour and half another rather than a photograph. */
   useEffect(() => {
     if (canvas.current) draw(canvas.current, true);
-  }, [facesIn, size, picture, words, back, crop]);
+  }, [facesIn, size, picture, words, back, crop, look]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
 
@@ -416,7 +446,7 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
       return;
     }
     const img = new Image();
-    img.onload = () => { setPicture(img); setCrop(MIDDLE); URL.revokeObjectURL(img.src); };
+    img.onload = () => { setPicture(img); setCrop(MIDDLE); setLook(PLAIN); URL.revokeObjectURL(img.src); };
     img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
     img.src = made.preview;
   };
@@ -769,6 +799,83 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
                 {t('post.gap', 'Some of the frame is background rather than photograph. That is what “the whole picture” does — with the background off, it is the picture on nothing.')}
               </p>
             )}
+          </div>
+        )}
+
+        {/* ── How it reads ───────────────────────────────────────────────
+ 
+            Carli, 7 October 2026, listing what a modern editor has: *"auto
+            focus, blur ... Dit is alles code wat ons oor tyd kan develop om
+            ons editing tools te upgrade."*
+ 
+            This is the half of that list which runs on the phone for
+            nothing. The other half — taking an item out and putting another
+            in, a real upscaler, motion on a still — needs an engine and a
+            price per use, and the price is hers.
+ 
+            No "sharpen". A canvas filter has none, and raising contrast and
+            calling it focus would be a control that lies about what it did:
+            nothing recovers a photograph that was soft when it was taken.
+            `AUTO` is honest about being a lift. */}
+        {picture && (
+          <div
+            data-postlook
+            className="space-y-3 rounded-xl border p-3"
+            style={asRoom
+              ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+              : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className={MIKRO}>{t('post.look', 'How it reads')}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-postauto
+                  onClick={() => setLook(AUTO)}
+                  className={LEEG}
+                >
+                  {t('post.auto', 'Lift it')}
+                </button>
+                <button
+                  type="button"
+                  data-postplain
+                  disabled={!touched(look)}
+                  onClick={() => setLook(PLAIN)}
+                  className={`${LEEG} disabled:opacity-40`}
+                >
+                  {t('post.asShot', 'As it came')}
+                </button>
+              </div>
+            </div>
+
+            {([
+              ['bright', t('post.bright', 'Brightness')],
+              ['contrast', t('post.contrast', 'Contrast')],
+              ['colour', t('post.colour', 'Colour')],
+              ['warmth', t('post.warmth', 'Warmth')],
+              ['blur', t('post.blur', 'Blur')],
+            ] as const).map(([key, name]) => (
+              <label key={key} className="block space-y-1">
+                <span className="text-[12px]" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+                  {name}
+                </span>
+                <input
+                  type="range"
+                  data-postlookslider={key}
+                  min={RANGES[key].min}
+                  max={RANGES[key].max}
+                  step={RANGES[key].step}
+                  value={look[key]}
+                  onChange={(event) => setLook((was) => ({ ...was, [key]: Number(event.target.value) }))}
+                  className="w-full"
+                  aria-label={name}
+                />
+              </label>
+            ))}
+
+            <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+              {t('post.lookFree', 'All of this happens on your own device and costs nothing, however many times you change it.')}
+            </p>
           </div>
         )}
 
