@@ -61,7 +61,7 @@ import {
 import {
   AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
 } from '../lib/postlook';
-import { canRead, readWords, tidy, type Readable } from '../lib/ocr';
+import { canRead, readWords, tidy, wordsAtAll, type Readable } from '../lib/ocr';
 import { EDGES, cutOut, edgeOf, maskOnto, type EdgeId } from '../lib/cutout';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
@@ -598,7 +598,14 @@ export default function PostStudio({ onClose, onIntoFilm, asRoom = false }: {
           : t('post.grabFailed', 'The words could not be read out of that picture.'));
         return;
       }
-      setGrabbed(tidy(got.text));
+      /* Nothing, rather than nonsense.
+ 
+         A reader that invents text is worse than one that finds none: nobody
+         can tell a bad read of a real sign from a photograph with nothing to
+         read, so the only safe thing to do with the nonsense is retype the
+         sign by hand — which is what the button was for. */
+      const words = tidy(got.text);
+      setGrabbed(wordsAtAll(words, got.sure) ? words : '');
     } finally {
       setReading(null);
     }

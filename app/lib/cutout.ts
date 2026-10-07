@@ -148,7 +148,7 @@ export function maskOnto(
  * nothing of her is eaten. Anything approaching a whole mask pixel starts
  * dissolving hair, which is the part everybody looks at.
  */
-export const SOFTNESS = 0.75;
+export const SOFTNESS = 1.6;
 
 /**
  * How soft the edge is, as a choice rather than a guess.
@@ -162,9 +162,9 @@ export const SOFTNESS = 0.75;
  * thing on a small photograph and a large one.
  */
 export const EDGES = [
-  { id: 'tight', soft: 0.3 },
-  { id: 'normal', soft: SOFTNESS },
-  { id: 'soft', soft: 1.4 },
+  { id: 'tight', soft: 0.8 },
+  { id: 'normal', soft: 1.6 },
+  { id: 'soft', soft: 3 },
 ] as const;
 
 export type EdgeId = (typeof EDGES)[number]['id'];
@@ -187,24 +187,77 @@ export function feathered(
   height: number,
   softness: number = SOFTNESS,
 ): HTMLCanvasElement {
+  const was = Math.max(1, (mask as { width?: number }).width ?? 1);
+  const tall = Math.max(1, (mask as { height?: number }).height ?? 1);
+
+  /* ── Softened at the MASK's own size, before anything is stretched ────
+ 
+     Carli, 7 October 2026, twice, with photographs of herself: *"Its not
+     looking perfect"*, then *"Nogsteeds rowwe edges"* — and the second
+     picture showed the answer. The rough edges were HORIZONTAL streaks
+     along her collar.
+ 
+     The model takes a square. A portrait photograph is squashed into 256 by
+     256 to be read and the mask comes back square, so stretching it back
+     makes every mask pixel a TALL rectangle — wider than high in one axis
+     and the reverse in the other. The first feather was computed from the
+     width alone and blurred after the stretch, which is wrong twice: a round
+     blur cannot soften a rectangle evenly, and the number was right for only
+     one of the two axes. Vertically it was barely blurring at all, which is
+     exactly a horizontal streak.
+ 
+     Blurred at 256 by 256, one mask pixel is one pixel in BOTH directions.
+     Whatever the stretch does afterwards, it does to an edge that is already
+     soft, and it does it proportionally. */
+  const soft = document.createElement('canvas');
+  soft.width = was;
+  soft.height = tall;
+  const near = soft.getContext('2d');
+  if (!near) return soft;
+  /* Nothing to soften when nothing is being enlarged.
+ 
+     The staircase IS the blow-up. A mask already at the picture's size has
+     no stairs in it, so blurring it would only eat the edge it was given —
+     and the bench proves a same-size mask keeps exactly what it covers and
+     nothing else, which that would quietly break. */
+  const enlarging = width > was || height > tall;
+  const amount = enlarging ? Math.max(0, softness) : 0;
+  if (amount > 0.05) near.filter = `blur(${amount.toFixed(2)}px)`;
+  near.drawImage(mask, 0, 0);
+  near.filter = 'none';
+
+  /* ── Grown in steps, not in one jump ─────────────────────────────────
+ 
+     A browser doubling a picture does a good job; asked for twelve times at
+     once it reaches for far-apart source pixels and the staircase survives
+     however high the quality is set. Doubling until the last step is under
+     two smooths each stair into the one beside it, which is the difference
+     between a soft staircase and an edge. */
+  let from: HTMLCanvasElement = soft;
+  let now = was;
+  let nowTall = tall;
+  while (now * 2 < width && nowTall * 2 < height) {
+    const step = document.createElement('canvas');
+    step.width = now * 2;
+    step.height = nowTall * 2;
+    const draw = step.getContext('2d');
+    if (!draw) break;
+    draw.imageSmoothingEnabled = true;
+    draw.imageSmoothingQuality = 'high';
+    draw.drawImage(from, 0, 0, step.width, step.height);
+    from = step;
+    now = step.width;
+    nowTall = step.height;
+  }
+
   const big = document.createElement('canvas');
   big.width = width;
   big.height = height;
   const ctx = big.getContext('2d');
   if (!ctx) return big;
-
-  /* How big one mask pixel has become. Falls back to no blur when the mask
-     will not say its own size, because a guess here is a guess at how much
-     of somebody's hair to dissolve. */
-  const was = (mask as { width?: number }).width ?? 0;
-  const grown = was > 0 ? width / was : 0;
-  const soft = grown > 1 ? grown * Math.max(0, softness) : 0;
-
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  if (soft > 0.3) ctx.filter = `blur(${soft.toFixed(2)}px)`;
-  ctx.drawImage(mask, 0, 0, width, height);
-  ctx.filter = 'none';
+  ctx.drawImage(from, 0, 0, width, height);
   return big;
 }
 

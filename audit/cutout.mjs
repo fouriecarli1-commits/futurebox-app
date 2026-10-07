@@ -115,10 +115,29 @@ try {
        which is a property of the constants and says the same thing on every
        photograph. The share stays as a loose sanity bound — it would still
        catch a feather that dissolved everything. */
-    check('  and no edge feathers by more than about one mask pixel',
-      bench.softest <= 1.5,
+    /* ── The staircase, measured on a shape the model never sees ──── */
+
+    const [rawStair, tightStair, normalStair, softStair] = bench.stairs ?? [];
+    check('a blown-up mask comes out as an edge, not a staircase',
+      normalStair > 0 && normalStair <= 2,
+      `the edge jumps ${normalStair} pixels sideways between neighbouring rows,`
+      + ` where one mask pixel is ${bench.scale} — a jump the size of a mask`
+      + ' pixel IS the staircase, and it is what Carli photographed twice');
+    check('  and better than the single jump that shipped',
+      rawStair > normalStair,
+      `${rawStair} in one jump at the browser's default quality against`
+      + ` ${normalStair} grown in steps — the stepped growth is what kills the`
+      + ' stairs; the blur softens what is left');
+    check('  on a picture a different shape from the mask, which is the real case',
+      softStair > 0 && softStair <= 2,
+      `the softest still jumps ${softStair} — the model takes a square, so a`
+      + ' portrait photograph has mask pixels taller than they are wide, and a'
+      + ' feather measured on the width alone barely blurs vertically at all');
+
+    check('  and no edge feathers by more than a few mask pixels',
+      bench.softest <= 3.5,
       `the softest is ${bench.softest} of a mask pixel — past about one and a`
-      + ' half it stops being an edge and starts dissolving hair, which is the'
+      + ' few it stops being an edge and starts dissolving hair, which is the'
       + ' part everybody looks at');
     check('  and even the softest leaves most of the picture untouched',
       softest < bench.side * bench.side * 0.6,

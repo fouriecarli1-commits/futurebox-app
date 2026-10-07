@@ -24,7 +24,7 @@
  * for the walk to read.
  */
 import React, { useEffect, useState } from 'react';
-import { EDGES, SOFTNESS, maskOnto, shareKept } from '../lib/cutout';
+import { EDGES, SOFTNESS, feathered, maskOnto, shareKept } from '../lib/cutout';
 
 const SIDE = 200;
 
@@ -80,12 +80,12 @@ export default function CutCheck(): React.ReactElement {
        measured is the SOFTNESS of the edge: how many pixels come out part
        way between kept and gone. A hard stretch gives almost none. */
     const small = document.createElement('canvas');
-    small.width = 20;
-    small.height = 20;
+    small.width = 64;
+    small.height = 64;
     const rough = small.getContext('2d');
     if (!rough) return;
     rough.fillStyle = '#ffffff';
-    rough.fillRect(0, 0, 10, 20);
+    rough.fillRect(0, 0, 32, 64);
 
     /** How many pixels of an edge are part way between kept and gone. */
     const softnessOf = (amount: number): number => {
@@ -118,6 +118,83 @@ export default function CutCheck(): React.ReactElement {
       if (x > SIDE * 0.7 && a < 10) goneFar += 1;
     }
 
+    /* ── The staircase, which is the thing she can actually see ──────
+ 
+       Carli, 7 October 2026, twice: *"Its not looking perfect"* and then
+       *"Nogsteeds rowwe edges"*. Softness was the wrong instrument — an edge
+       can be soft and still be a staircase, and a staircase is what a blown
+       up mask is.
+ 
+       A DIAGONAL edge in a small mask, grown to a picture that is a
+       different shape, which is the real case: the model takes a square, so
+       a portrait photograph comes back with mask pixels that are taller than
+       they are wide. The first feather was computed from the width alone and
+       so barely blurred vertically at all — which is exactly the horizontal
+       streaking along her collar.
+ 
+       Measured as the biggest jump sideways between one row and the next
+       where the edge crosses half. A staircase jumps by the scale factor; a
+       real edge moves by about one. */
+    /* The real proportions: the model answers at 256 square and a phone
+       photograph is ten or more times that, in a shape that is not square.
+       A 20-pixel mask on a 200-pixel picture is not the same problem — at
+       that size a blur of half a mask pixel is sub-pixel and does nothing,
+       which is how three edges came to measure identically. */
+    const STAIR = 64;
+    const WIDE = 480;
+    const TALL = 720;
+    const stair = document.createElement('canvas');
+    stair.width = STAIR;
+    stair.height = STAIR;
+    const cut = stair.getContext('2d');
+    if (!cut) return;
+    cut.fillStyle = '#ffffff';
+    cut.beginPath();
+    cut.moveTo(0, 0);
+    cut.lineTo(STAIR, STAIR);
+    cut.lineTo(0, STAIR);
+    cut.closePath();
+    cut.fill();
+
+    /** The biggest sideways jump between neighbouring rows of an edge. */
+    const jaggedness = (grown: HTMLCanvasElement): number => {
+      const look = grown.getContext('2d', { willReadFrequently: true });
+      if (!look) return -1;
+      const got = look.getImageData(0, 0, grown.width, grown.height).data;
+      const crossing: number[] = [];
+      for (let y = 0; y < grown.height; y += 1) {
+        let at = -1;
+        for (let x = 0; x < grown.width; x += 1) {
+          if (got[(y * grown.width + x) * 4 + 3] < 128) { at = x; break; }
+        }
+        if (at > 2 && at < grown.width - 2) crossing.push(at);
+      }
+      let worst = 0;
+      for (let i = 1; i < crossing.length; i += 1) {
+        const jump = Math.abs(crossing[i] - crossing[i - 1]);
+        if (jump > worst) worst = jump;
+      }
+      return crossing.length < 10 ? -1 : worst;
+    };
+
+    /* And the one that shipped: a single jump, at the browser's default
+       quality, with no feather. That is the baseline the staircase has to be
+       measured against — NOT "the same code with the blur set to nought",
+       which still grows the mask in steps and so has no staircase either.
+       Comparing against that said the feather was doing nothing, and it was
+       right: the stepped growth is what kills the stairs, and the blur is
+       what softens what is left. */
+    const oneJump = document.createElement('canvas');
+    oneJump.width = WIDE;
+    oneJump.height = TALL;
+    const jump = oneJump.getContext('2d');
+    if (!jump) return;
+    jump.imageSmoothingQuality = 'low';
+    jump.drawImage(stair, 0, 0, WIDE, TALL);
+
+    const stairs = [jaggedness(oneJump),
+      ...EDGES.map((one) => jaggedness(feathered(stair, WIDE, TALL, one.soft)))];
+
     /* And the pure half, with arrays made here rather than by a model. */
     const allOn = new Uint8ClampedArray(400).fill(255);
     const allOff = new Uint8ClampedArray(400).fill(0);
@@ -139,6 +216,8 @@ export default function CutCheck(): React.ReactElement {
       softness: SOFTNESS,
       edges,
       softest: Math.max(...EDGES.map((one) => one.soft)),
+      stairs,
+      scale: Math.max(WIDE / STAIR, TALL / STAIR),
     }));
   }, []);
 

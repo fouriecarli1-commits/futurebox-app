@@ -136,6 +136,79 @@ export async function readWords(
  * Nothing else is touched. A spell-correct over somebody's sign would be
  * this app deciding what their photograph said.
  */
+/**
+ * Whether a reading is words at all, or the engine seeing faces in clouds.
+ *
+ * ── What she was shown ───────────────────────────────────────────────────
+ *
+ * Carli, 7 October 2026, having pressed Read English on a photograph of her
+ * own face: *"Wat is daai words in the picture"*. It had answered:
+ *
+ *     SN
+ *     GEE
+ *     P BK aS SS
+ *     = : = 1)
+ *     RS ——~ a\.
+ *     SS \
+ *
+ * There are no words in that photograph. Tesseract found letter-shaped
+ * things in hair and skin and reported them, as it is built to — and it
+ * reported them with a confidence of about thirty, which this code was
+ * throwing away.
+ *
+ * A reader that invents text is worse than one that finds none. Nobody can
+ * tell whether the nonsense is a bad read of a real sign or a photograph
+ * with nothing to read, so the only safe thing to do with it is retype the
+ * sign by hand — which is what the button was for.
+ *
+ * ── Two questions, because confidence alone is not enough ────────────────
+ *
+ * Tesseract is sometimes confident about rubbish and sometimes unsure about
+ * a perfectly good sign photographed at an angle. So this asks both how sure
+ * it was and whether the SHAPE of what came back looks like language: real
+ * writing is mostly letters in runs, and noise is mostly punctuation and
+ * stranded single characters.
+ *
+ * Deliberately generous. A half-right read of a real sign is worth having;
+ * what is being caught is the case with nothing in it at all.
+ */
+export function wordsAtAll(text: string, sure: number): boolean {
+  const lines = text.split('\n').map((one) => one.trim()).filter((one) => one.length > 0);
+  if (lines.length === 0) return false;
+
+  /* A word is a run of three or more letters. "SN" and "GEE" are not words;
+     anything somebody photographed on purpose has at least one thing on it
+     that is. */
+  const WORD = /[A-Za-z\u00C0-\u024F]{3,}/;
+  const saying = lines.filter((one) => WORD.test(one)).length;
+
+  /* ── The share of LINES that say something, which is the real test ────
+ 
+     Confidence was tried first and is not it. Her face read at about thirty
+     and was refused; the same reading at ninety was not, because confidence
+     says how sure the engine is of the shapes and nothing about whether the
+     shapes are language.
+ 
+     What separates her face from a sign is the SHAPE OF THE PAGE. Noise is
+     scattered: six lines, one of which happens to hold three letters in a
+     row. Writing is not: nearly every line of a sign has a word on it,
+     whether it is one line or twenty. That holds for "OPEN" and for a whole
+     notice board, which a test on the total number of letters does not. */
+  if (saying / lines.length < 0.5) return false;
+
+  const body = text.replace(/\s/g, '');
+  const letters = (body.match(/[A-Za-z\u00C0-\u024F]/g) ?? []).length;
+  /* And it has to be mostly letters rather than mostly punctuation. A page
+     of brackets and dashes can come back from a photograph of a fence. */
+  if (body.length === 0 || letters / body.length < 0.5) return false;
+
+  /* Confidence last, and only as a floor. It is worth something — an engine
+     that is sure of itself about something shaped like language usually has
+     it right — but a sign photographed at an angle or in poor light reads
+     low and is still worth having half-right. */
+  return sure >= 25;
+}
+
 export const tidy = (text: string): string =>
   text
     .split('\n')

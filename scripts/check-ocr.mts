@@ -28,7 +28,7 @@
 import { existsSync, statSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { withoutComments } from './prose.mts';
-import { READABLE } from '../app/lib/ocr';
+import { READABLE, tidy, wordsAtAll } from '../app/lib/ocr';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -117,6 +117,44 @@ ok('it reads the picture she brought in, not the canvas',
 
 ok(`both languages are offered (${READABLE.length})`, READABLE.length >= 2
   && READABLE.includes('afr'), READABLE.join(', '));
+
+/* ── A reading that is not words is not offered as words ──────────────────
+ 
+   Carli, 7 October 2026, having pressed Read English on a photograph of her
+   own face: *"Wat is daai words in the picture"*. The fixture below is
+   exactly what it showed her — Tesseract finding letter-shaped things in
+   hair and skin, at a confidence of about thirty, which this code was
+   throwing away.
+ 
+   A reader that invents text is worse than one that finds none: nobody can
+   tell a bad read of a real sign from a photograph with nothing in it, so
+   the only safe thing to do with the nonsense is retype the sign by hand —
+   which is what the button was for. */
+
+const HER_FACE = 'SN\nGEE\nP BK aS SS\n= : = 1)\nRS \u2014\u2014~ a\\.\nSS \\';
+
+ok('what it read off her face is not offered as words',
+  !wordsAtAll(tidy(HER_FACE), 30),
+  'this exact reading was shown to her as the words in her photograph');
+ok('  and would not be even if it had been sure of itself',
+  !wordsAtAll(tidy(HER_FACE), 95),
+  'confidence alone is not enough — Tesseract is sometimes certain about'
+  + ' rubbish, so the SHAPE of what came back has to look like language too');
+
+ok('a real sign is kept', wordsAtAll('FUTUREBOX STUDIO', 88),
+  'the walk reads exactly this out of a picture, so refusing it would be'
+  + ' refusing the feature');
+ok('  and a real sign read badly is still kept',
+  wordsAtAll('Kom kuier by\ndie Karoo Kafee\nelke Saterdag', 44),
+  'a sign photographed at an angle or in poor light reads low and is worth'
+  + ' having half-right — what is being caught is the case with nothing in it');
+ok('  and one short word somebody photographed on purpose',
+  wordsAtAll('OPEN', 91),
+  'a single clear word is a sign; the test for language must not need a'
+  + ' sentence');
+
+ok('nothing at all is nothing, whatever the number says',
+  !wordsAtAll('', 99) && !wordsAtAll('   \n  ', 99));
 
 if (bad) {
   console.error(`\ncheck:ocr — ${bad} assertion(s) failed.\n`);
