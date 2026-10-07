@@ -323,6 +323,48 @@ try {
       + ' drawn to help her see transparency, not to be part of the post');
   }
 
+  /* ── The preview is not the product ──────────────────────────────────
+ 
+     Right-click on a canvas offers "Save image as…", and what that hands
+     over is not a screenshot of a phone screen — it is the exact file. The
+     preview used to be the full 1080x1920, so there was a free full-size
+     road out of a screen whose entire charging model is a credit on the way
+     out. Her reason for having no watermark was *"hulle sal nie kan export
+     sonder krediete nie"*; a free road out is that decision reversed by
+     nobody.
+ 
+     Read off the canvas rather than the CSS, because CSS is what made it
+     look fine while being wrong. */
+  const shownAt = await page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    return el instanceof HTMLCanvasElement ? { w: el.width, h: el.height } : null;
+  });
+  check('the preview is drawn smaller than the file it stands for',
+    shownAt !== null && Math.max(shownAt.w, shownAt.h) <= 720,
+    `${shownAt ? `${shownAt.w}x${shownAt.h}` : 'no canvas'} — saved straight off`
+    + ' the canvas that is the finished picture, for nothing');
+
+  /* ── And it can go next door ─────────────────────────────────────────
+ 
+     Carli: *"kan ook in die video editor ingesit word."* The editor is the
+     room under this desk, so this is the whole feature: press once, and the
+     picture is the film's cover with no trip through the camera roll.
+ 
+     Measured in the editor and not in the studio. A confirmation sentence
+     is the studio agreeing with itself; the cover appearing downstairs is
+     the only thing that says the hand-over happened. */
+  const into = page.locator('[data-postintofilm]').first();
+  check('the post offers to become the film\u2019s cover', (await into.count()) > 0,
+    'the only way into the editor is a download and a re-import');
+
+  if ((await into.count()) > 0) {
+    const price = ((await into.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
+    check('  and says what that costs, like the save does',
+      /\d/.test(price) && /credit|krediet/i.test(price),
+      `${price} — the editor exports for nothing on the device, so a free`
+      + ' hand-over would be a free road off the phone');
+  }
+
   /* ── Nothing stranded under the app's own bar ────────────────────────── */
 
   /* Scrolled to the END first, which is the whole point of the assertion.
@@ -372,6 +414,77 @@ try {
     && (await page.locator('[data-openpost]').count()) > 0,
     'closing the post should leave the video desk, not the whole studio');
 
+
+  /* ── And then, from a clean start, the hand-over ─────────────────────
+ 
+     Last and on its own, because it ends somewhere else: pressing it closes
+     nothing but the measurement has to be taken in the EDITOR, and a block
+     in the middle of this walk that reopened the sheet afterwards was how
+     the first version of it broke the three assertions below it.
+ 
+     Carli: *"kan ook in die video editor ingesit word."* A confirmation
+     sentence in the studio is the studio agreeing with itself. The cover
+     appearing downstairs is the only thing that says the hand-over
+     happened — and if it did not, she was charged for nothing. */
+  if ((await page.locator('[data-openpost]').count()) > 0) {
+    await page.locator('[data-openpost]').first().click();
+    await page.waitForTimeout(700);
+    const again = page.locator('[data-postintofilm]').first();
+    if ((await again.count()) > 0) {
+      await again.click();
+      await page.waitForTimeout(1200);
+      const said = await page.evaluate(() => {
+        const el = document.querySelector('[data-poststudio]');
+        return el ? (el.textContent ?? '') : '';
+      });
+      check('pressing it says where the picture went',
+        /cutting room|snykamer/i.test(said),
+        'it has to NAME the room. It said "below this desk" at first, which'
+        + ' is where the button is and not where the editor is, so she went'
+        + ' looking down a page for something that was never on it');
+      await page.locator('[data-poststudio] [data-backout]').first().click();
+      await page.waitForTimeout(800);
+
+      /* Through the door, then behind the bar.
+ 
+         Two layers, and the first version of this walked neither — it read
+         for the cover straight after closing the sheet, found nothing, and
+         reported the hand-over broken when it had worked. A check wrong
+         about the code is the costlier direction to be wrong in, and it
+         also found the real fault next to it: the studio's own sentence
+         said "the editor is below this desk", and the cutting room is a
+         ROOM away. The sentence was sending her scrolling.
+ 
+         So: into the cutting room, then open the dock's film bench, which
+         is where the cover panel lives and until then is not in the DOM. */
+      const door = page.locator('[data-tocutting]').first();
+      if ((await door.count()) > 0) {
+        await door.click();
+        await page.waitForTimeout(1400);
+      }
+      const film = page.locator('[data-cutbench="film"]').first();
+      if ((await film.count()) > 0) {
+        await film.click();
+        await page.waitForTimeout(800);
+      }
+      const hasCover = await page.evaluate(() => {
+        const shown = document.querySelector('[data-editorcovershown]');
+        /* And it says WHICH of the two it is. A frame shot out of the film
+           would also fill this slot; only `coverFrom: 'brought'` makes the
+           panel say a picture was brought in, which is what the hand-over
+           sets. */
+        const panel = shown?.closest('div')?.parentElement?.textContent ?? '';
+        return { shown: Boolean(shown), brought: /brought|ingebring|gebring/i.test(panel) };
+      });
+      check('  and the cutting room really has it as the film\u2019s cover', hasCover.shown,
+        'nothing in the editor\u2019s cover slot, so the press went nowhere —'
+        + ' which is what a charge for nothing looks like');
+      check('    as a picture brought in, not a frame shot out of the film',
+        hasCover.brought,
+        'the slot is filled but the panel does not say it was brought in, so'
+        + ' `coverFrom` did not come with it');
+    }
+  }
   const faults = noise.filter((one) => /pageerror|console: /.test(one));
   check('and nothing throws while it is used', faults.length === 0,
     faults.slice(0, 3).join(' · '));

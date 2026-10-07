@@ -1052,6 +1052,13 @@ jobs:
       - name: A member's own picture cannot become album art
         run: npm run check:ownart
 
+      # One road out of the post studio and it is the paid one. Her reason
+      # for having no watermark was that nothing can be exported without
+      # credits, so a second road reverses that decision without anybody
+      # deciding it — and the film's own export is free, on the device.
+      - name: No picture leaves the post studio unpaid
+        run: npm run check:postpaid
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the

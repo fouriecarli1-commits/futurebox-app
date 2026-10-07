@@ -63,6 +63,15 @@ const LEEG = 'rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs fo
 const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100';
 
 
+/**
+ * The longest edge the on-screen preview is drawn at.
+ *
+ * Small enough that a saved preview is not the product, large enough that it
+ * is sharp on a phone: 540 across a 390-point screen is still more than two
+ * device pixels per point on everything made here.
+ */
+const PREVIEW_LONGEST = 540;
+
 /** Where a block of words sits, as three choices rather than a drag. */
 const SPOTS = [
   { id: 'top', y: 0.08 },
@@ -94,7 +103,17 @@ const boxFor = (one: Words): Box => ({
  */
 const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
-export default function PostStudio({ onClose }: { readonly onClose: () => void }): React.ReactElement {
+export default function PostStudio({ onClose, onIntoFilm }: {
+  readonly onClose: () => void;
+  /**
+   * Hand the finished picture to the film being cut on the desk below.
+   *
+   * Optional, and the button only appears when it is there, because the
+   * studio should still work anywhere it is mounted without a film to put
+   * anything into.
+   */
+  readonly onIntoFilm?: (png: File) => void;
+}): React.ReactElement {
   const { t, lang } = useLang();
   const [size, setSize] = useState<PostSize>(POST_SIZES[0]);
   const [picture, setPicture] = useState<HTMLImageElement | null>(null);
@@ -140,12 +159,44 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
     return ctx.measureText(text).width;
   };
 
-  /** Everything that is drawn, in the order it is drawn. */
+  /**
+   * Everything that is drawn, in the order it is drawn.
+   *
+   * ── Why the preview is small and the file is not ──────────────────────
+   *
+   * Both come out of here, and they differ in exactly two ways: the guides,
+   * and the number of pixels.
+   *
+   * The preview used to be the full 1080x1920, scaled down by CSS. It looked
+   * right and it was a hole: right-click on a canvas offers "Save image
+   * as…", and what that hands over is not a screenshot of a phone screen —
+   * it is the exact file, at full size, for nothing. The credit on the way
+   * out was the whole reason there is no watermark, so a free road out is
+   * that decision reversed without anybody deciding it.
+   *
+   * `PREVIEW_LONGEST` is drawn in frame coordinates through `ctx.scale`, so
+   * every measurement below stays in frame units and the picture is the same
+   * picture — just not a deliverable one. `measureText` ignores the
+   * transform, which is what makes the text fit identically at both sizes.
+   */
   const draw = (to: HTMLCanvasElement, guides: boolean): void => {
     const ctx = to.getContext('2d');
     if (!ctx) return;
-    to.width = size.width;
-    to.height = size.height;
+    const want = guides
+      ? Math.min(1, PREVIEW_LONGEST / Math.max(size.width, size.height))
+      : 1;
+    /* The canvas is sized first and the scale read back OUT of it.
+ 
+       Taking the scale as given and rounding the canvas to it leaves the
+       frame a fraction of a pixel short of the edge — 1080 x 0.28125 is
+       303.75 in a canvas 304 across — and that quarter-pixel strip is
+       never painted. On a transparent post it is a see-through line down
+       one side of the picture, which is both a visible flaw and enough to
+       fail the probe's own "nothing shows through the preview" reading of
+       it. */
+    to.width = Math.ceil(size.width * want);
+    to.height = Math.ceil(size.height * want);
+    ctx.setTransform(to.width / size.width, 0, 0, to.height / size.height, 0, 0);
     /* Setting width or height clears the canvas to transparent, so "nothing
        behind it" is the absence of this fill rather than a colour. */
     if (back) {
@@ -160,13 +211,24 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
          find out when a layered post came back with a black box behind it.
          The feature would have worked and been unusable, which is worse than
          it not being there. */
-      const step = Math.round(size.width / 24);
-      for (let y = 0; y < size.height; y += step) {
-        for (let x = 0; x < size.width; x += step) {
+      /* Drawn in DEVICE pixels, with the frame transform set aside.
+ 
+         Drawn in frame units it lands on fractional pixels once the preview
+         is scaled down, so the canvas antialiases every single block
+         boundary — twelve per cent of the preview came back part
+         see-through, and on screen that is a faint grid of seams over a
+         picture meant to show that there is nothing there. Integer steps on
+         an identity transform have no boundaries to soften. */
+      const had = ctx.getTransform();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      const step = Math.max(6, Math.round(to.width / 12));
+      for (let y = 0; y < to.height; y += step) {
+        for (let x = 0; x < to.width; x += step) {
           ctx.fillStyle = ((x / step) + (y / step)) % 2 === 0 ? '#3f3f46' : '#27272a';
           ctx.fillRect(x, y, step, step);
         }
       }
+      ctx.setTransform(had);
     }
 
     if (picture) {
@@ -282,39 +344,71 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
    * refuses in its own words — signed out, no credits — and those sentences
    * are better than any invented here.
    */
+  /**
+   * Paid for, then drawn. One road for both ways out.
+   *
+   * ── Why the film has to come through here too ────────────────────────
+   *
+   * Carli: *"Dit is vir plasings vir sosiale media en kan ook in die video
+   * editor ingesit word."* So a post can go next door as the film's cover —
+   * and the video editor charges nothing, because it cuts and exports
+   * entirely on the device: *"no credits, no queue, no waiting."*
+   *
+   * Which means post → cover → film would have been a free way to take a
+   * post off the phone, and it would have undone the reason there is no
+   * watermark: *"elke keer wanneer iets afgelaai word kos dit krediete ...
+   * hulle sal nie kan export sonder krediete nie."* A second road out that
+   * nobody is charged for is the watermark decision reversed by accident.
+   *
+   * `spend_credits` takes a charge once per reference and the reference is
+   * the post's own id, so the honest case is also the kind one: a post she
+   * already saved costs nothing to put into a film, and a post that goes
+   * straight into a film costs the one credit it would have cost to save.
+   */
+  const paidPicture = async (): Promise<Blob | null> => {
+    const token = await accessToken();
+    const answer = await fetch('/api/post/export', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ post }),
+    });
+    if (!answer.ok) {
+      const why = (await answer.json().catch(() => ({}))) as { message?: string };
+      setSaid(why.message ?? `${t('post.noExport', 'That could not be exported.')} (${answer.status})`);
+      return null;
+    }
+    /* Asked again here even though the screen already asked on mount.
+
+       The credit is already spent by this line. A race between the font
+       download and a quick press would hand her a file in the fallback
+       face and charge her for it, and `document.fonts.load` on something
+       already loaded returns immediately — so this costs nothing in the
+       case that is not the bug. */
+    await faceReady();
+    const sheet = document.createElement('canvas');
+    draw(sheet, false);
+    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, 'image/png'));
+    if (!blob) setSaid(t('post.noExport', 'That could not be exported.'));
+    return blob;
+  };
+
+  /**
+   * Off the device, charged before it is drawn.
+   *
+   * A save that happens and is sometimes not paid for is a price nobody can
+   * reason about, so the browser asks before it draws the file. The route
+   * refuses in its own words — signed out, no credits — and those sentences
+   * are better than any invented here.
+   */
   const take = async (): Promise<void> => {
     setBusy(true);
     setSaid('');
     try {
-      const token = await accessToken();
-      const answer = await fetch('/api/post/export', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ post }),
-      });
-      if (!answer.ok) {
-        const why = (await answer.json().catch(() => ({}))) as { message?: string };
-        setSaid(why.message ?? `${t('post.noExport', 'That could not be exported.')} (${answer.status})`);
-        return;
-      }
-      /* Asked again here even though the screen already asked on mount.
- 
-         The credit is already spent by this line. A race between the font
-         download and a quick press would hand her a file in the fallback
-         face and charge her for it, and `document.fonts.load` on something
-         already loaded returns immediately — so this costs nothing in the
-         case that is not the bug. */
-      await faceReady();
-      const sheet = document.createElement('canvas');
-      draw(sheet, false);
-      const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, 'image/png'));
-      if (!blob) {
-        setSaid(t('post.noExport', 'That could not be exported.'));
-        return;
-      }
+      const blob = await paidPicture();
+      if (!blob) return;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -322,6 +416,35 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
       a.click();
       URL.revokeObjectURL(url);
       setSaid(t('post.saved', 'Saved to your device.'));
+    } catch {
+      setSaid(t('post.noExport', 'That could not be exported.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** The same picture, handed next door instead of onto the device. */
+  const intoFilm = async (): Promise<void> => {
+    if (!onIntoFilm) return;
+    setBusy(true);
+    setSaid('');
+    try {
+      const blob = await paidPicture();
+      if (!blob) return;
+      /* A `File` and not the bare blob: `isPicture` in `lib/videocover.ts`
+         reads the type, which a blob carries, but the editor also shows the
+         cover's name and a nameless one reads as a missing one. */
+      onIntoFilm(new File([blob], `post-${size.id}.png`, { type: 'image/png' }));
+      /* The room is NAMED, and it is named correctly.
+ 
+         This first said "the editor is below this desk" — which is where
+         the button to it is, not where it is. The cutting room is its own
+         room reached from that button, so the sentence sent her scrolling
+         down a desk looking for something that was never there. A small
+         lie about where a thing went costs the same as a missing feature:
+         she goes looking, does not find it, and stops believing the
+         sentence. */
+      setSaid(t('post.intoFilmDone', 'It is the film\u2019s cover now. Open the cutting room to see it on the film.'));
     } catch {
       setSaid(t('post.noExport', 'That could not be exported.'));
     } finally {
@@ -525,6 +648,30 @@ export default function PostStudio({ onClose }: { readonly onClose: () => void }
                   {t('post.save', 'Save the picture')} · {creditsSaid(CREDITS.postOut, t)}
                 </span>}
           </button>
+          {/* ── And into the film next door ─────────────────────────────
+ 
+              Carli: *"kan ook in die video editor ingesit word."* The editor
+              is the room under this desk, so this is a hand-over and not a
+              download — but it goes through the same charge, because the
+              editor cuts and exports on the device for nothing and a free
+              road out would undo the reason there is no watermark.
+ 
+              Charged once per post, so a post she already saved is free to
+              put into a film. The button says so rather than making her
+              find out. */}
+          {onIntoFilm && (
+            <button
+              type="button"
+              onClick={() => void intoFilm()}
+              disabled={busy}
+              data-postintofilm
+              className={LEEG}
+            >
+              {t('post.intoFilm', 'Use it as the film\u2019s cover')}
+              {' · '}
+              {creditsSaid(CREDITS.postOut, t)}
+            </button>
+          )}
           <p className="text-[12px] leading-relaxed text-zinc-500">
             {t('post.freeUntil', 'Making it costs nothing. The credit is for taking it off the device, and the same post saved twice is charged once.')}
           </p>

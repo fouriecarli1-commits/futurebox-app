@@ -854,6 +854,19 @@ export default function FutureBoxHome() {
    * between two rooms and this is the only thing that sees both.
    */
   const [videoSong, setVideoSong] = useState<string | undefined>(undefined);
+  /**
+   * A post made on the video desk, on its way to the editor under it.
+   *
+   * Carli: *"Dit is vir plasings vir sosiale media en kan ook in die video
+   * editor ingesit word."* The desk and the cutting room are two different
+   * tabs, so neither is mounted when the other is and neither can hand the
+   * other anything — this is the wire between them, and it is one `File`.
+   *
+   * Not cleared after the editor takes it. The editor's own `commit` makes
+   * the cover part of the project, and clearing this would mean a second
+   * press of the same button could not re-send the same picture.
+   */
+  const [postCover, setPostCover] = useState<File | null>(null);
 
   /**
    * The two things that scroll in the studio, and why both are held here.
@@ -4146,6 +4159,14 @@ export default function FutureBoxHome() {
                   onUpgrade={() => setPricingModalOpen(true)}
                   onGoTo={goToRoom}
                   songId={videoSong}
+                  /* A post, handed to the film in the cutting room.
+ 
+                     Held here because the desk and the cutting room are two
+                     different tabs of the studio: the desk makes the
+                     picture, the editor takes it, and neither is mounted
+                     when the other is. One piece of state above both is the
+                     whole wire, and it survives the walk between them. */
+                  onPostToFilm={setPostCover}
                 />
                 {/* ── The editor, under the desk it belongs to ──────────────
  
@@ -4227,6 +4248,8 @@ export default function FutureBoxHome() {
                 <VideoEditor
                   plan={userPlan}
                   onUpgrade={() => setPricingModalOpen(true)}
+                  /* What the post studio on the desk above sent down. */
+                  postCover={postCover}
                   /* The copilot as a button rather than a column.
 
                      Carli, same message: *"Die copilot kan ook net 'n button

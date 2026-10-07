@@ -178,8 +178,18 @@ export default function VideoCanvas({
   onUpgrade,
   onGoTo,
   songId,
+  onPostToFilm,
 }: {
   onUpgrade?: () => void;
+  /**
+   * Hand a finished post to the film being cut in the cutting room.
+   *
+   * Lifted to `page.tsx` rather than wired across, because the cutting room
+   * is a different tab of the studio and not a child of this desk. The state
+   * lives above both, so it survives the walk between them. Passed straight
+   * through to the post studio; this desk never looks at the picture.
+   */
+  onPostToFilm?: (png: File) => void;
   /** Move to another room. Used by the cheaper route out of a spoken line. */
   onGoTo?: (surface: SurfaceId) => void;
   /**
@@ -608,7 +618,23 @@ export default function VideoCanvas({
         </button>
       </div>
 
-      {postOpen && <PostStudio onClose={() => setPostOpen(false)} />}
+      {postOpen && (
+        <PostStudio
+          onClose={() => setPostOpen(false)}
+          /* The sheet is NOT closed on the way.
+ 
+             Closing it looked tidier and it is the worse of the two: the
+             cutting room is a room away and its cover panel is behind the
+             dock's bar, so she would be left on this desk with no way to
+             tell whether the press did anything. That is the same fault as a
+             transparent post previewing black — the thing worked and cannot
+             be seen to have worked.
+ 
+             So the studio keeps its own sentence, which names where the
+             picture went, and she closes the sheet when she is ready. */
+          onIntoFilm={onPostToFilm}
+        />
+      )}
 
       {/* ── Is this thing plugged in ───────────────────────────────────
           Written for the person who set the keys up, in the place they

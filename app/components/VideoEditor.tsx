@@ -463,9 +463,20 @@ export default function VideoEditor({
   onUpgrade,
   copilot,
   covered,
+  postCover,
 }: {
   readonly plan: Plan;
   readonly onUpgrade?: () => void;
+  /**
+   * A picture the post studio on the desk above made, to use as the cover.
+   *
+   * It arrives already paid for — `/api/post/export` charges before the
+   * canvas is drawn, once per post, so a post she already saved comes down
+   * here for nothing and one that did not costs the one credit it would
+   * have cost to save. The editor exports for nothing on the device, so
+   * without that charge this would have been a free road off the phone.
+   */
+  readonly postCover?: File | null;
   /**
    * The thing you talk to, handed in rather than built here.
    *
@@ -1053,6 +1064,26 @@ export default function VideoEditor({
      has to be decoded before it can be drawn. */
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [markName, setMarkName] = useState('');
+
+  /* ── The post from the desk above ─────────────────────────────────────
+ 
+     Taken once per picture, and tracked by identity rather than by a flag.
+ 
+     A boolean "already taken" would be wrong the second time she makes a
+     post: the flag is set, the new picture arrives, and nothing happens —
+     which looks exactly like the button being broken. Comparing the `File`
+     itself means every new picture is taken and the same one never is, with
+     no state to get out of step.
+ 
+     It goes in as `coverFrom: 'brought'` because that is what it is: a
+     picture brought in, not a frame shot out of the film. The panel reads
+     that to say which of the two it is showing. */
+  const tookPost = useRef<File | null>(null);
+  useEffect(() => {
+    if (!postCover || tookPost.current === postCover) return;
+    tookPost.current = postCover;
+    commit((was) => ({ ...was, cover: postCover, coverFrom: 'brought' }));
+  }, [postCover, commit]);
   const [corner, setCorner] = useState<Corner>('bottomRight');
   /* Where it has been dragged to, or null for "wherever the corner says".
      Null is the default and is not the same as the centre: a mark that has

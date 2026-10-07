@@ -1641,6 +1641,8 @@ export const STRINGS: Dict = {
   "post.face.plain": { en: "Plain", af: "Gewoon" },
   "post.face.poster": { en: "Poster", af: "Plakkaat" },
   "post.face.book": { en: "Book", af: "Boek" },
+  "post.intoFilm": { en: "Use it as the film\u2019s cover", af: "Gebruik dit as die film se voorblad" },
+  "post.intoFilmDone": { en: "It is the film\u2019s cover now. Open the cutting room to see it on the film.", af: "Dit is nou die film se voorblad. Maak die snykamer oop om dit op die film te sien." },
   "post.words": { en: "Words", af: "Woorde" },
   "post.addWords": { en: "Add words", af: "Sit woorde by" },
   "post.theWords": { en: "The words", af: "Die woorde" },
