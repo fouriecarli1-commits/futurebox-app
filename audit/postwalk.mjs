@@ -845,6 +845,42 @@ try {
       `${round?.width}x${round?.height} against ${upright.width}x${upright.height}`);
   }
 
+  /* ── Something behind the words, so they can be read ────────────────
+ 
+     Every line is drawn with a soft shadow, which loses to a bright sky and
+     to a patterned wall. `check:posttext` holds the arithmetic of the block;
+     what a browser has to answer is that pressing it darkens the pixels
+     behind the words and nothing else — a backdrop that paints the whole
+     frame is the version that ships, because on a dark photograph nobody
+     can see it has.
+ 
+     Read as the average of the canvas, which moves when any pixel does. */
+  await bench('text');
+  if ((await page.locator('[data-postbehindwords="bar"]').count()) > 0) {
+    const plainText = await mean();
+    await page.locator('[data-postbehindwords="bar"]').first().click();
+    await page.waitForTimeout(600);
+    const barred = await mean();
+    check('a solid bar behind the words really darkens what is behind them',
+      barred !== null && plainText !== null
+        && barred.r + barred.g + barred.b < plainText.r + plainText.g + plainText.b,
+      `${JSON.stringify(plainText)} → ${JSON.stringify(barred)} — a button`
+      + ' wired to a state nobody draws');
+    check('  and not the whole picture',
+      barred !== null && plainText !== null
+        && barred.r + barred.g + barred.b > (plainText.r + plainText.g + plainText.b) * 0.8,
+      `${JSON.stringify(plainText)} → ${JSON.stringify(barred)} — a block round`
+      + ' two words that darkens a fifth of the frame is a block measured from'
+      + ' the box rather than from the words');
+    await page.locator('[data-postbehindwords="none"]').first().click();
+    await page.waitForTimeout(500);
+    const backToShadow = await mean();
+    check('    and taking it off puts the picture back exactly',
+      backToShadow !== null && plainText !== null
+        && backToShadow.r === plainText.r && backToShadow.g === plainText.g,
+      `${JSON.stringify(plainText)} → ${JSON.stringify(backToShadow)}`);
+  }
+
   /* ── Somewhere to start, which the empty room needed most ───────────
  
      Carli's list, 7 October 2026: *"Video, etc templates."*

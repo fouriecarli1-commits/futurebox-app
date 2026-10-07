@@ -280,3 +280,58 @@ export function boxFor(spot: SpotId, size: PostSize, zone: Zone = ALL): Box {
   const x = Math.max(0.08, safe.left);
   return { x, y, w: Math.min(0.84, safe.left + safe.width - x), h: 0.18 };
 }
+
+/**
+ * What goes behind a line of words so it can be read.
+ *
+ * ── Why a shadow is not enough ───────────────────────────────────────────
+ *
+ * Every line in this room is drawn with a soft shadow under it, which is the
+ * right default and the reason is written where it is drawn: light text on a
+ * light photograph is unreadable, and the picture behind the words is
+ * whatever she chose rather than a background somebody designed.
+ *
+ * A shadow carries white text over a busy photograph and loses to two things
+ * it meets constantly — a bright sky, and a patterned wall. Every editor
+ * answers that the same way, with something solid behind the words, and this
+ * room had no answer at all.
+ *
+ *   · `none` is the shadow alone, which is what it has always been.
+ *   · `shade` is a soft dark wash behind the line, fading at its ends. It
+ *     reads as part of the photograph and carries over almost anything.
+ *   · `bar` is a solid block the width of the words. It reads as a label
+ *     rather than as part of the picture, which is exactly right for a date
+ *     or a price and wrong for a quotation.
+ *
+ * Measured from the words rather than the box: a bar as wide as the box
+ * round a two-word line is a stripe across the picture with a word in the
+ * middle of it.
+ */
+export const BACKDROPS = ['none', 'shade', 'bar'] as const;
+export type Backdrop = (typeof BACKDROPS)[number];
+
+/**
+ * The rectangle to paint behind one line, in frame pixels, or `null`.
+ *
+ * `widest` is what the widest line of this block measures, so a two-line
+ * block gets one width and does not step in and out. The padding is a share
+ * of the type size for the reason every other measurement here is a share:
+ * four pixels is a frame round 14px type and invisible round 200px type.
+ */
+export function behindWords(
+  widest: number,
+  px: number,
+  lines: number,
+  at: { readonly x: number; readonly y: number },
+  frame: { readonly width: number },
+): { x: number; y: number; w: number; h: number } {
+  const padX = px * 0.38;
+  const padY = px * 0.22;
+  const w = Math.min(frame.width, widest + padX * 2);
+  return {
+    x: at.x - w / 2,
+    y: at.y - padY,
+    w,
+    h: lines * px * 1.2 + padY * 2 - px * 0.2,
+  };
+}

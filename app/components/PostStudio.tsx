@@ -47,8 +47,9 @@ import {
   Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import {
-  POST_SIZES, SPOTS, boxFor as boxOfSpot, clashes, fitText, moveInside, sizeById,
-  type Measure, type PostSize, type SpotId,
+  BACKDROPS, POST_SIZES, SPOTS, behindWords, boxFor as boxOfSpot, clashes, fitText,
+  moveInside, sizeById,
+  type Backdrop, type Measure, type PostSize, type SpotId,
 } from '../lib/posttext';
 import { ALL, boxOf } from '../lib/safezones';
 import { CREDITS, creditsSaid } from '../lib/credits';
@@ -144,6 +145,14 @@ interface Words {
   readonly face: FaceId;
   readonly spot: SpotId;
   readonly ink: string;
+  /**
+   * What goes behind the line so it can be read.
+   *
+   * Optional, and absent means `none` — which is what every line written
+   * before tonight is, and is the shadow alone that the room has always
+   * drawn. `posttext.ts` carries why a shadow is not enough.
+   */
+  readonly behind?: Backdrop;
 }
 
 /**
@@ -614,9 +623,44 @@ export default function PostStudio({
       const box = moveInside(boxOfSpot(one.spot, size), size);
       const fit = fitText(one.text, box, size, measureWith(ctx, chosen.css, chosen.weight));
       ctx.font = `${chosen.weight} ${fit.px}px ${chosen.css}`;
-      ctx.fillStyle = one.ink;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
+
+      /* ── Something solid behind the words, where she asked for it ──────
+ 
+          Under the shadow and under the letters, measured from the WORDS
+          and not from the box: a bar as wide as the box round a two-word
+          line is a stripe across the picture with a word in the middle of
+          it. One width for the whole block, from its widest line, so a
+          two-line caption does not step in and out. */
+      if (one.behind && one.behind !== 'none') {
+        const widest = fit.lines.reduce(
+          (most, line) => Math.max(most, ctx.measureText(line).width),
+          0,
+        );
+        const back = behindWords(
+          widest, fit.px, fit.lines.length,
+          { x: size.width / 2, y: box.y * size.height }, size,
+        );
+        ctx.save();
+        if (one.behind === 'bar') {
+          ctx.fillStyle = 'rgba(0,0,0,0.72)';
+          ctx.fillRect(back.x, back.y, back.w, back.h);
+        } else {
+          /* Fading at the ends, so it reads as part of the photograph
+             rather than as a box somebody drew on it. */
+          const wash = ctx.createLinearGradient(back.x, 0, back.x + back.w, 0);
+          wash.addColorStop(0, 'rgba(0,0,0,0)');
+          wash.addColorStop(0.18, 'rgba(0,0,0,0.55)');
+          wash.addColorStop(0.82, 'rgba(0,0,0,0.55)');
+          wash.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = wash;
+          ctx.fillRect(back.x, back.y, back.w, back.h);
+        }
+        ctx.restore();
+      }
+
+      ctx.fillStyle = one.ink;
       /* A soft shadow under every line. Light text on a light photograph is
          unreadable and it is not a thing somebody notices while typing — the
          picture behind the words is whatever they chose, not a background
@@ -2661,6 +2705,29 @@ export default function PostStudio({
                 className={`${LEEG} ${one.spot === spot.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
               >
                 {t(`post.spot.${spot.id}`, spot.id)}
+              </button>
+            ))}
+            {/* ── Something behind the line, so it can be read ───────────
+ 
+                Every line is drawn with a soft shadow under it and a shadow
+                loses to a bright sky and to a patterned wall, which is two
+                of the three photographs anybody owns. `posttext.ts` carries
+                the three. */}
+            {BACKDROPS.map((how) => (
+              <button
+                key={how}
+                type="button"
+                data-postbehindwords={how}
+                aria-pressed={(one.behind ?? 'none') === how}
+                onClick={() => setWords((was) => was.map((w) => (
+                  w.id === one.id ? { ...w, behind: how } : w)))}
+                className={`${LEEG} ${(one.behind ?? 'none') === how ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+              >
+                {how === 'none'
+                  ? t('post.backNone', 'Shadow only')
+                  : how === 'shade'
+                    ? t('post.backShade', 'Shade behind')
+                    : t('post.backBar', 'Solid bar')}
               </button>
             ))}
             <input

@@ -17,7 +17,7 @@
  * are behind somebody's username, and by then it is on the internet.
  */
 import {
-  POST_SIZES, clashes, fitText, moveInside, sizeById, wrap,
+  POST_SIZES, behindWords, clashes, fitText, moveInside, sizeById, wrap,
   type Box, type Measure,
 } from '../app/lib/posttext';
 import { readFileSync } from 'node:fs';
@@ -242,6 +242,51 @@ ok('    and the screen says so before the credit is spent',
 
 ok('  and the background can be put back without hunting for the colour again',
   /setLastColour/.test(studio) && /back \?\? lastColour/.test(studio));
+
+/* ── Something behind the words, so they can be read ─────────────────
+ 
+   Carli has two photographs in the fixtures of this repo where her own
+   caption is over a bright sky. Every line is drawn with a soft shadow
+   under it, which is right and is not enough: a shadow loses to a bright
+   sky and to a patterned wall, which is two of the three photographs
+   anybody owns.
+ 
+   The arithmetic is where this goes wrong, in one specific way: a bar
+   measured from the BOX rather than from the words is a stripe across the
+   whole picture with two words in the middle of it. */
+const narrow = behindWords(200, 50, 1, { x: 540, y: 300 }, { width: 1080 });
+ok('a bar behind two words is as wide as the words, not as the picture',
+  narrow.w < 1080 * 0.4,
+  `${Math.round(narrow.w)} of 1080 — measured from the box it is a stripe`
+  + ' across the picture with a word in the middle of it');
+ok('  and it is centred on them',
+  Math.abs(narrow.x + narrow.w / 2 - 540) < 0.01,
+  `${Math.round(narrow.x + narrow.w / 2)} against 540`);
+ok('  and a little wider than the words themselves',
+  narrow.w > 200 && narrow.w < 200 + 50 * 1.2,
+  `${Math.round(narrow.w)} round words measuring 200 at 50px — no padding is`
+  + ' letters touching the edge of the block');
+
+const twoLines = behindWords(200, 50, 2, { x: 540, y: 300 }, { width: 1080 });
+ok('  and two lines are one block, not two',
+  twoLines.w === narrow.w && twoLines.h > narrow.h,
+  `${Math.round(twoLines.w)}x${Math.round(twoLines.h)} against`
+  + ` ${Math.round(narrow.w)}x${Math.round(narrow.h)} — one width from the`
+  + ' widest line, so a caption does not step in and out');
+
+const overWide = behindWords(4000, 50, 1, { x: 540, y: 300 }, { width: 1080 });
+ok('  and nothing reaches past the picture',
+  overWide.w <= 1080,
+  `${Math.round(overWide.w)} of 1080 — words wider than the frame are wrapped by`
+  + ' `fitText`, but a block that trusts them is a block off the edge');
+
+/* The padding is a share of the type size, for the reason every other
+   measurement in this file is: four pixels is a frame round 14px type and
+   invisible round 200px type. */
+const small = behindWords(100, 14, 1, { x: 540, y: 300 }, { width: 1080 });
+const big = behindWords(100, 200, 1, { x: 540, y: 300 }, { width: 1080 });
+ok('  and the padding grows with the type', big.w - 100 > (small.w - 100) * 8,
+  `${(small.w - 100).toFixed(1)} at 14px against ${(big.w - 100).toFixed(1)} at 200px`);
 
 /* ── The faces ────────────────────────────────────────────────────────────
  
