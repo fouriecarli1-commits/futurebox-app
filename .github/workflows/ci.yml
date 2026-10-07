@@ -1130,6 +1130,13 @@ jobs:
       - name: What a store build reads is still there and still right
         run: npm run check:playstore
 
+      # Three of the eight licences an amp capture can carry forbid
+      # selling outright, and no amount of crediting changes that. The
+      # licence is asked once, and the question it answers is asked months
+      # later by somebody who was not there.
+      - name: A capture that may not be sold through says so
+        run: npm run check:amplicence
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever

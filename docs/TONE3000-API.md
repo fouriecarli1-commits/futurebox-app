@@ -714,6 +714,33 @@ Konsep vir daardie vraag:
 Dit is 'n vraag wat 'n mens **voor** die integrasie stel, nie wanneer iemand
 se liedjie reeds verkoop is nie.
 
+### Wat op 7 Oktober 2026 gebou is, voordat die integrasie bestaan
+
+Carli het gevra: *"Didn't Tone3000 give us permission if we add their name on
+products?"* — deels, en die deel wat nie is nie, is die deel wat saak maak.
+
+Punt 1 hierbo is klaar. `lib/amplicence.ts` dra al agt lisensies en wat elkeen
+toelaat; `lib/amps.ts` hou die **maker** en die **lisensie** saam met elke
+opname; `lib/nam.ts` lees `modeled_by` uit die lêer waar dit daar is. Punt 2 is
+klaar: die ProBooth vra die lisensie die oomblik wanneer 'n opname inkom, en
+druk op die skerm watter opnames erkenning vra en watter sê 'n liedjie mag nie
+verkoop word nie.
+
+Drie besluite wat in `check:amplicence` vasgehou word:
+
+* **Nie weet is nie toestemming nie.** 'n Opname sonder 'n lisensie, en 'n
+  lisensie wat die app nie ken nie, val albei op die versigtige antwoord. 'n
+  Onbekende string wat na die toegeeflike kant toe val, is hoe 'n tikfout
+  toestemming word.
+* **`t3k` is versigtig totdat hulle antwoord.** Wat hul eie lisensie toelaat,
+  is hulle s'n om te sê.
+* **Die erkenning noem die MAKER**, nie die webwerf nie. "Attribute the person
+  who made this" word nie bevredig deur te sê waar dit afgelaai is nie.
+
+Punt 3 — om hulle te vra — bly oop. Die vraag is kleiner nou: dit gaan nie meer
+oor wat ons moet doen nie, net oor of `t3k` en die Select-katalogus iets anders
+beteken as wat ons aanvaar het.
+
 ## Een vraag vir hulle, uit ons eie kode
 
 `architecture` neem **een** waarde: `1`, `2` of `custom`. Weglaat gee die

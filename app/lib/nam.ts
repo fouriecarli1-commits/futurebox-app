@@ -79,6 +79,26 @@ export function ampName(modelJson: string): string {
 }
 
 /**
+ * Who made the capture, out of the file, or an empty string.
+ *
+ * `modeled_by` is the NAM metadata field for it, and a good many captures
+ * carry it because the plugin that makes them asks. The ones that do not are
+ * why the room asks as well.
+ *
+ * Read here rather than in `amps.ts` for the reason `ampName` is here: this
+ * file is the one that knows what a NAM file looks like, and a second parser
+ * is a second thing to be wrong about the same bytes.
+ */
+export function ampMaker(modelJson: string): string {
+  try {
+    const model = NamModel.parse(modelJson);
+    return (model.metadata?.modeled_by ?? '').trim().slice(0, 60);
+  } catch {
+    return '';
+  }
+}
+
+/**
  * The level the model was captured at, in dB, or null when the file does not
  * say.
  *

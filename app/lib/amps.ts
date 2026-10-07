@@ -52,6 +52,7 @@
  */
 
 import { deleteAudio, getAudio, putAudio } from './library';
+import type { LicenceId } from './amplicence';
 
 export interface Amp {
   readonly id: string;
@@ -61,6 +62,25 @@ export interface Amp {
   readonly from: string;
   readonly bytes: number;
   readonly createdAt: string;
+  /**
+   * Who made the capture, read out of the file where it says.
+   *
+   * Carli, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us permission
+   * if we add their name on products?"* Partly — and the name a `cc-by`
+   * licence asks for is the MAKER's, not the site's. A NAM file carries
+   * `modeled_by` often enough to be worth reading, and `ampMaker` reads it.
+   */
+  readonly maker?: string;
+  /**
+   * And what somebody is allowed to do with a song made through it.
+   *
+   * Not in the file — a NAM capture has a name, the gear and sometimes a
+   * maker, and no licence field at all — so it is asked once, when the
+   * capture comes in, and kept with it for ever after. The question it
+   * answers is asked much later, when somebody sells the song, and by then
+   * nobody can reconstruct it. `lib/amplicence.ts` carries the eight.
+   */
+  readonly licence?: LicenceId;
   /** Kept when the rest is evicted. */
   readonly favourite?: boolean;
 }
@@ -140,6 +160,20 @@ export function favouriteAmp(id: string, yes: boolean): Amp[] {
   const all = loadAmps().map((one) => (one.id === id ? { ...one, favourite: yes } : one));
   write(all);
   return all;
+}
+
+/**
+ * What may be done with a song made through this one.
+ *
+ * Its own function rather than a field on `renameAmp`, because the two are
+ * asked at different moments by different people: a name is changed when
+ * somebody wants to find it again, and a licence is set once, on the way in,
+ * and afterwards only when somebody realises it was wrong.
+ */
+export function setAmpLicence(id: string, licence: LicenceId): Amp[] {
+  const kept = loadAmps().map((one) => (one.id === id ? { ...one, licence } : one));
+  write(kept);
+  return kept;
 }
 
 export function renameAmp(id: string, name: string): Amp[] {

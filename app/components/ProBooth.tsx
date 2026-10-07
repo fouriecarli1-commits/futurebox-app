@@ -28,9 +28,12 @@ import {
 import { failed, separate, separateParts } from '../lib/stems';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone, NOTHING_OFF } from '../lib/tone';
-import { ampName, through } from '../lib/nam';
+import { ampMaker, ampName, through } from '../lib/nam';
 import {
-  AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, type Amp,
+  LICENCES, UNKNOWN, licenceOf, mayBeSold, needsCredit, type LicenceId,
+} from '../lib/amplicence';
+import {
+  AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, setAmpLicence, type Amp,
 } from '../lib/amps';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
@@ -4288,6 +4291,12 @@ function LaneRow({
      manager again, and a re-recorded take could not get its amp back at all.
      `lib/amps.ts` holds them now. */
   const [shelf, setShelf] = useState<Amp[]>([]);
+  /* Which capture is waiting to be told what it came under. `null` is none,
+     and the row that asks is drawn beside that capture rather than as a
+     dialogue over the room — a question about one thing belongs next to the
+     thing. */
+  const [asking, setAsking] = useState<string | null>(null);
+
   useEffect(() => { setShelf(loadAmps()); }, []);
 
   /** Run this lane through a capture, whatever it came from. */
@@ -4338,14 +4347,31 @@ function LaneRow({
          on the row to say which. `through` throws on a capture this engine
          cannot read, so the catch below is the whole test. */
       await runThrough(json, name);
+      /* ── Who made it, and what may be done with it ────────────────
+ 
+         Carli, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us
+         permission if we add their name on products?"* Partly — three of
+         the eight licences a capture can carry forbid selling outright,
+         and the credit a `cc-by` asks for is the MAKER's name, not the
+         site's.
+ 
+         The maker is in the file often enough to be worth reading. The
+         licence never is, so the capture goes onto the shelf as "I do not
+         know" and the row asks. Cautious by default, because somebody who
+         does not know what a capture came under has not got permission —
+         they have got a capture and a question. */
+      const made = ampId();
       await rememberAmp({
-        id: ampId(),
+        id: made,
         name,
         from: file.name,
         bytes: file.size,
         createdAt: new Date().toISOString(),
+        maker: ampMaker(json) || undefined,
+        licence: UNKNOWN,
       }, json);
       setShelf(loadAmps());
+      setAsking(made);
     } catch {
       setAmpFailed(t('pro.ampFailed', 'That file did not load as an amp.'));
     } finally {
@@ -4951,6 +4977,73 @@ function LaneRow({
               })}
             </div>
           )}
+          {/* ── What this capture came under ─────────────────────────────
+ 
+              Carli, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us
+              permission if we add their name on products?"* Partly. Three of
+              the eight licences a capture can carry forbid selling outright,
+              and the credit a `cc-by` asks for is the maker's name and not
+              the site's. `lib/amplicence.ts` carries all eight.
+ 
+              Asked beside the capture rather than as a dialogue over the
+              room, and asked ONCE — on the way in — because the question it
+              answers is asked months later by somebody who was not there and
+              cannot reconstruct it. */}
+          {asking && shelf.some((one) => one.id === asking) && (
+            <div
+              data-amplicence={asking}
+              className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] p-2.5"
+            >
+              <p className="text-[11px] leading-snug text-amber-200">
+                {t(
+                  'pro.ampAsk',
+                  'What did this capture come under? Three of the licences on TONE3000 say a song made through them may not be sold, so this is worth a moment now rather than a question later.',
+                )}
+              </p>
+              <select
+                data-amplicencepick
+                value={shelf.find((one) => one.id === asking)?.licence ?? UNKNOWN}
+                onChange={(event) => {
+                  setShelf(setAmpLicence(asking, event.target.value as LicenceId));
+                }}
+                className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
+              >
+                {LICENCES.map((one) => (
+                  <option key={one.id} value={one.id}>{t(one.name[0], one.name[1])}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                data-amplicencedone
+                onClick={() => setAsking(null)}
+                className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-xs font-bold text-zinc-200"
+              >
+                {t('pro.ampAskDone', 'That is right')}
+              </button>
+            </div>
+          )}
+
+          {/* And what the shelf is owed, once there is anything on it that
+              owes something. Printed rather than kept, because a credit
+              nobody can see is a credit nobody gives. */}
+          {shelf.some((one) => needsCredit(one.licence)) && (
+            <p data-ampcredits className="text-[11px] leading-snug text-zinc-500">
+              {t('pro.ampCredits', 'Captures on this shelf that ask to be credited:')}
+              {' '}
+              {shelf.filter((one) => needsCredit(one.licence))
+                .map((one) => `${one.maker || one.name} (${licenceOf(one.licence).id})`)
+                .join(' \u00b7 ')}
+              {shelf.some((one) => !mayBeSold(one.licence)) && (
+                <>
+                  {' '}
+                  <strong className="text-amber-300">
+                    {t('pro.ampNotForSale', 'Some of these say a song made through them may not be sold.')}
+                  </strong>
+                </>
+              )}
+            </p>
+          )}
+
           {shelf.length > 0 && (
             <Note className="text-[11px] text-zinc-600 leading-snug">{t('pro.ampShelf')}</Note>
           )}
