@@ -54,6 +54,10 @@ import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import { barClearance } from './TabBar';
 import { FACES, faceOf, faceReady, type FaceId } from '../lib/postfaces';
+import {
+  MIDDLE, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP,
+  canMove, moveBy, place, showsThrough, zoomTo, type Crop,
+} from '../lib/postcrop';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
@@ -117,6 +121,11 @@ export default function PostStudio({ onClose, onIntoFilm }: {
   const { t, lang } = useLang();
   const [size, setSize] = useState<PostSize>(POST_SIZES[0]);
   const [picture, setPicture] = useState<HTMLImageElement | null>(null);
+  /* Which part of it shows, and how close. `lib/postcrop.ts` holds the
+     maths and the reason the pan is a fraction rather than a number of
+     pixels. Reset with every new picture: the spot that was right for the
+     last photograph means nothing on this one. */
+  const [crop, setCrop] = useState<Crop>(MIDDLE);
   /* `null` is nothing behind it, and not a colour that happens to be dark.
  
      Her words: *"transparency"*, in the list beside text and nice fonts. A
@@ -232,13 +241,11 @@ export default function PostStudio({ onClose, onIntoFilm }: {
     }
 
     if (picture) {
-      /* Covered, not stretched. A photograph squashed into a square is the
-         one thing that makes a post look like a mistake rather than a
-         choice, and cropping is what every app does with the same picture. */
-      const scale = Math.max(size.width / picture.width, size.height / picture.height);
-      const w = picture.width * scale;
-      const h = picture.height * scale;
-      ctx.drawImage(picture, (size.width - w) / 2, (size.height - h) / 2, w, h);
+      /* Placed, not stretched, and placed by the one function that also
+         reports how far it can move — so the screen cannot draw it in one
+         spot and offer a drag that means another. */
+      const at = place(picture, size, crop);
+      ctx.drawImage(picture, at.left, at.top, at.width, at.height);
     }
 
     for (const one of words) {
@@ -295,9 +302,64 @@ export default function PostStudio({ onClose, onIntoFilm }: {
     return () => { left = true; };
   }, []);
 
+  /* Every piece of state the draw reads, listed.
+ 
+     `crop` was missing from this list and nothing said so: the sliders moved,
+     their labels updated, the state was right, and the picture never
+     changed. A dependency list is a promise about what `draw` reads, and the
+     compiler does not check it — `audit/postwalk.mjs` does, by counting red
+     and blue pixels before and after a drag. That is why the fixture is half
+     one colour and half another rather than a photograph. */
   useEffect(() => {
     if (canvas.current) draw(canvas.current, true);
-  }, [facesIn, size, picture, words, back]);
+  }, [facesIn, size, picture, words, back, crop]);
+
+  /* ── Where the picture sits, and whether it can be moved ──────────── */
+
+  const at = useMemo(
+    () => (picture ? place(picture, size, crop) : null),
+    [picture, size, crop],
+  );
+  const movable = at !== null && canMove(at);
+  const gaps = at !== null && showsThrough(at, size);
+
+  /* The last point the thumb was at, not the point it started from.
+ 
+     Measuring from the start of the gesture and re-applying the whole
+     distance each time works only while nothing clamps; the moment the
+     picture reaches an edge, the stored total keeps growing and the picture
+     jumps when the thumb turns back. Each move is applied as a step from the
+     previous one, so an edge simply stops it. */
+  const lastAt = useRef<{ readonly x: number; readonly y: number } | null>(null);
+
+  const grab = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (!movable) return;
+    lastAt.current = { x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const was = lastAt.current;
+    if (!was || !at) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    if (box.width <= 0) return;
+    /* Screen pixels into frame units. The canvas is drawn at 540 on its
+       longest edge and shown at whatever width the phone gives it, so
+       neither of those numbers is the one to divide by — the box on screen
+       is. */
+    const per = size.width / box.width;
+    const byX = (event.clientX - was.x) * per;
+    const byY = (event.clientY - was.y) * per;
+    lastAt.current = { x: event.clientX, y: event.clientY };
+    setCrop((now) => moveBy(now, at, byX, byY));
+  };
+
+  const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    lastAt.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
 
   /** Whether anything she has written lands under the platform's furniture. */
   const covered = useMemo(
@@ -331,7 +393,7 @@ export default function PostStudio({ onClose, onIntoFilm }: {
       return;
     }
     const img = new Image();
-    img.onload = () => { setPicture(img); URL.revokeObjectURL(img.src); };
+    img.onload = () => { setPicture(img); setCrop(MIDDLE); URL.revokeObjectURL(img.src); };
     img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
     img.src = made.preview;
   };
@@ -492,8 +554,24 @@ export default function PostStudio({ onClose, onIntoFilm }: {
         <canvas
           ref={canvas}
           data-postcanvas
+          data-postmovable={movable ? 'yes' : 'no'}
+          onPointerDown={grab}
+          onPointerMove={drag}
+          onPointerUp={letGo}
+          onPointerCancel={letGo}
           className="w-full rounded-xl border border-zinc-800"
-          style={{ aspectRatio: `${size.width} / ${size.height}` }}
+          style={{
+            aspectRatio: `${size.width} / ${size.height}`,
+            /* Only while there is something to pan.
+ 
+               `touch-action: none` on this canvas permanently would be a
+               tall dead zone in the middle of a sheet that scrolls — she
+               puts her thumb on the picture, pulls, and the page refuses to
+               move, which reads as the app being frozen. With no slack
+               there is nothing to drag, so the page gets the gesture. */
+            touchAction: movable ? 'none' : 'auto',
+            cursor: movable ? 'grab' : 'default',
+          }}
         />
 
         {covered && (
@@ -552,6 +630,80 @@ export default function PostStudio({ onClose, onIntoFilm }: {
               : t('post.clearOff', 'Take the background off')}
           </button>
         </div>
+
+        {/* ── Which part of it shows ─────────────────────────────────────
+ 
+            Carli, 7 October 2026, having found the screen: *"Waar edit ek 'n
+            foto?"* This is the half that was missing. A phone photograph is
+            4:3 and a story is 9:16, so something always falls off — and
+            until now the app chose what, every time, with no way to argue.
+ 
+            Only drawn when there is a picture. A zoom slider over an empty
+            frame is a control for nothing. */}
+        {picture && at && (
+          <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+            <p className={MIKRO}>{t('post.framing', 'What shows')}</p>
+
+            <div className="flex flex-wrap gap-2">
+              {(['fill', 'whole'] as const).map((one) => (
+                <button
+                  key={one}
+                  type="button"
+                  data-postbasis={one}
+                  aria-pressed={crop.basis === one}
+                  onClick={() => setCrop((was) => ({ ...was, basis: one, x: 0, y: 0 }))}
+                  className={`${LEEG} ${crop.basis === one ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+                >
+                  {one === 'fill'
+                    ? t('post.fill', 'Fill the frame')
+                    : t('post.whole', 'The whole picture')}
+                </button>
+              ))}
+              {/* Back to the middle, at the basis. Everything a drag and a
+                  slider can get wrong, in one press — which is what somebody
+                  wants after pushing a picture somewhere they did not mean. */}
+              <button
+                type="button"
+                data-postcentre
+                onClick={() => setCrop((was) => ({ ...was, zoom: ZOOM_MIN, x: 0, y: 0 }))}
+                className={LEEG}
+              >
+                {t('post.centre', 'Centre it')}
+              </button>
+            </div>
+
+            <label className="block space-y-1">
+              <span className="text-[12px] text-zinc-400">
+                {t('post.closer', 'How close')}
+                {' · '}
+                <span data-postzoomnow>{`${crop.zoom.toFixed(2)}x`}</span>
+              </span>
+              <input
+                type="range"
+                data-postzoom
+                min={ZOOM_MIN}
+                max={ZOOM_MAX}
+                step={ZOOM_STEP}
+                value={crop.zoom}
+                onChange={(event) => setCrop((was) => zoomTo(was, Number(event.target.value)))}
+                className="w-full"
+                aria-label={t('post.closer', 'How close')}
+              />
+            </label>
+
+            <p className="text-[12px] leading-relaxed text-zinc-500">
+              {movable
+                ? t('post.dragIt', 'Drag the picture above to choose what shows.')
+                : t('post.noDrag', 'The whole picture fits, so there is nothing to move. Go closer to choose a part of it.')}
+            </p>
+
+            {gaps && (
+              <p data-postgap className="text-[12px] leading-relaxed text-amber-300">
+                {t('post.gap', 'Some of the frame is background rather than photograph. That is what “the whole picture” does — with the background off, it is the picture on nothing.')}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── The words ─────────────────────────────────────────────────── */}
         <div className="space-y-3">

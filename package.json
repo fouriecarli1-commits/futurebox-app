@@ -260,6 +260,7 @@
     "check:coverwall": "tsx scripts/check-coverwall.mts",
     "check:ownart": "tsx scripts/check-ownart.mts",
     "check:postpaid": "tsx scripts/check-postpaid.mts",
+    "check:postcrop": "tsx scripts/check-postcrop.mts",
     "check:boothback": "node audit/boothback.mjs",
     "check:boothwalk": "node audit/boothwalk.mjs",
     "check:whitescreen": "node audit/whitescreen.mjs",

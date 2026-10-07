@@ -1059,6 +1059,14 @@ jobs:
       - name: No picture leaves the post studio unpaid
         run: npm run check:postpaid
 
+      # Which part of the photograph shows. A phone photo is 4:3 and a story
+      # is 9:16, so 740 pixels fall off each side of a 4032-wide picture and
+      # until now the app chose which. Arithmetic rather than a screen: in
+      # `fill` the frame is never uncovered at any pan value, including ten
+      # and NaN, because the pan is a share of the slack and not a distance.
+      - name: Which part of a photo shows, and how close
+        run: npm run check:postcrop
+
       # The gallery is a whole room, not a card in somebody else's page.
       # Eighty-one variables generated from GALLERY_THEME rather than typed,
       # a wall dark enough for a painting to glow, a gold accent, and the

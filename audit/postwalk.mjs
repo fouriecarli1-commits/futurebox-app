@@ -323,6 +323,181 @@ try {
       + ' drawn to help her see transparency, not to be part of the post');
   }
 
+  /* ── Which part of the photograph shows ──────────────────────────────
+ 
+     Carli, 7 October 2026: *"Waar edit ek 'n foto?"* `check:postcrop` walks
+     the arithmetic — 6804 placements, none of them uncovering the frame. What
+     arithmetic cannot say is whether the screen is wired to it: a slider that
+     updates its own label and a canvas that never changes is exactly what a
+     broken control looks like.
+ 
+     So the picture is HALF RED AND HALF BLUE, and every assertion below is a
+     colour count. Two halves is the only fixture that answers "which part is
+     showing" rather than "did something change".
+ 
+     Made in the page rather than kept as a file in this repo: a binary
+     fixture is a thing to go stale, and a 4:3 picture is two fillRects. */
+  const put = await page.evaluate(async () => {
+    const c = document.createElement('canvas');
+    c.width = 400;
+    c.height = 300;
+    const x = c.getContext('2d');
+    x.fillStyle = '#ff0000';
+    x.fillRect(0, 0, 200, 300);
+    x.fillStyle = '#0000ff';
+    x.fillRect(200, 0, 200, 300);
+    const blob = await new Promise((done) => c.toBlob(done, 'image/png'));
+    const input = document.querySelector('[data-postpicture] input[type=file]')
+      ?? document.querySelector('[data-poststudio] input[type=file]');
+    if (!input || !blob) return false;
+    const holder = new DataTransfer();
+    holder.items.add(new File([blob], 'half.png', { type: 'image/png' }));
+    input.files = holder.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  });
+  check('a picture off the phone can be brought in', put === true,
+    'the file input is not where this walk looks for it');
+  await page.waitForTimeout(1200);
+
+  /** How much red and blue is on screen, and how much is neither. */
+  const colours = () => page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    if (!(el instanceof HTMLCanvasElement)) return null;
+    const ctx = el.getContext('2d');
+    const { data } = ctx.getImageData(0, 0, el.width, el.height);
+    let red = 0;
+    let blue = 0;
+    let green = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i] > 170 && data[i + 1] < 90 && data[i + 2] < 90) red += 1;
+      else if (data[i + 2] > 170 && data[i] < 90 && data[i + 1] < 90) blue += 1;
+      else if (data[i + 1] > 170 && data[i] < 90 && data[i + 2] < 90) green += 1;
+    }
+    return { red, blue, green, total: data.length / 4 };
+  });
+
+  /* A background nothing in the photograph can be mistaken for. If any of it
+     shows while the basis is `fill`, the picture is not covering the frame.
+ 
+     Set with `fill` and not by assigning `.value` and firing an event.
+     React keeps its own record of what an input last held, so a value
+     written straight onto the node is read back as "unchanged" and the
+     handler never runs. The first version of this did exactly that: the
+     background was never green, so "none of the background shows" counted
+     green pixels in a picture that had no green in it and passed every
+     time. An assertion that cannot fail is worse than none, because it is
+     read as cover. */
+  await page.locator('[data-postbehind]').first().fill('#00ff00');
+  await page.waitForTimeout(500);
+
+  const middle = await colours();
+  check('  and at the centre, both sides of it are showing',
+    middle !== null && middle.red > 1000 && middle.blue > 1000,
+    `red ${middle?.red}, blue ${middle?.blue} — the frame is 9:16 and the`
+    + ' picture 4:3, so the middle of it should straddle both halves');
+  check('  and none of the background shows behind it',
+    middle !== null && middle.green === 0,
+    `${middle?.green} background pixels — in "fill" the photograph covers the`
+    + ' frame, and a gap on a transparent post is an invisible wedge');
+
+  check('the canvas says it can be dragged',
+    (await page.locator('[data-postcanvas][data-postmovable="yes"]').count()) > 0,
+    '740 pixels fall off each side of this picture and the screen reports'
+    + ' nothing to move, so she cannot choose which');
+
+  /* Dragged to one end, by hand, across the canvas.
+ 
+     On a tall shape the canvas is 636 points high on an 844-point screen, so
+     its middle sits under the dock — and a drag aimed there lands on the
+     furniture, not the picture. The first version of this reported the drag
+     doing nothing, which was true of the gesture and false of the app: the
+     same drag in isolation moved the picture from half red to two-thirds
+     blue. So the point is scrolled into view and then held well inside both
+     the canvas and the screen. */
+  await page.locator('[data-postcanvas]').first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  let pulled = null;
+  const box = await page.locator('[data-postcanvas]').first().boundingBox();
+  if (box) {
+    const high = Math.min(box.y + box.height - 20, 844 - 160);
+    const y = Math.max(box.y + 20, high);
+    await page.mouse.move(box.x + box.width * 0.8, y);
+    await page.mouse.down();
+    /* Step by step rather than one `steps:` move. Each pointermove is one
+       increment applied from the last, which is what makes an edge stop the
+       picture instead of storing a total that snaps back. */
+    for (let step = 1; step <= 10; step += 1) {
+      await page.mouse.move(box.x + box.width * (0.8 - 0.07 * step), y);
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(500);
+    pulled = await colours();
+    check('  and dragging it changes which part is in the frame',
+      pulled !== null && middle !== null && pulled.blue > middle.blue,
+      `blue went ${middle?.blue} → ${pulled?.blue} — a drag that moves nothing`
+      + ' is the fault this whole feature exists to fix, wearing a new face');
+    check('    and still nothing of the background shows',
+      pulled !== null && pulled.green === 0,
+      `${pulled?.green} background pixels after dragging to the end — the pan`
+      + ' is stored as a share of the slack precisely so this cannot happen');
+  }
+
+  /* Closer in, to the point where only one half can fit. */
+  /* Centred first.
+ 
+     Zoomed from the edge the drag left it at, the frame is a hundred per
+     cent blue at every magnification — the rightmost tenth of a picture
+     whose right half is blue is blue whatever the scale — so the counts
+     were identical and the assertion called a working slider broken. The
+     third time in this one block that the walk was wrong about the code
+     rather than the other way round, and all three were the same mistake:
+     measuring a change against a reading taken somewhere else. */
+  await page.locator('[data-postcentre]').first().click();
+  await page.waitForTimeout(400);
+  const was = await colours();
+  await page.locator('[data-postzoom]').first().fill('4');
+  await page.waitForTimeout(500);
+  const close = await colours();
+  const label = await page.locator('[data-postzoomnow]').first().innerText().catch(() => '');
+  /* `was` is the centred reading taken immediately above, not the one from
+     before the drag. Compared to the older number this passed on the drag's
+     change and would have gone on passing with the slider wired to nothing —
+     the same adjacent measurement this whole file is arranged against, and I
+     wrote it three assertions after writing the warning about it. */
+  check('going closer says so and actually goes closer',
+    /4\.00/.test(label) && close !== null && was !== null
+      && Math.abs(close.blue - was.blue) > 500,
+    `the label reads "${label}" and blue went ${was?.blue} → ${close?.blue}`
+    + ' — a slider that moves its own number and nothing else is what a'
+    + ' control wired to nothing looks like');
+
+  /* And the whole picture, which is allowed to leave background showing —
+     at its own size. Tested while still at 4x, it covered the frame and
+     reported no background, which is correct and proves nothing: "the whole
+     picture" means the picture FITS, and a picture zoomed four times past
+     fitting does not. */
+  await page.locator('[data-postzoom]').first().fill('1');
+  await page.waitForTimeout(400);
+  await page.locator('[data-postbasis="whole"]').first().click();
+  await page.waitForTimeout(600);
+  const whole = await colours();
+  check('the whole picture fits, with background above and below it',
+    whole !== null && whole.green > 1000 && whole.red > 500 && whole.blue > 500,
+    `${whole?.green} background, red ${whole?.red}, blue ${whole?.blue} — a 4:3`
+    + ' picture contained in a 9:16 frame leaves 555 pixels top and bottom');
+  check('  and the screen says that is what is happening',
+    (await page.locator('[data-postgap]').count()) > 0,
+    'background where a photograph was expected, with nothing saying why');
+
+  /* Back to where the rest of the walk expects to be. */
+  await page.locator('[data-postbasis="fill"]').first().click();
+  await page.locator('[data-postcentre]').first().click();
+  await page.locator('[data-poststudio] [data-postpicture] ~ button, [data-poststudio] button')
+    .filter({ hasText: /Take it out|Haal dit uit/ }).first().click()
+    .catch(() => {});
+  await page.waitForTimeout(600);
+
   /* ── The preview is not the product ──────────────────────────────────
  
      Right-click on a canvas offers "Save image as…", and what that hands
