@@ -1124,6 +1124,12 @@ jobs:
       - name: A turn swaps the sides, and nothing is enlarged past the ceiling
         run: npm run check:postwork
 
+      # The manifest, the icons and the asset links are read by nothing in
+      # day-to-day use, which is exactly why they rot — and the first
+      # anybody hears of it is a store submission rejected weeks later.
+      - name: What a store build reads is still there and still right
+        run: npm run check:playstore
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever

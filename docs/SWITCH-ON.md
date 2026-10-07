@@ -510,6 +510,22 @@ Variables in Vercel, then redeploy:
 | `FUTUREBOX_LEGAL_EMAIL` | An address a person can write to, on the domain rather than a personal one | **set this** |
 | `FUTUREBOX_LEGAL_PHONE` | A number a person can actually ring — **not necessarily your own** | when you have a business line |
 
+### Google Play, if the app goes there
+
+Neither of these does anything until there is an app in the Play Console,
+and until both are set `/.well-known/assetlinks.json` answers with an empty
+list — which is the honest statement "no Android app may claim this site
+yet". `docs/PLAY-STORE.md` has the whole of it, including the one question
+to put to the attorney before submitting.
+
+| Variable | What to put | Have it? |
+|---|---|---|
+| `ANDROID_PACKAGE` | The package name you chose in the Play Console, e.g. `studio.futurebox.app` | when the app exists |
+| `ANDROID_CERT_SHA256` | The **SHA-256 certificate fingerprint** from Play Console → Setup → App integrity → App signing. Several, comma-separated, while a key is being rotated | when the app exists |
+
+Without these the installed app shows a browser address bar across the top
+of every screen, which is both ugly and, on a store listing, suspicious.
+
 ### Your own phone number, and why it is not the price of admission
 
 Section 43(1) asks for a telephone number, subsection (b), **and** an e-mail

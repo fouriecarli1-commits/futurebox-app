@@ -35,6 +35,31 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: APP_SHORT,
     description:
       'The whole studio in one place: write a song with AI and sing on it yourself, clone your voice for the show, and put a video to it.',
+    /* ── The fields a store asks for, which a browser does not ───────
+ 
+        Carli's list, 7 October 2026: *"Registrasie op playstore."* An app
+        on Google Play that is this web app in a wrapper reads this file at
+        build time, and four of these are things it needs and a browser
+        shrugs at:
+ 
+          · `id` is the app's identity across reinstalls and renames. Left
+            out, it defaults to `start_url` — so the day the start page
+            moves, every installed copy becomes a second, different app.
+          · `scope` says which pages are IN the app. Without it a link to a
+            supplier opens inside the installed window with no address bar
+            and no way back, which is the worst screen this app can show.
+          · `orientation` is `any` and not `portrait`, deliberately: the
+            cutting room and the booth both rebuild themselves for a phone
+            held sideways, and locking the app upright would throw that
+            away.
+          · `categories` and `lang` are what a store lists it under, and
+            this app is bilingual with Afrikaans first in its own country. */
+    id: '/',
+    scope: '/',
+    lang: 'en-ZA',
+    dir: 'ltr',
+    orientation: 'any',
+    categories: ['music', 'video', 'photo', 'productivity'],
     start_url: '/',
     display: 'standalone',
     background_color: '#fafaf9',
