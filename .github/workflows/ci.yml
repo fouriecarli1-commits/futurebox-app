@@ -714,6 +714,27 @@ jobs:
       - name: The cover maker says it is kept, and can take it off
         run: npm run check:covermaker
 
+      # And then it turned out it was not kept. The copy into our storage was
+      # done by the browser, inside the poll that watches the picture being
+      # drawn — so a closed tab, a sleeping phone or a panel that unmounted
+      # when a song stopped playing left a cover the engine had made and been
+      # paid for, on a link that expires, with nothing recording it existed.
+      # The job is written down before the credits go, an uncollected cover is
+      # collected on the next panel open, and the line promising it is saved
+      # now requires the server to have said so.
+      - name: A cover that was made comes back, and only a kept one says saved
+        run: npm run check:coverkeep
+
+      # On 5 October every supplier call moved behind one door and the music
+      # endpoint was shortened to a path to suit it. Two fetches were missed
+      # and stayed bare — a path with no host, which a server cannot dial.
+      # Making a song and separating stems were both dead for three days,
+      # reporting themselves as the supplier being unreachable. check:seam
+      # asks whether anything writes a HOST, and a path writes none, so it
+      # stayed green throughout. This asks the other half.
+      - name: No server call dials a path with no host
+        run: npm run check:onedoor
+
       # A song whose words have been measured once must never be measured
       # again. Both rungs cache their own answer and neither recognises the
       # other's, so writing an upload's heard words onto its row sent the

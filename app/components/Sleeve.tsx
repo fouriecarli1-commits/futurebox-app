@@ -40,6 +40,32 @@
  * looks exactly like a screen that did nothing. The button she went looking
  * for is really a line of text, and that is what this now has.
  *
+ * ── Which was wrong, and she found out the expensive way ─────────────────
+ *
+ * Carli, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
+ * moet daar 'n opsie wees 'keep'. Ek sien ek het een gegenerate en nou is dit
+ * weg."*
+ *
+ * The same request, three weeks later, with a lost picture behind it. "A cover
+ * IS kept the moment it is drawn" was true of the code and false in the world,
+ * because the thing doing the keeping was THIS COMPONENT: the copy into our
+ * storage happens in the `?id=` handler, which only runs while the loop in
+ * `make` below is still polling. Everything that ends that loop early — the
+ * booth unmounting this panel when a song stops playing, a closed tab, a
+ * sleeping phone, the two-minute deadline — left a picture the engine had
+ * drawn and been paid for, on a link that expires within the hour.
+ *
+ * Worse, this panel took the route's own `kept: false` — which it has always
+ * answered when the copy did not land — dropped it, and printed the green
+ * "it is saved" line anyway. A reassurance I added for her, printed over the
+ * exact failure it reassures about.
+ *
+ * So: the server writes the job down before charging (`coverkeep.sql`), this
+ * panel asks on open whether a cover is owed and collects it, the state comes
+ * from `standingOf` where a check can drive every branch, and **the saved line
+ * requires `kept === true`**. The keep button is real now, and it appears in
+ * the two states that have something to keep.
+ *
  * The second is plain: "Another" was laid on top of the artwork, which is the
  * one part of this screen worth looking at. The controls sit under it now.
  *
@@ -73,9 +99,12 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Check, Image as ImageIcon, Loader2, Palette, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertTriangle, Check, Image as ImageIcon, Loader2, Palette, RefreshCw, Trash2 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
+import {
+  hasPicture, offersKeep, saysSaved, standingOf, type CoverWord,
+} from '../lib/coverstate';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 
@@ -85,6 +114,7 @@ export default function Sleeve({
   genre,
   style,
   onRealArt,
+  onWorking,
   onShort,
 }: {
   trackId: string;
@@ -98,6 +128,26 @@ export default function Sleeve({
    */
   onRealArt: () => void;
   /**
+   * Said when a draw or a keep starts, and again when it stops.
+   *
+   * ── Why this is required, and why it is the real fix ─────────────────
+   *
+   * The booth mounts this panel on `playing === track.id || sleeveFor ===
+   * track.id`, and a finished song sets `playing` to null. So: press play,
+   * press "Make a cover image", let the song reach its end — and this panel
+   * unmounts with the poll loop inside it, a few seconds before the picture
+   * it has paid for arrives. That is the fault behind *"ek het een gegenerate
+   * en nou is dit weg"*, and the recovery everything else here adds is the
+   * safety net under it, not the fix.
+   *
+   * The fix is that a room showing this panel pins it open while it is
+   * working. Required rather than optional for the reason `onRealArt` is: an
+   * optional door is forgotten at the second call site and fails silently
+   * there, which is the shape of most of the faults in this repo — and in
+   * this case the silent failure is a picture somebody paid for.
+   */
+  onWorking: (working: boolean) => void;
+  /**
    * Handed the refusal body so the top-up panel can open where it belongs.
    *
    * Optional, and the studio does not pass it yet — nothing on that screen
@@ -109,16 +159,40 @@ export default function Sleeve({
   onShort?: (payload: unknown) => void;
 }): React.ReactElement {
   const { t } = useLang();
-  const [url, setUrl] = useState<string | null>(null);
+  /* The server's whole answer, not just the picture. `kept` is the field this
+     panel used to throw away; `pending` is the one that turns "no cover" into
+     "a cover nobody collected". `standingOf` turns the three into one word. */
+  const [word, setWord] = useState<CoverWord>({});
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  /* Both `make` and `keep` go through this rather than `setBusy`, so neither
+     can start work without pinning the panel that holds its poll. */
+  const working = useCallback((yes: boolean): void => {
+    setBusy(yes);
+    onWorking(yes);
+  }, [onWorking]);
+  const standing = standingOf(word);
+  /* Empty rather than null, because it is only ever read inside the branch
+     `hasPicture` guards and an `img` with no `src` at all is a broken icon.
+     The guard is the function, not this value. */
+  const url = word.url ?? '';
 
   const headers = useCallback(async (): Promise<Record<string, string>> => {
     const token = await accessToken();
     return token ? { authorization: `Bearer ${token}` } : {};
   }, []);
 
-  // Is there one already? Asked once, and it generates nothing.
+  /* Is there one already — and is one owed?
+ 
+     Asked once, and it generates nothing: the GET is read-only and costs
+     nothing whether it finds a picture or not.
+ 
+     The second half is new. When the answer is `pending`, a cover was drawn
+     for this song and charged for and never copied into our storage, which is
+     the fault this whole panel was rewritten for. It is collected here rather
+     than waited on, because a picture already paid for should not need a
+     press — and if the collecting itself fails, `standing` becomes
+     `uncollected` and the keep button is right there. */
   useEffect(() => {
     let alive = true;
     void (async () => {
@@ -126,8 +200,26 @@ export default function Sleeve({
         const response = await fetch(`/api/cover?track=${encodeURIComponent(trackId)}`, {
           headers: await headers(),
         });
-        const data = (await response.json()) as { state?: string; url?: string };
-        if (alive && data.state === 'done' && data.url) setUrl(data.url);
+        const data = (await response.json()) as CoverWord & { state?: string };
+        if (!alive) return;
+        if (data.state === 'done' && data.url) {
+          setWord({ url: data.url, kept: data.kept });
+          return;
+        }
+        if (data.pending !== true) return;
+        /* Owed. Mark it so the panel says so even if the collect below falls
+           over, rather than reading as a song that never had a cover. */
+        setWord({ pending: true });
+        const got = await fetch(`/api/cover?track=${encodeURIComponent(trackId)}`, {
+          method: 'PUT',
+          headers: await headers(),
+        });
+        const back = (await got.json().catch(() => ({}))) as CoverWord & {
+          state?: string;
+          message?: string;
+        };
+        if (!alive) return;
+        if (back.state === 'done' && back.url) setWord({ url: back.url, kept: back.kept });
       } catch {
         // No cover yet is the ordinary case and needs no announcement.
       }
@@ -137,8 +229,49 @@ export default function Sleeve({
     };
   }, [trackId, headers]);
 
+  /**
+   * The keep button.
+   *
+   * Goes back to the engine for a cover that was made and never copied here.
+   * It carries no id — the server finds the job from who is asking and which
+   * song, which is also what stops it being a way to pull somebody else's
+   * picture into your own folder.
+   */
+  const keep = async (): Promise<void> => {
+    working(true);
+    setProblem(null);
+    try {
+      const got = await fetch(`/api/cover?track=${encodeURIComponent(trackId)}`, {
+        method: 'PUT',
+        headers: await headers(),
+      });
+      const back = (await got.json().catch(() => ({}))) as CoverWord & {
+        state?: string;
+        message?: string;
+      };
+      if (back.state === 'done' && back.url) {
+        setWord({ url: back.url, kept: back.kept });
+        /* Said only when it is true. `kept` false here means the engine still
+           has it and we still do not, and the button stays. */
+        if (back.kept !== true) {
+          setProblem(t('cover.notKept', 'The picture is there but it could not be saved into the app. Try again in a moment.'));
+        }
+        return;
+      }
+      if (back.state === 'running') {
+        setProblem(t('cover.stillDrawing', 'It is still being drawn. Give it a few seconds and press this again.'));
+        return;
+      }
+      setProblem(back.message ?? t('cover.gone', 'That one could not be fetched any more.'));
+    } catch {
+      setProblem(t('cover.notKept', 'The picture is there but it could not be saved into the app. Try again in a moment.'));
+    } finally {
+      working(false);
+    }
+  };
+
   const takeOff = async (): Promise<void> => {
-    setBusy(true);
+    working(true);
     setProblem(null);
     try {
       const gone = await fetch(`/api/cover?track=${encodeURIComponent(trackId)}`, {
@@ -149,16 +282,16 @@ export default function Sleeve({
         setProblem(t('cover.notOff', 'That could not be taken off. Try again in a moment.'));
         return;
       }
-      setUrl(null);
+      setWord({});
     } catch {
       setProblem(t('cover.notOff', 'That could not be taken off. Try again in a moment.'));
     } finally {
-      setBusy(false);
+      working(false);
     }
   };
 
   const make = async (): Promise<void> => {
-    setBusy(true);
+    working(true);
     setProblem(null);
     try {
       const started = await fetch('/api/cover', {
@@ -170,11 +303,19 @@ export default function Sleeve({
         id?: string;
         message?: string;
         needsCredits?: boolean;
+        recoverable?: boolean;
       };
       if (!started.ok || !opened.id) {
         if (opened.needsCredits) onShort?.(opened);
         setProblem(opened.message ?? t('cover.failed', 'The cover could not be made.'));
         return;
+      }
+      /* The job did not get written down, so leaving this screen before the
+         picture arrives really would lose it. Said now, while she can choose
+         to stay, rather than discovered afterwards — which is how the fault
+         this was all written for was discovered. */
+      if (opened.recoverable === false) {
+        setProblem(t('cover.stayHere', 'Stay on this screen until the picture appears \u2014 it cannot be fetched again if you leave.'));
       }
 
       // Two seconds between asks, for two minutes. An image is quick, and
@@ -186,9 +327,8 @@ export default function Sleeve({
           `/api/cover?id=${encodeURIComponent(opened.id)}&track=${encodeURIComponent(trackId)}`,
           { headers: await headers() },
         );
-        const progress = (await asked.json().catch(() => ({}))) as {
+        const progress = (await asked.json().catch(() => ({}))) as CoverWord & {
           state?: string;
-          url?: string;
           message?: string;
         };
         if (progress.state === 'failed') {
@@ -196,7 +336,13 @@ export default function Sleeve({
           return;
         }
         if (progress.state === 'done' && progress.url) {
-          setUrl(progress.url);
+          setWord({ url: progress.url, kept: progress.kept });
+          /* The "stay on this screen" warning is set while the picture is on
+             its way, when the job could not be written down. Once the picture
+             is here it is no longer true, and a warning left standing over a
+             finished thing is the small version of the fault this whole panel
+             was rewritten for. */
+          setProblem(null);
           return;
         }
       }
@@ -204,7 +350,7 @@ export default function Sleeve({
     } catch {
       setProblem(t('cover.failed', 'The cover could not be made.'));
     } finally {
-      setBusy(false);
+      working(false);
     }
   };
 
@@ -225,9 +371,24 @@ export default function Sleeve({
     </>
   );
 
+  /* Written once, used in both states that have something to keep — the
+     reason `realArt` is written once a few lines above. */
+  const keepButton = (
+    <button
+      type="button"
+      onClick={() => void keep()}
+      disabled={busy}
+      data-keep
+      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 hover:border-emerald-400 flex items-center gap-1.5 disabled:opacity-60"
+    >
+      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+      {t('cover.keep', 'Keep it')}
+    </button>
+  );
+
   return (
     <div className="space-y-2">
-      {url ? (
+      {hasPicture(standing) ? (
         <>
           {/* Nothing over the artwork. It is the one thing on this panel
               worth looking at, and a button parked in the corner of it
@@ -239,14 +400,27 @@ export default function Sleeve({
             className="w-full aspect-square object-cover rounded-xl border border-zinc-800 bg-zinc-950"
           />
 
-          {/* The sentence that replaces the button she went looking for.
-              It was always saved; nothing ever said so. */}
-          <p className="flex items-start gap-1.5 text-sm leading-snug text-emerald-300/90">
-            <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-            {t('cover.kept', 'This is the song\u2019s cover now. It is saved and it goes wherever the song goes.')}
-          </p>
+          {/* ── Said only when the server said so ──────────────────────
+ 
+              This line used to print under every picture, including the ones
+              the route had just reported it could not keep. `saysSaved` is
+              `standing === 'kept'` and nothing else: not known is not saved,
+              and `check:coverkeep` drives every value the server can send
+              through `standingOf` to hold that. */}
+          {saysSaved(standing) ? (
+            <p className="flex items-start gap-1.5 text-sm leading-snug text-emerald-300/90">
+              <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+              {t('cover.kept', 'This is the song\u2019s cover now. It is saved and it goes wherever the song goes.')}
+            </p>
+          ) : (
+            <p className="flex items-start gap-1.5 text-sm leading-snug text-amber-300/90">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+              {t('cover.adrift', 'This was drawn but it is not saved in the app yet \u2014 the picture above is on a link that stops working within the hour. Press Keep it.')}
+            </p>
+          )}
 
           <div className="flex flex-wrap items-center gap-2">
+            {offersKeep(standing) && keepButton}
             <button
               type="button"
               onClick={() => void make()}
@@ -278,6 +452,22 @@ export default function Sleeve({
         </>
       ) : (
         <>
+          {/* ── A cover that was paid for and never collected ───────────
+ 
+              The state that did not exist until today: the engine drew one,
+              credits went, and nothing copied it here — so this panel showed
+              the plain "make one" button, for two credits, over a picture
+              already bought. The panel tries to collect it on open; this is
+              what shows when that has not happened yet or did not work. */}
+          {standing === 'uncollected' && (
+            <>
+              <p className="flex items-start gap-1.5 text-sm leading-snug text-amber-300/90">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                {t('cover.owed', 'A cover was made for this song and never saved. It costs nothing to fetch it.')}
+              </p>
+              {keepButton}
+            </>
+          )}
           <button
             type="button"
             onClick={() => void make()}

@@ -118,6 +118,39 @@ export const shareFor = (kind: Kind): number => {
   return Math.round(ceilingFor(kind) * part);
 };
 
+/* ── "Try again in a moment" sent her round a circle ────────────────────
+
+   Carli, 8 October 2026, having set `MUSIC_ENGINE=google` and redeployed:
+   *"Die liedjie wil nie gemaak word nie."*
+
+   The reads below answer null when they fail, and `enough` turns a null into
+   "We could not check how much of this month is left. Try again in a moment."
+   That is the right sentence for a database having a bad second. It is the
+   wrong sentence — and worse, the wrong INSTRUCTION — for the much more
+   likely cause on a fresh switch-on: `supabase/googlespend.sql` has never
+   been run, so the function being called does not exist. Trying again in a
+   moment then fails identically, for ever, and nothing anywhere says why.
+
+   A missing table and a busy one are not the same problem and they do not
+   have the same answer, so they are no longer the same sentence. Postgres
+   says which it is — `42P01` for a missing table, `42883` for a missing
+   function, and Supabase's REST layer reports an unknown function as
+   `PGRST202` with the name in the message. */
+const MISSING = /42P01|42883|PGRST202|PGRST205|does not exist|could not find/i;
+
+/** Why a spend read came back with nothing. */
+export type Unread = 'missing' | 'failed';
+
+const whyUnread = (error: unknown): Unread => {
+  const said = error && typeof error === 'object'
+    ? `${String((error as { code?: unknown }).code ?? '')} ${String((error as { message?: unknown }).message ?? '')}`
+    : String(error);
+  return MISSING.test(said) ? 'missing' : 'failed';
+};
+
+/** The last reason a read failed, so `enough` can say which it was. */
+let lastUnread: Unread = 'failed';
+
 /** Spent this month on one engine. Null when it could not be read. */
 export async function usedMicros(kind: Kind): Promise<number | null> {
   const db = admin();
@@ -126,7 +159,12 @@ export async function usedMicros(kind: Kind): Promise<number | null> {
      so it is a decision. */
   if (!db) return 0;
   const { data, error } = await db.rpc('google_micros_this_month', { p_kind: kind });
-  if (error) return null;
+  if (error) {
+    lastUnread = whyUnread(error);
+    console.error(`[google] the ${kind} ceiling could not be read (${lastUnread}):`
+      + ` ${String((error as { message?: unknown }).message ?? error)}`);
+    return null;
+  }
   const micros = Number(data);
   return Number.isFinite(micros) ? micros : null;
 }
@@ -136,9 +174,29 @@ export async function mineMicros(kind: Kind, owner: string): Promise<number | nu
   const db = admin();
   if (!db) return 0;
   const { data, error } = await db.rpc('google_micros_this_month_for', { p_kind: kind, p_owner: owner });
-  if (error) return null;
+  if (error) {
+    lastUnread = whyUnread(error);
+    console.error(`[google] one member\u2019s ${kind} share could not be read (${lastUnread}):`
+      + ` ${String((error as { message?: unknown }).message ?? error)}`);
+    return null;
+  }
   const micros = Number(data);
   return Number.isFinite(micros) ? micros : null;
+}
+
+/**
+ * What to say when the ceiling cannot be read.
+ *
+ * Exported so `check:googlecap` can drive both answers, because the whole
+ * point is that there are two and they send a person to different places.
+ */
+export function unreadMessage(why: Unread): string {
+  return why === 'missing'
+    ? 'The Google budget table is not in the database yet, so nothing can be'
+      + ' made until it is. Run supabase/googlespend.sql (or supabase/ALMAL.sql,'
+      + ' which is the whole schema in one paste) in Supabase \u2192 SQL Editor.'
+      + ' Trying again will not help until that is done.'
+    : 'We could not check how much of this month is left. Try again in a moment.';
 }
 
 export interface Refusal {
@@ -169,11 +227,7 @@ export async function enough(
   if (owner) {
     const mine = await mineMicros(kind, owner);
     if (mine === null) {
-      return {
-        code: 'google_unknown',
-        message: 'We could not check how much of this month is left. Try again in a moment.',
-        left: 0,
-      };
+      return { code: 'google_unknown', message: unreadMessage(lastUnread), left: 0 };
     }
     const share = shareFor(kind);
     if (mine + micros > share) {
@@ -187,11 +241,7 @@ export async function enough(
 
   const used = await usedMicros(kind);
   if (used === null) {
-    return {
-      code: 'google_unknown',
-      message: 'We could not check how much of this month is left. Try again in a moment.',
-      left: 0,
-    };
+    return { code: 'google_unknown', message: unreadMessage(lastUnread), left: 0 };
   }
   const roof = ceilingFor(kind);
   if (used + micros > roof) {

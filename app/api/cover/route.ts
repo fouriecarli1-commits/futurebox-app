@@ -11,20 +11,46 @@
  *   GET  /api/cover?id=…      how is it going; the picture when it is done
  *   GET  /api/cover?track=…   is there already one for this track
  *   GET  /api/cover?tracks=…  the sleeves for a screenful of songs, at once
+ *   PUT  /api/cover?track=…   collect a cover that was made and never kept
+ *   DELETE /api/cover?track=… take the sleeve off
  *
  * The file goes beside the audio at `<owner>/<trackId>.cover.png`, which is
  * why there is no migration here: the bucket already exists, the path is
  * derived rather than stored, and account deletion already sweeps everything
  * under `<owner>/`.
+ *
+ * ── The keep was being done by her browser ───────────────────────────────
+ *
+ * Carli, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
+ * moet daar 'n opsie wees 'keep'. Ek sien ek het een gegenerate en nou is dit
+ * weg."*
+ *
+ * She asked for a keep button on 14 September too, and the answer then was
+ * that a cover is kept the moment it is drawn and all that was missing was a
+ * sentence saying so. That was wrong, and `PUT` is the correction.
+ *
+ * The copy from the engine into our storage lives in the `?id=` handler
+ * below. That handler runs only because an open panel polls it every two
+ * seconds — so the picture was kept if and only if the panel was still
+ * mounted when the engine finished. The booth unmounts that panel when a song
+ * stops playing. A phone sleeps. A tab gets closed. In each of those the
+ * engine had made the cover, it had been charged for, and nothing copied it;
+ * and because the job id lived in a component's local variable, nothing
+ * afterwards knew the picture had ever existed.
+ *
+ * So `supabase/coverkeep.sql` writes the job down before the credits go, and
+ * `PUT` collects what was left behind — which is the keep button she asked
+ * for, in the one situation where a keep button means something.
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
-import { charge } from '@/app/lib/server/credits';
+import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS } from '@/app/lib/credits';
 import { checkCover, configured, coverPrompt, startCover } from '@/app/lib/server/cover';
 import { storageId } from '@/app/lib/server/ownedpath';
+import { claimRefund, markFailed, markKept, pending, remember } from '@/app/lib/server/coverkeep';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,6 +72,64 @@ interface Body {
 async function link(client: NonNullable<ReturnType<typeof admin>>, path: string): Promise<string | null> {
   const { data } = await client.storage.from(BUCKET).createSignedUrl(path, LINK_SECONDS);
   return data?.signedUrl ?? null;
+}
+
+type Client = NonNullable<ReturnType<typeof admin>>;
+
+/**
+ * Fetch the picture off the engine and put it in our storage.
+ *
+ * ── Why this is one function and not two copies ──────────────────────────
+ *
+ * There are two ways a cover arrives: the poll that is watching it being
+ * drawn, and the `PUT` that goes back for one nobody collected. Both have to
+ * download from a link that expires, upload under a path derived from the
+ * owner, and mark the job kept — and the version that drifts is the one
+ * that stops marking, which turns every later panel open into an offer to
+ * collect a cover that is already there.
+ *
+ * `kept: false` is the answer when the copy did not land, and the engine's
+ * own link goes out with it. Losing a picture somebody paid for in order to
+ * be tidy would be the worse trade. What must not happen — and did, until
+ * today — is a screen that takes that answer and calls it saved anyway.
+ */
+async function keepIt(
+  client: Client,
+  owner: string,
+  trackId: string,
+  jobId: string,
+  from: string,
+): Promise<{ url: string; kept: boolean }> {
+  const path = coverPath(owner, trackId);
+  try {
+    const file = await fetch(from);
+    if (!file.ok) throw new Error('download');
+    const put = await client.storage
+      .from(BUCKET)
+      .upload(path, await file.arrayBuffer(), { contentType: 'image/png', upsert: true });
+    if (put.error) throw put.error;
+  } catch {
+    return { url: from, kept: false };
+  }
+  /* Marked only after the upload returned without an error, because this is
+     the flag that stops anything offering to collect it again. Marking first
+     and uploading after would lose exactly the covers this was written for. */
+  await markKept(jobId);
+  return { url: (await link(client, path)) ?? from, kept: true };
+}
+
+/**
+ * A failed cover: recorded, and the credits claimed back once.
+ *
+ * Nothing gave them back before. A cover the engine refused was charged for
+ * and that was the end of it — which nobody would ever notice, because the
+ * screen says "the cover could not be made" and a person reads that as the
+ * whole story.
+ */
+async function coverFailed(jobId: string, owner: string, message: string): Promise<void> {
+  await markFailed(jobId, message);
+  const give = await claimRefund(jobId, owner);
+  if (give > 0) await refund(owner, give, `cover:${jobId}`);
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -124,39 +208,45 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ covers, asked: true });
   }
 
-  // Asking about a track: is there one already, without generating anything.
+  /* Asking about a track: is there one already, and — new — is one owed.
+ 
+     Read-only, deliberately. It used to answer `none` for a song whose cover
+     had been drawn, paid for and never copied here, which is the same word it
+     uses for a song nobody ever made one for. Those are not the same thing
+     and only one of them has something a person would want to press.
+ 
+     The collecting itself is `PUT`, below. A GET that writes is how the
+     copying ended up somewhere only a poll could reach it. */
   if (trackId && !id) {
     const { data } = await client.storage.from(BUCKET).list(caller.id, {
       search: `${trackId}.cover.png`,
       limit: 1,
     });
-    return Response.json(
-      data?.length
-        ? { state: 'done', url: await link(client, coverPath(caller.id, trackId)) }
-        : { state: 'none' },
-    );
+    if (data?.length) {
+      return Response.json({
+        state: 'done',
+        url: await link(client, coverPath(caller.id, trackId)),
+        /* It is in our storage: that is what this branch means. The screen
+           is allowed to say saved here and nowhere else. */
+        kept: true,
+      });
+    }
+    return Response.json({ state: 'none', pending: (await pending(caller.id, trackId)) !== null });
   }
 
   const progress = await checkCover(String(id));
+  if (progress.state === 'failed') {
+    /* Recorded and refunded before the sentence goes out, so the credits are
+       back by the time she reads that it did not work. */
+    await coverFailed(String(id), caller.id, progress.message);
+    return Response.json(progress);
+  }
   if (progress.state !== 'done') return Response.json(progress);
 
   // Fetched and kept, because their link expires and a cover a member cannot
   // open next week is not a cover they were given.
-  const path = coverPath(caller.id, String(trackId ?? id));
-  try {
-    const file = await fetch(progress.url);
-    if (!file.ok) throw new Error('download');
-    const put = await client.storage
-      .from(BUCKET)
-      .upload(path, await file.arrayBuffer(), { contentType: 'image/png', upsert: true });
-    if (put.error) throw put.error;
-  } catch {
-    // It exists at the engine and we could not keep a copy. Their URL is good
-    // for a while yet, so hand that over rather than losing the picture.
-    return Response.json({ state: 'done', url: progress.url, kept: false });
-  }
-
-  return Response.json({ state: 'done', url: await link(client, path), kept: true });
+  const got = await keepIt(client, caller.id, String(trackId ?? id), String(id), progress.url);
+  return Response.json({ state: 'done', url: got.url, kept: got.kept });
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -210,7 +300,92 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: started.message }, { status: started.status });
   }
 
-  return Response.json({ id: started.id, track: trackId, state: 'running' });
+  /* Written down before the answer goes out, so an uncollected cover is a
+     fact somebody can find later. This is the one line that makes `PUT`
+     possible, and it is checked rather than fired and forgotten: a job that
+     failed to record is a cover that cannot be recovered, and saying so now
+     beats finding out the week the picture is gone. */
+  /* What was actually TAKEN, not what a cover lists at.
+ 
+     `charge` skips the operator — their generations are billed to their own
+     supplier accounts before it is reached — and skips everything when
+     credits are not configured, and says so by handing back a null owner. So
+     recording `CREDITS.cover` here would have a failed cover refund two
+     credits to somebody who was charged none, which is credits appearing out
+     of a failure. The refund path is correct either way, because
+     `claim_cover_refund` returns this number and nothing is given back when
+     it is zero. */
+  const kept = await remember(
+    caller.id,
+    trackId,
+    started.id,
+    paid.owner ? CREDITS.cover : 0,
+  );
+
+  return Response.json({
+    id: started.id,
+    track: trackId,
+    state: 'running',
+    /* False means: if this tab closes before the picture arrives, it really
+       is lost, because nothing wrote the job down. The screen says so rather
+       than letting her walk away from a cover she has paid for. */
+    recoverable: kept,
+  });
+}
+
+/**
+ * Collect a cover that was made and never kept.
+ *
+ * This is the keep button. It takes no id from the request — the job is found
+ * from the owner and the song, which is also what stops it being a way to
+ * fetch somebody else's picture into your own folder.
+ *
+ * Idempotent on purpose: pressing it when there is nothing to collect answers
+ * `state: 'none'` rather than an error, and pressing it twice collects once
+ * because the first one marks the job kept.
+ */
+export async function PUT(request: Request): Promise<Response> {
+  const trackId = new URL(request.url).searchParams.get('track') ?? '';
+  if (!trackId || !storageId(trackId)) {
+    return Response.json({ message: 'Which song?' }, { status: 400 });
+  }
+
+  if (!metered()) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });
+  const caller = await callerFrom(request);
+  if (!caller) return Response.json({ message: 'Sign in first.' }, { status: 401 });
+
+  const client = admin();
+  if (!client) return Response.json({ message: 'Storage is not configured.' }, { status: 503 });
+
+  /* Already in storage: nothing to fetch, and the honest answer is the
+     picture. Somebody pressing keep on a cover that is already kept has got
+     what they asked for. */
+  const { data: there } = await client.storage.from(BUCKET).list(caller.id, {
+    search: `${trackId}.cover.png`,
+    limit: 1,
+  });
+  if (there?.length) {
+    return Response.json({
+      state: 'done',
+      url: await link(client, coverPath(caller.id, trackId)),
+      kept: true,
+    });
+  }
+
+  const job = await pending(caller.id, trackId);
+  if (!job) return Response.json({ state: 'none', pending: false });
+
+  const progress = await checkCover(job);
+  if (progress.state === 'failed') {
+    await coverFailed(job, caller.id, progress.message);
+    return Response.json({ state: 'failed', message: progress.message });
+  }
+  /* Still being drawn. Not an error and not nothing — the panel should keep
+     asking, which is what it does with a running state anywhere else. */
+  if (progress.state !== 'done') return Response.json({ state: 'running' });
+
+  const got = await keepIt(client, caller.id, trackId, job, progress.url);
+  return Response.json({ state: 'done', url: got.url, kept: got.kept, collected: true });
 }
 
 /**

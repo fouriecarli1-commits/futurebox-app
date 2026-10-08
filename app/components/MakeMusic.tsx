@@ -1658,6 +1658,14 @@ export default function MakeMusic({
                       genre={track.genre}
                       style={track.style ?? ''}
                       onRealArt={() => onGoToArt({ id: track.id, title: track.title })}
+                      /* Pinned while it draws. This panel is mounted on
+                         `playing || sleeveFor`, and a song that reaches its
+                         end sets `playing` to null — which used to take the
+                         panel, and the loop waiting for the picture, down
+                         with it a few seconds before the cover arrived. */
+                      onWorking={(busy) => {
+                        if (busy) setSleeveFor(track.id);
+                      }}
                     />
                     {playing === track.id && (
                       <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />

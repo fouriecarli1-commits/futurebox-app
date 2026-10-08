@@ -44,6 +44,8 @@
     "check:dubpath": "tsx scripts/check-dubpath.mts",
     "check:pixelguard": "tsx scripts/check-pixelguard.mts",
     "check:covermaker": "tsx scripts/check-covermaker.mts",
+    "check:coverkeep": "tsx scripts/check-coverkeep.mts",
+    "check:onedoor": "tsx scripts/check-onedoor.mts",
     "check:paidonce": "tsx scripts/check-paidonce.mts",
     "check:songcaption": "tsx scripts/check-songcaption.mts",
     "check:roomwords": "tsx scripts/check-roomwords.mts",

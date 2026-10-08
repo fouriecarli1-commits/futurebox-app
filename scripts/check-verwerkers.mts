@@ -221,6 +221,12 @@ const KEPT: Record<string, string> = {
      millionths of a dollar, and whose turn it was. Still a row about a
      person, and the page has to say so. */
   google_spend: 'engines cost us',
+  /* A job number at the image engine, which song, what it cost, and whether
+     the picture was ever copied here. No picture and no prompt — but the row
+     exists precisely so a cover can be fetched back later, which means it
+     outlives the request that made it, and a row that outlives its request is
+     a row the page has to mention. */
+  cover_jobs: 'cover art you ordered',
   voice_owners: 'singing voice is yours',
   cast_members: 'photograph',
   pairs: 'work together',

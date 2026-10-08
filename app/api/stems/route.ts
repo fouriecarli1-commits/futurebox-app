@@ -230,7 +230,13 @@ export async function POST(request: Request): Promise<Response> {
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${ENDPOINT}?output_format=${OUTPUT_FORMAT}`, {
+    /* Through the door, for the reason written out in `app/api/music/
+       route.ts`: `ENDPOINT` became a path on 5 October when every supplier
+       call was meant to move behind `call()`, and this fetch was missed with
+       it. A path with no host is not an address, so this threw before
+       anything left the machine and the catch below called it unreachable.
+       Found by `check:onedoor`, written for the music one, on its first run. */
+    upstream = await call('stems', `${ENDPOINT}?output_format=${OUTPUT_FORMAT}`, {
       method: 'POST',
       body: outgoing,
     });

@@ -882,6 +882,14 @@ export default function Channel({
                     genre={track.genre}
                     style={track.style ?? ''}
                     onRealArt={() => onGoToArt({ id: track.id, title: track.title })}
+                    /* Already pinned here — this panel mounts on `sleeveFor`
+                       alone and nothing else closes it. Passed anyway, and
+                       not as an empty function, because the value is the
+                       same one the booth needs and a no-op here would be the
+                       thing somebody copies to the third call site. */
+                    onWorking={(busy) => {
+                      if (busy) setSleeveFor(track.id);
+                    }}
                   />
                 ) : (
                   <Cover

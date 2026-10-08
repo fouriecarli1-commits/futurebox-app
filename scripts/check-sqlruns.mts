@@ -420,6 +420,65 @@ if (placeholder) {
   ok('the same charge, sent twice, is taken once', twice === '70',
     `${twice} left of 100 after charging 30 twice under one reference — 40 means the reference is written down and never read`);
 
+  /* ── A failed cover refunds once, however many polls see it ────
+
+     The same shape as the charge above and for the same reason: a cover's
+     failure is only ever discovered by a poll, and a poll happens as many
+     times as an open screen asks. So the claim has to BE the update, and
+     `claim_cover_refund` is written that way — the second caller matches no
+     row and is told nothing is owed.
+
+     Asserted against real Postgres because `check:sqlruns` otherwise only
+     proves the file parses. A function that runs and hands back the same
+     number twice is a function that pays twice, and it would look exactly
+     like one that works. */
+  let paidBack = '';
+  try {
+    const owner = psql(DB, ['-tAc',
+      "insert into auth.users (id, email) values (gen_random_uuid(), 'omslag@futurebox.test')"
+      + ' returning id']).trim();
+    psql(DB, ['-c',
+      "insert into public.cover_jobs (id, owner, track_id, charged, failed_at)"
+      + ` values ('job-one', '${owner}', 'track-one', 2, now())`]);
+    const first = psql(DB, ['-tAc',
+      `select coalesce(public.claim_cover_refund('job-one', '${owner}'), 0)`]).trim();
+    const second = psql(DB, ['-tAc',
+      `select coalesce(public.claim_cover_refund('job-one', '${owner}'), 0)`]).trim();
+    /* And not to somebody else, on a row that is still open. */
+    psql(DB, ['-c',
+      "insert into public.cover_jobs (id, owner, track_id, charged, failed_at)"
+      + ` values ('job-two', '${owner}', 'track-two', 2, now())`]);
+    const stranger = psql(DB, ['-tAc',
+      "select coalesce(public.claim_cover_refund('job-two',"
+      + " (select id from auth.users where email = 'tweekeer@futurebox.test')), 0)"]).trim();
+    paidBack = `${first}/${second}/${stranger}`;
+  } catch (error) {
+    paidBack = `threw: ${(String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? [''])[0]}`;
+  }
+  ok('a failed cover gives its credits back exactly once', paidBack === '2/0/0',
+    `${paidBack} — wanted 2 back on the first claim, nothing on the second, and`
+    + ' nothing at all to somebody who does not own the job. 2/2 pays twice;'
+    + ' 0/0 never pays; a third number above 0 refunds a stranger');
+
+  /* And a cover that has NOT failed owes nothing, however it is asked for —
+     the condition that stops a running job being cashed in. */
+  let running = '';
+  try {
+    const owner = psql(DB, ['-tAc',
+      "insert into auth.users (id, email) values (gen_random_uuid(), 'loop@futurebox.test')"
+      + ' returning id']).trim();
+    psql(DB, ['-c',
+      "insert into public.cover_jobs (id, owner, track_id, charged)"
+      + ` values ('job-running', '${owner}', 'track-three', 2)`]);
+    running = psql(DB, ['-tAc',
+      `select coalesce(public.claim_cover_refund('job-running', '${owner}'), 0)`]).trim();
+  } catch (error) {
+    running = `threw: ${(String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? [''])[0]}`;
+  }
+  ok('  and a cover still being drawn owes nothing yet', running === '0',
+    `${running} — a job that has not failed must not be refundable, or a member`
+    + ' gets the credits back and the picture');
+
   /* And it is findable afterwards. The file's own closing note says a
      "test-" reference marks what was given away rather than bought, and
      that is the query somebody runs before a launch — so it had better

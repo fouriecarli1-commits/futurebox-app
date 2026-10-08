@@ -68,6 +68,7 @@ be. In this order:
 | `supabase/invites.sql` | The invite link in a collab email answers "not set up" |
 | `supabase/charts.sql` | The Top 10 bars on Spotlight stay empty for ever |
 | `supabase/listens.sql` | A maker cannot see how many times their song was played |
+| `supabase/coverkeep.sql` | An album cover the engine drew is lost the moment the screen is left, and a cover that failed is never refunded |
 
 **Or paste one file instead of five.** `supabase/ALMAL.sql` is those five in
 that order, generated from them by `npm run sql:bundle`, with a guard at the

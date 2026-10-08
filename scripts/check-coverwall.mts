@@ -91,11 +91,39 @@ const cover = readFileSync(COVER, 'utf8');
 const uploads = cover.match(/\.upload\([^)]*\)/g) ?? [];
 ok('  and it uploads exactly once', uploads.length === 1, uploads.join(' | '));
 
+/* ── The same rule, one level down, from 8 October 2026 ────────────────
+ 
+   This read `const file = await fetch(progress.url)` and was satisfied, for
+   as long as the fetch and the upload sat in the handler together. They do
+   not any more: there are two ways a cover arrives — the poll that watches it
+   being drawn, and the `PUT` that goes back for one nobody collected — and
+   one function does the copying for both.
+ 
+   So the question splits in two, and both halves have to hold:
+ 
+     the helper fetches its own argument, and
+     every caller hands it the ENGINE's url and nothing else.
+ 
+   Which is stricter than what was here before, not looser: it now proves the
+   source at both call sites rather than at the single one that existed. A
+   `keepIt(…, body.picture)` added tomorrow is the upload button this rule
+   exists to prevent, and it fails on the second half. */
 ok('  from a picture fetched off the engine, not off the request',
-  /const file = await fetch\(progress\.url\)/.test(cover),
+  /const file = await fetch\(from\)/.test(cover),
   'the bytes that land at <owner>/<trackId>.cover.png must come from the'
   + ' supplier that just made them. A member supplying those bytes is the'
   + ' upload button this rule exists to prevent');
+
+/* To the call's own `);` rather than the first `)` — an argument is allowed
+   to contain a call of its own, and `[^)]*` stopped inside `String(trackId ??
+   id)` and then reported the truncation as a caller passing the wrong thing.
+   A rule that fails for its own reading rather than for what it reads is a
+   rule that gets relaxed by whoever meets it next. */
+const handed = [...cover.matchAll(/await keepIt\((.+?)\);/g)].map((one) => one[1].trim());
+ok('  and every caller hands it the engine\u2019s own link',
+  handed.length >= 2 && handed.every((args) => /progress\.url$/.test(args)),
+  `${handed.length} call(s): ${handed.join(' | ') || 'none found'} — one of them`
+  + ' is passing something other than what the engine just answered');
 
 ok('  and the route never opens the request as a file at all',
   !/request\.(formData|blob|arrayBuffer)\(/.test(cover),

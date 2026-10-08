@@ -23,7 +23,9 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { before } from './order.mts';
-import { CEILINGS, DOLLAR, KINDS, SHARE, ceilingFor, shareFor } from '../app/lib/server/googlespend.ts';
+import {
+  CEILINGS, DOLLAR, KINDS, SHARE, ceilingFor, shareFor, unreadMessage,
+} from '../app/lib/server/googlespend.ts';
 import type { Kind } from '../app/lib/server/googlespend.ts';
 
 let bad = 0;
@@ -159,9 +161,59 @@ ok('the real `enough` asks in that order',
   'the table above is driven against a stand-in; this is what keeps it'
   + ' describing the real one');
 
-ok('a failed read really does answer null in both counts',
-  (lib.match(/if \(error\) return null;/g) ?? []).length === 2,
-  'one of them returning nought would be the ceiling off for that half');
+/* ── Read per function, not counted across the file ──────────────────────
+ 
+   This counted `if (error) return null;` twice in the whole file and was
+   satisfied. On 8 October 2026 both error branches grew a body — they now
+   record WHY the read failed, so a missing table can say "run this file"
+   instead of "try again in a moment", which is what Carli was told while
+   trying again could never work. The one-line form was gone and the count
+   went to nought, which is the rule failing for its own shape rather than
+   for what it is about.
+ 
+   What it is about is per function: each of the two reads must hand back
+   NULL on a failed read. Nought would read as "nothing spent", which is the
+   ceiling switched off for that half — the whole thing this file guards. So
+   each body is sliced out and asked on its own. */
+/* And the two reasons really are two sentences, driven rather than read.
+ 
+   The one that matters is `missing`: it has to name the file to run and say
+   that waiting will not help, because the sentence it replaced told her to
+   try again in a moment when trying again could never work. */
+const missing = unreadMessage('missing');
+const failed = unreadMessage('failed');
+ok('a missing table and a busy one get different answers', missing !== failed,
+  'one sentence for both is the sentence that sent her round a circle');
+ok('  and the missing one names the file to run',
+  /googlespend\.sql/.test(missing) && /ALMAL\.sql/.test(missing),
+  'a refusal that does not say what to do is a refusal nobody can act on');
+ok('  and says that waiting will not help',
+  /will not help/i.test(missing) && !/try again/i.test(missing),
+  '"try again in a moment" is wrong advice for a table that is not there');
+ok('  while a read that merely failed still says try again',
+  /try again/i.test(failed),
+  'a database having a bad second IS worth retrying, and that answer must'
+  + ' survive the new one being added beside it');
+
+const bodyOf = (name: string): string => {
+  const at = lib.indexOf(`export async function ${name}`);
+  if (at < 0) return '';
+  const rest = lib.slice(at + 10);
+  const end = rest.indexOf('\nexport ');
+  return end < 0 ? rest : rest.slice(0, end);
+};
+
+for (const name of ['usedMicros', 'mineMicros']) {
+  const body = bodyOf(name);
+  ok(`${name} answers null when the read fails, not nought`,
+    body.length > 0 && /if \(error\) \{[\s\S]*?return null;/.test(body)
+    && !/if \(error\)[\s\S]*?return 0;/.test(body),
+    'nought reads as "nothing spent", which is the ceiling off for that half');
+  ok(`  and ${name} says why, so the refusal can name a missing table`,
+    /whyUnread\(error\)/.test(body),
+    'a missing table and a busy one are not the same problem and do not have'
+    + ' the same answer');
+}
 
 ok('what is spent is written down only after the work is in hand',
   /if \(!db \|\| micros <= 0\) return;/.test(lib),

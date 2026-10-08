@@ -307,7 +307,27 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, songCost(length), 'song');
   if (!paid.ok) return paid.response;
 
-  const ask = (format: string) => fetch(`${ENDPOINT}?output_format=${format}`, {
+  /* ── Out of the one door, which this call never went through ──────
+ 
+     Carli, 8 October 2026, having switched Google off again: *"Could not
+     reach the music service. Try again in a moment."*
+ 
+     That sentence is this route's catch block, and what it was catching was
+     not a network at all. On 5 October `ENDPOINT` was shortened from a whole
+     address to the path `/v1/music`, because from that day every supplier
+     call was supposed to go through `call()`, which puts the supplier's own
+     base in front of it and adds the key. This call was missed. It stayed a
+     bare `fetch` — of a path with no host, which Node cannot dial and
+     refuses with `Failed to parse URL` before anything leaves the machine.
+ 
+     So the booth's own button has been broken since that commit, and it
+     reported the breakage as the supplier being unreachable: a sentence
+     that sends somebody to wait for a service that was never asked.
+ 
+     It did not show up because the Google branch above returns before ever
+     reaching this line, and that is where the evening's testing was. The
+     engine switch hid its own fault. */
+  const ask = (format: string) => call('music', `${ENDPOINT}?output_format=${format}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildRequest(body)),

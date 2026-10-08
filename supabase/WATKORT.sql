@@ -7,7 +7,7 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 51 tabelle, 32 kolomme wat later
+-- Dit kyk na 52 tabelle, 32 kolomme wat later
 -- bygekom het, 6 stoor-emmers en 51 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
@@ -141,6 +141,7 @@ with verwag (l_eer, soort, naam) as (
     ('collab.sql', 'tabel', 'public.collab_messages'),
     ('collab.sql', 'tabel', 'public.collabs'),
     ('arena.sql', 'tabel', 'public.competitions'),
+    ('coverkeep.sql', 'tabel', 'public.cover_jobs'),
     ('radar.sql', 'tabel', 'public.creators'),
     ('credits.sql', 'tabel', 'public.credit_entries'),
     ('dubs.sql', 'tabel', 'public.dubs'),

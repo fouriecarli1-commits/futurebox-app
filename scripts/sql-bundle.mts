@@ -41,6 +41,7 @@ export const ORDER = [
   'cast',
   'collab',
   'credits',
+  'coverkeep',
   'dubs',
   'eleven',
   'elevenrem',
@@ -169,6 +170,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
   addons: 'Die bemarkings-byvoegsel kan gekoop of toegeken word.',
   posting: 'Die plaas-tou. Sonder dit antwoord dit "nie opgestel nie".',
   dubs: 'Oorklanking. Dieselfde antwoord sonder dit.',
+  coverkeep:
+    'Watter omslagprent bestel is, sodat een wat nooit gestoor is, gaan gehaal kan word. Die kopie na ons stoor is voorheen deur die blaaier self gedoen — so ’n toegemaakte oortjie het ’n prent wat die enjin gemaak en waarvoor betaal is, by die enjin laat lê op ’n skakel wat verval. Sonder hierdie tabel is daar niks wat weet die prent het ooit bestaan nie, en gee ’n omslag wat misluk het ook nie die krediete terug nie.',
   invites: 'Die uitnodigingsskakel in \u2019n saamwerk-e-pos.',
   listens:
     'Hoeveel kere \u2019n liedjie geluister is, per liedjie, vir die maker. Moet n\u00e1 charts.sql loop.',

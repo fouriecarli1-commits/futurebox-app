@@ -62,11 +62,17 @@ ok('the cover panel draws a door to real art', /data-realart/.test(sleeve),
 ok('  and pressing it is what calls onRealArt', /onClick=\{onRealArt\}/.test(sleeve),
   'the button is drawn and wired to something else');
 
-/* The panel is `url ? (…) : (…)`. Split on the ternary's own arms rather
-   than counting, because "twice somewhere in the file" is satisfied by two
-   copies in the same branch — which is the adjacent-measurement mistake
-   this repo keeps finding. */
-const arm = /\{url \? \(([\s\S]*?)\n      \) : \(([\s\S]*?)\n      \)\}/.exec(sleeve);
+/* The panel is `hasPicture(standing) ? (…) : (…)`. Split on the ternary's own
+   arms rather than counting, because "twice somewhere in the file" is
+   satisfied by two copies in the same branch — which is the adjacent-
+   measurement mistake this repo keeps finding.
+ 
+   It read `{url ? (` until 8 October 2026, when the panel stopped deciding
+   from the picture and started deciding from the server's answer about
+   whether the picture was KEPT — see `app/lib/coverstate.ts`. The assertion
+   below that the shape is still readable is what turned a silent regex into
+   a failure naming the rewrite, which is the whole reason it is there. */
+const arm = /\{hasPicture\(standing\) \? \(([\s\S]*?)\n      \) : \(([\s\S]*?)\n      \)\}/.exec(sleeve);
 ok('the panel is still the two-state shape this rule reads', Boolean(arm),
   'the ternary was rewritten, so the two rules below are measuring nothing');
 if (arm) {
