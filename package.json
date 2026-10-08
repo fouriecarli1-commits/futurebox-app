@@ -48,6 +48,7 @@
     "check:onedoor": "tsx scripts/check-onedoor.mts",
     "check:findable": "tsx scripts/check-findable.mts",
     "check:filmstrip": "tsx scripts/check-filmstrip.mts",
+    "check:onlyonpress": "tsx scripts/check-onlyonpress.mts",
     "check:paidonce": "tsx scripts/check-paidonce.mts",
     "check:songcaption": "tsx scripts/check-songcaption.mts",
     "check:roomwords": "tsx scripts/check-roomwords.mts",

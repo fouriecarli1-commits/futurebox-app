@@ -755,6 +755,17 @@ jobs:
       - name: The clock shows what the shot looks like
         run: npm run check:filmstrip
 
+      # "Die photo editor save ook fotos op 'n mens se foon sonder dat mens
+      # die export gedruk het." It could not be reproduced, and a sweep of
+      # all nineteen writes-to-device found every one behind a press. But "I
+      # could not reproduce it" is not a property anybody can keep. The thing
+      # she described has one shape in code — a write that runs because
+      # something ARRIVED rather than because somebody PRESSED, which is a
+      # write inside an effect — and this makes that impossible rather than
+      # improbable.
+      - name: Nothing reaches the device except from a press
+        run: npm run check:onlyonpress
+
       # A song whose words have been measured once must never be measured
       # again. Both rungs cache their own answer and neither recognises the
       # other's, so writing an upload's heard words onto its row sent the
