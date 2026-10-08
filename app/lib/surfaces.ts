@@ -286,16 +286,42 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       en: "Take it to the timeline",
       af: "Vat dit na die tydlyn",
     },
+    /* ── The Pro Booth is behind this door, and nothing said so ───────
+ 
+       Carli, 8 October 2026: *"Maak seker probooth se funksies werk en kan
+       maklik gevind word."*
+ 
+       They work — `audit/probooth.mjs` presses 109 things in that room and
+       all of them answer. Finding it was the other half, and the answer was
+       no: the Pro Booth has no entry of its own in this file, and this entry,
+       the room it lives behind, described itself as singing over a backing
+       track and listed three things it could help with, none of them its own.
+       The words a person would actually search with — lanes, mixing,
+       mastering, stems, tone, amp — appeared nowhere in this file at all.
+ 
+       That matters more here than a missing menu card would elsewhere,
+       because this file is what the copilot answers "where do I ..." out of.
+       A feature absent from it cannot be pointed at by the one part of the
+       app whose job is pointing at things. Somebody on a paid plan looking
+       for where to mix had to already know to open this room and spot a
+       button in it.
+ 
+       Named here rather than given a surface of its own: it is a screen
+       inside this room, not a `studioTab`, so a surface would mean routing
+       and back-stack work — and the back stack in these rooms is something
+       she has already been bitten by twice. The door is real and labelled;
+       what was missing was the app being able to say it exists. */
     purpose:
-      "Singing on your own track: recording takes over the backing, and lifting a vocal back out.",
+      "Singing on your own track: recording takes over the backing, and lifting a vocal back out. The Pro Booth opens from a door in this room, on any paid plan: many lanes on one timeline, a grid and a click, mixing and mastering with a loudness reading, splitting a lane into its instruments, guitar tone and amp captures, and undo. Say so when somebody asks where to mix, where the lanes are, or where to master \u2014 it is behind the button that reads \"Lanes and mixing\", and the words are not on screen in there, which is what this room is for.",
     helps: {
-      en: "I can tell you which take to keep, what to fix in it, and what to do next with the one you like.",
-      af: "Ek kan jou sê watter opname om te hou, wat daaraan te regmaak, en wat om volgende te doen met die een waarvan jy hou.",
+      en: "I can tell you which take to keep, what to fix in it, and what to do next with the one you like \u2014 and where to go for lanes, mixing and mastering.",
+      af: "Ek kan jou sê watter opname om te hou, wat daaraan te regmaak, en wat om volgende te doen met die een waarvan jy hou \u2014 en waarheen om te gaan vir bane, menging en mastering.",
     },
     can: [
       "say which take to keep",
       "clean up a take",
       "write words to sing to",
+      "say where the lanes, the mixing and the mastering are",
     ],
     ops: {
       pick_song:
@@ -313,6 +339,11 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       {
         en: "Clean up the take I just did",
         af: "Maak die opname skoon wat ek nou gedoen het",
+      },
+      /* The question somebody actually asks, now that there is an answer. */
+      {
+        en: "Where do I mix, with lanes?",
+        af: "Waar meng ek, met bane?",
       },
     ],
   },

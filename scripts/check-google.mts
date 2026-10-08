@@ -120,11 +120,24 @@ ok('  and a video is asked for as a long-running job',
   MODELS.filter((one) => one.what === 'video').every((one) => one.verb === 'predictLongRunning'),
   MODELS.filter((one) => one.what === 'video').map((one) => one.verb).join(', '));
 
-ok('  and the probe uses each model\u2019s own verb rather than a default',
-  /addressOf\(model, spec\?\.verb \?\? 'predict'\)/
-    .test(withoutComments(readFileSync('app/lib/server/google.ts', 'utf8'))),
-  'a probe with one verb hard-coded answers the wrong question for most of'
-  + ' the list');
+/* The probe used to carry each model's verb, and this held it to that.
+   It no longer has a verb to carry: a read has none, which is the point —
+   `:predict` is what let the body check answer for the model. The concern
+   moves to where a verb is still real, which is the calls that generate. */
+const googleLib = withoutComments(readFileSync('app/lib/server/google.ts', 'utf8'));
+ok('  and the probe deliberately carries no verb at all',
+  !/readAddressOf[\s\S]{0,200}verb/.test(googleLib)
+  && !/addressOf\(model, spec\?\.verb/.test(googleLib),
+  'a verb on the probe is a generate endpoint, and a generate endpoint is'
+  + ' what answered for the body instead of for the model');
+
+ok('  while the calls that really generate each use their own',
+  /addressOf\(model, 'predict'\)/.test(
+    withoutComments(readFileSync('app/lib/server/lyria.ts', 'utf8')))
+  && /addressOf\(CHOSEN\.video, verb\)/.test(
+    withoutComments(readFileSync('app/lib/server/video/google.ts', 'utf8'))),
+  'music is a predict and video is a long-running job; one verb for both is'
+  + ' a 404 on whichever one it is not');
 
 ok('  and the address builder puts the verb after the colon',
   addressOf('m', 'generateContent').endsWith('/models/m:generateContent'),
@@ -134,25 +147,61 @@ ok('  and the address builder puts the verb after the colon',
 
 const lib = withoutComments(readFileSync('app/lib/server/google.ts', 'utf8'));
 
-ok('the probe asks with an empty body, which a model must refuse',
-  /body: '\{\}'/.test(lib),
-  'a probe that sends a real prompt is a probe that makes a song every time'
-  + ' somebody checks whether the key works');
+/* ── These four asserted the OLD probe, and the old probe was wrong ──────
+ 
+   Until 8 October 2026 they read: the probe POSTs an empty body, a 400 means
+   the model is THERE, and a 2xx must shout because something was generated
+   from nothing. Every one of them passed, every day, while the probe was
+   answering a question about my own request.
+ 
+   Carli's screen settled it: `lyria-3-pro-preview` — which this probe had
+   reported as "there" — came back from a real call as *"was not found or
+   your project does not have access to it"*. On `:predict` Google validates
+   the body BEFORE resolving the model, so an empty body earns a 400 from the
+   body check and the name is never looked up. The 400 meant "your body is
+   empty", and this check insisted on reading it as "your model exists".
+ 
+   The concern underneath them was always right and is kept: **the probe must
+   not be able to generate anything.** It is now guaranteed by shape rather
+   than by malformedness — a GET on the model as a resource cannot generate,
+   whatever Google does with it, where a POST only avoided generating by
+   being broken. */
 
-ok('  and a 400 is read as the model being THERE',
-  /response\.status === 400 \|\| response\.status === 422/.test(lib),
-  'refused on contents means the address and the permission are both fine,'
-  + ' which is the whole question');
+ok('the probe reads the model rather than poking it',
+  /await fetch\(readAddressOf\(model\)/.test(lib),
+  'a POST to a generate verb is a probe whose safety rests on its own body'
+  + ' being malformed, and that is what made the old one answer the wrong'
+  + ' question for four models');
+
+ok('  and it sends no body at all, so nothing can be made by asking',
+  !/readAddressOf\(model\)[\s\S]{0,260}body:/.test(lib),
+  'a body on this request is a probe that could generate');
+
+ok('  and a 200 is what means the model is THERE',
+  /response\.status === 200\s*\n?\s*\? 'yes'/.test(lib),
+  'the model read back is the only answer that means it exists; a 400 means'
+  + ' the request was wrong, which says nothing about the model');
 
 ok('  while a 404 and a 403 stay different answers',
   /response\.status === 404/.test(lib) && /response\.status === 401 \|\| response\.status === 403/.test(lib),
   '"not on this account" and "this key may not" send somebody to two'
   + ' different pages, and one sentence for both sends them to the wrong one');
 
-ok('  and a success is reported as a thing that should be impossible',
-  /UNEXPECTED: an empty body was ACCEPTED/.test(lib),
-  'a 2xx here means something was generated from nothing, which is a charge'
-  + ' nobody asked for — it must shout rather than fold into "unclear"');
+/* ── And the question the old one could not ask at all ─────────────── */
+
+ok('Google is asked for its own list of what this project has',
+  /export async function catalogue/.test(lib) && /listAddress\(\)/.test(lib),
+  'a list cannot be faked by a malformed request: either the name is in it'
+  + ' or it is not. Every per-model reading is an inference; this is the'
+  + ' answer');
+
+ok('  and the list is read with no body either',
+  !/listAddress\(\)[\s\S]{0,200}(body:|method: 'POST')/.test(lib));
+
+ok('  and what it finds that this app has never heard of is said out loud',
+  /newToThisApp/.test(readFileSync('app/api/google/setup/route.ts', 'utf8')),
+  'the ids nobody had to guess are the most useful rows on that page, and a'
+  + ' report that only grades OUR guesses can never introduce a new one');
 
 /* ── 5. The key does not leak ─────────────────────────────────────────── */
 

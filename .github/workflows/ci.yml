@@ -735,6 +735,16 @@ jobs:
       - name: No server call dials a path with no host
         run: npm run check:onedoor
 
+      # The Pro Booth works — 109 things pressed in it, all answering — and
+      # could not be found. It is a screen inside the vocal booth rather than
+      # a tab, so it has no entry in surfaces.ts; and the booth's own entry
+      # never said lanes, mixing or mastering. That file is what the copilot
+      # answers "where do I ..." out of, so the question had no answer
+      # anywhere in the app. Held against the label on the door itself, so a
+      # rename cannot quietly make the directory wrong.
+      - name: The room directory can point at the Pro Booth
+        run: npm run check:findable
+
       # A song whose words have been measured once must never be measured
       # again. Both rungs cache their own answer and neither recognises the
       # other's, so writing an upload's heard words onto its row sent the

@@ -33,7 +33,7 @@
 import crypto from 'node:crypto';
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { isOwnerEmail } from '@/app/lib/server/owners';
-import { MODELS, addressOf, configured, project, reach, region } from '@/app/lib/server/google';
+import { MODELS, addressOf, catalogue, configured, project, reach, region } from '@/app/lib/server/google';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -118,7 +118,21 @@ export async function GET(request: Request): Promise<Response> {
     });
   }
 
-  const found = await Promise.all(MODELS.map((one) => reach(one.id)));
+  /* ── The list first, because it is the answer ──────────────────────
+ 
+     The named candidates below are a guess at what Google calls things.
+     This is Google telling us what this project HAS, which is the question
+     all along and the one the old empty-body probe could not answer — see
+     the long note in `lib/server/google.ts`. It generates nothing.
+ 
+     Both, not one: the list says what exists, the per-model reads say
+     whether this key may touch each one. A model in the list that reads
+     back `not-allowed` is a different problem from one that is absent, and
+     only asking both tells them apart. */
+  const [has, found] = await Promise.all([
+    catalogue(),
+    Promise.all(MODELS.map((one) => reach(one.id))),
+  ]);
 
   /* ── One line per KIND, worked out from the list ────────────────────
 
@@ -139,10 +153,25 @@ export async function GET(request: Request): Promise<Response> {
       : `${kind}: NONE answered. Check Model Garden for this project and region.`;
   });
 
+  /* What the list turned up that this app has never heard of — the most
+     useful rows on the page, because they are the ids nobody had to guess. */
+  const unknownToUs = has.ours
+    .filter((one) => !MODELS.some((named) => named.id === one.name))
+    .map((one) => `${one.what}: ${one.name}`);
+
   return Response.json({
     ready: true,
     project: project(),
     region: region(),
+    /* Google's own answer to "what does this project have", first. */
+    catalogue: {
+      asked: has.ok,
+      status: has.status,
+      note: has.note,
+      total: has.total,
+      ours: has.ours,
+      newToThisApp: unknownToUs,
+    },
     /* So a wrong region is visible as a wrong address rather than guessed at
        from four 404s. */
     example: addressOf(MODELS[0].id, MODELS[0].verb),
@@ -151,6 +180,12 @@ export async function GET(request: Request): Promise<Response> {
       ...says,
       found.some((one) => one.answer === 'not-allowed')
         ? 'At least one said not-allowed, which is a key restriction or an access request rather than a wrong name.'
+        : '',
+      has.ok
+        ? `Google's own list: ${has.note}`
+        : `Google's own list could not be read (${has.status}): ${has.note}`,
+      unknownToUs.length
+        ? `The list has engines this app does not name: ${unknownToUs.join(', ')}. Those ids are facts; the ones above are guesses.`
         : '',
     ].filter(Boolean).join(' '),
   });

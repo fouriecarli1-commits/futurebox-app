@@ -117,8 +117,39 @@ export const MODELS = [
  *   gemini-3-pro-image-preview  404
  *   gemini-3.1-flash-image      404
  *
- * So every guess above is now a fact, and three of them were wrong — which
- * is three afternoons the probe did not cost.
+ * Three of those were facts and five were not, and the five looked exactly
+ * like the three.
+ *
+ * ── What the 400s actually measured, 8 October 2026 ──────────────────────
+ *
+ * Carli, that evening, with Google's own words on her screen:
+ *
+ *   Publisher model `…/models/lyria-3-pro-preview` was not found or your
+ *   project does not have access to it.
+ *
+ * For a model this table called "there".
+ *
+ * The probe asked each model with an EMPTY body and read 400 as "there, and
+ * you sent rubbish". That holds for `:generateContent` — the three Nano
+ * Banana names really did answer 404, which proves the model is resolved
+ * before the body is looked at on that surface. It does NOT hold for
+ * `:predict`: there the body is validated FIRST, so an empty one earns a 400
+ * from the body check and the model is never looked up at all.
+ *
+ * So the four `:predict` readings — both Lyrias and both Veos — measured the
+ * shape of my own request, not her project. The one sound reading in the
+ * table is `gemini-2.5-flash-image`, and the three 404s beside it.
+ *
+ * This is the repository's recurring fault arriving in the tool built to
+ * prevent it: a probe green because it measured the adjacent thing. It is
+ * corrected here rather than deleted, because a wrong measurement quietly
+ * removed teaches nobody, and the next person to reach for an empty-body
+ * probe should meet this paragraph first.
+ *
+ * `readAddressOf` and `listAddress` below are the honest questions: a GET on
+ * the model, and Google's own list of what this project can see. Neither
+ * sends a body, so neither can be answered by the body check, and neither
+ * generates or bills anything.
  *
  * ── The one that comes with a clock ──────────────────────────────────────
  *
@@ -219,6 +250,25 @@ export interface Reached {
 }
 
 /**
+ * The address of the model as a THING to read, rather than a verb to call.
+ *
+ * Unscoped on purpose. The project-scoped path answers an HTML 404 to a GET —
+ * it exists only to be POSTed to — while this one answers a JSON 401 with no
+ * key, which is how a correct address refuses an unauthenticated caller.
+ * Measured from this machine on 8 October 2026 against `lyria-002`.
+ *
+ * An API key identifies the project it belongs to, so this is still asked as
+ * her project even though the project is not in the path.
+ */
+export const readAddressOf = (model: string): string =>
+  `https://${region()}-aiplatform.googleapis.com/v1/publishers/google/models/${model}`;
+
+/** Every publisher model this project can see. Generates nothing. */
+export const listAddress = (): string =>
+  `https://${region()}-aiplatform.googleapis.com/v1beta1/publishers/google/models`
+  + '?view=PUBLISHER_MODEL_VIEW_BASIC&pageSize=200';
+
+/**
  * Whether a model answers, asked with a body it must refuse.
  *
  * Deliberately empty. A model that takes a POST and rejects this on its
@@ -232,17 +282,25 @@ export async function reach(model: string): Promise<Reached> {
   if (!configured()) {
     return { model, what, status: 0, answer: 'unclear', note: 'No key or no project set.' };
   }
+  /* ── Read the model, do not poke it ────────────────────────────────
+ 
+     A GET on the model as a resource. No body, so nothing can be refused
+     by the body check before the name is looked up — which is the whole
+     fault the old version of this function had: it POSTed `{}` and read
+     the 400 that the body check returned as proof the model existed.
+ 
+     A read also cannot generate and cannot bill, which the POST only
+     avoided by being malformed. */
   let response: Response;
   try {
-    response = await fetch(addressOf(model, spec?.verb ?? 'predict'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
-      body: '{}',
+    response = await fetch(readAddressOf(model), {
+      headers: { 'x-goog-api-key': key() },
+      signal: AbortSignal.timeout(15000),
     });
   } catch {
     return { model, what, status: 0, answer: 'unclear', note: 'Could not be reached at all.' };
   }
-  const answer = response.status === 400 || response.status === 422
+  const answer = response.status === 200
     ? 'yes' as const
     : response.status === 404
       ? 'no' as const
@@ -250,22 +308,96 @@ export async function reach(model: string): Promise<Reached> {
         ? 'not-allowed' as const
         : 'unclear' as const;
   const note = answer === 'yes'
-    ? 'There, allowed, and refused an empty body on its contents. Use this id.'
+    ? 'There, and readable by this key. Use this id.'
     : answer === 'no'
       ? 'Not on this account or not in this region. Try the other id, or another region.'
       : answer === 'not-allowed'
         ? 'The address is there and this key may not use it: a key restriction, a missing role, or a model that needs access requesting.'
         : `Neither a refusal nor an acceptance: ${response.status}.`;
-  /* A 2xx would mean something was GENERATED from an empty body, which should
-     be impossible and would be a charge nobody asked for. Said loudly rather
-     than folded into "unclear". */
+  return { model, what, status: response.status, answer, note };
+}
+
+/** One model as the list reports it. */
+export interface Listed {
+  readonly name: string;
+  readonly what: 'music' | 'video' | 'image' | 'other';
+}
+
+export interface Catalogue {
+  readonly ok: boolean;
+  readonly status: number;
+  /** Only the ones worth reading: the music, video and picture engines. */
+  readonly ours: readonly Listed[];
+  readonly total: number;
+  readonly note: string;
+}
+
+const KINDS: readonly { readonly test: RegExp; readonly what: Listed['what'] }[] = [
+  { test: /lyria/i, what: 'music' },
+  { test: /veo/i, what: 'video' },
+  { test: /image|imagen|banana/i, what: 'image' },
+];
+
+/**
+ * What this project can actually see, asked of Google rather than inferred.
+ *
+ * This is the question the old probe was trying to answer and could not. A
+ * list cannot be faked by a malformed request: either the name is in it or
+ * it is not. It generates nothing and bills nothing.
+ *
+ * The whole list is long and most of it is not ours, so only the music,
+ * video and picture engines are handed back — but `total` says how many
+ * there were, so a filter that matches nothing can be told apart from a
+ * project that really has nothing.
+ */
+export async function catalogue(): Promise<Catalogue> {
+  if (!configured()) {
+    return { ok: false, status: 0, ours: [], total: 0, note: 'No key or no project set.' };
+  }
+  let response: Response;
+  try {
+    response = await fetch(listAddress(), {
+      headers: { 'x-goog-api-key': key() },
+      signal: AbortSignal.timeout(20000),
+    });
+  } catch {
+    return { ok: false, status: 0, ours: [], total: 0, note: 'The list could not be reached.' };
+  }
+  const text = await response.text().catch(() => '');
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      ours: [],
+      total: 0,
+      /* Google's own words. A sentence invented here would hide the one
+         thing worth seeing, which is what they objected to. */
+      note: text.slice(0, 300) || `The list answered ${response.status}.`,
+    };
+  }
+  let body: unknown;
+  try { body = JSON.parse(text); } catch { body = null; }
+  const rows = (body && typeof body === 'object'
+    ? (body as { publisherModels?: unknown }).publisherModels
+    : null);
+  const all = Array.isArray(rows) ? rows : [];
+  const ours: Listed[] = [];
+  for (const row of all) {
+    const name = String((row as { name?: unknown })?.name ?? '');
+    if (!name) continue;
+    /* `publishers/google/models/veo-3.1-fast-generate-001` → the last part,
+       which is the id every other part of this app uses. */
+    const id = name.split('/').pop() ?? name;
+    const kind = KINDS.find((one) => one.test.test(id));
+    if (kind) ours.push({ name: id, what: kind.what });
+  }
   return {
-    model,
-    what,
+    ok: true,
     status: response.status,
-    answer,
-    note: response.status >= 200 && response.status < 300
-      ? `UNEXPECTED: an empty body was ACCEPTED (${response.status}). Check the billing page — something may have been generated.`
-      : note,
+    ours,
+    total: all.length,
+    note: all.length === 0
+      ? 'The list came back empty, which is not the same as the engines being absent — check the key is allowed to list models.'
+      : `${all.length} models on this project; ${ours.length} of them are ours.`,
   };
 }
