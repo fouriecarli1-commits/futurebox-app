@@ -6668,6 +6668,18 @@ Twee maniere vorentoe, en die keuse is joune:
    gaan nagaan voordat dit in die kode land — en dan dieselfde vir Spotlight
    doen.
 
-**Nog nie gedoen nie:** die Post Lab se liedjielys dra nog `Demo creator` en
-`@demo-neon` as plekhouers. Dieselfde fout, 'n ander oortjie; dit wag omdat
-dit raak aan watter liedjies in jou kanaal is.
+**Twee dinge wat nog dieselfde dag reggemaak is:**
+
+- **Die Post Lab se vier plekhouer-liedjies is uit** — `Neon Harvest`,
+  `Gravel Road Sunrise`, `Highveld Static` en `Paper Planes & Pixels`, elkeen
+  deur `Demo creator`. Hulle was ook dood: die Post Lab se lys filtreer op
+  `onChannel` en al vier was `false`, dus is nie een ooit geteken nie.
+- **Jou eie onderwerpe is nou joune.** `profileFromTracks` het vyf woorde
+  voor joune ingesit — `ai music`, `ai`, `creators`, `vibe coding`,
+  `building` — dus het **elke lid** van hierdie app by die Radar opgedaag as
+  'n KI-musiek-vibe-coder, wat hulle ook al maak. 'n Afrikaanse teaterkunstenaar
+  is op "vibe coding" gematch. En 'n lid met niks vrygestel nie is stil op
+  **FutureBox se eie liedjie** geprofileer — sy genre, sy etikette, sy
+  modelstapel — en vyf programme is toe gerangskik teen 'n opname waarin sy
+  geen deel gehad het nie. Nou: niks vrygestel is niks vrygestel, elke ry wys
+  'n strepie, en die sin sê wat dit 'n syfer sou gee.
