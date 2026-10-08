@@ -194,6 +194,49 @@ ok('none of the three variables can reach a browser',
   '`NEXT_PUBLIC_` puts a value in the bundle, which puts this key in'
   + ' everybody’s hands. `check:security` scans for it too');
 
+/* ── 7. A person does not have to spend a secret to use it ───────────── */
+
+/* Carli, 8 October 2026, on being told to open `?key=<POST_SECRET>`:
+   *"maar dan gaan ek nou weer 'n password weggee wat ek weer gaan moet
+   verander."*
+
+   She was right, and an hour earlier her Google key had been burned by
+   exactly that. A secret in a query string is a secret in the browser
+   history, in the access log and in any screenshot of the address bar. So a
+   signed-in owner gets in with no secret, and the secret stays for the
+   things that are not people. */
+
+ok('a signed-in owner gets in without a secret',
+  /const isOwner = await ownerOf\(request\)/.test(route)
+  && /if \(!isOwner && !tries\.some/.test(route),
+  'telling her to type a second secret into a URL is asking her to burn a'
+  + ' second one');
+
+ok('  and being an owner is a signed-in email, not a header she can set',
+  /await callerFrom\(request\)/.test(route) && /isOwnerEmail\(caller\.email\)/.test(route),
+  'anything a browser can type is not an authorisation');
+
+ok('  and the secret still works, for the things that are not people',
+  /sameSecret\(one, wanted\)/.test(route) && /POST_SECRET/.test(route),
+  'a terminal and a script have no session; removing it trades one'
+  + ' awkwardness for another');
+
+ok('  and no secret AND no owner is said plainly rather than as a 404',
+  /Sign in as the owner, or set POST_SECRET/.test(route),
+  'that case is a deployment nobody can get into, which is worth a sentence'
+  + ' rather than the silence a wrong secret gets');
+
+const page = withoutComments(readFileSync('app/google/page.tsx', 'utf8'));
+ok('the page sends her token in a header, never in the address',
+  /Authorization: `Bearer \$\{token\}`/.test(page) && !/\?key=/.test(page),
+  'a header is the one place a secret travels that nothing writes down');
+
+ok('  and it shows what came back even when that is not JSON',
+  /\$\{answer\.status\}: \$\{body\}/.test(page),
+  'a 404 of "no" IS the answer \u2014 it means this account is not an owner,'
+  + ' and a page that swallowed it would leave her pressing a button that'
+  + ' does nothing');
+
 if (bad) {
   console.error(`\ncheck:google — ${bad} assertion(s) failed.\n`);
   process.exit(1);

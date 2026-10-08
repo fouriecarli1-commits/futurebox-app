@@ -231,6 +231,28 @@ on a feeling, and the credits charged for each can be checked against it.
 `CREDITS.video` has one cent of margin on Kling today. That number is the first thing to redo
 once `/api/google/setup` has said which models answer and at what rate — not before.
 
+## Open it without spending a secret
+
+*Carli, 8 October 2026, when told to open `?key=<POST_SECRET>`:* "maar dan gaan ek nou weer 'n
+password weggee wat ek weer gaan moet verander."
+
+**She was right, and it was this app's fault rather than hers.** An hour earlier her Google key
+had to be rotated because it had been typed into a query string; the next instruction was to type
+a *different* secret into a query string. A secret in a URL is a secret in the browser history, in
+the access log, and in any screenshot of the address bar. That is not a thing to ask twice.
+
+So there is a page:
+
+```
+https://<your app>/google
+```
+
+Sign in on the main site as usual, open it, press **Ask**. No password anywhere — the app already
+knows the account is the owner, and the token travels in a header, where nothing writes it down.
+
+The `?key=<POST_SECRET>` route still works, for the things that are not people: a terminal, a
+script, a check. Both doors, and the person gets the one that costs her nothing.
+
 ## When the setup page answers `no`
 
 A bare `no` is a **404**, and it means one thing only: `POST_SECRET` is set on the deployment and

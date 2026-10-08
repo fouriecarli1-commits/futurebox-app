@@ -31,6 +31,8 @@
  */
 
 import crypto from 'node:crypto';
+import { callerFrom, metered } from '@/app/lib/server/account';
+import { isOwnerEmail } from '@/app/lib/server/owners';
 import { MODELS, addressOf, configured, project, reach, region } from '@/app/lib/server/google';
 
 export const runtime = 'nodejs';
@@ -46,11 +48,41 @@ function sameSecret(given: string, wanted: string): boolean {
   return crypto.timingSafeEqual(a, b);
 }
 
+/**
+ * Being signed in as the owner, which is the way a PERSON should get in.
+ *
+ * ── Why this exists beside the secret ────────────────────────────────────
+ *
+ * Carli, 8 October 2026, on being told to open `?key=<POST_SECRET>`:
+ * *"maar dan gaan ek nou weer 'n password weggee wat ek weer gaan moet
+ * verander."*
+ *
+ * She is right, and it is this file's fault rather than hers. A secret in a
+ * query string is a secret in the browser history, in the access log, and in
+ * any screenshot of the address bar — which is exactly how her Google key
+ * had to be rotated an hour earlier. Telling her to do the same thing again
+ * with a different secret is asking her to burn a second one.
+ *
+ * So a signed-in owner gets in with no secret at all. The token travels in a
+ * header, where nothing logs it, and it is hers already.
+ *
+ * The secret stays for everything that is not a person: a terminal, a
+ * script, a check. Removing it would be trading one awkwardness for another.
+ */
+async function ownerOf(request: Request): Promise<boolean> {
+  if (!metered()) return false;
+  const caller = await callerFrom(request);
+  return !!caller?.email && isOwnerEmail(caller.email);
+}
+
 export async function GET(request: Request): Promise<Response> {
+  /* The person first, because it is the one that costs her nothing. */
+  const isOwner = await ownerOf(request);
+
   const wanted = process.env.POST_SECRET ?? '';
-  if (!wanted) {
+  if (!isOwner && !wanted) {
     return Response.json(
-      { error: 'no_secret', message: 'Set POST_SECRET before using this.' },
+      { error: 'no_secret', message: 'Sign in as the owner, or set POST_SECRET.' },
       { status: 503 },
     );
   }
@@ -72,7 +104,9 @@ export async function GET(request: Request): Promise<Response> {
     /^.*?[?&]key=([^&]*).*$/.exec(url.search)?.[1] ?? '',
     (request.headers.get('authorization') ?? '').replace(/^Bearer /, ''),
   ].filter(Boolean);
-  if (!tries.some((one) => sameSecret(one, wanted))) return new Response('no', { status: 404 });
+  if (!isOwner && !tries.some((one) => sameSecret(one, wanted))) {
+    return new Response('no', { status: 404 });
+  }
 
   if (!configured()) {
     return Response.json({
