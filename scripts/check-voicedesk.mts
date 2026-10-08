@@ -42,8 +42,31 @@ const route = readFileSync('app/api/voice/sing/route.ts', 'utf8');
 for (const field of ['pitchShift', 'conversionStrength', 'modelVolumeMix', 'pre', 'post']) {
   ok(`the route reads ${field}`, new RegExp(`['"]${field}['"]`).test(route));
 }
-ok('and hands all of it to the conversion',
-  /convert\(\s*wanted, audio, 'take\.wav', Date\.now\(\) \+ WAIT_MS, want, dials, asked, after,/.test(route));
+/* ── Across the seam, in two halves ────────────────────────────────────
+
+   The route used to call Kits' `convert` with eight positional arguments and
+   this matched that line. Since 8 October 2026 it calls whoever is singing
+   (`lib/server/singer.ts`, for Kits' §1.3), so "hands all of it over" is now
+   two claims and both are checked.
+
+   The split is the point of the seam rather than an accident of it. `pitch`
+   and `strength` are true of singing voice conversion whoever does it, so
+   they ride on the ask itself. A noise gate's attack time in milliseconds is
+   one supplier's effects chain, so it travels as an opaque tuning tagged with
+   who issued it — and anyone else drops it rather than half-reading it. */
+const adapter = readFileSync('app/lib/server/singerkits.ts', 'utf8');
+ok('the route puts the two universal dials on the ask itself',
+  /\{ pitch: shift \}/.test(route) && /\{ strength \}/.test(route));
+ok('and Kits\u2019 own effects in a tuning tagged as Kits\u2019',
+  /const tuning: KitsTuning = \{\s*cleanup: asked,\s*polish: after,/.test(route)
+  && /modelVolumeMix: modelVolume/.test(route)
+  && /tuning: \{ by: who\.id, it: tuning \}/.test(route));
+ok('and the adapter hands every part of it to the conversion',
+  /convert\(\s*id,\s*ask\.audio,\s*ask\.filename,\s*ask\.deadline,\s*ask\.want,\s*dials,/.test(adapter)
+  && /mine\.cleanup === undefined \? PHONE_CLEANUP : mine\.cleanup/.test(adapter)
+  && /mine\.polish \?\? null/.test(adapter),
+  'the desk was reachable by nothing for weeks; the seam must not put it back'
+  + ' in that state');
 
 /* ── 2. Names on the wire, shapes on the server ────────────────────────── */
 ok('the effects are named, not described in numbers',

@@ -93,6 +93,8 @@ import { broughtFrom, fileIt, loadBrought, posterOf, readBrought, starBrought, t
 import { myVideos, type MyVideo } from '../lib/filmed';
 import { linesFrom, type Timed } from '../lib/timedtext';
 import { lyricCount, lyricPieces } from '../lib/lyriccut';
+import { asTimed, lyricCount as songLineCount, lyricFilm } from '../lib/lyricfilm';
+import { timeFor, type Timing } from '../lib/lyrictime';
 import { keepFilm, loadFilm } from '../lib/filmkeep';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
@@ -1111,6 +1113,20 @@ export default function VideoEditor({
    * the lines describe.
    */
   const [lyrics, setLyrics] = useState<Readonly<Record<string, readonly Timed[]>>>({});
+  /**
+   * The words of the song under the film, and how sure the app is about them.
+   *
+   * `lib/lyrictime.ts` owns the five-rung ladder that answers this — placed
+   * against the audio by forced alignment, heard by a transcriber, measured
+   * from the gaps between phrases, laid into wherever the singing starts, or
+   * spread evenly. `how` is which of those, and it is carried because the
+   * offer below refuses on the bottom rung: a guess cut into fifty-two shots
+   * is fifty-two wrong cuts, which is worse than no feature.
+   *
+   * Beside the edit rather than in it, for the same reason as `lyrics`: a
+   * reading of a file is not a decision somebody made.
+   */
+  const [sung, setSung] = useState<{ readonly lines: readonly Timed[]; readonly how: Timing } | null>(null);
   /** Which video's file is being pulled down, so its own card can say so. */
   const [pulling, setPulling] = useState<string | null>(null);
   /** Her own songs on this device, for putting one under the film. */
@@ -1871,6 +1887,48 @@ export default function VideoEditor({
       return rest;
     });
   }, [piece, lyrics, commit]);
+
+  /**
+   * Is the ladder's answer good enough to cut a film on?
+   *
+   * `spread` is the bottom rung: the words laid evenly across the song with
+   * nothing measured. It is the right thing to DRAW — a screen has to put the
+   * words somewhere — and the wrong thing to CUT on, because a cut is not a
+   * guess that can be ignored, it is fifty-two edits to her film.
+   *
+   * `sung` is kept. It is thin, but it has heard the file: the singing starts
+   * somewhere after the song does and the lines are laid into that part.
+   */
+  const sungIsGood = !!sung && sung.how !== 'spread' && sung.how !== 'none';
+
+  /**
+   * How many lines the offer would hang, worked out once per change.
+   *
+   * Memoised because the only honest way to count them is to do the work and
+   * see — `lyricfilm.ts` has the note on why a second count is a count that
+   * will one day disagree. On her own song that is fifty-one splits and
+   * fifty-one changes, and the words bench must not run it on every render
+   * while somebody is typing in the caption box underneath it.
+   */
+  const sungHowMany = useMemo(
+    () => (sungIsGood && sung ? songLineCount(edit, sung.lines) : 0),
+    [sungIsGood, sung, edit],
+  );
+
+  /**
+   * Hang the song's own words on the film, one shot per line.
+   *
+   * `lyricFilm` is the whole of it, and it is arithmetic tested on its own.
+   * What happens here is the room's three jobs: one history step, the
+   * selection left alone because every id changes and the bench should not
+   * chase it, and the offer taken off the table.
+   */
+  const hangSong = useCallback(() => {
+    if (!sung?.lines.length) return;
+    commit((was) => lyricFilm(was, sung.lines));
+    setPicked('');
+    setSung(null);
+  }, [sung, commit]);
 
   /** And the same, for a change to the film as a whole rather than a piece. */
   const slideFilm = useCallback((how: (was: Edit) => Edit) => {
@@ -3967,7 +4025,7 @@ export default function VideoEditor({
            and nothing anywhere else, so without this she would only find it
            by opening a bench she had no reason to open. The blur was built
            and then not found for exactly that reason. */
-        waiting={piece && lyrics[piece.id]?.length ? 'words' : null}
+        waiting={(piece && lyrics[piece.id]?.length) || sungIsGood ? 'words' : null}
       >
         {bench === 'folder' && (
           <div className="space-y-3">
@@ -4643,6 +4701,68 @@ export default function VideoEditor({
             </div>
           )}
 
+          {/* ── The song's own words ─────────────────────────────────────
+
+              The commoner case than the one above, and the harder one. A film
+              that arrived with a `tx3g` track is one shot from one supplier.
+              A song under a storyboard of scenes is what this app is for, and
+              the line times are then positions in the whole assembly rather
+              than in any one file. `lib/lyricfilm.ts` does that arithmetic.
+
+              Drawn inside the piece's own bench, which is not strictly where
+              it belongs — it is about the film, not the shot. It sits here
+              because this is the bench somebody opens to think about words,
+              and there is always a shot selected once there is a film: the
+              effect above moves the selection on to a real piece whenever the
+              one it named stops existing, which is exactly what every id
+              doing this does.
+
+              Offered only where the ladder in `lib/lyrictime.ts` actually
+              measured something. On its bottom rung the words are spread
+              evenly with nothing heard, and that is fine to draw on a screen
+              and not fine to cut a film on. */}
+          {sungIsGood && sung && sungHowMany > 0 && (
+            <div
+              data-editorsongoffer
+              className="rounded-xl border p-3 space-y-2"
+              style={{ borderColor: 'rgba(16,185,129,0.35)', background: 'rgba(52,211,153,0.08)' }}
+            >
+              <p className="text-sm leading-relaxed" style={{ color: INK_DIM }}>
+                <ListMusic className="w-3.5 h-3.5 inline-block mr-1.5 align-[-2px]" />
+                {t('edit.songFound', 'The track under this film has words, and we know when each one is sung.')}
+              </p>
+              <button
+                type="button"
+                data-editorsonghang
+                onClick={hangSong}
+                className="min-h-[48px] w-full rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
+                style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+              >
+                <Scissors className="w-4 h-4" />
+                {t('edit.songHang', 'Put the {n} sung lines on the film')
+                  .replace('{n}', String(sungHowMany))}
+              </button>
+              <p className="text-xs leading-relaxed" style={{ color: INK_DIM }} data-editorsonghow={sung.how}>
+                {/* How it knows, in her words rather than the ladder's. A
+                    member deciding whether to press this is entitled to know
+                    whether the timings were measured or worked out. */}
+                {sung.how === 'aligned'
+                  ? t('edit.songAligned', 'The words were placed against the singing itself, so they are as exact as we can get.')
+                  : sung.how === 'heard'
+                    ? t('edit.songHeard', 'The singing was listened to word by word, so these are the moments they were actually sung.')
+                    : sung.how === 'phrases'
+                      ? t('edit.songPhrases', 'The gaps between the phrases were measured in the track, so the lines land on the singing rather than being spread out.')
+                      : t('edit.songSung', 'We can hear roughly where the singing starts and the lines are laid into that part. Check a few and move them if they drift.')}
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: INK_DIM }}>
+                {t(
+                  'edit.songNote',
+                  'It cuts the film at every line, so each one is a shot with its own words. Every cut you already made stays a cut, the film stays exactly as long, and one press of undo puts it back.',
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Words over the piece. */}
           <label className="space-y-1.5 block">
             <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
@@ -4870,6 +4990,10 @@ export default function VideoEditor({
                     underCame: 'device' as const,
                     underName: file.name.replace(/\.[^.]+$/, ''),
                   }));
+                  /* A song off the phone has no lyrics on file to place, so
+                     there is nothing to offer. Cleared rather than left: the
+                     offer must not go on describing the song before it. */
+                  setSung(null);
                   /* Onto the shelf as it passes, so the next film does not
                      send her back to the phone for the same song. */
                   void lengthOf(file)
@@ -4935,6 +5059,25 @@ export default function VideoEditor({
                               underCame: 'made' as const,
                               underName: one.title,
                             }));
+                            /* ── Where the words fall, asked once ──────────
+
+                               Her own song, so the lyrics are on file and the
+                               ladder in `lib/lyrictime.ts` can place them
+                               against the audio. Asked here, at the moment
+                               the song lands, because the answer is kept and
+                               cannot change unless the file does — and
+                               because a member who has just chosen a song is
+                               the one person who will wait a second for it.
+
+                               Not awaited and not allowed to fail the pick:
+                               the song is already under the film, and a film
+                               with no lyric offer on it is the same film. */
+                            setSung(null);
+                            void timeFor(one, blob)
+                              .then((found) => setSung(
+                                found.lines.length ? { lines: asTimed(found.lines), how: found.how } : null,
+                              ))
+                              .catch(() => undefined);
                           })
                           .finally(() => setPulling(null));
                       }}

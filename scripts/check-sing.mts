@@ -307,6 +307,22 @@ ok('the report says which paths are actually real',
 
 const minutes = read('app/lib/server/kitsminutes.ts');
 const sing = read('app/api/voice/sing/route.ts');
+/* ── Where three of these assertions moved to, and why ─────────────────
+
+   On 8 October 2026 a seam went in front of voice conversion: the route asks
+   for a recording in a voice and does not know who answers. See
+   `lib/server/singer.ts`, and Kits' §1.3, which is the clause it exists for.
+
+   Every fact below still holds. Three of them simply live on the other side
+   of the seam now — Kits' download-minutes are Kits' ceiling, so the
+   arithmetic that turns a take's length into minutes moved into the Kits
+   adapter with them. So those assertions read the adapter.
+
+   They are NOT relaxed to let the seam through. "Ask before charging",
+   "write it down only once the audio is in hand" and "count what was
+   downloaded, not what was sent" each still go red if they stop being true,
+   and each was broken on purpose to prove it. */
+const adapter = read('app/lib/server/singerkits.ts');
 
 ok('the plan\u2019s roof is written down as a number, not assumed',
   /KITS_MONTHLY_MINUTES/.test(minutes) && /: 400;/.test(minutes),
@@ -323,8 +339,12 @@ ok('and the function is not reachable from the browser',
   ));
 
 ok('singing asks whether there is room before it charges',
-  before(sing, 'await enough(', 'await charge('),
+  before(sing, 'await who.room(', 'await charge('),
   'a member turned away by a ceiling they cannot see must not also have paid for the turn');
+ok('and the room it asks for is whoever is singing, not one named supplier',
+  /await who\.room\(billed/.test(sing) && !/from '@\/app\/lib\/server\/kitsminutes'/.test(sing),
+  'a seam that only moves audio is cosmetic — what differs between suppliers'
+  + ' is what their work costs and against which ceiling');
 ok('and the refusal says how much is left',
   /left: room\.left/.test(sing) && /\$\{minutes\} minute/.test(minutes),
   '"come back next month" and "try a shorter take" are different answers, and only the number says which');
@@ -336,18 +356,25 @@ ok('and the refusal says how much is left',
    every real position, so the assertion failed rather than passing wrongly.
    That is the good direction to break in, but it had stopped testing the
    order it was written for. A regex for the call keeps it testing that. */
-const noteAt = sing.search(/void note\(/);
+const noteAt = sing.search(/void who\.note\(/);
 ok('the spend is written down only after the audio is in hand',
   noteAt > -1 && noteAt > sing.indexOf('if (!done.ok)'),
   'the minutes burn on download, and a conversion that failed downloaded nothing');
 /* And the number written down is what came back, not the length of the song.
    The two are the same here — one file — and `downloadSeconds` is what makes
    that a stated fact rather than a coincidence the next route can break. */
+/* In the adapter now. `downloadSeconds` is Kits' arithmetic about Kits'
+   ceiling, and it crossed the seam with them rather than staying in a route
+   that is supposed to be able to ask anybody. Asserted in BOTH places it is
+   used, because asking "is there room for this" and writing down "this much
+   was used" have to agree about how much "this" is — two call sites counting
+   differently is a ceiling that drifts. */
 ok('and what is written down is the downloaded length, not the song\u2019s',
-  /const spend = downloadSeconds\(/.test(sing) && /void note\(spend,/.test(sing),
+  (adapter.match(/downloadSeconds\(seconds, 1\)/g) ?? []).length === 2
+  && /void who\.note\(billed/.test(sing),
   'a two-file job downloads twice the audio and must count twice the minutes');
 ok('the bookkeeping cannot fail the member\u2019s request',
-  /void note\(/.test(sing) && /\(\) => undefined,/.test(minutes));
+  /void who\.note\(/.test(sing) && /\(\) => undefined,/.test(minutes));
 /* Matched on the fields rather than on the literal `minutes: {`.
 
    That literal went stale the moment the setup route hoisted the object into

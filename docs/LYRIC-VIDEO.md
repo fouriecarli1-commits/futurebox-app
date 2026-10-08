@@ -82,10 +82,47 @@ three times and all three belong in the sheet.
 
 ---
 
+## The commoner case: a song under a film
+
+Everything above is about a film that *arrived* with its words in it. That is one supplier, one
+shot, and the line times are positions inside one file.
+
+The case this app is actually for is the other one: **a song under a storyboard of scenes.** There
+the line times are positions in the whole assembly, and which shot a line lands on depends on
+everything in front of it.
+
+That is now built too, and it needed no new supplier and no new spending, because the answer was
+already in the app. `app/lib/lyrictime.ts` has answered "where do the words fall" for every screen
+in the app since September, on a ladder of five rungs:
+
+| Rung | What it is | What it costs |
+|---|---|---|
+| **aligned** | the words we already have, placed against the audio by forced alignment | ElevenLabs credits |
+| **heard** | a transcription with a timestamp on every word | ElevenLabs credits |
+| **phrases** | the gaps between the phrases measured in the file | **free, on the phone** |
+| **sung** | the singing plainly starts somewhere after the file does | **free, on the phone** |
+| **spread** | the old even spread, with nothing measured | free, and a guess |
+
+So: put one of her own songs under a film, open the Words bench, and the offer is there — *"Put
+the 51 sung lines on the film."* It cuts the film at every line, hangs each line on the shot that
+starts where it is sung, **keeps every cut she already made**, and leaves the film exactly as long.
+
+**The offer refuses the bottom rung.** On `spread` the words are laid out evenly with nothing
+heard. That is the right thing to *draw* on a screen — a screen has to put the words somewhere —
+and the wrong thing to *cut a film on*, because a cut is not a guess that can be ignored, it is
+fifty-two edits to her work. And the offer says which rung it is standing on, in plain words, so
+somebody deciding whether to press it knows whether the timings were measured or worked out.
+
+`app/lib/lyricfilm.ts` is the arithmetic; `check:lyricfilm` holds it.
+
+---
+
 ## What is **not** built, and what is not known
 
 **Nothing here generates a lyric track.** This reads one if the song arrives with one. A song
-made in this app's own booth has no `tx3g` track, so the button will not appear on it.
+made in this app's own booth has no `tx3g` track, so *that* button will not appear on it — the
+song-under-the-film offer above is the route for those, and it is the better one, because it works
+on a film of many shots rather than one.
 
 **Which suppliers send one back is an open question.** The only thing known for certain is that
 the file Lyria gave her on 8 October had one. Whether Mureka, MiniMax or anyone else returns

@@ -50,8 +50,17 @@ ok('and it is five', /: 5;/.test(/return[^;]*: 5;/.exec(minutes)?.[0] ?? ''),
 ok('and it can be moved without a deploy', /KITS_MINUTES_EACH/.test(minutes));
 
 /* ── It is actually consulted ──────────────────────────────────────────── */
-ok('the singing room passes the member', /await enough\(spend, caller\?\.id \?\? null\)/.test(sing),
+/* Two halves since the seam went in on 8 October 2026 (`lib/server/singer.ts`,
+   and Kits' §1.3 which it exists for): the route hands the member to whoever
+   is singing, and the Kits adapter hands them on to `enough`. Both are
+   asserted, because the member going missing at either step is the same fault
+   — the cap stops doing anything and nothing says so. */
+ok('the singing room passes the member', /await who\.room\(billed, caller\?\.id \?\? null\)/.test(sing),
   'without the owner, enough only checks the workspace roof and the cap does nothing');
+ok('and the Kits adapter passes them on to the ceiling',
+  /await enough\(downloadSeconds\(seconds, 1\), owner \?\? null\)/
+    .test(readFileSync('app/lib/server/singerkits.ts', 'utf8')),
+  'the seam carries the owner precisely so a per-member cap can exist behind it');
 ok('and so does the splitter', /await enough\(spend, owner\)/.test(stems));
 ok('the member’s own share is checked before the workspace roof',
   before(minutes, 'const ownLeft', 'const left = await leftSeconds()'),

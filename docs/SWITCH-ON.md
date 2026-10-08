@@ -340,6 +340,19 @@ saam. Die toep tel elke minuut wat dit teruggee en weier voordat die dak breek
 — 'n weiering met 'n rede is goedkoper as 'n mislukking waarvoor iemand reeds
 betaal het. Verander die getal net as die plan verander.
 
+`SINGER` is optional and names **which supplier sings**. Unset means the
+first one that is configured, which today is Kits and is the right answer —
+there is one. It exists because `app/lib/server/singer.ts` put a seam in
+front of voice conversion, so the room asks for a recording in a voice and
+does not know who answers.
+
+Why that matters more than it sounds: Kits' own terms, §1.3, let them remove
+or replace any voice model, and remove functionality, if they have *"any
+reason to believe"* it may infringe. So the catalogue is not a stable
+dependency, and until the seam existed, losing it meant the feature stopped
+rather than moved. Set this to another supplier's id the day there is one; it
+takes effect without new code being deployed.
+
 `KITS_MINUTES_EACH` is die dak **per lid** per maand, in minute. Onstel
 beteken **5**.
 

@@ -1103,6 +1103,39 @@ export const STRINGS: Dict = {
     en: "It cuts this film at every line, so each one is a shot with its own words. The film stays exactly as long. One press of undo puts it back.",
     af: "Dit sny hierdie film by elke reël, sodat elkeen ’n skoot met sy eie woorde is. Die film bly presies net so lank. Een druk op undo sit dit terug.",
   },
+  /* ── The song under the film, and where its words fall ───────────────
+
+     `lib/lyrictime.ts`'s ladder answers when each line is sung; the room says
+     which rung it is standing on, because a member deciding whether to cut a
+     film on these timings is entitled to know whether they were measured. */
+  "edit.songFound": {
+    en: "The track under this film has words, and we know when each one is sung.",
+    af: "Die liedjie onder hierdie film het woorde, en ons weet wanneer elkeen gesing word.",
+  },
+  "edit.songHang": {
+    en: "Put the {n} sung lines on the film",
+    af: "Sit die {n} gesingde re\u00eble op die film",
+  },
+  "edit.songAligned": {
+    en: "The words were placed against the singing itself, so they are as exact as we can get.",
+    af: "Die woorde is teen die sang self geplaas, so hulle is so presies as wat ons kan kry.",
+  },
+  "edit.songHeard": {
+    en: "The singing was listened to word by word, so these are the moments they were actually sung.",
+    af: "Daar is woord vir woord na die sang geluister, so dit is die oomblikke waarop hulle werklik gesing is.",
+  },
+  "edit.songPhrases": {
+    en: "The gaps between the phrases were measured in the track, so the lines land on the singing rather than being spread out.",
+    af: "Die gapings tussen die frases is in die liedjie gemeet, so die re\u00eble land op die sang eerder as om net uitgesprei te word.",
+  },
+  "edit.songSung": {
+    en: "We can hear roughly where the singing starts and the lines are laid into that part. Check a few and move them if they drift.",
+    af: "Ons kan ongeveer hoor waar die sang begin en die re\u00eble word in daardie deel gel\u00ea. Gaan \u2019n paar na en skuif hulle as hulle wegdryf.",
+  },
+  "edit.songNote": {
+    en: "It cuts the film at every line, so each one is a shot with its own words. Every cut you already made stays a cut, the film stays exactly as long, and one press of undo puts it back.",
+    af: "Dit sny die film by elke re\u00ebl, sodat elkeen \u2019n skoot met sy eie woorde is. Elke sny wat jy al gemaak het bly \u2019n sny, die film bly presies net so lank, en een druk op undo sit dit terug.",
+  },
   "edit.wordsSize": {
     en: "How big the words are",
     af: "Hoe groot die woorde is",

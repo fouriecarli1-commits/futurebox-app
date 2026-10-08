@@ -20,13 +20,19 @@
 
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
-import { configured, convert, namedModels, safeModelId, PHONE_CLEANUP, cleanupFrom, polishFrom } from '@/app/lib/server/kits';
+import { namedModels, PHONE_CLEANUP, cleanupFrom, polishFrom } from '@/app/lib/server/kits';
+/* The seam. The route asks for a recording in a voice and does not know who
+   answers — `lib/server/singer.ts` has the whole argument, and Kits' §1.3 is
+   the clause it exists for. The adapter is imported for its side effect: a
+   supplier enrols itself at the bottom of its own file. */
+import { theSinger } from '@/app/lib/server/singers';
+import type { KitsTuning } from '@/app/lib/server/singerkits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
-import { downloadSeconds, enough, note } from '@/app/lib/server/kitsminutes';
+
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -58,7 +64,8 @@ export async function POST(request: Request): Promise<Response> {
   const flood = refuseIfTooMany('voice-sing', request, GENERATION);
   if (flood) return flood;
 
-  if (!configured()) {
+  const who = theSinger();
+  if (!who) {
     return Response.json(
       { message: 'Singing in your own voice is not switched on for this app yet.' },
       { status: 503 },
@@ -89,7 +96,11 @@ export async function POST(request: Request): Promise<Response> {
   /* Which trained voice. Digits only, and either one she named in the
      environment or one she typed in the room — the room remembers it locally
      because this app cannot list her models (see `namedModels`). */
-  const wanted = safeModelId(form.get('voiceModelId')) ?? safeModelId(namedModels()[0]?.id);
+  /* Presence only. What a usable id LOOKS like is the supplier's answer —
+     Kits' are digits, somebody else's might be words — so the shape is
+     checked inside the supplier and this only asks whether one was given. */
+  const said = String(form.get('voiceModelId') ?? '').trim();
+  const wanted = said || String(namedModels()[0]?.id ?? '').trim();
   if (!wanted) {
     return Response.json(
       {
@@ -123,14 +134,17 @@ export async function POST(request: Request): Promise<Response> {
      `downloadSeconds` rather than left implicit, because the route beside
      this one downloads two and the difference is the whole point of that
      function. */
-  const spend = downloadSeconds(billed, 1);
+  /* Whatever ceiling this supplier has, asked in its own units. Kits counts
+     download-minutes against a monthly four hundred; anything we ran
+     ourselves would count GPU-seconds. The route asks "is there room for this
+     much work" and does not know which. */
   /* The member's own share as well as the workspace's.
 
      Without the owner, `enough` only checks Kits' roof — which one member can
      empty on their own, leaving everybody else with a refusal in a room that
      worked yesterday. Five minutes each is the cap; see `minutesEach`. */
-  const room = await enough(spend, caller?.id ?? null);
-  if (room) {
+  const room = await who.room(billed, caller?.id ?? null);
+  if (!room.ok) {
     /* The code as well as the sentence, so `lib/apierror.ts` can say it in
        Afrikaans — and so "you are out" and "everybody is out" stay different
        answers on the screen as well as in here. */
@@ -187,11 +201,7 @@ export async function POST(request: Request): Promise<Response> {
   const strength = ratio('conversionStrength');
   const modelVolume = ratio('modelVolumeMix');
 
-  const dials = {
-    ...(Number.isFinite(shift) && shift !== 0 ? { pitchShift: shift } : {}),
-    ...(strength === undefined ? {} : { conversionStrength: strength }),
-    ...(modelVolume === undefined ? {} : { modelVolumeMix: modelVolume }),
-  };
+
 
   /* Names, not numbers. A gate is four numbers and a browser that could send
      them could send a threshold of +40 dB; the shapes live on the server and
@@ -202,9 +212,28 @@ export async function POST(request: Request): Promise<Response> {
   const asked = form.has('pre') ? cleanupFrom(named('pre')) : PHONE_CLEANUP;
   const after = form.has('post') ? polishFrom(named('post')) : null;
 
-  const done = await convert(
-    wanted, audio, 'take.wav', Date.now() + WAIT_MS, want, dials, asked, after,
-  );
+  /* ── Across the seam ───────────────────────────────────────────────
+
+     `pitch` and `strength` go on the ask itself, because they are true of
+     singing voice conversion whoever does it. The rest is Kits' own effects
+     chain with Kits' own field names, so it travels tagged as theirs and
+     anybody else drops it rather than half-recognising it. See the note in
+     `lib/server/singer.ts` on why dropping is the safe failure. */
+  const tuning: KitsTuning = {
+    cleanup: asked,
+    polish: after,
+    ...(modelVolume === undefined ? {} : { dials: { modelVolumeMix: modelVolume } }),
+  };
+  const done = await who.sing({
+    voice: wanted,
+    audio,
+    filename: 'take.wav',
+    deadline: Date.now() + WAIT_MS,
+    want,
+    ...(Number.isFinite(shift) && shift !== 0 ? { pitch: shift } : {}),
+    ...(strength === undefined ? {} : { strength }),
+    tuning: { by: who.id, it: tuning },
+  });
   if (!done.ok) {
     await paid.refund();
     return Response.json({ message: done.message }, { status: done.status });
@@ -213,7 +242,7 @@ export async function POST(request: Request): Promise<Response> {
   /* Written down only once the audio is actually in hand, because the minutes
      burn on download and a conversion that failed downloaded nothing. Not
      awaited: the member's file is ready and the bookkeeping must not hold it. */
-  void note(spend, 'sing', caller?.id);
+  void who.note(billed, caller?.id);
 
   return new Response(done.audio, {
     headers: { 'Content-Type': done.type, 'Cache-Control': 'no-store' },

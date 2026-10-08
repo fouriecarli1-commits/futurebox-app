@@ -345,7 +345,7 @@ ok('  and the bench is moved on to a shot that still exists',
   + ' nothing is a room that looks broken');
 
 ok('the words bench is marked when a film arrives with lines in it',
-  /waiting=\{piece && lyrics\[piece\.id\]\?\.length \? 'words' : null\}/.test(room),
+  /waiting=\{\(piece && lyrics\[piece\.id\]\?\.length\) \|\| sungIsGood \? 'words' : null\}/.test(room),
   'the offer lives on one bench and nowhere else, so without a mark on the bar'
   + ' she would only find it by opening a bench she had no reason to open —'
   + ' which is how the blur was built and then not found');

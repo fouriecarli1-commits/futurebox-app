@@ -283,6 +283,8 @@
     "check:textpick": "tsx scripts/check-textpick.mts",
     "check:timedtext": "tsx scripts/check-timedtext.mts",
     "check:lyriccut": "tsx scripts/check-lyriccut.mts",
+    "check:lyricfilm": "tsx scripts/check-lyricfilm.mts",
+    "check:voiceseam": "tsx scripts/check-voiceseam.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

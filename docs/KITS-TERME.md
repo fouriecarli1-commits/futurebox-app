@@ -110,6 +110,19 @@ is yes it is cleaner than ElevenLabs'.
 | Where | What it says | What it means here |
 |---|---|---|
 | **§1.3 Right to Remove** | Arpeggi may remove or replace any model, and remove functionality, if they have *"any reason to believe"* it may infringe | **A voice or instrument a member builds a sound around can disappear.** The catalogue is not a stable dependency and the app should not present it as one |
+
+> **§1.3, answered in code — 8 October 2026.** It presented the catalogue as exactly that
+> stable dependency until today: `/api/voice/sing` imported `convert` from `lib/server/kits.ts`
+> and called it with Kits' own arguments, so losing them meant the feature stopped rather than
+> moved. There is now a seam — `lib/server/singer.ts` — and the room asks for a recording in a
+> voice without knowing who answers. `SINGER` names the supplier, so a second one is switched on
+> without a deploy. `check:voiceseam` proves the interface is not Kits-shaped by writing a second
+> supplier against it and driving it through. Two things the seam also carries, because a seam
+> that only moves audio is cosmetic: the **ceiling** (Kits counts download-minutes; somebody else
+> would count GPU-seconds) and `stillThere(voice)`, which is §1.3 as a method — a voice saved
+> against a member's work can be withdrawn between one session and the next, and a screen that
+> discovers that by failing a conversion is a screen that took the credits first. An outage is
+> deliberately **not** read as a withdrawal.
 | **§1.2** | An irrevocable covenant not to sue over outputs similar or identical to ours, by Arpeggi or by any other Kits user | Same non-uniqueness point as ElevenLabs, plus a waiver of the right to complain |
 | **§2.1** | No unlawful, defamatory, harassing, abusive, fraudulent, racist, hateful, vulgar, cruel or obscene use, *"as determined in Arpeggi's sole discretion"*, and they may send takedown notices to third-party platforms | They can have a member's track pulled off TikTok directly. Our own safety gate is the thing that keeps this theoretical |
 | **§3.5** | We indemnify them for our breach, our violation of third-party rights, and our use of the model | Same shape as the ElevenLabs and OEM indemnities. Three suppliers, three indemnities, one uploaded song |

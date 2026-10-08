@@ -1207,6 +1207,19 @@ jobs:
       - name: A film that arrived with its lyrics is cut one shot per line
         run: npm run check:lyriccut
 
+      # And the commoner case: a song under a film, on the FILM's clock,
+      # over shots she already cut. Every cut she made must still be a cut
+      # and the film must be exactly as long.
+      - name: A song under a film is cut one shot per sung line
+        run: npm run check:lyricfilm
+
+      # The seam in front of voice conversion, which exists because Kits'
+      # own terms let them withdraw any voice at any time. Proved by the
+      # check WRITING a second supplier against the interface: if it were
+      # secretly Kits-shaped, that stand-in could not be written.
+      - name: The room asks for a voice and does not know who answers
+        run: npm run check:voiceseam
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
