@@ -1157,6 +1157,13 @@ jobs:
       - name: The Collab Radar keeps her own list and scores only what it knows
         run: npm run check:radar
 
+      # Which rooms a child could be left alone in is a measurement, not an
+      # opinion: `charge(` in a handler is what makes a route paid, and each
+      # room is followed through its own imports. The figures the write-up
+      # rests on fail here rather than going quietly out of date.
+      - name: Which rooms can spend a credit is still what the write-up says
+        run: npm run check:kidsafe
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

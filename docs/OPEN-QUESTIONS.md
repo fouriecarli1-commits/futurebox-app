@@ -6731,3 +6731,68 @@ nie 'n rigtingverandering nie.
 maand die regte grens is — dit is `STALE_DAYS` in `app/lib/habits.ts`, een
 nommer, en ek het dit so gekies omdat dit dieselfde venster is as wat die res
 van die lêer gebruik.
+
+
+---
+
+## 'n Kindervriendelike weergawe: wat die meting sê — 8 Oktober 2026
+
+**Jou lys, 7 Oktober:** *"Dalk 'n kindervriendelike weergawe."*
+
+Die ooglopende bou is 'n skakelaar wat die kamers wegsteek waarin 'n kind nie
+hoort nie. Voor ek dit skryf, is die vraag **watter** kamers dit is — en dit
+is 'n meting, nie 'n mening nie. `npm run check:kidsafe` neem dit, en die
+syfers hieronder kom daaruit eerder as uit my kop.
+
+**Wat gemeet word:** elke roete onder `app/api` waarvan die hanteerder
+`charge` roep (dit is wat 'n roete betaald maak — `check:paidcall` lees die
+kode al so, vir dieselfde rede), en dan watter kamer by een kan uitkom. Die
+kamer-na-komponent-kaart kom uit `page.tsx` se eie reëls, en elke komponent
+word deur sy eie invoere gevolg.
+
+**Die eerste weergawe van die meting was stukkend, en dit is die moeite werd
+om te sê hoe.** Dit het gerapporteer dat **al vyftien** kamers kan bestee —
+want `app/lib/cloud.ts` het 'n *kommentaar* wat `/api/music` noem, en
+`cloud.ts` word deur alles ingevoer. Vyftien uit vyftien is die lesing wat 'n
+stukkende instrument gee. Die regte weergawe stroop eers die kommentaar, met
+die repo se eie `withoutComments`.
+
+**Wat die regte meting sê:**
+
+- **Drie kamers kan glad nie 'n krediet bestee nie:** die kunsmark, die
+  saamwerk-kamer en die hook-voer.
+- **Die prent-editor bestee op presies een ding:** om die prent van die
+  toestel af te neem (`/api/post/export`). Elke stuk gereedskap daarin loop op
+  die toestel en is verniet.
+- Elke ander kamer kan bestee, van een roete (die klank-afrigter) tot veertien
+  (Maak 'n liedjie).
+
+**En hier is die ding wat die hele ontwerp verander: die kamers wat VERNIET is,
+is nie die kamers wat VEILIG is nie.** Die saamwerk-kamer kos niks en sit 'n
+kind in 'n gesprek met vreemdelinge. Die kunsmark kos geen krediete nie en is
+'n winkel. Van die vier is die **prent-editor** die enigste een met geen ander
+mense in nie en geen geld in nie sodra die aflaai-deur toe is — en dit is per
+toeval die kamer waarin 'n kind eintlik wil wees.
+
+**Dus is 'n kindervriendelike weergawe nie "steek party kamers weg" nie. Dit is
+een kamer met een deur toe.** Dit is 'n klein ding om te bou:
+
+1. 'n Skakelaar in jou rekening, op die toestel gehou, met 'n woord wat 'sê
+   hoe 'n grootmens dit afsit.
+2. Die deur wys net die prent-editor.
+3. `goToRoom` weier enige ander kamer — daardie funksie se eie kommentaar sê
+   dit is die enigste plek waar 'n kamer gekies word, dus is daar een punt om
+   te bewaak.
+4. Die kopiloot af (dit is 'n oop gesprek met 'n model) en die aflaai-knoppie
+   af.
+
+**Hoekom ek dit nie sommer gebou het nie:** jy het "dalk" geskryf, en dit is 'n
+besluit oor jou produk eerder as oor die kode — wie dit is vir, wat dit kos,
+of 'n kind se prente óóit van die toestel af mag, en of dit op dieselfde
+rekening of 'n ander een sit. Sê die woord en dit is 'n aand se werk.
+
+**Wat in die tussentyd vasgehou word:** `check:kidsafe` hou die syfers
+hierbo vas. As iemand 'n betaalde deur by die prent-editor voeg, of by een van
+die drie verniet kamers, word die toets rooi — en hierdie bladsy is hardop
+verkeerd eerder as stil verkeerd. Getoets deur een by die prent-editor te
+voeg: dit word rooi en noem die roete.
