@@ -619,7 +619,19 @@ function backdrop(
  * Three lines at most. A fourth means somebody wrote a paragraph, and cutting
  * it off is a clearer signal than shrinking the type until it is unreadable.
  */
-const CAPTION_LINES = 3;
+/**
+ * How many lines a caption may run to, and how far apart they sit.
+ *
+ * Exported because `check:filmstart` has to bound how TALL a template's
+ * caption can become before it decides the caption clears the platform's
+ * furniture, and a 3 copied into the check is a bound that stops being true
+ * the day this becomes a 4 — silently, and in the direction of a title the
+ * app suggested coming out behind a username.
+ */
+export const CAPTION_LINES = 3;
+
+/** The baseline step, as a multiple of the type size. */
+export const CAPTION_STEP = 1.28;
 
 function wrapped(
   context: CanvasRenderingContext2D,
@@ -738,7 +750,7 @@ export function drawCaption(
   context.textAlign = 'center';
   context.textBaseline = 'alphabetic';
 
-  const step = Math.round(size * 1.28);
+  const step = Math.round(size * CAPTION_STEP);
   const pad = Math.round(size * 0.42);
   /* Clear of the bottom eighth, which is where every app that plays these
      puts its own furniture — the caption, the handle, the progress bar. A

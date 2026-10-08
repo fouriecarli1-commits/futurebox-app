@@ -73,7 +73,7 @@ figures below replaced a set that had gone wrong in four places at once — one
 of which said "44 checks, of which 82 are browser probes", which cannot be
 true of anything.
 
-- **334 checks** wired into CI, of which **137 are browser probes** that drive
+- **335 checks** wired into CI, of which **137 are browser probes** that drive
   the real app rather than reading the code. All pass. (Was 44 and 82.)
 
   *This figure went from 264 to 265 while it was being written down, because

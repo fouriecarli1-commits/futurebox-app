@@ -2672,6 +2672,88 @@ try {
     }
   }
 
+  /* ── Somewhere to start, which the room with footage in it needed ────
+
+     Carli's list, 7 October 2026: *"Video, etc templates."*
+
+     `check:filmstart` holds the arithmetic — nothing lands under the
+     platform's furniture, nothing is timed past the end of its own shot,
+     and a caption she typed is never replaced. What a browser has to
+     answer is that pressing one changes the FILM rather than a label.
+
+     Walked last of everything at this window, and that is not tidiness.
+     The press re-dresses the whole film — a new shape, a look on every
+     shot, words over the first one — and every assertion above this is
+     about a tall film with the mono look and her own caption on it. Run
+     in the middle, this press is a walk that quietly re-dresses the room
+     for everything after it, and then the next real failure anywhere
+     below is about this press rather than about the thing it names. It
+     cost one failure to learn: `wordsBox` stayed square from the press,
+     and the band-corner assertion two hundred lines further on went from
+     green to "was 0px and is 0px". */
+  await bench('film');
+  const starts = p.locator('[data-editorstart]');
+  check('the room offers somewhere to start, now that there is footage in it',
+    (await starts.count()) >= 4,
+    `${await starts.count()} — a cutting room with a clip in it is five`
+    + ' decisions before the first cut, and the person who came to post about'
+    + ' Friday is still choosing a transition');
+
+  const songStart = p.locator('[data-editorstart="song"]');
+  if (await songStart.count()) {
+    /* The first block, and its caption emptied, because that is the one
+       state a starting point is for: footage in and none of the five
+       decisions made. Everything above this walk has already typed over
+       this shot, and a template leaving her words alone — which is the
+       assertion below — would make the one above it untestable. */
+    await p.locator('[data-editorblock]').first().click();
+    await p.waitForTimeout(400);
+    await bench('words');
+    await p.locator('[data-editorwords]').fill('');
+    await p.waitForTimeout(400);
+    /* Its own locator: the one three hundred lines up is inside the block
+       that brought the clip in, and a walk that reaches into another
+       block's scope is a walk that stops running when that block moves. */
+    const glass = p.locator('[data-editorviewer]');
+    const lookWas = await glass.evaluate((el) => el.style.filter || '');
+
+    await bench('film');
+    await songStart.click();
+    await p.waitForTimeout(700);
+    check('  and pressing one really sets the shape',
+      (await p.locator('[data-editorshape="square"]').getAttribute('aria-pressed')) === 'true',
+      'square was what that one chooses — a starting point that sets the words'
+      + ' and not the shape is the half that looks like it worked');
+
+    const lookNow = await glass.evaluate((el) => el.style.filter || '');
+    check('    and the look, on the shot rather than in a label',
+      lookNow !== lookWas && /brightness|contrast|saturate|grayscale/.test(lookNow),
+      `the viewer's filter was "${lookWas}" and is "${lookNow}" — a filter that`
+      + ' has not moved is a look written into the edit and drawn by nobody');
+
+    await bench('words');
+    const caption = p.locator('[data-editorwords]');
+    const wrote = ((await caption.inputValue().catch(() => '')) || '').trim();
+    check('    and really writes the title over the first shot',
+      wrote.length > 0 && !wrote.includes('film.tpl'),
+      `"${wrote}" — empty is a template that dressed the film and said nothing`
+      + ' on it; a key is the app writing its own dictionary onto her film');
+
+    /* ── Her words beat ours, pressed rather than reasoned about ────── */
+    await caption.fill('My eie woorde');
+    await p.waitForTimeout(400);
+    await bench('film');
+    await p.locator('[data-editorstart="reel"]').click();
+    await p.waitForTimeout(700);
+    await bench('words');
+    check('    and a caption she typed is left where it is',
+      ((await caption.inputValue().catch(() => '')) || '').trim() === 'My eie woorde',
+      `"${await caption.inputValue().catch(() => '')}" — the shots are hers and`
+      + ' anything written over them was typed while looking at them, so a'
+      + ' starting point that wiped a caption is the app overruling the one'
+      + ' part of the film it did not make');
+  }
+
   /* ── And then the same room on a phone ────────────────────────────────
 
      Everything above runs at 1280x900, which is right for most of it. Three

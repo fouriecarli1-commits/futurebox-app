@@ -1143,6 +1143,13 @@ jobs:
       - name: No template puts its words where the platform prints its own
         run: npm run check:posttemplates
 
+      # The same rule in the cutting room, where a template cannot make the
+      # film and so dresses the one she brought in. Measured at three lines,
+      # which is the renderer's own ceiling, because the Afrikaans of the
+      # same sentence is longer nearly every time.
+      - name: No starting point for a film puts its words under the furniture
+        run: npm run check:filmstart
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

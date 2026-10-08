@@ -57,6 +57,7 @@ import DeskSheet from './BoothCard';
 import KeepVideo from './KeepVideo';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import { BAR, BAR_TIGHT, ROW2, ROW3, ROW5, SLIDE } from '../lib/benchbar';
+import { STARTS, dressed } from '../lib/filmstart';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
@@ -5209,6 +5210,66 @@ export default function VideoEditor({
 
         {bench === 'film' && (
           <div className="space-y-4">
+            {/* ── Somewhere to start ────────────────────────────
+
+                Carli's list, 7 October 2026: *"Video, etc templates."*
+
+                On the film bench and above the shape, because that is the
+                order the decisions happen in: a starting point CHOOSES the
+                shape, so offering it under one is offering her a shape to
+                set twice. The same reasoning that moved cropping off the
+                picture bench and onto the frame — where a tool goes is
+                about what the person is doing, not about what the code
+                does.
+
+                It needs a shot in the room and says so rather than offering
+                a press that silently does nothing: nothing in this app can
+                film her show for her, and `lib/filmstart.ts` says why
+                pretending otherwise would be worse than no templates. */}
+            <div className="space-y-1.5">
+              <span className="text-sm text-zinc-400">{t('edit.start', 'Start from something')}</span>
+              {edit.pieces.length === 0 ? (
+                <p className="text-[12px] leading-relaxed text-zinc-500">
+                  {t(
+                    'edit.startEmpty',
+                    'Bring a clip in first. A starting point dresses your own film — one look across every shot, how they come in after one another, a title and a sign-off — it cannot film it for you.',
+                  )}
+                </p>
+              ) : (
+                <>
+                  <div className={ROW2}>
+                    {STARTS.map((one) => (
+                      <button
+                        key={one.id}
+                        type="button"
+                        data-editorstart={one.id}
+                        onClick={() => commit((was) => ({
+                          ...was,
+                          shape: one.shape,
+                          pieces: dressed(one, was.pieces, t),
+                        }))}
+                        className={`${BAR} border`}
+                        style={{
+                          borderColor: 'rgba(16,185,129,0.45)',
+                          background: 'rgba(52,211,153,0.18)',
+                          color: INK,
+                          boxShadow: RAISE,
+                        }}
+                      >
+                        {t(one.name[0], one.name[1])}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[12px] leading-relaxed text-zinc-500">
+                    {t(
+                      'edit.startWhy',
+                      'Each one sets the shape, one look across every shot, how the shots come in after one another, and a title and a sign-off. Change every part of it afterwards, and the arrows take it back. Words you have already typed are left alone.',
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
+
             {/* ── The shape, which changes what you are looking at ────── */}
             <div className="space-y-1.5">
               <span className="text-sm text-zinc-400">{t('edit.shape', 'Shape')}</span>

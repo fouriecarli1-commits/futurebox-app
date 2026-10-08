@@ -1667,6 +1667,35 @@ export const STRINGS: Dict = {
   "post.templatesWhy": { en: "A shape, a look and the words already in place, for the thing you are actually posting. Change every part of it afterwards \u2014 none of it is locked.", af: "\u2019n Vorm, \u2019n voorkoms en die woorde reeds in plek, vir die ding wat jy werklik plaas. Verander daarna elke deel daarvan \u2014 niks daarvan is vas nie." },
   "post.tplShow": { en: "A show on Friday", af: "\u2019n Vertoning Vrydag" },
   "post.tplShowWhat": { en: "The date and the place, big, over a photograph.", af: "Die datum en die plek, groot, oor \u2019n foto." },
+  /* ── Somewhere to start, in the cutting room ───────────────────
+
+     Carli's list, 7 October 2026: *"Video, etc templates."* The photo ones
+     are above; these dress a film she already has — a look, a join, a title
+     and a sign-off — because nothing in this app can film her show for her.
+     `lib/filmstart.ts` says why that distinction is the whole design. */
+  "edit.start": { en: "Start from something", af: "Begin met iets" },
+  "edit.startEmpty": { en: "Bring a clip in first. A starting point dresses your own film — one look across every shot, how they come in after one another, a title and a sign-off — it cannot film it for you.", af: "Bring eers ’n skoot in. ’n Beginpunt klee jou eie film aan — een voorkoms oor elke skoot, hoe hulle na mekaar inkom, ’n titel en ’n afsluiting — dit kan dit nie vir jou film nie." },
+  "edit.startWhy": { en: "Each one sets the shape, one look across every shot, how the shots come in after one another, and a title and a sign-off. Change every part of it afterwards, and the arrows take it back. Words you have already typed are left alone.", af: "Elkeen stel die vorm, een voorkoms oor elke skoot, hoe die skote na mekaar inkom, en ’n titel en ’n afsluiting. Verander elke deel daarvan daarna, en die pyltjies neem dit terug. Woorde wat jy reeds getik het, word uitgelos." },
+  "film.tplShow": { en: "A show is coming", af: "’n Vertoning kom" },
+  "film.tplShowWhat": { en: "Through black between the shots, the date up front and the venue at the end.", af: "Deur swart tussen die skote, die datum vooraan en die plek aan die einde." },
+  "film.tplShowTitle": { en: "FRIDAY 8PM", af: "VRYDAG 20:00" },
+  "film.tplShowEnd": { en: "Aandklas, Stellenbosch", af: "Aandklas, Stellenbosch" },
+  "film.tplReel": { en: "A reel of the work", af: "’n Rol van die werk" },
+  "film.tplReelWhat": { en: "Straight cuts, one look across everything, a name at the start.", af: "Reguit snye, een voorkoms oor alles, ’n naam aan die begin." },
+  "film.tplReelTitle": { en: "Selected work", af: "Gekose werk" },
+  "film.tplBehind": { en: "Behind the scenes", af: "Agter die skerms" },
+  "film.tplBehindWhat": { en: "Warm, shots flowing into one another, one line low down.", af: "Warm, skote wat in mekaar vloei, een reël laag onder." },
+  "film.tplBehindTitle": { en: "Day three. Still going.", af: "Dag drie. Nog aan die gang." },
+  "film.tplSong": { en: "A song is out", af: "’n Liedjie is uit" },
+  "film.tplSongWhat": { en: "Square, bright, with a flash on every cut.", af: "Vierkantig, helder, met ’n blits op elke sny." },
+  "film.tplSongTitle": { en: "OUT NOW", af: "NOU UIT" },
+  "film.tplSongEnd": { en: "Everywhere you listen", af: "Oral waar jy luister" },
+  "film.tplScreen": { en: "For a big screen", af: "Vir ’n groot skerm" },
+  "film.tplScreenWhat": { en: "The wide shape, dissolves, and the name at the end.", af: "Die breë vorm, oorvloeie, en die naam aan die einde." },
+  "film.tplScreenEnd": { en: "FutureBox Studio", af: "FutureBox Studio" },
+  "film.tplThanks": { en: "Thank you", af: "Dankie" },
+  "film.tplThanksWhat": { en: "After the show, after the release, after anything.", af: "Na die vertoning, na die vrystelling, na enigiets." },
+  "film.tplThanksEnd": { en: "DANKIE", af: "DANKIE" },
   "post.tplShowOne": { en: "FRIDAY 8PM", af: "VRYDAG 20:00" },
   "post.tplShowTwo": { en: "Aandklas, Stellenbosch", af: "Aandklas, Stellenbosch" },
   "post.tplSong": { en: "A song is out", af: "\u2019n Liedjie is uit" },
