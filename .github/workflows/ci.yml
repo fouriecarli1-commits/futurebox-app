@@ -1220,6 +1220,12 @@ jobs:
       - name: The room asks for a voice and does not know who answers
         run: npm run check:voiceseam
 
+      # Whose singing voice is whose. Kits cannot train over its API, so
+      # every voice lives on one shared account — and the picker drew all of
+      # them for everybody, so any member could sing in any member's clone.
+      - name: A singing voice belongs to one member
+        run: npm run check:ownvoices
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

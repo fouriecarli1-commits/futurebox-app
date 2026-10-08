@@ -26,6 +26,7 @@ import { namedModels, PHONE_CLEANUP, cleanupFrom, polishFrom } from '@/app/lib/s
    the clause it exists for. The adapter is imported for its side effect: a
    supplier enrols itself at the bottom of its own file. */
 import { theSinger } from '@/app/lib/server/singers';
+import { whose } from '@/app/lib/server/ownvoices';
 import type { KitsTuning } from '@/app/lib/server/singerkits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS, perMinute } from '@/app/lib/credits';
@@ -119,6 +120,39 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(
       { message: 'Singing a take in another voice needs a paid plan.', needsPlan: true },
       { status: 402 },
+    );
+  }
+
+  /* ── Whose voice this is ───────────────────────────────────────────
+
+     Kits cannot create a voice over its API, so every singing voice is
+     trained by hand on one shared account — and until this check existed,
+     any member could sing in any member's cloned voice simply by sending
+     the number. A voice is the one thing in this app that identifies a
+     person, and `/api/voice/clone` already says what that means: a clone of
+     somebody made without them is impersonation whatever it was intended
+     for. That sentence had nothing enforcing it on this side.
+
+     Before the credits, like every other refusal here. And an unreadable
+     table refuses rather than opens — `lib/server/ownvoices.ts` carries why
+     that trade is taken and what it costs. */
+  const belongs = await whose(wanted, caller?.id ?? null);
+  if (belongs.kind === 'theirs') {
+    return Response.json(
+      {
+        error: 'voice_not_yours',
+        message: 'That voice belongs to somebody else. Pick one of your own, or one from the catalogue.',
+      },
+      { status: 403 },
+    );
+  }
+  if (belongs.kind === 'unknown') {
+    return Response.json(
+      {
+        error: 'voice_unchecked',
+        message: 'We could not check who that voice belongs to. Try again in a moment.',
+      },
+      { status: 503 },
     );
   }
 

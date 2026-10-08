@@ -237,8 +237,13 @@ ok(
    left. This assertion accepted no argument at all and went red the day the
    per-member cap landed, which is a check calling an improvement a
    regression. It asks for the shape now and this asks for the meaning. */
+/* Matched on the member rather than on the whole argument list. The call
+   grew a SECOND argument on 8 October 2026 — whether the caller runs the
+   place, so the voice picker can show them the voices not yet given out —
+   and an exact-list match called that a regression too. The claim is about
+   the member being passed, so that is what is read. */
 ok('and told it about the member asking, because the cap is five minutes each',
-  /singing\(caller\?\.id \?\? null\)/.test(state),
+  /singing\(caller\?\.id \?\? null[,)]/.test(state),
   'a room told the account-wide answer offers the button to somebody with no minutes left');
 
 /* ── 5. Make a song, the other half of "in Pro Booth en in Make a song" ── */

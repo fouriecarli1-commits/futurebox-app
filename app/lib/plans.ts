@@ -599,6 +599,39 @@ export interface PodcastCaps {
   readonly publish: boolean;
 }
 
+/**
+ * How many SINGING voices of her own a tier may hold.
+ *
+ * Carli, 8 October 2026, choosing the numbers: *"Free 0 / Maker 1 / Studio 2
+ * / Label 5."*
+ *
+ * ── Why this is a different number from `PODCAST_CAPS.voices` ────────────
+ *
+ * They are different things with the same English word, and running them
+ * together would price one of them wrongly.
+ *
+ * `PODCAST_CAPS.voices` is a SPEAKING voice, cloned through ElevenLabs' API.
+ * Those slots come inside a subscription we already pay for every month, so
+ * using more of them costs nothing extra — which is why that one is 1/3/10
+ * and should stay generous. Holding back a slot already bought is waste.
+ *
+ * This one is a SINGING voice, and Kits cannot create one over its API —
+ * measured 9 September 2026, `POST /voice-models` answers 404. So every one
+ * of these is an afternoon of somebody's actual work on kits.ai: a dataset
+ * gathered, uploaded, trained, listened to. The cost is real, it is hers,
+ * and it does not scale by paying a bigger subscription. A small number is
+ * the honest one.
+ *
+ * Zero on free is not withholding the feature. There is nothing to hold back
+ * on a plan where nobody is going to spend an afternoon training a voice.
+ */
+export const VOICE_CAPS: Record<Tier, number> = {
+  free: 0,
+  maker: 1,
+  studio: 2,
+  label: 5,
+};
+
 export const PODCAST_CAPS: Record<Tier, PodcastCaps> = {
   free: { voices: 0, speakChars: 400, speakPerDay: 3, clean: false, publish: false },
   maker: { voices: 1, speakChars: 3_000, speakPerDay: 20, clean: true, publish: true },

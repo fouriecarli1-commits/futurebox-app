@@ -151,6 +151,90 @@ export function maskOnto(
 export const SOFTNESS = 1.6;
 
 /**
+ * Where "probably her" becomes "her", and "probably not" becomes "not".
+ *
+ * ── The fault this fixes ─────────────────────────────────────────────────
+ *
+ * Carli, 8 October 2026, with a photograph of her own face cut out: *"Dit is
+ * hoe die bg remover nou lyk."* The checkerboard was showing THROUGH her.
+ * Her face was a ghost of itself and everything below her chin had gone.
+ *
+ * The model does not answer "person" or "background". It answers a
+ * PROBABILITY, pixel by pixel, and this file was passing that straight
+ * through as the alpha channel. So a pixel the model was sixty per cent sure
+ * about came out sixty per cent opaque — and a face the model is unsure
+ * about does not come out wrong, it comes out see-through. Where it was less
+ * sure still, her shoulders faded to nothing without ever being decided
+ * against.
+ *
+ * That is a probability map being used as a picture. They are not the same
+ * thing. A cut-out has to make up its mind.
+ *
+ * ── Why a band and not a single threshold ────────────────────────────────
+ *
+ * One number would give a hard edge, and a hard edge on a 256-pixel mask
+ * blown up to a phone photograph is the staircase this file already spent
+ * two rounds softening out. So: everything the model is more than `SURE`
+ * about is fully her, everything under `UNSURE` is fully gone, and the
+ * narrow band between them keeps its gradient and is what the feather then
+ * softens.
+ *
+ * The band sits a little below the middle rather than around it. A model
+ * that is unsure tends to be unsure INWARDS — hair, a shoulder against a
+ * similar colour — so a centred band eats the person at exactly the places
+ * somebody looks. Losing a little background is invisible; losing a
+ * shoulder is what she photographed.
+ */
+export const UNSURE = 0.30;
+export const SURE = 0.62;
+
+/**
+ * The mask with its mind made up, at its own size.
+ *
+ * Separate and exported so it can be proved on a mask made by hand, which is
+ * the only way to test this without depending on the model's opinion of a
+ * particular photograph — the same reason `maskOnto` is exported.
+ *
+ * Returns a NEW canvas and never touches what it was given: the engine reuses
+ * its own canvas for the next picture, and writing into it would corrupt a
+ * mask somebody else is still holding.
+ */
+export function decided(
+  mask: CanvasImageSource,
+  unsure: number = UNSURE,
+  sure: number = SURE,
+): HTMLCanvasElement {
+  const wide = Math.max(1, (mask as { width?: number }).width ?? 1);
+  const tall = Math.max(1, (mask as { height?: number }).height ?? 1);
+  const out = document.createElement('canvas');
+  out.width = wide;
+  out.height = tall;
+  const ctx = out.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return out;
+  ctx.drawImage(mask, 0, 0);
+
+  /* A few hundred pixels square, so reading every one of them costs nothing
+     — unlike the picture itself, which is why `maskOnto` composites instead
+     of looping. This is the one place a loop is the cheaper answer. */
+  const got = ctx.getImageData(0, 0, wide, tall);
+  const px = got.data;
+  const lo = Math.max(0, Math.min(1, unsure)) * 255;
+  const hi = Math.max(lo + 1, Math.min(1, sure) * 255);
+  const span = hi - lo;
+  for (let i = 0; i < px.length; i += 4) {
+    /* The alpha channel is what `destination-in` reads and what MediaPipe
+       puts its answer in — the same channel its own documented example
+       composites against. The colour channels are left alone: nothing
+       downstream looks at them, and a mask that is white where it is opaque
+       is easier to look at when something goes wrong. */
+    const was = px[i + 3];
+    px[i + 3] = was <= lo ? 0 : was >= hi ? 255 : Math.round(((was - lo) / span) * 255);
+  }
+  ctx.putImageData(got, 0, 0);
+  return out;
+}
+
+/**
  * How soft the edge is, as a choice rather than a guess.
  *
  * Carli photographed the fault and I cannot photograph the fix: how an edge
@@ -223,7 +307,12 @@ export function feathered(
   const enlarging = width > was || height > tall;
   const amount = enlarging ? Math.max(0, softness) : 0;
   if (amount > 0.05) near.filter = `blur(${amount.toFixed(2)}px)`;
-  near.drawImage(mask, 0, 0);
+  /* Made up its mind BEFORE it is softened, and that order is the whole
+     point. Deciding after the blur would throw away the gradient the blur
+     just made and put the staircase back; deciding first leaves a mask that
+     is solid in the middle, empty outside, and gradual only across the band
+     — which is exactly the edge the feather is for. */
+  near.drawImage(decided(mask), 0, 0);
   near.filter = 'none';
 
   /* ── Grown in steps, not in one jump ─────────────────────────────────

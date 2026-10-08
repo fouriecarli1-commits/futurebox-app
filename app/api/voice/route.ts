@@ -15,6 +15,8 @@ import {
 } from '@/app/lib/server/kits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { mineSeconds, minutesEach } from '@/app/lib/server/kitsminutes';
+import { mine as myVoices } from '@/app/lib/server/ownvoices';
+import { isOwnerEmail } from '@/app/lib/server/owners';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,10 +31,19 @@ export const maxDuration = 30;
  * first place. Only whether the key is set and the names of the models — never
  * the key, and never the variable's name, which `check:security` scans for.
  */
-async function singing(owner?: string | null): Promise<{
+async function singing(owner?: string | null, runsThePlace = false): Promise<{
   configured: boolean;
   models: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
   stock: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
+  /**
+   * Whether who-owns-what could be read at all.
+   *
+   * False means the table did not answer, and `models` is therefore empty
+   * because it closed rather than opened. A screen can then say "could not
+   * check" instead of drawing nothing, which reads as "you have none" and
+   * sends somebody off to train a voice they already have.
+   */
+  voicesKnown: boolean;
   /**
    * How much singing this member has left this month, in whole minutes.
    *
@@ -72,17 +83,58 @@ async function singing(owner?: string | null): Promise<{
      whole catalogue — which is how a stranger's voice nearly ended up at the
      top of a list labelled "your trained voices". */
   if (!singConfigured()) {
-    return { configured: false, models: [], stock: [], minutesLeft: null, minutesEach: minutesEach() };
+    return {
+      configured: false, models: [], stock: [], voicesKnown: true,
+      minutesLeft: null, minutesEach: minutesEach(),
+    };
   }
-  const [mine, theirs, used] = await Promise.all([
+  const [trained, theirs, used, held] = await Promise.all([
     singModels(),
     singCatalogue(),
     owner ? mineSeconds(owner) : Promise.resolve(null),
+    owner ? myVoices(owner) : Promise.resolve([] as const),
   ]);
+
+  /* ── Only the ones that are actually yours ─────────────────────────────
+
+     Kits cannot create a voice over its API, so every trained voice lives on
+     one shared account. `myModels=true` already stops Kits' whole catalogue
+     appearing under "your trained voices" — but it does not stop ANOTHER
+     MEMBER'S cloned voice appearing there, because on a shared account every
+     member's voice is one of "ours".
+
+     So the list is now what this member has been given, by id, out of
+     `voice_owners`. Everyone still gets the stock catalogue, which is what
+     somebody with no voice of their own sings in.
+
+     ── Why closed by default, and why now is the moment ─────────────────
+
+     An unclaimed trained voice could have been shown to everybody — it
+     belongs to nobody yet, and `whose()` treats it as open. That leaves a
+     window: between training a voice for somebody and giving it to them, it
+     is visible to the whole app. Small, and exactly long enough to be the
+     one that matters, because that window is widest the day a voice is new.
+
+     Closing it costs nothing today. The account has had no trained voices on
+     it since it was measured on 9 September 2026, and Carli confirmed on
+     8 October that she has still not cloned a voice. There is no list to
+     break. A default that is safe now and would have been awkward later is
+     one worth setting while it is free.
+
+     The owner of the place sees the unclaimed ones, because somebody has to
+     be able to see a voice in order to give it to anybody. */
+  const ours = new Set((held ?? []).map((one) => one.voiceId));
+  const yours = trained.filter((one) => ours.has(one.id));
+  const toGive = runsThePlace ? trained.filter((one) => !ours.has(one.id)) : [];
+
   return {
     configured: true,
-    models: mine,
+    models: [...yours, ...toGive],
     stock: theirs,
+    /* Null when the table could not be read, so a screen can say "could not
+       check" instead of drawing an empty list that looks like "you have
+       none". `ownvoices.ts` has the note on why a failed read closes. */
+    voicesKnown: held !== null,
     /* Floored, so it never rounds up into minutes that are not there: a
        screen saying one minute left when there are forty seconds is a screen
        that sets somebody up to be refused. */
@@ -120,6 +172,6 @@ export async function GET(request: Request): Promise<Response> {
     caps,
     mine,
     stock: await stockVoices(),
-    singing: await singing(caller?.id ?? null),
+    singing: await singing(caller?.id ?? null, !!caller?.email && isOwnerEmail(caller.email)),
   });
 }

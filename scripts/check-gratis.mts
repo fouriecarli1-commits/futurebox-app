@@ -113,6 +113,12 @@ function imports(src: string): string[] {
  * stops describing the app.
  */
 const FREE: Record<string, string> = {
+  'app/api/voice/own/route.ts':
+    'says which member a trained singing voice belongs to. It reads Kits\''
+    + ' list of models to check the number is one of ours and then writes a'
+    + ' row — no conversion, no audio, nothing generated. Owner-only, so it'
+    + ' is not a member action at all, and the thing it guards (one member'
+    + ' singing in another member\'s cloned voice) is the opposite of a bill',
   'app/api/watch/route.ts':
     'the health letter. It runs on a secret, for the owner, and it asks the'
     + ' suppliers what they have spent rather than spending anything',

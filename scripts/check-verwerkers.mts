@@ -213,6 +213,11 @@ const KEPT: Record<string, string> = {
      expects "signed in with TONE3000" to mean unless the page says so. */
   tone3000_pending: 'TONE3000',
   tone3000_tokens: 'TONE3000',
+  /* Not a recording and not a sound — a number and an account id. But it
+     is still a row that says something about a person, and the one it says
+     is "this voice is this member's", which is the whole reason the row is
+     worth having and the whole reason the page has to mention it. */
+  voice_owners: 'singing voice is yours',
   cast_members: 'photograph',
   pairs: 'work together',
   pair_links: 'work together',

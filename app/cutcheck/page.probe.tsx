@@ -24,7 +24,9 @@
  * for the walk to read.
  */
 import React, { useEffect, useState } from 'react';
-import { EDGES, SOFTNESS, blurBehind, feathered, maskOnto, shareKept } from '../lib/cutout';
+import {
+  EDGES, SOFTNESS, SURE, UNSURE, blurBehind, decided, feathered, maskOnto, shareKept,
+} from '../lib/cutout';
 
 const SIDE = 200;
 
@@ -239,7 +241,69 @@ export default function CutCheck(): React.ReactElement {
     const sharpSide = spread(4, SIDE / 2 - 12);
     const softSide = spread(SIDE / 2 + 12, SIDE - 4);
 
+    /* ── A mask that has not made its mind up ─────────────────────────
+
+        Carli, 8 October 2026, with her own face cut out: *"Dit is hoe die bg
+        remover nou lyk."* The checkerboard was showing THROUGH her.
+
+        The model answers a PROBABILITY, not a yes or a no, and this file was
+        handing that straight to the alpha channel — so a pixel it was sixty
+        per cent sure about came out sixty per cent opaque. A face it is
+        unsure about does not come out wrong; it comes out see-through.
+
+        So: a mask whose middle is 60% sure, whose outside is 20% sure, and a
+        ramp between them. Both of the wrong answers have to be impossible to
+        confuse with the right one, which is why the two flats are on either
+        side of the band rather than at 0 and 255 where anything would pass. */
+    const SOFT = 120;
+    const unsure = document.createElement('canvas');
+    unsure.width = SOFT;
+    unsure.height = SOFT;
+    const vague = unsure.getContext('2d');
+    if (!vague) return;
+    const ink = (a: number): string => `rgba(255,255,255,${a})`;
+    /* 20% sure everywhere: the background the model has not ruled out. */
+    vague.fillStyle = ink(0.2);
+    vague.fillRect(0, 0, SOFT, SOFT);
+    /* 60% sure in the middle: her, as far as the model is prepared to say. */
+    vague.fillStyle = ink(0.6);
+    vague.fillRect(30, 30, 60, 60);
+
+    const made = decided(unsure);
+    const readMade = made.getContext('2d', { willReadFrequently: true });
+    if (!readMade) return;
+    const mind = readMade.getImageData(0, 0, SOFT, SOFT).data;
+    const alphaAt = (x: number, y: number): number => mind[((y * SOFT) + x) * 4 + 3];
+    const middleNow = alphaAt(60, 60);
+    const outsideNow = alphaAt(5, 5);
+
+    /* And the same mask through the whole chain, which is what she actually
+       sees: a picture, that mask, the feather, the blow-up. The reading is
+       the alpha WELL inside her — if that is not 255 the checkerboard shows
+       through, which is the fault. */
+    const flat = document.createElement('canvas');
+    flat.width = SOFT;
+    flat.height = SOFT;
+    const red = flat.getContext('2d');
+    if (!red) return;
+    red.fillStyle = '#ff0000';
+    red.fillRect(0, 0, SOFT, SOFT);
+    const cutSoft = maskOnto(flat, unsure, SOFT * 4, SOFT * 4);
+    const readCut = cutSoft.getContext('2d', { willReadFrequently: true });
+    if (!readCut) return;
+    const cutPx = readCut.getImageData(0, 0, SOFT * 4, SOFT * 4).data;
+    const at = (x: number, y: number): number => cutPx[((y * SOFT * 4) + x) * 4 + 3];
+    /* Well inside the 60% square, and well outside it. */
+    const solidInside = at(240, 240);
+    const emptyOutside = at(20, 20);
+
     setSaid(JSON.stringify({
+      middleNow,
+      outsideNow,
+      solidInside,
+      emptyOutside,
+      unsureAt: UNSURE,
+      sureAt: SURE,
       sharpSide,
       softSide,
       keptLeft,

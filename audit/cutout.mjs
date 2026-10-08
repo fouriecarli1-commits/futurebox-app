@@ -143,6 +143,45 @@ try {
  
        What is read is the spread of values along a row, well inside each
        half so the feather at the seam is not what is being measured. */
+    /* ── The model answers a probability, not a yes ───────────────────
+
+       Carli, 8 October 2026, with a photograph of her own face cut out:
+       *"Dit is hoe die bg remover nou lyk."* The checkerboard was showing
+       THROUGH her, and everything below her chin had gone.
+
+       The cause was the whole design of the thing: the model's confidence
+       was being handed straight to the alpha channel, so a pixel it was
+       sixty per cent sure about came out sixty per cent opaque. A face it is
+       unsure about does not come out wrong — it comes out see-through, which
+       is a failure that looks like a rendering bug rather than a bad guess.
+
+       The bench hands `decided` a mask that is 60% sure in the middle and
+       20% sure outside, which is the shape of the answer that produced her
+       screenshot. Both flats sit INSIDE the range rather than at 0 and 255,
+       so a function that did nothing at all cannot pass. */
+    check('a mask the model is only 60% sure of comes out fully opaque',
+      bench.middleNow === 255,
+      `the middle of the mask is ${bench.middleNow} of 255 — anything under`
+      + ' it is the checkerboard showing through her face, which is exactly'
+      + ' what she photographed');
+    check('  and 20% sure comes out fully gone',
+      bench.outsideNow === 0,
+      `the outside is ${bench.outsideNow} of 255 — a background the model has`
+      + ' not ruled out is still a background, and leaving it at a fifth of'
+      + ' its strength is a grey haze round everything');
+    check('  with the band sitting below the middle, not across it',
+      bench.unsureAt < 0.5 && bench.sureAt > 0.5 && bench.unsureAt < bench.sureAt,
+      `the band is ${bench.unsureAt} to ${bench.sureAt} — a model that is`
+      + ' unsure is unsure INWARDS, at hair and at a shoulder against a'
+      + ' similar colour, so a band centred on a half eats the person at the'
+      + ' places somebody looks');
+    check('and the whole chain leaves her solid, not a ghost',
+      bench.solidInside === 255 && bench.emptyOutside === 0,
+      `through the feather and the blow-up, well inside her reads`
+      + ` ${bench.solidInside} and well outside reads ${bench.emptyOutside},`
+      + ' of 255 — this is the reading that would have caught it, and it did'
+      + ' not exist');
+
     check('putting the background out of focus leaves the person untouched',
       bench.sharpSide === 255,
       `the stripes behind the mask span ${bench.sharpSide} of 255 — anything`

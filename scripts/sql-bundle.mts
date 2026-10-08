@@ -47,6 +47,7 @@ export const ORDER = [
   'finetunes',
   'invites',
   'kits',
+  'kitsvoices',
   'kitsmine',
   /* ── `events` before the files that alter it ──────────────────────
 
@@ -170,6 +171,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
   invites: 'Die uitnodigingsskakel in \u2019n saamwerk-e-pos.',
   listens:
     'Hoeveel kere \u2019n liedjie geluister is, per liedjie, vir die maker. Moet n\u00e1 charts.sql loop.',
+  kitsvoices:
+    'Wie se sangstem is wie s\u2019n. Kits kan nie \u2019n stem oor die API skep nie, so elke stem staan op \u00e9\u00e9n gedeelde rekening \u2014 sonder hierdie tabel sien elke lid elke lid se gekloonde stem, en kan in hulle sing.',
   kits:
     'Die Kits.AI minuut-teller. Sonder dit weet die rem nie hoeveel van die 400 aflaaiminute oor is nie, en dan is daar geen rem nie.',
   eleven:

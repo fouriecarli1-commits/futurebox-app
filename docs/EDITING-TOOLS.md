@@ -124,6 +124,57 @@ back from it, the way `app/lib/credits.ts` already does for the engines we use.
 
 ---
 
+## The three in the cutting room, and the question she asked about them
+
+*Carli, 8 October 2026, looking at the card in the video editor that lists taking a background
+out, taking an item out of a shot, and generating a piece you do not have:* "Sal google se lyria
+engine dit kan doen? Dit voel ook soos iets wat elevenlabs moet kan doen."
+
+**No, and no — and not nearly.** Both of those are sound companies.
+
+* **Lyria is Google's MUSIC model.** It writes and sings songs. It has no idea what a pixel is.
+  Google's video model is **Veo**, which is a different product with a different price, and Veo
+  is already the engine this app's long-video work is measured against.
+* **ElevenLabs is audio end to end** — speech, voice changing, voice isolation, sound effects,
+  dubbing, music. Their whole price list is per character, per minute of audio or per sound
+  effect. The only thing they do that touches a video file at all is **dubbing**, which replaces
+  what the film SAYS. It does not change a single pixel of what it SHOWS.
+
+So neither can do any of the three. What can:
+
+| The tool | What it really needs |
+|---|---|
+| **Background out of a video** | Segmentation, frame by frame — and see below, because this one may need no engine at all |
+| **Item out of a shot** | Generative video inpainting. A real engine, and the expensive kind |
+| **Generating a piece you do not have** | Text-to-video: Veo, Kling, Seedance, MiniMax. Priced in `docs/MINIMAX-PRYSE.md` |
+
+### The first one may already be free
+
+This is the part worth acting on. **The photo editor already takes a background out on the
+phone, for nothing** — `app/lib/cutout.ts`, MediaPipe's selfie segmentation, 6 MB self-hosted
+under the CSP, no engine and no credits.
+
+A video is frames. The cutting room already plays the whole film through once to lay it down, and
+already composites every frame. So "take the background out of this shot" could be the same model
+run per frame on her own device: no supplier, no credits, and — this is the part that matters
+most — **nothing of her members leaves the phone.**
+
+The card on that screen says the honest thing about why these are not switched on: *"Sending
+video of a person to another company needs an answer about what that company may do with it
+first."* The device route does not need that answer at all, because nothing is sent.
+
+What it costs instead is time: a 55-second film at 25 frames a second is about 1 400 frames, and
+even at a twentieth of a second each that is over a minute of work on top of the lay-down. That
+is a real cost and it should be said on the button, not discovered.
+
+And it carries the same limit the photo one carries, which has to be said in the room rather than
+buried here: **it looks for a PERSON.** It knows nothing about a guitar, a car or a dog.
+
+So of the three on that card, one is probably not a paid feature at all, and the other two are
+genuinely engines. That is worth knowing before any of them is priced.
+
+---
+
 ## The order I would do them in
 
 1. ~~Grab text~~ — done.
