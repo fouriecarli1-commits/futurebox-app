@@ -6683,3 +6683,51 @@ Twee maniere vorentoe, en die keuse is joune:
   modelstapel — en vyf programme is toe gerangskik teen 'n opname waarin sy
   geen deel gehad het nie. Nou: niks vrygestel is niks vrygestel, elke ry wys
   'n strepie, en die sin sê wat dit 'n syfer sou gee.
+
+
+---
+
+## "Kyk die app regtig na jou preference" — 8 Oktober 2026
+
+**Jou lys, 7 Oktober:** *"Kyk die app regtig na jou preference / top 10
+lyste."*
+
+**Die top 10-lyste is eerlik.** Elke ry op Spotlight se musiek- en
+potgooi-lyste is 'n regte speel deur 'n regte mens, een per mens per liedjie
+per dag oor dertig dae — `supabase/charts.sql` sê hoekom daardie reël en nie
+'n ander een nie. Vandag is dit 'n kort lys, want daar is 'n handjievol mense
+op die app, en die leë toestand sê wat dit tel en hoe iemand daarop kom eerder
+as "geen data". Spotify se eie lys staan daarnaas en is as hulle s'n gemerk:
+hulle API weet nie wat met KI gemaak is nie, dus sou 'n "top 10 KI-musiek" uit
+hulle data ons wat besluit met hulle naam daarop.
+
+**Die voorkeur-masjinerie is ook eerlik, en versigtiger as wat ek verwag het.**
+`app/lib/habits.ts` weier om 'n voorkeur te vind wat nie daar is nie: twee
+sigtings minimum, 'n derde van die venster, en 'n gelykop-telling is *twee
+dinge wat jy doen* eerder as 'n keuse tussen hulle. Die rekening se tellings
+tel bo die toestel se, en nie saam nie. Alles daarvan het 'n toets.
+
+**Een ding was verkeerd, en dit is vandag regemaak.** Die app het die genre
+**altyd** bo die kamer gekies. Beide het dieselfde drempels geslaag, dus is
+nie een meer verdien as die ander nie — die keuse tussen hulle was 'n
+sorteerorde wat soos 'n voorkeur gelyk het. Getoets, nie gelees nie: twee
+dubstep-liedjies in April klop sestig sessies in die prent-editor sedertdien,
+en die aanbod het na Make gewys.
+
+Vir die mense vir wie hierdie app eintlik is, is dit die meeste van die tyd
+verkeerd: iemand wat Afrikaanse teater doen maak een liedjie en leef daarna in
+die prent- en video-editors, en word elke besoek vir die res van die jaar as 'n
+dubstep-produsent gegroet.
+
+Die twee tellings kan nie vergelyk word nie — liedjies gemaak en kamers
+oopgemaak is nie dieselfde eenheid nie, en 'n vergelyking daaroor sou 'n syfer
+wees wat soos 'n meting lyk. Wat wél vergelyk kan word is **wanneer**. Die
+genre hou dit nou, behalwe as die kamer meer as 'n maand nuwer is — die een
+geval waar die spesifieke antwoord ook die ou antwoord is. Binne die maand hou
+die genre dit, want om te noem wat jy maak is die beter aanbod en twee weke is
+nie 'n rigtingverandering nie.
+
+**Niks hiervan is joune nie.** Die een ding wat jy sou wou nagaan, is of 'n
+maand die regte grens is — dit is `STALE_DAYS` in `app/lib/habits.ts`, een
+nommer, en ek het dit so gekies omdat dit dieselfde venster is as wat die res
+van die lêer gebruik.

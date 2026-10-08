@@ -62,6 +62,17 @@ export interface Habit {
   readonly genre: string | null;
   readonly songs: number;
   readonly makes: number;
+  /**
+   * When each of those two habits was last acted on.
+   *
+   * Only so `suggest` can break the tie between them. Both have already
+   * passed the same thresholds by the time they are set, so neither is more
+   * EARNED than the other — what separates them is which one is still
+   * happening. Null where that habit is not set, or where the history it came
+   * from carries no date.
+   */
+  readonly genreAt: string | null;
+  readonly roomAt: string | null;
   /** The most recent thing they made, of either kind. */
   readonly lastAt: string | null;
   /** Have they been here before at all? Decides greeted-back or greeted-first. */
@@ -137,7 +148,7 @@ function genreOf(song: SongLike): string {
  * on the account is no more a habit than a single song in a library, and it is
  * more tempting to trust because it arrived from a server.
  */
-function fromAccount(lines: readonly TasteLine[], kind: TasteKind): string | null {
+function lineFrom(lines: readonly TasteLine[], kind: TasteKind): TasteLine | null {
   const mine = lines
     .filter((one) => one.kind === kind && one.label.trim() && one.times > 0)
     .sort((a, b) => b.times - a.times);
@@ -148,7 +159,15 @@ function fromAccount(lines: readonly TasteLine[], kind: TasteKind): string | nul
   if (top.times < LEAST_TIMES || top.times / total < LEAST_SHARE) return null;
   // A tie is two things they do, not a preference between them.
   if (mine[1] && mine[1].times === top.times) return null;
-  return top.label;
+  return top;
+}
+
+/* The line's WHEN as well as its what, because `suggest` has to break a tie
+   between two habits that have both already earned their place, and the only
+   thing it can honestly compare them on is which one is live. See the note
+   on `suggest`. */
+function fromAccount(lines: readonly TasteLine[], kind: TasteKind): string | null {
+  return lineFrom(lines, kind)?.label ?? null;
 }
 
 export function habitOf(
@@ -174,17 +193,33 @@ export function habitOf(
   /* The account first, the device behind it. Not merged: adding a browser's
      counts to an account's would double what happened on this device and
      count nothing extra, which is the worst of both. */
-  const genre = fromAccount(account, 'genre') ?? commonest(recentSongs.map(genreOf));
+  const genreLine = lineFrom(account, 'genre');
+  const roomLine = lineFrom(account, 'room');
+  const genre = genreLine?.label ?? commonest(recentSongs.map(genreOf));
   const room =
-    (fromAccount(account, 'room') as SurfaceId | null) ??
+    ((roomLine?.label ?? null) as SurfaceId | null) ??
     (commonest(recentMakes.map((one) => one.surface ?? '')) as SurfaceId | null);
 
-  const answered = fromAccount(account, 'genre') ?? fromAccount(account, 'room');
+  /* The account's own date where there is one, and the newest thing of that
+     shape on the device where there is not. A habit read off the device has
+     no `last_at` of its own — what it has is the rows it was counted from. */
+  const genreAt = genreLine?.last_at
+    ?? (genre
+      ? recentSongs.find((one) => genreOf(one).toLowerCase() === genre.toLowerCase())?.createdAt ?? null
+      : null);
+  const roomAt = roomLine?.last_at
+    ?? (room
+      ? recentMakes.find((one) => (one.surface ?? '') === room)?.createdAt ?? null
+      : null);
+
+  const answered = genreLine?.label ?? roomLine?.label;
   return {
     source: answered ? 'account' : genre || room ? 'device' : 'none',
     name: firstName(name),
     room: room ?? null,
     genre,
+    genreAt,
+    roomAt,
     songs: songs.length,
     makes: makes.length,
     lastAt,
@@ -217,12 +252,63 @@ export type Suggestion =
 /** Where somebody with no history should start, which is where everyone starts. */
 const FIRST_ROOM: SurfaceId = 'make';
 
+/**
+ * How far apart the two habits have to be before the newer one wins, in days.
+ *
+ * A month, because that is the same span `RECENT_SONGS` and `RECENT_MAKES`
+ * are sized for: somebody who made trance for a year and has spent this
+ * month on gospel is doing gospel, and the same reasoning across the two
+ * kinds of habit says somebody who made two songs in April and has been in
+ * the editor every week since is doing the editor.
+ *
+ * Generous on purpose. Inside the month the genre keeps it, because naming
+ * what they make is the better offer and a fortnight is not a change of
+ * direction.
+ */
+export const STALE_DAYS = 30;
+
+const daysBetween = (newer: string, older: string): number => {
+  const a = Date.parse(newer);
+  const b = Date.parse(older);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+  return (a - b) / 86_400_000;
+};
+
 export function suggest(habit: Habit): Suggestion {
   if (!habit.returning) return { kind: 'first', room: FIRST_ROOM };
-  /* Genre before room, because it is the more specific true thing. "Another
-     dubstep song?" is a better offer than "back to the video desk?" even when
-     both are earned — it names what they make rather than where they were. */
-  if (habit.genre) return { kind: 'genre', room: FIRST_ROOM, genre: habit.genre };
+  /* ── Genre before room, unless the genre has stopped happening ─────
+ 
+      Genre first because it is the more specific true thing: "Another dubstep
+      song?" is a better offer than "back to the video desk?" even when both
+      are earned, since it names what they make rather than where they were.
+      That part has not changed.
+ 
+      What was wrong was that it was genre first ALWAYS. Both habits have
+      already passed the same thresholds by the time they are set — two
+      sightings and a third of the window, no ties — so neither is more
+      earned than the other, and the tie-break was a sort order dressed as a
+      preference. Two dubstep songs in April beat sixty sessions in the photo
+      editor since, and the offer pointed at Make.
+ 
+      For the people this app is actually for that is wrong most of the time:
+      somebody doing Afrikaans theatre makes one song, then lives in the
+      photo and video editors, and every visit for the rest of the year is
+      greeted as a dubstep producer.
+ 
+      The two counts cannot be compared — songs made and rooms opened are not
+      the same unit, and a comparison across them would be a number that
+      looks like a measurement. What CAN be compared is WHEN: one clock, both
+      habits. So the genre keeps it unless the room is more than a month
+      newer, which is the one case where the specific answer is also the
+      stale one. */
+  if (habit.genre) {
+    const stale = habit.genreAt !== null
+      && habit.roomAt !== null
+      && habit.room !== null
+      && daysBetween(habit.roomAt, habit.genreAt) > STALE_DAYS;
+    if (!stale) return { kind: 'genre', room: FIRST_ROOM, genre: habit.genre };
+    return { kind: 'room', room: habit.room as SurfaceId };
+  }
   if (habit.room) return { kind: 'room', room: habit.room };
   return { kind: 'again', room: FIRST_ROOM };
 }

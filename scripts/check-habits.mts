@@ -160,6 +160,62 @@ function makes(...surfaces: string[]): MakeLike[] {
   check('a genre is offered ahead of a room', suggest(habit).kind === 'genre', suggest(habit).kind);
 }
 
+/* ── Unless the genre has stopped happening ───────────────────────
+ 
+   It was genre first ALWAYS, and both habits pass the same thresholds — two
+   sightings, a third of the window, no ties — so neither is more earned than
+   the other and the tie-break was a sort order dressed as a preference. Two
+   dubstep songs in April beat sixty sessions in the photo editor since, and
+   the offer pointed at Make.
+ 
+   The counts cannot be compared: songs made and rooms opened are not the same
+   unit. The DATE can, so the genre keeps it unless the room is more than
+   `STALE_DAYS` newer. */
+{
+  const dated = (kind: 'genre' | 'room', label: string, times: number, at: string) =>
+    ({ kind, label, times, last_at: at });
+  const april = '2026-04-02T00:00:00.000Z';
+
+  const stale = habitOf([], [], '', [
+    dated('genre', 'dubstep', 2, april),
+    dated('room', 'canvas', 60, '2026-10-07T00:00:00.000Z'),
+  ]);
+  check('both habits are still read', stale.genre === 'dubstep' && stale.room === 'canvas',
+    `${stale.genre} / ${stale.room}`);
+  check('but a genre six months stale gives way to the room they live in',
+    suggest(stale).kind === 'room', suggest(stale).kind);
+  check('and it is that room', suggest(stale).room === 'canvas', String(suggest(stale).room));
+
+  const fresh = habitOf([], [], '', [
+    dated('genre', 'dubstep', 2, '2026-09-20T00:00:00.000Z'),
+    dated('room', 'canvas', 60, '2026-10-07T00:00:00.000Z'),
+  ]);
+  check('a genre from a fortnight ago keeps it, however busy the room',
+    suggest(fresh).kind === 'genre', suggest(fresh).kind);
+
+  const older = habitOf([], [], '', [
+    dated('genre', 'dubstep', 2, '2026-10-07T00:00:00.000Z'),
+    dated('room', 'canvas', 60, april),
+  ]);
+  check('and a room that is the stale one changes nothing',
+    suggest(older).kind === 'genre', suggest(older).kind);
+
+  /* With no room habit at all there is nothing to give way TO, whatever the
+     dates say — the first version of this rule returned `habit.room` and
+     would have offered a suggestion pointing at null. */
+  const alone = habitOf([], [], '', [dated('genre', 'dubstep', 2, april)]);
+  check('a stale genre with no room to fall back on is still offered',
+    suggest(alone).kind === 'genre', suggest(alone).kind);
+
+  /* And a habit read off the device rather than the account carries dates
+     too, out of the rows it was counted from — otherwise this whole rule is
+     unreachable for anybody signed out. */
+  const onDevice = habitOf(songs('kwaito', 'kwaito'), makes('canvas', 'canvas', 'canvas'));
+  check('a habit read off the device knows when each of its halves happened',
+    onDevice.genreAt !== null && onDevice.roomAt !== null,
+    `${onDevice.genreAt} / ${onDevice.roomAt}`);
+}
+
 // ── Nothing here throws on rubbish ───────────────────────────────────────
 {
   const habit = habitOf(
