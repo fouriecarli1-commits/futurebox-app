@@ -81,12 +81,12 @@ In this order, because each one needs the one before it.
    finding that out now is cheaper than finding it out from a 403 in the app. Note which
    **region** they are offered in — `us-central1` is the usual one, and the region is part of
    every call.
-2. **Make a service account**, not a personal key. Give it exactly one role: **Vertex AI User**
-   (`roles/aiplatform.user`). Not Owner, not Editor. A key that can only generate is a key that
-   cannot delete a project.
-3. **Make a JSON key for it and put it in Vercel.** Never in the repository — the same rule as
-   every other key this app uses. `docs/SWITCH-ON.md` is where the variable gets its name and
-   its line.
+2. **Sign in as something, and there are now two ways.** See the section below — Google offered
+   her an API key, which is simpler than the service account this step originally said, and her
+   spend cap is what makes it a reasonable choice.
+3. **Whichever it is, it goes in Vercel.** Never in the repository, and never
+   `NEXT_PUBLIC_` — the same rule as every other key this app uses. `docs/SWITCH-ON.md` is where
+   the variable gets its name and its line.
 4. **Tell me the project id and the region** and I will wire the two engines behind the seams
    that already exist.
 
@@ -138,6 +138,65 @@ Cloud credit would not pay for it either. Not confirmed in Google's own document
 worth testing with a card.*
 
 ---
+
+## An API key or a service account
+
+*Carli, 8 October 2026, pasting what Google's starter handed her:*
+
+```python
+client = genai.Client(vertexai=True, api_key=API_KEY)
+```
+
+That is **Vertex with an API key** rather than a service account, and it is newer than the advice
+this document originally gave. Both work. The honest comparison:
+
+| | API key | Service account |
+|---|---|---|
+| What it is | one string | a JSON file with a private key in it |
+| Scoping | restricted to chosen APIs in the console | an IAM role, as narrow as `roles/aiplatform.user` |
+| Who did it | nobody — the key has no identity | the account, in the audit log |
+| Rotating | make a new one, swap the variable | make a new key, swap the variable |
+| Leaked | anyone can spend, up to whatever stops them | the same, but the role bounds what they can reach |
+
+The textbook answer is the service account. **The reason the API key is nevertheless fine here is
+the spend cap she built this morning.** A leaked key on an uncapped project is an open invoice; a
+leaked key on a project that pauses at $100 is a bad month, not a disaster. Having built the cap
+first changes which of these is a reasonable risk — which is a good argument for having built it
+first.
+
+So: an API key is acceptable, **on three conditions**.
+
+1. **Restrict it in the console** — API restrictions, Vertex AI only. An unrestricted key is a key
+   for every API the project has, including any switched on later by accident.
+2. **Server side only.** It goes in Vercel as a plain variable, never one beginning
+   `NEXT_PUBLIC_`, because that prefix puts it in the browser and therefore in everybody's hands.
+   `check:security` scans for exactly this.
+3. **Rotate it if it is ever pasted anywhere** — a chat, a screenshot, a notebook that gets
+   shared. A key in a message is a key that is out.
+
+## What those starter samples are, and are not
+
+All of them generate TEXT with `gemini-2.5-flash-lite` — bubble sort, the weather, tool calling.
+That is Google showing how the SDK works. **None of it is Lyria or Veo**, and this app does not
+need a Google text model at all: the copilot is already somebody else's and works.
+
+Two more differences worth knowing before any of it is copied:
+
+* **It is Python; this app is TypeScript.** The same SDK exists for Node as `@google/genai`, with
+  the same shapes. `pip install google-genai` has no bearing on us.
+* **`auth.authenticate_user()` is Colab**, and it signs in as *her*, in a browser, by clicking.
+  A server has nobody to click. That line is the one thing in the starter that cannot be
+  translated — which is exactly why the key or the service account exists.
+* The `numpy<2.0` pin is a Colab image problem and nothing to do with this.
+
+What the samples ARE good for is hearing the models before anything is built around them. For
+that the model ids matter, and the sources disagree:
+
+* **Lyria** — the official page documents **`lyria-002`** (32.8-second clips, base64 WAV back,
+  available globally). Newer pages show **`lyria-3-pro-preview`**. Check Model Garden in her own
+  project for which is actually offered to her before spending a minute on the wrong one.
+* **Veo** — `veo-3.1-generate-001` and `veo-3.1-fast-generate-001`. The output bucket is
+  optional; without one the video comes back in the response.
 
 ## Two smaller things worth doing while she is in there
 
