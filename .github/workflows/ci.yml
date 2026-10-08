@@ -1188,6 +1188,12 @@ jobs:
       - name: The supplier price comparison still gives the answer it states
         run: npm run check:minimax
 
+      # Three frames of reference in one gesture — the picture's pixels, a
+      # share of the picture, and the canvas. Get the conversion wrong and
+      # nothing throws: the tap just selects the line above.
+      - name: Tapping a line of writing lands on the line she tapped
+        run: npm run check:textpick
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

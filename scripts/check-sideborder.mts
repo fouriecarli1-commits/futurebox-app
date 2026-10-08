@@ -96,10 +96,33 @@ for (const file of files) {
   const lines = source.split('\n');
   for (const match of source.matchAll(/<(button|label)\b/g)) {
     const at = source.slice(0, match.index).split('\n').length - 1;
-    /* The opening tag can run over many lines — an onClick with an arrow in
-       it means we cannot just read to the first `>`. Eighteen lines is more
-       than any tag in this app and short enough not to reach the next one. */
-    const window = lines.slice(at, at + 18).join('\n');
+    /* ── The opening tag, and only it ───────────────────────────
+
+       This read eighteen lines, on the reasoning that an `onClick` with an
+       arrow in it means the tag cannot simply be read to the first `>`, and
+       that eighteen is "short enough not to reach the next one".
+
+       That second half stopped being true on 8 October 2026. A button
+       whose class is a NAMED constant — `className={VUL}` — is invisible to
+       the pattern below, which only reads a string or a template. So the
+       search did not stop at that button: it carried on down the window,
+       found the `border-t` on the strip BELOW it, and reported a button
+       that was perfectly fine. The fault it names is real and the button it
+       named was not.
+
+       Read to the tag's own closing `>` instead, counting braces so an
+       arrow function inside an attribute does not end it early. Exact
+       rather than generous, and it cannot wander into the next element
+       however the code is laid out. */
+    let depth = 0;
+    let end = match.index ?? 0;
+    for (let i = match.index ?? 0; i < source.length; i += 1) {
+      const ch = source[i];
+      if (ch === '{') depth += 1;
+      else if (ch === '}') depth -= 1;
+      else if (ch === '>' && depth === 0) { end = i; break; }
+    }
+    const window = source.slice(match.index ?? 0, end);
     const cls = /className=(?:"([^"]*)"|\{`([^`]*)`\})/.exec(window);
     if (!cls) continue;
     const value = cls[1] ?? cls[2] ?? '';

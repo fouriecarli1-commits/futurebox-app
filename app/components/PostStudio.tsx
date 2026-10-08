@@ -49,6 +49,10 @@ import {
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import {
+  fromFrame, maskFor as maskOfLine, middleOf, ontoFrame, pickAt, picksFrom,
+  shareOf as shareOfLine, type Pick,
+} from '../lib/textpick';
+import {
   BACKDROPS, LETTER_GAP, LINE_GAP, POST_SIZES, SPOTS, atInside, atOf, behindWords,
   blockAt, boxAround, boxFor as boxOfSpot, clashes, fitText, measureWithGap, moveInside,
   sizeById,
@@ -389,6 +393,28 @@ export default function PostStudio({
      progress on it looks broken rather than busy. */
   const [reading, setReading] = useState<number | null>(null);
   const [grabbed, setGrabbed] = useState<string | null>(null);
+  /**
+   * The lines the reader found, with a box round each, and the one she tapped.
+   *
+   * ── What she asked for ───────────────────────────────────
+   *
+   * Carli, 8 October 2026: *"dat die masjien self objekte en text
+   * identifiseer wat dan highlight en dan kan die klient op die objekte of
+   * text click wat hulle graag wil grab, rondskuif, of delete."*
+   *
+   * The reader has always found these. It found them in the same pass that
+   * makes the text she already gets, and this file took the text and threw
+   * the boxes away — see the note on `Found` in `lib/ocr.ts`. So none of
+   * this is a new engine, and none of it costs anything: it is the part of
+   * the old one that was being discarded.
+   */
+  /* Which language the reader was last asked for, so the tappable read does
+     not need a third and fourth button beside the two that are already
+     there. Afrikaans and English find different words in the same sign. */
+  const [grabLang, setGrabLang] = useState<Readable>('eng');
+  const [picking, setPicking] = useState(false);
+  const [found, setFound] = useState<readonly Pick[] | null>(null);
+  const [picked, setPicked] = useState<Pick | null>(null);
   /* Cutting the background out. `whole` holds the picture as it was brought
      in, so the cut is never a one-way door — a member who cuts a photograph
      and does not like it has nothing to go back to otherwise but the camera
@@ -669,13 +695,45 @@ export default function PostStudio({
          at zoom 1 is contain, so every edge of it is on the glass and every
          corner of the box can be reached. A crop dragged over a picture whose
          edges are off the screen is a crop you cannot see the result of. */
-      const at = place(picture, size, cropBox || traced ? WHOLE_VIEW : crop);
+      /* ── And the whole photograph while she is picking words out of it ─
+
+         The same reasoning as cropping and tracing, one line up: a line of
+         writing off the edge of the frame is a line she cannot tap. It also
+         makes the arithmetic one thing instead of two — `shareAt` already
+         converts a thumb against `WHOLE_VIEW`, so the box that is drawn and
+         the box that is tapped come out of the same placement by
+         construction rather than by two call sites agreeing. */
+      const at = place(picture, size, cropBox || traced || picking ? WHOLE_VIEW : crop);
       /* The look goes on the PICTURE and comes off again before anything is
          written. Words under a blur are not a style, they are a mistake, and
          a filter left set would put every one of them through it. */
       ctx.filter = filterFor(look, to.width / size.width);
       ctx.drawImage(picture, at.left, at.top, at.width, at.height);
       ctx.filter = 'none';
+
+      /* ── A box round every line the reader found ─────────────────
+
+         On the glass only. `guides` is false for the download and for the
+         shelf, exactly as the checkerboard and the safe-zone bands are: a
+         rectangle round the writing is drawn to help her aim, not to be
+         part of the post.
+
+         Before the warm wash and before the words, so a highlight is not
+         tinted by a look she has on and is not drawn over by her own
+         caption. */
+      if (guides && picking && found) {
+        ctx.save();
+        ctx.lineWidth = Math.max(1, size.width / 220);
+        for (const one of found) {
+          const box = ontoFrame(one, at);
+          const chosen = picked?.id === one.id;
+          ctx.strokeStyle = chosen ? 'rgba(52,211,153,0.95)' : 'rgba(52,211,153,0.5)';
+          ctx.fillStyle = chosen ? 'rgba(52,211,153,0.28)' : 'rgba(52,211,153,0.10)';
+          ctx.fillRect(box.left, box.top, box.width, box.height);
+          ctx.strokeRect(box.left, box.top, box.width, box.height);
+        }
+        ctx.restore();
+      }
 
       const wash = warmWash(look);
       if (wash) {
@@ -981,7 +1039,13 @@ export default function PostStudio({
      one colour and half another rather than a photograph. */
   useEffect(() => {
     if (canvas.current) draw(canvas.current, true);
-  }, [facesIn, size, picture, words, back, crop, look, cropBox, traced]);
+    /* `picking`, `found` and `picked` are in here because the highlights are
+       drawn, and a drawing whose state is not in the list is a drawing that
+       never happens. The probe caught it exactly: the tap named the right
+       line — the arithmetic was fine — and the glass stayed empty, because
+       nothing had repainted since the boxes arrived. */
+  }, [facesIn, size, picture, words, back, crop, look, cropBox, traced,
+    picking, found, picked]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
 
@@ -1037,7 +1101,17 @@ export default function PostStudio({
   };
 
   const grab = (event: React.PointerEvent<HTMLCanvasElement>): void => {
-    /* ── The words first, because a thumb on a word means the word ────
+    /* ── Picking a line out of the photograph, before anything else ────
+
+        A mode she turned on, so a thumb means one thing while it is on and
+        there is nothing to guess at. Same shape as cropping and tracing. */
+    if (picking) {
+      const put = shareAt(event);
+      if (!put || !found) return;
+      setPicked(pickAt(found, put.x, put.y));
+      return;
+    }
+    /* ── The words next, because a thumb on a word means the word ─────
  
         Carli, 8 October 2026: *"Die woord op die screen kan nog nie
         geskuif en gecrop word nie."* Before this, a drag on the glass
@@ -1339,6 +1413,7 @@ export default function PostStudio({
     if (!picture) return;
     setSaid('');
     setGrabbed(null);
+    setGrabLang(lang);
     if (!canRead()) {
       setSaid(t('post.grabOld', 'This browser is too old to read words out of a picture.'));
       return;
@@ -1360,6 +1435,56 @@ export default function PostStudio({
          sign by hand — which is what the button was for. */
       const words = tidy(got.text);
       setGrabbed(wordsAtAll(words, got.sure) ? words : '');
+    } finally {
+      setReading(null);
+    }
+  };
+
+  /**
+   * The same reading, kept as boxes so a line can be tapped.
+   *
+   * The engine call is identical — one pass, on the device, for nothing.
+   * What differs is which half of the answer is used: `grabText` takes the
+   * text and this takes the boxes that came with it.
+   */
+  const findLines = async (lang: Readable): Promise<void> => {
+    if (!picture) return;
+    setSaid('');
+    setPicked(null);
+    if (!canRead()) {
+      setSaid(t('post.grabOld', 'This browser is too old to read words out of a picture.'));
+      return;
+    }
+    setReading(0);
+    try {
+      const got = await readWords(picture, lang, (part) => setReading(part));
+      if (!got.ok) {
+        setSaid(got.why === 'unsupported'
+          ? t('post.grabOld', 'This browser is too old to read words out of a picture.')
+          : t('post.grabFailed', 'The words could not be read out of that picture.'));
+        return;
+      }
+      const lines = picksFrom(
+        got.lines,
+        picture.naturalWidth || picture.width,
+        picture.naturalHeight || picture.height,
+      );
+      if (!lines.length) {
+        setFound(null);
+        setPicking(false);
+        setSaid(t(
+          'post.findNone',
+          'No lines of writing could be made out in this picture. It reads printed text well and handwriting badly.',
+        ));
+        return;
+      }
+      setFound(lines);
+      setPicking(true);
+      /* The bench closes, the same way it does for cropping, for cutting a
+         shape and for moving words — it sits over the middle of the
+         picture, and a line she cannot reach is a line she cannot tap. */
+      setBench(null);
+      setSaid('');
     } finally {
       setReading(null);
     }
@@ -1690,6 +1815,92 @@ export default function PostStudio({
   const rubbingNow = useRef(false);
   /** Where the thumb was a moment ago, so a stroke is a line and not a dot. */
   const lastRub = useRef<{ readonly x: number; readonly y: number } | null>(null);
+
+  /* ── The three things she can do with a line she tapped ───────────
+
+      Carli, 8 October 2026: *"dan kan die klient op die objekte of text
+      click wat hulle graag wil grab, rondskuif, of delete."*
+
+      Three actions, two primitives, and both primitives were already here:
+      put words on the picture, and erase a patch of it. Grabbing is the
+      first; taking out is the second; moving is both, which is why it is
+      one press rather than two — a line left in the photograph AND added
+      as text reads as the app having duplicated it. */
+
+  /** Put the line on the picture as real, editable words, where it was. */
+  const grabLine = (one: Pick): void => {
+    const at = middleOf(one);
+    setWords((was) => [...was, {
+      id: freshId(),
+      text: one.text,
+      face: FACES[0].id,
+      spot: 'middle',
+      ink: '#ffffff',
+      /* Where they were, not where the room would have put them. Words that
+         jump to the default spot when she grabs them are words she has to
+         put back by hand, and she asked for them to be grabbable precisely
+         so she would not have to. */
+      at,
+    }]);
+    setPicking(false);
+    setFound(null);
+    setPicked(null);
+    setBench('text');
+    setSaid(t(
+      'post.lineGrabbed',
+      'Those words are on the picture now and you can change them — the face, the colour, the spacing, and dragging them where you want. The ones in the photograph are still underneath; take them out if you want only yours.',
+    ));
+  };
+
+  /** Erase the line out of the photograph. */
+  const dropLine = (one: Pick): boolean => {
+    if (!picture) return false;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    const rubbed = document.createElement('canvas');
+    rubbed.width = wide;
+    rubbed.height = tall;
+    const ctx = rubbed.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return false;
+    ctx.drawImage(picture, 0, 0);
+    const done = erase(ctx.getImageData(0, 0, wide, tall), maskOfLine(one, wide, tall));
+    if (!done.ok) {
+      /* The same refusal the painted eraser gives, in the same words: this
+         grows the edges of a gap inwards and cannot invent what was behind
+         something large. A line of writing across a whole poster is exactly
+         that case. */
+      setSaid(done.why === 'toomuch'
+        ? t('post.lineTooMuch', 'That line covers too much of the picture to take out this way. It fills the gap with what is around it, which works for something small.')
+        : t('post.lineNothing', 'There is nothing to take out there.'));
+      return false;
+    }
+    ctx.putImageData(done.pixels, 0, 0);
+    before(t('post.stepLine', 'taking a line of words out'));
+    asPicture(rubbed, (made) => {
+      setWhole(picture);
+      setPicture(made);
+      /* The boxes belonged to a picture that no longer exists. Keeping them
+         would offer her a tap on writing that has been erased — the same
+         reason the shape cut drops the background remover's mask. */
+      /* The boxes belonged to a picture that no longer exists. Keeping them
+         would offer her a tap on writing that has been erased — the same
+         reason the shape cut drops the background remover's mask.
+
+         Picking STAYS ON, though, and that is deliberate twice over.
+         Somebody taking one line off a poster usually wants the next one,
+         and making her press Find again between them is a room getting in
+         the way. It also keeps the photograph drawn whole rather than
+         snapping back to the crop, which is the difference between seeing
+         what the erase did and seeing the picture jump. */
+      setFound(null);
+      setPicked(null);
+      setSaid(t(
+        'post.lineGone',
+        'Taken out. Press “Find the words” again to pick another one, or Done when you have finished.',
+      ));
+    }, () => setSaid(t('post.lineFailed', 'That could not be taken out.')));
+    return true;
+  };
 
   /** Take out what has been painted over. */
   const rubOut = (): void => {
@@ -2911,6 +3122,39 @@ export default function PostStudio({
               </button>
             ))}
           </div>
+          {/* ── And the same reading, tappable ────────────────────
+
+              Carli, 8 October 2026: *"dat die masjien self objekte en text
+              identifiseer wat dan highlight en dan kan die klient op die
+              objekte of text click wat hulle graag wil grab, rondskuif, of
+              delete."*
+
+              Beside the two reading buttons and not instead of them. They
+              answer a different question: those two hand back the whole
+              reading as text to copy, this one puts a box round each line
+              so she can take one. Somebody photographing a page wants the
+              first; somebody fixing a poster wants the second. */}
+          <button
+            type="button"
+            data-postfindwords
+            disabled={reading !== null}
+            onClick={() => void findLines(grabLang)}
+            className={`${LEEG} disabled:opacity-40`}
+          >
+            <ScanText className="h-3.5 w-3.5" />
+            {reading !== null
+              ? `${Math.round(reading * 100)}%`
+              : t('post.findWords', 'Find the words, so I can tap one')}
+          </button>
+          <p
+            className="text-[12px] leading-relaxed"
+            style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}
+          >
+            {t(
+              'post.findWordsWhy',
+              'Puts a box round every line it can read. Tap one and you can take it out of the photograph, or lift it onto the picture as words you can change.',
+            )}
+          </p>
         </div>
 
         {grabbed !== null && grabbed.length > 0 && (
@@ -3568,6 +3812,70 @@ export default function PostStudio({
 
       {cropStrip}
       {traceStrip}
+      {/* ── The line she tapped, and the three things to do with it ────
+
+          On the screen rather than on a bench, for the reason the crop bar
+          and the cut bar are: the bench covers the middle of the picture,
+          and a Take-it-out button behind the thing she is aiming at is a
+          button nobody can press. */}
+      {picking && (
+        <div
+          data-postlinebar
+          className="flex-shrink-0 space-y-2 border-t px-4 py-3"
+          style={asRoom
+            ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
+            : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
+        >
+          <p
+            data-postlinesaid
+            className="text-[12px] leading-relaxed"
+            style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}
+          >
+            {picked
+              ? `“${picked.text}”`
+              : t('post.tapALine', 'Tap a line of writing on the picture.')}
+          </p>
+          {picked && (
+            <div className={RY3}>
+              <button
+                type="button"
+                data-postlinegrab
+                onClick={() => grabLine(picked)}
+                className={LEEG}
+              >
+                {t('post.lineGrab', 'Lift it onto the picture')}
+              </button>
+              <button
+                type="button"
+                data-postlinedrop
+                onClick={() => dropLine(picked)}
+                className={LEEG}
+              >
+                {t('post.lineDrop', 'Take it out')}
+              </button>
+              {/* Both, which is what moving a line is. One press, because a
+                  line left in the photograph AND added as words reads as
+                  the app having duplicated it. */}
+              <button
+                type="button"
+                data-postlinemove
+                onClick={() => { const one = picked; if (dropLine(one)) grabLine(one); }}
+                className={LEEG}
+              >
+                {t('post.lineMove', 'Move it')}
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            data-postlinedone
+            onClick={() => { setPicking(false); setFound(null); setPicked(null); setBench('read'); }}
+            className={VUL}
+          >
+            {t('post.lineDone', 'Done with the words')}
+          </button>
+        </div>
+      )}
       {picture !== null || words.length > 0 ? movingWords && (
         <div
           data-postmovebar

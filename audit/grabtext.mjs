@@ -183,6 +183,168 @@ try {
       + ' a read nobody wanted');
   }
 
+  /* ── And the same reading, tappable ─────────────────────────
+
+     Carli, 8 October 2026: *"dat die masjien self objekte en text
+     identifiseer wat dan highlight en dan kan die klient op die objekte of
+     text click wat hulle graag wil grab, rondskuif, of delete."*
+
+     Walked here rather than in a probe of its own, and the reason is five
+     megabytes: the first read fetches the core and the language file, and a
+     second probe would pay that again to prove something about the same
+     engine. `check:textpick` holds the arithmetic — the three frames of
+     reference, the tap, the mask. What a browser has to answer is whether a
+     thumb on the glass lands on the writing.
+
+     Which is the one thing the arithmetic cannot say: it proves the
+     conversion is right, not that the room is using it. */
+  /* Back to the reader's own bench. Pressing "Put it on the picture" above
+     opens the words bench — deliberately, so she can fix what the reader
+     got wrong — so the button this needs is no longer on screen. The first
+     version of this assertion reported the feature missing when what was
+     missing was the bench. */
+  const backToRead = page.locator('[data-cutbench="read"]').first();
+  if (await backToRead.count()) {
+    await backToRead.click();
+    await page.waitForTimeout(600);
+  }
+
+  const findIt = page.locator('[data-postfindwords]').first();
+  check('the room offers to find the lines, not only to read them',
+    (await findIt.count()) > 0,
+    'reading hands back the whole page as text to copy; this puts a box'
+    + ' round each line so one can be taken — somebody photographing a page'
+    + ' wants the first and somebody fixing a poster wants the second');
+
+  /* The reading before the press, so the one after it has something to be
+     compared with. Taken before the click and not after, which is the only
+     order that can tell a highlight from a picture that was always green. */
+  const beforeFind = await page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    if (!el) return null;
+    const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+    let red = 0;
+    let green = 0;
+    for (let i = 0; i < d.length; i += 4) { red += d[i]; green += d[i + 1]; }
+    return (green - red) / (d.length / 4);
+  });
+
+  if (await findIt.count()) {
+    await findIt.click();
+    /* The engine is warm by now — the read above paid for it — but it still
+       has to run. */
+    let bar = 0;
+    for (let waited = 0; waited < 90; waited += 1) {
+      await page.waitForTimeout(1000);
+      bar = await page.locator('[data-postlinebar]').count();
+      if (bar > 0) break;
+    }
+    check('  and pressing it puts the room into picking a line',
+      bar > 0,
+      'no [data-postlinebar] — the bench closes and the bar comes up, the'
+      + ' same shape cropping and cutting use');
+
+    /* ── The highlights, read off the glass ───────────────────
+
+       Measured as the GREEN CAST over the whole picture, before and after,
+       rather than by counting pixels of a particular colour.
+
+       The first version counted pixels where green beat red by forty. That
+       is right for the box she has tapped, which is filled at 0.28, and
+       wrong for the rest, which are filled at 0.10 — a tenth of
+       `rgb(52,211,153)` over white paper comes out about (235, 251, 245),
+       and 251 does not beat 235 by forty. It reported nought highlighted
+       pixels over a picture that was covered in them, which is an
+       instrument failing and reading as the feature failing.
+
+       A cast is the honest measure for a wash: whatever the alpha, a green
+       wash moves green away from red across the whole frame. */
+    const cast = () => page.evaluate(() => {
+      const el = document.querySelector('[data-postcanvas]');
+      if (!el) return null;
+      const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+      let red = 0;
+      let green = 0;
+      for (let i = 0; i < d.length; i += 4) { red += d[i]; green += d[i + 1]; }
+      return (green - red) / (d.length / 4);
+    });
+    const lit = await cast();
+    check('    and the lines it found are drawn on the picture',
+      beforeFind !== null && lit !== null && lit > beforeFind + 1,
+      `the green cast over the picture was ${beforeFind?.toFixed(2)} and is`
+      + ` ${lit?.toFixed(2)} — a feature that finds the writing and shows her`
+      + ' nothing is a feature she cannot aim at');
+
+    /* ── The tap, which is the thing arithmetic cannot prove ──────── */
+    const glass = await page.locator('[data-postcanvas]').first().boundingBox();
+    await page.mouse.click(glass.x + glass.width / 2, glass.y + glass.height / 2);
+    await page.waitForTimeout(600);
+    const named = ((await page.locator('[data-postlinesaid]').first()
+      .innerText().catch(() => '')) ?? '').trim();
+    check('    and a tap in the middle of the writing names the line it hit',
+      flat(named).includes(flat(WANT)),
+      `the bar says "${named}" and the picture says "${WANT}" — the fixture is`
+      + ' one line across the middle, so a tap in the middle of the glass has'
+      + ' to find it. Anything else is the conversion between the picture,'
+      + ' the frame and the canvas being applied once too often, which does'
+      + ' not throw — it just selects the wrong thing');
+
+    /* ── And taking it out really takes it out ───────────────────
+
+       Counting PAPER, not ink, and that is the second instrument this
+       assertion has had.
+
+       The first counted dark pixels and passed — for the wrong reason. The
+       room's background colour is `#111113`, and a 1400 × 420 photograph
+       letterboxed into this frame leaves wide bands of it above and below.
+       Those bands are dark and opaque, so "ink" was counting the
+       background: 200 959 of them before, and nought after, because
+       finishing the cut put the placement back to filling the frame and the
+       bands went away. The writing could have survived untouched and that
+       assertion would still have gone green.
+
+       White paper cannot be confounded that way. The fixture is black type
+       on white, the background is near-black, and erasing the type turns
+       those pixels into the paper around them — so the paper grows by about
+       what the ink was. */
+    const paper = () => page.evaluate(() => {
+      const el = document.querySelector('[data-postcanvas]');
+      if (!el) return 0;
+      const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] > 200 && d[i] > 200 && d[i + 1] > 200 && d[i + 2] > 200) n += 1;
+      }
+      return n;
+    });
+    const paperWas = await paper();
+    const dropIt = page.locator('[data-postlinedrop]').first();
+    check('    and the line she tapped can be taken out',
+      (await dropIt.count()) > 0,
+      'no [data-postlinedrop] — nothing was picked, so the three actions'
+      + ' never appeared');
+    if ((await dropIt.count()) > 0) {
+      await dropIt.click();
+      await page.waitForTimeout(1500);
+      const paperNow = await paper();
+      check('      and the writing really goes out of the photograph',
+        paperWas > 1000 && paperNow > paperWas * 1.02,
+        `${paperWas} white pixels became ${paperNow} — the eraser is handed a`
+        + ' mask in the picture’s own pixels, and a mask built against the'
+        + ' canvas would clear a rectangle a third of the way across instead');
+
+      /* And the words are gone from the reading as well as from the glass:
+         a second read of the same photograph should no longer find them. */
+      const stillSaid = ((await page.locator('[data-postlinesaid]').first()
+        .innerText().catch(() => '')) ?? '').trim();
+      check('      and the room stops offering a line that is no longer there',
+        stillSaid === '' || !flat(stillSaid).includes(flat(WANT)),
+        `the bar still says "${stillSaid}" — the boxes belonged to a picture`
+        + ' that no longer exists, and a tap on erased writing is a tap on'
+        + ' nothing');
+    }
+  }
+
   for (const one of noise) check(`no console error: ${one}`, false);
 } catch (error) {
   check('the walk itself fell over', false, String(error).split('\n')[0]);

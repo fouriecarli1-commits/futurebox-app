@@ -75,8 +75,53 @@ export function canRead(): boolean {
   }
 }
 
+/**
+ * One line of words the engine found, and where it found it.
+ *
+ * ── Why these were being thrown away ───────────────────────────
+ *
+ * Carli, 8 October 2026: *"dat dit AI integrated is en die masjien
+ * identifiseer self objekte en text wat dan highlight en dan kan die klient
+ * op die objekte of text click wat hulle graag wil grab, rondskuif, of
+ * delete."*
+ *
+ * This file took `data.text` and dropped everything else. The engine also
+ * returns `blocks → paragraphs → lines → words`, and every one of them
+ * carries a `bbox`. The boxes were already being computed, in the same pass
+ * that makes the text — so a tappable word costs nothing that was not
+ * already being paid.
+ *
+ * Lines rather than words, because a line is what somebody means when they
+ * point at writing in a photograph. A word is available underneath if that
+ * ever turns out to be wrong, and it is one field away.
+ *
+ * In PIXELS of the picture that was read, which is the engine's own frame of
+ * reference. Turning them into shares of the frame is `textpick.ts`'s job
+ * and is kept out of here: this file knows what Tesseract said, and nothing
+ * about how the room draws.
+ */
+export interface Found {
+  readonly text: string;
+  /** Nought to a hundred, the engine's own. */
+  readonly sure: number;
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 export type Read =
-  | { readonly ok: true; readonly text: string; readonly sure: number }
+  | {
+    readonly ok: true;
+    readonly text: string;
+    readonly sure: number;
+    /**
+     * Every line it found, with its box. Empty where the engine answered
+     * without blocks — which is a thing it is allowed to do, and the reason
+     * nothing downstream may assume there is one per line of `text`.
+     */
+    readonly lines: readonly Found[];
+  }
   | { readonly ok: false; readonly why: 'unsupported' | 'failed' };
 
 /**
@@ -116,9 +161,36 @@ export async function readWords(
         ? (m: { progress?: number }) => onStep(Math.max(0, Math.min(1, m.progress ?? 0)))
         : undefined,
     });
-    const { data } = await worker.recognize(from);
+    /* `blocks: true` asked for by name. It is not the default in this
+       version, and without it `data.blocks` comes back null and every box
+       below is silently absent — which reads, on the screen, as a
+       photograph with no writing in it. */
+    const { data } = await worker.recognize(from, {}, { text: true, blocks: true });
     await worker.terminate();
-    return { ok: true, text: (data.text ?? '').trim(), sure: Math.round(data.confidence ?? 0) };
+    const lines: Found[] = [];
+    for (const block of data.blocks ?? []) {
+      for (const para of block.paragraphs ?? []) {
+        for (const line of para.lines ?? []) {
+          const said = (line.text ?? '').trim();
+          if (!said) continue;
+          const box = line.bbox;
+          lines.push({
+            text: said,
+            sure: Math.round(line.confidence ?? 0),
+            left: box.x0,
+            top: box.y0,
+            width: box.x1 - box.x0,
+            height: box.y1 - box.y0,
+          });
+        }
+      }
+    }
+    return {
+      ok: true,
+      text: (data.text ?? '').trim(),
+      sure: Math.round(data.confidence ?? 0),
+      lines,
+    };
   } catch {
     return { ok: false, why: 'failed' };
   }

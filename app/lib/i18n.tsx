@@ -1757,6 +1757,28 @@ export const STRINGS: Dict = {
      Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
      die app te bêrge. Daar moet dalk ’n gallery in channel gestoor word."*
      Free, because it does not leave the device — see `keepInApp`. */
+  /* ── Tap a line of writing in the photograph ─────────────────────
+
+     Carli, 8 October 2026: *"dat die masjien self objekte en text
+     identifiseer wat dan highlight en dan kan die klient op die objekte of
+     text click wat hulle graag wil grab, rondskuif, of delete."*
+
+     The reader already found these boxes; `lib/ocr.ts` was throwing them
+     away. Nothing here costs anything. */
+  "post.findWords": { en: "Find the words, so I can tap one", af: "Vind die woorde, sodat ek een kan tik" },
+  "post.findWordsWhy": { en: "Puts a box round every line it can read. Tap one and you can take it out of the photograph, or lift it onto the picture as words you can change.", af: "Sit ’n blokkie om elke reël wat dit kan lees. Tik een en jy kan dit uit die foto haal, of dit op die prent lig as woorde wat jy kan verander." },
+  "post.findNone": { en: "No lines of writing could be made out in this picture. It reads printed text well and handwriting badly.", af: "Geen reëls skrif kon in hierdie prent uitgemaak word nie. Dit lees gedrukte teks goed en handskrif swak." },
+  "post.tapALine": { en: "Tap a line of writing on the picture.", af: "Tik ’n reël skrif op die prent." },
+  "post.lineGrab": { en: "Lift it onto the picture", af: "Lig dit op die prent" },
+  "post.lineDrop": { en: "Take it out", af: "Haal dit uit" },
+  "post.lineMove": { en: "Move it", af: "Skuif dit" },
+  "post.lineDone": { en: "Done with the words", af: "Klaar met die woorde" },
+  "post.lineGrabbed": { en: "Those words are on the picture now and you can change them — the face, the colour, the spacing, and dragging them where you want. The ones in the photograph are still underneath; take them out if you want only yours.", af: "Daardie woorde is nou op die prent en jy kan hulle verander — die lettertipe, die kleur, die spasiering, en sleep hulle waar jy wil. Dié in die foto is nog daaronder; haal hulle uit as jy net joune wil hê." },
+  "post.lineGone": { en: "Taken out. Press “Find the words” again to pick another one, or Done when you have finished.", af: "Uitgehaal. Druk weer “Vind die woorde” om nog een te kies, of Klaar wanneer jy klaar is." },
+  "post.lineTooMuch": { en: "That line covers too much of the picture to take out this way. It fills the gap with what is around it, which works for something small.", af: "Daardie reël dek te veel van die prent om so uit te haal. Dit vul die gat met wat rondom is, wat vir iets klein werk." },
+  "post.lineNothing": { en: "There is nothing to take out there.", af: "Daar is niks om daar uit te haal nie." },
+  "post.lineFailed": { en: "That could not be taken out.", af: "Dit kon nie uitgehaal word nie." },
+  "post.stepLine": { en: "taking a line of words out", af: "om ’n reël woorde uit te haal" },
   "post.keepHere": { en: "Keep it in the app", af: "Bêre dit in die app" },
   "post.keepHereWhy": { en: "Puts it on your Channel and makes it pickable in the cutting room. Free, because it stays on this device — saving it to your phone is the press above.", af: "Sit dit op jou Kanaal en maak dit kiesbaar in die snykamer. Verniet, want dit bly op hierdie toestel — om dit op jou foon te stoor is die druk hierbo." },
   "post.keptHere": { en: "Kept in the app. It is on your Channel under “Your pictures”, and the cutting room can pick it from there — no credits, because it has not left this device.", af: "In die app gebêre. Dit is op jou Kanaal onder “Jou prente”, en die snykamer kan dit daar kies — geen krediete nie, want dit het nie hierdie toestel verlaat nie." },
