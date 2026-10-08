@@ -257,6 +257,24 @@ guesses were wrong. That is three afternoons the probe did not cost.
   second against $0.20, and `CREDITS.video` has one cent of margin.
 * **Pictures: `gemini-2.5-flash-image`.** Not a choice — the only one of four that answered.
 
+### A correction, made before it shipped
+
+The first version of this document chose **`lyria-002`** for music, because it is the documented
+one. That is picking a name without asking what it does.
+
+**Lyria 2 is instrumental only, and thirty seconds.** Google's own model page says so — 30-second
+WAV clips at 48 kHz, a 32.8-second ceiling, modality listed as text-to-music (instrumental only).
+This app makes sung songs of about two minutes, so the first real press would have come back as
+half a minute of backing track with nobody singing.
+
+**Lyria 3 Pro** sings, carries lyrics, reads section tags, and goes to about three minutes. That
+is the song engine, and `lyria-002` is kept for the job it is actually right for: thirty seconds
+of instrumental is a **bed**, which is what goes under a video.
+
+Worth saying plainly because I got Lyria wrong in the other direction earlier the same week —
+eight instrumental code examples, and I concluded the model could not sing. Examples show what a
+vendor chose to show. A model page says what a model is.
+
 ### The one that comes with a clock
 
 **Nano Banana Pro is not on this account.** All three of its candidate names 404ed. The only

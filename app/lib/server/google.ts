@@ -136,10 +136,33 @@ export const MODELS = [
  * used once.
  */
 export const CHOSEN = {
-  /* The cheaper of the two that work. `lyria-3-pro-preview` is the other,
-     and is preview, so a listening test decides between them rather than a
-     coin. */
-  music: 'lyria-002',
+  /* ── Corrected 8 October 2026, before it shipped ──────────────────────
+
+     This said `lyria-002`, chosen because it is "the documented one". That
+     was picking a name without asking what it DOES.
+
+     `lyria-002` is Lyria 2: **instrumental only, and thirty seconds.**
+     Google's own model page says so — "30-second WAV clips, 48 kHz,
+     instrumental only", a 32.8-second ceiling, and the modality listed as
+     text-to-music (instrumental only).
+
+     This app makes SUNG songs of about two minutes. So lyria-002 could not
+     have made one, and the first real press would have come back as half a
+     minute of backing track with nobody singing — which is exactly the
+     fault `musicplan.ts` already has a long note about, arriving by a new
+     door.
+
+     Lyria 3 Pro sings, carries lyrics, and goes to about three minutes.
+     That is the song engine. Preview, and worth the preview.
+
+     Said plainly because I got Lyria wrong in the other direction earlier
+     in the same week — I read eight instrumental code examples and
+     concluded the model could not sing, and Carli corrected me. Examples
+     show what a vendor chose to show. A model page says what a model is. */
+  music: 'lyria-3-pro-preview',
+  /* And the one that was almost the default has a real job: thirty seconds
+     of instrumental is a BED, which is what goes under a video. */
+  bed: 'lyria-002',
   /* The fast one first, deliberately: $0.08 a second against $0.20, and the
      margin on video is one cent. */
   video: 'veo-3.1-fast-generate-001',
@@ -163,8 +186,17 @@ export const CHOSEN = {
  * the difference between these and it is one query rather than a guess.
  */
 export const COSTS = {
-  /** One Lyria clip of about 32.8 seconds. */
-  music: 60_000,
+  /**
+   * One Lyria 3 Pro song, up to about three minutes.
+   *
+   * $0.08, from the pricing Carli sent on 8 October. **Not confirmed on a
+   * Google page** — that figure appears on a secondary source and the proxy
+   * here cannot reach Vertex's pricing page. It is the least certain number
+   * in this file and the first to redo against her real invoice.
+   */
+  music: 80_000,
+  /** One Lyria 2 instrumental clip of 30 seconds, at $0.06. Documented. */
+  bed: 60_000,
 } as const;
 
 export interface Reached {

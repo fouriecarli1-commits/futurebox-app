@@ -28,6 +28,10 @@ import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan';
+import { CHOSEN, COSTS, configured as googleOn } from '@/app/lib/server/google';
+import { enough as enoughGoogle, note as noteGoogle } from '@/app/lib/server/googlespend';
+import { makeSong } from '@/app/lib/server/lyria';
+import { cannot, promptFor } from '@/app/lib/server/lyriaprompt';
 import { songCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
@@ -235,6 +239,66 @@ export async function POST(request: Request): Promise<Response> {
       { error: 'allowance_used', message: room.message, left: room.left },
       { status: 429 },
     );
+  }
+
+  /* ── Which engine answers ──────────────────────────────────────────
+
+     Carli, 8 October 2026: *"Wire dit agter die booth se button in."*
+
+     One button, two possible engines, named by `MUSIC_ENGINE`. The default
+     stays ElevenLabs — what works today keeps working, and switching back
+     is one variable rather than a deploy.
+
+     Behind the SAME button on purpose. A second "make a song" beside the
+     first is two controls nobody can choose between, which is the exact
+     objection that put Kits and Music.ai behind one split button in the
+     booth.
+
+     What does not cross over is listed in `lib/server/lyriaprompt.ts`:
+     ElevenLabs takes a composition plan with per-section seconds, Lyria
+     takes one string. The losses are stated there and refused here where
+     they cannot be lived with. */
+  if ((process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google') {
+    if (!googleOn()) {
+      return Response.json(
+        { message: 'The Google music engine is named but not switched on. See docs/GOOGLE-OPSTEL.md.' },
+        { status: 503 },
+      );
+    }
+    /* A trained sound belongs to the other engine and has no Lyria
+       equivalent. Dropping it silently would hand her a song in the wrong
+       voice after she chose hers. */
+    const no = cannot(body);
+    if (no) return Response.json({ message: no }, { status: 400 });
+
+    /* Our own ceiling before the credits, as everywhere else. */
+    const room = await enoughGoogle('music', COSTS.music, caller?.id ?? null);
+    if (room) {
+      return Response.json(
+        { error: room.code, message: room.message, left: room.left },
+        { status: 429 },
+      );
+    }
+    const bill = await charge(request, songCost(length), 'song');
+    if (!bill.ok) return bill.response;
+
+    const asked = promptFor(body);
+    const made = await makeSong(asked.prompt, asked.negative, undefined, CHOSEN.music);
+    if (!made.ok) {
+      await bill.refund();
+      return Response.json({ message: made.message }, { status: made.status });
+    }
+    void noteGoogle('music', COSTS.music, CHOSEN.music, caller?.id);
+    return new Response(new Uint8Array(made.audio), {
+      headers: {
+        'Content-Type': made.type,
+        'Cache-Control': 'no-store',
+        'X-Audio-Under': made.under,
+        /* So a song that came back can be told apart from one the other
+           engine made, without guessing from how it sounds. */
+        'X-Music-Engine': 'google',
+      },
+    });
   }
 
   // Paid for before a byte is asked for, and given back below if the engine

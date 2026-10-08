@@ -19,7 +19,8 @@ import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { before } from './order.mts';
 import { FIELDS, audioIn } from '../app/lib/server/lyria.ts';
-import { COSTS } from '../app/lib/server/google.ts';
+import { cannot, promptFor } from '../app/lib/server/lyriaprompt.ts';
+import { CHOSEN, COSTS } from '../app/lib/server/google.ts';
 import { CREDITS } from '../app/lib/credits.ts';
 
 let bad = 0;
@@ -120,11 +121,27 @@ ok('the row says which model ran',
 
 /* ── 4. The money, as far as it is known ──────────────────────────────── */
 
-ok('a song costs us a published rate, not a guess at one',
-  COSTS.music === 60_000,
-  `${COSTS.music} micro-dollars — $0.06 for a 30-second Lyria-002 clip, from`
-  + ' the pricing she sent on 8 October. A published rate is not an invoice,'
-  + ' which is why every call writes down what it was charged at');
+/* ── The correction this nearly shipped without ────────────────────────
+
+   `CHOSEN.music` was `lyria-002`, picked because it is the documented one.
+   That is choosing a name without asking what it does: Lyria 2 is
+   INSTRUMENTAL ONLY and THIRTY SECONDS, per Google's own model page. This
+   app makes sung songs of about two minutes, so the first real press would
+   have come back as half a minute of backing track with nobody singing. */
+ok('the song engine is one that can actually sing',
+  CHOSEN.music === 'lyria-3-pro-preview',
+  `${CHOSEN.music} — lyria-002 is instrumental only and 30 seconds, which`
+  + ' is a bed, not a song');
+
+ok('  and the instrumental one is kept for the job it is right for',
+  CHOSEN.bed === 'lyria-002' && COSTS.bed === 60_000,
+  'thirty seconds of instrumental is what goes under a video');
+
+ok('a song costs us a rate, and the least certain one in the file',
+  COSTS.music === 80_000,
+  `${COSTS.music} micro-dollars — $0.08 for a Lyria 3 Pro song, from a`
+  + ' secondary source rather than a Google page. The honest number is her'
+  + ' first invoice, which is why every call writes down which model ran');
 
 ok('and the member pays the app’s own song price, not a number invented here',
   /CREDITS\.song/.test(route) && CREDITS.song > 0,
@@ -144,6 +161,96 @@ ok('  and their own words survive a refusal',
   /text\.slice\(0, 300\)/.test(lib),
   'a sentence invented here would hide the one thing worth seeing, which is'
   + ' what Google actually objected to');
+
+/* ── 6. The plan, written out as one string ──────────────────────────── */
+
+/* ElevenLabs Music takes a composition plan: sections, lines, seconds each.
+   Lyria takes one string. So the translation is lossy, and these hold what
+   survives and what is refused rather than dropped. */
+
+const plan = {
+  style: 'Afrikaanse volksrock, akoestiese kitaar',
+  seconds: 127,
+  sections: [
+    { name: 'Verse 1', lines: ['Ek sit hier stil', 'En word van alles waar'], seconds: 20 },
+    { name: 'Chorus', lines: ['Altyd vry'], seconds: 18 },
+    { name: '[Bridge]', lines: ['Voeltjie van my vrede'], seconds: 12 },
+  ],
+};
+
+const out = promptFor(plan);
+
+ok('the style leads, because it is what the model leans on hardest',
+  out.prompt.startsWith('Afrikaanse volksrock'),
+  out.prompt.slice(0, 60));
+
+ok('every section becomes a tag Lyria reads',
+  out.prompt.includes('[Verse 1]') && out.prompt.includes('[Chorus]'),
+  'section tags are how a structure is asked for, and they are the same'
+  + ' vocabulary the plan already uses');
+
+ok('  and a name that is already bracketed is not bracketed twice',
+  out.prompt.includes('[Bridge]') && !out.prompt.includes('[[Bridge]]'),
+  'a pasted lyric sheet often brings its own brackets');
+
+ok('  and every line of the lyric survives',
+  ['Ek sit hier stil', 'En word van alles waar', 'Altyd vry', 'Voeltjie van my vrede']
+    .every((line) => out.prompt.includes(line)),
+  'the words are the one thing that must not be summarised');
+
+ok('the length is said in words, rounded, because it is not a parameter',
+  /About 130 seconds long\./.test(out.prompt) && out.seconds === 127,
+  `${out.prompt.match(/About [^.]*\./)?.[0]} — "about 127 seconds" claims a`
+  + ' precision nothing on the other side honours');
+
+const quiet = promptFor({ style: 'warm piano', instrumental: true, sections: plan.sections });
+ok('an instrumental says so in the prompt AND in the negative',
+  /Instrumental only, no vocals\./.test(quiet.prompt) && /vocals/.test(quiet.negative),
+  'Lyria 3 Pro sings by default, and this is the setting somebody notices'
+  + ' immediately if it fails');
+
+ok('  and does not then send the words to be sung',
+  !quiet.prompt.includes('Altyd vry'),
+  'an instrumental with a lyric in its prompt is a model being given two'
+  + ' instructions and picking one');
+
+ok('a trained sound is refused rather than quietly dropped',
+  (cannot({ style: 'x', finetuneId: 'ft_123' }) ?? '').includes('other music engine'),
+  'it is an ElevenLabs model on an ElevenLabs account with no Lyria'
+  + ' equivalent \u2014 dropping it hands her a song in the wrong voice after'
+  + ' she chose hers');
+
+ok('  and an empty ask is refused before anything is charged',
+  cannot({}) !== null && cannot({ style: 'warm piano' }) === null,
+  JSON.stringify([cannot({}), cannot({ style: 'warm piano' })]));
+
+/* ── 7. One button, two engines ──────────────────────────────────────── */
+
+const booth = withoutComments(readFileSync('app/api/music/route.ts', 'utf8'));
+
+ok('the booth\u2019s own button is what reaches Lyria',
+  /MUSIC_ENGINE/.test(booth) && /await makeSong\(/.test(booth),
+  'a second "make a song" beside the first is two controls nobody can'
+  + ' choose between \u2014 the same objection that put Kits and Music.ai'
+  + ' behind one split button');
+
+ok('  and the engine that works today stays the default',
+  /=== 'google'/.test(booth),
+  'switching back is one variable rather than a deploy, and a default that'
+  + ' changed under her is a room that broke by itself');
+
+ok('  with the ceiling asked before the credits on that path too',
+  before(booth, "await enoughGoogle('music'", 'const bill = await charge('),
+  'the rule does not stop applying because it is a different supplier');
+
+ok('  and the credits given back when Lyria refuses',
+  /if \(!made\.ok\) \{\s*await bill\.refund\(\);/.test(booth),
+  'a charge that survives a failure is what makes somebody stop pressing');
+
+ok('  and the answer says which engine made it',
+  /'X-Music-Engine': 'google'/.test(booth),
+  'a song that came back should be tellable from the other engine\u2019s'
+  + ' without guessing from how it sounds');
 
 if (bad) {
   console.error(`\ncheck:lyria — ${bad} assertion(s) failed.\n`);

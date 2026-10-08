@@ -366,6 +366,21 @@ refuse, so nothing is generated and nothing is billed. It comes back with a
 sentence saying which Lyria and which Veo id to use — which is the question
 Google's own documentation currently disagrees with itself about.
 
+`MUSIC_ENGINE` is optional and names **which engine the booth's own button
+reaches**. Unset means ElevenLabs, which is what works today. Set it to
+`google` for Lyria 3 Pro.
+
+Behind the same button on purpose — a second "make a song" beside the first
+is two controls nobody can choose between. Switching back is this one
+variable, not a deploy.
+
+Two things do not cross over, and the app says so rather than guessing:
+a **trained sound** is an ElevenLabs model on an ElevenLabs account with no
+Lyria equivalent, so a song asking for one is refused rather than quietly
+made in the wrong voice; and **per-section seconds** are gone, because
+ElevenLabs takes a composition plan and Lyria takes one string. The length
+is said to Lyria in words and it is not held to it.
+
 `GOOGLE_CAP_MUSIC`, `GOOGLE_CAP_VIDEO` and `GOOGLE_CAP_IMAGE` are optional,
 in whole dollars a month, and mean **40, 40 and 10** when unset. They are the
 app's own ceilings UNDER Google's, one per engine.
