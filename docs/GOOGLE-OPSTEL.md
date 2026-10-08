@@ -92,6 +92,53 @@ In this order, because each one needs the one before it.
 
 ---
 
+## The upgrade box in AI Studio: do not click it
+
+*A few minutes later, in AI Studio rather than the Cloud console, she was offered two upgrades:*
+**Gemini API — pay per request**, and **Google AI — monthly subscription**, with a button saying
+"Continue with pay per request".
+
+**Neither. Close the box.**
+
+### They are two different doors to the same models
+
+This is the thing the dialog does not say, and it is the whole answer:
+
+| | Gemini API (AI Studio) | Vertex AI (Cloud console) |
+|---|---|---|
+| Address | `generativelanguage.googleapis.com` | `aiplatform.googleapis.com` |
+| Sign in as | an API key | a service account |
+| Needs | a Google account | a Cloud project with billing |
+| Playground | Google AI Studio | Vertex AI Studio |
+
+**Her spend cap is on the second one.** It is attached to one project and one service, and that
+service is Vertex AI. The Gemini API is a different service at a different address, so turning on
+pay-per-request there creates **a second bill with nothing standing in front of it** — the $100
+does not apply, the alerts do not count it, and the pause does not pause it.
+
+That is the same warning as the API list above, arriving at the moment it actually costs
+something.
+
+### And the subscription is the wrong shape anyway
+
+"Google AI — monthly subscription" is the consumer plan: the Gemini app, higher limits in the
+Studio, Google One storage. Its own line in the dialog says **✗ Access to all models & agents**.
+It is a plan for a person using Google's apps, not a way for software to call an engine, and no
+amount of it would let this app generate a song.
+
+### What to do instead, if the point was to try things out
+
+That is a fair thing to want — nobody should wire an engine into a room before hearing what it
+sounds like. Do it in **Vertex AI Studio**, inside the project that already has the cap. Same
+models, same prompt box, and the spending lands inside the $100 rather than beside it.
+
+*One caveat, reported by users rather than by Google: AI Studio's paid tier appears to run on its
+own prepaid credits, which Cloud promotional credits cannot fund. If that is right, a free $300
+Cloud credit would not pay for it either. Not confirmed in Google's own documentation, and not
+worth testing with a card.*
+
+---
+
 ## Two smaller things worth doing while she is in there
 
 **Check who gets the budget emails.** Budget alerts go to the billing administrators of the
