@@ -2434,6 +2434,39 @@ export const STRINGS: Dict = {
   "radar.follower": { en: "follower", af: "volgeling" },
   "radar.followers": { en: "followers", af: "volgelinge" },
   "radar.heading": { en: "Collab Radar", af: "Collab Radar" },
+  /* ── The Radar, read in Afrikaans 8 October 2026 ─────────────────
+
+     Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."* Reading
+     it in Afrikaans found fourteen pieces of English typed straight into
+     the markup rather than through the dictionary — "Copy", "Copied",
+     "Add", "Email draft", "Your channels", "Hide", "live", "not created
+     yet", "Open", "Posting is Pro", "Ask FutureBox to boost", and two
+     sentences built with backticks. Every one of them sat on an otherwise
+     Afrikaans screen, and `check:afrikaans` could not see any of them
+     because a string that never reaches `t` is not a missing translation —
+     it is not a translation at all. */
+  "radar.copy": { en: "Copy", af: "Kopieer" },
+  "radar.copied": { en: "Copied", af: "Gekopieer" },
+  "radar.copyDraft": { en: "Copy draft", af: "Kopieer die konsep" },
+  "radar.copyBrief": { en: "Copy brief", af: "Kopieer die opdrag" },
+  "radar.headEmail": { en: "Email draft", af: "E-pos konsep" },
+  "radar.headDm": { en: "DM draft", af: "DM konsep" },
+  "radar.subject": { en: "Subject", af: "Onderwerp" },
+  "radar.add": { en: "Add it to the list", af: "Voeg dit by die lys" },
+  "radar.showTopics": { en: "What it is about — theatre, Afrikaans music, comedy", af: "Waaroor dit gaan — teater, Afrikaanse musiek, komedie" },
+  "radar.addShowKept": { en: "Your list is kept on this device, so it is here the next time you open the Radar. Separate your topics with commas.", af: "Jou lys word op hierdie toestel gehou, dus is dit hier die volgende keer wat jy die Radar oopmaak. Skei jou onderwerpe met kommas." },
+  "radar.noScore": { en: "Nothing has been said about this show yet, so there is nothing to measure.", af: "Daar is nog niks oor hierdie program gesê nie, dus is daar niks om te meet nie." },
+  "radar.yours": { en: "yours", af: "joune" },
+  "radar.dropShow": { en: "Take it off", af: "Haal dit af" },
+  "radar.yourChannels": { en: "Your channels", af: "Jou kanale" },
+  "radar.whatPosting": { en: "What would real posting take?", af: "Wat sou regte plasing verg?" },
+  "radar.chLive": { en: "live", af: "regstreeks" },
+  "radar.chSoon": { en: "not created yet", af: "nog nie gemaak nie" },
+  "radar.open": { en: "Open", af: "Maak oop" },
+  "radar.postOn": { en: "Post on {where}", af: "Plaas op {where}" },
+  "radar.openComposer": { en: "Open the {where} composer", af: "Maak die {where}-opsteller oop" },
+  "radar.postingPro": { en: "Posting is Pro", af: "Plasing is Pro" },
+  "radar.askBoost": { en: "Ask FutureBox to boost", af: "Vra FutureBox om te versterk" },
   "radar.draftEmail": { en: "Draft email", af: "Stel ’n e-pos op" },
   "radar.draftDm": { en: "Draft DM", af: "Stel ’n DM op" },
   "radar.findContact": { en: "Find their contact page", af: "Vind hulle kontakblad" },

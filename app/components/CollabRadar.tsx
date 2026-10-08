@@ -28,6 +28,7 @@ import {
   loadBoosts, saveBoosts, type Handles, type BoostRequest,
 } from '../lib/social';
 import { check, ENTITLEMENTS, type Plan } from '../lib/entitlements';
+import { MOST, loadOwn, ownTarget, saveOwn, topicsFrom } from '../lib/radartargets';
 import {
   matchPodcasts, buildPitch, buildLiveBrief, buildPosts,
   type CreatorProfile,
@@ -35,7 +36,7 @@ import {
 
 type RadarTab = 'podcasts' | 'live' | 'posts';
 
-function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
+function CopyButton({ text, label, done }: { text: string; label: string; done: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -52,12 +53,28 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
       className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all flex items-center space-x-1.5"
     >
       {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-      <span>{copied ? 'Copied' : label}</span>
+      <span>{copied ? done : label}</span>
     </button>
   );
 }
 
-function ScoreBar({ score }: { score: number }) {
+/**
+ * How well a show fits, or a dash where that cannot honestly be answered.
+ *
+ * `null` rather than nought, and the difference matters on the screen: a
+ * nought-per-cent bar says "measured, and it is a bad fit", which is a
+ * verdict on a show nothing has been measured about. A dash says nobody has
+ * said what the show is about yet — see `lib/radartargets.ts` for the
+ * percentage this used to draw from topics the panel invented.
+ */
+function ScoreBar({ score, none }: { score: number | null; none: string }) {
+  if (score === null) {
+    return (
+      <div className="flex items-center justify-end min-w-[92px]">
+        <span className="text-[13px] text-zinc-600" title={none}>—</span>
+      </div>
+    );
+  }
   const pct = Math.round(score * 100);
   const tone = pct >= 70 ? 'bg-emerald-400' : pct >= 45 ? 'bg-cyan-400' : 'bg-zinc-600';
   return (
@@ -68,17 +85,6 @@ function ScoreBar({ score }: { score: number }) {
       <span className="text-[13px] text-zinc-400 w-8 text-right">{pct}%</span>
     </div>
   );
-}
-
-/**
- * Which of the three demo rows this is, for its dictionary key.
- *
- * Read off the id — `pod-demo-2` — rather than a position in a list, because a
- * position changes the moment the matcher sorts them, and a key that changes
- * with the sort order puts the wrong Afrikaans on the wrong row.
- */
-function demoNumber(id: string): string {
-  return id.replace(/^pod-demo-/, '');
 }
 
 export default function CollabRadar({
@@ -103,7 +109,17 @@ export default function CollabRadar({
   const [pitchFormat, setPitchFormat] = useState<'email' | 'dm'>('email');
   const [pitchBody, setPitchBody] = useState('');
   const [ownTargetName, setOwnTargetName] = useState('');
-  const [ownTargets, setOwnTargets] = useState<PodcastTarget[]>([]);
+  const [ownTargetTopics, setOwnTargetTopics] = useState('');
+  /* ── Kept between visits, which it was not ───────────────────────
+
+     Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."* This was
+     a plain `useState([])`, so every show she found, looked up and typed in
+     was gone the next time the page loaded — and the panel's own note two
+     hundred lines down says the best targets are shows nobody has pitched
+     yet and that FutureBox does not scrape directories. Which makes this
+     typed list the most valuable thing on the screen, and it was the one
+     thing not saved. */
+  const [ownTargets, setOwnTargets] = useState<readonly PodcastTarget[]>([]);
 
   // TikTok live planner
   const [checked, setChecked] = useState<string[]>([]);
@@ -131,6 +147,7 @@ export default function CollabRadar({
   useEffect(() => {
     setHandles(loadHandles());
     setBoosts(loadBoosts());
+    setOwnTargets(loadOwn());
   }, []);
 
   const allTargets = useMemo(() => [...PODCAST_TARGETS, ...ownTargets], [ownTargets]);
@@ -154,23 +171,31 @@ export default function CollabRadar({
   };
 
   const addOwnTarget = () => {
-    const name = ownTargetName.trim();
-    if (!name) return;
-    setOwnTargets((prev) => [
-      ...prev,
-      {
-        id: `own-${prev.length}-${name.toLowerCase().replace(/\s+/g, '-')}`,
-        name,
-        host: t('radar.demo.host', 'Add the host name'),
-        topics: ['ai music', 'ai', 'creators'],
-        format: t('radar.demo.format', 'Add the format'),
-        audience: t('radar.unknown', 'Unknown'),
-        reach: 'reachable',
-        url: '',
-        angle: t('radar.demo.angle', 'Add the angle you would pitch.'),
-      },
-    ]);
+    const made = ownTarget({
+      name: ownTargetName,
+      topics: topicsFrom(ownTargetTopics),
+      audience: t('radar.unknown', 'Unknown'),
+    });
+    if (!made) return;
+    setOwnTargets((prev) => {
+      const next = [...prev, made].slice(-MOST);
+      saveOwn(next);
+      return next;
+    });
     setOwnTargetName('');
+    setOwnTargetTopics('');
+  };
+
+  /* Taken off the list, and off the device with it. A remove that leaves the
+     row in storage comes back on the next load, which reads as the panel
+     refusing to let go of a show she decided against. */
+  const dropOwnTarget = (id: string) => {
+    setOwnTargets((prev) => {
+      const next = prev.filter((one) => one.id !== id);
+      saveOwn(next);
+      return next;
+    });
+    setSelectedPodcast((now) => (now?.id === id ? null : now));
   };
 
   const tabs: Array<{ id: RadarTab; label: string; icon: typeof Mic }> = [
@@ -257,23 +282,28 @@ export default function CollabRadar({
                   <div className="min-w-0">
                     {/* A real show keeps its own name in both languages —
                         translating "Huberman Lab" would invent a thing that
-                        does not exist. The three demo rows are ours, are
-                        marked as such in the data, and are the ones a person
-                        is meant to replace, so those do get translated. */}
+                        does not exist. Nothing here is ours to translate any
+                        more: the three `[Your target]` rows that were came
+                        out on 8 October, and a show she typed in is in
+                        whatever language she typed it. */}
                     <p className="text-xs font-bold text-white truncate">
-                      {podcast.isDemo ? t(`radar.demo.${demoNumber(podcast.id)}.name`, podcast.name) : podcast.name}
+                      {podcast.name}
                     </p>
+                    {/* Joined with the middle dot only where there is
+                        something either side of it. A show she typed in has
+                        a name and nothing else yet, and `· · Unknown` under
+                        it reads as a row that failed to load. */}
                     <p className="text-[13px] text-zinc-500">
-                      {podcast.isDemo ? t('radar.demo.host', podcast.host) : podcast.host}
-                      {' · '}
-                      {podcast.isDemo
-                        ? t(`radar.demo.${demoNumber(podcast.id)}.format`, podcast.format)
-                        : podcast.format}
-                      {' · '}
-                      {podcast.audience}
+                      {[podcast.host, podcast.format, podcast.audience]
+                        .map((one) => one.trim())
+                        .filter(Boolean)
+                        .join(' · ')}
                     </p>
                   </div>
-                  <ScoreBar score={score} />
+                  <ScoreBar
+                    score={score}
+                    none={t('radar.noScore', 'Nothing has been said about this show yet, so there is nothing to measure.')}
+                  />
                 </div>
 
                 <p className="text-[13px] text-zinc-400 pt-2 leading-relaxed">{verdict}</p>
@@ -293,10 +323,23 @@ export default function CollabRadar({
                       {s}
                     </span>
                   ))}
-                  {podcast.isDemo && (
-                    <span className="px-2 py-0.5 rounded-md text-xs text-zinc-500 border border-zinc-800 bg-zinc-950">
-                      {t('radar.placeholder', 'placeholder — replace with a real show')}
-                    </span>
+                  {/* Her own rows say so, and can be taken off again. Mine
+                      is a show she looked up and typed in; the five above
+                      are ours and are not hers to delete. */}
+                  {podcast.id.startsWith('own-') && (
+                    <>
+                      <span className="px-2 py-0.5 rounded-md text-xs text-cyan-300 border border-cyan-500/30 bg-cyan-500/10">
+                        {t('radar.yours', 'yours')}
+                      </span>
+                      <button
+                        type="button"
+                        data-radardrop={podcast.id}
+                        onClick={() => dropOwnTarget(podcast.id)}
+                        className="px-2 py-0.5 rounded-md text-xs text-zinc-500 border border-zinc-800 bg-zinc-950 hover:border-zinc-600 hover:text-zinc-300"
+                      >
+                        {t('radar.dropShow', 'Take it off')}
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -342,22 +385,46 @@ export default function CollabRadar({
                   'The best targets are shows your size that nobody has pitched yet. FutureBox does not scrape podcast directories — add the ones you find and they join the ranking.',
                 )}
               </Note>
-              <div className="flex gap-2">
-                <input
-                  value={ownTargetName}
-                  onChange={(e) => setOwnTargetName(e.target.value)}
-                  placeholder={t("radar.showName", "Podcast name")}
-                  className="flex-1 bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
-                />
-                <button
-                  type="button"
-                  onClick={addOwnTarget}
-                  className="min-h-[44px] px-3 py-2 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center space-x-1"
-                >
-                  <Plus className="w-3 h-3" />
-                  <span>Add</span>
-                </button>
-              </div>
+              <input
+                value={ownTargetName}
+                data-radarname
+                onChange={(e) => setOwnTargetName(e.target.value)}
+                placeholder={t('radar.showName', 'Podcast name')}
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+              />
+              {/* ── What it is about, which used to be invented ───────────
+
+                  A show added here arrived with `['ai music', 'ai',
+                  'creators']` written into the panel, whatever the show was
+                  about, and the matcher then scored it against those three
+                  and drew a percentage beside it. An Afrikaans theatre
+                  podcast is not a weak match on "ai music" — it is not a
+                  match at all, and the screen said 34%.
+
+                  Typed, and empty means no score rather than a made-up
+                  one. `lib/radartargets.ts` says why. */}
+              <input
+                value={ownTargetTopics}
+                data-radartopics
+                onChange={(e) => setOwnTargetTopics(e.target.value)}
+                placeholder={t('radar.showTopics', 'What it is about — theatre, Afrikaans music, comedy')}
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+              />
+              <button
+                type="button"
+                data-radaradd
+                onClick={addOwnTarget}
+                className="min-h-[44px] w-full px-3 py-2 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center justify-center space-x-1"
+              >
+                <Plus className="w-3 h-3" />
+                <span>{t('radar.add', 'Add it to the list')}</span>
+              </button>
+              <p className="text-[13px] text-zinc-500 leading-relaxed">
+                {t(
+                  'radar.addShowKept',
+                  'Your list is kept on this device, so it is here the next time you open the Radar. Separate your topics with commas.',
+                )}
+              </p>
             </div>
           </div>
 
@@ -366,13 +433,19 @@ export default function CollabRadar({
               <div className="p-4 rounded-2xl bg-black/40 border border-zinc-800 space-y-3 sticky top-24">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-white">
-                    {pitchFormat === 'email' ? 'Email draft' : 'DM draft'} → {selectedPodcast.name}
+                    {pitchFormat === 'email'
+                      ? t('radar.headEmail', 'Email draft')
+                      : t('radar.headDm', 'DM draft')} → {selectedPodcast.name}
                   </p>
-                  <CopyButton text={pitchBody} label="Copy draft" />
+                  <CopyButton
+                    text={pitchBody}
+                    label={t('radar.copyDraft', 'Copy draft')}
+                    done={t('radar.copied', 'Copied')}
+                  />
                 </div>
                 {pitchFormat === 'email' && (
                   <div className="text-[13px] text-zinc-400 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
-                    Subject: {buildPitch(profile, selectedPodcast, 'email').subject}
+                    {t('radar.subject', 'Subject')}: {buildPitch(profile, selectedPodcast, 'email').subject}
                   </div>
                 )}
                 <textarea
@@ -475,7 +548,11 @@ export default function CollabRadar({
             </div>
             <div className="flex items-center justify-between">
               <p className="text-[13px] text-zinc-500">{t('radar.sendBrief', "Send this to your co-host before the room opens.")}</p>
-              <CopyButton text={buildLiveBrief(profile, coHost, liveTopic, liveSlot)} label="Copy brief" />
+              <CopyButton
+                text={buildLiveBrief(profile, coHost, liveTopic, liveSlot)}
+                label={t('radar.copyBrief', 'Copy brief')}
+                done={t('radar.copied', 'Copied')}
+              />
             </div>
             <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[13px] text-zinc-300 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
               {buildLiveBrief(profile, coHost, liveTopic, liveSlot)}
@@ -519,14 +596,16 @@ export default function CollabRadar({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-bold text-white flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-cyan-400" />
-                Your channels
+                {t('radar.yourChannels', 'Your channels')}
               </p>
               <button
                 type="button"
                 onClick={() => setShowConnectNote((v) => !v)}
                 className="text-sm text-zinc-400 hover:text-white"
               >
-                {showConnectNote ? 'Hide' : 'What would real posting take?'}
+                {showConnectNote
+                  ? t('radar.hide', 'Hide')
+                  : t('radar.whatPosting', 'What would real posting take?')}
               </button>
             </div>
 
@@ -602,13 +681,13 @@ export default function CollabRadar({
                     <p className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
                       {pf.name} · @{ch.handle}
                       <span className={ch.live ? 'text-emerald-400' : 'text-amber-400'}>
-                        {ch.live ? 'live' : 'not created yet'}
+                        {ch.live ? t('radar.chLive', 'live') : t('radar.chSoon', 'not created yet')}
                       </span>
                     </p>
                     <p className="text-sm text-zinc-500">{ch.role}</p>
                     {ch.live && url && (
                       <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-400 hover:underline">
-                        Open
+                        {t('radar.open', 'Open')}
                       </a>
                     )}
                   </div>
@@ -688,7 +767,11 @@ export default function CollabRadar({
                 <div key={i} className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-emerald-500/40 transition-all space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-bold text-emerald-300 leading-snug">{post.hook}</p>
-                    <CopyButton text={caption} />
+                    <CopyButton
+                      text={caption}
+                      label={t('radar.copy', 'Copy')}
+                      done={t('radar.copied', 'Copied')}
+                    />
                   </div>
                   <pre className="text-[13px] text-zinc-300 whitespace-pre-wrap leading-relaxed">{caption}</pre>
                   <p className="text-[13px] text-zinc-500 flex items-start gap-1.5 pt-1 border-t border-zinc-800/80">
@@ -704,7 +787,9 @@ export default function CollabRadar({
                         className="px-2.5 py-1 rounded-lg text-sm font-semibold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 flex items-center gap-1.5"
                       >
                         <Send className="w-3 h-3" />
-                        {platform.shareIntent ? `Post on ${platform.name}` : `Open ${platform.name} composer`}
+                        {platform.shareIntent
+                          ? t('radar.postOn', 'Post on {where}').replace('{where}', platform.name)
+                          : t('radar.openComposer', 'Open the {where} composer').replace('{where}', platform.name)}
                       </a>
                     ) : (
                       <button
@@ -713,7 +798,7 @@ export default function CollabRadar({
                         className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center gap-1.5"
                       >
                         <Lock className="w-3 h-3" />
-                        Posting is Pro
+                        {t('radar.postingPro', 'Posting is Pro')}
                       </button>
                     )}
                     <button
@@ -722,7 +807,7 @@ export default function CollabRadar({
                       className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
                     >
                       {!canBoost && <Lock className="w-3 h-3 text-amber-400" />}
-                      Ask FutureBox to boost
+                      {t('radar.askBoost', 'Ask FutureBox to boost')}
                     </button>
                   </div>
                   {!platform.shareIntent && (

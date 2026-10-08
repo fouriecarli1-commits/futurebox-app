@@ -6611,3 +6611,63 @@ POPIA 72 kom uit wat die repo self aanteken. Voor 'n regte bekendstelling moet
 
 Twee verdere dinge vir 'n prokureur: die kommersiële lisensie, en die CPA se
 afkoelreg, wat op geen bladsy genoem word nie.
+
+---
+
+## Die Collab Radar se teikenlys wys na die verkeerde land — 8 Oktober 2026
+
+**Jou lys, 7 Oktober:** *"Kyk nog mooi na colab radar."*
+
+**Wat reggemaak is** (commit van vandag, `check:radar` hou dit vas):
+
+- **Jou eie lys word nou gehou.** Dit was `useState([])` — elke program wat jy
+  gevind, opgesoek en ingetik het, was weg die volgende keer wat die bladsy
+  laai. Die paneel se eie nota sê die beste teikens is programme wat niemand
+  nog gevra het nie en dat FutureBox nie gidse deursoek nie, wat daardie
+  ingetikte lys die waardevolste ding op die skerm maak — en dit was die een
+  ding wat nie gestoor is nie.
+- **Jou onderwerpe is nou joune.** 'n Program wat jy bygevoeg het, het met
+  `ai music`, `ai` en `creators` ingekom, wat ook al die program oor gegaan
+  het, en die paneel het 'n persentasie daaruit bereken. 'n Afrikaanse
+  teaterprogram is nie 'n swak pas op "ai music" nie — dit is glad nie 'n pas
+  nie, en die skerm het 34% gesê. Nou tik jy in waaroor dit gaan, en 'n
+  program waaroor niks gesê is nie kry **'n strepie, nie 'n syfer nie**.
+- **Drie plekhouer-rye is uit.** Daar het `[Your target] AI music creator
+  show` en twee ander tussen vyf regte programme gesit, en soos hulle gegradeer.
+- **Veertien stukke Engels is vertaal.** "Copy", "Copied", "Add", "Email
+  draft", "Your channels", "Hide", "live", "not created yet", "Open",
+  "Posting is Pro", "Ask FutureBox to boost" en twee sinne wat met backticks
+  gebou is. `check:afrikaans` kon nie een van hulle sien nie: 'n string wat
+  nooit by `t` kom nie, is nie 'n ontbrekende vertaling nie — dit is glad nie
+  'n vertaling nie.
+
+**Wat joune is, en hoekom ek dit nie kon doen nie:**
+
+Die vyf programme wat oorbly, is **Lex Fridman, The Diary of a CEO, Dwarkesh,
+All-In en Huberman Lab**. Hulle is regte programme, en hulle is eerlik gemerk
+as `aspirational` — maar hulle is Amerikaanse tegnologie- en
+besigheidsprogramme, en jou lede is Afrikaanse teater-, musiek- en
+kunsmense. Die graderingsreël sorteer hulle onder toe, dus doen hulle geen
+skade nie; hulle is net dooie gewig.
+
+Wat daar hoort, is Suid-Afrikaanse en Afrikaanse media — RSG, kunsblaaie,
+fees-podsendings, streeksradio. **Ek kan nie een van hulle van hier af
+bevestig nie:** die uitgaande netwerk blokkeer feitlik elke Suid-Afrikaanse
+webwerf wat ek getoets het (quicket, webtickets, computicket, howler,
+artscape, baxter), en 'n lys van regte organisasies met URL's wat ek nie kon
+oopmaak nie, is 'n lys wat jou na dooie skakels stuur. Dit is dieselfde rede
+waarom Spotlight se gebeure-opsporing wag.
+
+Twee maniere vorentoe, en die keuse is joune:
+
+1. **Jy tik hulle in.** Die boks hou nou wat jy intik, met jou eie onderwerpe,
+   en dit bly op jou toestel. Vyf programme wat jy self ken, is beter as
+   vyftig wat ek geraai het.
+2. **Laat die gashere deur.** As jy die Suid-Afrikaanse webwerwe in die
+   omgewing se netwerkbeleid toelaat, kan ek elke naam, bladsy en formaat
+   gaan nagaan voordat dit in die kode land — en dan dieselfde vir Spotlight
+   doen.
+
+**Nog nie gedoen nie:** die Post Lab se liedjielys dra nog `Demo creator` en
+`@demo-neon` as plekhouers. Dieselfde fout, 'n ander oortjie; dit wag omdat
+dit raak aan watter liedjies in jou kanaal is.

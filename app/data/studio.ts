@@ -120,44 +120,26 @@ export const PODCAST_TARGETS: readonly PodcastTarget[] = [
     url: 'https://hubermanlab.com/',
     angle: 'Weak fit — only worth pitching with a music-and-focus research angle.',
   },
-  // Demo rows: the shape a realistic target list takes once you start filling it
-  // in yourself. Replace these — they are placeholders, not real shows.
-  {
-    id: 'pod-demo-1',
-    name: '[Your target] AI music creator show',
-    host: 'Add the host name',
-    topics: ['ai music', 'suno', 'creators', 'production'],
-    format: 'Weekly, 45 min, video + audio',
-    audience: '5k – 50k',
-    reach: 'reachable',
-    url: '',
-    angle: 'Demo a full track built live, start to finish, with the stack on screen.',
-    isDemo: true,
-  },
-  {
-    id: 'pod-demo-2',
-    name: '[Your target] vibe-coding / indie build show',
-    host: 'Add the host name',
-    topics: ['vibe coding', 'indie', 'ai', 'building'],
-    format: 'Fortnightly, 60 min',
-    audience: '2k – 20k',
-    reach: 'peer',
-    url: '',
-    angle: 'Build a FutureBox feature live and ship it during the episode.',
-    isDemo: true,
-  },
-  {
-    id: 'pod-demo-3',
-    name: '[Your target] South African tech / creator podcast',
-    host: 'Add the host name',
-    topics: ['south africa', 'creators', 'ai', 'business'],
-    format: 'Weekly, 40 min',
-    audience: '1k – 15k',
-    reach: 'peer',
-    url: '',
-    angle: 'Local angle: building an AI media channel from South Africa, in two languages.',
-    isDemo: true,
-  },
+  /* ── Three placeholder rows, taken out 8 October 2026 ──────────────
+
+     Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
+
+     Where these are now there were three rows reading `[Your target] AI
+     music creator show`, `[Your target] vibe-coding / indie build show`
+     and `[Your target] South African tech / creator podcast`, with
+     `Add the host name` under each.
+
+     This repo already holds that a placeholder shipped as content is a
+     fault, and holds it with a check: `check:posttemplates` refuses
+     `YOUR TEXT HERE` on a photo template, because *"a placeholder is a
+     second job: it hands back the same blank page with more steps."* The
+     Radar had three of them in its primary list, above the fold, sorted in
+     among five real shows and scored like them — and an invented 34%
+     beside `[Your target]` is a number about nothing.
+
+     What replaces them is the add-your-own box, which now keeps what she
+     types between visits and takes her own topics rather than three the
+     panel invented. See `lib/radartargets.ts`. */
 ];
 
 // -----------------------------------------------------------------------------

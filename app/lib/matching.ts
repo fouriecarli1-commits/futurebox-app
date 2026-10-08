@@ -180,7 +180,22 @@ export function profileFromTracks(
 
 export interface PodcastMatch {
   readonly podcast: PodcastTarget;
-  readonly score: number;
+  /**
+   * How well it fits, or `null` when that cannot honestly be answered.
+   *
+   * Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."* A show
+   * she added herself used to arrive with three topics hard-coded into the
+   * panel — `ai music`, `ai`, `creators` — whatever the show was about, and
+   * the matcher then scored it against those and drew a percentage. An
+   * Afrikaans theatre podcast is not a weak match on "ai music"; it is not
+   * a match at all, and the screen said 34%.
+   *
+   * So a target with no topics of its own gets no number, and the row draws
+   * a dash with a line saying what to type. Same rule as the cutting room,
+   * which shows no recommended shape when no clip has been measured: a
+   * default presented as a reading is worse than no reading.
+   */
+  readonly score: number | null;
   readonly shared: readonly string[];
   readonly verdict: string;
 }
@@ -217,6 +232,14 @@ const VERDICT = {
     en: 'Thin overlap. Only worth it if you can offer something specific they cannot get elsewhere.',
     af: 'Min oorvleueling. Net die moeite werd as jy iets spesifieks kan bied wat hulle nêrens anders kry nie.',
   },
+  /* No topics on the show, so no fit to report. The sentence asks for the
+     one thing that would turn the dash into a number, rather than saying
+     the match is poor — which would be a verdict on a show nothing has
+     been measured about. */
+  unknown: {
+    en: 'Add what this show is about and the fit gets worked out. Until then there is nothing to measure.',
+    af: 'Tik in waaroor hierdie program gaan en die pas word uitgewerk. Tot dan is daar niks om te meet nie.',
+  },
 } as const;
 
 export function matchPodcasts(
@@ -225,7 +248,10 @@ export function matchPodcasts(
   lang: 'en' | 'af' = 'en',
 ): PodcastMatch[] {
   return targets
-    .map((podcast) => {
+    .map((podcast): PodcastMatch => {
+      if (!podcast.topics.length) {
+        return { podcast, score: null, shared: [], verdict: VERDICT.unknown[lang] };
+      }
       const { score: topicScore, shared } = tagOverlap(profile.topics, podcast.topics);
       // Reach is a multiplier, not a bonus: a perfect topic fit on a show that
       // will never reply is still not a plan.
@@ -238,7 +264,16 @@ export function matchPodcasts(
             : VERDICT.thin[lang];
       return { podcast, score, shared, verdict };
     })
-    .sort((a, b) => b.score - a.score);
+    /* The unscored ones to the top, not the bottom. They are the shows she
+       typed in herself and the only thing standing between them and a
+       number is one line of typing — sorted last they are a row nobody
+       scrolls to, which is where her own list went to die. */
+    .sort((a, b) => {
+      if (a.score === null && b.score === null) return 0;
+      if (a.score === null) return -1;
+      if (b.score === null) return 1;
+      return b.score - a.score;
+    });
 }
 
 // -----------------------------------------------------------------------------
