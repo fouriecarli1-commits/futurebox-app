@@ -1108,6 +1108,19 @@ export const STRINGS: Dict = {
      `lib/lyrictime.ts`'s ladder answers when each line is sung; the room says
      which rung it is standing on, because a member deciding whether to cut a
      film on these timings is entitled to know whether they were measured. */
+  /* ── What the reader found, lifted onto the picture ──────────────────
+
+     Carli, 8 October 2026: *"Find the words kry die woorde, maar van daar af
+     moet mens die woorde kan edit en rond skuif, of delete."* Each line is
+     its own words now, so each can be dragged on its own. */
+  "post.grabbedOne": {
+    en: "On the picture. Change it, drag it or throw it away under Words.",
+    af: "Op die prent. Verander dit, sleep dit of gooi dit weg onder Woorde.",
+  },
+  "post.grabbedMany": {
+    en: "{n} lines on the picture, each one its own. Change, drag or throw away any of them under Words.",
+    af: "{n} re\u00eble op die prent, elkeen op sy eie. Verander, sleep of gooi enige van hulle weg onder Woorde.",
+  },
   "edit.songFound": {
     en: "The track under this film has words, and we know when each one is sung.",
     af: "Die liedjie onder hierdie film het woorde, en ons weet wanneer elkeen gesing word.",
@@ -1823,7 +1836,7 @@ export const STRINGS: Dict = {
      The reader already found these boxes; `lib/ocr.ts` was throwing them
      away. Nothing here costs anything. */
   "post.findWords": { en: "Find the words, so I can tap one", af: "Vind die woorde, sodat ek een kan tik" },
-  "post.findWordsWhy": { en: "Puts a box round every line it can read. Tap one and you can take it out of the photograph, or lift it onto the picture as words you can change.", af: "Sit ’n blokkie om elke reël wat dit kan lees. Tik een en jy kan dit uit die foto haal, of dit op die prent lig as woorde wat jy kan verander." },
+  "post.findWordsWhy": { en: "Puts a box round every line it can read. Tap one to take it out of the photograph, or lift it onto the picture. Whatever you lift lands under Words as real text — each line on its own, so you can retype it, drag it anywhere, or throw it away.", af: "Sit ’n blokkie om elke reël wat dit kan lees. Tik een om dit uit die foto te haal, of lig dit op die prent. Wat jy ook al oplig beland onder Woorde as regte teks — elke reël op sy eie, sodat jy dit kan oortik, enige plek kan sleep, of kan weggooi." },
   "post.findNone": { en: "No lines of writing could be made out in this picture. It reads printed text well and handwriting badly.", af: "Geen reëls skrif kon in hierdie prent uitgemaak word nie. Dit lees gedrukte teks goed en handskrif swak." },
   "post.tapALine": { en: "Tap a line of writing on the picture.", af: "Tik ’n reël skrif op die prent." },
   "post.lineGrab": { en: "Lift it onto the picture", af: "Lig dit op die prent" },
@@ -1941,7 +1954,7 @@ export const STRINGS: Dict = {
   "post.cutDone": { en: "Background gone, and there is nothing behind it now — the squares are how the picture shows you that. Save it as PNG to keep it see-through; JPG cannot. Put a colour behind it below if you want one.", af: "Agtergrond weg, en daar is nou niks daaragter nie — die blokkies is hoe die prent dit vir jou wys. Stoor dit as PNG om dit deursigtig te hou; JPG kan nie. Sit ’n kleur daaragter hieronder as jy een wil hê." },
   "post.grabEn": { en: "Read English", af: "Lees Engels" },
   "post.grabAf": { en: "Read Afrikaans", af: "Lees Afrikaans" },
-  "post.grabUse": { en: "Put it on the picture", af: "Sit dit op die prent" },
+  "post.grabUse": { en: "Put them on, each on its own", af: "Sit hulle op, elkeen op sy eie" },
   "post.grabCopy": { en: "Copy it", af: "Kopieer dit" },
   "post.grabNone": { en: "No words could be made out in this picture. It reads printed text well and handwriting badly.", af: "Geen woorde kon in hierdie prent uitgemaak word nie. Dit lees gedrukte teks goed en handskrif swak." },
   "post.grabFree": { en: "The reading happens on your own device and costs nothing. The first time takes a moment while the reader downloads.", af: "Die lees gebeur op jou eie toestel en kos niks. Die eerste keer vat \u2019n oomblik terwyl die leser aflaai." },

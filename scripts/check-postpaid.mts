@@ -191,6 +191,46 @@ ok('the route charges, once per post', /charge\(request, CREDITS\.postOut/.test(
 ok(`  and the price is ${CREDITS.postOut} credits, not nothing`, CREDITS.postOut >= 1,
   'a charge of zero passes every rule above and collects nothing');
 
+/* ── And nothing ELSE in the photo flow can write a file ───────────────
+
+   Carli, 8 October 2026: *"Die photo editor save ook fotos op 'n mens se
+   foon sonder dat mens die export gedruk het."*
+
+   Everything above holds `PostStudio.tsx` to one way out, behind the charge.
+   It said nothing about the files AROUND it — the picker, the shelf, the
+   thumbnails, the resizer — and "the editor saved something" is a sentence
+   about the whole room, not about one file.
+
+   So the whole room is read. There is exactly one line in any of them that
+   can put a file on a phone, and it is the one above. If a second ever
+   appears, this says so by name rather than by somebody noticing a
+   photograph in their gallery.
+
+   What this canNOT rule out, and nothing in a repository can: a picture
+   taken through the picker's own Camera option is saved to the gallery by
+   the PHONE, before the browser is handed anything. That is the operating
+   system doing its job and no code here is involved. */
+const NEARBY = [
+  'app/components/Pictures.tsx',
+  'app/lib/assets.ts',
+  'app/lib/brought.ts',
+  'app/lib/imagefile.ts',
+];
+/* `a.download = …` is the only way a page starts a save without the person
+   choosing a file themselves; the other two are the explicit pickers. */
+const WRITES = /\.download\s*=|showSaveFilePicker|msSaveOrOpenBlob/;
+const strays = NEARBY.filter((one) => WRITES.test(withoutComments(readFileSync(one, 'utf8'))));
+ok('nothing else in the photo room can put a file on a phone',
+  strays.length === 0,
+  `${strays.join(', ')} — the shelf and the picker keep things INSIDE the app,`
+  + ' in the browser\u2019s own storage. A save that appears among them is a free'
+  + ' export wearing a different name');
+
+ok('  and the one that can is the paid one, not a second copy of it',
+  (withoutComments(readFileSync('app/components/PostStudio.tsx', 'utf8'))
+    .match(/\.download\s*=/g) ?? []).length === 1,
+  'two download lines is two prices, and only one of them was decided');
+
 if (bad) {
   console.error(`\ncheck:postpaid — ${bad} assertion(s) failed. A post leaves one way, paid.`);
   process.exit(1);

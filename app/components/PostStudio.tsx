@@ -1828,6 +1828,63 @@ export default function PostStudio({
       as text reads as the app having duplicated it. */
 
   /** Put the line on the picture as real, editable words, where it was. */
+  /**
+   * Every line it read, each as its own words.
+   *
+   * ── Why not one block ───────────────────────────────────────────────
+   *
+   * Carli, 8 October 2026: *"Find the words kry die woorde, maar van daar af
+   * moet mens die woorde kan edit en rond skuif, of delete."*
+   *
+   * All three of those already worked — on the Words bench, where every line
+   * has a box to retype it, a handle to drag it and a bin to throw it away.
+   * What did not work is the thing in the middle of her sentence: **rond
+   * skuif.** "Put it on the picture" joined every line with a newline and
+   * added ONE block, so a poster whose heading and date were read as two
+   * lines came back as one lump that could only move as a lump.
+   *
+   * One line, one words. Each lands where it was in the photograph, which is
+   * what tapping a single line already did — this is that, for all of them
+   * at once, rather than a different behaviour for the button beside it.
+   */
+  const grabEvery = (): void => {
+    const lines = found ?? [];
+    const made: Words[] = lines.length
+      ? lines.map((one) => ({
+        id: freshId(),
+        text: one.text,
+        face: FACES[0].id,
+        spot: 'middle' as const,
+        ink: '#ffffff',
+        at: middleOf(one),
+      }))
+      /* No boxes, only text: a read that found words without finding where
+         they were. Stacked rather than placed, because a made-up position is
+         worse than an obvious default she can drag. */
+      : (grabbed ?? '').split('\n').map((line) => line.trim()).filter(Boolean)
+        .map((line, n) => ({
+          id: freshId(),
+          text: line,
+          face: FACES[0].id,
+          spot: (n === 0 ? 'bottom' : 'top') as SpotId,
+          ink: '#ffffff',
+        }));
+    if (!made.length) return;
+    setWords((was) => [...was, ...made]);
+    setGrabbed(null);
+    setPicking(false);
+    setFound(null);
+    setPicked(null);
+    /* And open the bench they landed on. The room is benches rather than one
+       scroll, so leaving her on this one puts the words on the canvas and the
+       box to fix what the reader got wrong behind a different tab. */
+    setBench('text');
+    setSaid(made.length === 1
+      ? t('post.grabbedOne', 'On the picture. Change it, drag it or throw it away under Words.')
+      : t('post.grabbedMany', '{n} lines on the picture, each one its own. Change, drag or throw away any of them under Words.')
+        .replace('{n}', String(made.length)));
+  };
+
   const grabLine = (one: Pick): void => {
     const at = middleOf(one);
     setWords((was) => [...was, {
@@ -3152,7 +3209,7 @@ export default function PostStudio({
           >
             {t(
               'post.findWordsWhy',
-              'Puts a box round every line it can read. Tap one and you can take it out of the photograph, or lift it onto the picture as words you can change.',
+              'Puts a box round every line it can read. Tap one to take it out of the photograph, or lift it onto the picture. Whatever you lift lands under Words as real text — each line on its own, so you can retype it, drag it anywhere, or throw it away.',
             )}
           </p>
         </div>
@@ -3170,24 +3227,10 @@ export default function PostStudio({
               <button
                 type="button"
                 data-postgrabuse
-                onClick={() => {
-                  setWords((was) => [...was, {
-                    id: freshId(), text: grabbed, face: FACES[0].id,
-                    spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
-                  }]);
-                  setGrabbed(null);
-                  /* And open the bench the words landed on.
- 
-                     The room is benches rather than one scroll now, so "Put
-                     it on the picture" put them somewhere she was not
-                     looking: the words appear on the canvas, and the box to
-                     fix what the reader got wrong is behind a different tab.
-                     A read nobody can edit is a read nobody wanted. */
-                  setBench('text');
-                }}
+                onClick={grabEvery}
                 className={LEEG}
               >
-                {t('post.grabUse', 'Put it on the picture')}
+                {t('post.grabUse', 'Put them on, each on its own')}
               </button>
               <button
                 type="button"

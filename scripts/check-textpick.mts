@@ -29,6 +29,7 @@ import {
 } from '../app/lib/textpick.ts';
 import type { Found } from '../app/lib/ocr.ts';
 import { readFileSync } from 'node:fs';
+import { withoutComments } from './prose.mts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -220,6 +221,46 @@ ok('  and a reading with no blocks still answers with its text',
   /lines,/.test(ocr) && /const lines: Found\[\] = \[\]/.test(ocr),
   'the boxes are an addition to what this already did, and a reading that'
   + ' comes back without them must not stop the words arriving');
+
+/* ── Lifted as words she can actually work with ────────────────────────
+
+   Carli, 8 October 2026: *"Find the words kry die woorde, maar van daar af
+   moet mens die woorde kan edit en rond skuif, of delete."*
+
+   All three already existed on the Words bench — a box to retype, a handle
+   to drag, a bin. What did not was the middle one, for a read of more than
+   one line: "Put it on the picture" joined every line with a newline and
+   added ONE block, so a heading and a date read as two lines came back as a
+   lump that could only move as a lump.
+
+   These read the room's source and hold that the wire exists, not that it
+   works on a screen. `audit/postwalk.mjs` walks the press. */
+const room = withoutComments(readFileSync('app/components/PostStudio.tsx', 'utf8'));
+
+ok('every line it read is lifted as its own words',
+  /const made: Words\[\] = lines\.length\s*\?\s*lines\.map\(/.test(room),
+  'one block cannot be moved line by line, which is the half of her sentence'
+  + ' that was not already true');
+
+ok('  and each lands where it was in the photograph',
+  /at: middleOf\(one\),/.test(room),
+  'words that jump to a default spot when she lifts them are words she has'
+  + ' to put back by hand, which is what lifting them was meant to avoid');
+
+ok('  with a fall-back for a read that found words but no boxes',
+  /\(grabbed \?\? ''\)\.split\('\\n'\)/.test(room),
+  'a made-up position is worse than an obvious default she can drag');
+
+ok('and she is left on the bench where they can be changed',
+  /setBench\('text'\);[\s\S]{0,400}?post\.grabbedOne/.test(room),
+  'the words appear on the canvas and the box to fix what the reader got'
+  + ' wrong is behind a different tab — a read nobody can edit is a read'
+  + ' nobody wanted');
+
+ok('and the room says all three things are possible, in the room',
+  /retype it, drag it anywhere, or throw it away/.test(room),
+  'she asked for edit, move and delete because the screen did not say they'
+  + ' were there — two of the three already were');
 
 if (bad) {
   console.error(`\ncheck:textpick — ${bad} assertion(s) failed.\n`);

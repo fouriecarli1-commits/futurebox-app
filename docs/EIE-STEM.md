@@ -209,6 +209,60 @@ listened to before anything is built around it.
 
 ---
 
+## And if Google takes the music, what takes the video?
+
+*Carli, 8 October 2026:* "Ek besef nou net ons gaan die musiek probleem vervang met google, maar
+wat van die video generation?"
+
+**The same account.** That is the whole answer and it is the reason the question is worth asking
+now rather than later.
+
+Lyria and **Veo** are both Google. Registering once on Vertex AI — the step in
+`docs/OPEN-QUESTIONS.md` she was going to take for Lyria anyway — turns on music AND video on one
+project, one bill, one set of quotas, one data-processing agreement to read and sign. Against the
+alternative we have been pricing, which is MiniMax for video and somebody else for music, that is
+one supplier relationship instead of two.
+
+### What Veo costs, checked 8 October 2026
+
+Per second of finished video. Vertex AI's **video-only** rates are the lower column and are the
+ones that matter to us, because this app puts its own sound under the picture:
+
+| | With audio (Gemini API) | Video only (Vertex AI) |
+|---|---|---|
+| **Veo 3.1 Lite** 720p | $0.05/s | **$0.03/s** |
+| **Veo 3.1 Fast** 720p | $0.10/s | **$0.08/s** |
+| **Veo 3.1 Standard** 720p/1080p | $0.40/s | **$0.20/s** |
+
+At R16 to the dollar, an **eight-second shot**:
+
+* Lite, video only — $0.24 = **R3.84**
+* Fast, video only — $0.64 = **R10.24**
+* Standard, video only — $1.60 = **R25.60**
+
+Against MiniMax's H3 at $0.08/second (R10.24 for eight seconds), **Fast is the same price and
+Lite is a third of it.** That is the number worth knowing before the Vertex registration, because
+it changes the question from "shall we add Google for music" to "shall we move".
+
+**These figures disagree between sources and must be confirmed on Google's own page.** Several
+guides still quote a flat $0.75 a second, which is either older or generic, and one of them sells
+Veo credits and therefore has a reason to quote high. The proxy here blocks Google's consoles, so
+I could not read the official page — the first thing to do inside the Cloud console, once she is
+registered, is read the SKU rates for her own region and currency and correct this table.
+
+### What this does not change
+
+**`CREDITS.video` is 15 a unit and has one cent of margin on Kling.** That was already the open
+question in `docs/KOSTE-EN-WINS.md` and it does not get easier by adding an engine; it gets easier
+by choosing the cheap one. If Veo Lite is really R3.84 for eight seconds, the margin problem
+solves itself. If it is really $0.75 a second, it gets much worse. So: the price is the decision,
+and the price has to come off Google's own page rather than off a blog.
+
+**It is still a different model from Lyria and still needs its own line on `/privacy`** — Google
+as a processor, named, with what is sent to them. One registration is not one disclosure.
+
+---
+
 ## Sources for the prices and the licence position
 
 Checked 8 October 2026. All of it should be re-checked before money moves.
@@ -220,5 +274,11 @@ Checked 8 October 2026. All of it should be re-checked before money moves.
 * [so-vits-svc project listing, licence and provenance — SourcePulse](https://www.sourcepulse.org/projects/1157773)
 * [so-vits-svc deployment documents — SourcePulse](https://www.sourcepulse.org/projects/1832062)
 * [On AGPL weights combined with a non-AGPL inference script — Ultralytics issue #2129](https://github.com/ultralytics/ultralytics/issues/2129)
+* Veo pricing, 8 October 2026, all of it needing confirmation on Google's own page:
+  [Akool's Veo 3.1 cost guide](https://akool.com/blog-posts/google-veo-3-1-cost-guide) ·
+  [Atlas Cloud on Veo 3.1 API pricing](https://www.atlascloud.ai/blog/tips/veo-3.1-api-pricing) ·
+  [WaveSpeed on Veo 3 pricing](https://wavespeed.ai/blog/cost-and-billing/google-veo-3-pricing/) ·
+  [Magic Hour's Veo 3 pricing page](https://magichour.ai/blog/veo-3-pricing), which sells Veo
+  credits and quotes the high flat rate
 * [getdeploying: GPUHub vs Render](https://getdeploying.com/gpuhub-vs-render) — listed with no GPU
   price, which is **not** evidence that Render has none; it is why §5 says to check their own page.
