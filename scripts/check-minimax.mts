@@ -182,6 +182,90 @@ ok('  but transcribes for more, so this is not one decision',
   + ' everything to one supplier because its headline looked cheaper is how'
   + ' a bill goes up while the spreadsheet says it went down');
 
+/* ── Mureka, which is the one that matters ──────────────────────
+
+   Carli sent their whole price list on 8 October 2026, signed in to their
+   site. A song is the biggest single cost in this app and the one the
+   whole credit scale was built round, so this comparison is worth more
+   than the other two put together.
+
+   Pay-as-you-go, in dollars, from their APIs & Pricing tables. */
+const MUREKA = {
+  /** Lyrics to song, by model. Up to 5m30s. */
+  songFromLyrics: { v76: 0.03, v8v9: 0.045, v95: 0.15 },
+  /** Prompt to song — a style and a prompt, no lyrics written. */
+  songFromPrompt: { older: 0.30, v95: 0.50 },
+  bgm: { v76: 0.03, v8v9: 0.045, v95: 0.15 },
+  /** A picture or a clip in, music out. */
+  soundtrack: 0.10,
+  lyrics: 0.009,
+  singleTrack: 0.09,
+  vocalClone: 5,
+  stems: { two: 0.20, five: 0.06, twelve: 0.70 },
+  extend: { v76: 0.036, v8: 0.10 },
+  remix: 0.20,
+  regionEdit: 0.10,
+  describe: 0.10,
+  transcribe: 0.20,
+  ttsPerHour: 4.9,
+  lyricsVideo: 0.10,
+} as const;
+
+/* What a song costs us today: ElevenLabs music at $0.15 a minute, and a
+   song is two minutes. `docs/ELEVENLABS-PRYSE.md` works it out off the
+   page Carli sent on 8 September 2026. */
+const SONG_NOW = 0.15 * 2;
+
+console.log(`  a song brings in R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)}`
+  + ` (${CREDITS.song} credits at R${CREDIT_RAND_LOW.toFixed(2)})`);
+console.log(`    what one costs us now      $${SONG_NOW.toFixed(3)}  R${rand(SONG_NOW).toFixed(2)}`);
+for (const [name, usd] of [
+  ['Mureka V7.6, lyrics to song', MUREKA.songFromLyrics.v76],
+  ['Mureka V8/V9, lyrics to song', MUREKA.songFromLyrics.v8v9],
+  ['Mureka 9.5, lyrics to song', MUREKA.songFromLyrics.v95],
+  ['Mureka V8/V9, prompt to song', MUREKA.songFromPrompt.older],
+  ['Mureka 9.5, prompt to song', MUREKA.songFromPrompt.v95],
+] as readonly [string, number][]) {
+  console.log(`    ${name.padEnd(26)} $${usd.toFixed(3)}  R${rand(usd).toFixed(2)}`
+    + `  ${(CREDITS.song * CREDIT_RAND_LOW) - rand(usd) >= 0 ? '+' : ''}`
+    + `R${((CREDITS.song * CREDIT_RAND_LOW) - rand(usd)).toFixed(2)}`);
+}
+console.log('');
+
+ok('a song costs us more than it brings in today, on the thinnest plan',
+  rand(SONG_NOW) > CREDITS.song * CREDIT_RAND_LOW,
+  `R${rand(SONG_NOW).toFixed(2)} to make against`
+  + ` R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)} taken — this is the`
+  + ' biggest single cost in the app and the one the whole credit scale was'
+  + ' built round');
+
+ok('  and Mureka’s working model makes it cost a fraction of that',
+  MUREKA.songFromLyrics.v8v9 < SONG_NOW / 5,
+  `$${MUREKA.songFromLyrics.v8v9} against $${SONG_NOW.toFixed(2)}`);
+
+ok('  which turns the song from a loss into a margin',
+  rand(MUREKA.songFromLyrics.v8v9) < CREDITS.song * CREDIT_RAND_LOW,
+  `R${rand(MUREKA.songFromLyrics.v8v9).toFixed(2)} against`
+  + ` R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)}`);
+
+ok('  and even their dearest song model is cheaper than what we pay now',
+  MUREKA.songFromLyrics.v95 < SONG_NOW,
+  `$${MUREKA.songFromLyrics.v95} against $${SONG_NOW.toFixed(2)} — if this`
+  + ' ever fails, the write-up’s headline is wrong');
+
+/* The one that is NOT cheaper, because a comparison with only good news in
+   it is a comparison somebody stopped reading too early. */
+ok('  but writing the song from a prompt alone is dearer than what we pay now',
+  MUREKA.songFromPrompt.older >= SONG_NOW,
+  `$${MUREKA.songFromPrompt.older} against $${SONG_NOW.toFixed(2)} — the cheap`
+  + ' price is lyrics-to-song, and this app writes the lyrics first, which is'
+  + ' the half that makes the cheap price the one we would actually pay');
+
+ok('  and their lyrics are cheap enough that writing them first is free in practice',
+  MUREKA.lyrics + MUREKA.songFromLyrics.v8v9 < MUREKA.songFromPrompt.older,
+  `$${(MUREKA.lyrics + MUREKA.songFromLyrics.v8v9).toFixed(3)} for lyrics and a`
+  + ` song against $${MUREKA.songFromPrompt.older} for prompt-to-song`);
+
 /* ── The write-up says all of this, and says whose numbers they are ─── */
 const doc = readFileSync('docs/MINIMAX-PRYSE.md', 'utf8');
 ok('the write-up exists and dates the prices to the day she sent them',
@@ -208,10 +292,40 @@ ok('  and says their plans are priced per seat, which may not be a wholesale rat
   + ' rights" is permission to use what YOU make, not to resell generation to'
   + ' third parties, and a document that leaves that out reads as a plan');
 
+ok('  and carries the song comparison, which is the biggest number in it',
+  /Mureka/.test(doc) && /0,045|0\.045/.test(doc),
+  'a song is the largest single cost in this app, and a price comparison'
+  + ' that leaves it out is a comparison about the small things');
+
 ok('  and names the credit expiry, which is the catch in every plan',
   /verval|verstryk/i.test(doc),
   'unused credits expire monthly and do not roll over — which turns a'
   + ' discount into a loss at a volume she has not reached yet');
+
+/* ── And the letter that goes with it ──────────────────────────
+ 
+   Carli, 8 October 2026: *"Kan jy my help om vir mureka ’n custom sales
+   epos te skryf, wie ons is, die vrae oor ryalties, asook, wat hulle dak
+   is?"* Three questions, and the royalties one first — because if they
+   claim a share of revenue on music their model made, every figure above
+   is wrong and the comparison falls over. A price per song that later
+   becomes a percentage of turnover is not a price. */
+const letter = readFileSync('docs/EPOS-MUREKA.md', 'utf8');
+ok('the letter to Mureka asks the three questions she named',
+  /[Rr]oyalt/.test(letter) && /ceiling/i.test(letter) && /concurren/i.test(letter),
+  'royalties, their ceiling and concurrency — and royalties first, because'
+  + ' it is the one that can make every number above meaningless');
+ok('  and says the size she is actually at, not a number that sounds better',
+  /2\s?000/.test(letter) && /8\s?000/.test(letter),
+  'an inflated figure becomes a quote written for a business that does not'
+  + ' exist, and then she has to take it back');
+ok('  and keeps our own costings out of it',
+  !/R1[.,]58/.test(letter) && !/CREDITS/.test(letter),
+  'a letter that names our margin tells the other side exactly how much'
+  + ' room we have');
+ok('  and says what happens if they do not answer',
+  /22 Oktober 2026/.test(letter) && /niks is nie/.test(letter),
+  'a deadline with no consequence behind it is a request asked twice');
 
 if (bad) {
   console.error(`\ncheck:minimax — ${bad} assertion(s) failed.\n`);

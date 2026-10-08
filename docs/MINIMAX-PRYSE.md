@@ -193,3 +193,103 @@ die sitplek-vraag hierbo eers moet beantwoord.
 **Magic grab is steeds nie op hulle lys nie.** Daar is 'n Image Editing Suite
 genoem op die Wonder-plan, maar niks wat sê dit doen generatiewe inpainting met
 'n masker nie. Geen prys, geen belofte.
+
+
+---
+
+# Mureka, en die grootste syfer in die hele app
+
+*Carli het hulle hele pryslys op **8 Oktober 2026** gestuur, ingeteken op
+hulle werf. Weer eens: ek kon die bladsy nie self oopmaak nie. Die pryse is
+hare; die rekenkunde is myne, en `check:minimax` hou dit teen `credits.ts`.*
+
+'n Liedjie is die **grootste enkele koste in hierdie app** en die een waarom
+die hele kredietskaal gebou is. Hierdie een vergelyking is meer werd as die
+ander twee saam.
+
+## Wat 'n liedjie nou doen
+
+| | Dollar | Rand |
+|---|---|---|
+| Wat 'n liedjie inbring (10 krediete @ R0,23) | | **R2,30** |
+| Wat een ons nou kos (ElevenLabs, $0,15/minuut × 2) | $0,300 | **R4,80** |
+
+> **Elke liedjie op die dunste plan verloor R2,50.**
+
+Dit is nie nuus wat met Mureka kom nie — dit is waar sedert 8 September, toe
+jy ElevenLabs se bladsy gestuur het. Dit is net die eerste keer dat daar 'n
+alternatief langsaan staan.
+
+## Wat Mureka vra
+
+| Model | Dollar | Rand | Marge |
+|---|---|---|---|
+| V7.6, lirieke → liedjie | $0,030 | R0,48 | **+R1,82** |
+| **V8 / V9, lirieke → liedjie** | **$0,045** | **R0,72** | **+R1,58** |
+| 9.5, lirieke → liedjie | $0,150 | R2,40 | −R0,10 |
+| V8 / V9, prompt → liedjie | $0,300 | R4,80 | −R2,50 |
+| 9.5, prompt → liedjie | $0,500 | R8,00 | −R5,70 |
+
+**Die werkmodel kos 'n sewende van wat ons nou betaal.** Dit draai 'n verlies
+van R2,50 per liedjie in 'n marge van R1,58 — en hulle liedjies loop tot
+5m30s, teenoor die twee minute waarop ons som gebou is.
+
+**Maar let op die laaste twee rye.** Die goedkoop prys is **lirieke →
+liedjie**. Prompt-na-liedjie, waar die model self die woorde skryf, kos
+dieselfde of meer as wat ons nou betaal. Dit maak nie saak nie, en dis die
+mooi deel: hierdie app skryf die lirieke klaar eerste, en Mureka se eie
+lirieke kos $0,009. Lirieke plus liedjie is $0,054 — steeds 'n vyfde van wat
+ons nou betaal.
+
+## Die res van hulle lys, teen wat ons nou doen
+
+| Wat | Mureka | Wat ons nou betaal |
+|---|---|---|
+| Stem kloon | $5 per stem, eenmalig | ElevenLabs, sien `ELEVENLABS-PRYSE.md` |
+| Stem-skeiding (2 stems) | $0,20 | $0,12 / minuut |
+| Stem-skeiding (5 stems) | **$0,06** | — |
+| Stem-skeiding (12 stems) | $0,70 | — |
+| Teks hardop lees | $4,90 / uur | $0,10 / 1 000 karakters |
+| Transkripsie (bladmusiek) | $0,20 / liedjie | nie dieselfde ding nie |
+| Liedjie verleng | $0,036 (V7.6) / $0,10 (V8) | nie beskikbaar nie |
+| Remix | $0,20 | nie beskikbaar nie |
+| Streek-redigering (10–30 s) | $0,10 | **nie beskikbaar nie** |
+| Prent of video → musiek | $0,10 | nie beskikbaar nie |
+| Lirieke-video | $0,10 | nie beskikbaar nie |
+
+Drie van daardie reëls is dinge wat die app glad nie kan doen nie en wat
+mense vra: **'n liedjie verleng**, **'n stuk van 'n liedjie oorskryf sonder
+om die hele ding oor te maak**, en **musiek uit 'n foto of 'n video**.
+
+## Hulle planne, en wat die vangplek dié keer is
+
+| | Prys | Gelyktydige versoeke |
+|---|---|---|
+| Proef | $10 eenmalig | 1 |
+| Basic | $1 000 | 5 |
+| Standard | $3 000 | 15 |
+| Business | $5 000 | 25 |
+| Enterprise | $30 000 | 150 |
+
+Alles 12 maande geldig, volle model- en API-toegang op elke vlak.
+
+**Dit is nie 'n intekening nie — dit is 'n hergelaaide saldo.** Daar is geen
+sitplek-probleem soos by OpenArt nie: dit is 'n API met sleutels, soos Kling
+en ElevenLabs. Dit is die eerlike kant.
+
+Die vangplek is **gelyktydigheid, en dit tel per aankoop en nie opgetel nie**
+— hulle eie nota sê dit: vyf keer $1 000 gee jou 5 gelyktydige versoeke, nie
+25 nie. By 2 000 lede wat Vrydagaand almal tegelyk 'n liedjie maak, is 5 'n
+tou. Dit is die een syfer om oor te onderhandel, en dit is nie die prys nie.
+
+## Wat ek sou doen
+
+1. **Vra Mureka.** Die e-pos staan in `docs/EPOS-MUREKA.md`. Die drie vrae
+   wat saak maak is tantieme, hulle plafon, en of gelyktydigheid losgemaak
+   kan word van die saldo.
+2. **Moet nie die 9.5-model vir alles gebruik nie.** Dit kos vyf keer die
+   werkmodel en bring ons by breek-gelyk terug.
+3. **Hou lirieke waar hulle is.** Ons skryf hulle klaar, en dit is presies
+   wat die goedkoop prys moontlik maak.
+4. **Punt 5 uit die MiniMax-afdeling bly staan:** ons video-prys het een sent
+   marge. Dit is 'n aparte probleem en dit gaan nie weg nie.
