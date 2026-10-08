@@ -7026,3 +7026,15 @@ Afrikaans lyric is a thing to hear, not to reason about.
 **Nano Banana has a published end date.** `gemini-2.5-flash-image` is the only image model on
 the account and Vertex lists its shutdown as 15 March 2027. Nano Banana Pro 404s under all three
 of its names today. Re-run `/google` from time to time and move the moment Pro appears.
+
+**`RAND_PER_USD = 16` may be a seventh out, and everything rests on it.**
+Carli, 8 October 2026, on Lyria: *"$0.08 (~R1.40 tot R1.50) per gegenereerde liedjie."* At 16 to
+the dollar, $0.08 is R1.28. Her figure implies **17.5 to 18.75**.
+
+The number itself is small. What is not small is where it sits: every supplier cost in this app
+is converted at 16, so a real rate nearer 18 understates every one of them by about a seventh —
+including `CREDITS.video`, whose margin is already one cent and would therefore be negative.
+
+It is one constant in `app/lib/plans.ts` and it is four months old. Worth checking against the
+rate her card is actually billed at, which is the only rate that matters, and worth re-running
+the margins afterwards rather than before.

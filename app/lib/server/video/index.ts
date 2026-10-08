@@ -21,6 +21,7 @@
 
 import { kling } from './kling.ts';
 import { seedance, veo } from './eleven.ts';
+import { googleVeo } from './google.ts';
 import { suits, type Grade, type Provider, type StartRequest } from './types.ts';
 
 export * from './types.ts';
@@ -47,8 +48,25 @@ export {
  *
  * Costs, per clip, from this project's own invoices rather than from anybody's
  * marketing page: Seedance R2.62, Veo R10.72, Kling R33.48.
+ *
+ * ── Two Veos, and they are the same picture ─────────────────────────────
+ *
+ * `veo` is Veo resold by ElevenLabs. `googleVeo` is Veo on Carli's own
+ * Vertex project, switched on 8 October 2026. Same model, same grade, and
+ * the member cannot tell them apart — which is the point: a grade is a
+ * promise about the RESULT, and who bills for it is ours to decide.
+ *
+ * Google's is first because it is the cheaper of the two at Google's own
+ * published rate and because it stops at a ceiling she controls. If it is
+ * not configured, or its month is spent, the list falls through to the
+ * resold one exactly as it always did — and the first anybody knows about
+ * it is nothing at all, which is correct.
+ *
+ * The two are counted separately, each in its own units, because they are
+ * different accounts with different ceilings. `video_spend_this_month`
+ * already keys on the provider id, so that came free.
  */
-export const PROVIDERS: readonly Provider[] = [seedance, veo, kling];
+export const PROVIDERS: readonly Provider[] = [seedance, googleVeo, veo, kling];
 
 export function providerById(id: string): Provider | undefined {
   return PROVIDERS.find((one) => one.id === id);

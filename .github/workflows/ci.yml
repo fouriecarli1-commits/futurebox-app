@@ -1245,6 +1245,12 @@ jobs:
       - name: A song is found whichever field it comes back in
         run: npm run check:lyria
 
+      # Veo straight from Google, as one more engine in the list that
+      # already existed — tried before the reseller of the same model, and
+      # counted in micro-dollars against her own ceiling.
+      - name: Google's Veo is one more engine, not a route beside them
+        run: npm run check:veo
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

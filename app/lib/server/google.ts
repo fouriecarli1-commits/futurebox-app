@@ -189,10 +189,21 @@ export const COSTS = {
   /**
    * One Lyria 3 Pro song, up to about three minutes.
    *
-   * $0.08, from the pricing Carli sent on 8 October. **Not confirmed on a
-   * Google page** — that figure appears on a secondary source and the proxy
-   * here cannot reach Vertex's pricing page. It is the least certain number
-   * in this file and the first to redo against her real invoice.
+   * $0.08. Written from a secondary source, then **corroborated the same
+   * day by Carli from her own reading**: *"Die amptelike/gemiddelde prys is
+   * $0.08 (~R1.40 tot R1.50) per gegenereerde liedjie."* Two independent
+   * sources agreeing is not an invoice, but it is no longer one blog.
+   *
+   * ── And her rand figure says something the dollar one does not ────────
+   *
+   * $0.08 at this app's `RAND_PER_USD = 16` is **R1.28**. She read R1.40 to
+   * R1.50, which implies 17.5 to 18.75 rand to the dollar.
+   *
+   * That gap is not about Lyria. **Every supplier price in this app is
+   * converted at 16**, so if the real rate is nearer 18 then every cost is
+   * understated by about a seventh — including the video margin that is
+   * already one cent. The exchange rate is the single assumption under all
+   * of them, and it is four months old. See `docs/OPEN-QUESTIONS.md`.
    */
   music: 80_000,
   /** One Lyria 2 instrumental clip of 30 seconds, at $0.06. Documented. */
