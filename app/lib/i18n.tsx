@@ -1079,6 +1079,30 @@ export const STRINGS: Dict = {
   "edit.bed": { en: "Track under it", af: "Klank daaronder" },
   "edit.bedFrom": { en: "From", af: "Van" },
   "edit.noBed": { en: "No track under it yet", af: "Nog geen klank daaronder nie" },
+  /* ── A film that arrived with its lyrics ─────────────────────────────
+
+     A song from an engine can carry its words and the second each one is
+     sung on as a third track. See `docs/LYRIC-VIDEO.md`. */
+  /* The dot on a bench with something behind it that the room found rather
+     than something somebody did. Said in the button's name as well as drawn,
+     because a mark nobody sees is a mark that was not made. */
+  "dock.waiting": {
+    en: "Something new is waiting here.",
+    af: "Iets nuuts wag hier.",
+  },
+  "edit.lyricFound": {
+    en: "This film came in with its words and the moment each one is sung.",
+    af: "Hierdie film het met sy woorde ingekom, en met die oomblik wanneer elkeen gesing word.",
+  },
+  /* `{n}` is the number of lines found, put in by the room. */
+  "edit.lyricHang": {
+    en: "Put the {n} sung lines on the film",
+    af: "Sit die {n} gesingde reëls op die film",
+  },
+  "edit.lyricNote": {
+    en: "It cuts this film at every line, so each one is a shot with its own words. The film stays exactly as long. One press of undo puts it back.",
+    af: "Dit sny hierdie film by elke reël, sodat elkeen ’n skoot met sy eie woorde is. Die film bly presies net so lank. Een druk op undo sit dit terug.",
+  },
   "edit.wordsSize": {
     en: "How big the words are",
     af: "Hoe groot die woorde is",

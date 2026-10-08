@@ -90,6 +90,7 @@ function BenchButton({
   t,
   tall = false,
   dim = false,
+  waiting = false,
 }: {
   readonly spec: BenchSpec;
   readonly open: Bench;
@@ -98,6 +99,15 @@ function BenchButton({
   readonly tall?: boolean;
   /** Nothing to work on yet, so the panel would open empty. */
   readonly dim?: boolean;
+  /**
+   * Something is behind this bench that was not there before.
+   *
+   * For a thing the room has FOUND rather than a thing somebody did: a film
+   * that arrived with its lyrics in it, which is an offer on the words bench
+   * and otherwise invisible until she happens to open that bench. The same
+   * objection as the blur, which was built and then not found.
+   */
+  readonly waiting?: boolean;
 }): React.ReactElement {
   const on = open === spec.id;
   const label = t(spec.label[0], spec.label[1]);
@@ -113,7 +123,11 @@ function BenchButton({
       data-cutbench={spec.id}
       /* The name AND the sentence: a screen reader gets one string, and "Looks"
          on its own is no more use to it than a wand is to an eye. */
-      aria-label={`${label}. ${what}`}
+      /* The dot below is a dot, and a dot is a colour. Said in the name as
+         well, because a mark somebody cannot see is a mark that was not
+         made — the same reason the format chips got a fill and not a second
+         shade. */
+      aria-label={`${label}. ${what}${waiting ? ` ${t('dock.waiting', 'Something new is waiting here.')}` : ''}`}
       title={what}
       className={`relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 disabled:opacity-35 ${
         tall ? 'w-full' : 'flex-1'
@@ -125,6 +139,16 @@ function BenchButton({
     >
       {spec.icon}
       <span className="w-full truncate text-center text-[10px] font-bold leading-none">{label}</span>
+      {waiting && (
+        <span
+          aria-hidden
+          data-cutbenchwaiting={spec.id}
+          /* On the left, so it cannot sit on top of the credits mark on a
+             bench that is both. */
+          className="absolute left-1 top-1 h-2 w-2 rounded-full"
+          style={{ background: LIT, boxShadow: '0 0 0 2px rgba(0,0,0,0.35)' }}
+        />
+      )}
       {spec.paid && (
         <span
           aria-hidden
@@ -209,6 +233,7 @@ export default function CutDock({
   onSkip,
   place,
   noClip = false,
+  waiting = null,
   upper = UPPER,
   lower = LOWER,
   transport: hasTransport = true,
@@ -225,6 +250,14 @@ export default function CutDock({
   readonly place?: string;
   /** Nothing on the clock yet, so "This shot" has nothing to show. */
   readonly noClip?: boolean;
+  /**
+   * The one bench with something waiting behind it, if any.
+   *
+   * A prop rather than a field on `BenchSpec`, because the specs are
+   * module-level constants shared by two rooms and this changes while
+   * somebody is standing in front of it.
+   */
+  readonly waiting?: Bench;
   /**
    * The benches, so a second room can have this exact bar.
    *
@@ -370,6 +403,7 @@ export default function CutDock({
                 t={t}
                 tall
                 dim={spec.id === 'clip' && noClip}
+                waiting={spec.id === waiting}
               />
             ))}
           </div>
@@ -439,13 +473,13 @@ export default function CutDock({
               centred around a gap where the play button is not. */}
           {hasTransport ? (
             <>
-              <BenchButton spec={upper[0]} open={open} onOpen={onOpen} t={t} dim={noClip} />
+              <BenchButton spec={upper[0]} open={open} onOpen={onOpen} t={t} dim={noClip} waiting={upper[0].id === waiting} />
               {transport}
-              {upper[1] ? <BenchButton spec={upper[1]} open={open} onOpen={onOpen} t={t} /> : null}
+              {upper[1] ? <BenchButton spec={upper[1]} open={open} onOpen={onOpen} t={t} waiting={upper[1].id === waiting} /> : null}
             </>
           ) : (
             upper.map((spec) => (
-              <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} />
+              <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} waiting={spec.id === waiting} />
             ))
           )}
         </div>
@@ -457,7 +491,7 @@ export default function CutDock({
           style={{ background: PANEL }}
         >
           {lower.map((spec) => (
-            <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} />
+            <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} waiting={spec.id === waiting} />
           ))}
         </div>
       </div>

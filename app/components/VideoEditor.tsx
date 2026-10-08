@@ -91,6 +91,8 @@ import { accessToken } from '../lib/cloud';
 import { broughtIn, cameFromChannel, madeHere, mustOwn, type Came } from '../lib/filmrights';
 import { broughtFrom, fileIt, loadBrought, posterOf, readBrought, starBrought, type Brought } from '../lib/brought';
 import { myVideos, type MyVideo } from '../lib/filmed';
+import { linesFrom, type Timed } from '../lib/timedtext';
+import { lyricCount, lyricPieces } from '../lib/lyriccut';
 import { keepFilm, loadFilm } from '../lib/filmkeep';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
@@ -374,6 +376,23 @@ function stepFor(total: number, perSecond: number): number {
  * will hold" is two answers to one question.
  */
 export const CLIP_MAX_BYTES = 500 * 1024 * 1024;
+
+/**
+ * How big a file this room will read the lyrics out of.
+ *
+ * `linesFrom` wants the whole file in memory, because the text samples are
+ * found through offsets into it. Half a gigabyte held on a phone to pull out
+ * a few hundred bytes of text is not a trade worth making, and the honest
+ * ceiling is the kind of file that actually carries a timed-text track: one a
+ * song engine made. Her own Lyria song — 169 seconds, 1024 × 1024, with the
+ * lyric track in it — is 7.8 megabytes.
+ *
+ * A phone recording has no text track in it at all, so what this skips is a
+ * read that would have found nothing. Set well above the real files and well
+ * below the ceiling on the clip itself, which is deliberately not the same
+ * number: they answer different questions.
+ */
+export const LYRIC_MAX_BYTES = 64 * 1024 * 1024;
 
 function seconds(value: number): string {
   const whole = Math.max(0, value);
@@ -1078,6 +1097,20 @@ export default function VideoEditor({
      everybody including signed-out, and a request that comes back 401 before
      anybody asked for it is a wasted round trip on a phone. */
   const [channel, setChannel] = useState<MyVideo[] | null>(null);
+  /**
+   * The sung lines found in a brought-in film, by the piece they came in on.
+   *
+   * Kept beside the edit rather than in it: these are a reading of a file,
+   * not a decision somebody made, so they have no business in undo and no
+   * business being saved. Once the offer is taken the lines live in the
+   * pieces, where they can be edited like any other caption.
+   *
+   * Keyed by the piece the file arrived as. Splitting that piece gives the
+   * halves new ids, so the offer goes away the moment the film has been cut
+   * by hand — which is right: the cuts this would make are no longer the cuts
+   * the lines describe.
+   */
+  const [lyrics, setLyrics] = useState<Readonly<Record<string, readonly Timed[]>>>({});
   /** Which video's file is being pulled down, so its own card can say so. */
   const [pulling, setPulling] = useState<string | null>(null);
   /** Her own songs on this device, for putting one under the film. */
@@ -1627,8 +1660,34 @@ export default function VideoEditor({
             file,
           )).catch(() => undefined);
         }
+        /* Hoisted out of the `add` below so the lyrics can be filed under
+           the piece they arrived on. */
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+        /* ── The lyrics, if the file brought any ─────────────────────
+
+           Carli, 8 October 2026, on a song she had just made: *"wat dit
+           awesome maak dat dit dadelik 'n video en album art saam create wat
+           ek vir ons engine ook sal wil hê."*
+
+           Her file had a third track in it — the lyrics, line by line, with
+           the second each one lands on. `lib/timedtext.ts` reads them.
+           Nothing is done with them here beyond filing them: the offer is
+           made on the words bench, and a film that arrives already cut into
+           fifty-one shots nobody asked for is a room that did something to
+           her work without being told to. */
+        if (file.size <= LYRIC_MAX_BYTES) {
+          try {
+            const sung = linesFrom(await file.arrayBuffer());
+            if (sung.length) setLyrics((was) => ({ ...was, [id]: sung }));
+          } catch {
+            /* Out of memory on a big file, and the clip is already on the
+               clock. A film with no lyric offer on it is the same film. */
+          }
+        }
+
         next = add(next, {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          id,
           clip: file,
           came,
           name: file.name.replace(/\.[^.]+$/, ''),
@@ -1783,6 +1842,35 @@ export default function VideoEditor({
     if (beforeDrag.current === null) { commit((was) => change(was, id, how)); return; }
     setEdit((was) => change(was, id, how));
   }, [piece, commit]);
+
+  /**
+   * Hang the film's own lyrics on it: one shot per line.
+   *
+   * The whole feature is `lyricPieces`, which is arithmetic and tested on its
+   * own. What happens here is the three things a room has to do around it:
+   * one history step so it can be undone in one press, the selection moved on
+   * to the first new shot so the bench is not pointing at a piece that no
+   * longer exists, and the offer taken off the table.
+   */
+  const hangLyrics = useCallback(() => {
+    if (!piece) return;
+    const sung = lyrics[piece.id];
+    if (!sung?.length) return;
+    const cut = lyricPieces(piece, sung);
+    if (cut.length < 2) return;
+    commit((was) => ({
+      ...was,
+      pieces: was.pieces.flatMap((one) => (one.id === piece.id ? cut : [one])),
+    }));
+    setPicked(cut[0].id);
+    /* Dropped, not kept: the piece it was filed under is gone, and an offer
+       that survives being taken is an offer that can be taken twice. */
+    setLyrics((was) => {
+      const rest = { ...was };
+      delete rest[piece.id];
+      return rest;
+    });
+  }, [piece, lyrics, commit]);
 
   /** And the same, for a change to the film as a whole rather than a piece. */
   const slideFilm = useCallback((how: (was: Edit) => Edit) => {
@@ -3875,6 +3963,11 @@ export default function VideoEditor({
         onSkip={(by) => scrubTo(at + by)}
         place={total > 0 ? `${seconds(at)} / ${seconds(total)}` : undefined}
         noClip={!piece}
+        /* A film that arrived with its lyrics is an offer on the words bench
+           and nothing anywhere else, so without this she would only find it
+           by opening a bench she had no reason to open. The blur was built
+           and then not found for exactly that reason. */
+        waiting={piece && lyrics[piece.id]?.length ? 'words' : null}
       >
         {bench === 'folder' && (
           <div className="space-y-3">
@@ -4500,6 +4593,56 @@ export default function VideoEditor({
 
         {bench === 'words' && piece && (
           <div className="space-y-3">
+          {/* ── The film's own lyrics ────────────────────────────────────
+
+              Carli, 8 October 2026: *"wat dit awesome maak dat dit dadelik 'n
+              video en album art saam create wat ek vir ons engine ook sal wil
+              hê."*
+
+              A song that comes back from an engine can carry its lyrics as a
+              third track — the lines, and the second each one is sung on. The
+              hard half of a lyric video is knowing WHEN, and a file that says
+              so has done the part this app cannot do for itself.
+
+              An offer rather than something that happens on the way in. It
+              cuts the film into one shot per line, which is a big change to
+              somebody's work, and it is hers to want. Shown only where there
+              is something to show: a clip with no text track in it, or one
+              already cut by hand, gets no button and no explanation of a
+              button it cannot have. */}
+          {(lyrics[piece.id]?.length ?? 0) > 0 && (
+            <div
+              data-editorlyricoffer
+              className="rounded-xl border p-3 space-y-2"
+              style={{ borderColor: 'rgba(16,185,129,0.35)', background: 'rgba(52,211,153,0.08)' }}
+            >
+              <p className="text-sm leading-relaxed" style={{ color: INK_DIM }}>
+                <ListMusic className="w-3.5 h-3.5 inline-block mr-1.5 align-[-2px]" />
+                {t(
+                  'edit.lyricFound',
+                  'This film came in with its words and the moment each one is sung.',
+                )}
+              </p>
+              <button
+                type="button"
+                data-editorlyrichang
+                onClick={hangLyrics}
+                className="min-h-[48px] w-full rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
+                style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+              >
+                <Scissors className="w-4 h-4" />
+                {t('edit.lyricHang', 'Put the {n} sung lines on the film')
+                  .replace('{n}', String(lyricCount(piece, lyrics[piece.id] ?? [])))}
+              </button>
+              <p className="text-xs leading-relaxed" style={{ color: INK_DIM }}>
+                {t(
+                  'edit.lyricNote',
+                  'It cuts this film at every line, so each one is a shot with its own words. The film stays exactly as long. One press of undo puts it back.',
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Words over the piece. */}
           <label className="space-y-1.5 block">
             <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">

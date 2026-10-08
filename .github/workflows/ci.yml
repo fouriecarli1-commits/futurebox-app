@@ -1200,6 +1200,13 @@ jobs:
       - name: The timed lyrics come out of a film one line each
         run: npm run check:timedtext
 
+      # And what is done with those lines: one shot per line, each landing
+      # on the frame it was sung on. The two things that must not change
+      # are measured — the film is exactly as long afterwards, and no frame
+      # falls between the shots.
+      - name: A film that arrived with its lyrics is cut one shot per line
+        run: npm run check:lyriccut
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
