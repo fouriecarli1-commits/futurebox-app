@@ -340,6 +340,32 @@ saam. Die toep tel elke minuut wat dit teruggee en weier voordat die dak breek
 — 'n weiering met 'n rede is goedkoper as 'n mislukking waarvoor iemand reeds
 betaal het. Verander die getal net as die plan verander.
 
+## Google: Lyria and Veo
+
+Three variables, all on the server, none of them ever `NEXT_PUBLIC_`.
+
+`GOOGLE_VERTEX_KEY` is the API key made in the Cloud console. **Restrict it
+to the Vertex AI API** before pasting it anywhere — an unrestricted key works
+for every API the project has, including ones switched on later by accident.
+`docs/GOOGLE-OPSTEL.md` carries why an API key is acceptable here at all, and
+the short version is that the spend cap was built first.
+
+`GOOGLE_PROJECT` is the Cloud project id — the one with the spend cap on it,
+not the display name. It bills there and it pauses there.
+
+`GOOGLE_REGION` is optional and means `us-central1` when unset. It is part of
+the ADDRESS, not a parameter, so a wrong region fails as a bad host rather
+than as a model that does not exist. That distinction was measured: a
+`:predict` against the regional host with no key answers **401**, and the same
+path without the region in the host answers **404**. 401 is the shape being
+right.
+
+Once all three are set, open `/api/google/setup?key=<POST_SECRET>` once. It
+asks each candidate model whether it answers, with an empty body it must
+refuse, so nothing is generated and nothing is billed. It comes back with a
+sentence saying which Lyria and which Veo id to use — which is the question
+Google's own documentation currently disagrees with itself about.
+
 `SINGER` is optional and names **which supplier sings**. Unset means the
 first one that is configured, which today is Kits and is the right answer —
 there is one. It exists because `app/lib/server/singer.ts` put a seam in

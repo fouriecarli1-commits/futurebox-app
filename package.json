@@ -286,6 +286,7 @@
     "check:lyricfilm": "tsx scripts/check-lyricfilm.mts",
     "check:voiceseam": "tsx scripts/check-voiceseam.mts",
     "check:ownvoices": "tsx scripts/check-ownvoices.mts",
+    "check:google": "tsx scripts/check-google.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

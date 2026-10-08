@@ -1226,6 +1226,13 @@ jobs:
       - name: A singing voice belongs to one member
         run: npm run check:ownvoices
 
+      # Where Google's engines are. The region lives in the HOST, because a
+      # :predict on the regional host answered 401 with no key while the
+      # unregional one answered 404 — and a 404 reads as "we do not have
+      # this model" rather than as "the URL is wrong".
+      - name: Google's address is the shape that answered 401, not 404
+        run: npm run check:google
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

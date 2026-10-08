@@ -198,6 +198,39 @@ that the model ids matter, and the sources disagree:
 * **Veo** — `veo-3.1-generate-001` and `veo-3.1-fast-generate-001`. The output bucket is
   optional; without one the video comes back in the response.
 
+## The three engines, chosen
+
+*Carli, 8 October 2026:* "Ek dink ons moet dan lyria, nano banana en veo gebruik." And:
+"Ek sal my budget in google verhoog soos wat ons wins maak."
+
+So: **Lyria** for music, **Nano Banana** for pictures, **Veo** for video. One project, one key,
+one bill, one agreement. That is a real simplification over MiniMax for video and somebody else
+for everything else, and it is the right call.
+
+Two consequences worth having in writing before they are discovered.
+
+### One cap means they all stop together
+
+The spend cap is per **service**, and all three of these are the same service. So the month
+Veo runs hot, **the music and the pictures stop too** — not because anything is wrong with them,
+but because they share a ceiling with the expensive one.
+
+That is the cost of the simplification, and it is worth paying. But it means the app needs its
+**own** ceilings underneath Google's, per engine, the way `kitsminutes.ts` already does for
+Kits' four hundred minutes. Google's cap is the last line, not the budget. Without ours, one
+member making videos all afternoon takes the songs away from everybody.
+
+### Raising it as profit comes is right, and it needs a number to be raised against
+
+"Soos wat ons wins maak" is the correct instinct and the correct order — spend what has been
+earned rather than what is hoped for. What it needs to be workable is the thing
+`docs/KOSTE-EN-WINS.md` already asks for: **what one song, one picture and one video actually
+cost us once Google's real rates are known.** Then the cap moves on an arithmetic rather than
+on a feeling, and the credits charged for each can be checked against it.
+
+`CREDITS.video` has one cent of margin on Kling today. That number is the first thing to redo
+once `/api/google/setup` has said which models answer and at what rate — not before.
+
 ## Two smaller things worth doing while she is in there
 
 **Check who gets the budget emails.** Budget alerts go to the billing administrators of the
