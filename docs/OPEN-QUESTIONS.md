@@ -6796,3 +6796,84 @@ hierbo vas. As iemand 'n betaalde deur by die prent-editor voeg, of by een van
 die drie verniet kamers, word die toets rooi — en hierdie bladsy is hardop
 verkeerd eerder as stil verkeerd. Getoets deur een by die prent-editor te
 voeg: dit word rooi en noem die roete.
+
+
+---
+
+## "Hoe kan ons render benut" — 8 Oktober 2026
+
+**Jou lys, 7 Oktober:** *"Hoe kan ons render benut."*
+
+Ek neem aan jy bedoel Render — die gasheer, die een waar jy 'n regte masjien
+huur wat aanhou loop, eerder as Vercel se funksies wat 'n paar sekondes lank
+leef. As jy "render" bedoel het soos in video rendering, sê so en ek skryf
+daardie antwoord in plaas hiervan.
+
+### Waar dit regtig sou help, en dit is een plek
+
+`docs/LONG_VIDEO.md` het 'n afdeling wat **"Why not a server"** heet, en die
+rede wat daar staan is:
+
+> *'n Vercel-funksie het nie die tyd of die geheue vir 'n drie-minuut-enkodering
+> nie.*
+
+Dit is presies die gaping wat Render toemaak. 'n Render-diens is 'n houer met
+regte SVE, geheue en skyf wat so lank loop as wat die werk vat — geen
+60-sekonde-plafon nie. Dit is nie 'n optimering nie; dit is die een ding wat
+die app nou glad nie kan doen nie.
+
+### Hoekom dit vroeêr afgeskiet is, en hoekom die helfte van daardie rede weg is
+
+Dieselfde afdeling sê ook:
+
+> *Twaalf snitte op en een film terug is 'n groot klomp van iemand se
+> mobiele data vir werk wat die skootrekenaar reeds die lêers vir hou.*
+
+Daardie beswaar is nog waar vir **jou eie materiaal** — video van jou foon
+af moet opgelaai word en dit is regte data.
+
+Maar vir **gegenereerde snitte is dit nie meer waar nie, en dit was nooit
+heeltemal waar nie.** Ek het dit nagegaan in plaas van aangeneem:
+`app/lib/engines.ts` se `generateVideo` vra die enjin, wag, en kry 'n **URL**
+terug — `progress.url` — en die blaaier laai dit dan van die verskaffer se
+berging af. Die snitte is dus al op 'n bediener. 'n Render-diens sou dieselfde
+URL's self kon gaan haal. **Nul oplaai.**
+
+### En die een wat die saak eintlik maak
+
+Die blaaier-sny loop teen 1,03× regte tyd — gemeet, in `audit/stitch.mjs`,
+nie geraai nie. Dit beteken 'n drie-minuut-film vat drie minute **met die
+oortjie oop en wakker**. Op 'n skootrekenaar is dit 'n ongerief. Op 'n foon
+is dit stukkend: die skerm sluit, die blaaier sit die oortjie op ys, en die
+uitvoer breek halfpad. Die dokument sê self dat enigiemand wat hierdie
+funksie beplan, om daardie syfer moet beplan.
+
+Dus is Render se eerlike rol **nie die standaard nie, maar die uitweg vir die
+geval wat die blaaier nie kan doen nie**: 'n lang film uit gegenereerde snitte,
+op 'n foon. Alles wat die blaaier wél kan doen, bly waar dit is — dit kos
+niemand 'n sent en dit is hoekom die redigering verniet is.
+
+### Wat ek nie kon nagaan nie
+
+**Render se pryse en limiete.** Die uitgaande netwerk blokkeer render.com
+(403 deur die instaanbediener, albei die prys- en die dokumentasiebladsy). Ek
+sit géén syfer in hierdie bladsy uit my kop nie — dit is dieselfde reël as
+in `docs/EDITING-TOOLS.md`: 'n prys wat uit geheue neergeskryf en dan aan lede
+gehef word, is presies die soort ding wat stil verkeerd is.
+
+### Wat dit sou kos om te bou, in werk eerder as in rand
+
+1. 'n Klein diens wat 'n lys URL's, 'n liedjie en 'n vorm vat en een lêer
+   teruggee. Die snylogika bestaan al in `app/lib/stitch.ts` en is gemeet —
+   maar dit is blaaier-kode (canvas, `MediaRecorder`), dus sou die diens
+   `ffmpeg` gebruik, wat 'n ander implementering van dieselfde besluite is.
+   Dit is die regte werk hierin.
+2. 'n Roete wat dit vra en wag, met die krediete gehef soos elke ander
+   betaalde deur — met die prys voor die druk.
+3. 'n Toets wat die twee paaie teen mekaar meet: dieselfde snitte, dieselfde
+   liedjie, dieselfde lengte uit, albei kante. Daarsonder is dit twee
+   snyers wat verskillende films maak en niemand weet watter een reg is nie.
+
+**Punt 3 is nie opsioneel nie.** Twee implementerings van dieselfde ding wat
+nie teen mekaar gemeet word nie, is hoe hierdie app 'n film sou uitvoer wat
+anders lyk as die een wat sy in die voorskou gesien het.

@@ -69,6 +69,32 @@ for work the laptop is already holding the files for. It also needs a machine
 this app does not run: a Vercel function has neither the time nor the memory
 for a three-minute encode.
 
+**Half of that first reason is wrong, and was found to be on 8 October 2026**
+— Carli's list asked *"Hoe kan ons render benut"*, meaning Render, the host
+where a real machine keeps running.
+
+It stands for her own footage: video off a phone has to go up, and that is
+real data. It does not stand for GENERATED clips. `generateVideo` in
+`app/lib/engines.ts` asks the engine, polls, and gets a **URL** back —
+`progress.url` — which the browser then downloads from the supplier's
+storage. The clips are already on a server. A service could fetch the same
+URLs itself and nothing would be uploaded at all.
+
+And the 1.03× above is what actually makes the case. Three minutes of film
+is three minutes with the tab open and awake, which is an inconvenience on a
+laptop and broken on a phone: the screen locks, the browser freezes the tab,
+and the export stops halfway. So a long-running service is not a replacement
+for this path — everything the browser can do stays where it is, because
+that is what makes the editing free — but it is the honest way out of the one
+case the browser cannot do: a long film from generated clips, on a phone.
+
+What that would cost in work, and the one part of it that is not optional —
+a check measuring the two stitchers against each other, or they are two
+implementations making different films with nobody knowing which is right —
+is in `docs/OPEN-QUESTIONS.md` under that heading. Render's own prices and
+limits are not written here: the outbound network blocks render.com, and a
+price written down from memory is the fault this repo keeps catching.
+
 ## Built
 
 The storyboard is in the video desk, under the single-shot composer, because
