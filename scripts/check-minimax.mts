@@ -401,6 +401,39 @@ ok('  and says it is unsettled rather than stating it as the law',
   + ' page already refuses to bet on our own reading of somebody else’s'
   + ' contract — betting on our own reading of a statute would be worse');
 
+/* ── The correction, kept where the wrong claim was ─────────────
+
+   I read Carli's eight Lyria code examples and concluded the model was
+   instrumental. Every example WAS instrumental and one of them listed
+   `vocals` in its negative prompt — but that is a conclusion about the
+   examples written as a conclusion about the model. Examples show what a
+   vendor wanted to show; they do not show where a model stops.
+
+   She then sent a song it had made: Afrikaans, sung, 2:58.
+
+   The correction stays in the document rather than being tidied away,
+   because the write-up is what somebody reads in three months and the
+   reasoning that was wrong is the part worth keeping. */
+ok('the write-up carries the correction about Lyria singing',
+  /sing wel/.test(everywhere) && /verkeerd/.test(everywhere),
+  'an inference about the examples was written as a fact about the model,'
+  + ' and a document that quietly drops a wrong claim teaches nobody');
+
+/* And the measurements off the file itself, which are the only figures in
+   this file I took rather than was given. 178.6 seconds against the
+   third-hand 184-second ceiling is the first independent support that
+   ceiling has had. */
+ok('  and the length measured off her own file supports the quoted ceiling',
+  /178,6|178\.6/.test(everywhere) && /184/.test(everywhere),
+  'the ceiling was third-hand; a song that uses 178.6 of a stated 184'
+  + ' seconds is the first evidence for it that did not come from a summary');
+
+ok('  and names the timed-text track, which is the part that matters',
+  /tx3g/.test(everywhere) && /getydsde/.test(everywhere),
+  'the hard part of a lyric video is knowing when each line lands, and that'
+  + ' track is that answer — `drawCaption` and `wordsFrom`/`wordsTo` are'
+  + ' already in this app, so the rest is assembly rather than an engine');
+
 /* ── And the letter that goes with it ──────────────────────────
  
    Carli, 8 October 2026: *"Kan jy my help om vir mureka ’n custom sales

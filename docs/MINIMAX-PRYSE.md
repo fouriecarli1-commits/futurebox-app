@@ -426,3 +426,178 @@ vraag vir die prokureur. Dit staan op daardie lys.
 3. **Vra na SynthID** saam met die ander regsvrae, nie apart nie.
 4. Niks hiervan is gebou nie, en ek sou dit nie bou voordat punt 1 geantwoord
    is nie. Twee klank-enjins half ingedra is erger as een wat werk.
+
+
+---
+
+# Reggestel: Lyria sing wel — en wat in die lêer was
+
+*Carli het op 8 Oktober 2026 'n liedjie gestuur wat sy pas op Lyria gemaak
+het: **"Vrye Vlug"**. In Afrikaans. Gesing.*
+
+## Ek was verkeerd, en dit is die moeite werd om te sê hoe
+
+Ek het uit haar agt kodevoorbeelde afgelei dat Lyria 'n **instrumentale**
+enjin is. Elke voorbeeld was instrumentaal — 'n indie-folk-snit, 'n
+synth-pop-haak, 'n filmmusiek-partituur, musiek uit 'n videoraampie, 'n
+speletjie-bed — en **een van hulle het `vocals` in sy negatiewe prompt gehad**.
+
+Dit was 'n gevolgtrekking oor die **voorbeelde** wat ek as 'n gevolgtrekking
+oor die **model** geskryf het. Die voorbeelde wys wat Google wou wys; hulle
+wys nie waar die model ophou nie. Die liedjie wat sy gestuur het, sing.
+
+## Wat werklik in die lêer is
+
+Ek het die houer self oopgemaak (geen ffmpeg op hierdie masjien nie, dus met
+die hand deur die atome):
+
+| | |
+|---|---|
+| **Lengte** | **178,6 sekondes — 2:58** |
+| **Video** | H.264, **1024 × 1024** |
+| **Klank** | AAC |
+| **Derde baan** | **`tx3g` — 'n getydsde teksbaan** |
+| Titel | Vrye Vlug |
+| Album | Tuiste in die Wind |
+| Genre | Contemporary Acoustic Folk-Pop |
+| Saamgevoeg deur | FFmpeg (Lavf59.27.100) |
+
+Drie dinge daaruit is belangrik.
+
+**2:58 is teen die plafon.** Lyria 3 Pro se grens is 184 sekondes. Hierdie
+liedjie gebruik 178,6 daarvan. Die derdehandse plafon in die vorige afdeling
+is dus nie net 'n gerug nie — dit stem ooreen met wat die lêer self wys.
+
+**1024 × 1024 is albumkuns-vorm, nie 'n film nie.** Dit is 'n vierkant. Dit
+is presies wat 'n voorblad is, met die klank daarby.
+
+**Die derde baan is die belangrikste ding in die hele lêer.** 'n `tx3g`-baan
+is **getydsde teks** — die lirieke, reël vir reël, met die sekondes waarop
+elkeen inkom. Dit is nie in die prentjie ingebrand nie; dit is data.
+
+## En dít is wat haar vraag beantwoord
+
+Sy het geskryf: *"wat dit awesome maak dat dit dadelik 'n video en album art
+saam create wat ek vir ons engine ook sal wil hê."*
+
+Die moeilike deel van 'n lirieke-video is nie die video nie. Dit is om te weet
+**wanneer elke reël inkom**. Daardie baan is daardie antwoord, gratis, saam
+met die liedjie.
+
+En hierdie app het al elke ander stuk:
+
+- `lib/stitch.ts` se `drawCaption` teken al woorde op 'n raam, met 'n
+  lettertipe, 'n kleur, 'n band daaragter en 'n plek op die raam.
+- Die snykamer se stukke dra al `wordsFrom` en `wordsTo` — **woorde met 'n
+  begin- en eindtyd**, presies die vorm wat 'n `tx3g`-baan het.
+- Die prent-editor maak al 1:1-vierkante met woorde daarop, en kan 'n prent
+  as 'n film se voorblad oorhandig.
+- `lib/albumart.ts` en die kunsmark hanteer al voorblaaie.
+
+**Dus is "'n liedjie wat met 'n voorblad en 'n lirieke-video aankom" nie 'n
+nuwe enjin nie. Dit is samestelling** — en dit loop op die toestel, verniet,
+soos die res van die redigering.
+
+Dit is ook hoekom Mureka se **Lyrics Video teen $0,10** dalk nie nodig is nie:
+ons sou daarvoor betaal om iets te doen wat die stitcher al kan doen, sodra
+daar getydsde lirieke is.
+
+## Wat ek nie kon nagaan nie
+
+Die lirieke self. Om `tx3g`-monsters uit `mdat` te haal verg 'n demukser, en
+daar is nie 'n ffmpeg op hierdie masjien nie. Ek weet die baan is daar en wat
+sy soort is; ek het nie die reëls gelees nie. As dit saak maak, kan ek 'n
+klein leser skryf — maar dit is werk, nie 'n kyk nie.
+
+## Wat dit aan die vorige afdeling verander
+
+Die aanbeveling staan, met een reël bygevoeg: Lyria is **nie net 'n
+klankbaan-enjin nie**. Dit maak 'n liedjie met gesang, in Afrikaans, van byna
+drie minute, met 'n vierkantige voorblad-video en getydsde lirieke — en dit
+teen $0,08.
+
+Dit maak die vergelyking met Mureka 'n egte keuse eerder as twee verskillende
+dinge. Die twee toetse wat nou saak maak, en albei is joune:
+
+1. **Dieselfde liriek deur albei**, en luister. Dit bly die een vergelyking
+   wat niemand anders kan maak nie.
+2. **Gee Mureka se baan ook getydsde lirieke terug?** Hulle lys 'n
+   Lyrics Video teen $0,10, wat beteken hulle het die tydsberekening — maar of
+   hulle dit as **data** teruggee of net as 'n klaar video, is die verskil
+   tussen 'n lirieke-video wat ons verniet bou en een waarvoor ons elke keer
+   betaal.
+
+
+---
+
+# Waar om te registreer: Vertex AI, nie AI Studio nie
+
+*Carli, 8 Oktober 2026: "Jy moet my help om te sê watter platform ek moet
+gebruik om op te teken vir google se lyria."*
+
+## Kort antwoord
+
+**Google Cloud (Vertex AI).** Maak die Cloud-projek en die
+faktuur-rekening **eerste**, dan haak AI Studio daarby in.
+
+Dit is nie twee aparte wêrelde nie. Jou eie notas sê dit: AI Studio se stap 4
+is *"Koppel 'n Google Cloud Billing Account"*. Dieselfde faktuur-rekening, twee
+deure. Dus kos dit jou niks ekstra om die regte een eerste te maak.
+
+## Hoekom Vertex en nie AI Studio nie
+
+**1. Die data-rede, en dit is die enigste een wat alleen sou tel.**
+
+Jou eie nota: op die gratis vlak gebruik Google jou prompts om die modelle te
+verbeter. 'n Prompt in hierdie app is **'n lid se lirieke** — haar woorde.
+
+`/privacy` noem ElevenLabs by die naam as 'n verwerker, want POPIA vereis dat
+'n verwerker genoem word. Enige musiek-verskaffer wat bykom, moet dieselfde
+behandeling kry, en daarvoor is 'n **verwerkersooreenkoms (DPA)** nodig.
+Google Cloud het 'n standaard-DPA; AI Studio se gratis vlak is presies die
+teenoorgestelde ding.
+
+> **Moenie die gratis vlak gebruik vir enigiets met 'n lid se woorde in nie.**
+> Vir jou eie toetse vanaand is dit reg. Vir die app is dit nie.
+
+**2. Dit is 'n maatskappy, nie 'n persoon nie.** 'n AI Studio-sleutel hang aan
+'n persoonlike Google-rekening. 'n Cloud-projek het 'n diensrekening, rolle,
+'n ouditspoor en 'n eienaar wat die maatskappy is. FUTUREBOXSTUDIO (Pty) Ltd
+hoort op die rekening, nie jou persoonlike Gmail nie.
+
+**3. 'n Koste-plafon.** 'n Cloud-projek het begrotings, waarskuwings en
+kwotas. In 'n app waar lede krediete bestee, is 'n plafon wat jy self stel die
+verskil tussen 'n duur dag en 'n ramp. AI Studio gee jou veel minder daarvan.
+
+**4. Dit pas by hoe die app al werk.** Sleutels woon in Vercel, en elke
+verskaffer word van die bediener af geroep — nooit uit die blaaier nie. Dit is
+presies Vertex se model.
+
+**5. Groei.** Jy het gesê 2 000 tot 8 000 lede. Kwota-verhogings, steun en
+ondernemingsterme bestaan aan die Cloud-kant.
+
+## Die volgorde wat ek sou volg
+
+1. **Google Cloud Console** → maak 'n projek (noem dit `futurebox`).
+2. **Billing** → koppel 'n faktuur-rekening aan daardie projek.
+3. **Budgets & alerts** → stel 'n maandelikse plafon en 'n waarskuwing. Doen
+   dit nou, nie later nie.
+4. **Vertex AI API** → `Enable`.
+5. Maak 'n **diensrekening** met net die Vertex-regte, laai die sleutel af, en
+   sit dit in **Vercel** se omgewingsveranderlikes. **Nie in die repo nie** —
+   `check:security` keer dit in elk geval.
+6. Wil jy vanaand nog speel: gaan AI Studio toe, kies dieselfde
+   faktuur-rekening, en jy is van die gratis vlak af.
+
+## Wat ek nie kan sê nie
+
+Ek kan nie console.cloud.google.com of aistudio.google.com bereik nie — die
+netwerk blokkeer hulle, soos al die ander. Die stappe hierbo kom uit wat jy
+gestuur het plus hoe hierdie app se ander verskaffers al opgestel is. **Die
+knoppies se name kan anders wees as wat jou nota sê**; die volgorde en die
+redes is waarvoor ek instaan.
+
+En twee dinge wat op die prokureur se lys bykom sodra jy registreer:
+
+- **Google by `/privacy` as 'n verwerker genoem**, soos ElevenLabs.
+- **Die DPA onderteken**, en die streek gekies waar die verwerking gebeur.
