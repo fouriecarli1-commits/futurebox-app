@@ -288,6 +288,7 @@
     "check:ownvoices": "tsx scripts/check-ownvoices.mts",
     "check:google": "tsx scripts/check-google.mts",
     "check:googlecap": "tsx scripts/check-googlecap.mts",
+    "check:lyria": "tsx scripts/check-lyria.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

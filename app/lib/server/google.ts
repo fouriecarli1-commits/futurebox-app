@@ -147,6 +147,26 @@ export const CHOSEN = {
   image: 'gemini-2.5-flash-image',
 } as const;
 
+/**
+ * What one call costs us, in micro-dollars.
+ *
+ * ── Where these come from, and how sure they are ─────────────────────────
+ *
+ * From the pricing Carli sent on 8 October 2026: Lyria-002 at $0.06 for a
+ * 30-second clip, and the clip Google's own page documents is 32.8 seconds.
+ * So one press of Lyria is 60 000 micro-dollars.
+ *
+ * **These are published rates, not an invoice.** The honest version of this
+ * number arrives on her first Google bill, and until then `CREDITS.song`
+ * cannot be checked against anything. Which is why every call writes down
+ * what it was CHARGED AT as well as what ran: when the real invoice lands,
+ * the difference between these and it is one query rather than a guess.
+ */
+export const COSTS = {
+  /** One Lyria clip of about 32.8 seconds. */
+  music: 60_000,
+} as const;
+
 export interface Reached {
   readonly model: string;
   readonly what: string;

@@ -1239,6 +1239,12 @@ jobs:
       - name: Each Google engine has its own month
         run: npm run check:googlecap
 
+      # A song from Lyria. The field the audio arrives in was never
+      # measured, so the reader tries five and says which answered — a 200
+      # whose audio is in the wrong field is a paid call thrown away.
+      - name: A song is found whichever field it comes back in
+        run: npm run check:lyria
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
