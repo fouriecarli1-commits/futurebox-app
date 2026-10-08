@@ -54,9 +54,25 @@ export async function GET(request: Request): Promise<Response> {
       { status: 503 },
     );
   }
-  const given = new URL(request.url).searchParams.get('key')
-    ?? (request.headers.get('authorization') ?? '').replace(/^Bearer /, '');
-  if (!given || !sameSecret(given, wanted)) return new Response('no', { status: 404 });
+  /* ── Three forms of the same secret, and why ────────────────────────
+
+     `searchParams.get` URL-DECODES. A secret containing a `+` — which any
+     base64-ish string can — arrives here as a SPACE, and the comparison
+     fails for a secret that was typed perfectly. That failure is invisible:
+     the page answers 404, which is the same answer as a wrong secret, and
+     somebody spends an afternoon re-reading a value that was right.
+
+     So the raw query text is tried as well, and the header for anything
+     that is not a browser. All three go through the constant-time compare;
+     an attacker learns nothing from three attempts at one string they
+     already sent. */
+  const url = new URL(request.url);
+  const tries = [
+    url.searchParams.get('key') ?? '',
+    /^.*?[?&]key=([^&]*).*$/.exec(url.search)?.[1] ?? '',
+    (request.headers.get('authorization') ?? '').replace(/^Bearer /, ''),
+  ].filter(Boolean);
+  if (!tries.some((one) => sameSecret(one, wanted))) return new Response('no', { status: 404 });
 
   if (!configured()) {
     return Response.json({

@@ -163,6 +163,17 @@ ok('the setup page is behind the secret, compared in constant time',
   'it confirms whether a paid key works, so it must refuse rather than'
   + ' default to open');
 
+ok('a secret with a + in it is not mangled into a space',
+  /\[\?&\]key=\(\[\^&\]\*\)/.test(route),
+  '`searchParams.get` url-decodes, so a `+` in a base64-ish secret arrives as'
+  + ' a space and a perfectly typed secret fails — answering 404, which is the'
+  + ' same answer as a wrong one, which is an afternoon re-reading a value that'
+  + ' was right');
+
+ok('  and every form goes through the constant-time compare',
+  /tries\.some\(\(one\) => sameSecret\(one, wanted\)\)/.test(route),
+  'trying three forms must not mean comparing one of them loosely');
+
 ok('  and answers a wrong secret the way a wrong path answers',
   /new Response\('no', \{ status: 404 \}\)/.test(route),
   'a 403 confirms the address is real and worth pushing at');

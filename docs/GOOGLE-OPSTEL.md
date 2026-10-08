@@ -231,6 +231,40 @@ on a feeling, and the credits charged for each can be checked against it.
 `CREDITS.video` has one cent of margin on Kling today. That number is the first thing to redo
 once `/api/google/setup` has said which models answer and at what rate — not before.
 
+## When the setup page answers `no`
+
+A bare `no` is a **404**, and it means one thing only: `POST_SECRET` is set on the deployment and
+the value sent did not match it. It is deliberately the same answer a non-existent path gives, so
+nobody can probe for the page — which is correct, and which also means it tells the owner
+nothing. Three ways it has actually gone wrong:
+
+**The wrong secret entirely.** `?key=` on this page wants **`POST_SECRET`**, never the Google API
+key. On 8 October it was given the Google key, three times. That key then existed in a browser
+history, in Vercel's access log and in a screenshot, and had to be rotated — which is the whole
+reason the rule about never pasting a key anywhere is a rule and not a preference.
+
+**A secret the URL mangled.** `searchParams.get` URL-decodes, so a `+` in a base64-ish secret
+arrives as a space and a perfectly typed secret fails. The route now tries the raw query text as
+well as the decoded one, both through the constant-time compare. `check:google` holds it.
+
+**No redeploy.** Vercel picks up new variables only on a new deployment. The variables can be
+perfect and the running site still have none of them.
+
+### The quickest way to tell which
+
+`CRON_SECRET`, `WATCH_SECRET` and `POST_SECRET` all hold the same value — see §6. So there is a
+page that is known to work:
+
+```
+https://<your app>/api/mail/setup?key=<POST_SECRET>
+```
+
+If that one answers, the secret is right and the problem is elsewhere. If it also says `no`, the
+secret is the problem, and the fix is to read it off Vercel — or, if it was stored as Sensitive
+and cannot be read back, to set a new one. **Set all three names to the same new value**, or
+`/api/watch` starts answering the scheduler with a 404 and the allowance warnings stop arriving
+with nothing to say they have.
+
 ## Two smaller things worth doing while she is in there
 
 **Check who gets the budget emails.** Budget alerts go to the billing administrators of the
