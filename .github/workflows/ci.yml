@@ -1164,6 +1164,12 @@ jobs:
       - name: Which rooms can spend a credit is still what the write-up says
         run: npm run check:kidsafe
 
+      # An advertisement is the one place an overclaim becomes a complaint,
+      # and it has happened here once: "Five seats on one account" sat on a
+      # paid card and nothing in the code adds a second person to an account.
+      - name: The marketing material says nothing the app does not do
+        run: npm run check:bemarking
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
