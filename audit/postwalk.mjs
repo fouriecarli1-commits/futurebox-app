@@ -872,13 +872,320 @@ try {
       `${JSON.stringify(plainText)} → ${JSON.stringify(barred)} — a block round`
       + ' two words that darkens a fifth of the frame is a block measured from'
       + ' the box rather than from the words');
+    /* ── Where the words are, measured off the glass ─────────────────
+ 
+       Carli, 8 October 2026: *"Die woord op die screen kan nog nie geskuif
+       en gecrop word nie. Daar moet 'n ook 'n line spacing scroll bar wees,
+       en spacing tussen die woorde self."*
+ 
+       Three things to prove and one instrument for all three. With the
+       solid bar behind the words there is a dark block on the glass, and
+       where it is and how big it is answers every one: dragging moves it,
+       line spacing makes it taller, letter spacing makes it wider.
+ 
+       Read as the darkest rows and columns rather than as a rectangle,
+       because the block is drawn on a photograph and its edges are
+       feathered into it. */
+    const block = () => page.evaluate(() => {
+      const el = document.querySelector('[data-postcanvas]');
+      if (!el) return null;
+      const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+      /* Dark AND opaque: a transparent corner is not a bar. */
+      const dark = (x, y) => {
+        const i = (y * el.width + x) * 4;
+        return d[i + 3] > 200 && d[i] + d[i + 1] + d[i + 2] < 180;
+      };
+
+      /* ── The longest run, and not the first live row to the last ────
+ 
+         Two versions of this were wrong before it worked, and both were
+         wrong about the same thing: the preview paints the platform's safe
+         zones as `rgba(0,0,0,0.45)` bands across the top and the bottom,
+         so the top-left pixel of a bright red photograph reads 140 — dark.
+ 
+         Counting against the loudest row made the whole picture "dark".
+         Counting from the first live row to the last made it 0 to 539,
+         because the two bands are live and everything between them is
+         inside that span.
+ 
+         A bar is a RUN. So: the longest unbroken run of live rows that is
+         not one of the bands, which is to say does not touch an edge. */
+      const run = (counts, floor) => {
+        let best = null;
+        let from = -1;
+        for (let i = 0; i <= counts.length; i += 1) {
+          const live = i < counts.length && counts[i] >= floor;
+          if (live && from < 0) from = i;
+          if (!live && from >= 0) {
+            const touches = from === 0 || i === counts.length;
+            if (!touches && (!best || i - from > best.to - best.from)) {
+              best = { from, to: i - 1, middle: (from + i - 1) / 2 };
+            }
+            from = -1;
+          }
+        }
+        return best;
+      };
+
+      const rows = new Array(el.height).fill(0);
+      for (let y = 0; y < el.height; y += 1) {
+        for (let x = 0; x < el.width; x += 1) if (dark(x, y)) rows[y] += 1;
+      }
+      const down = run(rows, Math.max(4, Math.round(el.width * 0.12)));
+      if (!down) return { down: null, across: null, height: el.height, width: el.width };
+
+      /* ── And the width, counted only inside the bar's own rows ──────
+ 
+         Counted down the whole canvas, every column is live — the two
+         bands put hundreds of dark pixels in each — so the one run spans
+         the full width, touches both edges, and is thrown away. The bar's
+         width is a question about the bar's rows. */
+      const cols = new Array(el.width).fill(0);
+      for (let x = 0; x < el.width; x += 1) {
+        for (let y = down.from; y <= down.to; y += 1) if (dark(x, y)) cols[x] += 1;
+      }
+      const tall = down.to - down.from + 1;
+      return {
+        down,
+        across: run(cols, Math.max(2, Math.round(tall * 0.4))),
+        height: el.height,
+        width: el.width,
+      };
+    });
+
+    /* Into the middle of the picture first. The first line of words lands
+       at the bottom, which on a story is inside the platform's safe-zone
+       band — and the band is `rgba(0,0,0,0.45)` across the whole width, so
+       a dark bar drawn inside it cannot be told from the band it is in. */
+    await page.locator('[data-postspot="middle"]').first().click();
+    await page.waitForTimeout(500);
+
+    /* ── And out of the way of her own thumb ────────────────────
+
+       The drag did nothing for a while and the handler was never the
+       reason. `document.elementFromPoint` at the middle of the glass came
+       back `DIV.flex items-center gap-2` — the words panel itself, sitting
+       over the middle of the picture. A press that never reaches the canvas
+       cannot be a press on a word.
+
+       So the panel closes while she moves them, the same way cropping and
+       cutting close it, and the walk has to press the same button she does
+       or it is testing a canvas no thumb can reach. */
+    const toMove = page.locator('[data-postmovewords]').first();
+    check('  and there is a way to get the panel off the picture to move them',
+      (await toMove.count()) > 0,
+      'no [data-postmovewords] — the words panel covers the middle of the'
+      + ' glass, so without a button that closes it the drag below is a drag'
+      + ' on a panel and the words never move');
+    if (await toMove.count()) {
+      await toMove.click();
+      await page.waitForTimeout(400);
+    }
+    const atFirst = await block();
+    /* Loudly, rather than skipping. An `if` round a block of assertions is
+       a check that quietly does nothing the day its instrument stops
+       finding what it measures — which is exactly what happened here
+       twice, and both times the run came back green. */
+    check('  and the bar can be found on the glass to measure',
+      Boolean(atFirst && atFirst.down && atFirst.across),
+      `${JSON.stringify(atFirst)} — the three assertions below this one`
+      + ' measure where that block is and how big it is, and without it they'
+      + ' are three assertions that did not run');
+    if (atFirst && atFirst.down && atFirst.across) {
+      /* Dragged down the glass by a fifth of it. */
+      const glass = await page.locator('[data-postcanvas]').first().boundingBox();
+      const onScreen = (row) => glass.y + (row / atFirst.height) * glass.height;
+      await page.mouse.move(glass.x + glass.width / 2, onScreen(atFirst.down.middle));
+      await page.mouse.down();
+      for (let step = 1; step <= 10; step += 1) {
+        await page.mouse.move(
+          glass.x + glass.width / 2,
+          onScreen(atFirst.down.middle) + (glass.height * 0.2 * step) / 10,
+        );
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(500);
+      const moved = await block();
+      /* Back into the panel before the two bars, which live in it. */
+      const done = page.locator('[data-postmovedone]').first();
+      if (await done.count()) {
+        await done.click();
+        await page.waitForTimeout(400);
+      }
+      check('  the words can be dragged to where she wants them',
+        moved?.down && moved.down.middle > atFirst.down.middle + atFirst.height * 0.1,
+        `the block sat at row ${Math.round(atFirst.down.middle)} and after a drag`
+        + ` a fifth of the way down the glass it is at ${Math.round(moved?.down?.middle ?? -1)}`
+        + ' — four fixed places and no way to move them is a caption across'
+        + ' somebody\u2019s face with nothing to be done about it');
+
+      /* ── The two bars, measured as RATIOS and not as sizes ──────────
+
+          Carli, 8 October 2026: *"Daar moet 'n ook 'n line spacing scroll
+          bar wees, en spacing tussen die woorde self."*
+
+          The obvious assertions — line spacing makes the block taller,
+          letter spacing makes it wider — are both false, and they are false
+          for a reason worth writing down rather than working around.
+
+          A line of words is fitted to a FIXED box: `fitText` walks the type
+          size down until the lines fit 0.18 of the frame, so the block is
+          always as full as that box allows. Crank line spacing up and the
+          box does not grow — the TYPE shrinks instead, and the block's
+          height lands within a pixel of where it was. On the fixture here
+          it is 96 rows at 1.2 and 97 rows at 2.2. An assertion on height is
+          an assertion about the box, which is the kind of green Carli
+          minds most: a check that passes because it is measuring something
+          next to the thing it names.
+
+          What line spacing actually IS, independently of any box, is the
+          gap between the lines relative to the size of the lettering. That
+          ratio is scale-free, so the type shrinking does not hide it: on
+          this fixture it goes from about 0.7 to about 2. Letter spacing is
+          the same question sideways — the gaps between the letters against
+          the width of the letters themselves.
+
+          So the instrument looks for the INK on the bar rather than the bar:
+          runs of bright rows are lines, runs of bright columns are letters,
+          and both assertions are about the gaps between the runs. */
+      const ink = (bar) => page.evaluate((box) => {
+        const el = document.querySelector('[data-postcanvas]');
+        if (!el) return null;
+        const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+        /* Bright: the words are drawn in white on the solid bar. */
+        const lit = (x, y) => {
+          const i = (y * el.width + x) * 4;
+          return d[i + 3] > 200 && d[i] + d[i + 1] + d[i + 2] > 560;
+        };
+        const runs = (counts, floor) => {
+          const out = [];
+          let from = -1;
+          for (let i = 0; i <= counts.length; i += 1) {
+            const live = i < counts.length && counts[i] >= floor;
+            if (live && from < 0) from = i;
+            if (!live && from >= 0) { out.push({ from, to: i - 1 }); from = -1; }
+          }
+          return out;
+        };
+
+        const rows = [];
+        for (let y = box.down.from; y <= box.down.to; y += 1) {
+          let n = 0;
+          for (let x = box.across.from; x <= box.across.to; x += 1) if (lit(x, y)) n += 1;
+          rows.push(n);
+        }
+        const lines = runs(rows, 2);
+
+        const cols = [];
+        for (let x = box.across.from; x <= box.across.to; x += 1) {
+          let n = 0;
+          for (let y = box.down.from; y <= box.down.to; y += 1) if (lit(x, y)) n += 1;
+          cols.push(n);
+        }
+        const letters = runs(cols, 1);
+
+        /* The two numbers both assertions turn on: how thick a run is, and
+           how wide the space between two runs is. A single run has no gap,
+           which is the one case the assertions have to refuse rather than
+           divide by. */
+        const spread = (list) => {
+          if (list.length < 2) return null;
+          const thick = list.reduce((sum, one) => sum + (one.to - one.from + 1), 0) / list.length;
+          let gaps = 0;
+          for (let i = 1; i < list.length; i += 1) gaps += list[i].from - list[i - 1].to - 1;
+          return { runs: list.length, thick, gap: gaps / (list.length - 1), ratio: (gaps / (list.length - 1)) / thick };
+        };
+        return { lines: spread(lines), letters: spread(letters) };
+      }, bar);
+
+      /* Two lines, because line spacing between one line and nothing is
+         not a thing anybody can see. */
+      const theWords = page.locator('[data-postthewords]').first();
+      check('  and the words can be rewritten to measure the spacing on',
+        (await theWords.count()) > 0,
+        'no [data-postthewords] — the two spacing assertions below need two'
+        + ' lines of words and cannot type them');
+      if (await theWords.count()) {
+        await theWords.fill('Karoo pad\nsonsak');
+        await page.waitForTimeout(600);
+      }
+      /* And back to the middle, because the drag above left the block at
+         row 378 of a 540 story — which is inside the platform's bottom
+         band, and a dark bar drawn inside a dark band is a bar the
+         instrument throws away for touching an edge. The first version of
+         these two assertions read `null` for exactly that reason. */
+      await page.locator('[data-postspot="middle"]').first().click();
+      await page.waitForTimeout(500);
+
+      const taller = page.locator('[data-postlinegap]').first();
+      check('  and there is a line spacing bar',
+        (await taller.count()) > 0,
+        'no [data-postlinegap] — she asked for two spacing bars and this is'
+        + ' the first of them');
+      const wider = page.locator('[data-postlettergap]').first();
+      check('  and there is a letter spacing bar',
+        (await wider.count()) > 0,
+        'no [data-postlettergap] — she asked for two spacing bars and this'
+        + ' is the second of them');
+
+      if ((await taller.count()) && (await wider.count())) {
+        await taller.fill('1.2');
+        await wider.fill('0');
+        await page.waitForTimeout(600);
+        const tightBar = await block();
+        const tight = tightBar?.down && tightBar?.across ? await ink(tightBar) : null;
+        check('  and the two lines of words can be found on the bar to measure',
+          Boolean(tight && tight.lines && tight.letters),
+          `${JSON.stringify(tight)} — the two assertions below measure the`
+          + ' gaps between the lines and between the letters, and without the'
+          + ' ink they are two assertions that did not run');
+
+        if (tight && tight.lines && tight.letters) {
+          await taller.fill('2.2');
+          await page.waitForTimeout(600);
+          const spreadBar = await block();
+          const spread = spreadBar?.down && spreadBar?.across ? await ink(spreadBar) : null;
+          check('    and the line spacing bar really opens the gap between the lines',
+            spread?.lines && spread.lines.ratio > tight.lines.ratio * 1.3,
+            `gap over letter height ${tight.lines.ratio.toFixed(2)} →`
+            + ` ${spread?.lines ? spread.lines.ratio.toFixed(2) : '?'} — a bar`
+            + ' wired to a number nobody lays the lines out with. Measured as a'
+            + ' ratio on purpose: the block is fitted to a fixed box, so its'
+            + ' HEIGHT barely moves and an assertion on height would pass'
+            + ' whether this bar worked or not');
+          await taller.fill('1.2');
+          await page.waitForTimeout(500);
+
+          await wider.fill('0.4');
+          await page.waitForTimeout(600);
+          const wideBar = await block();
+          const wide = wideBar?.down && wideBar?.across ? await ink(wideBar) : null;
+          check('    and the letter spacing bar really opens the gap between the letters',
+            wide?.letters && wide.letters.ratio > tight.letters.ratio * 1.3,
+            `gap over letter width ${tight.letters.ratio.toFixed(2)} →`
+            + ` ${wide?.letters ? wide.letters.ratio.toFixed(2) : '?'} — the same`
+            + ' question sideways, and the same reason for the ratio: a gap'
+            + ' drawn and not measured gives text that overflows the box it was'
+            + ' fitted to, so the width is about the box and not the letters');
+          await wider.fill('0');
+          await page.waitForTimeout(500);
+        }
+      }
+    }
+
     await page.locator('[data-postbehindwords="none"]').first().click();
     await page.waitForTimeout(500);
     const backToShadow = await mean();
-    check('    and taking it off puts the picture back exactly',
-      backToShadow !== null && plainText !== null
-        && backToShadow.r === plainText.r && backToShadow.g === plainText.g,
-      `${JSON.stringify(plainText)} → ${JSON.stringify(backToShadow)}`);
+    /* Not compared with the reading before the bar: the words have been
+       dragged a fifth of the way down the glass since then, which is the
+       assertion above and makes this one about a different picture. What
+       it can still say is that the bar is gone — the glass is lighter than
+       it was with the bar on it. */
+    check('    and taking it off lifts the picture again',
+      backToShadow !== null && barred !== null
+        && backToShadow.r + backToShadow.g + backToShadow.b
+          > barred.r + barred.g + barred.b,
+      `${JSON.stringify(barred)} → ${JSON.stringify(backToShadow)}`);
   }
 
   /* ── Somewhere to start, which the empty room needed most ───────────

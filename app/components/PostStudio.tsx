@@ -44,12 +44,13 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
+  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import {
-  BACKDROPS, POST_SIZES, SPOTS, behindWords, boxFor as boxOfSpot, clashes, fitText,
-  moveInside, sizeById,
-  type Backdrop, type Measure, type PostSize, type SpotId,
+  BACKDROPS, LETTER_GAP, LINE_GAP, POST_SIZES, SPOTS, atInside, atOf, behindWords,
+  blockAt, boxAround, boxFor as boxOfSpot, clashes, fitText, measureWithGap, moveInside,
+  sizeById,
+  type At, type Backdrop, type Measure, type PostSize, type SpotId,
 } from '../lib/posttext';
 import { ALL, boxOf } from '../lib/safezones';
 import { CREDITS, creditsSaid } from '../lib/credits';
@@ -147,6 +148,20 @@ interface Words {
   readonly face: FaceId;
   readonly spot: SpotId;
   readonly ink: string;
+  /**
+   * Where it actually sits, as a share of the picture.
+   *
+   * Carli, 8 October 2026: *"Die woord op die screen kan nog nie geskuif en
+   * gecrop word nie."* The four spots stay — they are quick and they are
+   * where a caption usually goes — and this is underneath them. Absent
+   * means "wherever the spot says", which is every line written before
+   * today.
+   */
+  readonly at?: At;
+  /** How far apart the lines are, as a multiple of the type size. */
+  readonly lineGap?: number;
+  /** How far apart the letters are, as a share of the type size. */
+  readonly letterGap?: number;
   /**
    * What goes behind the line so it can be read.
    *
@@ -475,8 +490,22 @@ export default function PostStudio({
      The start of a drag is a ref and not state: a circle is REBUILT from
      its two corners on every pointermove, so the first corner has to
      survive a render without causing one. */
+  /* Whether the room is in "move the words" — the bench shut, the glass
+     clear, and a strip over the bar. The same shape as the crop and the
+     shape cut, and for the same reason: the bench covers the middle of the
+     picture, so a word under it cannot be taken hold of. */
+  const [movingWords, setMovingWords] = useState(false);
+
   const [cutShape, setCutShape] = useState<CutShape>('pencil');
   const cutFrom = useRef<{ readonly x: number; readonly y: number } | null>(null);
+
+  /* Where each block of words landed last time it was drawn, as shares of
+     the frame, so a thumb can find the one it is on. */
+  const laidOut = useRef(new Map<string, {
+    readonly x: number; readonly y: number; readonly w: number; readonly h: number;
+  }>());
+  /** The line a thumb is currently carrying, and where it took hold. */
+  const carrying = useRef<{ readonly id: string; readonly dx: number; readonly dy: number } | null>(null);
   /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
      button that opens it — see the note on the cutting room's. */
   const [asking, setAsking] = useState(false);
@@ -634,10 +663,51 @@ export default function PostStudio({
       if (!one.text.trim()) continue;
       const chosen = faceOf(one.face);
       const box = moveInside(boxOfSpot(one.spot, size), size);
-      const fit = fitText(one.text, box, size, measureWith(ctx, chosen.css, chosen.weight));
+      /* ── Measured with the letter spacing in it ──────────────────────
+ 
+          A gap applied at the drawing and not at the measuring gives text
+          that overflows the box it was fitted to, which is the whole job
+          `fitText` exists to do. */
+      const letterGap = one.letterGap ?? LETTER_GAP.normal;
+      const lineGap = one.lineGap ?? LINE_GAP.normal;
+      const measure = measureWithGap(
+        measureWith(ctx, chosen.css, chosen.weight), letterGap,
+      );
+      const fit = fitText(one.text, box, size, measure, { lineHeight: lineGap });
       ctx.font = `${chosen.weight} ${fit.px}px ${chosen.css}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
+      /* Where the block goes: wherever she put it, or where the spot says
+         if she has not moved it. Centred on the point, because that is
+         what dragging a thing to a place means. */
+      const put = blockAt(
+        one.at ?? atOf(one.spot), fit.lines.length, fit.px, lineGap, size,
+      );
+
+      /** One line, with the letters spaced by hand.
+ 
+          `ctx.letterSpacing` exists and is not used: it adds a gap after
+          the LAST letter as well, so a centred line comes out off-centre by
+          half a gap — and it is missing from enough browsers that the
+          export and the preview could disagree on one and not the other.
+          Drawn letter by letter, the arithmetic is ours and is the same
+          everywhere. */
+      const writeLine = (line: string, atX: number, atY: number): void => {
+        if (letterGap === 0) {
+          ctx.fillText(line, atX, atY);
+          return;
+        }
+        const gap = letterGap * fit.px;
+        const wide = ctx.measureText(line).width + Math.max(0, line.length - 1) * gap;
+        let x = atX - wide / 2;
+        const was = ctx.textAlign;
+        ctx.textAlign = 'left';
+        for (const letter of line) {
+          ctx.fillText(letter, x, atY);
+          x += ctx.measureText(letter).width + gap;
+        }
+        ctx.textAlign = was;
+      };
 
       /* ── Something solid behind the words, where she asked for it ──────
  
@@ -652,8 +722,9 @@ export default function PostStudio({
           0,
         );
         const back = behindWords(
-          widest, fit.px, fit.lines.length,
-          { x: size.width / 2, y: box.y * size.height }, size,
+          widest + Math.max(0, fit.lines.reduce((most, line) => Math.max(most, line.length), 0) - 1)
+            * letterGap * fit.px,
+          fit.px, fit.lines.length, { x: put.x, y: put.y }, size,
         );
         ctx.save();
         if (one.behind === 'bar') {
@@ -678,12 +749,30 @@ export default function PostStudio({
          unreadable and it is not a thing somebody notices while typing — the
          picture behind the words is whatever they chose, not a background
          somebody designed for them. */
+      /* ── Where this block landed, so a thumb can take hold of it ────
+ 
+          Written down at the moment it is drawn, because the drawing is
+          the only place that knows: the size the type fitted at, how many
+          lines it wrapped to and how far apart they are all come out of
+          `fitText`, and none of them is state anybody else holds.
+ 
+          A ref and not state: a render writes it and a gesture reads it,
+          and putting it in state would make every draw cause another. */
+      laidOut.current.set(one.id, {
+        x: put.x / size.width,
+        y: (put.y + (fit.lines.length * fit.px * lineGap) / 2) / size.height,
+        w: Math.min(1, (fit.lines.reduce(
+          (most, line) => Math.max(most, measure(line, fit.px)), 0,
+        ) + fit.px * 0.6) / size.width),
+        h: (fit.lines.length * fit.px * lineGap + fit.px * 0.3) / size.height,
+      });
+
       ctx.shadowColor = 'rgba(0,0,0,0.55)';
       ctx.shadowBlur = Math.max(2, fit.px * 0.12);
-      let y = box.y * size.height;
+      let y = put.y;
       for (const line of fit.lines) {
-        ctx.fillText(line, size.width / 2, y);
-        y += fit.px * 1.2;
+        writeLine(line, put.x, y);
+        y += fit.px * lineGap;
       }
       ctx.shadowBlur = 0;
     }
@@ -898,7 +987,42 @@ export default function PostStudio({
     };
   };
 
+  /** The same point, as a share of the FRAME rather than of the picture. */
+  const frameAt = (
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ): { readonly x: number; readonly y: number } | null => {
+    const on = event.currentTarget.getBoundingClientRect();
+    if (on.width <= 0 || on.height <= 0) return null;
+    return {
+      x: (event.clientX - on.left) / on.width,
+      y: (event.clientY - on.top) / on.height,
+    };
+  };
+
   const grab = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    /* ── The words first, because a thumb on a word means the word ────
+ 
+        Carli, 8 October 2026: *"Die woord op die screen kan nog nie
+        geskuif en gecrop word nie."* Before this, a drag on the glass
+        could only ever mean the picture, and the caption went where the
+        spot said and stayed there.
+ 
+        Checked before panning and after cropping: a crop or a trace is a
+        mode somebody turned on and is unambiguous, and a thumb that lands
+        on a word while neither is on means the word. */
+    if (!cropBox && !traced && words.length > 0) {
+      const put = frameAt(event);
+      if (put) {
+        for (const one of words) {
+          const was = laidOut.current.get(one.id);
+          if (!was) continue;
+          if (Math.abs(put.x - was.x) > was.w / 2 || Math.abs(put.y - was.y) > was.h / 2) continue;
+          carrying.current = { id: one.id, dx: put.x - was.x, dy: put.y - was.y };
+          event.currentTarget.setPointerCapture(event.pointerId);
+          return;
+        }
+      }
+    }
     if (traced) {
       const put = shareAt(event);
       if (!put) return;
@@ -942,6 +1066,15 @@ export default function PostStudio({
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const held = carrying.current;
+    if (held) {
+      const put = frameAt(event);
+      if (!put) return;
+      setWords((was) => was.map((one) => (one.id === held.id
+        ? { ...one, at: atInside({ x: put.x - held.dx, y: put.y - held.dy }) }
+        : one)));
+      return;
+    }
     if (traced) {
       if (!tracingNow.current) return;
       const put = shareAt(event);
@@ -990,6 +1123,7 @@ export default function PostStudio({
     grip.current = null;
     tracingNow.current = false;
     cutFrom.current = null;
+    carrying.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -997,7 +1131,8 @@ export default function PostStudio({
 
   /** Whether anything she has written lands under the platform's furniture. */
   const covered = useMemo(
-    () => words.some((one) => one.text.trim() && clashes(boxOfSpot(one.spot, size), size)),
+    () => words.some((one) => one.text.trim()
+      && clashes(boxAround(one.at ?? atOf(one.spot), size), size)),
     [words, size],
   );
 
@@ -1561,7 +1696,7 @@ export default function PostStudio({
       const cut = await cutOut(picture, (part) => setCutting(part), edgeOf(edge));
       if (!cut.ok) {
         setSaid(cut.why === 'nobody'
-          ? t('post.cutNobody', 'No person could be found in this picture. This looks for people, and knows nothing about objects.')
+          ? t('post.cutNobody', 'No person found in this picture. This one only knows people \u2014 a face and shoulders, not a close-up of hair or an object. Use Cut out a shape below and draw round what you want instead.')
           : t('post.cutFailed', 'The background could not be taken out of that picture.'));
         return;
       }
@@ -1570,7 +1705,7 @@ export default function PostStudio({
       asPicture(cut.canvas, (one) => {
         setWhole(picture);
         setPicture(one);
-        setSaid(t('post.cutDone', 'The background is out. Take the background colour off as well for a see-through picture.'));
+        setSaid(t('post.cutDone', 'Background gone. Press \u201cNothing behind it\u201d as well if you want it see-through.'));
       }, () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')));
     } finally {
       setCutting(null);
@@ -1622,7 +1757,7 @@ export default function PostStudio({
       const cut = await cutOut(picture, (part) => setCutting(part), edgeOf(edge));
       if (!cut.ok) {
         setSaid(cut.why === 'nobody'
-          ? t('post.cutNobody', 'No person could be found in this picture. This looks for people, and knows nothing about objects.')
+          ? t('post.cutNobody', 'No person found in this picture. This one only knows people \u2014 a face and shoulders, not a close-up of hair or an object. Use Cut out a shape below and draw round what you want instead.')
           : t('post.behindFailed', 'That could not be put out of focus.'));
         return;
       }
@@ -2023,7 +2158,7 @@ export default function PostStudio({
           ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
           : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
       >
-        <p className={MIKRO}>{t('post.cut', 'Background')}</p>
+        <p className={MIKRO}>{t('post.cut', 'BG remover')}</p>
         <button
           type="button"
           data-postcutgo
@@ -2033,7 +2168,7 @@ export default function PostStudio({
         >
           {cutting !== null
             ? `${Math.round(cutting * 100)}%`
-            : t('post.cutGo', 'Take the background out')}
+            : t('post.cutGo', 'Remove the background')}
         </button>
         {/* How hard the cut edge is.
  
@@ -2077,7 +2212,7 @@ export default function PostStudio({
           </button>
         )}
         <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-          {t('post.cutWhat', 'This looks for people. It runs on your own device and costs nothing; the first time takes a moment while it downloads.')}
+          {t('post.cutWhat', 'One press takes the background away and leaves the person. It only finds PEOPLE \u2014 for anything else, use Cut out a shape below. Free, and it happens on your own phone; the first time takes a moment while it downloads.')}
         </span>
         {/* ── And the other thing to do with the same mask ──────────────
  
@@ -2089,7 +2224,7 @@ export default function PostStudio({
  
             Instant when she has already cut one out of this picture: the
             answer is in hand and nothing is downloaded twice. */}
-        <p className={`${MIKRO} pt-1`}>{t('post.behind2', 'Or put it out of focus')}</p>
+        <p className={`${MIKRO} pt-1`}>{t('post.behind2', 'Or blur the background')}</p>
         <div className={plain ? RY : RY3}>
           {(plain ? BEHIND.filter((one) => one.id === 'misty') : BEHIND).map((one) => (
             <button
@@ -2113,7 +2248,7 @@ export default function PostStudio({
         <p className="text-[12px] leading-relaxed text-zinc-500">
           {t(
             'post.behindWhy',
-            'Keeps the person sharp and puts the room behind them out of focus \u2014 what a phone\u2019s portrait mode does. Same model as taking the background out, so it looks for people.',
+            'Instead of removing the background, blur it. You stay sharp and everything behind you goes soft \u2014 the portrait look. It finds people, same as the button above.',
           )}
         </p>
 
@@ -2233,7 +2368,7 @@ export default function PostStudio({
             <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
               {smeared > TOO_MUCH
                 ? t('post.rubTooMuch', 'That is too much of the picture to take out this way. This grows the edges of a gap inwards, which works for something small.')
-                : t('post.rubHow', 'Drag over the thing you want gone. It is good at something small against a plain background, and it smears where there was a pattern behind it.')}
+                : t('post.rubHow', 'Paint over the whole thing you want gone \u2014 every bit of it, or the parts you miss grow back. It works best against a plain wall, the sky or grass. Against a pattern it smudges.')}
             </p>
           </>
         )}
@@ -2716,6 +2851,25 @@ export default function PostStudio({
 
     {/* ── The words ─────────────────────────────────────────────────── */}
     <div className="space-y-3">
+      {words.length > 0 && (
+        <>
+          <button
+            type="button"
+            data-postmovewords
+            onClick={() => { setMovingWords(true); setBench(null); setSaid(''); }}
+            className={LEEG}
+          >
+            <Move className="h-3.5 w-3.5" />
+            {t('post.moveWords', 'Move them on the picture')}
+          </button>
+          <p className="text-[12px] leading-relaxed text-zinc-500">
+            {t(
+              'post.dragWords',
+              'This closes the panel so you can reach the words, then drag any line where you want it. The four buttons on each line are quick places to start.',
+            )}
+          </p>
+        </>
+      )}
       <div className="flex items-center justify-between gap-2">
         <p className={MIKRO}>{t('post.words', 'Words')}</p>
         <button
@@ -2743,6 +2897,7 @@ export default function PostStudio({
             <span className={MIKRO}>{t('post.theWords', 'The words')}</span>
             <textarea
               rows={2}
+              data-postthewords={one.id}
               value={one.text}
               onChange={(event) => setWords((was) => was.map((w) => (
                 w.id === one.id ? { ...w, text: event.target.value } : w)))}
@@ -2771,8 +2926,15 @@ export default function PostStudio({
               <button
                 key={spot.id}
                 type="button"
+                data-postspot={spot.id}
+                aria-pressed={one.spot === spot.id}
+                /* And the position with it. The spots are presets for the
+                   thing she can now drag, so pressing one has to MOVE the
+                   line — a spot that changed a label and left the words
+                   where a thumb had put them is a button that does
+                   nothing. */
                 onClick={() => setWords((was) => was.map((w) => (
-                  w.id === one.id ? { ...w, spot: spot.id } : w)))}
+                  w.id === one.id ? { ...w, spot: spot.id, at: atOf(spot.id) } : w)))}
                 className={`${LEEG} ${one.spot === spot.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
               >
                 {t(`post.spot.${spot.id}`, spot.id)}
@@ -2818,6 +2980,62 @@ export default function PostStudio({
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
+
+          {/* ── The two spacings ──────────────────────────────────────
+ 
+              Carli, 8 October 2026: *"Daar moet 'n ook 'n line spacing
+              scroll bar wees, en spacing tussen die woorde self. Dus moet
+              daar twee spacing bars wees."*
+ 
+              Both are live sliders rather than presses, because both are
+              things somebody nudges while looking at the picture — and
+              neither costs anything, since both are drawn rather than
+              written. The letter one is measured as well as drawn, so the
+              type still fits the box it was fitted to. */}
+          {!plain && (
+            <div className={RY}>
+              <label className={`${KNOP} cursor-pointer flex-col !items-stretch !justify-center gap-1 py-1`}>
+                <span className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                  {t('post.lineGap', 'Line spacing')}
+                  <span data-postlinegapnow className="tabular-nums">
+                    {(one.lineGap ?? LINE_GAP.normal).toFixed(2)}
+                  </span>
+                </span>
+                <input
+                  type="range"
+                  data-postlinegap={one.id}
+                  min={LINE_GAP.min}
+                  max={LINE_GAP.max}
+                  step={LINE_GAP.step}
+                  value={one.lineGap ?? LINE_GAP.normal}
+                  onChange={(event) => setWords((was) => was.map((w) => (
+                    w.id === one.id ? { ...w, lineGap: Number(event.target.value) } : w)))}
+                  className="h-5 w-full cursor-pointer accent-emerald-500"
+                  aria-label={t('post.lineGap', 'Line spacing')}
+                />
+              </label>
+              <label className={`${KNOP} cursor-pointer flex-col !items-stretch !justify-center gap-1 py-1`}>
+                <span className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                  {t('post.letterGap', 'Letter spacing')}
+                  <span data-postlettergapnow className="tabular-nums">
+                    {(one.letterGap ?? LETTER_GAP.normal).toFixed(2)}
+                  </span>
+                </span>
+                <input
+                  type="range"
+                  data-postlettergap={one.id}
+                  min={LETTER_GAP.min}
+                  max={LETTER_GAP.max}
+                  step={LETTER_GAP.step}
+                  value={one.letterGap ?? LETTER_GAP.normal}
+                  onChange={(event) => setWords((was) => was.map((w) => (
+                    w.id === one.id ? { ...w, letterGap: Number(event.target.value) } : w)))}
+                  className="h-5 w-full cursor-pointer accent-emerald-500"
+                  aria-label={t('post.letterGap', 'Letter spacing')}
+                />
+              </label>
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -3132,7 +3350,11 @@ export default function PostStudio({
             /* `none` while cropping as well as while panning. A corner drag
                that the page treats as a scroll moves the room instead of the
                box, and on a phone that reads as the handle not working. */
-            touchAction: movable || cropBox || traced ? 'none' : 'auto',
+            /* And with words on it. Once there are any, the glass is an
+               editing surface: a drag means move this word, or pan the
+               picture under it, and the page scrolling instead means
+               neither. */
+            touchAction: movable || cropBox || traced || words.length > 0 ? 'none' : 'auto',
             cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
           }}
         />
@@ -3167,6 +3389,27 @@ export default function PostStudio({
 
       {cropStrip}
       {traceStrip}
+      {picture !== null || words.length > 0 ? movingWords && (
+        <div
+          data-postmovebar
+          className="flex-shrink-0 space-y-2 border-t px-4 py-3"
+          style={asRoom
+            ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
+            : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
+        >
+          <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+            {t('post.moveWordsHow', 'Put your finger on a line of words and drag it where you want it.')}
+          </p>
+          <button
+            type="button"
+            data-postmovedone
+            onClick={() => { setMovingWords(false); setBench('text'); }}
+            className={VUL}
+          >
+            {t('post.moveWordsDone', 'Done moving')}
+          </button>
+        </div>
+      ) : null}
 
       {/* ── The copilot, over the room ────────────────────────────────
  

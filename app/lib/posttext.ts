@@ -335,3 +335,115 @@ export function behindWords(
     h: lines * px * 1.2 + padY * 2 - px * 0.2,
   };
 }
+
+/**
+ * The two spacings, and where a line of words actually sits.
+ *
+ * ── What she asked for ───────────────────────────────────────────────────
+ *
+ * Carli, 8 October 2026: *"Die woord op die screen kan nog nie geskuif en
+ * gecrop word nie. Daar moet 'n ook 'n line spacing scroll bar wees, en
+ * spacing tussen die woorde self. Dus moet daar twee spacing bars wees."*
+ *
+ * Three things, and the first is the one that makes the other two worth
+ * having: words could only sit in one of four places down the middle of the
+ * picture. Everything else about them was adjustable and WHERE they went was
+ * not, which on a photograph of a person means the caption goes across their
+ * face and there is nothing to be done about it.
+ *
+ * ── Why the position is a share and not a spot ───────────────────────────
+ *
+ * The four spots stay, because they are quick and they are where a caption
+ * usually goes. What is added is a position underneath them: a pair of
+ * shares, 0..1, of the picture's own width and height. Pressing a spot sets
+ * it; dragging moves it; and because it is a share it means the same thing
+ * after the shape changes, which a number of pixels would not.
+ *
+ * ── And why the two spacings are measured, not just drawn ────────────────
+ *
+ * Letter spacing changes how wide a line is, and how wide a line is decides
+ * where it wraps and what size it fits at. A spacing applied at the drawing
+ * and not at the measuring gives text that overflows the box it was fitted
+ * to — which is the whole job `fitText` exists to do. So the measurement
+ * takes the gap too.
+ */
+
+/** How far apart the lines are, as a multiple of the type size. */
+export const LINE_GAP = { min: 0.9, max: 2.2, step: 0.05, normal: 1.2 };
+
+/** How far apart the letters are, as a share of the type size. */
+export const LETTER_GAP = { min: -0.05, max: 0.5, step: 0.01, normal: 0 };
+
+/** Where a line of words sits, as a share of the picture. */
+export interface At {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** The spot presets, as positions. `x` is the middle for all four. */
+export const atOf = (spot: SpotId): At =>
+  ({ x: 0.5, y: (SPOTS.find((one) => one.id === spot)?.y ?? 0.42) + 0.09 });
+
+/**
+ * A line of words measured with its letter spacing in it.
+ *
+ * Wrapped round whatever the canvas measures, because `fitText` and `wrap`
+ * take a `Measure` and have no business knowing about a gap. One extra gap
+ * per letter and none after the last, which is how every typesetter has
+ * counted it and is not what `ctx.letterSpacing` does — that one adds a gap
+ * after the last letter too, and a centred line is then off-centre by half
+ * of it.
+ */
+export const measureWithGap = (measure: Measure, gap: number): Measure =>
+  (text: string, px: number) =>
+    measure(text, px) + Math.max(0, text.length - 1) * gap * px;
+
+/**
+ * Where the top-left of a block of words goes, from its middle.
+ *
+ * The block is centred on `at`, horizontally and vertically, because that is
+ * what dragging a thing to a place means — the place is the middle of it,
+ * not a corner nobody can see.
+ */
+export function blockAt(
+  at: At,
+  lines: number,
+  px: number,
+  lineGap: number,
+  frame: { readonly width: number; readonly height: number },
+): { readonly x: number; readonly y: number } {
+  const tall = lines * px * lineGap;
+  return {
+    x: at.x * frame.width,
+    y: at.y * frame.height - tall / 2,
+  };
+}
+
+/** Inside the picture, wherever a thumb lets go of it. */
+export const atInside = (at: At): At => ({
+  x: Math.min(1, Math.max(0, Number.isFinite(at.x) ? at.x : 0.5)),
+  y: Math.min(1, Math.max(0, Number.isFinite(at.y) ? at.y : 0.5)),
+});
+
+/**
+ * The rectangle a block of words really occupies, for the clash warning.
+ *
+ * `boxFor` is the box the type is FITTED in — how large it may be and where
+ * it may wrap. Once she can drag a line anywhere, that is no longer where it
+ * ends up, and the warning about the platform's furniture has to be about
+ * where it ends up.
+ *
+ * The width is the fitting box's, because a line is wrapped to that; the
+ * height and the middle come from where she put it.
+ */
+export function boxAround(at: At, size: PostSize, zone: Zone = ALL): Box {
+  const fitted = boxFor('middle', size, zone);
+  const w = fitted.w;
+  const h = 0.18;
+  return {
+    x: Math.min(1 - w, Math.max(0, at.x - w / 2)),
+    y: Math.min(1 - h, Math.max(0, at.y - h / 2)),
+    w,
+    h,
+  };
+}

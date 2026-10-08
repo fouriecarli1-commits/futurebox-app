@@ -104,6 +104,11 @@ const SAME_IN_BOTH = new Set([
      there — and "DANKIE" is the Afrikaans, printed in English on purpose
      because that is what people in this country put on that post. */
   'Aandklas, Stellenbosch', 'DANKIE',
+  /* Carli, 8 October 2026: *"Ek dink in elkgeval moet dit Background remover
+     genoem word. As dit te lank is net BG remover."* Hers, in both
+     languages — it is what people in this country call the tool, and
+     "Agtergrondverwyderaar" is a word nobody has ever said out loud. */
+  'BG remover', 'Magic eraser',
   /* The room's own name, hers in both languages. Carli, 4 October 2026, asked
      directly which name she meant: *"Nee, Video Editor."* "Video-redigeerder"
      is the dictionary answer and is not what anybody in this country calls it. */
