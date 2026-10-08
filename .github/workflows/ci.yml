@@ -1194,6 +1194,12 @@ jobs:
       - name: Tapping a line of writing lands on the line she tapped
         run: npm run check:textpick
 
+      # The timed lyrics in an MP4's text track, which is the part of a
+      # lyric video this app cannot work out for itself. The samples are a
+      # rolling karaoke window, so a naive reader triplicates every line.
+      - name: The timed lyrics come out of a film one line each
+        run: npm run check:timedtext
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
