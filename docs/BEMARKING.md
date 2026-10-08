@@ -128,6 +128,7 @@ hou vas dat net die aflaai hef.
 | "Vyf plekke op een rekening" | Niks in die kode voeg ’n tweede mens by ’n rekening nie. Dit was op die Label-kaart en is uitgehaal. |
 | "Onbeperkte liedjies" | Krediete is maandeliks en begrens. Die getalle staan in `plans.ts`. |
 | "Gratis video's" | Die gratis plan het **geen** video-enjin nie. Wat verniet is, is die blaaier-sketch wat op die toestel geteken word. |
+| "Jou liedjie is jou kopiereg" | Niemand vat dit van jou nie en jy mag dit verkoop — maar of 'n suiwer gegenereerde snit **eksklusiewe** kopiereg dra, is onseker in die meeste lande. Die terme-bladsy sê dit nou. Wat jy wél mag sê: *jy besit wat jy maak en niemand anders neem dit nie.* |
 | "Ons kontroleer kopiereg" | Die app kan dit nie en beweer dit nie — `app/lib/filmrights.ts` sê hoekom. Dit weet wél watter dele van ’n film uit homself gekom het. |
 | "Top 10 KI-musiek in Suid-Afrika" as ’n landwye lys | Dit is die lys van wat op FutureBox gespeel word, eerlik getel. Vandag is dit ’n kort lys. |
 | Enigiets oor ’n app-winkel voordat dit daar is | `docs/PLAY-STORE.md` sê wat nog oop is. |

@@ -131,8 +131,29 @@ export default function Terms(): React.ReactElement {
           <p><strong className="text-white">Selling what you make: where this actually stands.</strong> The music engine behind FutureBox runs on FutureBox&apos;s own paid plan, and that plan carries a commercial licence over what is generated on it, with <strong className="text-white">no credit to the engine required</strong>. What is <em>not</em> settled is whether that licence reaches through to you. The engine&apos;s owner told us in writing on 9 September 2026 that a member of a platform selling what they made under the platform&apos;s account is &ldquo;not explicitly covered&rdquo; by the terms of the plan we are on.</p>
           <p><strong className="text-white">Where that stands as of {UPDATED}:</strong> better than it did. The engine&apos;s owner publishes a separate agreement covering exactly this &mdash; a platform bundling their service into its own and passing it on to its members &mdash; and that agreement permits it from the plan FutureBox is now on, and forbids it on the plans below. We read that as covering you. We have asked them to confirm it in writing and they have not yet answered.</p>
           <p>So we are still not going to put it flatly, because that would be us betting on our own reading of somebody else&apos;s contract and you would be the one carrying the bet. We are negotiating the written confirmation now. What we will tell you meanwhile is this: <strong className="text-white">what you make is yours, nobody else takes ownership of it</strong>, we believe the commercial licence does reach you, and the day that is in writing this page says so plainly. If you intend to release something commercially before then, ask us and we will tell you exactly where it stands rather than guess.</p>
-          <p>Two further limits worth knowing, because they are real and not fine print:</p>
+          <p>Three further limits worth knowing, because they are real and not fine print:</p>
           <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
+            {/* ── Added 8 October 2026 ─────────────────────────────
+
+                Carli was reading Google's Lyria terms and sent a summary
+                of them. It made a point this page had never made, and the
+                point is not about Google: it is true of every generated
+                song in this app, including the ones made today.
+
+                The bullet below it says what happens if a model gives you
+                something close to somebody else's — the risk of you
+                infringing. This is the other direction, and nobody had
+                written it down: whether you can STOP anybody else. Those
+                are different questions and only one of them was answered
+                here.
+
+                Stated as a thing that is unsettled rather than as the law,
+                because it is unsettled, because the position differs by
+                country, and because this page already refuses to bet on
+                our own reading of somebody else's contract — betting on
+                our own reading of somebody else's statute would be worse.
+                It is on the attorney's list in `docs/LEGAL-REVIEW.md`. */}
+            <li><strong className="text-white">A song the machine made on its own may not be yours to defend.</strong> Nobody takes it from you and you may sell it — that part is above and it stands. What is not settled, here or in most countries, is whether a piece of music generated purely from a prompt attracts the kind of copyright that lets you stop somebody else using something very like it. The usual answer is that protection follows human authorship. So the surest way to hold something defensible is to put yourself into it: <strong className="text-white">sing on it in the Pro Booth, play on it, rewrite the arrangement, cut it into your own film.</strong> That is your performance and your work, and it is a different thing in law from a track a prompt produced. We are asking an attorney where this lands in South Africa specifically, and this page will say so plainly when we know.</li>
             <li><strong className="text-white">Generated music is not guaranteed to be unique.</strong> An AI model can produce something close to what it produced for somebody else. FutureBox cannot promise originality and does not warrant that anything generated here is free of somebody else&apos;s rights.</li>
             {/* Confirmed by ElevenLabs support on 9 September 2026, in writing,
                 in answer to a direct question. It is stated here rather than

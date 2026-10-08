@@ -293,3 +293,136 @@ tou. Dit is die een syfer om oor te onderhandel, en dit is nie die prys nie.
    wat die goedkoop prys moontlik maak.
 4. **Punt 5 uit die MiniMax-afdeling bly staan:** ons video-prys het een sent
    marge. Dit is 'n aparte probleem en dit gaan nie weg nie.
+
+
+---
+
+# Google se Lyria — en die een ding wat niemand genoem het nie
+
+*Carli, 8 Oktober 2026: "Ek is baie beïndruk met google se lyria. Die
+Afrikaans is baie mooi."*
+
+## Jou sin is die waardevolste reël in hierdie hele lêer
+
+Elke ander syfer hierin is rekenkunde op 'n gepubliseerde prys. **Gehalte in
+Afrikaans is 'n ding wat 'n mens met 'n oor moet beoordeel** — in 'n taal
+waarop die meeste van hierdie modelle skaars geoefen is — en niemand anders
+op hierdie projek kan dit beoordeel nie. Ek kan nie luister nie en die netwerk
+blokkeer hulle in elk geval.
+
+Dit is ook presies die vraag wat in die Mureka-brief staan. Jy het dit nou vir
+een verskaffer beantwoord.
+
+## Die prys, en hoekom dit anders gemerk is
+
+Die skermskoot is 'n KI-antwoord wat OpenRouter, RightsDocket en Pixazo
+aanhaal — **nie Google nie**. Dus is `$0,08 per snit` derdehands, en dit staan
+hier so gemerk eerder as in 'n tabel waar dit soos die ander lyk.
+
+Wat vertroue gee, is 'n onafhanklike pad daarnatoe: **OpenArt verkoop Lyria 3
+Pro teen 50 krediete**, wat op die Wonder-plan **$0,0825** is. Twee roetes wat
+binne 'n halwe sent van mekaar land, is meer werd as enige een alleen — en dit
+is steeds nie Google se eie bladsy nie.
+
+| | Dollar | Rand | Marge teen R2,30 in |
+|---|---|---|---|
+| Wat ons nou betaal (ElevenLabs) | $0,300 | R4,80 | **−R2,50** |
+| Lyria 3 Clip (30 s) | $0,040 | R0,64 | +R1,66 |
+| **Lyria 3 Pro (tot 184 s)** | **$0,080** | **R1,28** | **+R1,02** |
+| Lyria-002 (30 s, erfenis) | $0,060 | R0,96 | +R1,34 |
+| Lyria 3 Pro deur OpenArt Wonder | $0,0825 | R1,32 | +R0,98 |
+| Mureka V8/V9, lirieke → liedjie | $0,045 | R0,72 | +R1,58 |
+
+**Lyria sit tussenin.** Dit kos 'n kwart van wat ons nou betaal en byna twee
+keer wat Mureka vra. Daardie verskil — sowat 56 sent 'n liedjie — is die
+verskil wat jou oor moet regverdig. As Lyria se Afrikaans wesenlik beter is as
+Mureka s'n, is 56 sent niks. Dit is 'n vergelyking wat net jy kan maak, en die
+eerlike toets is dieselfde liriek deur albei.
+
+## Die goeie nuus oor hóé mens dit koop
+
+Vertex AI en die Gemini API is **gewone betaal-soos-jy-gaan API's met
+sleutels** — presies die vorm waarin ons Kling en ElevenLabs al gebruik. Geen
+sitplek-probleem soos by OpenArt nie, en geen saldo wat verval soos daar nie.
+Van die drie verskaffers in hierdie lêer is dit die een wat die minste nuwe
+vrae oopmaak oor hóé 'n mens betaal.
+
+En `app/lib/engines.ts` se `Engines`-koppelvlak is al 'n deur met twee gate in
+— `generateAudio` en `generateVideo`. 'n Tweede klank-enjin is 'n
+implementering van een funksie, nie 'n herbou nie.
+
+## Die ding wat niemand genoem het nie: SynthID
+
+Albei helftes van jou skermskoot sê dit tussen hakies: **elke snit uit die
+amptelike Lyria-API dra 'n onhoorbare SynthID-watermerk** vir herkoms en
+verifikasie.
+
+**Niks in hierdie app ken daardie woord nie.** Ek het gekyk.
+
+Dit is nie 'n rede om Lyria nie te gebruik nie. Dit pas eintlik goed by die
+reël in `docs/BEMARKING.md` oor openlik gemerkte KI. Maar:
+
+- 'n Lid wat haar liedjie kommersieel vrystel, dra 'n Google-herkomsmerk in
+  daardie opname. Sy moet dit **van ons** hoor en nie van iemand anders nie.
+- `app/lib/filmrights.ts` bestaan presies omdat hierdie repo nie 'n aanspraak
+  oor iemand se regte ongesê laat nie. Dieselfde reël geld hier.
+- Dit is 'n vraag vir die prokureur saam met die ander: wat beteken 'n
+  verskaffer se watermerk vir 'n lid se eienaarskap en vir verspreiders wat
+  daarvoor skandeer?
+
+Dit is een sin op die skerm en een reël in die terme. Dit is nie werk nie —
+dit is net iets wat nie vergeet moet word nie, en daarom staan dit hier.
+
+## Lyria se tantieme-antwoord, en die groter ding wat daaruit kom
+
+Jy het hulle terme-opsomming gestuur. Die antwoord op die vraag wat in die
+Mureka-brief eerste staan, is vir Google:
+
+- **Geen tantieme nie.** Geen agterkant-fooie, geen deurlopende lisensiekoste.
+  Jy betaal net vir die genereringsversoeke.
+- **Google eis geen eienaarskap** oor wat jou prompts maak nie.
+- **Kommersiële gebruik is toegelaat** op die betaalde API-vlakke: speletjies,
+  YouTube, potgooie, advertensies, apps, video.
+- Hulle filters blokkeer prompts wat 'n handelsmerk-kunstenaar se stem of
+  woordelikse kopieregtelike lirieke vra.
+- **SynthID help eintlik:** dit laat platforms soos YouTube herkoms verifieer
+  en **verkeerde kopiereg-aanspraakstakings voorkom**. Ek het dit in die
+  vorige afdeling as 'n risiko aangeteken; dit is net so veel 'n beskerming.
+
+### En die een reël wat die hele app raak
+
+Daardie opsomming sê ook iets wat **niks met Google te doen het nie**:
+
+> *Suiwer KI-gegenereerde musiek hou nie tradisionele eksklusiewe kopiereg in
+> die meeste jurisdiksies nie. Jy hou kommersiële gebruiksregte, maar jy kan
+> nie ander keer om soortgelyke materiaal te gebruik nie — tensy menslike
+> kreatiewe wysiging of verwerking bygevoeg is.*
+
+Dit geld vir **elke gegenereerde liedjie in hierdie app**, vandag, met
+ElevenLabs. Nie net vir Lyria nie.
+
+Die terme-bladsy het die een rigting gehad — *"Generated music is not
+guaranteed to be unique"*, wat oor die risiko gaan dat jy op iemand anders
+trap. Die ander rigting het nog nooit daar gestaan nie: **of jy iemand anders
+kan keer.** Dit is nou bygevoeg.
+
+En die app het al 'n antwoord daarop, wat ek nie besef het nie: **die Pro
+Booth.** Om self daarop te sing is presies die menslike bydrae waarvan
+daardie reël praat. Dieselfde geld vir self speel, die verwerking oorskryf, of
+dit in jou eie film sny. Die kamer waarin iemand self sing, is die ding wat 'n
+gegenereerde snit in iets verander waarop sy dalk regte het.
+
+**Ek stel dit as onseker en nie as die reg nie.** Die bron is weer 'n
+KI-opsomming, die posisie verskil per land, en Suid-Afrika se antwoord is 'n
+vraag vir die prokureur. Dit staan op daardie lys.
+
+## Wat ek sou doen
+
+1. **Doen die toets wat net jy kan doen:** dieselfde liriek, deur Lyria en
+   deur Mureka, en luister. Dit is die een vergelyking wat nie in hierdie lêer
+   staan nie en wat die besluit maak.
+2. **Moenie die prys as vas aanvaar nie.** $0,08 is derdehands. Google Cloud
+   se eie prysbladsy is een kyk vir jou en onbereikbaar vir my.
+3. **Vra na SynthID** saam met die ander regsvrae, nie apart nie.
+4. Niks hiervan is gebou nie, en ek sou dit nie bou voordat punt 1 geantwoord
+   is nie. Twee klank-enjins half ingedra is erger as een wat werk.

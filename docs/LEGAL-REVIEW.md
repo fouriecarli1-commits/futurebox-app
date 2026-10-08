@@ -149,3 +149,51 @@ for somebody qualified.
 done here and disappears from the page fails the build, and one that is
 filled in and still listed as a gap fails it too. So this document cannot
 quietly stop being true.
+
+
+---
+
+## Added 8 October 2026 — does an AI-generated song attract copyright in South Africa?
+
+Carli sent Google's Lyria terms summary on 8 October 2026. The royalty
+answer was clean — no royalties, no ownership claim by Google, commercial
+use permitted on the paid API — but it carried a sentence that has nothing
+to do with Google and everything to do with this app:
+
+> Purely AI-generated music does not hold exclusive traditional copyright
+> protection in most jurisdictions. While you hold commercial usage rights,
+> you cannot stop others from using similar AI-generated material unless
+> human creative modification or arrangement is added.
+
+**That applies to every generated song made in FutureBox today**, with the
+supplier it already uses, and it is a different question from the one
+`/terms` already answers.
+
+The page said *"generated music is not guaranteed to be unique"* — the risk
+of a member infringing somebody else. It had never said whether a member can
+**enforce** anything. A bullet has been added saying so, stated as unsettled
+rather than as law, and pointing at the Pro Booth: singing on a track, playing
+on it, rewriting the arrangement or cutting it into her own film is the human
+authorship that sentence turns on, and that room is already built.
+
+**The questions for you:**
+
+1. Under South African copyright law, does a musical work generated from a
+   text prompt attract copyright, and if so who is the author? Section 1's
+   definition of "computer-generated work" and the authorship rule for it
+   are the obvious starting point and we have not read them — the network
+   blocks gov.za from this machine, which is the same reason the ECTA work
+   in this file is unverified.
+2. How much human contribution is enough? A sung vocal over a generated
+   backing track is the common case in this app and we would like to know
+   whether that is sufficient, because if it is, it changes what we tell
+   every member.
+3. Does the answer change what `/terms` should say, and is the wording there
+   now defensible as an interim statement?
+4. A supplier watermark — Google's SynthID is embedded inaudibly in every
+   Lyria track — what does it mean for a member's ownership, and for
+   distributors who scan for it?
+
+**The source is an AI summary, not a statute and not Google's own terms.**
+It is recorded here as the reason the question is being asked, not as an
+answer to it.
