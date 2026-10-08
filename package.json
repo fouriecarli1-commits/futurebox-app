@@ -269,6 +269,7 @@
     "check:cutout": "tsx scripts/check-cutout.mts",
     "check:privateinfo": "tsx scripts/check-privateinfo.mts",
     "check:amplicence": "tsx scripts/check-amplicence.mts",
+    "check:ecta": "tsx scripts/check-ecta.mts",
     "check:cropbox": "tsx scripts/check-cropbox.mts",
     "check:posttemplates": "tsx scripts/check-posttemplates.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",

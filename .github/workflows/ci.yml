@@ -1143,6 +1143,12 @@ jobs:
       - name: No template puts its words where the platform prints its own
         run: npm run check:posttemplates
 
+      # The handover for the attorney lists what each of ECTA section
+      # 43's particulars says and where. A list like that is true the day
+      # it is written; an attorney then reads it and does not go and look.
+      - name: The legal handover still describes the pages that are here
+        run: npm run check:ecta
+
       # The eraser grows the picture around a gap inwards over it. Every
       # pixel it writes is ours, so the test is known pixels in and known
       # pixels out — and above all that nothing outside the mask is ever
