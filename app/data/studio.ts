@@ -179,58 +179,17 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     models: ['FutureBox'],
     onChannel: true,
   },
-  {
-    id: 'flv-1',
-    title: 'Neon Harvest',
-    creator: 'Demo creator',
-    handle: '@demo-neon',
-    genre: 'Melodic Techno',
-    tags: ['dance', 'synth', 'driving', 'afterlife'],
-    bpm: 124,
-    key: 'A Minor',
-    models: ['FutureBox'],
-    onChannel: false,
-    isDemo: true,
-  },
-  {
-    id: 'flv-2',
-    title: 'Gravel Road Sunrise',
-    creator: 'Demo creator',
-    handle: '@demo-country',
-    genre: 'Modern Country Pop',
-    tags: ['acoustic', 'pop', 'warm', 'pedal steel', 'storytelling'],
-    bpm: 104,
-    key: 'G Major',
-    models: ['FutureBox'],
-    onChannel: false,
-    isDemo: true,
-  },
-  {
-    id: 'flv-3',
-    title: 'Highveld Static',
-    creator: 'Demo creator',
-    handle: '@demo-sa',
-    genre: 'Afro House',
-    tags: ['dance', 'percussion', 'south africa', 'groove'],
-    bpm: 122,
-    key: 'F Minor',
-    models: ['FutureBox'],
-    onChannel: false,
-    isDemo: true,
-  },
-  {
-    id: 'flv-4',
-    title: 'Paper Planes & Pixels',
-    creator: 'Demo creator',
-    handle: '@demo-lofi',
-    genre: 'Lo-fi Beats',
-    tags: ['lofi', 'warm', 'mellow', 'study'],
-    bpm: 88,
-    key: 'C Major',
-    models: ['FutureBox'],
-    onChannel: false,
-    isDemo: true,
-  },
+  /* ── Four demo songs, taken out 8 October 2026 ──────────────────
+
+     `Neon Harvest`, `Gravel Road Sunrise`, `Highveld Static` and
+     `Paper Planes & Pixels`, each by `Demo creator` at `@demo-neon` and the
+     rest. The same fault as the Radar's three `[Your target]` rows, which
+     came out in the same commit: a placeholder shipped as content.
+
+     They were also dead. The Post Lab's song list filters on `onChannel`
+     and all four were `false`, so none of them was ever drawn — which is
+     worse rather than better: dead data with placeholder names is what the
+     next list to be written gets copied from. */
 ];
 
 // -----------------------------------------------------------------------------

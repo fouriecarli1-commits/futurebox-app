@@ -2445,6 +2445,13 @@ export const STRINGS: Dict = {
      Afrikaans screen, and `check:afrikaans` could not see any of them
      because a string that never reaches `t` is not a missing translation —
      it is not a translation at all. */
+  "radar.sendYourself": { en: "Send this from your own account. FutureBox stores no addresses and mails nobody on your behalf — an unsolicited pitch sent by a tool reads like spam and gets the channel blocked, not booked.", af: "Stuur dit van jou eie rekening af. FutureBox hou geen adresse nie en pos namens niemand nie — ’n ongevraagde vra wat deur ’n program gestuur is, lees soos gemorspos en kry die kanaal geblokkeer, nie bespreek nie." },
+  "radar.tiktokNotYet": { en: "@futurebox on TikTok — not created yet", af: "@futurebox op TikTok — nog nie gemaak nie" },
+  "radar.liveFirst": { en: "A live collab cannot be booked before the room exists, and TikTok gates LIVE behind follower and age minimums that change. Work the list, then invite a co-host.", af: "’n Regstreekse saamwerk kan nie bespreek word voor die kamer bestaan nie, en TikTok hou LIVE agter volgeling- en ouderdomsminimums wat verander. Werk deur die lys, nooi dan ’n mede-aanbieder." },
+  "radar.approvalFirst": { en: "Every platform makes an app apply, and be approved, before it may post on your behalf — so nothing posts anywhere without you. Here is what each one asks for:", af: "Elke platform laat ’n program aansoek doen, en goedgekeur word, voor dit namens jou mag plaas — dus plaas niks êrens sonder jou nie. Hier is wat elkeen vra:" },
+  "radar.meantime": { en: "In the meantime your handles become working links, and each post opens that platform with the caption ready to paste.", af: "In die tussentyd word jou name werkende skakels, en elke plasing maak daardie platform oop met die teks gereed om te plak." },
+  "radar.tagUs": { en: "Tag FutureBox in a post and the collab becomes findable — an untagged one is invisible to the channel that would boost it. A boost is a request to a person, not an automatic repost.", af: "Merk FutureBox in ’n plasing en die saamwerk word vindbaar — een sonder ’n merk is onsigbaar vir die kanaal wat dit sou versterk. ’n Versterking is ’n vra aan ’n mens, nie ’n outomatiese herplasing nie." },
+  "radar.copyFirst": { en: "Copy the caption first — no public URL can attach your video for you.", af: "Kopieer eers die teks — geen openbare skakel kan jou video vir jou aanheg nie." },
   "radar.copy": { en: "Copy", af: "Kopieer" },
   "radar.copied": { en: "Copied", af: "Gekopieer" },
   "radar.copyDraft": { en: "Copy draft", af: "Kopieer die konsep" },

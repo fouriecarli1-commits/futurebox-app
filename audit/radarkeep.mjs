@@ -84,57 +84,53 @@ try {
       + ' `useState`, so every show she found, looked up and typed in was'
       + ' gone the next morning, and nothing on the screen said so');
 
-    /* ── The other half of the same fault, read off the screen ───────
+    /* ── What a brand-new member actually sees ──────────────────
 
-       The first version of these two assertions expected the row she typed
-       to score HIGH, on the reasoning that both of the topics typed with it
-       are the ones she works in. It came back 16%, and the assertion was
-       wrong rather than the app: the score is her topics against the SHOW's,
-       and her topics come off what the signed-in account has actually
-       released — which, on a fresh test account with no songs on it, is not
-       theatre. A probe cannot know what that account's topics are, so an
-       assertion that assumes them is an assertion about the fixture.
+       Two versions of these assertions were wrong before this one, and both
+       in the same direction: they assumed something about the signed-in
+       account rather than reading it.
 
-       What it CAN say, without knowing either side, is the thing the fault
-       was about: a show with topics gets a number and a show with nothing
-       said about it gets none. That is the whole claim — the score comes
-       from what is typed, and where nothing is typed there is nothing to
-       show. */
-    const counted = () => page.locator('span')
-      .filter({ hasText: /^[0-9]{1,3}%$/ }).allInnerTexts()
-      .then((all) => all.map((one) => Number(one.replace('%', ''))).filter(Number.isFinite))
-      .catch(() => []);
+       The first expected the row she typed to score HIGH, reasoning that
+       the topics typed with it are the ones she works in. It came back 16%:
+       the score is her topics against the SHOW's, and hers come off what
+       the account has actually released. The second expected it to be
+       scored at all, and six percentages came back as six noughts — because
+       the account this probe signs up has released nothing, and a profile
+       built on nothing has no topics to compare with.
 
-    const withTopics = await counted();
-    check('    and a show with topics on it is scored',
-      withTopics.length >= 6,
-      `${JSON.stringify(withTopics)} — five shipped shows and hers makes six`
-      + ' percentages, so one short means the row she typed is not being'
-      + ' scored at all');
+       That is the honest state of this panel for every new member, so it is
+       what the probe reads: every row a dash, the sentence saying what
+       would give it a number, and the heading admitting there is nothing
+       released yet. `check:radar` holds the scored case against a fixture
+       it controls, which is where arithmetic belongs; a browser is here to
+       say what is on the screen.
 
-    await name.fill('Iets waaroor niks gese is nie');
-    await topics.fill('');
-    await page.locator('[data-radaradd]').first().click();
-    await page.waitForTimeout(900);
-    const noTopics = await counted();
-    check('    and a show with nothing said about it gets no number at all',
-      noTopics.length === withTopics.length,
-      `${JSON.stringify(withTopics)} → ${JSON.stringify(noTopics)} — a seventh`
-      + ' percentage is the fault this is for: a show added with no topics'
-      + ' used to arrive carrying `ai music`, `ai` and `creators`, written'
-      + ' into the panel, and the matcher drew a percentage from them. An'
-      + ' Afrikaans theatre podcast scored on "ai music" is not a weak match;'
-      + ' it is not a match at all, and the screen said 34%');
-    check('      and says what to type to give it one',
-      (await page.getByText(/nothing to measure/i).count()) > 0,
-      'a dash with no sentence beside it reads as a row that failed to load'
-      + ' rather than as a question nobody has answered yet');
+       The nought-per-cent bars this replaced were the fault rather than the
+       passing. A bar at nought beside all five shows says "measured, and
+       all five are a bad fit", which is a verdict on a fit nothing has been
+       measured about — and before today this account was quietly profiled
+       on FUTUREBOX's own song, its genre, its tags and its model stack, so
+       five shows were ranked against a record she had no part in under the
+       heading of her own profile. */
+    const pct = (await page.locator('span')
+      .filter({ hasText: /^[0-9]{1,3}%$/ }).allInnerTexts().catch(() => []))
+      .map((one) => Number(one.replace('%', '')))
+      .filter(Number.isFinite);
+    check('    and a member who has released nothing is given no percentages',
+      pct.length === 0,
+      `${JSON.stringify(pct)} — a profile built on nothing has nothing to`
+      + ' compare with, and a number drawn from it is a number about nothing');
 
-    /* Off again, so what follows is about the show this probe is following
-       rather than about the one it just used to count. The unscored rows
-       sort to the top, so the first "Take it off" is this one's. */
-    await page.locator('[data-radardrop]').first().click();
-    await page.waitForTimeout(700);
+    check('      and is told what would give them one',
+      (await page.getByText(/Nothing of yours to compare/i).count()) > 0,
+      'a row of dashes with no sentence beside it reads as a panel that'
+      + ' failed to load rather than as a question nobody has answered yet');
+
+    check('      and the heading says there is nothing released yet',
+      (await page.getByText(/nothing released yet/i).count()) > 0,
+      'the heading says matches are worked out from what you have released,'
+      + ' so on an account with nothing on it that sentence has to finish'
+      + ' itself honestly');
 
     /* ── And taking it off really takes it off ─────────────────── */
     await page.locator('[data-radardrop]').first().click();
@@ -168,7 +164,8 @@ if (problems.length) {
   process.exit(1);
 }
 console.log(
-  '\ncheck:radarkeep — a show she types into the Radar is on the list, scored'
-  + ' on the topics she gave it, still there after a reload, and gone for good'
-  + ' once she takes it off.',
+  '\ncheck:radarkeep — a show she types into the Radar lands on the list'
+  + ' marked as hers, is still there after a reload, and is gone for good once'
+  + ' she takes it off — and an account with nothing released gets dashes and'
+  + ' a sentence rather than five percentages about nothing.',
 );

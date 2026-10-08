@@ -166,13 +166,57 @@ export function profileFromTracks(
   followers: number,
   tracks: readonly TrackFlavour[],
 ): CreatorProfile {
-  const mine = tracks.filter((t) => t.handle === handle);
-  const source = mine.length > 0 ? mine : tracks.filter((t) => t.onChannel);
+  /* ── Her own work, with no stand-in for it ─────────────────────
+ 
+     This read `mine.length > 0 ? mine : tracks.filter((t) => t.onChannel)`,
+     so a member with nothing released was profiled on FUTUREBOX's own song
+     — its genre, its tags, its model stack — and the Radar then ranked five
+     shows against a record she had no part in, under the heading of her own
+     profile. A stand-in presented as a reading is the same fault as the
+     invented topics it sits beside, and it had one more consequence: with
+     the fallback in place `profile.topics` was never empty, so the "nothing
+     of yours to compare this against yet" branch below could not be reached
+     and the assertion holding it was green for something the app could not
+     do.
+ 
+     Nothing released is now nothing released: every row shows a dash and
+     the sentence says what would give it a number. */
+  const source = tracks.filter((t) => t.handle === handle);
   return {
     name,
     handle,
     followers,
-    topics: ['ai music', 'ai', 'creators', 'vibe coding', 'building', ...source.flatMap((t) => t.tags)],
+    /* ── Her topics, and not five of ours in front of them ──────────
+ 
+       Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
+ 
+       This line read:
+ 
+           topics: ['ai music', 'ai', 'creators', 'vibe coding', 'building',
+                    ...source.flatMap((t) => t.tags)],
+ 
+       — so every member of this app arrived at the Radar as an AI-music
+       vibe-coder, whatever they actually make, and every show was scored
+       against those five words plus whatever their own tracks said. An
+       Afrikaans theatre artist was being matched on "vibe coding" and
+       "building".
+ 
+       It is the same fault as the one on the other side of the comparison:
+       a show she added used to arrive carrying three topics the panel
+       invented, and a score worked out from invented topics on EITHER side
+       is a percentage about nothing. Fixing one and leaving the other
+       fixes half a thing.
+ 
+       So the topics are what her own work says: the tags on her tracks and
+       the genres they are in, de-duplicated. Nothing released yet means no
+       topics, which means every show gets a dash and the panel says why —
+       `check:radar` holds that, and the honest answer to "how well does
+       this show fit my work" before there is any work is that nobody can
+       say. */
+    topics: Array.from(new Set([
+      ...source.flatMap((t) => t.tags),
+      ...source.map((t) => t.genre),
+    ].map((one) => one.toLowerCase()))),
     models: Array.from(new Set(source.flatMap((t) => t.models))),
     genres: Array.from(new Set(source.map((t) => t.genre))),
   };
@@ -240,6 +284,13 @@ const VERDICT = {
     en: 'Add what this show is about and the fit gets worked out. Until then there is nothing to measure.',
     af: 'Tik in waaroor hierdie program gaan en die pas word uitgewerk. Tot dan is daar niks om te meet nie.',
   },
+  /* Nothing of hers to compare against. The sentence is about her side
+     rather than about the show, because the show is fine — it is the other
+     half of the comparison that is missing. */
+  nowork: {
+    en: 'Nothing of yours to compare this against yet. Make or bring in a song and the fit gets worked out from what it is.',
+    af: 'Nog niks van jou om dit mee te vergelyk nie. Maak of bring ’n liedjie in en die pas word uitgewerk uit wat dit is.',
+  },
 } as const;
 
 export function matchPodcasts(
@@ -251,6 +302,13 @@ export function matchPodcasts(
     .map((podcast): PodcastMatch => {
       if (!podcast.topics.length) {
         return { podcast, score: null, shared: [], verdict: VERDICT.unknown[lang] };
+      }
+      /* And the other side of the same comparison. With nothing released,
+         `tagOverlap` returns nought — and a nought-per-cent bar beside every
+         show on the list says "measured, and all five are a bad fit", which
+         is a verdict on a fit nothing has been measured about. */
+      if (!profile.topics.length) {
+        return { podcast, score: null, shared: [], verdict: VERDICT.nowork[lang] };
       }
       const { score: topicScore, shared } = tagOverlap(profile.topics, podcast.topics);
       // Reach is a multiplier, not a bonus: a perfect topic fit on a show that

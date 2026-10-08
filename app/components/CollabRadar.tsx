@@ -456,8 +456,10 @@ export default function CollabRadar({
                 <div className="flex items-start space-x-2 text-[13px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                   <span>
-                    Send this from your own account. FutureBox stores no addresses and mails nobody on your behalf —
-                    an unsolicited pitch sent by a tool reads like spam and gets the channel blocked, not booked.
+                    {t(
+                      'radar.sendYourself',
+                      'Send this from your own account. FutureBox stores no addresses and mails nobody on your behalf — an unsolicited pitch sent by a tool reads like spam and gets the channel blocked, not booked.',
+                    )}
                   </span>
                 </div>
               </div>
@@ -479,11 +481,15 @@ export default function CollabRadar({
           <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3">
             <div className="flex items-center space-x-2">
               <Video className="w-4 h-4 text-rose-400" />
-              <p className="text-xs font-bold text-white">@futurebox on TikTok — not created yet</p>
+              <p className="text-xs font-bold text-white">
+                {t('radar.tiktokNotYet', '@futurebox on TikTok — not created yet')}
+              </p>
             </div>
             <p className="text-[13px] text-zinc-400 leading-relaxed">
-              A live collab cannot be booked before the room exists, and TikTok gates LIVE behind follower and age
-              minimums that change. Work the list, then invite a co-host.
+              {t(
+                'radar.liveFirst',
+                'A live collab cannot be booked before the room exists, and TikTok gates LIVE behind follower and age minimums that change. Work the list, then invite a co-host.',
+              )}
             </p>
             <div className="space-y-1.5">
               {TIKTOK_LAUNCH_STEPS.map((step) => {
@@ -612,8 +618,10 @@ export default function CollabRadar({
             {showConnectNote && (
               <div className="text-sm text-zinc-400 leading-relaxed bg-black/40 border border-zinc-800 rounded-xl p-3 space-y-1.5">
                 <p>
-                  Every platform makes an app apply, and be approved, before it may post on your behalf — so nothing
-                  posts anywhere without you. Here is what each one asks for:
+                  {t(
+                    'radar.approvalFirst',
+                    'Every platform makes an app apply, and be approved, before it may post on your behalf — so nothing posts anywhere without you. Here is what each one asks for:',
+                  )}
                 </p>
                 <ul className="space-y-0.5">
                   {SOCIAL_PLATFORMS.map((pf) => (
@@ -623,8 +631,10 @@ export default function CollabRadar({
                   ))}
                 </ul>
                 <p>
-                  In the meantime your handles become working links, and each post opens that platform with the caption
-                  ready to paste.
+                  {t(
+                    'radar.meantime',
+                    'In the meantime your handles become working links, and each post opens that platform with the caption ready to paste.',
+                  )}
                 </p>
               </div>
             )}
@@ -695,8 +705,10 @@ export default function CollabRadar({
               })}
             </div>
             <p className="text-sm text-zinc-500 leading-relaxed">
-              Tag FutureBox in a post and the collab becomes findable — an untagged one is invisible to the channel
-              that would boost it. A boost is a request to a person, not an automatic repost.
+              {t(
+                'radar.tagUs',
+                'Tag FutureBox in a post and the collab becomes findable — an untagged one is invisible to the channel that would boost it. A boost is a request to a person, not an automatic repost.',
+              )}
             </p>
           </div>
 
@@ -812,7 +824,10 @@ export default function CollabRadar({
                   </div>
                   {!platform.shareIntent && (
                     <p className="text-[13px] text-zinc-600">
-                      Copy the caption first — no public URL can attach your video for you.
+                      {t(
+                        'radar.copyFirst',
+                        'Copy the caption first — no public URL can attach your video for you.',
+                      )}
                     </p>
                   )}
                 </div>

@@ -36,8 +36,8 @@
 import {
   MOST, ownTarget, readOwn, scorable, topicsFrom,
 } from '../app/lib/radartargets.ts';
-import { PODCAST_TARGETS } from '../app/data/studio.ts';
-import { matchPodcasts, type CreatorProfile } from '../app/lib/matching.ts';
+import { PODCAST_TARGETS, TRACK_FLAVOURS } from '../app/data/studio.ts';
+import { matchPodcasts, profileFromTracks, type CreatorProfile } from '../app/lib/matching.ts';
 import { readFileSync } from 'node:fs';
 
 let bad = 0;
@@ -64,6 +64,23 @@ ok('  and every one of them names a real show and a page to find it on',
 ok('  and every one of them has topics, so every row can be scored',
   PODCAST_TARGETS.every(scorable),
   PODCAST_TARGETS.filter((one) => !scorable(one)).map((one) => one.name).join(', '));
+
+/* The songs too, which carried `Demo creator` and `@demo-neon` and were also
+   dead — the Post Lab's list filters on `onChannel` and all four were
+   false, so none was ever drawn. Dead data with placeholder names is worse
+   rather than better: it is what the next list to be written gets copied
+   from. */
+const fakeSongs = TRACK_FLAVOURS.filter((one) => /demo|placeholder|lorem|example/i
+  .test(`${one.creator} ${one.handle} ${one.title}`) || one.isDemo);
+ok('  and no song in the shipped catalogue is a placeholder',
+  fakeSongs.length === 0,
+  fakeSongs.map((one) => `${one.title} — ${one.creator}`).join(', '));
+
+ok('  and every song in it is on the channel it is offered from',
+  TRACK_FLAVOURS.every((one) => one.onChannel),
+  TRACK_FLAVOURS.filter((one) => !one.onChannel).map((one) => one.title).join(', ')
+  + ' — the Post Lab’s list filters on this, so a song that is not on the'
+  + ' channel is a row nobody can ever reach');
 
 /* ── 2. Her topics are hers ─────────────────────────────────────────── */
 ok('what she types becomes the topics',
@@ -129,6 +146,50 @@ ok('  and once she says what it is about, it gets a real one',
   `${toldRow.score} — both her topics are on it, so this is the one row that`
   + ' should score high');
 
+/* ── 3b. The other side of the same comparison ──────────────────────── */
+const nothingYet: CreatorProfile = { ...profile, topics: [], genres: [] };
+const blind = matchPodcasts(nothingYet, PODCAST_TARGETS, 'en');
+ok('a member with nothing released gets no scores either',
+  blind.every((one) => one.score === null),
+  `${JSON.stringify(blind.map((one) => one.score))} — a nought-per-cent bar`
+  + ' beside every show says "measured, and all five are a bad fit", which is'
+  + ' a verdict on a fit nothing has been measured about');
+ok('  and is told what would give them one',
+  blind.every((one) => /nothing of yours/i.test(one.verdict)),
+  `"${blind[0].verdict}" — the sentence has to be about her side, because`
+  + ' the show is fine; it is the other half of the comparison that is missing');
+
+/* ── And her own topics are her own work, not five of ours ───────────
+ 
+   `profileFromTracks` read:
+ 
+       topics: ['ai music', 'ai', 'creators', 'vibe coding', 'building',
+                ...source.flatMap((t) => t.tags)],
+ 
+   so every member arrived at the Radar as an AI-music vibe-coder whatever
+   they actually make, and an Afrikaans theatre artist was matched on
+   "vibe coding". It is the same fault as the invented topics on the show,
+   one side over — and a score worked out from invented topics on EITHER
+   side is a percentage about nothing. */
+const hers = profileFromTracks('Carli', '@carli', 10, [{
+  id: 'one',
+  title: 'Aandklas',
+  creator: 'Carli',
+  handle: '@carli',
+  genre: 'Afrikaans teater',
+  tags: ['teater', 'afrikaans'],
+  bpm: 100,
+  key: 'A Minor',
+  models: ['FutureBox'],
+  onChannel: true,
+}]);
+ok('what a member is about comes off their own work',
+  hers.topics.length === 3
+    && ['teater', 'afrikaans', 'afrikaans teater'].every((one) => hers.topics.includes(one)),
+  `${JSON.stringify(hers.topics)} — five topics in front of hers is every`
+  + ' member of this app arriving as an AI-music vibe-coder, whatever they'
+  + ' actually make');
+
 /* ── 4. Storage is not ours ─────────────────────────────────────────── */
 ok('nothing in storage can stop the panel opening',
   readOwn(null).length === 0
@@ -162,6 +223,31 @@ ok('the panel loads her list on the way in and saves it on every change',
   'a list kept in `useState` alone is the fault this check exists for, and'
   + ' a save on add but not on remove brings a show she decided against'
   + ' back on the next load');
+
+/* ── 6. Nothing on the screen is English typed straight into the markup ─
+ 
+   `check:afrikaans` is blind to this and cannot help being: it reads the
+   keys the code asks `t` for, and a string that never reaches `t` is not a
+   missing translation — it is not a translation at all. Twenty-one pieces
+   of English were sitting on this panel on 8 October for exactly that
+   reason: "Copy", "Copied", "Add", "Email draft", "Your channels", "Hide",
+   "live", "not created yet", "Open", "Posting is Pro", "Ask FutureBox to
+   boost", and seven whole paragraphs.
+ 
+   Matched as text between JSX tags that starts with a capital or is a lone
+   lower-case word, which is what a rendered sentence looks like and what a
+   class list, a URL and an expression do not. */
+const rendered = [...panel.matchAll(/>[\t ]*\n?[\t ]*([A-Z’'][^<>{}]{2,}?)[\t ]*\n?[\t ]*</g)]
+  .map((one) => one[1].replace(/\s+/g, ' ').trim())
+  /* A middle dot, an arrow or a lone piece of punctuation between tags is
+     furniture rather than a sentence. */
+  .filter((one) => /[A-Za-z]{3}/.test(one));
+ok('nothing on the panel is English typed straight into the markup',
+  rendered.length === 0,
+  `${rendered.slice(0, 6).map((one) => `"${one.slice(0, 48)}"`).join(', ')}`
+  + ` (${rendered.length} in all) — \`check:afrikaans\` cannot see these: a`
+  + ' string that never reaches `t` is not a missing translation, it is not a'
+  + ' translation at all');
 
 if (bad) {
   console.error(`\ncheck:radar — ${bad} assertion(s) failed.\n`);
