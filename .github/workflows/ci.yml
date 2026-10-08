@@ -1233,6 +1233,12 @@ jobs:
       - name: Google's address is the shape that answered 401, not 404
         run: npm run check:google
 
+      # Our own ceilings under Google's one cap. Lyria, Nano Banana and Veo
+      # are all the same SERVICE, so without these the month Veo runs hot
+      # takes the music and the pictures down with it.
+      - name: Each Google engine has its own month
+        run: npm run check:googlecap
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

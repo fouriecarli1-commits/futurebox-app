@@ -48,6 +48,7 @@ export const ORDER = [
   'invites',
   'kits',
   'kitsvoices',
+  'googlespend',
   'kitsmine',
   /* ── `events` before the files that alter it ──────────────────────
 
@@ -171,6 +172,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
   invites: 'Die uitnodigingsskakel in \u2019n saamwerk-e-pos.',
   listens:
     'Hoeveel kere \u2019n liedjie geluister is, per liedjie, vir die maker. Moet n\u00e1 charts.sql loop.',
+  googlespend:
+    'Wat Google ons gekos het, per gebruik, per enjin. Google se dak hang aan één diens en al drie enjins is daardie diens — sonder hierdie tabel stop die musiek en die prente saam met die video.',
   kitsvoices:
     'Wie se sangstem is wie s\u2019n. Kits kan nie \u2019n stem oor die API skep nie, so elke stem staan op \u00e9\u00e9n gedeelde rekening \u2014 sonder hierdie tabel sien elke lid elke lid se gekloonde stem, en kan in hulle sing.',
   kits:

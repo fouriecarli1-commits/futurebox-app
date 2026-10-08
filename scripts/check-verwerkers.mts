@@ -217,6 +217,10 @@ const KEPT: Record<string, string> = {
      is still a row that says something about a person, and the one it says
      is "this voice is this member's", which is the whole reason the row is
      worth having and the whole reason the page has to mention it. */
+  /* Not a song, not a prompt, not a picture — an engine name, a number of
+     millionths of a dollar, and whose turn it was. Still a row about a
+     person, and the page has to say so. */
+  google_spend: 'engines cost us',
   voice_owners: 'singing voice is yours',
   cast_members: 'photograph',
   pairs: 'work together',

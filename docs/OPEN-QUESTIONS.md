@@ -7009,3 +7009,20 @@ toets.
 3. **'n Regte voorwerp-model laaste**, en net as een self gehost kan word en ek
    dit kan meet. Alles wat deur 'n verskaffer gaan, kos per druk en moet die
    prys voor die druk sê.
+
+
+## Still owed to her — 8 October 2026
+
+**The amp modellers.** Carli: *"Jy moet ook onthou om my te help om die amp modelers af te laai
+en dan op ons app te sit."* TONE3000 is the source and `docs/EPOS-TONE3000.md` and
+`docs/KITS-TERME.md` already cover the supplier side; what is not built is the downloading and
+the putting-on. Written down here because it was asked in the middle of a different piece of
+work and would otherwise be lost in the scroll.
+
+**A listening test between the two Lyrias.** Both `lyria-002` and `lyria-3-pro-preview` answer
+on her project. The default is the documented one. Which actually sounds better on the same
+Afrikaans lyric is a thing to hear, not to reason about.
+
+**Nano Banana has a published end date.** `gemini-2.5-flash-image` is the only image model on
+the account and Vertex lists its shutdown as 15 March 2027. Nano Banana Pro 404s under all three
+of its names today. Re-run `/google` from time to time and move the moment Pro appears.

@@ -366,6 +366,26 @@ refuse, so nothing is generated and nothing is billed. It comes back with a
 sentence saying which Lyria and which Veo id to use — which is the question
 Google's own documentation currently disagrees with itself about.
 
+`GOOGLE_CAP_MUSIC`, `GOOGLE_CAP_VIDEO` and `GOOGLE_CAP_IMAGE` are optional,
+in whole dollars a month, and mean **40, 40 and 10** when unset. They are the
+app's own ceilings UNDER Google's, one per engine.
+
+They exist because Google's spend cap hangs on one **service**, and Lyria,
+Nano Banana and Veo are all that one service. Without these, the month Veo
+runs hot the music and the pictures stop with it. Google's cap is the last
+line, not the budget.
+
+They deliberately add up to less than the cap on the Google side. If they
+summed to it, the first engine to reach its own ceiling would be the one that
+had already taken everything, and Google's cap would never be what stopped
+it. **Raising the budget in Google does nothing on its own — raise these
+too.**
+
+`GOOGLE_SHARE_EACH` is optional, a fraction between 0 and 1, and means **0.1**:
+how much of one engine's month a single member may take. A ceiling one member
+can empty leaves everybody else with a refusal in a room that worked
+yesterday.
+
 `SINGER` is optional and names **which supplier sings**. Unset means the
 first one that is configured, which today is Kits and is the right answer —
 there is one. It exists because `app/lib/server/singer.ts` put a seam in
