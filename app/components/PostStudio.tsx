@@ -44,7 +44,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Trash2, Type, Undo2, X,
+  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import {
   BACKDROPS, POST_SIZES, SPOTS, behindWords, boxFor as boxOfSpot, clashes, fitText,
@@ -76,7 +76,8 @@ import {
   FORMATS, SCALES, formatOf, holdsClear, nameFor, type FileKind, type Scale,
 } from '../lib/postfile';
 import {
-  cutAlong, trace, whyNot, worthCutting, type Path as Traced,
+  SHAPES, cutAlong, dragged, shapePath, trace, whyNot, worthCutting,
+  type Path as Traced, type Shape as CutShape,
 } from '../lib/lasso';
 import { makeBack } from '../lib/postback';
 import { usePlain, useSetPlain } from '../lib/plainmode';
@@ -116,6 +117,7 @@ const KNOP = 'inline-flex min-h-[44px] w-full items-center justify-center gap-1.
   + ' border border-zinc-700 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 text-center';
 const RY = 'grid grid-cols-2 gap-2';
 const RY3 = 'grid grid-cols-3 gap-2';
+const RY4 = 'grid grid-cols-4 gap-2';
 
 const VUL = 'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl'
   + ' bg-emerald-500 px-4 text-sm font-bold text-black disabled:opacity-40';
@@ -464,6 +466,17 @@ export default function PostStudio({
 
   const [traced, setTraced] = useState<Traced | null>(null);
   const tracingNow = useRef(false);
+  /* ── Which of the four, and where the drag started ────────────────────
+ 
+     Carli, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil waar
+     jy totale vryheid het om mooi om elke edge te sny."* Four answers to
+     "how hard is this edge", and `lib/lasso.ts` carries which is for what.
+ 
+     The start of a drag is a ref and not state: a circle is REBUILT from
+     its two corners on every pointermove, so the first corner has to
+     survive a render without causing one. */
+  const [cutShape, setCutShape] = useState<CutShape>('pencil');
+  const cutFrom = useRef<{ readonly x: number; readonly y: number } | null>(null);
   /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
      button that opens it — see the note on the cutting room's. */
   const [asking, setAsking] = useState(false);
@@ -889,13 +902,25 @@ export default function PostStudio({
     if (traced) {
       const put = shareAt(event);
       if (!put) return;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      /* ── A line is tapped, not dragged ───────────────────────────────
+ 
+          Each press puts one corner down and the edge to the last one is
+          exactly straight, which is the one thing a finger cannot do and
+          the whole reason this shape exists. So it ADDS rather than
+          starting again. */
+      if (cutShape === 'line') {
+        tracingNow.current = false;
+        setTraced((now) => [...(now ?? []), { x: put.x, y: put.y }]);
+        return;
+      }
       tracingNow.current = true;
+      cutFrom.current = put;
       /* A new stroke starts the shape again rather than joining on to the
          last one. Lifting a thumb and putting it down somewhere else would
          draw a straight line across everything in between — the same
          decision the eraser made, for the same reason. */
       setTraced([{ x: put.x, y: put.y }]);
-      event.currentTarget.setPointerCapture(event.pointerId);
       return;
     }
     if (cropBox) {
@@ -921,6 +946,13 @@ export default function PostStudio({
       if (!tracingNow.current) return;
       const put = shareAt(event);
       if (!put) return;
+      /* A dragged shape is rebuilt from its two corners rather than
+         appended to: appending would grow a new circle on top of the last
+         one at every pointermove. */
+      if (dragged(cutShape)) {
+        setTraced((now) => shapePath(cutShape, cutFrom.current, put, now ?? []));
+        return;
+      }
       setTraced((now) => (now ? trace(now, put) : now));
       return;
     }
@@ -957,6 +989,7 @@ export default function PostStudio({
     lastAt.current = null;
     grip.current = null;
     tracingNow.current = false;
+    cutFrom.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -1693,14 +1726,21 @@ export default function PostStudio({
      While it is open the bench closes itself, so the glass is the whole
      photograph with the box over it. There is nothing to set in a panel: the
      tool is the gesture, and the two buttons are "do it" and "don't". */
-  /** The way into the free-hand cut, on the picture's own bench. */
+  /**
+   * The way into cutting a shape out, on the picture's own bench.
+   *
+   * Carli, 8 October 2026: *"Daai moet eerder 'n ander naam kry.
+   * Free-hand-cut."* She is right — "draw around something" says how it
+   * works rather than what it does, and it had stopped being true anyway
+   * the moment there were four shapes to do it with.
+   */
   const traceStart = picture ? (
     <div className="space-y-2">
-      <p className={MIKRO}>{t('post.drawRound', 'Draw around something')}</p>
+      <p className={MIKRO}>{t('post.cutShape', 'Cut out a shape')}</p>
       <p className="text-[12px] leading-relaxed text-zinc-500">
         {t(
-          'post.drawRoundWhy',
-          'Trace round anything with your finger and keep it, or take it out. Slower than the other two, and it works on anything \u2014 a guitar, a dog, a bottle \u2014 not only on people.',
+          'post.cutShapeWhy',
+          'Choose a circle, a square, straight lines or the pencil, draw it over the picture, and keep what is inside or take it out. It works on anything \u2014 a guitar, a dog, a bottle \u2014 not only on people.',
         )}
       </p>
       <button
@@ -1710,7 +1750,7 @@ export default function PostStudio({
         className={LEEG}
       >
         <Lasso className="h-3.5 w-3.5" />
-        {t('post.drawRoundStart', 'Start drawing')}
+        {t('post.cutShapeStart', 'Choose a shape')}
       </button>
     </div>
   ) : null;
@@ -1731,10 +1771,41 @@ export default function PostStudio({
         ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
         : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
     >
+      {/* ── Which shape, before how to use it ──────────────────────────
+ 
+          Four answers to "how hard is this edge", and the one somebody
+          reaches for says what kind of picture it is. The pencil last,
+          because it is the slow one and the other three are what most
+          pictures want. */}
+      <div className={RY4}>
+        {SHAPES.map((how) => (
+          <button
+            key={how}
+            type="button"
+            data-postcutshapepick={how}
+            aria-pressed={cutShape === how}
+            onClick={() => { setCutShape(how); setTraced([]); setSaid(''); }}
+            className={`${LEEG} ${cutShape === how ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+          >
+            {how === 'circle' ? <Circle className="h-3.5 w-3.5" />
+              : how === 'square' ? <Square className="h-3.5 w-3.5" />
+                : how === 'line' ? <Spline className="h-3.5 w-3.5" />
+                  : <Pencil className="h-3.5 w-3.5" />}
+            {how === 'circle' ? t('post.cutCircle', 'Circle')
+              : how === 'square' ? t('post.cutSquareShape', 'Square')
+                : how === 'line' ? t('post.cutLine', 'Lines')
+                  : t('post.cutPencil', 'Pencil')}
+          </button>
+        ))}
+      </div>
       <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
         {worthCutting(traced)
           ? t('post.drawReady', 'Now keep what you drew round, or take it out. Draw again to start the shape over.')
-          : t('post.drawHow', 'Put your finger on the picture and trace right round the thing. Lift it when you get back to where you started.')}
+          : cutShape === 'line'
+            ? t('post.cutLineHow', 'Tap each corner of the thing. The edges between them come out exactly straight \u2014 good for a sign, a building, a screen.')
+            : dragged(cutShape)
+              ? t('post.cutDragHow', 'Put your finger down at one corner and drag to the other. The shape follows as you go.')
+              : t('post.drawHow', 'Put your finger on the picture and trace right round the thing. Lift it when you get back to where you started.')}
       </p>
       <div className={RY}>
         <button

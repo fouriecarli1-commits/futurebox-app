@@ -22,7 +22,8 @@
  *      a photograph of nothing.
  */
 import {
-  ENOUGH, NEAR, NEARLY_ALL, area, closed, softness, trace, whyNot, worthCutting,
+  ENOUGH, NEAR, NEARLY_ALL, ROUND, area, boxPath, closed, ringPath, shapePath,
+  softness, trace, whyNot, worthCutting,
   type Dot, type Path,
 } from '../app/lib/lasso.ts';
 
@@ -104,6 +105,78 @@ for (const of of [{ width: 4032, height: 3024 }, { width: 64, height: 64 }, { wi
     soft >= 1 && soft < Math.min(of.width, of.height) / 4 + 1,
     'a blur of nought is a hard line and a blur of half the picture is a smear');
 }
+
+/* ── The four shapes, which are four answers to one question ────────
+ 
+   Carli, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil waar
+   jy totale vryheid het."* All four end as the same path, so what can go
+   wrong is the arithmetic that makes them: a circle that is a polygon you
+   can see the corners of, a rectangle drawn backwards, or either of them
+   dragged off the edge of the picture. */
+
+const corner = { x: 0.2, y: 0.3 };
+const away = { x: 0.8, y: 0.7 };
+
+const box = boxPath(corner, away);
+ok('a rectangle from two corners covers what is between them',
+  Math.abs(area(box) - 0.6 * 0.4) < 1e-9,
+  `${area(box)} against ${(0.6 * 0.4).toFixed(2)}`);
+ok('  and comes out the same dragged backwards',
+  Math.abs(area(boxPath(away, corner)) - area(box)) < 1e-9,
+  'a drag up and to the left is the same rectangle, and a path with its'
+  + ' corners in the other order fills identically either way');
+ok('  and has four corners, not five',
+  box.length === 4, String(box.length));
+
+const ring = ringPath(corner, away);
+/* An ellipse inscribed in that rectangle has area pi * a * b. A 64-sided
+   polygon is a little under, by the slivers it cuts off each arc — about a
+   quarter of a per cent, and anything much larger than that is a shape
+   somebody can see the corners of. */
+const perfect = Math.PI * 0.3 * 0.2;
+ok('a circle from two corners is round, not a polygon you can see',
+  area(ring) < perfect && area(ring) > perfect * 0.995,
+  `${area(ring).toFixed(5)} against ${perfect.toFixed(5)} — short by`
+  + ` ${(((perfect - area(ring)) / perfect) * 100).toFixed(2)}%`);
+ok('  and fits inside the drag rather than reaching past it',
+  ring.every((one) => one.x >= 0.2 - 1e-9 && one.x <= 0.8 + 1e-9
+    && one.y >= 0.3 - 1e-9 && one.y <= 0.7 + 1e-9),
+  'a circle that reaches past the corners somebody dragged is a circle that'
+  + ' takes in what they left out');
+
+/* Dragged off the edge, which is every drag that starts near one. */
+const offTheEdge = [
+  boxPath({ x: -2, y: -2 }, { x: 3, y: 3 }),
+  ringPath({ x: -2, y: 0.5 }, { x: 3, y: 0.5 }),
+  ringPath({ x: 0.5, y: -9 }, { x: 0.5, y: 9 }),
+];
+ok('  and neither shape can be dragged outside the picture',
+  offTheEdge.every((path) => path.every((one) => one.x >= 0 && one.x <= 1
+    && one.y >= 0 && one.y <= 1 && Number.isFinite(one.x) && Number.isFinite(one.y))),
+  'a polygon with a corner outside fills as nothing on one browser and as an'
+  + ' enormous wedge on another');
+
+/* And the one that decides which of them a gesture is building. */
+ok('a dragged shape is rebuilt from the two corners every time',
+  shapePath('square', corner, away, []).length === 4
+  && shapePath('circle', corner, away, []).length === ROUND,
+  'a shape that appended instead of rebuilding would grow a new rectangle'
+  + ' on every pointermove');
+ok('  and a traced one is left exactly as it was traced',
+  shapePath('pencil', corner, away, round).length === round.length
+  && shapePath('line', corner, away, round).length === round.length,
+  'their points were put there one at a time, and rebuilding them from two'
+  + ' corners is the pencil becoming a rectangle under her finger');
+ok('  and a dragged shape with nowhere to start is left alone too',
+  shapePath('circle', null, away, round).length === round.length,
+  'the first pointermove of a drag arrives before the start is recorded in'
+  + ' at least one browser, and a null start must not throw');
+
+ok('a tap with a dragged shape is still too small to cut along',
+  !worthCutting(boxPath({ x: 0.5, y: 0.5 }, { x: 0.501, y: 0.501 }))
+  && !worthCutting(ringPath({ x: 0.5, y: 0.5 }, { x: 0.504, y: 0.504 })),
+  'a finger that touches the glass and does not move is a shape of nothing,'
+  + ' and cutting along it leaves a photograph of nothing');
 
 if (bad) {
   console.error(`\ncheck:lasso — ${bad} assertion(s) failed.\n`);

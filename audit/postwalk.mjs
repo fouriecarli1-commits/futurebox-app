@@ -1093,7 +1093,7 @@ try {
   await bringTheFixtureIn();
   await page.waitForTimeout(1200);
 
-  check('the room offers to draw round something',
+  check('the room offers to cut a shape out',
     (await page.locator('[data-postdrawstart]').count()) > 0,
     'two ways to cut something out, both of which need the thing to be a'
     + ' person or to be small');
@@ -1109,6 +1109,75 @@ try {
       await page.locator('[data-postdrawkeep]').first().isDisabled(),
       'a tap is not a shape, and cutting along one leaves a photograph of'
       + ' nothing');
+
+    /* ── The four shapes, which is what she asked for ─────────────────
+ 
+       Carli, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil."*
+       The square is the one to prove by dragging, because its area is
+       arithmetic anybody can do in their head: a drag across the middle
+       half of a picture keeps a quarter of it, and what comes back has to
+       be the blue quarter and no red.
+ 
+       Proved before the pencil below it, and left on the pencil, so the
+       trace that follows is the trace that was always there. */
+    for (const shape of ['circle', 'square', 'line', 'pencil']) {
+      check(`      and ${shape} is one of the shapes to cut with`,
+        (await page.locator(`[data-postcutshapepick="${shape}"]`).count()) > 0,
+        'four answers to how hard an edge is, and this one is not offered');
+    }
+
+    const glassFor = () => page.evaluate(() => {
+      const el = document.querySelector('[data-postcanvas]');
+      const of = document.querySelector('[data-postpicturesize]');
+      if (!el || !of) return null;
+      const box = el.getBoundingClientRect();
+      const scale = Math.min(box.width / Number(of.dataset.w), box.height / Number(of.dataset.h));
+      const w = Number(of.dataset.w) * scale;
+      const h = Number(of.dataset.h) * scale;
+      return {
+        left: box.left + (box.width - w) / 2,
+        top: box.top + (box.height - h) / 2,
+        width: w,
+        height: h,
+      };
+    });
+
+    await page.locator('[data-postcutshapepick="square"]').first().click();
+    await page.waitForTimeout(400);
+    const forSquare = await glassFor();
+    if (forSquare) {
+      /* The blue half, top to bottom, dragged corner to corner. */
+      await page.mouse.move(forSquare.left + forSquare.width * 0.56, forSquare.top + 6);
+      await page.mouse.down();
+      for (let step = 1; step <= 10; step += 1) {
+        await page.mouse.move(
+          forSquare.left + forSquare.width * (0.56 + (0.42 * step) / 10),
+          forSquare.top + 6 + ((forSquare.height - 12) * step) / 10,
+        );
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(400);
+      check('      and dragging a square really makes one to act on',
+        !(await page.locator('[data-postdrawkeep]').first().isDisabled()),
+        'the drag went corner to corner and the room still thinks there is no'
+        + ' shape, so a dragged shape is not reaching it');
+      await page.locator('[data-postdrawkeep]').first().click();
+      await page.waitForTimeout(1200);
+      const squared = await colours();
+      check('        and keeping it drops everything outside the square',
+        squared !== null && squared.blue > 1000 && squared.red < 200,
+        `red ${squared?.red}, blue ${squared?.blue} — a square dragged over the`
+        + ' blue half, so red should be gone');
+
+      /* And back to the picture and the pencil, for the trace below. */
+      await page.locator('[data-postundo]').first().click();
+      await page.waitForTimeout(800);
+      await bench('pic');
+      await page.locator('[data-postdrawstart]').first().click();
+      await page.waitForTimeout(600);
+      await page.locator('[data-postcutshapepick="pencil"]').first().click();
+      await page.waitForTimeout(400);
+    }
 
     /* ── Round the blue half, wherever the blue half actually is ───────
  

@@ -235,3 +235,91 @@ export function cutAlong(
   ctx.globalCompositeOperation = 'source-over';
   return made;
 }
+
+/**
+ * The four ways to say which part of a picture you mean.
+ *
+ * ── What she asked for ───────────────────────────────────────────────────
+ *
+ * Carli, 8 October 2026: *"Ek dink daai opsie moet verskillende shapes hê
+ * waarvan iemand kan kies om mee te cut. 'N circle, 'n vierkand, 'n lyn, 'n
+ * pencil waar jy totale vryheid het om mooi om elke edge te sny."*
+ *
+ * She is right that one of these is not enough, and right about which four.
+ * They are not four features; they are four answers to "how hard is this
+ * edge", and the one somebody reaches for says what kind of picture it is:
+ *
+ *   · `circle` — a face, a plate, a logo, a moon. Two corners of a drag and
+ *     it is done, and nothing drawn by hand is as round as this.
+ *   · `square` — a sign, a window, a screen, a label. Same gesture.
+ *   · `line`  — a building, a table, a box, anything made by people. Tap
+ *     each corner; the edges between them are exactly straight, which is
+ *     the one thing a finger cannot do.
+ *   · `pencil` — everything else. The slowest and the only one that can
+ *     follow hair, a hand or a leaf.
+ *
+ * All four end as the same `Path`, so `cutAlong` has never heard of them and
+ * the mask, the feather and the two directions are the same code for all
+ * four. A shape that compiled to its own mask would be four edges to get
+ * right instead of one.
+ */
+export const SHAPES = ['pencil', 'circle', 'square', 'line'] as const;
+export type Shape = (typeof SHAPES)[number];
+
+/** Is this one drawn by dragging two corners apart? */
+export const dragged = (how: Shape): boolean => how === 'circle' || how === 'square';
+
+/** A rectangle, from the two corners of a drag. */
+export function boxPath(from: Dot, to: Dot): Path {
+  const left = hold(Math.min(from.x, to.x));
+  const right = hold(Math.max(from.x, to.x));
+  const top = hold(Math.min(from.y, to.y));
+  const bottom = hold(Math.max(from.y, to.y));
+  return [
+    { x: left, y: top },
+    { x: right, y: top },
+    { x: right, y: bottom },
+    { x: left, y: bottom },
+  ];
+}
+
+/**
+ * How many points an ellipse is drawn with.
+ *
+ * Sixty-four. The mask is filled at the picture's own resolution, so the
+ * flat side between two points is about one fiftieth of the ring — half a
+ * pixel on a 1080-wide circle, which is under the feather and cannot be
+ * seen. Sixteen is visibly a polygon on anything bigger than a thumbnail;
+ * two hundred and fifty-six is slower to fill for no difference at all.
+ */
+export const ROUND = 64;
+
+/** An ellipse inscribed in the two corners of a drag. */
+export function ringPath(from: Dot, to: Dot, points: number = ROUND): Path {
+  const midX = (from.x + to.x) / 2;
+  const midY = (from.y + to.y) / 2;
+  const acrossX = Math.abs(to.x - from.x) / 2;
+  const acrossY = Math.abs(to.y - from.y) / 2;
+  const out: Dot[] = [];
+  for (let i = 0; i < points; i += 1) {
+    const turn = (i / points) * Math.PI * 2;
+    out.push({
+      x: hold(midX + Math.cos(turn) * acrossX),
+      y: hold(midY + Math.sin(turn) * acrossY),
+    });
+  }
+  return out;
+}
+
+/**
+ * The path a shape makes from where a gesture started and where it is now.
+ *
+ * One function so the room does not have to know which shapes are dragged
+ * and which are traced — it hands over what it has and gets back a path. A
+ * `pencil` or a `line` is already a path and comes back untouched, because
+ * their points were put there one at a time.
+ */
+export function shapePath(how: Shape, from: Dot | null, to: Dot, made: Path): Path {
+  if (!dragged(how) || !from) return made;
+  return how === 'circle' ? ringPath(from, to) : boxPath(from, to);
+}
