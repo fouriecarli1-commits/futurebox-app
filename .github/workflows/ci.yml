@@ -1182,6 +1182,12 @@ jobs:
       - name: A picture kept in the app has no way out of it
         run: npm run check:shelf
 
+      # Supplier prices she pasted, against our own credit price read out of
+      # the code. A document saying "this would lose money" is true today and
+      # silently false the day CREDITS.video moves.
+      - name: The supplier price comparison still gives the answer it states
+        run: npm run check:minimax
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

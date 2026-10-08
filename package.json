@@ -279,6 +279,7 @@
     "check:bemarking": "tsx scripts/check-bemarking.mts",
     "check:chosen": "tsx scripts/check-chosen.mts",
     "check:shelf": "tsx scripts/check-shelf.mts",
+    "check:minimax": "tsx scripts/check-minimax.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

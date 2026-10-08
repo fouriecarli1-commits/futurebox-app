@@ -6877,3 +6877,135 @@ gehef word, is presies die soort ding wat stil verkeerd is.
 **Punt 3 is nie opsioneel nie.** Twee implementerings van dieselfde ding wat
 nie teen mekaar gemeet word nie, is hoe hierdie app 'n film sou uitvoer wat
 anders lyk as die een wat sy in die voorskou gesien het.
+
+
+---
+
+## Render: jy betaal al daarvoor, en die patroon staan in jou eie repo — 8 Oktober 2026
+
+**Jy:** *"Ek betaal reeds vir render, ek gebruik dit op vibefy code, daarom wil
+ek vra dat jy kyk of ons dit ook kan benut?"*
+
+Dit verander my antwoord van gister wesenlik. Ek het toe geskryf dat Render se
+pryse nie nagegaan kon word nie en die koste 'n oop vraag is. Die koste is nie
+meer die vraag nie — die rekening bestaan.
+
+### Wat ek in jou eie opstelling gevind het
+
+`/home/user/Vibefy/render.yaml` is nie 'n webdiens nie. Dit is 'n **worker**:
+
+- `type: worker`, nie `web` nie — niks praat met dit oor HTTP nie.
+- Dit **eis werk op** uit `public.assessment_requests` met
+  `FOR UPDATE SKIP LOCKED` en loop sweeps op 'n tydhouer.
+- `runtime: docker`, `region: frankfurt`, `plan: starter`, `autoDeploy: true`.
+- Die kommentaar bo-aan sê presies die ding wat FutureBox nodig het: *"a
+  process that holds a browser open for the minutes an assessment takes, which
+  no serverless function on any plan can do."*
+
+Daardie laaste sin is woord vir woord die probleem in
+`docs/LONG_VIDEO.md`. Jy het die oplossing al gebou, vir 'n ander repo.
+
+### En FutureBox pas die patroon al
+
+`supabase/video.sql` het 'n werktabel wat niks hoef te verander nie:
+
+    status text not null default 'running'
+      check (status in ('running', 'done', 'failed'))
+
+met `owner`, `credits` (wat die lid betaal het, sodat 'n terugbetaling die
+bedrag ken), en `path` — die pad in ons eie emmer sodra die lêer gehaal is.
+'n Worker wat met `FOR UPDATE SKIP LOCKED` uit daardie tabel eis, is dieselfde
+vorm as die een wat jy al laat loop.
+
+### Die een ding wat ek steeds nie kan sê nie
+
+**Of 'n tweede diens op jou rekening meer kos.** Render faktureer per diens, en
+jou `render.yaml` dra een worker op `plan: starter`. Of 'n tweede een binne wat
+jy al betaal val, of 'n nuwe reel op die rekening is, staan op jou Render-paneel
+— en ek kan render.com nie bereik nie (403 deur die instaanbediener). Dit is
+een kyk op 'n bladsy wat jy oop het en ek nie.
+
+### Wat ek sou bou, en in watter orde
+
+1. **Die worker self**, met die snylogika. `app/lib/stitch.ts` hou al elke
+   besluit — die vorm, die oorvloeie, die verdowwings, die woorde — maar in
+   blaaier-kode (canvas, `MediaRecorder`), so die diens sou `ffmpeg` gebruik.
+   Dit is 'n tweede implementering van dieselfde besluite, en dit is die regte
+   werk hierin.
+2. **'n Roete wat dit vra**, met die krediete gehef soos elke ander betaalde
+   deur — prys voor die druk.
+3. **'n Toets wat die twee snyers teen mekaar meet.** Dieselfde snitte,
+   dieselfde liedjie, dieselfde lengte uit, albei kante.
+
+**Punt 3 is nie opsioneel nie**, en dit is die rede waarom ek nie vanaand
+begin het nie: twee snyers wat nie teen mekaar gemeet word nie, is hoe hierdie
+app 'n film uitvoer wat anders lyk as die een wat sy in die voorskou
+goedgekeur het. Die sê-die-woord is joune; dit is 'n aand of twee se werk.
+
+---
+
+## Klik op 'n voorwerp of woorde en gryp dit — 8 Oktober 2026
+
+**Jy:** *"Dan wonder ek hoe moontlik dit is wanneer mens die magic eraser
+button click, of die grab text, dat dit AI integrated is en die masjien
+identifiseer self objekte en text wat dan highlight en dan kan die klient op
+die objekte of text click wat hulle graag wil grab, rondskuif, of delete."*
+
+Ek het dit nagegaan eerder as geraai. Die twee helftes van jou idee is baie ver
+van mekaar af.
+
+### Woorde: dit is byna klaar, en dit kos niks
+
+Die app lees al woorde uit 'n foto met Tesseract, **op die toestel, verniet**.
+Wat ek vandag gevind het, is dat die enjin baie meer teruggee as wat ons vra.
+`app/lib/ocr.ts` neem net `data.text`. Die enjin gee ook:
+
+    blocks → paragraphs → lines → words
+
+en **elkeen van hulle dra 'n `bbox`** — 'n blokkie met `x0, y0, x1, y1`. Ek het
+dit in `node_modules/tesseract.js/src/index.d.ts` nagegaan: Tesseract 7.0.0, en
+die blokkies is daar.
+
+Dit beteken: die rame om elke reël en elke woord **word al bereken**, in
+dieselfde deurloop wat die teks maak wat jy nou al kry. Ons gooi hulle net weg.
+
+So jou idee vir teks is:
+
+1. Lees die foto (gebeur al).
+2. Teken 'n blokkie om elke reël (die data is daar).
+3. Sy tik een aan — dit lig op.
+4. Dan: **gryp** dit (dit word regte, redigeerbare woorde op die prent, met die
+   font en die spasie-stawe wat ons gister gebou het), **skuif** dit (die
+   sleep-kode bestaan al), of **vee uit** (die magic eraser vat 'n masker, en
+   die blokkie ís 'n masker).
+
+Elke stuk daarvan bestaan. Dit is wiring, nie 'n nuwe enjin nie, en dit kos
+niks en gaan nêrens heen nie. **Dit is die een wat ek sóu bou.**
+
+### Voorwerpe: twee stappe, en die eerste een het ook geen model nodig nie
+
+Om 'n voorwerp te **identifiseer** — "dit is 'n kitaar, dit is 'n hond" — verg
+'n voorwerp-model. Die app host al een model self (die persoon-model in
+`cutout.ts`, onder die CSP), so die patroon bestaan; wat ek nie kan doen nie, is
+'n model van hier af aflaai. Die netwerk blokkeer dit, en 'n model wat ek nie
+kon toets nie, is nie iets wat hierdie repo stuur.
+
+Maar jou idee — *klik op die voorwerp en dit lig op* — het nie 'n naam vir die
+voorwerp nodig nie. Dit het 'n **gebied** nodig. En daarvoor is daar 'n metode
+wat geen model hoef nie en wat twintig jaar lank in elke prent-program gewerk
+het: 'n toorstaffie wat van die punt waar sy tik na buite groei terwyl die kleur
+naby genoeg bly.
+
+Dit werk **presies in die geval waar die magic eraser nou al werk**: teen 'n
+gewone muur, die lug, of gras. Teen 'n patroon werk albei nie. Dus sou dit niks
+belowe wat dit nie kan nie — en dit is verniet, op die toestel, en ek kan dit
+toets.
+
+### Wat ek sou doen
+
+1. **Teks eerste.** Die blokkies is daar, die gryp, skuif en vee is daar.
+2. **Toorstaffie vir voorwerpe daarna.** Geen model, geen koste, en eerlik oor
+   waar dit werk.
+3. **'n Regte voorwerp-model laaste**, en net as een self gehost kan word en ek
+   dit kan meet. Alles wat deur 'n verskaffer gaan, kos per druk en moet die
+   prys voor die druk sê.
