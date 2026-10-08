@@ -231,6 +231,45 @@ on a feeling, and the credits charged for each can be checked against it.
 `CREDITS.video` has one cent of margin on Kling today. That number is the first thing to redo
 once `/api/google/setup` has said which models answer and at what rate — not before.
 
+## What is actually there — measured 8 October 2026
+
+`/google`, against `psyched-choir-433408-h0` in `us-central1`:
+
+| Model | | |
+|---|---|---|
+| `lyria-002` | music | **there** |
+| `lyria-3-pro-preview` | music | **there** |
+| `veo-3.1-generate-001` | video | **there** |
+| `veo-3.1-fast-generate-001` | video | **there** |
+| `gemini-2.5-flash-image` | image | **there** |
+| `gemini-3-pro-image` | image | 404 |
+| `gemini-3-pro-image-preview` | image | 404 |
+| `gemini-3.1-flash-image` | image | 404 |
+
+So everything works — key, project, region and URL shape all correct — and three of the eight
+guesses were wrong. That is three afternoons the probe did not cost.
+
+### What was chosen, and why
+
+* **Music: `lyria-002`.** Both work. This is the documented one; `lyria-3-pro-preview` is a
+  preview. Which actually sounds better is a listening test on the same lyric, not a coin.
+* **Video: `veo-3.1-fast-generate-001`.** Both work. The fast one first, deliberately: $0.08 a
+  second against $0.20, and `CREDITS.video` has one cent of margin.
+* **Pictures: `gemini-2.5-flash-image`.** Not a choice — the only one of four that answered.
+
+### The one that comes with a clock
+
+**Nano Banana Pro is not on this account.** All three of its candidate names 404ed. The only
+image model available is the *original* Nano Banana — and that is precisely the one whose
+shutdown date two Google pages disagree about: **2 October 2026** on the Gemini API, **15 March
+2027** on Vertex. The first has already passed and it still answered here, so Vertex's date is
+the one that governs.
+
+That is a real dependency with a published end, not a hypothetical. The pictures will have to
+move before March 2027. It is a one-line change in `lib/server/google.ts` — **if somebody
+re-runs the probe from time to time and notices Nano Banana Pro appearing.** Which is the
+argument for keeping `/google` rather than deleting it once it has been used once.
+
 ## Open it without spending a secret
 
 *Carli, 8 October 2026, when told to open `?key=<POST_SECRET>`:* "maar dan gaan ek nou weer 'n

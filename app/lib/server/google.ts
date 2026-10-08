@@ -101,6 +101,52 @@ export const MODELS = [
   { id: 'gemini-3.1-flash-image', what: 'image', verb: 'generateContent', note: 'Named as the replacement for the above. Id unverified anywhere official.' },
 ] as const;
 
+/**
+ * The ids that actually answered on her project, measured 8 October 2026.
+ *
+ * ── The reading ──────────────────────────────────────────────────────────
+ *
+ * `/api/google/setup` against `psyched-choir-433408-h0` in `us-central1`:
+ *
+ *   lyria-002                   400  there
+ *   lyria-3-pro-preview         400  there
+ *   veo-3.1-generate-001        400  there
+ *   veo-3.1-fast-generate-001   400  there
+ *   gemini-2.5-flash-image      400  there
+ *   gemini-3-pro-image          404
+ *   gemini-3-pro-image-preview  404
+ *   gemini-3.1-flash-image      404
+ *
+ * So every guess above is now a fact, and three of them were wrong — which
+ * is three afternoons the probe did not cost.
+ *
+ * ── The one that comes with a clock ──────────────────────────────────────
+ *
+ * **Nano Banana Pro is not on this account.** All three of its candidate
+ * names answered 404. The only image model that works is the ORIGINAL Nano
+ * Banana — and that is the one whose shutdown date two Google pages
+ * disagree about: 2 October 2026 on the Gemini API, 15 March 2027 on
+ * Vertex. The first of those has already passed, and it still answered 400
+ * here, so Vertex's date is the one that governs.
+ *
+ * That is a real dependency with a published end, not a hypothetical. The
+ * pictures will have to move before March 2027, and the move is a one-line
+ * change here IF the probe is re-run from time to time — which is the
+ * argument for keeping `/google` rather than deleting it once it has been
+ * used once.
+ */
+export const CHOSEN = {
+  /* The cheaper of the two that work. `lyria-3-pro-preview` is the other,
+     and is preview, so a listening test decides between them rather than a
+     coin. */
+  music: 'lyria-002',
+  /* The fast one first, deliberately: $0.08 a second against $0.20, and the
+     margin on video is one cent. */
+  video: 'veo-3.1-fast-generate-001',
+  /* Not a choice. It is the only one of four that answered. */
+  image: 'gemini-2.5-flash-image',
+} as const;
+
 export interface Reached {
   readonly model: string;
   readonly what: string;

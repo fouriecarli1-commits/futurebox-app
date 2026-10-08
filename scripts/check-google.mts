@@ -22,7 +22,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
-import { MODELS, addressOf, configured, region } from '../app/lib/server/google.ts';
+import { CHOSEN, MODELS, addressOf, configured, region } from '../app/lib/server/google.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -193,6 +193,41 @@ ok('none of the three variables can reach a browser',
   !/NEXT_PUBLIC_GOOGLE/.test(lib),
   '`NEXT_PUBLIC_` puts a value in the bundle, which puts this key in'
   + ' everybody’s hands. `check:security` scans for it too');
+
+/* ── 6b. What was measured, and the summary that nearly hid it ───────── */
+
+/* On 8 October 2026 the probe answered against her real project, and the
+   report it sent back said nothing at all about images — while the answer
+   she needed was in the rows above it. The summary was two hand-written
+   sentences, written when there were two kinds, and a third had since
+   arrived. */
+
+ok('the summary is built from the list, not written out by hand',
+  /const kinds = \[\.\.\.new Set\(MODELS\.map\(\(one\) => one\.what\)\)\]/.test(route),
+  'a sentence per kind, typed once, describes the list as it was the day'
+  + ' somebody wrote it \u2014 and silently omits the kind added afterwards,'
+  + ' which is exactly what happened');
+
+ok('  so a kind with nothing working says so rather than vanishing',
+  /NONE answered/.test(route),
+  'an absent line reads as "fine", which is the opposite of the truth');
+
+ok('every chosen id is one that was actually measured',
+  Object.values(CHOSEN).every((id) => MODELS.some((one) => one.id === id)),
+  Object.values(CHOSEN).join(', ')
+  + ' \u2014 a default that is not in the list is a default nothing has ever'
+  + ' asked Google about');
+
+ok('  and the image one is the only one of four that answered',
+  CHOSEN.image === 'gemini-2.5-flash-image'
+  && MODELS.filter((one) => one.what === 'image').length === 4,
+  'Nano Banana Pro 404ed under all three of its names on her project. This'
+  + ' is not a preference, it is the only thing there');
+
+ok('  and the video default is the cheap one, because the margin is a cent',
+  CHOSEN.video.includes('fast'),
+  `${CHOSEN.video} \u2014 $0.08 a second against $0.20, and CREDITS.video has`
+  + ' one cent of margin on Kling');
 
 /* ── 7. A person does not have to spend a secret to use it ───────────── */
 

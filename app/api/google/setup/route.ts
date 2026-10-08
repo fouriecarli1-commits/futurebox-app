@@ -119,8 +119,25 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const found = await Promise.all(MODELS.map((one) => reach(one.id)));
-  const music = found.filter((one) => one.what === 'music' && one.answer === 'yes');
-  const video = found.filter((one) => one.what === 'video' && one.answer === 'yes');
+
+  /* ── One line per KIND, worked out from the list ────────────────────
+
+     The first version of this named music and video in two hand-written
+     sentences. Then Carli chose Nano Banana, a third kind arrived, and the
+     report she sent back on 8 October said nothing at all about images —
+     while the answer she needed was in the rows above it.
+
+     That is the whole argument against a summary written out by hand: it
+     describes the list as it was the day somebody wrote it. This one is
+     built FROM the list, so a kind that cannot be silently left out is a
+     kind nobody has to remember. `check:google` holds it. */
+  const kinds = [...new Set(MODELS.map((one) => one.what))];
+  const says = kinds.map((kind) => {
+    const works = found.filter((one) => one.what === kind && one.answer === 'yes');
+    return works.length
+      ? `${kind}: use ${works.map((one) => one.model).join(' or ')}.`
+      : `${kind}: NONE answered. Check Model Garden for this project and region.`;
+  });
 
   return Response.json({
     ready: true,
@@ -128,17 +145,10 @@ export async function GET(request: Request): Promise<Response> {
     region: region(),
     /* So a wrong region is visible as a wrong address rather than guessed at
        from four 404s. */
-    example: addressOf(MODELS[0].id),
+    example: addressOf(MODELS[0].id, MODELS[0].verb),
     models: found,
-    /* The sentence to send back, so nobody has to read four status codes to
-       answer one question. */
     says: [
-      music.length
-        ? `Music: use ${music.map((one) => one.model).join(' or ')}.`
-        : 'Music: NONE of the Lyria ids answered. Check Model Garden for this project and region.',
-      video.length
-        ? `Video: use ${video.map((one) => one.model).join(' or ')}.`
-        : 'Video: NONE of the Veo ids answered. Check Model Garden for this project and region.',
+      ...says,
       found.some((one) => one.answer === 'not-allowed')
         ? 'At least one said not-allowed, which is a key restriction or an access request rather than a wrong name.'
         : '',
