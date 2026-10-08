@@ -549,6 +549,7 @@ wearing the probe's clothes.
 
 | What | When | Where |
 |---|---|---|
+| Die video se visuals op die tydlyn. Sy het gevra: *“Hoe moontlik is dit om die video se visuals op die tydlyn te wys? Dit gaan dit makliker maak om te weet waar om te cut ens.”* — ’n blok het net ’n naam en ’n lengte gedra, wat sê WÁTTER skoot dit is en niks oor waar enigiets daarin gebeur nie. Die prente word op die toestel uit materiaal wat reeds in die blaaier is, ontsyfer: niks opgelaai nie, niks gegenereer nie, niks gehef nie, werk op die gratis plan | 2026-10-09 | `lib/filmstrip.ts`, `components/FilmStrip.tsx`, `check:filmstrip`, `audit/editor.mjs` |
 | Making a song and separating stems were dead for three days — a path with no host, left behind when supplier calls moved behind one door on 5 October. Confirmed fixed by Carli on the live site the same evening. `check:onedoor` is the rule that catches it, and it found the stems one itself | 2026-10-08 | `633ffd4`, `check:onedoor` |
 | An album cover was copied into our storage BY THE BROWSER, so a finished song, a closed tab or a sleeping phone lost a picture already paid for — and the panel printed “it is saved” over the route’s own `kept: false`. The job is written down before the credits go, the panel pins itself open while it works, and a failed cover refunds | 2026-10-08 | `633ffd4`, `check:coverkeep`, `supabase/coverkeep.sql` |
 | TONE3000 has an API; amp modelling built | 2026-09 | `lib/nam.ts`, `check:nam` |

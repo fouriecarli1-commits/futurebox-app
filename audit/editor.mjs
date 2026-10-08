@@ -325,6 +325,100 @@ try {
       (await p.locator('[data-editorpiece]').count()) === 1,
       'the block is selected on arrival, so its panel should be up');
 
+    /* ── Pictures on the block, which is the half a source rule cannot see ──
+
+       Carli, 8 October 2026: *"Hoe moontlik is dit om die video se visuals op
+       die tydlyn te wys? Dit gaan dit makliker maak om te weet waar om te cut
+       ens."*
+
+       `check:filmstrip` drives the arithmetic — how many, taken from where,
+       remembered under what. It cannot tell a working decoder from one that
+       answers black, because only a browser has a decoder. So this asks the
+       one question left: did real pictures arrive on the block.
+
+       Waited for rather than read straight away. Decoding is deliberately
+       after paint — the block is usable without it — so a probe that looks
+       immediately is reading the moment before the feature happens, which
+       would pass on an empty strip and fail on a slow one. */
+    const pictures = p.locator('[data-filmstrip]').first();
+    const drew = await pictures.waitFor({ state: 'attached', timeout: 20000 })
+      .then(() => true).catch(() => false);
+    check('the block carries pictures of the shot',
+      drew,
+      'a name and a duration say which shot it is and nothing about where'
+      + ' anything happens in it, which is what makes aiming a cut a matter'
+      + ' of scrubbing one second at a time');
+
+    if (drew) {
+      const many = Number(await pictures.getAttribute('data-filmstrip')) || 0;
+      check('  and more than one of them, so the shot has a shape',
+        many >= 1, `${many} pictures`);
+
+      /* ── Read the PIXELS, not the length of the string ───────────────
+
+         The first version of this asked whether the data URL was longer than
+         two thousand characters, on the theory that a real photograph is big
+         and an empty canvas is small. It failed on the first run, against a
+         strip that was working perfectly.
+
+         The fixture above is a flat green field with one white square on it,
+         and a 48-pixel JPEG of a flat colour compresses to a few hundred
+         bytes. So the rule was measuring how COMPRESSIBLE the frame was and
+         reporting it as whether a frame existed — the same adjacent
+         measurement this repository keeps finding, written into the check
+         meant to catch it.
+
+         Measured afterwards, which makes it worse than miscalibrated: a
+         48-pixel JPEG of pure black is 1047 characters and the same of flat
+         green is 1051. Four apart. There was no threshold that rule could
+         have been given — length and "did a frame arrive" are unrelated
+         quantities, and it would have rejected a working strip and a broken
+         one alike.
+
+         The real question is whether anything was drawn, and the only honest
+         way to ask is to look: load the picture back and read its pixels.
+         Black is what a canvas that drew nothing gives. Proven both ways
+         before being trusted — black reads false, a real frame reads true. */
+      const lit = await p.locator('[data-filmstrip] > span').evaluateAll(async (nodes) => {
+        const look = (node) => new Promise((done) => {
+          const url = (getComputedStyle(node).backgroundImage || '').slice(5, -2);
+          if (!url.startsWith('data:image/')) { done(false); return; }
+          const img = new Image();
+          img.onload = () => {
+            const can = document.createElement('canvas');
+            can.width = img.width; can.height = img.height;
+            const ctx = can.getContext('2d');
+            if (!ctx || !img.width) { done(false); return; }
+            ctx.drawImage(img, 0, 0);
+            const d = ctx.getImageData(0, 0, img.width, img.height).data;
+            /* Anything that is not the black a blank canvas gives. A real
+               frame of anything at all clears this; a frame that failed to
+               draw does not. */
+            let most = 0;
+            for (let i = 0; i < d.length; i += 4) {
+              most = Math.max(most, d[i], d[i + 1], d[i + 2]);
+            }
+            done(most > 24);
+          };
+          img.onerror = () => done(false);
+          img.src = url;
+        });
+        const all = await Promise.all(nodes.map(look));
+        return all.filter(Boolean).length;
+      });
+      check('  and each one is a real frame rather than an empty box',
+        lit >= 1,
+        `${lit} of ${many} have anything but black in them — a canvas that`
+        + ' drew nothing looks exactly like a shot filmed in the dark, and'
+        + ' only the pixels tell them apart');
+
+      /* Nothing on the strip may take a press meant for the block. */
+      const eats = await p.locator('[data-filmstrip]').evaluateAll((nodes) =>
+        nodes.filter((node) => getComputedStyle(node).pointerEvents !== 'none').length);
+      check('  and none of them can swallow a tap meant for the block',
+        eats === 0, `${eats} with pointer events on`);
+    }
+
     /* The panel had two number boxes and no picture at first, which is asking
        somebody to decide "starts at 3.4" about a shot they cannot see. */
     const viewer = p.locator('[data-editorviewer]');

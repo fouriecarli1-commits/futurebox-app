@@ -63,6 +63,7 @@ import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
+import FilmStrip from './FilmStrip';
 import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
 } from '../lib/videopaint';
@@ -3239,13 +3240,49 @@ export default function VideoEditor({
                             : '0 0 0 1px rgba(16,185,129,0.22) inset',
                         }}
                       >
+                        {/* ── What the shot actually looks like ────────────
+ 
+                            Carli, 8 October 2026: *"Hoe moontlik is dit om die
+                            video se visuals op die tydlyn te wys? Dit gaan dit
+                            makliker maak om te weet waar om te cut ens."*
+ 
+                            A name and a duration tell you which shot this is
+                            and nothing about where anything happens inside it,
+                            so aiming a cut meant scrubbing the viewer a second
+                            at a time. The pictures are decoded here on the
+                            device out of material that is already in this
+                            browser: nothing uploaded, nothing generated,
+                            nothing charged, and it works on the free plan.
+ 
+                            Behind the words, and `pointer-events` off, so the
+                            block is still one button with one target. */}
+                        <FilmStrip
+                          clip={one.clip}
+                          clipId={one.id}
+                          from={one.from}
+                          to={one.to}
+                          wide={Math.max(THINNEST, wide)}
+                          tall={laneTall}
+                        />
                         <span
-                          className="block truncate text-[11px] font-semibold"
-                          style={{ color: on ? '#ecfdf5' : 'rgba(236,253,245,0.8)' }}
+                          className="relative block truncate text-[11px] font-semibold"
+                          style={{
+                            color: on ? '#ecfdf5' : 'rgba(236,253,245,0.9)',
+                            /* Readable over a photograph. The strip is dimmed
+                               already; this is the other half, because a shot
+                               can be bright in the one place the name sits. */
+                            textShadow: '0 1px 2px rgba(0,0,0,0.85)',
+                          }}
                         >
                           {one.name}
                         </span>
-                        <span className="block text-[11px] tabular-nums" style={{ color: 'rgba(236,253,245,0.45)' }}>
+                        <span
+                          className="relative block text-[11px] tabular-nums"
+                          style={{
+                            color: 'rgba(236,253,245,0.7)',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.85)',
+                          }}
+                        >
                           {seconds(lengthOfPiece(one))}
                         </span>
                       </button>

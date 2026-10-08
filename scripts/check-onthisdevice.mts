@@ -156,7 +156,31 @@ for (const file of walk('app/components')) {
      called after a dot. */
   const calls = (write: string): boolean =>
     new RegExp(`(^|[^.\\w])${write.replace('(', '\\(')}`, 'm').test(text);
-  if (!every.some(calls)) continue;
+
+  /* ── And it has to be the STORE's function, not a name that matches ──
+ 
+     The bare-call rule above was the second attempt; this is the third, and
+     it is the one that reads the fact rather than the spelling.
+ 
+     `FilmStrip.tsx` keeps the pictures it has decoded in a Map so that
+     blocks, which remount constantly, do not decode the same strip again. Its
+     helper is called `remember`, which is also what `lib/makes.ts` and
+     `lib/dubjob.ts` call the functions that write to IndexedDB. A bare call
+     to a function this file DEFINES is not a write to a store, and nothing
+     about an in-memory cache belongs in a sentence about where work is kept.
+ 
+     A room cannot file anything through a store it has not imported, so the
+     import is the fact. Narrower than the name, and strictly more accurate:
+     nothing that really files can escape it, because the import is how the
+     filing gets in. */
+  const imports = (write: string): boolean => {
+    const name = write.replace('(', '');
+    return new RegExp(
+      `import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*'[^']*(library|assets|brought|filmkeep|makes|uploads|dubjob)'`,
+      'm',
+    ).test(text);
+  };
+  if (!every.some((write) => calls(write) && imports(write))) continue;
   filing += 1;
   const keys = [...text.matchAll(/t\(\s*'([^']+)'/g)].map((hit) => hit[1]);
   /* Through the dictionary keys only. The first version also accepted the

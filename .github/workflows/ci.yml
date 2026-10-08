@@ -745,6 +745,16 @@ jobs:
       - name: The room directory can point at the Pro Booth
         run: npm run check:findable
 
+      # A block on the clock carried a name and a duration, which says which
+      # shot it is and nothing about where anything happens in it — so aiming
+      # a cut meant scrubbing the viewer a second at a time. The pictures are
+      # decoded on the device out of material already in the browser: nothing
+      # uploaded, nothing charged. Three traps in the arithmetic: a frame at
+      # the very end does not exist, a piece can be shorter than one frame,
+      # and the count has to follow her zoom without running away.
+      - name: The clock shows what the shot looks like
+        run: npm run check:filmstrip
+
       # A song whose words have been measured once must never be measured
       # again. Both rungs cache their own answer and neither recognises the
       # other's, so writing an upload's heard words onto its row sent the
