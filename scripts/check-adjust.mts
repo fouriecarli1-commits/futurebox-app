@@ -114,7 +114,40 @@ ok('the cut handed to the renderer composes them with gradeCss',
   'a second way of composing a look and a dial is a second answer to what the'
   + ' picture looks like');
 ok('  and so does the preview she is judging',
-  /gradeCss\(filterCss\(piece\.look\), piece\.adjust\)/.test(room));
+  /gradeCss\(filterCss\(piece\.look\), piece\.adjust, previewScale\)/.test(room),
+  'the preview has to pass the scale it is drawn at. `blur()` is in device'
+  + ' pixels and the preview is about a third of the film’s height on a'
+  + ' phone, so the same blur unscaled is three times as strong on screen as'
+  + ' in the file — and the picture she approves is not the picture she gets');
+
+/* ── And the scale really does something ─────────────────────────
+ 
+   Carli, 8 October 2026: *"Dit laat my dink dat video editor ook ’n blur
+   funksie nodig het."* It had one, capped at three pixels, because it was
+   written as a CORRECTION for soft footage rather than as a thing you do to
+   a shot on purpose. Three pixels on a 1080-wide frame is not a blur.
+ 
+   Raising it to twenty is what made the scale matter: at three the preview's
+   error was small enough that nobody noticed, and at twenty it is the
+   difference between a soft background and unrecognisable mush. */
+const blurred = adjustCss({ ...NO_ADJUST, sharp: 12 });
+ok('a blur dialled up really reaches the filter',
+  /blur\(12\.00px\)/.test(blurred),
+  `"${blurred}" — a dial that moves and changes nothing is the thing`
+  + ' `videoadjust.ts` exists to avoid');
+ok('  and the dial goes far enough to be a blur rather than a correction',
+  (DIALS.find((one) => one.id === 'sharp')?.most ?? 0) >= 10,
+  `${DIALS.find((one) => one.id === 'sharp')?.most} — behind a title, under a`
+  + ' credit roll, over a face you have no permission for: none of those is'
+  + ' possible at three pixels on a 1080-wide frame');
+ok('  and the preview’s copy of it is scaled down to match the film',
+  /blur\(4\.00px\)/.test(adjustCss({ ...NO_ADJUST, sharp: 12 }, 1 / 3)),
+  `"${adjustCss({ ...NO_ADJUST, sharp: 12 }, 1 / 3)}" — a third of the frame`
+  + ' has to be a third of the blur, or the two disagree about the same shot');
+ok('  and nothing else on the dial is scaled, because nothing else is in pixels',
+  adjustCss({ ...NO_ADJUST, bright: 1.4 }, 1 / 3) === adjustCss({ ...NO_ADJUST, bright: 1.4 }),
+  'brightness is a multiplier and a hue is an angle; scaling either with the'
+  + ' canvas would make a dial mean two things');
 
 /* ── And what is NOT here is named, which is the other half of the answer ─ */
 

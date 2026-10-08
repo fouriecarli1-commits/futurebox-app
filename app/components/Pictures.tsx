@@ -56,11 +56,28 @@ export default function Pictures({
   /** Which room asked, recorded against a new picture. */
   from,
   disabled = false,
+  pickOnly = false,
 }: {
   value: string | null;
   onChange: (dataUrl: string | null) => void;
   from?: string;
   disabled?: boolean;
+  /**
+   * Hide the way IN, and offer only the pictures already here.
+   *
+   * ── Why a bench needed this ───────────────────────────────
+   *
+   * The cutting room's logo bench already has a file input of its own —
+   * "Put a logo on it" — so the strip's own two-line drop zone was a second
+   * door to the same place, in a room that has exactly one bar's width.
+   *
+   * `check:tidybars` named it rather than me: every control on a bench has
+   * to be one height, and the drop zone measured 109 pixels against the
+   * bench's 44. A row of controls where one is two and a half times the
+   * height of the others is what reads as untidy, and that check exists
+   * because Carli said so on 4 October: *"Kyk mooi alles allign nie."*
+   */
+  pickOnly?: boolean;
 }): React.ReactElement {
   const { t } = useLang();
   const input = useRef<HTMLInputElement | null>(null);
@@ -321,6 +338,7 @@ export default function Pictures({
         </>
       )}
 
+      {!pickOnly && (
       <button
         type="button"
         onClick={() => input.current?.click()}
@@ -340,6 +358,7 @@ export default function Pictures({
           )}
         </span>
       </button>
+      )}
 
       {problem && (
         <p className="text-xs text-rose-300 flex items-center gap-1.5">

@@ -25,6 +25,7 @@ import {
 import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
+import Pictures from './Pictures';
 import { readAudio } from '../lib/trackaudio';
 import { addUpload, editUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
@@ -600,6 +601,40 @@ export default function Channel({
           {t(
             'chan.videosNote',
             'Every video you make anywhere in this app arrives here by itself — there is nothing to press and nothing to move. Kept on this device, like your songs. Post it opens the composers; nothing is published until you say so.',
+          )}
+        </Note>
+      </Card>
+
+      {/* ── Your pictures ───────────────────────────────────
+
+          Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto
+          binne die app te bêrge. Daar moet dalk ’n gallery in channel
+          gestoor word."*
+
+          The shelf itself is not new — `lib/assets.ts` has held twenty
+          pictures per device since the brand kit needed them, and the start
+          frame and the video canvas both pick from it. What was missing was
+          anywhere to SEE it. A shelf three rooms can write to and no room
+          can look at is a drawer with no handle: she had no way to know what
+          was on it, what it was called, or that it was there at all.
+
+          Beside the songs and the videos, because that is what this page is:
+          the place everything made in this app arrives by itself. */}
+      <Card
+        title={t('chan.pictures', 'Your pictures')}
+        icon={<ImageIcon className="w-4 h-4" />}
+      >
+        <div data-chanpictures>
+          {/* A picker with nothing to pick INTO, which is the honest shape of
+              a gallery here: choosing one shows it big, renaming and starring
+              work, and the rooms that really need a picture mount the same
+              strip where the picture is used. */}
+          <Pictures value={null} onChange={() => undefined} from="channel" />
+        </div>
+        <Note className="text-xs text-zinc-500 leading-relaxed">
+          {t(
+            'chan.picturesNote',
+            'Press “Keep it in the app” in the photo editor and the picture arrives here. The cutting room and the video canvas pick from this same shelf, so a logo or a poster is chosen once rather than found in your files every time. Kept on this device, like your songs — saving one to your phone is a separate press in the photo editor, and that is the one that costs.',
           )}
         </Note>
       </Card>

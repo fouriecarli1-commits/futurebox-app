@@ -74,18 +74,42 @@ export const DIALS: readonly Dial[] = [
    */
   { id: 'warm', label: ['adj.warm', 'Warmth'], rest: 0, least: -30, most: 30, step: 1 },
   /**
-   * Sharpness, as a negative blur.
+   * Blur, which was Softness and only went to three.
    *
-   * There is no sharpen filter in CSS. What there is is blur, and the useful
-   * half of this dial is the other direction: phone footage shot through glass,
-   * or a clip that has been through one compression too many, is helped more by
-   * a little softening than by anything else available here.
+   * There is no sharpen filter in CSS. What there is is blur, so this dial
+   * runs from none to blurred and never the other way — promising a sharpen
+   * we cannot do would be a dial that moves and changes nothing, which is the
+   * thing this file exists to avoid.
    *
-   * So the dial runs from soft to none and stops at none, and it is called
-   * Softness in the room. Promising a sharpen we cannot do would be a dial that
-   * moves and changes nothing, which is the thing this file exists to avoid.
+   * ── Why it stopped at three, and why it does not any more ─────────
+   *
+   * It was written as a CORRECTION: phone footage shot through glass, or a
+   * clip that has been through one compression too many, is helped by a
+   * little softening. Three pixels is plenty for that and the dial was
+   * capped there and called Softness.
+   *
+   * Carli, 8 October 2026: *"Dit laat my dink dat video editor ook 'n blur
+   * funksie nodig het."* A blur is not a correction. It is a thing you do to
+   * a shot on purpose — behind a title, under a credit roll, over a face you
+   * do not have permission for — and at three pixels on a 1080-wide frame
+   * none of those is possible. The photo editor's own blur runs to twenty,
+   * which is where this one goes now.
+   *
+   * ── And why raising it needed the scale fixed first ──────────────
+   *
+   * `blur()` is in device pixels. The preview draws a clip at whatever width
+   * the phone gives it — about 300 — and the renderer draws the same clip at
+   * 1080, so the same `blur(3px)` is three and a half times as strong on
+   * screen as in the film. At three pixels that error is small enough that
+   * nobody noticed. At twenty it is the difference between a soft background
+   * and unrecognisable mush, and the picture she approves would not be the
+   * picture she gets.
+   *
+   * So `adjustCss` and `gradeCss` take a scale, exactly as `filterFor` does
+   * in `postlook.ts` and for the same reason, and the preview passes the one
+   * it is drawn at. `check:adjust` holds that the two agree.
    */
-  { id: 'sharp', label: ['adj.sharp', 'Softness'], rest: 0, least: 0, most: 3, step: 0.1 },
+  { id: 'sharp', label: ['adj.sharp', 'Blur'], rest: 0, least: 0, most: 20, step: 0.5 },
 ];
 
 /** Where every dial rests. */
@@ -113,7 +137,7 @@ export function adjusted(dials?: Adjust): boolean {
  * rendering in real time that is the difference between a film that finishes
  * and one that stutters.
  */
-export function adjustCss(dials?: Adjust): string {
+export function adjustCss(dials?: Adjust, scale = 1): string {
   if (!adjusted(dials)) return '';
   const at = (id: Dial['id']): number => {
     const one = DIALS.find((d) => d.id === id);
@@ -126,7 +150,10 @@ export function adjustCss(dials?: Adjust): string {
   if (Math.abs(at('contrast') - 1) > 1e-6) parts.push(`contrast(${at('contrast').toFixed(2)})`);
   if (Math.abs(at('colour') - 1) > 1e-6) parts.push(`saturate(${at('colour').toFixed(2)})`);
   if (Math.abs(at('warm')) > 1e-6) parts.push(`hue-rotate(${Math.round(at('warm'))}deg)`);
-  if (at('sharp') > 1e-6) parts.push(`blur(${at('sharp').toFixed(1)}px)`);
+  /* Scaled with whatever this is drawn on. See the note on the dial: the
+     preview is a third of the frame's width, and a blur in device pixels
+     would be three times as strong on screen as in the film. */
+  if (at('sharp') > 1e-6) parts.push(`blur(${(at('sharp') * scale).toFixed(2)}px)`);
   return parts.join(' ');
 }
 
@@ -139,8 +166,8 @@ export function adjustCss(dials?: Adjust): string {
  * One function so that the preview and the renderer cannot compose them
  * differently. `check:adjust` holds both ends against it.
  */
-export function gradeCss(lookCss: string, dials?: Adjust): string {
-  const dial = adjustCss(dials);
+export function gradeCss(lookCss: string, dials?: Adjust, scale = 1): string {
+  const dial = adjustCss(dials, scale);
   if (!lookCss) return dial;
   if (!dial) return lookCss;
   return `${lookCss} ${dial}`;

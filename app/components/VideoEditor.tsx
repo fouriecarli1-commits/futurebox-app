@@ -53,6 +53,7 @@ import {
 } from 'lucide-react';
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
+import Pictures from './Pictures';
 import DeskSheet from './BoothCard';
 import KeepVideo from './KeepVideo';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
@@ -1234,6 +1235,27 @@ export default function VideoEditor({
        below this. Same moment either way: the frame is only ever a different
        size because a different piece is in it. */
   }, [picked]);
+
+  /**
+   * How small the preview is drawn, against the film it stands for.
+   *
+   * Only the blur dial needs it, and it needs it badly. `blur()` is in device
+   * pixels: the preview is about a third of the film's height on a phone, so
+   * the same `blur(20px)` is three times as strong on screen as in the file —
+   * which means the picture she approves is not the picture she gets. The
+   * photo editor's `filterFor` takes a scale for exactly this reason.
+   *
+   * Measured off the box that is already measured above, rather than guessed
+   * from a breakpoint. Falls back to 1 before the first measurement and on a
+   * browser with no `ResizeObserver`: unscaled is the behaviour this had
+   * before today, and it is wrong in the mild direction rather than the
+   * direction that blurs a preview into mush.
+   */
+  const previewScale = useMemo(() => {
+    const tall = SHAPES[edit.shape ?? 'tall']?.height ?? SHAPES.tall.height;
+    if (!frameHeight || !tall) return 1;
+    return frameHeight / tall;
+  }, [frameHeight, edit.shape]);
 
   const [stripWidth, setStripWidth] = useState(0);
   useEffect(() => {
@@ -2611,7 +2633,7 @@ export default function VideoEditor({
                    runs — so a dial moved here changes the picture she is
                    judging and the film that comes out, in that order and by
                    the same string. */
-                style={{ filter: gradeCss(filterCss(piece.look), piece.adjust) || undefined }}
+                style={{ filter: gradeCss(filterCss(piece.look), piece.adjust, previewScale) || undefined }}
                 /* `contain` or `cover`, from the same flag the renderer reads, so
                    the bars she sees are the bars she gets. */
                 className={`absolute inset-0 h-full w-full ${
@@ -5066,6 +5088,42 @@ export default function VideoEditor({
                 }}
               />
             </label>
+            {/* ── Or off the shelf, rather than out of the file manager ────
+
+                Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n
+                foto binne die app te bêrge … Dan wanneer mens video editor
+                gebruik is dit een van die plekke wat geroep word waaruit mens
+                kan kies."*
+
+                This slot took a file input and nothing else, which is the
+                exact fault `Pictures.tsx`'s own header was written about: the
+                picture is read, used and forgotten, so the next film sends
+                her back to the file manager to find the same logo again. A
+                logo is the one picture in this app that gets used on
+                everything.
+
+                The same shelf the brand kit, the start frame and the canvas
+                already pick from, and the one the photo editor now writes to
+                — so a poster made next door is here without being
+                downloaded and brought back. */}
+            <div data-editormarkshelf className="pt-1">
+              <Pictures
+                value={null}
+                from="videoedit"
+                pickOnly
+                onChange={(url) => {
+                  if (!url) return;
+                  void loadMark(url).then((img) => {
+                    if (!img) {
+                      setProblem(t('edit.markBad', 'That picture could not be read.'));
+                      return;
+                    }
+                    setMark(img);
+                    setMarkName(t('edit.markFromShelf', 'From your pictures'));
+                  });
+                }}
+              />
+            </div>
             {mark && (
               <>
               {/* ── And off again ───────────────────────────────────────

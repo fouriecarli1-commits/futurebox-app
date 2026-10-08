@@ -1476,6 +1476,35 @@ try {
         `red ${squared?.red}, blue ${squared?.blue} — a square dragged over the`
         + ' blue half, so red should be gone');
 
+      /* ── And a cut really leaves nothing behind it ───────────────
+
+         Carli, 8 October 2026: *"Take the background out gee die ilusie dat
+         dit transparent is, maar dit is nog nie."*
+
+         She was exactly right and it was one default. `back` opened at
+         `#111113` — a near-black — so a cut put the person on a colour
+         that, on a dark screen, reads as nothing at all. The picture looked
+         see-through and the file was a near-black rectangle with a person
+         on it. The room's own answer was a sentence asking her to press
+         "Nothing behind it" as well: a second step, to undo a default that
+         was lying to her.
+
+         Read off the BUTTON rather than off the pixels, because the pixels
+         cannot tell the two apart — which is the whole fault. The
+         checkerboard is drawn under a transparent post and `#111113` is
+         drawn under an opaque one, and both of them are dark squares. The
+         button is the one place the room says which it is, and the file
+         assertions further up this walk prove the button tells the truth. */
+      await bench('pic');
+      await page.waitForTimeout(400);
+      const cleared = page.locator('[data-postclear]').first();
+      check('        and the cut really takes the background out, not just the person',
+        (await cleared.getAttribute('aria-pressed')) === 'true',
+        'the background colour is still on after a cut, so the picture is a'
+        + ' near-black rectangle with a person on it — and on a dark screen'
+        + ' that looks exactly like a see-through one, which is how this'
+        + ' shipped');
+
       /* And back to the picture and the pencil, for the trace below. */
       await page.locator('[data-postundo]').first().click();
       await page.waitForTimeout(800);
@@ -1581,6 +1610,86 @@ try {
      post saved as a JPG comes out on a solid colour and no setting undoes
      it. `check:postfile` holds that `holdsClear` says so; this holds that the
      ROOM says so, on the screen, before the credit is spent. */
+  /* ── Kept in the app, which is the free half of leaving ──────────
+
+     Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
+     die app te bêrge. Daar moet dalk ’n gallery in channel gestoor word."*
+
+     `check:shelf` holds that the free press does not touch the paid route
+     and that nothing on the shelf can hand the file back. What a browser
+     has to answer is that the press puts a picture ON the shelf — a button
+     that says it kept the picture and kept nothing is the shape of a
+     feature nobody checked.
+
+     Read out of the shelf's own storage rather than off a thumbnail,
+     because a grid that renders is not the same claim as a picture that
+     survives a reload, and the shelf is the thing the cutting room will
+     read next door. */
+  await bench('save');
+  const shelfBefore = await page.evaluate(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem('futurebox.assets.v1') ?? '[]').length;
+    } catch { return -1; }
+  });
+  const keeper = page.locator('[data-postkeep]').first();
+  check('the room offers to keep the picture in the app, beside taking it out',
+    (await keeper.count()) > 0,
+    'no [data-postkeep] — every picture had to be downloaded and brought back'
+    + ' in to be used anywhere else in the app');
+  if (await keeper.count()) {
+    await keeper.click();
+    await page.waitForTimeout(1200);
+    const shelfAfter = await page.evaluate(() => {
+      try {
+        return JSON.parse(window.localStorage.getItem('futurebox.assets.v1') ?? '[]');
+      } catch { return []; }
+    });
+    check('  and pressing it really puts one on the shelf',
+      Array.isArray(shelfAfter) && shelfAfter.length === shelfBefore + 1,
+      `${shelfBefore} → ${Array.isArray(shelfAfter) ? shelfAfter.length : '?'}`
+      + ' pictures on the shelf');
+    check('    with its own thumbnail, so a grid does not read every full file',
+      Array.isArray(shelfAfter) && shelfAfter.some((one) => typeof one?.thumb === 'string'
+        && one.thumb.startsWith('data:image')),
+      'a shelf row with no thumbnail is a row the picker draws as a blank');
+    check('    and marked as having come out of this room',
+      Array.isArray(shelfAfter) && shelfAfter.some((one) => one?.from === 'photo'),
+      `${JSON.stringify((Array.isArray(shelfAfter) ? shelfAfter : []).map((one) => one?.from))}`
+      + ' — a room can offer its own first, and without this every picture'
+      + ' looks like it came from nowhere');
+    check('    and the room says it cost nothing, because it has not left the device',
+      /credit|krediet/i.test((await page.locator('[data-postsaid]').innerText().catch(() => '')) || ''),
+      `"${await page.locator('[data-postsaid]').innerText().catch(() => '')}" — a`
+      + ' free button beside a paid one has to say which it is, or the free'
+      + ' one reads as the broken one');
+  }
+
+  /* ── Set, rather than toggled ──────────────────────────────
+
+     `[data-postclear]` is a toggle, and the four presses below used to be
+     written blind: the section assumed a colour was behind the picture
+     because that is what the room opened with, pressed once to take it off
+     and once to put it back.
+
+     Then a cut started taking the background off by itself — which is the
+     fix for *"Take the background out gee die ilusie dat dit transparent is,
+     maar dit is nog nie"* — and every one of those presses meant the
+     opposite. Two assertions went red and neither was about the thing it
+     named.
+
+     So this reads the button and presses it only if it has to. A probe that
+     sets the state it is about cannot be broken by something upstream
+     changing a default. */
+  const behind = async (wanted) => {
+    await bench('pic');
+    const button = page.locator('[data-postclear]').first();
+    const clear = (await button.getAttribute('aria-pressed')) === 'true';
+    if (clear === wanted) return;
+    await button.click();
+    await page.waitForTimeout(400);
+  };
+
+  await behind(false);
   await bench('save');
   check('the room offers more than one kind of file',
     (await page.locator('[data-postkind="png"]').count()) > 0
@@ -1596,9 +1705,7 @@ try {
     'a warning that is always up is a warning nobody reads');
 
   /* The background off, which is the state that clashes. */
-  await bench('pic');
-  await page.locator('[data-postclear]').first().click();
-  await page.waitForTimeout(400);
+  await behind(true);
   await bench('save');
   check('  and JPG on a see-through post warns her before the press',
     (await page.locator('[data-postkindwarn]:visible').count()) > 0,
@@ -1611,9 +1718,7 @@ try {
     (await page.locator('[data-postkindwarn]:visible').count()) === 0);
 
   /* Put back, so nothing below this is measured against a transparent post. */
-  await bench('pic');
-  await page.locator('[data-postclear]').first().click();
-  await page.waitForTimeout(400);
+  await behind(false);
 
   await bench('tone');
   const asShot = await mean();

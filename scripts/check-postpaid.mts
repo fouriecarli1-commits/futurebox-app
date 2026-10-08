@@ -85,6 +85,28 @@ const INSIDE: Readonly<Record<string, string>> = {
     + ' background remover, changing its edge, and the eraser all go through it. The'
     + ' data URL becomes an <img> which becomes the picture, so it never leaves the'
     + ' page: no anchor, and nothing anybody can save from',
+  /* ── The shelf, added 8 October 2026 ──────────────────────────
+ 
+     Carli: *"Daar moet ook ’n opsie wees om ’n foto binne die app te
+     bêrge."* `keepInApp` draws the picture and writes it into
+     `lib/assets.ts`, which is two more makers — and this rule caught both
+     within the minute, which is what it is for.
+ 
+     Its canvas is called `shelved` rather than `sheet` ON PURPOSE. The paid
+     export's canvas is `sheet`, and naming `sheet.toBlob` here to let the
+     free keep through would have excused the paid road out at the same time.
+     A variable name is a poor fence, so the fence is somewhere else: this
+     entry is only true while `check:shelf` holds that nothing in
+     `assets.ts` or `Pictures.tsx` can hand the file back — no
+     `downloadBlob`, no anchor with a `download`, no `createObjectURL`, no
+     save picker. That check breaks when this reason stops being true. */
+  'shelved.toDataURL': 'the free keep, which puts the picture on the device’s own'
+    + ' twenty-picture shelf. The data URL goes into `rememberAsset` and nowhere'
+    + ' else; `check:shelf` holds that the shelf has no way out, which is what'
+    + ' makes the keep free rather than a second export',
+  'shelved.toBlob': 'the same keep, for the byte count the shelf records so it can'
+    + ' say how much room it is using. The blob is measured and dropped — see'
+    + ' `check:shelf`',
 };
 const makers = studio.match(/[\w.]*\.(?:toBlob|toDataURL)\(/g) ?? [];
 const leaving = makers.filter((one) => !Object.keys(INSIDE).some((kept) => one.startsWith(kept)));

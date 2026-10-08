@@ -44,8 +44,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Bookmark,
   Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
 } from 'lucide-react';
+import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import {
   BACKDROPS, LETTER_GAP, LINE_GAP, POST_SIZES, SPOTS, atInside, atOf, behindWords,
   blockAt, boxAround, boxFor as boxOfSpot, clashes, fitText, measureWithGap, moveInside,
@@ -123,6 +125,41 @@ const RY4 = 'grid grid-cols-4 gap-2';
 const VUL = 'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl'
   + ' bg-emerald-500 px-4 text-sm font-bold text-black disabled:opacity-40';
 const LEEG = KNOP;
+/**
+ * What a chosen chip looks like.
+ *
+ * ── The fault ────────────────────────────────────────────────────────────
+ *
+ * Carli, 8 October 2026: *"Die export se png en jpg buttons moet highlight
+ * wanneer mens dit kies."*
+ *
+ * They already did, in the DOM: every chip in this room carries
+ * `aria-pressed` and the chosen one got `border-emerald-500/60
+ * text-emerald-400`. What it did NOT get was a fill — so on this room's
+ * near-black panel the whole difference between chosen and not chosen was a
+ * grey border going half-strength green and the text going from zinc-300 to
+ * emerald-400. Two small changes, both of them in colour alone, on a dark
+ * card.
+ *
+ * It was not just the two she named. Nine chip sets in this file were written
+ * the same way: the shape, the format, the size, the fit, the face, the spot,
+ * the backdrop, the cut shape and the edge. She noticed it on the one where
+ * getting it wrong costs her something — a JPEG cannot hold a see-through
+ * background, so a format she could not tell she had chosen is a transparent
+ * post downloaded onto black.
+ *
+ * ── What it is now ───────────────────────────────────────────────────────
+ *
+ * A fill, a full-strength border and the room's own raised shadow, which is
+ * what the cutting room's shape chips already do and what she has not
+ * complained about. Three changes rather than two, and one of them is not a
+ * colour — which is what makes it readable on a dark panel and to anybody
+ * who cannot separate a grey border from a green one.
+ *
+ * `check:chosen` holds that every `aria-pressed` chip in this room says so
+ * with more than a colour.
+ */
+const GEKIES = 'border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.35)]';
 const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100';
 
 
@@ -1450,9 +1487,10 @@ export default function PostStudio({
            picture that no longer exists, and changing the edge after this
            would put the old cut back. */
         lastMask.current = null;
+        nothingBehind();
         setSaid(keep
-          ? t('post.drewKept', 'Kept what you drew round. Put a colour behind it, or leave it see-through.')
-          : t('post.drewGone', 'Taken out. There is nothing behind it \u2014 put a colour behind the picture if you want one.'));
+          ? t('post.drewKept', 'Kept what you drew round, with nothing behind it — the squares are how the picture shows you that. Save it as PNG to keep it see-through. Put a colour behind it below if you want one.')
+          : t('post.drewGone', 'Taken out, and there is nothing behind it — the squares are how the picture shows you that. Save it as PNG to keep it see-through. Put a colour behind it below if you want one.'));
       },
       () => setSaid(t('post.drewFailed', 'That could not be cut out.')),
     );
@@ -1688,6 +1726,40 @@ export default function PostStudio({
     }, () => setSaid(t('post.rubFailed', 'That could not be taken out.')));
   };
 
+  /**
+   * A cut has made the picture see-through, so take the colour off behind it.
+   *
+   * ── The fault this exists for ───────────────────────────────
+   *
+   * Carli, 8 October 2026: *"Take the background out gee die ilusie dat dit
+   * transparent is, maar dit is nog nie."*
+   *
+   * She was exactly right, and the reason was one default. `back` opens at
+   * `#111113` — a near-black. So the whole sequence was: she presses Remove
+   * the background, the person is cut out, and the room fills the space
+   * behind them with a colour that on a dark screen reads as nothing at all.
+   * The picture LOOKS see-through. The file is a near-black rectangle with a
+   * person on it.
+   *
+   * And the room's own answer to that was a sentence under the button asking
+   * her to press "Nothing behind it" as well — a second step she had to
+   * notice, in order to undo a default that was lying to her. The shape cut
+   * was worse: it said *"leave it see-through"* while the colour was still
+   * on.
+   *
+   * ── Why clearing it, rather than wording it better ──────────────
+   *
+   * Because taking the background out should take the background out. That
+   * is what the button says. A colour behind a cut-out is a real thing to
+   * want — it is how a profile picture or a poster is made — and it is still
+   * one press away on the same bench; what it may not be is what happens by
+   * itself to somebody who asked for the opposite.
+   *
+   * The preview then shows the checkerboard, which has been there all along
+   * and is the honest picture of nothing behind it.
+   */
+  const nothingBehind = (): void => setBack(null);
+
   const cutBackground = async (): Promise<void> => {
     if (!picture || cutting !== null) return;
     setSaid('');
@@ -1705,7 +1777,11 @@ export default function PostStudio({
       asPicture(cut.canvas, (one) => {
         setWhole(picture);
         setPicture(one);
-        setSaid(t('post.cutDone', 'Background gone. Press \u201cNothing behind it\u201d as well if you want it see-through.'));
+        nothingBehind();
+        setSaid(t(
+          'post.cutDone',
+          'Background gone, and there is nothing behind it now — the squares are how the picture shows you that. Save it as PNG to keep it see-through; JPG cannot. Put a colour behind it below if you want one.',
+        ));
       }, () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')));
     } finally {
       setCutting(null);
@@ -1765,6 +1841,67 @@ export default function PostStudio({
       put(blurBehind(picture, cut.mask, wide, tall, behindOf(how, { width: wide, height: tall }), edgeOf(edge)));
     } finally {
       setCutting(null);
+    }
+  };
+
+  /**
+   * Kept in the app, rather than taken out of it.
+   *
+   * ── What she asked for ───────────────────────────────────
+   *
+   * Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
+   * die app te bêrge. Daar moet dalk ’n gallery in channel gestoor word.
+   * Dan wanneer mens video editor gebruik is dit een van die plekke wat
+   * geroep word waaruit mens kan kies."*
+   *
+   * ── Why it is free, and why that is not a hole ─────────────────
+   *
+   * Everything in this room is free and the one press that spends is taking
+   * the picture OFF the device. This does not take it off anything: the
+   * shelf is `lib/assets.ts`, the same twenty-picture shelf the brand kit
+   * and the start frame already use, and it lives in this browser.
+   *
+   * What makes that safe rather than a free download is that the shelf has
+   * no way out. `Pictures.tsx` chooses, renames, stars and deletes; it does
+   * not download, and `check:shelf` holds that it never learns to — because
+   * a shelf that could hand the file back would be the paid export with an
+   * extra step.
+   *
+   * Charging for it would also charge twice for one picture: once to put it
+   * on the shelf and again to use it next door. That is the fault the
+   * hand-over to the film was already written to avoid.
+   */
+  const keepInApp = async (): Promise<void> => {
+    if (busy) return;
+    setSaid('');
+    try {
+      await faceReady();
+      const shelved = document.createElement('canvas');
+      /* `false` for the guides, exactly as the download does: the
+         checkerboard and the safe-zone bands are drawn to help her see, not
+         to be part of the picture. And at 1, because a shelf is a working
+         copy — twice the size is for printing, which is what the paid
+         export is for. */
+      draw(shelved, false, 1);
+      const url = shelved.toDataURL('image/png');
+      const thumb = await thumbnailOf(url);
+      const blob = await new Promise<Blob | null>((done) => shelved.toBlob(done, 'image/png'));
+      await rememberAsset({
+        id: assetId(),
+        kind: 'picture',
+        name: nameFor(size.id, 'png', 1).replace(/\.png$/, ''),
+        mime: 'image/png',
+        bytes: blob?.size ?? 0,
+        createdAt: new Date().toISOString(),
+        thumb,
+        from: 'photo',
+      }, url);
+      setSaid(t(
+        'post.keptHere',
+        'Kept in the app. It is on your Channel under “Your pictures”, and the cutting room can pick it from there — no credits, because it has not left this device.',
+      ));
+    } catch {
+      setSaid(t('post.keptFailed', 'That could not be kept. This device may be out of room.'));
     }
   };
 
@@ -1920,7 +2057,7 @@ export default function PostStudio({
             data-postcutshapepick={how}
             aria-pressed={cutShape === how}
             onClick={() => { setCutShape(how); setTraced([]); setSaid(''); }}
-            className={`${LEEG} ${cutShape === how ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+            className={`${LEEG} ${cutShape === how ? GEKIES : ''}`}
           >
             {how === 'circle' ? <Circle className="h-3.5 w-3.5" />
               : how === 'square' ? <Square className="h-3.5 w-3.5" />
@@ -2192,7 +2329,7 @@ export default function PostStudio({
             data-postedge={one.id}
             aria-pressed={edge === one.id}
             onClick={() => cutAgain(one.id)}
-            className={`${LEEG} ${edge === one.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+            className={`${LEEG} ${edge === one.id ? GEKIES : ''}`}
           >
             {one.id === 'tight'
               ? t('post.edgeTight', 'Hard edge')
@@ -2249,6 +2386,26 @@ export default function PostStudio({
           {t(
             'post.behindWhy',
             'Instead of removing the background, blur it. You stay sharp and everything behind you goes soft \u2014 the portrait look. It finds people, same as the button above.',
+          )}
+        </p>
+        {/* ── And the other blur, pointed at from where she looked ─────
+
+            Carli, 8 October 2026: *"Daar is nou ’n blur behind a person, dit
+            is goed. Ons benodig wel ook ’n blur funksie vir die hele foto."*
+
+            It is there, and has been: a Blur slider on the Looks bench that
+            runs to twenty. She asked for it anyway, which means it may as
+            well not be — she came looking for a blur HERE, at the blur that
+            needs a person in the picture, and nothing here said where the
+            other one was.
+
+            A line rather than a second slider. Two blurs on one bench, one
+            of which quietly fails on a photograph with no person in it, is
+            worse than one of each in the place it belongs. */}
+        <p data-postwholeblur className="text-[12px] leading-relaxed text-zinc-500">
+          {t(
+            'post.behindWhole',
+            'To blur the WHOLE picture instead — no person needed — use the Blur slider under “How it reads”.',
           )}
         </p>
 
@@ -2450,7 +2607,7 @@ export default function PostStudio({
             data-postshape={one.id}
             aria-pressed={one.id === size.id}
             onClick={() => setSize(one)}
-            className={`${LEEG} ${one.id === size.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+            className={`${LEEG} ${one.id === size.id ? GEKIES : ''}`}
           >
             {one.name} · {one.width}×{one.height}
           </button>
@@ -2521,7 +2678,7 @@ export default function PostStudio({
               data-postbasis={one}
               aria-pressed={crop.basis === one}
               onClick={() => setCrop((was) => ({ ...was, basis: one, x: 0, y: 0 }))}
-              className={`${LEEG} ${crop.basis === one ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+              className={`${LEEG} ${crop.basis === one ? GEKIES : ''}`}
             >
               {one === 'fill'
                 ? t('post.fill', 'Fill the frame')
@@ -2917,7 +3074,7 @@ export default function PostStudio({
                    different shapes for one choice. */
                 style={{ fontFamily: face.css, fontWeight: face.weight }}
                 data-postface={face.id}
-                className={`${LEEG} ${one.face === face.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+                className={`${LEEG} ${one.face === face.id ? GEKIES : ''}`}
               >
                 {t(`post.face.${face.id}`, face.name)}
               </button>
@@ -2935,7 +3092,7 @@ export default function PostStudio({
                    nothing. */
                 onClick={() => setWords((was) => was.map((w) => (
                   w.id === one.id ? { ...w, spot: spot.id, at: atOf(spot.id) } : w)))}
-                className={`${LEEG} ${one.spot === spot.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+                className={`${LEEG} ${one.spot === spot.id ? GEKIES : ''}`}
               >
                 {t(`post.spot.${spot.id}`, spot.id)}
               </button>
@@ -2954,7 +3111,7 @@ export default function PostStudio({
                 aria-pressed={(one.behind ?? 'none') === how}
                 onClick={() => setWords((was) => was.map((w) => (
                   w.id === one.id ? { ...w, behind: how } : w)))}
-                className={`${LEEG} ${(one.behind ?? 'none') === how ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+                className={`${LEEG} ${(one.behind ?? 'none') === how ? GEKIES : ''}`}
               >
                 {how === 'none'
                   ? t('post.backNone', 'Shadow only')
@@ -3089,7 +3246,7 @@ export default function PostStudio({
             data-postkind={one.id}
             aria-pressed={kind === one.id}
             onClick={() => setKind(one.id)}
-            className={`${LEEG} ${kind === one.id ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+            className={`${LEEG} ${kind === one.id ? GEKIES : ''}`}
           >
             {t(one.name[0], one.name[1])}
           </button>
@@ -3128,7 +3285,7 @@ export default function PostStudio({
             data-postscale={one}
             aria-pressed={scale === one}
             onClick={() => setScale(one)}
-            className={`${LEEG} ${scale === one ? 'border-emerald-500/60 text-emerald-400' : ''}`}
+            className={`${LEEG} ${scale === one ? GEKIES : ''}`}
           >
             {one}× · {size.width * one}×{size.height * one}
           </button>
@@ -3149,6 +3306,28 @@ export default function PostStudio({
               {t('post.save', 'Save the picture')} · {creditsSaid(CREDITS.postOut, t)}
             </span>}
       </button>
+      {/* ── Kept, rather than taken out ───────────────────────
+
+          Free, and the line under it says why — a free button beside a paid
+          one with nothing between them reads as a mistake. `keepInApp` says
+          why a shelf with no way out is not a free download. */}
+      <button
+        type="button"
+        onClick={() => void keepInApp()}
+        disabled={busy || (picture === null && words.length === 0)}
+        data-postkeep
+        className={LEEG}
+      >
+        <Bookmark className="h-3.5 w-3.5" />
+        {t('post.keepHere', 'Keep it in the app')}
+      </button>
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {t(
+          'post.keepHereWhy',
+          'Puts it on your Channel and makes it pickable in the cutting room. Free, because it stays on this device — saving it to your phone is the press above.',
+        )}
+      </p>
+
       {/* ── And into the film next door ─────────────────────────────
  
           Carli: *"kan ook in die video editor ingesit word."* The editor

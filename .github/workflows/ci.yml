@@ -1170,6 +1170,18 @@ jobs:
       - name: The marketing material says nothing the app does not do
         run: npm run check:bemarking
 
+      # A chosen chip said so with two colour changes on a near-black card,
+      # and the format chip is the one where not seeing it means a
+      # transparent post downloaded onto black.
+      - name: A chosen button says so with more than a colour
+        run: npm run check:chosen
+
+      # Keeping a picture in the app is free because the picture stays on the
+      # device. A shelf that could hand the file back would be the paid
+      # export with one extra step, and nothing would say so.
+      - name: A picture kept in the app has no way out of it
+        run: npm run check:shelf
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

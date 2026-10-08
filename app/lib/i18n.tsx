@@ -695,17 +695,28 @@ export const STRINGS: Dict = {
     en: "Take back the last change",
     af: "Vat die laaste verandering terug",
   },
+  /* ── "Back" was the word, and it was the wrong one ───────────────
+
+     Carli, 8 October 2026, asking for a video editor *"asook ’n undo en
+     redo"* — which it has had since September, on the surface, under the
+     clock, with the arrow icons.
+
+     She did not find it because "Back" in an app means the way out of the
+     room. A button labelled Back beside a timeline is navigation, and
+     nobody presses navigation to undo a mistake. The photo editor says
+     "Put back" / "Doen dit weer" and she has not asked for undo there.
+     Same words here. */
   "edit.undoShort": {
-    en: "Back",
-    af: "Terug",
+    en: "Put back",
+    af: "Sit terug",
   },
   "edit.redo": {
     en: "Put the change back",
     af: "Sit die verandering terug",
   },
   "edit.redoShort": {
-    en: "Forward",
-    af: "Vorentoe",
+    en: "Do it again",
+    af: "Doen dit weer",
   },
   "edit.mark": {
     en: "Your mark in the corner",
@@ -1270,7 +1281,7 @@ export const STRINGS: Dict = {
   "adj.contrast": { en: "Contrast", af: "Kontras" },
   "adj.colour": { en: "Colour", af: "Kleur" },
   "adj.warm": { en: "Warmth", af: "Warmte" },
-  "adj.sharp": { en: "Softness", af: "Sagtheid" },
+  "adj.sharp": { en: "Blur", af: "Verwasig" },
   "cut.paidHere": {
     en: "All of the cutting is free. Putting the finished film together is the one press that spends, and it shows the bill before it does.",
     af: "Al die sny is gratis. Om die klaar film saam te sit is die een druk wat spandeer, en dit wys die rekening voor dit dit doen.",
@@ -1741,6 +1752,19 @@ export const STRINGS: Dict = {
   "post.behindSoft": { en: "A little", af: "Bietjie" },
   "post.behindMisty": { en: "Misty", af: "Wasig" },
   "post.behindGone": { en: "Gone", af: "Weg" },
+  /* ── A picture kept in the app ─────────────────────────────
+
+     Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
+     die app te bêrge. Daar moet dalk ’n gallery in channel gestoor word."*
+     Free, because it does not leave the device — see `keepInApp`. */
+  "post.keepHere": { en: "Keep it in the app", af: "Bêre dit in die app" },
+  "post.keepHereWhy": { en: "Puts it on your Channel and makes it pickable in the cutting room. Free, because it stays on this device — saving it to your phone is the press above.", af: "Sit dit op jou Kanaal en maak dit kiesbaar in die snykamer. Verniet, want dit bly op hierdie toestel — om dit op jou foon te stoor is die druk hierbo." },
+  "post.keptHere": { en: "Kept in the app. It is on your Channel under “Your pictures”, and the cutting room can pick it from there — no credits, because it has not left this device.", af: "In die app gebêre. Dit is op jou Kanaal onder “Jou prente”, en die snykamer kan dit daar kies — geen krediete nie, want dit het nie hierdie toestel verlaat nie." },
+  "post.keptFailed": { en: "That could not be kept. This device may be out of room.", af: "Dit kon nie gebêre word nie. Hierdie toestel het dalk nie meer plek nie." },
+  "chan.pictures": { en: "Your pictures", af: "Jou prente" },
+  "chan.picturesNote": { en: "Press “Keep it in the app” in the photo editor and the picture arrives here. The cutting room and the video canvas pick from this same shelf, so a logo or a poster is chosen once rather than found in your files every time. Kept on this device, like your songs — saving one to your phone is a separate press in the photo editor, and that is the one that costs.", af: "Druk “Bêre dit in die app” in die prent-editor en die prent kom hier aan. Die snykamer en die video-doek kies uit dieselfde rak, dus word ’n logo of ’n plakkaat een keer gekies eerder as elke keer in jou lêers gesoek. Op hierdie toestel gehou, soos jou liedjies — om een op jou foon te stoor is ’n aparte druk in die prent-editor, en dit is die een wat kos." },
+  "edit.markFromShelf": { en: "From your pictures", af: "Uit jou prente" },
+  "post.behindWhole": { en: "To blur the WHOLE picture instead — no person needed — use the Blur slider under “How it reads”.", af: "Om die HELE prent eerder te verwasig — geen persoon nodig nie — gebruik die Verwasig-skuifbalk onder “Hoe dit lees”." },
   "post.behindWhy": { en: "Instead of removing the background, blur it. You stay sharp and everything behind you goes soft \u2014 the portrait look. It finds people, same as the button above.", af: "In plaas daarvan om die agtergrond te verwyder, verwasig dit. Jy bly skerp en alles agter jou word sag \u2014 die portretvoorkoms. Dit vind mense, net soos die knoppie hierbo." },
   "post.behindDone": { en: "The room behind you is out of focus. Everything in front of it is as sharp as it was.", af: "Die vertrek agter jou is buite fokus. Alles voor dit is net so skerp soos dit was." },
   "post.behindFailed": { en: "That could not be put out of focus.", af: "Dit kon nie buite fokus gesit word nie." },
@@ -1784,8 +1808,8 @@ export const STRINGS: Dict = {
   "post.drawStop": { en: "Leave it", af: "Laat dit bly" },
   "post.drewAll": { en: "That is the whole picture. Draw round the part you want.", af: "Dit is die hele prent. Teken om die deel wat jy wil h\u00ea." },
   "post.drewLittle": { en: "Draw right round the thing, with your finger on the picture. A tap is not a shape.", af: "Trek reg om die ding, met jou vinger op die prent. \u2019n Tik is nie \u2019n vorm nie." },
-  "post.drewKept": { en: "Kept what you drew round. Put a colour behind it, or leave it see-through.", af: "Gehou wat jy omgetrek het. Sit \u2019n kleur daaragter, of laat dit deursigtig." },
-  "post.drewGone": { en: "Taken out. There is nothing behind it \u2014 put a colour behind the picture if you want one.", af: "Uitgehaal. Daar is niks daaragter nie \u2014 sit \u2019n kleur agter die prent as jy een wil h\u00ea." },
+  "post.drewKept": { en: "Kept what you drew round, with nothing behind it — the squares are how the picture shows you that. Save it as PNG to keep it see-through. Put a colour behind it below if you want one.", af: "Gehou wat jy omgetrek het, met niks daaragter nie — die blokkies is hoe die prent dit vir jou wys. Stoor dit as PNG om dit deursigtig te hou. Sit ’n kleur daaragter hieronder as jy een wil hê." },
+  "post.drewGone": { en: "Taken out, and there is nothing behind it — the squares are how the picture shows you that. Save it as PNG to keep it see-through. Put a colour behind it below if you want one.", af: "Uitgehaal, en daar is niks daaragter nie — die blokkies is hoe die prent dit vir jou wys. Stoor dit as PNG om dit deursigtig te hou. Sit ’n kleur daaragter hieronder as jy een wil hê." },
   "post.drewFailed": { en: "That could not be cut out.", af: "Dit kon nie uitgesny word nie." },
   "post.kind": { en: "What kind of file", af: "Watter soort l\u00eaer" },
   "post.kindPng": { en: "PNG", af: "PNG" },
@@ -1835,7 +1859,7 @@ export const STRINGS: Dict = {
   "post.cutWhat": { en: "One press takes the background away and leaves the person. It only finds PEOPLE \u2014 for anything else, use Cut out a shape below. Free, and it happens on your own phone; the first time takes a moment while it downloads.", af: "Een druk haal die agtergrond weg en los die persoon. Dit vind net MENSE \u2014 vir enigiets anders, gebruik Sny \u2019n vorm uit hieronder. Verniet, en dit gebeur op jou eie foon; die eerste keer vat \u2019n oomblik terwyl dit aflaai." },
   "post.cutNobody": { en: "No person found in this picture. This one only knows people \u2014 a face and shoulders, not a close-up of hair or an object. Use Cut out a shape below and draw round what you want instead.", af: "Geen persoon in hierdie prent gevind nie. Hierdie een ken net mense \u2014 \u2019n gesig en skouers, nie \u2019n nabyskoot van hare of \u2019n voorwerp nie. Gebruik Sny \u2019n vorm uit hieronder en teken eerder om wat jy wil h\u00ea." },
   "post.cutFailed": { en: "The background could not be taken out of that picture.", af: "Die agtergrond kon nie uit daardie prent gehaal word nie." },
-  "post.cutDone": { en: "Background gone. Press \u201cNothing behind it\u201d as well if you want it see-through.", af: "Agtergrond weg. Druk ook \u201cNiks daaragter nie\u201d as jy dit deursigtig wil h\u00ea." },
+  "post.cutDone": { en: "Background gone, and there is nothing behind it now — the squares are how the picture shows you that. Save it as PNG to keep it see-through; JPG cannot. Put a colour behind it below if you want one.", af: "Agtergrond weg, en daar is nou niks daaragter nie — die blokkies is hoe die prent dit vir jou wys. Stoor dit as PNG om dit deursigtig te hou; JPG kan nie. Sit ’n kleur daaragter hieronder as jy een wil hê." },
   "post.grabEn": { en: "Read English", af: "Lees Engels" },
   "post.grabAf": { en: "Read Afrikaans", af: "Lees Afrikaans" },
   "post.grabUse": { en: "Put it on the picture", af: "Sit dit op die prent" },
