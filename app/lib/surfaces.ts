@@ -312,7 +312,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
        she has already been bitten by twice. The door is real and labelled;
        what was missing was the app being able to say it exists. */
     purpose:
-      "Singing on your own track: recording takes over the backing, and lifting a vocal back out. The Pro Booth opens from a door in this room, on any paid plan: many lanes on one timeline, a grid and a click, mixing and mastering with a loudness reading, splitting a lane into its instruments, guitar tone and amp captures, and undo. Say so when somebody asks where to mix, where the lanes are, or where to master \u2014 it is behind the button that reads \"Lanes and mixing\", and the words are not on screen in there, which is what this room is for.",
+      "Singing on your own track: recording takes over the backing, cleaning the room noise off a take, and lifting a vocal back out. The Pro Booth opens from a door in this room, on any paid plan: many lanes on one timeline, a grid and a click, mixing and mastering with a loudness reading, splitting a lane into its instruments, guitar tone and amp captures, and undo. Say so when somebody asks where to mix, where the lanes are, or where to master \u2014 it is behind the button that reads \"Lanes and mixing\", and the words are not on screen in there, which is what this room is for.",
     helps: {
       en: "I can tell you which take to keep, what to fix in it, and what to do next with the one you like \u2014 and where to go for lanes, mixing and mastering.",
       af: "Ek kan jou sê watter opname om te hou, wat daaraan te regmaak, en wat om volgende te doen met die een waarvan jy hou \u2014 en waarheen om te gaan vir bane, menging en mastering.",
@@ -448,7 +448,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     id: "videoedit",
     stage: "show",
     purpose:
-      "The cutting room: their own footage on a clock, trimmed, split, reordered, faded and put together in the browser. All of the cutting is free and unlimited, on every plan including the free one, because it runs on their own device. Putting the finished film together is what costs, and the room shows an itemised bill before it charges. The three that need an engine (taking a background out, taking an item out, generating a missing piece) are doors that say so. Do not offer to write a shot list here; that is the video desk.",
+      "The cutting room: their own footage on a clock, trimmed, split, reordered, faded, with words set on the picture, and put together in the browser. All of the cutting is free and unlimited, on every plan including the free one, because it runs on their own device. Putting the finished film together is what costs, and the room shows an itemised bill before it charges. The three that need an engine (taking a background out, taking an item out, generating a missing piece) are doors that say so. Do not offer to write a shot list here; that is the video desk.",
     helps: {
       en: "I can tell you what each control does, but the cutting is yours \u2014 nothing in this room asks me to do anything.",
       af: "Ek kan jou s\u00ea wat elke kontrole doen, maar die sny is joune \u2014 niks in hierdie kamer vra my om iets te doen nie.",
@@ -547,13 +547,33 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     id: "channels",
     stage: "release",
     next: { to: "live", en: "Play it live", af: "Speel dit live" },
+    /* ── The words out of a song are sold here and were never named ──
+ 
+       Found on 9 October 2026 by walking every capability the app charges
+       for against this directory. `CREDITS.transcribe` is a real price, per
+       minute, charged from this room and from the player in it — and nothing
+       in this file said the feature existed, so "how do I get the words out
+       of my song?" had no answer from the one part of the app whose job is
+       answering that.
+ 
+       Two other candidates from the same walk turned out to be my own
+       vocabulary rather than gaps: the cutting room already says "taking a
+       background out" and "taking an item out", and the voice studio says
+       "cloning". Searching for the words I would have used found holes that
+       were not there, which is why `check:findable` now carries a reviewed
+       list of words per capability instead of a guess. */
     purpose:
-      "Your channel: your released music, in the order you want people to hear it. Every video made anywhere in this app is here too, under Your videos \u2014 a clip arrives there on its own the moment it is made, so there is nothing to press and nothing to ask for.",
+      "Your channel: your released music, in the order you want people to hear it. Every video made anywhere in this app is here too, under Your videos \u2014 a clip arrives there on its own the moment it is made, so there is nothing to press and nothing to ask for. The words of a song can be heard out of the recording here, charged by the minute \u2014 say so when somebody asks where to get the lyrics out of something they have already made.",
     helps: {
       en: "I can set the running order, write the description, and name a playlist.",
       af: "Ek kan die speelorde stel, die beskrywing skryf, en ’n speellys benoem.",
     },
-    can: ["set the running order", "write the description", "name a playlist"],
+    can: [
+      "set the running order",
+      "write the description",
+      "name a playlist",
+      "say where the words of a recording are heard out of it",
+    ],
     ops: {
       open_playlist: "the value is the name of one of their playlists",
     },

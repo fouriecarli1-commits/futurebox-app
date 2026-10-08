@@ -37,6 +37,7 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { surfaceDirectory, helpsWith, seedsFor } from '../app/lib/surfaces.ts';
+import { CREDITS } from '../app/lib/credits.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -95,6 +96,83 @@ for (const lang of ['en', 'af'] as const) {
   ok(`  and what the room offers in ${lang} mentions it`,
     /mix|meng|lane|bane/.test(helpsWith('booth', lang).toLowerCase()));
 }
+
+/* ── 4. Every paid capability is nameable ───────────────────────────────
+
+   The Pro Booth was found by tripping over it. This is the same question
+   asked of all of them: if a member can SPEND on a thing, the copilot has to
+   be able to say where it is. A paid feature nobody can find is a support
+   question and money left on the table.
+
+   ── Why the words are a reviewed list and not a guess ───────────────────
+
+   The first version of this walk searched the directory for the words I
+   would have used. It reported three gaps and two of them were mine: the
+   cutting room says "taking a background out" and "taking an item out",
+   where I had looked for "erase" and "rub"; the voice studio says "cloning",
+   where I had looked for "clone". A rule that searches for its author's
+   vocabulary finds holes that are not there — the same adjacent measurement
+   in its other direction, failing instead of passing.
+
+   So the words below are the app's, read off the directory and written down.
+   `null` means the capability is deliberately not a place to go, with the
+   reason beside it. Every key in `CREDITS` has to appear here, so a new
+   price cannot be added without somebody deciding which of the two it is. */
+const FINDABLE: Record<string, readonly string[] | null> = {
+  song: ['song'],
+  /* A format of the thing above, not a room of its own. */
+  halfSong: null,
+  video: ['video'],
+  cover: ['cover'],
+  filmOut: ['film'],
+  /* The room now says "words set on the picture". Named with the app's
+     own phrase rather than mine, which was "caption". */
+  filmWords: ['words set on the picture'],
+  filmLook: ['look'],
+  /* The room says "faded", not "join" or "transition". Another of mine. */
+  filmJoin: ['faded'],
+  filmMark: ['mark'],
+  filmUnder: ['under'],
+  mixOut: ['mix'],
+  postOut: ['post'],
+  /* The same film, rendered in the browser instead of bought out. One
+     capability, one place; a second entry would be a second door that does
+     not exist. */
+  browserVideo: null,
+  stems: ['instrument'],
+  transcribe: ['words of a song'],
+  clean: ['clean'],
+  voiceChange: ['voice'],
+  sing: ['sing'],
+  clone: ['cloning'],
+  finetune: ['train'],
+  dub: ['dub'],
+  read: ['reading anything in it'],
+  parts: ['part'],
+  marketPlan: ['campaign'],
+  adLines: ['advert'],
+  cutout: ['background out'],
+  erase: ['item out'],
+};
+
+const priced = Object.keys(CREDITS);
+const undecided = priced.filter((one) => !(one in FINDABLE));
+ok('every paid capability has been decided about',
+  undecided.length === 0,
+  `${undecided.join(', ')} — add each to FINDABLE with the words the room`
+  + ' directory uses, or null and a reason. A price added without that is a'
+  + ' thing somebody can buy and nobody can be sent to');
+
+const unfindable = Object.entries(FINDABLE)
+  .filter(([name, words]) => words !== null && priced.includes(name)
+    && !words.some((word) => directory.toLowerCase().includes(word.toLowerCase())))
+  .map(([name, words]) => `${name} (none of: ${(words ?? []).join(', ')})`);
+
+ok('and every one of them is named where the copilot can find it',
+  unfindable.length === 0,
+  `${unfindable.join('; ')} — the directory is the whole of what the copilot`
+  + ' is told about the rooms, so a capability missing from it cannot be'
+  + ' pointed at by the one part of the app whose job is pointing');
 
 console.log(bad === 0
   ? '\ncheck:findable — the Pro Booth is named where the app looks to answer "where do I ...".'
