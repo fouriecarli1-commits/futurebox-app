@@ -549,6 +549,8 @@ wearing the probe's clothes.
 
 | What | When | Where |
 |---|---|---|
+| Making a song and separating stems were dead for three days — a path with no host, left behind when supplier calls moved behind one door on 5 October. Confirmed fixed by Carli on the live site the same evening. `check:onedoor` is the rule that catches it, and it found the stems one itself | 2026-10-08 | `633ffd4`, `check:onedoor` |
+| An album cover was copied into our storage BY THE BROWSER, so a finished song, a closed tab or a sleeping phone lost a picture already paid for — and the panel printed “it is saved” over the route’s own `kept: false`. The job is written down before the credits go, the panel pins itself open while it works, and a failed cover refunds | 2026-10-08 | `633ffd4`, `check:coverkeep`, `supabase/coverkeep.sql` |
 | TONE3000 has an API; amp modelling built | 2026-09 | `lib/nam.ts`, `check:nam` |
 | The mixer really does mix | 2026-09 | `check:mix`, measured audio |
 | Bring a song in from a file | 2026-09-05 | `099f958` |
