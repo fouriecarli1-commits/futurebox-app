@@ -1334,6 +1334,12 @@ jobs:
       - name: A song is handed over with its sleeve in it
         run: npm run check:omslag
 
+      # A desk is not a hand. Two of the rooms had a side rail for a turned
+      # phone and offered it to nothing else, and one of them never turned
+      # itself into a row, so that rail was stacked at the foot of a column.
+      - name: A room at a desk is not a room in a hand
+        run: npm run check:lessenaar
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

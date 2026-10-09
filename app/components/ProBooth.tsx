@@ -67,6 +67,7 @@ import { canMove, move } from '../lib/laneorder';
 import { NO_FX, type Fx } from '../lib/fx';
 import { useOwnScreen } from '../lib/fullroom';
 import { useSideways } from '../lib/sideways';
+import { useAtDesk } from '../lib/atdesk';
 import VoiceMixer, { DEFAULT_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
 import Cost from './Cost';
 import HowToTrain from './HowToTrain';
@@ -232,6 +233,12 @@ export default function ProBooth({
      the right. Carli: *"dan gaan die buttons weer beter werk aan die kant
      van die skerm en nie onder nie."* See `app/lib/sideways.ts`. */
   const sideways = useSideways();
+  /* A desk wants the rail for the same reason a turned phone does: width to
+     spare. This room already had the rail and only ever offered it to a
+     phone. Carli, 9 October 2026: *"Die website moet nie lyk soos 'n foon
+     app nie."* `lib/atdesk.ts` carries why these are two questions. */
+  const atDesk = useAtDesk();
+  const onEdge = sideways || atDesk;
   const metronomeRef = useRef<Metronome | null>(null);
 
   /* ── Singing a lane in somebody else's voice ────────────────────────────
@@ -3883,8 +3890,10 @@ export default function ProBooth({
        bars pinned under it. Whatever needs to scroll scrolls inside itself. */
     <div
       data-booth
+      /* The marker `check:lessenaar` finds this wrapper by. */
+      data-cutroom
       className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
-        sideways ? 'flex-row' : 'flex-col'
+        onEdge ? 'flex-row' : 'flex-col'
       }`}
     >
       {/* Everything but the dock, in a column of its own. In portrait that

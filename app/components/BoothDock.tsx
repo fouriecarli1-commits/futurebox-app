@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useSideways } from '../lib/sideways';
+import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
 
 /** Which panel is out. `null` is all of them shut. */
@@ -244,6 +245,12 @@ export default function BoothDock({
      the rail below, and `app/lib/sideways.ts` for why the test is how the
      device is held rather than how wide it is. */
   const sideways = useSideways();
+  /* And at a desk, for the same reason. The rail below is a grid of six
+     either way, so a desk needs no third layout — only to be offered the
+     one a turned phone already gets. Carli, 9 October 2026: *"Die website
+     moet nie lyk soos 'n foon app nie."* */
+  const atDesk = useAtDesk();
+  const onEdge = sideways || atDesk;
 
   /**
    * The open desk, framed.
@@ -403,7 +410,7 @@ export default function BoothDock({
     </>
   );
 
-  if (sideways) return rail;
+  if (onEdge) return rail;
 
   return (
     <>

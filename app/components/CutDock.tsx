@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useSideways } from '../lib/sideways';
+import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, EDGE, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 
@@ -285,6 +286,26 @@ export default function CutDock({
   const { t } = useLang();
   const here = [...upper, ...lower].find((spec) => spec.id === open);
   const sideways = useSideways();
+  /* ── Two ways to be wider than you are tall ─────────────────────────────
+
+     Carli, 9 October 2026: *"Die website moet nie lyk soos 'n foon app
+     nie."*
+
+     She is looking at this bar. A desktop browser was getting the layout
+     drawn for a thumb — a row of icons across the foot and a panel over the
+     film — because the only question this room asked was whether a PHONE had
+     been turned on its side, and `lib/sideways.ts` excludes a mouse on
+     purpose.
+
+     The rail it switches to is already the right answer for a desk; it was
+     simply never offered one. So the branch below is reached by either
+     question, and `atDesk` is kept separately from `edge` for the two places
+     where a desk has room a turned phone does not: the rail can afford a
+     column instead of two cramped ones, and the panel can be a panel rather
+     than a capped sheet. `lib/atdesk.ts` carries why the two queries cannot
+     both be true. */
+  const atDesk = useAtDesk();
+  const edge = sideways || atDesk;
 
   /* ── The bench takes half the screen, not all of it ─────────────────────
 
@@ -304,7 +325,17 @@ export default function CutDock({
        above the bench, and half the screen of a phone is still most of a
        film — see `GLASS` in `lib/cutlook.ts`, which is the other half of the
        same complaint. */
-    <div className="flex min-h-0 max-h-[46dvh] flex-col">
+    <div
+      /* Capped only where the cap buys something. On a phone the panel is
+         OVER the film and half the screen is the compromise — her complaint
+         on 8 October was that the panels *"belemmer die view van die
+         video"*. On an edge it is BESIDE the film, so there is nothing to
+         trade and a cap would throw away a screen for a reason that does
+         not apply. `check:lessenaar` holds that there is one cap and not
+         two. */
+      className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[46dvh]'}`}
+      style={atDesk ? { width: 400, flexShrink: 0, borderLeft: `1px solid ${EDGE}` } : undefined}
+    >
     <DeskSheet
       icon={here.icon}
       title={t(here.label[0], here.label[1])}
@@ -387,14 +418,18 @@ export default function CutDock({
      wil gebruik, en dan gaan die buttons weer beter werk aan die kant van die
      skerm en nie onder nie"* — and a cutting room is MORE likely to be held
      sideways than a booth, because a wide film is the shape of the screen. */
-  if (sideways) {
+  if (edge) {
     return (
       <>
         {sheet}
         <div
           data-cutdock=""
           className="flex-shrink-0 flex flex-col items-center gap-1 overflow-y-auto px-1 py-2"
-          style={{ background: PANEL, borderLeft: `1px solid ${EDGE}`, width: 96 }}
+          /* Wider at a desk, because there is width to spend and the labels
+             under the icons are the only thing naming what a bench does. 96
+             is the turned phone's, where height is what is scarce and the
+             two columns below are what keeps seven buttons on the screen. */
+          style={{ background: PANEL, borderLeft: `1px solid ${EDGE}`, width: atDesk ? 120 : 96 }}
         >
           {hasTransport ? (
             <>
@@ -402,7 +437,15 @@ export default function CutDock({
               <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
             </>
           ) : null}
-          <div data-cutbenchrow="" className="grid w-full grid-cols-2 gap-1" style={{ background: PANEL }}>
+          <div
+            data-cutbenchrow=""
+            /* One column at a desk: seven buttons down 120 pixels is a
+               toolbar, and two columns of 60 is where a label truncates to
+               nothing. Two sideways, where the screen is 390 tall and seven
+               in a line would not fit. */
+            className={`grid w-full gap-1 ${atDesk ? 'grid-cols-1' : 'grid-cols-2'}`}
+            style={{ background: PANEL }}
+          >
             {[...upper, ...lower].map((spec) => (
               <BenchButton
                 key={spec.id}

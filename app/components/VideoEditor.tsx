@@ -72,6 +72,8 @@ import {
 } from 'lucide-react';
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
+import { useSideways } from '../lib/sideways';
+import { useAtDesk } from '../lib/atdesk';
 import Pictures from './Pictures';
 import DeskSheet from './BoothCard';
 import KeepVideo from './KeepVideo';
@@ -661,6 +663,11 @@ export default function VideoEditor({
  
      `audit/underbar.mjs` is what proves it, in a browser, in both rooms. */
   const { shell, tall } = useRoomHeight();
+  /* Which way the room is laid out. See the wrapper below, and
+     `lib/atdesk.ts` for why these are two questions and not one. */
+  const sideways = useSideways();
+  const atDesk = useAtDesk();
+  const onEdge = sideways || atDesk;
 
   /* ── Taking it back ─────────────────────────────────────────────────────
  
@@ -2765,7 +2772,20 @@ async function smallerFrame(url: string): Promise<string> {
        Not one new control is below. Every one of them was already in this room.
        What changed is that the room has a floor. */
     <div
-      className="flex flex-col"
+      /* ── A row when the bar is on an edge ─────────────────────────────
+
+         This was the literal string `"flex flex-col"`, and that was a bug
+         with a month on it. `CutDock.tsx` has had a 96-pixel rail for a
+         turned phone since September; `ProBooth.tsx` reads `sideways` and
+         becomes a row so the rail has an edge to stand on. This room never
+         did, so held sideways it stacked that rail at the BOTTOM of a
+         column — neither the bar nor the rail but a squeezed ruin of both.
+
+         Found on 9 October while answering Carli's *"Die website moet nie
+         lyk soos 'n foon app nie"*, because a desk needs exactly the same
+         row and would have fallen into exactly the same hole.
+         `check:lessenaar` now holds it. */
+      className={`flex ${onEdge ? 'flex-row' : 'flex-col'}`}
       data-videoeditor
       data-cutroom
       ref={shell}
@@ -2799,6 +2819,15 @@ async function smallerFrame(url: string): Promise<string> {
         maxHeight: tall === null ? ROOM_HEIGHT_GUESS : tall,
       }}
     >
+      {/* ── Everything but the bar, in a column of its own ────────────────
+
+          In a column that wrapper IS this; on an edge it is the left of the
+          room and the rail takes the right. One inner column rather than two
+          layouts, for the reason `ProBooth.tsx` gives where it does the same
+          thing: the picture, the clock and the strip do not care which way
+          round the room is, and a second copy that does is how the two come
+          to disagree about something. */}
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col overflow-hidden">
       {/* ── The one press that spends, where every editor puts it ─────────
 
           Top right, above the picture. Carli's screenshots all have it there
@@ -4471,6 +4500,8 @@ async function smallerFrame(url: string): Promise<string> {
           </DeskSheet>
         </div>
       )}
+
+      </div>
 
       {/* ── The bar, and what comes out from behind it ──────────────────── */}
       <CutDock

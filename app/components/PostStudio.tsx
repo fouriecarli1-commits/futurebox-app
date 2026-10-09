@@ -63,6 +63,8 @@ import { CREDITS, creditsSaid } from '../lib/credits';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import RoomDock, { type Bench, type BenchSpec } from './CutDock';
+import { useSideways } from '../lib/sideways';
+import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK } from '../lib/cutlook';
 import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
@@ -2371,9 +2373,22 @@ export default function PostStudio({
      The same arithmetic the cutting room needs, so it is the same hook. */
   const { shell, tall } = useRoomHeight();
 
+  /* ── A row when the bar is on an edge ───────────────────────────────────
+
+     Carli, 9 October 2026: *"Die website moet nie lyk soos 'n foon app
+     nie."* A desk and a turned phone want the same thing from this room —
+     the bench down the side instead of across the foot — and until now it
+     asked for neither. `lib/atdesk.ts` carries why they are two questions.
+
+     Note that `onEdge` changes the DIRECTION and nothing else. The body below
+     is already one column, so there is no second layout here; there is one
+     room with its bar on a different side of it. */
+  const sideways = useSideways();
+  const atDesk = useAtDesk();
+  const onEdge = sideways || atDesk;
   const SKIN = asRoom
-    ? 'flex flex-col overflow-hidden'
-    : 'fixed inset-0 z-[60] flex flex-col overflow-hidden bg-zinc-950';
+    ? `flex ${onEdge ? 'flex-row' : 'flex-col'} overflow-hidden`
+    : `fixed inset-0 z-[60] flex ${onEdge ? 'flex-row' : 'flex-col'} overflow-hidden bg-zinc-950`;
 
 
   /* ── The benches ──────────────────────────────────────────────────────
@@ -3907,6 +3922,9 @@ export default function PostStudio({
       ref={shell}
       className={`${SKIN} text-zinc-100`}
       data-poststudio
+      /* The marker `check:lessenaar` finds the wrapper by. The direction
+         lives in `SKIN` above, which is where the reasoning is. */
+      data-cutroom
       data-postroom={asRoom ? 'yes' : 'no'}
       style={{
         ...(asRoom ? { background: FLOOR, color: INK } : {}),
@@ -3926,7 +3944,17 @@ export default function PostStudio({
           behind the control you are using on it. The cutting room already
           knows this — its sheet is capped so the frame stays visible — and
           this room now works the same way. */}
-      <div className="mx-auto flex w-full max-w-2xl min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+      <div
+        /* Wider at a desk. `max-w-2xl` is 672 pixels, which on a phone is
+           the whole screen and at a desk is a phone-shaped strip down the
+           middle of a monitor with grey either side — which is precisely
+           the look she objected to. The cap stays, because a photograph
+           stretched across 2,000 pixels of browser is not better, it is
+           just bigger. */
+        className={`mx-auto flex w-full min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 ${
+          atDesk ? 'max-w-5xl' : 'max-w-2xl'
+        }`}
+      >
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">
             {asRoom ? t('rail.photo', 'Photo Editor') : t('post.title', 'Make a post')}
