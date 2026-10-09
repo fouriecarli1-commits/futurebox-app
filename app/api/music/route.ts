@@ -30,7 +30,7 @@ import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/ap
 import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan';
 import { CHOSEN, COSTS, configured as googleOn } from '@/app/lib/server/google';
 import { enough as enoughGoogle, note as noteGoogle } from '@/app/lib/server/googlespend';
-import { makeSong } from '@/app/lib/server/lyria';
+import { makeSong, saidHeader } from '@/app/lib/server/lyria';
 import { cannot, promptFor } from '@/app/lib/server/lyriaprompt';
 import { songCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
@@ -297,6 +297,10 @@ export async function POST(request: Request): Promise<Response> {
         /* So a song that came back can be told apart from one the other
            engine made, without guessing from how it sounds. */
         'X-Music-Engine': 'google',
+        /* The words Lyria wrote, which it has been sending with every song
+           since 8 October and which nothing has ever read. Base64, because
+           a header cannot hold a newline and lyrics are made of them. */
+        ...saidHeader(made.said),
       },
     });
   }

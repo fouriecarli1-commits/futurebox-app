@@ -1323,6 +1323,12 @@ jobs:
       - name: Afrikaans lyrics are respelled, and only the lyrics
         run: npm run check:singit
 
+      # Lyria sends the words it wrote with every song, and for a day
+      # nothing read them. They reach the browser now, intact, without
+      # anybody pretending to know yet which row is the lyrics.
+      - name: The words Lyria sends reach somebody
+        run: npm run check:woorde
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

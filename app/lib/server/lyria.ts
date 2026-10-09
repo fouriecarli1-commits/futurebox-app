@@ -101,10 +101,20 @@ export function audioIn(body: unknown): { base64: string; under: string } | null
  * The words Lyria wrote, when it wrote any.
  *
  * Her page shows the model answering with LYRICS and a DESCRIPTION beside
- * the audio. This app has never asked for either and has a whole lyric desk
- * of its own, so nothing acts on them yet — but they are read out here
- * rather than thrown away, because "the engine also sends the words" is a
- * fact worth having in one place when somebody wants them.
+ * the audio.
+ *
+ * ── This was dead for a day, and that is the point of the note ──────────
+ *
+ * This function was written on 9 October 2026 and exported, and NOTHING
+ * called it. The app paid for every song, Google sent the words with every
+ * one, and they were read into an array and dropped on the floor. It was
+ * found by grepping for its own name while answering a question about
+ * what more Google could do — the answer being, in this case, something it
+ * was already doing.
+ *
+ * `makeSong` now carries them out and both music routes hand them to the
+ * browser. The rows stay rows: see `Made.said` for why naming one of them
+ * `lyrics` would be a guess.
  */
 export function wordsIn(body: unknown): string[] {
   const top = asRecord(body);
@@ -116,8 +126,74 @@ export function wordsIn(body: unknown): string[] {
     .filter(Boolean);
 }
 
+/**
+ * The text rows as a header value: base64 of the rows, newline-separated.
+ *
+ * ── Why base64 and not the words themselves ─────────────────────────────
+ *
+ * A header may not contain a newline, and lyrics are nothing but newlines.
+ * It also may not contain a non-Latin-1 byte, and Afrikaans is full of
+ * them — `ë`, `ô`, `’` — so a header carrying "voëltjie" raw either
+ * throws or arrives mangled, depending on the runtime, which is the worst
+ * of the two.
+ *
+ * So: UTF-8, then base64, and the browser decodes it. A song whose words
+ * came back as nothing sends no header at all rather than an empty one —
+ * the same rule `sayItRight` follows about empty fields, and for the same
+ * reason: a field present but empty means something different from a field
+ * absent, and only one of those is true.
+ *
+ * Rows are joined by `\n\n` rather than `\n`, because a row is itself
+ * multi-line and a single newline would make two rows unseparable from one
+ * row with a line break in it.
+ */
+export function saidHeader(said: readonly string[]): Record<string, string> {
+  const rows = said.filter((one) => one.trim());
+  if (!rows.length) return {};
+  return {
+    'X-Song-Words': Buffer.from(rows.join('\n\n'), 'utf8').toString('base64'),
+    /* How many rows, so the browser knows whether it is looking at one
+       thing or two without having to split and count. */
+    'X-Song-Words-Rows': String(rows.length),
+  };
+}
+
 export type Made =
-  | { readonly ok: true; readonly audio: Buffer; readonly type: string; readonly under: string }
+  | {
+    readonly ok: true;
+    readonly audio: Buffer;
+    readonly type: string;
+    readonly under: string;
+    /**
+     * The text rows Lyria sent beside the audio, in the order it sent them.
+     *
+     * ── Why this is not `{ lyrics, description }` ─────────────────────
+     *
+     * Because that would be a guess, and the guess is the kind that has
+     * cost this project a day twice this week. Her Model Garden card shows
+     * the SHAPE with placeholder strings in it:
+     *
+     *     "outputs": [ { "text": "LYRICS",      "type": "text" },
+     *                  { "text": "DESCRIPTION", "type": "text" },
+     *                  { "type": "audio", "data": "…" } ]
+     *
+     * Those two rows carry no field saying which is which. The words
+     * "LYRICS" and "DESCRIPTION" are the card's example values, not
+     * labels. So the only thing separating them is their ORDER, and
+     * naming the first one `lyrics` here would be a conclusion drawn from
+     * a sample rather than from a song.
+     *
+     * The cost of being wrong is not small: a release that published the
+     * description where the lyrics should be, or a lyric video that
+     * scrolls "A warm mid-tempo ballad with brushed drums" across the
+     * screen on the beat.
+     *
+     * So the rows travel as rows, the route hands them to the browser,
+     * and the FIRST REAL SONG says which is which. See
+     * `docs/OPEN-QUESTIONS.md`.
+     */
+    readonly said: readonly string[];
+  }
   | { readonly ok: false; readonly status: number; readonly message: string };
 
 /**
@@ -209,5 +285,9 @@ export async function makeSong(
     audio: Buffer.from(got.base64, 'base64'),
     type: 'audio/wav',
     under: got.under,
+    /* Read rather than dropped, which is the whole of this change. Lyria has
+       been sending these with every song since 8 October and nothing has ever
+       looked at them. */
+    said: wordsIn(body),
   };
 }

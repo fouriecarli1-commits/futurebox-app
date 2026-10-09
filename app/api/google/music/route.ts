@@ -26,7 +26,7 @@ import { callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { CHOSEN, COSTS, configured } from '@/app/lib/server/google';
 import { enough, note } from '@/app/lib/server/googlespend';
-import { makeSong } from '@/app/lib/server/lyria';
+import { makeSong, saidHeader } from '@/app/lib/server/lyria';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
@@ -116,6 +116,9 @@ export async function POST(request: Request): Promise<Response> {
          settles a guess `lib/server/lyria.ts` had to make, and a header is
          where that answer can be read without a log. */
       'X-Audio-Under': made.under,
+      /* The words Lyria wrote. See `saidHeader`, and see `Made.said` for why
+         they are rows rather than a named lyrics field. */
+      ...saidHeader(made.said),
     },
   });
 }
