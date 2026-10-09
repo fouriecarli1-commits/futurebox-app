@@ -47,11 +47,16 @@
  * which is exactly what a static table of eras cannot carry — and the app
  * already has a copilot for work of that kind.
  *
- * `claude-opus-5-5` rather than the `claude-opus-5` the two older call sites
- * use: it is newer AND cheaper per token, so there is no trade being made
- * here. The other two are worth moving for the same reason, and that is a
- * separate change rather than something to do quietly inside this one —
- * see `docs/OPEN-QUESTIONS.md`.
+ * `claude-opus-5-5` rather than the `claude-opus-5` the rest of this app
+ * uses: it is newer AND cheaper per token, so there is no trade being made
+ * here.
+ *
+ * This note said "the two older call sites" when it was written. There are
+ * THIRTEEN, counted on 9 October. Moving them is worth doing and is not a
+ * thing to do quietly inside another change: the same prompt on a different
+ * model is a different output, there are no evals in this repo to measure
+ * that with, and running them would spend her money. So it stays hers to
+ * decide — see `docs/OPEN-QUESTIONS.md`.
  */
 
 import { z } from 'zod';

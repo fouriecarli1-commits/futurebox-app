@@ -34,7 +34,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X } from 'lucide-react';
+import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X, Image as ImageIcon } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
@@ -45,6 +45,8 @@ import { DESTINATIONS, PLATFORMS } from '../data/social';
 import { CARRIED, filmThisAd, readThisAd } from '../lib/adhandover';
 import { NOTHING_KEPT, forgetBrief, loadBrief, saveBrief } from '../lib/adbrief';
 import { clearPicks, loadPicks, putPicks } from '../lib/chosenformat';
+import { posterWords, worthDrawing } from '../lib/adposter';
+import { shapeFor } from '../lib/adhandover';
 import { loadPlan, savePlan } from '../lib/marketplan';
 import {
   EMPTY_SHELF, dropWork, keepWork, loadShelf, nameOf, newWorkId, openWork, workById,
@@ -326,6 +328,59 @@ export default function Campaign({
     looks.find((one) => one.style && (one.id === 'short_vertical' || one.id === 'explainer_film'))?.style;
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  /* ── The advert as a still, with its words in the picture ──────────────
+ 
+     Carli, 9 October 2026, twice: *"onthou nano banana kan woorde in foto
+     sit"*, and then *"gaan aan met die advert desk."*
+ 
+     The desk wrote adverts and handed them to the video desk or the voice
+     room, which left the commonest advert there is — a still with the words
+     on it — unmade. `lib/adposter.ts` carries why the words go into the
+     prompt rather than onto the picture afterwards, and why only two of
+     them do. */
+  const [poster, setPoster] = useState<Record<string, string>>({});
+  const [drawing, setDrawing] = useState<string | null>(null);
+
+  const drawPoster = async (ad: Ad, key: string): Promise<void> => {
+    if (drawing || !worthDrawing(ad)) return;
+    setDrawing(key);
+    setProblem(null);
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/google/picture', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          words: posterWords(ad, lookFor(ad) ?? ''),
+          /* The shape the campaign is going out in, not a default. A square
+             poster for a TikTok campaign is a poster she has to crop. */
+          aspect: shapeFor(going),
+        }),
+      });
+      if (!answer.ok) {
+        /* Their sentence where there is one: it says whether it was refused,
+           whether the allowance is out, or what could not be drawn. */
+        const why = (await answer.json().catch(() => ({}))) as { message?: string };
+        setProblem(why.message
+          ?? `${t('ads.posterFailed', 'That poster could not be drawn.')} (${answer.status})`);
+        return;
+      }
+      const url = URL.createObjectURL(await answer.blob());
+      setPoster((was) => {
+        /* The one before it goes, so a desk full of redraws is not a desk
+           full of held pictures. */
+        if (was[key]) URL.revokeObjectURL(was[key]);
+        return { ...was, [key]: url };
+      });
+    } catch {
+      setProblem(t('ads.posterOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setDrawing(null);
+    }
+  };
   const [copied, setCopied] = useState<number | null>(null);
   const [kept, setKept] = useState(0);
 
@@ -945,6 +1000,26 @@ export default function Campaign({
               <VideoIcon className="w-3.5 h-3.5 text-emerald-400" />
               {t('ads.film', 'Film this one')}
             </button>
+            {/* ── The still, with the words in it ───────────────────────
+                Beside "Film this one" because it is the same advert going
+                out a different way, and the commonest way of the two. */}
+            <button
+              type="button"
+              onClick={() => void drawPoster(ad, `${index}`)}
+              disabled={Boolean(drawing) || !worthDrawing(ad)}
+              data-adposter={index}
+              className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors disabled:opacity-50"
+            >
+              {drawing === `${index}`
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                : <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />}
+              {poster[`${index}`]
+                ? t('ads.posterAgain', 'Draw it again')
+                : t('ads.poster', 'Make a poster')}
+              <span className="text-xs text-zinc-500">
+                · {CREDITS.repaint} {t('ads.credits', 'credits')}
+              </span>
+            </button>
             {ad.spoken && (
               <button
                 type="button"
@@ -966,6 +1041,27 @@ export default function Campaign({
               </button>
             )}
           </div>
+
+          {poster[`${index}`] && (
+            <div className="space-y-2" data-adposterout={index}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={poster[`${index}`]}
+                alt={ad.headline}
+                className="w-full rounded-xl border border-zinc-800 bg-black"
+              />
+              {/* ── Said, because it will sometimes be wrong ───────────
+                  Rendering text is the thing image models are worst at. A
+                  fallback that is named is a fallback somebody uses; an
+                  unnamed one is a feature that looks broken. */}
+              <p className="text-xs leading-relaxed text-zinc-500">
+                {t(
+                  'ads.posterNote',
+                  'If the lettering came out wrong, draw it again — or take it to the Photo Editor, which sets real type you can place yourself.',
+                )}
+              </p>
+            </div>
+          )}
         </div>
       ))}
 

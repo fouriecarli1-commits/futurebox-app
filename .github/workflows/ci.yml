@@ -1413,6 +1413,19 @@ jobs:
       - name: A reference becomes a style and no name goes with it
         run: npm run check:anderwoorde
 
+      # A cover is drawn with the song, once, and never for a song that
+      # already has one: the guard is a ref rather than state, it waits for
+      # the does-one-exist answer, and the button says what the press costs.
+      - name: A cover with the song, once and never twice
+        run: npm run check:omslagsaam
+
+      # An advert comes out as a still with its words IN the picture: the
+      # headline is spelled out rather than asked for, only two lines are
+      # sent, the lettering is kept off the edges, and the desk says where
+      # the real text tool is when it comes out wrong.
+      - name: An advert comes out as a still with its words in it
+        run: npm run check:plakkaat
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

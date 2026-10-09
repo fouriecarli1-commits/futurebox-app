@@ -565,6 +565,31 @@ export default function MakeMusic({
      and a song nobody made a cover for is a row in a list rather than a
      record. The button below opens it without playing anything. */
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
+  /* ── A cover as standard, with the song ────────────────────────────────
+ 
+     Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
+     saam met die liedjie."*
+ 
+     Ticked by default, which is what "standaard" means — and a tick rather
+     than an automatic charge, which is the other half of a rule she set on
+     30 September: *"Te veel aankoop punte gaan mense afsit."* The price is
+     on the make button beside the song's, so nothing is a surprise and one
+     press still makes both.
+ 
+     Remembered per device rather than per account: it is a preference about
+     how somebody works, not a thing worth a row in a table, and a browser
+     that will not keep it simply starts ticked again. */
+  const [wantCover, setWantCover] = useState(true);
+  useEffect(() => {
+    try {
+      const said = window.localStorage.getItem('futurebox.cover.with.song');
+      if (said === 'no') setWantCover(false);
+    } catch {
+      /* A private window. Ticked is the right default anyway. */
+    }
+  }, []);
+  /** The song just made, for which the cover should be drawn without asking. */
+  const [coverFor, setCoverFor] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
 
@@ -840,6 +865,13 @@ export default function MakeMusic({
           }
         });
         onMade(track);
+        /* The panel, open, with the new song in it. `coverFor` is what tells
+           it to draw without being asked — see `Sleeve.startNow`, which only
+           acts once and only when the song has no cover already. */
+        if (wantCover) {
+          setCoverFor(track.id);
+          setSleeveFor(track.id);
+        }
       } catch (error) {
         // The reason travels all the way here and used to be dropped on the
         // floor: `catch {}` without binding it, then a generic line. The music
@@ -854,7 +886,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.style, lyrics, onMade, ownSound, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan],
+    [bpm, canvas.style, lyrics, onMade, ownSound, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan, wantCover],
   );
 
   const toggle = async (track: Track) => {
@@ -1627,6 +1659,45 @@ export default function MakeMusic({
             rounder and a glow of its own. It is the only thing on the screen
             that costs anything and the only thing that makes a song; nothing
             else in this room may look like it. */}
+        {/* ── A cover with it, ticked as standard ───────────────────────
+ 
+            Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album
+            cover saam met die liedjie."* Ticked by default, because that is
+            what standard means — and a tick rather than an automatic charge,
+            because of the other rule she set: *"Te veel aankoop punte gaan
+            mense afsit."* The price is on the button below with the song's,
+            so one press makes both and neither is a surprise.
+ 
+            Above the button rather than below it: a choice that changes what
+            that button costs has to be readable before it is pressed. */}
+        <label className="flex items-start gap-2.5 text-sm text-zinc-300" data-covertoo>
+          <input
+            type="checkbox"
+            checked={wantCover}
+            onChange={(event) => {
+              setWantCover(event.target.checked);
+              try {
+                window.localStorage.setItem(
+                  'futurebox.cover.with.song',
+                  event.target.checked ? 'yes' : 'no',
+                );
+              } catch {
+                /* A private window keeps nothing. Ticked again next time. */
+              }
+            }}
+            className="mt-0.5 h-4 w-4 flex-shrink-0 accent-emerald-500"
+          />
+          <span>
+            {t('make.coverToo', 'Draw a cover for it too')}
+            <span className="block text-xs leading-snug text-zinc-500">
+              {t(
+                'make.coverTooWhy',
+                'A song without a picture is a row in a list. It is drawn while you listen.',
+              )}
+            </span>
+          </span>
+        </label>
+
         <button
           type="button"
           onClick={() => make()}
@@ -1635,6 +1706,14 @@ export default function MakeMusic({
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
           {busy ? `${t('make.going')} ${elapsed}s` : t('make.go')}
+          {/* What the press costs, both halves of it. The song's number was
+              already on the length chips; the cover's was nowhere until
+              now, and a tick that quietly adds two credits is the surprise
+              this app does not do. */}
+          <span className="text-sm font-bold opacity-80">
+            · {songCost(seconds) + (wantCover ? CREDITS.cover : 0)}{' '}
+            {t('video.credits', 'credits')}
+          </span>
         </button>
 
         {busy && <Progress stage={stage} elapsed={elapsed} asked={seconds} t={t} />}
@@ -1746,6 +1825,7 @@ export default function MakeMusic({
                       genre={track.genre}
                       style={track.style ?? ''}
                       onRealArt={() => onGoToArt({ id: track.id, title: track.title })}
+                      startNow={coverFor === track.id}
                       /* Pinned while it draws. This panel is mounted on
                          `playing || sleeveFor`, and a song that reaches its
                          end sets `playing` to null — which used to take the

@@ -98,7 +98,7 @@
  * refuses a room that mounts a sleeve with no way through to the artists.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Check, Image as ImageIcon, Loader2, Palette, RefreshCw, Trash2 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
@@ -116,11 +116,40 @@ export default function Sleeve({
   onRealArt,
   onWorking,
   onShort,
+  startNow = false,
 }: {
   trackId: string;
   title: string;
   genre: string;
   style: string;
+  /**
+   * Draw the cover as soon as this opens, without waiting to be asked.
+   *
+   * ── What she asked ─────────────────────────────────────────────────
+   *
+   * Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album
+   * cover saam met die liedjie."* As standard, with the song.
+   *
+   * Until now a cover was a button somebody had to go and find after the
+   * fact, which is why most songs in this app are a row in a list rather
+   * than a record.
+   *
+   * ── Why a prop and not a charge in the song route ──────────────────
+   *
+   * Because everything that makes this reliable is already in this file:
+   * the job, the poll, the "stay here" warning, the recovery for a job
+   * that was never written down, the refund. A second path that drew
+   * covers would be a second copy of all of it, and the half nobody
+   * tested would be the half that loses a picture.
+   *
+   * So the song room ticks a box, the panel opens with the new song in
+   * it, and this starts the same `make()` the button does. One press
+   * from her side, one code path from this side.
+   *
+   * Once, and never on a song that already has one — see the effect
+   * below, which is the part that could quietly charge twice.
+   */
+  startNow?: boolean;
   /**
    * Out to the album art room, carrying this song.
    *
@@ -177,6 +206,13 @@ export default function Sleeve({
      The guard is the function, not this value. */
   const url = word.url ?? '';
 
+  /* Whether the question above has been answered yet. `startNow` waits on
+     it, because starting a draw before knowing whether one already exists is
+     how a song gets charged twice for the same picture. */
+  const [asked, setAsked] = useState(false);
+  /* Fired once per mount, whatever React does with the effect. */
+  const begun = useRef(false);
+
   const headers = useCallback(async (): Promise<Record<string, string>> => {
     const token = await accessToken();
     return token ? { authorization: `Bearer ${token}` } : {};
@@ -222,6 +258,8 @@ export default function Sleeve({
         if (back.state === 'done' && back.url) setWord({ url: back.url, kept: back.kept });
       } catch {
         // No cover yet is the ordinary case and needs no announcement.
+      } finally {
+        if (alive) setAsked(true);
       }
     })();
     return () => {
@@ -237,6 +275,30 @@ export default function Sleeve({
    * song, which is also what stops it being a way to pull somebody else's
    * picture into your own folder.
    */
+  /* ── Drawn as standard, with the song ──────────────────────────────────
+ 
+     Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
+     saam met die liedjie."*
+ 
+     Three conditions, and each one is a way this could charge for nothing.
+     Only when the song room asked for it (`startNow`); only once a mount
+     (`begun`), because an effect that runs twice draws two pictures and
+     bills for two; and only after the question above has been ANSWERED, with
+     the answer being that there is no cover and none owed — a song that
+     already has one must never be charged for a second.
+ 
+     `make()` and not a copy of it: the job, the poll, the "stay here"
+     warning and the refund are all in there, and a second path would be a
+     second half nobody tested. */
+  useEffect(() => {
+    if (!startNow || !asked || begun.current) return;
+    if (word.url || word.pending) return;
+    begun.current = true;
+    void make();
+    // `make` is stable enough for this: it is called once, behind a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startNow, asked, word.url, word.pending]);
+
   const keep = async (): Promise<void> => {
     working(true);
     setProblem(null);
