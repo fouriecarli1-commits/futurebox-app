@@ -135,8 +135,11 @@ const RATES: Record<string, number> = {
      only safe reading of an uncertain price. */
   'veo-3.1-fast-generate-001': 150_000,
   'veo-3.1-lite-generate-001': 50_000,
-  'veo-3.1-generate-001': 400_000,
-  'veo-3.0-generate-001': 400_000,
+  /* The dear end of $0.35–$0.50, her figures of 9 October 2026 — not the
+     middle, which is what $0.40 was. The $0.60–$0.75 band is the rate with
+     audio or 4K, and this app asks for neither. */
+  'veo-3.1-generate-001': 500_000,
+  'veo-3.0-generate-001': 500_000,
   /* Seen on her console but never priced. Counted at the dear figure so a
      switch to it cannot quietly undercount; over-counting makes our own
      ceiling bind early, which is an annoyance, and under-counting is a bill

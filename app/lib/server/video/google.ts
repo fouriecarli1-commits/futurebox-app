@@ -91,7 +91,7 @@ import type { Grade, Progress, Provider, StartRequest, Started } from './types';
  *   Kling               R3.44      6.5x
  *   Veo Lite            R4.00      5.6x
  *   Veo Fast           R12.00      1.9x
- *   Veo Standard       R32.00      loses money
+ *   Veo Standard       R40.00      2.2x on the premium rung
  *
  * So Lite sits in the same band as the engines already in use, Fast is thin,
  * and Standard cannot be sold at this price at all.
@@ -120,10 +120,33 @@ import type { Grade, Progress, Provider, StartRequest, Started } from './types';
 const PER_SECOND = 150_000;
 
 /**
- * The same unit for the full model: $0.40 a second, the dear end of what is
- * quoted for it. Five seconds costs R32.00 against the R89.40 premium takes.
+ * The same unit for the full model: $0.50 a second.
+ *
+ * ── It was $0.40, which was the MIDDLE of a range ────────────────────────
+ *
+ * Carli's per-second figures, 9 October 2026: Lite about $0.03 to $0.05,
+ * Fast about $0.10 to $0.15, and Quality **about $0.35 to $0.50** — with
+ * audio or 4K it can run to $0.60 or $0.75.
+ *
+ * Lite and Fast were already set at the top of their ranges. This one was
+ * set at $0.40 from a single earlier figure, and $0.40 is the middle of
+ * $0.35 to $0.50, not its dear end. The rule the other two follow is that an
+ * uncertain price is taken at the expensive end, because over-counting binds
+ * our own ceiling early and under-counting is a bill. So it follows it too.
+ *
+ * Five seconds now costs R40.00 against the R89.40 premium takes, which is
+ * 2.2 times rather than 2.8. Still over the floor `check:graadbaan` holds,
+ * and thinner than it looked an hour ago.
+ *
+ * ── The $0.60 to $0.75 end does not apply, and here is why ───────────────
+ *
+ * That is the rate with AUDIO or 4K. This app sends `generateAudio: false`
+ * on every Veo request — deliberately, because the voice is laid over
+ * afterwards in Afrikaans, which the video models do not speak — and never
+ * asks for 4K. If either of those ever changes, this number changes with it,
+ * and `check:veo` is what stops the model moving without the rate.
  */
-const FULL_PER_SECOND = 400_000;
+const FULL_PER_SECOND = 500_000;
 
 /**
  * And Lite, at $0.05 a second — Carli's own price table, 9 October 2026.

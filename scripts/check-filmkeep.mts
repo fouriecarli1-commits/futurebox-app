@@ -268,8 +268,18 @@ ok('  and the name is kept with the project',
   + ' its fields, and while the spread is still there');
 
 ok('  and at the shape the FILM came out, not the first clip\'s',
-  /aspect=\{ASPECTS\[edit\.shape \?\? 'tall'\]/.test(room)
+  /* Through `aspectOf` since 9 October 2026, for the reason in
+     `check:logomark`: an edit can carry its own frame now, and a custom one
+     has no key in `ASPECTS` — so the table read would answer `9:16` for a
+     wide custom film and the Channel would letterbox it, which is the exact
+     fault this line was written against.
+
+     `ASPECTS` is still asserted to exist and still has to agree with
+     `SHAPES`, because `aspectOf` reads it for every NAMED shape and only
+     falls back to nearest-by-ratio for a custom one. */
+  /aspect=\{aspectOf\(edit\)\}/.test(room)
   && /export const ASPECTS/.test(cut)
+  && /export function aspectOf/.test(cut)
   && shapesAndAspectsAgree(),
   'a tall film cut from wide clips is a tall film; reading the clip would put'
   + ' a 16:9 row on a 9:16 video and the Channel would letterbox it');

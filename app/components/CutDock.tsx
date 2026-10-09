@@ -129,7 +129,12 @@ function BenchButton({
          shade. */
       aria-label={`${label}. ${what}${waiting ? ` ${t('dock.waiting', 'Something new is waiting here.')}` : ''}`}
       title={what}
-      className={`relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 disabled:opacity-35 ${
+      /* 46 rather than 52. Her other option, taken as well as the glass:
+         *"of dit moet kleiner gesquash word onder"*. Two rows of these plus
+         the transport is the whole foot of the room, so six pixels a button
+         is twelve pixels of film back on a phone — and 46 is still above
+         the 44 this app treats as the floor for a thumb. */
+      className={`relative flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 disabled:opacity-35 ${
         tall ? 'w-full' : 'flex-1'
       }`}
       style={{
@@ -295,7 +300,11 @@ export default function CutDock({
      two different numbers, and the one that matters is the screen somebody can
      actually see. */
   const sheet = here ? (
-    <div className="flex min-h-0 max-h-[52dvh] flex-col">
+    /* 46dvh rather than 52. The cap exists so the frame stays on the glass
+       above the bench, and half the screen of a phone is still most of a
+       film — see `GLASS` in `lib/cutlook.ts`, which is the other half of the
+       same complaint. */
+    <div className="flex min-h-0 max-h-[46dvh] flex-col">
     <DeskSheet
       icon={here.icon}
       title={t(here.label[0], here.label[1])}

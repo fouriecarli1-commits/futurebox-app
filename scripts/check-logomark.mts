@@ -189,7 +189,17 @@ ok(
 );
 ok(
   '  and that shape is the one the edit asked for, not a constant',
-  /const shape = SHAPES\[edit\.shape \?\? 'tall'\]/.test(room),
+  /* `SHAPES[edit.shape ?? 'tall']` until 9 October 2026, when an edit became
+     able to carry its own frame — Carli: *"Die video desk en photo editor
+     moet 'n opsie hê om custom sizes te kies."*
+
+     Reading the table is not merely a different spelling now, it is wrong:
+     a custom frame has no key in it, so the table read falls back to `tall`
+     and the logo is placed in a frame the film is not in. So this asserts
+     the helper, which is the only way left of getting the right answer. */
+  /const shape = shapeOf\(edit\)/.test(room),
+  'shapeOf is the only read that sees a custom frame; the table read falls'
+  + ' back to tall and puts the mark in the wrong place',
 );
 
 /* ── The filmed take, and the one ordering that makes it safe ────────────

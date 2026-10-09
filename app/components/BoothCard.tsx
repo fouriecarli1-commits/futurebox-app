@@ -266,7 +266,20 @@ export default function DeskSheet({
     PANEL, RAISED, EDGE, INK, INK_DIM, LIT, COIN,
   };
   return (
-    <div data-desk className="flex min-h-0 flex-1 flex-col" style={{ background: paint.RAISED }}>
+    <div
+      data-desk
+      /* See-through where the room asked for it — the cutting room, whose
+         benches sit over the film. `RAISED` everywhere else, so the booth is
+         untouched. See `GLASS` in `lib/cutlook.ts`. */
+      data-glass={paint.GLASS ? 'yes' : undefined}
+      className="flex min-h-0 flex-1 flex-col"
+      style={{
+        background: paint.GLASS ?? paint.RAISED,
+        ...(paint.GLASS_BLUR
+          ? { backdropFilter: paint.GLASS_BLUR, WebkitBackdropFilter: paint.GLASS_BLUR }
+          : {}),
+      }}
+    >
       <header
         className="flex-shrink-0 border-b px-4 py-3"
         style={{ borderColor: paint.EDGE, background: paint.PANEL }}

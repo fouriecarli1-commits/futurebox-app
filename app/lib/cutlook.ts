@@ -97,15 +97,50 @@ export const COIN = 'rgba(250,204,21,0.9)';
 export const RAISE = '0 1px 0 0 rgba(236,253,245,0.14) inset, 0 -1px 0 0 rgba(0,0,0,0.45) inset, 0 1px 2px 0 rgba(0,0,0,0.45)';
 export const PRESS = '0 1px 0 0 rgba(0,0,0,0.45) inset, 0 -1px 0 0 rgba(236,253,245,0.10) inset';
 
+/**
+ * The body of a bench in THIS room, which is see-through.
+ *
+ * ── Why only this room ───────────────────────────────────────────────────
+ *
+ * Carli, 9 October 2026: *"Die pop out bars onder belemmer die view van die
+ * video. Of dit moet kleiner gesquash word onder, of die background van die
+ * buttons moet baie deursigtig wees."*
+ *
+ * A bench in the booth sits over a waveform and a list of lanes, and there
+ * is nothing behind it worth seeing. A bench here sits over the FILM, which
+ * is the one thing the person is looking at and the only way to tell whether
+ * what they just changed is right. `CutDock` already caps the sheet at half
+ * the screen for that reason, and half the screen of a phone is still most
+ * of a film.
+ *
+ * So the body goes to about half opacity with a blur behind it. The film
+ * stays legible through it and the controls stay legible over it — which is
+ * what the blur buys and why this is not simply a lower alpha.
+ *
+ * The HEADER stays solid. A see-through title bar over moving pictures is
+ * the thing that becomes unreadable, and it is also the part somebody aims
+ * at to close the bench.
+ */
+export const GLASS = 'rgba(10,36,21,0.55)';
+
+/** The blur that makes words legible over whatever is moving behind them. */
+export const GLASS_BLUR = 'blur(14px)';
+
 /** Everything above, in one object, for handing to a shared frame. */
 export const CUT_LOOK = {
-  VOID, PANEL, RAISED, EDGE, INK, INK_DIM, INK_FAINT, LIT, COIN,
+  VOID, PANEL, RAISED, EDGE, INK, INK_DIM, INK_FAINT, LIT, COIN, GLASS, GLASS_BLUR,
 } as const;
 
 /** What a shared frame needs in order to be painted in a room's colours. */
 export type Look = {
   readonly PANEL: string;
   readonly RAISED: string;
+  /**
+   * A see-through body, where the room has one. Optional on purpose: the
+   * booth does not want it, and a room that leaves it out gets `RAISED`.
+   */
+  readonly GLASS?: string;
+  readonly GLASS_BLUR?: string;
   readonly EDGE: string;
   readonly INK: string;
   readonly INK_DIM: string;

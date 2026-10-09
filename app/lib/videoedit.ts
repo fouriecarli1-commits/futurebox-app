@@ -240,7 +240,20 @@ export const SHAPES: Readonly<Record<string, Shape>> = {
   tall: { width: 1080, height: 1920 },
   wide: { width: 1920, height: 1080 },
   square: { width: 1080, height: 1080 },
+  /* ── The one that was missing, 9 October 2026 ────────────────
+
+     Four by five, 1080 × 1350: the feed post. It is the shape Instagram and
+     Facebook give the most height to in a scroll, and a square posted there
+     is a square with the feed's own margins around it.
+
+     Three shapes covered the story, the screen and the square and left out
+     the one most people are actually posting. */
+  post: { width: 1080, height: 1350 },
 };
+
+/** The smallest and largest side a custom size may have. */
+export const SIDE_MIN = 240;
+export const SIDE_MAX = 4096;
 
 /**
  * The same three shapes in the words the rest of the app uses.
@@ -255,7 +268,61 @@ export const ASPECTS: Readonly<Record<string, '9:16' | '16:9' | '1:1'>> = {
   tall: '9:16',
   wide: '16:9',
   square: '1:1',
+  /* Four by five is 0.8, and of the three the engines take, one by one is the
+     nearest. It is also the one that loses least: a square cropped to 4:5
+     loses a sliver off each side, where a 9:16 clip cropped to 4:5 throws
+     away a third of the picture top and bottom. */
+  post: '1:1',
 };
+
+/**
+ * The shape this edit is actually framed at.
+ *
+ * ── Why a function and not `SHAPES[edit.shape]` ──────────────────────────
+ *
+ * Carli, 9 October 2026: *"Die video desk en photo editor moet 'n opsie hê
+ * om custom sizes te kies. Dat die ratios perfek is."*
+ *
+ * Named shapes cover the common cases and will never cover all of them — a
+ * billboard, a printed poster, a screen in a shop window, whatever the
+ * client's spec sheet says. So an edit can carry its own size, and
+ * everything that needs the frame asks here instead of reaching into the
+ * table.
+ *
+ * Clamped rather than trusted: a zero or a negative is a canvas that throws,
+ * and forty thousand pixels is a tab that dies. `sizeFor` makes the sides
+ * even afterwards, which encoders need, so that is not repeated here.
+ */
+export function shapeOf(edit: { readonly shape?: string; readonly size?: Shape }): Shape {
+  if (edit.shape === 'custom' && edit.size) {
+    const hold = (n: number): number => Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(n)));
+    return { width: hold(edit.size.width), height: hold(edit.size.height) };
+  }
+  return SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall;
+}
+
+/**
+ * What to ask a video engine for, given the shape this edit is framed at.
+ *
+ * The engines take three aspects and no others, so a custom frame has to be
+ * told which of the three it is nearest — by ratio, which is the only
+ * honest answer, and then the clip is fitted into the real frame the way
+ * every other clip is.
+ *
+ * Said out loud because it is a downgrade rather than a translation: a clip
+ * generated for a 2:1 banner is a 16:9 clip with the top and bottom going
+ * spare, and somebody should be able to find out why from the code.
+ */
+export function aspectOf(
+  edit: { readonly shape?: string; readonly size?: Shape },
+): '9:16' | '16:9' | '1:1' {
+  if (edit.shape !== 'custom') return ASPECTS[edit.shape ?? 'tall'] ?? '9:16';
+  const { width, height } = shapeOf(edit);
+  const ratio = width / height;
+  const near: ['9:16' | '16:9' | '1:1', number][] = [['9:16', 9 / 16], ['1:1', 1], ['16:9', 16 / 9]];
+  return near.reduce((best, one) =>
+    Math.abs(ratio - one[1]) < Math.abs(ratio - best[1]) ? one : best)[0];
+}
 
 /** An edit, whole. */
 export interface Edit {
@@ -275,7 +342,10 @@ export interface Edit {
    */
   readonly title?: string;
   /** Absent is tall: most of what leaves this app is watched on a phone. */
-  readonly shape?: keyof typeof SHAPES;
+  /** A named shape, or `custom` — in which case `size` carries the pixels. */
+  readonly shape?: keyof typeof SHAPES | 'custom';
+  /** The frame, when `shape` is `custom`. Clamped by `shapeOf`. */
+  readonly size?: Shape;
   /**
    * What the file is written at.
    *
@@ -765,7 +835,7 @@ export function cutFrom(edit: Edit): Cut {
     };
   });
 
-  const shape = SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall;
+  const shape = shapeOf(edit);
   /* The chosen grade applied HERE, at the one place an edit becomes a cut.
  
      So the renderer never learns what a grade is — by the time a cut reaches

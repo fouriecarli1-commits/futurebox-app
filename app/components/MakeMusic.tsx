@@ -556,6 +556,18 @@ export default function MakeMusic({
   // Making a video is the same job here as on its own tab, so it is the same
   // component. This screen only decides which track it is pointed at.
   const [videoFor, setVideoFor] = useState<Track | null>(null);
+  /** Where the video panel is drawn, so opening it can bring it into view. */
+  const videoPanel = useRef<HTMLDivElement | null>(null);
+
+  /* Reading only: it moves the view, it writes nothing and it spends
+     nothing. `smooth` so it reads as the page moving rather than jumping,
+     and `center` rather than `start` because the panel is shorter than a
+     screen and a panel pinned to the top edge looks like a page that has
+     lost its header. */
+  useEffect(() => {
+    if (!videoFor) return;
+    videoPanel.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [videoFor]);
   /** What has been paid for. Refreshed after a payment returns. */
   const [owned, setOwned] = useState<Owned>(NOTHING);
   const [buying, setBuying] = useState<string | null>(null);
@@ -1807,7 +1819,25 @@ export default function MakeMusic({
           </div>
         )}
 
-        {videoFor && <VideoPanel track={videoFor} onClose={() => setVideoFor(null)} />}
+        {/* ── Why this scrolls itself into view ─────────────────────────
+
+            Carli, 9 October 2026: *"As ek kliek op make a video by 'n
+            liedjie doen dit niks nie."*
+
+            It did do something. This panel is drawn AFTER the whole list of
+            songs, so pressing the button on the first of five opened it
+            below the other four — off the bottom of a phone, with nothing
+            moving on the screen she was looking at. A press that works and
+            shows nothing is a press that did not work, as far as anybody
+            using it is concerned.
+
+            Putting the panel beside its own song would mean one panel per
+            row and a different layout for every width. Moving the screen to
+            the panel is one line and makes the press visible wherever the
+            list has got to. */}
+        <div ref={videoPanel}>
+          {videoFor && <VideoPanel track={videoFor} onClose={() => setVideoFor(null)} />}
+        </div>
 
         {tracks.length > 0 && (
           <p className="text-sm text-zinc-500">

@@ -176,7 +176,7 @@ const COSTS_RAND: Record<string, number> = {
   veo: 10.72,
   'google-veo-standard': 4.00,
   'google-veo-better': 12.00,
-  'google-veo-premium': 32.00,
+  'google-veo-premium': 40.00,
   kling: 3.44,
 };
 

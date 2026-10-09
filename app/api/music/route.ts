@@ -23,6 +23,7 @@
  */
 
 import { noteCost } from '@/app/lib/server/eleven';
+import { looksAfrikaans } from '@/app/lib/lyriclang';
 import { call, ready } from '@/app/lib/server/suppliers';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
@@ -258,7 +259,31 @@ export async function POST(request: Request): Promise<Response> {
      ElevenLabs takes a composition plan with per-section seconds, Lyria
      takes one string. The losses are stated there and refused here where
      they cannot be lived with. */
-  if ((process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google') {
+  /* ── Afrikaans goes to ElevenLabs, whatever the switch says ──────
+
+     Carli, 9 October 2026: *"Ek dink ons moet Afrikaanse liedjies steeds
+     deur elevenlabs hardloop. Elevenlabs se afrikaans is beter as lyria
+     sin."*
+
+     That is her ear, which is the only instrument that can judge it, and it
+     is not a thing any check here can hold — `check:singit` can prove the
+     words were respelled and nothing can prove a vowel came out right.
+
+     `MUSIC_ENGINE` is one setting for the whole deployment. This is the one
+     case where the song decides instead, and it decides on the words
+     themselves rather than on the browser's language: `looksAfrikaans`
+     wants two markers in the lyric and has already had `is`, `my`, `was`,
+     `so` and `die` taken out of its list for being English too, so an
+     English song with one "nie" quoted in it still goes to Google.
+
+     A song with no words at all — an instrumental — has nothing to read,
+     so it follows the switch. */
+  const sung = (body.sections ?? [])
+    .flatMap((one) => one.lines ?? [])
+    .join('\n');
+  const afrikaans = looksAfrikaans(sung);
+
+  if (!afrikaans && (process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google') {
     if (!googleOn()) {
       return Response.json(
         { message: 'The Google music engine is named but not switched on. See docs/GOOGLE-OPSTEL.md.' },

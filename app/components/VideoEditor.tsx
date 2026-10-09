@@ -135,7 +135,8 @@ import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
 import {
-  ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
+  ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE, SIDE_MAX, SIDE_MIN,
+  aspectOf, shapeOf,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
   captionAt, cutOut, cutSong, heard, move, runs, songSecond, split, splitHere, startsAt,
   trim,
@@ -1191,7 +1192,7 @@ export default function VideoEditor({
      could have told her: `check:logomark` measures the preview's fractions
      against `markBox`'s and they agreed exactly. They were both right about the
      fraction and the preview was wrong about the frame. */
-  const shape = SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall;
+  const shape = shapeOf(edit);
 
   /* How much the preview is magnified. One means no magnification at all,
      and at one the zoom box is not a scroller — see the note where it is
@@ -1291,7 +1292,7 @@ export default function VideoEditor({
      up as a reading. */
   const shapeSays = useMemo(() => shapeAdvice(edit.pieces), [edit.pieces]);
   const gradeSays = useMemo(
-    () => gradeAdvice(total, SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall, rateFor(edit.fps)),
+    () => gradeAdvice(total, shapeOf(edit), rateFor(edit.fps)),
     [total, edit.shape, edit.fps],
   );
 
@@ -1332,7 +1333,7 @@ export default function VideoEditor({
    * direction that blurs a preview into mush.
    */
   const previewScale = useMemo(() => {
-    const tall = SHAPES[edit.shape ?? 'tall']?.height ?? SHAPES.tall.height;
+    const tall = shapeOf(edit).height;
     if (!frameHeight || !tall) return 1;
     return frameHeight / tall;
   }, [frameHeight, edit.shape]);
@@ -4409,7 +4410,7 @@ async function smallerFrame(url: string): Promise<string> {
               /* The FILM's shape, which is the shape it actually came out in
                  — not the shape of whatever clip happens to be first on the
                  clock. */
-              aspect={ASPECTS[edit.shape ?? 'tall'] ?? '9:16'}
+              aspect={aspectOf(edit)}
             />
           </div>
         )}
@@ -6080,7 +6081,7 @@ async function smallerFrame(url: string): Promise<string> {
                   "Square" are one width instead of 53, 63 and 77 — see
                   `lib/benchbar.ts`. */}
               <div className={ROW3}>
-                {(Object.keys(SHAPES) as (keyof typeof SHAPES)[]).map((one) => {
+                {([...Object.keys(SHAPES), 'custom'] as string[]).map((one) => {
                   const on = (edit.shape ?? 'tall') === one;
                   return (
                     <button
@@ -6361,7 +6362,7 @@ async function smallerFrame(url: string): Promise<string> {
                 would be claiming precision this does not have. */}
             <p className="text-sm" style={{ color: INK_DIM }} data-editorweight>
               {(() => {
-                const frame = sizeFor(SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall, edit.grade);
+                const frame = sizeFor(shapeOf(edit), edit.grade);
                 const mb = weighs(total, bitsFor(frame.width, frame.height, rateFor(edit.fps)));
                 return t('edit.weighs', 'About {mb} MB, at {w}×{h}')
                   .replace('{mb}', String(mb))
