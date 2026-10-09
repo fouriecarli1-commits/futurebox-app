@@ -51,7 +51,9 @@ import { buildCaption, loadHandles, shareUrlFor, type Handles } from '../lib/soc
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 import PostToLive from './PostToLive';
-import { downloadBlob, getAudio, safeFilename, type Track } from '../lib/library';
+import { getAudio, safeFilename, type Track } from '../lib/library';
+import { accessToken } from '../lib/cloud';
+import { saveSong } from '../lib/songfile';
 
 export default function ShareRow({
   title,
@@ -121,7 +123,10 @@ export default function ShareRow({
         setFile('gone');
         return;
       }
-      downloadBlob(audio, safeFilename(track.title, 'wav'));
+      /* With its sleeve. A WAV cannot carry a picture, so `saveSong` hands
+         the cover over beside it — which is what a distributor asks for
+         anyway. */
+      await saveSong(track, audio, await accessToken());
       setFile(null);
     } catch {
       setFile('gone');

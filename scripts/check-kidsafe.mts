@@ -110,12 +110,41 @@ ok('  and every room on the rail can be found in the page that mounts it',
 const fileFor = (name: string): string | undefined =>
   [...code.keys()].find((one) => one.endsWith(`/components/${name}.tsx`));
 
+/**
+ * Whether this file ever SENDS anything, as opposed to only asking.
+ *
+ * ── Why this had to be added ─────────────────────────────────────────────
+ *
+ * On 9 October 2026 a song started coming down with its cover inside it, and
+ * `lib/songfile.ts` fetches that cover from `/api/cover`. That route charges
+ * on POST — making a cover costs credits — so this file counted every room
+ * that could reach it as a room that can spend.
+ *
+ * One of them was the hook feed, which was one of the three rooms the
+ * write-up says cannot spend a credit at all. The check went red, correctly
+ * in its own terms and wrongly about the app: a person in the hook feed can
+ * download their own song, which READS the cover. There is no way to make
+ * one from there and no credit can leave.
+ *
+ * Rewriting the write-up to say two rooms would have recorded something
+ * false. So the instrument got finer instead: a file that never sets a
+ * method on a fetch only ever asks, and asking is not spending.
+ *
+ * Conservative in the right direction on purpose. A file that posts ANYWHERE
+ * counts as spending on every charging route it names — so the mistake this
+ * can make is calling a room spendier than it is, which is the safe mistake
+ * for a question about what a child can do.
+ */
+const onlyAsks = (src: string): boolean =>
+  src.includes('fetch(') && !/method:\s*['"`](POST|PUT|PATCH|DELETE)/i.test(src);
+
 const reaches = (file: string | undefined, seen = new Set<string>()): string[] => {
   if (!file || seen.has(file)) return [];
   seen.add(file);
   const src = code.get(file) ?? '';
-  const hits = [...charging].filter((one) => src.includes(`'${one}`)
+  const named = [...charging].filter((one) => src.includes(`'${one}`)
     || src.includes(`"${one}`) || src.includes(`\`${one}`));
+  const hits = onlyAsks(src) ? [] : named;
   for (const m of src.matchAll(/from\s+'(\.[^']+)'/g)) {
     const base = join(file, '..', m[1]);
     for (const ext of ['.tsx', '.ts']) {

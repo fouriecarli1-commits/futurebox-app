@@ -1329,6 +1329,11 @@ jobs:
       - name: The words Lyria sends reach somebody
         run: npm run check:woorde
 
+      # The album art goes inside the song file, as a front-cover frame in a
+      # tag players actually read, without touching a byte of the audio.
+      - name: A song is handed over with its sleeve in it
+        run: npm run check:omslag
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

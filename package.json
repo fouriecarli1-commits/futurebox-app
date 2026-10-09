@@ -299,6 +299,7 @@
     "check:prent": "tsx scripts/check-prent.mts",
     "check:singit": "tsx scripts/check-singit.mts",
     "check:woorde": "tsx scripts/check-woorde.mts",
+    "check:omslag": "tsx scripts/check-omslag.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

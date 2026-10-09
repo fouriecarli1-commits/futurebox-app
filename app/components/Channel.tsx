@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
-import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
+import { loadTracks, type Track } from '../lib/library';
+import { saveSong } from '../lib/songfile';
 import Pictures from './Pictures';
 import { readAudio } from '../lib/trackaudio';
 import { addUpload, editUpload, loadUploads, removeUpload } from '../lib/uploads';
@@ -341,9 +342,10 @@ export default function Channel({
           setKeepFailed(track.id);
           return false;
         }
-        const kind = (blob.type || '').toLowerCase();
-        const ext = kind.includes('wav') ? 'wav' : kind.includes('ogg') ? 'ogg' : kind.includes('mp4') || kind.includes('m4a') ? 'm4a' : 'mp3';
-        downloadBlob(blob, safeFilename(track.title, ext));
+        /* The sleeve goes with it. `saveSong` works out the extension and
+           puts the cover inside an MP3, or hands it over beside a WAV — one
+           decision in one place rather than three screens each guessing. */
+        await saveSong(track, blob, await accessToken());
         return true;
       } catch {
         setKeepFailed(track.id);

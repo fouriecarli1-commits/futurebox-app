@@ -24,6 +24,8 @@ import {
   loadTracks, saveTracks, putAudio, getAudio, deleteAudio, downloadBlob, safeFilename,
   type Track,
 } from '../lib/library';
+import { accessToken } from '../lib/cloud';
+import { saveSong } from '../lib/songfile';
 import { durationOf, readAudio } from '../lib/trackaudio';
 import { keepMix, takeId } from '../lib/takekeep';
 import { engines, splitSections, type Stage } from '../lib/engines';
@@ -854,7 +856,8 @@ export default function MakeMusic({
       // No accounts configured, so there is nothing to check and nothing
       // stored: the device's own copy is the download, as it always was.
       const blob = await readAudio(track.id);
-      if (blob) downloadBlob(blob, safeFilename(track.title, 'wav'));
+      /* With its sleeve — see `lib/songfile.ts`. */
+      if (blob) await saveSong(track, blob, await accessToken());
       return;
     }
     setStatus(answer.message);
