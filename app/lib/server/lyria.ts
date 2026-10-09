@@ -143,15 +143,27 @@ export function wordsIn(body: unknown): string[] {
  * reason: a field present but empty means something different from a field
  * absent, and only one of those is true.
  *
- * Rows are joined by `\n\n` rather than `\n`, because a row is itself
- * multi-line and a single newline would make two rows unseparable from one
- * row with a line break in it.
+ * ── And why it is JSON rather than a separator ──────────────────────────
+ *
+ * This joined the rows with `\n\n`, on the reasoning that a row is itself
+ * multi-line so a single newline could not separate two of them.
+ *
+ * `check:gesing` found that on its first run, against a lyric sheet of the
+ * shape every engine sends: a blank line between the verse and the chorus.
+ * A lyric sheet IS `\n\n`-separated internally, so one sheet came back as
+ * two rows — and the reader, looking for the row that is the lyrics, would
+ * have kept the verse and quietly lost the chorus. It would have looked
+ * like a short song rather than like a bug.
+ *
+ * There is no character that cannot appear in lyrics. So the rows are not
+ * separated at all: they are a JSON array, which has no separator to
+ * collide with.
  */
 export function saidHeader(said: readonly string[]): Record<string, string> {
   const rows = said.filter((one) => one.trim());
   if (!rows.length) return {};
   return {
-    'X-Song-Words': Buffer.from(rows.join('\n\n'), 'utf8').toString('base64'),
+    'X-Song-Words': Buffer.from(JSON.stringify(rows), 'utf8').toString('base64'),
     /* How many rows, so the browser knows whether it is looking at one
        thing or two without having to split and count. */
     'X-Song-Words-Rows': String(rows.length),

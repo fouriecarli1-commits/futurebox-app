@@ -314,6 +314,7 @@
     "check:anderwoorde": "tsx scripts/check-anderwoorde.mts",
     "check:omslagsaam": "tsx scripts/check-omslagsaam.mts",
     "check:plakkaat": "tsx scripts/check-plakkaat.mts",
+    "check:gesing": "tsx scripts/check-gesing.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

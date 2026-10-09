@@ -767,6 +767,8 @@ export default function MakeMusic({
 
         // A connected engine takes over here; until then we render the sketch.
         let blob: Blob;
+        /** What the engine says it sang, where the room had no words of its own. */
+        let sungBack = '';
         let source: Track['source'] = 'sketch';
         let models: string[] = ['FutureBox sketch'];
         if (engines.available('audio')) {
@@ -796,6 +798,15 @@ export default function MakeMusic({
           models = [result.model]
             .concat(singItYourself ? ['Backing — no vocal'] : [])
             .concat(trained ? [`Trained on your own songs — ${trained.name}`] : []);
+          /* ── The words it actually sang ──────────────────────────────
+ 
+             Kept only when the room has none of its own. Somebody who wrote
+             their lyrics here has the real ones already, and overwriting
+             them with the engine's reading of them would be the app
+             correcting her. This fills the gap where there was nothing —
+             a song asked for by prompt, which until now came back with its
+             words and dropped them. */
+          if (result.sung && !lyrics.trim()) sungBack = result.sung;
         } else {
           blob = encodeWav(renderSketch(spec));
         }
@@ -826,7 +837,12 @@ export default function MakeMusic({
           genre: remixOf?.genre ?? (canvas.style.split(',')[0] || 'Untitled style').trim(),
           bpm: spec.bpm,
           key: spec.key,
-          lyrics,
+          /* The words the engine sang, when the room had none of its own.
+             Every song made by prompt since 8 October came back with these
+             and dropped them — see `lib/sungwords.ts`. They go on the track
+             itself so the release carries them, the sleeve can read them,
+             and a lyric video has something to put on the screen. */
+          lyrics: lyrics.trim() || sungBack,
           style: styleText,
           models,
           source,

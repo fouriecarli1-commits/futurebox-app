@@ -1426,6 +1426,12 @@ jobs:
       - name: An advert comes out as a still with its words in it
         run: npm run check:plakkaat
 
+      # The words a song came back with are kept, and only when they are
+      # words: a description or a refusal must never be shown as lyrics, and
+      # a lyric sheet with a blank line in it must survive the header whole.
+      - name: The words a song came back with are kept
+        run: npm run check:gesing
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

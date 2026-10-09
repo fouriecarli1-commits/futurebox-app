@@ -28,6 +28,7 @@
 
 import { accessToken } from './cloud';
 import { shapeSong } from './songshape';
+import { rowsFrom, sungWordsIn } from './sungwords';
 
 /**
  * A refusal from a route, with whether there is another way round it.
@@ -134,6 +135,15 @@ export interface EngineResult {
   readonly blob: Blob;
   /** Shown against the release, so listeners see what made it. */
   readonly model: string;
+  /**
+   * The words the engine actually sang, where it said so.
+   *
+   * Absent for an instrumental, for an engine that sends no words, and —
+   * on purpose — where no row the engine sent looks like a lyric sheet. A
+   * description shown as lyrics is a release with the wrong words printed
+   * on it, so `lib/sungwords.ts` says no rather than guessing.
+   */
+  readonly sung?: string;
 }
 
 export interface Engines {
@@ -422,7 +432,20 @@ export const engines: Engines = {
     }
 
     const model = response.headers.get('X-Music-Model') ?? 'ElevenLabs Music';
-    return { blob: await collect(response, request), model };
+    /* ── The words it actually sang ────────────────────────────────────
+ 
+       Google's music model answers with the lyrics as well as the audio,
+       and until now the browser read the header and nothing looked at it —
+       `lib/server/lyria.ts` found the same fault one layer down on 9
+       October, where the rows were extracted and dropped on the floor. This
+       is the other half of that.
+ 
+       `null` where no row looks like a lyric sheet, which is a real answer:
+       no words shown is unhelpful, and the wrong words shown is a release
+       with a description printed on it. `lib/sungwords.ts` carries the
+       reasoning and `check:gesing` drives the reading. */
+    const sung = sungWordsIn(rowsFrom(response.headers));
+    return { blob: await collect(response, request), model, ...(sung ? { sung } : {}) };
   },
 
   /**
