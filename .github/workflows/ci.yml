@@ -1373,6 +1373,13 @@ jobs:
       - name: The trim window is real and the preview is not silent
         run: npm run check:knipvenster
 
+      # A hum becomes the rhythm that was hummed and then an instrument,
+      # driven on a hum the check synthesises itself: four taps on ONE pitch
+      # have to come back as four notes, which is the case a pitch track
+      # alone reads as one held note.
+      - name: A hum becomes the rhythm that was hummed
+        run: npm run check:neurie
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

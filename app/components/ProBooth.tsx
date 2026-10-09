@@ -80,6 +80,8 @@ import {
 } from '../lib/parts';
 import { songCost } from '../lib/credits';
 import { makeHistory } from '../lib/undo';
+import { notesIn, snapTo } from '../lib/humnotes';
+import { VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -3380,6 +3382,85 @@ export default function ProBooth({
      place and its bin already are — it is a thing done to one lane, and the
      row is where a lane's own actions live. Said here, because a desk called
      Stems that did not mention splitting would send people looking. */
+  /* ── Hum it, and have it played ────────────────────────────────────────
+ 
+     Carli, 9 October 2026, about a thing Suno had launched: *"Wat oulik is
+     is dat mens die ritme van 'n liedjie met jou stem kan sing en in sit, en
+     dan kies jy net die instrument tipe."*
+ 
+     Beside "Generate a part" on purpose. It is the same job — get an
+     instrument onto a lane — reached the other way round: that one is asked
+     for in words and costs credits, this one is hummed and costs nothing,
+     because every bit of it runs on the device. Two ways into one job belong
+     in one place.
+ 
+     `lib/humnotes.ts` finds the notes and `lib/huminstrument.ts` plays them;
+     `check:neurie` drives both on a hum it synthesises itself. Nothing here
+     does any of that work, which is why there is so little of it. */
+  const [humVoice, setHumVoice] = useState<VoiceId>('bass');
+  const [humSnap, setHumSnap] = useState(true);
+  const [humming, setHumming] = useState(false);
+
+  const humIt = useCallback(async (): Promise<void> => {
+    const lane = lanes.find((one) => one.id === picked);
+    const voice = voiceById(humVoice);
+    if (!lane || !voice || humming) return;
+    setHumming(true);
+    setProblem(null);
+    try {
+      const samples = lane.audio.getChannelData(0);
+      const heard = notesIn(samples, lane.audio.sampleRate);
+      if (!heard.length) {
+        setProblem(t(
+          'hum.nothing',
+          'Nothing was heard in that lane to play. Hum or tap the rhythm with a bit of space between the notes, then try again.',
+        ));
+        return;
+      }
+      /* Snapped by default, and her own instinct about this feature: a
+         hummed rhythm is never quite in time and the point is to get
+         something usable rather than something faithful. The switch is there
+         because a swung or rubato part is the case where it is wrong. */
+      const notes = humSnap ? snapTo(heard, meter.bpm) : heard;
+      const played = renderHum(
+        notes,
+        voice,
+        lane.audio.duration,
+        lane.audio.sampleRate,
+      );
+
+      const ctx = context();
+      if (!ctx) {
+        setProblem(t('pro.noAudio', 'This browser would not start its audio.'));
+        return;
+      }
+      const buffer = ctx.createBuffer(1, played.length, lane.audio.sampleRate);
+      /* `set` on the channel rather than `copyToChannel`: one fewer copy,
+         and `copyToChannel` wants a `Float32Array<ArrayBuffer>` where a
+         plain `Float32Array` is `ArrayBufferLike`, which is a type error
+         about shared memory in a function that has never seen any. */
+      buffer.getChannelData(0).set(played);
+
+      setLanes((was) => [
+        ...was,
+        {
+          id: `hum-${Date.now()}-${voice.id}`,
+          name: `${t(voice.says[0], voice.says[1])} · ${t('hum.from', 'hummed')}`,
+          audio: buffer,
+          /* On top of the lane it came from, so it plays with the hum rather
+             than after it. Somebody who wanted it elsewhere drags it. */
+          at: lane.at,
+          gain: 1,
+          muted: false,
+          soloed: false,
+        },
+      ]);
+      setStale(true);
+    } finally {
+      setHumming(false);
+    }
+  }, [lanes, picked, humVoice, humSnap, humming, meter.bpm, context, t]);
+
   const stemDesk = (
     <>
       <Card
@@ -3401,6 +3482,78 @@ export default function ProBooth({
           <Music2 className="h-4 w-4" />
           {t('part.title', 'Generate a part')}
         </button>
+      </Card>
+
+      {/* ── Hum it instead ───────────────────────────────────────────────
+          Free, and said so plainly: it is the only thing on this desk that
+          is, and the reason is worth knowing rather than guessing at — none
+          of it leaves the phone. */}
+      <Card
+        icon={<Mic2 className="h-4 w-4" />}
+        title={t('hum.title', 'Hum it, and have it played')}
+        what={t(
+          'hum.what',
+          'Record yourself humming or tapping the rhythm on a lane, pick an instrument, and it comes back played. Free and unlimited — none of it leaves this device.',
+        )}
+      >
+        <div className="space-y-3" data-humcard>
+          <div className="grid grid-cols-2 gap-2">
+            {VOICES.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                onClick={() => setHumVoice(one.id)}
+                aria-pressed={humVoice === one.id}
+                data-humvoice={one.id}
+                title={t(one.what[0], one.what[1])}
+                className={`min-h-[44px] rounded-xl border px-3 py-2 text-left text-xs font-bold ${
+                  humVoice === one.id
+                    ? 'border-sky-400/70 bg-sky-500/10 text-sky-200'
+                    : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                }`}
+              >
+                <span className="block">{t(one.says[0], one.says[1])}</span>
+                <span className="mt-0.5 block text-[10px] font-medium leading-snug text-zinc-500">
+                  {t(one.what[0], one.what[1])}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <label className="flex items-start gap-2.5 text-xs text-zinc-400">
+            <input
+              type="checkbox"
+              checked={humSnap}
+              data-humsnap
+              onChange={(event) => setHumSnap(event.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-sky-500"
+            />
+            <span>
+              {t('hum.snap', 'Put it on the click')}
+              <span className="block text-[11px] leading-snug text-zinc-600">
+                {t(
+                  'hum.snapWhy',
+                  'A hummed rhythm is never quite in time. Off is for a part that swings or drifts on purpose.',
+                )}
+              </span>
+            </span>
+          </label>
+
+          <button
+            type="button"
+            onClick={() => void humIt()}
+            disabled={!picked || humming || busy || recording || making}
+            data-humgo
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
+          >
+            <Mic2 className="h-4 w-4" />
+            {humming
+              ? t('hum.working', 'Listening to it\u2026')
+              : picked
+                ? t('hum.go', 'Play this lane as the instrument')
+                : t('pro.pickOne', 'Pick a lane first')}
+          </button>
+        </div>
       </Card>
 
       <Card
