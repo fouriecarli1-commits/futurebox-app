@@ -511,6 +511,30 @@ rather than "that did not work" — send me that sentence and it is a five-minut
 fix. **R640 a month buys nothing until one conversion has actually come back**,
 so make one the day you pay.
 
+### 12b. `SING_PHONETIC` — leave it unset unless a song sounds worse
+
+**`SING_PHONETIC` — leave it empty. Set it to `off` only if you want the
+phonetic respelling switched off.**
+
+Carli's technique, 9 October 2026: the vocal models were trained on English,
+so they do not know Afrikaans spelling. The lyrics are now respelled on the
+way to the engine — *"Ek is baie lief vir jou"* goes out as *"Eck iss buy-a
+leef fir yo"* — which is the same thing her `tjie → kie` dictionary does for
+the speaking voice, and which had never reached a single song.
+
+**What it does NOT touch:** the lyrics you typed (the room shows what you
+wrote and the release carries it), the section names, the style words, or any
+line that is not Afrikaans. An English chorus over Afrikaans verses keeps its
+English.
+
+**Why there is a switch at all.** Seventy-three of the respellings are mine
+and have been heard by nobody; six are hers, from the example she sent. This
+is a judgement about sound and the only instrument that settles it is an ear.
+If a song comes out worse, `SING_PHONETIC=off` and a redeploy puts it back
+exactly as it was — no commit, no waiting for me. A single word that comes
+out wrong is better reported than switched off: it is one line in
+`app/lib/server/singit.ts`.
+
 ### 13. The two engines behind a flag — and one of them is settled
 
 **`ELEVEN_SEEDANCE_READY` — leave it empty. It is not for sale on Pro.**

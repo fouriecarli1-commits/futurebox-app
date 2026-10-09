@@ -14,6 +14,7 @@
  * fails. A check that cannot fail is decoration.
  */
 import { buildRequest, forPreview, type Body } from '../app/lib/server/musicplan';
+import { singable } from '../app/lib/server/singit.ts';
 import { looksAfrikaans, singDirection } from '../app/lib/lyriclang';
 import { shapeSong, planLength } from '../app/lib/songshape';
 import { timelineOf } from '../app/lib/timeline';
@@ -56,8 +57,25 @@ const sung = buildRequest(preview) as {
 check('a request with words becomes a composition plan, not a prompt',
   Boolean(sung.composition_plan) && sung.prompt === undefined);
 const text = (sung.composition_plan?.chunks ?? []).map((chunk) => chunk.text).join('\n');
+/* ── Respelled, not verbatim, since 9 October 2026 ───────────────
+
+   This read `text.includes(line)` and it was right to: the fault it was
+   written for is the one Carli hit on an Afrikaans song — "net klank het
+   uitgekom" — where the words somebody typed were thrown away on the
+   server and the room showed lyrics the audio did not have.
+
+   Her phonetic technique respells the words on the way out, so a verbatim
+   comparison now fails for the right reason, and both of these lines did.
+   What has to stay true is unchanged: the words somebody wrote REACH the
+   engine. So it compares against what will actually be sung, and asserts
+   separately that the respelling is a respelling rather than a deletion —
+   same number of words, nothing emptied. `check:singit` holds the rest. */
 for (const line of ['Ek ry alleen deur die Karoo', 'Al die pad terug huis toe']) {
-  check(`"${line}" is in what is sent`, text.includes(line));
+  const sung = singable(line);
+  check(`"${line}" is in what is sent, as "${sung}"`, text.includes(sung));
+  check('  and the respelling kept every word rather than dropping any',
+    sung.split(/\s+/).length === line.split(/\s+/).length && sung.trim().length > 0,
+    `${sung.split(/\s+/).length} words against ${line.split(/\s+/).length}`);
 }
 check('and each part is named, so the words land in the right place',
   text.includes('[Verse]') && text.includes('[Chorus]'));

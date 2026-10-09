@@ -7,6 +7,8 @@
 > plekke waar 'n fout duur is, is klousule 4 (wat die koper kry) en klousule
 > 7 (BTW).
 >
+> **Hierdie een is vir kunswerk.** 'n Sanger wat sy stem gee, teken `docs/SANGER-OOREENKOMS.md` — 'n aparte dokument, want 'n stem is spesiale persoonlike inligting onder POPIA en 'n stemmodel word oor en oor gebruik, wat die teenoorgestelde is van klousule 4 se *“uniek, en een keer verkoop”*.
+>
 > Die Engelse weergawe is `docs/ARTIST-AGREEMENT.md`. Die twee sê dieselfde
 > ding; as hulle ooit verskil, geld die een wat albei partye onderteken het.
 >

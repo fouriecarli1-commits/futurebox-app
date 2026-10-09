@@ -79,6 +79,55 @@ export function looksAfrikaans(lyrics: string): boolean {
   return false;
 }
 
+/**
+ * Whether ONE line carries any Afrikaans at all.
+ *
+ * ── Two thresholds on one list, and why ─────────────────────────────────
+ *
+ * `looksAfrikaans` needs two markers and four words, because it decides a
+ * direction for the WHOLE song: a single "nie" in an English lyric is
+ * somebody quoting, and asking for Afrikaans singing over an English chorus
+ * is the exact fault that detector was built to prevent.
+ *
+ * This one needs one marker, and it is only ever asked INSIDE a song the
+ * two-marker test has already called Afrikaans — see `singit.ts`. At that
+ * point the question is no longer "is this an Afrikaans song", it is "is
+ * this particular line the English hook". One Afrikaans word answers that,
+ * and a line is four or five words long, so demanding two would skip half
+ * the verses.
+ *
+ * Same list, deliberately. A second list of Afrikaans markers is a second
+ * place to add a word to and one place to forget — and the reasoning above
+ * the list, about which borderline words are in and why, is the part worth
+ * not duplicating.
+ *
+ * An accented vowel counts too. `ë`, `ê`, `ô` and the rest do not occur
+ * in English words, so `voëltjie` or `sê` answers yes without being in any
+ * list.
+ */
+/**
+ * The three the list above calls borderline, left out of the one-marker test.
+ *
+ * Its own words: *"`pad`, `hou` and `ry` are the borderline ones: each is a
+ * word in English too. They stay because two are needed to fire."* At one
+ * marker that reasoning is gone, and it showed immediately — "So is the
+ * pad", an English line, came back "Soh iss the put".
+ *
+ * Not a second list: a named exclusion, with the first list's own sentence
+ * as the reason, in the file that sentence lives in.
+ */
+const BORDERLINE = new Set(['pad', 'hou', 'ry']);
+
+export function hasAfrikaansWord(line: string): boolean {
+  if (/[äëïöüâêîôû]/i.test(line)) return true;
+  return line
+    .replace(/\[[^\]]*\]/g, ' ')
+    .toLowerCase()
+    .split(/[^a-zà-ÿ']+/)
+    .filter(Boolean)
+    .some((word) => SET.has(word) && !BORDERLINE.has(word));
+}
+
 /** The three answers the room offers. */
 export type SingIn = 'af' | 'en' | 'auto';
 

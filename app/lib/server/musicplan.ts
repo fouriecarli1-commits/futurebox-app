@@ -16,6 +16,9 @@
  * and styles, rather than v1's sections under a global style. The field names
  * below come from the SDK's serialisers, not from memory.
  */
+import { looksAfrikaans } from '../lyriclang';
+import { respelling, singableLines } from './singit';
+
 const MODEL_ID = 'music_v2';
 
 /** ElevenLabs' own bounds. Sending outside them is a 422, so clamp first. */
@@ -113,6 +116,19 @@ export function buildRequest(body: Body): Record<string, unknown> {
     .map((section) => ({ ...section, lines: toLines(section.lines ?? []) }));
   const anyWords = sections.some((section) => section.lines.length > 0);
 
+  /* ── Is this an Afrikaans song at all ─────────────────────────
+
+     Asked once, on the WHOLE lyric, because that is what `looksAfrikaans`
+     is for and what its two-marker threshold is tuned to: one Afrikaans
+     word in an English song is somebody quoting. Asked per line it would
+     respell an English song that happened to contain "alleen".
+
+     Inside a song it answers yes to, `singableLines` then skips any line
+     with no Afrikaans in it — which is the English hook over Afrikaans
+     verses, the normal thing people write here. */
+  const afrikaans = respelling()
+    && looksAfrikaans(sections.flatMap((section) => section.lines).join('\n'));
+
   if (anyWords) {
     // A backing track to sing over is still a structured song: same sections,
     // same lengths, no voice. Dropping to the plain-prompt path would have lost
@@ -133,9 +149,21 @@ export function buildRequest(body: Body): Record<string, unknown> {
           // part of the song is; the lines follow it, one per line — unless
           // there are none, which is an intro, a break or an outro and is the
           // name on its own.
+          /* ── The words, respelled for a model that reads English ─────
+
+             Carli's technique, 9 October 2026. `singableLines` leaves a
+             line alone unless it is Afrikaans, and it is applied HERE and
+             nowhere else on purpose: the section NAME is an instruction to
+             the engine and `positive_styles` is a description of a sound,
+             so respelling either of those would be turning English into
+             nonsense. Only what gets sung goes through it.
+
+             The member's own lyrics are untouched — what they typed is
+             what the room shows and what the release carries. This is the
+             copy that leaves the building. */
           text: wordless || section.lines.length === 0
             ? `[${section.name}]`
-            : `[${section.name}]\n${section.lines.join('\n')}`,
+            : `[${section.name}]\n${(afrikaans ? singableLines(section.lines) : section.lines).join('\n')}`,
           duration_ms: clamp((section.seconds || 20) * 1000, SECTION_MIN_MS, SECTION_MAX_MS),
           // The first chunk's styles set the whole song, so it carries the full
           // list and later chunks carry a shorter one. That is the SDK's own

@@ -7,6 +7,11 @@
 > two places where a mistake is expensive are clause 4 (what the buyer gets)
 > and clause 7 (VAT).
 >
+> **This one is for artwork.** A singer giving their voice signs
+> `docs/SINGER-AGREEMENT.md` — a separate document, because a voice is special
+> personal information under POPIA and a voice model is used over and over,
+> which is the opposite of clause 4's *“unique, and sold once”*.
+>
 > The Afrikaans version is `docs/KUNSTENAAR-OOREENKOMS.md`. The two say the
 > same thing; if they ever differ, the one both parties signed governs.
 >

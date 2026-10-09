@@ -1317,6 +1317,12 @@ jobs:
       - name: The picture engine is called the way her console says
         run: npm run check:prent
 
+      # Her phonetic technique, applied to the words on their way to the
+      # music engine and to nothing else: not the section names, not the
+      # styles, and not a line that is English.
+      - name: Afrikaans lyrics are respelled, and only the lyrics
+        run: npm run check:singit
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
