@@ -1399,6 +1399,13 @@ jobs:
       - name: A child's song survives the page closing
         run: npm run check:kinderliedjie
 
+      # The shelves moved to the account. The move is driven against fake
+      # shelves: nothing leaves the device until the account confirms, an
+      # interrupted move does not duplicate, a full shelf is not a reason to
+      # drop anything, and the bucket is private to its owner.
+      - name: The shelves moved to the account and nothing was lost
+        run: npm run check:plankserver
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

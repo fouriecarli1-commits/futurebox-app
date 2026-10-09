@@ -94,6 +94,9 @@ export const ORDER = [
      credit tables, it only reads its own, and a file that needs nothing is
      a file whose position cannot be wrong. */
   'kinders',
+  /* After `kinders`, and depending on nothing but `auth.users` and the
+     storage schema. The kids' shelf: one table and one private bucket. */
+  'kinderplank',
 ] as const;
 
 /**
@@ -222,6 +225,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Die TONE3000-aanmelding: \u2019n handdruk wat loop, en die tokens daarna. Albei is service_role alleen en het met opset geen leesbeleid nie \u2014 \u2019n refresh token is blywende toegang tot iemand anders se TONE3000-rekening, en \u2019n blaaier wat hom kan lees maak die hele rede om hom bediener-kant te hou ongedaan. Sonder dit stuur die Browse TONE3000-knoppie haar weg en niks weet wie terugkom nie.',
   kinders:
     'Die kind se toelaag: een ry per rekening wat sê ’n kind gebruik dit en hoeveel krediete hy mag spandeer. Die ry sé teenwoordigheid IS kindermodus. Die twee funksies trek dit af en gee dit terug, met dieselfde slot wat `spend_credits` gebruik — sonder dit is die perk ’n voorstel wanneer twee knoppies saam gedruk word. Sonder hierdie lêer is die toelaag net ’n getal in die blaaier, en ’n herlaai maak dit niks.',
+  kinderplank:
+    'Die kinderplank op die rekening eerder as op een foon: een tabel vir stories én liedjies, en ’n PRIVATE emmer vir die prente, voorlesings en liedjies. Nie publiek soos `avatars` nie — niks hierop word aan vreemdelinge gewys nie, en ’n publieke emmer beteken enigiemand wat die pad ken kan die lêer haal. Sonder hierdie lêer bly ’n storie op die toestel waar dit gemaak is, en ’n storie wat op die skootrekenaar gemaak is, is nie op die foon se plank nie.',
 };
 
 /**

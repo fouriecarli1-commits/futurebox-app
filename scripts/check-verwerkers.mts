@@ -302,6 +302,11 @@ const KEPT: Record<string, string> = {
      handed their phone to a child, which the page has to mention for the
      same reason as the rest: the row outlives the request that made it. */
   kids_mode: 'allowance you set for a child',
+  /* The one row on this list that holds a CHILD's own material: the stories
+     a grown-up made for them and the songs the child made. It moved onto
+     the account on 9 October — before that it was on the device and this
+     page had nothing to say about it, which was true and is no longer. */
+  kid_shelf: 'stories and songs kept for a child',
   voice_owners: 'singing voice is yours',
   cast_members: 'photograph',
   pairs: 'work together',

@@ -7,8 +7,8 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 53 tabelle, 32 kolomme wat later
--- bygekom het, 6 stoor-emmers en 51 beleide, en gee 'n ry
+-- Dit kyk na 54 tabelle, 32 kolomme wat later
+-- bygekom het, 7 stoor-emmers en 58 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
 -- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
@@ -53,6 +53,9 @@ with verwag (l_eer, soort, naam) as (
     ('podcast.sql', 'beleid', 'public.episodes: read episodes'),
     ('finetunes.sql', 'beleid', 'public.finetunes: read own finetunes'),
     ('usage.sql', 'beleid', 'public.generations: read own generations'),
+    ('kinderplank.sql', 'beleid', 'public.kid_shelf: clear own shelf'),
+    ('kinderplank.sql', 'beleid', 'public.kid_shelf: read own shelf'),
+    ('kinderplank.sql', 'beleid', 'public.kid_shelf: write own shelf'),
     ('usage.sql', 'beleid', 'public.memberships: read own membership'),
     ('usage.sql', 'beleid', 'public.purchases: read own purchases'),
     ('posting.sql', 'beleid', 'public.scheduled_posts: read own scheduled posts'),
@@ -72,25 +75,30 @@ with verwag (l_eer, soort, naam) as (
     ('avatars.sql', 'beleid', 'storage.objects: delete own avatar'),
     ('cast.sql', 'beleid', 'storage.objects: delete own cast picture'),
     ('podcast.sql', 'beleid', 'storage.objects: delete own episodes audio'),
+    ('kinderplank.sql', 'beleid', 'storage.objects: delete own kidshelf'),
     ('video.sql', 'beleid', 'storage.objects: delete own videos file'),
     ('livevideo.sql', 'beleid', 'storage.objects: put own filmed video'),
     ('avatars.sql', 'beleid', 'storage.objects: read avatars'),
     ('podcast.sql', 'beleid', 'storage.objects: read episodes audio'),
     ('schema.sql', 'beleid', 'storage.objects: read own audio'),
     ('cast.sql', 'beleid', 'storage.objects: read own cast picture'),
+    ('kinderplank.sql', 'beleid', 'storage.objects: read own kidshelf'),
     ('video.sql', 'beleid', 'storage.objects: read own videos file'),
     ('schema.sql', 'beleid', 'storage.objects: replace own audio'),
     ('avatars.sql', 'beleid', 'storage.objects: replace own avatar'),
     ('cast.sql', 'beleid', 'storage.objects: replace own cast picture'),
     ('podcast.sql', 'beleid', 'storage.objects: replace own episodes audio'),
+    ('kinderplank.sql', 'beleid', 'storage.objects: replace own kidshelf'),
     ('schema.sql', 'beleid', 'storage.objects: write own audio'),
     ('avatars.sql', 'beleid', 'storage.objects: write own avatar'),
     ('cast.sql', 'beleid', 'storage.objects: write own cast picture'),
     ('podcast.sql', 'beleid', 'storage.objects: write own episodes audio'),
+    ('kinderplank.sql', 'beleid', 'storage.objects: write own kidshelf'),
     ('albumart.sql', 'emmer', 'art'),
     ('avatars.sql', 'emmer', 'avatars'),
     ('cast.sql', 'emmer', 'cast'),
     ('podcast.sql', 'emmer', 'episodes'),
+    ('kinderplank.sql', 'emmer', 'kidshelf'),
     ('schema.sql', 'emmer', 'tracks'),
     ('video.sql', 'emmer', 'videos'),
     ('afrikaans.sql', 'kolom', 'public.afrikaans_reports.heard'),
@@ -152,6 +160,7 @@ with verwag (l_eer, soort, naam) as (
     ('finetunes.sql', 'tabel', 'public.finetunes'),
     ('usage.sql', 'tabel', 'public.generations'),
     ('googlespend.sql', 'tabel', 'public.google_spend'),
+    ('kinderplank.sql', 'tabel', 'public.kid_shelf'),
     ('kinders.sql', 'tabel', 'public.kids_mode'),
     ('kits.sql', 'tabel', 'public.kits_minutes'),
     ('liveflags.sql', 'tabel', 'public.live_flags'),

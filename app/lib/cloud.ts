@@ -38,7 +38,16 @@ export function configured(): boolean {
   return Boolean(url && anonKey);
 }
 
-function getClient(): SupabaseClient | null {
+/**
+ * The one client this app talks to Supabase with.
+ *
+ * Exported since 9 October 2026, when the kids' shelves moved onto the
+ * account and `lib/cloudshelf.ts` needed both the tables and the bucket.
+ * `getStorageClient` below has always handed out half of this; a second
+ * `createClient` for the other half would be a second session, a second
+ * token refresh, and two ideas of who is signed in.
+ */
+export function getClient(): SupabaseClient | null {
   if (!configured()) return null;
   if (!client) client = createClient(url, anonKey);
   return client;

@@ -34,7 +34,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BookOpen, Loader2, Pause, Play, Trash2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
-import { allStories, forgetStory, type KeptStory } from '../lib/storykeep';
+import {
+  allStories, forgetStory, onAccount, onDevice, type KeptStory,
+} from '../lib/storykeep';
+import { moveShelf } from '../lib/shelfmove';
 
 export default function StoryShelf({
   grownUp = false,
@@ -61,7 +64,16 @@ export default function StoryShelf({
      megabytes held for as long as the tab is. */
   const urls = useRef<string[]>([]);
 
-  const look = useCallback(() => { void allStories().then(setShelf); }, []);
+  /* Anything still on this device goes up first, then the shelf is read.
+     Quietly: a grown-up opening this wants the shelf, not a report about
+     plumbing. `lib/shelfmove.ts` carries the reasoning, chiefly that nothing
+     is taken off the device until the account has confirmed it. */
+  const look = useCallback(() => {
+    void moveShelf(onDevice, onAccount)
+      .catch(() => ({ moved: 0, left: 0 }))
+      .then(() => allStories())
+      .then(setShelf);
+  }, []);
   useEffect(look, [look]);
 
   const letGo = useCallback(() => {

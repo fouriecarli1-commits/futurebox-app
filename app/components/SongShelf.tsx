@@ -30,7 +30,10 @@ import {
   Trash2, Waves,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
-import { allSongs, forgetSong, type KeptSong } from '../lib/songkeep';
+import {
+  allSongs, forgetSong, onAccount, onDevice, type KeptSong,
+} from '../lib/songkeep';
+import { moveShelf } from '../lib/shelfmove';
 
 /** The same pictures the room's own choices use, so a song looks like the
     thing it was made from rather than like a row in a list. */
@@ -57,7 +60,14 @@ export default function SongShelf({
   const audio = useRef<HTMLAudioElement | null>(null);
   const urls = useRef<string[]>([]);
 
-  const look = useCallback(() => { void allSongs().then(setShelf); }, []);
+  /* The device's songs go up before the first look. See `StoryShelf.tsx`,
+     which does the same for the same reason. */
+  const look = useCallback(() => {
+    void moveShelf(onDevice, onAccount)
+      .catch(() => ({ moved: 0, left: 0 }))
+      .then(() => allSongs())
+      .then(setShelf);
+  }, []);
   useEffect(look, [look, again]);
 
   useEffect(() => () => {

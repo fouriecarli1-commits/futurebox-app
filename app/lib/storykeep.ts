@@ -53,12 +53,16 @@
  * fault where a record points at a blob that is no longer there.
  */
 
-import { shelfOf, type Put } from './ondevice';
+import { cloudShelfOf } from './cloudshelf';
+import { shelfOf, type Put, type Shelf } from './ondevice';
 
-/* Unchanged since the shelf shipped. A new name here is every story kept
-   before today quietly disappearing, with the shelf reporting nothing wrong. */
-const DB_NAME = 'futurebox-stories';
-const SHELF = 'stories';
+/* The device shelf these were kept on before 9 October. Not written to any
+   more — `lib/shelfmove.ts` reads it once, carries what is there up to the
+   account, and empties it. The names must not change while anything could
+   still be sitting in it: a rename is every story kept before today quietly
+   gone, with the shelf reporting nothing wrong. */
+export const OLD_DB = 'futurebox-stories';
+export const OLD_STORE = 'stories';
 
 /**
  * How many stories one device holds.
@@ -96,12 +100,65 @@ export function titleOf(firstPage: string): string {
   return words.replace(/[,;:.!?]+$/, '') || 'A story';
 }
 
-const shelf = shelfOf<KeptStory>({
-  database: DB_NAME,
-  store: SHELF,
+/** The shelf these used to live on, for `shelfmove.ts` to empty. */
+export const onDevice: Shelf<KeptStory> = shelfOf<KeptStory>({
+  database: OLD_DB,
+  store: OLD_STORE,
   most: MOST_STORIES,
   /* A story with no pages is a half-written row, not a story. */
   sound: (one) => Array.isArray(one.pages) && one.pages.length > 0,
+});
+
+interface StoryBody {
+  readonly pages: readonly {
+    readonly text: string;
+    readonly picture: string;
+    readonly audio: string;
+    readonly seconds: number;
+  }[];
+}
+
+/**
+ * The shelf itself: on the account.
+ *
+ * Carli, 9 October 2026: *"Skuif die stories en liedjies na die server
+ * toe."* A story made on a laptop was not on the phone's shelf, because it
+ * was never anywhere but the laptop.
+ *
+ * Two files a page, named by their page number so a story keeps its order
+ * without the names carrying anything else. `check:plankserver` drives the
+ * naming, because a page mis-numbered here is a book whose pictures and
+ * readings belong to different pages — which plays, and is wrong.
+ */
+const shelf = cloudShelfOf<KeptStory, StoryBody>({
+  kind: 'story',
+  most: MOST_STORIES,
+  files: (one) => one.pages.flatMap((page, i) => [
+    { name: `page-${i}-picture`, blob: page.picture },
+    { name: `page-${i}-audio`, blob: page.audio },
+  ]),
+  body: (one, at) => ({
+    pages: one.pages.map((page, i) => ({
+      text: page.text,
+      picture: at(`page-${i}-picture`),
+      audio: at(`page-${i}-audio`),
+      seconds: page.seconds,
+    })),
+  }),
+  back: async (row, file) => {
+    const rows = row.body?.pages ?? [];
+    if (!rows.length) return null;
+    const pages: KeptPage[] = [];
+    for (const page of rows) {
+      const [picture, audio] = await Promise.all([file(page.picture), file(page.audio)]);
+      /* A page missing either half is a book that opens to a broken picture
+         or turns in silence. The whole story is skipped rather than shown
+         with a hole in it. */
+      if (!picture || !audio) return null;
+      pages.push({ text: page.text, picture, audio, seconds: Number(page.seconds) || 0 });
+    }
+    return { id: row.id, title: row.title, made: row.made, pages };
+  },
 });
 
 /**
@@ -111,6 +168,9 @@ const shelf = shelfOf<KeptStory>({
  * a failed save is nothing: a book that was paid for and did not save is a
  * sentence somebody needs to read while the tab is still open.
  */
+/** The account's shelf, for `shelfmove.ts` to fill. */
+export const onAccount: Shelf<KeptStory> = shelf;
+
 export const keepStory = (story: KeptStory): Promise<Put> => shelf.keep(story);
 
 /** Everything on the shelf, newest first. */
