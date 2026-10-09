@@ -1799,6 +1799,53 @@ export default function VideoEditor({
     }
   };
 
+/**
+ * The frame, shrunk to something a request body can carry.
+ *
+ * ── Why this exists at all ────────────────────────────────────────────
+ *
+ * Nano Banana draws at 2K because a photograph handed back at 1024 across is
+ * visibly softened. A 2048-wide PNG of a real scene is megabytes, and it then
+ * has to travel to `/api/video` as base64 inside JSON — a third longer again.
+ * The platform stops a body at about 4.5 MB before any route runs, and what
+ * comes back is a bare 413 with nothing readable in it.
+ *
+ * So the frame that LEAVES is not the frame she looked at. A start frame is a
+ * reference for composition, palette and subject — the engine renders its own
+ * output at its own size — so 1280 across is as useful as 2048 and a fraction
+ * of the bytes.
+ *
+ * JPEG rather than PNG, deliberately: a drawn scene is photographic, JPEG at
+ * nine-tenths is a few hundred kilobytes where the PNG is several megabytes,
+ * and a start frame has no transparency to lose.
+ *
+ * The one she sees in the panel is untouched. This is only what is posted.
+ */
+const LONG_SIDE = 1280;
+
+async function smallerFrame(url: string): Promise<string> {
+  const img = await new Promise<HTMLImageElement>((done, fail) => {
+    const one = new Image();
+    one.onload = () => done(one);
+    one.onerror = () => fail(new Error('frame'));
+    one.src = url;
+  });
+  const wide = img.naturalWidth || img.width;
+  const tall = img.naturalHeight || img.height;
+  const biggest = Math.max(wide, tall);
+  /* Already small enough is left exactly as it is. Re-encoding a small
+     picture costs quality for nothing. */
+  if (biggest <= LONG_SIDE) return url;
+  const scale = LONG_SIDE / biggest;
+  const sheet = document.createElement('canvas');
+  sheet.width = Math.round(wide * scale);
+  sheet.height = Math.round(tall * scale);
+  const ctx = sheet.getContext('2d');
+  if (!ctx) return url;
+  ctx.drawImage(img, 0, 0, sheet.width, sheet.height);
+  return sheet.toDataURL('image/jpeg', 0.9);
+}
+
   /** Start the clip. The frame goes with it; the words say what moves. */
   const makeItMove = async (): Promise<void> => {
     const words = shotWords.trim();
@@ -1822,7 +1869,7 @@ export default function VideoEditor({
              app's own voices are Afrikaans and the video models are
              English-first, so the line is laid over afterwards. */
           speak: false,
-          image: shotPic,
+          image: await smallerFrame(shotPic),
         }),
       });
       const said = (await answer.json().catch(() => ({}))) as { id?: string; message?: string };

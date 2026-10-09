@@ -88,7 +88,27 @@ interface Body {
 
 /** What a start frame may be, and how big. */
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
+/**
+ * Three megabytes of PICTURE, which is four of body.
+ *
+ * ── It was four, and four was a promise the edge breaks ────────────────
+ *
+ * The size below is measured on the decoded bytes, which is right — base64
+ * runs a third longer and a limit applied to the text is a limit on
+ * something else. But the PLATFORM's wall is on the body, and the body is
+ * the base64. Four megabytes of picture is 5.3 on the wire, past the 4.5
+ * the edge carries, so a picture this route had just promised to accept
+ * would have been refused at the door with a bare 413 and no sentence in
+ * it — the exact fault `check:bodylimit` exists for, in a route whose own
+ * ceiling looked safe.
+ *
+ * Three leaves room for the prompt and the rest of the JSON beside it.
+ *
+ * It did not bite until the cutting room started sending a drawn frame on
+ * 9 October 2026, and it was found by extending the check rather than by
+ * the check catching it. The check compares against what travels now.
+ */
+const IMAGE_MAX_BYTES = 3 * 1024 * 1024;
 
 type Attached =
   | { readonly ok: true; readonly image?: { data: string; mime: string } }
@@ -124,7 +144,7 @@ function readImage(raw: string | undefined): Attached {
   if (bytes > IMAGE_MAX_BYTES) {
     return {
       ok: false,
-      message: 'That picture is over 4 MB. A smaller one works just as well as a start frame.',
+      message: 'That picture is over 3 MB. A smaller one works just as well as a start frame.',
     };
   }
 

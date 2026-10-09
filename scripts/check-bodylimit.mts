@@ -141,7 +141,28 @@ function routeFiles(dir = 'app/api', found: string[] = []): string[] {
 for (const path of routeFiles()) {
   const source = withoutComments(readFileSync(path, 'utf8'));
   const ceiling = ceilingOf(source);
-  if (!ceiling || ceiling.bytes <= PLATFORM) continue;
+  if (!ceiling) continue;
+
+  /* ── A ceiling measured AFTER decoding is not a ceiling on the body ──
+
+     `/api/video` takes its start frame as a data URL and measures the
+     DECODED bytes — correctly, because base64 runs a third longer and a
+     limit applied to the text is a limit on something else. Its own comment
+     says exactly that.
+
+     But the platform's wall is on the BODY, which is the base64. So a route
+     declaring four megabytes of picture is declaring 5.3 megabytes on the
+     wire, and this loop skipped it because four is under four and a half.
+     Green, and wrong, and the route would have answered a bare 413 for a
+     picture it had just promised to accept.
+
+     Found on 9 October 2026, an hour after the cutting room started sending
+     a drawn frame to that route — which is to say: found because somebody
+     used it, not because this check caught it. So the comparison is made on
+     what actually travels. */
+  const takesBase64 = /;base64,/.test(source) && /\* 3\) \/ 4|\* 3 \/ 4/.test(source);
+  const onTheWire = takesBase64 ? Math.ceil((ceiling.bytes * 4) / 3) : ceiling.bytes;
+  if (onTheWire <= PLATFORM) continue;
 
   const name = path.replace(/^app\/api\//, '/api/').replace(/\/route\.ts$/, '');
   /* `audioFrom` is the shared intake for one file and `audioListFrom` for
@@ -157,8 +178,12 @@ for (const path of routeFiles()) {
   ok(`  ${name} claims ${megabytes(ceiling.bytes)} and can receive it`, takesKey,
     takesKey
       ? 'takes a storage key as well as a posted file'
-      : `${ceiling.name} is ${megabytes(ceiling.bytes)}, the platform stops at `
-        + `${megabytes(PLATFORM)} — everything past that is a bare 413`);
+      : `${ceiling.name} is ${megabytes(ceiling.bytes)}`
+        + (takesBase64
+          ? `, which is ${megabytes(onTheWire)} once base64 has run a third longer`
+          : '')
+        + `, and the platform stops at ${megabytes(PLATFORM)} — everything`
+        + ' past that is a bare 413');
 }
 
 /* And the browser has to actually use the second door, or it is one nobody
