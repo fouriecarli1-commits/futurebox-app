@@ -28,13 +28,32 @@
  * That is also why the room is gated on a plan rather than on credits. It
  * costs nothing to run and it is worth paying for, which is exactly the shape
  * `credits.ts` describes: entering a room is included, generating in it costs
- * credits. There is nothing to generate here yet.
+ * credits.
+ *
+ * ── And since 9 October 2026 there IS one thing to generate ─────────────
+ *
+ * *Make a shot*: words into a frame (Nano Banana, five credits), the frame
+ * changed by saying what to change until it is right, and then the frame
+ * animated once (Veo, fifteen credits and up). It is the only thing in this
+ * room that costs anything, it says so on its own buttons, and the sentence
+ * above stays true of everything else.
+ *
+ * Two presses and not one, because `video/types.ts` is right that text alone
+ * is the expensive way to get a look: every near-miss is charged. Five
+ * credits a try to settle the picture, then pay once for the motion.
  *
  * ── The three things she asked for that are NOT here ─────────────────────
  *
  * Taking a background out, taking an item out, and generating a missing
  * piece. All three need an engine — fal.ai for the first two — and all three
  * are priced in `credits.ts` and named on every plan card.
+ *
+ * *Make a shot* above is NOT one of them, and the difference is the reason it
+ * could be built while these three still cannot: those three send HER
+ * FOOTAGE to a supplier — video of a person — and that is what needs the
+ * privacy-page line and the POPIA section 72 answer below. Nothing from the
+ * clock is ever sent by *Make a shot*. What leaves is words, and a picture
+ * this app drew from those words seconds earlier.
  *
  * They are doors that say so rather than buttons that lie. The reason they
  * are not wired tonight is not that the code is hard: it is that the legal
@@ -57,6 +76,17 @@ import Pictures from './Pictures';
 import DeskSheet from './BoothCard';
 import KeepVideo from './KeepVideo';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
+
+/**
+ * The small control in the make-a-shot panel.
+ *
+ * Written out once rather than repeated nine times, and 44 pixels tall like
+ * every other control in this room — a 36-pixel button in a bench of 44s is
+ * the one thing that does not read as a control, which is a fault this
+ * project has already fixed once in the photo room.
+ */
+const SMALL = 'min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2'
+  + ' text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600';
 import { BAR, BAR_TIGHT, ROW2, ROW3, ROW5, SLIDE } from '../lib/benchbar';
 import { STARTS, dressed } from '../lib/filmstart';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
@@ -100,7 +130,7 @@ import { keepFilm, loadFilm } from '../lib/filmkeep';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { check, type Plan } from '../lib/entitlements';
-import { CREDITS, perMinute } from '../lib/credits';
+import { CREDITS, creditsSaid, perMinute, videoCost, type VideoGrade } from '../lib/credits';
 import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
@@ -1628,6 +1658,188 @@ export default function VideoEditor({
      need a second copy of the length check, the decode, or the `holds` note
      below — a second copy is how the two ways in end up disagreeing about
      what a clip is. */
+  /* ── Making a shot, which is the one paid thing in this room ────────
+
+     Everything else here is free and runs in this browser. This is not, and
+     the panel says so where it is pressed rather than in a footnote.
+
+     ── Why this does not break the rule the room was built on ───────────
+
+     The header above says the three generating things are not wired because
+     *"a supplier receiving video of a person needs a line on the privacy
+     page and an answer about POPIA section 72 before a single frame is
+     sent."* That rule is about HER FOOTAGE going out — taking a background
+     off a clip of a person, taking an item out of one.
+
+     Nothing of the member's goes out here. What leaves is words, and then a
+     picture this app drew from those words seconds earlier. No clip from the
+     clock is ever sent. The distinction is the whole reason this can be
+     built tonight and the other three still cannot.
+
+     Google is on the privacy page as of 9 October 2026, with what it
+     receives and a section 72 basis, and `check:verwerkers` holds that. */
+  const [shotWords, setShotWords] = useState('');
+  const [shotPic, setShotPic] = useState<string | null>(null);
+  const [shotBusy, setShotBusy] = useState<'' | 'draw' | 'move'>('');
+  const [shotJob, setShotJob] = useState<string | null>(null);
+  const [shotReady, setShotReady] = useState<string | null>(null);
+  const [shotSaid, setShotSaid] = useState('');
+  const [shotSeconds, setShotSeconds] = useState<4 | 6 | 8>(4);
+  const [shotGrade, setShotGrade] = useState<VideoGrade>('standard');
+
+  /**
+   * Ask how the clip is going, until it is going no more.
+   *
+   * ── It asks; it does not put anything anywhere ───────────────────────
+   *
+   * When the clip is done this sets a url and stops. It does NOT drop the
+   * clip onto the clock, and that is deliberate twice over.
+   *
+   * `check:onlyonpress` is the rule — every file that reaches a device comes
+   * from a press — and an effect that quietly added a clip while she was
+   * cutting something else would be the exact shape that rule forbids. It is
+   * also simply better: a clip that cost fifteen credits is worth looking at
+   * before it lands in the middle of her film.
+   *
+   * Five seconds between asks, and the interval is torn down on unmount so a
+   * room that has been closed stops asking.
+   */
+  useEffect(() => {
+    if (!shotJob) return undefined;
+    let stopped = false;
+    const ask = async (): Promise<void> => {
+      try {
+        const token = await accessToken();
+        const answer = await fetch(`/api/video?id=${encodeURIComponent(shotJob)}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const said = (await answer.json().catch(() => ({}))) as
+          { state?: string; url?: string; message?: string };
+        if (stopped) return;
+        if (said.state === 'done' && said.url) {
+          setShotReady(said.url);
+          setShotJob(null);
+          setShotSaid(t('edit.shotDone', 'Ready. Look at it, then put it on the clock.'));
+        } else if (said.state === 'failed') {
+          setShotJob(null);
+          setShotSaid(said.message
+            ?? t('edit.shotFailedMake', 'The engine could not make that one. The credits have been given back.'));
+        }
+      } catch {
+        /* A blip is not a failure. The route refunds on a real failure, and
+           a refund fired by a lost connection would pay twice. */
+      }
+    };
+    void ask();
+    const every = window.setInterval(() => { void ask(); }, 5_000);
+    return () => { stopped = true; window.clearInterval(every); };
+  }, [shotJob, t]);
+
+
+  /**
+   * Draw the frame, or change the one that is drawn.
+   *
+   * ── Why a picture first, and not straight to video ───────────────────
+   *
+   * `lib/server/video/types.ts` already argues it: *"Text alone is the
+   * expensive way to get a specific look: you describe the thing, the engine
+   * draws something adjacent, you describe it again, and every attempt is
+   * charged. A start frame settles the subject, the palette and the framing
+   * in one go, so the prompt only has to say what MOVES."*
+   *
+   * A picture is five credits and a clip is fifteen and up. So the look is
+   * settled here, as many times as it takes, and the motion is paid for
+   * once. That is the whole shape of this panel and it is why the two
+   * buttons are not one.
+   */
+  const drawFrame = async (): Promise<void> => {
+    const words = shotWords.trim();
+    if (!words || shotBusy) return;
+    setShotBusy('draw');
+    setShotSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/google/picture', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          words,
+          /* Changing the frame that is there, where there is one — the cheap
+             path. `shotPic` is a data URL, so the preamble comes off. */
+          ...(shotPic
+            ? { from: { data: shotPic.slice(shotPic.indexOf(',') + 1), mime: 'image/png' } }
+            : { aspect: '16:9' }),
+        }),
+      });
+      if (!answer.ok) {
+        const why = (await answer.json().catch(() => ({}))) as { message?: string };
+        setShotSaid(why.message
+          ?? `${t('edit.shotFailed', 'That frame could not be drawn.')} (${answer.status})`);
+        return;
+      }
+      const blob = await answer.blob();
+      const reader = new FileReader();
+      reader.onload = () => {
+        setShotPic(String(reader.result));
+        /* A new frame means the clip that was made from the old one is not
+           this one any more. Leaving it would offer her a clip of a picture
+           she has just replaced. */
+        setShotReady(null);
+        setShotSaid(t('edit.shotDrawn', 'Drawn. Say what to change and press again, or make it move.'));
+      };
+      reader.onerror = () => setShotSaid(t('edit.shotUnreadable', 'What came back could not be read as a picture.'));
+      reader.readAsDataURL(blob);
+    } catch {
+      setShotSaid(t('edit.shotOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setShotBusy('');
+    }
+  };
+
+  /** Start the clip. The frame goes with it; the words say what moves. */
+  const makeItMove = async (): Promise<void> => {
+    const words = shotWords.trim();
+    if (!shotPic || !words || shotBusy) return;
+    setShotBusy('move');
+    setShotSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          prompt: words,
+          aspect: '16:9',
+          seconds: shotSeconds,
+          grade: shotGrade,
+          /* Silent on purpose, and it is not a saving to be sorry about: the
+             app's own voices are Afrikaans and the video models are
+             English-first, so the line is laid over afterwards. */
+          speak: false,
+          image: shotPic,
+        }),
+      });
+      const said = (await answer.json().catch(() => ({}))) as { id?: string; message?: string };
+      if (!answer.ok || !said.id) {
+        setShotSaid(said.message
+          ?? `${t('edit.shotNoStart', 'That clip could not be started.')} (${answer.status})`);
+        return;
+      }
+      setShotJob(said.id);
+      setShotSaid(t('edit.shotMaking', 'Making it. This takes a minute or two — you can carry on cutting while it runs.'));
+    } catch {
+      setShotSaid(t('edit.shotOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setShotBusy('');
+    }
+  };
+
   const bringIn = useCallback(async (
     files: FileList | readonly File[] | null,
     /* Where this material came from, carried from the door rather than
@@ -3003,6 +3215,169 @@ export default function VideoEditor({
                   onChange={(event) => { void bringIn(event.target.files); event.target.value = ''; }}
                 />
               </label>
+
+              {/* ── Make a shot, which is the one paid thing in this room ──
+
+                  Everything else here is free and runs in this browser. This
+                  is not, and the price is on the button rather than in a
+                  footnote.
+
+                  Two buttons and not one, on purpose. `video/types.ts` says
+                  why: text alone is the expensive way to get a look, because
+                  every near-miss is charged. A frame is five credits and a
+                  clip is fifteen and up — so the look is settled as many
+                  times as it takes, and the motion is paid for once. */}
+              <div data-editorshot className="rounded-xl border p-3 space-y-2"
+                style={{ borderColor: 'rgba(16,185,129,0.28)', background: 'rgba(16,185,129,0.05)' }}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: INK_DIM }}>
+                  {t('edit.shotTitle', 'Make a shot')}
+                </div>
+                <textarea
+                  data-editorshotwords
+                  value={shotWords}
+                  onChange={(event) => setShotWords(event.target.value)}
+                  rows={2}
+                  maxLength={500}
+                  placeholder={t('edit.shotHint', 'A konsertina on a stoep at sunset. The curtain moves in the wind.')}
+                  className="w-full rounded-lg border border-zinc-800 bg-black/30 p-2.5 text-[13px] leading-relaxed outline-none focus:border-emerald-500/60"
+                  style={{ color: INK }}
+                />
+                {shotPic && (
+                  /* A plain `<img>`, with the lint rule turned off for this
+                     one line and the reason here rather than nowhere.
+
+                     `next/image` exists to optimise and size images it can
+                     fetch. This one is a data URL that was drawn four
+                     seconds ago, lives only in this component's state, and
+                     is thrown away the moment she presses "Change the
+                     frame" — there is nothing to optimise and no URL to
+                     optimise it from. The alternative that passes the rule
+                     is a `background-image` on a div, which would cost the
+                     alt text, and a picture somebody paid five credits for
+                     ought to be describable to a screen reader. */
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={shotPic}
+                    alt={t('edit.shotFrame', 'The frame that was drawn')}
+                    data-editorshotframe
+                    className="w-full rounded-lg border border-zinc-800"
+                  />
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    data-editorshotdraw
+                    disabled={Boolean(shotBusy) || !shotWords.trim()}
+                    onClick={() => { void drawFrame(); }}
+                    className={`${SMALL} disabled:opacity-40`}
+                  >
+                    {shotBusy === 'draw'
+                      ? t('edit.shotDrawing', 'Drawing…')
+                      : `${shotPic ? t('edit.shotAgain', 'Change the frame') : t('edit.shotDraw', 'Draw the frame')} · ${creditsSaid(CREDITS.repaint, t)}`}
+                  </button>
+                  {shotPic && (
+                    <button
+                      type="button"
+                      data-editorshotdrop
+                      onClick={() => { setShotPic(null); setShotReady(null); setShotSaid(''); }}
+                      className={SMALL}
+                    >
+                      {t('edit.shotStart', 'Start over')}
+                    </button>
+                  )}
+                </div>
+                {shotPic && (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {([4, 6, 8] as const).map((many) => (
+                        <button
+                          key={many}
+                          type="button"
+                          data-editorshotseconds={many}
+                          aria-pressed={shotSeconds === many}
+                          onClick={() => setShotSeconds(many)}
+                          className={`${SMALL} ${shotSeconds === many ? 'border-emerald-400 text-emerald-200' : ''}`}
+                        >
+                          {t('edit.shotSeconds', '{n} sec').replace('{n}', String(many))}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(['standard', 'better', 'premium'] as const).map((rung) => (
+                        <button
+                          key={rung}
+                          type="button"
+                          data-editorshotgrade={rung}
+                          aria-pressed={shotGrade === rung}
+                          onClick={() => setShotGrade(rung)}
+                          className={`${SMALL} ${shotGrade === rung ? 'border-emerald-400 text-emerald-200' : ''}`}
+                        >
+                          {rung === 'standard'
+                            ? t('edit.gradeStandard', 'Good')
+                            : rung === 'better' ? t('edit.gradeBetter', 'Better') : t('edit.gradePremium', 'Best')}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      data-editorshotmove
+                      disabled={Boolean(shotBusy) || Boolean(shotJob) || !shotWords.trim()}
+                      onClick={() => { void makeItMove(); }}
+                      className={`${SMALL} disabled:opacity-40`}
+                    >
+                      {shotJob
+                        ? t('edit.shotMakingShort', 'Making it…')
+                        : `${t('edit.shotMove', 'Make it move')} · ${creditsSaid(videoCost(shotGrade, shotSeconds), t)}`}
+                    </button>
+                  </>
+                )}
+                {shotReady && (
+                  <>
+                    <video
+                      src={shotReady}
+                      data-editorshotclip
+                      controls
+                      playsInline
+                      className="w-full rounded-lg border border-zinc-800"
+                    />
+                    {/* The press that puts it on the clock. Never an effect —
+                        see the note on the poll above. */}
+                    <button
+                      type="button"
+                      data-editorshotkeep
+                      onClick={() => {
+                        const url = shotReady;
+                        void (async () => {
+                          try {
+                            const got = await fetch(url);
+                            const blob = await got.blob();
+                            const file = new File([blob], 'made-shot.mp4', { type: blob.type || 'video/mp4' });
+                            await bringIn([file], 'made');
+                            setShotReady(null);
+                            setShotSaid(t('edit.shotOnClock', 'On the clock. Draw another frame to make the next one.'));
+                          } catch {
+                            setShotSaid(t('edit.shotNoKeep', 'That clip could not be put on the clock. It is still in your videos.'));
+                          }
+                        })();
+                      }}
+                      className={SMALL}
+                    >
+                      {t('edit.shotKeep', 'Put it on the clock')}
+                    </button>
+                  </>
+                )}
+                {shotSaid && (
+                  <p data-editorshotsaid className="text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
+                    {shotSaid}
+                  </p>
+                )}
+                <p className="text-[11px] leading-relaxed" style={{ color: INK_DIM }}>
+                  {t(
+                    'edit.shotWhat',
+                    'This is the only thing in this room that costs credits. Draw a frame until it looks right — five credits a try — then pay once to make it move. Nothing of your own footage is sent anywhere: what leaves is your words and the frame this app just drew from them.',
+                  )}
+                </p>
+              </div>
 
               <button
                 type="button"

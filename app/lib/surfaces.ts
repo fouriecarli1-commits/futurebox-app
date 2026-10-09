@@ -448,7 +448,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     id: "videoedit",
     stage: "show",
     purpose:
-      "The cutting room: their own footage on a clock, trimmed, split, reordered, faded, with words set on the picture, and put together in the browser. All of the cutting is free and unlimited, on every plan including the free one, because it runs on their own device. Putting the finished film together is what costs, and the room shows an itemised bill before it charges. The three that need an engine (taking a background out, taking an item out, generating a missing piece) are doors that say so. Do not offer to write a shot list here; that is the video desk.",
+      "The cutting room: their own footage on a clock, trimmed, split, reordered, faded, with words set on the picture, and put together in the browser. All of the cutting is free and unlimited, on every plan including the free one, because it runs on their own device. One thing in the room is not free: Make a shot, which draws a frame from a sentence and then makes that frame move, and which says what it costs on its own buttons. Putting the finished film together is what costs, and the room shows an itemised bill before it charges. The three that need an engine (taking a background out, taking an item out, generating a missing piece) are doors that say so. Do not offer to write a shot list here; that is the video desk.",
     helps: {
       en: "I can tell you what each control does, but the cutting is yours \u2014 nothing in this room asks me to do anything.",
       af: "Ek kan jou s\u00ea wat elke kontrole doen, maar die sny is joune \u2014 niks in hierdie kamer vra my om iets te doen nie.",
