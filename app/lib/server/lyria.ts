@@ -24,7 +24,7 @@
  * list both get shorter.
  */
 
-import { CHOSEN, addressOf, configured } from './google';
+import { CHOSEN, configured, interactionsAddress } from './google';
 
 /** Where the audio was found, so the guessing can stop after the first song. */
 export let foundUnder: string | null = null;
@@ -51,6 +51,35 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
 export function audioIn(body: unknown): { base64: string; under: string } | null {
   const top = asRecord(body);
   if (!top) return null;
+  /* ── `outputs`, and the row that calls itself audio ────────────────
+ 
+     Measured, at last. Carli's own Model Garden page, 9 October 2026:
+ 
+       { "status": "completed",
+         "outputs": [ { "text": "LYRICS", "type": "text" },
+                      { "text": "DESCRIPTION", "type": "text" },
+                      { "mime_type": "", "data": "…", "type": "audio" } ] }
+ 
+     So the song is in `outputs`, under `data`, in the row whose `type` is
+     `audio` — and the list also carries the WORDS and a description, which
+     is a feature nobody here knew about.
+ 
+     Picking by `type` rather than by taking the first long string matters:
+     the lyrics are a long string too, and a reader that grabbed the longest
+     field would hand somebody a .wav full of text. */
+  const outputs = Array.isArray(top.outputs) ? top.outputs : null;
+  if (outputs) {
+    for (const one of outputs) {
+      const row = asRecord(one);
+      if (!row || row.type !== 'audio') continue;
+      const got = row.data;
+      if (typeof got === 'string' && got.length > 512) return { base64: got, under: 'outputs[audio].data' };
+    }
+  }
+  /* The older shapes, kept as a fallback. `lyria-002` is a publisher model
+     on `:predict` and answers differently, and a project that has that one
+     and not the new one should still make a song rather than meet a reader
+     that only knows one API. */
   const list = Array.isArray(top.predictions) ? top.predictions
     : Array.isArray(top.candidates) ? top.candidates
       : [top];
@@ -66,6 +95,25 @@ export function audioIn(body: unknown): { base64: string; under: string } | null
     }
   }
   return null;
+}
+
+/**
+ * The words Lyria wrote, when it wrote any.
+ *
+ * Her page shows the model answering with LYRICS and a DESCRIPTION beside
+ * the audio. This app has never asked for either and has a whole lyric desk
+ * of its own, so nothing acts on them yet — but they are read out here
+ * rather than thrown away, because "the engine also sends the words" is a
+ * fact worth having in one place when somebody wants them.
+ */
+export function wordsIn(body: unknown): string[] {
+  const top = asRecord(body);
+  const outputs = top && Array.isArray(top.outputs) ? top.outputs : [];
+  return outputs
+    .map((one) => asRecord(one))
+    .filter((row): row is Record<string, unknown> => Boolean(row) && row?.type === 'text')
+    .map((row) => (typeof row.text === 'string' ? row.text : ''))
+    .filter(Boolean);
 }
 
 export type Made =
@@ -88,21 +136,42 @@ export async function makeSong(
   if (!configured()) {
     return { ok: false, status: 503, message: 'The music engine is not switched on yet.' };
   }
+  /* ── The interactions API, which is not the publisher one ──────────
+ 
+     From her own Model Garden page, 9 October 2026. The model goes in the
+     BODY, the input is a list of typed parts, and the address has no model
+     in it at all:
+ 
+       POST …/v1beta1/projects/{project}/locations/global/interactions
+       { "model": "lyria-3-pro-preview",
+         "input": [ { "type": "text", "text": "…" } ] }
+ 
+     `negative` and `seed` are dropped here rather than carried over from
+     the `:predict` shape: nothing on her page shows where they go, and a
+     field invented to look thorough is a 400 on the first real song, or
+     worse, silently ignored while the booth believes it asked.
+ 
+     `negative` mattered — it is how an instrumental is asked for — so it is
+     folded into the words instead, which is the one place her page shows
+     text going. Said out loud because it is a downgrade, not a translation.
+ 
+     The curl on her page signs with `gcloud auth print-access-token`, an
+     OAuth token, not an API key. Whether this endpoint takes the key this
+     app holds is the one thing still unmeasured, and the first real song
+     settles it: a 401 saying "API keys are not supported" is that answer,
+     and it is a different fix from anything here. */
+  const words = negative ? `${prompt}\n\nAvoid: ${negative}` : prompt;
   let response: Response;
   try {
-    response = await fetch(addressOf(model, 'predict'), {
+    response = await fetch(interactionsAddress(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': process.env.GOOGLE_VERTEX_KEY ?? '',
       },
       body: JSON.stringify({
-        instances: [{
-          prompt,
-          ...(negative ? { negative_prompt: negative } : {}),
-          ...(seed === undefined ? {} : { seed }),
-        }],
-        parameters: { sample_count: 1 },
+        model,
+        input: [{ type: 'text', text: words }],
       }),
     });
   } catch {

@@ -18,7 +18,7 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { before } from './order.mts';
-import { FIELDS, audioIn } from '../app/lib/server/lyria.ts';
+import { FIELDS, audioIn, wordsIn } from '../app/lib/server/lyria.ts';
 import { cannot, promptFor } from '../app/lib/server/lyriaprompt.ts';
 import { CHOSEN, COSTS } from '../app/lib/server/google.ts';
 import { CREDITS } from '../app/lib/credits.ts';
@@ -31,6 +31,43 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 
 /** Long enough that the reader will accept it as audio rather than a word. */
 const SONG = 'U'.repeat(900);
+
+/* ── 0. The shape her own console shows ───────────────────────────────── */
+
+/* Measured at last, 9 October 2026, off Carli's Model Garden page. Every
+   assertion below this used to be about shapes I had guessed at; this one is
+   about the shape that actually arrives, and it is first because it is the
+   only one with evidence behind it. */
+const HERS = {
+  status: 'completed',
+  outputs: [
+    { text: 'LYRICS', type: 'text' },
+    { text: 'DESCRIPTION', type: 'text' },
+    { mime_type: '', data: SONG, type: 'audio' },
+    {},
+  ],
+  role: 'model',
+  object: 'interaction',
+  model: 'lyria-3-pro-preview',
+};
+
+ok('the song is found in the shape her console actually shows',
+  audioIn(HERS)?.base64 === SONG,
+  'this is the one shape that is not a guess');
+
+ok('  and it is taken from the row that calls itself audio',
+  audioIn(HERS)?.under === 'outputs[audio].data',
+  `${audioIn(HERS)?.under} — the lyrics are a long string too, so a reader`
+  + ' that took the longest field would hand somebody a .wav full of words');
+
+ok('  and the words it wrote are read out rather than thrown away',
+  wordsIn(HERS).join('|') === 'LYRICS|DESCRIPTION',
+  `${wordsIn(HERS).join('|')} — the engine sends the lyrics and a description`
+  + ' beside the audio, which nobody here knew until she pasted it');
+
+ok('  and an outputs list with no audio row is not a song',
+  audioIn({ outputs: [{ text: SONG, type: 'text' }] }) === null,
+  'a text output as long as a song is still text');
 
 /* ── 1. Every shape the audio might come back in ──────────────────────── */
 

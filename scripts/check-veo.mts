@@ -112,15 +112,63 @@ ok('the ceiling is the one Google number, not a second copy of it',
   + ' stale one. Raising GOOGLE_CAP_VIDEO has to raise this or the variable'
   + ' is decoration');
 
-ok('a clip costs what Google charges a second, in micro-dollars',
-  googleVeo.cost(8) === 640_000 && googleVeo.cost(4) === 320_000,
-  `${googleVeo.cost(8)} for eight seconds — $0.08 a second video-only, which`
-  + ' is $0.64, which is 640 000 millionths');
+/* ── These two pinned a model her project does not have ─────────────────
+ 
+   Until 9 October 2026 the app ran `veo-3.1-fast-generate-001` at $0.08 a
+   second, and this asserted both. Carli opened Model Garden on her own
+   project and its Veo page says `veo-3.0-generate-001` in every line —
+   start, operation name and poll. The 3.1 ids were a number off a web page.
+ 
+   So the chosen model is now the one with evidence behind it, which is the
+   FULL one, and the rate moved with it. The rule is no longer "pick the
+   cheap one" — it is the thing that rule was protecting: **the rate counted
+   must be the rate of the model actually run**, whichever that is. A rate
+   belonging to a different model is a ceiling measuring the wrong thing. */
 
-ok('  and the cheap model is the one it runs',
-  googleVeo.model === CHOSEN.video && CHOSEN.video.includes('fast'),
-  `${googleVeo.model} — $0.08 a second against $0.20, and CREDITS.video has`
-  + ' one cent of margin');
+const RATES: Record<string, number> = {
+  'veo-3.1-fast-generate-001': 80_000,
+  'veo-3.1-generate-001': 200_000,
+  'veo-3.0-generate-001': 200_000,
+  /* Seen on her console but never priced. Counted at the dear figure so a
+     switch to it cannot quietly undercount; over-counting makes our own
+     ceiling bind early, which is an annoyance, and under-counting is a bill
+     nobody saw coming. This file was already out by a factor of a thousand
+     once, in exactly this spot. */
+  'veo-3.1-lite-generate-001': 200_000,
+};
+
+const rate = RATES[CHOSEN.video];
+ok('the model it runs has a rate written down',
+  typeof rate === 'number',
+  `${CHOSEN.video} — a model with no rate beside it is a clip counted at`
+  + " somebody's guess");
+
+ok('  and the cost it counts is that rate, multiplied out',
+  rate !== undefined
+  && googleVeo.cost(8) === rate * 8 && googleVeo.cost(4) === rate * 4,
+  `${googleVeo.cost(8)} for eight seconds, where ${CHOSEN.video} is`
+  + ` ${rate} a second, so eight is ${(rate ?? 0) * 8}. The first version of`
+  + ' this file was out by a thousand in exactly this spot');
+
+ok('  and the model the provider reports is the one that was chosen',
+  googleVeo.model === CHOSEN.video, `${googleVeo.model} vs ${CHOSEN.video}`);
+
+/* ── What this does NOT assert, deliberately ────────────────────────────
+ 
+   Whether a clip can be sold at a profit. Switching to the evidenced model
+   made that urgent — five seconds of the full Veo is about $1.00 against
+   fifteen credits, which is not a thin margin but a subsidy — and the
+   temptation was to put the arithmetic here.
+ 
+   It belongs in `check:kredietkoste`, which already prices every action in
+   this app against the cheapest credit anybody can buy, with the tier tables
+   as its source. A second copy here would be a second place for the credit
+   price to be wrong, and the one that drifts is always the copy.
+ 
+   The decision is hers in any case: raise the price, or do not route video
+   to Google until the fast id is confirmed on her project. It is recorded in
+   docs/OPEN-QUESTIONS.md rather than enforced by a rule I would be inventing
+   the numbers for. */
 
 /* ── 4. A finished clip, found whichever field it is in ───────────────── */
 

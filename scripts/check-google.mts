@@ -80,14 +80,23 @@ ok('  and so does a key with no project',
 
 /* ── 3. Both of each, because the sources disagree ────────────────────── */
 
-ok('both Lyria ids are named, not one of them picked',
-  MODELS.filter((one) => one.what === 'music').length === 2,
+/* Three now, not two: her console shows `lyria-3-pro-preview` for a whole
+   song and `lyria-3-clip-preview` for a clip, both on the interactions api,
+   beside the older `lyria-002` which really is a publisher model. Counted
+   rather than named, so a fourth does not have to be argued with. */
+ok('every Lyria her console shows is carried, not one of them picked',
+  MODELS.filter((one) => one.what === 'music').length >= 3
+  && MODELS.some((one) => one.id === 'lyria-3-clip-preview'),
   MODELS.filter((one) => one.what === 'music').map((one) => one.id).join(', ')
-  + ' — Google’s own page documents lyria-002 and its newer pages show'
-  + ' lyria-3-pro-preview. Hard-coding either is a 404 nobody can read');
+  + ' — a clip and a whole song are different jobs and she has both');
 
-ok('  and both Veo ids, so the cheap one can be tried first',
-  MODELS.filter((one) => one.what === 'video').length === 2,
+/* Her console shows two real ones — `veo-3.0-generate-001` and
+   `veo-3.1-lite-generate-001` — and the app carries a third as a candidate.
+   Counted as "more than one and the Lite one among them" rather than pinned
+   to a number, because the number moved the moment she looked. */
+ok('  and the Veo she can actually see is carried, cheap tier included',
+  MODELS.filter((one) => one.what === 'video').length >= 2
+  && MODELS.some((one) => one.id === 'veo-3.1-lite-generate-001'),
   MODELS.filter((one) => one.what === 'video').map((one) => one.id).join(', '));
 
 ok('  and the image ones too, where the names are worst of all',
@@ -131,13 +140,16 @@ ok('  and the probe deliberately carries no verb at all',
   'a verb on the probe is a generate endpoint, and a generate endpoint is'
   + ' what answered for the body instead of for the model');
 
-ok('  while the calls that really generate each use their own',
-  /addressOf\(model, 'predict'\)/.test(
+/* Music no longer goes through `addressOf` at all — it is not a publisher
+   model. What has to stay true is that each engine calls its OWN address:
+   music the interactions one, video the long-running publisher one. */
+ok('  while the calls that really generate each use their own address',
+  /interactionsAddress\(\)/.test(
     withoutComments(readFileSync('app/lib/server/lyria.ts', 'utf8')))
   && /addressOf\(CHOSEN\.video, verb\)/.test(
     withoutComments(readFileSync('app/lib/server/video/google.ts', 'utf8'))),
-  'music is a predict and video is a long-running job; one verb for both is'
-  + ' a 404 on whichever one it is not');
+  'music is an interaction and video is a long-running publisher job; one'
+  + ' address for both is a 404 on whichever one it is not');
 
 ok('  and the address builder puts the verb after the colon',
   addressOf('m', 'generateContent').endsWith('/models/m:generateContent'),
@@ -304,16 +316,43 @@ ok('every chosen id is one that was actually measured',
   + ' \u2014 a default that is not in the list is a default nothing has ever'
   + ' asked Google about');
 
-ok('  and the image one is the only one of four that answered',
-  CHOSEN.image === 'gemini-2.5-flash-image'
-  && MODELS.filter((one) => one.what === 'image').length === 4,
-  'Nano Banana Pro 404ed under all three of its names on her project. This'
-  + ' is not a preference, it is the only thing there');
+/* ── Chosen because she SAW them, not because a probe inferred them ─────
+ 
+   Until 9 October 2026 these asserted a model picked from a probe reading
+   and a model picked from a web page. Carli opened Model Garden on her own
+   project and pasted what it shows, and two of the three were wrong:
+ 
+     video   veo-3.0-generate-001        the app had veo-3.1-…
+     image   gemini-nano-banana-2.1      the app had gemini-2.5-flash-image
+     music   lyria-3-pro-preview         right id, wrong API entirely
+ 
+   So the rule is no longer which id — a name I would be hard-coding from
+   the same kind of source that was wrong twice — but that every default is
+   one with a note saying it was SEEN. */
+const seen = (id: string): boolean =>
+  /Model Garden page|her own console|HER Model Garden/i.test(
+    MODELS.find((one) => one.id === id)?.note ?? '',
+  );
 
-ok('  and the video default is the cheap one, because the margin is a cent',
-  CHOSEN.video.includes('fast'),
-  `${CHOSEN.video} \u2014 $0.08 a second against $0.20, and CREDITS.video has`
-  + ' one cent of margin on Kling');
+for (const [kind, id] of Object.entries(CHOSEN)) {
+  if (kind === 'bed') continue;
+  ok(`the ${kind} default is one she has actually seen listed`,
+    seen(id),
+    `${id} — its note does not say it was seen in her console, which means it`
+    + ' came from the same kind of source that got video and image wrong');
+}
+
+ok('and the music default is reached through the interactions api',
+  /interactionsAddress/.test(lib)
+  && /locations\/global\/interactions/.test(lib),
+  'lyria-3-pro-preview is not a publisher model; asking it to :predict'
+  + ' answered "Publisher model was not found", which was true and which I'
+  + ' read as a wrong id for a day');
+
+ok('  and a global model is addressed without a region',
+  /where === 'global'/.test(lib) && /locations\/global\/publishers/.test(lib),
+  'one builder that put the region in the host AND the path was right for'
+  + ' exactly one of her three engines');
 
 /* ── 7. A person does not have to spend a secret to use it ───────────── */
 

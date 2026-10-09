@@ -59,9 +59,32 @@ export const configured = (): boolean => !!key() && !!project();
  * Exported so `check:google` can read it without a key and without a
  * network — the shape is the part that can be got wrong silently.
  */
-export const addressOf = (model: string, verb = 'predict'): string =>
-  `https://${region()}-aiplatform.googleapis.com/v1/projects/${project()}`
-  + `/locations/${region()}/publishers/google/models/${model}:${verb}`;
+/**
+ * Where a model lives, which is not the same for all of them.
+ *
+ * ── Three engines, three addresses ───────────────────────────────────────
+ *
+ * Carli's own Model Garden, 9 October 2026, pasted sample by sample:
+ *
+ *   Veo       us-central1-aiplatform.googleapis.com … /locations/us-central1
+ *   Nano      aiplatform.googleapis.com            … /locations/global
+ *   Lyria 3   aiplatform.googleapis.com            … /locations/global
+ *             and not a publisher model at all — see interactionsAddress()
+ *
+ * One builder that put the region in both the host and the path was right
+ * for exactly one of the three, which is a large part of why a week of
+ * probing produced 404s. `where` says which kind a model is, and it is read
+ * off `MODELS` rather than guessed per call site.
+ */
+export const addressOf = (model: string, verb = 'predict'): string => {
+  const spec = MODELS.find((one) => one.id === model);
+  if (spec?.where === 'global') {
+    return `https://aiplatform.googleapis.com/v1/projects/${project()}`
+      + `/locations/global/publishers/google/models/${model}:${verb}`;
+  }
+  return `https://${region()}-aiplatform.googleapis.com/v1/projects/${project()}`
+    + `/locations/${region()}/publishers/google/models/${model}:${verb}`;
+};
 
 /**
  * The models, and how sure we are of each name.
@@ -78,11 +101,61 @@ export const addressOf = (model: string, verb = 'predict'): string =>
  * find out what Kits really had, for the same reason: arpeggi.io could not
  * be reached from here either.
  */
-export const MODELS = [
-  { id: 'lyria-002', what: 'music', verb: 'predict', note: 'Documented on Google’s own Lyria page. 32.8-second clips, base64 WAV back.' },
-  { id: 'lyria-3-pro-preview', what: 'music', verb: 'predict', note: 'Shown on newer pages. Preview, so it may not be on every account. Its documented RESPONSE looks like a Gemini one, so if predict 404s this may want generateContent.' },
-  { id: 'veo-3.1-generate-001', what: 'video', verb: 'predictLongRunning', note: 'The full one. $0.20 a second video-only, if the published rate holds.' },
-  { id: 'veo-3.1-fast-generate-001', what: 'video', verb: 'predictLongRunning', note: 'The cheap one, and the one worth trying first.' },
+/** One candidate: its id, what it makes, how it is called, and where it lives. */
+export interface Candidate {
+  readonly id: string;
+  readonly what: 'music' | 'video' | 'image';
+  readonly verb: string;
+  /** `global` models use the unregional host and `locations/global`. */
+  readonly where?: 'global';
+  readonly note: string;
+}
+
+export const MODELS: readonly Candidate[] = [
+  { id: 'lyria-002', what: 'music', verb: 'predict', note: 'A real publisher model on :predict \u2014 a different api from the two below. Instrumental only and about 30 seconds, so not the booth\u2019s button.' },
+  /* ── The two that are really there, and on another API ────────────
+ 
+     Carli's Model Garden, 9 October 2026. Both of these are `interactions`
+     models — `v1beta1`, `locations/global`, model named in the body — and
+     neither is a publisher model you can `:predict`. That is why asking
+     `models/lyria-3-pro-preview:predict` answered "Publisher model was not
+     found": it was a true answer to a question about the wrong API.
+ 
+     `verb` is kept on them only because the probe's control compares like
+     with like; nothing calls these through `addressOf`. */
+  { id: 'lyria-3-pro-preview', what: 'music', verb: 'predict', note: 'A whole song. On the INTERACTIONS api, not predict \u2014 see interactionsAddress(). Seen on her own Model Garden page.' },
+  { id: 'lyria-3-clip-preview', what: 'music', verb: 'predict', note: 'Song CLIPS, same interactions api. Seen on her page beside the pro one. The right one for a short piece rather than a whole song.' },
+  /* ── Four Veos on her project, and the app already had the right one ─
+ 
+     Carli walked Model Garden on 9 October 2026 and pasted card after card.
+     Four ids came off her own screen, each with the same flow:
+ 
+       veo-3.0-generate-001
+       veo-3.1-generate-001
+       veo-3.1-lite-generate-001
+       veo-3.1-fast-generate-001
+ 
+     ── What I did while she was pasting, which is the lesson ──────────
+ 
+     She sent the 3.0 card first. I concluded her project did not have 3.1,
+     changed the chosen model, and wrote that into the code. Then Lite
+     arrived and I concluded that `fast` was a name I had invented, and wrote
+     THAT into the code. Then the full 3.1 arrived, then Fast arrived, and
+     both conclusions were wrong.
+ 
+     The app's original setting — `veo-3.1-fast-generate-001` at $0.08 a
+     second — was correct from the start. Two confident "corrections" in
+     twenty minutes, each from one more card than the last, each written into
+     a file as though settled.
+ 
+     It is the same error as reading a probe's 400 as a fact about a model:
+     concluding from a fragment and recording the conclusion as a finding.
+     The difference is that this time the fragments were arriving one a
+     minute and I kept rewriting rather than waiting for the list to end. */
+  { id: 'veo-3.1-fast-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. The cheap tier, the chosen one, and the id this app had before any of today\u2019s churn.' },
+  { id: 'veo-3.1-lite-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. A second cheap tier; price unread, so not chosen over the one whose rate is known.' },
+  { id: 'veo-3.1-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. The full 3.1, about $0.20 a second.' },
+  { id: 'veo-3.0-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. The older full model.' },
   /* ── Nano Banana, where the names are worst ────────────────────
 
      Carli, 8 October 2026: *"Ek dink ons moet dan lyria, nano banana en veo
@@ -95,9 +168,13 @@ export const MODELS = [
      and the original Nano Banana (`gemini-2.5-flash-image`) has two
      different shutdown dates on two Google pages — one of them six days
      ago. Nothing here is worth betting an afternoon on. The probe asks. */
+  /* Hers, off her own console, with the address her sample uses: the
+     UNREGIONAL host and `locations/global`. The four guesses below it are
+     kept so the probe keeps asking, but this is the one with evidence. */
+  { id: 'gemini-nano-banana-2.1', what: 'image', verb: 'generateContent', where: 'global', note: 'Shown on HER Model Garden page as "Gemini Nano Banana 2.1", 9 October 2026. Takes response_modalities TEXT+IMAGE, an aspect_ratio and an image_size.' },
   { id: 'gemini-3-pro-image', what: 'image', verb: 'generateContent', note: 'Nano Banana Pro, the general-availability name per a third-party guide. Unconfirmed on a Google page.' },
   { id: 'gemini-3-pro-image-preview', what: 'image', verb: 'generateContent', note: 'Nano Banana Pro as Google’s own Vertex page lists it. Possibly withdrawn with the other -preview ids.' },
-  { id: 'gemini-2.5-flash-image', what: 'image', verb: 'generateContent', note: 'The original Nano Banana. Two Google pages give two shutdown dates, one of which has already passed.' },
+  { id: 'gemini-2.5-flash-image', what: 'image', verb: 'generateContent', note: 'The original Nano Banana. Answered 400 to an empty body on 8 October, which on this verb means the name resolved.' },
   { id: 'gemini-3.1-flash-image', what: 'image', verb: 'generateContent', note: 'Named as the replacement for the above. Id unverified anywhere official.' },
 ] as const;
 
@@ -110,8 +187,10 @@ export const MODELS = [
  *
  *   lyria-002                   400  there
  *   lyria-3-pro-preview         400  there
- *   veo-3.1-generate-001        400  there
- *   veo-3.1-fast-generate-001   400  there
+ *   veo-3.1-generate-001        400  there   (id correct, reading worthless)
+ *   veo-3.1-fast-generate-001   400  there   (an id I invented; "there" is
+ *                                             the proof the reading was of
+ *                                             my request and not her project)
  *   gemini-2.5-flash-image      400  there
  *   gemini-3-pro-image          404
  *   gemini-3-pro-image-preview  404
@@ -196,9 +275,14 @@ export const CHOSEN = {
   bed: 'lyria-002',
   /* The fast one first, deliberately: $0.08 a second against $0.20, and the
      margin on video is one cent. */
+  /* Back to where it started, now with evidence under it rather than a
+     guess. The cheap tier matters commercially: five seconds of the FULL
+     model costs about four times what this app charges for a clip, so the
+     fast one is the only reason Google video is sellable at this price. */
   video: 'veo-3.1-fast-generate-001',
   /* Not a choice. It is the only one of four that answered. */
-  image: 'gemini-2.5-flash-image',
+  /* Hers, seen in her console, over the one that merely answered a probe. */
+  image: 'gemini-nano-banana-2.1',
 } as const;
 
 /**
@@ -262,6 +346,25 @@ export interface Reached {
  */
 export const readAddressOf = (model: string): string =>
   `https://${region()}-aiplatform.googleapis.com/v1/publishers/google/models/${model}`;
+
+/**
+ * Where Lyria 3 actually lives, which is not where the rest of them live.
+ *
+ * Carli pasted her own Model Garden page on 9 October 2026, and it is a
+ * different API in every part:
+ *
+ *   host      aiplatform.googleapis.com      not {region}-aiplatform…
+ *   version   v1beta1                        not v1
+ *   location  locations/global               not us-central1
+ *   path      /interactions                  not /publishers/google/models/…
+ *   model     named in the BODY              not in the URL
+ *
+ * Which is exactly why `lyria-3-pro-preview:predict` answered *"Publisher
+ * model … was not found"*. It is not a publisher model. The 404 was correct
+ * and complete, and I read it as "wrong id" for a day.
+ */
+export const interactionsAddress = (): string =>
+  `https://aiplatform.googleapis.com/v1beta1/projects/${project()}/locations/global/interactions`;
 
 /** Every publisher model this project can see. Generates nothing. */
 export const listAddress = (): string =>
