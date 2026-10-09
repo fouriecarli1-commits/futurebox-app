@@ -133,6 +133,19 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   filmJoin: ['faded'],
   filmMark: ['mark'],
   filmUnder: ['under'],
+  /* ── Not a room, and not a thing anybody goes looking for ───────────
+ 
+     The style translation is the way OUT of a refusal: somebody types
+     "klink soos Beat It", is told that naming an artist is refused, and is
+     offered the translation right there. It has no room, no tab and no
+     entry in the directory, and it should not have one — a thing nobody can
+     find until they need it is correct when the only way to need it is to
+     have just been refused.
+ 
+     `null` on purpose rather than missing, which is what this check is for:
+     a price added with nothing decided about where it lives is a thing
+     somebody can buy and nobody can be sent to. */
+  styleword: null,
   mixOut: ['mix'],
   postOut: ['post'],
   /* The room says "change what is IN the picture by saying what to change".

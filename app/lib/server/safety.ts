@@ -74,6 +74,9 @@ function refusalResponse(refusal: Refusal, strikes: number): Response {
       error: 'refused',
       rule: refusal.rule,
       message: refusal.message + warning,
+      /* Carried so the room can offer the translation. Absent on every
+         refusal but one — see `Refusal.sayItInstead`. */
+      ...(refusal.sayItInstead ? { sayItInstead: true } : {}),
     },
     { status: 422 },
   );

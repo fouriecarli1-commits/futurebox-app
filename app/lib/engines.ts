@@ -30,6 +30,26 @@ import { accessToken } from './cloud';
 import { shapeSong } from './songshape';
 
 /**
+ * A refusal from a route, with whether there is another way round it.
+ *
+ * An `Error` subclass rather than a return shape, so that nothing which
+ * already catches one of these has to change: `error.message` is the same
+ * sentence it always was. `sayItInstead` is read by the song room and by
+ * nothing else — see `Refusal.sayItInstead` in `lib/moderation.ts`, where
+ * exactly one rule sets it.
+ */
+export class Refused extends Error {
+  readonly sayItInstead: boolean;
+
+  constructor(message: string, sayItInstead = false) {
+    super(message);
+    this.name = 'Refused';
+    this.sayItInstead = sayItInstead;
+  }
+}
+
+
+/**
  * Where a generation has got to.
  *
  * Every one of these is something observed, never a guess dressed as progress.
@@ -385,7 +405,20 @@ export const engines: Engines = {
       const detail = (await response.json().catch(() => ({}))) as { message?: string };
       // 401 and 402 are the allowance answering, not a failure — the message is
       // written for the person and is shown as-is.
-      throw new Error(detail.message ?? 'The music service could not make that one.');
+      /* ── One refusal travels with a flag on it ───────────────────────
+ 
+         A prompt refused for naming an artist's SOUND can be turned into a
+         describable style instead — see `app/api/styleword/route.ts`. The
+         room can only offer that if it knows which refusal it got, and a
+         plain `Error` carries nothing but a sentence.
+ 
+         Thrown rather than returned so every existing caller is unchanged:
+         a `Refused` IS an `Error`, so `error.message` still reads the same
+         everywhere that only wants the words. */
+      throw new Refused(
+        detail.message ?? 'The music service could not make that one.',
+        Boolean((detail as { sayItInstead?: boolean }).sayItInstead),
+      );
     }
 
     const model = response.headers.get('X-Music-Model') ?? 'ElevenLabs Music';

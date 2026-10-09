@@ -657,6 +657,38 @@ export const CREDITS = {
    */
   adLines: 40,
   /**
+   * Turning a named reference into a describable style. Per translation.
+   *
+   * ── Where it comes from ───────────────────────────────────────────────
+   *
+   * Carli, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie
+   * soek wat baie klink soos michael jackson se liedjie beat it"*, and then
+   * the sentence that made it buildable: *"dit kry dit net mooi reg om die
+   * 80's se styl in baie nader aan daardie formaat te genereer."* The era
+   * and the format, not the song and not the person.
+   *
+   * ── The arithmetic, the same way `adLines` above was done ─────────────
+   *
+   * A much smaller call than the advert writer: one style line and one
+   * sentence, at `max_tokens: 1500`.
+   *
+   *      600 output × $25/M = $0.0150       → R0.24
+   *      900 input  × $5/M  = $0.0045       → R0.07
+   *                                           ─────
+   *                                           R0.31
+   *
+   * **Three credits is about R4.97, 16x.** Below `adLines`' twenty on
+   * purpose, and the reason is what this is: not a product somebody buys but
+   * a step on the way to buying a song. Somebody meets a refusal, presses
+   * this, and spends ten credits on the song they could not otherwise have
+   * made. Pricing the doorway like the room is how the sale is lost at the
+   * door.
+   *
+   * It is also the band the other small calls sit in — `cover` is 2,
+   * `transcribe` is 2, `repaint` is 5 — rather than a number of its own.
+   */
+  styleword: 3,
+  /**
    * Taking the background out of a clip. **Per five seconds**, not per minute.
    *
    * ── The unit was wrong, and that mattered more than the rate ───────────

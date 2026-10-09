@@ -132,15 +132,38 @@ export const SYSTEM = [
  * `style`, which is the exact request `moderation.ts` refuses at the front
  * door.
  *
- * Matched on the word rather than the substring: "Beat It" must not strip a
- * style line of the word "beat", which is a drum. Word boundaries, case
- * folded, and short words left alone for the same reason.
+ * ── What it matches, and the bug that set the threshold ─────────────────
+ *
+ * Two things: the whole name as a phrase, and any single word of it long
+ * enough to be distinctive.
+ *
+ * The threshold was four letters, and `check:anderwoorde` caught that on the
+ * first run — against the very example this feature is named for. "Beat It"
+ * splits to "beat", which is four letters, so a perfectly clean style line
+ * containing *"a four-on-the-floor beat"* was thrown away. A guard that
+ * rejects good work is not a safe guard; it is one somebody turns off.
+ *
+ * Five catches the names that matter — michael, jackson, prince, madonna,
+ * beyonce — and leaves the drums alone. What five does NOT catch is a
+ * one-word act whose name is an ordinary English word: Yes, Rush, Live,
+ * Beat. Said plainly rather than papered over, because the answer is not in
+ * this function: the route runs `screen()` over the returned style as well,
+ * and the known-names list is what catches those. One net for the general
+ * case, a second for the exact one.
  */
 export function clean(style: string, dropped: readonly string[]): boolean {
   const lower = style.toLowerCase();
-  return !dropped.some((name) => name
-    .toLowerCase()
-    .split(/[^\p{L}\p{N}']+/u)
-    .filter((word) => word.length >= 4)
-    .some((word) => new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'u').test(lower)));
+  const has = (word: string): boolean =>
+    new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'u').test(lower);
+
+  return !dropped.some((name) => {
+    const whole = name.trim().toLowerCase();
+    /* The whole name, which catches "beat it" without catching "beat". */
+    if (whole && has(whole)) return true;
+    /* And any single word distinctive enough to be one on its own. */
+    return whole
+      .split(/[^\p{L}\p{N}']+/u)
+      .filter((word) => word.length >= 5)
+      .some(has);
+  });
 }

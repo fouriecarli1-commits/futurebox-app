@@ -1406,6 +1406,13 @@ jobs:
       - name: The shelves moved to the account and nothing was lost
         run: npm run check:plankserver
 
+      # A named reference becomes a describable style, and no name goes with
+      # it. Exactly one refusal in moderation.ts has a door beside it — the
+      # voice rule must never grow one — and the guard that strips names is
+      # driven on the case it is named for.
+      - name: A reference becomes a style and no name goes with it
+        run: npm run check:anderwoorde
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

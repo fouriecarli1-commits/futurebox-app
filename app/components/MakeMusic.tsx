@@ -28,7 +28,7 @@ import { accessToken } from '../lib/cloud';
 import { saveSong } from '../lib/songfile';
 import { durationOf, readAudio } from '../lib/trackaudio';
 import { keepMix, takeId } from '../lib/takekeep';
-import { engines, splitSections, type Stage } from '../lib/engines';
+import { Refused, engines, splitSections, type Stage } from '../lib/engines';
 import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
 import NowPlaying from './NowPlaying';
@@ -41,7 +41,7 @@ import LyricHelp from './LyricHelp';
 import Note from './Note';
 import Hint from './Hint';
 import { STARTERS, LENGTH_CHOICES } from '../data/sound';
-import { songCost } from '../lib/credits';
+import { CREDITS, songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import * as cloud from '../lib/cloud';
@@ -533,6 +533,21 @@ export default function MakeMusic({
    */
   const [stage, setStage] = useState<Stage | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  /* ── The one refusal with a way out of it ──────────────────────────────
+ 
+     Carli, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie
+     soek wat baie klink soos michael jackson se liedjie beat it"*, and then
+     the sentence that made it buildable — *"dit kry dit net mooi reg om die
+     80's se styl in baie nader aan daardie formaat te genereer."*
+ 
+     Naming an artist to describe a SOUND is refused, and the refusal tells
+     somebody to say the tempo, the instruments, the era and the mood
+     themselves. Most people cannot. This is the offer to do it for them,
+     and it is drawn ONLY when the refusal says so — `sayItInstead` is set
+     on that one rule and never on the voice rule, which must not have a way
+     round it. See `lib/moderation.ts` and `check:anderwoorde`. */
+  const [canSayIt, setCanSayIt] = useState(false);
+  const [saying, setSaying] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null);
   /**
    * Exactly what is coming out of the speakers.
@@ -586,6 +601,49 @@ export default function MakeMusic({
    * why the generic production words that used to be appended here were doing
    * harm — they were four more things competing with the two that mattered.
    */
+  /**
+   * Turn what they typed into a style the engine can make.
+   *
+   * Replaces the style field with what comes back, and says what was swapped
+   * for what — not a silent correction. Somebody who asked for a sound
+   * should see what the sound turned out to be, because the next thing they
+   * do is edit it.
+   */
+  const sayItAsASound = async (): Promise<void> => {
+    const asked = canvas.style.trim();
+    if (!asked || saying) return;
+    setSaying(true);
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/styleword', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ asked }),
+      });
+      const said = (await answer.json().catch(() => ({}))) as {
+        style?: string; tempo?: string; says?: string; message?: string;
+      };
+      if (!answer.ok || !said.style) {
+        /* Their sentence where there is one: it says whether it was refused,
+           whether the allowance is out, or whether it simply could not be
+           described without naming them. */
+        setStatus(said.message ?? t('make.sayItFailed', 'That could not be put another way.'));
+        return;
+      }
+      setCanvas((was) => ({ ...was, style: said.style as string }));
+      setCanSayIt(false);
+      setStatus(said.says
+        ?? t('make.sayItDone', 'Swapped the name for the sound. Have a look, then make it.'));
+    } catch {
+      setStatus(t('make.sayItOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setSaying(false);
+    }
+  };
+
   const styleText = (() => {
     const written = canvas.style.trim();
     const parts = written ? written.split(',').map((p) => p.trim()).filter(Boolean) : [];
@@ -790,6 +848,7 @@ export default function MakeMusic({
         // to do next.
         const reason = error instanceof Error ? error.message.trim() : '';
         setStatus(reason || t('make.failed'));
+        setCanSayIt(error instanceof Refused && error.sayItInstead);
       } finally {
         setBusy(false);
         setStage(null);
@@ -1608,6 +1667,20 @@ export default function MakeMusic({
         </div>
 
         {status && <p className="text-sm text-emerald-300">{status}</p>}
+        {canSayIt && (
+          <button
+            type="button"
+            onClick={() => void sayItAsASound()}
+            disabled={saying || !canvas.style.trim()}
+            data-sayitinstead
+            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 text-sm font-bold text-amber-200 disabled:opacity-50"
+          >
+            <Sparkles className="h-4 w-4 flex-shrink-0" />
+            {saying
+              ? t('make.sayingIt', 'Working out what that sounds like…')
+              : `${t('make.sayIt', 'Say it as a sound instead')} · ${CREDITS.styleword} ${t('make.credits', 'credits')}`}
+          </button>
+        )}
 
         {!engines.available('audio') && (
           <p className="text-sm text-zinc-500 leading-relaxed border-t border-zinc-800 pt-3">

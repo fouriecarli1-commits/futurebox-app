@@ -116,6 +116,20 @@ export interface Refusal {
   /** Shown to whoever typed it. Says what was refused, not merely "no". */
   readonly message: string;
   /**
+   * Whether this refusal can be turned into a style instead of a wall.
+   *
+   * True on exactly one rule: naming an artist to describe a SOUND. What
+   * that person wants is the era and the format, which is not anybody's
+   * property — see `app/lib/server/styleword.ts`.
+   *
+   * Not on the voice refusal, and that is the point of the flag existing at
+   * all rather than the room working it out from the rule name: a voice
+   * identifies a person, it is the largest exposure this app has, and it
+   * must never grow a door. `check:anderwoorde` asserts that nothing else
+   * carries this.
+   */
+  readonly sayItInstead?: boolean;
+  /**
    * Whether this refusal counts against the account.
    *
    * A style prompt that strays near a famous name is a mistake somebody makes
@@ -259,8 +273,13 @@ const OFFICE = /\b(president|prime\s+minister|chancellor|senator|congressman|gov
 
 /* ── The screen ────────────────────────────────────────────────────────── */
 
-function refuse(rule: Rule, message: string, counts = true): Refusal {
-  return { rule, message, counts };
+function refuse(
+  rule: Rule,
+  message: string,
+  counts = true,
+  sayItInstead = false,
+): Refusal {
+  return { rule, message, counts, ...(sayItInstead ? { sayItInstead } : {}) };
 }
 
 /**
@@ -274,6 +293,30 @@ function nameAfter(text: string, cue: RegExp, knownOnly: boolean): string | null
   if (!match) return null;
 
   const rest = text.slice(match.index + match[0].length);
+
+  /* ── A name typed in lower case is still a name ───────────────────────
+ 
+     `NAME_SHAPE` below requires a capital letter, which is the only signal
+     there is for a name this file has never heard of. For a name it HAS
+     heard of there is a better one: the list itself.
+ 
+     Found on 9 October 2026 while building the style translator, by running
+     the screen over Carli's own words — *"klink soos michael jackson se
+     liedjie beat it"*. Capitalised it was refused; exactly as she typed it,
+     it was allowed. Nobody capitalises on a phone, and this rule is the
+     largest legal exposure this app has.
+ 
+     Safe in lower case precisely because it is gated on a cue: "queen" and
+     "prince" are ordinary words, and "sounds like queen" is not an ordinary
+     sentence. Longest first, so "taylor swift" is not read as "taylor". */
+  const words = rest.trimStart().split(/\s+/);
+  for (let take = Math.min(4, words.length); take >= 1; take -= 1) {
+    const tried = words.slice(0, take).join(' ')
+      .toLowerCase()
+      .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}'’.-]+$/gu, '');
+    if (tried && KNOWN.has(tried)) return words.slice(0, take).join(' ').replace(/[^\p{L}\p{N}'’.-]+$/u, '');
+  }
+
   const shape = NAME_SHAPE.exec(rest.trimStart());
   if (!shape) return null;
 
@@ -290,6 +333,47 @@ function nameAfter(text: string, cue: RegExp, knownOnly: boolean): string | null
   // for a performer whatever the list says.
   const after = rest.trimStart().slice(shape[1].length).trimStart();
   return PERFORMER.test(after) ? name : null;
+}
+
+/**
+ * The name in front of a possessive, or null. "Michael Jackson's voice".
+ *
+ * ── Why this is a second shape and not another cue ───────────────────────
+ *
+ * `VOICE_CUE` and `STYLE_CUE` both put the name AFTER the words — "in the
+ * voice of X", "sounds like X". The commonest way anybody actually writes
+ * it puts the name first: "X's voice", "X se stem". Found on 9 October 2026
+ * while building the style translator, by running the screen over a sentence
+ * written the way somebody would type it: *"sing it in Michael Jackson's
+ * voice"* was allowed, capitalised or not.
+ *
+ * That is the rule this file's own header calls the single largest legal
+ * exposure the app has, missing the phrasing people use.
+ *
+ * `want` says which possessive is being looked for, because a voice and a
+ * style are not the same refusal: one gets a door beside it and the other
+ * must never have one.
+ */
+function namesOwn(text: string, want: 'voice' | 'style'): string | null {
+  const what = want === 'voice'
+    ? "(?:voice|vocals?|stem|sang)"
+    : "(?:style|sound|styl|klank)";
+  /* Both possessives: English "'s" and Afrikaans "se". The name itself is
+     matched case-insensitively against the list, for the same reason
+     `nameAfter` now does — nobody capitalises on a phone. */
+  const found = new RegExp(
+    `([\\p{L}\\p{N}'’.-]+(?:\\s+[\\p{L}\\p{N}'’.-]+){0,3})\\s*(?:['’]s|\\s+se)\\s+${what}\\b`,
+    'iu',
+  ).exec(text);
+  if (!found) return null;
+
+  const words = found[1].trim().split(/\s+/);
+  /* Longest first: "taylor swift's voice" is Taylor Swift, not Swift. */
+  for (let drop = 0; drop < words.length; drop += 1) {
+    const tried = words.slice(drop).join(' ').toLowerCase();
+    if (KNOWN.has(tried)) return words.slice(drop).join(' ');
+  }
+  return null;
 }
 
 /**
@@ -319,7 +403,11 @@ export function screen(text: string, surface: Surface): Refusal | null {
   }
 
   // 2. A named person's voice, face or performance.
-  const voiceName = nameAfter(value, VOICE_CUE, false);
+  /* The possessive, before the cue-based one. A sentence that says both —
+     "sounds like X, in X's voice" — is a voice request, and the voice rule
+     is the one with no way around it. */
+  const ownsVoice = namesOwn(value, 'voice');
+  const voiceName = ownsVoice ?? nameAfter(value, VOICE_CUE, false);
   if (voiceName) {
     return refuse(
       'likeness',
@@ -328,12 +416,25 @@ export function screen(text: string, surface: Surface): Refusal | null {
     );
   }
 
-  const styleName = nameAfter(value, STYLE_CUE, true);
+  const styleName = namesOwn(value, 'style') ?? nameAfter(value, STYLE_CUE, true);
   if (styleName) {
+    /* ── The one refusal with a door next to it ────────────────────────
+ 
+       This sentence tells somebody to do a translation by hand: say the
+       tempo, the instruments, the era, the mood. Most people cannot, and
+       the ones who can should not have to.
+ 
+       `sayItInstead` is what lets the room offer to do it — see
+       `app/api/styleword/route.ts`. It is set HERE and on nothing else,
+       and that is the whole of its safety: the voice refusal above, which
+       is the largest exposure this app has, must never grow a door, and
+       it cannot grow one by accident because the flag is not on it.
+       `check:anderwoorde` asserts exactly that. */
     return refuse(
       'likeness',
       `Prompts that name ${styleName} are refused, because a request in a named artist's style is a request for that artist. Say what you actually want — the tempo, the instruments, the era, the mood — and the result will be yours to release.`,
       false,
+      true,
     );
   }
 
