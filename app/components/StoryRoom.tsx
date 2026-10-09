@@ -44,9 +44,12 @@ import {
 } from '../lib/storypages';
 import { drawPage, readPage } from '../lib/storymake';
 import { STORY_FRAME, recordStory, type Spread } from '../lib/storyfilm';
+import { MOST_STORIES, keepStory, titleOf } from '../lib/storykeep';
 
 interface Made {
   readonly picture?: string;
+  /** The picture itself, for the shelf — an object URL cannot be stored. */
+  readonly blob?: Blob;
   readonly image?: HTMLImageElement;
   readonly audio?: Blob;
   readonly buffer?: AudioBuffer;
@@ -64,6 +67,7 @@ export default function StoryRoom(): React.ReactElement {
   const [says, setSays] = useState('');
   const [film, setFilm] = useState('');
   const [at, setAt] = useState(0);
+  const [onShelf, setOnShelf] = useState(false);
 
   const pages = pagesFrom(story);
   const bill = billFor(pages);
@@ -119,6 +123,7 @@ export default function StoryRoom(): React.ReactElement {
           ...was,
           [page.id]: {
             picture: drawn.picture,
+            blob: drawn.blob,
             image: drawn.image,
             audio: read.audio,
             buffer,
@@ -153,6 +158,56 @@ export default function StoryRoom(): React.ReactElement {
     } finally {
       setBusy('');
       setAt(0);
+    }
+  }, [ready, busy, pages, made, t]);
+
+  /* ── Onto the shelf, so a child can be handed it ───────────────────────
+ 
+     Carli, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
+     kamer."* Until this, a book lived in a tab: close it and the pictures
+     and the readings — which were paid for — stopped existing, and the kids
+     room could not reach one at all.
+ 
+     Kept on the device rather than on a server, because the grown-up writes
+     it on the phone they then hand over. `lib/storykeep.ts` carries the rest
+     of that reasoning, including why a kept story costs nothing to hear. */
+  const shelve = useCallback(async (): Promise<void> => {
+    if (!ready || busy) return;
+    setBusy(t('story.keeping', 'Putting it on the shelf\u2026'));
+    try {
+      const put = await keepStory({
+        id: `story-${Date.now()}`,
+        title: titleOf(pages[0]?.text ?? ''),
+        made: Date.now(),
+        pages: pages.map((one) => ({
+          text: one.text,
+          picture: made[one.id]!.blob!,
+          audio: made[one.id]!.audio!,
+          seconds: made[one.id]!.seconds ?? 0,
+        })),
+      });
+      if (put === 'kept') {
+        setOnShelf(true);
+        setSays(t(
+          'story.kept',
+          'It is on the shelf. A child can play it in the kids room, and hearing it costs nothing.',
+        ));
+      } else if (put === 'shelfFull') {
+        setSays(t('story.shelfFull', 'The shelf is full \u2014 it holds {n} stories. Take one off in the kids room first.')
+          .replace('{n}', String(MOST_STORIES)));
+      } else if (put === 'full') {
+        setSays(t(
+          'story.deviceFull',
+          'There is no room left on this device. Make space and try again \u2014 or make the film now, before this is lost.',
+        ));
+      } else {
+        setSays(t(
+          'story.noKeep',
+          'This browser will not keep anything. A private window usually cannot.',
+        ));
+      }
+    } finally {
+      setBusy('');
     }
   }, [ready, busy, pages, made, t]);
 
@@ -309,6 +364,25 @@ export default function StoryRoom(): React.ReactElement {
               {at.toFixed(0)}s / {runsFor(shown).toFixed(0)}s
             </p>
           )}
+
+          {/* ── And onto the shelf ────────────────────────────────────────
+              Above the film on the page would be wrong — a film is the thing
+              somebody came for. But this is the one that stops the book
+              disappearing when the tab closes, so it is not behind anything
+              either. */}
+          <button
+            type="button"
+            onClick={() => void shelve()}
+            disabled={Boolean(busy) || onShelf}
+            data-storyshelve
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-amber-500/50 bg-amber-500/10 text-sm font-black text-amber-300 disabled:opacity-40"
+          >
+            <BookOpen className="h-5 w-5" />
+            {onShelf
+              ? t('story.onShelf', 'On the shelf for the kids room')
+              : t('story.shelve', 'Keep it for the kids room')}
+            <span className="text-amber-500/80">· {t('story.free', 'free')}</span>
+          </button>
         </div>
       )}
 

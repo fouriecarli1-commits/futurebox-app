@@ -1387,6 +1387,12 @@ jobs:
       - name: A story becomes pages and the pictures turn with the voice
         run: npm run check:storie
 
+      # A kept story holds the picture itself and not an object URL, playing
+      # one spends nothing, the bin is only drawn for a grown-up, and a full
+      # shelf refuses rather than deleting somebody's story to make room.
+      - name: A story on a shelf a child can reach, for nothing
+        run: npm run check:kinderverhaal
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

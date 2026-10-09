@@ -99,7 +99,11 @@ export const KID_PRICES: readonly Priced[] = [
        Both halves are built and charged elsewhere today; the ROOM that puts
        them together is not, which is what `ready` says. */
     credits: (readCost(STORY_PAGE_CHARS) + CREDITS.repaint) * STORY_PAGES,
-    ready: false,
+    /* Reachable from the kids room since 9 October: a grown-up makes a book
+       in Story mode and keeps it on the shelf, and the child plays it from
+       there. The price is what MAKING one costs — hearing a kept one costs
+       nothing, which is the point of the shelf and is said on the page. */
+    ready: true,
     says: ['kids.priceStory', 'A story read out loud, eight pages with a picture each'],
   },
 ];

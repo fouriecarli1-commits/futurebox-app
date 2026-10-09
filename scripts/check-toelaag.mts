@@ -205,10 +205,29 @@ ok('  and the child\'s room is still the one with nothing to type into',
   + ' it no longer holds — and `check:kinderkamer` should have caught that'
   + ' first');
 
-ok('  and the two that are marked ready have rooms behind them',
-  KID_PRICES.filter((one) => one.ready).every((one) => ['song', 'video'].includes(one.id)),
-  'something other than a song or a video is marked ready — the app makes'
-  + ' those two today and nothing else in this room');
+/* ── One rule, not a list ────────────────────────────────────────────────
+ 
+   This was `['song', 'video'].includes(one.id)` — a hand-written list of what
+   the room could do, which went stale the first time the room could do
+   something else, on 9 October, about four hours after it was written. A list
+   of what is true today is a list that is wrong tomorrow and says nothing
+   when it goes.
+ 
+   The rule is the same one the story row is measured by, applied to all of
+   them: `ready` says the CHILD can reach it, so every row marked ready has to
+   be findable in the child's room and every row that is not must not be. */
+for (const priced of KID_PRICES) {
+  const mentioned = new RegExp(priced.id, 'i').test(withoutComments(kidsRoom))
+    || (priced.id === 'song' && /makeKidSong/.test(withoutComments(kidsRoom)))
+    || (priced.id === 'video' && /startKidVideo/.test(withoutComments(kidsRoom)));
+  ok(`  and the ${priced.id} row says whether the child can reach it`,
+    priced.ready === mentioned,
+    mentioned
+      ? `the room reaches ${priced.id} and the price list says it cannot — a`
+        + ' parent is being told they cannot do a thing they can'
+      : `${priced.id} is marked ready and the child's room has no way to it,`
+        + ' so the page quotes a price for something that cannot be pressed');
+}
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);

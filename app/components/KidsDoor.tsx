@@ -44,6 +44,7 @@ import {
   ALLOWANCE_STEPS, KID_PRICES, howMany, type KidThing,
 } from '../lib/kidsallowance';
 import { endKids, giveAllowance, kidsNow, type KidsState } from '../lib/kidsdoor';
+import StoryShelf from './StoryShelf';
 
 /** What one of each thing is called in a sentence about how many. */
 const MANY: Record<KidThing, readonly [string, string, string]> = {
@@ -188,6 +189,16 @@ export default function KidsDoor({
           )}{' '}
           {t('kids.songIs', 'One song is')} {songPrice} {t('kids.credits', 'credits')}.
         </p>
+      </div>
+
+      {/* ── The shelf, where a grown-up can take one off ─────────────────
+          The same shelf the child sees, with the one control they do not
+          get: taking a story off it cannot be undone. */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+          {t('kids.shelfTitle', 'Stories on this device')}
+        </h3>
+        <StoryShelf grownUp />
       </div>
 
       {/* ── Where it stands ──────────────────────────────────────────── */}

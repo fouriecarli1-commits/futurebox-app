@@ -50,6 +50,7 @@ import {
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import KidsDoor from './KidsDoor';
+import StoryShelf from './StoryShelf';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
 import { howMany, priceOf } from '../lib/kidsallowance';
 import {
@@ -235,6 +236,28 @@ export default function KidsRoom(): React.ReactElement {
         >
           {t('kids.grownUp', 'Grown-up')}
         </button>
+      </div>
+
+      {/* ── The stories a grown-up has made ───────────────────────────────
+ 
+          Carli, 9 October 2026: *"Gaan aan met die shelf van stories in die
+          kids kamer."*
+ 
+          Above the song, because a story is the thing to reach for when
+          somebody has already made one and the song is what to do when they
+          have not. Nothing in here spends: the pictures and the readings
+          were paid for when the book was made, so a child can hear the same
+          story all afternoon and the allowance is untouched.
+ 
+          The bin is not drawn for a child — `grownUp` is false here. Losing
+          a story somebody made them is the one press in this room that
+          cannot be undone, and the grown-up's own page has the same shelf
+          with it. */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-extrabold text-white">
+          {t('kids.stories', 'Stories')}
+        </h2>
+        <StoryShelf />
       </div>
 
       <div className="space-y-3">

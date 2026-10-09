@@ -15,6 +15,15 @@ export interface Drawn {
   /** An object URL for the picture. The room owns revoking it. */
   readonly picture: string;
   readonly image: HTMLImageElement;
+  /**
+   * The picture itself.
+   *
+   * Kept alongside the URL because an object URL is a handle into THIS tab
+   * and nothing else: it cannot be written to a database, and a story put on
+   * the shelf with one in it comes back pointing at nothing. `storykeep.ts`
+   * stores the Blob.
+   */
+  readonly blob: Blob;
 }
 
 /** Draw one page. The message, where there is one, is the engine's own. */
@@ -36,14 +45,15 @@ export async function drawPage(
       const why = (await answer.json().catch(() => ({}))) as { message?: string };
       return { says: why.message ?? `That picture could not be drawn. (${answer.status})` };
     }
-    const url = URL.createObjectURL(await answer.blob());
+    const blob = await answer.blob();
+    const url = URL.createObjectURL(blob);
     const image = new Image();
     await new Promise<void>((resolve, reject) => {
       image.onload = () => resolve();
       image.onerror = () => reject(new Error('decode'));
       image.src = url;
     });
-    return { picture: url, image };
+    return { picture: url, image, blob };
   } catch {
     return { says: 'That could not be sent. Check the connection and try again.' };
   }
