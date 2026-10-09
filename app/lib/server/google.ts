@@ -276,7 +276,38 @@ export const listAddress = (): string =>
  * so nothing is billed. A 404 is the model not being on this account or in
  * this region, and the two have to stay different answers.
  */
-export async function reach(model: string): Promise<Reached> {
+/**
+ * A name that cannot exist, used as a control.
+ *
+ * ── Why a probe needs one, having now been wrong twice ───────────────────
+ *
+ * The first probe POSTed an empty body to the generate verb and read 400 as
+ * "the model is there". That was a fact about the request, not the project,
+ * because `:predict` validates the body before it resolves the name.
+ *
+ * The second read the model as a resource instead. Carli pressed it on
+ * 9 October 2026 and Google answered, for all eight:
+ *
+ *   API keys are not supported by this API. Expected OAuth2 access token or
+ *   other authentication credentials that assert a principal.
+ *
+ * So that method cannot be used with the credential this app has at all —
+ * and every row came back `not-allowed`, which reads as "your key lacks a
+ * permission" and is the wrong thing to go and fix.
+ *
+ * Twice, the probe reported a reading when it was not measuring anything.
+ * The fault both times is the same and it is not the method: it is that
+ * nothing checked whether the method could tell one answer from another.
+ *
+ * A control settles it. Ask about a model that certainly does not exist, the
+ * same way, in the same breath. If the control answers differently from a
+ * candidate, the question is being answered. If it answers the SAME, the
+ * probe is blind and must say so instead of printing eight rows that look
+ * like findings.
+ */
+export const NO_SUCH = 'futurebox-no-such-model-001';
+
+export async function reach(model: string, verb?: string): Promise<Reached> {
   const spec = MODELS.find((one) => one.id === model);
   const what = spec?.what ?? 'unknown';
   if (!configured()) {
@@ -291,30 +322,96 @@ export async function reach(model: string): Promise<Reached> {
  
      A read also cannot generate and cannot bill, which the POST only
      avoided by being malformed. */
+  /* The generate verb with an EMPTY body — the only door an API key is
+     allowed through, now that the read and the list have both refused one.
+     An empty body cannot generate and cannot bill, which was always the
+     reason it was chosen; what it could never do on its own is tell a real
+     name from a false one, and that is what the control is for. */
   let response: Response;
   try {
-    response = await fetch(readAddressOf(model), {
-      headers: { 'x-goog-api-key': key() },
+    response = await fetch(addressOf(model, verb ?? spec?.verb ?? 'predict'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
+      body: '{}',
       signal: AbortSignal.timeout(15000),
     });
   } catch {
     return { model, what, status: 0, answer: 'unclear', note: 'Could not be reached at all.' };
   }
-  const answer = response.status === 200
+  const said = (await response.text().catch(() => '')).slice(0, 200);
+
+  /* ── "Not allowed" is two different problems ──────────────────────
+ 
+     A 401 saying API KEYS ARE NOT SUPPORTED is this app holding the wrong
+     kind of credential for that method — nothing to grant, nothing to
+     request, and no amount of looking at roles will help. A 401 or 403
+     saying anything else really is a permission. Reporting both as
+     "not-allowed, ask for access" sent her to the wrong page. */
+  const wrongKind = /API keys are not supported/i.test(said);
+
+  const answer = response.status === 400 || response.status === 422
     ? 'yes' as const
     : response.status === 404
       ? 'no' as const
       : response.status === 401 || response.status === 403
         ? 'not-allowed' as const
         : 'unclear' as const;
-  const note = answer === 'yes'
-    ? 'There, and readable by this key. Use this id.'
-    : answer === 'no'
-      ? 'Not on this account or not in this region. Try the other id, or another region.'
-      : answer === 'not-allowed'
-        ? 'The address is there and this key may not use it: a key restriction, a missing role, or a model that needs access requesting.'
-        : `Neither a refusal nor an acceptance: ${response.status}.`;
+
+  const note = wrongKind
+    ? 'This method does not take an API key at all — not a permission, and'
+      + ' nothing to request. It needs a service account or OAuth.'
+    : answer === 'yes'
+      ? 'Answered on its contents rather than on its name — see the control below'
+        + ' before trusting that as "the model is there".'
+      : answer === 'no'
+        ? 'The name was resolved and there is nothing by it. This one is a real'
+          + ' answer: a 404 cannot come from an empty body.'
+        : answer === 'not-allowed'
+          ? 'The address is there and this key may not use it: a key restriction,'
+            + ' a missing role, or a model that needs access requesting.'
+          : `Neither a refusal nor an acceptance: ${response.status}. ${said}`;
+
   return { model, what, status: response.status, answer, note };
+}
+
+/**
+ * Whether the probe can tell a real model from a made-up one, per verb.
+ *
+ * This is the question that was never asked, and asking it is cheap: the
+ * same request, against a name that cannot exist. Both verbs are tried
+ * because they behave differently — on 8 October the picture models, which
+ * use `generateContent`, really did answer 404 for three names that do not
+ * exist, while `predict` answered 400 for everything.
+ */
+export interface Sighted {
+  readonly verb: string;
+  readonly status: number;
+  /** True when a name that cannot exist is told apart from one that can. */
+  readonly canTell: boolean;
+  readonly note: string;
+}
+
+export async function sighted(): Promise<Sighted[]> {
+  const verbs = [...new Set(MODELS.map((one) => one.verb))];
+  const out: Sighted[] = [];
+  for (const verb of verbs) {
+    const control = await reach(NO_SUCH, verb);
+    out.push({
+      verb,
+      status: control.status,
+      /* A 404 for a name that cannot exist means the name was looked up,
+         which means a 404 for a candidate means something too. Anything
+         else means the answer came back before the name was read, and
+         every row for this verb is about the request. */
+      canTell: control.answer === 'no',
+      note: control.answer === 'no'
+        ? `A made-up name answers 404 here, so the rows for ${verb} are about the models.`
+        : `A made-up name answers ${control.status} here, exactly like a real one would.`
+          + ` NOTHING this probe says about ${verb} models is a reading — it is the`
+          + ' shape of the request. Open Model Garden in the console instead.',
+    });
+  }
+  return out;
 }
 
 /** One model as the list reports it. */

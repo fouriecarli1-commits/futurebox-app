@@ -68,10 +68,21 @@ export default function GoogleSetup(): React.ReactElement {
   return (
     <main className="mx-auto max-w-2xl p-6 space-y-4">
       <h1 className="text-xl font-bold">Google: what is actually there</h1>
+      {/* ── Say what it does NOW ────────────────────────────────────────
+ 
+          This read "asks each candidate model whether it answers, with an
+          empty request it has to refuse", which is what the probe did until
+          8 October 2026 and is exactly the method that turned out to be
+          measuring the request rather than the project — see the long note
+          in `lib/server/google.ts`. The probe was rewritten and the sentence
+          describing it was not, which is its own small version of the same
+          fault: a page that says one thing and does another. */}
       <p className="text-sm leading-relaxed text-zinc-400">
-        Asks each candidate model whether it answers, with an empty request it
-        has to refuse. Nothing is generated and nothing is billed. Sign in on
-        the main site first — this uses that, not a password.
+        Asks Google for its own list of the models this project can see, and
+        reads each candidate model as a thing rather than poking it. No
+        request body goes out, so nothing can be generated and nothing is
+        billed. Sign in on the main site first — this uses that, not a
+        password.
       </p>
       <button
         type="button"

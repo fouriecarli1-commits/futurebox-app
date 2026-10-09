@@ -33,7 +33,9 @@
 import crypto from 'node:crypto';
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { isOwnerEmail } from '@/app/lib/server/owners';
-import { MODELS, addressOf, catalogue, configured, project, reach, region } from '@/app/lib/server/google';
+import {
+  MODELS, addressOf, catalogue, configured, project, reach, region, sighted,
+} from '@/app/lib/server/google';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -129,9 +131,13 @@ export async function GET(request: Request): Promise<Response> {
      whether this key may touch each one. A model in the list that reads
      back `not-allowed` is a different problem from one that is absent, and
      only asking both tells them apart. */
-  const [has, found] = await Promise.all([
+  const [has, found, canSee] = await Promise.all([
     catalogue(),
     Promise.all(MODELS.map((one) => reach(one.id))),
+    /* Whether any of the rows above mean anything. Asked in the same breath
+       rather than assumed, twice having reported readings from a method that
+       was not reading. */
+    sighted(),
   ]);
 
   /* ── One line per KIND, worked out from the list ────────────────────
@@ -145,12 +151,28 @@ export async function GET(request: Request): Promise<Response> {
      describes the list as it was the day somebody wrote it. This one is
      built FROM the list, so a kind that cannot be silently left out is a
      kind nobody has to remember. `check:google` holds it. */
+  const tells = new Map(canSee.map((one) => [one.verb, one.canTell]));
   const kinds = [...new Set(MODELS.map((one) => one.what))];
   const says = kinds.map((kind) => {
+    const verb = MODELS.find((one) => one.what === kind)?.verb ?? 'predict';
+    /* ── Say nothing rather than say something unmeasured ──────────
+ 
+       The old line read "NONE answered, check Model Garden" whether the
+       probe had looked or not, and on 9 October it printed that for all
+       three kinds when the truth was that the method had refused the
+       credential before any model was reached. A sentence that reads the
+       same whether or not anything was measured is the fault this whole
+       file keeps arriving at. */
+    if (!tells.get(verb)) {
+      return `${kind}: NOT MEASURED. The probe cannot tell a real ${verb} model`
+        + ' from a made-up one with this credential, so it is saying nothing'
+        + ' about these. Open Vertex AI \u2192 Model Garden in the console.';
+    }
     const works = found.filter((one) => one.what === kind && one.answer === 'yes');
+    const absent = found.filter((one) => one.what === kind && one.answer === 'no');
     return works.length
       ? `${kind}: use ${works.map((one) => one.model).join(' or ')}.`
-      : `${kind}: NONE answered. Check Model Garden for this project and region.`;
+      : `${kind}: none of ${absent.map((one) => one.model).join(', ')} are on this project.`;
   });
 
   /* What the list turned up that this app has never heard of — the most
@@ -164,6 +186,8 @@ export async function GET(request: Request): Promise<Response> {
     project: project(),
     region: region(),
     /* Google's own answer to "what does this project have", first. */
+    /* Put this first: it decides whether anything below is a reading. */
+    canTheProbeSee: canSee,
     catalogue: {
       asked: has.ok,
       status: has.status,

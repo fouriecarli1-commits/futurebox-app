@@ -167,20 +167,50 @@ const lib = withoutComments(readFileSync('app/lib/server/google.ts', 'utf8'));
    whatever Google does with it, where a POST only avoided generating by
    being broken. */
 
-ok('the probe reads the model rather than poking it',
-  /await fetch\(readAddressOf\(model\)/.test(lib),
-  'a POST to a generate verb is a probe whose safety rests on its own body'
-  + ' being malformed, and that is what made the old one answer the wrong'
-  + ' question for four models');
+/* ── Wrong twice, and the second time for a new reason ───────────────────
+ 
+   These asserted that the probe READS the model rather than poking it, which
+   was the 8 October rewrite. Carli pressed it on 9 October and Google
+   answered, for all eight models:
+ 
+     API keys are not supported by this API. Expected OAuth2 access token or
+     other authentication credentials that assert a principal.
+ 
+   The read and the list do not take the credential this app has. So the
+   probe is back on the generate verb with an empty body — the only door an
+   API key may use — and the rule has moved to the thing that was missing
+   from BOTH versions.
+ 
+   Neither of them could tell whether it was measuring anything. The first
+   read a body check as a model reading; the second asked a question the
+   credential could not carry; and both printed eight confident rows. The
+   method was never the fault. Not checking was.
+ 
+   So: a control. The same request, against a name that cannot exist. If a
+   made-up name is told apart from a real one, the rows mean something. If it
+   is not, the probe says so and says nothing else. */
 
-ok('  and it sends no body at all, so nothing can be made by asking',
-  !/readAddressOf\(model\)[\s\S]{0,260}body:/.test(lib),
-  'a body on this request is a probe that could generate');
+ok('the probe cannot generate: an empty body and no prompt',
+  /body: '\{\}'/.test(lib) && !/prompt/.test(lib.slice(lib.indexOf('export async function reach'))),
+  'the one thing that was right in every version, and the reason an empty'
+  + ' body was chosen in the first place');
 
-ok('  and a 200 is what means the model is THERE',
-  /response\.status === 200\s*\n?\s*\? 'yes'/.test(lib),
-  'the model read back is the only answer that means it exists; a 400 means'
-  + ' the request was wrong, which says nothing about the model');
+ok('  and it carries a control that cannot exist',
+  /export const NO_SUCH/.test(lib) && /reach\(NO_SUCH, verb\)/.test(lib),
+  'without one, a probe cannot tell a reading from the shape of its own'
+  + ' request — which is how this file was wrong twice');
+
+ok('  and only a 404 on the control counts as being able to see',
+  /canTell: control\.answer === 'no'/.test(lib),
+  'a made-up name answering the same as a real one means the name was never'
+  + ' looked up; anything softer than 404 here is wishful');
+
+ok('  and a 401 about the KIND of credential is not read as a permission',
+  /API keys are not supported/.test(lib)
+  && /not a permission, and/.test(lib),
+  '"ask for access to this model" sent her to a page that could not have'
+  + ' helped: there is nothing to grant when the method refuses the whole'
+  + ' class of credential');
 
 ok('  while a 404 and a 403 stay different answers',
   /response\.status === 404/.test(lib) && /response\.status === 401 \|\| response\.status === 403/.test(lib),
@@ -258,8 +288,15 @@ ok('the summary is built from the list, not written out by hand',
   + ' which is exactly what happened');
 
 ok('  so a kind with nothing working says so rather than vanishing',
-  /NONE answered/.test(route),
+  /are on this project/.test(route),
   'an absent line reads as "fine", which is the opposite of the truth');
+
+ok('  and a kind the probe could not measure says THAT, not "none"',
+  /NOT MEASURED/.test(route) && /!tells\.get\(verb\)/.test(route),
+  'on 9 October this printed "NONE answered — check Model Garden" for all'
+  + ' three kinds, when the truth was that the credential had been refused'
+  + ' before a single model was reached. A sentence that reads the same'
+  + ' whether or not anything was measured is the whole fault');
 
 ok('every chosen id is one that was actually measured',
   Object.values(CHOSEN).every((id) => MODELS.some((one) => one.id === id)),
