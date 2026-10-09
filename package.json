@@ -296,6 +296,7 @@
     "check:lyria": "tsx scripts/check-lyria.mts",
     "check:veo": "tsx scripts/check-veo.mts",
     "check:graadbaan": "tsx scripts/check-graadbaan.mts",
+    "check:prent": "tsx scripts/check-prent.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

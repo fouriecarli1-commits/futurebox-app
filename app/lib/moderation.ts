@@ -82,7 +82,22 @@ export type Surface =
    * public office claimed, a news event staged — because those are wrong in a
    * plan for the same reasons they are wrong in a shot.
    */
-  | 'brief';
+  | 'brief'
+  /**
+   * What somebody typed to make a still picture, or to change one.
+   *
+   * Its own surface rather than borrowed from `video`, for the reason spelled
+   * out under `room`: the moderation log is the evidence this platform
+   * enforces its own rules, and a refusal filed under `video` for a route
+   * that films nothing is evidence of the wrong thing.
+   *
+   * It carries `video`'s rules wherever the risk is in the picture rather
+   * than in its movement — a real person's face, a public official, a
+   * staged news photograph, sexual content. A still of a public figure
+   * saying something they never said is the same wrong as the clip, and the
+   * fact that it does not move has never made a fake photograph harmless.
+   */
+  | 'picture';
 
 export type Rule =
   | 'minors'
@@ -322,7 +337,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
     );
   }
 
-  if ((surface === 'video' || surface === 'brief' || surface === 'speech') && hit(OFFICE) && NAME_ANYWHERE.test(value)) {
+  if ((surface === 'video' || surface === 'brief' || surface === 'speech' || surface === 'picture') && hit(OFFICE) && NAME_ANYWHERE.test(value)) {
     return refuse(
       'likeness',
       'This names a person in public office. Putting words in the mouth of a real official is the one use of this technology that reliably ends in court, so it is refused.',
@@ -330,7 +345,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
   }
 
   // 3. Something made to be mistaken for a record of an event.
-  if ((surface === 'video' || surface === 'brief' || surface === 'speech') && hit(NEWS)) {
+  if ((surface === 'video' || surface === 'brief' || surface === 'speech' || surface === 'picture') && hit(NEWS)) {
     return refuse(
       'fabricated-news',
       'This asks for something that would be taken as real footage or a real report. Anything made here can be fiction, comedy or drama, but not a fake record of something that happened.',
@@ -340,7 +355,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
   // 4. Sexual content. This is a music, podcast and video app, and there is no
   //    version of it where making explicit material is worth the moderation
   //    burden that comes with it.
-  if (hit(SEXUAL) && (surface === 'video' || surface === 'brief' || surface === 'name')) {
+  if (hit(SEXUAL) && (surface === 'video' || surface === 'brief' || surface === 'name' || surface === 'picture')) {
     return refuse(
       'explicit',
       'Sexually explicit material is outside what this app makes.',

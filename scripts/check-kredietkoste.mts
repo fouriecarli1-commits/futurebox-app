@@ -40,6 +40,7 @@
  */
 import { CREDITS, TIER_CREDITS, readCost } from '../app/lib/credits.ts';
 import { TIER_SPECS, RAND_PER_USD } from '../app/lib/plans.ts';
+import { PER_PICTURE } from '../app/lib/server/picture.ts';
 import { paid } from '../app/data/aiprices.ts';
 
 let bad = 0;
@@ -229,6 +230,12 @@ const priced: {
   /* Estimated at the dearest thing in the same family — see `CREDITS.erase`.
      Held against that same rate so it can never quietly fall under it. */
   { product: true, what: 'an item taken out, per five seconds', credits: CREDITS.erase, cost: CUTOUT_PER_5S },
+  /* A still picture changed by saying what to change — Nano Banana on her
+     own Google project. `PER_PICTURE` is micro-dollars and is itself the
+     expensive end of an unread price, so this asserts the margin against a
+     figure deliberately set too high. If it passes here it passes on the
+     real invoice. */
+  { product: true, what: 'a still picture changed by saying what to change', credits: CREDITS.repaint, cost: (PER_PICTURE / 1_000_000) * RAND_PER_USD },
 ];
 
 for (const one of priced) {

@@ -2679,6 +2679,28 @@ export default function PostStudio({
 
       </div>
     )}
+    {/* ── Where “change it by saying what to change” is NOT ────────
+
+        The engine is built and the route is live: Nano Banana, on her own
+        Google project, at `/api/google/picture`. It was in this room, right
+        here, under the eraser — and `check:kidsafe` reddened, which is the
+        check doing exactly what it was written to do.
+
+        Its finding, measured off the code rather than decided: this is the
+        only room in the app with no other people in it and no money in it
+        once the download door is shut, which makes it the one room a child
+        could be left alone in. A child-friendly version of FutureBox is
+        therefore not "hide some rooms", it is this one room with one door
+        closed — and a second paid door, to a generative model, is the
+        thing that stops that being true.
+
+        That is a decision about her product, so it is hers. The control is
+        about twenty lines and it goes back here the day she says so; what
+        is waiting on her is in `docs/OPEN-QUESTIONS.md`.
+
+        Written here rather than only in that file because this is where
+        somebody will look for it, having been told the photo editor can
+        change a picture by asking. */}
     {/* ── Taking something small out ─────────────────────────────────
  
         Carli, 7 October 2026: *"magic eraser"*. This grows the pixels

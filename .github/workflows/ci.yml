@@ -1310,6 +1310,13 @@ jobs:
       - name: The grade ladder holds
         run: npm run check:graadbaan
 
+      # Nano Banana, the third of the three engines she named on 8 October
+      # and the only one nothing had ever called. The address off her own
+      # console, a reader driven without a network, and a charge that
+      # cannot happen before there is room for it.
+      - name: The picture engine is called the way her console says
+        run: npm run check:prent
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
