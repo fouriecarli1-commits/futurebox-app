@@ -135,22 +135,15 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   filmUnder: ['under'],
   mixOut: ['mix'],
   postOut: ['post'],
-  /* ── Priced, built, and deliberately without a door ─────────────────
+  /* The room says "change what is IN the picture by saying what to change".
+     Named with its own phrase: mine was "repaint", which appears nowhere a
+     member will ever read.
 
-     Nano Banana at `/api/google/picture`, 9 October 2026. The control was
-     written and it was in the photo editor, and `check:kidsafe` reddened:
-     that room is the only one in the app with no other people and no money
-     in it once the download door is shut, which makes it the one room a
-     child could be left alone in. A second paid door, to a generative
-     model, is the thing that stops that being true — and that is a
-     decision about her product rather than about this code.
-
-     So `null`, with the reason, rather than a phrase pointing at a button
-     that is not there. A paid thing nobody can be sent to is what this
-     check is for; a paid thing nobody can reach AT ALL is a different
-     state, and this entry is here so it stays a stated one rather than
-     becoming an oversight. Waiting on her in `docs/OPEN-QUESTIONS.md`. */
-  repaint: null,
+     It was `null` for an hour, with the reason, while the control was out of
+     the room and `check:kidsafe`'s question was with her — a paid thing
+     with no door anywhere is a different state from one nobody can be sent
+     to, and it was worth saying which. She answered; the door is back. */
+  repaint: ['saying what to change'],
   /* The same film, rendered in the browser instead of bought out. One
      capability, one place; a second entry would be a second door that does
      not exist. */

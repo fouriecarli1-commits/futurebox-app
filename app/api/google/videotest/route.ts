@@ -54,7 +54,7 @@
 
 import { opened } from '@/app/lib/server/ownerdoor';
 import { configured as googleOn, project, region } from '@/app/lib/server/google';
-import { googleVeo } from '@/app/lib/server/video';
+import { googleVeo, googleVeoFull } from '@/app/lib/server/video';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,6 +63,22 @@ export const maxDuration = 60;
 
 /** Four seconds, the shortest length Veo will make, because it is the cheapest. */
 const SECONDS = 4;
+
+/**
+ * Which rung to ask, because the answer is per MODEL and not per project.
+ *
+ * Carli settled the cheap rung on 9 October 2026: `needsBucket: false`, the
+ * bytes came back. The full model on `premium` is a different publisher
+ * model and has never been asked, which is a good inference rather than a
+ * measurement — and this project has been burnt by exactly that distinction
+ * twice this week.
+ *
+ * So `?rung=premium` asks the other one. It is deliberately not the default:
+ * four seconds of the full model is about $1.60 against the cheap rung's
+ * $0.60, and nobody should spend the dearer one by leaving a parameter off.
+ */
+const RUNGS = { better: googleVeo, premium: googleVeoFull } as const;
+type Rung = keyof typeof RUNGS;
 
 /**
  * Deliberately dull, and deliberately not a person.
@@ -81,6 +97,13 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const job = url.searchParams.get('op') ?? '';
   const go = url.searchParams.get('go') === 'yes';
+  const asked = url.searchParams.get('rung') ?? '';
+  const rung: Rung = asked === 'premium' ? 'premium' : 'better';
+  const engine = RUNGS[rung];
+  /* The rung travels in every link this page hands back, because asking
+     about a job on the wrong model gets a not-found rather than progress —
+     an operation name belongs to the model that minted it. */
+  const tail = rung === 'premium' ? '&rung=premium' : '';
   const here = `${url.origin}${url.pathname}`;
 
   if (!googleOn()) {
@@ -94,7 +117,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── Asking about a clip already started. Free. ──────────────────── */
   if (job) {
-    const where = await googleVeo.check(job);
+    const where = await engine.check(job);
     if (where.state === 'running') {
       return Response.json({
         ready: true,
@@ -102,7 +125,7 @@ export async function GET(request: Request): Promise<Response> {
         done: false,
         says: 'Still making it. Google takes a minute or two for four seconds.'
           + ' Open pressNext again — asking costs nothing.',
-        pressNext: `${here}?op=${encodeURIComponent(job)}`,
+        pressNext: `${here}?op=${encodeURIComponent(job)}${tail}`,
       });
     }
     if (where.state === 'unknown') {
@@ -111,7 +134,7 @@ export async function GET(request: Request): Promise<Response> {
         needsBucket: null,
         done: false,
         says: `Google could not be reached to ask: ${where.message}`,
-        pressNext: `${here}?op=${encodeURIComponent(job)}`,
+        pressNext: `${here}?op=${encodeURIComponent(job)}${tail}`,
       });
     }
     if (where.state === 'failed') {
@@ -158,18 +181,30 @@ export async function GET(request: Request): Promise<Response> {
       ready: true,
       needsBucket: null,
       willSpend: true,
-      says: `This makes one real ${SECONDS}-second clip on Google Veo to find out`
-        + ' whether the video comes back as bytes or as a gs:// path in a'
-        + ' bucket. It costs about $0.60, call it R10, and there is no free way'
-        + ' to ask. Add &go=yes to the address to spend it.',
+      says: `This makes one real ${SECONDS}-second clip on ${engine.name} to find`
+        + ' out whether the video comes back as bytes or as a gs:// path in a'
+        + ' bucket. There is no free way to ask. Add &go=yes to the address to'
+        + ' spend it.'
+        + (rung === 'premium'
+          ? ' This is the DEARER rung: about $1.60, call it R26. The cheap one'
+            + ' was already answered on 9 October 2026 — no bucket needed —'
+            + ' so this only settles the full model behind the premium grade.'
+          : ' About $0.60, call it R10. Carli already ran this on'
+            + ' 9 October 2026 and it answered no bucket needed, so there is'
+            + ' nothing left to find out here unless the model changes.'),
+      alreadyAnswered: rung === 'better' ? 'needsBucket: false, 9 October 2026' : null,
+      otherRung: rung === 'better'
+        ? `${here}?rung=premium`
+        : `${here}`,
       project: project(),
       region: region(),
-      model: googleVeo.model,
-      pressToStart: `${here}?go=yes`,
+      rung,
+    model: engine.model,
+      pressToStart: `${here}?go=yes${tail}`,
     });
   }
 
-  const started = await googleVeo.start({
+  const started = await engine.start({
     prompt: PROMPT,
     aspect: '16:9',
     seconds: SECONDS,
@@ -191,6 +226,6 @@ export async function GET(request: Request): Promise<Response> {
     says: 'Started. Google is making it now, which takes a minute or two.'
       + ' Open pressNext to ask whether it came back as bytes or as a bucket'
       + ' path — asking costs nothing.',
-    pressNext: `${here}?op=${encodeURIComponent(started.taskId)}`,
+    pressNext: `${here}?op=${encodeURIComponent(started.taskId)}${tail}`,
   });
 }

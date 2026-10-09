@@ -149,12 +149,38 @@ ok('three rooms cannot spend a credit at all',
   + ' `docs/OPEN-QUESTIONS.md` says which three, and a write-up whose figures'
   + ' have quietly changed is worse than none');
 
-ok('  and the photo editor spends on one thing only: taking the picture off the device',
-  JSON.stringify(spend.get('photo')) === JSON.stringify(['/api/post/export']),
-  `${JSON.stringify(spend.get('photo'))} — every tool in that room runs on`
-  + ' the device and is free, which is what makes it the one room a child'
-  + ' could be left in; a second paid door in it is the thing that would'
-  + ' change that');
+/* ── This assertion changed on 9 October 2026, and how it changed matters ─
+
+   It read `['/api/post/export']` — one paid door — on the ground that the
+   photo editor was the only room with no other people and no money in it,
+   and therefore the room a child-friendly FutureBox would be. It reddened
+   the moment the picture-change control went in, which is exactly its job.
+
+   The control came out and the question went to her. Her answer:
+
+     *"Ek dink die child funksie is net om met liedjie maak te speel - en
+     dalk om die liedjie 'n video te maak."*
+
+   The child version is the BOOTH. Making a song, and maybe a video of it —
+   both of which cost credits, so "the room with no money in it" was never
+   the thing she wanted. The measurement was right; the design conclusion
+   drawn from it was mine and it was wrong about her product. That is the
+   useful failure mode of a check like this one: it stopped a change, a human
+   looked, and the finding turned out to be the part that needed correcting.
+
+   So the number is rewritten with today's date rather than the rule being
+   dropped. Still named rather than counted, so the NEXT paid door in this
+   room reddens too — the point was never one door, it was that nobody adds
+   one silently. What the child mode needs is written up in
+   `docs/OPEN-QUESTIONS.md`, and it is about the booth. */
+ok('  and the photo editor spends on exactly the two things it is meant to',
+  JSON.stringify(spend.get('photo'))
+    === JSON.stringify(['/api/google/picture', '/api/post/export']),
+  `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
+  + ' and changing what is in it by saying what to change. Every other tool'
+  + ' in that room runs on the device and is free. A THIRD paid door is a'
+  + ' decision somebody has to make out loud, which is what this line is'
+  + ' for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',
   FREE.includes('collab'),

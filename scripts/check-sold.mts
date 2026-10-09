@@ -89,17 +89,18 @@ for (const { what, says } of MUST_BE_ON_EVERY_CARD) {
 
 /** Priced things that are deliberately not on the cards, and why. */
 const NAMED_ELSEWHERE: Record<string, string> = {
-  /* Nano Banana, priced on 9 October 2026 with the engine and the route, and
-     with no button anywhere on purpose — `check:kidsafe` reddened when the
-     control went into the photo editor, because that is the one room a child
-     could be left alone in and a second paid door changes it. Three choices
-     for where it goes are waiting for her in `docs/OPEN-QUESTIONS.md`.
+  /* Nano Banana in the photo editor, 9 October 2026. Exempt for the same
+     reason `postOut` is and not for a special one: the cards name ROOMS and
+     what they cost to run, and a line for every press inside one would be
+     read by nobody.
 
-     So it stays off the cards: a card naming a price for something nobody
-     can press is worse than no card, and the room it belongs in is not
-     settled. It goes on them the day she picks a door. */
-  repaint: 'the picture change — built, priced, and deliberately without a'
-    + ' door until she chooses which room it belongs in',
+     It was exempt for a different reason for an hour — "deliberately
+     without a door" — while `check:kidsafe` had the control out of the
+     room and the question with her. She answered that the child version is
+     the booth, so the door is back and so is the ordinary reason. */
+  repaint: 'five credits to have a picture redrawn, inside the photo editor,'
+    + ' whose other tools are free because they run on her own phone. The'
+    + ' cards name the room; this is one press inside it',
   /* Priced before the screen that spends it exists, deliberately. Carli set
      the rule on 6 October — "elke keer wanneer iets afgelaai word kos dit
      krediete" — and a price agreed while the feature is being designed is a

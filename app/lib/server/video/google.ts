@@ -20,13 +20,31 @@
  * for Standard. The fast one is the default for the reason the margin is one
  * cent — see `CREDITS.video`.
  *
- * ── The awkward part, stated rather than hidden ──────────────────────────
+ * ── The awkward part, and it is now measured rather than assumed ─────────
  *
  * `Progress` wants a URL when a clip is done, because every other engine
  * hands back a link the route then copies into our own bucket. **Google
  * hands back bytes**, because we deliberately did not switch Cloud Storage
  * on — see `docs/GOOGLE-OPSTEL.md`, where leaving it off is what keeps
  * everything inside the one capped service.
+ *
+ * That sentence was an inference for a day, and an uncomfortable one: every
+ * Veo sample on Carli's Model Garden page answers with a `gs://` path, so
+ * the reasonable fear was that Veo always writes to a bucket and this app
+ * had no way to read one. The samples all send `storageUri` and this app
+ * never does, so the samples could not settle it.
+ *
+ * **Carli ran `/api/google/videotest` on 9 October 2026 and it answered
+ * `needsBucket: false`.** One real four-second clip, through these two
+ * functions rather than through a probe beside them, and the bytes came
+ * back. No bucket, nothing to switch on, and the Cloud Storage question is
+ * closed for this rung.
+ *
+ * Measured on `veo-3.1-fast-generate-001`, which is what `googleVeo` runs.
+ * The premium rung runs the full model and that one is still an INFERENCE —
+ * same API, same request, no `storageUri` — which is a good inference and
+ * not a measurement. `/api/google/videotest?rung=premium` settles it for
+ * about R26 if anybody ever wants it settled.
  *
  * So `check` answers with a `data:` URL. `fetch` reads one, so the route's
  * own copy-into-the-bucket step works unchanged and nothing else had to
@@ -194,8 +212,12 @@ export const VIDEO_FIELDS = ['bytesBase64Encoded', 'videoBytes', 'video', 'bytes
  * — the file written into a Cloud Storage bucket, because the sample asks
  * for that with a `storageUri` parameter.
  *
- * This app does not send `storageUri`, so Veo should hand back bytes. But if
- * it ever answers with a path, "the video was not where this app looked for
+ * This app does not send `storageUri`, and the measurement of 9 October 2026
+ * says the cheap rung hands back bytes accordingly. This stays anyway, for
+ * two reasons: the full model on the premium rung has never been measured,
+ * and a model switched tomorrow is one line.
+ *
+ * If a path ever comes back, "the video was not where this app looked for
  * it" is true and useless: it reads as a field-name problem, and the real
  * problem is that the clip is in a bucket this app does not have and cannot
  * read with the credential it holds.

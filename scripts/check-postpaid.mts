@@ -107,6 +107,18 @@ const INSIDE: Readonly<Record<string, string>> = {
   'shelved.toBlob': 'the same keep, for the byte count the shelf records so it can'
     + ' say how much room it is using. The blob is measured and dropped — see'
     + ' `check:shelf`',
+  /* ── The picture on its way to be redrawn, 9 October 2026 ──────
+ 
+     Named `sent` rather than `sheet` ON PURPOSE, for the same reason
+     `shelved` is not `sheet`: this list keys on the variable name, so
+     borrowing the paid export's name to let this one through would have
+     excused the paid road out at the same time. A variable name is a poor
+     fence, so the fence is what the reason below asserts. */
+  'sent.toDataURL': 'the picture on its way to Google’s picture model. The data'
+    + ' URL is cut at the comma and posted as base64 in a request body, and what'
+    + ' comes back is a new <img>. No anchor, no download attribute, no object URL'
+    + ' handed to anybody: it leaves the page as a REQUEST, which is the one way'
+    + ' out of this room that cannot put a file on the device',
 };
 const makers = studio.match(/[\w.]*\.(?:toBlob|toDataURL)\(/g) ?? [];
 const leaving = makers.filter((one) => !Object.keys(INSIDE).some((kept) => one.startsWith(kept)));

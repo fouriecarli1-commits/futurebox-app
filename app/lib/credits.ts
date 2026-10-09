@@ -720,28 +720,29 @@ export const CREDITS = {
    *
    * `cutout` is eight and `erase` eleven, and both are the same kind of work
    * on a moving picture — heavier than this, because they do it to every
-   * frame of five seconds. A still is one frame. So eight is the top of
-   * what this could defend rather than the middle, and it is still the
-   * cheaper half of the family.
+   * frame of five seconds. A still is one frame.
    *
-   * Eight credits is **R11.92** at the cheapest tier against about R0.96 of
-   * Google — **12.4x**, which is the dearest multiple in this family and
-   * wants saying out loud.
+   * Five credits is **R7.45** at the cheapest tier against about R0.96 of
+   * Google — **7.8x**, the same multiple as `cutout` next door.
    *
-   * It was set at eight when the engine was thought to cost R2.40, which
-   * made it 5.0x and in line with `cutout`. Carli's price layout, hours
-   * later, put Nano Banana 2.1 at $0.0504 for the size this app asks for —
-   * a third of what was assumed — and a price set against a cost that
-   * moved is a price somebody should get to look at again. **Five credits
-   * would be R7.45 and 7.8x**, the same multiple as `cutout`, and that is
-   * the number to use if she would rather the room be cheap than the margin
-   * be fat. Left at eight until she says, because a price going DOWN is a
-   * kindness that can wait for her and a price going up is not.
+   * ── It was eight for about an hour, and she lowered it ─────────────
+   *
+   * Eight was set when the engine was thought to cost R2.40, which made it
+   * 5.0x and in line with the family. Her price layout, the same evening,
+   * put Nano Banana 2.1 at $0.0504 for the size this app asks for — a
+   * third of the assumption — so eight had quietly become 12.4x, the
+   * dearest multiple in the room. Put to her with both numbers; her answer,
+   * 9 October 2026: *"En ja vir die 5 krediete."*
+   *
+   * The shape of that is worth keeping: the price did not move because
+   * anybody disliked it, it moved because the COST underneath it was read
+   * properly, and a price resting on a cost that changed is a price its
+   * owner should get to look at again.
    *
    * Priced from a published page rather than an invoice, like `cutout`, and
    * `check:kredietkoste` holds it against that page.
    */
-  repaint: 8,
+  repaint: 5,
 } as const;
 
 /**
