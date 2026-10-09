@@ -237,6 +237,25 @@ ok('  and offers the snap she asked about, switchable',
   + ' a part that swings on purpose is the case where it is wrong, so it has'
   + ' to be switchable');
 
+/* ── The report that the feature's first step was missing ────────────────
+ 
+   Carli, 9 October 2026, looking at the first version: *"Daar is niks wat
+   record nie."* The card asked for a lane and the way to MAKE one was a
+   record button on a different desk — and recording does not pick the new
+   lane either, so there were two screens between "I want to hum something"
+   and anything happening. A feature whose first step is somewhere else is a
+   feature nobody completes. */
+ok('  and can record the hum in the card itself',
+  /data-humrecord/.test(booth) && /data-humstop/.test(booth),
+  'there is no way to record from the hum card, so the first step of the'
+  + ' feature is on another desk and the card opens saying "pick a lane"');
+
+ok('  and falls back to the newest take when nothing is picked',
+  /humLane[\s\S]{0,160}?reverse\(\)/.test(booth),
+  'the card needs a lane to be PICKED, and recording one does not pick it —'
+  + ' so pressing record and then an instrument does nothing, which is what'
+  + ' she saw');
+
 ok('  and spends nothing to do it',
   !/charge\s*\([^)]*hum/i.test(booth),
   'the hum path charges — it runs entirely on the device, and a charge for'

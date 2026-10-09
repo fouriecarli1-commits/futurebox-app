@@ -3401,8 +3401,27 @@ export default function ProBooth({
   const [humSnap, setHumSnap] = useState(true);
   const [humming, setHumming] = useState(false);
 
+  /* ── Which lane gets played ────────────────────────────────────────────
+ 
+     The one picked, or the newest take if nothing is picked.
+ 
+     Carli, 9 October 2026, looking at the first version: *"Daar is niks wat
+     record nie."* She was right, and it was the whole feature: the card said
+     "Pick a lane first" and the way to MAKE that lane was a record button on
+     a different desk. Recording does not pick the new lane either — only a
+     session with exactly one lane in it picks anything automatically — so
+     the honest first step was hidden behind two screens she had no reason to
+     visit.
+ 
+     The record button is in the card now, and this falls back to the newest
+     take so that pressing it and then pressing an instrument works without
+     anybody picking anything. */
+  const humLane = lanes.find((one) => one.id === picked)
+    ?? [...lanes].reverse().find((one) => !one.backing)
+    ?? null;
+
   const humIt = useCallback(async (): Promise<void> => {
-    const lane = lanes.find((one) => one.id === picked);
+    const lane = humLane;
     const voice = voiceById(humVoice);
     if (!lane || !voice || humming) return;
     setHumming(true);
@@ -3459,7 +3478,7 @@ export default function ProBooth({
     } finally {
       setHumming(false);
     }
-  }, [lanes, picked, humVoice, humSnap, humming, meter.bpm, context, t]);
+  }, [humLane, humVoice, humSnap, humming, meter.bpm, context, t]);
 
   const stemDesk = (
     <>
@@ -3497,27 +3516,81 @@ export default function ProBooth({
         )}
       >
         <div className="space-y-3" data-humcard>
-          <div className="grid grid-cols-2 gap-2">
-            {VOICES.map((one) => (
+          {/* ── 1. Hum it ─────────────────────────────────────────────────
+              Her whole report on the first version: *"Daar is niks wat
+              record nie."* The card asked for a lane and the way to make one
+              was a record button on another desk. The first step of a
+              feature belongs in the feature. */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              {t('hum.step1', '1 · Hum or tap it')}
+            </p>
+            {recording ? (
               <button
-                key={one.id}
                 type="button"
-                onClick={() => setHumVoice(one.id)}
-                aria-pressed={humVoice === one.id}
-                data-humvoice={one.id}
-                title={t(one.what[0], one.what[1])}
-                className={`min-h-[44px] rounded-xl border px-3 py-2 text-left text-xs font-bold ${
-                  humVoice === one.id
-                    ? 'border-sky-400/70 bg-sky-500/10 text-sky-200'
-                    : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                }`}
+                onClick={() => void stopRecording()}
+                data-humstop
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-red-500 bg-red-500/20 px-4 text-sm font-bold text-red-300"
               >
-                <span className="block">{t(one.says[0], one.says[1])}</span>
-                <span className="mt-0.5 block text-[10px] font-medium leading-snug text-zinc-500">
-                  {t(one.what[0], one.what[1])}
-                </span>
+                <Square className="h-4 w-4 fill-current" />
+                {t('pro.stopRecording', 'Stop recording')}
               </button>
-            ))}
+            ) : (
+              <button
+                type="button"
+                onClick={() => void record()}
+                disabled={busy || making}
+                data-humrecord
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-bold text-onAccent disabled:opacity-50"
+              >
+                <Circle className="h-4 w-4 fill-current" />
+                {t('hum.record', 'Record a hum')}
+              </button>
+            )}
+            <p className="text-[11px] leading-snug text-zinc-600">
+              {humLane
+                ? `${t('hum.using', 'Will play')}: ${humLane.name}`
+                : t('hum.nothingYet', 'Nothing recorded yet. Leave a little space between the notes.')}
+            </p>
+          </div>
+
+          {/* ── 2. Pick the sound ─────────────────────────────────────────
+              One column, not two. Carli, 9 October 2026: *"Dit lyk nie goed
+              nie."* This desk is already two columns wide on a phone, so a
+              grid of two inside one of them gave each button about forty
+              pixels of text — "An / octave / down / from / what / you /
+              hummed", one word a line. A row each, name and sentence on
+              separate lines, uses the width the card actually has. */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              {t('hum.step2', '2 · Pick the sound')}
+            </p>
+            <div className="space-y-1.5">
+              {VOICES.map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  onClick={() => setHumVoice(one.id)}
+                  aria-pressed={humVoice === one.id}
+                  data-humvoice={one.id}
+                  className={`block min-h-[44px] w-full rounded-xl border px-3 py-2 text-left ${
+                    humVoice === one.id
+                      ? 'border-sky-400/70 bg-sky-500/10'
+                      : 'border-zinc-700 bg-zinc-900'
+                  }`}
+                >
+                  <span className={`block text-sm font-bold ${
+                    humVoice === one.id ? 'text-sky-200' : 'text-zinc-200'
+                  }`}
+                  >
+                    {t(one.says[0], one.says[1])}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] font-medium leading-snug text-zinc-500">
+                    {t(one.what[0], one.what[1])}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <label className="flex items-start gap-2.5 text-xs text-zinc-400">
@@ -3539,20 +3612,24 @@ export default function ProBooth({
             </span>
           </label>
 
-          <button
-            type="button"
-            onClick={() => void humIt()}
-            disabled={!picked || humming || busy || recording || making}
-            data-humgo
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
-          >
-            <Mic2 className="h-4 w-4" />
-            {humming
-              ? t('hum.working', 'Listening to it\u2026')
-              : picked
-                ? t('hum.go', 'Play this lane as the instrument')
-                : t('pro.pickOne', 'Pick a lane first')}
-          </button>
+          {/* ── 3. Play it ──────────────────────────────────────────────── */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              {t('hum.step3', '3 · Have it played')}
+            </p>
+            <button
+              type="button"
+              onClick={() => void humIt()}
+              disabled={!humLane || humming || busy || recording || making}
+              data-humgo
+              className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
+            >
+              <Mic2 className="h-4 w-4 flex-shrink-0" />
+              {humming
+                ? t('hum.working', 'Listening to it\u2026')
+                : t('hum.go', 'Play it as the instrument')}
+            </button>
+          </div>
         </div>
       </Card>
 
