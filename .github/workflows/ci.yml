@@ -1360,6 +1360,19 @@ jobs:
       - name: The child's room has two presses in it and no way out
         run: npm run check:kinderkamer
 
+      # A shot the copilot writes has to be deep enough to make a video
+      # from: the instruction's own worked example clears the desk's floor,
+      # the shot list is separated by blank lines rather than newlines, and
+      # the desk refuses by words rather than by twelve characters.
+      - name: A shot is deep enough to make a video from
+        run: npm run check:skootdiepte
+
+      # The trim handles cannot cross, an empty window is not reported as
+      # the whole clip, and the preview plays exactly the sound the finished
+      # film will carry. All three were behind one screenshot.
+      - name: The trim window is real and the preview is not silent
+        run: npm run check:knipvenster
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

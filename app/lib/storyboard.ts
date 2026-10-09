@@ -225,10 +225,35 @@ export function askFor(shot: Shot, look?: string): string {
  * refuses is a board that cannot be made.
  */
 export function shotsFrom(text: string, seconds: number): Shot[] {
-  return text
-    .split('\n')
-    .map((line) => line.replace(/^\s*(?:\d+[.)]|[-*\u2022])\s*/, '').trim())
-    .filter((line) => line.length > 0)
+  /* ── A shot can be a paragraph ──────────────────────────────────────────
+ 
+     This split on `\n`, so one line WAS one shot — and that was the real
+     reason the copilot's shots were short. `write_scenes` told it "one shot
+     per line" while `set_prompt` asked for "three or four sentences", and
+     those two cannot both be obeyed. A model resolving the contradiction
+     keeps the format rule, because the format rule is the one that looks
+     like it will break something. So the shots came back as single clauses,
+     and a video engine given a clause invents the rest.
+ 
+     Carli said it twice, a month apart — 11 September: *"CoPilot moet net
+     baie meer descriptive wees wanneer video shots geskryf word"*, and 9
+     October: *"Die video studio se ai is baie kort af."* The first fix was a
+     longer instruction, which could not work while this line was here.
+ 
+     Blank lines first, so a shot is a paragraph and may be as long as it
+     needs to be. Falling back to single lines when there are no blank ones,
+     because a numbered list of one-liners is still what somebody pasting
+     from elsewhere will send — and because every board saved before today
+     is in that shape. `check:skootdiepte` drives both. */
+  const blocks = text.includes('\n\n') ? text.split(/\n\s*\n/) : text.split('\n');
+  return blocks
+    /* A leading number or bullet goes, and only a leading one: a paragraph
+       may well say "a 50mm lens" or "2 a.m." inside it. */
+    .map((block) => block.replace(/^\s*(?:\d+[.)]|[-*\u2022])\s*/, '').trim())
+    /* Newlines inside a paragraph become spaces. A shot is one prompt, and a
+       prompt with a hard wrap in it is the same prompt. */
+    .map((block) => block.replace(/\s*\n\s*/g, ' '))
+    .filter((block) => block.length > 0)
     .slice(0, MOST_SHOTS)
     .map((prompt) => ({ id: shotId(), prompt, seconds }));
 }

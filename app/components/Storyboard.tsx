@@ -67,6 +67,8 @@ import Note from './Note';
 import { FILTERS, NO_FILTER, filterCss } from '../lib/videofilters';
 import OwnFootage from './OwnFootage';
 import Subtitles, { translated } from './Subtitles';
+import { depthOf, thinSays } from '../lib/shotdepth';
+import { endMoved, startMoved, windowOf } from '../lib/trimwindow';
 
 /**
  * The words that go over a shot.
@@ -306,8 +308,27 @@ export default function Storyboard({
          with an invention of the same length and charge her for it. */
       if (shot?.mine) return;
       if (!shot || making) return;
-      if (shot.prompt.trim().length < 12) {
-        setProblem(t('board.tooShort', 'Say a bit more in that shot — what is in it, and what the camera does.'));
+      /* ── Twelve characters was not a floor ──────────────────────────
+ 
+         This was `length < 12`. "A dog runs" is eleven characters, so almost
+         everything cleared it — and a shot that clears the floor goes to the
+         engine, which invents the ninety per cent that was not said. Nothing
+         in this room ever told anybody, the copilot or her, that what they
+         had written was not enough to make a video from.
+ 
+         Carli, 9 October 2026: *"Die video studio se ai is baie kort af. Dit
+         moet baie descriptive wees en daardie ai moet weet wat verwag word,
+         om genoeg beskrywing te gee sodat 'n ai 'n sinvolle video kan
+         maak."* The instruction was already long by then; the floor was the
+         part that let a short shot through anyway.
+ 
+         Words rather than characters, because "aaaaaaaaaaaa" and "a dog
+         runs" are the same twelve characters and only one is a shot. See
+         `lib/shotdepth.ts`, which is the one place the number lives and the
+         one the copilot is told about. */
+      const depth = depthOf(shot.prompt);
+      if (!depth.enough) {
+        setProblem(thinSays(depth, t));
         return;
       }
       setMaking(id);
@@ -1194,9 +1215,13 @@ function Trim({
   const url = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
 
-  const from = Math.min(shot.from ?? 0, length);
-  const to = Math.min(shot.to ?? length, length);
-  const trimmed = to > from ? to - from : length;
+  /* The arithmetic and the two handle rules live in `lib/trimwindow.ts`.
+     Not for tidiness: every one of the three faults behind her screenshot of
+     9 October was a rule written here with a comment saying it held, and
+     undone by another line a few below it. Reading this file for "can the
+     handles cross" finds the comment. `check:knipvenster` moves them
+     instead, which a check cannot do to a component. */
+  const { from, to, trimmed, empty } = windowOf(shot, length);
 
   useEffect(() => {
     let alive = true;
@@ -1218,6 +1243,10 @@ function Trim({
   const preview = useCallback(() => {
     const element = video.current;
     if (!element) return;
+    /* Nothing to play. Without this the element seeks to the end and pauses
+       on the next frame, which looks exactly like a button that does not
+       work — and was. */
+    if (to <= from) return;
     element.currentTime = from;
     void element.play();
     setPlaying(true);
@@ -1266,8 +1295,45 @@ function Trim({
         )}
       </div>
 
+      {/* ── It plays what the film will play ───────────────────────────────
+ 
+          Carli, 9 October 2026: *"I just made a video with speech. No sound
+          is coming out."*
+ 
+          This was a bare `muted`, so "Play just this bit" was silent on every
+          shot, including one that had been paid to speak. `muted` on a video
+          element is there to satisfy a browser's autoplay rule, and this one
+          plays from a button press — a gesture — so the rule never applied.
+          It was a reflex, and it threw away the one thing she was checking
+          for.
+ 
+          `!shot.spoke` rather than nothing at all, because that is exactly
+          what the finished film does: `stitch.ts` carries a scene's own
+          sound only when the shot was asked to speak, so a shot nobody asked
+          to speak is still muted — see the note there, from 23 September,
+          about a film of twelve rooms of hiss under a song. The preview now
+          sounds like the film will sound, which also means a shot that
+          failed to speak is audible as silence HERE rather than discovered
+          in the export.
+ 
+          `controls` as well, so there is a volume to reach for and somebody
+          who hears nothing can see whether it is the clip or the phone. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <video ref={video} muted playsInline className="w-full max-h-40 rounded border border-zinc-800 bg-black" />
+      <video
+        ref={video}
+        muted={!shot.spoke}
+        controls
+        playsInline
+        className="w-full max-h-40 rounded border border-zinc-800 bg-black"
+      />
+      {!shot.spoke && (
+        <p className="text-[11px] leading-snug text-zinc-500" data-trimsilent>
+          {t(
+            'trim.silent',
+            'This shot has no spoken line, so it goes into the film without sound. Put the words in quotation marks and turn on the speaking switch below to change that.',
+          )}
+        </p>
+      )}
 
       <div className="space-y-1.5">
         <label className="block text-xs text-zinc-500" htmlFor={`from-${shot.id}`}>
@@ -1277,15 +1343,24 @@ function Trim({
           id={`from-${shot.id}`}
           type="range"
           min={0}
-          max={length}
+          /* ── The start cannot reach the end of the clip ─────────────────
+ 
+             This was `max={length}`, and the rule below — push the end along
+             rather than cross it — could not hold there. Dragged to 8 on an
+             8-second clip it asked for an end of 8.8, which `to` clamps back
+             to 8, and from and to were both 8: a window of nothing, reported
+             as the whole clip, with a play button that did nothing.
+ 
+             That is Carli's screenshot of 9 October 2026. The guard was
+             written and then undone one line later by a clamp, which is why
+             `check:knipvenster` drives the two handles against each other
+             rather than reading this rule. */
+          max={Math.max(0, length - step)}
           step={step}
           value={from}
-          onChange={(event) => {
-            const next = Number(event.target.value);
-            // The handles cannot cross. Pushing the start past the end drags
-            // the end with it rather than producing a window of nothing.
-            onChange({ from: next, to: Math.max(next + step, to) });
-          }}
+          onChange={(event) => onChange(
+            startMoved({ from, to }, Number(event.target.value), length, step),
+          )}
           className="w-full accent-emerald-500"
         />
         <label className="block text-xs text-zinc-500" htmlFor={`to-${shot.id}`}>
@@ -1294,14 +1369,16 @@ function Trim({
         <input
           id={`to-${shot.id}`}
           type="range"
-          min={0}
+          /* And the end cannot reach the start of it, for the same reason in
+             the other direction: dragged to 0 it asked for a start of
+             minus one step, and the card read "Starts at -0.8s". */
+          min={step}
           max={length}
           step={step}
           value={to}
-          onChange={(event) => {
-            const next = Number(event.target.value);
-            onChange({ to: next, from: Math.min(next - step, from) });
-          }}
+          onChange={(event) => onChange(
+            endMoved({ from, to }, Number(event.target.value), length, step),
+          )}
           className="w-full accent-emerald-500"
         />
       </div>

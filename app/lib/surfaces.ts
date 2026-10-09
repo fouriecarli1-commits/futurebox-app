@@ -1,3 +1,5 @@
+import { SHOT_EXAMPLE, SHOT_FULL_WORDS, SHOT_MIN_WORDS } from './shotdepth';
+
 /**
  * What each room in the studio is for.
  *
@@ -389,21 +391,63 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
          nothing ever told the copilot about, so it wrote adverts with
          people talking and no quotes, and every one of the four stayed
          switched off. */
+      /* ── Shown, not described ────────────────────────────────────────
+ 
+         Carli said this twice, a month apart. 11 September: *"CoPilot moet
+         net baie meer descriptive wees wanneer video shots geskryf word."*
+         9 October: *"Die video studio se ai is baie kort af. Dit moet baie
+         descriptive wees en daardie ai moet weet wat verwag word, om genoeg
+         beskrywing te gee sodat 'n ai 'n sinvolle video kan maak."*
+ 
+         The first fix was this instruction getting longer, and it did not
+         work, for three reasons that had nothing to do with its wording:
+         `write_scenes` below told it "one shot per line" while this asked
+         for three or four sentences; `shotsFrom` split on newlines, so the
+         line rule was real and a paragraph would have become four shots;
+         and the desk accepted a shot of twelve characters, so a thin one
+         went to the engine with nothing said.
+ 
+         All three are fixed. What is left is this: the instruction's only
+         example was *"as you would tell a camera operator"*, which is a
+         REGISTER rather than a shot — and a model shown a register writes
+         one. `SHOT_EXAMPLE` is a whole shot, and `check:skootdiepte` runs
+         the desk's own `depthOf` over it and fails if it does not clear
+         `full`. An instruction whose example is thin teaches thinness,
+         whatever the sentences around it ask for.
+ 
+         The floor is named too, because "be descriptive" is not a thing a
+         model can check itself against and "at least this many words, and
+         say these four things" is. */
       set_prompt:
         "the value is the whole shot, written for a video engine, not a summary of it. " +
-        "Name the subject and what they are doing, the setting, the light and time of day, " +
-        "what the camera does (a slow push in, a static wide, a handheld follow), the lens " +
-        "or framing, and the mood. Three or four sentences, not one clause \u2014 everything " +
-        "you leave out, the engine invents. " +
+        `At least ${SHOT_MIN_WORDS} words and usually more like ${SHOT_FULL_WORDS}; ` +
+        "the desk REFUSES to make a shot shorter than that, because everything " +
+        "you leave out the engine invents. Name all four of these or the room says " +
+        "they are missing: what the camera does (a slow push in, a static wide, a " +
+        "handheld follow), the light and time of day, where it is, and the mood. " +
+        "Name the subject and what they are doing first. " +
         "ANY words that are spoken or sung in the shot go in double quotation marks, exactly " +
-        "as they should be said: a woman at a window says \u201cek gaan nie terug nie\u201d. " +
+        "as they should be said. " +
         "That is how the desk knows there is a line at all \u2014 unquoted, it is drawn at " +
-        "rather than said, and the subtitle comes out empty",
+        "rather than said, and the subtitle comes out empty. " +
+        `This is the length and the shape to write in: \u201c${SHOT_EXAMPLE}\u201d`,
       set_aspect: "the value is exactly one of 16:9, 9:16 or 1:1",
       set_seconds:
         "the value is a whole number of seconds, and one the desk offers",
+      /* ── A blank line between shots, not a newline ───────────────────
+ 
+         This said "one shot per line", which contradicted `set_prompt`
+         above and was the contradiction a model resolved in favour of the
+         format. `shotsFrom` splits on blank lines now, so a shot is a
+         paragraph and can be as long as it needs to be — and this says so,
+         in the same words the parser uses. `check:skootdiepte` holds the
+         two together. */
       write_scenes:
-        "the value is the whole shot list, one shot per line, in the order they should play \u2014 use this rather than describing the scenes in the chat, because the person cannot type them onto the board from a message",
+        "the value is the whole shot list, in the order they should play. " +
+        "Separate the shots with a BLANK LINE, and write each one as fully as " +
+        "`set_prompt` describes \u2014 several sentences each, not one line each. " +
+        "Use this rather than describing the scenes in the chat, because the person " +
+        "cannot type them onto the board from a message",
       set_look:
         "the value is the look the whole video shares, in a few words \u2014 the film stock, the light, the palette \u2014 and not what happens in any one shot",
       /* The board is a fold, like every panel in the app, and a shut fold
