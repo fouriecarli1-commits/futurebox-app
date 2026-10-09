@@ -45,6 +45,11 @@ const room = withoutComments(readFileSync('app/components/StoryRoom.tsx', 'utf8'
 const kids = withoutComments(readFileSync('app/components/KidsRoom.tsx', 'utf8'));
 const door = withoutComments(readFileSync('app/components/KidsDoor.tsx', 'utf8'));
 const keep = withoutComments(readFileSync('app/lib/storykeep.ts', 'utf8'));
+/* The shelf's behaviour moved here when the songs needed the same one. The
+   two assertions about the cap follow it: left pointing at `storykeep.ts`
+   they would have gone green the moment the machinery left that file, which
+   is a check reporting a property it can no longer see. */
+const device = withoutComments(readFileSync('app/lib/ondevice.ts', 'utf8'));
 const make = withoutComments(readFileSync('app/lib/storymake.ts', 'utf8'));
 
 /* ── 1. What goes on the shelf is the picture, not a handle to it ───── */
@@ -97,15 +102,33 @@ ok('  while the grown-up\'s own page does',
 /* ── 4. The shelf never makes room by itself ─────────────────────────── */
 
 ok('a full shelf refuses rather than dropping the oldest story',
-  /shelfFull/.test(keep) && !/shift\(\)|splice\(0/.test(keep),
+  /shelfFull/.test(device) && !/shift\(\)|splice\(0/.test(device),
   'the cap makes room by deleting, which is work that stops existing — and'
   + ' invisible, because the new story saves perfectly');
 
 ok('  and the count is taken inside the write',
-  /transaction\(\[SHELF\], 'readwrite'\)[\s\S]{0,400}?count\(\)/.test(keep),
+  /transaction\(\[store\], 'readwrite'\)[\s\S]{0,400}?count\(\)/.test(device),
   'the shelf is counted in one transaction and written in the next, which'
   + ' leaves room for a second save to land between them — the cap present'
   + ' and not holding');
+
+/* ── The refactor's own hazard ───────────────────────────────────────────
+ 
+   Moving the machinery to `ondevice.ts` is safe only while the NAMES stay
+   put. A database or store renamed in passing is every story kept before
+   today quietly gone, with the shelf reporting nothing wrong — it opens a new
+   empty database and says there are no stories, which is indistinguishable
+   from never having made one. */
+ok('  and the stories\' database is the one they were kept in',
+  /'futurebox-stories'/.test(keep) && /'stories'/.test(keep),
+  'the database or store was renamed, so every story kept before today is'
+  + ' gone and the shelf says, truthfully and uselessly, that there are none');
+
+ok('  and the shelf is the shared one, not a second copy',
+  /shelfOf\s*[<(]/.test(keep),
+  '`storykeep.ts` has its own IndexedDB wrapper again — two copies is two'
+  + ' places the cap is enforced and two places somebody fixes a bug in one'
+  + ' of');
 
 ok('  and it holds a sane number',
   MOST_STORIES >= 4 && MOST_STORIES <= 50,

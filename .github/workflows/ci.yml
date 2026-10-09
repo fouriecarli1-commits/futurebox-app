@@ -1393,6 +1393,12 @@ jobs:
       - name: A story on a shelf a child can reach, for nothing
         run: npm run check:kinderverhaal
 
+      # A child's song survives the page closing: the audio itself is kept
+      # and not an object URL, playing one back spends nothing, the bin is
+      # the grown-up's, and both shelves share one implementation.
+      - name: A child's song survives the page closing
+        run: npm run check:kinderliedjie
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

@@ -45,6 +45,7 @@ import {
 } from '../lib/kidsallowance';
 import { endKids, giveAllowance, kidsNow, type KidsState } from '../lib/kidsdoor';
 import StoryShelf from './StoryShelf';
+import SongShelf from './SongShelf';
 
 /** What one of each thing is called in a sentence about how many. */
 const MANY: Record<KidThing, readonly [string, string, string]> = {
@@ -199,6 +200,16 @@ export default function KidsDoor({
           {t('kids.shelfTitle', 'Stories on this device')}
         </h3>
         <StoryShelf grownUp />
+      </div>
+
+      {/* And the child's own songs, with the same one control they do not
+          get: taking one off cannot be undone, and losing a song they made
+          is worse than losing one somebody made for them. */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+          {t('kids.songsKept', 'Songs this child has kept')}
+        </h3>
+        <SongShelf grownUp />
       </div>
 
       {/* ── Where it stands ──────────────────────────────────────────── */}

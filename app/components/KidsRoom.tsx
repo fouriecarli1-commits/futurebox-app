@@ -45,13 +45,15 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Cake, CloudRain, Dog, Film, Guitar, Loader2, Moon, Music, Rocket, ShieldCheck,
+  Cake, CloudRain, Dog, Film, Guitar, Heart, Loader2, Moon, Music, Rocket, ShieldCheck,
   Smile, Sparkles, Waves,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import KidsDoor from './KidsDoor';
 import StoryShelf from './StoryShelf';
+import SongShelf from './SongShelf';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
+import { MOST_SONGS, keepSong } from '../lib/songkeep';
 import { howMany, priceOf } from '../lib/kidsallowance';
 import {
   KID_SOUNDS, KID_TOPICS, askKidVideo, makeKidSong, startKidVideo,
@@ -116,6 +118,13 @@ export default function KidsRoom(): React.ReactElement {
   const [busy, setBusy] = useState<'' | 'song' | 'video'>('');
   const [says, setSays] = useState('');
   const [song, setSong] = useState('');
+  /* The song itself, not only its address. An object URL cannot be stored —
+     it is a handle into this tab — so keeping one would save a row that
+     opens to nothing tomorrow. The story shelf shipped with exactly that
+     bug and it was caught by driving what the room puts in. */
+  const [songBlob, setSongBlob] = useState<Blob | null>(null);
+  const [kept, setKept] = useState(false);
+  const [shelfAgain, setShelfAgain] = useState(0);
   const [job, setJob] = useState<string | null>(null);
   const [film, setFilm] = useState('');
 
@@ -199,6 +208,8 @@ export default function KidsRoom(): React.ReactElement {
     if (held.current) URL.revokeObjectURL(held.current);
     held.current = URL.createObjectURL(answer.audio);
     setSong(held.current);
+    setSongBlob(answer.audio);
+    setKept(false);
     setSays(t('kids.songDone', 'Here is your song!'));
   };
 
@@ -211,6 +222,42 @@ export default function KidsRoom(): React.ReactElement {
     if ('says' in answer) { setSays(answer.says); return; }
     setJob(answer.job);
     setSays(t('kids.filmMaking', 'Making your video. It takes a minute.'));
+  };
+
+  /* ── Keeping it ────────────────────────────────────────────────────────
+ 
+     Carli, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
+     is."* A song played in the room and was gone when the page closed — work
+     that stops existing, and worse here than anywhere else, because it cost
+     real credits out of an allowance a parent set and the person it happens
+     to is six and will think the app ate it.
+ 
+     Costs nothing and spends no allowance: it is already paid for. */
+  const keepIt = async (): Promise<void> => {
+    if (!songBlob || kept) return;
+    const what = KID_TOPICS.find((one) => one.id === topic);
+    const how = KID_SOUNDS.find((one) => one.id === sound);
+    const put = await keepSong({
+      id: `kidsong-${Date.now()}`,
+      title: `${t(what?.says[0] ?? 'kids.song', what?.says[1] ?? 'A song')}`
+        + ` · ${t(how?.says[0] ?? '', how?.says[1] ?? '')}`,
+      made: Date.now(),
+      audio: songBlob,
+      topic,
+      sound,
+    });
+    if (put === 'kept') {
+      setKept(true);
+      setShelfAgain((was) => was + 1);
+      setSays(t('kids.kept', 'Kept! You can play it again any time, and it costs nothing.'));
+    } else if (put === 'shelfFull') {
+      setSays(t('kids.shelfFull', 'Your shelf is full — it holds {n} songs. Ask a grown-up to take one off.')
+        .replace('{n}', String(MOST_SONGS)));
+    } else if (put === 'full') {
+      setSays(t('kids.deviceFull', 'There is no room left on this device.'));
+    } else {
+      setSays(t('kids.noKeep', 'This browser will not keep anything.'));
+    }
   };
 
   return (
@@ -258,6 +305,16 @@ export default function KidsRoom(): React.ReactElement {
           {t('kids.stories', 'Stories')}
         </h2>
         <StoryShelf />
+      </div>
+
+      {/* ── The songs this child has kept ────────────────────────────────
+          Under the stories and above the making, because a child who has
+          made songs before comes back for those first. */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-extrabold text-white">
+          {t('kids.mySongs', 'My songs')}
+        </h2>
+        <SongShelf again={shelfAgain} />
       </div>
 
       <div className="space-y-3">
@@ -329,6 +386,16 @@ export default function KidsRoom(): React.ReactElement {
               whose whole point is that it has two buttons in it. */}
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <audio src={song} controls className="w-full" data-kidsplayer />
+          <button
+            type="button"
+            onClick={() => void keepIt()}
+            disabled={!songBlob || kept}
+            data-kidskeep
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-amber-500/50 bg-amber-500/10 text-base font-black text-amber-300 disabled:opacity-40"
+          >
+            <Heart className="h-5 w-5" fill={kept ? 'currentColor' : 'none'} />
+            {kept ? t('kids.keptIt', 'Kept') : t('kids.keep', 'Keep it')}
+          </button>
           <button
             type="button"
             onClick={() => void film2()}

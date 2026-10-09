@@ -34,6 +34,14 @@
  * 1 then fails with a `VersionError` for the rest of the session. A third
  * database costs nothing and cannot do that to the songs or to the film.
  *
+ * ── Why the machinery is not here any more ───────────────────────────────
+ *
+ * It was, until the songs needed the same shelf the next day. Two copies of
+ * an IndexedDB wrapper is two places a cap is enforced and two places
+ * somebody later fixes a bug in one of, so the behaviour moved to
+ * `lib/ondevice.ts` and the names stayed here. The database and store names
+ * are UNCHANGED on purpose: a story kept yesterday is still on the shelf.
+ *
  * ── Why the blobs go in whole, unlike the film's ─────────────────────────
  *
  * `filmkeep.ts` keeps its clips apart from the edit because the edit changes
@@ -45,6 +53,10 @@
  * fault where a record points at a blob that is no longer there.
  */
 
+import { shelfOf, type Put } from './ondevice';
+
+/* Unchanged since the shelf shipped. A new name here is every story kept
+   before today quietly disappearing, with the shelf reporting nothing wrong. */
 const DB_NAME = 'futurebox-stories';
 const SHELF = 'stories';
 
@@ -56,6 +68,8 @@ const SHELF = 'stories';
  * not quietly fill up with books nobody plays.
  */
 export const MOST_STORIES = 12;
+
+export type { Put };
 
 export interface KeptPage {
   readonly text: string;
@@ -74,8 +88,6 @@ export interface KeptStory {
   readonly pages: readonly KeptPage[];
 }
 
-export type Put = 'kept' | 'full' | 'shelfFull' | 'off';
-
 /** A name for the shelf, from the first words of the story. */
 export function titleOf(firstPage: string): string {
   const words = firstPage.trim().split(/\s+/).slice(0, 6).join(' ');
@@ -84,23 +96,13 @@ export function titleOf(firstPage: string): string {
   return words.replace(/[,;:.!?]+$/, '') || 'A story';
 }
 
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const asked = indexedDB.open(DB_NAME, 1);
-    asked.onupgradeneeded = () => {
-      const db = asked.result;
-      if (!db.objectStoreNames.contains(SHELF)) {
-        db.createObjectStore(SHELF, { keyPath: 'id' });
-      }
-    };
-    asked.onsuccess = () => resolve(asked.result);
-    asked.onerror = () => reject(asked.error);
-    /* A second tab upgrading, or a private window refusing outright. Neither
-       is something the room can do anything about, and a promise that never
-       settles would hang the save forever. */
-    asked.onblocked = () => reject(new Error('blocked'));
-  });
-}
+const shelf = shelfOf<KeptStory>({
+  database: DB_NAME,
+  store: SHELF,
+  most: MOST_STORIES,
+  /* A story with no pages is a half-written row, not a story. */
+  sound: (one) => Array.isArray(one.pages) && one.pages.length > 0,
+});
 
 /**
  * Put a story on the shelf.
@@ -108,91 +110,11 @@ function openDb(): Promise<IDBDatabase> {
  * Answers rather than throws, because the one thing a room must not do with
  * a failed save is nothing: a book that was paid for and did not save is a
  * sentence somebody needs to read while the tab is still open.
- *
- * `shelfFull` rather than quietly dropping the oldest. Deleting somebody's
- * story to make room for a new one is work that stops existing, which
- * `filmkeep.ts` calls the worst class of fault this app can have — and it
- * would be invisible, because the new story saves perfectly.
  */
-export async function keepStory(story: KeptStory): Promise<Put> {
-  if (typeof indexedDB === 'undefined') return 'off';
-  let db: IDBDatabase | null = null;
-  try {
-    db = await openDb();
-    const live = db;
-    return await new Promise<Put>((resolve, reject) => {
-      const tx = live.transaction([SHELF], 'readwrite');
-      const shelf = tx.objectStore(SHELF);
-
-      /* Counted inside this transaction rather than in a read beforehand: a
-         look in one transaction and a write in the next leaves room for a
-         second save to land between them, which is this cap being present
-         and not holding. */
-      const counted = shelf.count();
-      counted.onsuccess = () => {
-        if (counted.result >= MOST_STORIES) {
-          tx.abort();
-          resolve('shelfFull');
-          return;
-        }
-        shelf.put(story);
-      };
-
-      tx.oncomplete = () => resolve('kept');
-      tx.onabort = () => {
-        /* A quota error is the disk, and anything else is not worth a
-           different sentence to somebody holding a phone. */
-        if (tx.error?.name === 'QuotaExceededError') resolve('full');
-        else reject(tx.error ?? new Error('aborted'));
-      };
-    });
-  } catch {
-    return 'off';
-  } finally {
-    db?.close();
-  }
-}
+export const keepStory = (story: KeptStory): Promise<Put> => shelf.keep(story);
 
 /** Everything on the shelf, newest first. */
-export async function allStories(): Promise<KeptStory[]> {
-  if (typeof indexedDB === 'undefined') return [];
-  let db: IDBDatabase | null = null;
-  try {
-    db = await openDb();
-    const live = db;
-    const found = await new Promise<KeptStory[]>((resolve, reject) => {
-      const asked = live.transaction([SHELF], 'readonly').objectStore(SHELF).getAll();
-      asked.onsuccess = () => resolve((asked.result ?? []) as KeptStory[]);
-      asked.onerror = () => reject(asked.error);
-    });
-    return found
-      .filter((one) => one && Array.isArray(one.pages) && one.pages.length > 0)
-      .sort((a, b) => b.made - a.made);
-  } catch {
-    return [];
-  } finally {
-    db?.close();
-  }
-}
+export const allStories = (): Promise<KeptStory[]> => shelf.all();
 
 /** Take one off the shelf. */
-export async function forgetStory(id: string): Promise<void> {
-  if (typeof indexedDB === 'undefined') return;
-  let db: IDBDatabase | null = null;
-  try {
-    db = await openDb();
-    const live = db;
-    await new Promise<void>((resolve) => {
-      const tx = live.transaction([SHELF], 'readwrite');
-      tx.objectStore(SHELF).delete(id);
-      tx.oncomplete = () => resolve();
-      /* A delete that fails leaves the story there, which the shelf will
-         show on its next look. Nothing to tell anybody. */
-      tx.onabort = () => resolve();
-    });
-  } catch {
-    /* Nothing to do and nothing worth saying. */
-  } finally {
-    db?.close();
-  }
-}
+export const forgetStory = (id: string): Promise<void> => shelf.forget(id);
