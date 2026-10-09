@@ -1432,6 +1432,12 @@ jobs:
       - name: The words a song came back with are kept
         run: npm run check:gesing
 
+      # Words burned into a film had no outline and no shadow at all, which
+      # is invisible over a bright sky and over a dark room alike. The edge
+      # is the same SHARE of the text at every size, not the same pixels.
+      - name: Words on a film have an edge at every size
+        run: npm run check:woordrand
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

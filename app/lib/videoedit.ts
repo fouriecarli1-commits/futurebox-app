@@ -51,6 +51,7 @@ import { bitsFor, rateFor, sizeFor } from './videoquality';
 import { stretches, withSkip, wordsSpan } from './videospan';
 import type { CoverFrom } from './videocover';
 import type { Came } from './filmrights';
+import type { EdgeId } from './wordsedge';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -144,6 +145,16 @@ export interface Piece {
   readonly wordsInk?: string;
   readonly wordsBack?: string;
   readonly wordsBox?: BoxShape;
+  /**
+   * What keeps the words readable over the picture: an outline, a shadow,
+   * both, or nothing.
+   *
+   * Absent means an outline. Until 9 October the film drew words with no
+   * edge at all, which is invisible over a bright sky and over a dark room
+   * alike — see `lib/wordsedge.ts`, which carries why that only ever showed
+   * on a title card.
+   */
+  readonly wordsEdge?: EdgeId;
   /**
    * How fast this piece plays, as a multiple. One is as filmed.
    *
@@ -810,6 +821,11 @@ export function cutFrom(edit: Edit): Cut {
         ...(one.wordsInk ? { ink: paintFor(one.wordsInk)?.hex ?? INK_DEFAULT } : {}),
         ...(one.wordsBack ? { back: paintFor(one.wordsBack)?.hex ?? BACK_DEFAULT } : {}),
         ...(one.wordsBox ? { box: one.wordsBox } : {}),
+        /* Carried even when absent is the default, because the DEFAULT
+           changed: a shot with no stored edge renders with an outline now,
+           and leaving the key off would leave that to `stitch.ts` to guess
+           twice. */
+        ...(one.wordsEdge ? { edge: one.wordsEdge } : {}),
         /* The shape decides the corner radius, so a square really is square —
            but only when she has not set one by hand. A number she dragged is
            hers, and a shape button overruling it would undo a gesture. */

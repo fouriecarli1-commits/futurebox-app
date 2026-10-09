@@ -136,6 +136,7 @@ import { CREDITS, creditsSaid, perMinute, videoCost, type VideoGrade } from '../
 import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
+import { EDGES, EDGE_DEFAULT } from '../lib/wordsedge';
 import {
   ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE, SIDE_MAX, SIDE_MIN,
   aspectOf, shapeOf,
@@ -5318,6 +5319,46 @@ async function smallerFrame(url: string): Promise<string> {
                         }}
                       >
                         {t(one.name[0], one.name[1])}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── The edge, which is what keeps them readable ────────────
+ 
+                  Carli, 9 October 2026: *"daar moet heelwat 'n verskeidenheid
+                  van teks opsies wees."* Measuring first found something
+                  worse than a short list: words on a film had no outline and
+                  no shadow at all, so white letters over a bright sky were
+                  gone and black ones over a dark room were gone. The caption
+                  box hid it, which is why it only ever showed on the one
+                  setting that has no box.
+ 
+                  After the box on purpose: with a box there is already
+                  contrast, and this is what carries a title card. */}
+              <div className="space-y-1.5">
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.wordsEdge', 'Edge on the letters')}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {EDGES.map((one) => {
+                    const on = (piece.wordsEdge ?? EDGE_DEFAULT) === one.id;
+                    return (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={on}
+                        data-editorwordsedge={one.id}
+                        onClick={() => tweak({ wordsEdge: one.id })}
+                        className="min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold"
+                        style={on ? {
+                          borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
+                        } : {
+                          borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
+                        }}
+                      >
+                        {lang === 'af' ? one.af : one.en}
                       </button>
                     );
                   })}

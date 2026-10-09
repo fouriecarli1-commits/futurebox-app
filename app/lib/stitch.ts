@@ -70,6 +70,7 @@ import { fontFor } from './videofonts';
 import { brushPath } from './videopaint';
 import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
+import { paintedFor, type EdgeId } from './wordsedge';
 
 export interface Scene {
   /** The clip itself, as it came back from the engine. */
@@ -264,6 +265,14 @@ export interface Caption {
   readonly ink?: string;
   readonly back?: string;
   readonly box?: 'none' | 'square' | 'round' | 'brush';
+  /**
+   * What keeps the letters readable over the picture.
+   *
+   * Absent means `outline`, not `none` — see `EDGE_DEFAULT` in
+   * `lib/wordsedge.ts`. An edit made before this existed renders differently
+   * because the way it used to render was the bug.
+   */
+  readonly edge?: EdgeId;
 }
 
 /**
@@ -703,6 +712,7 @@ export function drawCaption(
     readonly at?: Spot | null;
     readonly turn?: number;
     readonly solid?: number;
+    readonly edge?: EdgeId;
     readonly round?: number;
     readonly ink?: string;
     readonly back?: string;
@@ -819,10 +829,48 @@ export function drawCaption(
     context.fill();
   }
 
+  /* ── The edge that keeps words readable over a picture ────────────────
+ 
+     This was a fill and nothing else, which is fine on the shot it was tried
+     on and invisible on the next one: white words over a bright sky are
+     gone, black words over a dark room are gone. The caption box hid it —
+     at 62% black behind every caption there is always contrast — so it only
+     showed on the one setting that exists to have no box, a title card.
+ 
+     `lib/wordsedge.ts` works out the widths against the text size, so a
+     caption at 32px on a phone and one at 96px on a 4K export get the same
+     WEIGHT of edge rather than the same number of pixels. */
+  const edge = paintedFor(set?.edge, size);
+
+  /* The shadow goes on the context and is cleared afterwards, because it
+     would otherwise fall under the logo and anything else painted next. */
+  if (edge.blur > 0) {
+    context.shadowColor = edge.colour;
+    context.shadowBlur = edge.blur;
+    context.shadowOffsetX = edge.drop;
+    context.shadowOffsetY = edge.drop;
+  }
+
+  if (edge.stroke > 0) {
+    context.strokeStyle = edge.colour;
+    context.lineWidth = edge.stroke;
+    /* Round joins, because a mitre on a sharp corner of a letter shoots a
+       spike out of it at these widths — most visible on a capital A or W,
+       which is most of a headline. */
+    context.lineJoin = 'round';
+    context.miterLimit = 2;
+    lines.forEach((one, index) => {
+      context.strokeText(one, middle, firstBaseline + step * index);
+    });
+  }
+
   context.fillStyle = set?.ink ?? '#ffffff';
   lines.forEach((one, index) => {
     context.fillText(one, middle, firstBaseline + step * index);
   });
+  context.shadowBlur = 0;
+  context.shadowOffsetX = 0;
+  context.shadowOffsetY = 0;
   context.restore();
 }
 
