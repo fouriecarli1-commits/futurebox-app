@@ -1303,6 +1303,13 @@ jobs:
       - name: Google's Veo is one more engine, not a route beside them
         run: npm run check:veo
 
+      # The ladder around it: Kling retired on her word rather than deleted
+      # out from under the clips it had already been paid for, every rung
+      # with an engine behind it, and the two Google rungs counted against
+      # one ceiling instead of two.
+      - name: The grade ladder holds
+        run: npm run check:graadbaan
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

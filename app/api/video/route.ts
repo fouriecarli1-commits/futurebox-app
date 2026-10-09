@@ -45,6 +45,7 @@ import {
   nearestLength,
   providerById,
   PROVIDERS,
+  purseOf,
   scheme,
   type Aspect,
   type Grade,
@@ -399,10 +400,25 @@ export async function POST(request: Request): Promise<Response> {
     spent.set(one.id, data);
   }
 
+  /* ── Engines that share a bill are counted together ─────────────────
+
+     Two Google rungs bill the same project against the same
+     `GOOGLE_CAP_VIDEO`. Counted on their own ids they would each see the
+     whole ceiling, and between them spend twice what she capped — which
+     would make the cap, the one thing that makes her own Google account
+     safe to point an app at, quietly meaningless. `purse` says which
+     engines are one account; everything else still counts as itself. */
+  const purses = new Map<string, number>();
+  for (const one of PROVIDERS) {
+    if (!spent.has(one.id)) continue;
+    const name = purseOf(one);
+    purses.set(name, (purses.get(name) ?? 0) + (spent.get(one.id) ?? 0));
+  }
+
   const queue = candidates(
     grade,
     { prompt, aspect, seconds: wanted, speak, image },
-    (one) => spent.get(one.id) ?? 0,
+    (one) => purses.get(purseOf(one)) ?? 0,
   );
 
   if (queue.length === 0) {

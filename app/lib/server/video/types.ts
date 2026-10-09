@@ -119,6 +119,22 @@ export interface Provider {
   configured(): boolean;
   readonly can: Capabilities;
 
+  /**
+   * Which purse this engine draws on, where more than one draws on the same.
+   *
+   * Spend is counted per provider id, and the ceiling is asked of the
+   * provider. That is right while every engine has its own account. It stops
+   * being right the moment two engines bill the SAME account: two Google
+   * rungs, each counted on its own id against the one `GOOGLE_CAP_VIDEO`,
+   * would between them spend twice the ceiling she set — and the ceiling is
+   * the whole reason that account is safe to use.
+   *
+   * So engines that share a bill name the same purse, the route sums their
+   * spend together, and the ceiling binds once. Left unset it is the id,
+   * which is what every engine with its own account already wanted.
+   */
+  readonly purse?: string;
+
   /** The month's allowance, in this provider's units. */
   ceiling(): number;
   /** What one generation is expected to cost, in this provider's units. */
@@ -134,6 +150,9 @@ export function nearestLength(can: Capabilities, wanted: number): number {
     Math.abs(one - wanted) < Math.abs(best - wanted) ? one : best,
   );
 }
+
+/** The purse an engine draws on — its own account unless it says otherwise. */
+export const purseOf = (provider: Provider): string => provider.purse ?? provider.id;
 
 /** Whether an engine can do this request at all. */
 export function suits(provider: Provider, request: StartRequest): boolean {

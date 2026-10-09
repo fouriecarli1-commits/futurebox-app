@@ -106,7 +106,49 @@ const SENDS: Record<string, Processor> = {
      a track title they are looking up, not a fact about them. */
   'api.spotify.com': { name: 'Spotify', gets: null, basis: 'nothing personal is sent' },
   'accounts.spotify.com': { name: 'Spotify', gets: null, basis: 'nothing personal is sent' },
+  /* ── Google's AI, which this list did not have ──────────────────
+
+     Added 9 October 2026, and it should have been here on 8 October when the
+     first song was generated on her own Vertex project. Every word a member
+     types to make a song, a video or a picture goes to this host. That is
+     exactly what the 24 September audit was for, and the gap opened again
+     eleven days later — because the scan below only counted hosts that were
+     ALREADY in this map, so a processor nobody remembered was a processor
+     nobody was told about. See the rule under it, which is the real fix.
+
+     The prompt is the member's own words. It is not special information
+     under POPIA — it is not a voice or a face — but it is theirs, and a
+     picture they attach as a start frame may well be of a person. */
+  'aiplatform.googleapis.com': {
+    name: 'Google',
+    gets: 'what they typed to make a song, a video or a picture, and any'
+      + ' picture they attached for it to start from',
+    special: true,
+    basis: 'Google Cloud terms, on her own project — see docs/GOOGLE-OPSTEL.md',
+  },
+  /* A link is BUILT for the member to open — `.../<handle>/live` — and
+     nothing is ever called. Filed rather than skipped, because "this one does
+     not count" is how a list stays short. */
+  'www.tiktok.com': { name: 'TikTok', gets: null, basis: 'a link is built, never called' },
+  /* The amp modeller. A member connects their OWN TONE3000 account by OAuth,
+     so what reaches TONE3000 is their decision to connect and the tones they
+     ask for, which is the same shape as signing in with Google. */
+  'www.tone3000.com': {
+    name: 'TONE3000',
+    gets: 'their own choice to connect their TONE3000 account, and which tones they ask for',
+    basis: 'their own account, connected by them',
+  },
 };
+
+/**
+ * Hosts that are not a third party at all: our own, and the two schema URLs
+ * that appear in structured data rather than in a request.
+ *
+ * Narrow on purpose. Anything not matched here and not in `SENDS` fails the
+ * rule below, which is the point: the list has to be maintained by the
+ * failure rather than by somebody remembering.
+ */
+const OURS = /(^|\.)(futurebox\.studio|vibefy\.co\.za|schema\.org|localhost|example\.(com|org))$/;
 
 const files: string[] = [];
 const walk = (dir: string): void => {
@@ -120,10 +162,13 @@ walk('app/api');
 walk('app/lib/server');
 
 const dialled = new Set<string>();
+/** Hosts the server code names that this file has never heard of. */
+const unfiled = new Map<string, string>();
 for (const path of files) {
   const source = withoutComments(readFileSync(path, 'utf8'));
   for (const [, host] of source.matchAll(/https:\/\/([a-z0-9.-]+\.[a-z]{2,})/g)) {
     if (SENDS[host]) dialled.add(SENDS[host].name);
+    else if (!OURS.test(host) && !unfiled.has(host)) unfiled.set(host, path);
   }
   /* The SDK never writes its own URL down. Everything typed into the copilot
      goes to it, which is as personal as anything here. */
@@ -141,6 +186,30 @@ const carries = new Set(
       : Object.values(SENDS).some((one) => one.name === name && one.gets !== null),
   ),
 );
+
+/* ── 1a. Every outbound host is filed, whether or not it is a processor ──
+
+   This is the rule that was missing, and its absence is why Google's AI
+   received every prompt a member typed for eleven days without appearing on
+   the privacy page. The scan above asked "is this host one of the ones we
+   already know about" — so a host nobody had filed was a host nobody was
+   measuring, and the check went green every day by looking at the eight
+   processors it had been told about instead of at the code.
+
+   Carli's own standing complaint about this project, and she is right: a
+   check that is green because it measures something ADJACENT is worse than
+   no check, because it is also a claim.
+
+   So an unknown host is a failure. Filing one as `gets: null` with a reason
+   takes one line and is a decision somebody made on purpose; the cost of
+   getting it wrong is a POPIA question answered incorrectly in writing. */
+ok('every outbound host in the server code is filed in this check',
+  unfiled.size === 0,
+  [...unfiled].map(([host, where]) => `${host} (${where})`).join(', ')
+  + ' — add it to SENDS with what it receives, or `gets: null` and the'
+  + ' reason nothing of the member\'s goes there. An unfiled host is a'
+  + ' processor nobody was told about, which is how Google\'s AI stayed off'
+  + ' the privacy page for eleven days');
 
 const unnamed = [...carries].filter((name) => !policy.includes(`>${name}</strong>`));
 ok(`every processor that receives personal data is named on the privacy page (${carries.size} of them)`,

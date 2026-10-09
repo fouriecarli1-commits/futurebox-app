@@ -21,11 +21,14 @@
 
 import { kling } from './kling.ts';
 import { seedance, veo } from './eleven.ts';
-import { googleVeo } from './google.ts';
+import { googleVeo, googleVeoFull, googleVeoLite, googleVeoOldId } from './google.ts';
 import { suits, type Grade, type Provider, type StartRequest } from './types.ts';
 
 export * from './types.ts';
 export { scheme } from './kling.ts';
+/* Named, so the one page that tests Google's own Veo reaches the very engine
+   a member's video goes through rather than a hand-written copy of it. */
+export { googleVeo, googleVeoFull, googleVeoLite } from './google.ts';
 /* The presenter, which shares this broker and nothing else.
 
    Re-exported here so the desk and the routes reach every video capability
@@ -46,8 +49,14 @@ export {
 /**
  * Every engine, cheapest first inside each grade.
  *
- * Costs, per clip, from this project's own invoices rather than from anybody's
- * marketing page: Seedance R2.62, Veo R10.72, Kling R33.48.
+ * Costs, per five-second clip, from this project's own invoices rather than
+ * from anybody's marketing page: Seedance R2.62, resold Veo R10.72, Google
+ * Veo Fast R12.00, Google Veo full R32.00, Google Veo Lite R4.00.
+ *
+ * Against what each rung TAKES — `videoCost` charges standard once, better
+ * twice and premium four times, so R22.35, R44.70 and R89.40 at the cheapest
+ * credit tier — every engine on the list earns at least two and a half
+ * times what it costs.
  *
  * ── Two Veos, and they are the same picture ─────────────────────────────
  *
@@ -66,10 +75,41 @@ export {
  * different accounts with different ceilings. `video_spend_this_month`
  * already keys on the provider id, so that came free.
  */
-export const PROVIDERS: readonly Provider[] = [seedance, googleVeo, veo, kling];
+export const PROVIDERS: readonly Provider[] = [
+  seedance, googleVeoLite, googleVeo, veo, googleVeoFull,
+];
+
+/**
+ * Engines that are no longer offered, kept only so old rows can be read.
+ *
+ * ── Kling, retired 9 October 2026 ───────────────────────────────────────
+ *
+ * Carli: *"Ons gaan ook nie meer Kling gebruik nie, die video generation
+ * deur kling is sleg."* It is not a price decision and it is not arguable
+ * from here — she has watched what comes out of it and this app has not.
+ *
+ * ── Why it is not deleted ───────────────────────────────────────────────
+ *
+ * Because `video_jobs` rows written yesterday say `provider: 'kling'`, and
+ * a job is a charge followed minutes later by a question. An engine deleted
+ * out of the list is a clip somebody already paid for that can never be
+ * asked about again: the route reads `providerById(row.provider)`, gets
+ * nothing, and the job sits unfinished and unrefunded forever.
+ *
+ * So retired means exactly this: never offered, never charged, still
+ * answerable. `candidates` and `gradesAvailable` read `PROVIDERS` and will
+ * not find it; `providerById` reads both and will.
+ *
+ * The free browser visualiser in `kling.ts` is a different thing with an
+ * unfortunate address — it generates nothing, costs nothing and stays.
+ */
+export const RETIRED: readonly Provider[] = [kling];
 
 export function providerById(id: string): Provider | undefined {
-  return PROVIDERS.find((one) => one.id === id);
+  /* The cheap Google rung answered to `google-veo` before the rungs split on
+     9 October 2026. Rows carrying that id are still in flight. */
+  const wanted = id === googleVeoOldId ? googleVeo.id : id;
+  return [...PROVIDERS, ...RETIRED].find((one) => one.id === wanted);
 }
 
 /** Grades that have at least one engine behind them right now. */

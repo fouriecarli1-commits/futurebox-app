@@ -20,7 +20,7 @@ import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { PROVIDERS } from '../app/lib/server/video/index.ts';
 import { nearestLength, suits } from '../app/lib/server/video/types.ts';
-import { VIDEO_FIELDS, googleVeo, videoIn } from '../app/lib/server/video/google.ts';
+import { VIDEO_FIELDS, googleVeo, googleVeoFull, googleVeoLite, videoIn } from '../app/lib/server/video/google.ts';
 import { CHOSEN } from '../app/lib/server/google.ts';
 import { ceilingFor } from '../app/lib/server/googlespend.ts';
 import type { StartRequest } from '../app/lib/server/video/types.ts';
@@ -35,7 +35,11 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 
 const ids = PROVIDERS.map((one) => one.id);
 ok('Google’s Veo is one of the engines, not a route beside them',
-  ids.includes('google-veo'),
+  /* By the provider's own id rather than a string: the rungs split on
+     9 October 2026 and `google-veo` became `google-veo-better`, which this
+     assertion did not notice until it failed. A literal id in a check is a
+     second place the name lives. */
+  ids.includes(googleVeo.id),
   ids.join(', ')
   + ' — `/api/video` already is what a video engine needs: a job, a row so'
   + ' closing the tab does not lose it, a charge before and a refund if every'
@@ -45,7 +49,7 @@ ok('Google’s Veo is one of the engines, not a route beside them',
    shape `check:ordering` refuses, and it is right to: an id that is not
    there at all answers -1, which is less than every real position, so the
    assertion passes loudest exactly when the engine has gone missing. */
-const atGoogle = ids.indexOf('google-veo');
+const atGoogle = ids.indexOf(googleVeo.id);
 const atResold = ids.indexOf('veo');
 ok('  and it is tried before the one that resells the same model',
   atGoogle >= 0 && atResold >= 0 && atGoogle < atResold,
@@ -126,15 +130,18 @@ ok('the ceiling is the one Google number, not a second copy of it',
    belonging to a different model is a ceiling measuring the wrong thing. */
 
 const RATES: Record<string, number> = {
-  'veo-3.1-fast-generate-001': 80_000,
-  'veo-3.1-generate-001': 200_000,
-  'veo-3.0-generate-001': 200_000,
+  /* The top of the range Carli's price table quotes ($0.10-$0.15). A range
+     is a summary rather than Google's own page, and the expensive end is the
+     only safe reading of an uncertain price. */
+  'veo-3.1-fast-generate-001': 150_000,
+  'veo-3.1-lite-generate-001': 50_000,
+  'veo-3.1-generate-001': 400_000,
+  'veo-3.0-generate-001': 400_000,
   /* Seen on her console but never priced. Counted at the dear figure so a
      switch to it cannot quietly undercount; over-counting makes our own
      ceiling bind early, which is an annoyance, and under-counting is a bill
      nobody saw coming. This file was already out by a factor of a thousand
      once, in exactly this spot. */
-  'veo-3.1-lite-generate-001': 200_000,
 };
 
 const rate = RATES[CHOSEN.video];
@@ -152,6 +159,31 @@ ok('  and the cost it counts is that rate, multiplied out',
 
 ok('  and the model the provider reports is the one that was chosen',
   googleVeo.model === CHOSEN.video, `${googleVeo.model} vs ${CHOSEN.video}`);
+
+/* ── The second rung, added when Kling was retired ──────────────────
+
+   Premium had one engine behind it and she took it out on 9 October 2026, so
+   the full Veo now serves that rung. The rule above — a model with no rate
+   beside it is a clip counted at somebody's guess — applies to every rung
+   this app offers and not only to the one that happened to be here first.
+   Written as a loop for that reason: the third rung is covered the day it is
+   added, with nothing to remember. */
+for (const rung of [googleVeoLite, googleVeo, googleVeoFull]) {
+  const its = RATES[rung.model];
+  ok(`${rung.id} runs a model with a rate written down`,
+    typeof its === 'number',
+    `${rung.model} — see the note above`);
+  ok(`  and ${rung.id} counts that rate, multiplied out`,
+    its !== undefined && rung.cost(8) === its * 8 && rung.cost(4) === its * 4,
+    `${rung.cost(8)} for eight seconds where ${rung.model} is ${its} a second`);
+}
+
+ok('the full model is dearer a second than the fast one, or one of them is wrong',
+  (RATES[googleVeoFull.model] ?? 0) > (RATES[googleVeo.model] ?? 0),
+  `${googleVeoFull.model} at ${RATES[googleVeoFull.model]} against`
+  + ` ${googleVeo.model} at ${RATES[googleVeo.model]} — a premium rung that`
+  + ' costs us less than the one below it means the ids and the rates have'
+  + ' been paired up wrong, which has happened twice in this file already');
 
 /* ── What this does NOT assert, deliberately ────────────────────────────
  

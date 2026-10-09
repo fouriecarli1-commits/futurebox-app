@@ -143,11 +143,16 @@ ok('  and the probe deliberately carries no verb at all',
 /* Music no longer goes through `addressOf` at all — it is not a publisher
    model. What has to stay true is that each engine calls its OWN address:
    music the interactions one, video the long-running publisher one. */
+const videoLib = withoutComments(readFileSync('app/lib/server/video/google.ts', 'utf8'));
 ok('  while the calls that really generate each use their own address',
   /interactionsAddress\(\)/.test(
     withoutComments(readFileSync('app/lib/server/lyria.ts', 'utf8')))
-  && /addressOf\(CHOSEN\.video, verb\)/.test(
-    withoutComments(readFileSync('app/lib/server/video/google.ts', 'utf8'))),
+  /* `addressOf(CHOSEN.video, verb)` until 9 October 2026, when the rungs
+     split and the model became an argument. What has to stay true is that
+     video builds the PUBLISHER address and never the interactions one —
+     not which variable holds the model's name. */
+  && /addressOf\(model, verb\)/.test(videoLib)
+  && !/interactionsAddress/.test(videoLib),
   'music is an interaction and video is a long-running publisher job; one'
   + ' address for both is a 404 on whichever one it is not');
 
@@ -248,25 +253,40 @@ ok('  and what it finds that this app has never heard of is said out loud',
 /* ── 5. The key does not leak ─────────────────────────────────────────── */
 
 const route = withoutComments(readFileSync('app/api/google/setup/route.ts', 'utf8'));
+/* ── The door moved, and these assertions followed it ──────────────
+
+   Until 9 October 2026 the gate was forty lines pasted into this route and a
+   dozen others, and these five assertions read THIS FILE for them. That made
+   them true of one copy out of thirteen: the drifted copy was never the one
+   being measured.
+
+   So the gate is one file now and these read that file, plus one assertion
+   that this route really goes through it and keeps no compare of its own. */
+const door = withoutComments(readFileSync('app/lib/server/ownerdoor.ts', 'utf8'));
+
+ok('the setup page goes through the one door rather than its own copy of it',
+  /opened\(request\)/.test(route) && !/timingSafeEqual/.test(route),
+  'a second implementation of a gate is a second gate to get wrong, and the'
+  + ' wrong one answers 404 exactly like the right one');
 
 ok('the setup page is behind the secret, compared in constant time',
-  /crypto\.timingSafeEqual/.test(route) && /POST_SECRET/.test(route),
+  /crypto\.timingSafeEqual/.test(door) && /POST_SECRET/.test(door),
   'it confirms whether a paid key works, so it must refuse rather than'
   + ' default to open');
 
 ok('a secret with a + in it is not mangled into a space',
-  /\[\?&\]key=\(\[\^&\]\*\)/.test(route),
+  /\[\?&\]key=\(\[\^&\]\*\)/.test(door),
   '`searchParams.get` url-decodes, so a `+` in a base64-ish secret arrives as'
   + ' a space and a perfectly typed secret fails — answering 404, which is the'
   + ' same answer as a wrong one, which is an afternoon re-reading a value that'
   + ' was right');
 
 ok('  and every form goes through the constant-time compare',
-  /tries\.some\(\(one\) => sameSecret\(one, wanted\)\)/.test(route),
+  /tries\.some\(\(one\) => sameSecret\(one, wanted\)\)/.test(door),
   'trying three forms must not mean comparing one of them loosely');
 
 ok('  and answers a wrong secret the way a wrong path answers',
-  /new Response\('no', \{ status: 404 \}\)/.test(route),
+  /new Response\('no', \{ status: 404 \}\)/.test(door),
   'a 403 confirms the address is real and worth pushing at');
 
 ok('the key is never in the answer',
@@ -367,22 +387,33 @@ ok('  and a global model is addressed without a region',
    things that are not people. */
 
 ok('a signed-in owner gets in without a secret',
-  /const isOwner = await ownerOf\(request\)/.test(route)
-  && /if \(!isOwner && !tries\.some/.test(route),
+  /if \(await ownerOf\(request\)\) return \{ open: true/.test(door),
   'telling her to type a second secret into a URL is asking her to burn a'
   + ' second one');
 
+ok('  and the owner is tried FIRST, before any secret is wanted',
+  (() => {
+    const person = door.indexOf('ownerOf(request)');
+    const secret = door.indexOf("process.env.POST_SECRET");
+    /* Both required: a missing one answers -1, which is less than every
+       real position, so the comparison would pass loudest exactly when the
+       thing it is about has gone. */
+    return person >= 0 && secret >= 0 && person < secret;
+  })(),
+  'a deployment with no POST_SECRET set must still let her in on her own'
+  + ' sign-in rather than answering 503 at her');
+
 ok('  and being an owner is a signed-in email, not a header she can set',
-  /await callerFrom\(request\)/.test(route) && /isOwnerEmail\(caller\.email\)/.test(route),
+  /await callerFrom\(request\)/.test(door) && /isOwnerEmail\(caller\.email\)/.test(door),
   'anything a browser can type is not an authorisation');
 
 ok('  and the secret still works, for the things that are not people',
-  /sameSecret\(one, wanted\)/.test(route) && /POST_SECRET/.test(route),
+  /sameSecret\(one, wanted\)/.test(door) && /POST_SECRET/.test(door),
   'a terminal and a script have no session; removing it trades one'
   + ' awkwardness for another');
 
 ok('  and no secret AND no owner is said plainly rather than as a 404',
-  /Sign in as the owner, or set POST_SECRET/.test(route),
+  /Sign in as the owner, or set POST_SECRET/.test(door),
   'that case is a deployment nobody can get into, which is worth a sentence'
   + ' rather than the silence a wrong secret gets');
 

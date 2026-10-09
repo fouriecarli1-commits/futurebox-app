@@ -38,14 +38,47 @@
 
 import { CHOSEN, addressOf, configured as googleOn, region } from '../google';
 import { ceilingFor } from '../googlespend';
-import type { Progress, Provider, StartRequest, Started } from './types';
+import type { Grade, Progress, Provider, StartRequest, Started } from './types';
 
 /**
  * Micro-dollars a second, video only, from Google's published rate.
  *
- * $0.08 a second is 80 000 millionths of a dollar a second. Flatly.
+ * $0.15 a second is 150 000 millionths of a dollar a second. Flatly.
  *
- * ── Raised to 200 000 on 9 October 2026, and put back the same hour ──────
+ * ── 80 000 was this app's own number and nobody had ever read it ─────────
+ *
+ * Carli found a price table on 9 October 2026: Veo Lite $0.05 a second, Veo
+ * Fast $0.10 to $0.15, Veo Standard $0.40. This app had been counting Fast
+ * at $0.08 — a figure that has been in the file since the provider was
+ * written and that no one, including me, ever checked against anything.
+ *
+ * So it is set to 150 000: the TOP of the quoted range, not the middle and
+ * not the bottom. Her source is a summary rather than Google's own page —
+ * the range is the tell, because Google quotes one number — so the right
+ * response to an uncertain price is the expensive end of it. Over-counting
+ * binds our own ceiling early. Under-counting is a bill.
+ *
+ * ── What it costs against what it earns, read rather than guessed ────────
+ *
+ * Fifteen credits is one five-second unit, and a credit sells for R1.49 at
+ * the cheapest tier — so the app takes **R22.35** for five seconds, not the
+ * R3.75 I first told her. I had guessed a credit at twenty-five cents
+ * instead of reading `TIER_SPECS` and `TIER_CREDITS`, and the guess turned a
+ * healthy margin into an imaginary loss. Written down here because it is the
+ * same fault as every other one this week: a number taken from memory when
+ * the file was one command away.
+ *
+ *   per five seconds   costs us   margin on R22.35
+ *   Seedance            R2.62      8.5x
+ *   Kling               R3.44      6.5x
+ *   Veo Lite            R4.00      5.6x
+ *   Veo Fast           R12.00      1.9x
+ *   Veo Standard       R32.00      loses money
+ *
+ * So Lite sits in the same band as the engines already in use, Fast is thin,
+ * and Standard cannot be sold at this price at all.
+ *
+ * ── Raised to 200 000 earlier the same day, and put back ─────────────────
  *
  * Carli sent her Model Garden cards one at a time. On the first — the 3.0
  * one — I concluded the fast id this app used did not exist, moved the
@@ -66,12 +99,41 @@ import type { Progress, Provider, StartRequest, Started } from './types';
  * the sixty-thousandth clip and stopped nothing at all. `check:veo` caught
  * it on its first run, by multiplying the number out rather than reading it.
  */
-const PER_SECOND = 80_000;
+const PER_SECOND = 150_000;
+
+/**
+ * The same unit for the full model: $0.40 a second, the dear end of what is
+ * quoted for it. Five seconds costs R32.00 against the R89.40 premium takes.
+ */
+const FULL_PER_SECOND = 400_000;
+
+/**
+ * And Lite, at $0.05 a second — Carli's own price table, 9 October 2026.
+ *
+ * Five seconds costs R4.00 against the R22.35 standard takes, which is 5.6
+ * times and the same band the engines already in use sit in.
+ *
+ * ── Why standard needed a second engine at all ──────────────────────────
+ *
+ * Seedance was the only thing behind it, and Seedance is behind
+ * `ELEVEN_SEEDANCE_READY=1` because ByteDance models need approving on an
+ * ElevenLabs workspace. If that variable is not set on the deployment — and
+ * nothing in this repository can know whether it is — then `standard` has
+ * no engine, the desk stops offering the CHEAPEST video grade, and the only
+ * video anybody can buy is better or premium. That is a hole nobody would
+ * see: no error, no failing check, just a rung quietly missing from a page.
+ *
+ * So Lite serves standard too, on her own Google project, behind her own
+ * ceiling. Seedance is still tried first where it is switched on, because
+ * R2.62 is cheaper than R4.00 and the picture at this rung is a promise
+ * about the result rather than about whose engine made it.
+ */
+const LITE_PER_SECOND = 50_000;
 
 const key = (): string => process.env.GOOGLE_VERTEX_KEY ?? '';
 
-const post = async (verb: string, body: unknown): Promise<Response> => fetch(
-  addressOf(CHOSEN.video, verb),
+const post = async (model: string, verb: string, body: unknown): Promise<Response> => fetch(
+  addressOf(model, verb),
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key() },
@@ -79,13 +141,13 @@ const post = async (verb: string, body: unknown): Promise<Response> => fetch(
   },
 );
 
-async function start(request: StartRequest): Promise<Started> {
+async function start(model: string, request: StartRequest): Promise<Started> {
   if (!googleOn()) {
     return { ok: false, status: 503, message: 'Google video is not switched on.' };
   }
   let answer: Response;
   try {
-    answer = await post('predictLongRunning', {
+    answer = await post(model, 'predictLongRunning', {
       instances: [{
         prompt: request.prompt.slice(0, 2000),
         ...(request.image
@@ -187,10 +249,10 @@ export function videoIn(done: unknown): { base64: string; mime: string } | null 
   return null;
 }
 
-async function check(taskId: string): Promise<Progress> {
+async function check(model: string, taskId: string): Promise<Progress> {
   let answer: Response;
   try {
-    answer = await post('fetchPredictOperation', { operationName: taskId });
+    answer = await post(model, 'fetchPredictOperation', { operationName: taskId });
   } catch {
     /* Never a failure. The route refunds on failure, and a network blip
        that refunded a clip Google is still making would pay twice. */
@@ -235,33 +297,110 @@ async function check(taskId: string): Promise<Progress> {
   return { state: 'done', url: `data:${got.mime};base64,${got.base64}` };
 }
 
-export const googleVeo: Provider = {
-  id: 'google-veo',
-  name: `Veo 3.1 Fast (Google, ${region()})`,
-  /* The same rung as the resold one: it is the same model. A member who
-     paid for "better" gets Veo either way, and which of the two answers is
-     a billing decision rather than a promise about the picture. */
-  grade: 'better',
+/**
+ * One rung of Veo on her own project.
+ *
+ * ── Why this became a factory on 9 October 2026 ──────────────────────────
+ *
+ * Carli: *"Ons gaan ook nie meer Kling gebruik nie, die video generation
+ * deur kling is sleg."*
+ *
+ * Kling was the only engine behind `premium`. Taking it out left that rung
+ * with nothing behind it, and the router is honest about that — it simply
+ * stops offering premium — but a member who was being sold a top grade and
+ * now cannot buy one is a product with a hole in it.
+ *
+ * So premium is the full Veo, which it should arguably have been all along:
+ * `videoCost` charges premium FOUR times the base, R89.40 for five seconds
+ * at the cheapest credit tier, against R32.00 of Veo Standard. Kling at
+ * R3.44 was earning twenty-six times on that rung, which is the sort of
+ * number that reads as a mistake in the other direction.
+ *
+ * Both rungs are the same account and the same cap, which is the one thing
+ * about this that could have cost real money — see `purse`.
+ */
+function rung(
+  spec: { model: string; grade: Grade; perSecond: number; name: string },
+): Provider {
+  return {
+    id: `google-veo-${spec.grade}`,
+    name: spec.name,
+    grade: spec.grade,
+    model: spec.model,
+    configured: googleOn,
+    can: {
+      seconds: [4, 6, 8],
+      /* Wide and tall only, like the resold one: Veo's own request takes
+         those, and offering a square it will refuse is a button that cannot
+         work. */
+      aspects: ['16:9', '9:16'],
+      /* Deliberately silent — see `generateAudio` above. */
+      speaks: false,
+      /* Veo does take a start frame, and this says so only because the shape
+         above sends it. An image field an endpoint does not read is a member
+         paying for a clip that has nothing to do with their picture. */
+      startFrame: true,
+      maxPromptChars: 2000,
+    },
+    /* Both rungs bill the same Google project against the same
+       `GOOGLE_CAP_VIDEO`. Counted separately they would spend it twice. */
+    purse: 'google-video',
+    /* In micro-dollars, which is this provider's own unit, and read from the
+       one place the Google ceilings live so there are not two numbers. */
+    ceiling: () => ceilingFor('video'),
+    cost: (seconds) => Math.round(Math.max(1, seconds) * spec.perSecond),
+    start: (request) => start(spec.model, request),
+    check: (taskId) => check(spec.model, taskId),
+  };
+}
+
+/**
+ * The cheap rung, and the one that was here first.
+ *
+ * `id` changed from `google-veo` to `google-veo-better` the day the second
+ * rung arrived. `providerById` still answers for the old id — see
+ * `index.ts` — because a row written yesterday names it and a clip that
+ * cannot be checked is a clip that was paid for and lost.
+ */
+export const googleVeo: Provider = rung({
   model: CHOSEN.video,
-  configured: googleOn,
-  can: {
-    seconds: [4, 6, 8],
-    /* Wide and tall only, like the resold one: Veo's own request takes
-       those, and offering a square it will refuse is a button that cannot
-       work. */
-    aspects: ['16:9', '9:16'],
-    /* Deliberately silent — see `generateAudio` above. */
-    speaks: false,
-    /* Veo does take a start frame, and this says so only because the shape
-       above sends it. An image field an endpoint does not read is a member
-       paying for a clip that has nothing to do with their picture. */
-    startFrame: true,
-    maxPromptChars: 2000,
-  },
-  /* In micro-dollars, which is this provider's own unit, and read from the
-     one place the Google ceilings live so there are not two numbers. */
-  ceiling: () => ceilingFor('video'),
-  cost: (seconds) => Math.round(Math.max(1, seconds) * PER_SECOND),
-  start,
-  check,
-};
+  grade: 'better',
+  perSecond: PER_SECOND,
+  name: `Veo 3.1 Fast (Google, ${region()})`,
+});
+
+/** The old id, so rows written before the rungs split can still be read. */
+export const googleVeoOldId = 'google-veo';
+
+/**
+ * The cheapest rung, so that `standard` has an engine of its own.
+ *
+ * `veo-3.1-lite-generate-001` came off her own Model Garden page on
+ * 9 October 2026. The rate is from her price table the same day and is the
+ * one figure here that Google's own page has not confirmed — which is why
+ * it is the CHEAP rung rather than a dear one: if $0.05 turns out to be low,
+ * the error is on the engine with the biggest margin over it.
+ */
+export const googleVeoLite: Provider = rung({
+  model: 'veo-3.1-lite-generate-001',
+  grade: 'standard',
+  perSecond: LITE_PER_SECOND,
+  name: `Veo 3.1 Lite (Google, ${region()})`,
+});
+
+/**
+ * The full model, on the top rung.
+ *
+ * `veo-3.1-generate-001` came off Carli's own Model Garden page on 9 October
+ * 2026 — it is not a guessed id. The rate is the expensive end of what
+ * is quoted for it: her summary said $0.40 a second for full quality where
+ * Google's own page reads $0.20, and an uncertain price is taken at the top
+ * so that over-counting binds our ceiling early instead of arriving as a
+ * bill. `check:veo` holds the id and the rate to each other.
+ */
+export const googleVeoFull: Provider = rung({
+  model: 'veo-3.1-generate-001',
+  grade: 'premium',
+  perSecond: FULL_PER_SECOND,
+  name: `Veo 3.1 (Google, ${region()})`,
+});
