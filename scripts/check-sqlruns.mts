@@ -493,6 +493,52 @@ if (placeholder) {
   }
   ok('  and the row says it was given rather than bought', marked === '1',
     `${marked} — nothing marks it, so it cannot be found before a launch`);
+
+  /* ── The child's allowance actually stops ─────────────────────────────
+ 
+     Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+     page."* The page is a page; `kids_spend` is the allowance. Driven here
+     rather than read, because a limit that is off by one in the direction
+     that matters looks exactly like a limit that works — right up to the
+     press that goes through.
+ 
+     The sequence is the whole point: an account NOT in kids mode must be
+     told yes and must not be stopped by a table it has no row in; then
+     twelve of twelve goes through, the thirteenth credit does not, a
+     release puts it back, and the same spend goes through again. Six
+     answers, one string, so a wrong one names itself. */
+  let allowance = '';
+  try {
+    const owner = psql(DB, ['-tAc',
+      "insert into auth.users (id, email) values (gen_random_uuid(), 'kind@futurebox.test')"
+      + ' returning id']).trim();
+    /* No row yet: not in kids mode, so nothing here has an opinion. */
+    const before = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 99)`]).trim();
+    psql(DB, ['-c',
+      `insert into public.kids_mode (owner, allowance) values ('${owner}', 12)`]);
+    const fits = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 12)`]).trim();
+    const over = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 1)`]).trim();
+    psql(DB, ['-c', `select public.kids_release('${owner}', 12)`]);
+    const again = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 12)`]).trim();
+    const spent = psql(DB, ['-tAc',
+      `select spent from public.kids_mode where owner = '${owner}'`]).trim();
+    /* A release larger than what was spent floors at nothing rather than
+       going negative, which would read as extra allowance. */
+    psql(DB, ['-c', `select public.kids_release('${owner}', 999)`]);
+    const floored = psql(DB, ['-tAc',
+      `select spent from public.kids_mode where owner = '${owner}'`]).trim();
+    allowance = `${before}/${fits}/${over}/${again}/${spent}/${floored}`;
+  } catch (error) {
+    allowance = `threw: ${(String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? [''])[0]}`;
+  }
+  ok("a child's allowance lets twelve through and stops the thirteenth",
+    allowance === 't/t/f/t/12/0',
+    `${allowance} — wanted t/t/f/t/12/0: yes with no row at all, yes for the`
+    + ' twelve that fit, NO for the credit past them, yes again once released,'
+    + ' twelve recorded as spent, and nothing after a release bigger than the'
+    + ' spend. An `f` in the first slot locks an account that never asked for'
+    + ' kids mode; a `t` in the third is an allowance that does not stop; a'
+    + ' negative in the last reads as extra allowance');
 }
 
 if (failures) {

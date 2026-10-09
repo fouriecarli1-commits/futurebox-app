@@ -1347,6 +1347,19 @@ jobs:
       - name: The front door does not look like a phone app
         run: npm run check:voordeur
 
+      # A child's allowance is chosen by a parent and applied in charge(),
+      # not in a room — and every price the parent is shown comes from the
+      # same table the routes charge from. check:sqlruns drives the function
+      # itself against Postgres and proves it stops the credit past the cap.
+      - name: A child's allowance is enforced where the money moves
+        run: npm run check:toelaag
+
+      # The child's room has two presses in it and no way out: nothing
+      # navigates, nothing is typed, the song asks for somebody to sing it,
+      # and the video costs what the parent page said it would.
+      - name: The child's room has two presses in it and no way out
+        run: npm run check:kinderkamer
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

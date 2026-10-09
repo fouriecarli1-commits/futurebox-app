@@ -296,6 +296,12 @@ const KEPT: Record<string, string> = {
      outlives the request that made it, and a row that outlives its request is
      a row the page has to mention. */
   cover_jobs: 'cover art you ordered',
+  /* Not a child's name, not their song, not anything they typed — an
+     account id, a number of credits allowed, and a number spent. Still a
+     row about a person, and the thing it says about them is that somebody
+     handed their phone to a child, which the page has to mention for the
+     same reason as the rest: the row outlives the request that made it. */
+  kids_mode: 'allowance you set for a child',
   voice_owners: 'singing voice is yours',
   cast_members: 'photograph',
   pairs: 'work together',

@@ -21,6 +21,7 @@
 import { admin, callerFrom, callerIsOwner, metered, type Caller } from './account';
 import { wrote } from './wrote';
 import { budgetFor, capFor, monthKey, TIER_CREDITS } from '@/app/lib/credits';
+import { kidsRelease, kidsSpend } from './kidsmode';
 
 /**
  * What is left, or null when the question could not be asked.
@@ -81,6 +82,11 @@ export async function spend(
 export async function refund(owner: string, amount: number, ref?: string): Promise<void> {
   const client = admin();
   if (!client || amount <= 0) return;
+  /* And back onto the child's allowance, if there is one. A generation that
+     was charged and then failed upstream is refunded to the account here;
+     without this line the credits come back and the allowance does not, so a
+     child pays for the engine's bad afternoon. */
+  await kidsRelease(owner, amount);
   wrote(await client.from('credit_entries').insert({
     owner,
     amount,
@@ -223,7 +229,37 @@ export async function charge(
     };
   }
 
+  /* ── The child's allowance, before the account's balance ──────────────
+ 
+     Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+     page."* This is the line that makes that allowance real. Everything
+     else about kids mode is a room and a page; this is the only place the
+     limit is actually applied, because this is the only place the money
+     moves.
+ 
+     Before `spend` rather than after, so a refused child costs the account
+     nothing at all — and released again below if `spend` then refuses,
+     because an allowance taken for a song the parent could not afford is a
+     child short for nothing. `supabase/kinders.sql` holds both halves and
+     the lock they share.
+ 
+     An account not in kids mode gets `true` and never touches the table. */
+  if (!(await kidsSpend(caller.id, amount))) {
+    return {
+      ok: false,
+      response: Response.json(
+        {
+          message: 'That is more than is left of your allowance. Ask a grown-up.',
+          kidsSpent: true,
+          need: amount,
+        },
+        { status: 402 },
+      ),
+    };
+  }
+
   if (!(await spend(caller.id, amount, reason, ref))) {
+    await kidsRelease(caller.id, amount);
     return {
       ok: false,
       response: Response.json(
