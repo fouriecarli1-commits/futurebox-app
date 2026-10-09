@@ -1380,6 +1380,13 @@ jobs:
       - name: A hum becomes the rhythm that was hummed
         run: npm run check:neurie
 
+      # A story becomes pages, each page is charged its own reading, and the
+      # pictures turn when the voice does rather than on a fixed interval.
+      # Also that the picture is asked for with no lettering in it, which is
+      # one clause in a prompt and nothing else would notice going missing.
+      - name: A story becomes pages and the pictures turn with the voice
+        run: npm run check:storie
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

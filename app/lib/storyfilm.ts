@@ -75,8 +75,15 @@ export function drawSpread(
   );
 }
 
-/** Which page is on screen at this moment, or the last one past the end. */
-export function spreadAt(spreads: readonly Spread[], when: number): number {
+/**
+ * Which page is on screen at this moment, or the last one past the end.
+ *
+ * Takes only the one field it reads, so the timeline out of `timelineOf` can
+ * be handed to it directly — which is what `check:storie` does. A signature
+ * asking for a whole `Spread` would mean a check could only reach this with
+ * a decoded picture and an AudioBuffer in hand, which in a script is neither.
+ */
+export function spreadAt(spreads: readonly { readonly at: number }[], when: number): number {
   for (let i = spreads.length - 1; i >= 0; i -= 1) {
     if (when >= spreads[i].at) return i;
   }

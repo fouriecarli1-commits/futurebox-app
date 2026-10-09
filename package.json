@@ -307,6 +307,7 @@
     "check:skootdiepte": "tsx scripts/check-skootdiepte.mts",
     "check:knipvenster": "tsx scripts/check-knipvenster.mts",
     "check:neurie": "tsx scripts/check-neurie.mts",
+    "check:storie": "tsx scripts/check-storie.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

@@ -70,7 +70,23 @@ const pageId = (): string => {
   return `page-${counted}-${Math.random().toString(36).slice(2, 8)}`;
 };
 
-/** Split a long paragraph at the last sentence end that fits. */
+/**
+ * Split a long paragraph into pages, at the last sentence end that fits.
+ *
+ * A tail too short to be a page joins the piece before it — and this is the
+ * ONLY place that joining happens, which is the correction `check:storie`
+ * forced. The tail here is an artefact of where the cut landed, so gluing it
+ * back is repairing this function's own work. A short paragraph somebody
+ * TYPED is not an artefact: they put a blank line around it on purpose, and
+ * that is a page break.
+ *
+ * The first version joined both, and it ruined the case this feature is most
+ * for. A children's story written as short lines — "The dog ran." / "The cat
+ * sat." — has no paragraph over twenty-five characters, so every one of them
+ * joined the one before and the whole book came out as a single page of six
+ * hundred characters with one picture over it. Which is not a storybook; it
+ * is a paragraph.
+ */
 function broken(text: string): string[] {
   if (text.length <= PAGE_CHARS) return [text];
   const out: string[] = [];
@@ -92,17 +108,25 @@ function broken(text: string): string[] {
     out.push(rest.slice(0, cut).trim());
     rest = rest.slice(cut).trim();
   }
-  if (rest) out.push(rest);
+  if (rest) {
+    const last = out[out.length - 1];
+    if (rest.length < PAGE_MIN_CHARS && last !== undefined) {
+      out[out.length - 1] = `${last} ${rest}`.trim();
+    } else {
+      out.push(rest);
+    }
+  }
   return out;
 }
 
 /**
  * The story, as pages.
  *
- * Blank lines are page breaks, because that is already how somebody typing
- * separates paragraphs. A paragraph longer than a page is split at a
- * sentence end; a fragment shorter than `PAGE_MIN_CHARS` joins the page
- * before it rather than becoming a page with four words on it.
+ * A blank line is a page break, because that is already how somebody typing
+ * separates paragraphs — and it is a break whether what follows is three
+ * words or three hundred. A paragraph longer than a page is split by
+ * `broken` above, which is also the only thing that glues a short piece onto
+ * its neighbour.
  */
 export function pagesFrom(story: string): Page[] {
   const blocks = story.includes('\n\n')
@@ -114,15 +138,7 @@ export function pagesFrom(story: string): Page[] {
     const clean = block.replace(/\s*\n\s*/g, ' ').trim();
     if (!clean) continue;
     for (const piece of broken(clean)) {
-      if (!piece) continue;
-      /* A fragment joins what came before it. Only when there IS something
-         before it — a story that opens with three words opens with three
-         words, and swallowing it into page two would lose the opening. */
-      if (piece.length < PAGE_MIN_CHARS && texts.length) {
-        texts[texts.length - 1] = `${texts[texts.length - 1]} ${piece}`.trim();
-      } else {
-        texts.push(piece);
-      }
+      if (piece) texts.push(piece);
     }
   }
 

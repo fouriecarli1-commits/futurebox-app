@@ -35,7 +35,7 @@
  * cannot quietly become a promise.
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { CREDITS, readCost, videoCost } from '../app/lib/credits.ts';
 import {
@@ -165,17 +165,45 @@ ok('  and takes the account from the token rather than the body',
 
 /* ── 4. Nothing marked ready is a thing the room cannot do ──────────── */
 
-/* Read off the filesystem rather than listed: the day a story room lands,
-   this stops being a promise on its own. */
-const storyRoom = existsSync('app/components/StoryRoom.tsx');
+/* ── What `ready` means, corrected ──────────────────────────────────────
+ 
+   This measured `existsSync('app/components/StoryRoom.tsx')`, on the
+   reasoning that the day a story room landed the row would stop claiming it
+   did not exist on its own.
+ 
+   The day it landed, this reddened — and it was right to, but not for the
+   reason it gave. `ready` is not "a story room exists somewhere in the app".
+   It is "the CHILD'S room can do this", which is the only thing a parent
+   reading that price list is being told. A story room at its own address
+   that the kids room cannot reach is both things at once: real, and not
+   reachable from here.
+ 
+   So the measurement is reachability from `KidsRoom.tsx`, which is the fact
+   the row actually asserts. And the kids room cannot reach it today for a
+   reason that is itself held by a check: `check:kinderkamer` forbids
+   anything typed into in there, and a story is typed. The grown-up writes
+   it; the shelf of finished ones for the child is the next piece. */
+const kidsRoom = readFileSync('app/components/KidsRoom.tsx', 'utf8');
+const reachable = /StoryRoom|story/i.test(withoutComments(kidsRoom));
 const story = KID_PRICES.find((one) => one.id === 'story');
-ok('the story price says plainly that the room is not built yet',
-  story?.ready === storyRoom,
-  storyRoom
-    ? 'the story room exists now and the framework still says it does not —'
-      + ' a parent is being told they cannot do a thing they can'
-    : 'story mode is marked ready and there is no room for it, so the page is'
-      + ' quoting a price for something that cannot be pressed');
+
+ok('the story row says whether the CHILD can reach it, not whether a file exists',
+  story?.ready === reachable,
+  reachable
+    ? 'the kids room reaches story mode now and the framework still says it'
+      + ' cannot — a parent is being told they cannot do a thing they can'
+    : 'story mode is marked ready and the child\'s room has no way to it, so'
+      + ' the page is quoting a price for something that cannot be pressed'
+      + ' from where the parent is standing');
+
+/* And the room it is NOT reachable from is the one that cannot have a story
+   typed into it, which is why. Asserted so that "ready: false" stays a
+   consequence of a rule rather than a line somebody forgot to update. */
+ok('  and the child\'s room is still the one with nothing to type into',
+  !/<textarea|<input(?![^>]*type="checkbox")/.test(withoutComments(kidsRoom)),
+  'the kids room grew somewhere to type, so the reason story mode is not in'
+  + ' it no longer holds — and `check:kinderkamer` should have caught that'
+  + ' first');
 
 ok('  and the two that are marked ready have rooms behind them',
   KID_PRICES.filter((one) => one.ready).every((one) => ['song', 'video'].includes(one.id)),
