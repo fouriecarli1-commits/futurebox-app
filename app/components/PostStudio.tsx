@@ -457,6 +457,9 @@ export default function PostStudio({
      component is a bug that typechecks. */
   const [askWords, setAskWords] = useState('');
   const [redrawing, setRedrawing] = useState(false);
+  /* Only used when drawing from nothing — a picture being changed keeps its
+     own shape. Square first because that is what a post is. */
+  const [askShape, setAskShape] = useState<'1:1' | '9:16' | '16:9'>('1:1');
   const [said, setSaid] = useState('');
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
@@ -1970,74 +1973,76 @@ export default function PostStudio({
   };
 
   /**
-   * Change what is IN the picture by saying what to change.
+   * Make a picture from words, or change the one that is here.
    *
-   * ── What this is, and what it is not ──────────────────────────────────
+   * ── One control, two jobs, and why it is not two ──────────────────────
    *
-   * Everything else in this room happens on her own device and costs
-   * nothing: the crop, the background remover, the eraser, the words. This
-   * one leaves the phone, goes to Google's picture model on her own project,
-   * and costs credits — so the button says so before it is pressed, which
-   * is the only version of this that is fair.
+   * Carli, 9 October 2026: *"Ek sien nie veranderinge met ons nuwe tools in
+   * photo en video editor nie... daar moet seker ook 'n AI in wees en daar
+   * moet generate an image ook wees, asook die funksie waar jy 'n image vir
+   * die generator gee wat hy ook kan verander."*
    *
-   * It is still not album art. A cover is generated on the spot in the booth
-   * or bought from an artist, and that is a decision about paying artists
-   * rather than a gap here. This is her OWN photograph, altered.
+   * Two faults in one sentence, both mine. The first version only did the
+   * CHANGING half, and it was drawn only `{picture && …}` — so somebody
+   * opening the room with nothing in it saw no new tool at all, which is
+   * exactly what she reported. And it sat below the eraser, two screens
+   * down, which is the other reason it was invisible.
    *
-   * ── The words tool above stays, and that is the point ─────────────────
+   * So it is one panel at the TOP of the bench, beside "Bring a picture in",
+   * because "make one instead" belongs next to "bring one in" and nowhere
+   * else. With a picture it changes that picture; without one it draws a new
+   * one. The same engine, the same route, the same price — and one box to
+   * type into either way, because "generate" and "edit" being two different
+   * screens is a distinction that matters to the engine and not to a person.
    *
-   * Carli, 9 October 2026: *"onthou nano banana kan woorde in foto sit, maar
-   * in photo editor het mens steeds die opsie om self woorde in te sit."*
+   * ── The shape is only asked for when there is nothing to inherit ──────
    *
-   * Both, deliberately. The model draws words INTO the picture — on a shop
-   * window, along a wall, in the right perspective — which is a thing no
-   * amount of typesetting can do. The room's own words tool sets a real font
-   * ON TOP, which is sharper than any model draws letters and can be moved,
-   * recoloured and corrected afterwards. They are different jobs and neither
-   * replaces the other, so neither one is taken away.
+   * Changing a photograph keeps the photograph's shape: forcing a ratio onto
+   * somebody's own picture crops it. Drawing from nothing has no shape to
+   * keep, so that is the one case where it has to be asked.
    *
-   * ── Why the whole picture goes, and not the crop ──────────────────────
+   * ── Still not album art ───────────────────────────────────────────────
    *
-   * Same reasoning as the eraser painting on the whole picture: what comes
-   * back replaces the photograph, and everything downstream — the crop,
-   * the words, the export — is already written to work on whatever picture
-   * it is given. Sending the crop would quietly throw away the parts of her
-   * photograph that were outside the box.
+   * A cover is made in the booth or bought from an artist. That is a
+   * decision about paying artists and this does not change it.
    *
    * ── It runs on a press, and only on a press ───────────────────────────
    *
-   * No effect watches these words. `check:onlyonpress` is the rule and this
-   * is the kind of thing it exists for: a redraw fired by a `useEffect` on
-   * a text field would charge her a credit for every letter she typed.
+   * No effect watches these words. `check:onlyonpress` is the rule, and a
+   * redraw fired by a `useEffect` on a text field would charge a credit for
+   * every letter typed.
    */
-  const askToChange = async (): Promise<void> => {
+  const askForPicture = async (): Promise<void> => {
     const words = askWords.trim();
-    if (!picture || !words || redrawing) return;
+    if (!words || redrawing) return;
+    const changing = Boolean(picture);
     setRedrawing(true);
     setSaid('');
     try {
-      /* `sent`, not `sheet`. The paid export's canvas is `sheet`, and
-         `check:postpaid` keys its list of sanctioned ways-to-make-a-file on
-         the variable name — so borrowing that name would have quietly
-         excused the paid road out as well. The name says where this one
-         goes.
+      let from: { data: string; mime: string } | undefined;
+      if (picture) {
+        /* `sent`, not `sheet`. The paid export's canvas is `sheet`, and
+           `check:postpaid` keys its list of sanctioned ways-to-make-a-file
+           on the variable name — so borrowing that name would have quietly
+           excused the paid road out as well.
 
-         PNG because the picture may already have a see-through background
-         from the remover above, and a JPEG would fill it with black. */
-      const sent = document.createElement('canvas');
-      sent.width = picture.naturalWidth || picture.width;
-      sent.height = picture.naturalHeight || picture.height;
-      const ctx = sent.getContext('2d');
-      if (!ctx) {
-        setSaid(t('post.askFailed', 'That could not be changed.'));
-        return;
+           PNG because the picture may already have a see-through background
+           from the remover below, and a JPEG would fill it with black. */
+        const sent = document.createElement('canvas');
+        sent.width = picture.naturalWidth || picture.width;
+        sent.height = picture.naturalHeight || picture.height;
+        const ctx = sent.getContext('2d');
+        if (!ctx) {
+          setSaid(t('post.askFailed', 'That could not be made.'));
+          return;
+        }
+        ctx.drawImage(picture, 0, 0);
+        const url = sent.toDataURL('image/png');
+        /* The mime travels beside the data rather than being parsed back
+           out of the data URL on the server: the route has to know what it
+           is before anything leaves this machine. */
+        from = { data: url.slice(url.indexOf(',') + 1), mime: 'image/png' };
       }
-      ctx.drawImage(picture, 0, 0);
-      const url = sent.toDataURL('image/png');
-      /* The mime travels beside the data rather than being parsed back out
-         of the data URL on the server. The route has to know what it is
-         before anything leaves the machine, and a check that re-reads a
-         string the browser wrote is a check waiting to be fooled. */
       const token = await accessToken();
       const answer = await fetch('/api/google/picture', {
         method: 'POST',
@@ -2047,32 +2052,35 @@ export default function PostStudio({
         },
         body: JSON.stringify({
           words,
-          from: { data: url.slice(url.indexOf(',') + 1), mime: 'image/png' },
+          ...(from ? { from } : { aspect: askShape }),
         }),
       });
       if (!answer.ok) {
         /* Their sentence where there is one. The engine says things worth
            reading — that it will not draw a named person, that it could not
-           tell what to change, that the picture is too big — and replacing
-           those with "that did not work" is how somebody presses the same
-           button four times. */
+           tell what to change — and replacing those with "that did not
+           work" is how somebody presses the same button four times. */
         const why = (await answer.json().catch(() => ({}))) as { message?: string };
         setSaid(why.message
-          ?? `${t('post.askFailed', 'That could not be changed.')} (${answer.status})`);
+          ?? `${t('post.askFailed', 'That could not be made.')} (${answer.status})`);
         return;
       }
       const blob = await answer.blob();
       const came = URL.createObjectURL(blob);
       const img = new Image();
       img.onload = () => {
-        before(t('post.stepAsk', 'changing the picture'));
-        setWhole(picture);
+        before(changing
+          ? t('post.stepAsk', 'changing the picture')
+          : t('post.stepMake', 'making a picture'));
+        /* `whole` is what "Put it back" restores. Drawing from nothing has
+           nothing to go back TO, so it is cleared rather than left pointing
+           at whatever was there before this room was opened. */
+        setWhole(changing ? picture : null);
         setPicture(img);
         setAskWords('');
-        setSaid(t(
-          'post.askDone',
-          'Changed. Press “Put it back” if you would rather have the one you had.',
-        ));
+        setSaid(changing
+          ? t('post.askDone', 'Changed. Press “Put it back” if you would rather have the one you had.')
+          : t('post.madeDone', 'Made. Say what to change about it and press again, or carry on with the tools below.'));
         /* Revoked after the load, never before: the picture is decoded from
            this url and letting it go early is a blank image on a slow
            phone. */
@@ -2676,6 +2684,96 @@ export default function PostStudio({
           : t('post.clearOff', 'Take the background off')}
       </button>
     </div>
+
+    {/* ── Make a picture, or change this one, by saying it ───────────
+
+        Carli, 9 October 2026: *"Ek sien nie veranderinge met ons nuwe tools
+        in photo en video editor nie... daar moet seker ook 'n AI in wees en
+        daar moet generate an image ook wees, asook die funksie waar jy 'n
+        image vir die generator gee wat hy ook kan verander."*
+
+        It was there and she could not see it, which is the same thing as it
+        not being there. Two reasons, both mine: it was drawn only when a
+        picture was already loaded, so an empty room showed nothing; and it
+        sat below the eraser, two screens down.
+
+        So it is here, directly under "Bring a picture in", and it works
+        either way round — with a picture it changes that picture, without
+        one it draws a new one. Nano Banana, on her own Google project.
+
+        It is the ONE thing in this room that is not free and does not happen
+        on the device, so the button carries its price and the sentence under
+        it says so. */}
+    <div data-postask className={`${RY} flex-col items-stretch gap-2`}>
+      <div className={MIKRO}>
+        {picture
+          ? t('post.askTitle', 'Change it by saying what to change')
+          : t('post.makeTitle', 'Make a picture by saying what you want')}
+      </div>
+      <textarea
+        data-postaskwords
+        value={askWords}
+        onChange={(event) => setAskWords(event.target.value)}
+        rows={2}
+        maxLength={500}
+        placeholder={picture
+          ? t('post.askHint', 'Take the car out of the background. Make it evening. Write SALE on the window.')
+          : t('post.makeHint', 'A konsertina on a stoep at sunset, warm light, film grain.')}
+        className="w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px] leading-relaxed outline-none focus:border-emerald-500/60"
+        style={asRoom ? { color: INK } : undefined}
+      />
+      {/* The shape, only when there is nothing to inherit one from. Forcing
+          a ratio onto somebody's own photograph crops it. */}
+      {!picture && (
+        <div className="flex flex-wrap gap-2">
+          {([
+            ['1:1', t('post.shapeSquare', 'Square')],
+            ['9:16', t('post.shapeTall', 'Tall')],
+            ['16:9', t('post.shapeWide', 'Wide')],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              data-postaskshape={id}
+              aria-pressed={askShape === id}
+              onClick={() => setAskShape(id)}
+              className={`${LEEG} ${askShape === id ? GEKIES : ''}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          data-postaskgo
+          disabled={redrawing || !askWords.trim()}
+          onClick={() => { void askForPicture(); }}
+          className={`${LEEG} disabled:opacity-40`}
+        >
+          {redrawing
+            ? t('post.askBusy', 'Drawing it…')
+            : `${picture ? t('post.askGo', 'Change it') : t('post.makeGo', 'Make it')} · ${creditsSaid(CREDITS.repaint, t)}`}
+        </button>
+        {whole && (
+          <button
+            type="button"
+            data-postaskback
+            onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
+            className={LEEG}
+          >
+            {t('post.cutBack', 'Put it back')}
+          </button>
+        )}
+      </div>
+      <span className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+        {t(
+          'post.askWhat',
+          'Say what you want and it is drawn; bring a picture in first and it changes that one instead. This is the only thing in this room that is NOT free and does not happen on your phone — the picture is drawn somewhere else, so it costs credits and takes a few seconds. It can write words INTO the picture, on a window or along a wall; for words on top in a real font, use Words below, which is free and can be moved afterwards. It will not put a real person into a picture, and it cannot make album art: a cover is made in the booth or bought from an artist.',
+        )}
+      </span>
+    </div>
     {/* ── The background, taken out ──────────────────────────────────
  
         Carli, 7 October 2026: *"BG remover"*. It looks for a PERSON —
@@ -2808,86 +2906,6 @@ export default function PostStudio({
           )}
         </p>
 
-      </div>
-    )}
-    {/* ── Changing what is in the picture, by saying it ───────────
-
-        Carli, 8 October 2026: *"Ek dink ons moet dan lyria, nano banana en
-        veo gebruik."* Lyria makes the songs and Veo the clips; this is the
-        third one, and the only one of the three that nothing in the app had
-        ever called.
-
-        It sits under the eraser on purpose. The eraser above grows the
-        pixels around a gap inwards — free, instant, and hopeless against a
-        pattern. This one invents what was behind, which is the thing the
-        eraser's own sentence says it cannot do. Somebody who has just been
-        told "against a pattern it smudges" is exactly the person who wants
-        the next control to be this one.
-
-        ── It was taken out for an hour, and then put back ────────
-
-        `check:kidsafe` reddened when this went in: it had measured that this
-        was the only room in the app with no other people and no money in it
-        once the download door was shut, and concluded a child-friendly
-        FutureBox was this one room with one door closed. So the control came
-        out and the question went to her rather than the check being
-        rewritten to agree.
-
-        Her answer, 9 October 2026: *"Ek dink die child funksie is net om met
-        liedjie maak te speel - en dalk om die liedjie 'n video te maak."*
-        The child version is the booth, not this room. The measurement was
-        sound and the design conclusion drawn from it was mine, and it was
-        wrong about what she wanted. Back it comes.
-
-        Everything else in this room is free and happens on the device.
-        This one does not, so the button carries its price. */}
-    {picture && (
-      <div data-postask className="mt-4 flex flex-col gap-2">
-        <div className={MIKRO}>
-          {t('post.askTitle', 'Change it by saying what to change')}
-        </div>
-        <textarea
-          data-postaskwords
-          value={askWords}
-          onChange={(event) => setAskWords(event.target.value)}
-          rows={2}
-          maxLength={500}
-          placeholder={t(
-            'post.askHint',
-            'Take the car out of the background. Make it evening. Write SALE on the window.',
-          )}
-          className="w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px] leading-relaxed outline-none focus:border-emerald-500/60"
-          style={asRoom ? { color: INK } : undefined}
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            data-postaskgo
-            disabled={redrawing || !askWords.trim()}
-            onClick={() => { void askToChange(); }}
-            className={`${LEEG} disabled:opacity-40`}
-          >
-            {redrawing
-              ? t('post.askBusy', 'Drawing it…')
-              : `${t('post.askGo', 'Change it')} · ${creditsSaid(CREDITS.repaint, t)}`}
-          </button>
-          {whole && (
-            <button
-              type="button"
-              data-postaskback
-              onClick={() => { setPicture(whole); setWhole(null); setSaid(''); }}
-              className={LEEG}
-            >
-              {t('post.cutBack', 'Put it back')}
-            </button>
-          )}
-        </div>
-        <span className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-          {t(
-            'post.askWhat',
-            'Say what should be different and the picture comes back changed. This one is NOT free and it does not happen on your phone — the picture is sent to be redrawn, so it costs credits and takes a few seconds. It can write words INTO the picture, on a window or along a wall; for words on top in a real font, use Words above, which is free and can be moved afterwards. It will not put a real person into a picture, and it cannot make album art: a cover is made in the booth or bought from an artist.',
-          )}
-        </span>
       </div>
     )}
     {/* ── Taking something small out ─────────────────────────────────

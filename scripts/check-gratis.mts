@@ -67,6 +67,27 @@ const SPENDS = [
      call lived inside `app/api/charts/route.ts` with no import to read —
      a supplier with no seam is a supplier this rule cannot see. */
   'server/spotify',
+  /* ── Google, missing until 9 October 2026 ───────────────────
+
+     Every one of these spends real money on Carli's own Vertex project, and
+     not one of them was on this list. The whole file says "nothing reaches a
+     supplier for free by accident" and it has been green every day since
+     8 October while four routes reached Google and nobody counted.
+
+     It is the same failure the Spotify note above describes, word for word:
+     *"a supplier with no seam is a supplier this rule cannot see."* Google
+     arrived after that sentence was written, it has no seam — it is called
+     through these libraries rather than through `suppliers.ts` — and nobody
+     added it. A lesson written down in a comment is not a lesson applied.
+
+     Found while adding `/api/google/wordtest`, when this check passed and
+     should not have. */
+  'server/lyria', 'server/picture', 'server/video/google',
+  /* And the video index, because that is how a route reaches the engines in
+     practice: `/api/google/videotest` imports `server/video` and was STILL
+     invisible after the three above were added. A list of leaf modules
+     misses every route that goes through the front door. */
+  'server/video',
 ];
 
 /**
@@ -113,6 +134,29 @@ function imports(src: string): string[] {
  * stops describing the app.
  */
 const FREE: Record<string, string> = {
+  /* ── The two pages that answer a question nobody could answer ──────
+
+     Both spend real money and charge nothing, and both are the owner's own
+     diagnostic pages rather than member features. They are here with a
+     reason rather than left out, which is the whole point of this file:
+     the question is not "is this free" but "did somebody decide it".
+
+     Both refuse to spend without `&go=yes` in the address, which is the
+     thing that makes a money-spending page safe to have at all — a page
+     that bills on being opened is a page a crawler can bill. */
+  'app/api/google/videotest/route.ts':
+    'makes one real four-second Veo clip to settle whether Google hands the'
+    + ' video back as bytes or writes it to a Cloud Storage bucket. About'
+    + ' R10, owner-only, and it answered `needsBucket: false` on'
+    + ' 9 October 2026 — which closed a question no amount of reading could'
+    + ' close, because every Google sample sends a `storageUri` and this app'
+    + ' never does. Not a member action and not a feature',
+  'app/api/google/wordtest/route.ts':
+    'makes one short song to show which of Lyria\'s two text rows is the'
+    + ' lyrics and which is the description. About R1.28, owner-only. It'
+    + ' exists because the alternative instruction was "open the browser\'s'
+    + ' network tab and decode a base64 header", which is asking a person to'
+    + ' do a machine\'s job. Not a member action and not a feature',
   'app/api/voice/own/route.ts':
     'says which member a trained singing voice belongs to. It reads Kits\''
     + ' list of models to check the number is one of ours and then writes a'
