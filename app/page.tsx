@@ -3167,7 +3167,15 @@ export default function FutureBoxHome() {
 
             {picksBar}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+            <div
+              /* Four across at a desk. This stopped at three past 768 pixels,
+                 which inside a 1,280-pixel gutter is a 400-pixel card — so on
+                 a monitor the feed was three enormous tiles where a website
+                 shows a shelf. Carli, 9 October 2026: *"Die website moet nie
+                 lyk soos 'n foon app nie."* `check:voordeur` holds that no
+                 shelf here stops widening at `md`. */
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"
+            >
               {some(activePodcasts).map((pod) => (
                 <div 
                   key={pod.id}
@@ -3392,7 +3400,11 @@ export default function FutureBoxHome() {
 
             {picksBar}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+            <div
+              /* Four across at a desk, for the reason given at the podcast
+                 shelf above. */
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"
+            >
               {[
                 {
                   tag: t('feed.tag.vibe', 'Top Vibe Coded App'),

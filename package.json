@@ -301,6 +301,7 @@
     "check:woorde": "tsx scripts/check-woorde.mts",
     "check:omslag": "tsx scripts/check-omslag.mts",
     "check:lessenaar": "tsx scripts/check-lessenaar.mts",
+    "check:voordeur": "tsx scripts/check-voordeur.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

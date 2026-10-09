@@ -49,28 +49,29 @@
 import React, { useState } from 'react';
 import { Play } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { coverFor, sourceFor } from '../lib/welcomevideo';
 
-const AFRIKAANS = process.env.NEXT_PUBLIC_WELCOME_VIDEO_AFRIKAANS ?? '';
-/** The older name is still honoured, so an existing setup keeps working. */
-const ENGLISH =
-  process.env.NEXT_PUBLIC_WELCOME_VIDEO_ENGLISH ??
-  process.env.NEXT_PUBLIC_WELCOME_VIDEO ??
-  '/welcome.mp4';
-
-/** The cover frame for each recording. Optional: no cover simply means no poster. */
-const COVER_AFRIKAANS = process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERA ?? '';
-const COVER_ENGLISH = process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERE ?? '';
+/* Which recording, which cover, and whether there is one at all, all moved to
+   `lib/welcomevideo.ts` on 9 October.
+ 
+   Not for tidiness. The landing page now has to ask whether this player will
+   draw anything BEFORE it decides whether to open a column beside the words,
+   because a hero holding a space for a player that returns `null` is a hero
+   that is right in English and half empty in Afrikaans. Two files needing the
+   same answer is one file that owns it, and `check:voordeur` drives the page's
+   answer against this player's rather than reading both. That file carries the
+   note on the Afrikaans fallback — there is none, on purpose — and on why
+   these are read inside a function and not into a const. */
 
 export default function WelcomeVideo() {
   const { t, lang } = useLang();
   const [playing, setPlaying] = useState(false);
 
-  const source = lang === 'af' ? AFRIKAANS : ENGLISH;
-  // The cover follows the recording it belongs to. A cover set for the other
-  // language is not a fallback: it would put an Afrikaans title card over an
-  // English recording, which is worse than no card at all.
-  const cover = lang === 'af' ? COVER_AFRIKAANS : COVER_ENGLISH;
-  // No recording in this language: nothing, rather than the other one.
+  const source = sourceFor(lang);
+  const cover = coverFor(lang);
+  // No recording in this language: nothing, rather than the other one. The
+  // landing page asks the same helper the line above does, so the column it
+  // opens and the player it opens it for cannot disagree.
   if (!source) return null;
 
   return (

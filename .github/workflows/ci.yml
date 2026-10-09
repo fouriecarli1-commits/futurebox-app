@@ -1340,6 +1340,13 @@ jobs:
       - name: A room at a desk is not a room in a hand
         run: npm run check:lessenaar
 
+      # The home page a stranger lands on is `Landing.tsx`, not the feed. One
+      # gutter for the whole page, a hero that is two columns at a desk, and
+      # the column beside the words opened only when the visitor's language
+      # has a recording to put in it.
+      - name: The front door does not look like a phone app
+        run: npm run check:voordeur
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

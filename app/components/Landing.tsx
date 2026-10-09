@@ -21,6 +21,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Check, Cpu } from 'lucide-react';
 import WelcomeVideo from './WelcomeVideo';
+import { hasWelcomeVideo } from '../lib/welcomevideo';
 import { guessRegion, REGIONS, type Region } from '../lib/pricing';
 import { TIER_SPECS, TIERS, tierPrice } from '../lib/plans';
 import { useLang } from '../lib/i18n';
@@ -43,11 +44,34 @@ export default function Landing({
     setRegion(guessRegion(lang).region);
   }, [lang]);
 
+  /* ── Is there anything to put beside the words ─────────────────────────
+ 
+     Carli, 9 October 2026: *"Gaan aan met die website se home page."* At a
+     desk a home page is words on the left and something to look at on the
+     right; stacked down an 896-pixel column in the middle of a monitor is
+     the phone layout she objected to.
+ 
+     The thing to look at is `WelcomeVideo`, and it draws NOTHING when this
+     language has no recording — Afrikaans has one only if a variable is set
+     in Vercel. So the second column is opened by this question rather than
+     assumed, because a hero that is right in English and half empty in
+     Afrikaans is a hero that was only ever looked at in English.
+ 
+     `lib/welcomevideo.ts` owns the answer and the player acts on the same
+     one; `check:voordeur` drives the two against each other. */
+  const beside = hasWelcomeVideo(lang);
+
   const toPricing = () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
     <div className="min-h-screen">
-      <header className="max-w-4xl mx-auto px-6 pt-10">
+      {/* `max-w-6xl`, which is what the prices and the footer below already
+          were. This was `max-w-4xl` — so the logo at the top of the page sat
+          128 pixels inside the price cards further down it, and nothing on
+          the page lined up with anything else on it. One gutter for the whole
+          page, counted by `check:voordeur` so a fifth container cannot
+          quietly arrive at a fifth width. */}
+      <header className="max-w-6xl mx-auto px-6 pt-10">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center">
@@ -73,38 +97,124 @@ export default function Landing({
           Galaxy S9+) the browser zoomed the whole page out to fit it, and
           every screen in the app came out slightly small for the sake of the
           first word on the first one. It cannot wrap, so it has to fit. */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-16 pb-16 md:pt-20 md:pb-24">
-        <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_60px_rgba(16,185,129,0.25)]">
-            <Cpu className="w-7 h-7 sm:w-9 sm:h-9 md:w-14 md:h-14 text-onAccent" />
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-16 md:pt-20 md:pb-24">
+        {/* ── Words on the left, the thing to look at on the right ──────
+ 
+            At a desk only, and only when there IS something to look at. 896
+            pixels of stacked paragraphs centred in a 1,920-pixel window is a
+            phone screen with black either side, which is what Carli meant on
+            9 October 2026: *"Die website moet nie lyk soos 'n foon app nie."*
+ 
+            `beside` rather than an assumption: `WelcomeVideo` draws nothing
+            in a language with no recording, and a column held open for
+            nothing is a worse page than one honest column. See where `beside`
+            is worked out above, and `check:voordeur`, which drives that
+            answer against the player's own rather than trusting that the two
+            agree.
+ 
+            `items-center`, because the video is shorter than the words and a
+            16:9 box pinned to the top of a tall column reads as something
+            that fell off the sentence above it. */}
+        {/* And when there is nothing to put beside the words, they get a
+            MEASURE rather than the whole gutter. The page is 1,152 pixels
+            wide now; a headline run across all of it is unreadable in a
+            different way from a phone-shaped column, and this is the branch
+            an Afrikaans visitor gets whenever that recording is not set. The
+            left edge still lines up with the six below, because a measure
+            with no `mx-auto` does not centre. */}
+        <div className={beside ? 'lg:grid lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:items-center' : 'max-w-3xl'}>
+          <div className="min-w-0">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_60px_rgba(16,185,129,0.25)]">
+              <Cpu className="w-7 h-7 sm:w-9 sm:h-9 md:w-14 md:h-14 text-onAccent" />
+            </div>
+            <p className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
+              FUTURE<span className="text-emerald-400">BOX</span>
+            </p>
           </div>
-          <p className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
-            FUTURE<span className="text-emerald-400">BOX</span>
+
+          <p className="text-xl md:text-2xl text-zinc-300 font-semibold pt-6 tracking-tight">
+            {t('welcome.black', 'The black box of the future.')}
           </p>
+
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.02] pt-8">
+            {t('welcome.line1', 'Put your voice in.')}{' '}
+            <span className="text-emerald-400">{t('welcome.line2', 'Take a record out.')}</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-zinc-400 leading-relaxed pt-5 max-w-2xl">
+            {t(
+              'welcome.sub',
+              'FutureBox is the black box of the future — the whole studio in one place. Write it with AI, sing it yourself, clone your voice for the show, and put a video to it.',
+            )}
+          </p>
+
+
+          <div className="flex flex-wrap items-center gap-3 pt-9">
+            <button
+              type="button"
+              onClick={onStart}
+              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              {t('landing.startFree', 'Start free')}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onGoogle}
+              /* Literal white, deliberately outside the theme.
+
+                   Google's sign-in button is theirs and their guidelines say what
+                   it looks like: a white field with dark text beside their mark.
+                   It is the one control here that must not follow a palette, so
+                   the colours are written out rather than taken from a token —
+                   and `check:theme` knows about this line by name. */
+              className="px-5 py-3.5 rounded-xl bg-[#ffffff] text-[#1f1f1f] font-bold flex items-center gap-2.5 hover:opacity-90 transition-opacity"
+            >
+              {/* Google's own mark, drawn rather than fetched: an external image
+                  on the first screen is a request that can be slow or blocked. */}
+              <svg viewBox="0 0 48 48" className="w-4 h-4" aria-hidden="true">
+                <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />
+                <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.1 5.5c4.2-3.8 6.6-9.5 6.6-16.2z" />
+                <path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.8-6.1C1 17 0 20.4 0 24s1 7 2.6 10.1l7.8-5.4z" />
+                <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-9.1l-7.8 5.4C6.5 42.6 14.6 48 24 48z" />
+              </svg>
+              {t('welcome.google', 'Continue with Google')}
+            </button>
+            <button
+              type="button"
+              onClick={toPricing}
+              className="px-4 py-3.5 text-zinc-400 hover:text-white font-semibold"
+            >
+              {t('welcome.seePlans', 'See the plans')}
+            </button>
+          </div>
+
+          <p className="text-sm text-zinc-600 pt-5">
+            {t('landing.noCard', 'No card to start. The free tier is a real one, not a trial.')}
+          </p>
+          </div>
+
+          {/* Under the words on a phone, beside them at a desk. Under them in
+              both cases on purpose: somebody already convinced should reach
+              the way in before they reach a ten-second wait. */}
+          <div className={beside ? 'pt-12 lg:pt-0' : 'pt-12'}>
+            <WelcomeVideo />
+          </div>
         </div>
-
-        <p className="text-xl md:text-2xl text-zinc-300 font-semibold pt-6 tracking-tight">
-          {t('welcome.black', 'The black box of the future.')}
-        </p>
-
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.02] pt-8">
-          {t('welcome.line1', 'Put your voice in.')}{' '}
-          <span className="text-emerald-400">{t('welcome.line2', 'Take a record out.')}</span>
-        </h1>
-
-        <p className="text-lg md:text-xl text-zinc-400 leading-relaxed pt-5 max-w-2xl">
-          {t(
-            'welcome.sub',
-            'FutureBox is the black box of the future — the whole studio in one place. Write it with AI, sing it yourself, clone your voice for the show, and put a video to it.',
-          )}
-        </p>
 
         {/* ── What it gives you ───────────────────────────────────────────
             Six, each one a thing that is built and reachable from the rail
             inside. Nothing aspirational: a landing page listing a feature the
             code does not have is the one mistake here that cannot be argued
             away afterwards. */}
-        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3.5 pt-9 max-w-3xl">
+        <div
+          /* Three across at a desk and the whole gutter wide, because these
+             six moved out from under the words when the hero became two
+             columns. At `max-w-3xl` in two columns they were two long lines
+             of text with half a monitor empty beside them. */
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3.5 pt-14"
+        >
           {[
             [t('welcome.offer1', 'Songs you sing on'), t('welcome.offer1n', 'Write it with the copilot, generate it, keep the stems')],
             [t('welcome.offer2', 'Your own voice, cloned'), t('welcome.offer2n', 'Read a script in it, with your consent on record')],
@@ -121,57 +231,6 @@ export default function Landing({
               </span>
             </span>
           ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 pt-9">
-          <button
-            type="button"
-            onClick={onStart}
-            className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            {t('landing.startFree', 'Start free')}
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onGoogle}
-            /* Literal white, deliberately outside the theme.
-
-                 Google's sign-in button is theirs and their guidelines say what
-                 it looks like: a white field with dark text beside their mark.
-                 It is the one control here that must not follow a palette, so
-                 the colours are written out rather than taken from a token —
-                 and `check:theme` knows about this line by name. */
-            className="px-5 py-3.5 rounded-xl bg-[#ffffff] text-[#1f1f1f] font-bold flex items-center gap-2.5 hover:opacity-90 transition-opacity"
-          >
-            {/* Google's own mark, drawn rather than fetched: an external image
-                on the first screen is a request that can be slow or blocked. */}
-            <svg viewBox="0 0 48 48" className="w-4 h-4" aria-hidden="true">
-              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />
-              <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.1 5.5c4.2-3.8 6.6-9.5 6.6-16.2z" />
-              <path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.8-6.1C1 17 0 20.4 0 24s1 7 2.6 10.1l7.8-5.4z" />
-              <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-9.1l-7.8 5.4C6.5 42.6 14.6 48 24 48z" />
-            </svg>
-            {t('welcome.google', 'Continue with Google')}
-          </button>
-          <button
-            type="button"
-            onClick={toPricing}
-            className="px-4 py-3.5 text-zinc-400 hover:text-white font-semibold"
-          >
-            {t('welcome.seePlans', 'See the plans')}
-          </button>
-        </div>
-
-        <p className="text-sm text-zinc-600 pt-5">
-          {t('landing.noCard', 'No card to start. The free tier is a real one, not a trial.')}
-        </p>
-
-        {/* Below the buttons on purpose: somebody already convinced should
-            reach the way in before they reach a ten-second wait. Renders
-            nothing on the Afrikaans page — see WelcomeVideo. */}
-        <div className="pt-12">
-          <WelcomeVideo />
         </div>
       </section>
 
