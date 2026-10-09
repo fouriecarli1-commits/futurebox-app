@@ -45,6 +45,7 @@
  * number cannot go up.
  */
 import { readFileSync } from 'node:fs';
+import { withoutComments } from './prose.mts';
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -121,7 +122,21 @@ walk('app');
  */
 const found: { at: string; file: string; n: number; line: string }[] = [];
 for (const file of files) {
-  const lines = readFileSync(file, 'utf8').split('\n');
+  /* ── The prose blanked first ────────────────────────────────────────
+
+     This read the raw file and matched a paragraph on 9 October 2026: a
+     comment explaining that `const { data } = await …` followed by
+     `(data ?? [])` is the fault — written directly above the FIXED code —
+     was itself reported as the fault. So the fix made the check louder
+     instead of quieter, which is the most discouraging way for a check to
+     be wrong.
+
+     `withoutComments` blanks comments and string bodies and keeps the line
+     count, so the line numbers below still point where they did. It is the
+     same repair `check:plankserver` needed two days earlier for the same
+     reason: a check that reads the paragraph about the rule instead of the
+     code is measuring something adjacent. */
+  const lines = withoutComments(readFileSync(file, 'utf8')).split('\n');
   const seen = new Map<string, number>();
   for (let i = 0; i < lines.length; i += 1) {
     const said = /const \{ data(?::\s*(\w+))?\s*\} = await/.exec(lines[i]);

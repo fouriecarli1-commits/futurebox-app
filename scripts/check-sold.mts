@@ -143,6 +143,19 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      room that does not are two different products and the card has to say
      which one it is selling. */
   filmOut: 'on every card, in the same sentence as the cutting room',
+  /* The style translator, 9 October 2026. A name somebody types into the
+     song room — "like Beyoncé" — comes back as the SOUND rather than the
+     person: the room refuses the name and offers the description instead of
+     a dead end. Three credits.
+
+     Exempt for the ordinary reason the rest of this list is: the cards name
+     ROOMS and what they cost to run, and this is one press inside the song
+     room, offered only when a refusal has already happened. A card line for
+     it would have to explain the refusal to somebody who has not hit one,
+     which is a paragraph about a rule in the middle of a price list. */
+  styleword: 'three credits to have a named artist put as a sound instead,'
+    + ' offered inside the song room only after the name has been refused.'
+    + ' The cards name the room; this is one press inside it',
   /* The Pro Booth's own price, 2 October 2026, and on every card for the
      same reason: a room that charges and a room that does not are two
      different products. One a minute against the cutting room's three,

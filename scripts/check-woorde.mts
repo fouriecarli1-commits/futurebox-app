@@ -33,6 +33,7 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { saidHeader, wordsIn } from '../app/lib/server/lyria.ts';
+import { rowsFrom } from '../app/lib/sungwords.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -69,24 +70,51 @@ const head = saidHeader(wordsIn(REAL));
 ok('the words are handed over in a header',
   typeof head['X-Song-Words'] === 'string' && head['X-Song-Words'].length > 0);
 
+/* ── Read back the way the browser reads it ──────────────────────────────
+
+   These three read the decoded text directly and split it on a blank line,
+   because that is how the rows were packed until 9 October 2026 — and that
+   packing was wrong: **lyrics are nothing but blank lines**, so a song whose
+   words contain one came through as two rows and the second half was read as
+   a separate verse. The rows are JSON now, and these go through the same
+   reader the browser uses rather than re-implementing it here. A check that
+   unpacks a format by hand is a second implementation that can drift. */
+/* `rowsFrom` takes a `Headers`, because that is what a browser has. The
+   record `saidHeader` builds is what a route hands to `new Response`, so it
+   goes through the same constructor here — reading the route's record with a
+   hand-written getter would be a third implementation of the same thing. */
+const asHeaders = (made: Record<string, string>): Headers => new Headers(made);
+
+const unpacked = rowsFrom(asHeaders(head));
+
 ok('  and the newlines survive, which is why it is base64',
-  Buffer.from(head['X-Song-Words'] ?? '', 'base64').toString('utf8').includes('\n'),
+  unpacked.some((one) => one.includes('\n')),
   'a header may not contain a newline, and lyrics are nothing but newlines');
 
 ok('  and Afrikaans survives, which is the other reason',
   (() => {
-    const out = saidHeader(['My voëltjie sing ’n liedjie']);
-    return Buffer.from(out['X-Song-Words'] ?? '', 'base64').toString('utf8')
-      === 'My voëltjie sing ’n liedjie';
+    const out = rowsFrom(asHeaders(saidHeader(['My voëltjie sing ’n liedjie'])));
+    return out.length === 1 && out[0] === 'My voëltjie sing ’n liedjie';
   })(),
   'a header may not carry a non-Latin-1 byte, and "voëltjie" is full of'
   + ' them — raw, it either throws or arrives mangled depending on the'
   + ' runtime, and mangled is the worse of the two');
 
 ok('  and the two rows can be told apart after decoding',
-  Buffer.from(head['X-Song-Words'] ?? '', 'base64').toString('utf8').split('\n\n').length === 2,
+  unpacked.length === 2,
   'joined by one newline, a row with a line break in it would be'
   + ' indistinguishable from two rows');
+
+ok('    including a row with a BLANK line inside it, which every song has',
+  (() => {
+    const verse = 'Verse one, first line\nsecond line\n\nchorus line\nanother';
+    const out = rowsFrom(asHeaders(saidHeader([verse, 'a second row'])));
+    return out.length === 2 && out[0] === verse;
+  })(),
+  'the rows were joined with a blank line until 9 October 2026, and lyrics'
+  + ' are nothing but blank lines — so one song arrived as three rows and'
+  + ' the browser read a chorus as a separate verse. Nothing threw, and the'
+  + ' count in the other header disagreed with the list silently');
 
 ok('  and how many rows there are is said, not counted by guessing',
   head['X-Song-Words-Rows'] === '2', head['X-Song-Words-Rows'] ?? 'absent');

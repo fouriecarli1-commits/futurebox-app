@@ -38,7 +38,7 @@ import { callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { CHOSEN } from '@/app/lib/server/google';
 import { enough, note } from '@/app/lib/server/googlespend';
-import { PER_PICTURE, configured, makePicture } from '@/app/lib/server/picture';
+import { MOST_PICTURES, PER_PICTURE, configured, makePicture } from '@/app/lib/server/picture';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
@@ -53,7 +53,10 @@ export const maxDuration = 60;
 const MOST = 2_000;
 
 /**
- * The biggest picture that may come in, as base64 characters.
+ * The most picture that may come in at once, as base64 characters.
+ *
+ * The total across every picture on the request, not each one: see the intake
+ * below for why that distinction is the whole value of this number.
  *
  * Four megabytes, because **the platform stops at 4.5** and everything past
  * that is a bare 413 with no sentence in it. This file said eight, which was
@@ -104,33 +107,64 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'Say what to change, or what to draw.' }, { status: 400 });
   }
 
-  /* ── The picture coming in, if there is one ──────────────────────────
+  /* ── The pictures coming in, if there are any ────────────────────────
 
-     Its type travels beside it rather than being parsed back out of a data
-     URL. The route has to know what it is before anything leaves this
-     machine, and a check that re-reads a string the browser wrote is a
+     Their types travel beside them rather than being parsed back out of a
+     data URL. The route has to know what each one is before anything leaves
+     this machine, and a check that re-reads a string the browser wrote is a
      check waiting to be fooled — the same reasoning as `StartRequest.image`
-     in the video types. */
-  let from: { data: string; mime: string } | undefined;
-  const given = said.from && typeof said.from === 'object'
-    ? said.from as { data?: unknown; mime?: unknown }
-    : null;
-  if (given) {
-    const data = String(given.data ?? '');
-    const mime = String(given.mime ?? '');
+     in the video types.
+
+     ── Several, and why the total is what is measured ─────────────────
+
+     Gemini reads more than one picture in a turn, which is what makes "put
+     this person in that scene" and "the same character on page four"
+     possible at all. `MOST_PICTURES` is how many.
+
+     The ceiling moved with it, and this is the part that would have been
+     wrong if it had been left alone: the old limit was per picture, so three
+     pictures of four megabytes each would have passed a guard that says four
+     and then been refused by the platform at the door, with a bare 413 and
+     no sentence in it — the exact failure `check:bodylimit` exists for. So
+     the TOTAL is what is counted, and a member sending three big ones is
+     told so by this route rather than by the edge.
+
+     Too many pictures is refused rather than quietly trimmed. Dropping the
+     fourth would mean the answer came back missing a picture somebody chose,
+     with nothing anywhere saying why. */
+  const from: { data: string; mime: string }[] = [];
+  const asList = Array.isArray(said.from)
+    ? said.from
+    : said.from && typeof said.from === 'object' ? [said.from] : [];
+  if (asList.length > MOST_PICTURES) {
+    return Response.json(
+      { message: `${MOST_PICTURES} pictures at a time is the most.` },
+      { status: 400 },
+    );
+  }
+  for (const one of asList) {
+    const row = one && typeof one === 'object' ? one as { data?: unknown; mime?: unknown } : null;
+    const data = String(row?.data ?? '');
+    const mime = String(row?.mime ?? '');
     if (!data || !MIMES.has(mime)) {
       return Response.json(
         { message: 'That picture is not a kind this can read. PNG, JPEG or WebP.' },
         { status: 400 },
       );
     }
-    if (data.length > MOST_BYTES) {
-      return Response.json(
-        { message: 'That picture is too big. About three megabytes is the most.' },
-        { status: 413 },
-      );
-    }
-    from = { data, mime };
+    from.push({ data, mime });
+  }
+  const weight = from.reduce((all, one) => all + one.data.length, 0);
+  if (weight > MOST_BYTES) {
+    return Response.json(
+      {
+        message: from.length > 1
+          ? 'Those pictures come to too much together. About three megabytes'
+            + ' in total is the most.'
+          : 'That picture is too big. About three megabytes is the most.',
+      },
+      { status: 413 },
+    );
   }
 
   const aspect = ASPECTS.has(String(said.aspect ?? '')) ? String(said.aspect) as Aspect : undefined;

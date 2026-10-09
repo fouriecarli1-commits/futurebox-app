@@ -63,8 +63,13 @@ ok('  and mix and master to the right', /spec=\{UPPER\[1\]\}/.test(dock) && /id:
    own transport was then being compared with the bottom bar's desk buttons,
    which is two different bars measured as one and said the order was wrong
    while it was right in both. Split at the line that separates them. */
-const upright = from(dock, 'if (sideways) return rail;');
-const railOnly = upTo(dock, 'if (sideways) return rail;');
+/* The line it splits on was `if (sideways) return rail;` until 8 October
+   2026, when the rail became the layout for a desk as well as for a phone
+   held sideways — `onEdge = sideways || atDesk`. The split moved with it;
+   the rule did not. */
+const SPLIT = 'if (onEdge) return rail;';
+const upright = from(dock, SPLIT);
+const railOnly = upTo(dock, SPLIT);
 
 ok(
   '  in that order, which is the order she drew',
@@ -83,7 +88,16 @@ ok(
    carrying all six desks, in a grid rather than a column — a single column
    fits three of them on a phone held sideways and hides the other three
    below a fold. */
-ok('  and sideways they move to a rail down the side', /if \(sideways\) return rail;/.test(dock));
+ok('  and sideways they move to a rail down the side', dock.includes(SPLIT));
+/* And at a desk too, which is the same rail for a different reason: a wide
+   screen with a mouse has room beside the work and none under it. Held here
+   because the split above now depends on it — a check whose own bearings
+   come from a line nobody asserts is a check that goes quiet when that line
+   is renamed. */
+ok('    and at a desk, for the same reason in the other direction',
+  /const onEdge = sideways \|\| atDesk;/.test(dock),
+  'the rail is the layout whenever the buttons belong beside the work rather'
+  + ' than under it');
 ok('    carrying every desk, not the four', /\[\.\.\.UPPER, \.\.\.LOWER\]\.map/.test(railOnly));
 ok(
   '    laid out in a grid, because one column hides half of them on a phone',

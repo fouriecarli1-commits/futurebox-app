@@ -105,10 +105,27 @@ ok('  and a plain finish is not reported as a reason',
 
 const lib = withoutComments(readFileSync('app/lib/server/picture.ts', 'utf8'));
 
-ok('the picture to be changed is put BEFORE the words',
-  /if \(from\) parts\.push\(\{ inlineData[\s\S]{0,120}parts\.push\(\{ text: words \}\)/.test(lib),
+/* Every picture, and all of them before the words.
+ 
+   This read `if (from) parts.push(...)` until 9 October 2026, when the call
+   learned to take several pictures and the single push became a loop. The
+   assertion went red, which is the right behaviour — and the lazy repair
+   would have been to drop it. What it holds is the ORDER, so it is written
+   against the order: no `text` part may be pushed before the last
+   `inlineData` one. `check:prentverwysings` drives the same thing with the
+   network replaced and counts what actually went on the wire; this one reads
+   the source, because the two fail differently. */
+ok('every picture is put BEFORE the words',
+  (() => {
+    const pictureAt = lib.lastIndexOf('parts.push({ inlineData');
+    const wordsAt = lib.indexOf('parts.push({ text: words })');
+    return pictureAt >= 0 && wordsAt > pictureAt
+      && /for \(const one of given/.test(lib);
+  })(),
   'Gemini reads a conversation in order, so an instruction that arrives'
-  + ' before the thing it is about is an instruction about nothing');
+  + ' before the thing it is about is an instruction about nothing — and a'
+  + ' single push where a loop belongs is how every multi-picture capability'
+  + ' Google offers stayed unreachable');
 
 ok('  and TEXT is asked for beside IMAGE',
   /responseModalities: \['TEXT', 'IMAGE'\]/.test(lib),

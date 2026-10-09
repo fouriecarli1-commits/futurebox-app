@@ -73,6 +73,8 @@ import {
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
 import { useSideways } from '../lib/sideways';
+import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
+import { loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
 import { useAtDesk } from '../lib/atdesk';
 import Pictures from './Pictures';
 import DeskSheet from './BoothCard';
@@ -1690,6 +1692,62 @@ export default function VideoEditor({
   const [shotWords, setShotWords] = useState('');
   const [shotPic, setShotPic] = useState<string | null>(null);
   const [shotBusy, setShotBusy] = useState<'' | 'draw' | 'move'>('');
+  /* ── The cast, as pictures the engine draws FROM ───────────────────────
+
+     Carli, 9 October 2026: *"al die spesiale funksies van google moet ook
+     daar in wees."*
+
+     The cast has existed since September — people and products she has put
+     in, each with a reference picture in her own storage — and the only
+     thing that ever read it was the presenter panel. So a film made here
+     had a different person in every shot, and the fix was sitting in a
+     folder the whole time.
+
+     Gemini reads several pictures in a turn. Ticking a cast member sends
+     their picture up with the words, and the face in shot four is the face
+     in shot one. `lib/packpicture.ts` does the shrinking; `roomForRefs`
+     says how many may go. */
+  const [cast, setCast] = useState<Member[]>([]);
+  const [castPics, setCastPics] = useState<Record<string, string>>({});
+  const [castOn, setCastOn] = useState<string[]>([]);
+
+  /* Read once and re-read when the cast desk changes one. `onCastChanged`
+     is what the cast desk fires, so adding somebody next door shows up here
+     without a reload. */
+  useEffect(() => {
+    const read = () => { void loadCast().then(setCast); };
+    read();
+    return onCastChanged(read);
+  }, []);
+
+  /* Their pictures, which live in her own storage and come back as data
+     URLs. Fetched after the list rather than with it, so the ticks are
+     usable while the thumbnails are still arriving. */
+  useEffect(() => {
+    if (!cast.length) return undefined;
+    let alive = true;
+    void Promise.all(cast.map(async (one) => [one.path, await pictureOf(one.path)] as const))
+      .then((pairs) => {
+        if (!alive) return;
+        const found: Record<string, string> = {};
+        for (const [path, url] of pairs) if (url) found[path] = url;
+        setCastPics((was) => ({ ...was, ...found }));
+      });
+    return () => { alive = false; };
+  }, [cast]);
+
+  /** How many more may be ticked, given what is on the bench. */
+  const castRoom = roomForRefs(Boolean(shotPic));
+
+  /* Ticking off is always allowed; ticking on stops at the room there is.
+     A tick that silently does nothing is worse than one that is disabled,
+     so the buttons past the limit are drawn disabled rather than ignored. */
+  const toggleCast = (path: string): void => {
+    setCastOn((was) => (was.includes(path)
+      ? was.filter((one) => one !== path)
+      : was.length >= castRoom ? was : [...was, path]));
+  };
+
   const [shotJob, setShotJob] = useState<string | null>(null);
   const [shotReady, setShotReady] = useState<string | null>(null);
   const [shotSaid, setShotSaid] = useState('');
@@ -1767,6 +1825,37 @@ export default function VideoEditor({
     setShotBusy('draw');
     setShotSaid('');
     try {
+      /* ── The pictures going up ─────────────────────────────────────
+
+         The frame that is there, if there is one, and whichever cast
+         members are ticked. Decoded first because `packLed` needs pixels
+         and both of these are data URLs — one from the last draw, the
+         others out of her own storage. */
+      const lead = shotPic ? await imageFrom(shotPic) : null;
+      /* Name and picture kept together, and only the pairs that decoded.
+         Naming somebody in the words whose picture did not go up is the
+         exact fault the sentence below is written to avoid — it would ask
+         the engine to match a face it cannot see, and it would get a
+         stranger with her person's name on it. */
+      const pairs = (await Promise.all(
+        cast
+          .filter((one) => castOn.includes(one.path))
+          .map(async (one) => ({ one, image: await imageFrom(castPics[one.path] ?? '') })),
+      )).filter((row): row is { one: Member; image: HTMLImageElement } => Boolean(row.image));
+      const from = packLed(lead, pairs.map((row) => row.image));
+      /* Every picture, or a sentence. `packLed` leaves out anything that
+         will not fit rather than sending it, so a short list here means one
+         of them is on the floor — and a frame drawn without the face she
+         ticked, with nothing saying so, is the worst of the three outcomes. */
+      if (from.length < (lead ? 1 : 0) + pairs.length) {
+        setShotSaid(pairs.length
+          ? t('edit.shotTooBig',
+            'Those pictures are too big to send together. Take a cast member out.')
+          : t('edit.shotFrameTooBig',
+            'That frame is too big to send. Draw a new one rather than changing this.'));
+        return;
+      }
+      const who = pairs.map((row) => row.one);
       const token = await accessToken();
       const answer = await fetch('/api/google/picture', {
         method: 'POST',
@@ -1775,12 +1864,29 @@ export default function VideoEditor({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          words,
-          /* Changing the frame that is there, where there is one — the cheap
-             path. `shotPic` is a data URL, so the preamble comes off. */
-          ...(shotPic
-            ? { from: { data: shotPic.slice(shotPic.indexOf(',') + 1), mime: 'image/png' } }
-            : { aspect: '16:9' }),
+          words: who.length
+            /* ── The sentence that only goes when faces go ──────────────
+
+               Said only where cast pictures are actually attached. A model
+               told to "keep the person in the reference picture" with no
+               reference invents one and describes it, which is the most
+               expensive way to get a stranger. */
+            ? `${words}\n\nThe ${who.length === 1 ? 'picture' : 'pictures'} attached`
+              + ` ${who.length === 1 ? 'shows' : 'show'}`
+              + ` ${who.map((one) => one.name).join(' and ')}.`
+              + ` Draw ${who.length === 1 ? 'them' : 'each of them'} with exactly the face,`
+              + ' hair, build and colouring shown, and keep that the same in every shot.'
+            : words,
+          /* The frame on the bench leads and the cast follow. `packLed` has
+             the arithmetic: the lead keeps most of the budget because its
+             detail comes back in the answer, and a face only has to carry
+             "this person". */
+          ...(from.length ? { from } : {}),
+          /* The ratio only where there is no frame to inherit one from. A
+             cast picture is being looked at, not resized — left to itself
+             the engine takes the first reference's shape, which is how a
+             wide frame came back square. */
+          ...(shotPic ? {} : { aspect: '16:9' }),
         }),
       });
       if (!answer.ok) {
@@ -3320,6 +3426,60 @@ async function smallerFrame(url: string): Promise<string> {
                   className="w-full rounded-lg border border-zinc-800 bg-black/30 p-2.5 text-[13px] leading-relaxed outline-none focus:border-emerald-500/60"
                   style={{ color: INK }}
                 />
+                {/* ── Who is in the shot ──────────────────────────────────
+
+                    The cast desk has had people and products in it since
+                    September, each with a reference picture, and nothing
+                    but the presenter panel ever read it. So a film made
+                    here had a different person in every shot.
+
+                    Ticking somebody sends their picture up with the words,
+                    and the face in shot four is the face in shot one. Up to
+                    `roomForRefs` of them — the request body is what sets
+                    that, not a preference. */}
+                {cast.length > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="text-[11px]" style={{ color: INK_DIM }}>
+                      {t('edit.castSame', 'Keep the same people in it')}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {cast.map((one) => {
+                        const on = castOn.includes(one.path);
+                        return (
+                          <button
+                            key={one.path}
+                            type="button"
+                            data-editorshotcast={one.path}
+                            aria-pressed={on}
+                            disabled={!on && castOn.length >= castRoom}
+                            onClick={() => toggleCast(one.path)}
+                            className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[12px] disabled:opacity-40 ${
+                              on ? 'border-emerald-500/70 bg-emerald-500/15' : 'border-zinc-700'
+                            }`}
+                            style={{ color: INK }}
+                          >
+                            {castPics[one.path] && (
+                              /* eslint-disable-next-line @next/next/no-img-element -- a
+                                 data URL out of her own storage; there is no
+                                 path for the image component to optimise. */
+                              <img
+                                src={castPics[one.path]}
+                                alt=""
+                                className="h-6 w-6 rounded-full object-cover"
+                              />
+                            )}
+                            {one.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="text-[11px]" style={{ color: INK_DIM }}>
+                      {castOn.length >= castRoom
+                        ? t('edit.castFull', 'That is as many as can go up with one frame.')
+                        : t('edit.castHint', 'Their picture goes up with the words, so the face stays the same.')}
+                    </div>
+                  </div>
+                )}
                 {shotPic && (
                   /* A plain `<img>`, with the lint rule turned off for this
                      one line and the reason here rather than nowhere.

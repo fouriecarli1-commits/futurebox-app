@@ -105,15 +105,22 @@ export default function StoryRoom(): React.ReactElement {
     setFilm('');
     const ctx = context();
     if (!ctx) { setSays(t('story.noAudio', 'This browser would not start its audio.')); return; }
+    /* The pages drawn so far, in order, so each new page can be drawn from
+       the ones before it and the child stays the same child. Kept as a local
+       rather than read back out of `made`, because `setMade` has not landed
+       by the time the next page is asked for — reading state inside the loop
+       that writes it is how every page would have been drawn from nothing. */
+    const sofar: HTMLImageElement[] = [];
     try {
       for (let i = 0; i < pages.length; i += 1) {
         const page = pages[i];
         setBusy(t('story.making', 'Page {n} of {all}')
           .replace('{n}', String(i + 1)).replace('{all}', String(pages.length)));
 
-        const drawn = await drawPage(page, look);
+        const drawn = await drawPage(page, look, sofar);
         if ('says' in drawn) { setSays(drawn.says); return; }
         held.current.push(drawn.picture);
+        sofar.push(drawn.image);
 
         const read = await readPage(page, voiceId, lang);
         if ('says' in read) { setSays(read.says); return; }

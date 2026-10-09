@@ -42,6 +42,7 @@
  * `inlineData` and `inline_data` have both been seen off Vertex.
  */
 
+import { MOST_PICTURES } from '../picturelimit';
 import { CHOSEN, addressOf, configured as googleOn } from './google';
 
 /**
@@ -195,9 +196,13 @@ export function wordsIn(body: unknown): string[] {
  *               which is right for an edit: forcing a ratio on a picture
  *               somebody is editing crops their own photograph.
  */
+/* How many pictures may go in at once, and why three: `lib/picturelimit.ts`.
+   Re-exported so the route and this file name the same thing. */
+export { MOST_PICTURES };
+
 export async function makePicture(
   words: string,
-  from?: Given,
+  from?: Given | readonly Given[],
   aspect?: '1:1' | '16:9' | '9:16' | '4:3' | '3:4',
   model: string = CHOSEN.image,
 ): Promise<Drawn> {
@@ -210,7 +215,13 @@ export async function makePicture(
      and an instruction that arrives before the thing it is about is an
      instruction about nothing. */
   const parts: unknown[] = [];
-  if (from) parts.push({ inlineData: { mimeType: from.mime, data: from.data } });
+  /* Every picture, in the order they were given. The order is not cosmetic:
+     a model reading "put the first person into the second scene" needs them
+     in the order the sentence names them. */
+  const given = from ? (Array.isArray(from) ? from : [from as Given]) : [];
+  for (const one of given.slice(0, MOST_PICTURES)) {
+    parts.push({ inlineData: { mimeType: one.mime, data: one.data } });
+  }
   parts.push({ text: words });
 
   let answer: Response;

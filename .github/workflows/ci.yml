@@ -1438,6 +1438,15 @@ jobs:
       - name: Words on a film have an edge at every size
         run: npm run check:woordrand
 
+      # The parts array that carries pictures to Gemini was built to hold a
+      # list and only ever had one thing pushed into it, so every capability
+      # needing two pictures — the same child on page four, this person in
+      # that scene, my logo on this poster — was unreachable. The arithmetic
+      # is the part that can be wrong: a per-picture ceiling with three
+      # pictures allowed is a bare 413 before the route runs.
+      - name: Several pictures reach the engine, and fit in one body
+        run: npm run check:prentverwysings
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

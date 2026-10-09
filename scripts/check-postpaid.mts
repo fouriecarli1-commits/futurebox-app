@@ -107,18 +107,14 @@ const INSIDE: Readonly<Record<string, string>> = {
   'shelved.toBlob': 'the same keep, for the byte count the shelf records so it can'
     + ' say how much room it is using. The blob is measured and dropped — see'
     + ' `check:shelf`',
-  /* ── The picture on its way to be redrawn, 9 October 2026 ──────
+  /* ── The picture on its way to be redrawn ─────────────────────
  
-     Named `sent` rather than `sheet` ON PURPOSE, for the same reason
-     `shelved` is not `sheet`: this list keys on the variable name, so
-     borrowing the paid export's name to let this one through would have
-     excused the paid road out at the same time. A variable name is a poor
-     fence, so the fence is what the reason below asserts. */
-  'sent.toDataURL': 'the picture on its way to Google’s picture model. The data'
-    + ' URL is cut at the comma and posted as base64 in a request body, and what'
-    + ' comes back is a new <img>. No anchor, no download attribute, no object URL'
-    + ' handed to anybody: it leaves the page as a REQUEST, which is the one way'
-    + ' out of this room that cannot put a file on the device',
+     It was `sent.toDataURL` in this room on 9 October 2026, and on the 9th
+     it moved into `lib/packpicture.ts` so that several pictures could be
+     packed to share one request body. So there is nothing to name here any
+     more — and that is exactly the move this list cannot see, which is why
+     the block below follows the canvas into the library rather than letting
+     the rule quietly end at this file's edge. */
 };
 const makers = studio.match(/[\w.]*\.(?:toBlob|toDataURL)\(/g) ?? [];
 const leaving = makers.filter((one) => !Object.keys(INSIDE).some((kept) => one.startsWith(kept)));
@@ -131,6 +127,47 @@ ok(`the studio makes a file that can leave in one place (${leaving.length} of ${
    read as cover for the next one with a similar name. */
 const stale = Object.keys(INSIDE).filter((kept) => !makers.some((one) => one.startsWith(kept)));
 ok('  and no reason is left behind for one that is gone', stale.length === 0, stale.join(', '));
+
+/* ── The canvases this room calls, which are not in this room ─────────────
+
+   The list above reads ONE file, and on 9 October 2026 the picture-on-its-way
+   canvas moved out of it into `lib/packpicture.ts` — correctly, because
+   several pictures now have to be shrunk to share one request body. The
+   assertion above went red, which is the right behaviour and only half of
+   it: deleting the stale entry makes it green again and leaves a canvas this
+   room calls with nothing holding it.
+
+   A rule that can be escaped by moving four lines into a library is not a
+   rule. So every library this room draws pictures through is read here too,
+   and each has to be a dead end: a maker whose output goes onto a request
+   and nowhere a person can save from.
+
+   Not every library — the ones named. A sweep of all of `lib/` would catch
+   the paid export's own helpers and read as noise within a week. */
+const THROUGH: Record<string, string> = {
+  'app/lib/packpicture.ts': 'shrinks pictures to fit one request body on their'
+    + ' way to Google’s picture model. Its canvas output is cut at the comma and'
+    + ' posted as base64; nothing in it hands a file to anybody',
+};
+
+for (const [path, why] of Object.entries(THROUGH)) {
+  const source = withoutComments(readFileSync(path, 'utf8'));
+  const name = path.replace('app/lib/', '');
+  /* The closing quote is part of the match. Without it `packpictureX` passes
+     as `packpicture`, which is how this assertion was green the first time
+     it was negative-tested — a prefix is not a name. */
+  const specifier = `'${path.replace('app/lib/', '../lib/').replace(/\.ts$/, '')}'`;
+  ok(`  ${name} is called from this room, so it is held to the same rule`,
+    studio.includes(`from ${specifier}`),
+    `nothing in PostStudio imports it any more — ${why}, and a reason left`
+    + ' behind for a library that is gone is cover for the next one');
+
+  ok(`  and ${name} cannot put a file on the device`,
+    !/download\s*=|downloadBlob|createObjectURL|showSaveFilePicker|document\.createElement\('a'\)/
+      .test(source),
+    `${why} — a canvas moved out of the room is only safe while the place it`
+    + ' moved to is still a dead end');
+}
 
 /* And that place asks the route BEFORE it draws. Read as a slice rather than
    by "both strings appear", which is true of any order. */

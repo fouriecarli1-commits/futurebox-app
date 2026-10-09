@@ -90,6 +90,10 @@ const SAME_IN_BOTH = new Set([
      are the same word in Afrikaans — "Amber" is amber and "Sand" is sand — and
      the honest alternative would be renaming a colour to dodge a check. */
   'Amber', 'Sand',
+  /* "Stories" is the Afrikaans plural of "storie" and it is spelled the same
+     way. The kids room's shelf tab says it, and the alternative — "Verhale" —
+     is the word a textbook uses rather than the word a child does. */
+  'Stories',
   /* Picture sizes. "480p" is 480p in every language, and translating a
      standard's own name would make it harder to recognise, not easier. */
   '480p', '720p', '1080p',

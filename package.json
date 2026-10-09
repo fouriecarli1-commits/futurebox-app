@@ -316,6 +316,7 @@
     "check:plakkaat": "tsx scripts/check-plakkaat.mts",
     "check:gesing": "tsx scripts/check-gesing.mts",
     "check:woordrand": "tsx scripts/check-woordrand.mts",
+    "check:prentverwysings": "tsx scripts/check-prentverwysings.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

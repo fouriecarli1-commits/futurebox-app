@@ -63,6 +63,13 @@ const PAIRS: readonly { route: string; reads: string | null; screens: readonly s
   { route: 'app/api/photosong/route.ts', reads: null, screens: ['app/components/PromptCards.tsx'] },
   { route: 'app/api/songfrom/route.ts', reads: null, screens: ['app/components/PromptCards.tsx'] },
   { route: 'app/api/recommend/route.ts', reads: null, screens: ['app/components/Recommend.tsx'] },
+  /* The style translator, 9 October 2026. It hands back the parsed answer
+     bare — `Response.json(parsed)` — and the song room reads `style` off it,
+     plus `says` for the sentence under the box. `style` is the one that must
+     be there: the room refuses to go on without it, so a schema renamed to
+     `description` would leave somebody staring at "that could not be put
+     another way" for a call that worked and was paid for. */
+  { route: 'app/api/styleword/route.ts', reads: 'style', screens: ['app/components/MakeMusic.tsx'] },
 ];
 
 const problems: string[] = [];
@@ -105,11 +112,43 @@ if (handsBackParsed.length === 0) {
 
 /* ── And each pair actually agrees ──────────────────────────────────────── */
 
-/** The top-level field names of a route's reply schema. */
-function schemaKeys(code: string): string[] | null {
+/** The top-level field names in one file's reply schema. */
+function keysIn(code: string): string[] | null {
   const schema = /const \w*Schema = z\.object\(\{([\s\S]*?)\n\}\)/.exec(code);
   if (!schema) return null;
   return [...schema[1].matchAll(/^  ([A-Za-z_$][\w$]*):/gm)].map((one) => one[1]);
+}
+
+/**
+ * The top-level field names of a route's reply schema, wherever it lives.
+ *
+ * ── Why it is not always in the route ────────────────────────────────────
+ *
+ * `/api/styleword` keeps its schema in `lib/server/styleword.ts`, with the
+ * system prompt it belongs beside, and imports it. That is the better place
+ * for it — the prompt and the shape it asks for are one thing — and it made
+ * this check report the route as unreadable, which is a check saying "I
+ * cannot see this" in the same breath as saying it is wrong.
+ *
+ * So a schema imported from inside this repository is followed one hop. One
+ * hop and no further: a chain of re-exports is a thing to notice rather than
+ * to resolve, and a resolver that walks for ever would hide the day the
+ * shape moved somewhere nobody expected.
+ */
+function schemaKeys(code: string): string[] | null {
+  const here = keysIn(code);
+  if (here) return here;
+  for (const [, named, where] of code.matchAll(
+    /import\s*\{([^}]*)\}\s*from\s*'(@\/app\/[^']+|\.[^']+)'/g,
+  )) {
+    if (!/\w*Schema\b/.test(named)) continue;
+    const path = `${where.replace('@/app/', 'app/').replace(/^\.\//, '')}.ts`;
+    let source: string;
+    try { source = readFileSync(path, 'utf8'); } catch { continue; }
+    const found = keysIn(source);
+    if (found) return found;
+  }
+  return null;
 }
 
 for (const { route, reads, screens } of PAIRS) {

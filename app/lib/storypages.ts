@@ -222,9 +222,23 @@ export function runsFor(shown: readonly Shown[]): number {
  * like any other prompt, and a story mentioning somebody real is refused
  * there rather than here.
  */
-export function pictureWords(page: Page, look: string): string {
+export function pictureWords(page: Page, look: string, seen = 0): string {
   const style = look.trim()
     || 'a warm, friendly children\'s storybook illustration, soft colours, hand-painted look';
+  /* ── The sentence that only goes when pictures go with it ────────────
+
+     Said only where earlier pages are actually attached, because an
+     instruction about pictures that are not there is an instruction about
+     nothing — and worse, a model told to "keep the same character as the
+     reference images" with no references invents a reference and describes
+     it. One page is "the first picture"; two is "the pictures", which reads
+     as written rather than as a template. */
+  const same = seen > 0
+    ? ` The ${seen === 1 ? 'picture' : 'pictures'} attached ${seen === 1 ? 'is' : 'are'}`
+      + ` earlier page${seen === 1 ? '' : 's'} of this same book: keep every character's`
+      + ' face, hair, build, clothing and colouring exactly as they appear there, and'
+      + ' keep the same drawing style, palette and light. Only the moment changes.'
+    : '';
   return `${style}. A single illustration for this moment in the story, with no `
-    + `words or lettering anywhere in the picture: ${page.text}`;
+    + `words or lettering anywhere in the picture: ${page.text}${same}`;
 }

@@ -183,10 +183,31 @@ export function cloudShelfOf<T extends { id: string; made: number; title: string
       /* The files first and the row second. The other order leaves files
          with nothing pointing at them — invisible, unlistable, and still
          counted against her storage bill for ever. */
-      const { data } = await supabase.storage
+      const listed = await supabase.storage
         .from(BUCKET)
         .list(`${account.id}/${kind}/${id}`);
-      const paths = (data ?? []).map((one: { name: string }) => `${account.id}/${kind}/${id}/${one.name}`);
+      /* ── The error taken, and the row left alone when it comes ─────
+
+         This read `const { data } = await …` and then `(data ?? [])`, which
+         is the exact fault the comment above warns about, one line below it:
+         the Supabase client does not throw, so a listing that failed arrives
+         as `data: null`, becomes an empty list of paths, and the row below
+         is deleted anyway — leaving the files with nothing pointing at them,
+         invisible, unlistable, and on her storage bill for ever.
+
+         `check:couldnotask` found it. So the listing is taken, and when it
+         fails the row stays: the item is still on the shelf, the room still
+         shows it, and pressing again retries. A shelf entry that would not
+         go away is a thing somebody can see and report. Orphaned files are
+         not. */
+      if (listed.error) {
+        console.error(`shelf: the ${kind}'s files could not be listed, so it was`
+          + ` left on the shelf rather than losing them: ${listed.error.message}`);
+        return;
+      }
+      const paths = (listed.data ?? []).map(
+        (one: { name: string }) => `${account.id}/${kind}/${id}/${one.name}`,
+      );
       if (paths.length) {
         const gone = await supabase.storage.from(BUCKET).remove(paths);
         /* Taken rather than discarded. The Supabase client does not throw, so

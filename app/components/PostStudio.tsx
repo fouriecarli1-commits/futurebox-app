@@ -89,6 +89,10 @@ import {
   type Path as Traced, type Shape as CutShape,
 } from '../lib/lasso';
 import { makeBack } from '../lib/postback';
+import { REFERENCE_SIDE, packLed, roomForRefs } from '../lib/packpicture';
+/* `SHAPES` is already taken in this room by the pen's shapes — pencil,
+   circle, square, line. These are the ratios a picture can be asked for. */
+import { SHAPES as RATIOS, SHAPE_DEFAULT, type ShapeId } from '../lib/pictureshapes';
 import { usePlain, useSetPlain } from '../lib/plainmode';
 import { TEMPLATES, type Template } from '../lib/posttemplates';
 import {
@@ -460,8 +464,25 @@ export default function PostStudio({
   const [askWords, setAskWords] = useState('');
   const [redrawing, setRedrawing] = useState(false);
   /* Only used when drawing from nothing — a picture being changed keeps its
-     own shape. Square first because that is what a post is. */
-  const [askShape, setAskShape] = useState<'1:1' | '9:16' | '16:9'>('1:1');
+     own shape. Square first because that is what a post is.
+
+     All five the engine takes, not the three that were here. The two that
+     were missing are the ordinary photograph shapes — 4:3 and 3:4 — which is
+     to say the shapes most pictures in the world actually are, left out of a
+     list of three for no reason beyond the list having been written quickly.
+     Carli, 9 October 2026: *"daar moet van alles wat opsies is, 'n
+     verskeidenheid wees."* */
+  const [askShape, setAskShape] = useState<ShapeId>(SHAPE_DEFAULT);
+  /* ── Pictures to copy from, which is the capability that was sitting idle ─
+
+     Gemini reads several pictures in a turn. Until now this room sent one:
+     the picture on the bench, or nothing. So "put this person into that
+     scene", "put my logo on this", "make it look like that photograph" were
+     all impossible, and the reason was a list that only ever had one thing
+     put in it.
+
+     Object URLs, so they are revoked when they go. */
+  const [refs, setRefs] = useState<{ url: string; image: HTMLImageElement }[]>([]);
   const [said, setSaid] = useState('');
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
@@ -1303,6 +1324,88 @@ export default function PostStudio({
   };
 
   /**
+   * Bring in pictures for the engine to copy FROM.
+   *
+   * ── What this is, said plainly ────────────────────────────────────────
+   *
+   * Not pictures to edit. Pictures to look at while it draws something
+   * else: this person's face, this logo, this palette, this costume. The
+   * words say what to do with them — "put the man from the second picture
+   * into the first", "put this logo on the shirt", "make it look like that
+   * photograph".
+   *
+   * Gemini has always read several pictures in a turn. This room sent one,
+   * because the list that carried them was built to hold a list and only
+   * ever had one thing put in it.
+   *
+   * ── Why they are read at `REFERENCE_SIDE` and not full size ───────────
+   *
+   * `lib/packpicture.ts` has the arithmetic. In short: a reference is never
+   * handed back to anybody, so all it has to survive is being looked at,
+   * and the request body is the thing that cannot grow. They are read in at
+   * a modest size here as well as shrunk there, because the memory ceiling
+   * in `lib/imagefile.ts` is about THIS tab and applies either way.
+   */
+  const bringRefs = async (files: FileList | null): Promise<void> => {
+    if (!files || files.length === 0) return;
+    setSaid('');
+    const room = roomForRefs(Boolean(picture)) - refs.length;
+    if (room <= 0) {
+      setSaid(t('post.refsFull', 'That is as many pictures as can go up at once.'));
+      return;
+    }
+    const taking = Array.from(files).slice(0, room);
+    for (const file of taking) {
+      /* eslint-disable no-await-in-loop -- one at a time on purpose: three
+         decodes at once on a phone is the memory spike `lib/imagefile.ts`
+         exists to avoid, and three is the most there will ever be. */
+      const made = await fit(file, REFERENCE_SIDE);
+      if (!made.ok) {
+        setSaid(made.why === 'too_many_pixels'
+          ? t('post.tooMany', 'That picture is too large to open on a phone. A photo straight off a camera often is.')
+          : t('post.badFile', 'That file could not be read as a picture.'));
+        continue;
+      }
+      const img = new Image();
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        img.src = made.preview;
+      });
+      /* eslint-enable no-await-in-loop */
+      if (!img.naturalWidth) {
+        setSaid(t('post.badFile', 'That file could not be read as a picture.'));
+        continue;
+      }
+      setRefs((was) => [...was, { url: made.preview, image: img }]);
+    }
+    if (files.length > taking.length) {
+      setSaid(t('post.refsSome', 'Only the first few went up — that is as many as fit at once.'));
+    }
+  };
+
+  /* Every reference still held when the room closes.
+     An object URL is a handle the browser keeps alive until it is told
+     otherwise, so leaving the room with three up would hold three
+     photographs in memory for as long as the tab lives. A ref rather than a
+     dependency on `refs`, because an effect that re-runs on every change
+     would revoke the URL the thumbnail is still drawing from. */
+  const refsNow = useRef(refs);
+  refsNow.current = refs;
+  useEffect(() => () => {
+    for (const one of refsNow.current) URL.revokeObjectURL(one.url);
+  }, []);
+
+  /** Take one back out, and let go of its object URL. */
+  const dropRef = (at: number): void => {
+    setRefs((was) => {
+      const going = was[at];
+      if (going) URL.revokeObjectURL(going.url);
+      return was.filter((_, index) => index !== at);
+    });
+  };
+
+  /**
    * Charged first, saved second.
    *
    * A save that happens and is sometimes not paid for is a price nobody can
@@ -2021,29 +2124,27 @@ export default function PostStudio({
     setRedrawing(true);
     setSaid('');
     try {
-      let from: { data: string; mime: string } | undefined;
-      if (picture) {
-        /* `sent`, not `sheet`. The paid export's canvas is `sheet`, and
-           `check:postpaid` keys its list of sanctioned ways-to-make-a-file
-           on the variable name — so borrowing that name would have quietly
-           excused the paid road out as well.
+      /* ── The pictures going up ───────────────────────────────────────
 
-           PNG because the picture may already have a see-through background
-           from the remover below, and a JPEG would fill it with black. */
-        const sent = document.createElement('canvas');
-        sent.width = picture.naturalWidth || picture.width;
-        sent.height = picture.naturalHeight || picture.height;
-        const ctx = sent.getContext('2d');
-        if (!ctx) {
-          setSaid(t('post.askFailed', 'That could not be made.'));
-          return;
-        }
-        ctx.drawImage(picture, 0, 0);
-        const url = sent.toDataURL('image/png');
-        /* The mime travels beside the data rather than being parsed back
-           out of the data URL on the server: the route has to know what it
-           is before anything leaves this machine. */
-        from = { data: url.slice(url.indexOf(',') + 1), mime: 'image/png' };
+         The one on the bench leads, and the ones brought in to copy from
+         follow. `packLed` does the shrinking and the arithmetic: the lead
+         keeps most of the budget because its detail comes back in the
+         answer, and a reference only has to carry "this person" or "this
+         logo". One picture and no references is still sent whole, as PNG,
+         unshrunk — the see-through background from the remover below would
+         fill with black in a JPEG, and a photograph going up to be changed
+         must not arrive already damaged.
+
+         `packLed`, not a canvas here. The paid export's canvas is `sheet`
+         and `check:postpaid` keys its list of sanctioned ways-to-make-a-file
+         on the variable name, so a canvas written inline in this room is a
+         thing that has to be excused every time. One library doing it is
+         one place to look. */
+      const from = packLed(picture ?? null, refs.map((one) => one.image));
+      if ((picture || refs.length) && from.length === 0) {
+        setSaid(t('post.askTooBig',
+          'Those pictures are too big to send together. Take one out, or use a smaller one.'));
+        return;
       }
       const token = await accessToken();
       const answer = await fetch('/api/google/picture', {
@@ -2054,7 +2155,16 @@ export default function PostStudio({
         },
         body: JSON.stringify({
           words,
-          ...(from ? { from } : { aspect: askShape }),
+          ...(from.length ? { from } : {}),
+          /* The shape goes whenever there is no picture on the bench to
+             inherit one from — references included. A reference is being
+             looked at, not resized, so it hands down a style and not a
+             frame; left to itself the engine picks the first reference's
+             shape, which is how a square poster came back wide.
+
+             With a picture on the bench the ratio is left off entirely:
+             forcing one onto somebody's own photograph crops it. */
+          ...(picture ? {} : { aspect: askShape }),
         }),
       });
       if (!answer.ok) {
@@ -2737,24 +2847,68 @@ export default function PostStudio({
         className="w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px] leading-relaxed outline-none focus:border-emerald-500/60"
         style={asRoom ? { color: INK } : undefined}
       />
+      {/* ── Pictures to copy from ──────────────────────────────────────
+
+          The capability that was sitting unused. The engine reads several
+          pictures in a turn: this person's face, this logo, this palette.
+          The words then say what to do with them.
+
+          Shown always, with or without a picture on the bench, because both
+          are real: with one it is "put this logo on that shirt", without one
+          it is "draw a poster in the style of these two". */}
+      <div className="flex flex-wrap items-center gap-2">
+        <label
+          data-postaskrefs
+          className={`${LEEG} cursor-pointer ${refs.length >= roomForRefs(Boolean(picture)) ? 'opacity-40' : ''}`}
+        >
+          {t('post.refsAdd', 'Pictures to copy from')}
+          <input
+            type="file"
+            accept={ACCEPTS}
+            multiple
+            disabled={refs.length >= roomForRefs(Boolean(picture))}
+            className="hidden"
+            onChange={(event) => {
+              void bringRefs(event.target.files);
+              /* Cleared so choosing the same file twice still fires. */
+              event.target.value = '';
+            }}
+          />
+        </label>
+        {refs.map((one, at) => (
+          <button
+            key={one.url}
+            type="button"
+            data-postaskref={at}
+            onClick={() => dropRef(at)}
+            title={t('post.refsDrop', 'Take this one out')}
+            className="relative h-10 w-10 overflow-hidden rounded-lg border border-zinc-700"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- an
+                object URL for a picture chosen a second ago; the image
+                component wants a path it can measure and optimise, and
+                there is nothing on a server to optimise. */}
+            <img src={one.url} alt="" className="h-full w-full object-cover" />
+            <span className="absolute inset-0 grid place-items-center bg-black/45 text-[11px]">×</span>
+          </button>
+        ))}
+      </div>
+
       {/* The shape, only when there is nothing to inherit one from. Forcing
           a ratio onto somebody's own photograph crops it. */}
       {!picture && (
         <div className="flex flex-wrap gap-2">
-          {([
-            ['1:1', t('post.shapeSquare', 'Square')],
-            ['9:16', t('post.shapeTall', 'Tall')],
-            ['16:9', t('post.shapeWide', 'Wide')],
-          ] as const).map(([id, label]) => (
+          {RATIOS.map((shape) => (
             <button
-              key={id}
+              key={shape.id}
               type="button"
-              data-postaskshape={id}
-              aria-pressed={askShape === id}
-              onClick={() => setAskShape(id)}
-              className={`${LEEG} ${askShape === id ? GEKIES : ''}`}
+              data-postaskshape={shape.id}
+              aria-pressed={askShape === shape.id}
+              onClick={() => setAskShape(shape.id)}
+              title={lang === 'af' ? shape.forAf : shape.forEn}
+              className={`${LEEG} ${askShape === shape.id ? GEKIES : ''}`}
             >
-              {label}
+              {lang === 'af' ? shape.af : shape.en}
             </button>
           ))}
         </div>
