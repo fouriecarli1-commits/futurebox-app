@@ -134,6 +134,14 @@ function imports(src: string): string[] {
  * stops describing the app.
  */
 const FREE: Record<string, string> = {
+  /* The bench where Google draws the Cubed mark. The operator's alone — the
+     route refuses anybody who is not her — so a charge on it would be the app
+     billing her for its own logo. It still asks the Google ceiling first, and
+     for four pictures rather than one, because the money is hers either way.
+     See check:merklab. */
+  'app/api/cubed/mark/route.ts':
+    'the operator\'s own bench for choosing a logo: owner-only, run a handful'
+    + ' of times, and metered against the Google ceiling rather than credits',
   /* ── The two pages that answer a question nobody could answer ──────
 
      Both spend real money and charge nothing, and both are the owner's own

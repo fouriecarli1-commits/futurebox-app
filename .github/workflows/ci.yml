@@ -1613,6 +1613,15 @@ jobs:
       - name: Three to a masterclass, sixty to the guest
         run: npm run check:cubed
 
+      # "Het jy vir google gevra sonder jou voorbeelde?" An image model
+      # handed a drawing reproduces it, and what would be reproduced is a
+      # mark she has already turned down twice. Passing one is a single
+      # word and invisible from outside — the pictures simply come back
+      # looking like ours. So the ask is a value, it is run and read here,
+      # and the one call site is pinned and counted.
+      - name: Google draws the mark from her words and nothing of ours
+        run: npm run check:merklab
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

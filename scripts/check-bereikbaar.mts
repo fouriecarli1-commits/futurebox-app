@@ -67,14 +67,38 @@ const NO_DOOR: Record<string, string> = {
   google: 'the operator\'s own probe: it prints supplier names, which she asked'
     + ' to be off member screens, and one person who has been told the address'
     + ' is the whole audience',
+  /* The bench where Google draws the Cubed mark. Every press spends her own
+     Google budget on four pictures, and it is a tool for one person on the
+     few days she is choosing a logo. A door to it inside the app would put a
+     spend button on a members' screen to save her typing an address once. */
+  'cubed/mark': 'the operator\'s own bench: every press spends her Google'
+    + ' budget on four pictures, and the route refuses anybody who is not her,'
+    + ' so a door would only put a spend button on a member\'s screen',
 };
 
-/** Every route in the app that renders a page a person could be sent. */
-function pagesIn(): string[] {
-  return readdirSync('app')
-    .filter((one) => statSync(`app/${one}`).isDirectory())
-    .filter((one) => existsSync(`app/${one}/page.tsx`))
-    .sort();
+/**
+ * Every route in the app that renders a page a person could be sent.
+ *
+ * Nested ones too. The first version of this read only the top level, and a
+ * page added at `cubed/mark` was reported reachable by a check that had never
+ * looked at it — green for a reason next to the one it claims, which is the
+ * failure this whole file is about.
+ *
+ * A segment in brackets is left out: it is reached from a template rather than
+ * from a quoted path, so the scan below could never find a link to it and
+ * would call every dynamic page lost.
+ */
+function pagesIn(from = 'app', under = ''): string[] {
+  const out: string[] = [];
+  for (const one of readdirSync(from)) {
+    if (one.startsWith('[') || one.startsWith('_') || one.startsWith('.')) continue;
+    const where = `${from}/${one}`;
+    if (!statSync(where).isDirectory()) continue;
+    const route = under ? `${under}/${one}` : one;
+    if (existsSync(`${where}/page.tsx`)) out.push(route);
+    out.push(...pagesIn(where, route));
+  }
+  return out.sort();
 }
 
 /** The front door and everything the app proper is built out of. */

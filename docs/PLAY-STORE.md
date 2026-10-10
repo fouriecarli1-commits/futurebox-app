@@ -33,6 +33,21 @@ The practical consequences, said plainly:
   which is on top of Paystack. It may be cheaper to launch on the web only
   and come to Play once the volume is known.
 
+  Two things moved in 2026 and both help, but neither is settled enough to
+  plan on. Google opened a **billing choice** programme on 30 June 2026: in
+  the United States, the United Kingdom and the EEA the service fee now
+  starts at 10% on the first million dollars a year, and the 5% billing fee
+  applies only when the purchase goes through Play's own billing. South
+  Africa is **not** in that restructure. South Africa *is* one of the
+  countries where **user choice billing** is offered — the member picks, at
+  the moment of paying, between Play's billing and ours — and outside the
+  three restructured markets the older arrangement is reported to still
+  apply: the standard fee, reduced by four points when the purchase goes
+  through our own billing. **The four points and the South African fee table
+  are from secondary sources and are not confirmed.** Before anybody builds
+  on them, read the fee table inside the Play Console for South Africa, which
+  is the only version that binds.
+
 ---
 
 ## Done, in the code
@@ -45,6 +60,47 @@ The practical consequences, said plainly:
 | Public privacy page | `/privacy` |
 | In-app account deletion | `DeleteAccount.tsx` |
 | All of the above held against rot | `npm run check:playstore` |
+
+---
+
+## The developer account — **start this first** **yours**
+
+This is the long pole, and it is not in the code. Everything below it can be
+done in an afternoon; this one has a clock on it that nobody can shorten.
+
+**Open the account as the company, not as yourself.** FUTUREBOXSTUDIO (Pty)
+Ltd is registered, so this is a choice you already have and it is the whole
+difference between launching in a fortnight and launching in two months.
+
+| | Personal account | Organisation account |
+|---|---|---|
+| Before you may go to production | A **closed test**: at least **12 testers**, opted in, continuously, for **14 days** | None of that |
+| What it costs | 25 USD, once | 25 USD, once |
+| What it needs | Your identity | A **D-U-N-S number** for the company |
+| How long to get ready | 14 days *after* you have found 12 people with Android phones who will install it and keep it | Up to **30 days** for the D-U-N-S, which you can start today |
+
+The twelve-tester rule applies to personal accounts created after 13
+November 2023, which any account you open now would be. Google also looks at
+whether the testers actually *used* the app — twelve names that installed it
+and never opened it is not a passed test. Internal testing does not count,
+only the closed track.
+
+So: **apply for the D-U-N-S number today**, before anything else on this
+page. It is free, it comes from Dun & Bradstreet, and Google says the process
+can take up to 30 days. Everything else here — the wrapper, the asset links,
+the listing — is days of work that can happen while you wait. If the D-U-N-S
+comes back and the account is an organisation one, the fortnight of closed
+testing simply never happens.
+
+Check first whether the company already has one. Many registered companies
+do, and looking is a two-minute search on Dun & Bradstreet's site.
+
+> The 12-tester rule and the D-U-N-S requirement are both on Google's own
+> help pages (`support.google.com/googleplay/android-developer`, answers
+> 14151465 and 13628312). That organisation accounts are *exempt* from the
+> tester rule is the scope of that page rather than a sentence in it —
+> confirm it in the Console when you open the account, because it decides
+> your timeline.
 
 ---
 
@@ -195,6 +251,8 @@ user interaction.
 
 ## Before you press submit
 
+- [ ] A D-U-N-S number for FUTUREBOXSTUDIO (Pty) Ltd, and a Play developer
+      account opened as the **organisation**
 - [ ] `ANDROID_PACKAGE` and `ANDROID_CERT_SHA256` set in Vercel, and
       `/.well-known/assetlinks.json` shows them
 - [ ] The attorney has answered the Play Billing question

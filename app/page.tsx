@@ -14,7 +14,7 @@ import {
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors,
-  Image as ImageIcon, Baby} from 'lucide-react';
+  Image as ImageIcon, Baby, Boxes} from 'lucide-react';
 import {
   TRACK_FLAVOURS,
 } from './data/studio';
@@ -43,7 +43,6 @@ import { probeAudio } from './lib/engines';
 import Booth from './components/Booth';
 import LiveChannel from './components/LiveChannel';
 import Masterclasses from './components/Masterclasses';
-import CubedMark from './components/CubedMark';
 import { Counters, Views, useBoard } from './components/Counters';
 import Placement from './components/Placement';
 import PodcastStudio from './components/PodcastStudio';
@@ -3320,15 +3319,19 @@ export default function FutureBoxHome() {
                 has scrolled past twenty cards has already decided what they
                 came for.
 
-                The mark is the button's own argument. It is the only thing on
-                this page with a surface on it, which is what makes it read as
-                a door into somewhere else rather than another row. */}
+                The Cubed logo is NOT here, and that is deliberate. Her file
+                is both marks side by side with a word under each, 1408 wide.
+                At the size of this tile it is a smudge of two logos, and
+                cropping it to one is remaking it, which she asked me not to
+                do: "Ek wil nie hê jy moet dit remake nie." Until a one-mark
+                file exists, this row carries a plain glyph that is not
+                pretending to be her logo. */}
             <a
               href="/cubed"
               data-cubeddoor
               className="group flex items-center gap-4 rounded-2xl border border-zinc-800 bg-gradient-to-r from-zinc-950 to-zinc-900 px-5 py-4 hover:border-zinc-600"
             >
-              <CubedMark size={48} back="#0b0b0e" />
+              <Boxes className="h-12 w-12 flex-shrink-0 text-zinc-400" />
               <span className="min-w-0 flex-1">
                 <span className="block text-base font-black tracking-tight text-white">
                   {t('cubed.title', 'Cubed')}
