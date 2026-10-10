@@ -2,6 +2,7 @@
 
 import { isClean, isUncleaned, wireClean, wireTone, type Clean, type Tone } from './tone';
 import { anyFx, wireFx, type Fx } from './fx';
+import type { HumNote } from './humnotes';
 
 /**
  * A session: several pieces of audio on one clock.
@@ -89,6 +90,38 @@ export interface Lane {
    * Absent is the normal state and is every lane made before this existed.
    */
   readonly link?: string;
+  /**
+   * The notes this lane was BUILT from, when it was built from notes.
+   *
+   * Only the hum-an-instrument path has these: somebody hums, `notesIn` finds
+   * the notes, and one of the voices plays them onto a new lane. Keeping them
+   * is what makes "download MIDI" on that lane a fact rather than a reading —
+   * re-transcribing our own synthesised audio to recover notes we already had
+   * is both lossy and absurd.
+   *
+   * Absent on a recording, an upload and a generated part, and `midiFor` is
+   * told `heard` rather than `exact` for those. See `lib/midi.ts` for why the
+   * difference has to reach the screen.
+   */
+  readonly notes?: readonly HumNote[];
+  /**
+   * Where this lane's sound changes, in seconds into its own audio.
+   *
+   * Carli, 10 October 2026: *"Kan die studio ook nie 'n drag funksie hê, wat
+   * ook natuurlike oorgange identifiseer"*, and then for this room: *"dan as
+   * mens op dit click spring die driehoekies aan die onderste lyn van die
+   * klank baan op by elke natuurlike oorgange, progressies, modulasies."*
+   *
+   * Measured by `lib/transitions.ts`, on this lane's own clock rather than the
+   * session's, so moving the clip along the song does not move the marks and
+   * cutting the clip hides the ones outside the cut. Absent means nobody has
+   * asked yet; an empty array means it was asked and there was nothing to
+   * find, which the room must be able to tell apart from not having asked.
+   */
+  readonly marks?: readonly number[];
+  /** Whether the marks are drawn. Off by default: a row of triangles nobody
+   *  asked for is clutter on every lane at once. */
+  readonly marksOn?: boolean;
   /** −1 hard left to 1 hard right. Absent means centre, for lanes made before
    *  there was a pan at all. */
   readonly pan?: number;

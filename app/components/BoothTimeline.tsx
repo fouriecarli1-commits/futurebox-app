@@ -108,7 +108,18 @@ function hueFor(index: number, count: number): number {
  * pressable M and S allow, and every pixel saved goes to the waveform. The
  * row lost ten with the name pulled tight to the top.
  */
-const GUTTER = 96;  // two 44s, a gap between them, and a hair each side
+/* ── Still 96, and that number is hers rather than mine ────────────
+
+   Two 44s, a gap between them, and a hair each side. Shown the choice between
+   reorder arrows in this gutter and a 294-pixel timeline on a phone, she kept
+   the timeline — which is why the reorder arrows live on the lane's own card,
+   and why `check:laneorder` holds this number.
+
+   It was widened to 136 for the marks button and then put back: three 44s do
+   not fit in 96, and growing the gutter to fit a third one spends something
+   she has already decided she would rather keep. The button went to the top of
+   the cell instead. See it for what that trades. */
+const GUTTER = 96;
 /** A lane is drawn this tall. */
 const ROW = 78;
 
@@ -137,6 +148,7 @@ export default function BoothTimeline({
   picked,
   region,
   onRegion,
+  onMarks,
 }: {
   readonly lanes: readonly Lane[];
   /** The length of the whole session, in seconds. The axis is this wide. */
@@ -169,6 +181,20 @@ export default function BoothTimeline({
   readonly onSlide: (moves: readonly { readonly id: string; readonly at: number }[]) => void;
   /** Tapping a lane's name opens its controls. */
   readonly onPick: (id: string) => void;
+  /**
+   * Listen to this lane and show where it changes — or stop showing.
+   *
+   * Carli, 10 October 2026: *"Daar kan dalk ook 'n button wees links by s m,
+   * wat dan 'n helder blou driehoekie is, dan as mens op dit click spring die
+   * driehoekies aan die onderste lyn van die klank baan op by elke natuurlike
+   * oorgange, progressies, modulasies. Dit help die editor om te weet waar om
+   * oorgange te kry vir editing."*
+   *
+   * The room does the listening, because the room owns the lane and the
+   * measurement is kept on it: `findMarks` in `ProBooth.tsx`. This draws what
+   * it found.
+   */
+  readonly onMarks: (id: string) => void;
   readonly picked?: string | null;
   /**
    * The piece of the song that is marked, in seconds on the session's clock.
@@ -1268,10 +1294,78 @@ export default function BoothTimeline({
                        its own centre under one of theirs — which is a press
                        aimed at the lane landing on solo. 44 tall, because it
                        is a button. */
-                    className="absolute inset-x-0 top-0 h-11 px-1.5 pt-1 text-left"
+                    /* `right-11` rather than the whole width: the marks
+                       button sits in the top-right corner of this cell. What
+                       the name gives up is about three characters of a label
+                       that was already truncating in 96 pixels. */
+                    className="absolute left-0 right-11 top-0 h-11 px-1.5 pt-1 text-left"
                   >
                     <span className="block w-full truncate text-[11px] font-bold leading-tight" style={{ color: INK }}>
                       {lane.name}
+                    </span>
+                  </button>
+
+                  {/* ── Where this lane changes ─────────────────────
+
+                      Carli, 10 October 2026: *"Daar kan dalk ook 'n button
+                      wees links by s m, wat dan 'n helder blou driehoekie is,
+                      dan as mens op dit click spring die driehoekies aan die
+                      onderste lyn van die klank baan op by elke natuurlike
+                      oorgange, progressies, modulasies. Dit help die editor om
+                      te weet waar om oorgange te kry vir editing."*
+
+                      Her shape and her colour. **One row up from where she
+                      said, and that is a trade she should be told about.**
+
+                      Beside M and S means three 44-pixel buttons in a
+                      96-pixel gutter. That does not fit: `justify-between`
+                      cannot make 132 of children fit 92 of box, it paints one
+                      over another, which is exactly how the pan slider ended
+                      up printed across the R. Shrinking them is worse — M and
+                      S are pressed with a thumb, mid-take, while something is
+                      playing, and a 32-pixel mute is a take somebody has to do
+                      again. Widening the gutter was tried, and it spends a
+                      choice she has already made: shown reorder arrows in this
+                      gutter against a 294-pixel timeline on a phone, she kept
+                      the timeline.
+
+                      So it is in the top-right of the same cell, in the lane's
+                      own gutter, in the row the clip it marks sits in. A full
+                      44, nothing shrunk, no timeline given up, and the name
+                      loses three characters it was already truncating. If she
+                      would rather have it exactly where she said, the gutter
+                      grows by 40 and the timeline gives up a seventh of its
+                      width — hers to decide, which is why this is written down
+                      rather than taken.
+
+                      Sky blue rather than this room's green: green in here
+                      means "this is on" — a solo, a tone stack that is doing
+                      something — and these are not a state of the lane, they
+                      are a reading of it. The region marker above is already
+                      blue for that reason. And it is a triangle on the button
+                      because triangles are what appear: the thing you press
+                      has to look like the thing it does. */}
+                  <button
+                    type="button"
+                    data-lanemarks={lane.marksOn ? 'on' : 'off'}
+                    onClick={() => onMarks(lane.id)}
+                    aria-pressed={Boolean(lane.marksOn)}
+                    aria-label={t('pro.marks', 'Where this lane changes')}
+                    title={t(
+                      'pro.marksWhat',
+                      'Listen to this lane and mark where it changes — a section, a key, a new instrument coming in. The marks sit along the bottom of the clip. It costs nothing and nothing is sent anywhere.',
+                    )}
+                    className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center"
+                  >
+                    <span
+                      className="flex h-6 w-8 items-center justify-center rounded"
+                      style={{
+                        background: lane.marksOn ? 'rgba(56,189,248,0.32)' : 'rgba(255,255,255,0.07)',
+                      }}
+                    >
+                      <svg viewBox="0 0 10 8" className="h-2 w-2.5" aria-hidden>
+                        <path d="M5 0 10 8H0z" fill={lane.marksOn ? '#7dd3fc' : INK_DIM} />
+                      </svg>
                     </span>
                   </button>
 
@@ -1542,6 +1636,60 @@ export default function BoothTimeline({
                           }}
                         />
                       ))}
+                    {/* ── The triangles, along the foot of the clip ──────
+
+                        Carli: *"dan as mens op dit click spring die
+                        driehoekies aan die onderste lyn van die klank baan op
+                        by elke natuurlike oorgange, progressies, modulasies.
+                        Dit help die editor om te weet waar om oorgange te kry
+                        vir editing."*
+
+                        On the lane's own clock, mapped onto the clip — which
+                        is three facts and each one earns its arithmetic:
+
+                        A mark outside the CUT is not drawn. The clip shows
+                        `window.from` to `window.to`; a transition at 40
+                        seconds in a lane trimmed to the first ten is a real
+                        transition in audio that is not on the screen, and
+                        drawing it at the edge would put a mark where the music
+                        does not change.
+
+                        A mark inside a REPEATED piece is drawn once per
+                        repeat, because that is where the change is heard. A
+                        four-bar part that goes round four times changes four
+                        times.
+
+                        And they are drawn, never dragged. A mark is a reading
+                        of the audio; it is the cut handles and the clip that
+                        move, and `pointer-events-none` is what keeps a row of
+                        small shapes along the bottom edge from stealing the
+                        presses aimed at the grip underneath them. */}
+                    {lane.marksOn && (lane.marks ?? []).length > 0 &&
+                      (lane.marks ?? []).flatMap((second) => {
+                        if (second <= window.from || second >= window.to) return [];
+                        const into = (second - window.from) / Math.max(0.001, once);
+                        return Array.from({ length: times }, (_, n) => (
+                          <span
+                            key={`${second}-${n}`}
+                            data-lanemark={second.toFixed(2)}
+                            className="pointer-events-none absolute bottom-0"
+                            style={{ left: `${((into + n) / times) * 100}%`, transform: 'translateX(-50%)' }}
+                          >
+                            {/* The line as well as the triangle. The triangle
+                                says where to look and the line says exactly
+                                where — a shape five pixels wide cannot point
+                                at a moment on a timeline this zoomed out. */}
+                            <span
+                              className="absolute bottom-0 left-1/2 w-px"
+                              style={{ height: ROW - 10, background: 'rgba(125,211,252,0.55)', transform: 'translateX(-50%)' }}
+                            />
+                            <svg viewBox="0 0 10 8" className="relative block h-2 w-2.5" aria-hidden>
+                              <path d="M5 0 10 8H0z" fill="#7dd3fc" />
+                            </svg>
+                          </span>
+                        ));
+                      })}
+
                     {/* The lane's name, on the clip.
 
                         A block of colour with a wave in it says which lane

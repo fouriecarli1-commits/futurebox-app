@@ -1531,6 +1531,23 @@ jobs:
       - name: Every page in the app has a way in
         run: npm run check:bereikbaar
 
+      # MIDI is the one thing this app makes that nothing in this app ever
+      # opens again. A wrong WAV is wrong out loud the first time anybody
+      # presses play; a wrong MIDI file loads in somebody else's sequencer a
+      # week later with the notes a bar early. So the bytes are read back out
+      # — header, chunk lengths, tempo, track name, and every note-on and
+      # note-off decoded from the deltas the writer wrote.
+      - name: The MIDI a lane hands over is a MIDI file
+        run: npm run check:midi
+
+      # She asked to be able to name a track, and the field had been there
+      # for weeks: borderless, transparent, no placeholder, no visible label,
+      # in bold at the top of the card — which is what a heading looks like.
+      # "It exists" is the answer that loses that argument, so what is held
+      # here is that it LOOKS like a field.
+      - name: Every lane can be named, and says where it changes
+        run: npm run check:baannaam
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

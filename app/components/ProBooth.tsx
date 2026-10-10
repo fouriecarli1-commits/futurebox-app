@@ -42,6 +42,8 @@ import { CREDITS, perMinute } from '../lib/credits';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepsession';
 import { encodeWav } from '../lib/wav';
+import { transitionsIn } from '../lib/transitions';
+import { midiBlob, midiFor, type Source } from '../lib/midi';
 import { LAYOUTS, layoutById, type Layout } from '../lib/channels';
 import { BAR, ROW2, STACK } from '../lib/benchbar';
 import { knownLatency } from '../lib/mixdown';
@@ -81,6 +83,7 @@ import {
 import { songCost } from '../lib/credits';
 import { makeHistory } from '../lib/undo';
 import { notesIn, snapTo } from '../lib/humnotes';
+import { downloadBlob, safeFilename } from '../lib/library';
 import { GROUPS, VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
@@ -829,6 +832,92 @@ export default function ProBooth({
     },
     [at, rate, t],
   );
+
+  /**
+   * ── Where this lane's sound changes ──────────────────────────
+   *
+   * Carli, 10 October 2026: *"sal dit 'n goeie funksie wees as die booth na
+   * die klank baan luister, en die natuurlike oorgange identifiseer … dan as
+   * mens op dit click spring die driehoekies aan die onderste lyn van die
+   * klank baan op by elke natuurlike oorgange, progressies, modulasies. Dit
+   * help die editor om te weet waar om oorgange te kry vir editing."*
+   *
+   * Measured once and kept, because the measurement is a few hundred FFTs and
+   * the answer does not change until the audio does. Pressing the button again
+   * only hides and shows them.
+   *
+   * On the lane's OWN clock, not the session's. Moving the clip along the song
+   * must not move the marks, and the cut has to be able to hide the ones
+   * outside it — both of which fall out for free from measuring the audio
+   * rather than the arrangement.
+   *
+   * It costs nothing and calls nothing: `lib/transitions.ts` runs here, in the
+   * browser, on the samples this room already has.
+   */
+  const findMarks = (id: string): void => {
+    const lane = lanes.find((one) => one.id === id);
+    if (!lane) return;
+    if (lane.marks) {
+      /* Already measured. The press is a switch from here on, and re-running
+         a few hundred FFTs to answer a question already answered would make
+         the second press slower than the first for no reason. */
+      change(id, { marksOn: !lane.marksOn });
+      return;
+    }
+    const source = lane.amped?.audio ?? lane.audio;
+    const marks = transitionsIn(source.getChannelData(0), source.sampleRate);
+    /* An empty array rather than leaving it absent: "asked, and there is
+       nothing there" is a different state from "nobody has asked", and the
+       lane strip says so. A drone has no transitions and that is an answer. */
+    change(id, { marks, marksOn: true });
+  };
+
+  /**
+   * ── A lane out of the room, as sound or as notes ───────────────
+   *
+   * Carli, 10 October 2026: *"iemand op 'n spesifieke track kan click en dan
+   * is daar 'n dropdownmenu wat die opsie gee vir download midi, download
+   * wav. Dit gee die geleentheid om 'n sekere klank te save vir 'n ander
+   * projek."*
+   *
+   * The WAV is the cut piece through its amp — `pieceOf`, which is the same
+   * function the mixdown uses, so the file and the song cannot disagree about
+   * what this lane is. It is NOT the mix: the level, the pan and the tone
+   * stack are nodes in the graph and belong to this session's balance, and
+   * somebody taking a sound to another project wants the sound rather than
+   * this song's opinion of it. The strip says so in a line.
+   *
+   * The MIDI is notes, and whether they are known or heard is the whole of
+   * `lib/midi.ts`'s honesty. Nothing is written if nothing was found: a file
+   * with no notes in it is a file somebody opens in a week and cannot tell
+   * from a broken export.
+   */
+  const saveLane = async (lane: Lane, what: 'wav' | 'midi'): Promise<void> => {
+    const ctx = context();
+    if (!ctx) {
+      setProblem(t('pro.noAudio', 'This browser would not start its audio.'));
+      return;
+    }
+    const piece = pieceOf(lane, ctx);
+    const named = lane.name.trim() || t('pro.lane', 'Lane');
+    if (what === 'wav') {
+      downloadBlob(encodeWav(piece, 'stereo'), safeFilename(named, 'wav'));
+      return;
+    }
+    const source: Source = lane.notes?.length ? 'exact' : 'heard';
+    const notes = lane.notes?.length
+      ? lane.notes
+      : notesIn(piece.getChannelData(0), piece.sampleRate);
+    const written = midiFor(notes, { bpm: meter.bpm, name: named, source });
+    if (written.notes === 0) {
+      setProblem(t(
+        'pro.midiNone',
+        'No notes were heard in that lane, so there is nothing to write. MIDI follows one line at a time — a full mix or a wash of reverb has no single line in it.',
+      ));
+      return;
+    }
+    downloadBlob(midiBlob(written), safeFilename(named, 'mid'));
+  };
 
   const change = (id: string, how: Partial<Lane>): void => (
     setStale(true),
@@ -2511,6 +2600,7 @@ export default function ProBooth({
             }
             onBrowseAmps={() => void browseTone3000()}
             browsing={t3kBusy}
+            onSave={(what) => void saveLane(lane, what)}
             busy={busy}
           />
         ))}
@@ -3472,6 +3562,10 @@ export default function ProBooth({
           gain: 1,
           muted: false,
           soloed: false,
+          /* The notes this lane IS. Kept so that "download MIDI" on it is a
+             fact rather than a reading: re-transcribing our own synthesised
+             audio to recover notes we already had is lossy and absurd. */
+          notes,
         },
       ]);
       setStale(true);
@@ -4301,6 +4395,7 @@ export default function ProBooth({
           are dragged, cut and dragged again with a thumb, and the playhead
           has a head big enough to catch. */}
       <BoothTimeline
+        onMarks={findMarks}
         lanes={lanes}
         /* The canvas, not the song — see the note by `canvas` above. The
            editor draws on a surface with room at the end so a clip dragged
@@ -4477,6 +4572,7 @@ function LaneRow({
   onUseTempo,
   onBrowseAmps,
   browsing,
+  onSave,
   busy,
 }: {
   lane: Lane;
@@ -4507,11 +4603,23 @@ function LaneRow({
    */
   onBrowseAmps: () => void;
   browsing: boolean;
+  /** Take this lane out of the room: `wav` is the sound, `mid` is the notes. */
+  onSave: (what: 'wav' | 'midi') => void;
   busy: boolean;
 }): React.ReactElement {
   const { t } = useLang();
   const quiet = audible(lanes).indexOf(lane) < 0;
   const [open, setOpen] = useState(false);
+  /** Whether the take-it-away menu is down. */
+  const [saving, setSaving] = useState(false);
+  /**
+   * Whether this lane's MIDI would be a fact or a reading.
+   *
+   * Known from the lane alone, which is the point: the menu has to say which
+   * of the two it is BEFORE the file is downloaded, so this cannot be the
+   * result of doing the transcription.
+   */
+  const source: Source = lane.notes?.length ? 'exact' : 'heard';
   const tone: Tone = lane.tone ?? CLEAN;
 
   /* Bringing an amp in.
@@ -4673,11 +4781,33 @@ function LaneRow({
         screen. The waveform keeps a floor so it stays a waveform. */}
     <div className="p-2 flex flex-wrap items-center gap-x-3 gap-y-2">
       <div className="w-full sm:w-40 flex-shrink-0 space-y-1">
+        {/* ── The name, as a field rather than as text ─────────────
+
+            Carli, 10 October 2026: *"Op elke track van die probooth moet daar
+            'n manier wees om die track 'n naam te gee. Vir 'n professional
+            moet hulle weet watter instrument is waar."*
+
+            It was already here and she looked and did not find it — which is
+            the same thing as it not being here. It was a borderless,
+            placeholder-less, label-less `bg-transparent` input, so what was on
+            the screen was the lane's name in bold, looking exactly like the
+            heading it was sitting where. Nothing said it could be typed in.
+
+            So: a border, a label above it, and a placeholder that is an
+            instrument. The placeholder is doing the real work — "Bass, Lead
+            vocal, Kick" is the sentence that says both "this is a field" and
+            "this is what goes in it", and a professional with eleven lanes
+            open is exactly the person who needs the second half. */}
+        <label htmlFor={`lane-name-${lane.id}`} className="block text-[10px] font-bold uppercase tracking-wide text-zinc-600">
+          {t('pro.laneName', 'Lane name')}
+        </label>
         <input
+          id={`lane-name-${lane.id}`}
+          data-lanenamefield
           value={lane.name}
           onChange={(event) => onChange({ name: event.target.value.slice(0, 40) })}
-          className="min-h-[44px] w-full bg-transparent text-sm font-semibold text-zinc-200 outline-none focus:text-white"
-          aria-label={t('pro.laneName', 'Lane name')}
+          placeholder={t('pro.laneNameHint', 'Bass, Lead vocal, Kick…')}
+          className="min-h-[44px] w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-sm font-semibold text-zinc-200 placeholder:font-normal placeholder:text-zinc-600 outline-none focus:border-emerald-500 focus:text-white"
         />
         <div className="flex items-center gap-1 min-w-0">
           <button
@@ -4867,6 +4997,80 @@ function LaneRow({
         >
           <Mic2 className="w-4 h-4" />
         </button>
+        {/* ── Take this one away ─────────────────────────────
+
+            Carli, 10 October 2026: *"iemand op 'n spesifieke track kan click
+            en dan is daar 'n dropdownmenu wat die opsie gee vir download midi,
+            download wav. Dit gee die geleentheid om 'n sekere klank te save
+            vir 'n ander projek."*
+
+            A menu rather than two buttons, because the two are not
+            interchangeable and the difference needs a sentence each. The WAV
+            is the sound. The MIDI is the notes — and on a recording those
+            notes have to be FOUND, one line at a time, which is a thing
+            somebody must know BEFORE the file is on their machine and not
+            after they have built a session on it. `check:midi` holds that
+            sentence to being on the screen. */}
+        <div className="relative">
+          <button
+            type="button"
+            data-lanesave
+            onClick={() => setSaving((was) => !was)}
+            aria-expanded={saving}
+            title={t('pro.save', 'Take this lane away')}
+            className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-lg border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-emerald-500/50 hover:text-emerald-400"
+          >
+            <ArrowDownToLine className="h-4 w-4 flex-shrink-0" />
+            {t('pro.save', 'Take this lane away')}
+          </button>
+          {saving && (
+            <div
+              data-lanesavemenu
+              className="absolute right-0 z-20 mt-1 w-72 space-y-1 rounded-xl border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
+            >
+              <button
+                type="button"
+                data-savewav
+                onClick={() => { setSaving(false); onSave('wav'); }}
+                className="w-full rounded-lg px-2.5 py-2 text-left hover:bg-zinc-900"
+              >
+                <span className="block text-sm font-bold text-zinc-200">
+                  {t('pro.saveWav', 'Download WAV')}
+                </span>
+                <span className="block text-xs leading-snug text-zinc-500">
+                  {t(
+                    'pro.saveWavNote',
+                    'The sound, cut as you cut it, through its amp. Not the mix — the level, the pan and the tone are this song’s balance and do not travel with it.',
+                  )}
+                </span>
+              </button>
+              <button
+                type="button"
+                data-savemidi
+                onClick={() => { setSaving(false); onSave('midi'); }}
+                className="w-full rounded-lg px-2.5 py-2 text-left hover:bg-zinc-900"
+              >
+                <span className="block text-sm font-bold text-zinc-200">
+                  {t('pro.saveMidi', 'Download MIDI')}
+                </span>
+                {/* Which of the two this would be, said before the press.
+                    A lane the booth BUILT from notes carries them; anything
+                    else has to be listened to. */}
+                <span className="block text-xs leading-snug text-zinc-500">
+                  {source === 'heard'
+                    ? t(
+                        'pro.midiHeard',
+                        'The notes, found by listening. One line at a time — a chord comes out as a single note and a full mix comes out as nonsense, so this is for a bass, a melody or a hummed beat.',
+                      )
+                    : t(
+                        'pro.midiExact',
+                        'The notes this lane was built from, exactly as they were played. Nothing is measured and nothing can be wrong.',
+                      )}
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
         {!lane.backing && (
           <button type="button" data-droplane onClick={onRemove} className="p-2 sm:p-0 text-zinc-600 hover:text-red-400 ml-auto">
             <Trash2 className="w-4 h-4" />
