@@ -82,7 +82,7 @@ import {
   pullCorner, toShape, type Box as CropBox, type Grip,
 } from '../lib/cropbox';
 import {
-  FORMATS, SCALES, formatOf, holdsClear, nameFor, type FileKind, type Scale,
+  FORMATS, SCALES, canWebp, formatOf, holdsClear, nameFor, type FileKind, type Scale,
 } from '../lib/postfile';
 import {
   SHAPES, cutAlong, dragged, shapePath, trace, whyNot, worthCutting,
@@ -483,6 +483,11 @@ export default function PostStudio({
 
      Object URLs, so they are revoked when they go. */
   const [refs, setRefs] = useState<{ url: string; image: HTMLImageElement }[]>([]);
+  /* Whether this browser can really write a WebP. Asked once, on the client
+     only — `canWebp` makes a one-pixel canvas, and asking it on every render
+     would make a canvas for every keystroke. */
+  const [webpWorks, setWebpWorks] = useState(false);
+  useEffect(() => { setWebpWorks(canWebp()); }, []);
   const [said, setSaid] = useState('');
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
@@ -3924,7 +3929,11 @@ export default function PostStudio({
     <div className="space-y-2">
       <p className={MIKRO}>{t('post.kind', 'What kind of file')}</p>
       <div className={RY}>
-        {FORMATS.map((one) => (
+        {/* WebP only where this browser can really write one. An older
+            Safari answers `toBlob('image/webp')` with a PNG and says
+            nothing, so the button would save a PNG called `.webp` — which
+            is found out when a platform refuses the upload. */}
+        {FORMATS.filter((one) => one.id !== 'webp' || webpWorks).map((one) => (
           <button
             key={one.id}
             type="button"

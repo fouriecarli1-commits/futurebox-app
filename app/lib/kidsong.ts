@@ -54,22 +54,68 @@ export interface Choice {
   readonly words: string;
 }
 
-/** Six things to sing about. */
+/**
+ * Things to sing about.
+ *
+ * ── Why there are more of them than there were ───────────────────────────
+ *
+ * Six, chosen quickly so the room could be finished. Carli, 9 October 2026:
+ * *"daar moet van alles wat opsies is, 'n verskeidenheid wees."*
+ *
+ * Fourteen. A child who presses the same six buttons gets the same six songs
+ * and stops asking — and a list a child browses is not the same thing as a
+ * list an adult scans: the whole point is that one of them is already the
+ * thing they were going to say.
+ *
+ * ── What is deliberately not here ────────────────────────────────────────
+ *
+ * Nothing about a real person, a real place or a brand, which is the rule
+ * `guard` enforces on the way out anyway — but a BUTTON that offers it is
+ * worse than a typed request that is refused, because the room put it there.
+ * And nothing frightening: "being brave when something is scary" is as close
+ * as this list goes, and it goes there on purpose because that is a song a
+ * child actually wants.
+ *
+ * South African rather than generic where it costs nothing: a thunderstorm
+ * on a tin roof, a braai, a farm. A child here knows those.
+ */
 export const KID_TOPICS: readonly Choice[] = [
   { id: 'dog', says: ['kids.topicDog', 'My dog'], words: 'a happy song about a dog who is somebody\'s best friend' },
+  { id: 'cat', says: ['kids.topicCat', 'My cat'], words: 'a playful song about a cat who sleeps all day and runs about at night' },
   { id: 'space', says: ['kids.topicSpace', 'Space'], words: 'a song about flying a rocket past the planets and the stars' },
   { id: 'birthday', says: ['kids.topicBirthday', 'A birthday'], words: 'a cheerful birthday song about cake and candles and friends' },
   { id: 'sea', says: ['kids.topicSea', 'The sea'], words: 'a song about the sea, the waves, and the fish under them' },
-  { id: 'rain', says: ['kids.topicRain', 'Rain'], words: 'a gentle song about rain on the roof and puddles to jump in' },
+  { id: 'rain', says: ['kids.topicRain', 'Rain'], words: 'a gentle song about rain on a tin roof and puddles to jump in' },
   { id: 'brave', says: ['kids.topicBrave', 'Being brave'], words: 'an encouraging song about being brave when something is scary' },
+  { id: 'dinos', says: ['kids.topicDinos', 'Dinosaurs'], words: 'a stomping song about dinosaurs, big ones and small ones' },
+  { id: 'farm', says: ['kids.topicFarm', 'The farm'], words: 'a song about a farm, the animals on it and the sounds they make' },
+  { id: 'bedtime', says: ['kids.topicBedtime', 'Going to sleep'], words: 'a slow, calm song for falling asleep, about the dark being friendly' },
+  { id: 'friends', says: ['kids.topicFriends', 'My friends'], words: 'a warm song about friends who look after each other' },
+  { id: 'counting', says: ['kids.topicCounting', 'Counting'], words: 'a simple counting song from one to ten, each number in its own line' },
+  { id: 'colours', says: ['kids.topicColours', 'Colours'], words: 'a bright song naming colours and something that is each one' },
+  { id: 'school', says: ['kids.topicSchool', 'School'], words: 'a cheerful song about the first day at school and making a friend there' },
 ];
 
-/** Four kinds of music. */
+/**
+ * Kinds of music.
+ *
+ * ── Four became nine, and the four are untouched ─────────────────────────
+ *
+ * Each one is a sound a child can tell apart from the others with their eyes
+ * shut, which is the bar for this list: "indie" and "alternative" are a
+ * choice between two words rather than two songs. A marching band, a brass
+ * band and a music box are not.
+ */
 export const KID_SOUNDS: readonly Choice[] = [
   { id: 'happy', says: ['kids.soundHappy', 'Happy'], words: 'bright upbeat pop, major key, clear friendly vocal' },
   { id: 'quiet', says: ['kids.soundQuiet', 'Quiet'], words: 'gentle acoustic lullaby, soft vocal, slow' },
   { id: 'rock', says: ['kids.soundRock', 'Loud'], words: 'simple cheerful rock with drums and guitar, big chorus' },
   { id: 'dance', says: ['kids.soundDance', 'Dancey'], words: 'simple four-on-the-floor dance beat, playful, fun to jump to' },
+  { id: 'march', says: ['kids.soundMarch', 'Marching'], words: 'a simple marching band tune with a snare drum and a steady step' },
+  { id: 'funny', says: ['kids.soundFunny', 'Silly'], words: 'a comic song with tuba, slide whistle and silly sound effects' },
+  { id: 'country', says: ['kids.soundCountry', 'Country'], words: 'easy country with acoustic guitar, a fiddle and a sing-along chorus' },
+  { id: 'kwaito', says: ['kids.soundKwaito', 'Kwaito'], words: 'slow South African kwaito groove, warm bass, simple chanted chorus' },
+  { id: 'musicbox', says: ['kids.soundMusicbox', 'Music box'], words: 'a music box melody with soft bells and a slow gentle vocal' },
 ];
 
 const choice = (list: readonly Choice[], id: string): Choice | undefined =>

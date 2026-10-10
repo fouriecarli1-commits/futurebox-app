@@ -99,7 +99,7 @@ import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import FilmStrip from './FilmStrip';
 import {
-  BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
+  BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, previewFor, roundFor,
 } from '../lib/videopaint';
 import {
   GRADES, GRADE_DEFAULT, RATES, bitsFor, gradeFor, rateFor, sizeFor, weighs,
@@ -3247,26 +3247,56 @@ async function smallerFrame(url: string): Promise<string> {
                     opacity: wordsNow.ghost ? 0.3 : (wordsNow.said.wordsSolid ?? 1),
                     outline: wordsNow.ghost ? `1px dashed ${LIT}` : undefined,
                     outlineOffset: wordsNow.ghost ? 3 : undefined,
-                    /* Approximate, and said so rather than implied: the renderer
-                       rounds against the band's MEASURED height, and the band
-                       here is a div that has not been measured. It moves the
-                       right way and lands within a pixel or two of the film. */
-                    borderRadius: (wordsNow.said.wordsBox ?? BOX_DEFAULT) === 'brush'
-                      /* The brush is a painted path on the canvas and cannot be
-                         a border radius. A lozenge is the closest an element
-                         gets, and the preview says "a shape, not a box" rather
-                         than pretending to be the stroke. The film draws the
-                         real one; `check:videopaint` holds that they agree on
-                         everything a radius CAN carry. */
-                      ? '48% 44% 46% 50% / 60% 56% 58% 54%'
-                      : (wordsNow.said.wordsRound ?? roundFor(wordsNow.said.wordsBox ?? BOX_DEFAULT))
-                        * Math.max(9, (wordsNow.said.wordsSize ?? 0.048) * frameHeight),
-                    /* The same 62% the renderer paints the box at, so the
-                       preview shows the picture through it exactly as the film
-                       will. `none` draws nothing, which is a title card. */
-                    background: (wordsNow.said.wordsBox ?? BOX_DEFAULT) === 'none'
-                      ? 'transparent'
-                      : tintOf(paintFor(wordsNow.said.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT, 0.62),
+                    /* ── The shape, from the one place that knows it ────
+
+                        `previewFor` in `lib/videopaint.ts` works out the CSS
+                        from the same shares of the band's height that the
+                        canvas path uses, so a ribbon previews as a ribbon and
+                        a strip of tape as tape rather than both as rounded
+                        boxes. Six of the ten are exact; the brush is
+                        approximate and says so there.
+
+                        Still approximate in one respect, and said rather than
+                        implied: the renderer rounds against the band's
+                        MEASURED height and this band is a div that has not
+                        been measured. It lands within a pixel or two. */
+                    ...(() => {
+                      const shape = wordsNow.said.wordsBox ?? BOX_DEFAULT;
+                      const px = Math.max(9, (wordsNow.said.wordsSize ?? 0.048) * frameHeight);
+                      const look = previewFor(
+                        shape,
+                        wordsNow.said.wordsRound ?? roundFor(shape),
+                        px,
+                      );
+                      const colour = tintOf(
+                        paintFor(wordsNow.said.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT,
+                        0.62,
+                      );
+                      const solid = tintOf(
+                        paintFor(wordsNow.said.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT,
+                        0.95,
+                      );
+                      return {
+                        borderRadius: look.borderRadius,
+                        clipPath: look.clipPath,
+                        /* The band runs the whole frame for a news band, which
+                           is the one shape that changes the geometry. The
+                           words stay centred inside it. */
+                        ...(look.wide ? { left: 0, width: '100%' } : {}),
+                        /* The same 62% the renderer paints the box at, so the
+                           preview shows the picture through it exactly as the
+                           film will. `none` draws nothing, which is a title
+                           card — and the two stroked shapes leave the picture
+                           visible on purpose, which is the reason to pick
+                           them. */
+                        background: shape === 'none' || look.stroked ? 'transparent' : colour,
+                        ...(shape === 'line'
+                          ? { borderBottom: `${look.lineWidth}px solid ${solid}` }
+                          : shape === 'outline'
+                            ? { border: `${look.lineWidth}px solid ${solid}` }
+                            : {}),
+                      };
+                    })(),
                     color: paintFor(wordsNow.said.wordsInk ?? 'white')?.hex ?? INK_DEFAULT,
                     zIndex: 2,
                   }}

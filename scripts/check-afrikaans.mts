@@ -90,6 +90,10 @@ const SAME_IN_BOTH = new Set([
      are the same word in Afrikaans — "Amber" is amber and "Sand" is sand — and
      the honest alternative would be renaming a colour to dodge a check. */
   'Amber', 'Sand',
+  /* Kwaito is a South African genre and the word is the same in every
+     language that has it, this one included. WebP is a file format's name.
+     Translating either would make it harder to recognise, not easier. */
+  'Kwaito', 'WebP',
   /* An instrument whose name is the same word in Afrikaans. A marimba is a
      marimba, and the alternative would be renaming an instrument to dodge a
      check. */

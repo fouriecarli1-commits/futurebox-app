@@ -36,6 +36,8 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { MOST_SONGS } from '../app/lib/songkeep.ts';
+import { KID_SOUNDS, KID_TOPICS } from '../app/lib/kidsong.ts';
+import { screen } from '../app/lib/moderation.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -127,6 +129,61 @@ ok('keeping a song makes the shelf look again',
   /setShelfAgain/.test(room) && /\[\s*look\s*,\s*again\s*\]/.test(shelf),
   'the shelf is read once on mount, so a song just kept does not appear until'
   + ' the room is reopened — which reads as the Keep button not working');
+
+/* ── 6. The lists a child browses ──────────────────────────────────────
+
+   Six topics and four sounds until 10 October 2026, chosen quickly so the
+   room could be finished. Carli: *"daar moet van alles wat opsies is, 'n
+   verskeidenheid wees."*
+
+   A child who presses the same six buttons gets the same six songs and stops
+   asking. But a long list is not the goal either, and the two faults a list
+   like this can have are both silent: an entry that would be REFUSED on the
+   way out, and two entries that are the same song under two names. */
+
+ok(`there is a real variety to sing about (${KID_TOPICS.length})`,
+  KID_TOPICS.length >= 12,
+  'six is one afternoon of a child pressing buttons');
+
+ok(`  and a real variety of sounds (${KID_SOUNDS.length})`,
+  KID_SOUNDS.length >= 8,
+  'each one has to be a sound a child can tell apart with their eyes shut —'
+  + ' "indie" against "alternative" is a choice between two words');
+
+ok('  and no two of either are the same thing twice',
+  new Set(KID_TOPICS.map((one) => one.id)).size === KID_TOPICS.length
+  && new Set(KID_SOUNDS.map((one) => one.id)).size === KID_SOUNDS.length
+  && new Set(KID_TOPICS.map((one) => one.words)).size === KID_TOPICS.length
+  && new Set(KID_SOUNDS.map((one) => one.words)).size === KID_SOUNDS.length,
+  'two rows that put the same words in the prompt are one row with two'
+  + ' names, and a child picking between them is picking nothing');
+
+/* ── Every button survives the front door ─────────────────────────────
+
+   `guard` screens what goes to a supplier, so a topic naming a real singer
+   or a brand would be refused on the way out — AFTER a child has pressed it
+   and been told no by a room that offered it. A button the app refuses is
+   worse than a typed request it refuses, because the app put the button
+   there.
+
+   Driven through `screen` itself rather than by reading the words, because
+   the rule is whatever that function says today. */
+for (const one of [...KID_TOPICS, ...KID_SOUNDS]) {
+  const said = screen(one.words, 'song');
+  ok(`  "${one.says[1]}" is not a button the app would refuse`,
+    said === null,
+    `${said?.rule ?? ''} — ${said?.message ?? ''}. A child pressed a button this`
+    + ' room offered and was told no');
+}
+
+/* And the prompt a child's song is actually built from carries both. */
+ok('the song asks for the topic AND the sound',
+  (() => {
+    const made = withoutComments(readFileSync('app/lib/kidsong.ts', 'utf8'));
+    return /topic/.test(made) && /sound/.test(made) && /KID_SECONDS/.test(made);
+  })(),
+  'a room with two lists and a prompt that reads one of them is a room where'
+  + ' half the choices do nothing');
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);

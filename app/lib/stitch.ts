@@ -67,7 +67,7 @@
 
 import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
 import { fontFor } from './videofonts';
-import { brushPath } from './videopaint';
+import { boxPath, boxById, type BoxShape } from './videopaint';
 import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 import { paintedFor, type EdgeId } from './wordsedge';
@@ -222,7 +222,7 @@ export interface Scene {
   readonly captionTo?: number;
   readonly captionInk?: string;
   readonly captionBack?: string;
-  readonly captionBox?: 'none' | 'square' | 'round' | 'brush';
+  readonly captionBox?: BoxShape;
   /**
    * More than one caption over this scene, each with its own ends.
    *
@@ -264,7 +264,7 @@ export interface Caption {
   readonly round?: number;
   readonly ink?: string;
   readonly back?: string;
-  readonly box?: 'none' | 'square' | 'round' | 'brush';
+  readonly box?: BoxShape;
   /**
    * What keeps the letters readable over the picture.
    *
@@ -716,7 +716,7 @@ export function drawCaption(
     readonly round?: number;
     readonly ink?: string;
     readonly back?: string;
-    readonly box?: 'none' | 'square' | 'round' | 'brush';
+    readonly box?: BoxShape;
   },
 ): void {
   const words = text.trim();
@@ -809,24 +809,48 @@ export function drawCaption(
      that same 62%, so a caption she has coloured sits on the picture the way
      the black one did rather than becoming an opaque slab: the whole point of
      a caption box is that you can still see what is behind it. */
-  const boxLeft = Math.max(0, Math.min(width - boxWidth, middle - boxWidth / 2));
   const shape = set?.box ?? 'round';
+  const spec = boxById(shape);
 
   if (shape !== 'none') {
-    context.fillStyle = tint(set?.back ?? '#000000', 0.62);
-    if (shape === 'brush') {
-      brushPath(context, boxLeft, boxTop, boxWidth, boxHeight);
+    /* ── Edge to edge, where the shape says so ─────────────────────────
+
+       A news bulletin's name band runs the whole width of the frame, which
+       is the one property of a shape that changes the GEOMETRY rather than
+       the path. Read off the shape's own row in `videopaint.ts` rather than
+       named here, so a second full-width shape needs no change in the file
+       that renders the film. */
+    const wide = spec?.wide === true;
+    const left = wide
+      ? 0
+      : Math.max(0, Math.min(width - boxWidth, middle - boxWidth / 2));
+    const across = wide ? width : boxWidth;
+
+    /* Rounded as a share of the band's own height, so the setting means the
+       same thing at any size. Zero is a square box, one is a lozenge; the
+       default is what it has always been. A shape with a path of its own
+       ignores it. */
+    const round = set?.round ?? CAPTION_ROUND;
+    boxPath(context, shape, left, boxTop, across, boxHeight, round);
+
+    if (spec?.stroked) {
+      /* The frame and the underline. Stroked at a weight taken from the text
+         size, for the reason `wordsedge.ts` gives: the same number of pixels
+         is a different WEIGHT at 32px and at 96px, so a frame that looks
+         right on a phone is a hairline on a 4K export. */
+      context.strokeStyle = tint(set?.back ?? '#000000', 0.95);
+      context.lineWidth = Math.max(2, Math.round(size / 10));
+      context.lineCap = 'round';
+      context.stroke();
     } else {
-      context.beginPath();
-      context.roundRect(
-        boxLeft, boxTop, boxWidth, boxHeight,
-        /* Rounded as a share of the band's own height, so the setting
-           means the same thing at any size. Zero is a square box, one is a
-           lozenge; the default is what it has always been. */
-        Math.round((set?.round ?? CAPTION_ROUND) * Math.min(size, boxHeight / 2)),
-      );
+      /* The fill was `rgba(0, 0, 0, 0.62)` — black at 62%. A chosen colour
+         keeps that same 62%, so a caption she has coloured sits on the
+         picture the way the black one did rather than becoming an opaque
+         slab: the whole point of a caption box is that you can still see
+         what is behind it. */
+      context.fillStyle = tint(set?.back ?? '#000000', 0.62);
+      context.fill();
     }
-    context.fill();
   }
 
   /* ── The edge that keeps words readable over a picture ────────────────

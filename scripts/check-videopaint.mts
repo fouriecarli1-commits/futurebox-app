@@ -22,8 +22,8 @@
  * COMPOSITED box, over a mid-grey frame, which is what she will actually see.
  */
 import {
-  BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, brushPath, isBox,
-  paintFor, roundFor,
+  BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, boxPath, brushPath, isBox,
+  paintFor, previewFor, roundFor, type BoxShape,
 } from '../app/lib/videopaint';
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
@@ -149,12 +149,63 @@ ok('  and every swatch has something in the palette it is readable on',
 
 /* ── The four shapes she named ─────────────────────────────────────────── */
 
-ok('all four shapes she asked for are on offer',
-  BOXES.length === 4 && ['none', 'square', 'round', 'brush'].every(
-    (id) => BOXES.some((one) => one.id === id),
-  ),
+/**
+ * What one shape actually draws, as a list of instructions.
+ *
+ * ── Why a recording context and not a reading of the source ─────────────
+ *
+ * A canvas is not something a check can look at, so the usual answer is to
+ * read the code and assert it mentions the right things — which is how a
+ * check ends up measuring the paragraph instead of the picture. A context
+ * that writes down every call it is given is the honest version: `boxPath`
+ * runs for real, and what comes back is what the renderer would have drawn.
+ *
+ * Numbers are rounded, so two shapes that differ by a rounding are the same
+ * shape. That is the point: this is used to prove no two entries in the list
+ * draw the same thing under two names.
+ */
+function pathOf(shape: BoxShape): string {
+  const said: string[] = [];
+  const at = (n: number) => Math.round(n);
+  const fake = {
+    beginPath: () => said.push('begin'),
+    closePath: () => said.push('close'),
+    moveTo: (x: number, y: number) => said.push(`move ${at(x)},${at(y)}`),
+    lineTo: (x: number, y: number) => said.push(`line ${at(x)},${at(y)}`),
+    quadraticCurveTo: (a: number, b: number, c: number, d: number) =>
+      said.push(`curve ${at(a)},${at(b)} ${at(c)},${at(d)}`),
+    roundRect: (x: number, y: number, w: number, h: number, r: number) =>
+      said.push(`rect ${at(x)},${at(y)} ${at(w)}x${at(h)} r${at(r)}`),
+  } as unknown as CanvasRenderingContext2D;
+  boxPath(fake, shape, 100, 50, 400, 40, roundFor(shape));
+  return said.join(' / ');
+}
+
+ok('every shape she asked for by name is still on offer',
+  ['none', 'square', 'round', 'brush'].every((id) => BOXES.some((one) => one.id === id)),
   BOXES.map((one) => one.id).join(', ')
-  + ' — "’n square, ’n square met ronde punte, ’n verfkwas", and no box at all');
+  + ' — "’n square, ’n square met ronde punte, ’n verfkwas", and no box at all.'
+  + ' Widened to ten on 10 October 2026 ("daar moet van alles wat opsies is,'
+  + " 'n verskeidenheid wees\"), and a widening that drops one of the four she"
+  + ' named is a widening that lost something');
+
+ok('  and there is a real variety of them now',
+  BOXES.length >= 8,
+  `${BOXES.length} — four was the three she named plus the title card, and`
+  + ' every new one is a shape somebody who has watched television would'
+  + ' recognise rather than a variation on the rounded box');
+
+ok('  and no two of them are the same shape under two names',
+  (() => {
+    const drawn = BOXES.filter((one) => one.id !== 'none').map((one) => ({
+      id: one.id,
+      how: `${pathOf(one.id)}|${one.wide ? 'wide' : ''}|${one.stroked ? 'stroked' : ''}`,
+    }));
+    return new Set(drawn.map((one) => one.how)).size === drawn.length;
+  })(),
+  'two entries that draw the same instructions are one entry with two names,'
+  + ' and somebody picking between them is picking nothing — the same rule the'
+  + ' two retuned swatches above are held to');
 
 ok('  and a square really is square',
   roundFor('square') === 0,
@@ -233,9 +284,22 @@ ok('  and keeps the box see-through at the same 62%',
   'a chosen colour that becomes an opaque slab has taken the picture away,'
   + ' which is the opposite of what a caption box is for');
 
-ok('  and draws the brush rather than approximating it with a radius',
-  /brushPath\(/.test(render),
-  'the one shape a border radius cannot be');
+ok('  and draws each shape rather than approximating it with a radius',
+  /boxPath\(context, shape,/.test(render) && !/roundRect\(\s*$/m.test(render),
+  'a ribbon and a strip of tape are not corner radii, and the renderer used'
+  + ' to be `if (brush) … else roundRect(…)` — which is a fine shape for two'
+  + ' and silently draws a rounded box for the other six');
+
+ok('  and takes the full-width shapes off the shape itself',
+  /spec\?\.wide === true/.test(render) && !/shape === 'bar'/.test(render),
+  'a news band runs edge to edge, which is the one property that changes the'
+  + ' geometry rather than the path. Named in the renderer it would have to be'
+  + ' named again for the next one');
+
+ok('  and strokes the hollow ones instead of filling them',
+  /spec\?\.stroked/.test(render) && /context\.stroke\(\)/.test(render),
+  'a frame and an underline leave the picture visible, which is the whole'
+  + ' reason somebody picks one over the filled box');
 
 ok('  and never draws a box at all when she picked none',
   /shape !== 'none'/.test(render),
@@ -251,9 +315,50 @@ ok('the preview reads the same palette the renderer does',
   'two tables of colours is two palettes the first time one is retuned');
 
 ok('  and shows the box at the renderer’s 62% too',
-  /tintOf\([\s\S]{0,140}?,\s*0\.62\)/.test(room),
+  /tintOf\([\s\S]{0,200}?,\s*$/m.test(room) && /0\.62,\s*$/m.test(room),
   'a preview that is more solid than the film is a preview that lies about'
   + ' what she will get');
+
+/* ── The preview draws the shape, not a stand-in for it ─────────────────
+
+   The preview was a `borderRadius` and nothing else, which was honest while
+   the brush was the only shape a radius could not be. With ten it is not:
+   somebody who picks a ribbon would see a rounded box and find out what they
+   chose after paying to export. She has reported exactly that fault in other
+   rooms.
+
+   `previewFor` is the one place the geometry lives, for both renderings, and
+   these drive it rather than reading the room's source. */
+for (const one of BOXES) {
+  const look = previewFor(one.id, roundFor(one.id), 40);
+  const exact = one.id === 'tape' || one.id === 'banner';
+  ok(`  the ${one.id} previews as itself`,
+    exact
+      ? Boolean(look.clipPath) && look.clipPath!.includes('polygon')
+      : Boolean(look.borderRadius) || look.stroked,
+    exact
+      ? 'a ribbon and a strip of tape are polygons in CSS with the same'
+        + ' arithmetic the canvas uses — previewing them as rounded boxes is a'
+        + ' preview that lies'
+      : `${one.id} has neither a radius nor a stroke, so the preview shows a`
+        + ' plain rectangle for a shape that is not one');
+
+  ok(`    and its width and fill match what the film does`,
+    look.wide === (one.wide === true) && look.stroked === (one.stroked === true),
+    'the two properties that change the geometry rather than the path. Read'
+    + ' from the shape in both places, or the preview is centred where the film'
+    + ' is edge to edge');
+}
+
+ok('the room asks the library for the shape rather than writing CSS itself',
+  /previewFor\(/.test(room),
+  'two places working out a notch from the band height is two places to get'
+  + ' it wrong, and only one of them is on the screen while she chooses');
+
+ok('  and the pill is a lozenge in both',
+  roundFor('pill') === 1 && previewFor('pill', 1, 40).borderRadius === '20px',
+  'one is the whole half-height, which is what makes a pill a pill rather'
+  + ' than a very rounded rectangle');
 
 if (bad) {
   console.error(`\ncheck:videopaint — ${bad} assertion(s) failed.\n`);
@@ -261,6 +366,7 @@ if (bad) {
 }
 console.log(
   `\ncheck:videopaint — ${PAINTS.length} colours across all six sixths of the hue`
-  + ' circle, four shapes behind the words, every swatch readable on something,'
+  + ` circle, ${BOXES.length} shapes behind the words, every swatch readable on`
+  + ' something,'
   + ' and the preview and the film drawing the same thing.',
 );
