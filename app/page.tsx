@@ -4364,7 +4364,12 @@ export default function FutureBoxHome() {
                   for (const wire of videoFromHook(hook)) {
                     copilotBus.handoff(wire.room, wire.op, wire.value);
                   }
-                  goToRoom('canvas');
+                  /* And WHY, which the four wires above could not carry. A
+                     hook is already the strongest fifteen seconds of a song
+                     — the app chose it — so the help worth offering is "do
+                     not waste it" rather than "find the good part", and
+                     those are different conversations. */
+                  goToRoom('canvas', { id: 'hook_video', subject: hook.title ?? '' });
                 }}
                 /* A song somebody opened up, carried into Make a song. The
                    same hand-off the Studio's Remake uses — canvas, handoff,
@@ -4384,7 +4389,11 @@ export default function FutureBoxHome() {
                   };
                   setHandoff(next);
                   setCanvas(next);
-                  goToRoom('make');
+                  /* The style travelled; the words deliberately did not. The
+                     copilot could see the canvas and not the one fact that
+                     changes what help is worth giving — that the point is to
+                     end up somewhere ELSE. */
+                  goToRoom('make', { id: 'built_on', subject: from.title ?? '' });
                   /* The canvas travels to the copilot on every turn, so it
                      will SEE the title and the style. What it cannot see is
                      where they came from — and "built on somebody else's
@@ -4568,6 +4577,11 @@ export default function FutureBoxHome() {
                 onRemake={(next) => {
                   setHandoff(next);
                   setCanvas(next);
+                  /* No errand. Remaking her OWN song is not building on
+                     somebody else's: the words are hers to reuse and the
+                     point is not to end up somewhere different, so the
+                     `built_on` brief would be wrong in both halves. The
+                     room's own opening line is the right one here. */
                   goToRoom('make');
                   setMakeSignal((n) => n + 1);
                 }}

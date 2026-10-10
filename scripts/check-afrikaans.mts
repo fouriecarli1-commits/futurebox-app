@@ -94,6 +94,10 @@ const SAME_IN_BOTH = new Set([
      language that has it, this one included. WebP is a file format's name.
      Translating either would make it harder to recognise, not easier. */
   'Kwaito', 'WebP',
+  /* Instruments whose names are the same word in Afrikaans. A banjo is a
+     banjo and a harp is a harp; renaming one to dodge a check is renaming an
+     instrument. */
+  'Banjo', 'Harp',
   /* An instrument whose name is the same word in Afrikaans. A marimba is a
      marimba, and the alternative would be renaming an instrument to dodge a
      check. */

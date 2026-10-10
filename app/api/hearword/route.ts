@@ -46,8 +46,9 @@
 
 import crypto from 'node:crypto';
 import { configured as googleOn } from '@/app/lib/server/google';
-import { hearWord, rulesFor, worthKeeping } from '@/app/lib/server/hearword';
+import { SURE_ENOUGH, hearWord, rulesFor, worthKeeping } from '@/app/lib/server/hearword';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
+import { admin } from '@/app/lib/server/account';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -155,5 +156,117 @@ export async function POST(request: Request): Promise<Response> {
     /* What the rules WOULD be. Handed back to be looked at, not written:
        the saving is a separate press by somebody who has heard it. */
     rules: rulesFor(word, heard),
+  });
+}
+
+/**
+ * Keep what was heard.
+ *
+ * ── Why this is a second verb and not part of the first ──────────────────
+ *
+ * Because hearing a word and keeping it are different decisions, and the
+ * thing that happens between them is a person listening. A route that
+ * transcribed and saved in one call would make the playback decorative: the
+ * rule would already be on the account by the time she heard it was wrong.
+ *
+ * The POST above still writes nothing, and `check:hoorwoord` holds that.
+ *
+ * ── The word is the key, deliberately ────────────────────────────────────
+ *
+ * One pronunciation per word. Saying it again replaces the old row rather
+ * than adding a second rule for the same word — two rules that disagree
+ * about one word is a dictionary where the answer depends on the order
+ * ElevenLabs happens to apply them in, which is not something anybody can
+ * reason about afterwards.
+ *
+ * ── What is NOT stored ───────────────────────────────────────────────────
+ *
+ * The recording. It has done its job the moment the IPA is read off it, and
+ * a voice is personal information in a way that a word and its sounds are
+ * not. There is nothing in this table that ties a row to a human, which is
+ * also why it is not on the privacy page.
+ */
+export async function PUT(request: Request): Promise<Response> {
+  const wanted = process.env.POST_SECRET ?? '';
+  const url = new URL(request.url);
+  const given = url.searchParams.get('key') ?? '';
+  if (!wanted || !sameSecret(given, wanted)) return new Response('no', { status: 404 });
+
+  const db = admin();
+  if (!db) {
+    return Response.json(
+      { message: 'The database is not switched on, so there is nowhere to keep it.' },
+      { status: 503 },
+    );
+  }
+
+  let said: {
+    word?: unknown; language?: unknown; ipa?: unknown;
+    alias?: unknown; sure?: unknown; trouble?: unknown;
+  };
+  try {
+    said = await request.json() as typeof said;
+  } catch {
+    return Response.json({ message: 'Could not read that.' }, { status: 400 });
+  }
+
+  const word = String(said.word ?? '').trim().slice(0, MOST_WORD);
+  const language = String(said.language ?? '').trim().slice(0, MOST_LANGUAGE);
+  /* Generous, and bounded: IPA for a phrase is longer than the phrase, and
+     an unbounded string from a model is a row nobody meant to write. */
+  const ipa = String(said.ipa ?? '').trim().slice(0, 400);
+  const alias = String(said.alias ?? '').trim().slice(0, MOST_WORD);
+  const trouble = String(said.trouble ?? '').trim().slice(0, 300);
+  const asked = Number(said.sure);
+  const sure = Number.isFinite(asked) ? Math.max(0, Math.min(1, asked)) : 0;
+
+  if (!word || !ipa || !language) {
+    return Response.json(
+      { message: 'A word, a language and its sounds — all three, or there is nothing to keep.' },
+      { status: 400 },
+    );
+  }
+
+  /* The same line the booth draws, drawn again here. A room can be changed
+     and a route cannot be bypassed: an unsure transcription kept by a
+     request made by hand would be in the dictionary for every member with
+     nobody having heard it. */
+  if (sure < SURE_ENOUGH) {
+    return Response.json(
+      {
+        message: 'That was not sure enough to keep. Record it again, closer to'
+          + ' the microphone. A phonetic rule that is wrong makes the voice say'
+          + ' a different word with total confidence.',
+      },
+      { status: 400 },
+    );
+  }
+
+  const put = await db
+    .from('said_words')
+    .upsert({ word, language, ipa, alias, sure, trouble }, { onConflict: 'word' });
+  /* Taken rather than discarded. A failed write reported as success is a
+     word she believes is in the dictionary and is not, which she will next
+     notice as the app still saying it wrong. */
+  if (put.error) {
+    return Response.json(
+      { message: `It could not be kept: ${put.error.message}` },
+      { status: 502 },
+    );
+  }
+
+  const counted = await db
+    .from('said_words')
+    .select('word', { count: 'exact', head: true });
+
+  return Response.json({
+    kept: word,
+    /* How many are in the table now, so the next sentence can be true. A
+       count that failed is reported as unknown rather than as zero. */
+    words: counted.error ? null : counted.count ?? null,
+    /* The rule is in the table and NOT yet on her ElevenLabs account. Said
+       plainly, because the gap between the two is exactly where somebody
+       would otherwise assume the job was done. */
+    live: false,
   });
 }

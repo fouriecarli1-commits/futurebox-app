@@ -85,6 +85,14 @@ const ALLOWED: Record<string, string> = {
   'app/api/eleven/prices/route.ts': 'owner-only page; the message names the .sql file to run',
   'app/api/creator/route.ts': 'a duplicate-handle error, already reworded before it is sent',
   'app/api/afrikaans/route.ts': 'owner-only report on whether a migration ran',
+  /* The pronunciation booth's keep, 10 October 2026. Behind POST_SECRET and
+     compared in constant time, like the two above it — no member ever sees a
+     word of it. What comes back is Postgres saying why a row was refused,
+     which on an owner's tool is the ONLY useful thing to say: "it could not
+     be kept" without the reason is a page she has to come and ask about,
+     and the reason is almost always a table that has not been created yet.
+     `supabase/uitspraak.sql` is the file to paste, and the error names it. */
+  'app/api/hearword/route.ts': 'owner-only; the message names why a row was refused',
 };
 
 const leaking: string[] = [];

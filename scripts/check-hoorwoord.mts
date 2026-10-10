@@ -254,15 +254,141 @@ ok('  and says plainly when it is not sure enough to keep',
   'the gate is in the library and the room has to SHOW it, or an unsure'
   + ' answer looks the same as a confident one');
 
-ok('  and writes nothing itself',
-  !/pronunciation-dictionaries/.test(booth) && !/method: 'PUT'/.test(booth),
-  'a page that both proposes and commits is a page where a mis-tap is'
-  + ' permanent for every member at once');
+/* This said "writes nothing itself" until 10 October 2026, when the keep
+   button went in — and a rule that is simply deleted when it becomes
+   inconvenient was never a rule. What it was really protecting is still
+   here: the booth must not reach ElevenLabs' dictionary endpoints ITSELF.
+   Everything that touches her account goes through the owner route, which
+   has the guard, the brake and the stale-id recovery; a page with its own
+   copy of that call is a second path where all three have to be remembered
+   again. */
+/* Matched on the ADDRESS and not on the name. The first version looked for
+   the string "elevenlabs" anywhere and went red on the button's own label,
+   which says "Put them on ElevenLabs" — a check reading the page's prose
+   instead of its code, which is the fault this repository has now made four
+   times in a week. `withoutComments` blanks comments; it does not blank the
+   words on a button. */
+ok('  and never calls her ElevenLabs account itself',
+  !/pronunciation-dictionaries/.test(booth)
+  && !/api\.elevenlabs\.io/.test(booth)
+  && !/xi-api-key/i.test(booth),
+  'the owner route has the guard, the rate brake and the recovery from a'
+  + ' stale dictionary id. A page with its own copy of that call is a second'
+  + ' path where every one of those has to be remembered again');
+
+ok('  and the transcription press still writes nothing',
+  (() => {
+    const at = booth.indexOf('const listen =');
+    return at >= 0 && !/method: 'PUT'/.test(booth.slice(at, booth.indexOf('const keep =')));
+  })(),
+  'hearing and keeping are different decisions and a person listens between'
+  + ' them — if the first press saved, the playback would be decorative');
 
 ok('  and names the languages rather than taking a typed one',
   /isiXhosa/.test(booth) && /LANGUAGES\.map/.test(booth),
   'a typo in the language is a model guessing, which is the one failure that'
   + ' gives a confident wrong answer instead of a refusal');
+
+/* ── 8. Keeping it, which is a different decision ──────────────────────
+
+   Carli: *"Gaan aan met die keep button."*
+
+   Three presses, and the gaps between them are the whole design: a person
+   LISTENS between the transcription and the keep, and the difference between
+   "kept in FutureBox's list" and "live on her account" is exactly where
+   somebody assumes the job is done.
+
+   The faults here are all silent ones. A keep that also pushed would make
+   the playback decorative. A keep that let an unsure answer through would
+   put a confidently wrong word in the dictionary every member's reads use. A
+   push that did not record WHICH version is live would work perfectly and
+   leave the app still saying the word the old way. */
+
+ok('keeping is a different verb from hearing',
+  /export async function PUT/.test(route) && /export async function POST/.test(route),
+  'a route that transcribed and saved in one call would make the playback'
+  + ' decorative — the rule would be on the account by the time she heard it'
+  + ' was wrong');
+
+ok('  and the keep is behind the same owner secret',
+  (route.match(/sameSecret\(given, wanted\)/g) ?? []).length >= 2,
+  'one guarded verb and one open one on the same route is the open one'
+  + ' being the whole route');
+
+ok('  and it refuses an unsure transcription too, not only the room',
+  /sure < SURE_ENOUGH/.test(route),
+  'a room can be changed and a request can be made by hand. The line has to'
+  + ' be drawn where the write happens, or an unsure rule reaches every'
+  + ' member with nobody having heard it');
+
+ok('  and the word is the key, so saying it again replaces it',
+  /onConflict: 'word'/.test(route),
+  'two rules that disagree about one word is a dictionary where the answer'
+  + ' depends on the order ElevenLabs happens to apply them in');
+
+ok('  and a failed write is reported rather than called success',
+  /if \(put\.error\)/.test(route),
+  'a word she believes is kept and is not is a fault she next meets as the'
+  + ' app still saying it wrong, three days later');
+
+ok('  and it does not keep the recording',
+  !/audio/.test(route.slice(route.indexOf('export async function PUT'))),
+  'the recording has done its job the moment the IPA is read off it, and a'
+  + ' voice is personal information in a way a word is not');
+
+/* ── The two halves reach the account, and the live one is written down ─ */
+
+const push = withoutComments(readFileSync('app/api/eleven/dictionary/route.ts', 'utf8'));
+
+ok('the push sends the written rules AND the heard ones',
+  /await allRules\(\)/.test(push) && !/const rules = asRules\(\)/.test(push),
+  'a keep button that fills a table nothing reads is a button that does'
+  + ' nothing, which is the hardest kind of nothing to notice');
+
+ok('  and writes down which dictionary is live',
+  /said_dictionary/.test(push) && /version, rules: rules\.length/.test(push),
+  'a dictionary is addressed by an id AND a version, and this call mints a'
+  + ' new version. Forgetting to record it fails in silence: the push'
+  + ' worked, the rules are up, and the app goes on saying the word wrong');
+
+ok('  and says plainly whether that worked',
+  /pointed/.test(push),
+  'the difference between "and now paste two values into Vercel" and "and'
+  + ' that is it"');
+
+const say = withoutComments(readFileSync('app/lib/server/sayit.ts', 'utf8'));
+
+ok('every read asks which dictionary is live',
+  /export async function liveLocators/.test(say)
+  && /from\('said_dictionary'\)/.test(say),
+  'the env vars alone mean a version pasted by hand after every change, and'
+  + ' forgetting is invisible');
+
+ok('  and falls back to the environment rather than to nothing',
+  (() => {
+    const at = say.indexOf('export async function liveLocators');
+    const body = say.slice(at, at + 1400);
+    return (body.match(/return locators\(\);/g) ?? []).length >= 3;
+  })(),
+  'no database, a failed lookup and an empty row are three different'
+  + ' things and all three must mean "use what was set before" — returning'
+  + ' none would take the pronunciation off every read in the app at once');
+
+ok('  and a failed lookup of the heard words does not silently empty them',
+  /if \(got\.error\)/.test(say) && /console\.error/.test(say),
+  'a listing that failed becoming "there are no heard rules" is her isiXhosa'
+  + ' quietly reverting to the English pronunciation with nothing saying why');
+
+const booth2 = withoutComments(readFileSync('app/uitspraak/page.tsx', 'utf8'));
+
+ok('the booth has the keep button and the push button, and they are not one',
+  /data-uitspraakkeep/.test(booth2) && /data-uitspraakpush/.test(booth2),
+  'one button doing both would save before she had heard it');
+
+ok('  and it says which of the two has happened',
+  /data-uitspraakkept/.test(booth2),
+  '"kept" and "live" are different states and the page has to say which,'
+  + ' or the gap between them is where the job is assumed done');
 
 console.log(bad === 0
   ? '\n  A word said once: transcribed, never trusted on its own, and never'

@@ -321,6 +321,8 @@
     "check:omni": "tsx scripts/check-omni.mts",
     "check:lewendefoto": "tsx scripts/check-lewendefoto.mts",
     "check:hoorwoord": "tsx scripts/check-hoorwoord.mts",
+    "check:boodskappe": "tsx scripts/check-boodskappe.mts",
+    "check:eennaam": "tsx scripts/check-eennaam.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

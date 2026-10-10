@@ -97,6 +97,12 @@ export const ORDER = [
   /* After `kinders`, and depending on nothing but `auth.users` and the
      storage schema. The kids' shelf: one table and one private bucket. */
   'kinderplank',
+  /* Last, and depending on nothing at all. The words she has heard said, and
+     a one-row pointer at whichever ElevenLabs dictionary is live — see
+     `lib/server/sayit.ts`. No `auth.users`, no storage: this is the app's own
+     dictionary rather than anybody's, which is also why neither table has an
+     owner column. */
+  'uitspraak',
 ] as const;
 
 /**
@@ -227,6 +233,9 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Die kind se toelaag: een ry per rekening wat sê ’n kind gebruik dit en hoeveel krediete hy mag spandeer. Die ry sé teenwoordigheid IS kindermodus. Die twee funksies trek dit af en gee dit terug, met dieselfde slot wat `spend_credits` gebruik — sonder dit is die perk ’n voorstel wanneer twee knoppies saam gedruk word. Sonder hierdie lêer is die toelaag net ’n getal in die blaaier, en ’n herlaai maak dit niks.',
   kinderplank:
     'Die kinderplank op die rekening eerder as op een foon: een tabel vir stories én liedjies, en ’n PRIVATE emmer vir die prente, voorlesings en liedjies. Nie publiek soos `avatars` nie — niks hierop word aan vreemdelinge gewys nie, en ’n publieke emmer beteken enigiemand wat die pad ken kan die lêer haal. Sonder hierdie lêer bly ’n storie op die toestel waar dit gemaak is, en ’n storie wat op die skootrekenaar gemaak is, is nie op die foon se plank nie.',
+  uitspraak:
+    'Die woorde wat sy gehoor s\u00ea is, met hul klanke, en \u2019n wyser na '
+    + 'watter uitspraakwoordeboek tans lewendig is.',
 };
 
 /**

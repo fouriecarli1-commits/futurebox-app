@@ -35,19 +35,66 @@ const rules = strip(readFileSync('app/lib/server/sayit.ts', 'utf8'));
 const reports = strip(readFileSync('app/api/afrikaans/route.ts', 'utf8'));
 const dictionary = strip(readFileSync('app/api/eleven/dictionary/route.ts', 'utf8'));
 
-/* ── The rules are source, and only source ──────────────────────────────
+/* ── Where a rule may come from, and where it may not ───────────────────
  
-   Matched on the shape of a read rather than on a word: any database call
-   inside the file that decides what ElevenLabs is told. */
+   ── This said "source, and only source", and that stopped being true ──
+ 
+   Until 10 October 2026 `sayit.ts` read nothing at runtime, and this checked
+   that by refusing any database call in it at all. On that date the booth at
+   `/uitspraak` got its keep button: she says an isiXhosa word into the phone,
+   a listening model writes the IPA, she hears it read back, and she presses
+   keep. The rule lands in `said_words` and `sayit.ts` sends it with the
+   written ones.
+ 
+   "No table" would have forbidden that — and the PROPERTY this file exists
+   for was never "no table". It is at the top of this file: *a reported word
+   is a candidate; it must never become a rule on its own.* The danger is
+   whatever ANYBODY can type reaching the voice that reads other people's
+   podcasts. A word she recorded, listened to and kept is the opposite of
+   that: it is the human step, not a way round it.
+ 
+   So the rule is written as what it always meant. A table a MEMBER can write
+   to must never be read here; a table only the owner can write to may be.
+   And the second half is not taken on trust — the three assertions under it
+   are what make the first one true. */
 check(
-  'the rules the dictionary is built from come from this file, not a table',
-  !/from\('afrikaans_reports'\)|supabase|createClient|\.select\(/.test(rules),
-  'sayit.ts reads something at runtime; the rules must be source somebody committed',
+  'the member reports table is never read where the rules are built',
+  !/afrikaans_reports/.test(rules) && !/afrikaans_reports/.test(dictionary),
+  'a report applied on its own puts whatever anybody typed into the voice'
+  + ' that reads other people\'s podcasts',
 );
 check(
-  'and the upload route builds from those rules, not from reports',
-  /asRules\(\)/.test(dictionary) && !/afrikaans_reports/.test(dictionary),
-  'the dictionary is built from something other than the file under review',
+  'and the upload route builds from the rules, not from reports',
+  /allRules\(\)/.test(dictionary),
+  'the dictionary is built from something other than the files under review',
+);
+
+/* The one table it MAY read, and why it is safe — asserted rather than
+   asserted-about. Three things have to hold, and if any of them stops
+   holding this stops being a human step and becomes the hole. */
+const schema = readFileSync('supabase/uitspraak.sql', 'utf8');
+const booth = strip(readFileSync('app/api/hearword/route.ts', 'utf8'));
+
+check(
+  'the only table the rules DO read is one no member can write',
+  /alter table public\.said_words enable row level security/.test(schema)
+  && !/create policy[^;]*said_words/i.test(schema),
+  'row-level security on with no policy means the anon and authenticated'
+  + ' keys can do nothing there — only the service key, which never leaves'
+  + ' the server. A policy added later would open it',
+);
+check(
+  'and the one route that writes it is the owner\'s',
+  /POST_SECRET/.test(booth) && /timingSafeEqual/.test(booth),
+  'a route that writes into the dictionary and is not behind the owner'
+  + ' secret is the report path with extra steps',
+);
+check(
+  'and it writes only what a person has listened to',
+  /sure < SURE_ENOUGH/.test(booth),
+  'the booth refuses an unsure transcription and so does the route. A'
+  + ' phonetic rule that is wrong makes the voice say a different word with'
+  + ' total confidence, in every member\'s reads at once',
 );
 
 /* ── A report writes a row and nothing else ─────────────────────────────
@@ -217,7 +264,13 @@ for (const found of wire.matchAll(/\$\{BASE\}\/text-to-([a-z-]+)/g)) {
   const call = callAt(wire, found.index ?? 0);
   const name = `text-to-${found[1]}`;
   reads.push(name);
-  if (!/sayItRight\(\)/.test(call)) silent.push(name);
+  /* `sayItRightNow` since 10 October 2026 — the async one, which asks the
+     database which dictionary is live rather than reading two environment
+     variables that somebody has to keep up to date by hand. The rule is
+     unchanged: every read endpoint carries the dictionary, and one that does
+     not is a read pronounced differently from its neighbours with nothing on
+     any screen to show it. Only the name moved. */
+  if (!/sayItRightNow\(\)/.test(call)) silent.push(name);
 }
 
 check('every read endpoint is found', reads.length >= 4, `${reads.length}: ${reads.join(', ')}`);

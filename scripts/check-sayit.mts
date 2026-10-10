@@ -123,13 +123,38 @@ withEnv('dict_1', 'ver_1', () => {
 
 const eleven = readFileSync('app/lib/server/eleven.ts', 'utf8');
 const reads = ['speak', 'speakTimed', 'speakStream'];
+/* `sayItRightNow` since 10 October 2026, when the booth at `/uitspraak`
+   gained a keep button and the dictionary stopped living only in two
+   environment variables. The async one asks the database WHICH dictionary is
+   live, so a word she kept is used on the very next read rather than after
+   somebody has pasted a version id into Vercel.
+ 
+   The rule has not changed at all — every way of reading text aloud passes
+   the dictionary, and two out of three is a bug with no symptom on the third.
+   Only the name of the function has. */
+const PASSES = /\.\.\.await sayItRightNow\(\)/g;
 ok(`all ${reads.length} ways of reading text aloud pass the dictionary`,
-  (eleven.match(/\.\.\.sayItRight\(\)/g) ?? []).length === reads.length,
+  (eleven.match(PASSES) ?? []).length === reads.length,
   'a dictionary applied to two reads out of three is a bug with no symptom on the third');
 for (const name of reads) {
   const body = eleven.split(`export async function ${name}(`)[1] ?? '';
-  ok(`  ${name} is one of them`, /\.\.\.sayItRight\(\)/.test(body.slice(0, 2000)), 'not in its body');
+  ok(`  ${name} is one of them`,
+    /\.\.\.await sayItRightNow\(\)/.test(body.slice(0, 2000)), 'not in its body');
 }
+
+/* And the one that asks the database must fall back rather than return none.
+   A failed lookup becoming "there is no dictionary" takes the pronunciation
+   off every read in the app at once, which is the loudest possible version of
+   the fault this whole file is about. `check:hoorwoord` drives the three
+   cases; this names the rule where somebody reading about the dictionary will
+   meet it. */
+const say = readFileSync('app/lib/server/sayit.ts', 'utf8');
+ok('  and asking the database which one is live cannot answer "none"',
+  /export async function liveLocators/.test(say)
+  && (say.slice(say.indexOf('export async function liveLocators'), say.indexOf('export async function liveLocators') + 1400)
+    .match(/return locators\(\);/g) ?? []).length >= 3,
+  'no database, a failed lookup and an empty row all have to mean "use what'
+  + ' was set before"');
 
 // ── The route builds from the source, not from a copy ────────────────────
 
@@ -139,9 +164,20 @@ for (const name of reads) {
 const code = (source: string): string =>
   source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
 const route = code(readFileSync('app/api/eleven/dictionary/route.ts', 'utf8'));
+/* `allRules()` since 10 October 2026: the rules written in `sayit.ts` AND the
+   ones heard in the booth at `/uitspraak` and kept in `said_words`. Both go
+   up, because a keep button that fills a table nothing sends is a button that
+   does nothing — which is the hardest kind of nothing to notice.
+ 
+   The rule is the same one: the route must build from `sayit.ts` and not from
+   a list of its own, because a second copy is a copy that drifts. */
 ok('the setup route sends the rules from sayit.ts',
-  /from '@\/app\/lib\/server\/sayit'/.test(route) && /asRules\(\)/.test(route),
+  /from '@\/app\/lib\/server\/sayit'/.test(route) && /allRules\(\)/.test(route),
   'a second copy of the rules is a copy that drifts');
+ok('  and sends the heard ones with them',
+  /await allRules\(\)/.test(route) && !/const rules = asRules\(\)/.test(route),
+  'the booth writes into `said_words` and this is the only thing that ever'
+  + ' carries that table to her account');
 ok('and it replaces the rules rather than adding to them',
   /set-rules/.test(route) && !/add-rules/.test(route),
   'add-rules leaves a deleted rule on the account for ever');

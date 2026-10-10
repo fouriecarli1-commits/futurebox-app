@@ -19,7 +19,7 @@ import { call, ready } from './suppliers';
 import { noteSpend } from './elevencost.ts';
 import { watchEleven } from './spendwatch';
 import { joinPcm } from '../pcmwav.ts';
-import { locators, sayItRight } from './sayit';
+import { liveLocators, sayItRightNow } from './sayit';
 
 /* The path, not the host. Where this call goes and which key it carries now
    belong to `suppliers.ts`, because twenty-one calls each building their own
@@ -487,7 +487,7 @@ export async function speak(
            on every read rather than only the Afrikaans ones: the rules are
            Afrikaans spellings and an English script contains none of them, so
            gating it on language would be a branch that changes no output. */
-        ...sayItRight(),
+        ...await sayItRightNow(),
       }),
     },
   );
@@ -563,7 +563,7 @@ export async function speakTimed(
            on every read rather than only the Afrikaans ones: the rules are
            Afrikaans spellings and an English script contains none of them, so
            gating it on language would be a branch that changes no output. */
-        ...sayItRight(),
+        ...await sayItRightNow(),
       }),
     },
   );
@@ -651,7 +651,7 @@ export async function speakStream(
            on every read rather than only the Afrikaans ones: the rules are
            Afrikaans spellings and an English script contains none of them, so
            gating it on language would be a branch that changes no output. */
-        ...sayItRight(),
+        ...await sayItRightNow(),
       }),
     },
   );
@@ -773,7 +773,7 @@ async function sayTurns(
          in it coming back as an English "ch" while the one-line reads were
          being fixed. "Reg in die skryf, uitgelos in die praat", exactly.
          Sends nothing when no dictionary is set — see sayit.ts. */
-      ...(dictionary ? sayItRight() : {}),
+      ...(dictionary ? await sayItRightNow() : {}),
     }),
   });
 }
@@ -805,7 +805,10 @@ export async function converse(
      Costs one extra request per episode, once, and only when a dictionary
      exists to send. Starts false when there is none, so today it does
      nothing at all. */
-  let dictionary = locators().length > 0;
+  /* Asks the database which dictionary is live, so a word she kept in the
+     booth is used on the very next read rather than after somebody has
+     pasted a version id into Vercel. */
+  let dictionary = (await liveLocators()).length > 0;
   for (let at = 0; at < parts.length; at += 1) {
     let response = await sayTurns(parts[at], model, languageCode, dictionary);
     /* Dropped for the whole episode rather than per part: a field is either

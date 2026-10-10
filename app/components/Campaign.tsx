@@ -41,6 +41,7 @@ import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { matchByTitle, useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
+import type { Errand } from '../lib/errands';
 import { DESTINATIONS, PLATFORMS } from '../data/social';
 import { CARRIED, filmThisAd, readThisAd } from '../lib/adhandover';
 import { NOTHING_KEPT, forgetBrief, loadBrief, saveBrief } from '../lib/adbrief';
@@ -147,7 +148,21 @@ export default function Campaign({
   onGoTo,
   onSetUp,
 }: {
-  onGoTo: (surface: SurfaceId) => void;
+  /**
+   * Where to go, and WHY.
+   *
+   * The errand is the half that was missing. `filmThisAd` and `readThisAd`
+   * have carried the hook, the scene and the call to action across for
+   * weeks, so the next room's canvas arrived filled in — and its copilot
+   * arrived knowing nothing, opening with the generic line about what a
+   * video desk is for to somebody who had just walked in with an advert in
+   * their hands.
+   *
+   * Carli, 10 October 2026: *"Copilot se suggestions vir generations moet
+   * meer wees. Tans is daar net een suggestion waarmee hy voorstel om te
+   * help."*
+   */
+  onGoTo: (surface: SurfaceId, why?: Errand | null) => void;
   /**
    * Put something in a room on the way into it.
    *
@@ -522,7 +537,7 @@ export default function Campaign({
             for (const wire of filmThisAd({ ad, going, style: lookFor(ad), said: t('carry.filmed', CARRIED.filmed) })) {
               onSetUp(wire.room, wire.op, wire.value);
             }
-            onGoTo('canvas');
+            onGoTo('canvas', { id: 'advert_video', subject: ad.headline });
           },
         }
       : {}),
@@ -534,7 +549,7 @@ export default function Campaign({
             for (const wire of readThisAd({ ad, said: t('carry.read', CARRIED.read) })) {
               onSetUp(wire.room, wire.op, wire.value);
             }
-            onGoTo('voice_studio');
+            onGoTo('voice_studio', { id: 'advert_read', subject: ad.headline });
           },
         }
       : {}),
@@ -1135,7 +1150,7 @@ export default function Campaign({
                 for (const wire of filmThisAd({ ad, going, style: lookFor(ad), said: t('carry.filmed', CARRIED.filmed) })) {
                   onSetUp(wire.room, wire.op, wire.value);
                 }
-                onGoTo('canvas');
+                onGoTo('canvas', { id: 'advert_video', subject: ad.headline });
               }}
               className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
             >
@@ -1174,7 +1189,7 @@ export default function Campaign({
                   for (const wire of readThisAd({ ad, said: t('carry.read', CARRIED.read) })) {
                     onSetUp(wire.room, wire.op, wire.value);
                   }
-                  onGoTo('voice_studio');
+                  onGoTo('voice_studio', { id: 'advert_read', subject: ad.headline });
                 }}
                 className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
               >

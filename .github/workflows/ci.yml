@@ -1478,6 +1478,19 @@ jobs:
       - name: A word said once is transcribed and never trusted alone
         run: npm run check:hoorwoord
 
+      # The copilot had exactly one reason to be in a room, against six
+      # hand-offs the app already makes. An errand nobody raises is a
+      # paragraph in a file: nothing throws, the copilot just goes on saying
+      # the generic line to somebody holding a specific job.
+      - name: Every reason to walk into a room is one the copilot is told
+        run: npm run check:boodskappe
+
+      # "square word 3 keer genoem in video editor." Three controls, three
+      # different things, one word — each list reasonable on the day it was
+      # written, and the fault only visible on the screen where both are.
+      - name: No word means two things on one screen
+        run: npm run check:eennaam
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

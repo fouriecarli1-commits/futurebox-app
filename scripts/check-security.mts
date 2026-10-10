@@ -225,6 +225,25 @@ const ANONYMOUS: Record<string, string> = {
      token. */
   'app/api/dub/hook/route.ts':
     "ElevenLabs' dub webhook — no caller exists; HMAC-verified, and it writes no field that decides money",
+  /* The pronunciation booth's keep, 10 October 2026. There is no caller to
+     scope it to and that is the design rather than an oversight: there is ONE
+     dictionary and every read in the app uses it, so a rule is the app's and
+     not any member's. `said_words` has no owner column for the same reason.
+ 
+     It is behind POST_SECRET, compared in constant time, which is what the
+     clause below actually requires of anything on this list. */
+  'app/api/hearword/route.ts':
+    'the app\'s own pronunciation dictionary — one list for every read, so there is no member to scope it to; behind POST_SECRET',
+  /* The same, from the other end. This route pushes the dictionary onto her
+     ElevenLabs account and, since 10 October 2026, writes down WHICH version
+     is live — one row, in `said_dictionary`, read by every text-to-speech
+     call in the app. There is no member it could be scoped to: it is the
+     app's own pointer at the app's own dictionary.
+ 
+     Behind POST_SECRET since the day it was written, for the stronger reason
+     that it spends on her account. */
+  'app/api/eleven/dictionary/route.ts':
+    'writes which pronunciation dictionary is live — one row for the whole app, no member to scope it to; behind POST_SECRET',
 };
 for (const file of walk('app/api')) {
   if (!file.endsWith('route.ts')) continue;

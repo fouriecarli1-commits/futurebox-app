@@ -63,6 +63,8 @@
  * a list of a language's diminutives up to date by hand.
  */
 
+import { admin } from './account';
+
 /** One alias rule: a string ElevenLabs reads, and what to read instead. */
 export interface SayRule {
   readonly string_to_replace: string;
@@ -166,6 +168,89 @@ export function asRules(): { string_to_replace: string; type: 'alias'; alias: st
   return SAY_RULES.map(({ string_to_replace, type, alias }) => ({ string_to_replace, type, alias }));
 }
 
+/* ── The words she has HEARD said ────────────────────────────────────────
+
+   Carli, 10 October 2026: *"Gaan aan met die keep button."*
+
+   Everything above was written by a person reasoning about a language. What
+   follows was heard from a speaker's mouth in the booth at `/uitspraak`, and
+   it is kept in a table rather than in this file because a web page cannot
+   edit source — and handing her JSON to paste into the repo by hand is what
+   the booth already did, which is what she was saying is not good enough.
+
+   The split stays visible on purpose. `sayit.ts` is still the record of the
+   rules somebody argued for; `said_words` is the record of the rules
+   somebody said. A dictionary built by ear is only worth what its provenance
+   is worth, which is the argument this file already makes about its own two
+   halves.
+
+   And these are PHONEME rules, which no rule in this file has ever been. A
+   click has no respelling in any other language's letters, so an alias
+   cannot carry isiXhosa at all. */
+
+/** One rule as ElevenLabs takes it, of either kind. */
+export interface AnyRule {
+  readonly string_to_replace: string;
+  readonly type: 'alias' | 'phoneme';
+  readonly alias?: string;
+  readonly phoneme?: string;
+  readonly alphabet?: 'ipa';
+}
+
+/**
+ * The heard rules, out of the table.
+ *
+ * An empty list where there is no database, no table yet, or nothing in it —
+ * and those three are deliberately the same answer here. This is read on the
+ * way to a paid read of somebody's text, and a dictionary that cannot be
+ * looked up must not be the thing that stops a song being sung. The source
+ * rules still go.
+ *
+ * The error is TAKEN rather than discarded, because a listing that failed
+ * silently becoming "there are no heard rules" is the whole category of
+ * fault `check:couldnotask` exists for: it would mean her isiXhosa quietly
+ * reverting to the English pronunciation with nothing anywhere saying why.
+ */
+export async function heardRules(): Promise<AnyRule[]> {
+  const db = admin();
+  if (!db) return [];
+  const got = await db
+    .from('said_words')
+    .select('word, ipa, alias')
+    .order('word');
+  if (got.error) {
+    console.error(`sayit: the heard words could not be read, so only the`
+      + ` written rules are being sent: ${got.error.message}`);
+    return [];
+  }
+  const out: AnyRule[] = [];
+  for (const row of got.data ?? []) {
+    const word = String((row as { word?: unknown }).word ?? '').trim();
+    const ipa = String((row as { ipa?: unknown }).ipa ?? '').trim();
+    if (!word || !ipa) continue;
+    out.push({ string_to_replace: word, type: 'phoneme', phoneme: ipa, alphabet: 'ipa' });
+    /* The respelling beside it, where one was given. ElevenLabs refuses
+       phoneme rules on some models, and a dictionary rejected wholesale over
+       one rule of the wrong kind helps nobody. Never invented — see
+       `rulesFor` in `hearword.ts`. */
+    const alias = String((row as { alias?: unknown }).alias ?? '').trim();
+    if (alias) out.push({ string_to_replace: word, type: 'alias', alias });
+  }
+  return out;
+}
+
+/**
+ * Everything that goes onto the account: written first, heard after.
+ *
+ * Written first for the ordering reason `SAY_RULES` already gives — a
+ * specific word should be matched before a general ending. A heard rule is
+ * always a whole word, so it sits after the suffixes without changing what
+ * any of them do.
+ */
+export async function allRules(): Promise<AnyRule[]> {
+  return [...asRules(), ...await heardRules()];
+}
+
 /**
  * The dictionary to apply, when there is one.
  *
@@ -183,6 +268,52 @@ export function locators(): { pronunciation_dictionary_id: string; version_id: s
 }
 
 /**
+ * The dictionary that is actually live, preferring what was last pushed.
+ *
+ * ── The step this removes, and why it was the worst kind of step ─────────
+ *
+ * A dictionary is addressed by an id AND a version, and adding a rule mints
+ * a NEW version. Until 10 October 2026 both lived only in environment
+ * variables, so every change to the rules meant pasting a new version id
+ * into Vercel by hand.
+ *
+ * Forgetting it fails in silence. The push worked, the rule is on her
+ * account, the locator still points at the old version, and the app goes on
+ * saying the word wrong — with nothing anywhere to suggest the button did
+ * not work. That is not a step somebody occasionally forgets; it is a step
+ * whose omission is invisible.
+ *
+ * So the push route writes the pair into `said_dictionary` and this reads
+ * it. The environment variables stay as the fallback, which is what keeps an
+ * old deployment and a fresh database both working: nothing has to be set
+ * for this to be no worse than it was.
+ *
+ * A lookup that FAILS falls back too, rather than returning none — because
+ * none means every read in the app loses its pronunciation at once, and a
+ * stale version is better than no version.
+ */
+export async function liveLocators(): Promise<
+  { pronunciation_dictionary_id: string; version_id: string }[]
+> {
+  const db = admin();
+  if (!db) return locators();
+  const got = await db
+    .from('said_dictionary')
+    .select('dict_id, version')
+    .limit(1)
+    .maybeSingle();
+  if (got.error) {
+    console.error(`sayit: which dictionary is live could not be read, so the`
+      + ` environment variables are being used: ${got.error.message}`);
+    return locators();
+  }
+  const id = String((got.data as { dict_id?: unknown } | null)?.dict_id ?? '').trim();
+  const version = String((got.data as { version?: unknown } | null)?.version ?? '').trim();
+  if (!id || !version) return locators();
+  return [{ pronunciation_dictionary_id: id, version_id: version }];
+}
+
+/**
  * The field to spread into a text-to-speech body.
  *
  * Spread rather than set, because ElevenLabs rejects unknown and malformed
@@ -193,5 +324,19 @@ export function locators(): { pronunciation_dictionary_id: string; version_id: s
  */
 export function sayItRight(): Record<string, unknown> {
   const list = locators();
+  return list.length ? { pronunciation_dictionary_locators: list } : {};
+}
+
+/**
+ * The same, asking the database first.
+ *
+ * Async, which is why it is a second function rather than a change to the
+ * one above: `sayItRight` is spread into request bodies and a few of its
+ * callers are not the right shape for an await. The ones that ARE — every
+ * text-to-speech call in `eleven.ts` — use this, so a rule she kept in the
+ * booth is live on the next read without anybody touching Vercel.
+ */
+export async function sayItRightNow(): Promise<Record<string, unknown>> {
+  const list = await liveLocators();
   return list.length ? { pronunciation_dictionary_locators: list } : {};
 }

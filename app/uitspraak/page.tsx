@@ -34,12 +34,22 @@
  * language the person writing the rule may not speak. Her ears are the last
  * gate and the only one that can catch that.
  *
- * ── Nothing here writes to the dictionary ────────────────────────────────
+ * ── Three presses, and the gaps between them are the design ──────────────
  *
- * It shows the two rules it would write and offers them to be copied. The
- * actual write goes through `/api/eleven/dictionary`, which is a separate
- * press with its own page — because a page that both proposes and commits is
- * a page where a mis-tap is permanent for every member at once.
+ * **Write down the sounds** transcribes and saves nothing.
+ * **Keep it** puts the rule in FutureBox's own list — `said_words` — and
+ * still does not touch her ElevenLabs account.
+ * **Put them on ElevenLabs** replaces the dictionary on the account with the
+ * whole list, written rules and heard ones together, and writes down which
+ * version is live so every read uses it.
+ *
+ * Three rather than one because a person listens between the first and the
+ * second, and because the difference between "kept" and "live" is exactly
+ * where somebody would otherwise assume the job was done. The page says
+ * which it is, every time.
+ *
+ * Carli, 10 October 2026: *"Gaan aan met die keep button."* Before it, this
+ * page showed her JSON to paste into a source file by hand.
  */
 
 import React, { useRef, useState } from 'react';
@@ -89,6 +99,8 @@ export default function PronunciationBooth(): React.ReactElement {
   const [heard, setHeard] = useState<Heard | null>(null);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
+  const [kept, setKept] = useState('');
+  const [pushing, setPushing] = useState(false);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -187,6 +199,85 @@ export default function PronunciationBooth(): React.ReactElement {
       setProblem('That could not be sent. Check the connection and try again.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  /**
+   * Keep it.
+   *
+   * A separate press from the transcription, and the thing that happens
+   * between them is her listening. A page that transcribed and saved in one
+   * go would make the playback decorative — the rule would already be on the
+   * account by the time she heard it was wrong.
+   *
+   * It goes into the app's table, not onto ElevenLabs. The push is the third
+   * press below, and the difference is said out loud rather than implied:
+   * the gap between "kept" and "live" is exactly where somebody would
+   * otherwise assume the job was done.
+   */
+  const keep = async (): Promise<void> => {
+    if (!heard || !heard.keepable || busy) return;
+    setBusy(true);
+    setProblem('');
+    setKept('');
+    try {
+      const answer = await fetch(`/api/hearword?key=${encodeURIComponent(key)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: word.trim(),
+          language,
+          ipa: heard.ipa,
+          /* Only a respelling the model actually gave. `rulesFor` never
+             invents one, and this must not either: an invented respelling of
+             a click is the confidently wrong word the whole booth exists to
+             prevent. */
+          alias: heard.rules.find((one) => one.type === 'alias')?.alias ?? '',
+          sure: heard.sure,
+          trouble: heard.trouble,
+        }),
+      });
+      const said = (await answer.json().catch(() => ({}))) as
+        { kept?: string; words?: number | null; message?: string };
+      if (!answer.ok) {
+        setProblem(said.message ?? `It could not be kept. (${answer.status})`);
+        return;
+      }
+      setKept(said.words == null
+        ? `“${said.kept}” is kept. Put them on ElevenLabs to make it live.`
+        : `“${said.kept}” is kept — ${said.words} heard word${said.words === 1 ? '' : 's'} now.`
+          + ' Put them on ElevenLabs to make it live.');
+    } catch {
+      setProblem('That could not be sent. Check the connection and try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /**
+   * Put them on her account.
+   *
+   * The same page the written rules have always gone through, which now
+   * sends both halves and writes down which dictionary is live — so this is
+   * the last press and there is nothing to paste into Vercel afterwards.
+   */
+  const push = async (): Promise<void> => {
+    if (pushing || !key) return;
+    setPushing(true);
+    setProblem('');
+    try {
+      const answer = await fetch(`/api/eleven/dictionary?key=${encodeURIComponent(key)}`);
+      const said = (await answer.json().catch(() => ({}))) as
+        { ok?: boolean; rules?: number; nowLive?: string; why?: string; pointing?: string };
+      if (!answer.ok || !said.ok) {
+        setProblem(said.why ?? said.pointing ?? `That did not go up. (${answer.status})`);
+        return;
+      }
+      setKept(`${said.rules ?? 0} rules are on the account. ${said.nowLive ?? ''}`);
+    } catch {
+      setProblem('That could not be sent. Check the connection and try again.');
+    } finally {
+      setPushing(false);
     }
   };
 
@@ -333,10 +424,36 @@ export default function PronunciationBooth(): React.ReactElement {
               {heard.keepable && (
                 <>
                   <p className="text-[12px] leading-relaxed text-zinc-500">
-                    Hear it read back before you keep it. The reading test is
-                    at <code>/api/eleven/pronounce</code>; the dictionary is at{' '}
-                    <code>/api/eleven/dictionary</code>. Nothing on this page
-                    writes anything.
+                    Play your own recording above and read the sounds beside
+                    it. Keep it only if they agree — a phonetic rule that is
+                    wrong makes the voice say a different word with total
+                    confidence.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      data-uitspraakkeep
+                      disabled={busy || !key}
+                      onClick={() => { void keep(); }}
+                      className={BUTTON}
+                    >
+                      {busy ? 'Keeping…' : 'Keep it'}
+                    </button>
+                    <button
+                      type="button"
+                      data-uitspraakpush
+                      disabled={pushing || !key}
+                      onClick={() => { void push(); }}
+                      className={BUTTON}
+                    >
+                      {pushing ? 'Putting them up…' : 'Put them on ElevenLabs'}
+                    </button>
+                  </div>
+                  <p className="text-[12px] leading-relaxed text-zinc-500">
+                    Keeping puts it in FutureBox’s own list. Putting them up
+                    replaces the dictionary on your ElevenLabs account with
+                    that whole list and makes it the one every read uses —
+                    nothing to paste into Vercel afterwards.
                   </p>
                   {/* Wrapped rather than scrolled sideways. `check:onlyboothmoves`
                       asked for it and it is right on a phone: a JSON block that
@@ -353,6 +470,15 @@ export default function PronunciationBooth(): React.ReactElement {
                 </>
               )}
             </div>
+          )}
+
+          {kept && (
+            <p
+              data-uitspraakkept
+              className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-300"
+            >
+              {kept}
+            </p>
           )}
 
           {problem && (

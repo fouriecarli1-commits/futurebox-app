@@ -34,7 +34,8 @@
 import crypto from 'node:crypto';
 import { call, ready } from '@/app/lib/server/suppliers';
 import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
-import { SAY_RULES, asRules, locators } from '@/app/lib/server/sayit';
+import { admin } from '@/app/lib/server/account';
+import { SAY_RULES, allRules, locators } from '@/app/lib/server/sayit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -150,7 +151,18 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 
-  const rules = asRules();
+  /* ── Both halves ─────────────────────────────────────────────────────
+ 
+     The rules written in `sayit.ts`, and the ones HEARD in the booth at
+     `/uitspraak` and kept in `said_words`. Until 10 October 2026 this sent
+     only the first, which was right while there was no second half.
+ 
+     `set-rules` and not `add-rules`, as the note below says: the dictionary
+     on the account is replaced by exactly this list every time. So a word
+     she keeps in the booth and then deletes from the table disappears from
+     her account on the next push, which is the behaviour that keeps the two
+     from drifting. */
+  const rules = await allRules();
 
   /* ── Which dictionary, and why this is not just the env var ───────────
  
@@ -266,9 +278,45 @@ export async function GET(request: Request): Promise<Response> {
     });
   }
 
+  /* ── Which dictionary is live, written down where the app reads it ───
+ 
+     A dictionary is addressed by an id AND a version, and this call has just
+     minted a new version. Until today the only record of it was whatever
+     somebody pasted into Vercel — and forgetting that step fails in silence:
+     the push worked, the rules are on the account, the locator still points
+     at the old version, and the app goes on saying the word wrong.
+ 
+     `liveLocators()` reads this row. The environment variables stay as the
+     fallback, so nothing has to be set for this to be no worse than before.
+ 
+     Not awaited for the answer's sake — it IS awaited, because a page that
+     says "done" while the pointer write is still in flight is the same
+     silence one layer down. */
+  let pointed = true;
+  let pointingSaid = '';
+  const db = admin();
+  if (!db) {
+    pointed = false;
+    pointingSaid = 'There is no database here, so which dictionary is live could'
+      + ' not be written down. Paste both values into Vercel.';
+  } else {
+    const wrote = await db
+      .from('said_dictionary')
+      .upsert({ solo: true, dict_id: id, version, rules: rules.length }, { onConflict: 'solo' });
+    if (wrote.error) {
+      pointed = false;
+      pointingSaid = `Which dictionary is live could not be written down:`
+        + ` ${wrote.error.message}. Paste both values into Vercel instead.`;
+    }
+  }
+
   return Response.json({
     ok: true,
     did: existing ? 'replaced the rules in the dictionary you already have' : 'made a new dictionary',
+    /* Said first, because it is the difference between "and now paste two
+       values into Vercel" and "and that is it". */
+    pointed,
+    ...(pointingSaid ? { pointing: pointingSaid } : {}),
     ...(staleId
       ? {
           replaced:
@@ -277,14 +325,21 @@ export async function GET(request: Request): Promise<Response> {
         }
       : {}),
     name: NAME,
-    rules: SAY_RULES.length,
+    rules: rules.length,
+    /* Split, because the two halves have different provenance and that is
+       the thing worth being able to see at a glance: one was argued for in a
+       file, the other was heard from a speaker. */
+    written: SAY_RULES.length,
+    heard: rules.length - SAY_RULES.length,
     /* Both, every time, including when only the version changed — because
        only changing one of them is the mistake this is for. */
     setInVercel: { ELEVEN_DICT_ID: id, ELEVEN_DICT_VERSION: version },
-    nowLive: locators().length > 0
-      ? 'A dictionary is already being applied to every read. Paste these and redeploy so the new version is the one used.'
-      : 'Nothing is being applied to reads yet. Paste both of these into Vercel and redeploy.',
+    nowLive: pointed
+      ? 'This is now the dictionary every read uses. Nothing to paste.'
+      : locators().length > 0
+        ? 'A dictionary is already being applied to every read. Paste these and redeploy so the new version is the one used.'
+        : 'Nothing is being applied to reads yet. Paste both of these into Vercel and redeploy.',
     /* What went up, so the answer is checkable without opening the file. */
-    sent: SAY_RULES.map((rule) => `${rule.string_to_replace} → ${rule.alias}`),
+    sent: rules.map((rule) => `${rule.string_to_replace} → ${rule.alias ?? rule.phoneme ?? ''}`),
   });
 }

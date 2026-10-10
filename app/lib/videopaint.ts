@@ -142,7 +142,23 @@ export interface Box {
 
 export const BOXES: readonly Box[] = [
   { id: 'none', name: ['box.none', 'No box'] },
-  { id: 'square', name: ['box.square', 'Square'] },
+  /* ── Named for its corners, not its geometry ─────────────────────
+ 
+     Carli, 10 October 2026: *"square word 3 keer genoem in video editor."*
+     She is right and it is a naming fault, not a duplication: the film's
+     SHAPE can be square, a caption box's corners can be square, and the
+     picture ratios offer a square — three controls, three different things,
+     one word.
+ 
+     The frame's shape is genuinely a square and keeps the name. This one is
+     not a square: it is a band with sharp corners, and it sits two buttons
+     away from "Rounded", which is what it is really being chosen against. So
+     it says that.
+ 
+     The id stays `square`, because an id is stored on every edit somebody
+     has already made and renaming it would make those edits forget which
+     box they had. */
+  { id: 'square', name: ['box.square', 'Sharp corners'] },
   { id: 'round', name: ['box.round', 'Rounded'] },
   { id: 'pill', name: ['box.pill', 'Pill'] },
   { id: 'brush', name: ['box.brush', 'Brush'] },

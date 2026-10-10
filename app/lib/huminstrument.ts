@@ -50,19 +50,37 @@
  *
  * ── Why they are grouped ─────────────────────────────────────────────────
  *
- * Thirteen nouns in a column is the list nobody reads past the third, which
+ * A column of two dozen nouns is the list nobody reads past the third, which
  * was the honest half of the old paragraph. They are ordered as a person
  * looks for them: the low end, then the held instruments, then the struck
  * and plucked ones, then the kit. `GROUPS` carries the headings.
+ *
+ * ── And a section is not a soloist ───────────────────────────────────────
+ *
+ * Carli, 10 October 2026: *"Die hoeveelheid stems wat ons het bepaal ook die
+ * sukses van die produk. Ek dink aan instrumente wat ek nie sien nie soos,
+ * tjello, kontra-bas."*
+ *
+ * She is right, and the fault was a particular one: `strings` and `brass`
+ * were ENSEMBLES standing in for every instrument in them. A cello and a
+ * double bass are no more "strings" than a singer is a choir. Both are here
+ * now, and so are the violin, the trumpet, the trombone, the clarinet, the
+ * saxophone, the banjo, the harp — and the concertina, which this app's own
+ * video placeholder has said since September (*"A konsertina on a stoep at
+ * sunset"*) while the room that makes the music could not play one.
+ *
+ * The sections stay. A string section and one cello are different sounds and
+ * both are worth having; what was wrong was having only the first.
  */
 
 /** The one this app writes samples at, as `lib/audio.ts` does. */
 export const RATE = 44100;
 
 export type VoiceId =
-  | 'subbass' | 'bass'
-  | 'keys' | 'organ' | 'strings' | 'brass' | 'flute' | 'choir' | 'lead'
-  | 'pluck' | 'guitar' | 'marimba' | 'bell'
+  | 'subbass' | 'bass' | 'kontrabas'
+  | 'keys' | 'organ' | 'strings' | 'cello' | 'violin' | 'brass' | 'trumpet'
+  | 'trombone' | 'flute' | 'clarinet' | 'sax' | 'konsertina' | 'choir' | 'lead'
+  | 'pluck' | 'guitar' | 'banjo' | 'harp' | 'marimba' | 'bell'
   | 'drums';
 
 /** Which heading an instrument sits under, so thirteen read as four. */
@@ -164,6 +182,31 @@ export const VOICES: readonly Voice[] = [
     attack: 0.004,
     release: 0.03,
   },
+  {
+    id: 'kontrabas',
+    says: ['hum.kontrabas', 'Double bass'],
+    what: ['hum.kontrabasWhat', 'Bowed, with the wood in it. Holds under a whole band.'],
+    shift: -24,
+    pitched: true,
+    group: 'low',
+    /* Hers, 10 October 2026: *"Ek dink aan instrumente wat ek nie sien nie
+       soos, tjello, kontra-bas."* Both were missing and both should have
+       been here: `strings` is a SECTION, and a section is not a solo
+       instrument any more than a choir is a singer.
+ 
+       Bowed and not plucked, which is the whole difference from `bass`
+       above: a bow keeps the note alive for as long as the arm moves, so
+       this holds where the electric one decays. Rich odd harmonics and a
+       slow attack, with bow noise through all of it. */
+    partials: [1, 0.3, 0.45, 0.2, 0.18, 0.1],
+    decay: 0,
+    decayFloor: 14,
+    attack: 0.09,
+    release: 0.1,
+    detune: { ratio: 1.0025, level: 0.3 },
+    breath: 0.05,
+    breathFor: 1,
+  },
 
   /* ── Held and sustained ───────────────────────────────────────────────
 
@@ -223,6 +266,47 @@ export const VOICES: readonly Voice[] = [
     breathFor: 1,
   },
   {
+    id: 'cello',
+    says: ['hum.cello', 'Cello'],
+    what: ['hum.celloWhat', 'One cello, not a section. Warm and close, the voice of the strings.'],
+    shift: -12,
+    pitched: true,
+    group: 'held',
+    /* Named by her. Down an octave because a hummed line sits where a voice
+       sits and a cello sings an octave below it — the same reasoning the
+       bass has, for the same reason.
+ 
+       Against `strings`: no detune and almost none of the slow swell. A
+       section is many instruments not quite together, and that not-quite is
+       what makes it a section. One cello is ONE instrument, so taking the
+       detune off is most of what makes this read as a soloist. */
+    partials: [1, 0.55, 0.4, 0.22, 0.16, 0.08, 0.05],
+    decay: 0,
+    decayFloor: 16,
+    attack: 0.08,
+    release: 0.12,
+    breath: 0.04,
+    breathFor: 1,
+  },
+  {
+    id: 'violin',
+    says: ['hum.violin', 'Violin'],
+    what: ['hum.violinWhat', 'One violin, high and singing. For a line over the top.'],
+    shift: 12,
+    pitched: true,
+    group: 'held',
+    /* Up an octave, where a violin lives. Brighter than the cello — more
+       weight in the upper harmonics — and a faster bow, because a violin
+       speaks sooner than a cello does. */
+    partials: [1, 0.6, 0.45, 0.35, 0.22, 0.14, 0.09],
+    decay: 0,
+    decayFloor: 16,
+    attack: 0.05,
+    release: 0.1,
+    breath: 0.05,
+    breathFor: 1,
+  },
+  {
     id: 'brass',
     says: ['hum.brass', 'Brass'],
     what: ['hum.brassWhat', 'Bright and firm, with a bit of a push at the start. For a hook.'],
@@ -235,6 +319,37 @@ export const VOICES: readonly Voice[] = [
     attack: 0.05,
     release: 0.07,
     detune: { ratio: 1.002, level: 0.3 },
+  },
+  {
+    id: 'trumpet',
+    says: ['hum.trumpet', 'Trumpet'],
+    what: ['hum.trumpetWhat', 'One trumpet, bright and forward. Cuts over everything.'],
+    shift: 0,
+    pitched: true,
+    group: 'held',
+    /* A narrow, hard tone: the harmonics stay strong a long way up, which is
+       what makes brass carry across a room. No detune — one player. */
+    partials: [1, 0.8, 0.65, 0.5, 0.42, 0.3, 0.2, 0.12],
+    decay: 0,
+    decayFloor: 8,
+    attack: 0.035,
+    release: 0.06,
+  },
+  {
+    id: 'trombone',
+    says: ['hum.trombone', 'Trombone'],
+    what: ['hum.tromboneWhat', 'Broad and low, and it slides. Under a chorus.'],
+    shift: -12,
+    pitched: true,
+    group: 'held',
+    /* Down an octave from the trumpet and rounder: the even harmonics lead,
+       which is the difference between a trombone and a trumpet playing the
+       same note. A slower attack, because the slide takes time. */
+    partials: [1, 0.75, 0.4, 0.45, 0.2, 0.15, 0.08],
+    decay: 0,
+    decayFloor: 8,
+    attack: 0.06,
+    release: 0.08,
   },
   {
     id: 'flute',
@@ -253,6 +368,68 @@ export const VOICES: readonly Voice[] = [
     /* The breath is the instrument. Without it this is a test tone. */
     breath: 0.1,
     breathFor: 1,
+  },
+  {
+    id: 'clarinet',
+    says: ['hum.clarinet', 'Clarinet'],
+    what: ['hum.clarinetWhat', 'Woody and hollow. Nothing else in this list sounds like it.'],
+    shift: 0,
+    pitched: true,
+    group: 'held',
+    /* ODD harmonics only, which is not a stylistic choice: a clarinet is a
+       tube closed at one end and the physics of that suppress the even ones.
+       It is the reason a clarinet is instantly recognisable, and it is why
+       this is worth a row of its own beside the flute — two wind
+       instruments that sound nothing alike. */
+    partials: [1, 0, 0.5, 0, 0.3, 0, 0.15],
+    decay: 0,
+    decayFloor: 10,
+    attack: 0.04,
+    release: 0.07,
+    breath: 0.06,
+    breathFor: 1,
+  },
+  {
+    id: 'sax',
+    says: ['hum.sax', 'Saxophone'],
+    what: ['hum.saxWhat', 'Reedy and throaty, with the air in it. For a solo.'],
+    shift: 0,
+    pitched: true,
+    group: 'held',
+    /* Between the clarinet and the brass: a reed, but a cone rather than a
+       tube, so the even harmonics come back. More breath than anything else
+       in this list except the flute, because a saxophone is audibly a person
+       blowing. */
+    partials: [1, 0.55, 0.6, 0.35, 0.3, 0.2, 0.12],
+    decay: 0,
+    decayFloor: 9,
+    attack: 0.045,
+    release: 0.08,
+    breath: 0.08,
+    breathFor: 1,
+  },
+  {
+    id: 'konsertina',
+    says: ['hum.konsertina', 'Concertina'],
+    what: ['hum.konsertinaWhat', 'Reeds and bellows. Boeremusiek, a stoep, a Saturday.'],
+    shift: 0,
+    pitched: true,
+    group: 'held',
+    /* This app's own placeholder for a video prompt is *"A konsertina on a
+       stoep at sunset"*, and the instrument was not in the room that makes
+       the music. It is the sound of the music a great many of her users
+       actually make.
+ 
+       Free reeds: a bright, slightly buzzy series that does not fall away
+       the way a bowed string's does, and two reeds per note a few cents
+       apart — which is the wobble everybody recognises as an accordion and
+       is not an accident of tuning, it is how they are built. */
+    partials: [1, 0.65, 0.5, 0.4, 0.3, 0.25, 0.18, 0.12],
+    decay: 0,
+    decayFloor: 12,
+    attack: 0.03,
+    release: 0.05,
+    detune: { ratio: 1.007, level: 0.75 },
   },
   {
     id: 'choir',
@@ -327,6 +504,42 @@ export const VOICES: readonly Voice[] = [
        between a string being struck and a tone appearing. */
     breath: 0.22,
     breathFor: 0.06,
+  },
+  {
+    id: 'banjo',
+    says: ['hum.banjo', 'Banjo'],
+    what: ['hum.banjoWhat', 'Bright, hard and short. A fast line sounds faster on it.'],
+    shift: 0,
+    pitched: true,
+    group: 'struck',
+    /* A skin head over a drum, so the attack is percussive and the upper
+       harmonics are loud before anything else arrives. Shorter than the
+       guitar and much brighter — which, with a plectrum sound at the front,
+       is the whole of what makes a banjo a banjo. */
+    partials: [1, 0.5, 0.55, 0.4, 0.3, 0.2],
+    decay: 0.45,
+    attack: 0.002,
+    release: 0.04,
+    most: 1.1,
+    detune: { ratio: 1.002, level: 0.4 },
+    breath: 0.3,
+    breathFor: 0.05,
+  },
+  {
+    id: 'harp',
+    says: ['hum.harp', 'Harp'],
+    what: ['hum.harpWhat', 'Soft and clean, and it rings a long time. For a run.'],
+    shift: 0,
+    pitched: true,
+    group: 'struck',
+    /* Plucked flesh on gut: almost no attack noise at all, which is what
+       separates it from every other plucked thing here. Few harmonics and a
+       very long fall. */
+    partials: [1, 0.3, 0.18, 0.08, 0.04],
+    decay: 2.2,
+    attack: 0.004,
+    release: 0.15,
+    most: 4,
   },
   {
     id: 'marimba',
