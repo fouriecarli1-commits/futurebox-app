@@ -33,6 +33,36 @@
  * press is one somebody chose on purpose — and it is simply better for a
  * six-year-old, because a blank box is a room with nothing in it.
  *
+ * ── Why this room looks nothing like the rest of the app ────────────────
+ *
+ * Carli, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
+ * dit moet colourful en exciting wees… dit moet vol kleur en excitement
+ * wees, en selfs die uitleg moet anders en uniek wees as die status quo."*
+ *
+ * She was right, and the fault was that it had been built like every other
+ * screen here: headed sections down a column, one accent colour, equal grey
+ * tiles. That is the status quo, and for a six-year-old it is a form.
+ *
+ * Three things changed, and each one is a rule rather than a decoration:
+ *
+ *   · A PALETTE OF ITS OWN. Warm paper instead of near-black, and fourteen
+ *     colours — one per topic — in `lib/kidslook.ts`, where a check can
+ *     count them and measure that the words on each are readable.
+ *   · A SENTENCE INSTEAD OF HEADINGS. The two choices build "A song about X
+ *     that sounds Y" in big type at the top, and it fills in as a child
+ *     presses. A heading tells you what a section is for; a sentence tells
+ *     you what you are about to get, which is the thing a child is actually
+ *     deciding.
+ *   · BUBBLES OF THREE SIZES, not a grid. A grid of equal squares is what
+ *     every app does. The sizes come from one list in `kidslook.ts` that
+ *     does not line up row to row, so the sheet reads as scattered stickers
+ *     while staying an ordinary wrapping row underneath — which is what
+ *     keeps it working on a phone and keeps every bubble a real button.
+ *
+ * What did NOT change is every rule above this line: no typing, no way out,
+ * nothing but the two choices, and the allowance re-asked after every press.
+ * A brighter room is not a looser one.
+ *
  * ── Why the allowance is re-asked after every press ─────────────────────
  *
  * Because the number on screen is the one thing a child will believe. The
@@ -58,6 +88,7 @@ import { asClock, howMany, priceOf } from '../lib/kidsallowance';
 import {
   KID_SOUNDS, KID_TOPICS, askKidVideo, makeKidSong, startKidVideo,
 } from '../lib/kidsong';
+import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
 
 /** A picture a child can tell apart at a glance, per choice. */
 const FACES: Record<string, React.ReactNode> = {
@@ -73,36 +104,70 @@ const FACES: Record<string, React.ReactNode> = {
   dance: <Music className="h-7 w-7" />,
 };
 
-function Big({
+/**
+ * One choice, as a bubble in its own colour.
+ *
+ * ── Why a bubble and not a tile ──────────────────────────────────────────
+ *
+ * Her words: *"selfs die uitleg moet anders en uniek wees as die status
+ * quo."* A grid of equal grey tiles is the status quo. These are round, they
+ * come in three sizes that do not line up row to row, and each carries the
+ * colour its topic owns — so the sheet reads as stickers scattered on paper
+ * while remaining, underneath, an ordinary wrapping row of real buttons.
+ *
+ * ── Why the size is passed in and not decided here ───────────────────────
+ *
+ * Because it belongs to the SHEET, not to the bubble: "no two rows line up"
+ * is a fact about fourteen of them together, and a bubble choosing its own
+ * size at random would look different on every render and be impossible to
+ * check. `sizeAt` in `lib/kidslook.ts` holds the run.
+ */
+function Bubble({
   on,
   face,
   label,
   onPick,
+  paint,
+  size = 1,
   off = false,
 }: {
   readonly on: boolean;
   readonly face: React.ReactNode;
   readonly label: string;
   readonly onPick: () => void;
+  readonly paint: { readonly from: string; readonly to: string; readonly ink: string };
+  readonly size?: number;
   readonly off?: boolean;
 }): React.ReactElement {
+  /* 96, 112 and 132. The smallest is still well above the app's 44, because
+     these are pressed by a small hand that is not aiming carefully. */
+  const across = size === 3 ? 132 : size === 2 ? 112 : 96;
   return (
     <button
       type="button"
       onClick={onPick}
       disabled={off}
       aria-pressed={on}
-      /* 76 rather than the app's 44. These are pressed by a small hand that
-         is not aiming carefully, and the room has nothing else in it to make
-         space for. */
-      className={`flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 disabled:opacity-40 ${
-        on
-          ? 'border-emerald-400 bg-emerald-500/15 text-emerald-300'
-          : 'border-zinc-700 bg-zinc-900/60 text-zinc-300'
-      }`}
+      data-kidsbubble
+      style={{
+        width: across,
+        height: across,
+        background: `linear-gradient(145deg, ${paint.from}, ${paint.to})`,
+        color: paint.ink,
+        /* The chosen one lifts off the paper rather than changing colour:
+           changing it would lose the one thing the bubble is for, and a
+           child tracks "the big one that moved" more easily than a border. */
+        transform: on ? 'scale(1.06)' : undefined,
+        boxShadow: on
+          ? '0 10px 0 rgba(0,0,0,0.18), 0 0 0 5px rgba(255,255,255,0.9)'
+          : '0 5px 0 rgba(0,0,0,0.14)',
+      }}
+      className="flex flex-shrink-0 flex-col items-center justify-center gap-1 rounded-full px-2 transition-transform duration-150 disabled:opacity-40"
     >
       {face}
-      <span className="w-full truncate text-center text-xs font-bold">{label}</span>
+      <span className="w-full px-1 text-center text-[11px] font-black leading-tight">
+        {label}
+      </span>
     </button>
   );
 }
@@ -113,6 +178,9 @@ export default function KidsRoom(): React.ReactElement {
   /* The grown-up's page, reached on purpose rather than by going back. */
   const [atDoor, setAtDoor] = useState(false);
 
+  /* Which line the mascot is on. A number and not a sentence, so the room
+     can change language without the mascot changing its mind. */
+  const [mascot, setMascot] = useState(0);
   const [topic, setTopic] = useState('');
   const [sound, setSound] = useState('');
   const [busy, setBusy] = useState<'' | 'song' | 'video'>('');
@@ -337,8 +405,23 @@ export default function KidsRoom(): React.ReactElement {
     }
   };
 
+  /* What the sentence at the top is wearing. `paintOf` answers with a plain
+     colour when nothing is chosen, so the sentence is never a bare word. */
+  const topicPaint = paintOf(PAINTS, topic || null);
+  const soundPaint = paintOf(SOUND_PAINTS, sound || null);
+
+  /* The wheel and the mascot are Google's two ideas from the room she had it
+     draw. `lib/kidslook.ts` carries what was taken from that and what was
+     deliberately left in it. */
+  const wheel = (): void => {
+    const got = spin(KID_TOPICS, KID_SOUNDS);
+    setTopic(got.topic);
+    setSound(got.sound);
+    setMascot((n) => (n + 3) % MASCOT_SAYS.length);
+  };
+
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-7 p-5" data-kidsroom>
+    <div className="mx-auto w-full max-w-3xl space-y-6 p-5 text-ink" data-kidsroom>
       {/* ── What is left, in songs ──────────────────────────────────────
           In songs and not in credits, because a number of credits is a thing
           a child has to be taught and a number of songs is a thing they
@@ -411,40 +494,119 @@ export default function KidsRoom(): React.ReactElement {
         <SongShelf again={shelfAgain} />
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-extrabold text-white">
-          {t('kids.pickTopic', 'What should the song be about?')}
-        </h2>
-        <div className="grid grid-cols-3 gap-2">
-          {KID_TOPICS.map((one) => (
-            <Big
-              key={one.id}
-              on={topic === one.id}
-              face={FACES[one.id]}
-              label={t(one.says[0], one.says[1])}
-              onPick={() => setTopic(one.id)}
-              off={Boolean(busy) || Boolean(job)}
-            />
-          ))}
-        </div>
+      {/* ── The mascot and the wheel, both Google's ideas ────────────────
+ 
+          She took the question to Google and sent back what it drew. These
+          two are from that: something that talks to a child who has just
+          arrived, and a press for one who cannot decide. What was NOT taken
+          from it — a nickname text box, a Render button that renders
+          nothing — is written down in `lib/kidslook.ts`. */}
+      {/* `bg-white` is NOT white in this app — `white` is the ink token, so on
+          a light theme it paints near-black. That is the Cubed room's fault
+          exactly, and `check:theme` caught it here before it shipped a second
+          time. The paper is `surface-50`, which in this room's own block is a
+          warm near-white. */}
+      <div className="flex items-center gap-4 rounded-3xl border-4 border-surface-100 bg-surface-50/80 p-4 shadow-lg">
+        <button
+          type="button"
+          data-kidsmascot
+          data-kidsbob
+          onClick={() => setMascot((n) => (n + 1) % MASCOT_SAYS.length)}
+          aria-label={t('kids.mascotSays', 'Say something else')}
+          className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-4xl"
+          style={{ background: 'linear-gradient(145deg,#7C4DFF,#FF4081)' }}
+        >
+          <span aria-hidden>👾</span>
+        </button>
+        <p data-kidsmascotsays className="min-w-0 flex-1 text-base font-black leading-tight">
+          {t(`kids.mascot${mascot}`, MASCOT_SAYS[mascot][0])}
+        </p>
+        <button
+          type="button"
+          data-kidswheel
+          onClick={wheel}
+          disabled={Boolean(busy) || Boolean(job)}
+          style={{ boxShadow: '0 6px 0 #b45309' }}
+          className="flex min-h-[56px] flex-shrink-0 items-center gap-2 rounded-2xl bg-amber-400 px-4 text-sm font-black text-amber-950 disabled:opacity-40"
+        >
+          <span aria-hidden>🎲</span>
+          {t('kids.spin', 'Spin')}
+        </button>
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-extrabold text-white">
-          {t('kids.pickSound', 'How should it sound?')}
-        </h2>
-        <div className="grid grid-cols-4 gap-2">
-          {KID_SOUNDS.map((one) => (
-            <Big
-              key={one.id}
-              on={sound === one.id}
-              face={FACES[one.id]}
-              label={t(one.says[0], one.says[1])}
-              onPick={() => setSound(one.id)}
-              off={Boolean(busy) || Boolean(job)}
-            />
-          ))}
-        </div>
+      {/* ── The sentence, which is what the headings used to be ──────────
+ 
+          Her words: *"selfs die uitleg moet anders en uniek wees as die
+          status quo."* Two headings reading "What should the song be about?"
+          and "How should it sound?" are a form. This is the same two choices
+          said as the thing a child is about to get, filling in as they press
+          — and it carries the colours of what they picked, so the answer to
+          "what did I choose" is readable from across a room. */}
+      <p data-kidssentence className="px-1 text-[26px] font-black leading-tight sm:text-3xl" style={{ color: 'rgb(60,30,12)' }}>
+        {t('kids.aSongAbout', 'A song about')}{' '}
+        <span
+          data-kidssentencetopic
+          className="inline-block rounded-full px-3 py-0.5 align-middle"
+          style={{
+            background: `linear-gradient(145deg, ${topicPaint.from}, ${topicPaint.to})`,
+            color: topicPaint.ink,
+          }}
+        >
+          {topic
+            ? t(KID_TOPICS.find((one) => one.id === topic)!.says[0],
+              KID_TOPICS.find((one) => one.id === topic)!.says[1])
+            : t('kids.something', 'something')}
+        </span>{' '}
+        {t('kids.thatSounds', 'that sounds')}{' '}
+        <span
+          data-kidssentencesound
+          className="inline-block rounded-full px-3 py-0.5 align-middle"
+          style={{
+            background: `linear-gradient(145deg, ${soundPaint.from}, ${soundPaint.to})`,
+            color: soundPaint.ink,
+          }}
+        >
+          {sound
+            ? t(KID_SOUNDS.find((one) => one.id === sound)!.says[0],
+              KID_SOUNDS.find((one) => one.id === sound)!.says[1])
+            : t('kids.anyway', 'any way')}
+        </span>
+      </p>
+
+      {/* The sheet of topics. A wrapping row rather than a grid, so the
+          three sizes can sit beside each other without a cell forcing them
+          all to the tallest. */}
+      <div data-kidstopics className="flex flex-wrap justify-center gap-2.5">
+        {KID_TOPICS.map((one, at) => (
+          <Bubble
+            key={one.id}
+            on={topic === one.id}
+            face={FACES[one.id] ?? <Music className="h-7 w-7" />}
+            label={t(one.says[0], one.says[1])}
+            onPick={() => setTopic(one.id)}
+            paint={paintOf(PAINTS, one.id)}
+            size={sizeAt(at)}
+            off={Boolean(busy) || Boolean(job)}
+          />
+        ))}
+      </div>
+
+      {/* And the four sounds, all one size: four of something is a row, and
+          giving them three sizes too would make the page look unsorted
+          rather than scattered. */}
+      <div data-kidssounds className="flex flex-wrap justify-center gap-2.5">
+        {KID_SOUNDS.map((one) => (
+          <Bubble
+            key={one.id}
+            on={sound === one.id}
+            face={FACES[one.id] ?? <Music className="h-7 w-7" />}
+            label={t(one.says[0], one.says[1])}
+            onPick={() => setSound(one.id)}
+            paint={paintOf(SOUND_PAINTS, one.id)}
+            size={2}
+            off={Boolean(busy) || Boolean(job)}
+          />
+        ))}
       </div>
 
       <button
@@ -452,7 +614,11 @@ export default function KidsRoom(): React.ReactElement {
         onClick={() => void make()}
         disabled={!canSong}
         data-kidsmake
-        className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 text-lg font-black text-onAccent disabled:opacity-40"
+        /* Round, hot pink, and the biggest thing on the page. Every choice
+           in this room is already a colour, so the one button that MAKES
+           something has to be a colour none of the choices are. */
+        style={{ boxShadow: '0 8px 0 rgb(173,12,90)' }}
+        className="mx-auto flex h-[92px] w-[92px] flex-col items-center justify-center gap-0.5 rounded-full bg-primary-500 text-[13px] font-black leading-tight text-white disabled:opacity-40 sm:h-[104px] sm:w-[104px]"
       >
         {busy === 'song' ? (
           <>

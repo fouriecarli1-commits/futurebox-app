@@ -139,6 +139,15 @@ const FREE: Record<string, string> = {
      billing her for its own logo. It still asks the Google ceiling first, and
      for four pictures rather than one, because the money is hers either way.
      See check:merklab. */
+  /* The bench where Google draws the children's room's pictures. The
+     operator's alone — the route refuses anybody who is not her — so a charge
+     on it would be the app billing her for her own artwork. It still asks the
+     Google ceiling first, and for all twenty-three rather than one, because
+     the money is hers either way. See check:kinderkuns. */
+  'app/api/kids/art/route.ts':
+    'the operator\'s own bench for the children\'s room artwork: owner-only,'
+    + ' run a handful of times, and metered against the Google ceiling rather'
+    + ' than credits',
   'app/api/cubed/mark/route.ts':
     'the operator\'s own bench for choosing a logo: owner-only, run a handful'
     + ' of times, and metered against the Google ceiling rather than credits',

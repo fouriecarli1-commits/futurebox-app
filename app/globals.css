@@ -499,6 +499,92 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
  * would be the app's chrome arriving in the middle of a room whose whole job
  * is to look like somebody else's invitation.
  */
+/* ── The child's room ───────────────────────────────────────────────────
+
+   Carli, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
+   dit moet colourful en exciting wees… dit moet vol kleur en excitement
+   wees."*
+
+   The rest of this app is near-black with one green in it, which is right
+   for somebody editing a film at night and wrong for a six-year-old. So the
+   room declares `data-kidsroom` and this repaints the ground under it — the
+   same mechanism the Cubed room uses, so there is one way of doing this and
+   not two.
+
+   `body:has(...)` as well as the room itself, because the site footer is a
+   SIBLING of the page: a selector on the room alone ends a sunlit room in a
+   near-black band. That was learned on the Cubed room and is not going to be
+   learned twice. */
+[data-kidsroom],
+body:has([data-kidsroom]) {
+  /* The rounded face, loaded in `layout.tsx` and used only here. Google's
+     own answer when she took the question to it: a playful face, not the
+     system one. */
+  --fb-font-sans: var(--fb-font-round), "Trebuchet MS", system-ui, sans-serif;
+
+  /* Warm paper rather than white: a screen of pure white is a lamp, and this
+     is a room somebody small sits close to. */
+  --fb-page: 255 247 237;
+  --fb-ink: 32 24 14;
+
+  --fb-surface-50: 255 251 245;
+  --fb-surface-100: 255 243 227;
+  --fb-surface-200: 255 230 199;
+  --fb-surface-300: 253 211 164;
+  --fb-surface-400: 247 183 120;
+  --fb-surface-500: 234 146 72;
+  --fb-surface-600: 199 110 44;
+  --fb-surface-700: 154 80 30;
+  --fb-surface-800: 104 52 20;
+  --fb-surface-900: 60 30 12;
+  --fb-surface-950: 32 24 14;
+
+  /* The accent is a hot pink rather than the app's green: in a room where
+     every choice is already a colour, the one button that MAKES something
+     has to be a colour none of the choices are. */
+  --fb-primary-50: 255 240 248;
+  --fb-primary-100: 255 219 238;
+  --fb-primary-200: 255 184 219;
+  --fb-primary-300: 255 136 192;
+  --fb-primary-400: 255 90 165;
+  --fb-primary-500: 243 45 136;
+  --fb-primary-600: 214 20 112;
+  --fb-primary-700: 173 12 90;
+  --fb-primary-800: 130 12 70;
+  --fb-primary-900: 92 12 52;
+  --fb-primary-950: 56 6 31;
+}
+
+/* ── The ground the room sits on ────────────────────────────────────────
+ 
+   A flat colour is a wall. Google's version of this room came back with a
+   three-colour wash, and it is right: it gives the page somewhere to be
+   without putting anything in it that a child has to read past. */
+body:has([data-kidsroom]) {
+  background-image:
+    radial-gradient(70rem 40rem at 12% -8%, rgba(255, 214, 0, 0.22), transparent 60%),
+    radial-gradient(60rem 40rem at 92% 8%, rgba(255, 64, 129, 0.18), transparent 60%),
+    radial-gradient(70rem 48rem at 50% 108%, rgba(0, 229, 255, 0.20), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* The gentle bob Google asked for on the thing a child is meant to press
+   first. Off for anybody who has said they do not want movement — this is a
+   decoration, and a decoration is the first thing to go. */
+@keyframes fb-kids-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2.5deg); }
+}
+
+[data-kidsbob] {
+  animation: fb-kids-bob 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-kidsbob] { animation: none; }
+}
+
+
 /* Both selectors, and the second one is the one that matters.
  *
  * `[data-cubed]` alone paints the room and leaves the site footer — which the

@@ -71,6 +71,14 @@ const NO_DOOR: Record<string, string> = {
      Google budget on four pictures, and it is a tool for one person on the
      few days she is choosing a logo. A door to it inside the app would put a
      spend button on a members' screen to save her typing an address once. */
+  /* The bench where Google draws the children's room's pictures. Same
+     reason as the mark bench below it: every press spends her Google budget,
+     twenty-three pictures at a time, and the route refuses anybody who is not
+     her. A door to it inside the app would only put a spend button on a
+     member's screen. */
+  'kids/art': 'the operator\'s own bench for the children\'s artwork: every'
+    + ' press spends her Google budget on twenty-three pictures, and the route'
+    + ' refuses anybody who is not her',
   'cubed/mark': 'the operator\'s own bench: every press spends her Google'
     + ' budget on four pictures, and the route refuses anybody who is not her,'
     + ' so a door would only put a spend button on a member\'s screen',

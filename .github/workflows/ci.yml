@@ -1613,6 +1613,23 @@ jobs:
       - name: Three to a masterclass, sixty to the guest
         run: npm run check:cubed
 
+      # "Die kids room page is dood en vervelig." Both ways a colourful room
+      # goes wrong are invisible to whoever picked the colours: a choice
+      # with no colour falls through to grey and looks disabled, and a
+      # label the same brightness as its bubble cannot be read by exactly
+      # the person who cannot say why. Counted against the real lists.
+      - name: The child's room is colourful, and every label can be read
+        run: npm run check:kinderkleur
+
+      # "Jy sal moet ons google engines gebruik." Twenty-three pictures for
+      # the room's choices, asked of Google in words, as one set. Every way
+      # that goes wrong draws something: a choice with no subject written
+      # falls back to a musical note, a sound asked for as a word gets a
+      # picture of the word, a topic still carrying its SONG prompt gets
+      # sheet music. All of them are counted here.
+      - name: Google draws the children's pictures, as a set
+        run: npm run check:kinderkuns
+
       # An image model cannot make transparency: asked for a see-through
       # background it draws a PICTURE of a checkerboard, and hers arrived as
       # a 35-pixel grid of grey and white squares. So the transparency is

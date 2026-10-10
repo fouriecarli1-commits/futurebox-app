@@ -1,4 +1,5 @@
 import './globals.css';
+import { Fredoka } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { APP_LINE, APP_NAME, APP_SHORT, BAR_COLOUR } from './lib/brand';
 import { LanguageProvider } from './lib/i18n';
@@ -9,6 +10,27 @@ import Blankscreen from './components/Blankscreen';
 import LaunchMark from './components/LaunchMark';
 import { startupImages } from './lib/splash';
 import { SITE_URL } from './lib/brand';
+
+/**
+ * The child's room's own face.
+ *
+ * Carli, 10 October 2026, having taken the question to Google herself and
+ * come back with its answer: a playful rounded face, not the system one.
+ *
+ * Loaded through `next/font` rather than a stylesheet link, which means it is
+ * fetched once at BUILD time and served from this origin — so there is no
+ * request to another company's server on a page a six-year-old is looking at,
+ * and nothing to be slow or blocked on a phone in Mokopane.
+ *
+ * It is a variable and not a default: only `[data-kidsroom]` picks it up. A
+ * rounded face on the cutting room would be a different app.
+ */
+const fredoka = Fredoka({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--fb-font-round',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   /**
@@ -101,7 +123,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={fredoka.variable}>
       <body className="min-h-screen antialiased selection:bg-emerald-500 selection:text-onAccent">
         <LanguageProvider>
           {/* Listening before any room draws. See the note in the component:
