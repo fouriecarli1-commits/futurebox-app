@@ -1577,6 +1577,15 @@ jobs:
       - name: The blur patch hides what it is put over
         run: npm run check:blurkol
 
+      # The brand pack held one picture and one colour, and — the fault that
+      # matters — the picture library kept twenty and dropped the oldest,
+      # sparing only what somebody had starred. Nothing starred a picture
+      # when it was chosen as the brand logo, so a logo set in September was
+      # deleted in October by twenty ordinary presses in the photo room and
+      # both desks that read the pack silently drew nothing.
+      - name: A brand pack is a folder, and nothing in it is thrown away
+        run: npm run check:merkpak
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

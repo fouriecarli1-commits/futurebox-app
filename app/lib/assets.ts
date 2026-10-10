@@ -44,6 +44,7 @@
  */
 
 import { deleteAudio, getAudio, putAudio } from './library';
+import { heldIds, loadBrandKit } from './brandkit';
 
 export type AssetKind = 'picture';
 
@@ -162,21 +163,45 @@ function dataUrlToBlob(dataUrl: string): Blob {
  * orphan blob in IndexedDB is invisible and still counts against the quota,
  * which is the worst kind of leak.
  */
+/**
+ * Which pictures have to go to make room, and which can never go.
+ *
+ * ── Why this is its own function ─────────────────────────────────────────
+ *
+ * Because the thing it decides is a deletion, and the way it was wrong was
+ * invisible. It was `!one.favourite` alone — and `favourite` is a star
+ * somebody presses. Nothing pressed a star when a picture was chosen as a
+ * brand logo, so a logo set in September was thrown away in October by twenty
+ * ordinary presses in the photo room: the pack pointed at a deleted file, the
+ * advert desk and the video desk drew nothing, and nothing on any screen said
+ * so, because every room that reads the pack draws the logo only if it finds
+ * it.
+ *
+ * Pulled out and exported so `check:merkpak` can hand it twenty-five pictures
+ * with a brand logo among them and watch what survives. The decision that
+ * deletes somebody's logo is not a decision to hold with a comment.
+ *
+ * Oldest first, and never anything starred or held. `held` comes from the
+ * pack rather than from a second flag on the asset: two places recording
+ * "this one matters" is two places to be wrong about it.
+ */
+export function droppable(all: readonly Asset[], held: readonly string[]): Asset[] {
+  const over = all.length - KEEP;
+  if (over <= 0) return [];
+  const safe = new Set(held);
+  return all
+    .filter((one) => !one.favourite && !safe.has(one.id))
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .slice(0, over);
+}
+
 export async function rememberAsset(asset: Asset, dataUrl: string): Promise<void> {
   await putAudio(asset.id, dataUrlToBlob(dataUrl));
 
   const all = loadAssets();
   const next = [asset, ...all.filter((one) => one.id !== asset.id)];
 
-  const over = next.length - KEEP;
-  const dropped: Asset[] = [];
-  if (over > 0) {
-    const candidates = next
-      .filter((one) => !one.favourite)
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-    dropped.push(...candidates.slice(0, over));
-  }
-
+  const dropped = droppable(next, heldIds(loadBrandKit()));
   const dropping = new Set(dropped.map((one) => one.id));
   write(next.filter((one) => !dropping.has(one.id)));
   await Promise.all(dropped.map((one) => deleteAudio(one.id)));

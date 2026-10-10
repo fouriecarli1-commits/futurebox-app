@@ -17,13 +17,39 @@
  *
  * ── What is in it, and why so little ─────────────────────────────────────
  *
- * A name, a line about the voice, a logo, and one colour. Nothing else.
+ * A name, a line about the voice, a folder of pictures, and a few colours.
+ * Nothing else.
  *
  * A brand kit that asks for twelve fields is a form nobody finishes, and the
  * eight fields after the fourth do not change what the writer produces. These
- * four do: the name is what the copy says, the voice line is the difference
- * between "artisanal" and "we open at six", the logo is what goes in the
- * corner of a clip, and the colour is what a title card is set on.
+ * do: the name is what the copy says, the voice line is the difference between
+ * "artisanal" and "we open at six", the pictures are what goes in the corner
+ * of a clip or onto a poster, and the colours are what a title card is set on.
+ *
+ * ── Why it became a folder ───────────────────────────────────────────────
+ *
+ * Carli, 10 October 2026: *"Ek dink ook daar moet 'n brand pack wees. Iemand
+ * moet 'n folder kan hê met hulle brand goed op."*
+ *
+ * It held ONE logo. A business has a logo and a wordmark and a white version
+ * of the logo for a dark poster and a photograph of the shop front, and
+ * "whichever one of those you last chose" is not a brand pack. So the pictures
+ * are a list, and one of them is marked as the logo — which is the one that
+ * goes in the corner of a clip.
+ *
+ * Colours the same way: a palette, with the first one the main one. One colour
+ * cannot set a title card AND the text on it.
+ *
+ * ── The thing a folder has to do that a field does not ───────────────────
+ *
+ * **It has to still be there tomorrow.** The pictures are references into
+ * `assets.ts`, which keeps twenty and drops the oldest when a twenty-first
+ * arrives — so a logo chosen in September was being thrown away by ordinary
+ * use of the photo rooms in October, silently, leaving the advert desk and the
+ * video desk with a brand kit pointing at nothing. `heldIds` is what
+ * `rememberAsset` reads so that it never drops anything the pack is holding.
+ * That bug is the reason this file exports that function and the reason
+ * `check:merkpak` exists.
  *
  * ── On this device ───────────────────────────────────────────────────────
  *
@@ -42,12 +68,38 @@ export interface BrandKit {
    * says when asked.
    */
   readonly voice: string;
-  /** An id in the picture library. Kept as a reference so it is not stored twice. */
+  /**
+   * Which of the folder's pictures is the logo.
+   *
+   * An id in the picture library, kept as a reference so the file is stored
+   * once. It is expected to be one of `pictureIds`, and `heldIds` holds it
+   * either way: a kit saved before the folder existed has a logo and no
+   * folder, and losing that logo to make the shapes tidy would be this
+   * change taking something away.
+   */
   readonly logoAssetId?: string;
-  /** One hex colour. Used where a title card or a card border needs the brand. */
+  /**
+   * The folder: every picture that belongs to this brand.
+   *
+   * The logo, the wordmark, the white version for a dark poster, the shop
+   * front. Newest first, which is the order `assets.ts` keeps.
+   */
+  readonly pictureIds?: readonly string[];
+  /** The main colour. The first of `colours`, kept for every kit saved before there were several. */
   readonly colour?: string;
+  /**
+   * The palette, main one first.
+   *
+   * One colour cannot set a title card AND the text on it, which is what a
+   * single `colour` was being asked to do.
+   */
+  readonly colours?: readonly string[];
   readonly updatedAt: string;
 }
+
+/** How many pictures a brand pack may hold, and how many colours. */
+export const MOST_PICTURES = 8;
+export const MOST_COLOURS = 5;
 
 const KEY = 'futurebox.brandkit.v1';
 
@@ -72,7 +124,15 @@ export function loadBrandKit(): BrandKit {
 }
 
 export function saveBrandKit(kit: Omit<BrandKit, 'updatedAt'>): BrandKit {
-  const next: BrandKit = { ...kit, updatedAt: new Date().toISOString() };
+  const next: BrandKit = {
+    ...kit,
+    /* Capped here rather than in the room, because the room is not the only
+       thing that can write this and a pack of two hundred references is a
+       pack that cannot be drawn. */
+    ...(kit.pictureIds ? { pictureIds: kit.pictureIds.slice(0, MOST_PICTURES) } : {}),
+    ...(kit.colours ? { colours: kit.colours.slice(0, MOST_COLOURS) } : {}),
+    updatedAt: new Date().toISOString(),
+  };
   if (typeof window !== 'undefined') {
     try {
       window.localStorage.setItem(KEY, JSON.stringify(next));
@@ -86,6 +146,35 @@ export function saveBrandKit(kit: Omit<BrandKit, 'updatedAt'>): BrandKit {
 /** Whether there is anything in it worth sending anywhere. */
 export function hasBrandKit(kit: BrandKit): boolean {
   return kit.name.trim().length > 0 || kit.voice.trim().length > 0;
+}
+
+/**
+ * Every picture id the pack is holding on to.
+ *
+ * Read by `rememberAsset` before it evicts anything. The library keeps twenty
+ * pictures and drops the oldest when a twenty-first arrives, and nothing used
+ * to stop it dropping a brand logo chosen a month ago — so the pack pointed
+ * at a file that had been deleted and every room reading it drew nothing,
+ * with no sign that anything had gone.
+ *
+ * The logo is in here as well as the folder, and both are deliberate: a kit
+ * saved before the folder existed has a logo and no folder.
+ */
+export function heldIds(kit: BrandKit): readonly string[] {
+  const all = [
+    ...(kit.logoAssetId ? [kit.logoAssetId] : []),
+    ...(kit.pictureIds ?? []),
+  ];
+  return [...new Set(all)];
+}
+
+/** The palette, main colour first, for a kit of either shape. */
+export function paletteOf(kit: BrandKit): readonly string[] {
+  const all = [
+    ...(kit.colour ? [kit.colour] : []),
+    ...(kit.colours ?? []),
+  ];
+  return [...new Set(all)].slice(0, MOST_COLOURS);
 }
 
 /**

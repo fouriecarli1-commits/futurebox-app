@@ -2303,7 +2303,17 @@ export const STRINGS: Dict = {
      Written rather than translated where the English leans on an idiom:
      "we open at six" is the point of that line, and its Afrikaans has to
      be something somebody would actually say. */
-  "kit.title": { en: "Who these adverts are for", af: "Vir wie hierdie advertensies is" },
+  "kit.title": { en: "Your brand pack", af: "Jou handelsmerkpak" },
+  "kit.folder": { en: "The brand folder", af: "Die handelsmerkvouer" },
+  "kit.folderNote": { en: "The logo, the wordmark, a white version for a dark poster, the shop front. The starred one is what goes in the corner of a clip. Nothing in this folder is ever thrown away to make room for a new picture.", af: "Die logo, die woordmerk, \u2019n wit weergawe vir \u2019n donker plakkaat, die winkel se voorkant. Die een met die sterretjie is wat in die hoek van \u2019n greep gaan. Niks in hierdie vouer word ooit weggegooi om plek te maak vir \u2019n nuwe prent nie." },
+  "kit.gone": { en: "This picture is not on this device any more.", af: "Hierdie prent is nie meer op hierdie toestel nie." },
+  "kit.makeLogo": { en: "Use this one as the logo", af: "Gebruik hierdie een as die logo" },
+  "kit.take": { en: "Take it out of the folder", af: "Haal dit uit die vouer" },
+  "kit.colours": { en: "The colours", af: "Die kleure" },
+  "kit.colourMain": { en: "The main colour", af: "Die hoofkleur" },
+  "kit.colourMore": { en: "Another brand colour", af: "Nog \u2019n handelsmerkkleur" },
+  "kit.colourTake": { en: "Take this colour out", af: "Haal hierdie kleur uit" },
+  "kit.colourAdd": { en: "Add a colour", af: "Voeg \u2019n kleur by" },
   "kit.empty": { en: "Set it once and every advert after this uses it.", af: "Stel dit een keer en elke advertensie hierna gebruik dit." },
   "kit.logoAlt": { en: "Your logo", af: "Jou logo" },
   "kit.why": { en: "The brief is what is different about today. This is what is the same every time — so the adverts you write on Thursday sound like the ones from Monday. Kept on this device.", af: "Die opdrag is wat vandag anders is. Dit is wat elke keer dieselfde bly — sodat die advertensies wat jy Donderdag skryf klink soos dié van Maandag. Op hierdie toestel gehou." },
