@@ -4734,6 +4734,65 @@ export const STRINGS: Dict = {
   "hum.nothing": { en: "Nothing was heard in that lane to play. Hum or tap the rhythm with a bit of space between the notes, then try again.", af: "Niks is in daardie baan gehoor om te speel nie. Hum of tik die ritme met ’n bietjie spasie tussen die note, en probeer weer." },
   "hum.nothingYet": { en: "Nothing recorded yet. Leave a little space between the notes.", af: "Nog niks opgeneem nie. Laat ’n bietjie spasie tussen die note." },
   "hum.record": { en: "Record a hum", af: "Neem ’n hum op" },
+  /* ── The instrument names, which were never here ───────────────────────
+
+     Found on 10 October 2026. `hum.bass`, `hum.keys`, `hum.pluck`,
+     `hum.drums` and their four sentences had been read by the hum card
+     since the day it shipped and were in no dictionary — four instrument
+     names reading English to an Afrikaans reader, with `check:afrikaans`
+     saying everything was fine every time it ran.
+
+     Because the card says `t(one.says[0], one.says[1])` over a list, so the
+     key is a string inside a library's data rather than at the call site,
+     and the check only looked for `t('some.key', …)`. It reads key-shaped
+     pairs in data now, and the same widening immediately found the kids
+     room's topics, sounds and prices in the same state. */
+  "hum.groupLow": { en: "The low end", af: "Die lae punt" },
+  "hum.groupHeld": { en: "Held and sustained", af: "Gehou en volgehou" },
+  "hum.groupStruck": { en: "Struck and plucked", af: "Geslaan en getokkel" },
+  "hum.groupKit": { en: "Rhythm only", af: "Net ritme" },
+  "hum.subbass": { en: "Sub bass", af: "Sub-bas" },
+  "hum.subbassWhat": { en: "Two octaves down, almost pure. For the floor under everything.", af: "Twee oktawe laer, byna skoon. Vir die vloer onder alles." },
+  "hum.bass": { en: "Bass", af: "Bas" },
+  "hum.bassWhat": { en: "An octave down from what you hummed, round and short.", af: "’n Oktaaf laer as wat jy gehum het, rond en kort." },
+  "hum.keys": { en: "Electric piano", af: "Elektriese klavier" },
+  "hum.keysWhat": { en: "Soft and sustained, at the pitch you hummed.", af: "Sag en volgehou, op die toonhoogte wat jy gehum het." },
+  "hum.organ": { en: "Organ", af: "Orrel" },
+  "hum.organWhat": { en: "Does not fade at all. Holds flat for as long as you held the note.", af: "Verdwyn glad nie. Hou plat vir so lank as wat jy die noot gehou het." },
+  "hum.strings": { en: "Strings", af: "Strykers" },
+  "hum.stringsWhat": { en: "Comes in slowly and swells. For a line underneath a chorus.", af: "Kom stadig in en swel. Vir ’n lyn onder ’n refrein." },
+  "hum.brass": { en: "Brass", af: "Koper" },
+  "hum.brassWhat": { en: "Bright and firm, with a bit of a push at the start. For a hook.", af: "Helder en vas, met ’n stootjie aan die begin. Vir ’n hoek." },
+  "hum.flute": { en: "Flute", af: "Fluit" },
+  "hum.fluteWhat": { en: "Almost a pure tone, with the breath left in. Sits above everything.", af: "Byna ’n skoon toon, met die asem nog daarin. Sit bo-oor alles." },
+  "hum.choir": { en: "Voices", af: "Stemme" },
+  "hum.choirWhat": { en: "A soft pad of hummed voices. For a bed under the whole thing.", af: "’n Sagte kussing van gehumde stemme. Vir ’n bed onder die hele ding." },
+  "hum.lead": { en: "Synth lead", af: "Sintleier" },
+  "hum.leadWhat": { en: "Thick and buzzy, two oscillators apart. Cuts through a busy mix.", af: "Dik en gons, twee ossillators uitmekaar. Sny deur ’n besige mengsel." },
+  "hum.pluck": { en: "Plucked string", af: "Getokkelde snaar" },
+  "hum.pluckWhat": { en: "Short and bright, good for a riff.", af: "Kort en helder, goed vir ’n riff." },
+  "hum.guitar": { en: "Guitar", af: "Kitaar" },
+  "hum.guitarWhat": { en: "Warmer than the pluck and it rings for longer.", af: "Warmer as die tokkel en dit klink langer na." },
+  "hum.marimba": { en: "Marimba", af: "Marimba" },
+  "hum.marimbaWhat": { en: "Wooden and hollow, gone almost at once. Good for a fast line.", af: "Houterig en hol, byna dadelik weg. Goed vir ’n vinnige lyn." },
+  "hum.bell": { en: "Music box", af: "Musiekdosie" },
+  "hum.bellWhat": { en: "High and glassy, and it rings on. For a lullaby or an ending.", af: "Hoog en glasagtig, en dit klink aan. Vir ’n slaapliedjie of ’n slot." },
+  "hum.drums": { en: "Drum kit", af: "Dromstel" },
+  "hum.drumsWhat": { en: "Ignores the notes and keeps the rhythm. Hum low for a kick, high for a snare.", af: "Ignoreer die note en hou die ritme. Hum laag vir ’n skop, hoog vir ’n snaartrom." },
+  /* The kids room, in the same state and found by the same widening. */
+  "kids.topicDog": { en: "My dog", af: "My hond" },
+  "kids.topicSpace": { en: "Space", af: "Die ruimte" },
+  "kids.topicBirthday": { en: "A birthday", af: "’n Verjaarsdag" },
+  "kids.topicSea": { en: "The sea", af: "Die see" },
+  "kids.topicRain": { en: "Rain", af: "Reën" },
+  "kids.topicBrave": { en: "Being brave", af: "Om dapper te wees" },
+  "kids.soundHappy": { en: "Happy", af: "Vrolik" },
+  "kids.soundQuiet": { en: "Quiet", af: "Stil" },
+  "kids.soundRock": { en: "Loud", af: "Hard" },
+  "kids.soundDance": { en: "Dancey", af: "Dansbaar" },
+  "kids.priceSong": { en: "A song, about a minute long", af: "’n Liedjie, omtrent ’n minuut lank" },
+  "kids.priceVideo": { en: "A ten-second video for a song", af: "’n Video van tien sekondes vir ’n liedjie" },
+  "kids.priceStory": { en: "A story read out loud, eight pages with a picture each", af: "’n Storie wat voorgelees word, agt bladsye met ’n prent elk" },
   "hum.snap": { en: "Put it on the click", af: "Sit dit op die klik" },
   "hum.snapWhy": { en: "A hummed rhythm is never quite in time. Off is for a part that swings or drifts on purpose.", af: "’n Gehumde ritme is nooit heeltemal in tyd nie. Af is vir ’n deel wat doelbewus swing of dryf." },
   "hum.step1": { en: "1 · Hum or tap it", af: "1 · Hum of tik dit" },

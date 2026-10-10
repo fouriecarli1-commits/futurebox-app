@@ -40,7 +40,7 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { MIN_NOTE_S, notesIn, snapTo } from '../app/lib/humnotes.ts';
-import { RATE, VOICES, renderHum, voiceById } from '../app/lib/huminstrument.ts';
+import { GROUPS, RATE, VOICES, renderHum, voiceById } from '../app/lib/huminstrument.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -181,6 +181,138 @@ for (const voice of VOICES) {
     'two renders of one hum differ, so nothing about this voice can be'
     + ' asserted and a part cannot be reproduced');
 }
+
+/* ── Thirteen voices, and no one of them the loudest thing in the room ───
+
+   The timbre became DATA on 10 October 2026 so that an instrument is a row
+   rather than a branch in a loop that runs forty-four thousand times a
+   second. That makes a variety cheap and it opens one fault that the
+   if/else version could not have: a voice with eight harmonics summed
+   against a voice with two is four times as loud, and a part that clips is
+   a part somebody blames the recording for.
+
+   `play` normalises by the weight of the partials. This measures the
+   result, because a normaliser is arithmetic and arithmetic is the thing
+   that can be quietly wrong. */
+const peak = (out: Float32Array): number => {
+  let most = 0;
+  for (let i = 0; i < out.length; i += 1) most = Math.max(most, Math.abs(out[i]));
+  return most;
+};
+
+/* ── Measured as SATURATION, not as a peak ───────────────────────────────
+
+   The first version of this compared peaks, and the peaks were useless:
+   `renderHum` ends with `tanh(x * 1.1) * 0.85`, so everything comes out at
+   roughly the same height whatever went in. Deleting the normaliser
+   altogether left this assertion green — which is the fault she cares about
+   most, a check passing because it measures something adjacent.
+
+   What a four-times-too-loud voice actually does is sit in the bend of that
+   tanh: the tone comes back flattened, which is the buzz a soft clip makes
+   rather than silence or a number past one. So what is counted is how much
+   of the part is up in the bend. A part that is mostly saturated is a part
+   whose shape has been thrown away. */
+const saturated = (out: Float32Array): number => {
+  let hot = 0;
+  let sounding = 0;
+  for (let i = 0; i < out.length; i += 1) {
+    const at = Math.abs(out[i]);
+    if (at > 0.02) sounding += 1;
+    /* 0.72 is where tanh has bent far enough to be audible as flattening:
+       tanh(0.95) × 0.85 ≈ 0.62, so anything above this came in past about
+       1.2 and is being squashed. */
+    if (at > 0.72) hot += 1;
+  }
+  return sounding > 0 ? hot / sounding : 0;
+};
+
+const hottest = VOICES
+  .map((one) => ({ id: one.id, at: saturated(renderHum(played, one, 2.5)) }))
+  .reduce((most, one) => (one.at > most.at ? one : most));
+
+/* Two percent, and the gap either side of it is wide. Measured: with the
+   normaliser every one of the fourteen spends 0.0% of its samples in the
+   bend; with it deleted, the synth lead spends 20%, the brass 17%, the
+   voices 6% and the strings 3% — the four with the most harmonics, which is
+   exactly the fault. Anything above a couple of percent on a two-note part
+   is a voice whose own harmonics are fighting each other. */
+ok(`no voice is loud enough to flatten itself (${VOICES.length} voices)`,
+  hottest.at < 0.02,
+  `${hottest.id} spends ${(hottest.at * 100).toFixed(0)}% of its sounding`
+  + ' samples in the soft clip. Summing eight harmonics unnormalised is four'
+  + ' times the level of summing two, and what comes out is not louder, it is'
+  + ' FLATTENED — the buzz a clip makes, which reads as a bad synth rather'
+  + ' than as a missing division');
+
+const peaks = VOICES.map((one) => ({ id: one.id, at: peak(renderHum(played, one, 2.5)) }));
+const quietest = peaks.reduce((least, one) => (one.at < least.at ? one : least));
+
+ok('  and every one of them is actually audible',
+  quietest.at > 0.08,
+  `${quietest.id} peaks at ${quietest.at.toFixed(3)} — below about a tenth it`
+  + ' is a button that appears to do nothing on a phone speaker');
+
+/* ── Held means held, and struck means struck ───────────────────────────
+
+   The one thing a person choosing from this list is choosing between. An
+   organ that fades and a marimba that rings on are both the `decay` data
+   read wrongly, and neither throws — the part just sounds like the wrong
+   instrument, which reads as the synth being bad rather than as a number
+   being wrong.
+
+   Measured on a two-second note: how loud it still is near the end against
+   how loud it was near the start. */
+const oneLong = [{ midi: 60, from: 0.05, to: 2.05, loud: 0.9 }];
+function fadeOf(id: string): number {
+  const out = renderHum(oneLong, voiceById(id)!, 2.6);
+  const early = peak(out.slice(Math.round(0.1 * RATE), Math.round(0.3 * RATE)));
+  const late = peak(out.slice(Math.round(1.6 * RATE), Math.round(1.9 * RATE)));
+  return early > 0 ? late / early : 0;
+}
+
+for (const one of VOICES) {
+  if (!one.pitched) continue;
+  const left = fadeOf(one.id);
+  /* A struck instrument has a fixed fall, so after a second and a half it
+     must be well down. A held one has none, so it must still be there. The
+     bell is struck and rings for 1.6 seconds on purpose, so it is allowed
+     to be louder than the rest of its group. */
+  const struck = one.decay > 0;
+  const passes = struck ? left < (one.decay >= 1 ? 0.7 : 0.25) : left > 0.2;
+  ok(`  ${one.id} ${struck ? 'dies on its own' : 'holds while the note is held'}`,
+    passes,
+    `${(left * 100).toFixed(0)}% of its opening level is still there after a`
+    + ' second and a half, which is the wrong way round for what its data'
+    + ` says (decay ${one.decay || 'held'})`);
+}
+
+ok('  and the organ is the one that does not fade at all',
+  fadeOf('organ') > 0.85,
+  `${(fadeOf('organ') * 100).toFixed(0)}% left — an organ that fades is not an`
+  + ' organ, and it is the only reason to offer one beside the piano');
+
+ok('  and the marimba is the one that is gone almost at once',
+  fadeOf('marimba') < 0.05,
+  'wooden and hollow and gone is the whole of what it is for');
+
+/* Every pitched voice has real harmonics, so a row added with an empty list
+   is caught here rather than by somebody pressing a silent button. */
+ok('every pitched voice has harmonics worth summing',
+  VOICES.filter((one) => one.pitched).every((one) =>
+    one.partials.length > 0 && one.partials.some((amount) => amount > 0.5)),
+  'a partials list of zeros renders silence, and a fundamental quieter than'
+  + ' its own harmonics is an instrument with no note in it');
+
+ok('  and every one sits under a heading, so thirteen read as four',
+  VOICES.every((one) => GROUPS.some((group) => group.id === one.group)),
+  `${GROUPS.map((one) => one.id).join(', ')} — thirteen nouns in a column is`
+  + ' the list nobody reads past the third');
+
+ok('  and no heading is empty',
+  GROUPS.every((group) => VOICES.some((one) => one.group === group.id)),
+  'a heading with nothing under it is a row of whitespace somebody looks for'
+  + ' the missing instruments in');
 
 /* The bass is an octave down, measured rather than read off its `shift`.
    Zero crossings are a coarse pitch reading and coarse is all this needs:

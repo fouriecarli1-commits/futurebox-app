@@ -90,6 +90,10 @@ const SAME_IN_BOTH = new Set([
      are the same word in Afrikaans — "Amber" is amber and "Sand" is sand — and
      the honest alternative would be renaming a colour to dodge a check. */
   'Amber', 'Sand',
+  /* An instrument whose name is the same word in Afrikaans. A marimba is a
+     marimba, and the alternative would be renaming an instrument to dodge a
+     check. */
+  'Marimba',
   /* "Stories" is the Afrikaans plural of "storie" and it is spelled the same
      way. The kids room's shelf tab says it, and the alternative — "Verhale" —
      is the word a textbook uses rather than the word a child does. */
@@ -353,6 +357,41 @@ for (const file of walk('app')) {
   const src = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   // Both quotings, because a key built in a template literal is still a key.
   for (const m of [...src.matchAll(/\bt\(\s*'([^']+)'/g), ...src.matchAll(/\bt\(\s*`([^`$]+)`/g)]) {
+    if (!known.has(m[1]) && !missing.has(m[1])) missing.set(m[1], file);
+  }
+
+  /* ── Keys carried as DATA, which this check could not see ─────────────
+
+     Found on 10 October 2026, while widening the hum room's instruments
+     from four to thirteen: `hum.bass`, `hum.keys`, `hum.pluck`, `hum.drums`
+     and their four sentences had **never** been in the dictionary. Four
+     instrument names reading English to an Afrikaans reader since the day
+     the room shipped, and this check said everything was fine every time it
+     ran.
+
+     Because the pattern above matches `t('some.key', …)` at the call site,
+     and these are not written at the call site. The room says
+     `t(one.says[0], one.says[1])` over a list, and the key is a string in a
+     `readonly [string, string]` pair in a library — invisible to a scan
+     looking for `t(`.
+
+     It is the shape she has been shown as the good one, too: an option list
+     that carries its own name and its own sentence, so a room renders rows
+     instead of hardcoding them. `GROUPS`, `VOICES`, `EDGES`, `SHAPES` all
+     do it. So the hole was not one list's mistake, it was the convention
+     outrunning the check — which is the same failure as a check measuring
+     something adjacent, one level up: it measured the OLD way of writing
+     the app.
+
+     So a pair whose first half looks like a key and whose second half looks
+     like English prose is read as a key. `'[a-z][\w]*\.[A-Za-z]'` is the
+     key shape this app uses everywhere, and requiring a space or a capital
+     in the second half keeps ordinary two-string tuples out. */
+  for (const m of src.matchAll(
+    /\[\s*'([a-z][A-Za-z0-9]*\.[A-Za-z][A-Za-z0-9]*)'\s*,\s*'((?:[^'\\]|\\.){2,})'\s*\]/g,
+  )) {
+    const english = m[2];
+    if (!/[A-Z ]/.test(english)) continue;
     if (!known.has(m[1]) && !missing.has(m[1])) missing.set(m[1], file);
   }
 }

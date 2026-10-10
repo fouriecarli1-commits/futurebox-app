@@ -81,7 +81,7 @@ import {
 import { songCost } from '../lib/credits';
 import { makeHistory } from '../lib/undo';
 import { notesIn, snapTo } from '../lib/humnotes';
-import { VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
+import { GROUPS, VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -3565,30 +3565,49 @@ export default function ProBooth({
             <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
               {t('hum.step2', '2 · Pick the sound')}
             </p>
-            <div className="space-y-1.5">
-              {VOICES.map((one) => (
-                <button
-                  key={one.id}
-                  type="button"
-                  onClick={() => setHumVoice(one.id)}
-                  aria-pressed={humVoice === one.id}
-                  data-humvoice={one.id}
-                  className={`block min-h-[44px] w-full rounded-xl border px-3 py-2 text-left ${
-                    humVoice === one.id
-                      ? 'border-sky-400/70 bg-sky-500/10'
-                      : 'border-zinc-700 bg-zinc-900'
-                  }`}
-                >
-                  <span className={`block text-sm font-bold ${
-                    humVoice === one.id ? 'text-sky-200' : 'text-zinc-200'
-                  }`}
-                  >
-                    {t(one.says[0], one.says[1])}
-                  </span>
-                  <span className="mt-0.5 block text-[11px] font-medium leading-snug text-zinc-500">
-                    {t(one.what[0], one.what[1])}
-                  </span>
-                </button>
+            {/* ── Under headings, because there are thirteen of them now ──
+
+                Four on 9 October, thirteen on the 10th. Carli: *"daar moet
+                van alles wat opsies is, 'n verskeidenheid wees."*
+
+                Thirteen in one column is the list nobody reads past the
+                third, which was the honest half of the argument the library
+                used to make for keeping it at four. So they sit under the
+                four headings a person actually looks under — the low end,
+                the held ones, the struck ones, and the kit — and the
+                headings come from `GROUPS` rather than from a list written
+                out again here. */}
+            <div className="space-y-2.5">
+              {GROUPS.map((group) => (
+                <div key={group.id} className="space-y-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">
+                    {t(group.says[0], group.says[1])}
+                  </p>
+                  {VOICES.filter((one) => one.group === group.id).map((one) => (
+                    <button
+                      key={one.id}
+                      type="button"
+                      onClick={() => setHumVoice(one.id)}
+                      aria-pressed={humVoice === one.id}
+                      data-humvoice={one.id}
+                      className={`block min-h-[44px] w-full rounded-xl border px-3 py-2 text-left ${
+                        humVoice === one.id
+                          ? 'border-sky-400/70 bg-sky-500/10'
+                          : 'border-zinc-700 bg-zinc-900'
+                      }`}
+                    >
+                      <span className={`block text-sm font-bold ${
+                        humVoice === one.id ? 'text-sky-200' : 'text-zinc-200'
+                      }`}
+                      >
+                        {t(one.says[0], one.says[1])}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] font-medium leading-snug text-zinc-500">
+                        {t(one.what[0], one.what[1])}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
