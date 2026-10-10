@@ -152,6 +152,31 @@ for (const preset of PRESETS) {
    square an authenticator app scans, which is an optical target rather than
    a surface; both are written as a literal `bg-[#ffffff]` and both are named
    in the allowlist below. */
+/**
+ * How many literal colours each allowlisted file is allowed.
+ *
+ * One unless it is written down here with a reason, and the reason is the
+ * entry's own comment in the allowlist below. A number raised without one is
+ * the allowlist becoming a habit.
+ */
+const HOW_MANY: Record<string, number> = {
+  /* Google's sign-in button: their white fill and their near-black text,
+     both specified by them. */
+  'app/components/Landing.tsx': 2,
+  /* Nine brand buttons, a fill and a text colour each: Google, Apple,
+     Facebook, Spotify, Discord, Twitch, GitHub, LinkedIn and one more. Each
+     pair is the company's own specification and a themed version is
+     off-brand — which is the entry's reason, nine times. */
+  'app/components/SignInWith.tsx': 18,
+  /* Words over somebody's artwork: ink at three weights for the three levels
+     of the caption, and the scrim under them. Same reasoning as subtitles on
+     any player — the surface behind is a photograph, not a theme. */
+  'app/components/FollowWords.tsx': 4,
+  /* The same, plus a translucent chip behind one control and the near-black
+     the screen falls back to before the artwork has loaded. */
+  'app/components/SongScreen.tsx': 6,
+};
+
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir)) {
     if (name === 'node_modules' || name === '.next') continue;
@@ -208,8 +233,48 @@ for (const file of walk('app')) {
        as brand chrome above — a surface that must not follow the theme —
        and the only literal colour in that file. */
     'app/components/Authenticators.tsx',
+    /* The square a logo is previewed in, 10 October 2026. A brand mark is
+       drawn to sit on white and arrives as a transparent PNG, so against a
+       themed card a dark logo is invisible and she cannot check what she is
+       about to put on a poster. It is the authenticator case again — a true
+       rendering of somebody else's artwork rather than a surface of ours —
+       and it is the only literal colour in that file.
+
+       Reached here by way of being wrong twice: `bg-white/5` first, which
+       paints near-black on a light preset, then `bg-white`, which paints
+       near-black too because Tailwind remaps `white` to `--fb-ink`. The
+       check said both within the minute. */
+    'app/components/Campaign.tsx',
   ]);
-  if (brandOrOverPicture.has(file.split('\\').join('/'))) continue;
+  /* ── An allowlisted file is allowed ONE reason, not a free pass ────
+
+     The entries above each say "the only literal colour in that file", and
+     nothing held them to it: an allowlist keyed on a FILE exempts every
+     literal anybody adds to that file afterwards, and the claim in the
+     comment quietly stops being true.
+
+     Noticed on 10 October 2026 while adding the logo preview to the advert
+     desk — a file that is 1,400 lines long, which is a lot of room for a
+     second colour to appear in under cover of the first. So the count is
+     held. A new literal in one of these files fails here and the answer is
+     either to fix it or to raise the number WITH a reason beside it, which
+     is the same bargain the allowlist itself is. */
+  const named = file.split('\\').join('/');
+  if (brandOrOverPicture.has(named)) {
+    const literals = [...src.matchAll(
+      /\b(?:bg|text|border|ring|from|to|via|fill|stroke|shadow)-\[(?:#[0-9A-Fa-f]{3,8}|rgba?\([^\]]*\))\]/g,
+    )];
+    const allowed = HOW_MANY[named] ?? 1;
+    if (literals.length > allowed) {
+      failures.push(
+        `  ${named}: ${literals.length} literal colours, and ${allowed} named as`
+        + ' exempt. Every one of these files says it has only the colours its'
+        + ' reason covers — add the reason, or use the families:'
+        + ` ${literals.map((one) => one[0]).join(' ')}`,
+      );
+    }
+    continue;
+  }
   for (const found of src.matchAll(
     /\b(?:bg|text|border|ring|from|to|via|fill|stroke|shadow)-\[(?:#[0-9A-Fa-f]{3,8}|rgba?\([^\]]*\))\]/g,
   )) {

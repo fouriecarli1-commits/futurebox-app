@@ -66,7 +66,44 @@ export function worthDrawing(ad: AdLike): boolean {
  * from one brief are one campaign rather than three unrelated pictures —
  * the same reasoning as the storybook's look in `storypages.ts`.
  */
-export function posterWords(ad: AdLike, look = ''): string {
+/**
+ * What to say about a logo, when a real one is going up with the words.
+ *
+ * ── Why the prompt says "no logos" at all ────────────────────────────────
+ *
+ * Because an invented logo is worse than none. Asked for a brand mark with
+ * nothing to copy, a picture model draws something that looks like a logo
+ * and belongs to nobody — sometimes close enough to a real company's to be a
+ * problem, always close enough to look like a mistake somebody made on
+ * purpose. So the rule was written absolutely and correctly.
+ *
+ * ── What changed ─────────────────────────────────────────────────────────
+ *
+ * The engine takes several pictures in a turn now, so a real logo can go up
+ * beside the words. The rule flips rather than loosens: where a logo is
+ * attached, it must be the ONLY mark in the picture and it must be copied
+ * rather than interpreted — redrawn "in the same style" is a logo that is
+ * not her logo, which for a brand mark is the whole of the thing.
+ *
+ * Exported and taken as a count so a check can drive both ways. The count
+ * and not a boolean, because what is attached is what the sentence may
+ * mention: a sentence about a logo that did not go up asks the engine to
+ * match a mark it cannot see.
+ */
+export function logoWords(logos: number): string {
+  if (logos < 1) {
+    return 'No other words anywhere. No logos, no watermarks, no invented brand'
+      + ' names, no lorem ipsum, no captions outside the frame.';
+  }
+  return `The attached ${logos === 1 ? 'picture is a logo' : 'pictures are logos'}.`
+    + ` Place ${logos === 1 ? 'it' : 'them'} in the composition exactly as`
+    + ` ${logos === 1 ? 'it is' : 'they are'} — same shapes, same colours, same`
+    + ' proportions, same wording. Do not redraw, restyle, recolour or'
+    + ' reletter it, and do not add any other mark, badge or watermark.'
+    + ' No invented brand names, no lorem ipsum, no captions outside the frame.';
+}
+
+export function posterWords(ad: AdLike, look = '', logos = 0): string {
   const headline = ad.headline.trim().slice(0, MOST_HEADLINE);
   const cta = ad.cta.trim().slice(0, MOST_CTA);
   const style = look.trim();
@@ -82,8 +119,7 @@ export function posterWords(ad: AdLike, look = ''): string {
     'The lettering must be part of the image — on a surface, a wall, a sign,'
     + ' a screen or clean space in the composition — lit by the same light as'
     + ' the scene, not pasted on top.',
-    'No other words anywhere. No logos, no watermarks, no invented brand'
-    + ' names, no lorem ipsum, no captions outside the frame.',
+    logoWords(logos),
     /* The margin is not decoration: a feed crops, and a headline against the
        edge is a headline with its first letter missing. */
     'Keep all lettering well inside the frame, away from every edge.',

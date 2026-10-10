@@ -46,6 +46,9 @@ import { CARRIED, filmThisAd, readThisAd } from '../lib/adhandover';
 import { NOTHING_KEPT, forgetBrief, loadBrief, saveBrief } from '../lib/adbrief';
 import { clearPicks, loadPicks, putPicks } from '../lib/chosenformat';
 import { posterWords, worthDrawing } from '../lib/adposter';
+import { ACCEPTS, fit } from '../lib/imagefile';
+import { REFERENCE_SIDE, packOne } from '../lib/packpicture';
+import { BUDGET } from '../lib/picturelimit';
 import { shapeFor } from '../lib/adhandover';
 import { loadPlan, savePlan } from '../lib/marketplan';
 import {
@@ -340,12 +343,75 @@ export default function Campaign({
      them do. */
   const [poster, setPoster] = useState<Record<string, string>>({});
   const [drawing, setDrawing] = useState<string | null>(null);
+  /* ── Her own logo on the poster ────────────────────────────────────────
+
+     The poster prompt has always said "no logos", and that was right: asked
+     for a brand mark with nothing to copy, a picture model draws something
+     that looks like a logo and belongs to nobody. Sometimes close enough to
+     a real company's to be a problem, always close enough to look like a
+     mistake made on purpose.
+
+     The engine reads several pictures in a turn now, so a real one can go
+     up with the words — and `logoWords` flips the rule rather than loosening
+     it: with a logo attached it must be the ONLY mark in the picture and it
+     must be COPIED, not interpreted. A logo redrawn in the same style is not
+     her logo, which for a brand mark is the whole of the thing.
+
+     One, not three. A poster with two brand marks on it is a poster nobody
+     can read, and `roomForRefs(false)` is only the ceiling the body sets. */
+  const [logo, setLogo] = useState<{ url: string; image: HTMLImageElement } | null>(null);
+
+  /**
+   * Bring a logo in.
+   *
+   * Read at `REFERENCE_SIDE` rather than full size, for the reason
+   * `lib/packpicture.ts` gives: a reference is never handed back to anybody,
+   * so all it has to survive is being looked at — and the memory ceiling in
+   * `lib/imagefile.ts` is about THIS tab and applies whatever it is for.
+   */
+  const bringLogo = async (file: File | null): Promise<void> => {
+    if (!file) return;
+    setProblem(null);
+    const made = await fit(file, REFERENCE_SIDE);
+    if (!made.ok) {
+      setProblem(made.why === 'too_many_pixels'
+        ? t('ads.logoHuge', 'That file is too large to open on a phone.')
+        : t('ads.logoUnreadable', 'That file could not be read as a picture.'));
+      return;
+    }
+    const image = new Image();
+    await new Promise<void>((done) => {
+      image.onload = () => done();
+      image.onerror = () => done();
+      image.src = made.preview;
+    });
+    if (!image.naturalWidth) {
+      setProblem(t('ads.logoUnreadable', 'That file could not be read as a picture.'));
+      return;
+    }
+    /* The one before it goes, so a desk full of second thoughts is not a
+       desk full of held files. */
+    setLogo((was) => {
+      if (was) URL.revokeObjectURL(was.url);
+      return { url: made.preview, image };
+    });
+  };
 
   const drawPoster = async (ad: Ad, key: string): Promise<void> => {
     if (drawing || !worthDrawing(ad)) return;
     setDrawing(key);
     setProblem(null);
     try {
+      /* Her logo, shrunk to fit the body. `packSome` of one picture does not
+         shrink it — one picture is the edit case — so the side is asked for
+         explicitly: a logo is a reference here, not the thing coming back,
+         and a 2K PNG of it is megabytes for a mark that reads at 768. */
+      const packed = logo ? packOne(logo.image, REFERENCE_SIDE, BUDGET) : null;
+      const from = packed ? [packed] : [];
+      if (logo && from.length === 0) {
+        setProblem(t('ads.logoTooBig', 'That logo is too big to send. Use a smaller file.'));
+        return;
+      }
       const token = await accessToken();
       const answer = await fetch('/api/google/picture', {
         method: 'POST',
@@ -354,9 +420,15 @@ export default function Campaign({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          words: posterWords(ad, lookFor(ad) ?? ''),
+          words: posterWords(ad, lookFor(ad) ?? '', from.length),
+          ...(from.length ? { from } : {}),
           /* The shape the campaign is going out in, not a default. A square
-             poster for a TikTok campaign is a poster she has to crop. */
+             poster for a TikTok campaign is a poster she has to crop.
+
+             Sent even with a logo attached, because a logo hands down a mark
+             and not a frame — left to itself the engine takes the logo's own
+             shape, and a square logo would make a square poster for a Reels
+             campaign. */
           aspect: shapeFor(going),
         }),
       });
@@ -910,6 +982,76 @@ export default function Campaign({
         )}
       </Card>
       </div>
+
+      {/* ── Her own logo, once for the whole desk ──────────────────────
+
+          Once and not per advert, because a brand has one mark. The poster
+          prompt has always said "no logos" and that was right: asked for a
+          brand mark with nothing to copy, a picture model draws something
+          that belongs to nobody. With a real one attached the rule flips —
+          `logoWords` in `lib/adposter.ts` says it must be the ONLY mark and
+          must be COPIED rather than redrawn, because a logo restyled is not
+          her logo. */}
+      {ads.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3">
+          <span className="text-xs text-zinc-500">
+            {t('ads.logoTitle', 'Your logo on the posters')}
+          </span>
+          <label
+            data-adlogo
+            className="min-h-[36px] flex items-center gap-2 cursor-pointer text-sm text-zinc-200 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3 py-1.5"
+          >
+            {logo ? t('ads.logoSwap', 'Use a different one') : t('ads.logoAdd', 'Bring a logo in')}
+            <input
+              type="file"
+              accept={ACCEPTS}
+              className="hidden"
+              onChange={(event) => {
+                void bringLogo(event.target.files?.[0] ?? null);
+                /* Cleared so choosing the same file twice still fires. */
+                event.target.value = '';
+              }}
+            />
+          </label>
+          {logo && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- an
+                  object URL for a file chosen a moment ago; there is no path
+                  for the image component to optimise. */}
+              {/* ── A literal white, named in check:theme's allowlist ─────
+
+                  A logo is drawn to sit on white, and a transparent PNG of a
+                  dark mark vanishes against this card. So this one square
+                  must NOT follow the theme — the same case as the QR square
+                  an authenticator scans: it is a true rendering of somebody
+                  else's artwork, not a surface of ours.
+
+                  `bg-white` is wrong for it, which `check:theme` said within
+                  the minute: Tailwind remaps `white` to `--fb-ink` here, so
+                  on a light preset `bg-white` paints near-BLACK. A literal
+                  `bg-[#ffffff]` is the way a colour that must stay fixed is
+                  written in this app. */}
+              <img src={logo.url} alt="" className="h-9 w-9 rounded-lg border border-zinc-700 object-contain bg-[#ffffff]" />
+              <button
+                type="button"
+                data-adlogooff
+                onClick={() => {
+                  URL.revokeObjectURL(logo.url);
+                  setLogo(null);
+                }}
+                className="min-h-[36px] text-sm text-zinc-400 hover:text-white border border-zinc-800 rounded-xl px-3 py-1.5"
+              >
+                {t('ads.logoOff', 'No logo')}
+              </button>
+            </>
+          )}
+          <span className="text-xs text-zinc-500">
+            {logo
+              ? t('ads.logoOn', 'It goes up with the words and is copied exactly, not redrawn.')
+              : t('ads.logoWhy', 'Without one the poster carries no mark at all — an invented logo belongs to nobody.')}
+          </span>
+        </div>
+      )}
 
       {ads.map((ad, index) => (
         <div key={`${ad.angle}-${index}`} className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">

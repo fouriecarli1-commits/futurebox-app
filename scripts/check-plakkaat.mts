@@ -33,7 +33,7 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { CREDITS } from '../app/lib/credits.ts';
-import { MOST_CTA, MOST_HEADLINE, posterWords, worthDrawing } from '../app/lib/adposter.ts';
+import { MOST_CTA, MOST_HEADLINE, logoWords, posterWords, worthDrawing } from '../app/lib/adposter.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -71,6 +71,46 @@ ok('  and nothing else does',
   /No other words anywhere/i.test(words) && /no logos|no watermarks/i.test(words),
   'an image model fills empty space with invented brand names, watermarks'
   + ' and lorem ipsum, and a poster carrying a fake logo is unusable');
+
+/* ── A real logo flips that rule rather than loosening it ────────────────
+
+   The engine takes several pictures in a turn as of 9 October 2026, so her
+   own logo can go up with the words. The rule above stays absolute while
+   nothing is attached — an invented brand mark belongs to nobody and is
+   sometimes close enough to a real company's to be a problem.
+
+   With one attached, the two things that can go wrong are both silent. A
+   prompt that still says "no logos" while a logo is on the request is two
+   instructions about the same picture, and the model obeys whichever it
+   likes. And a logo "placed in the same style" is not her logo — for a brand
+   mark, being copied exactly is the whole of the thing. */
+const withLogo = posterWords(ad, 'warm evening light', 1);
+
+ok('    unless a real logo is attached, and then it is the only mark',
+  !/no logos/i.test(withLogo) && /attached picture is a logo/i.test(withLogo),
+  'a prompt that says "no logos" with a logo on the request is two'
+  + ' instructions about one picture, and the model obeys whichever it likes');
+
+ok('    and it is copied rather than redrawn',
+  /exactly as it is/i.test(withLogo)
+  && /[Dd]o not redraw/.test(withLogo)
+  && /same colours/i.test(withLogo),
+  'a logo restyled, recoloured or relettered is not her logo, and for a'
+  + ' brand mark that is the whole of the thing');
+
+ok('    and no second mark is invited in beside it',
+  /do not add any other mark/i.test(withLogo)
+  && /no invented brand names/i.test(withLogo),
+  'the empty space an image model fills is still there; it is the blanket'
+  + ' "no logos" that had to go, not the rest of it');
+
+ok('    and the sentence is worded for how many went up',
+  /pictures are logos/i.test(logoWords(2))
+  && /picture is a logo/i.test(logoWords(1))
+  && /no logos/i.test(logoWords(0)),
+  'a sentence about a logo that did not go up asks the engine to match a'
+  + ' mark it cannot see, and "the attached pictures is a logo" reads as a'
+  + ' template');
 
 /* Counted, not read. The first version of this also asserted the prompt did
    not contain "lorem" — while the prompt deliberately SAYS "no lorem ipsum".

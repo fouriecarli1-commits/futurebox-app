@@ -396,6 +396,7 @@ export const seedance: Provider = {
     // So the desk sends people to the grade that is proven, and this line
     // becomes true the day somebody checks rather than the day somebody hopes.
     startFrame: false,
+    endFrame: false,
     maxPromptChars: 2000,
   },
   ceiling: () => allowance(process.env.ELEVEN_VIDEO_CREDITS, 13_000),
@@ -421,6 +422,7 @@ export const veo: Provider = {
     speaks: true,
     /** Unverified on this broker; see the note on Seedance above. */
     startFrame: false,
+    endFrame: false,
     maxPromptChars: 2000,
   },
   ceiling: () => allowance(process.env.ELEVEN_VIDEO_CREDITS, 13_000),

@@ -1447,6 +1447,14 @@ jobs:
       - name: Several pictures reach the engine, and fit in one body
         run: npm run check:prentverwysings
 
+      # Veo takes an opening frame AND a closing one, and this app sent the
+      # opening frame from the day the call was written. A field an endpoint
+      # does not read is dropped in silence and still billed, so the pair is
+      # declared per engine and refused where it cannot work — and two frames
+      # are counted against one body, not each against the ceiling.
+      - name: A clip can be made to arrive on a frame she chose
+        run: npm run check:slotraam
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

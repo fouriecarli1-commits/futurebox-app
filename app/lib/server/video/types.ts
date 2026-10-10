@@ -77,6 +77,33 @@ export interface StartRequest {
    * waiting to be fooled.
    */
   readonly image?: { readonly data: string; readonly mime: string };
+  /**
+   * A picture for the clip to END on. Optional, and it needs the first one.
+   *
+   * ── What it buys, which is not "a bit more control" ───────────────────
+   *
+   * Carli sent a Gemini conversation on 9 October 2026 listing what Google's
+   * models can do, and this was in it — *"eerste/laaste raam-instellings"*.
+   * The Veo call here had sent the first frame since it was written and
+   * never the last, so the field was unused: a capability that had been
+   * paid for in the subscription and never offered.
+   *
+   * Two frames turns a clip from a guess into a MOVE. With one frame the
+   * engine decides where the shot is going; with two it has to arrive, so
+   * the camera push, the door opening, the face turning are all the engine
+   * filling in between two pictures somebody chose rather than inventing an
+   * ending. And it is the one thing that makes two clips JOIN: end clip one
+   * on the frame clip two begins with, and the cut disappears.
+   *
+   * ── Why it may not travel alone ───────────────────────────────────────
+   *
+   * An end frame with no start frame is a request to interpolate from
+   * nothing, which Veo does not do — it reads `lastFrame` only beside an
+   * `image`. Sent alone it is silently dropped, which is a member paying
+   * for a clip that ignores the picture they chose, with nothing anywhere
+   * saying why. `suits()` below refuses it rather than letting that happen.
+   */
+  readonly endImage?: { readonly data: string; readonly mime: string };
 }
 
 export type Started =
@@ -105,6 +132,16 @@ export interface Capabilities {
    * says why.
    */
   readonly startFrame: boolean;
+  /**
+   * True where the engine will also END on a picture it is given.
+   *
+   * Separate from `startFrame` and false by default, for the reason that
+   * field already gives: a `lastFrame` an endpoint does not read is dropped
+   * in silence, and the member pays for a clip that ends wherever the engine
+   * felt like ending it. Only Veo declares it true, because only Veo's own
+   * request shape documents the field.
+   */
+  readonly endFrame: boolean;
   readonly maxPromptChars: number;
 }
 
@@ -160,5 +197,11 @@ export function suits(provider: Provider, request: StartRequest): boolean {
   if (!provider.can.aspects.includes(request.aspect)) return false;
   if (request.speak && !provider.can.speaks) return false;
   if (request.image && !provider.can.startFrame) return false;
+  if (request.endImage && !provider.can.endFrame) return false;
+  /* An end frame with no start frame is a request to interpolate from
+     nothing. Veo reads `lastFrame` only beside an `image`, so the pair is
+     refused here rather than being dropped by the engine in silence — the
+     fault the `image` line above exists to prevent, one field along. */
+  if (request.endImage && !request.image) return false;
   return true;
 }

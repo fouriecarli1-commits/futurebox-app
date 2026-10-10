@@ -303,6 +303,11 @@ export const kling: Provider = {
       return speaks();
     },
     startFrame: true,
+    /* Not declared. Kling's own request shape documents a start image and
+       this app has not read an end-frame field for it, and a field an
+       endpoint ignores is a member paying for a clip that ends wherever the
+       engine liked. */
+    endFrame: false,
     maxPromptChars: 2500,
   },
   ceiling: monthlyCeiling,

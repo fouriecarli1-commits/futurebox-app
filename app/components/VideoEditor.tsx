@@ -1692,6 +1692,24 @@ export default function VideoEditor({
   const [shotWords, setShotWords] = useState('');
   const [shotPic, setShotPic] = useState<string | null>(null);
   const [shotBusy, setShotBusy] = useState<'' | 'draw' | 'move'>('');
+  /* ── The frame the clip has to arrive at ───────────────────────────────
+
+     Carli sent a Gemini conversation on 9 October 2026 naming what Google's
+     models can do, and *"eerste/laaste raam-instellings"* was in it. The Veo
+     call had sent the first frame since the day it was written and never the
+     last — so the field was unused, and the thing it buys was not on offer.
+
+     It is not a refinement. With one frame the engine decides where the shot
+     goes; with two it has to ARRIVE, so a camera push, a door opening, a face
+     turning are the engine filling in between two pictures she chose. And it
+     is the only way two clips JOIN: end clip one on the frame clip two begins
+     with, and the cut disappears.
+
+     `drawInto` says which of the two the Draw button fills. One box and one
+     button for both, because two text boxes and two buttons is the same room
+     twice and the second one is always the one nobody finds. */
+  const [shotEnd, setShotEnd] = useState<string | null>(null);
+  const [drawInto, setDrawInto] = useState<'start' | 'end'>('start');
   /* ── The cast, as pictures the engine draws FROM ───────────────────────
 
      Carli, 9 October 2026: *"al die spesiale funksies van google moet ook
@@ -1831,7 +1849,11 @@ export default function VideoEditor({
          members are ticked. Decoded first because `packLed` needs pixels
          and both of these are data URLs — one from the last draw, the
          others out of her own storage. */
-      const lead = shotPic ? await imageFrom(shotPic) : null;
+      /* The frame being changed is the one the switch is pointing at. A
+         draw aimed at the closing frame that edited the opening one would
+         overwrite work with no way to tell why. */
+      const onBench = drawInto === 'end' ? shotEnd : shotPic;
+      const lead = onBench ? await imageFrom(onBench) : null;
       /* Name and picture kept together, and only the pairs that decoded.
          Naming somebody in the words whose picture did not go up is the
          exact fault the sentence below is written to avoid — it would ask
@@ -1886,7 +1908,7 @@ export default function VideoEditor({
              cast picture is being looked at, not resized — left to itself
              the engine takes the first reference's shape, which is how a
              wide frame came back square. */
-          ...(shotPic ? {} : { aspect: '16:9' }),
+          ...(onBench ? {} : { aspect: '16:9' }),
         }),
       });
       if (!answer.ok) {
@@ -1898,12 +1920,15 @@ export default function VideoEditor({
       const blob = await answer.blob();
       const reader = new FileReader();
       reader.onload = () => {
-        setShotPic(String(reader.result));
+        if (drawInto === 'end') setShotEnd(String(reader.result));
+        else setShotPic(String(reader.result));
         /* A new frame means the clip that was made from the old one is not
            this one any more. Leaving it would offer her a clip of a picture
            she has just replaced. */
         setShotReady(null);
-        setShotSaid(t('edit.shotDrawn', 'Drawn. Say what to change and press again, or make it move.'));
+        setShotSaid(drawInto === 'end'
+          ? t('edit.shotEndDrawn', 'The closing frame is drawn. The clip will move from the opening frame to this one.')
+          : t('edit.shotDrawn', 'Drawn. Say what to change and press again, or make it move.'));
       };
       reader.onerror = () => setShotSaid(t('edit.shotUnreadable', 'What came back could not be read as a picture.'));
       reader.readAsDataURL(blob);
@@ -1985,6 +2010,11 @@ async function smallerFrame(url: string): Promise<string> {
              English-first, so the line is laid over afterwards. */
           speak: false,
           image: await smallerFrame(shotPic),
+          /* The frame it has to arrive at, where there is one. Only ever
+             beside the opening frame: Veo reads `lastFrame` only with an
+             `image`, and `suits()` on the server refuses the pair rather
+             than letting the engine drop it in silence. */
+          ...(shotEnd ? { endImage: await smallerFrame(shotEnd) } : {}),
         }),
       });
       const said = (await answer.json().catch(() => ({}))) as { id?: string; message?: string };
@@ -3480,6 +3510,73 @@ async function smallerFrame(url: string): Promise<string> {
                     </div>
                   </div>
                 )}
+                {/* ── Which of the two frames the Draw button fills ──────
+
+                    Google's Veo takes an opening frame AND a closing one,
+                    and this room only ever sent the opening. Two frames is
+                    what turns a clip from a guess into a move: the engine
+                    has to arrive somewhere she chose rather than deciding
+                    where the shot ends — and it is the only way two clips
+                    join without a visible cut.
+
+                    One box and one button for both, with a switch, because
+                    two boxes and two buttons is the same room twice and
+                    nobody finds the second one. */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {([
+                    ['start', t('edit.frameOpening', 'Opening frame'), shotPic],
+                    ['end', t('edit.frameClosing', 'Closing frame'), shotEnd],
+                  ] as const).map(([which, label, held]) => (
+                    <button
+                      key={which}
+                      type="button"
+                      data-editorshotinto={which}
+                      aria-pressed={drawInto === which}
+                      onClick={() => setDrawInto(which)}
+                      className={`rounded-lg border px-2 py-1 text-[12px] ${
+                        drawInto === which ? 'border-emerald-500/70 bg-emerald-500/15' : 'border-zinc-700'
+                      }`}
+                      style={{ color: INK }}
+                    >
+                      {label}
+                      {held ? ' ·' : ''}
+                    </button>
+                  ))}
+                  {shotEnd && (
+                    <button
+                      type="button"
+                      data-editorshotendoff
+                      onClick={() => {
+                        setShotEnd(null);
+                        setDrawInto('start');
+                        setShotReady(null);
+                      }}
+                      className="rounded-lg border border-zinc-700 px-2 py-1 text-[12px]"
+                      style={{ color: INK_DIM }}
+                    >
+                      {t('edit.frameClosingOff', 'No closing frame')}
+                    </button>
+                  )}
+                </div>
+                <div className="text-[11px]" style={{ color: INK_DIM }}>
+                  {shotEnd
+                    ? t('edit.frameBoth', 'The clip moves from the opening frame to the closing one. End a clip on the frame the next one opens with, and the cut disappears.')
+                    : t('edit.frameOne', 'A closing frame is optional. Give one and the engine has to arrive there instead of deciding where the shot ends.')}
+                </div>
+                {shotEnd && (
+                  /* eslint-disable-next-line @next/next/no-img-element -- a
+                     data URL drawn a moment ago, held in this component's
+                     state; there is no path for the image component to
+                     optimise and no URL to optimise it from. */
+                  <img
+                    src={shotEnd}
+                    alt={t('edit.shotEndFrame', 'The frame the clip ends on')}
+                    data-editorshotendframe
+                    className={`w-full rounded-lg border ${
+                      drawInto === 'end' ? 'border-emerald-500/60' : 'border-zinc-800'
+                    }`}
+                  />
+                )}
                 {shotPic && (
                   /* A plain `<img>`, with the lint rule turned off for this
                      one line and the reason here rather than nowhere.
@@ -3498,7 +3595,9 @@ async function smallerFrame(url: string): Promise<string> {
                     src={shotPic}
                     alt={t('edit.shotFrame', 'The frame that was drawn')}
                     data-editorshotframe
-                    className="w-full rounded-lg border border-zinc-800"
+                    className={`w-full rounded-lg border ${
+                      drawInto === 'start' ? 'border-emerald-500/60' : 'border-zinc-800'
+                    }`}
                   />
                 )}
                 <div className="flex flex-wrap items-center gap-2">

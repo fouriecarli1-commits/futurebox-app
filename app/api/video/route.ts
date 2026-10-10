@@ -84,6 +84,8 @@ interface Body {
    * streaming.
    */
   image?: string;
+  /** A frame the clip must END on. Needs `image` beside it — see `suits()`. */
+  endImage?: string;
 }
 
 /** What a start frame may be, and how big. */
@@ -110,6 +112,18 @@ const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
  */
 const IMAGE_MAX_BYTES = 3 * 1024 * 1024;
 
+/**
+ * The real byte count behind a base64 string.
+ *
+ * Its own function because two places need it now — one frame against the
+ * ceiling, and two frames against the same ceiling together — and the
+ * padding arithmetic written twice is the arithmetic written differently.
+ */
+function bytesOf(data: string): number {
+  const padding = data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0;
+  return Math.floor((data.length * 3) / 4) - padding;
+}
+
 type Attached =
   | { readonly ok: true; readonly image?: { data: string; mime: string } }
   | { readonly ok: false; readonly message: string };
@@ -126,7 +140,7 @@ type Attached =
  * runs a third longer than what it encodes, so a limit applied to the text is
  * a limit on something else.
  */
-function readImage(raw: string | undefined): Attached {
+function readImage(raw: string | undefined, which: 'start' | 'end' = 'start'): Attached {
   if (typeof raw !== 'string' || raw === '') return { ok: true };
 
   const match = /^data:([a-z]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i.exec(raw);
@@ -138,13 +152,12 @@ function readImage(raw: string | undefined): Attached {
     return { ok: false, message: 'Attach a PNG, a JPEG or a WebP.' };
   }
 
-  // Four characters carry three bytes, less whatever padding is on the end.
-  const padding = data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0;
-  const bytes = Math.floor((data.length * 3) / 4) - padding;
-  if (bytes > IMAGE_MAX_BYTES) {
+  if (bytesOf(data) > IMAGE_MAX_BYTES) {
     return {
       ok: false,
-      message: 'That picture is over 3 MB. A smaller one works just as well as a start frame.',
+      message: which === 'end'
+        ? 'That end frame is over 3 MB. A smaller one works just as well.'
+        : 'That picture is over 3 MB. A smaller one works just as well as a start frame.',
     };
   }
 
@@ -398,6 +411,45 @@ export async function POST(request: Request): Promise<Response> {
   if (!attached.ok) return Response.json({ message: attached.message }, { status: 400 });
   const image = attached.image;
 
+  /* ── The frame the clip has to arrive at ────────────────────────────
+
+     Veo reads a `lastFrame` beside its `image` and this route never sent
+     one, so "start here and end there" was a capability sitting unused.
+     `suits()` refuses the pair where an engine does not read it, and
+     refuses an end frame with no start frame, which is what Veo would
+     otherwise drop in silence.
+
+     The TOTAL is what is measured against the body, not each frame. Two
+     pictures of three megabytes each are eight on the wire once base64 has
+     run a third longer, and the platform refuses past four and a half
+     BEFORE this route is reached — a bare 413 with no sentence in it. So a
+     ceiling that passes each frame and sends both is the same promise the
+     edge breaks that `check:bodylimit` was written about. */
+  const ending = readImage(body.endImage, 'end');
+  if (!ending.ok) return Response.json({ message: ending.message }, { status: 400 });
+  const endImage = ending.image;
+  if (image && endImage) {
+    const both = bytesOf(image.data) + bytesOf(endImage.data);
+    if (both > IMAGE_MAX_BYTES) {
+      return Response.json(
+        {
+          message: 'Those two frames come to over 3 MB together. Use smaller ones —'
+            + ' a frame settles the look, it is not the film.',
+        },
+        { status: 413 },
+      );
+    }
+  }
+  if (endImage && !image) {
+    return Response.json(
+      {
+        message: 'An end frame needs a start frame beside it. Draw the opening frame'
+          + ' first, then say where the shot should finish.',
+      },
+      { status: 400 },
+    );
+  }
+
   const grade: Grade =
     body.grade === 'premium' ? 'premium' : body.grade === 'better' ? 'better' : 'standard';
 
@@ -437,7 +489,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const queue = candidates(
     grade,
-    { prompt, aspect, seconds: wanted, speak, image },
+    { prompt, aspect, seconds: wanted, speak, image, endImage },
     (one) => purses.get(purseOf(one)) ?? 0,
   );
 
@@ -449,6 +501,8 @@ export async function POST(request: Request): Promise<Response> {
       ? 'That grade of video is not switched on for this app yet.'
       : image && !inGrade.some((one) => one.can.startFrame)
         ? 'Nothing on this grade starts from a picture yet. Take the attachment off, or move up a grade — a picture is only ever sent to an engine that reads it.'
+      : endImage && !inGrade.some((one) => one.can.endFrame)
+        ? 'Nothing on this grade ends on a picture yet. Take the end frame off, or move up a grade — a frame is only ever sent to an engine that reads it.'
       : speak && !inGrade.some((one) => one.can.speaks)
         ? 'Nothing on this grade can speak a line aloud. Take the quotation marks out and record the voice separately — it sounds better and costs a fraction.'
         : !inGrade.some((one) => one.can.seconds.indexOf(wanted) !== -1)
@@ -487,6 +541,7 @@ export async function POST(request: Request): Promise<Response> {
       seconds: length,
       speak,
       image,
+      endImage,
     });
     if (started.ok) {
       engine = one;

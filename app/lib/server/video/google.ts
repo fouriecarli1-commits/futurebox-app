@@ -194,6 +194,19 @@ async function start(model: string, request: StartRequest): Promise<Started> {
         ...(request.image
           ? { image: { bytesBase64Encoded: request.image.data, mimeType: request.image.mime } }
           : {}),
+        /* The frame the clip has to ARRIVE at. Veo's own request shape calls
+           it `lastFrame` and reads it only beside `image`, which `suits()`
+           holds — so this is never sent alone. With both, the engine is
+           filling in between two pictures somebody chose instead of deciding
+           where the shot ends. */
+        ...(request.image && request.endImage
+          ? {
+            lastFrame: {
+              bytesBase64Encoded: request.endImage.data,
+              mimeType: request.endImage.mime,
+            },
+          }
+          : {}),
       }],
       parameters: {
         durationSeconds: request.seconds,
@@ -385,6 +398,9 @@ function rung(
          above sends it. An image field an endpoint does not read is a member
          paying for a clip that has nothing to do with their picture. */
       startFrame: true,
+      /* And the last frame, 10 October 2026. The field was in Veo's request
+         shape the whole time and nothing here sent it. */
+      endFrame: true,
       maxPromptChars: 2000,
     },
     /* Both rungs bill the same Google project against the same
