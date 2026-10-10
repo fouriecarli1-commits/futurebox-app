@@ -148,3 +148,119 @@ omdat net jy dit kan sê:
   te sit. Enigiets anders is ’n prentjie van ’n ding eerder as die ding.
 - **Die name** van die mense in die sagte bekendstelling, en of hulle
   krediete kry om mee te speel.
+
+---
+
+## 7. Die openbare bekendstelling, 1 November
+
+*Afdelings 1 tot 6 is vir die sagte bekendstelling aan jou mense. Hierdie een
+is vir vreemdelinge, en 'n vreemdeling weet niks van jou af nie. Dieselfde
+reël geld: niks hierin belowe iets wat die app nie doen nie.*
+
+### Die plasing vir dag een
+
+> Dit is FutureBox.
+>
+> Maak 'n liedjie. Sing self daarop. Sny 'n video. Sit woorde op 'n foto.
+> Maak 'n potgooi.
+>
+> Die redigering kos niks en is onbeperk — op elke plan, ook die gratis een.
+> Wat kos, is die enjins, en elke knoppie sê sy prys voordat dit dit doen.
+>
+> Alles in Afrikaans. Nie net die voorblad nie: elke knoppie, elke
+> verduideliking, elke foutboodskap.
+>
+> futurebox.studio
+
+*Engels:* This is FutureBox. Make a song. Sing on it yourself. Cut a video.
+Put words on a photo. Make a podcast. The editing costs nothing and is
+unlimited on every plan, including the free one. What costs money is the
+engines, and every button says its price before it spends. All of it in
+Afrikaans as well as English — not just the front page.
+
+### Sewe dae, een ding per dag
+
+'n Plasing per dag, elkeen oor **een** ding. Nie een van hulle is 'n lys van
+kenmerke nie, want niemand lees 'n lys nie.
+
+1. **Die prent-editor.** Die video van 'n foto wat verander — sny, draai,
+   agtergrond uit, woorde op. Alles verniet op jou eie foon.
+2. **Sing self daarop.** Die woorde beweeg in tyd en 'n aftelling bring jou
+   in. Een reël weer sing is 'n sleep oor daardie reël.
+3. **Die kinderkamer.** 'n Toelae wat 'n grootmens stel, skermtyd wat
+   regtig uitskop, en niks om in te tik nie.
+4. **Die video-sjablone.** Twaalf begin-punte: 'n advertensie, 'n liedjie
+   wat uit is, 'n stuk van 'n potgooi, hoe iets gedoen word, 'n aftelling,
+   wat mense gesê het.
+5. **Die taal.** Die hele app, albei tale, met 'n toets wat keer dat die een
+   agter die ander bly.
+6. **Cubed.** Drie klasse maak 'n meesterklas, en 60% van wat 'n reeks
+   verdien, gaan aan die gas.
+7. **Die prys.** Wat verniet is, wat kos, en hoekom dit so verdeel is.
+
+### Drie kort advertensies, vir betaalde plasings
+
+Kort, want 'n betaalde plasing word in twee sekondes verby geswiep.
+
+**Een.** Jou foon is 'n ateljee. Maak 'n liedjie, sing self daarop, sny die
+video. Die redigering kos niks.
+
+**Twee.** Alles in Afrikaans. Elke knoppie, elke foutboodskap — nie net die
+voorblad nie.
+
+**Drie.** Elke knoppie wat geld bestee, sê die prys voordat dit dit doen. Jy
+kry nooit 'n rekening wat jy nie gesien het kom nie.
+
+**Waar dit bewys word:** `check:paidwalk` hou vas dat 'n betaalde knoppie sy
+prys sê voor dit hef; `check:afrikaans` dat elke sleutel albei tale het;
+`check:kinderkleur` dat daar niks in die kinderkamer is om in te tik nie;
+`check:filmstart` dat al twaalf sjablone se woorde binne die veilige strook
+val; `check:cubed` dat die 60/40 wat op die bladsy staan, die een is wat die
+kode gebruik.
+
+---
+
+## 8. Wat hulle gaan vra, en die eerlike antwoord
+
+*Nie een van hierdie antwoorde maak die app beter as wat dit is nie. 'n
+Oorbelofte by 'n beswaar is die duurste plek om een te maak.*
+
+**"Is dit nie net nog 'n KI-ding nie?"**
+Die KI is die enjin, nie die app nie. Die helfte van wat hierin is — die
+redigering, die snitte, die woorde op die skerm, die hele prent-editor —
+loop op jou eie toestel, kos niks, en sou werk al was daar geen enjin nie.
+
+**"Besit ek wat ek maak?"**
+Jy besit wat jy maak en niemand vat dit van jou nie, en jy mag dit verkoop.
+Of 'n suiwer gegenereerde snit **eksklusiewe** kopiereg dra, is onseker in
+die meeste lande — die terme-bladsy sê dit, eerder as om dit stil te hou.
+
+**"Wat kos dit regtig?"**
+Die redigering: niks, onbeperk, op elke plan. Die enjins: elke knoppie wys
+sy prys voordat dit dit doen. Die pryse staan op die prysbladsy en in
+`app/lib/plans.ts`, en 'n toets hou hierdie lêer daarteen.
+
+**"Is dit veilig vir my kind?"**
+Die kinderkamer het niks om in te tik nie — elke keuse is 'n knoppie wat
+iemand gekies het. 'n Grootmens stel die toelae en die skermtyd, en wanneer
+die tyd op is, gaan die kamer weg. Daar is geen pad uit daardie kamer na die
+res van die app nie.
+
+**"Werk dit op my foon?"**
+Dit is vir 'n foon gebou, nie vir 'n rekenaar wat ook 'n foon het nie.
+
+---
+
+## 9. Wat nog van jou af moet kom, vir 1 November
+
+Dit staan apart van afdeling 6, want daardie lys was vir die sagte
+bekendstelling. Hierdie is wat die openbare een nodig het:
+
+- **Een liedjie, een video en een prent wat ÉG uit die app uit kom**, om by
+  elke plasing te sit. Ek kan nie een maak nie.
+- **Jou gesig.** Die sterkste stuk bemarking wat hierdie app het, is jy wat
+  iets maak terwyl iemand kyk.
+- **Die D-U-N-S-nommer**, as Google Play ooit deel van die storie is. Dit
+  vat tot 30 dae en niks begin voordat dit bestaan nie.
+- **Die besluit oor betaalde plasings**: hoeveel, waar, en wat jy bereid is
+  om te verloor om die eerste honderd mense te kry.

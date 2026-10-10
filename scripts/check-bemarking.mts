@@ -108,13 +108,28 @@ const refused: readonly { readonly what: RegExp; readonly why: string }[] = [
    this read the whole document above the table and flagged the rule for
    quoting the thing it exists to warn about, which is a check that cannot
    tell a warning from a claim. */
-const copy = doc.slice(
-  doc.indexOf('## 1. Die een sin'),
-  doc.indexOf('## 5. Wat ons NIE mag s'),
-);
+/* Every word of selling copy in the file, which is all of it EXCEPT the
+   warning table — not just the sections that existed the day this was
+   written.
+
+   The first version read the slice from section one to section five, and on
+   10 October four new sections were added BELOW the table: a launch post,
+   a week of posts, three paid advertisements and the answers to what people
+   will ask. None of them was scanned. The mutation that found it was the
+   phrase "Onbeperkte liedjies" dropped into the launch post, which this
+   check passed without a word — the one claim in the table it exists to
+   catch, in the newest copy in the file, invisible because of where it sat.
+
+   So the slice is now the whole document with the table cut out of it, and
+   anything added anywhere is read. */
+const RULES = '## 5. Wat ons NIE mag s';
+const table = doc.indexOf(RULES);
+const afterTable = doc.indexOf('\n## ', table + RULES.length);
+const copy = doc.slice(doc.indexOf('## 1. Die een sin'), table)
+  + (afterTable === -1 ? '' : doc.slice(afterTable));
 ok('  and the copy itself can be found to read',
-  copy.length > 1000,
-  `${copy.length} characters between the first heading and the table — the`
+  copy.length > 1000 && table > 0 && afterTable > table,
+  `${copy.length} characters of copy, with the warning table cut out — the`
   + ' four assertions below read that slice, and without it they read nothing');
 for (const one of refused) {
   ok(`  and it does not claim: ${one.what.source.split('|')[0]}`,
