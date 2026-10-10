@@ -1498,6 +1498,14 @@ jobs:
       - name: All the words in one place, and a dark button that says why
         run: npm run check:heleblad
 
+      # Simple used to hide the controls and still ask for three things, and
+      # it sat inside the card it controlled. A choice about how much of the
+      # desk to show, met after the desk, is a choice nobody makes — and a
+      # Simple that silently resets what Everything set is the fifth time
+      # this app would have taken a working feature away.
+      - name: Simple is the copilot and a button
+        run: npm run check:eenvoudig
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

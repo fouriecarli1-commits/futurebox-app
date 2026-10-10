@@ -380,6 +380,39 @@ export default function MakeMusic({
    * Simple by default, and remembered, because somebody who has gone looking
    * for the controls once should not have to go looking again.
    */
+  /* ── Simple, or everything ────────────────────────────────────────────
+ 
+     Carli, 10 October 2026: *"Bo in make a song moet daar 'n simple button
+     wees, en 'n everything, die simple moet net 'n copilot wees, en die
+     copilot moet alles skryf en die styl, stemkeuse, en lengte van liedjie.
+     Daarna moet daar net staan make song. Met everything bladsy sluit dit
+     alles in wat nou daar is."*
+ 
+     There WAS a Simple here, and it was not this. It hid the advanced
+     controls and still asked for three things — a name, the words, and what
+     it should sound like — which is three things more than somebody who came
+     here to say "write me a song about my dog" wants to fill in.
+ 
+     So Simple now means what she said: the copilot, and a button. It writes
+     the words, the style, the voice and the length onto the canvas, and the
+     only other control on the screen is Make song.
+ 
+     ── And Everything is now really everything ─────────────────────────
+ 
+     The old arrangement had three tiers wearing two names: Simple-without-
+     advanced, Simple-with-advanced, and no third. *"Met everything bladsy
+     sluit dit alles in wat nou daar is"* — so Everything shows the whole
+     desk with no second switch inside it. `advanced` is kept as the name
+     every control below already tests, and it simply follows the mode.
+ 
+     ── Nothing is switched off by Simple ───────────────────────────────
+ 
+     The same rule the old switch had, and it matters more now: whatever is
+     set — a trained sound, a length, a key — still goes to the engine.
+     Simple hides the controls; it does not reset them. The line under the
+     mode row says so whenever anything is away from its default, because a
+     setting that applies silently because its control is out of sight is
+     worse than a crowded screen. */
   const [advanced, setAdvanced] = useState(false);
   useEffect(() => {
     try {
@@ -1046,6 +1079,51 @@ export default function MakeMusic({
         </p>
       </div>
 
+      {/* ── Simple, or everything ──────────────────────────────────────
+
+          Carli, 10 October 2026: *"Bo in make a song moet daar 'n simple
+          button wees, en 'n everything."* At the TOP, which is where it was
+          not: it used to sit inside the "How it is made" card, four cards
+          down, so a person met the whole desk before they met the choice
+          about how much of it to see.
+
+          Two buttons rather than a dropdown: it is a choice between two
+          things and both are worth naming. */}
+      <div data-makemode className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-zinc-400">{t('make.mode', 'How much of it')}</span>
+        {[false, true].map((one) => (
+          <button
+            key={String(one)}
+            type="button"
+            data-makemodepick={one ? 'all' : 'simple'}
+            onClick={() => chooseMode(one)}
+            aria-pressed={advanced === one}
+            className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
+              advanced === one
+                ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+            }`}
+          >
+            {one ? t('make.modeAll', 'Everything') : t('make.modeSimple', 'Simple')}
+          </button>
+        ))}
+        <Hint>
+          {t(
+            'make.modeWhy',
+            'Simple is the copilot and one button: tell it what you want and it writes the words, the style, the voice and the length. Everything opens the whole desk. Nothing is switched off by Simple \u2014 whatever you have set stays set.',
+          )}
+        </Hint>
+      </div>
+
+      {/* Whatever is set behind the switch is printed under it. A setting
+          that applies silently because its control is out of sight is worse
+          than a crowded screen. */}
+      {!advanced && changedFromDefault.length > 0 && (
+        <p data-makeinforce className="text-xs leading-snug text-zinc-500">
+          {t('make.inForce', 'Still set from Everything:')} {changedFromDefault.join(' \u00b7 ')}
+        </p>
+      )}
+
       {/* ── Set it up ───────────────────────────────────────────────────
 
           No box around the boxes. This used to be one bordered panel with
@@ -1056,6 +1134,60 @@ export default function MakeMusic({
           button. */}
       <div className="space-y-3">
 
+        {/* ── Simple: the copilot, and nothing else ─────────────────────
+
+            Carli, 10 October 2026: *"die simple moet net 'n copilot wees, en
+            die copilot moet alles skryf en die styl, stemkeuse, en lengte van
+            liedjie. Daarna moet daar net staan make song."*
+
+            So in Simple the desk is not here. What is here is the one
+            sentence that tells somebody what to do, and the button. The
+            copilot panel is the room's own, opened from the bar — it writes
+            onto this canvas, and whatever it writes is what the button
+            below sends.
+
+            What it has written is shown, because a canvas somebody cannot
+            see is a canvas they cannot correct: four lines, read-only,
+            saying what the song is going to be. Pressing Everything opens
+            all of it for editing and nothing is lost in either direction. */}
+        {!advanced && (
+          <div data-makesimple className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+            <p className="text-sm leading-relaxed text-zinc-300">
+              {t(
+                'make.simpleSay',
+                'Open the copilot and tell it what you want \u2014 "a happy song about my dog", in any language. It writes the words, the style, the voice and the length. Then press the button.',
+              )}
+            </p>
+
+            {/* What the copilot has put there. Only drawn once there is
+                something: an empty frame under a sentence asking somebody to
+                talk to the copilot reads as the copilot having failed. */}
+            {(title.trim() || lyrics.trim() || canvas.style.trim()) && (
+              <dl data-makesimpleread className="space-y-1.5 text-sm">
+                {[
+                  [t('make.name', 'Name'), title.trim()],
+                  [t('make.style', 'Sound'), canvas.style.trim()],
+                  [
+                    t('make.words', 'Words'),
+                    lyrics.trim()
+                      ? t('make.simpleLines', '{n} lines')
+                        .replace('{n}', String(lyrics.trim().split('\n').filter((one) => one.trim()).length))
+                      : '',
+                  ],
+                  [t('make.length', 'Length'), `${seconds}s`],
+                ].filter(([, value]) => value).map(([label, value]) => (
+                  <div key={String(label)} className="flex gap-2">
+                    <dt className="shrink-0 text-zinc-500">{label}</dt>
+                    <dd className="min-w-0 truncate text-zinc-200">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        )}
+
+        {advanced && (
+          <>
         <div>
           <label htmlFor="song-name" className="text-sm font-semibold text-zinc-300">
             {t('make.name')}
@@ -1402,45 +1534,6 @@ export default function MakeMusic({
           </div>
 
 
-          {/* ── Simple, or everything ──────────────────────────────────────
-
-              Two buttons rather than a dropdown: it is a choice between two
-              things, both of them worth naming.
-
-              Inside this card rather than at the top of the room. It is a
-              setting about how much of the desk to show, and a setting about
-              the desk belongs on the desk — at the top it was the first thing
-              a person met, before the room had asked them anything. */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-zinc-400">{t('make.mode', 'How much of it')}</span>
-          {[false, true].map((one) => (
-            <button
-              key={String(one)}
-              type="button"
-              onClick={() => chooseMode(one)}
-              aria-pressed={advanced === one}
-              className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
-                advanced === one
-                  ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
-                  : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
-              }`}
-            >
-              {one ? t('make.modeAll', 'Everything') : t('make.modeSimple', 'Simple')}
-            </button>
-          ))}
-          <Hint>
-            {t(
-              'make.modeWhy',
-              'Simple asks for the three things a song needs: a name, the words, and what it should sound like. Everything opens the voice, the speed, the mood, the length and your own trained sound. Nothing is switched off by Simple — whatever you set stays set.',
-            )}
-          </Hint>
-        </div>
-
-        {!advanced && changedFromDefault.length > 0 && (
-          <p className="text-xs text-zinc-500 leading-snug">
-            {t('make.inForce', 'Still set from Everything:')} {changedFromDefault.join(' · ')}
-          </p>
-        )}
 
 
           {/* ── Everything else, behind one switch ─────────────────────────
@@ -1648,6 +1741,9 @@ export default function MakeMusic({
 
 
         </Card>
+
+          </>
+        )}
 
         {/* What is about to be made, when it is not what the button says.
 

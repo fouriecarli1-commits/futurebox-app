@@ -2796,6 +2796,13 @@ export const STRINGS: Dict = {
   "make.modeSimple": { en: "Simple", af: "Eenvoudig" },
   "make.modeAll": { en: "Everything", af: "Alles" },
   "make.modeWhy": { en: "Simple asks for the three things a song needs: a name, the words, and what it should sound like. Everything opens the voice, the speed, the mood, the length and your own trained sound. Nothing is switched off by Simple \u2014 whatever you set stays set.", af: "Eenvoudig vra die drie dinge wat \u2019n liedjie nodig het: \u2019n naam, die woorde, en hoe dit moet klink. Alles maak die stem, die spoed, die stemming, die lengte en jou eie geleerde klank oop. Eenvoudig skakel niks af nie \u2014 wat jy gestel het, bly gestel." },
+  /* ── Simple is the copilot now, 10 October 2026 ────────────────────────
+     Carli: *"die simple moet net 'n copilot wees, en die copilot moet alles
+     skryf en die styl, stemkeuse, en lengte van liedjie. Daarna moet daar net
+     staan make song."* */
+  "make.simpleSay": { en: "Open the copilot and tell it what you want \u2014 \u201ca happy song about my dog\u201d, in any language. It writes the words, the style, the voice and the length. Then press the button.", af: "Maak die copilot oop en s\u00ea vir hom wat jy wil h\u00ea \u2014 \u201c\u2019n vrolike liedjie oor my hond\u201d, in enige taal. Hy skryf die woorde, die styl, die stem en die lengte. Druk dan die knoppie." },
+  "make.simpleLines": { en: "{n} lines", af: "{n} re\u00ebls" },
+  "make.style": { en: "Sound", af: "Klank" },
   "make.inForce": { en: "Still set from Everything:", af: "Steeds gestel vanaf Alles:" },
   "make.name": { en: "What is it called?", af: "Wat noem jy dit?" },
   "make.namePlaceholder": { en: "Give it a name", af: "Gee dit ’n naam" },
