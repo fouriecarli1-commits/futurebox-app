@@ -1470,6 +1470,14 @@ jobs:
       - name: A photograph with a little motion holds still and loops
         run: npm run check:lewendefoto
 
+      # An isiXhosa speaker says a word once and the machine writes the IPA.
+      # Every pronunciation rule this app has ever written is a respelling
+      # guessed at by somebody who does not speak the language, and a click
+      # has no respelling. A WRONG phoneme rule is worse than none, so an
+      # unsure answer is never offered and nothing writes without a listen.
+      - name: A word said once is transcribed and never trusted alone
+        run: npm run check:hoorwoord
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

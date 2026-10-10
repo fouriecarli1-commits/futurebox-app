@@ -246,6 +246,18 @@ export const MODELS: readonly Candidate[] = [
      `addressOf` is never called for it. `lib/server/omni.ts` has the reader
      and the four capabilities, one of which — editing an existing video —
      nothing in this app can do at any price. */
+  /* ── The one that LISTENS ──────────────────────────────────────────
+ 
+     Carli, 10 October 2026: *"But isn't there a way for an AI to listen to
+     the phonetic sounds of someone speaking isiXhosa?"* There is, and her
+     own listing has a Flash-class Gemini badged Serverless to do it with.
+     `lib/server/hearword.ts` is the prompt and the reader; this is the name,
+     carried so the probe asks rather than so anybody assumes.
+ 
+     Filed as `image` because `what` says which VERB the probe should use,
+     not which senses the model has — it is called on `:generateContent`,
+     the same surface the picture models are. */
+  { id: 'gemini-2.5-flash', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'A Flash-class Gemini that reads audio as well as pictures. Used to turn one spoken word into IPA for a pronunciation dictionary \u2014 see lib/server/hearword.ts. Serverless on her Model Garden listing, 10 October 2026.' },
   { id: 'gemini-omni-flash-preview', what: 'video', verb: 'predict', hosting: 'self-deployed', on: 'interactions', note: 'Gemini Omni Flash. Off HER OWN documentation page, 10 October 2026. On the INTERACTIONS api, not predict \u2014 see interactionsAddress(). Text-to-video, image-to-video, reference-to-video and VIDEO EDITING. Priced per token and the rate is unread, so nothing is charged through it yet.' },
 ] as const;
 

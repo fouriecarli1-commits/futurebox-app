@@ -7170,10 +7170,35 @@ Before any of it is uploaded, the licence on the specific recording has to be re
 openly-licensed scripture texts and some openly-licensed recordings; they are not the ones most
 people find first.
 
-**It is far more work than the problem needs.** What the app actually wants is not hours of audio,
-it is a **pronunciation lexicon** — a word and how to say it, in IPA. ElevenLabs takes one
-directly. Getting a lexicon out of a recording means forced alignment, then transcription, then
-phoneme extraction — a research pipeline. Getting it from rules means writing the rules down once.
+**It is far more work than the problem needs** — and here I was wrong in a way worth recording.
+I wrote that getting phonetics out of audio means "forced alignment, then transcription, then
+phoneme extraction — a research pipeline". Carli: *"But isn't there a way for an AI to listen to
+the phonetic sounds of someone speaking isiXhosa?"*
+
+There is, and it is ordinary. **Phone recognition** — audio in, phonetic symbols out — has existed
+for years. What I described is true of turning a whole audio Bible into a lexicon and false of
+what she actually asked, which is one word at a time. For one word it is one call to a model that
+listens.
+
+So the plan changed, and it is better than either of the first two. `app/lib/server/hearword.ts`
+takes a recording of a single word, the language, and how the word is written, and returns a narrow
+IPA transcription with a confidence beside it. `check:hoorwoord` drives the reader with no network.
+
+What it unlocks is bigger than it sounds. **Every pronunciation rule this app has ever written is
+an `alias`** — a word and a respelling, guessed at by somebody who does not speak the language.
+`sayit.ts` has never written a `phoneme` rule, which is the kind that carries real IPA. For
+isiXhosa that is the whole problem: a click has no respelling in any other language's letters, so
+`x` respelt as anything at all is wrong.
+
+The loop that makes it safe is the one `/api/eleven/pronounce` was already built around: an
+isiXhosa speaker says the word once, the model writes the IPA, **she hears it read back in the
+voice that will use it**, and only then is it saved. Nothing in `hearword.ts` writes to a
+dictionary and `check:hoorwoord` holds that no route does either — because an alias that is a bit
+off sounds a bit off, while a phoneme rule that is wrong makes the voice say a DIFFERENT WORD with
+total confidence.
+
+Still to build: the booth itself — record, hear it back, keep it. The library and the model
+candidate are in; the room is not.
 
 **And those languages are the ones where rules actually work.** isiZulu, isiXhosa, Sesotho,
 Setswana and Afrikaans are written almost exactly as they sound: a letter is a sound, nearly every
