@@ -194,7 +194,12 @@ export default function StyleFrom({
       setProblem(
         made.why === 'too_many_pixels'
           ? t('pic.tooManyPixels', 'That photo is too big for a phone browser to open — it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.')
-          : t('pic.unreadable', 'That picture could not be read.'),
+          /* The dictionary's words, not a second shorter version of
+             them. This said "That picture could not be read." and the
+             dictionary says which formats work — so the shorter sentence was
+             never once on anybody's screen, and reading this file would have
+             told you otherwise. `check:eensin`. */
+          : t('pic.unreadable', 'This browser could not read that picture. JPEG, PNG or WebP.'),
       );
       return;
     }

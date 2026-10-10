@@ -870,7 +870,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                       icon={<Upload className="w-3.5 h-3.5" />}
                       label={t('live.post', 'Post it')}
                       busyLabel={t('live.posting', 'Posting…')}
-                      doneLabel={t('live.posted', 'Posted')}
+                      doneLabel={t('live.wasPosted', 'Posted')}
                       className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
                       onDo={() =>
                         send({
@@ -960,7 +960,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                   icon={<Upload className="w-3.5 h-3.5" />}
                   label={t('live.post', 'Post it')}
                   busyLabel={t('live.posting', 'Posting…')}
-                  doneLabel={t('live.posted', 'Posted')}
+                  doneLabel={t('live.wasPosted', 'Posted')}
                   className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
                   onDo={() =>
                     send({

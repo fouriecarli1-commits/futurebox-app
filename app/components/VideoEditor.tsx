@@ -71,6 +71,7 @@ import {
   RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic,
 } from 'lucide-react';
 import Card from './Card';
+import MakeSound from './MakeSound';
 import CutDock, { type Bench } from './CutDock';
 import { useSideways } from '../lib/sideways';
 import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
@@ -5915,6 +5916,45 @@ async function smallerFrame(url: string): Promise<string> {
               </ul>
             )}
           </div>
+
+          {/* ── Or a sound made right here ──────────────────────────
+
+              Carli, 10 October 2026: *"Ek dink ook video editor, en video desk
+              kan stem generations hê, noem dit eerder, generate a sound, asook
+              'n podcast text tot speech. Dit is tipies iets wat 'n mens daar
+              ook sou kon gebruik."*
+
+              In the bed section rather than in a card of its own, and that is
+              the reason it is here: this is the one place in the room that
+              decides what plays under the film, and a sound made anywhere else
+              on the screen would be a sound somebody then has to find a way to
+              use. Everything above it is a bed brought in from somewhere — a
+              file, the shelf, her own songs. This is the one made on the spot,
+              and the panel hands it straight into the same `under` the other
+              three write to, so the rights panel, the level slider and the
+              mixdown treat it identically.
+
+              It is the only paid thing in this room, which is worth saying
+              out loud: everything else here is free to serve and that is the
+              editor's whole design. The price is on the button inside the
+              panel, where it moves with the length of the script. */}
+          <MakeSound
+            onUpgrade={onUpgrade}
+            onAudio={(audio, name) => {
+              const file = new File([audio], `${safeFilename(name, 'mp3')}`, { type: audio.type || 'audio/mpeg' });
+              commit((was) => ({
+                ...was,
+                under: file,
+                /* Made here, not carried in. The rights panel asks whoever
+                   brought a bed in to vouch for it, and asking somebody to
+                   vouch for a reading this app made for them thirty seconds
+                   ago is the kind of question people learn to tick without
+                   reading. */
+                underCame: 'made' as const,
+                underName: name,
+              }));
+            }}
+          />
 
           {edit.under && (
             <>

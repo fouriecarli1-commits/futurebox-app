@@ -1548,6 +1548,25 @@ jobs:
       - name: Every lane can be named, and says where it changes
         run: npm run check:baannaam
 
+      # "noem dit eerder, generate a sound" — her name, on both timelines.
+      # The language is the fault worth not making twice: /api/voice/speak
+      # picks its model from the language the caller states, and the room
+      # that never stated one had Afrikaans read by the model chosen for
+      # English for as long as it existed, inaudibly to anybody who does not
+      # speak it.
+      - name: Generate a sound, on both timelines
+        run: npm run check:maakklank
+
+      # Found while writing that panel: `sound.title` already meant "A sound
+      # of your own", the sound trainer's heading, so the new panel would
+      # have printed it over a video timeline. check:afrikaans could not see
+      # it — both keys existed and both had both languages. What gives it
+      # away is the fallback written beside the key: two different sentences
+      # for one key means two authors meant two things, and at most one of
+      # them is on the screen.
+      - name: One key, one sentence
+        run: npm run check:eensin
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

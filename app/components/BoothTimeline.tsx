@@ -1381,7 +1381,12 @@ export default function BoothTimeline({
                       type="button"
                       onClick={() => onChange(lane.id, { muted: !lane.muted })}
                       aria-pressed={lane.muted}
-                      aria-label={t('pro.mute', 'Mute')}
+                      /* Its own key, not the one on the face of the button.
+                         `pro.mute` is the letter M — that is what the
+                         dictionary holds and what is drawn — so an aria-label
+                         reading the same key announced this button as "M".
+                         Found by `check:eensin`. */
+                      aria-label={t('pro.muteName', 'Mute')}
                       title={t('pro.muteWhat', 'Silence this lane. It stays in the session and comes back when you press it again.')}
                       className="flex h-11 w-11 items-center justify-center"
                     >
@@ -1400,7 +1405,7 @@ export default function BoothTimeline({
                       type="button"
                       onClick={() => onChange(lane.id, { soloed: !lane.soloed })}
                       aria-pressed={lane.soloed}
-                      aria-label={t('pro.solo', 'Solo')}
+                      aria-label={t('pro.soloName', 'Solo')}
                       title={t('pro.soloWhat', 'Hear only this lane. Solo another one as well and you hear those two; press it again to get everything back.')}
                       className="flex h-11 w-11 items-center justify-center"
                     >

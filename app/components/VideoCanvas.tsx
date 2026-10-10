@@ -62,6 +62,7 @@ import ShareRow from './ShareRow';
 import { loadBrandKit, saveBrandKit } from '../lib/brandkit';
 import { assetDataUrl, loadAssets } from '../lib/assets';
 import Pictures from './Pictures';
+import MakeSound from './MakeSound';
 import { loadMark } from '../lib/logomark';
 
 type Aspect = EngineAspect;
@@ -156,11 +157,23 @@ async function withSong(
      logo would cost a person another minute of their evening and give the
      file another chance to be lost. One pass, everything it carries. */
   mark?: HTMLImageElement | null,
+  /* A sound made on this desk — a read line, a voice-over — which goes under
+     the clip in place of a song.
+ 
+     In place of, not as well as: `stitch` lays ONE audio track under a film,
+     and mixing a voice over music is a second pass with a gain on each, which
+     is the video editor's job and is already built there. A desk that quietly
+     dropped one of the two would be worse than a desk that says only one goes
+     under a clip here — which the panel does say. */
+  voice?: Blob | null,
 ): Promise<Blob> {
   const wanted = (caption ?? '').trim();
-  if ((!cut && !wanted && !mark) || !canStitch()) return clip;
+  if ((!cut && !wanted && !mark && !voice) || !canStitch()) return clip;
   try {
-    const audio = cut ? await readAudio(cut.songId) : null;
+    /* The made sound wins. It is the thing somebody pressed a button for
+       thirty seconds ago, and the song under a clip is a bed that was set
+       earlier and may well have been forgotten about. */
+    const audio = voice ?? (cut ? await readAudio(cut.songId) : null);
     // A song that has gone missing must not take the subtitles or the logo
     // with it.
     if (cut && !audio && !wanted && !mark) return clip;
@@ -171,7 +184,9 @@ async function withSong(
         : { width: 1280, height: 720 };
     const made = await stitch({
       scenes: [{ clip, name: 'clip', to: seconds, ...(wanted ? { caption: wanted } : {}) }],
-      ...(audio ? { audio, audioFrom: cut?.from } : {}),
+      /* From the top for a made sound: a read starts where it starts. The
+         offset belongs to the song window and to nothing else. */
+      ...(audio ? { audio, audioFrom: voice ? 0 : cut?.from } : {}),
       ...size,
       background: 'blur',
       ...(mark ? { mark } : {}),
@@ -358,6 +373,18 @@ export default function VideoCanvas({
    * difference. The dearer rungs are chosen deliberately, with the price on
    * them, by somebody who has decided this particular shot is worth it.
    */
+  /**
+   * A sound made on this desk, to go under the clip.
+   *
+   * Carli, 10 October 2026: *"Ek dink ook video editor, en video desk kan stem
+   * generations hê, noem dit eerder, generate a sound, asook 'n podcast text
+   * tot speech."*
+   *
+   * Kept here rather than in the panel, because the thing that uses it is the
+   * pass that lays audio under the finished clip — which runs after the engine
+   * answers, minutes after the sound was made.
+   */
+  const [voice, setVoice] = useState<{ blob: Blob; name: string } | null>(null);
   const [grade, setGrade] = useState<VideoGrade>('standard');
   /**
    * A picture to start the clip from. Held here rather than uploaded: it goes
@@ -625,7 +652,7 @@ export default function VideoCanvas({
           );
         }
       }
-      const clip = await withSong(result.blob, songCut, aspect, seconds, words, brandIt ? mark : null);
+      const clip = await withSong(result.blob, songCut, aspect, seconds, words, brandIt ? mark : null, voice?.blob ?? null);
       const url = URL.createObjectURL(clip);
       setMade((held) => [{ blob: clip, url, prompt: said, aspect, spoken: willSpeak, seconds }, ...held]);
       signal('video', { category: scene?.id ?? 'canvas' });
@@ -1030,6 +1057,48 @@ export default function VideoCanvas({
           </Note>
           <SongWindow seconds={seconds} value={songCut} onChange={setSongCut} />
         </Card>
+      )}
+
+      {/* ── A sound made right here ────────────────────────────
+
+          Carli, 10 October 2026: *"Ek dink ook video editor, en video desk kan
+          stem generations hê, noem dit eerder, generate a sound, asook 'n
+          podcast text tot speech. Dit is tipies iets wat 'n mens daar ook sou
+          kon gebruik."*
+
+          Directly under the song window, because the two answer the same
+          question — what is heard over this clip — and that is also why the
+          line below says only one of them can. `stitch` lays ONE audio track
+          under a film; mixing a voice over music needs a gain on each, which
+          is the video editor's work and is already built there. Saying so is
+          the difference between a desk with a limit and a desk that quietly
+          throws away whichever one you set first.
+
+          Why it matters on THIS desk in particular: no video engine on the
+          shelf speaks Afrikaans, and the ones that speak at all are on the
+          dearer rungs. A silent clip with a read laid over it is how this app
+          says anything in Afrikaans at all — see `speak` in the state above.
+          Until now that read had to be made in another room and carried
+          here. */}
+      <MakeSound
+        onUpgrade={onUpgrade}
+        onAudio={(audio, name) => setVoice({ blob: audio, name })}
+      />
+      {voice && (
+        <p data-canvasvoice className="text-xs leading-snug text-zinc-500">
+          {t(
+            'canvas.voiceUnder',
+            'This sound goes under the clip when you make it. Only one thing can — if a song is chosen too, the sound is what you hear. The video editor is where a voice is laid over music.',
+          )}{' '}
+          <button
+            type="button"
+            data-canvasvoiceoff
+            onClick={() => setVoice(null)}
+            className="underline underline-offset-2 hover:text-zinc-300"
+          >
+            {t('canvas.voiceOff', 'Take it off')}
+          </button>
+        </p>
       )}
 
       {/* ── The box ───────────────────────────────────────────────────── */}

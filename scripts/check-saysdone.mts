@@ -90,7 +90,13 @@ ok(
 const reported: readonly { readonly file: string; readonly what: string; readonly label: string }[] = [
   /* Her own example, twice over: the live room posts a song and posts a
      video, and both went grey and came back saying "Post it". */
-  { file: 'app/components/LiveChannel.tsx', what: 'posting a song to the live room', label: "live.posted" },
+  /* `live.wasPosted` rather than `live.posted`, and the rename is the point:
+     ONE key was carrying both this room's "Posted" and the post sheet's "In
+     the room", so the dictionary could only hold one of them and this room
+     drew the other one. `check:eensin` found it. The label this check names
+     has to be the label this room actually draws, or it is holding a room to
+     a word somebody else owns. */
+  { file: 'app/components/LiveChannel.tsx', what: 'posting a song to the live room', label: "live.wasPosted" },
   { file: 'app/components/LiveChannel.tsx', what: 'posting a video to the live room', label: "live.posting" },
   /* A download says nothing on a phone: the file lands somewhere and the
      shelf that answers for it on a desk is not there. */

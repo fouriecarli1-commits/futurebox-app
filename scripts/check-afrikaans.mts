@@ -82,6 +82,10 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* The word on the solo button, spoken. `Solo` is the word in both
+     languages — it is Italian in both — and the badge already says S in
+     both. Added when `check:eensin` split the aria-label off the letter. */
+  'Solo',
   /* The name a finished film goes up under when no clip on the clock has one.
      "Film" is the Afrikaans word for a film, and the alternative — "Rolprent"
      — is what the 1950s called it. */

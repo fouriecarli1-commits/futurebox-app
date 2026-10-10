@@ -899,7 +899,7 @@ export default function ProBooth({
       return;
     }
     const piece = pieceOf(lane, ctx);
-    const named = lane.name.trim() || t('pro.lane', 'Lane');
+    const named = lane.name.trim() || t('pro.laneOne', 'Lane');
     if (what === 'wav') {
       downloadBlob(encodeWav(piece, 'stereo'), safeFilename(named, 'wav'));
       return;
