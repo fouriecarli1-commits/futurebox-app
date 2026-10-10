@@ -1590,6 +1590,7 @@ export const STRINGS: Dict = {
     en: "Save it",
     af: "Stoor dit",
   },
+  "edit.shareWhat": { en: "A film I put together in FutureBox.", af: "\u2019n Fliek wat ek in FutureBox saamgesit het." },
   "edit.failed": {
     en: "That could not be put together just now.",
     af: "Dit kon nie nou saamgesit word nie.",

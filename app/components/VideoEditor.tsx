@@ -72,6 +72,7 @@ import {
 } from 'lucide-react';
 import Card from './Card';
 import MakeSound from './MakeSound';
+import ShareRow from './ShareRow';
 import {
   MOST_PATCHES, PATCH_LARGEST, PATCH_SMALLEST, STRENGTHS, blurRadius, newPatch,
   type Patch, type StrengthId,
@@ -4782,6 +4783,34 @@ async function smallerFrame(url: string): Promise<string> {
               <Download className="w-4 h-4" />
               {t('edit.save', 'Save it')}
             </button>
+
+            {/* ── And out to wherever it is going ───────────────────
+
+                Carli: *"elke kamer moet seker ook 'n konneksie met socials
+                hê, waar hulle hul videos en foto's na social media kan
+                stuur."*
+
+                This was the one room that finished a video and offered no way
+                to send it anywhere. The video desk next door has had the share
+                sheet since September, the photo room has it, the advert desk
+                has it — and the editor, which is where the longest and most
+                finished films come out, had a download and nothing else.
+
+                `file` rather than a `track`, because what comes out of here is
+                a blob the browser made and nothing else can reach: the sheet
+                asks for it only when somebody presses share, so an unpressed
+                button costs nothing. The same component everywhere else, so
+                the handles, the caption and the phone's own share sheet are
+                one thing to keep right rather than five. */}
+            <ShareRow
+              title={filmName}
+              what={t('edit.shareWhat', 'A film I put together in FutureBox.')}
+              file={async () => new File(
+                [made.blob],
+                safeFilename(filmName, made.ext),
+                { type: made.blob.type || 'video/mp4' },
+              )}
+            />
 
             {/* ── And into her channel ──────────────────────────────────
 
