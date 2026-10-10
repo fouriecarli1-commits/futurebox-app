@@ -235,6 +235,198 @@ export const STARTS: readonly FilmStart[] = [
       forSeconds: 3,
     },
   },
+  {
+    /* ── The six below were added on 10 October ────────────────────────
+ 
+       Carli: *"Gaan aan met die video templates."* The first six were the
+       obvious ones — a show, a reel, behind the scenes. These are the six
+       her members actually post next, judged against what the rest of this
+       app is for: music out, an advert, a podcast, a how-to, a countdown and
+       what other people said.
+ 
+       Every one of them dresses a film DIFFERENTLY from all eleven others —
+       a different shape, look and join between them — because six more names
+       for the same three effects is what makes a row of templates feel like
+       a menu with one dish on it. `check:filmstart` compares all twelve. */
+    id: 'advert',
+    name: ['film.tplAd', 'An advert'],
+    what: ['film.tplAdWhat', 'Square and hard-cut, the offer up front and where to get it at the end.'],
+    shape: 'square',
+    look: 'punch',
+    join: 'cut',
+    joinFor: 0,
+    title: {
+      says: ['film.tplAdTitle', 'TWO FOR ONE, THIS WEEK'],
+      font: 'heavy',
+      size: 0.056,
+      /* 0.21 and not 0.2: at three lines this block is 0.215 deep, so its
+         top lands at 0.1025 and the band starts at 0.094. The check did
+         that arithmetic and 0.2 failed it by nine thousandths. */
+      at: { x: 0.5, y: 0.21 },
+      ink: BLACK,
+      back: GOLD,
+      box: 'bar',
+      forSeconds: 2,
+    },
+    signOff: {
+      says: ['film.tplAdEnd', 'Order at the link'],
+      font: 'plain',
+      size: 0.042,
+      at: { x: 0.5, y: 0.7 },
+      ink: BLACK,
+      back: GOLD,
+      box: 'pill',
+      forSeconds: 2.5,
+    },
+  },
+  {
+    id: 'release',
+    name: ['film.tplOut', 'Out now'],
+    what: ['film.tplOutWhat', 'Dark and flashed on the beat, the name of the song first and where to hear it last.'],
+    shape: 'tall',
+    look: 'night',
+    join: 'flash',
+    joinFor: 0.15,
+    title: {
+      says: ['film.tplOutTitle', 'NEW SONG \u2014 OUT NOW'],
+      font: 'heavy',
+      size: 0.054,
+      at: { x: 0.5, y: 0.24 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'line',
+      forSeconds: 2.5,
+    },
+    signOff: {
+      says: ['film.tplOutEnd', 'Everywhere you listen'],
+      font: 'plain',
+      size: 0.038,
+      at: { x: 0.5, y: 0.68 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'round',
+      forSeconds: 3,
+    },
+  },
+  {
+    id: 'clip',
+    name: ['film.tplClip', 'A bit of the show'],
+    what: ['film.tplClipWhat', 'Wide and warm, the line that was said up front and the name of the show at the end.'],
+    shape: 'wide',
+    look: 'warm',
+    join: 'dip',
+    joinFor: 0.35,
+    title: {
+      says: ['film.tplClipTitle', '\u201cNobody tells you that part\u201d'],
+      font: 'serif',
+      size: 0.046,
+      at: { x: 0.5, y: 0.26 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'banner',
+      forSeconds: 3,
+    },
+    signOff: {
+      says: ['film.tplClipEnd', 'Full episode out Thursday'],
+      font: 'plain',
+      size: 0.036,
+      at: { x: 0.5, y: 0.7 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'round',
+      forSeconds: 2.5,
+    },
+  },
+  {
+    id: 'steps',
+    name: ['film.tplSteps', 'How it is done'],
+    what: ['film.tplStepsWhat', 'Bright, sliding from shot to shot, the first step up front and an invitation at the end.'],
+    shape: 'tall',
+    look: 'bright',
+    join: 'slide',
+    joinFor: 0.3,
+    title: {
+      says: ['film.tplStepsTitle', 'ONE: start with the drums'],
+      font: 'mono',
+      size: 0.042,
+      at: { x: 0.5, y: 0.19 },
+      ink: BLACK,
+      back: WHITE,
+      box: 'tape',
+      forSeconds: 3,
+    },
+    signOff: {
+      says: ['film.tplStepsEnd', 'Now go and make one'],
+      font: 'round',
+      size: 0.044,
+      at: { x: 0.5, y: 0.71 },
+      ink: BLACK,
+      back: WHITE,
+      box: 'pill',
+      forSeconds: 2.5,
+    },
+  },
+  {
+    id: 'countdown',
+    name: ['film.tplSoon', 'Counting down'],
+    what: ['film.tplSoonWhat', 'Hard and wiped between shots, the number of days first and the date last.'],
+    shape: 'tall',
+    look: 'noir',
+    join: 'wipe',
+    joinFor: 0.25,
+    title: {
+      says: ['film.tplSoonTitle', 'THREE DAYS'],
+      font: 'heavy',
+      /* The biggest words of any of the twelve, which is the point of a
+         countdown — and the reason it sits lowest: a 0.072 block is 0.277
+         deep at three lines, so it needs 0.25 to clear the header. */
+      size: 0.072,
+      at: { x: 0.5, y: 0.25 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'outline',
+      forSeconds: 2,
+    },
+    signOff: {
+      says: ['film.tplSoonEnd', 'Saturday, the 1st'],
+      font: 'serif',
+      size: 0.04,
+      at: { x: 0.5, y: 0.69 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'line',
+      forSeconds: 2.5,
+    },
+  },
+  {
+    id: 'voices',
+    name: ['film.tplVoices', 'What people said'],
+    what: ['film.tplVoicesWhat', 'Soft and dissolving, the thing somebody said up front and who said it at the end.'],
+    shape: 'square',
+    look: 'soft',
+    join: 'dissolve',
+    joinFor: 0.6,
+    title: {
+      says: ['film.tplVoicesTitle', '\u201cI played it twice before I got out of the car\u201d'],
+      font: 'serif',
+      size: 0.038,
+      at: { x: 0.5, y: 0.27 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'none',
+      forSeconds: 3.5,
+    },
+    signOff: {
+      says: ['film.tplVoicesEnd', '\u2014 Thandi, Polokwane'],
+      font: 'plain',
+      size: 0.034,
+      at: { x: 0.5, y: 0.66 },
+      ink: WHITE,
+      back: BLACK,
+      box: 'none',
+      forSeconds: 2.5,
+    },
+  },
 ];
 
 export const startOf = (id: string): FilmStart | null =>

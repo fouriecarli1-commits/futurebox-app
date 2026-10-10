@@ -72,6 +72,20 @@ const boxes = new Set(BOXES.map((one) => one.id));
 const wordsOf = (one: typeof STARTS[number]): readonly FilmWords[] =>
   [one.title, one.signOff].filter((w): w is FilmWords => Boolean(w));
 
+ok('  and no two of them dress a film the same way',
+  (() => {
+    /* A starting point IS its shape, its look and how the shots arrive. Two
+       with the same three are two names for one press, and a row of twelve
+       that does three things is a menu with one dish on it — which is what a
+       person means when they say the templates all look the same. */
+    const dressings = STARTS.map((one) => `${one.shape}/${one.look}/${one.join}`);
+    const twice = dressings.filter((one, at) => dressings.indexOf(one) !== at);
+    if (twice.length) console.log(`         the same twice: ${[...new Set(twice)].join(', ')}`);
+    return twice.length === 0;
+  })(),
+  'twelve names for three effects is what makes a row of templates feel'
+  + ' fake');
+
 ok('every shape a starting point names is one the room has',
   STARTS.every((one) => one.shape in SHAPES),
   STARTS.filter((one) => !(one.shape in SHAPES)).map((one) => `${one.id}: ${one.shape}`).join(', '));

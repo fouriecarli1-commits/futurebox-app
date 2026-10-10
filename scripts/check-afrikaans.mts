@@ -86,6 +86,13 @@ const SAME_IN_BOTH = new Set([
      languages — it is Italian in both — and the badge already says S in
      both. Added when `check:eensin` split the aria-label off the letter. */
   'Solo',
+  /* A person's name and the town they live in. The sample sign-off on the
+     "What people said" film template is somebody saying a thing about a
+     song, and a name does not translate: Thandi is Thandi in both, and
+     Polokwane is Polokwane in both. Added rather than given a second name,
+     because two names for one person in one app is the kind of thing that
+     reads as a mistake the day somebody notices it. */
+  '\u2014 Thandi, Polokwane',
   /* The name of the masterclass format. A name is a name: translating it
      would give the same thing two names and the second one would be the one
      nobody searches for. */
