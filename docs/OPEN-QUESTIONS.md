@@ -9,7 +9,7 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-24.
+Last updated: 2026-10-10.
 
 ---
 
@@ -7217,3 +7217,94 @@ compressed to fit the rhythm, and — the one that matters most here — **Sesot
 are tonal, and a melody overrides lexical tone completely.** A sung corpus would teach the wrong
 tone on every word that has one. Sung output is a separate problem and it is Lyria's, not the
 lexicon's.
+
+---
+
+## Regenerating part of a song — 10 October 2026
+
+Carli: *"Kan die studio ook nie 'n drag funksie hê, wat ook natuurlike oorgange detect, en dan kan
+byvoorbeeld, 15 sekonder gedeeltes van 'n liedjie oorgegenerate word in die woorde, of die
+progressie van die klank nie? Ek weet nie hoe moontlik dit is vir al met google nie?"*
+
+Three separate things, and they have three different answers.
+
+### 1. Detecting the natural transitions — **done, verified, costs nothing**
+
+`app/lib/transitions.ts`. One feature vector per tenth of a second — energy in eight octave-wide
+bands, plus the twelve pitch classes — and then, for each frame, how different the half-second
+after it is from the half-second before it. Section boundaries are where that curve spikes.
+
+It runs in the browser on a Float32Array, uses the FFT `check:listen` already drives, and never
+calls a model, so it is free and works offline on an uploaded file.
+
+`check:oorgange` holds it to signals whose boundaries are known to the millisecond, and **three of
+its signals have no boundaries at all** — an unchanging chord, silence, and a clip too short to
+hold a window either side. Those three are the half that matters: a detector that answers a
+sustained organ chord with a list of numbers is a detector that draws blocks in a song that has
+none, and nobody would ever report it. It found three real faults on its first run, including the
+one that mattered — a mean-and-standard-deviation threshold is pulled up by the spikes it is
+looking for, so a song with boundaries at 6s and 12s reported 12s alone and silently dropped a
+real change of chord. It is a median and a median absolute deviation now.
+
+**What it deliberately does not do:** name anything. It finds *places*. Calling one of them a
+chorus would be a guess wearing a label, and `check:oorgange` holds the file to having no section
+name in it at all (comments stripped first, so the header can still explain what it measures).
+
+### 2. Regenerating fifteen seconds *in place* — **not possible with anything on our shelf**
+
+This is the one she will mind, so it is worth being exact about why.
+
+What she is describing is **audio inpainting**: hand the model the song, say "replace 1:02 to 1:17",
+and have it generate something that joins at both ends — same key, same tempo, same voice, same
+room. The model has to be conditioned on the audio either side.
+
+- **Verified:** Lyria 3 and Lyria 3 Pro on Vertex take **text prompts and reference images**. Not
+  audio. Google's own launch page for them lists the inputs and audio is not among them. Structure
+  is controlled by *prompting* for intros, verses, choruses and bridges, and by duration controls —
+  which is asking for a shape, not editing one. Lyria 3 Pro goes to three minutes, Lyria 3 to
+  thirty seconds.
+- **Verified:** Lyria RealTime is a different product and genuinely steerable — a WebSocket, a list
+  of **weighted** prompts, and BPM, density and scale changeable while it plays. It is the closest
+  thing to "the progression of the sound changing across a section". But it steers music **it is
+  generating itself, live**. It does not take her finished song as input either.
+- **Unverified, and this is the one to check:** DeepMind's own writing about the original Lyria says
+  the model can do "transformation and continuation" tasks. None of that reached the documented
+  Vertex surface as a parameter. The place that would settle it is the Lyria 3 model card's input
+  list, at
+  `cloud.google.com/vertex-ai/generative-ai/docs/models/lyria/lyria-3`. **I could not read it from
+  this session** — it now redirects to `docs.cloud.google.com`, which does not resolve through this
+  proxy. So: *not documented and not verified*, which is not the same as proven absent.
+- **Also unverified:** whether the `interactions` API accepts `{ "type": "audio", … }` as an input
+  part the way it accepts text. `app/lib/server/lyria.ts` reads audio *out* of `outputs[]`, and the
+  request it builds is `input: [{ type: 'text', text: words }]`. An audio input part would be the
+  mechanism if it exists, and one probe with her key answers it.
+
+`app/components/SongSections.tsx` has said the honest version of this since it was written: *"It
+cannot patch a section in place — the music service generates a whole song from a whole plan, and
+there is no endpoint that replaces bar 33 to 48. So editing a section here changes the plan and
+makes a new take, which is a different thing from an edit and is labelled as one."* That is still
+true and it should keep saying so.
+
+### 3. Two near things that **are** real, and are worth building instead
+
+**Regenerate from a transition to the end.** Keep the audio up to a detected boundary; ask for a
+new take of the remainder at the same style, key and tempo, with the new words; butt-join on the
+boundary. One join instead of two, and it lands on a real section change rather than mid-phrase —
+which is exactly what the detector is for. It is still a different vocal take, so it only sounds
+right at a genuine boundary, and the room must say that.
+
+**Re-sing fifteen seconds of words over the same bed.** Where a song has a separate backing track —
+which the *sing it yourself* path already produces — changing the words of one section is exact:
+same bed, same key, same tempo, re-record or re-speak only those lines. This is the only route that
+delivers "fifteen seconds of a song's words regenerated" without a single compromise, and it needs
+no music model at all.
+
+**For an instrumental stretch** a third route opens: generate a replacement with Lyria 3 Clip, which
+exists for short pieces, at the same tempo and key, and cross-fade beat-aligned. No voice to match,
+so the join can be made to work. Not offered on a sung section, where it would obviously be a
+different singer.
+
+### What is built, and what is next
+
+Built and committed: the detector and its check. Not built yet: the drag handles on the studio
+timeline that snap to it, and the two honest regenerate routes above.

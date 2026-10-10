@@ -75,8 +75,13 @@ const MINOR = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34,
  * Written out rather than pulled in because the whole of this file has to run
  * on a Float32Array that a test can build, and a browser-only analyser node
  * cannot be handed one.
+ *
+ * Exported for `lib/transitions.ts`, which needs a spectrum per frame rather
+ * than a key for a whole song. A second copy of a butterfly loop is a second
+ * place for an off-by-one to live, and this one is already driven by
+ * `check:listen`.
  */
-function fft(real: Float32Array, imag: Float32Array): void {
+export function fft(real: Float32Array, imag: Float32Array): void {
   const n = real.length;
   for (let i = 1, j = 0; i < n; i += 1) {
     let bit = n >> 1;

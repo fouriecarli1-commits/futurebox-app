@@ -1513,6 +1513,15 @@ jobs:
       - name: The video desk, Simple and Everything
         run: npm run check:videoeenvoudig
 
+      # A detector that returns a list of numbers is the easiest thing here to
+      # be wrong about quietly: too low a threshold draws twenty blocks in a
+      # song with four, too high a threshold says it heard none, and both read
+      # on screen as the app having analysed the song. So the signals have
+      # boundaries known to the millisecond — and three of them have none,
+      # which is the half that matters.
+      - name: The transition detector finds the changes that are there
+        run: npm run check:oorgange
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
