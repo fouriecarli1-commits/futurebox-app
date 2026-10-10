@@ -51,7 +51,7 @@ import {
   minutesOf, seriesById, splitAsSaid,
 } from '../app/lib/cubed.ts';
 import { createHash } from 'node:crypto';
-import { LOGO, LOGO_TALL, LOGO_WIDE } from '../app/components/CubedMark.tsx';
+import { LOGO, LOGO_TALL, LOGO_WIDE, MARK } from '../app/components/CubedMark.tsx';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -209,12 +209,54 @@ ok('  and the room shows it big enough to read',
   'her file is BOTH marks with a word under each. Below about four hundred'
   + ' pixels wide it is a smudge of two logos rather than a logo');
 
-ok('  and the small places do not shrink it instead',
-  !/CubedMark/.test(page),
-  'the door tile is 48 pixels. Her logo there is unreadable, and cropping it'
-  + ' to one mark is remaking it — which is the thing she asked me not to do.'
-  + ' So that tile carries a plain glyph that is not pretending to be her'
-  + ' logo, and it says so where it is written');
+ok('  and the small places do not shrink the lockup instead',
+  !/<CubedMark/.test(page),
+  'her lockup is BOTH marks with a word under each. At 48 pixels it is a'
+  + ' smudge of two logos, so the door carries the single mark instead');
+
+/* ── 4b. The mark on its own, which she asked for ─────────────────────── */
+
+const markFile = (() => {
+  try {
+    return readFileSync(`public${MARK}`);
+  } catch {
+    return null;
+  }
+})();
+
+ok('the mark on its own is in the app',
+  markFile !== null && markFile.length > 1_000,
+  `public${MARK} — "Gaan nou vir my die een mark sonder woorde maak"`);
+
+ok('  and it is really see-through',
+  (() => {
+    if (!markFile) return false;
+    /* A PNG says its colour type in the IHDR, 25 bytes in: 6 is RGBA and
+       4 is grey+alpha. Anything else has no alpha channel at all, which is
+       the whole point of this file and is invisible on a white page. */
+    const kind = markFile[25];
+    return kind === 6 || kind === 4;
+  })(),
+  'a mark with no alpha channel looks right on every light page and arrives'
+  + ' as a white box the moment it is put on a dark one — which is both of'
+  + ' the places it goes');
+
+ok('  and it is square, so it can be an icon',
+  (() => {
+    if (!markFile) return false;
+    const wide = markFile.readUInt32BE(16);
+    const tall = markFile.readUInt32BE(20);
+    return wide === tall && wide >= 512;
+  })(),
+  'a store icon is square, and one that is not gets letterboxed or cropped'
+  + ' by whoever is showing it');
+
+ok('  and the door sets it on something it can be seen against',
+  /data-cubedchip/.test(mark) && /<CubedChip size=\{48\}/.test(page)
+  && /bg-zinc-100/.test(mark),
+  'her mark is navy and that tile is near-black. The two ways out are a'
+  + ' chip to put it on, or recolouring her artwork — and the second is the'
+  + ' thing she asked me not to do');
 
 /* ── 5. The room is dark through the theme, not around it ─────────────── */
 
@@ -248,12 +290,10 @@ ok('the classes section has its own door into the room',
   'her words: "Die masterclass button moet ook sy eie button hê en wanneer'
   + ' iemand daar op click vat dit jou ook na ’n futuristic kamer toe"');
 
-ok('  and the door carries something with a surface on it',
-  /<Boxes className="h-12 w-12/.test(page),
+ok('  and the door carries her mark',
+  /<CubedChip size=\{48\}/.test(page),
   'the tile is the button’s own argument: a row with nothing on its left is'
-  + ' another row. It is a plain glyph and not her logo shrunk, because her'
-  + ' file at 48 pixels is a smudge of two logos and cropping it to one is'
-  + ' remaking it');
+  + ' another row');
 
 ok('  and the section is called what she called it',
   /t\('tab\.classes', 'Cubed classes'\)/.test(page),

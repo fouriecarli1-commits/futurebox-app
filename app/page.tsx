@@ -14,7 +14,7 @@ import {
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors,
-  Image as ImageIcon, Baby, Boxes} from 'lucide-react';
+  Image as ImageIcon, Baby} from 'lucide-react';
 import {
   TRACK_FLAVOURS,
 } from './data/studio';
@@ -35,6 +35,7 @@ import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
 import VideoEditor from './components/VideoEditor';
 import VideoCanvas from './components/VideoCanvas';
+import { CubedChip } from './components/CubedMark';
 import PostStudio from './components/PostStudio';
 import Copilot, { type CopilotAction } from './components/Copilot';
 import type { Canvas } from './components/MakeMusic';
@@ -3319,19 +3320,19 @@ export default function FutureBoxHome() {
                 has scrolled past twenty cards has already decided what they
                 came for.
 
-                The Cubed logo is NOT here, and that is deliberate. Her file
-                is both marks side by side with a word under each, 1408 wide.
-                At the size of this tile it is a smudge of two logos, and
-                cropping it to one is remaking it, which she asked me not to
-                do: "Ek wil nie hê jy moet dit remake nie." Until a one-mark
-                file exists, this row carries a plain glyph that is not
-                pretending to be her logo. */}
+                Her mark, on its own and with the ground taken off — the
+                file she asked for: "Gaan nou vir my die een mark sonder
+                woorde maak." Cropped out of her own picture and cleared
+                with this app's own background remover; not one line
+                redrawn. On a pale chip because it is navy and this tile is
+                near-black, and recolouring it would be changing her
+                artwork. */}
             <a
               href="/cubed"
               data-cubeddoor
               className="group flex items-center gap-4 rounded-2xl border border-zinc-800 bg-gradient-to-r from-zinc-950 to-zinc-900 px-5 py-4 hover:border-zinc-600"
             >
-              <Boxes className="h-12 w-12 flex-shrink-0 text-zinc-400" />
+              <CubedChip size={48} />
               <span className="min-w-0 flex-1">
                 <span className="block text-base font-black tracking-tight text-white">
                   {t('cubed.title', 'Cubed')}
