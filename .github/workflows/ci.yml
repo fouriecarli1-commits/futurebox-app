@@ -1586,6 +1586,15 @@ jobs:
       - name: A brand pack is a folder, and nothing in it is thrown away
         run: npm run check:merkpak
 
+      # A blog like this fails by going quietly out of date, not by being
+      # empty: an article saying "press Add one under Blur a patch" breaks the
+      # day that button is renamed, and it still READS perfectly — somebody
+      # following it assumes they are looking in the wrong place and never
+      # reports it. So every article lists the controls it names, as i18n
+      # keys, and a key the dictionary has lost fails the build.
+      - name: The blog says things that are true of this app
+        run: npm run check:blog
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

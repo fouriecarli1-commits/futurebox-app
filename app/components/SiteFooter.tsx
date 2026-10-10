@@ -93,6 +93,12 @@ export function SiteFooter() {
                 is on every route: a grown-up who has not opened their account
                 sheet still has a way in, and so does somebody who was sent
                 the app rather than told about it. */}
+            {/* The articles, from every route. They are written to be found
+                by somebody who has not signed up, and the footer is the one
+                thing on every page. */}
+            <a href="/blog" className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap underline underline-offset-4 hover:text-zinc-200">
+              {t('foot.blog', 'How it works')}
+            </a>
             <a href="/kids" className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap underline underline-offset-4 hover:text-zinc-200">
               {t('foot.kids', 'Kids room')}
             </a>

@@ -18,7 +18,9 @@
  */
 
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, BookOpen } from 'lucide-react';
+import Link from 'next/link';
+import { inOrder, saidIn } from '../lib/blog';
 import { useLang } from '../lib/i18n';
 import HereNow from './HereNow';
 import Charts from './Charts';
@@ -37,7 +39,7 @@ export default function Spotlight({
   /** Where a charting song actually is. See the note in `Charts`. */
   onOpenLive: () => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { lang, t } = useLang();
 
   return (
     <div className="space-y-4">
@@ -154,6 +156,65 @@ export default function Spotlight({
           on it, which is what brings them back. Shut to start with, so four
           bars are four lines rather than four screens. */}
       <Charts onOpenRadar={onOpenRadar} onOpenLive={onOpenLive} />
+
+      {/* ── How it works ────────────────────────────────────
+
+          Carli, 10 October 2026: *"Ek besef ook in spotlight gaan ons 'n Blog
+          ook moet hê, daarin sal ek artikels moet deel oor hoe die
+          verskillende funksies in die app werk."*
+
+          Last on the page, and that is the right place rather than a demotion.
+          The hero says what this app is for and the bars say what is on it
+          — both of which somebody arriving needs before an article about how
+          a room works. What this is for is the second visit, and the search
+          result that brings somebody here in the first place.
+
+          Three, not all of them, with a door to the rest. A list of every
+          article on the landing page is a landing page that grows into an
+          index, and the whole lesson of the hero above is that two screens of
+          prose before the first button is two screens nobody reads.
+
+          Real links rather than buttons: these are pages with their own
+          addresses, meant to be opened in a tab, shared and found by a
+          crawler. See `lib/blog.ts`. */}
+      <section className="space-y-3" data-spotlightblog>
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white">
+            <BookOpen className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+            {t('blog.title', 'How it works')}
+          </h3>
+          <Link
+            href="/blog"
+            className="inline-flex min-h-[44px] items-center text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+          >
+            {t('blog.all', 'All of them')}
+          </Link>
+        </div>
+        <ul className="grid gap-2 sm:grid-cols-3">
+          {inOrder().slice(0, 3).map((piece) => (
+            <li key={piece.id}>
+              <Link
+                href={`/blog/${piece.id}`}
+                data-spotlightpiece={piece.id}
+                className="block h-full rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 hover:border-emerald-500/60"
+              >
+                {/* `saidIn`, not `t()`. The Afrikaans is in the article
+                    itself; handing these to the dictionary would be the same
+                    sentence in two files, and a key the dictionary has never
+                    heard of falls back to the English silently — so an
+                    Afrikaans reader would get an English title and nothing
+                    anywhere would say so. */}
+                <span className="block text-sm font-bold leading-tight text-white">
+                  {saidIn(piece.title, lang)}
+                </span>
+                <span className="block pt-1.5 text-xs leading-snug text-zinc-500">
+                  {saidIn(piece.blurb, lang)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

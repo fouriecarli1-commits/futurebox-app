@@ -334,6 +334,7 @@
     "check:eensin": "tsx scripts/check-eensin.mts",
     "check:blurkol": "tsx scripts/check-blurkol.mts",
     "check:merkpak": "tsx scripts/check-merkpak.mts",
+    "check:blog": "tsx scripts/check-blog.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",
