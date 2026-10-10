@@ -17,7 +17,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { inOrder } from '../lib/blog';
-import { SiteFooter } from '../components/SiteFooter';
 import BlogList from '../components/BlogList';
 
 export const metadata = {
@@ -48,7 +47,6 @@ export default function Blog(): React.ReactElement {
 
         <BlogList pieces={pieces} />
       </div>
-      <SiteFooter />
     </main>
   );
 }

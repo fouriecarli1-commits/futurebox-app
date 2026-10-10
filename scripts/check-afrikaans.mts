@@ -86,6 +86,10 @@ const SAME_IN_BOTH = new Set([
      languages — it is Italian in both — and the badge already says S in
      both. Added when `check:eensin` split the aria-label off the letter. */
   'Solo',
+  /* The name of the masterclass format. A name is a name: translating it
+     would give the same thing two names and the second one would be the one
+     nobody searches for. */
+  'Cubed',
   /* The name a finished film goes up under when no clip on the clock has one.
      "Film" is the Afrikaans word for a film, and the alternative — "Rolprent"
      — is what the 1950s called it. */

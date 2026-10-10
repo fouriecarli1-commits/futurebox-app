@@ -65,7 +65,14 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-10 pb-20 text-sm text-zinc-400 sm:flex-row sm:justify-between">
         <div className="flex flex-col items-center gap-2 sm:items-start">
           <p>© {year} FutureBox. {t('foot.rights', 'All rights reserved.')}</p>
-          <nav className="flex gap-5">
+          {/* Wrapping, because the row grew.
+
+              It was four links and `flex gap-5` with no wrap, which fitted a
+              390-pixel phone exactly. Three more went in today — the blog,
+              the kids room and story mode — and seven do not fit: measured at
+              466 pixels in a 390 viewport, which is the whole page scrolling
+              sideways and the first two links off the left edge. */}
+          <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1 sm:justify-start">
             <a href="/help" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
               {t('foot.help', 'Help')}
             </a>

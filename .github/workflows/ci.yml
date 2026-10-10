@@ -1605,6 +1605,14 @@ jobs:
       - name: Screen time belongs to the grown-up
         run: npm run check:skermtyd
 
+      # The name IS the rule: Cubed means three, so a series with two in it
+      # is a promise broken to the person who sat down for the third —
+      # quietly, because nothing on a screen counts for them. And the 60/40
+      # is quoted to guests in public before they agree, so a number that
+      # says 60 on the invitation and 55 in the agreement is not a bug.
+      - name: Three to a masterclass, sixty to the guest
+        run: npm run check:cubed
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

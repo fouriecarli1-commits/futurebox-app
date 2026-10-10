@@ -43,6 +43,7 @@ import { probeAudio } from './lib/engines';
 import Booth from './components/Booth';
 import LiveChannel from './components/LiveChannel';
 import Masterclasses from './components/Masterclasses';
+import CubedMark from './components/CubedMark';
 import { Counters, Views, useBoard } from './components/Counters';
 import Placement from './components/Placement';
 import PodcastStudio from './components/PodcastStudio';
@@ -2799,7 +2800,7 @@ export default function FutureBoxHome() {
           {([
             { id: 'all', label: t('tab.all', 'Spotlight'), short: t('tab.all.s', 'Spotlight'), icon: Compass },
             { id: 'futurebox', label: t('tab.pods', 'FutureBox Podcasts'), short: t('tab.pods.s', 'Podcasts'), icon: Headphones },
-            { id: 'masterclasses', label: t('tab.classes', 'Masterclasses'), short: t('tab.classes.s', 'Classes'), icon: GraduationCap },
+            { id: 'masterclasses', label: t('tab.classes', 'Cubed classes'), short: t('tab.classes.s', 'Cubed'), icon: GraduationCap },
             { id: 'creations', label: t('tab.creations', 'Creative AI Music & Video'), short: t('tab.creations.s', 'Music & video'), icon: Sparkles },
             { id: 'radar', label: t('tab.radar', 'AI Trends Radar'), short: t('tab.radar.s', 'Radar'), icon: TrendingUp },
           ] as const).map((tab) => {
@@ -3302,6 +3303,46 @@ export default function FutureBoxHome() {
             always={activeTab === 'masterclasses'}
           >
           <section className="space-y-6">
+            {/* ── Cubed, its own door ─────────────────────────────
+
+                Carli, 10 October 2026: *"Die masterclass button moet ook sy
+                eie button hê en wanneer iemand daar op click vat dit jou ook
+                na 'n futuristic kamer toe, wat spectacular en modern is."*
+
+                A button and not a tab, which is the distinction she drew. The
+                tab above shows the shelf — the library, the paths, the things
+                to watch. This is the door to the room where the format is
+                explained and a guest reads the terms, and those are two
+                different errands: one is browsing and the other is being
+                persuaded.
+
+                On top of the shelf rather than under it, because somebody who
+                has scrolled past twenty cards has already decided what they
+                came for.
+
+                The mark is the button's own argument. It is the only thing on
+                this page with a surface on it, which is what makes it read as
+                a door into somewhere else rather than another row. */}
+            <a
+              href="/cubed"
+              data-cubeddoor
+              className="group flex items-center gap-4 rounded-2xl border border-zinc-800 bg-gradient-to-r from-zinc-950 to-zinc-900 px-5 py-4 hover:border-zinc-600"
+            >
+              <CubedMark size={48} back="#0b0b0e" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-black tracking-tight text-white">
+                  {t('cubed.title', 'Cubed')}
+                </span>
+                <span className="block text-xs leading-snug text-zinc-500">
+                  {t(
+                    'cubed.door',
+                    'Three classes to a masterclass — what it is, how it is done, and what goes wrong.',
+                  )}
+                </span>
+              </span>
+              <ArrowRight className="h-4 w-4 flex-shrink-0 text-zinc-600 group-hover:text-zinc-300" />
+            </a>
+
             {picksBar}
 
             <Masterclasses

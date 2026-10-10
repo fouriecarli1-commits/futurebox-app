@@ -474,6 +474,80 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
  * in is bright on any surface, and a member who chose a violet accent should
  * still see it in here.
  */
+/* ── Cubed: iron on a black that is not quite black ──────────────────────
+ *
+ * Carli, 10 October 2026: *"wanneer iemand daar op click vat dit jou ook na 'n
+ * futuristic kamer toe, wat spectacular en modern is. Dit moet absolutely
+ * classy wees."*
+ *
+ * The room's own fixed palette, declared here rather than painted with inline
+ * styles in the component — and that distinction is the whole of why this
+ * block exists. The first version of the room set its background with a style
+ * attribute and wrote `text-white` on top of it. `white` in this app is
+ * `--fb-ink`, which follows the theme, so on the default light theme every
+ * heading in that near-black room came out near-black on near-black. It
+ * looked right in the source, compiled, and was invisible on the page.
+ *
+ * Doing it as tokens is what the Pro Booth above already does, for the same
+ * reason: a room that wants its own darkness has to say so to the theme
+ * rather than around it.
+ *
+ * ── Iron rather than the booth's blue ────────────────────────────────────
+ *
+ * The surfaces are the same neutral the mark is drawn in, very slightly cool,
+ * and the accent is steel instead of emerald. A green button on this page
+ * would be the app's chrome arriving in the middle of a room whose whole job
+ * is to look like somebody else's invitation.
+ */
+/* Both selectors, and the second one is the one that matters.
+ *
+ * `[data-cubed]` alone paints the room and leaves the site footer — which the
+ * root layout renders as a SIBLING of the page — on the app's own light
+ * theme, so a near-black room ended in a white band. `body:has(…)` hands the
+ * palette to the whole document for the routes this room is on, footer
+ * included.
+ *
+ * The first selector stays as the floor: where `:has` is not supported the
+ * room is still dark and only the footer is light, which is the old behaviour
+ * rather than a new fault. */
+[data-cubed],
+body:has([data-cubed]) {
+  --fb-surface-50: 244 246 249;
+  --fb-surface-100: 226 230 236;
+  --fb-surface-200: 199 205 214;
+  --fb-surface-300: 168 177 189;
+  /* The three that carry body text on this page, bright enough to read on a
+     near-black ground — the lesson the booth's own ramp above records. */
+  --fb-surface-400: 158 168 182;
+  --fb-surface-500: 134 145 160;
+  --fb-surface-600: 110 121 137;
+  --fb-surface-700: 60 68 78;
+  --fb-surface-800: 38 43 51;
+  --fb-surface-900: 24 28 34;
+  --fb-surface-950: 12 14 17;
+
+  /* Steel, not emerald. Brightest at 500 like every other ramp, so the same
+     class names go on meaning the same weights. */
+  --fb-primary-50: 14 20 26;
+  --fb-primary-100: 22 31 40;
+  --fb-primary-200: 34 46 58;
+  --fb-primary-300: 60 76 92;
+  --fb-primary-400: 118 136 155;
+  --fb-primary-500: 178 194 210;
+  --fb-primary-600: 150 166 183;
+  --fb-primary-700: 112 128 145;
+  --fb-primary-800: 78 92 107;
+  --fb-primary-900: 48 58 70;
+  --fb-primary-950: 26 33 41;
+
+  --fb-page: 7 8 10;
+  --fb-ink: 237 240 244;
+  --fb-void: 4 5 7;
+  --fb-scrim: 3 4 6;
+
+  color: rgb(var(--fb-ink));
+}
+
 [data-booth] {
   --fb-surface-50: 243 244 247;
   --fb-surface-100: 228 230 236;

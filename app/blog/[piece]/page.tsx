@@ -17,7 +17,6 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PIECES, pieceById } from '../../lib/blog';
-import { SiteFooter } from '../../components/SiteFooter';
 import BlogBody from '../../components/BlogBody';
 
 export function generateStaticParams(): { piece: string }[] {
@@ -51,7 +50,6 @@ export default async function Piece(
         </Link>
         <BlogBody piece={found} />
       </article>
-      <SiteFooter />
     </main>
   );
 }
