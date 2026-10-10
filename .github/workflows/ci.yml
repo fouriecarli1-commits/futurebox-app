@@ -1491,6 +1491,13 @@ jobs:
       - name: No word means two things on one screen
         run: npm run check:eennaam
 
+      # A button dark for a good reason and a button that is broken look
+      # exactly the same, and the difference is one sentence. And the whole
+      # lyric on a sheet: the teleprompter shows the line that is due now,
+      # which is wrong in the minute before somebody starts singing.
+      - name: All the words in one place, and a dark button that says why
+        run: npm run check:heleblad
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

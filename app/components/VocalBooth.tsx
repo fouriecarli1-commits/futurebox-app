@@ -28,7 +28,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { barClearance } from './TabBar';
-import { ArrowLeft, Check, ChevronDown, Circle, Ear, Layers, Loader2, Lock, Mic, Music2, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Circle, Ear, Layers, Loader2, Lock, Mic, Music2, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X, FileText } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { encodeWav } from '../lib/wav';
 import { accessToken } from '../lib/cloud';
@@ -57,6 +57,7 @@ import { check } from '../lib/entitlements';
 import { usePlan } from '../lib/useplan';
 import Card from './Card';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
+import { linesIn, sheetOf } from '../lib/wholesheet';
 import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
 import { CREDITS } from '../lib/credits';
@@ -1059,6 +1060,22 @@ export default function VocalBooth({
 
   const busyOrLive = phase === 'recording' || phase === 'counting';
 
+  /* ── The whole lyric, as a sheet ──────────────────────────────────────
+ 
+     Carli, 10 October 2026: *"die liedjie se woord moet ook op 'n button
+     beskikbaar wees, waar die hele liedjie se woorde kan op pop vir iemand
+     wat so wil record en die woorde in die geheel wil sien."*
+ 
+     The booth shows the line that is due now, like a teleprompter. That is
+     right while singing and wrong in the minute before, when what somebody
+     wants is the shape of the whole song: how many verses, where the chorus
+     lands, how long the bridge is. */
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const sheet = useMemo(
+    () => sheetOf(track.parts as readonly Part[] | undefined, track.lyrics),
+    [track.parts, track.lyrics],
+  );
+
   /** Whether the engraving of the take is open. Shut, always, to start. */
   const [sangOpen, setSangOpen] = useState(false);
 
@@ -1612,6 +1629,7 @@ export default function VocalBooth({
             <span className="flex min-w-0 items-center gap-2">
               <button
                 type="button"
+                data-boothread
                 onClick={() => void readWords()}
                 disabled={reading || busy || busyOrLive}
                 className="min-h-[44px] min-w-0 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
@@ -1619,10 +1637,131 @@ export default function VocalBooth({
                 {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
                 {reading ? t('booth.readingShort', 'Reading\u2026') : t('booth.readWords', 'Read the words off the song')}
               </button>
+              {/* ── Why it is dark, said rather than left to be guessed ────
+
+                  Carli, 10 October 2026: *"by probooth se sound recording is
+                  die button donker en nie beskikbaar nie wat sê listen to
+                  songs words."*
+
+                  It was greyed while recording, while counting in, and while
+                  anything else on this screen was working — all three correct
+                  and none of them said so. A button that is dark for a good
+                  reason and a button that is broken look exactly the same,
+                  and the difference is one sentence.
+
+                  Only drawn when it IS dark, so it is never a line of text
+                  explaining a button that works. */}
+              {(reading || busy || busyOrLive) && (
+                <span data-boothreadwhy className="text-[12px] leading-snug text-zinc-500">
+                  {busyOrLive
+                    ? t('booth.readWhileLive', 'Not while the microphone is open — stop the take first.')
+                    : reading
+                      ? t('booth.readWhileReading', 'Reading them now.')
+                      : t('booth.readWhileBusy', 'One thing at a time — wait for the other tool to finish.')}
+                </span>
+              )}
               <Cost rate={CREDITS.transcribe} seconds={duration || track.seconds} />
             </span>
           )}
+          {/* ── The whole lyric, free, and available while recording ────
+
+              Carli, 10 October 2026: *"die liedjie se woord moet ook op 'n
+              button beskikbaar wees, waar die hele liedjie se woorde kan op
+              pop vir iemand wat so wil record en die woorde in die geheel
+              wil sien."*
+
+              Deliberately NOT disabled while the microphone is open. It is
+              the one thing on this row somebody wants most in the middle of
+              a take — it costs nothing, reads nothing and sends nothing, so
+              there is no reason to take it away exactly when it is useful.
+
+              Drawn only where there are words to show. A button that opens
+              an empty sheet is worse than no button: it reads as the words
+              having been lost. */}
+          {sheet.length > 0 && (
+            <button
+              type="button"
+              data-boothsheet
+              onClick={() => setSheetOpen(true)}
+              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5"
+            >
+              <FileText className="w-4 h-4" />
+              {t('booth.wholeSheet', 'All the words')}
+              <span className="pl-0.5 text-zinc-500">{t('play.free', 'free')}</span>
+            </button>
+          )}
         </div>
+
+        {/* ── The sheet ───────────────────────────────────────────────────
+
+            Over everything, because it is for reading and anything behind it
+            is a distraction while you read. It does not pause the take: a
+            singer who opens it mid-song is opening it BECAUSE they are
+            mid-song.
+
+            `onClick` on the backdrop as well as the button, because the one
+            thing somebody does with a sheet they have finished with is tap
+            away from it. */}
+        {sheetOpen && (
+          <div
+            data-boothsheetout
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('booth.wholeSheet', 'All the words')}
+            onClick={() => setSheetOpen(false)}
+            /* `bg-scrim` and not `bg-black/80`: `black` is remapped to the theme's
+               void, which is a PALE GREY in the light theme this app ships —
+               so a sheet over it would have been unreadable white-on-white
+               for anybody on that theme. `check:scrim` said so within the
+               minute, and this is the second time today a Tailwind colour
+               name has meant the opposite of what it says. */
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim/80 p-4 backdrop-blur-sm"
+          >
+            <div
+              onClick={(event) => event.stopPropagation()}
+              className="my-4 w-full max-w-lg space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-bold text-zinc-100">
+                    {track.title || t('booth.untitled', 'This song')}
+                  </p>
+                  <p className="text-[12px] text-zinc-500">
+                    {t('booth.sheetCount', '{parts} parts, {lines} lines')
+                      .replace('{parts}', String(sheet.length))
+                      .replace('{lines}', String(linesIn(sheet)))}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  data-boothsheetshut
+                  onClick={() => setSheetOpen(false)}
+                  className="min-h-[44px] shrink-0 rounded-xl border border-zinc-700 px-3 py-2 text-sm font-semibold text-zinc-300"
+                >
+                  {t('booth.sheetShut', 'Close')}
+                </button>
+              </div>
+
+              {sheet.map((part, at) => (
+                <div key={`${part.name}-${at}`} className="space-y-1">
+                  {part.name && (
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                      {part.name}
+                    </p>
+                  )}
+                  {/* Each line on its own row, at a size somebody can read
+                      from arm's length with a microphone in front of them —
+                      which is the whole reason this is not the lyric box. */}
+                  {part.lines.map((line, n) => (
+                    <p key={n} className="text-[15px] leading-relaxed text-zinc-200">
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Singing with the singer ─────────────────────────────────────
             People sing better beside somebody already on the note. That is

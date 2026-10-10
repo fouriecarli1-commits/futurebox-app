@@ -3752,6 +3752,19 @@ export const STRINGS: Dict = {
     en: "Listen to the words",
     af: "Luister na die woorde",
   },
+  /* ── The read button says why it is dark, 10 October 2026 ──────────────
+     Carli: *"by probooth se sound recording is die button donker en nie
+     beskikbaar nie wat sê listen to songs words."* It was greyed for three
+     correct reasons and said none of them. */
+  "booth.readWhileLive": { en: "Not while the microphone is open \u2014 stop the take first.", af: "Nie terwyl die mikrofoon oop is nie \u2014 stop eers die opname." },
+  "booth.readWhileReading": { en: "Reading them now.", af: "Lees hulle nou." },
+  "booth.readWhileBusy": { en: "One thing at a time \u2014 wait for the other tool to finish.", af: "Een ding op \u2019n slag \u2014 wag dat die ander gereedskap klaarmaak." },
+  /* And the whole lyric on a sheet, for somebody recording who wants to see
+     the shape of the song rather than the line that is due now. */
+  "booth.wholeSheet": { en: "All the words", af: "Al die woorde" },
+  "booth.sheetCount": { en: "{parts} parts, {lines} lines", af: "{parts} dele, {lines} re\u00ebls" },
+  "booth.sheetShut": { en: "Close", af: "Maak toe" },
+  "booth.untitled": { en: "This song", af: "Hierdie liedjie" },
   "booth.playAlong": { en: "Play it and follow the words", af: "Speel dit en volg die woorde" },
   "booth.wordsMeasured": {
     en: "The words are lined up with where the voice actually sings.",
