@@ -1567,6 +1567,16 @@ jobs:
       - name: One key, one sentence
         run: npm run check:eensin
 
+      # "Ek sien ook nogsteeds nie 'n blur funksie nie" — she was right, and
+      # the first answer was the wrong feature: a dial blurs the whole frame,
+      # which is a mood, and a blur tool is a patch over a face. This is the
+      # only control in the app whose failure is somebody else's privacy, and
+      # all three ways it can fail are invisible on the screen where it is
+      # used — too gentle, drawn in the wrong place, or the glass and the
+      # film disagreeing about the radius.
+      - name: The blur patch hides what it is put over
+        run: npm run check:blurkol
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

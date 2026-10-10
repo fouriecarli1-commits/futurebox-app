@@ -66,6 +66,7 @@
  */
 
 import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
+import { drawPatches, type Patch } from './videoblur';
 import { fontFor } from './videofonts';
 import { boxPath, boxById, type BoxShape } from './videopaint';
 import { stretches, wordsUp } from './videospan';
@@ -127,6 +128,18 @@ export interface Scene {
   readonly caption?: string;
   /** How fast this scene plays, as a multiple. One is as filmed. */
   readonly speed?: number;
+  /**
+   * Patches of this shot blurred out: a face, a plate, a screen.
+   *
+   * Per scene and not per film, because the thing being hidden is in one shot.
+   * Drawn on top of the picture and UNDER the words and the logo — a caption
+   * is ours and a blur is hers, and blurring our own text would be this room
+   * reaching past what the control says it does.
+   *
+   * See `lib/videoblur.ts`. Absent or empty draws nothing at all, which is not
+   * the same as drawing a patch of strength zero.
+   */
+  readonly blurs?: readonly Patch[];
   /**
    * Fill the frame, cropping the overflow, instead of fitting the whole picture
    * in and putting something behind the bars.
@@ -1372,6 +1385,16 @@ export async function stitch(cut: Cut): Promise<Made> {
           if (wantsBlur && fills < 0.995) backdrop(context, scratch, video, cut.width, cut.height);
           context.drawImage(video, box.x, box.y, box.w, box.h);
           if (grade) context.filter = 'none';
+          /* ── The patches, over the picture and under everything of ours ──
+ 
+             After the grade comes off, so a face is blurred rather than
+             blurred-and-then-graded — which would be a second filter pass per
+             patch per frame for a difference nobody can see.
+ 
+             Before the caption and the mark. A blur is hers and a caption is
+             ours, and softening our own text would be this control reaching
+             past what it says it does. `check:blurpatch` holds the order. */
+          drawPatches(context, video, cut.scenes[index].blurs, cut, box);
           /* Over the picture and over the bars alike, so a caption on a wide
              shot in a tall film sits in the black band rather than across a
              face. Painted every frame because the frame under it is. */

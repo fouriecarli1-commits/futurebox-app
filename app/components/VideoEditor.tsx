@@ -72,6 +72,10 @@ import {
 } from 'lucide-react';
 import Card from './Card';
 import MakeSound from './MakeSound';
+import {
+  MOST_PATCHES, PATCH_LARGEST, PATCH_SMALLEST, STRENGTHS, blurRadius, newPatch,
+  type Patch, type StrengthId,
+} from '../lib/videoblur';
 import CutDock, { type Bench } from './CutDock';
 import { useSideways } from '../lib/sideways';
 import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
@@ -3321,6 +3325,81 @@ async function smallerFrame(url: string): Promise<string> {
                   />
                 </div>
               )}
+              {/* ── The blur patches, on the glass ──────────────────
+
+                  `backdrop-filter` here and `filter` on the canvas in the
+                  render, and the radius is the SAME share of the frame through
+                  the same function — `blurRadius`, scaled by `previewScale`,
+                  which is what makes the patch she places the patch she gets.
+                  Without that scale a 20-pixel blur is three times as strong
+                  on a 300-wide preview as in a 1080 film, which is the fault
+                  `videoadjust.ts` had to fix when the dial's ceiling went up.
+
+                  Dragged with `dragOnFrame` and sized with `grip`, the two the
+                  caption and the logo already use. The grip scales BOTH sides
+                  by the same ratio so the shape is kept; the two sliders in
+                  the bench are how a round patch becomes a wide one. */}
+              {(piece.blurs ?? []).map((patch) => {
+                const radius = blurRadius(patch.strength, shapeOf(edit)) * previewScale;
+                return (
+                  <div
+                    key={patch.id}
+                    data-editorblurglass={patch.id}
+                    onPointerDown={(event) => {
+                      holding();
+                      dragOnFrame(
+                        event,
+                        (spot) => slide({
+                          blurs: (piece.blurs ?? []).map((was) =>
+                            was.id === patch.id ? { ...was, at: spot } : was),
+                        }),
+                        held,
+                      );
+                    }}
+                    style={{
+                      left: `${patch.at.x * 100}%`,
+                      top: `${patch.at.y * 100}%`,
+                      width: `${patch.wide * 100}%`,
+                      height: `${patch.tall * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                      borderRadius: patch.round ? '50%' : '0.375rem',
+                      backdropFilter: `blur(${radius.toFixed(2)}px)`,
+                      WebkitBackdropFilter: `blur(${radius.toFixed(2)}px)`,
+                      zIndex: 1,
+                    }}
+                    className="absolute cursor-move touch-none select-none outline-dashed outline-1 outline-sky-400/70"
+                  >
+                    <span
+                      data-editorblurgrip={patch.id}
+                      onPointerDown={(event) => grip(
+                        event, patch.wide,
+                        (size) => {
+                          /* Both sides by the same ratio, so a round patch
+                             stays round. `grip` moves one number; the shape
+                             is two, and scaling only the width would turn a
+                             face into a letterbox on the first drag. */
+                          const ratio = patch.wide > 0 ? size / patch.wide : 1;
+                          slide({
+                            blurs: (piece.blurs ?? []).map((was) =>
+                              was.id === patch.id
+                                ? {
+                                    ...was,
+                                    wide: size,
+                                    tall: Math.max(
+                                      PATCH_SMALLEST,
+                                      Math.min(PATCH_LARGEST, was.tall * ratio),
+                                    ),
+                                  }
+                                : was),
+                          });
+                        },
+                        PATCH_SMALLEST, PATCH_LARGEST, held,
+                      )}
+                      className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-sky-400 bg-zinc-950"
+                    />
+                  </div>
+                );
+              })}
               {mark && (
                 /* Wrapped rather than left as a bare `<img>`, so the corner handle
                    has something to sit in the corner OF. The wrapper carries the
@@ -5426,6 +5505,157 @@ async function smallerFrame(url: string): Promise<string> {
                 </label>
               );
             })}
+          </div>
+
+          {/* ── A patch of it blurred out ─────────────────────────
+
+              Carli, 8 October 2026: *"Dit laat my dink dat video editor ook 'n
+              blur funksie nodig het."* So the dial above was renamed Blur and
+              its ceiling raised from three pixels to twenty.
+
+              Then, 10 October 2026: *"Ek sien ook nogsteeds nie 'n blur funksie
+              nie."*
+
+              She was right and the first answer was the wrong feature. That
+              dial blurs the WHOLE FRAME, which is a mood — a dream, a wash
+              behind a title. What anybody means by a blur tool is a patch over
+              one thing: a face somebody did not agree to, a number plate, a
+              name on a parcel, a phone screen with a message on it. None of
+              those is possible with a dial that softens everything.
+
+              Under the dials rather than in a bench of its own, because the two
+              are the same question asked at two sizes, and somebody who has
+              just failed to hide a face with the dial is standing here.
+
+              Free, like everything else in this room: `filter: blur()` on the
+              canvas during the render and `backdrop-filter` on the glass. */}
+          <div className="space-y-2" data-editorblur>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-sm text-zinc-400">
+                {t('blur.title', 'Blur a patch')}
+              </span>
+              {(piece.blurs ?? []).length < MOST_PATCHES && (
+                <button
+                  type="button"
+                  data-editorbluradd
+                  onClick={() => tweak({
+                    blurs: [...(piece.blurs ?? []), newPatch(`blur-${Date.now()}`)],
+                  })}
+                  className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-300"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t('blur.add', 'Add one')}
+                </button>
+              )}
+            </div>
+
+            {(piece.blurs ?? []).length === 0 ? (
+              <Note className="text-sm leading-relaxed text-zinc-500">
+                {t(
+                  'blur.none',
+                  'For a face, a number plate or a screen. Add one and it appears on the picture above — drag it onto the thing you want hidden and pull its corner to size it. The dial above softens the whole frame instead, which is a different job.',
+                )}
+              </Note>
+            ) : (
+              (piece.blurs ?? []).map((patch, index) => (
+                <div
+                  key={patch.id}
+                  data-editorblurpatch={patch.id}
+                  className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-zinc-300">
+                      {t('blur.one', 'Patch')} {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      data-editorblurdrop={patch.id}
+                      onClick={() => tweak({
+                        blurs: (piece.blurs ?? []).filter((one) => one.id !== patch.id),
+                      })}
+                      className="min-h-[44px] px-2 text-zinc-600 hover:text-red-400"
+                      aria-label={t('blur.drop', 'Take this patch off')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* How hard, in words rather than pixels. A number of pixels
+                      means nothing until you have seen it, and the only
+                      question anybody has is whether the thing is still
+                      readable. */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {STRENGTHS.map((one) => (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={patch.strength === one.id}
+                        data-editorblurhow={one.id}
+                        onClick={() => tweak({
+                          blurs: (piece.blurs ?? []).map((was) =>
+                            was.id === patch.id ? { ...was, strength: one.id as StrengthId } : was),
+                        })}
+                        className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                          patch.strength === one.id
+                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
+                            : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                        }`}
+                      >
+                        {t(`blur.how.${one.id}`, one.id === 'soft' ? 'Soft' : one.id === 'misty' ? 'Misty' : 'Gone')}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      aria-pressed={Boolean(patch.round)}
+                      data-editorblurround
+                      onClick={() => tweak({
+                        blurs: (piece.blurs ?? []).map((was) =>
+                          was.id === patch.id ? { ...was, round: !was.round } : was),
+                      })}
+                      className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                        patch.round
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
+                          : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                      }`}
+                    >
+                      {patch.round ? t('blur.round', 'Round') : t('blur.square', 'Square')}
+                    </button>
+                  </div>
+
+                  {/* Two sliders as well as the corner handle, because a
+                      number plate is wide and a face is not, and a corner
+                      handle that keeps the shape cannot make one out of the
+                      other. */}
+                  {([['wide', 'blur.wide', 'Width'], ['tall', 'blur.tall', 'Height']] as const)
+                    .map(([which, key, english]) => (
+                      <label key={which} className="block space-y-1">
+                        <span className="flex items-baseline justify-between gap-2 text-sm text-zinc-400">
+                          <span>{t(key, english)}</span>
+                          <span className="tabular-nums text-zinc-500">
+                            {Math.round(patch[which] * 100)}%
+                          </span>
+                        </span>
+                        <input
+                          type="range"
+                          min={PATCH_SMALLEST}
+                          max={PATCH_LARGEST}
+                          step={0.01}
+                          value={patch[which]}
+                          data-editorblursize={which}
+                          {...gesture}
+                          onChange={(event) => slide({
+                            blurs: (piece.blurs ?? []).map((was) =>
+                              was.id === patch.id
+                                ? { ...was, [which]: Number(event.target.value) }
+                                : was),
+                          })}
+                          className={`${SLIDE} accent-emerald-500`}
+                        />
+                      </label>
+                    ))}
+                </div>
+              ))
+            )}
           </div>
 
           </div>

@@ -332,6 +332,7 @@
     "check:baannaam": "tsx scripts/check-baannaam.mts",
     "check:maakklank": "tsx scripts/check-maakklank.mts",
     "check:eensin": "tsx scripts/check-eensin.mts",
+    "check:blurkol": "tsx scripts/check-blurkol.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

@@ -52,6 +52,7 @@ import { stretches, withSkip, wordsSpan } from './videospan';
 import type { CoverFrom } from './videocover';
 import type { Came } from './filmrights';
 import type { EdgeId } from './wordsedge';
+import type { Patch } from './videoblur';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -90,6 +91,18 @@ export interface Piece {
   readonly to: number;
   /** A look from `videofilters.ts`. Absent leaves the picture alone. */
   readonly look?: string;
+  /**
+   * Parts of this shot blurred out: a face, a plate, a screen.
+   *
+   * Carli, 10 October 2026: *"Ek sien ook nogsteeds nie 'n blur funksie nie."*
+   * The dial in `videoadjust.ts` blurs the whole frame, which is a mood; this
+   * is the one anybody means by a blur tool. See `lib/videoblur.ts`.
+   *
+   * On the piece rather than on the film, because the thing being hidden is in
+   * one shot — on the film it would blur the same square of every other shot
+   * as well.
+   */
+  readonly blurs?: readonly Patch[];
   /** Words over this piece for as long as it is up. */
   readonly words?: string;
   /**
@@ -763,6 +776,9 @@ export function cutFrom(edit: Edit): Cut {
         ? { grade: gradeCss(filterCss(one.look), one.adjust) }
         : {}),
       ...(one.speed && one.speed !== 1 ? { speed: one.speed } : {}),
+      /* Only when there are any. An empty array on every scene of every film
+         is a field the renderer then loops over to do nothing. */
+      ...(one.blurs?.length ? { blurs: one.blurs } : {}),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),
       ...(one.fill ? { fill: true } : {}),
       /* A shot speaks only if the shots lane is being heard at all. Resolved
