@@ -108,6 +108,7 @@ import {
   BEHIND, EDGES, behindOf, blurBehind, cutOut, edgeOf, maskOnto,
   type BehindId, type EdgeId,
 } from '../lib/cutout';
+import { NEARLY_ALL, takeGround } from '../lib/flatcut';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
@@ -432,6 +433,11 @@ export default function PostStudio({
      roll, and the file they picked may have been a crop they made elsewhere. */
   const [cutting, setCutting] = useState<number | null>(null);
   const [whole, setWhole] = useState<HTMLImageElement | null>(null);
+  /* Which plain-ground cut to make. 'everywhere' for a drawing, where the
+     gaps inside the mark are background too; 'edges' for a photograph, where
+     a white shirt in the middle of it is not. The pixels cannot tell which,
+     so it is a choice and not a guess. See `lib/flatcut.ts`. */
+  const [groundReach, setGroundReach] = useState<'everywhere' | 'edges'>('everywhere');
   /* The model's answer and the picture it was asked about, kept so the edge
      can be changed without six megabytes and a second of waiting. */
   const lastMask = useRef<{ readonly mask: HTMLCanvasElement; readonly of: HTMLImageElement } | null>(null);
@@ -2146,6 +2152,63 @@ export default function PostStudio({
     ));
   };
 
+  /**
+   * Take a plain background off — the cut that is not a person.
+   *
+   * Carli, 10 October 2026, of a logo this app had just made her: *"Well this
+   * was done on our own app. How are we going to get transparency?"*
+   *
+   * An image model cannot make transparency. It hands back opaque pixels, and
+   * asked for a transparent background it draws a PICTURE of a checkerboard —
+   * hers arrived as a 35-pixel grid of grey and white squares. So the
+   * checkerboard is what the answer looks like, and the transparency is made
+   * here instead.
+   *
+   * On the phone and free. There is no model in this one: it learns what the
+   * background is from the edge of the frame and takes that away, which is
+   * why it works on a drawing and the other remover does not.
+   */
+  const takeFlatGround = (): void => {
+    if (!picture) return;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    const sheet = document.createElement('canvas');
+    sheet.width = wide;
+    sheet.height = tall;
+    const ctx = sheet.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(picture, 0, 0);
+    const was = ctx.getImageData(0, 0, wide, tall);
+    const done = takeGround(
+      { data: was.data, width: wide, height: tall },
+      groundReach,
+    );
+    if (done.grounds.length === 0 || done.removed < 0.004) {
+      setSaid(t(
+        'post.groundNone',
+        'There is no plain background in this picture to take away. This one looks at the edges of the frame and removes what it finds there — it works on a logo, a drawing, or something photographed on a plain sheet. For a person, use Remove the background above.',
+      ));
+      return;
+    }
+    was.data.set(done.pixels.data);
+    ctx.putImageData(was, 0, 0);
+    before(t('post.stepGround', 'taking a plain background out'));
+    asPicture(sheet, (made) => {
+      setWhole(picture);
+      setPicture(made);
+      nothingBehind();
+      setSaid(done.removed > NEARLY_ALL
+        ? t(
+          'post.groundMost',
+          'That took nearly the whole picture away, which is right for a small mark on a big empty sheet and wrong if the subject has gone with it. Look at it, and press Put it back if it has.',
+        )
+        : t(
+          'post.groundDone',
+          'Background gone, and there is nothing behind it now — the squares are how the picture shows you that. Save it as PNG to keep it see-through; JPG cannot.',
+        ));
+    }, () => setSaid(t('post.groundFailed', 'That background could not be taken out.')));
+  };
+
   /** Erase the line out of the photograph. */
   const dropLine = (one: Pick): boolean => {
     if (!picture) return false;
@@ -3246,6 +3309,62 @@ export default function PostStudio({
         <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
           {t('post.cutWhat', 'One press takes the background away and leaves the person. It only finds PEOPLE \u2014 for anything else, use Cut out a shape below. Free, and it happens on your own phone; the first time takes a moment while it downloads.')}
         </span>
+        {/* ── And the one for everything that is not a person ───────────
+ 
+            Carli, 10 October 2026, of a logo this app had just made her:
+            *"Well this was done on our own app. How are we going to get
+            transparency?"*
+ 
+            An image model cannot make transparency. It returns opaque
+            pixels, and asked for a transparent background it draws a
+            PICTURE of a checkerboard — hers came back as a 35-pixel grid of
+            grey and white squares. No wording fixes that, so the
+            transparency is made here afterwards.
+ 
+            Beside the person one and not instead of it: that one runs a
+            model trained on people and finds nobody in a logo, which is
+            correct and useless. This one knows nothing about what is in the
+            picture — it learns the background off the edge of the frame.
+            Two tools, each honest about what it does. */}
+        <div data-postground className="flex w-full flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: asRoom ? 'rgba(16,185,129,0.18)' : 'rgb(39,39,42)' }}>
+          <p className={MIKRO}>{t('post.ground', 'Plain background')}</p>
+          <button
+            type="button"
+            data-postgroundgo
+            onClick={takeFlatGround}
+            className={LEEG}
+          >
+            {t('post.groundGo', 'Take a plain background off')}
+          </button>
+          {/* The pixels cannot say which of these is wanted, so it is asked
+              rather than guessed: a logo's own holes ARE background, and a
+              white shirt in the middle of a photograph is not. */}
+          {!plain && (
+            <>
+              <button
+                type="button"
+                data-postgroundreach="everywhere"
+                aria-pressed={groundReach === 'everywhere'}
+                onClick={() => setGroundReach('everywhere')}
+                className={`${LEEG} ${groundReach === 'everywhere' ? GEKIES : ''}`}
+              >
+                {t('post.groundAll', 'A logo or drawing')}
+              </button>
+              <button
+                type="button"
+                data-postgroundreach="edges"
+                aria-pressed={groundReach === 'edges'}
+                onClick={() => setGroundReach('edges')}
+                className={`${LEEG} ${groundReach === 'edges' ? GEKIES : ''}`}
+              >
+                {t('post.groundEdge', 'Around the outside only')}
+              </button>
+            </>
+          )}
+          <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+            {t('post.groundWhat', 'For a logo, a drawing, or anything photographed on a plain sheet \u2014 including the grey-and-white squares a picture comes back with when it was asked for a see-through background. It works out what the background is from the edges of the frame. Free, and it happens on your own phone.')}
+          </span>
+        </div>
         {/* ── And the other thing to do with the same mask ──────────────
  
             Carli's list, 7 October 2026: *"auto focus, blur"*. Beside taking

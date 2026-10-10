@@ -1613,6 +1613,16 @@ jobs:
       - name: Three to a masterclass, sixty to the guest
         run: npm run check:cubed
 
+      # An image model cannot make transparency: asked for a see-through
+      # background it draws a PICTURE of a checkerboard, and hers arrived as
+      # a 35-pixel grid of grey and white squares. So the transparency is
+      # made afterwards. Every way that goes wrong renders — the subject
+      # taken too, a grey rim left behind, a hole punched through a white
+      # shirt, every line hard-cut into a staircase — so the pictures are
+      # built pixel by pixel here, cut, and measured.
+      - name: A plain background comes off, checkerboard and all
+        run: npm run check:plateground
+
       # "Het jy vir google gevra sonder jou voorbeelde?" An image model
       # handed a drawing reproduces it, and what would be reproduced is a
       # mark she has already turned down twice. Passing one is a single

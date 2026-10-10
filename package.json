@@ -337,6 +337,7 @@
     "check:blog": "tsx scripts/check-blog.mts",
     "check:skermtyd": "tsx scripts/check-skermtyd.mts",
     "check:cubed": "tsx scripts/check-cubed.mts",
+    "check:plateground": "tsx scripts/check-plateground.mts",
     "check:merklab": "tsx scripts/check-merklab.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
