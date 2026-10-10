@@ -263,6 +263,7 @@
     "check:songwindow": "node audit/songwindow.mjs",
     "check:bodylimit": "tsx scripts/check-bodylimit.mts",
     "check:postwalk": "node audit/postwalk.mjs",
+    "check:plainground": "node audit/plainground.mjs",
     "check:posttext": "tsx scripts/check-posttext.mts",
     "check:coverwall": "tsx scripts/check-coverwall.mts",
     "check:ownart": "tsx scripts/check-ownart.mts",
