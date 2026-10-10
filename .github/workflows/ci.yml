@@ -1595,6 +1595,16 @@ jobs:
       - name: The blog says things that are true of this app
         run: npm run check:blog
 
+      # "Wanneer screen time op is moet dit die kind uitskop." Two ways a
+      # screen-time feature is a lie: the clock kept in the browser, which a
+      # reload restarts and a changed phone clock defeats; and only the page
+      # stopping a press, when a page can be reloaded or left open. The
+      # column holds the clock, kids_spend refuses once it is over
+      # (driven on real Postgres by check:sqlruns), and the room goes away
+      # rather than greying out.
+      - name: Screen time belongs to the grown-up
+        run: npm run check:skermtyd
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

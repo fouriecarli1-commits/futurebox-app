@@ -54,7 +54,7 @@ import StoryShelf from './StoryShelf';
 import SongShelf from './SongShelf';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
 import { MOST_SONGS, keepSong } from '../lib/songkeep';
-import { howMany, priceOf } from '../lib/kidsallowance';
+import { asClock, howMany, priceOf } from '../lib/kidsallowance';
 import {
   KID_SOUNDS, KID_TOPICS, askKidVideo, makeKidSong, startKidVideo,
 } from '../lib/kidsong';
@@ -134,6 +134,34 @@ export default function KidsRoom(): React.ReactElement {
   const held = useRef<string>('');
 
   useEffect(() => { void kidsNow().then(setState); }, []);
+
+  /**
+   * ── The clock, counted down here and owned by the server ─────────
+   *
+   * Carli, 10 October 2026: *"Wanneer screen time op is moet dit die kind
+   * uitskop."*
+   *
+   * The number comes from the server — `secondsLeft`, worked out against
+   * `sitting_from` in the database — and the ticking happens here. That is
+   * the right division: a page that worked the remaining time out for itself
+   * would be a page a child extends by changing the clock on the phone.
+   *
+   * Asked again every half minute as well as ticked, so a sitting a grown-up
+   * ended from another device closes this room too, and so a tab left asleep
+   * for an hour does not wake up believing it has fifty minutes left.
+   */
+  const [ticks, setTicks] = useState(0);
+  useEffect(() => {
+    if (!state?.open || state.minutes === null || state.minutes === undefined) return undefined;
+    const beat = setInterval(() => setTicks((was) => was + 1), 1000);
+    return () => clearInterval(beat);
+  }, [state?.open, state?.minutes]);
+
+  useEffect(() => {
+    if (!state?.open || !state.minutes) return undefined;
+    const again = setInterval(() => { void kidsNow().then(setState); }, 30_000);
+    return () => clearInterval(again);
+  }, [state?.open, state?.minutes]);
   useEffect(() => () => { if (held.current) URL.revokeObjectURL(held.current); }, []);
 
   /* Asking how the video is going. Only ever asks — nothing here spends, so a
@@ -168,6 +196,51 @@ export default function KidsRoom(): React.ReactElement {
     );
   }
 
+  /* ── How much of the sitting is left, as this room sees it ─────────
+
+     The server's number minus the seconds since it was read. `null` is no
+     clock on this room and lets everything through; zero is a sitting that
+     is over. Those are two different answers and reading one as the other
+     would lock every room opened before today out of its own allowance. */
+  const clockLeft = state.open && state.minutes
+    ? Math.max(0, (state.secondsLeft ?? 0) - ticks)
+    : null;
+  const timeUp = clockLeft !== null && clockLeft <= 0;
+
+  /* ── Time up: out, and said in words a child reads ───────────────
+
+     Her word was "uitskop" and this is it: the room is gone, not greyed
+     out. A room still on the screen with every button disabled is a room a
+     child keeps pressing.
+
+     Not the grown-up's page either. That page sets an allowance and hands a
+     phone over, and putting a child in front of it is handing them the
+     switch. One sentence, and the one thing a child can do about it, which
+     is fetch somebody. `atDoor` is how a grown-up gets past this, and it is
+     deliberately not a button a child would press by accident — it is the
+     small line at the bottom. */
+  if (timeUp) {
+    return (
+      <div className="mx-auto w-full max-w-md space-y-6 p-6 text-center" data-kidstimeup>
+        <p className="text-5xl" aria-hidden>⏰</p>
+        <h2 className="text-2xl font-extrabold tracking-tight text-white">
+          {t('kids.timeUp', 'Time is up')}
+        </h2>
+        <p className="text-base leading-relaxed text-zinc-300">
+          {t('kids.timeUpSay', 'That is all for now. Go and fetch a grown-up if you want some more.')}
+        </p>
+        <button
+          type="button"
+          data-kidsgrownup
+          onClick={() => setAtDoor(true)}
+          className="min-h-[44px] text-sm text-zinc-500 underline underline-offset-4"
+        >
+          {t('kids.imTheGrownUp', 'I am the grown-up')}
+        </button>
+      </div>
+    );
+  }
+
   /* No allowance set, or a grown-up asked for the door: the door. It is the
      same component the opening page uses, so there is one place an allowance
      is given and one place it is ended. */
@@ -192,6 +265,10 @@ export default function KidsRoom(): React.ReactElement {
 
   const left = state.left ?? 0;
   const songPrice = priceOf('song');
+  /* The countdown, where the child can see it. Under five minutes it turns,
+     because "it just stopped" is a worse experience than "two minutes left"
+     for the same amount of screen time. */
+  const nearlyOver = clockLeft !== null && clockLeft <= 300;
   const videoPrice = priceOf('video');
   const songsLeft = howMany(left, 'song');
   const canSong = Boolean(topic) && Boolean(sound) && left >= songPrice && !busy && !job;
@@ -270,10 +347,27 @@ export default function KidsRoom(): React.ReactElement {
         className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
         data-kidsleft
       >
-        <span className="text-sm font-bold text-emerald-300">
+        <span className="min-w-0 text-sm font-bold text-emerald-300">
           {songsLeft > 0
             ? `${songsLeft} ${songsLeft === 1 ? t('kids.songLeft', 'song left') : t('kids.songsLeft', 'songs left')}`
             : t('kids.noneLeft', 'All used up — ask a grown-up')}
+          {/* ── And how long is left, beside how much ──────────────
+
+              Only where there is a clock. A countdown that reads 0:00 and
+              then the room vanishing is a better five minutes than a room
+              that just stops, which is why it turns amber under five — a
+              child who can see it coming puts the last song on the shelf
+              instead of losing it mid-press. */}
+          {clockLeft !== null && (
+            <span
+              data-kidsclockleft={clockLeft}
+              className={`block text-xs font-bold tabular-nums ${
+                nearlyOver ? 'text-amber-300' : 'text-emerald-400/80'
+              }`}
+            >
+              {asClock(clockLeft)} {t('kids.ofTime', 'left')}
+            </span>
+          )}
         </span>
         <button
           type="button"

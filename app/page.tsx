@@ -14,7 +14,7 @@ import {
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors,
-  Image as ImageIcon} from 'lucide-react';
+  Image as ImageIcon, Baby} from 'lucide-react';
 import {
   TRACK_FLAVOURS,
 } from './data/studio';
@@ -2622,6 +2622,47 @@ export default function FutureBoxHome() {
                   {authMode === 'signin' ? t('landing.startFree') : t('common.signIn')}
                 </button>
               </p>
+
+              {/* ── Into the kids room ───────────────────────────
+
+                  Carli, 10 October 2026: *"Ek dink die kids afdeling moet by
+                  login page wees. Daar moet dan die opsie wees om in die kids
+                  channel in te log."*
+
+                  Here, on the sign-in screen, because this is the screen a
+                  child is looking at when they pick up the phone. Until today
+                  the only way in was for a grown-up to open the studio, find
+                  the account sheet and press a row in it — which is a grown-up
+                  doing four things before a child can press one.
+
+                  Separated by a rule and said as a question rather than
+                  dressed as a third sign-in option, because it is not one: an
+                  allowance belongs to an account, so a grown-up signs in once
+                  and sets it, and after that this door is what the child
+                  presses. `/kids` asks for a grown-up itself when nobody is
+                  signed in, which is the honest answer rather than a door that
+                  opens onto a failure.
+
+                  An `<a>` and not a router push: it is a page of its own,
+                  deliberately off the rail — the rail beside it is a shop, a
+                  conversation with strangers and every paid door in the app,
+                  which is what `check:kidsafe` measured. */}
+              <div className="border-t border-zinc-800 pt-4">
+                <a
+                  href="/kids"
+                  data-authkids
+                  className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-sm font-bold text-zinc-200 hover:border-emerald-500/60 hover:text-white"
+                >
+                  <Baby className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+                  {t('auth.kids', 'Go to the kids room')}
+                </a>
+                <p className="pt-2 text-center text-xs leading-relaxed text-zinc-600">
+                  {t(
+                    'auth.kidsWhy',
+                    'A grown-up sets an allowance and how long they may have it. When the time is up the room closes itself.',
+                  )}
+                </p>
+              </div>
                 </>
               )}
               {!cloud.configured() && (

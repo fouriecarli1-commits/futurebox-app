@@ -17,11 +17,25 @@ export interface KidsState {
   readonly allowance?: number;
   readonly spent?: number;
   readonly left?: number;
+  /** How long one sitting may last. Null or absent is a budget with no clock. */
+  readonly minutes?: number | null;
+  /**
+   * Seconds left in this sitting, as the SERVER counted them.
+   *
+   * Read once and counted down from in the browser, which is the right
+   * division of labour: the number is the server's and the ticking is the
+   * page's. A page that worked the remaining time out for itself would be a
+   * page a child could change the phone's clock to extend.
+   */
+  readonly secondsLeft?: number | null;
 }
 
 const shut: KidsState = { open: false };
 
-async function ask(how: 'GET' | 'POST' | 'DELETE', body?: unknown): Promise<KidsState | null> {
+async function ask(
+  how: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  body?: unknown,
+): Promise<KidsState | null> {
   const token = await accessToken();
   /* No token is not an error worth a message: the page behind this is only
      reachable signed in, and a session that has just expired should send
@@ -44,9 +58,28 @@ export async function kidsNow(): Promise<KidsState> {
   return (await ask('GET')) ?? shut;
 }
 
-/** Hand over an allowance, or change one. `null` when it could not be saved. */
-export async function giveAllowance(allowance: number): Promise<KidsState | null> {
-  return ask('POST', { allowance });
+/**
+ * Hand over an allowance and, if they want one, a clock.
+ *
+ * Handing the phone over IS the start of the sitting, so this starts the
+ * clock. `null` minutes is a budget with no clock on it, which is a
+ * reasonable thing to want and is what every room opened before today has.
+ */
+export async function giveAllowance(
+  allowance: number,
+  minutes: number | null = null,
+): Promise<KidsState | null> {
+  return ask('POST', { allowance, minutes });
+}
+
+/** Another sitting, without touching the allowance. The grown-up's press. */
+export async function sitAgain(): Promise<KidsState | null> {
+  return ask('PUT', { sit: true });
+}
+
+/** End this sitting now, keeping the room and its allowance. */
+export async function endSitting(): Promise<KidsState | null> {
+  return ask('PUT', { sit: false });
 }
 
 /** Shut the room. The child's spending cap goes with it. */

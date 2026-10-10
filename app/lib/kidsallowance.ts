@@ -145,3 +145,49 @@ export const ALLOWANCE_MAX = ALLOWANCE_STEPS[ALLOWANCE_STEPS.length - 1];
 export function sane(allowance: number): boolean {
   return Number.isInteger(allowance) && allowance >= 0 && allowance <= ALLOWANCE_MAX;
 }
+
+/**
+ * How long one sitting may last, in minutes.
+ *
+ * Carli, 10 October 2026: *"Dan moet die ouers die budget en screen time kan
+ * stel. Wanneer screen time op is moet dit die kind uitskop."*
+ *
+ * Four steps, like the allowance above, and for the same reason: a parent
+ * choosing between twelve numbers chooses none of them. Fifteen minutes is a
+ * car journey, half an hour is the usual answer, an hour is a rainy Saturday,
+ * and two hours is a parent who means "until I say so".
+ *
+ * `MINUTES_NONE` is a budget with no clock on it, which is a perfectly
+ * reasonable thing to want and is also every room opened before today. It is
+ * null rather than zero because a zero would have to mean either "no limit"
+ * or "no time", and a number that can be read either way is a number
+ * somebody will read the wrong one of.
+ */
+export const MINUTE_STEPS: readonly number[] = [15, 30, 60, 120];
+export const MINUTES_NONE = null;
+
+/** The shortest and longest a sitting may be. Held by the table as well. */
+export const MINUTES_LEAST = 5;
+export const MINUTES_MOST = 240;
+
+/**
+ * Is this a length of sitting a parent could have chosen?
+ *
+ * `null` passes, because no clock is an answer. The range matches the
+ * `check` on the column exactly — the page offering the steps, the route
+ * accepting them and the table storing them cannot disagree about what is
+ * allowed, which is the whole reason this lives here and not in three
+ * places.
+ */
+export function saneMinutes(minutes: unknown): boolean {
+  if (minutes === null || minutes === undefined) return true;
+  return Number.isInteger(minutes)
+    && (minutes as number) >= MINUTES_LEAST
+    && (minutes as number) <= MINUTES_MOST;
+}
+
+/** A countdown as a person reads it: `19:04`, or `0:08`. */
+export function asClock(seconds: number): string {
+  const whole = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+}

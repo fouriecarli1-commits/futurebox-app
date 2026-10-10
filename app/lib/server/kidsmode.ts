@@ -28,13 +28,24 @@
  */
 
 import { admin } from './account';
-import { sane } from '../kidsallowance';
+import { sane, saneMinutes } from '../kidsallowance';
 
 export interface KidsRoom {
   readonly allowance: number;
   readonly spent: number;
   /** What is left. Never negative — see `kids_release`. */
   readonly left: number;
+  /** How long one sitting may last. Null is a budget with no clock on it. */
+  readonly minutes: number | null;
+  /**
+   * Seconds left in this sitting. Null when there is no clock.
+   *
+   * Null and zero are different answers and every caller is written to tell
+   * them apart: null lets everything through, zero shuts the room. Reading
+   * one as the other would lock every kids room opened before today out of
+   * its own allowance.
+   */
+  readonly secondsLeft: number | null;
 }
 
 /**
@@ -50,13 +61,33 @@ export async function kidsRoom(owner: string): Promise<KidsRoom | null> {
   if (!client) return null;
   const { data, error } = await client
     .from('kids_mode')
-    .select('allowance, spent')
+    .select('allowance, spent, minutes')
     .eq('owner', owner)
     .maybeSingle();
   if (error || !data) return null;
   const allowance = Number(data.allowance) || 0;
   const spent = Number(data.spent) || 0;
-  return { allowance, spent, left: Math.max(0, allowance - spent) };
+  const minutes = data.minutes === null || data.minutes === undefined
+    ? null
+    : Number(data.minutes);
+
+  /* The clock from the database and not from here.
+ 
+     `now()` in Postgres rather than `Date.now()` in this process is the whole
+     point: a sitting measured against the browser's clock is a sitting a
+     child ends by changing the time on the phone, and a sitting measured
+     against a server process's clock is one that drifts between two
+     instances. One clock, in the one place that holds `sitting_from`. */
+  const { data: left } = await client.rpc('kids_time_left', { p_owner: owner });
+  const secondsLeft = left === null || left === undefined ? null : Number(left);
+
+  return {
+    allowance,
+    spent,
+    left: Math.max(0, allowance - spent),
+    minutes,
+    secondsLeft: Number.isFinite(secondsLeft as number) ? secondsLeft : null,
+  };
 }
 
 /**
@@ -66,13 +97,57 @@ export async function kidsRoom(owner: string): Promise<KidsRoom | null> {
  * topping a child up mid-afternoon means "have ten more", not "start again",
  * and the second reading would hand over the whole allowance twice.
  */
-export async function openKids(owner: string, allowance: number): Promise<boolean> {
-  if (!sane(allowance)) return false;
+export async function openKids(
+  owner: string,
+  allowance: number,
+  minutes: number | null = null,
+): Promise<boolean> {
+  if (!sane(allowance) || !saneMinutes(minutes)) return false;
   const client = admin();
   if (!client) return false;
   const { error } = await client
     .from('kids_mode')
-    .upsert({ owner, allowance }, { onConflict: 'owner' });
+    .upsert({
+      owner,
+      allowance,
+      minutes,
+      /* Handing the phone over IS the start of the sitting, so the clock
+         starts here and not on the child's first press. A clock that started
+         when the child pressed something would hand out unlimited time to a
+         child who sat looking at the screen, which is the whole thing a
+         parent setting screen time is asking about.
+ 
+         Null when there is no clock, which also clears a sitting that was
+         running when the parent took the clock off. */
+      sitting_from: minutes === null ? null : new Date().toISOString(),
+    }, { onConflict: 'owner' });
+  return !error;
+}
+
+/**
+ * Another sitting, without touching the allowance.
+ *
+ * The grown-up's "another twenty minutes". `spent` is deliberately not reset:
+ * more time is not more money, and a parent who meant both presses both.
+ */
+export async function sitAgain(owner: string): Promise<boolean> {
+  const client = admin();
+  if (!client) return false;
+  const { error } = await client.rpc('kids_sit', { p_owner: owner });
+  return !error;
+}
+
+/**
+ * End this sitting now.
+ *
+ * The grown-up taking the phone back before the clock runs out. The room
+ * stays open with its allowance intact — this is not `shutKids`, which is the
+ * off switch.
+ */
+export async function standUp(owner: string): Promise<boolean> {
+  const client = admin();
+  if (!client) return false;
+  const { error } = await client.rpc('kids_stand', { p_owner: owner });
   return !error;
 }
 

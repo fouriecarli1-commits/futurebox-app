@@ -7,7 +7,7 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 56 tabelle, 32 kolomme wat later
+-- Dit kyk na 56 tabelle, 34 kolomme wat later
 -- bygekom het, 7 stoor-emmers en 58 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
@@ -114,6 +114,8 @@ with verwag (l_eer, soort, naam) as (
     ('listens.sql', 'kolom', 'public.events.times'),
     ('abuse.sql', 'kolom', 'public.generations.email_key'),
     ('abuse.sql', 'kolom', 'public.generations.ip_hash'),
+    ('skermtyd.sql', 'kolom', 'public.kids_mode.minutes'),
+    ('skermtyd.sql', 'kolom', 'public.kids_mode.sitting_from'),
     ('albumart.sql', 'kolom', 'public.live_posts.art_by'),
     ('albumart.sql', 'kolom', 'public.live_posts.art_title'),
     ('buildon.sql', 'kolom', 'public.live_posts.build_on'),

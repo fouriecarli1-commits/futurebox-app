@@ -539,6 +539,95 @@ if (placeholder) {
     + ' spend. An `f` in the first slot locks an account that never asked for'
     + ' kids mode; a `t` in the third is an allowance that does not stop; a'
     + ' negative in the last reads as extra allowance');
+
+  /* ── And the clock stops a press as well as the screen does ────────
+ 
+     Carli, 10 October 2026: *"Wanneer screen time op is moet dit die kind
+     uitskop."* The room closing itself is the polite half: a page can be
+     reloaded, opened in a second tab, or left open while the clock runs
+     out. If the only thing stopping a press were the page, a child who
+     pressed at nineteen minutes fifty-nine and again at twenty-one would
+     be charged for both.
+ 
+     Driven with a sitting that started in the PAST, because the only way
+     to test an expiry without waiting for it is to hand it one that has
+     already happened. `now() - interval` does that honestly: nothing about
+     the function knows the clock was set backwards.
+ 
+     Seven answers in one string. A room with no clock has to answer `null`
+     to the time and `t` to the press — that is every room opened before
+     today, and the direction that matters: a null read as zero would lock
+     every existing kids room out of its own allowance. */
+  let clock = '';
+  try {
+    const owner = psql(DB, ['-tAc',
+      "insert into auth.users (id, email) values (gen_random_uuid(), 'horlosie@futurebox.test')"
+      + ' returning id']).trim();
+    psql(DB, ['-c',
+      `insert into public.kids_mode (owner, allowance) values ('${owner}', 100)`]);
+    /* No clock on this room at all. */
+    const noClock = psql(DB, ['-tAc', `select coalesce(public.kids_time_left('${owner}')::text, 'null')`]).trim();
+    const noClockSpend = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 1)`]).trim();
+    /* Twenty minutes, sitting from now. */
+    psql(DB, ['-c',
+      `update public.kids_mode set minutes = 20, sitting_from = now() where owner = '${owner}'`]);
+    const fresh = psql(DB, ['-tAc', `select public.kids_time_left('${owner}') > 1000`]).trim();
+    const inTime = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 1)`]).trim();
+    /* The sitting began half an hour ago, so it ended ten minutes ago. */
+    psql(DB, ['-c',
+      `update public.kids_mode set sitting_from = now() - interval '30 minutes' where owner = '${owner}'`]);
+    const over = psql(DB, ['-tAc', `select public.kids_time_left('${owner}')`]).trim();
+    const refused = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 1)`]).trim();
+    /* A grown-up starts another sitting. The clock moves and the press is
+       allowed again; `spent` is NOT reset, which is the other half of the
+       same decision — more time is not more money. */
+    psql(DB, ['-c', `select public.kids_sit('${owner}')`]);
+    const letBack = psql(DB, ['-tAc', `select public.kids_spend('${owner}', 1)`]).trim();
+    const spentNow = psql(DB, ['-tAc',
+      `select spent from public.kids_mode where owner = '${owner}'`]).trim();
+    clock = `${noClock}/${noClockSpend}/${fresh}/${inTime}/${over}/${refused}/${letBack}/${spentNow}`;
+  } catch (error) {
+    clock = `threw: ${(String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? [''])[0]}`;
+  }
+  ok('  and screen time stops a press once the sitting is over',
+    clock === 'null/t/t/t/0/f/t/3',
+    `${clock} — wanted null/t/t/t/0/f/t/3: no clock answers null and lets a`
+    + ' press through, a fresh twenty minutes has over a thousand seconds on'
+    + ' it and lets one through, a sitting that began thirty minutes ago has'
+    + ' NOTHING left and refuses, another sitting lets one through again, and'
+    + ' three credits are spent in total. A number in the first slot locks'
+    + ' every kids room opened before today out of its own allowance; a `t`'
+    + ' in the sixth is a clock that runs out and charges anyway');
+
+  /* The range is a `check` rather than a comment, because the number arrives
+     from a browser and the browser is the one place it cannot be trusted. */
+  let range = '';
+  try {
+    const owner = psql(DB, ['-tAc',
+      "insert into auth.users (id, email) values (gen_random_uuid(), 'reeks@futurebox.test')"
+      + ' returning id']).trim();
+    psql(DB, ['-c',
+      `insert into public.kids_mode (owner, allowance) values ('${owner}', 10)`]);
+    const refused: string[] = [];
+    for (const minutes of ['0', '1', '600', '-20']) {
+      try {
+        psql(DB, ['-c',
+          `update public.kids_mode set minutes = ${minutes} where owner = '${owner}'`]);
+        refused.push('took');
+      } catch {
+        refused.push('no');
+      }
+    }
+    range = refused.join(',');
+  } catch (error) {
+    range = `threw: ${(String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? [''])[0]}`;
+  }
+  ok('  and a nonsense number of minutes is refused by the table',
+    range === 'no,no,no,no',
+    `${range} — zero, one minute, ten hours and minus twenty all have to be`
+    + ' refused. Five minutes is the shortest worth handing a child and four'
+    + ' hours is the longest anybody means by screen time; a zero that got in'
+    + ' would read as a sitting that is over before it starts');
 }
 
 if (failures) {
