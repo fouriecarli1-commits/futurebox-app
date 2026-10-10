@@ -201,6 +201,69 @@ ok('  and the library itself keeps no state and saves nothing',
   'a library that writes is a library that can write the wrong thing while'
   + ' nobody is looking at the playback');
 
+/* ── 7. The booth, and the one thing it must not do ────────────────────
+
+   Carli: *"Does that mean that I can use the booth to record phonetic
+   sounds?"* Yes — and the booth is an OWNER's page rather than a room,
+   because there is one dictionary for the whole app: `sayit.ts` applies it
+   to every read through `ELEVEN_DICT_ID` and `ELEVEN_DICT_VERSION`, one id
+   shared by everybody. A rule contributed from a member's room would change
+   how the app speaks for every other member, and one bad rule would break
+   every read at once.
+
+   So the guard is the same one `/api/eleven/pronounce` uses, and these hold
+   it — an owner tool that quietly opens is the kind of thing nobody
+   notices until it is being used. */
+
+const route = withoutComments(readFileSync('app/api/hearword/route.ts', 'utf8'));
+
+ok('the listening route is behind the owner secret',
+  /POST_SECRET/.test(route) && /sameSecret\(given, wanted\)/.test(route),
+  'one dictionary serves every read in the app, so a rule written by anybody'
+  + ' changes how it speaks for everybody');
+
+ok('  and compares it in constant time',
+  /timingSafeEqual/.test(route),
+  'a comparison that returns early leaks the secret one character at a time');
+
+ok('  and answers 404 rather than 403',
+  /new Response\('no', \{ status: 404 \}\)/.test(route),
+  'a 403 confirms the address is real, which is half of finding it');
+
+ok('  and bounds the recording, because one word is under a second',
+  /MOST_BYTES/.test(route) && /audio\.length > MOST_BYTES/.test(route),
+  'a ceiling that would let a whole song through is a way to post a song to'
+  + ' a listening model on her key');
+
+ok('  and refuses without the word or the language, in words',
+  /Say which word was recorded/.test(route) && /Say which language it is/.test(route),
+  'without the written word the model cannot say that what it heard does not'
+  + ' match it, and without the language it guesses one — and a guessed'
+  + ' language is where the clicks go');
+
+const booth = withoutComments(readFileSync('app/uitspraak/page.tsx', 'utf8'));
+
+ok('the booth records, plays back, and shows the sounds',
+  /data-uitspraakrec/.test(booth) && /data-uitspraaktake/.test(booth)
+  && /data-uitspraakipa/.test(booth),
+  'a transcription she cannot hear beside the recording is a transcription'
+  + ' she has to take on trust');
+
+ok('  and says plainly when it is not sure enough to keep',
+  /data-uitspraakunsure/.test(booth),
+  'the gate is in the library and the room has to SHOW it, or an unsure'
+  + ' answer looks the same as a confident one');
+
+ok('  and writes nothing itself',
+  !/pronunciation-dictionaries/.test(booth) && !/method: 'PUT'/.test(booth),
+  'a page that both proposes and commits is a page where a mis-tap is'
+  + ' permanent for every member at once');
+
+ok('  and names the languages rather than taking a typed one',
+  /isiXhosa/.test(booth) && /LANGUAGES\.map/.test(booth),
+  'a typo in the language is a model guessing, which is the one failure that'
+  + ' gives a confident wrong answer instead of a refusal');
+
 console.log(bad === 0
   ? '\n  A word said once: transcribed, never trusted on its own, and never'
     + ' written anywhere without somebody hearing it first.'
