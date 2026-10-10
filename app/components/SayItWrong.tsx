@@ -205,6 +205,25 @@ export default function SayItWrong({
           'Dit gaan na ’n lys wat iemand lees. Niks verander vanself aan hoe die stem praat nie — dit is met opset so.',
         )}
       </p>
+
+      {/* ── The booth, which nothing led to ───────────────────────
+
+          `/uitspraak` was built, works end to end — say the word, see its
+          sounds, hear it read back, keep it — and no screen in the app
+          pointed at it. `check:bereikbaar` found it beside the kids room.
+
+          Here, because this is the one place in the app where somebody is
+          already telling us a word came out wrong. The paragraph above says,
+          truthfully, that nothing changes by itself; the booth is the thing
+          that does change it, and the difference between those two sentences
+          is a person who speaks the language saying the word once. */}
+      <a
+        href="/uitspraak"
+        className="inline-flex min-h-[44px] items-center gap-1.5 text-xs text-emerald-400 underline underline-offset-4 hover:text-emerald-300"
+      >
+        <Ear className="h-3.5 w-3.5" />
+        {t('sayit.booth', 'Of sê die woord self in die uitspraakhokkie')}
+      </a>
     </div>
   );
 }

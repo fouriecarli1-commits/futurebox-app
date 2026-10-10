@@ -29,7 +29,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2 } from 'lucide-react';
+import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen } from 'lucide-react';
 import RecordingName from './RecordingName';
 import Connections from './Connections';
 import DeleteAccount from './DeleteAccount';
@@ -362,6 +362,60 @@ export default function Account({
               </span>
             </span>
           </button>
+
+          {/* ── The two rooms nothing led to ────────────────────────
+
+              Carli, 10 October 2026: *"Waar lewe die kids funksie"*. Nowhere
+              anybody could get to. `/kids` and `/story` are both pages of
+              their own — deliberately, because the rail beside them is a shop,
+              a conversation with strangers and every paid door in the app, and
+              `check:kidsafe` is the measurement of why a child must not be
+              looking at it. But a page off the rail still has to be reachable
+              from somewhere, and neither of these was: the only mention of
+              `/kids` in the whole app was a sentence in a comment. Two finished
+              rooms, both working, both unreachable unless you typed the
+              address.
+
+              Here, because this is the grown-up's screen: an allowance is a
+              grown-up's decision and so is handing over the phone.
+              `check:bereikbaar` now holds every page in the app to having a
+              way in. */}
+          <a
+            href="/kids"
+            data-accountkids
+            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
+          >
+            <Baby className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold leading-tight">
+                {t('account.kids', 'The kids room')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {t(
+                  'account.kidsNote',
+                  'Set an allowance, then hand the phone over. Two presses in there and nothing else — make a song, make a video of it — and the allowance holds wherever they end up.',
+                )}
+              </span>
+            </span>
+          </a>
+          <a
+            href="/story"
+            data-accountstory
+            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
+          >
+            <BookOpen className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold leading-tight">
+                {t('account.story', 'Story mode')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {t(
+                  'account.storyNote',
+                  'A story written and drawn a page at a time, read aloud, and kept on the shelf.',
+                )}
+              </span>
+            </span>
+          </a>
         </section>
 
         {/* The engine bill used to be here, and is gone.

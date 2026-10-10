@@ -59,6 +59,19 @@ export default function Help(): React.ReactElement {
           >
             Privacy
           </Link>
+          {/* The language screen, which nothing in the app linked to.
+
+              `check:bereikbaar` found it. It prints what the app thinks the
+              language is, who set it and where it is stored, and it is the
+              only way out of a context that has got itself wrong — which is
+              a help problem, reached from the help page, rather than a
+              control belonging in the picker a person has already tried. */}
+          <Link
+            href="/taal"
+            className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
+          >
+            The language is wrong
+          </Link>
           <Link
             href="/"
             className="inline-flex min-h-[44px] items-center text-zinc-400 hover:text-zinc-200"

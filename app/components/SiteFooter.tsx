@@ -82,6 +82,23 @@ export function SiteFooter() {
             <a href="/legal" className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap underline underline-offset-4 hover:text-zinc-200">
               {t('foot.who', 'Who we are')}
             </a>
+            {/* ── Two rooms the app led to from nowhere ──────────────
+
+                Carli, 10 October 2026: *"Waar lewe die kids funksie"*. It
+                lived at `/kids` and nothing in the app linked to it — nor to
+                `/story`. Both are pages off the rail on purpose, and both were
+                reachable only by typing the address.
+
+                In the footer as well as the account screen, because the footer
+                is on every route: a grown-up who has not opened their account
+                sheet still has a way in, and so does somebody who was sent
+                the app rather than told about it. */}
+            <a href="/kids" className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap underline underline-offset-4 hover:text-zinc-200">
+              {t('foot.kids', 'Kids room')}
+            </a>
+            <a href="/story" className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap underline underline-offset-4 hover:text-zinc-200">
+              {t('foot.story', 'Story mode')}
+            </a>
           </nav>
         </div>
 

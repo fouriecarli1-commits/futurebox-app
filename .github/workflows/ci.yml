@@ -1522,6 +1522,15 @@ jobs:
       - name: The transition detector finds the changes that are there
         run: npm run check:oorgange
 
+      # "Waar lewe die kids funksie" — nowhere anybody could get to. Four
+      # finished pages, the kids room and story mode among them, were
+      # reachable only by typing the address, and the only mention of /kids
+      # in the whole app was a sentence inside a comment. That is the fifth
+      # working feature this app has hidden, so it stops being a thing
+      # somebody has to notice.
+      - name: Every page in the app has a way in
+        run: npm run check:bereikbaar
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.
