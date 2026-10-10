@@ -1455,6 +1455,21 @@ jobs:
       - name: A clip can be made to arrive on a frame she chose
         run: npm run check:slotraam
 
+      # Gemini Omni Flash is the only engine on her account that can CHANGE a
+      # video. Her own documentation page gave the endpoint, the request and a
+      # whole response, so the reader is settled before a cent is spent — and
+      # the model is badged Self-deployed, so nothing charges through it.
+      - name: The video-editing engine's reader matches her own answer
+        run: npm run check:omni
+
+      # A photograph given a little motion. Veo already took a start frame;
+      # the whole difference between "her photograph, moving" and "a new scene
+      # that begins with her photograph" is the prompt — so every prompt says
+      # the camera is locked and the face is unchanged, and the photograph goes
+      # up as the closing frame too so the clip loops.
+      - name: A photograph with a little motion holds still and loops
+        run: npm run check:lewendefoto
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

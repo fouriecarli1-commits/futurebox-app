@@ -89,7 +89,12 @@ import {
   type Path as Traced, type Shape as CutShape,
 } from '../lib/lasso';
 import { makeBack } from '../lib/postback';
-import { REFERENCE_SIDE, packLed, roomForRefs } from '../lib/packpicture';
+import ShareRow from './ShareRow';
+import { REFERENCE_SIDE, packLed, packOne, roomForRefs } from '../lib/packpicture';
+import { BUDGET } from '../lib/picturelimit';
+import {
+  LIVE_SECONDS, MOTIONS, MOTION_DEFAULT, motionWords,
+} from '../lib/livingphoto';
 /* `SHAPES` is already taken in this room by the pen's shapes — pencil,
    circle, square, line. These are the ratios a picture can be asked for. */
 import { SHAPES as RATIOS, SHAPE_DEFAULT, type ShapeId } from '../lib/pictureshapes';
@@ -488,6 +493,115 @@ export default function PostStudio({
      would make a canvas for every keystroke. */
   const [webpWorks, setWebpWorks] = useState(false);
   useEffect(() => { setWebpWorks(canWebp()); }, []);
+
+  /* ── A photograph given a little motion ───────────────────────────────
+
+     Carli, 10 October 2026: *"Ek wonder ook of google se modelle net bietjie
+     motion kan gee aan foto's? Dit kan baie van ons photo editing tools
+     verbeter, en vir al ook vir foto's wat vir bemarking gebruik word en
+     social media."*
+
+     Yes, and with no new engine: Veo has taken a start frame since the day it
+     was wired, and the whole trick is the prompt — "almost nothing moves".
+     `lib/livingphoto.ts` carries the twelve motions and why each is worded
+     the way it is.
+
+     The photograph goes up as the opening frame AND as the closing one, so
+     the clip has to come back to it and therefore LOOPS. That is only
+     possible because of the closing frame added earlier the same day. */
+  const [motion, setMotion] = useState<string>(MOTION_DEFAULT);
+  const [liveJob, setLiveJob] = useState<string | null>(null);
+  const [liveUrl, setLiveUrl] = useState<string | null>(null);
+  const [liveBusy, setLiveBusy] = useState(false);
+  const [liveSaid, setLiveSaid] = useState('');
+
+  /* The same five-second poll the cutting room uses, and for the same
+     reason: a clip is a job that takes a minute or two, and the route
+     refunds on a real failure — so a blip must not be read as one. */
+  useEffect(() => {
+    if (!liveJob) return undefined;
+    let stopped = false;
+    const ask = async (): Promise<void> => {
+      try {
+        const token = await accessToken();
+        const answer = await fetch(`/api/video?id=${encodeURIComponent(liveJob)}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const said = (await answer.json().catch(() => ({}))) as
+          { state?: string; url?: string; message?: string };
+        if (stopped) return;
+        if (said.state === 'done' && said.url) {
+          setLiveUrl(said.url);
+          setLiveJob(null);
+          setLiveSaid(t('post.liveDone', 'Ready. It loops, so it plays over and over.'));
+        } else if (said.state === 'failed') {
+          setLiveJob(null);
+          setLiveSaid(said.message
+            ?? t('post.liveFailed', 'The engine could not make that one. The credits have been given back.'));
+        }
+      } catch {
+        /* A blip is not a failure. */
+      }
+    };
+    void ask();
+    const every = window.setInterval(() => { void ask(); }, 5_000);
+    return () => { stopped = true; window.clearInterval(every); };
+  }, [liveJob, t]);
+
+  /**
+   * Bring the photograph to life.
+   *
+   * The picture on the bench, up twice — opening frame and closing frame —
+   * with a prompt that says what moves and, at length, what must not.
+   */
+  const bringToLife = async (): Promise<void> => {
+    if (!picture || liveBusy || liveJob) return;
+    setLiveBusy(true);
+    setLiveSaid('');
+    try {
+      /* Shrunk, and shrunk the same way the cutting room shrinks its frame:
+         the engine renders its own output at its own size, so 768 across is
+         as useful as 2048 and a fraction of the bytes — and TWO frames
+         travel on this request, counted together by the route. */
+      const packed = packOne(picture, REFERENCE_SIDE, Math.floor(BUDGET / 2));
+      if (!packed) {
+        setLiveSaid(t('post.liveTooBig', 'That picture is too big to send. Crop it or bring in a smaller one.'));
+        return;
+      }
+      const frame = `data:${packed.mime};base64,${packed.data}`;
+      const token = await accessToken();
+      const answer = await fetch('/api/video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          prompt: motionWords(motion),
+          /* The post's own shape, so a story-shaped post comes back
+             story-shaped rather than needing a crop. */
+          aspect: size.height > size.width ? '9:16' : size.width > size.height ? '16:9' : '1:1',
+          seconds: LIVE_SECONDS,
+          speak: false,
+          image: frame,
+          /* The same photograph again. This is what makes it loop. */
+          endImage: frame,
+        }),
+      });
+      const said = (await answer.json().catch(() => ({}))) as { id?: string; message?: string };
+      if (!answer.ok || !said.id) {
+        setLiveSaid(said.message
+          ?? `${t('post.liveNoStart', 'That could not be started.')} (${answer.status})`);
+        return;
+      }
+      setLiveJob(said.id);
+      setLiveSaid(t('post.liveMaking', 'Making it. A minute or two — you can carry on in here while it runs.'));
+    } catch {
+      setLiveSaid(t('post.liveOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setLiveBusy(false);
+    }
+  };
   const [said, setSaid] = useState('');
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
@@ -2814,6 +2928,116 @@ export default function PostStudio({
           : t('post.clearOff', 'Take the background off')}
       </button>
     </div>
+
+    {/* ── A photograph given a little motion ─────────────────────────
+
+        Carli, 10 October 2026: *"Ek wonder ook of google se modelle net
+        bietjie motion kan gee aan foto's? Dit kan baie van ons photo editing
+        tools verbeter, en vir al ook vir foto's wat vir bemarking gebruik
+        word en social media."*
+
+        No new engine: Veo takes a start frame and the trick is the prompt.
+        The photograph goes up as the opening frame AND the closing one, so
+        the clip returns to it and loops — which is what makes it postable
+        rather than a four-second clip that stops.
+
+        Only drawn when there is a photograph, because that is the whole
+        input. And it is a paid press, so the price is on the button. */}
+    {picture && (
+      <div data-postlive className={`${RY} flex-col items-stretch gap-2`}>
+        <div className={MIKRO}>{t('post.liveTitle', 'Give it a little motion')}</div>
+        <div className="flex flex-wrap gap-1.5">
+          {MOTIONS.map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              data-postmotion={one.id}
+              aria-pressed={motion === one.id}
+              onClick={() => setMotion(one.id)}
+              title={lang === 'af' ? t(one.what[0], one.what[1]) : one.what[1]}
+              className={`${LEEG} ${motion === one.id ? GEKIES : ''}`}
+            >
+              {t(one.says[0], one.says[1])}
+            </button>
+          ))}
+        </div>
+        <span className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+          {t(
+            MOTIONS.find((one) => one.id === motion)?.what[0] ?? 'post.liveWhat',
+            MOTIONS.find((one) => one.id === motion)?.what[1] ?? 'Any photograph',
+          )}
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            data-postlivego
+            disabled={liveBusy || Boolean(liveJob)}
+            onClick={() => { void bringToLife(); }}
+            className={`${LEEG} disabled:opacity-40`}
+          >
+            {liveJob
+              ? t('post.liveBusy', 'Making it…')
+              : `${t('post.liveGo', 'Bring it to life')} · ${creditsSaid(CREDITS.video * LIVE_SECONDS / 5, t)}`}
+          </button>
+          {liveUrl && (
+            <a
+              href={liveUrl}
+              download="futurebox-live.mp4"
+              data-postlivesave
+              className={LEEG}
+            >
+              {t('post.liveSave', 'Save the video')}
+            </a>
+          )}
+        </div>
+        {liveUrl && (
+          <>
+            {/* Muted, looping and autoplaying, because that is what the clip
+                IS: a photograph with a little motion in it. A player with a
+                play button on a four-second loop is a player nobody presses.
+                `playsInline` so a phone does not take it full screen. */}
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption -- a
+                photograph with motion and no speech in it; there is nothing
+                to caption. */}
+            <video
+              src={liveUrl}
+              data-postliveout
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full rounded-xl border border-zinc-800"
+            />
+            {/* The row that already exists, in the room where the thing
+                was finished. It copies the caption, hands the file to the
+                phone's own share sheet and opens the platform's composer —
+                it does not upload, and `ShareRow` says so in its own words.
+
+                `file` is a function and not a URL on purpose: building a
+                File nobody asked for is work for nothing, so it is only
+                fetched when somebody presses share. */}
+            <ShareRow
+              title={t('post.liveShare', 'A photo with a little motion')}
+              what={t('post.liveCaption', 'Made on FutureBox')}
+              file={async () => {
+                try {
+                  const got = await fetch(liveUrl);
+                  if (!got.ok) return null;
+                  return new File([await got.blob()], 'futurebox-live.mp4', { type: 'video/mp4' });
+                } catch {
+                  return null;
+                }
+              }}
+            />
+          </>
+        )}
+        {liveSaid && (
+          <span className="text-[12px] leading-relaxed" style={asRoom ? { color: INK } : undefined}>
+            {liveSaid}
+          </span>
+        )}
+      </div>
+    )}
 
     {/* ── Make a picture, or change this one, by saying it ───────────
 

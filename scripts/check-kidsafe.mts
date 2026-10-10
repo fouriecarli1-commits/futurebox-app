@@ -202,14 +202,34 @@ ok('three rooms cannot spend a credit at all',
    room reddens too — the point was never one door, it was that nobody adds
    one silently. What the child mode needs is written up in
    `docs/OPEN-QUESTIONS.md`, and it is about the booth. */
-ok('  and the photo editor spends on exactly the two things it is meant to',
+/* ── The third door, 10 October 2026, and it was asked for ──────────────
+
+   This read two, and it reddened the moment a video call went into the photo
+   room — which is exactly its job, and the second time it has done it.
+
+   The door is "give it a little motion": a photograph goes up to Veo as both
+   the opening and the closing frame with a prompt that says what moves and,
+   at length, what must NOT, and a four-second clip comes back that loops.
+   It is the video route, so it is the video price.
+
+   Carli asked for it in those words:
+
+     *"Ek hou nogal van die funksie Image-to-Video: Transform static images
+     into videos. Ek wonder ook of google se modelle net bietjie motion kan
+     gee aan foto's? Dit kan baie van ons photo editing tools verbeter, en
+     vir al ook vir foto's wat vir bemarking gebruik word en social media."*
+
+   So the decision was made out loud by the person whose room it is, which is
+   all this line has ever asked for. The number moves and the rule does not:
+   the FOURTH paid door in this room reddens too. */
+ok('  and the photo editor spends on exactly the three things it is meant to',
   JSON.stringify(spend.get('photo'))
-    === JSON.stringify(['/api/google/picture', '/api/post/export']),
+    === JSON.stringify(['/api/google/picture', '/api/post/export', '/api/video']),
   `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
-  + ' and changing what is in it by saying what to change. Every other tool'
-  + ' in that room runs on the device and is free. A THIRD paid door is a'
-  + ' decision somebody has to make out loud, which is what this line is'
-  + ' for');
+  + ' changing what is in it by saying what to change, and giving it a little'
+  + ' motion. Every other tool in that room runs on the device and is free. A'
+  + ' FOURTH paid door is a decision somebody has to make out loud, which is'
+  + ' what this line is for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',
   FREE.includes('collab'),
@@ -223,6 +243,6 @@ if (bad) {
 }
 console.log(
   'check:kidsafe — which rooms can spend a credit is read off the code, and'
-  + ' the three that cannot and the photo editor’s single paid door are still'
+  + ' the three that cannot and the photo editor’s three paid doors are still'
   + ' what the write-up says they are.',
 );

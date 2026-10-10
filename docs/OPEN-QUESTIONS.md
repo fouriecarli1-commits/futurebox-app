@@ -7055,3 +7055,98 @@ including `CREDITS.video`, whose margin is already one cent and would therefore 
 It is one constant in `app/lib/plans.ts` and it is four months old. Worth checking against the
 rate her card is actually billed at, which is the only rate that matters, and worth re-running
 the margins afterwards rather than before.
+
+**Gemini Omni Flash's rate per token, and whether video editing is worth it at any price.**
+Carli pasted her own documentation page on 10 October 2026: `gemini-omni-flash-preview`, on the
+same `interactions` endpoint Lyria 3 Pro is on, doing text-to-video, image-to-video,
+reference-to-video and — the one nothing in this app can do at any price — **editing a video that
+already exists**. "Make it evening", "take the car out", "make her turn round".
+
+`app/lib/server/omni.ts` reads the answer, driven against her own sample by `check:omni`. Nothing
+calls it, and `check:omni` holds that nothing does.
+
+The reason is the bill. Her sample response: 26 input tokens, 0 output tokens, **453 thought
+tokens**, 479 total. So it is priced per token, the thinking is 95% of it, and a ceiling built on
+prompt length would be wrong by a factor of eighteen. `lib/server/googlespend.ts` cannot hold a
+cap for an engine whose rate nobody has read, and this app does not run an engine without a cap.
+
+Carli, the same day, having looked: *"Gemini omni flash is baie duur."* So the question is not
+only the number — it is whether a credit price that covers it is a price anybody would pay for
+one edited clip. Read the rate off Google's pricing page, work out what four seconds of a real
+edit costs, and compare it with what the cutting room charges for a whole clip today.
+
+Her alternatives for **analysis** — a Flash-class model reading a video or an audio file at
+roughly $0.075–$0.15 per million input tokens — are a different thing and worth their own entry.
+They do not generate or edit video; they describe what is in one. That is cheap enough to use
+freely and there are at least three places it would earn its place: writing the shot prompt for
+her, finding the fifteen seconds of a song worth posting, and describing a clip to the advert
+desk so the copy is about what is actually on screen. Which model id is current on her project is
+a `/google` press, not a guess.
+
+**Two of this app's chosen Google models may be the wrong kind, and one press settles it.**
+Carli pasted her whole Model Garden listing on 10 October 2026. Every card carries a badge:
+**Serverless** — answers an API call and bills per use — or **Self-deployed**, which does not.
+A self-deployed model is one you put on an endpoint of your own, a machine that bills by the hour
+whether anything calls it or not, and it has no per-call address until you do. A request to one
+answers 404, and that 404 reads exactly like a wrong model name.
+
+Two readings off that listing:
+
+**The picture engine.** `CHOSEN.image` is `gemini-nano-banana-2.1`, chosen because her own card
+showed it. On the full listing that card is badged **Self-deployed**. `Gemini 2.5 Flash Image
+(Nano Banana)` is badged **Serverless** on the same page — and it is also the only image model
+that has ever answered a probe on her project, measured 8 October. If the badge is right, every
+picture the photo room, the storybook and the advert poster ask for is going to a model with no
+address, and the sentence everybody sees is "the picture engine answered 404".
+
+**The video engine.** `CHOSEN.video` is `veo-3.1-fast-generate-001`. The listing shows
+**Veo 3 Fast for Video Generation** and **Veo 2 for Generation**, both Serverless, and no 3.1 card
+at all — while on 9 October she pasted four separate Veo 3.1 cards off the same console. Those
+two things can both be true (a catalogue tile is not an id list) and that is exactly why this is a
+question rather than a change.
+
+Neither is changed from here. This file already records what happened the last time a model name
+was rewritten from one more screenshot than the last: two confident corrections in twenty minutes,
+both wrong, and the app's original setting right from the start. A badge in a catalogue is not a
+probe.
+
+**Run `/google` on her account.** It asks every id in `MODELS` and reports which answer. That is
+one press and it settles both. Until then `check:google` holds the badges as data — `hosting` on
+each candidate — so whichever way the probe lands, the reasoning is already written down.
+
+**And Gemini Omni Flash is Self-deployed, which is why it is expensive.** Both
+`Gemini Omni Flash Preview` and `Gemini Omni 1.1 Flash Preview` carry that badge. So the per-token
+price in its documentation is not what it would cost her: it is a machine running by the hour.
+That settles the entry above — video editing is not a per-call engine she can switch on, it is
+infrastructure — and it is worth re-reading before anybody is tempted by the capability list again.
+
+**Gemma 4 for the languages Lyria does not sing, and the half of that problem it cannot fix.**
+Carli, 10 October 2026: *"Ek wonder of mens 'n model soos Gemma 4 26B A4B IT API Service kan
+gebruik om die taal barrier te oorkom met ons liedjie generation."* Her Model Garden lists it as
+**Serverless**, badged NEW, and she gives its languages as Afrikaans, isiZulu, isiXhosa, Sesotho,
+Setswana and Shona.
+
+It is two problems wearing one name, and the model solves one of them.
+
+**The words — yes.** Writing a lyric in isiZulu, translating one into Setswana, checking that a
+line scans in Sesotho. All of that is a text model's job, and today every piece of writing in this
+app goes to Claude, which is good at Afrikaans and thinner on the other five. A model trained on
+them is better at them, it is serverless, and the places it would slot in already exist:
+`lib/surfaces.ts` writes lyrics, `lib/server/styleword.ts` rewrites a style, and the storybook
+writes nothing but could.
+
+**The singing — no.** Lyria is what pronounces the words, and no text model changes that. Handing
+Lyria a perfect isiZulu lyric does not make Lyria sing isiZulu; it makes it sing isiZulu words the
+way an English-first vocal model pronounces them. That is a listening test on her own account, not
+something to reason about from here — and it is the test that decides whether this is worth doing
+at all, because a beautifully written lyric sung wrongly is worse than an English one.
+
+So the order is: **hear Lyria sing one verse of isiZulu and one of Afrikaans first.** If it holds
+up, Gemma earns its place writing the words. If it does not, the answer is the one the video rooms
+already use for Afrikaans — generate the music, record the voice separately, lay it over — and
+that is a bigger feature than a model swap.
+
+Two costs to weigh before it is wired either way: a second writing model is a second supplier in
+the moderation path (`guard` screens what leaves, and it has to screen this too), and two models
+writing in one app means two voices in her product unless the split is by language and nothing
+else.

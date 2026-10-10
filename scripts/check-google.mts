@@ -125,9 +125,85 @@ ok('  and they are not all the same one',
   + ' \u2014 asking all of them to :predict reports 404 for most of the list'
   + ' and sends somebody hunting for models that were there all along');
 
-ok('  and a video is asked for as a long-running job',
-  MODELS.filter((one) => one.what === 'video').every((one) => one.verb === 'predictLongRunning'),
-  MODELS.filter((one) => one.what === 'video').map((one) => one.verb).join(', '));
+/* A video on the PUBLISHER api is a job, not an answer — Veo takes minutes.
+   A video on `interactions` is not a publisher model at all and has no verb
+   that means anything, which is why that is now a field rather than a
+   sentence in a note: this assertion went red on 10 October when Gemini Omni
+   Flash arrived, and the honest repair was to name the distinction rather
+   than to drop the rule. */
+const publisherVideo = MODELS.filter((one) => one.what === 'video' && !one.on);
+ok(`  and a video on the publisher api is asked for as a long-running job (${publisherVideo.length})`,
+  publisherVideo.length > 0
+  && publisherVideo.every((one) => one.verb === 'predictLongRunning'),
+  publisherVideo.map((one) => `${one.id} → ${one.verb}`).join(', ')
+  + ' — Veo takes minutes, so an answer is a job polled by name and asking'
+  + ' for it as an answer times out');
+
+/* And the field is not decoration: a model on `interactions` must not be put
+   through `addressOf`, which builds a publisher URL and answers 404 — the
+   404 that cost a week. Asserted on the LIBRARIES that call these models
+   rather than on their notes: asking a note to repeat what the field says is
+   asking prose to agree with data, which is the thing the field exists to
+   stop. */
+/* ── Serverless or self-deployed, off her own Model Garden listing ──────
+
+   A self-deployed model has no per-call address until somebody deploys it to
+   an endpoint that bills by the hour, so a request to one answers 404 — and
+   that 404 reads exactly like a wrong model name, which is the single most
+   expensive confusion this file exists to prevent.
+
+   Carli pasted the whole listing on 10 October 2026 and two of this app's
+   own choices read badly against it. Nothing was changed from here: a badge
+   in a catalogue is not a probe, and this file already records what happened
+   the last time a model name was rewritten from one more screenshot than the
+   last. What IS held is that a known risk is written down where somebody
+   will find it — an engine half-suspected and not written up is one nobody
+   can tell the state of in six months. */
+const badged = MODELS.filter((one) => one.hosting);
+ok(`her Model Garden badges are carried as data (${badged.length})`,
+  badged.length >= 5,
+  'serverless means it answers a call; self-deployed means it does not until'
+  + ' somebody runs a machine for it. The difference is a 404 that looks like'
+  + ' a typo');
+
+const risky = Object.values(CHOSEN)
+  .map((id) => MODELS.find((one) => one.id === id))
+  .filter((one): one is NonNullable<typeof one> => Boolean(one))
+  .filter((one) => one.hosting === 'self-deployed');
+
+ok('  and a chosen model her listing calls self-deployed is written up',
+  risky.length === 0
+  || risky.every((one) => {
+    const open = readFileSync('docs/OPEN-QUESTIONS.md', 'utf8');
+    return open.includes(one.id);
+  }),
+  `${risky.map((one) => one.id).join(', ')} — chosen, and badged as a model`
+  + ' that has no address to call. Either it is the wrong choice or the badge'
+  + ' is read wrong, and both of those are questions rather than edits — but'
+  + ' an unwritten one is a 404 nobody can explain');
+
+const onInteractions = MODELS.filter((one) => one.on === 'interactions');
+ok(`  and the models on the interactions api are named as such (${onInteractions.length})`,
+  onInteractions.length >= 3,
+  'the two Lyrias and Gemini Omni Flash. Three models that are not publisher'
+  + ' models at all, which is a fact `addressOf` has no way to know');
+
+for (const [path, what] of [
+  ['app/lib/server/lyria.ts', 'the song engine'],
+  ['app/lib/server/omni.ts', 'the video editor engine'],
+] as const) {
+  const source = withoutComments(readFileSync(path, 'utf8'));
+  ok(`    ${what} posts to interactionsAddress, never addressOf`,
+    /interactionsAddress\(\)/.test(source) && !/\baddressOf\(/.test(source),
+    `${path} — a publisher URL for an interactions model answers "Publisher`
+    + ' model was not found", which reads exactly like a wrong model name and'
+    + ' cost a week of probing');
+
+  ok(`      and names the model in the body, as that api takes it`,
+    /model: /.test(source) && /input: /.test(source),
+    'the publisher api puts the model in the path; this one puts it in the'
+    + ' body, and a request with neither is a 400 about the wrong thing');
+}
 
 /* The probe used to carry each model's verb, and this held it to that.
    It no longer has a verb to carry: a read has none, which is the point —

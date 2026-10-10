@@ -108,11 +108,54 @@ export interface Candidate {
   readonly verb: string;
   /** `global` models use the unregional host and `locations/global`. */
   readonly where?: 'global';
+  /**
+   * Which API it is on.
+   *
+   * ── Why this is data and not something read off the id ────────────────
+   *
+   * Three of these models are not publisher models at all: the two Lyrias
+   * and Gemini Omni Flash are on `interactions`, where the model is named in
+   * the BODY and there is no verb after a colon. A week of 404s came from one
+   * address builder serving both, and `addressOf` is never called for them.
+   *
+   * Until 10 October 2026 that fact lived in each one's `note` — prose, which
+   * nothing can read. So `check:google`'s rule that "a video model asks for a
+   * long-running job" went red the moment a video model arrived on
+   * `interactions`, and the choice was to weaken the rule or to name the
+   * thing it was really about. This is the thing it was really about.
+   *
+   * `verb` is kept on an interactions model only so the probe's control
+   * compares like with like.
+   */
+  readonly on?: 'interactions';
+  /**
+   * How Google serves it, off her own Model Garden listing.
+   *
+   * ── Why this matters more than any other field here ───────────────────
+   *
+   * **Serverless** means it answers an API call and bills per use. That is
+   * the only kind this app can call at all.
+   *
+   * **Self-deployed** means it does not. It is a model you deploy to an
+   * endpoint of your own — a machine that runs and bills by the HOUR whether
+   * anything calls it or not. There is no per-call address to post to until
+   * somebody deploys it, so a request to one answers 404, which reads
+   * exactly like a wrong model name.
+   *
+   * Carli pasted the whole Model Garden listing on 10 October 2026 and every
+   * card carries one badge or the other. Reading those badges answered two
+   * things nobody here knew and one that nobody here suspected — see the
+   * notes on the Veos and on Nano Banana below.
+   *
+   * Left undefined where her listing does not show the model at all, which
+   * is not the same as either.
+   */
+  readonly hosting?: 'serverless' | 'self-deployed';
   readonly note: string;
 }
 
 export const MODELS: readonly Candidate[] = [
-  { id: 'lyria-002', what: 'music', verb: 'predict', note: 'A real publisher model on :predict \u2014 a different api from the two below. Instrumental only and about 30 seconds, so not the booth\u2019s button.' },
+  { id: 'lyria-002', what: 'music', verb: 'predict', hosting: 'serverless', note: 'A real publisher model on :predict \u2014 a different api from the two below. Instrumental only and about 30 seconds, so not the booth\u2019s button.' },
   /* ── The two that are really there, and on another API ────────────
  
      Carli's Model Garden, 9 October 2026. Both of these are `interactions`
@@ -123,8 +166,8 @@ export const MODELS: readonly Candidate[] = [
  
      `verb` is kept on them only because the probe's control compares like
      with like; nothing calls these through `addressOf`. */
-  { id: 'lyria-3-pro-preview', what: 'music', verb: 'predict', note: 'A whole song. On the INTERACTIONS api, not predict \u2014 see interactionsAddress(). Seen on her own Model Garden page.' },
-  { id: 'lyria-3-clip-preview', what: 'music', verb: 'predict', note: 'Song CLIPS, same interactions api. Seen on her page beside the pro one. The right one for a short piece rather than a whole song.' },
+  { id: 'lyria-3-pro-preview', what: 'music', verb: 'predict', hosting: 'serverless', on: 'interactions', note: 'A whole song. On the INTERACTIONS api, not predict \u2014 see interactionsAddress(). Seen on her own Model Garden page.' },
+  { id: 'lyria-3-clip-preview', what: 'music', verb: 'predict', hosting: 'serverless', on: 'interactions', note: 'Song CLIPS, same interactions api. Seen on her page beside the pro one. The right one for a short piece rather than a whole song.' },
   /* ── Four Veos on her project, and the app already had the right one ─
  
      Carli walked Model Garden on 9 October 2026 and pasted card after card.
@@ -171,11 +214,27 @@ export const MODELS: readonly Candidate[] = [
   /* Hers, off her own console, with the address her sample uses: the
      UNREGIONAL host and `locations/global`. The four guesses below it are
      kept so the probe keeps asking, but this is the one with evidence. */
-  { id: 'gemini-nano-banana-2.1', what: 'image', verb: 'generateContent', where: 'global', note: 'Shown on HER Model Garden page as "Gemini Nano Banana 2.1", 9 October 2026. Takes response_modalities TEXT+IMAGE, an aspect_ratio and an image_size.' },
+  { id: 'gemini-nano-banana-2.1', what: 'image', verb: 'generateContent', hosting: 'self-deployed', where: 'global', note: 'Shown on HER Model Garden page as "Gemini Nano Banana 2.1", 9 October 2026. Takes response_modalities TEXT+IMAGE, an aspect_ratio and an image_size.' },
   { id: 'gemini-3-pro-image', what: 'image', verb: 'generateContent', note: 'Nano Banana Pro, the general-availability name per a third-party guide. Unconfirmed on a Google page.' },
   { id: 'gemini-3-pro-image-preview', what: 'image', verb: 'generateContent', note: 'Nano Banana Pro as Google’s own Vertex page lists it. Possibly withdrawn with the other -preview ids.' },
-  { id: 'gemini-2.5-flash-image', what: 'image', verb: 'generateContent', note: 'The original Nano Banana. Answered 400 to an empty body on 8 October, which on this verb means the name resolved.' },
+  { id: 'gemini-2.5-flash-image', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'The original Nano Banana. Answered 400 to an empty body on 8 October, which on this verb means the name resolved.' },
   { id: 'gemini-3.1-flash-image', what: 'image', verb: 'generateContent', note: 'Named as the replacement for the above. Id unverified anywhere official.' },
+  /* ── The one that can CHANGE a video ──────────────────────────────
+ 
+     Carli pasted her own documentation page on 10 October 2026: the
+     capability list, the endpoint, the request body and a whole response.
+     So this id is read rather than guessed — and it differs from the name
+     the Gemini conversation gave on the 9th, which was
+     `gemini-omni-flash-1.1`. A name off a chat and a name off the
+     documentation differed by a version number.
+ 
+     It is on the INTERACTIONS api, like the two Lyrias — the same endpoint
+     `interactionsAddress()` already builds, with the model in the body. So
+     `verb` is kept only so the probe's control compares like with like, and
+     `addressOf` is never called for it. `lib/server/omni.ts` has the reader
+     and the four capabilities, one of which — editing an existing video —
+     nothing in this app can do at any price. */
+  { id: 'gemini-omni-flash-preview', what: 'video', verb: 'predict', hosting: 'self-deployed', on: 'interactions', note: 'Gemini Omni Flash. Off HER OWN documentation page, 10 October 2026. On the INTERACTIONS api, not predict \u2014 see interactionsAddress(). Text-to-video, image-to-video, reference-to-video and VIDEO EDITING. Priced per token and the rate is unread, so nothing is charged through it yet.' },
 ] as const;
 
 /**
@@ -282,6 +341,29 @@ export const CHOSEN = {
   video: 'veo-3.1-fast-generate-001',
   /* Not a choice. It is the only one of four that answered. */
   /* Hers, seen in her console, over the one that merely answered a probe. */
+  /* ── Flagged 10 October 2026, and NOT changed from here ─────────────
+
+     Carli pasted her whole Model Garden listing, and every card carries a
+     badge: **Serverless** or **Self-deployed**. Two of this app's own
+     choices read badly against it.
+
+     `Gemini Nano Banana 2.1` — the one on this line — is badged
+     **Self-deployed**. A self-deployed model has no per-call address until
+     somebody deploys it to an endpoint that bills by the hour, so a request
+     to it answers 404 and that 404 reads exactly like a wrong model name.
+     `Gemini 2.5 Flash Image (Nano Banana)` is badged **Serverless** on the
+     same page, and it is also the only image model that has ever ANSWERED on
+     her project — measured on 8 October, written down below.
+
+     So the evidence now points the other way from the choice. It is still
+     not changed here, and that is deliberate: this file already carries the
+     note about two confident "corrections" in twenty minutes on the Veo
+     names, each written in from one more screenshot than the last, and each
+     wrong. A badge in a catalogue listing is not a probe.
+
+     `/google` on her own account is the probe, it takes one press, and it
+     answers this properly. `docs/OPEN-QUESTIONS.md` carries the question
+     with what is known on each side. */
   image: 'gemini-nano-banana-2.1',
 } as const;
 
