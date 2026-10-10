@@ -1506,6 +1506,13 @@ jobs:
       - name: Simple is the copilot and a button
         run: npm run check:eenvoudig
 
+      # The same two on the video desk, which is the harder room to cut in
+      # half: eleven controls, a thirteen-to-one price spread on the quality
+      # row, and the quotation-mark rule — the one fault here that is
+      # completely silent — taught inside the card Simple takes away.
+      - name: The video desk, Simple and Everything
+        run: npm run check:videoeenvoudig
+
       # The handover for the attorney lists what each of ECTA section
       # 43's particulars says and where. A list like that is true the day
       # it is written; an attorney then reads it and does not go and look.

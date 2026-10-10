@@ -325,6 +325,7 @@
     "check:eennaam": "tsx scripts/check-eennaam.mts",
     "check:heleblad": "tsx scripts/check-heleblad.mts",
     "check:eenvoudig": "tsx scripts/check-eenvoudig.mts",
+    "check:videoeenvoudig": "tsx scripts/check-videoeenvoudig.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",
     "check:postwork": "tsx scripts/check-postwork.mts",
     "check:postback": "tsx scripts/check-postback.mts",

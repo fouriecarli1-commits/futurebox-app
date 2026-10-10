@@ -111,6 +111,15 @@ const SHAPES: { id: Aspect; label: string; size: string; note: string }[] = [
 ];
 
 /**
+ * Where the choice between Simple and Everything is remembered.
+ *
+ * Its own key rather than the one Make a song uses: somebody who wants the
+ * whole desk on a video is not thereby somebody who wants the whole desk on a
+ * song, and one shared key would decide both from one press.
+ */
+const MODE_KEY = 'futurebox.canvas.mode.v1';
+
+/**
  * The chosen part of the song, laid under a finished clip.
  *
  * No video engine on the shelf takes an audio file, so a music video made here
@@ -191,6 +200,40 @@ export default function VideoCanvas({
   songId?: string;
 }) {
   const { t } = useLang();
+
+  /**
+   * How much of the desk is on screen.
+   *
+   * Carli, 10 October 2026: *"Ek wonder met video desk of dit nie ook so kan
+   * werk met simpl as net 'n copilot en 'n everything."* The same two as Make
+   * a song, for the same reason: this desk is six kinds of video, a genre row,
+   * a song window, a shot box, a quality row, a caption, a logo, a voice
+   * switch, a shape row and a length row before anybody reaches the button,
+   * and somebody who came here to say "film my shop front" wants none of it.
+   *
+   * Simple hides those controls. It does not reset them — a grade, a shape, a
+   * length or a start frame set in Everything still goes to the engine, and
+   * the line under the mode row says so whenever any of it is away from its
+   * default. A setting that applies while its control is out of sight is
+   * worse than a crowded screen, and this app has already hidden four working
+   * features once by taking things away.
+   */
+  const [advanced, setAdvanced] = useState(false);
+  useEffect(() => {
+    try {
+      setAdvanced(window.localStorage.getItem(MODE_KEY) === 'advanced');
+    } catch {
+      // Storage off. Simple is the right answer when nothing is known.
+    }
+  }, []);
+  const chooseMode = useCallback((next: boolean) => {
+    setAdvanced(next);
+    try {
+      window.localStorage.setItem(MODE_KEY, next ? 'advanced' : 'simple');
+    } catch {
+      // It still applies for this visit.
+    }
+  }, []);
 
   const [engine, setEngine] = useState<VideoEngine | null>(null);
   /* The post studio, over this desk. See the button below for why it is here
@@ -287,6 +330,25 @@ export default function VideoCanvas({
       setSeconds(wanted);
       shotCard.arrived();
     },
+    /* ── The quality, which the copilot could not reach ────────────────
+
+       Simple is "the copilot writes everything", and on this desk the
+       equivalent of a song's style is the grade: it decides the engine, the
+       price and whether a quoted line can be spoken at all. Without this the
+       copilot could write a shot with a line in quotation marks, set the
+       shape and the length, and leave the desk on Standard — which is
+       silent — so the one thing it had been asked for came back missing.
+
+       Refused rather than clamped when the engine does not offer the rung:
+       setting a grade that is not there would disable the lengths row and
+       leave somebody on a desk that cannot make anything. */
+    set_grade: (value) => {
+      const wanted = value.trim().toLowerCase();
+      if (!GRADES.some((one) => one.id === wanted)) return;
+      if (engine && !engine.grades.includes(wanted as VideoGrade)) return;
+      setGrade(wanted as VideoGrade);
+      shotCard.arrived();
+    },
   });
   /**
    * What the member is buying — never which engine serves it.
@@ -323,6 +385,32 @@ export default function VideoCanvas({
   const [kept, setKept] = useState(0);
   /** Which made clip has its language panel open, by its own url. */
   const [openLanguage, setOpenLanguage] = useState<string | null>(null);
+
+  /**
+   * Everything that is away from its default, in the words the controls use.
+   *
+   * Printed under the mode row in Simple. Not a nicety: all of this is sent
+   * whether or not its control is on the screen, and a grade set to Premium
+   * three visits ago is thirteen times the money on a press somebody thinks
+   * is the cheap one. The shape is here too, because a tall clip made by
+   * somebody who thought they were making a wide one is a clip they pay for
+   * twice.
+   */
+  const changedFromDefault = useMemo(() => {
+    const said: string[] = [];
+    if (grade !== 'standard') {
+      said.push(t(`canvas.grade.${grade}`, GRADES.find((one) => one.id === grade)?.label ?? grade) as string);
+    }
+    if (aspect !== '16:9') {
+      said.push(t(`canvas.shape.${aspect}`, SHAPES.find((one) => one.id === aspect)?.label ?? aspect) as string);
+    }
+    if (seconds !== 5) said.push(`${seconds}s`);
+    if (frame) said.push(t('canvas.inForceFrame', 'a start frame'));
+    if (songCut) said.push(t('canvas.inForceSong', 'a song under it'));
+    if (speak) said.push(t('canvas.letItSpeak', 'Let the engine say the line'));
+    if (subtitles.on) said.push(t('canvas.inForceWords', 'words on screen'));
+    return said;
+  }, [grade, aspect, seconds, frame, songCut, speak, subtitles.on, t]);
 
   useEffect(() => {
     let alive = true;
@@ -612,6 +700,50 @@ export default function VideoCanvas({
         </button>
       </div>
 
+      {/* ── How much of the desk ────────────────────────────────
+
+          Carli, 10 October 2026: *"Ek wonder met video desk of dit nie ook so
+          kan werk met simpl as net 'n copilot en 'n everything."*
+
+          First thing under the heading, which is the only place a choice
+          about how much of a page to show can go: met after the page, it is a
+          choice nobody makes. Two named buttons rather than a dropdown — it
+          is a choice between two things and both are worth naming. */}
+      <div data-canvasmode className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-zinc-400">{t('canvas.mode', 'How much of it')}</span>
+        {[false, true].map((one) => (
+          <button
+            key={String(one)}
+            type="button"
+            data-canvasmodepick={one ? 'all' : 'simple'}
+            onClick={() => chooseMode(one)}
+            aria-pressed={advanced === one}
+            className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
+              advanced === one
+                ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+            }`}
+          >
+            {one ? t('canvas.modeAll', 'Everything') : t('canvas.modeSimple', 'Simple')}
+          </button>
+        ))}
+        <Note className="text-xs leading-snug text-zinc-500">
+          {t(
+            'canvas.modeWhy',
+            'Simple is the copilot and one button: tell it what you want and it writes the shot, the quality, the shape and the length. Everything opens the whole desk \u2014 the kinds of video, a song under it, a start frame, a caption, your logo and the storyboard. Nothing is switched off by Simple; whatever you have set stays set.',
+          )}
+        </Note>
+      </div>
+
+      {/* Whatever is set behind the switch is printed under it. A grade left
+          on Premium three visits ago is thirteen times the money on a press
+          somebody thinks is the cheap one. */}
+      {!advanced && changedFromDefault.length > 0 && (
+        <p data-canvasinforce className="text-xs leading-snug text-zinc-500">
+          {t('canvas.inForce', 'Still set from Everything:')} {changedFromDefault.join(' \u00b7 ')}
+        </p>
+      )}
+
 
       {/* ── Is this thing plugged in ───────────────────────────────────
           Written for the person who set the keys up, in the place they
@@ -668,6 +800,80 @@ export default function VideoCanvas({
         </div>
       )}
 
+      {/* ── Simple: the copilot, and nothing else ───────────────────
+
+          One sentence saying what to do, and what the copilot has put on the
+          desk. The button is below, outside the switch, because "simpl as net
+          'n copilot en 'n everything" leaves room for exactly one other
+          thing.
+
+          The read-back is not decoration. The shot, the quality, the shape
+          and the length are what the press is going to cost and what it is
+          going to come back as, and a desk somebody cannot see is a desk they
+          cannot correct — they would find out what the copilot decided by
+          paying three minutes and up to sixty credits for it.
+
+          The quotation-mark rule comes with it. That panel and its warning
+          live in the shot card, which is not here in Simple, and it is the
+          one fault on this desk that is completely silent: a line written
+          without quotes comes back drawn at rather than said, the clip looks
+          finished, and the thing it was made for is missing. */}
+      {!advanced && (
+        <div data-canvassimple className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+          <p className="text-sm leading-relaxed text-zinc-300">
+            {t(
+              'canvas.simpleSay',
+              'Open the copilot and tell it what you want \u2014 "film my shop front at sunrise", in any language. It writes the shot, the quality, the shape and the length. Then press the button.',
+            )}
+          </p>
+
+          {prompt.trim() && (
+            <dl data-canvassimpleread className="space-y-1.5 text-sm">
+              {[
+                [t('canvas.simpleShot', 'The shot'), prompt.trim()],
+                [
+                  t('canvas.quality', 'Quality'),
+                  t(`canvas.grade.${grade}`, GRADES.find((one) => one.id === grade)?.label ?? grade) as string,
+                ],
+                [
+                  t('canvas.shape', 'Shape'),
+                  t(`canvas.shape.${aspect}`, SHAPES.find((one) => one.id === aspect)?.label ?? aspect) as string,
+                ],
+                [t('canvas.length', 'Length'), `${seconds}s`],
+              ].filter(([, value]) => value).map(([label, value]) => (
+                <div key={String(label)} className="flex gap-2">
+                  <dt className="shrink-0 text-zinc-500">{label}</dt>
+                  <dd className="min-w-0 truncate text-zinc-200">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {/* The one silent fault, carried into Simple. */}
+          {spoken.length > 0 && (
+            <div data-canvassimplesaid className="space-y-1">
+              <p className="text-xs text-emerald-400">{t('canvas.willSay', 'Will be spoken:')}</p>
+              {spoken.map((line, index) => (
+                <p key={index} className="text-xs italic text-zinc-300">&ldquo;{line}&rdquo;</p>
+              ))}
+            </div>
+          )}
+          {unquoted && (
+            <p className="flex gap-2 text-xs leading-relaxed text-amber-300">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+              <span>
+                {t(
+                  'canvas.unquoted',
+                  'This reads like somebody is meant to speak, but nothing is in quotation marks \u2014 so the words will be drawn at, not said. Put the line in quotes.',
+                )}
+              </span>
+            </p>
+          )}
+        </div>
+      )}
+
+      {advanced && (
+        <>
       {/* Six kinds is the point at which a grid stops being a choice and starts
           being a decision to postpone. Given whatever is already in the box, so
           somebody who has written the shot but not picked a kind gets a real
@@ -1257,6 +1463,22 @@ export default function VideoCanvas({
           </div>
         </div>
 
+      </Card>
+      </div>
+        </>
+      )}
+
+      {/* ── The one button ────────────────────────────────────
+
+          Outside the switch, because Simple is the copilot and this. It was
+          the last thing inside the shot card, which is where it had always
+          been and which would have left Simple with no way to make anything.
+
+          It keeps the error line with it. In Simple the shot box is not on
+          screen, so "say a bit more" has nowhere else to be said — and that
+          refusal is the desk's answer when the copilot has not written
+          enough yet. */}
+      <div className="space-y-2.5">
         <button
           type="button"
           onClick={make}
@@ -1284,7 +1506,6 @@ export default function VideoCanvas({
         )}
 
         {error && <p className="text-sm text-rose-400 leading-relaxed">{error}</p>}
-      </Card>
       </div>
 
       {/* ── A film out of many shots ──────────────────────────────────────
@@ -1305,6 +1526,7 @@ export default function VideoCanvas({
           It still borrows this desk's grade, shape and start frame — one
           decision, made once, above, and the cast picture is the whole reason
           twelve shots can have one person in them. */}
+      {advanced && (
       <Storyboard
         aspect={aspect}
         grade={grade}
@@ -1317,6 +1539,7 @@ export default function VideoCanvas({
         canSpeak={Boolean(able?.speaks)}
         onUpgrade={onUpgrade}
       />
+      )}
 
       {/* ── What has been made, newest first ──────────────────────────── */}
       {made.length > 0 && (

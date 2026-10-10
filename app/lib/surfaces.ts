@@ -434,6 +434,20 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       set_aspect: "the value is exactly one of 16:9, 9:16 or 1:1",
       set_seconds:
         "the value is a whole number of seconds, and one the desk offers",
+      /* ── The grade, because Simple means the copilot decides it ─────
+
+         On Simple the quality row is not on the screen, so whatever this
+         does not set is whatever the desk was last left on. It is also the
+         one setting that decides whether a quoted line is spoken at all —
+         Standard is silent — so a copilot that writes a line and leaves the
+         grade alone has written something that cannot be said. */
+      set_grade:
+        "the value is exactly one of standard, better or premium. Standard is " +
+        "silent and is the right answer for a shot with nobody speaking; use " +
+        "better when anything is in quotation marks, because standard cannot " +
+        "speak and the line would come back drawn at rather than said. Premium " +
+        "is thirteen times standard and is for a shot somebody has said is " +
+        "worth it — do not pick it to be helpful",
       /* ── A blank line between shots, not a newline ───────────────────
  
          This said "one shot per line", which contradicted `set_prompt`
