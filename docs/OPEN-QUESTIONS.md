@@ -7150,3 +7150,45 @@ Two costs to weigh before it is wired either way: a second writing model is a se
 the moderation path (`guard` screens what leaves, and it has to screen this too), and two models
 writing in one app means two voices in her product unless the split is by language and nothing
 else.
+
+**Pronunciation for the African languages: the Bible idea, and why a lexicon beats it.**
+Carli, 10 October 2026: *"Ek probeer net te dink hoe ons foenetiese woord uitsprake vinniger kan
+doen en kry vir die Afrika tale, sal dit nie werk om die Audio Bible van die verskillende tale op
+te laai nie, daar in sal al die uitsprake wees. Of moet dit gesing word om die uitsprake beter te
+kry?"*
+
+The instinct is right — a complete, carefully-read, parallel corpus in every one of those
+languages is exactly the kind of thing that solves this — and there are three reasons not to reach
+for it first.
+
+**It is somebody else's recording, and that is two copyrights.** The TEXT of most modern
+translations is in copyright (the Afrikaans 1983 and 2020 translations belong to the
+Bybelgenootskap van Suid-Afrika), and the RECORDING is a separate copyright belonging to whoever
+produced it. "Free to listen to" is not "free to train on": several of the big audio-Bible
+licences are explicitly no-derivatives, and a voice or a model built from one is a derivative.
+Before any of it is uploaded, the licence on the specific recording has to be read. There are
+openly-licensed scripture texts and some openly-licensed recordings; they are not the ones most
+people find first.
+
+**It is far more work than the problem needs.** What the app actually wants is not hours of audio,
+it is a **pronunciation lexicon** — a word and how to say it, in IPA. ElevenLabs takes one
+directly. Getting a lexicon out of a recording means forced alignment, then transcription, then
+phoneme extraction — a research pipeline. Getting it from rules means writing the rules down once.
+
+**And those languages are the ones where rules actually work.** isiZulu, isiXhosa, Sesotho,
+Setswana and Afrikaans are written almost exactly as they sound: a letter is a sound, nearly every
+time. That is not true of English, which is why English needs a dictionary of 130,000 exceptions.
+A grapheme-to-phoneme ruleset for isiZulu is small, and the hard parts are few and nameable — the
+clicks (`c`, `q`, `x` and their aspirated and voiced forms), the lateral `hl` and `dl`, and
+loanwords. Those go in a short exception list beside the rules.
+
+So the order is: **rules plus an exception list first, recordings only if that is not enough.** A
+few hundred words of exceptions, written by somebody who speaks the language, will beat a corpus
+pipeline and can be built this week.
+
+**And on whether it should be sung: no — speech, every time.** Singing is the worst possible
+source for pronunciation. Vowels are stretched and neutralised toward each other, consonants are
+compressed to fit the rhythm, and — the one that matters most here — **Sesotho, Setswana and Shona
+are tonal, and a melody overrides lexical tone completely.** A sung corpus would teach the wrong
+tone on every word that has one. Sung output is a separate problem and it is Lyria's, not the
+lexicon's.

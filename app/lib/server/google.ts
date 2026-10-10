@@ -195,10 +195,22 @@ export const MODELS: readonly Candidate[] = [
      concluding from a fragment and recording the conclusion as a finding.
      The difference is that this time the fragments were arriving one a
      minute and I kept rewriting rather than waiting for the list to end. */
-  { id: 'veo-3.1-fast-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. The cheap tier, the chosen one, and the id this app had before any of today\u2019s churn.' },
+  { id: 'veo-3.1-fast-generate-001', what: 'video', verb: 'predictLongRunning', hosting: 'serverless', note: 'Seen on her Model Garden page, 9 October 2026. The cheap tier, the chosen one, and the id this app had before any of today\u2019s churn.' },
   { id: 'veo-3.1-lite-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. A second cheap tier; price unread, so not chosen over the one whose rate is known.' },
   { id: 'veo-3.1-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. The full 3.1, about $0.20 a second.' },
-  { id: 'veo-3.0-generate-001', what: 'video', verb: 'predictLongRunning', note: 'Seen on her Model Garden page, 9 October 2026. The older full model.' },
+  { id: 'veo-3.0-generate-001', what: 'video', verb: 'predictLongRunning', hosting: 'serverless', note: 'Seen on her Model Garden page, 9 October 2026. The older full model.' },
+  /* ── The card her CATALOGUE shows, which is not the one chosen ──────
+ 
+     Her full Model Garden listing, 10 October 2026, shows two video tiles —
+     **Veo 3 Fast for Video Generation** and **Veo 2 for Generation**, both
+     Serverless — and no 3.1 tile at all, while on 9 October she pasted four
+     separate Veo 3.1 cards off the same console.
+ 
+     Both can be true: a catalogue tile is a product, and a product has
+     several ids. So nothing is chosen from this; the id is added so the
+     probe ASKS, which is the only thing that settles it. Written as 3.0
+     because that is Google's own version number for "Veo 3". */
+  { id: 'veo-3.0-fast-generate-001', what: 'video', verb: 'predictLongRunning', hosting: 'serverless', note: 'Veo 3 Fast. Her catalogue listing shows this tile and no 3.1 tile, 10 October 2026 — while she pasted four 3.1 cards the day before. The id is a guess at the fast 3.0 name; the probe is what answers.' },
   /* ── Nano Banana, where the names are worst ────────────────────
 
      Carli, 8 October 2026: *"Ek dink ons moet dan lyria, nano banana en veo

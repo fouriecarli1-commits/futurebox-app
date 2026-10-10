@@ -21,7 +21,10 @@
 
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
-import { PER_PICTURE, pictureIn, wordsIn } from '../app/lib/server/picture.ts';
+import {
+  IMAGE_ORDER, PER_PICTURE, makePicture, modelMissing, pictureIn, rememberImage,
+  wordsIn,
+} from '../app/lib/server/picture.ts';
 import { CHOSEN, addressOf } from '../app/lib/server/google.ts';
 import { CEILINGS, DOLLAR } from '../app/lib/server/googlespend.ts';
 import { CREDITS } from '../app/lib/credits.ts';
@@ -183,6 +186,123 @@ ok('  and the member pays more than twice what the picture costs us',
   `${CREDITS.repaint} credits against R${((PER_PICTURE / DOLLAR) * 16).toFixed(2)}`
   + ' — `check:kredietkoste` is the full version of this against every tier;'
   + ' this one is here so the engine and its price cannot be moved apart');
+
+/* ── 5b. A model that is not there is not the end of it ─────────────────
+
+   Carli pasted her whole Model Garden listing on 10 October 2026 and asked
+   *"Ok sal jy die models dan reg maak?"* Every card on it carries a badge,
+   and `Gemini Nano Banana 2.1` — this app's chosen picture model — is badged
+   **Self-deployed**: no per-call address at all until somebody runs a
+   machine for it, so a request answers 404.
+
+   `gemini-2.5-flash-image` is Serverless on the same page AND is the one
+   sound probe reading this app has ever taken.
+
+   Rather than guess which is right, the engine tries the list. These drive
+   that with the network replaced, because the two ways it can be wrong are
+   both silent: never falling back (a dead room), and falling back on a
+   REFUSAL, which pays Google twice for the same no. */
+
+async function drawWith(answers: Record<string, { status: number; body: string }>): Promise<{
+  drawn: Awaited<ReturnType<typeof makePicture>>;
+  tried: string[];
+}> {
+  const was = {
+    key: process.env.GOOGLE_VERTEX_KEY,
+    project: process.env.GOOGLE_PROJECT,
+    fetch: globalThis.fetch,
+  };
+  process.env.GOOGLE_VERTEX_KEY = 'test-key';
+  process.env.GOOGLE_PROJECT = 'test-project';
+  /* The engine REMEMBERS which model answered, so the fallback is paid for
+     once rather than on every picture. That memory is module state and it
+     leaks between the cases below: the first version of this had the refusal
+     case trying only `gemini-2.5-flash-image`, because the 404 case two
+     assertions earlier had taught it that name — and the assertion passed
+     for the wrong reason, which is the fault this whole repository is most
+     careful about. Each case starts from nothing. */
+  rememberImage(null);
+  const tried: string[] = [];
+  globalThis.fetch = (async (where: string) => {
+    const which = Object.keys(answers).find((one) => String(where).includes(one)) ?? '';
+    tried.push(which);
+    const said = answers[which] ?? { status: 404, body: 'not found' };
+    return {
+      ok: said.status >= 200 && said.status < 300,
+      status: said.status,
+      text: async () => said.body,
+    } as unknown as Response;
+  }) as typeof globalThis.fetch;
+  try {
+    return { drawn: await makePicture('a stoep at sunset'), tried };
+  } finally {
+    globalThis.fetch = was.fetch;
+    if (was.key === undefined) delete process.env.GOOGLE_VERTEX_KEY;
+    else process.env.GOOGLE_VERTEX_KEY = was.key;
+    if (was.project === undefined) delete process.env.GOOGLE_PROJECT;
+    else process.env.GOOGLE_PROJECT = was.project;
+  }
+}
+
+/** A 200 carrying a picture, in the shape Vertex answers in. */
+const DREW = {
+  status: 200,
+  body: JSON.stringify({
+    candidates: [{
+      content: { parts: [{ inlineData: { mimeType: 'image/png', data: 'A'.repeat(2048) } }] },
+    }],
+  }),
+};
+
+ok('the chosen model is tried first',
+  (await drawWith({ [IMAGE_ORDER[0]]: DREW })).tried[0] === IMAGE_ORDER[0],
+  `${IMAGE_ORDER.join(' then ')} — the first name is the one she chose, and a`
+  + ' fallback that reorders them has quietly made the choice itself');
+
+ok('  and there is somewhere to fall back TO',
+  IMAGE_ORDER.length >= 2,
+  'one name is not a list, and the whole point is that neither reading of'
+  + ' her Model Garden badge has to be right');
+
+{
+  const got = await drawWith({
+    [IMAGE_ORDER[0]]: { status: 404, body: 'Publisher model was not found' },
+    [IMAGE_ORDER[1]]: DREW,
+  });
+  ok('  and a 404 really is followed by the next one',
+    got.drawn.ok && got.tried.length === 2,
+    `tried ${got.tried.join(', ')} — a self-deployed model has no address, and`
+    + ' a room that stops at the first 404 is a room where every picture'
+    + ' fails for a reason nobody can see');
+}
+
+{
+  const got = await drawWith({
+    [IMAGE_ORDER[0]]: { status: 400, body: 'The prompt was blocked for safety' },
+    [IMAGE_ORDER[1]]: DREW,
+  });
+  ok('  but a REFUSAL stops there rather than asking the next one',
+    !got.drawn.ok && got.tried.length === 1,
+    `tried ${got.tried.join(', ')} — Google has already been paid for the`
+    + ' refusal; asking a second model the same refused question pays twice'
+    + ' for the same no, and hands back a picture she was told she could not'
+    + ' have');
+}
+
+{
+  const got = await drawWith({});
+  ok('  and every name missing is reported as itself',
+    !got.drawn.ok && got.tried.length === IMAGE_ORDER.length,
+    'a project with no picture model on it is a setup problem, and the'
+    + ' sentence has to say so rather than "that did not work"');
+}
+
+ok('only a missing MODEL moves down the list',
+  modelMissing(404, '') && modelMissing(400, 'Publisher model was not found')
+  && !modelMissing(400, 'blocked for safety') && !modelMissing(429, 'too many')
+  && !modelMissing(500, 'internal'),
+  'a rate limit or a safety block is not a reason to try another engine, and'
+  + ' treating one as such is how a refusal becomes two charges');
 
 /* ── 6. The route's order, and what it must not do ─────────────────────── */
 

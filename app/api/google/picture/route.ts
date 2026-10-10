@@ -38,7 +38,9 @@ import { callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { CHOSEN } from '@/app/lib/server/google';
 import { enough, note } from '@/app/lib/server/googlespend';
-import { MOST_PICTURES, PER_PICTURE, configured, makePicture } from '@/app/lib/server/picture';
+import {
+  MOST_PICTURES, PER_PICTURE, configured, makePicture, workingImage,
+} from '@/app/lib/server/picture';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
@@ -197,7 +199,12 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, CREDITS.repaint, 'repaint');
   if (!paid.ok) return paid.response;
 
-  const drawn = await makePicture(words, from, aspect, CHOSEN.image);
+  /* No model named, so the engine tries the list in `IMAGE_ORDER` and falls
+     back on a 404. Her Model Garden listing badges the chosen one
+     Self-deployed — a model with no address — and the one measured to
+     resolve on her project is second in that list. Naming a model here would
+     switch that off. */
+  const drawn = await makePicture(words, from, aspect);
   if (!drawn.ok) {
     await paid.refund();
     return Response.json({ message: drawn.message }, { status: drawn.status });
@@ -205,7 +212,11 @@ export async function POST(request: Request): Promise<Response> {
 
   /* Written down once the picture is in hand, and never awaited: the
      member's picture is ready and the bookkeeping must not hold it. */
-  void note('image', PER_PICTURE, CHOSEN.image, caller?.id);
+  /* The one that actually drew it, not the one that was asked for first.
+     The whole point of writing down which model ran is that the first real
+     bill can be matched against it, and a ledger that records a model which
+     404'd is a ledger that answers the wrong question. */
+  void note('image', PER_PICTURE, workingImage ?? CHOSEN.image, caller?.id);
 
   return new Response(new Uint8Array(drawn.image), {
     headers: {

@@ -200,11 +200,122 @@ export function wordsIn(body: unknown): string[] {
    Re-exported so the route and this file name the same thing. */
 export { MOST_PICTURES };
 
+/**
+ * The picture models to try, in order.
+ *
+ * ── Why this is a list now ───────────────────────────────────────────────
+ *
+ * Carli pasted her whole Model Garden listing on 10 October 2026, and every
+ * card on it carries a badge. `Gemini Nano Banana 2.1` — the chosen one — is
+ * badged **Self-deployed**, which means it has no per-call address at all
+ * until somebody puts it on a machine that bills by the hour. A request to
+ * one answers 404.
+ *
+ * `gemini-2.5-flash-image` is badged **Serverless** on the same page, and it
+ * is the one sound probe reading this app has ever taken: on 8 October it
+ * answered 400 to an empty body on `:generateContent`, and on that surface
+ * the model is resolved BEFORE the body is looked at. So that 400 means the
+ * name exists on her project. The three Nano Banana Pro names answered 404
+ * beside it.
+ *
+ * ── Why a list and not a different single choice ─────────────────────────
+ *
+ * Because I have been confidently wrong about a Google model name twice in
+ * one session before — this file's sibling records both — and because I do
+ * not have to be right. If 2.1 answers, it is used and it is the better
+ * model. If it 404s, the one that is measured to resolve is used. The app is
+ * correct under both readings and nobody has to guess.
+ *
+ * Carli: *"Ok sal jy die models dan reg maak?"* This is what fixing them
+ * looks like when the evidence is good but not certain.
+ */
+export const IMAGE_ORDER: readonly string[] = [CHOSEN.image, 'gemini-2.5-flash-image'];
+
+/**
+ * The one that answered last, so the fallback is paid for once.
+ *
+ * Without this, every picture on a project where the first name is missing
+ * would make two calls: a 404 and then a real one. The 404 costs nothing in
+ * money and about a second in time, and a second on every picture for the
+ * life of the deployment is a room that feels broken.
+ *
+ * Process-lifetime only, deliberately. A serverless instance that has learnt
+ * the answer keeps it; a new one learns it again on its first picture. There
+ * is nothing to invalidate and nothing to go stale, which is the right
+ * trade for a value that costs one request to rediscover.
+ */
+export let workingImage: string | null = null;
+
+/**
+ * Set, or forget, the remembered winner.
+ *
+ * Two real uses, and a test is not one of them — a function that exists only
+ * so a check can reach into a module is a hook, and hooks drift from the
+ * thing they are meant to be testing.
+ *
+ * **The probe can teach it.** `/api/google/setup` asks every candidate which
+ * ones resolve. Once it knows, the first real picture need not rediscover it
+ * by paying a 404 first.
+ *
+ * **A deployment can forget it.** The memory is process-lifetime and there is
+ * nothing to invalidate it, which is right while a project's models do not
+ * change under it — and wrong on the day somebody deploys the self-deployed
+ * one and it starts answering. Forgetting costs one request to relearn.
+ */
+export function rememberImage(model: string | null): void {
+  workingImage = model && IMAGE_ORDER.includes(model) ? model : null;
+}
+
+/** Only "that model is not here" is worth trying the next name for. */
+export function modelMissing(status: number, said: string): boolean {
+  if (status === 404) return true;
+  /* Google's own words on a publisher model that is not on the project. A
+     400 from the BODY check is a different thing entirely and must not move
+     us down the list — falling back on a refusal would pay twice for the
+     same refusal. */
+  return /was not found|does not have access|not supported|is not available/i.test(said);
+}
+
 export async function makePicture(
   words: string,
   from?: Given | readonly Given[],
   aspect?: '1:1' | '16:9' | '9:16' | '4:3' | '3:4',
-  model: string = CHOSEN.image,
+  model?: string,
+): Promise<Drawn> {
+  /* A model named by the caller is the only one tried: a check that drives
+     this must get what it asked for, and a route that wants a specific
+     engine is not asking for a search. */
+  if (model) return drawWith(model, words, from, aspect);
+
+  const order = workingImage
+    ? [workingImage, ...IMAGE_ORDER.filter((one) => one !== workingImage)]
+    : IMAGE_ORDER;
+
+  let last: Drawn | null = null;
+  for (const one of order) {
+    const drawn = await drawWith(one, words, from, aspect);
+    if (drawn.ok) {
+      workingImage = one;
+      return drawn;
+    }
+    last = drawn;
+    if (!modelMissing(drawn.status, drawn.message)) return drawn;
+  }
+  /* Every name missing. Reported as itself, with the last engine's own
+     words, rather than as "that did not work" — a project with no picture
+     model on it is a setup problem and the sentence should say so. */
+  return last ?? {
+    ok: false,
+    status: 503,
+    message: 'No picture model on this project answered.',
+  };
+}
+
+async function drawWith(
+  model: string,
+  words: string,
+  from?: Given | readonly Given[],
+  aspect?: '1:1' | '16:9' | '9:16' | '4:3' | '3:4',
 ): Promise<Drawn> {
   if (!configured()) {
     return { ok: false, status: 503, message: 'The picture engine is not switched on yet.' };
