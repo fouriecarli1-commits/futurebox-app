@@ -31,7 +31,8 @@
  */
 import { readFileSync } from 'node:fs';
 import {
-  CREDITS_A_MEMBER, RAND_PER_CREDIT, STEPS, ceilingFor, claimKey, elevenLetter, kitsLetter,
+  CREDITS_A_MEMBER, RAND_PER_CREDIT, STEPS, ceilingFor, claimKey, elevenLetter,
+  googleLetter, googleSupplier, kitsLetter,
   monthKey, stepFor,
 } from '../app/lib/server/spendwatch';
 import { PLAN_CREDITS } from '../app/lib/server/elevenceiling';
@@ -178,6 +179,86 @@ ok('an unreadable member count recommends nothing rather than guessing',
 ok('and the count includes members who have cancelled but are still paid up',
   /'non-renewing'/.test(readFileSync('app/lib/server/spendwatch.ts', 'utf8')),
   'a non-renewing subscription still uses credits until its date');
+
+/* ── Google, which was not watched at all ──────────────────────────
+
+   Carli, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer my
+   budgets in elevenlabs en google op raak."* ElevenLabs was watched and
+   Google was not, so the first thing she would have known about a Google
+   month running out is `enough()` refusing a member’s song.
+
+   The three engines have to be three claims. One claim for all of Google
+   would mean Veo crossing half silences the warning for music and pictures
+   for the rest of the month — and the engine that goes quiet is the one
+   nobody was watching. Driven rather than read, because "they are different
+   strings" is the whole of the assertion and it is one line to get wrong. */
+ok('each Google engine claims its own key',
+  (() => {
+    /* Through `googleSupplier`, which is what the watcher actually calls.
+       The first version of this handed `claimKey` three different suppliers
+       and asked whether the strings differed — which proves `claimKey` works
+       and says nothing about whether the watcher passes the kind through.
+       Hard-coding `'google_music'` in that call passed it. */
+    const keys = (['music', 'video', 'image'] as const)
+      .map((kind) => claimKey(googleSupplier(kind), 0.5, '2026-10'));
+    return new Set(keys).size === 3;
+  })(),
+  'one claim for all three means the first engine to cross a step silences'
+  + ' the other two for the month, and the engine that goes quiet is the one'
+  + ' nobody was watching');
+
+ok('  and none of them is the ElevenLabs key',
+  claimKey(googleSupplier('music'), 0.5, '2026-10') !== claimKey('eleven', 0.5, '2026-10'));
+
+/* The letter’s own numbers. Micro-dollars in, dollars on the page: $40 is
+   40 000 000 of them, and a letter that said "40000000" would be a letter
+   nobody could read a figure out of. */
+const google = googleLetter('video', 20_000_000, 40_000_000, 0.5);
+ok('the Google letter says what is spent and of what, in dollars',
+  google.body.includes('$20.00') && google.body.includes('$40.00'),
+  google.body.slice(0, 120));
+ok('  and names the engine rather than the kind',
+  google.subject.includes('Veo') && googleLetter('music', 1, 2, 0.5).subject.includes('Lyria')
+  && googleLetter('image', 1, 2, 0.5).subject.includes('Nano Banana'),
+  'she reads engine names, not the words music, video and image');
+ok('  and names the variable that actually stops the app',
+  google.body.includes('GOOGLE_CAP_VIDEO')
+  && googleLetter('music', 1, 2, 0.5).body.includes('GOOGLE_CAP_MUSIC')
+  && googleLetter('image', 1, 2, 0.5).body.includes('GOOGLE_CAP_IMAGE'),
+  'the mirror of the ElevenLabs trap: raising the budget in the Google'
+  + ' console does nothing, and somebody who raises it and redeploys nothing'
+  + ' will watch the app keep refusing work Google is willing to do');
+ok('  and says raising Google’s own budget is not enough',
+  /does NOT raise this/.test(google.body));
+ok('  and says all three engines share one cap underneath',
+  /ONE service/.test(google.body) && /Veo runs hot/.test(google.body),
+  'the month Veo runs hot is the month the music stops with it, which is the'
+  + ' whole reason the three ceilings exist');
+ok('at the ceiling it says the engine has stopped',
+  googleLetter('music', 40_000_000, 40_000_000, 1).subject.includes('used up')
+  && googleLetter('music', 40_000_000, 40_000_000, 1).body.includes('has stopped'),
+  googleLetter('music', 40_000_000, 40_000_000, 1).subject);
+
+/* And it is actually called. A watcher nothing calls is the state Google was
+   in until today — the code existed for ElevenLabs and not for this. */
+const spend = readFileSync('app/lib/server/googlespend.ts', 'utf8');
+ok('the watcher runs when a spend is recorded',
+  /watch\.watchGoogle\(kind\)/.test(spend),
+  'a warning nothing calls is the state Google was in until today');
+ok('  and after the row is written rather than before the work',
+  (() => {
+    const wroteAt = spend.indexOf('wrote(saved,');
+    const watchAt = spend.indexOf('watch.watchGoogle(kind)');
+    return wroteAt > 0 && watchAt > wroteAt;
+  })(),
+  'a warning from `enough()` would fire on every press of a busy afternoon'
+  + ' and say the same number each time; this runs once, at the one moment'
+  + ' the number has just moved');
+ok('  and an unreadable month says nothing rather than saying zero',
+  /if \(used === null\) return;/.test(readFileSync('app/lib/server/spendwatch.ts', 'utf8')),
+  'a letter saying "nothing is spent" when the truth is "we cannot tell" is'
+  + ' worse than no letter, and `enough()` has already refused the work');
+
 
 /* ── The price quoted is their published one ───────────────────────────── */
 ok('a thousand credits is about R3,09', Math.abs(RAND_PER_CREDIT * 1000 - 3.086) < 0.01,

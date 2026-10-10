@@ -79,7 +79,29 @@ export function monthKey(now = new Date()): string {
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
-export type Supplier = 'eleven' | 'kits' | 'voices';
+export type Supplier =
+  | 'eleven'
+  | 'kits'
+  | 'voices'
+  /**
+   * Google, one supplier per ENGINE and not one for all three.
+   *
+   * Carli, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer my
+   * budgets in elevenlabs en google op raak."*
+   *
+   * ElevenLabs was already watched and Google was not watched at all, so this
+   * is the half that was missing.
+   *
+   * Three suppliers because there are three ceilings: Lyria, Veo and Nano
+   * Banana each have their own in `googlespend.ts`, deliberately unequal,
+   * because video can empty a month in an afternoon and music is the thing
+   * the app is for. One claim key for all three would mean Veo crossing half
+   * silences the warning for music and pictures for the rest of the month —
+   * and the engine that goes quiet is the one nobody was watching.
+   */
+  | 'google_music'
+  | 'google_video'
+  | 'google_image';
 
 /** One claim per supplier, per step, per month. */
 export function claimKey(supplier: Supplier, step: number, month = monthKey()): string {
@@ -218,6 +240,100 @@ export function voicesLetter(used: number, limit: number, step: number): { subje
   ].join('\n');
 
   return { subject, body };
+}
+
+/**
+ * Which supplier one Google engine claims under.
+ *
+ * A function of two lines, exported, because the thing it decides cannot be
+ * tested any other way: `tell` writes to the database, so a check cannot
+ * watch `watchGoogle` claim a key. Hard-coding `'google_music'` in that call
+ * would make all three engines share one claim — Veo crossing half would
+ * silence the warning for music and pictures for the rest of the month — and
+ * a check that only asked whether `claimKey` keys three DIFFERENT strings
+ * apart would pass that happily. It did; this is the repair.
+ */
+export function googleSupplier(kind: 'music' | 'video' | 'image'): Supplier {
+  return `google_${kind}` as Supplier;
+}
+
+/**
+ * What the Google letter says, per engine.
+ *
+ * ── The trap this one names, which is the mirror of ElevenLabs' ──────────
+ *
+ * At ElevenLabs the danger is topping up and forgetting to raise the app's
+ * ceiling. Here it is the other way round: **raising Google's own cap does
+ * nothing**, because what stops this app is `GOOGLE_CAP_MUSIC`,
+ * `GOOGLE_CAP_VIDEO` and `GOOGLE_CAP_IMAGE` on Vercel. Somebody who raises
+ * the budget in the Google console and nothing else will watch the app keep
+ * refusing work Google is perfectly willing to do.
+ *
+ * ── And the one thing that is worth saying every time ────────────────────
+ *
+ * Google's cap hangs on one SERVICE, and all three engines are that service.
+ * So the engine that is running hot is not only spending its own ceiling — it
+ * is spending the shared cap underneath all three, and the month Veo runs hot
+ * is the month the music stops with it. That is the whole reason these three
+ * ceilings exist, and the letter is the one place she reads it while there is
+ * still something to do about it.
+ */
+export function googleLetter(
+  kind: 'music' | 'video' | 'image',
+  usedMicros: number,
+  ceilingMicros: number,
+  step: number,
+): { subject: string; body: string } {
+  const dollars = (micros: number): string => `$${(micros / 1_000_000).toFixed(2)}`;
+  const left = Math.max(0, ceilingMicros - usedMicros);
+  const percent = Math.round(step * 100);
+  const engine = kind === 'music' ? 'Lyria' : kind === 'video' ? 'Veo' : 'Nano Banana';
+  const variable = `GOOGLE_CAP_${kind.toUpperCase()}`;
+
+  const subject =
+    step >= 1
+      ? `Google ${engine}: the month’s budget is used up`
+      : `Google ${engine}: ${percent}% of the month’s budget is used`;
+
+  const body = [
+    step >= 1
+      ? `${engine} has stopped. ${dollars(usedMicros)} of ${dollars(ceilingMicros)} is spent this month, and the app will not spend past that until you raise the ceiling.`
+      : `${dollars(usedMicros)} of ${dollars(ceilingMicros)} is spent on ${engine} this month. ${dollars(left)} left.`,
+    '',
+    `Raising the budget in the Google console does NOT raise this. What stops the app is ${variable} on Vercel, which is ${dollars(ceilingMicros)} now. Change that and redeploy.`,
+    '',
+    'And the thing worth remembering while you decide: Google’s own cap hangs on ONE service, and Lyria, Veo and Nano Banana are all that one service. So this engine is not only spending its own ceiling — it is spending the cap underneath all three, which is why the month Veo runs hot is the month the music stops with it.',
+  ].join('\n');
+
+  return { subject, body };
+}
+
+/**
+ * Look at where one Google engine stands and write if a step was crossed.
+ *
+ * Fire and forget, from `note()` in `googlespend.ts` — after the work is in
+ * hand and the spend is recorded, which is the only moment the number has
+ * just changed.
+ *
+ * The reads are the same ones the refusal uses, so the warning and the
+ * refusal cannot disagree about where the month stands. A null read is a
+ * month this cannot speak about rather than a month at zero: `enough()` has
+ * already refused the work for the same reason, and a letter saying "nothing
+ * is spent" when the truth is "we cannot tell" is worse than no letter.
+ */
+export async function watchGoogle(kind: 'music' | 'video' | 'image'): Promise<void> {
+  try {
+    const google = await import('./googlespend');
+    const ceiling = google.ceilingFor(kind);
+    const used = await google.usedMicros(kind);
+    if (used === null) return;
+    const step = stepFor(used, ceiling);
+    if (step === null) return;
+    const { subject, body } = googleLetter(kind, used, ceiling, step);
+    await tell(googleSupplier(kind), step, subject, body);
+  } catch {
+    // A warning that failed is not a reason for a generation to fail.
+  }
 }
 
 /**

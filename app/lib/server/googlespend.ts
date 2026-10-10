@@ -291,6 +291,24 @@ export async function note(
     owner: owner ?? null,
   });
   wrote(saved, `what ${kind} cost us`);
+
+  /* ── And tell her, while there is still something she can do ────────
+ 
+     Carli, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer
+     my budgets in elevenlabs en google op raak."* ElevenLabs was watched
+     already — `watchEleven` has run on every generation since September —
+     and Google was not watched at all. The first thing she would have known
+     is `enough()` refusing a member's song.
+ 
+     Here and not in `enough()`, which is the other obvious place: `enough()`
+     runs BEFORE the work and answers a question about a month that has not
+     changed yet, so a warning from there would fire on every press of a busy
+     afternoon and say the same number each time. This runs once, after a
+     spend is recorded, which is the one moment the number has just moved.
+ 
+     Not awaited, and inside the same promise the comment above describes:
+     the member's file is ready and a letter must not hold it. */
+  void import('./spendwatch').then((watch) => watch.watchGoogle(kind));
 }
 
 /** What is left on every engine, for a screen that has to say. */
