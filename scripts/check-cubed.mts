@@ -33,6 +33,14 @@
  * cube to come BACK over the near one somewhere, and that is a specific pass
  * this file holds, because a mark without it still looks deliberate and is
  * simply the wrong drawing.
+ *
+ * The second version was two cubes in the same stance, which she looked at and
+ * sent back: *"die een moet half gedraai wees… en dan meer hoeke het."* Same
+ * stance means same three directions, so the overlap added clutter and no
+ * angles. So the questions here are asked of the geometry and not of the file:
+ * the bars are crossed for real, the turn is measured against the view, and
+ * the fresh angles are counted. A mark can be the wrong drawing and still read
+ * perfectly in the source, which is the only reason any of this is code.
  */
 
 import { readFileSync } from 'node:fs';
@@ -41,6 +49,9 @@ import {
   CLASSES_IN_A_SERIES, GUEST_SHARE, GUEST_TERMS, HOUSE_SHARE, SERIES,
   minutesOf, seriesById, splitAsSaid,
 } from '../app/lib/cubed.ts';
+import {
+  BAR, CASING, FAR, NEAR, OVER, SQUARE_ON, TURN, TURN_AXIS, VIEW, cubeBars,
+} from '../app/lib/cubedmark.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -142,11 +153,88 @@ ok('  and the room says the rest are still being arranged',
 ok('  and an id that is not there answers nothing',
   seriesById('no-such-series') === undefined);
 
-/* ── 4. The mark, and the one pass that makes it woven ────────────────── */
+/* ── 4. The mark: two cubes, one turned, really passing through ───────── */
+
+/** A bar is "Mx,yLx,y". Read it back as the two ends. */
+const endsOf = (d: string): [number, number, number, number] => {
+  const n = d.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
+  return [n[0], n[1], n[2], n[3]];
+};
+
+/** Where two bars cross, if they cross anywhere but at a shared end. */
+const crosses = (one: string, two: string): boolean => {
+  const [ax, ay, bx, by] = endsOf(one);
+  const [cx, cy, dx, dy] = endsOf(two);
+  const rx = bx - ax, ry = by - ay, sx = dx - cx, sy = dy - cy;
+  const turn = rx * sy - ry * sx;
+  if (Math.abs(turn) < 1e-9) return false;
+  const t = ((cx - ax) * sy - (cy - ay) * sx) / turn;
+  const u = ((cx - ax) * ry - (cy - ay) * rx) / turn;
+  /* Strictly inside both, so two bars meeting at a corner do not count. */
+  return t > 0.02 && t < 0.98 && u > 0.02 && u < 0.98;
+};
+
+/** The screen directions a cube's bars run in, to the nearest degree. */
+const anglesOf = (cube: readonly string[]): Set<number> => new Set(cube.map((d) => {
+  const [ax, ay, bx, by] = endsOf(d);
+  const deg = (Math.atan2(by - ay, bx - ax) * 180) / Math.PI;
+  return Math.round(((deg % 180) + 180) % 180);
+}));
+
+const boxOf = (cube: readonly string[]): [number, number, number, number] => {
+  const xs: number[] = [], ys: number[] = [];
+  for (const d of cube) { const [ax, ay, bx, by] = endsOf(d); xs.push(ax, bx); ys.push(ay, by); }
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+};
 
 ok('the mark draws two cubes',
-  /const FAR = cubeBars\(/.test(mark) && /const NEAR = cubeBars\(/.test(mark),
+  FAR.length >= 9 && NEAR.length >= 9 && /\bFAR\b/.test(mark) && /\bNEAR\b/.test(mark),
   'her words: "twee cubes in mekaar vervleg"');
+
+ok('  and a cube hides the edges behind it',
+  cubeBars(SQUARE_ON, 0, 21, 60, 60).length === 9,
+  'a cube seen corner-on shows nine of its twelve edges. Drawing all twelve'
+  + ' is a wireframe, which reads as a diagram rather than as a solid thing —'
+  + ' and the three it must drop are only knowable from the face normals');
+
+ok('  and the second one is really turned',
+  (() => {
+    /* Every direction in the whole mark, with near-parallels folded together. */
+    const apart = (a: number, b: number) => Math.min(Math.abs(a - b), 180 - Math.abs(a - b));
+    const kept: number[] = [];
+    for (const deg of [...anglesOf(FAR), ...anglesOf(NEAR)].sort((a, b) => a - b)) {
+      if (kept.every((was) => apart(was, deg) >= 7)) kept.push(deg);
+    }
+    if (kept.length < 5) console.log(`         ${kept.length} directions: ${kept.join(', ')}`);
+    return kept.length >= 5;
+  })(),
+  '"die een moet half gedraai wees… en dan meer hoeke het, omdat die een'
+  + ' gedraai is". Two cubes in the SAME stance share three directions between'
+  + ' them, so overlapping them adds clutter and no angles — which is exactly'
+  + ' what the first version of this mark was. And the folding is why this'
+  + ' counts five and not six: a turn that leaves two bars three degrees off'
+  + ' parallel reads as a line that missed, not as an angle, and two of the'
+  + ' turns tried here did precisely that');
+
+ok('  and it is turned ACROSS the view, not around it',
+  Math.abs(TURN_AXIS[0] * VIEW[0] + TURN_AXIS[1] * VIEW[1] + TURN_AXIS[2] * VIEW[2]) < 1e-9
+  && TURN > 0.2,
+  'turning a cube about the corner we are looking down spins the finished'
+  + ' drawing on the page and changes nothing about it: same bars, same'
+  + ' angles. Those were generated, looked at, and thrown away. Only an axis'
+  + ' across the view shows a face the other cube is not showing');
+
+ok('  and the two sit inside one another',
+  (() => {
+    const [ax, ay, bx, by] = boxOf(FAR);
+    const [cx, cy, dx, dy] = boxOf(NEAR);
+    const over = Math.max(0, Math.min(bx, dx) - Math.max(ax, cx))
+      * Math.max(0, Math.min(by, dy) - Math.max(ay, cy));
+    const least = Math.min((bx - ax) * (by - ay), (dx - cx) * (dy - cy));
+    return over / least > 0.55;
+  })(),
+  '"Die cubed nog meer in mekaar" — two cubes touching at a corner are two'
+  + ' cubes next to each other');
 
 ok('  and the near one erases what it crosses',
   /bars\(NEAR, back, CASING\)/.test(mark),
@@ -160,14 +248,27 @@ ok('  and the far one comes BACK over the near one',
   + ' and behind is overlapping rather than woven — which is exactly what the'
   + ' first version of this mark was');
 
+ok('  and the bars it brings back over really do cross the other cube',
+  OVER.length >= 2 && OVER.every((at) => FAR[at] !== undefined
+    && NEAR.some((other) => crosses(FAR[at], other))),
+  'a bar chosen to come back over that crosses NOTHING is drawn twice and'
+  + ' changes no pixel. The mark then looks deliberate in the source and'
+  + ' overlapped on the page, and no amount of reading the file tells you'
+  + ' which — so they are crossed here for real');
+
 ok('  and the casing is wider than the bar it hides',
-  (() => {
-    const bar = Number(mark.match(/export const BAR = ([\d.]+)/)?.[1] ?? 0);
-    const casing = Number(mark.match(/export const CASING = ([\d.]+)/)?.[1] ?? 0);
-    return bar > 0 && casing > bar + 1;
-  })(),
+  CASING > BAR + 1 && BAR > 0,
   'a casing the same width as the bar leaves the line it was meant to hide'
   + ' showing along both edges');
+
+ok('  and the whole mark stays inside its box',
+  (() => {
+    const [ax, ay, bx, by] = boxOf([...FAR, ...NEAR]);
+    const lip = CASING / 2;
+    return ax - lip > 0 && ay - lip > 0 && bx + lip < 120 && by + lip < 120;
+  })(),
+  'a bar whose casing runs off the viewBox is clipped square at the edge, and'
+  + ' a rounded cap that ends in a straight cut reads as a broken line');
 
 ok('  and the background is given rather than assumed',
   /readonly back\?: string;/.test(mark) && /back = '#/.test(mark)
@@ -179,8 +280,8 @@ ok('  and the background is given rather than assumed',
 
 ok('  and the iron is one gradient across the whole mark',
   /gradientUnits="userSpaceOnUse"/.test(mark),
-  'a gradient per bar lights every bar from its own direction, and eighteen'
-  + ' separately lit bars read as eighteen objects rather than two cubes');
+  'a gradient per bar lights every bar from its own direction, and twenty'
+  + ' separately lit bars read as twenty objects rather than two cubes');
 
 /* ── 5. The room is dark through the theme, not around it ─────────────── */
 

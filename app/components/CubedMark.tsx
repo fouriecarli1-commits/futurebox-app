@@ -1,10 +1,18 @@
 /**
- * The Cubed mark: two cubes threaded through each other, in iron.
+ * The Cubed mark: two cubes threaded through each other, one of them turned,
+ * in iron.
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
  * Carli, 10 October 2026: *"Ek soek ook 'n Logo waar twee cubes in mekaar
- * vervleg is met 'n sterk yster tipe look."*
+ * vervleg is met 'n sterk yster tipe look."* And, after looking at the first
+ * one: *"Die cubed nog meer in mekaar, die een moet half gedraai wees, dat dit
+ * soos een in mekaar pas en dan meer hoeke het, omdat die een gedraai is."*
+ *
+ * The shapes live in `app/lib/cubedmark.ts`, where they are a real cube turned
+ * in three dimensions rather than a hexagon somebody placed by hand — because
+ * a hand-placed hexagon can only be a cube from one direction, and her second
+ * sentence asks for a second direction. This file is the drawing of them.
  *
  * ── Why it is drawn rather than generated ────────────────────────────────
  *
@@ -22,11 +30,11 @@
  * version of this file was. It was drawn, looked at, and thrown away.
  *
  * The way it is actually done is the way a draughtsman does it. Each cube is
- * nine bars. The far cube goes down first. Then every bar of the near cube is
- * drawn TWICE: once fat, in the background colour, and once at its own width
- * in iron — so the fat pass erases the far cube where the near one crosses it
- * and the bar sits in the hole it just made. Then two bars of the FAR cube are
- * drawn again the same way, on top, so those two cross back over.
+ * its visible bars. The far cube goes down first. Then every bar of the near
+ * cube is drawn TWICE: once fat, in the background colour, and once at its own
+ * width in iron — so the fat pass erases the far cube where the near one
+ * crosses it and the bar sits in the hole it just made. Then the far cube's
+ * crossing bars are drawn again the same way, on top, so those cross back over.
  *
  * That last step is the one that earns the word. Without it the far cube is
  * merely behind, and behind is not woven.
@@ -38,59 +46,15 @@
  * ── The iron ─────────────────────────────────────────────────────────────
  *
  * One gradient across the whole mark in user space, not one per bar. A
- * gradient per bar lights every bar from its own direction, and eighteen
- * separately lit bars read as eighteen objects rather than two cubes. Five
+ * gradient per bar lights every bar from its own direction, and twenty
+ * separately lit bars read as twenty objects rather than two cubes. Five
  * stops rather than two, because a smooth ramp reads as plastic.
  */
 
 import React from 'react';
+import { BAR, CASING, FAR, NEAR, OVER } from '../lib/cubedmark';
 
-/** The geometry, so a check can ask the same questions the drawing answers. */
-export const BAR = 6;
-/** The erasing pass. Wider than the bar, or the hole does not clear its edges. */
-export const CASING = 9.4;
-
-/**
- * One isometric cube as nine bars: the hexagon's six, and the three that run
- * to the near corner.
- */
-export function cubeBars(cx: number, cy: number, side: number): string[] {
-  const h = side * 0.5;
-  /* tan(30°) × half width: the rise of an isometric edge. */
-  const q = side * 0.28868;
-  const d = side * 0.62;
-  const T: [number, number] = [cx, cy];
-  const TL: [number, number] = [cx - h, cy + q];
-  const TR: [number, number] = [cx + h, cy + q];
-  const C: [number, number] = [cx, cy + 2 * q];
-  const BL: [number, number] = [cx - h, cy + q + d];
-  const BR: [number, number] = [cx + h, cy + q + d];
-  const B: [number, number] = [cx, cy + 2 * q + d];
-  const bar = (a: [number, number], b: [number, number]): string =>
-    `M${a[0].toFixed(2)},${a[1].toFixed(2)}L${b[0].toFixed(2)},${b[1].toFixed(2)}`;
-  return [
-    bar(T, TL), bar(T, TR),
-    bar(TL, C), bar(TR, C),
-    bar(TL, BL), bar(TR, BR), bar(C, B),
-    bar(BL, B), bar(BR, B),
-  ];
-}
-
-/* The two cubes, placed so the drawing sits in the middle of its box and the
-   overlap is large enough to weave. Written out rather than computed: a mark
-   is a drawing somebody can read, not a function somebody has to run. */
-const FAR = cubeBars(45, 19, 48);
-const NEAR = cubeBars(75, 43, 48);
-
-/**
- * Which bars of the far cube come back over the near one.
- *
- * Five is its right-hand vertical and eight is its lower-right bar — the two
- * that actually cross the near cube's top face. Choosing bars that do not
- * cross anything would draw something and weave nothing, which is exactly how
- * this kind of mark looks right in the source and wrong on the page.
- */
-const OVER = [5, 8];
+export { BAR, CASING } from '../lib/cubedmark';
 
 export default function CubedMark({
   size = 64,
@@ -139,14 +103,14 @@ export default function CubedMark({
         </linearGradient>
       </defs>
 
-      {/* The far cube, whole. */}
+      {/* The straight cube, whole. */}
       {bars(FAR, iron, BAR)}
 
-      {/* The near cube, in the hole it makes for itself. */}
+      {/* The turned cube, in the hole it makes for itself. */}
       {bars(NEAR, back, CASING)}
       {bars(NEAR, iron, BAR)}
 
-      {/* And two bars of the far cube back over the top, which is the weave. */}
+      {/* And the straight one's crossing bars back over the top, which is the weave. */}
       {bars(OVER.map((at) => FAR[at]), back, CASING)}
       {bars(OVER.map((at) => FAR[at]), iron, BAR)}
     </svg>
