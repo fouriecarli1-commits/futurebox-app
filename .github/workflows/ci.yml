@@ -283,6 +283,14 @@ jobs:
         run: npm run check:filmcost
       - name: A room is called one thing, and its screen reads the rail's own key
         run: npm run check:oneroomname
+      - name: No control writes into a void — every piece of state a screen keeps is read
+        run: npm run check:intovoid
+      - name: No room waits for a job that is never coming
+        run: npm run check:jobwait
+      - name: A person can correct the country we price them in
+        run: npm run check:pickcountry
+      - name: The conduct count measures being sworn at, and still does nothing with it
+        run: npm run check:conduct
       - name: The picture dials make a real filter, and the ones that are missing are named
         run: npm run check:adjust
       - name: The cutting room is one opaque colour, and the copilot is a button over it

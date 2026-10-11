@@ -41,7 +41,9 @@
  * otherwise slip in behind them.
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { withoutComments } from './prose.mts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -130,6 +132,110 @@ ok('  and no row was changed in one language only',
   halfDone.length === 0,
   `${halfDone.join(', ')} — a reader sees one language, so a half-done`
   + ' rewrite is invisible to everybody who could report it');
+
+
+/* ── The two doors this check did not watch ──────────────────────────────
+
+   Everything above reads `i18n.tsx`. On 11 October 2026, auditing the advert
+   desk, that turned out to be most of the sentences and not all of them.
+
+   **A `t()` fallback.** `t('cost.free', 'Costs nothing')` carries its own
+   English, and it is what renders if the key is ever missing. The "Niks is
+   gratis" pass changed the dictionary and left thirty-nine fallbacks saying
+   the opposite — `booth.free` read "use no credits" in the dictionary and
+   "cost nothing" in the component, in the same breath.
+
+   **An inline `en:`/`af:` pair.** The advert desk's four steps are written in
+   `Campaign.tsx`, not the dictionary. Step two said "Several, each doing
+   something different. Free." — on the same screen as a button reading "40
+   credits", because `CREDITS.adLines` went from six to forty on 30 September
+   and the note did not move.
+
+   Both were invisible here, and this check reported "All good" through all of
+   it. That is the failure worth guarding against: not the sentence, but a
+   green check that measured the dictionary and was read as measuring the app.
+
+   A fallback is held to its dictionary row rather than to the word list,
+   because the row is the sentence that actually ships and two copies of one
+   sentence that disagree is the fault itself. */
+
+const SOURCE = /\bfree\b|\bgratis\b|kos niks|verniet|costs? nothing/i;
+/**
+ * A TS string body, decoded the way the compiler reads it.
+ *
+ * Two of them, because the two sources quote differently and one decoder for
+ * both throws on the first row that contains a quote mark: the dictionary
+ * writes `en: "…"` with `\"` inside, and a fallback is `'…'` with `\'`.
+ */
+const fromDouble = (raw: string): string => JSON.parse(`"${raw}"`) as string;
+const fromSingle = (raw: string): string =>
+  JSON.parse(`"${raw.replace(/\\'/g, "'").replace(/"/g, '\\"')}"`) as string;
+
+const dictionary = new Map(rows.map(([, key, en]) => [key, fromDouble(en)] as const));
+
+function sourceFiles(dir: string, found: string[] = []): string[] {
+  for (const entry of readdirSync(dir)) {
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) {
+      if (entry !== 'node_modules') sourceFiles(path, found);
+    } else if (/\.(ts|tsx)$/.test(path) && !path.endsWith('i18n.tsx')) found.push(path);
+  }
+  return found;
+}
+
+/**
+ * Files whose inline sentences may say it, and why.
+ *
+ * Not an exemption from the rule — a statement of what the rule is about. It
+ * bans a claim that HER work is free. A question teaching somebody what a
+ * term of art means is the opposite of that claim, and the same reasoning
+ * already lets this check name other people's free apps.
+ */
+const TEACHING: Readonly<Record<string, string>> = {
+  'app/data/musicquiz.ts':
+    'quiz questions about what "royalty-free" means on somebody else\'s sound'
+    + ' pack — teaching the term, not pricing anything here',
+};
+
+const drifted: string[] = [];
+const inline: string[] = [];
+for (const file of sourceFiles('app')) {
+  const code = withoutComments(readFileSync(file, 'utf8'));
+
+  for (const call of code.matchAll(/t\(\s*'([a-zA-Z0-9._]+)'\s*,\s*'((?:[^'\\]|\\.)*)'/g)) {
+    const row = dictionary.get(call[1]);
+    if (row === undefined) continue;
+    const fallback = fromSingle(call[2]);
+    if (fallback !== row && SOURCE.test(fallback) !== SOURCE.test(row)) {
+      drifted.push(`${call[1]} in ${file}`);
+    }
+  }
+
+  /* `en:`/`af:`/`noteEn:`/`noteAf:`, which is how a room writes a list of
+     steps or chips without a dictionary key for each line. The allowlist is
+     by key and these have none, so a sentence here that needs to say "free"
+     needs a dictionary key — which is the right outcome. */
+  const teaching = TEACHING[file];
+  for (const pair of code.matchAll(/\b(?:note)?(?:[eE]n|[aA]f):\s*'((?:[^'\\]|\\.)*)'/g)) {
+    if (!SOURCE.test(fromSingle(pair[1]))) continue;
+    if (teaching) continue;
+    inline.push(`${file}: "${fromSingle(pair[1]).slice(0, 60)}"`);
+  }
+}
+
+ok('  and no fallback disagrees with its dictionary row about being free',
+  drifted.length === 0,
+  `${drifted.join(', ')} — the fallback is what renders when a key is missing,`
+  + ' so a dictionary fixed without it is a fix that reappears');
+
+for (const [file, why] of Object.entries(TEACHING)) {
+  console.log(`  ok    ${file} may say it — ${why}`);
+}
+
+ok('  and no sentence written outside the dictionary calls it free',
+  inline.length === 0,
+  `${inline.join(' | ')} — give it a dictionary key, which is also how it`
+  + ' gets an Afrikaans that moves with it');
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);

@@ -26,6 +26,7 @@ import { screen } from '@/app/lib/moderation';
 import { SURFACES, describeOps, describeOtherRoomOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
 import { ERRANDS, briefFor, isErrandId } from '@/app/lib/errands';
 import { tooMany } from '@/app/lib/server/brake';
+import { noteConduct } from '@/app/lib/server/conduct';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { SINGERS } from '@/app/data/sound';
 import { craftBrief } from '@/app/data/songcraft';
@@ -438,6 +439,18 @@ export async function POST(request: Request): Promise<Response> {
   // string the studio then generates from, so a name asked for here would
   // arrive at the music route wearing the copilot's suggestion. Refused at the
   // door instead, in the same words the studio would have used.
+  /* Counted, and nothing more. Not awaited, not branched on, and it cannot
+     change a word of what comes back — see `lib/server/conduct.ts`. The owner
+     is attached when a token happens to be on the request and is null
+     otherwise; this route is anonymous by design, so most rows will be
+     identified by address alone, which is what `moderation_strikes` already
+     counts by and is enough for a thirty-day number.
+
+     Before the refusal below rather than after it, because a message that is
+     refused for its CONTENT was still typed at somebody, and leaving it out
+     would quietly make the count a count of polite abuse. */
+  noteConduct(request, body.message, null, 'copilot');
+
   const refused = screen(body.message, 'song');
   if (refused) {
     return Response.json(

@@ -210,8 +210,14 @@ export async function POST(request: Request): Promise<Response> {
      off Carli's Anthropic account forever, free.
 
      The desk is in every paid plan now and the writing comes out of the same
-     credits as a song — `CREDITS.adLines`, six, worked back from this call's
-     own ceiling. See the note in `credits.ts`. */
+     credits as a song — `CREDITS.adLines`, worked back from this call's own
+     ceiling. See the note in `credits.ts`.
+
+     This said "six" until 11 October 2026. The price went to forty on 30
+     September and the sentence did not move, so a comment explaining the
+     charge named a number the code had not charged for eleven days. Written
+     without the figure now: the constant is one import away, and a number
+     repeated in prose is a number that goes stale on its own. */
   const door = await paidRoom(request, 'market.desk');
   if (!door.ok) return door.response;
 

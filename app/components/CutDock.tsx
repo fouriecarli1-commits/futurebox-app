@@ -351,7 +351,7 @@ export default function CutDock({
       paidSays={t('dock.paidSays', 'Some of this costs credits.')}
       paidLine={paidLine ?? t(
         'cut.paidHere',
-        'All of the cutting is free. Putting the finished film together is the one press that spends, and it shows the bill before it does.',
+        'All of the cutting uses no credits. Putting the finished film together is the one press that spends, and it shows the bill before it does.',
       )}
       closeSays={t('cut.shut', 'Close this bench')}
       place={place}

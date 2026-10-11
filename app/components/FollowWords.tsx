@@ -827,7 +827,7 @@ export default function FollowWords({
                 ? t('play.listening', 'Listening to it…')
                 : t('play.listenFree', 'Listen to the words')}
               {!listening && (
-                <span className={INK_DIM}>· {t('play.free', 'free')}</span>
+                <span className={INK_DIM}>· {t('play.free', 'no credits')}</span>
               )}
             </button>
           )}

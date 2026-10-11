@@ -7310,3 +7310,62 @@ different singer.
 
 Built and committed: the detector and its check. Not built yet: the drag handles on the studio
 timeline that snap to it, and the two honest regenerate routes above.
+
+## Nobody can correct the country we price them in — 11 October 2026
+
+Found while auditing the rooms for things that do not work, by a new check
+(`check:intovoid`) looking for state a screen keeps and never reads.
+
+### What is wrong
+
+`app/page.tsx` guesses which country a visitor is in and prices the plans in
+that currency. The guess comes from `guessRegion`, which returns three things:
+the region, whether it is `confident`, and a `basis` — a plain sentence saying
+why, like `Device timezone (Africa/Johannesburg)` or `Server render — no
+browser to ask`.
+
+Two of those three were being thrown away.
+
+- **`basis`** was written into a `useState` value that nothing read. The app
+  worked out why it had chosen a country and discarded the answer.
+- **`confident`** is not read on this page at all. A guess the function itself
+  labels as not confident is shown exactly as confidently as one that is.
+
+And the thing that makes those matter: **`setRegion` is called in one place,
+by the guess, and nowhere else.** There is no picker. A visitor priced in the
+wrong currency cannot change it, cannot see why it happened, and is not told
+it was a guess.
+
+### Why it is not hypothetical
+
+`lib/pricing.ts` carries the record of it going wrong already: *"Found by
+opening the You tab in Afrikaans on a phone: 'Jou plan — Label · $119.00 per
+maand'."* The hand-written timezone list did not have that device's zone, the
+guess fell through to `navigator.language` of `en-US`, and a South African
+product quoted a South African reader in dollars. That specific hole was
+patched by preferring the app's own language. The shape of the fault was not:
+the list is still written by hand, and the next zone missing from it fails the
+same silent way.
+
+With a launch on 1 November, the cost of this is not a wrong label. It is a
+visitor who sees a price in the wrong currency, has no way to fix it, and
+leaves.
+
+### What was done now, and what was not
+
+Done: the discarded write is gone, so the code no longer pretends to keep an
+answer it drops, and `check:intovoid` holds the line for every other screen.
+
+Not done, deliberately: the fix. It is a change to what she sees, and she
+asked to be shown visual changes before they are made — *"Please show the
+changes to me before make them?"* So it is her call between:
+
+1. **A country picker next to the prices**, remembered on the device. Biggest
+   change, and the only one that actually lets somebody fix it.
+2. **Show the basis under the price** — one small line, `Device timezone
+   (Africa/Johannesburg)`, so a wrong guess is at least visible and
+   reportable.
+3. **Say it is a guess only when `confident` is false**, which is the smallest
+   honest change and costs one line of copy.
+
+These are not exclusive: 1 and 3 together is what a shop normally does.

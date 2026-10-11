@@ -167,6 +167,95 @@ export function guessRegion(appLang?: string): RegionGuess {
   }
 }
 
+/* ── Choosing it yourself ────────────────────────────────────────────────
+
+   Until 11 October 2026 the guess above was the end of it. `setRegion` was
+   called in one place, by the guess, and nowhere else: a visitor priced in
+   the wrong currency could not change it, could not see why it had happened,
+   and was not told it was a guess.
+
+   This file already carried the evidence that this goes wrong — *"Found by
+   opening the You tab in Afrikaans on a phone: 'Jou plan — Label · $119.00
+   per maand'."* The hole that caused that one was patched by preferring the
+   app's own language; the SHAPE of it was not, because the timezone list is
+   written by hand and the next zone missing from it fails the same silent
+   way.
+
+   Carli, 11 October 2026: *"Maak 'n country picker"*.
+
+   What a choice here does and does not do is worth being exact about, and
+   the picker says it on the screen. It changes the number a person is SHOWN.
+   It does not change what they are charged: that is bound to the country of
+   their payment method, which the provider tells us and their bank enforces,
+   for all the reasons at the top of this file. A picker that implied
+   otherwise would be a way to buy South African pricing from anywhere. */
+
+/**
+ * Where the choice is kept.
+ *
+ * Versioned, like every other key this app writes, so the shape can change
+ * without reading somebody's old value as if it were the new one.
+ */
+export const REGION_KEPT = 'futurebox.region.v1';
+
+/**
+ * The region this person chose before, or `null` if they never did.
+ *
+ * Validated against `REGIONS` rather than trusted: the value is in a
+ * browser's storage, where anybody can edit it, and a code that is no longer
+ * on the list has to read as "no choice" rather than fall through to the
+ * United States — which would silently move a South African to dollars, the
+ * exact fault this is here to fix.
+ *
+ * Returns `null` and never throws. Storage can be blocked outright, and a
+ * price list that will not render in a private window is worse than one that
+ * has to guess.
+ */
+export function keptRegion(): Region | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const code = window.localStorage.getItem(REGION_KEPT);
+    if (!code) return null;
+    return REGIONS.find((one) => one.code === code) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Remember a choice, or forget it.
+ *
+ * `null` forgets, which puts the person back on the guess — the right
+ * behaviour for a "use my device's country" option and the reason this is not
+ * a setter that only ever writes.
+ */
+export function keepRegion(code: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (code === null) window.localStorage.removeItem(REGION_KEPT);
+    else if (REGIONS.some((one) => one.code === code)) window.localStorage.setItem(REGION_KEPT, code);
+  } catch {
+    /* A browser that will not store it still shows the right price for this
+       visit, which is most of the value. Nothing to report to anybody. */
+  }
+}
+
+/**
+ * The list as a picker should show it: by name, not by purchasing power.
+ *
+ * `REGIONS` is ordered with the United States first because it is the
+ * baseline every `pppFactor` is relative to. That is the right order for
+ * reading the table and the wrong one for finding your own country in a drop
+ * list of nineteen.
+ *
+ * Sorted by the name as written here rather than by the reader's locale,
+ * because the option labels are in English in both languages — a country
+ * list that reorders itself when somebody switches to Afrikaans, while the
+ * labels stay put, reads as a bug.
+ */
+export const regionsByName = (): readonly Region[] =>
+  [...REGIONS].sort((a, b) => a.name.localeCompare(b.name, 'en'));
+
 /**
  * Rounds to a number that looks like a price rather than a conversion. Nobody
  * charges R71.83; they charge R69.

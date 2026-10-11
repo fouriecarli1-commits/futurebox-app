@@ -643,7 +643,6 @@ export default function MakeMusic({
   }, [videoFor]);
   /** What has been paid for. Refreshed after a payment returns. */
   const [owned, setOwned] = useState<Owned>(NOTHING);
-  const [buying, setBuying] = useState<string | null>(null);
   useEffect(() => {
     loadOwned().then(setOwned);
   }, []);

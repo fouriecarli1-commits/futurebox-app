@@ -2468,7 +2468,7 @@ export default function ProBooth({
             <Hint>
               {t(
                 'pro.cutAtWhat',
-                'Splits this lane in two at the playhead, and costs nothing. Both halves point at the same recording, so nothing is lost — drag an edge back and it is whole again. Move the white line first: the cut happens where the line is.',
+                'Splits this lane in two at the playhead, and uses no credits. Both halves point at the same recording, so nothing is lost — drag an edge back and it is whole again. Move the white line first: the cut happens where the line is.',
               )}
             </Hint>
             {/* No `?? lanes[0]`. With nothing picked this printed the FIRST
@@ -3606,7 +3606,7 @@ export default function ProBooth({
         title={t('hum.title', 'Hum it, and have it played')}
         what={t(
           'hum.what',
-          'Record yourself humming or tapping the rhythm on a lane, pick an instrument, and it comes back played. Free and unlimited — none of it leaves this device.',
+          'Record yourself humming or tapping the rhythm on a lane, pick an instrument, and it comes back played. No credits and no limit — none of it leaves this device.',
         )}
       >
         <div className="space-y-3" data-humcard>
@@ -4352,7 +4352,7 @@ export default function ProBooth({
           {saveFailed ? (
             <span className="font-semibold text-amber-300">
               {saveFailed === 'full'
-                ? t('pro.keptFull', 'This device has no room left, so the session is not being saved. Mix it down, or free some space.')
+                ? t('pro.keptFull', 'This device has no room left, so the session is not being saved. Mix it down, or make some space.')
                 : t('pro.keptNo', 'This browser will not keep the session, so leaving the room will lose it. Mix it down before you go.')}
             </span>
           ) : (
@@ -5094,7 +5094,7 @@ function LaneRow({
         <Hint className="ml-1">
           {t(
             'pro.whatRow',
-            'Two halves: lift the voice off this lane, so the singing and the music become two lanes. Layers: split it into named parts — drums, bass, and the rest. Magnifier: read the chords, key and tempo. Microphone: sing this lane in another voice. Bin: remove the lane. The first four cost credits and each one says how many; the bin costs nothing. The scissors above are a plain cut and cost nothing.',
+            'Two halves: lift the voice off this lane, so the singing and the music become two lanes. Layers: split it into named parts — drums, bass, and the rest. Magnifier: read the chords, key and tempo. Microphone: sing this lane in another voice. Bin: remove the lane. The first four cost credits and each one says how many; the bin uses none. The scissors above are a plain cut and use none.',
           )}
         </Hint>
       </div>
