@@ -63,18 +63,18 @@ ok('  and a floor of one unit, so the shortest work is not free',
   billFor(film({ seconds: 1 })).total === CREDITS.filmOut);
 
 const advertBill = billFor(ADVERT);
-ok('a twenty-second advert using all five functions is 25',
-  advertBill.total === 25,
+ok('a twenty-second advert using all five functions is 40',
+  advertBill.total === 40,
   `${advertBill.total} credits · ${rand(advertBill.total)} · ${perMonth(advertBill.total)} a month on Maker`);
 
 const longerBill = billFor(LONGER);
-ok('a minute and a half using all five is 45',
-  longerBill.total === 45,
+ok('a minute and a half using all five is 60',
+  longerBill.total === 60,
   `${longerBill.total} credits · ${rand(longerBill.total)} · ${perMonth(longerBill.total)} a month on Maker`);
 
 const dressedBill = billFor(DRESSED);
-ok('a three-minute music video using all five is 75',
-  dressedBill.total === 75,
+ok('a three-minute music video using all five is 90',
+  dressedBill.total === 90,
   `${dressedBill.total} credits · ${rand(dressedBill.total)} · ${perMonth(dressedBill.total)} a month on Maker`);
 
 /* ── And "affordable" as a number rather than a feeling ────────────────── */
@@ -86,7 +86,8 @@ ok('a three-minute music video using all five is 75',
    film has been sold something the plan cannot do, and that is the failure this
    assertion exists for — not "is it cheap", which is hers to decide.
 
-   At 10 a half minute and 3 a function it is 75 against 100. It fits with
+   At 10 a half minute and the five functions as they were then — three
+   each — it was 75 against 100. It fits with
    twenty-five over, which is the room the 4 October price change was for: at
    five a function it was 85 against 90 and a Maker who made one film had four
    credits left for the whole month. */
@@ -112,10 +113,20 @@ ok('  and the same for looks and transitions',
   billFor(film({ seconds: 60, looks: 9, joins: 9 })).total
     === billFor(film({ seconds: 60, looks: 1, joins: 1 })).total);
 
-ok('  so the dearest film of a length is the base plus five functions',
+/* ── The five stopped costing the same on 11 October 2026 ──────────────
+ 
+   This read the ceiling as the base plus `filmWords` times five, which was
+   right while every function cost three credits and became wrong the hour
+   Carli priced them apart — a look at six, her own logo at fifteen. The
+   ceiling is still a known number; it is just the sum of five different
+   ones now. */
+const FIVE = CREDITS.filmWords + CREDITS.filmLook + CREDITS.filmJoin
+  + CREDITS.filmMark + CREDITS.filmUnder;
+
+ok('  so the dearest film of a length is the base plus all five functions',
   billFor(film({
     seconds: 180, words: 99, looks: 99, joins: 99, mark: true, under: true,
-  })).total === billFor(film({ seconds: 180 })).total + CREDITS.filmWords * 5,
+  })).total === billFor(film({ seconds: 180 })).total + FIVE,
   'whatever somebody piles on, the price has a known top');
 
 ok('  and each row still says how many shots carry it',
@@ -197,10 +208,26 @@ const cards = readFileSync('app/lib/plans.ts', 'utf8');
 const quoted = (what: string, re: RegExp): number[] =>
   [...cards.matchAll(re)].map((m) => Number(m[1]));
 
-const perFunction = quoted('per function', /plus (\d+) for each function/g);
-ok('every card quotes the per-function price the constants charge',
-  perFunction.length >= 4 && perFunction.every((n) => n === CREDITS.filmWords),
-  `cards say ${perFunction.join(', ')}; the file charges ${CREDITS.filmWords}`);
+/* ── And the card lists five prices rather than one ────────────────────
+ 
+   It used to say "plus 3 for each function", and this read that one number
+   back. Now that the five differ, a card saying one number would be a card
+   lying about four of them — so it names each, and each is held against
+   its own constant. A card that quotes a price somebody is about to pay is
+   the one piece of copy that cannot be approximately right. */
+const eachSaid: [string, RegExp, number][] = [
+  ['words', /words (\d+)/g, CREDITS.filmWords],
+  ['a look', /a look (\d+)/g, CREDITS.filmLook],
+  ['a transition', /a transition (\d+)/g, CREDITS.filmJoin],
+  ['your logo', /your logo (\d+)/g, CREDITS.filmMark],
+  ['a track under it', /a track under it (\d+)/g, CREDITS.filmUnder],
+];
+for (const [what, re, charged] of eachSaid) {
+  const said = quoted(what, re);
+  ok(`every card quotes what ${what} costs, and it is what is charged`,
+    said.length >= 3 && said.every((n) => n === charged),
+    `cards say ${said.join(', ') || 'nothing'}; the file charges ${charged}`);
+}
 
 const advertSaid = quoted('advert', /advert using all five is (\d+)/g);
 ok('  and the advert they quote is the advert they will be billed',
@@ -243,7 +270,7 @@ if (bad) {
    charged something else — a summary line that lies is worse than none. */
 console.log(
   `\ncheck:filmcost — ${CREDITS.filmOut} credits a half minute and`
-  + ` ${CREDITS.filmWords} a function, so a twenty-second advert is`
+  + ` the five functions priced apart (${FIVE} for all of them), so a twenty-second advert is`
   + ` ${advertBill.total} and a dressed three-minute film is ${dressedBill.total}`
   + ` against Maker's ${TIER_CREDITS.maker}; words on six shots cost what words`
   + ' on one cost, the cards quote the same numbers, and the price is worked out'

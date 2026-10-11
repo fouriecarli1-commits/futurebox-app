@@ -72,9 +72,12 @@ function pricedRows(): string {
     const sell = row.credits * WORST;
     const win = sell - row.cost;
     const pct = sell > 0 ? `${((win / sell) * 100).toFixed(0)}%` : '—';
-    const times = row.cost > 0 ? `${(sell / row.cost).toFixed(1)}×` : '—';
+    /* No supplier, no multiple. "Infinity×" is not a number she can use,
+       and a dash with "niks" beside it says the true thing: the browser
+       renders it and the whole charge is margin. */
+    const times = row.cost > 0 ? `${(sell / row.cost).toFixed(1)}×` : '— geen enjin';
     out.push(
-      `| ${row.what} | ${row.credits} | ${rand(sell)} | ${rand(row.cost)}`
+      `| ${row.what} | ${row.credits} | ${rand(sell)} | ${row.cost > 0 ? rand(row.cost) : 'niks'}`
       + ` | **${rand(win)}** | ${pct} | ${times} |`,
     );
   }
@@ -111,9 +114,24 @@ const ABOUT: Readonly<Record<string, keyof typeof CREDITS>> = {
   'a voice change, per minute': 'voiceChange',
   'singing it, per minute (Kits)': 'sing',
   'dubbing, per minute': 'dub',
-  'reading 150 characters (a rate, not a press)': 'read',
-  'the smallest read anybody is charged (300 characters)': 'read',
-  'reading a song, per minute (Music.ai)': 'parts',
+  /* Not a CREDITS key: `readCost()` computes a charge from a length, and
+     these two rows are that rate and its floor. Mapping them onto `read`
+     claimed the song-reading price was covered by a row about text. */
+  /* `read`, not `parts`. That row is Music.ai reading a song — `CREDITS.read`
+     — and naming `parts` here marked the named-stems price as shown and then
+     showed it nowhere. Exactly the `video` fault again, in a different key,
+     four hours later, and `check:kaart` passed it because it only asked
+     whether the ROW existed and never whether the row was about that price. */
+  'reading a song, per minute (Music.ai)': 'read',
+  'putting a film together, per half minute (in the browser)': 'filmOut',
+  'words set on the picture (in the browser)': 'filmWords',
+  'a look over the film (in the browser)': 'filmLook',
+  'a join between two shots (in the browser)': 'filmJoin',
+  'a mark on the film (in the browser)': 'filmMark',
+  'a song laid under the film (in the browser)': 'filmUnder',
+  'bouncing a mix out (in the browser)': 'mixOut',
+  'taking a post off the device (in the browser)': 'postOut',
+  'a style word': 'styleword',
   'a marketing plan': 'marketPlan',
   'eight advert lines': 'adLines',
   'a background taken out, per five seconds': 'cutout',

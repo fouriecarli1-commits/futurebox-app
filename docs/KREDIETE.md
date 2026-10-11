@@ -17,6 +17,10 @@ daardie lid druk dieselfde knoppies.
 | dubbing, per minute | 110 | R163.90 | R40.48 | **R123.42** | 75% | 4.0× |
 | a marketing plan | 75 | R111.75 | R4.84 | **R106.91** | 96% | 23.1× |
 | eight advert lines | 40 | R59.60 | R3.24 | **R56.36** | 95% | 18.4× |
+| a mark on the film (in the browser) | 15 | R22.35 | niks | **R22.35** | 100% | — geen enjin |
+| putting a film together, per half minute (in the browser) | 10 | R14.90 | niks | **R14.90** | 100% | — geen enjin |
+| a look over the film (in the browser) | 6 | R8.94 | niks | **R8.94** | 100% | — geen enjin |
+| a style word | 6 | R8.94 | R0.31 | **R8.63** | 97% | 28.7× |
 | reading a song, per minute (Music.ai) | 6 | R8.94 | R1.12 | **R7.82** | 87% | 8.0× |
 | singing it, per minute (Kits) | 6 | R8.94 | R1.60 | **R7.34** | 82% | 5.6× |
 | splitting stems, per minute | 6 | R8.94 | R2.21 | **R6.73** | 75% | 4.0× |
@@ -25,6 +29,11 @@ daardie lid druk dieselfde knoppies.
 | a still picture changed by saying what to change | 5 | R7.45 | R0.96 | **R6.49** | 87% | 7.8× |
 | a two-minute song | 8 | R11.92 | R5.52 | **R6.40** | 54% | 2.2× |
 | an item taken out, per five seconds | 5 | R7.45 | R1.80 | **R5.65** | 76% | 4.1× |
+| words set on the picture (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
+| a join between two shots (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
+| a song laid under the film (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
+| bouncing a mix out (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
+| taking a post off the device (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
 | transcribing, per minute | 3 | R4.47 | R0.07 | **R4.40** | 98% | 66.3× |
 | a background taken out, per five seconds | 4 | R5.96 | R1.80 | **R4.16** | 70% | 3.3× |
 | a one-minute half song | 4 | R5.96 | R2.76 | **R3.20** | 54% | 2.2× |
@@ -38,20 +47,12 @@ daardie lid druk dieselfde knoppies.
 | Sleutel in die kode | Krediete | Ons vra | Enjin kos ons | Wins |
 |---|---:|---:|---|---|
 | `video` | 15 | R22.35 | nog nie gelees nie | nog nie bekend nie |
-| `cover` | 2 | R2.98 | nog nie gelees nie | nog nie bekend nie |
-| `filmOut` | 10 | R14.90 | nog nie gelees nie | nog nie bekend nie |
-| `filmWords` | 3 | R4.47 | nog nie gelees nie | nog nie bekend nie |
-| `filmLook` | 3 | R4.47 | nog nie gelees nie | nog nie bekend nie |
-| `filmJoin` | 3 | R4.47 | nog nie gelees nie | nog nie bekend nie |
-| `filmMark` | 3 | R4.47 | nog nie gelees nie | nog nie bekend nie |
-| `filmUnder` | 3 | R4.47 | nog nie gelees nie | nog nie bekend nie |
-| `mixOut` | 1 | R1.49 | nog nie gelees nie | nog nie bekend nie |
-| `postOut` | 2 | R2.98 | nog nie gelees nie | nog nie bekend nie |
+| `cover` | 15 | R22.35 | nog nie gelees nie | nog nie bekend nie |
 | `browserVideo` | 0 | — (niks) | nog nie gelees nie | nog nie bekend nie |
 | `clone` | 20 | R29.80 | nog nie gelees nie | nog nie bekend nie |
 | `finetune` | 300 | R447.00 | nog nie gelees nie | nog nie bekend nie |
-| `styleword` | 3 | R4.47 | nog nie gelees nie | nog nie bekend nie |
-| `grab` | 2 | R2.98 | nog nie gelees nie | nog nie bekend nie |
+| `parts` | 8 | R11.92 | nog nie gelees nie | nog nie bekend nie |
+| `grab` | 15 | R22.35 | nog nie gelees nie | nog nie bekend nie |
 
 ---
 

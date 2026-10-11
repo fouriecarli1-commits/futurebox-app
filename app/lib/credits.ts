@@ -202,7 +202,10 @@ export const CREDITS = {
    * button gets pressed forty times in a row by somebody deciding, and forty
    * of anything is a bill.
    */
-  cover: 2,
+  /* Carli, 11 October 2026: *"Cover = 15 credits"*, given in credits rather
+     than rand. R22.35. The supplier's rate for this one has still not been
+     read, so what it keeps is not known yet — see `docs/KREDIETE.md`. */
+  cover: 15,
   /**
    * Putting a film together in the cutting room. **Per half minute of
    * finished film**, floored at one by `perHalfMinute`.
@@ -341,12 +344,43 @@ export const CREDITS = {
   /** Words anywhere in the film. Three, however many shots carry them. */
   filmWords: 3,
   /** A look anywhere in the film. Three, however many shots carry one. */
-  filmLook: 3,
+  /* Carli, 11 October 2026: *"a look over the film, R8.50"*. Six credits is
+     R8.94, the nearest whole credit. The browser renders it, so all of it is
+     margin. */
+  filmLook: 6,
   /** Any transition that is not a straight cut. Three, however many there are. */
   filmJoin: 3,
   /** Her own mark on the film. */
-  filmMark: 3,
+  /* ── Fifteen, asked twice and answered twice ────────────────────────
+ 
+     Carli, 11 October 2026, first: *"a mark on the film, R14.90"* — ten
+     credits. That was flagged back to her, because it made a mark cost the
+     same as putting the WHOLE film together and nearly double a look over
+     it, and because R14.90 is the film-out price sitting one row above it
+     in the table she was reading from. The shape of a mis-read row.
+ 
+     Her answer: *"'n Mark on the film, R22.35"* — fifteen credits, exactly.
+     She raised it again after being told what it sat beside.
+ 
+     ── And the objection was wrong, twice ──────────────────────────────
+ 
+     "A mark is the smallest of the film presses" was the argument put to
+     her, and it was made without reading what a mark IS. `filmcost.ts`
+     says it plainly — *"whether her own mark is on it"* — and the plan
+     card has called it "your logo" all along. It is the branding press,
+     not a marker pen: the one that puts a studio's identity on a film
+     somebody else will watch. That is the most valuable of the five and
+     the obvious one to charge for.
+ 
+     She was right both times and the arithmetic was being read instead of
+     the feature. Written down because the next person to look at this
+     number will have the same thought.
+ 
+     Rendered in the browser, so all R22.35 of it is margin. */
+  filmMark: 15,
   /** A track under the whole thing. */
+  /* Carli put this at R5.00, which is 3.36 credits; three is R4.47 and the
+     nearest. Unchanged, and said rather than silently skipped. */
   filmUnder: 3,
   /**
    * Bouncing a mix out of the Pro Booth. **Per minute of finished mix.**
@@ -371,7 +405,9 @@ export const CREDITS = {
    * to the Library AND to the phone, and `spend_credits` now takes a charge
    * once per reference — so that is one mix and one charge, not two.
    */
-  mixOut: 1,
+  /* Carli, 11 October 2026: *"Bouncing a mix out, R5"*. Three credits is
+     R4.47, up from one. Bounced in the browser, so all of it is margin. */
+  mixOut: 3,
   /**
    * Taking a finished post off the device: one picture, one credit.
    *
@@ -432,7 +468,9 @@ export const CREDITS = {
    * free account used as an unlimited design tool — which a screenshot at
    * phone resolution is not.
    */
-  postOut: 2,
+  /* Carli, 11 October 2026: *"Taking a post off the device, R5"*. Three
+     credits is R4.47. The browser renders it, so all of it is margin. */
+  postOut: 3,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /**
@@ -758,7 +796,9 @@ export const CREDITS = {
    * It is also the band the other small calls sit in — `cover` is 2,
    * `transcribe` is 2, `repaint` is 5 — rather than a number of its own.
    */
-  styleword: 3,
+  /* Carli, 11 October 2026: *"A style word, R9"*. Six credits is R8.94.
+     Against the R0.31 of tokens this costs, it keeps R8.63. */
+  styleword: 6,
   /**
    * Taking the background out of a clip. **Per five seconds**, not per minute.
    *
@@ -892,7 +932,26 @@ export const CREDITS = {
    * and it would cut a flat logo well and a dog on grass badly, which is a
    * tool people stop trusting.
    */
-  grab: 2,
+  /* ── Raised from 2 to 15 by her, 11 October 2026 ───────────────────
+ 
+     *"Grab = 15 credits"*. R22.35.
+ 
+     Flagged when it was applied, because it is the opposite move to the one
+     she made on dubbing an hour earlier and for the same reason that one
+     was made: a press nobody can afford to try is a press nobody presses,
+     and this one is a reading rather than a generation. Two credits was set
+     against `transcribe`, which is the same shape of work.
+ 
+     Her answer settles it, and with a better reason than the arithmetic:
+     *"Ek is happy met grab se price, dit is wat ek 'n duisend keer gebruik
+     op canva en wat ek die meeste nodig het."*
+ 
+     That is the argument. A press she reaches for a thousand times is the
+     one carrying the product, and pricing it off what it costs US to serve
+     prices it off the wrong thing. The transcribe comparison measured the
+     supplier's bill; she measured what it is worth to the person pressing
+     it. */
+  grab: 15,
 } as const;
 
 /**

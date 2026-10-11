@@ -135,8 +135,42 @@ export const priced: {
   { what: 'reading a song, per minute (Music.ai)', credits: CREDITS.read, cost: SONGREAD_PER_MIN },
   /* The three rooms that used to be sold separately, or not at all. Entering
      them is included in every paid plan; generating in them is these. */
+  /* ── A style word, from its own documented arithmetic ──────────────
+ 
+     `credits.ts` works this out in its own comment — 900 tokens in at
+     $5/M and 600 out at $25/M — and then nothing read it, so the price
+     sat in the "no engine cost" table where she could not price it.
+     Computed with `paid()` here rather than copied as R0.31, so a change
+     in the published rate moves it. */
+  { what: 'a style word', credits: CREDITS.styleword,
+    cost: paid({ input: 900, output: 600, cacheRead: 0, cacheWrite: 0 }) },
   { product: true, what: 'a marketing plan', credits: CREDITS.marketPlan, cost: PLAN_CALL },
   { product: true, what: 'eight advert lines', credits: CREDITS.adLines, cost: ADS_CALL },
+  /* ── The ones that cost us nothing, named so they stop being blank ──
+ 
+     Carli, 11 October 2026: *"doen al die prys verstellings"*. She cannot
+     set a price with no cost beside it, and fourteen of them had none. Six
+     of those have none because there IS none: the film is cut and rendered
+     in the customer's own browser, the mix is bounced there, and a post
+     leaves from there. No supplier is called, no invoice exists, and the
+     whole charge is margin.
+ 
+     Written as zero rather than left out. A blank reads as "unknown" and
+     these are known — they are the most profitable lines in the app, and
+     she should be able to see that when she decides what they cost.
+ 
+     `check:kredietkoste` prints a dash for the multiple rather than
+     dividing by nought, and the supplier-plus-one rule does not apply to
+     a press with no supplier. */
+  { what: 'putting a film together, per half minute (in the browser)', credits: CREDITS.filmOut, cost: 0 },
+  { what: 'words set on the picture (in the browser)', credits: CREDITS.filmWords, cost: 0 },
+  { what: 'a look over the film (in the browser)', credits: CREDITS.filmLook, cost: 0 },
+  { what: 'a join between two shots (in the browser)', credits: CREDITS.filmJoin, cost: 0 },
+  { what: 'a mark on the film (in the browser)', credits: CREDITS.filmMark, cost: 0 },
+  { what: 'a song laid under the film (in the browser)', credits: CREDITS.filmUnder, cost: 0 },
+  { what: 'bouncing a mix out (in the browser)', credits: CREDITS.mixOut, cost: 0 },
+  { what: 'taking a post off the device (in the browser)', credits: CREDITS.postOut, cost: 0 },
+
   { product: true,
     decided: 'Carli, 11 Oct, with the engine cost and the profit in rand in front of her: "a background out of video R6.50"',
     what: 'a background taken out, per five seconds', credits: CREDITS.cutout, cost: CUTOUT_PER_5S },

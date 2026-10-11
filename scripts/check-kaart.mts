@@ -84,7 +84,35 @@ const claimed: string[] = [];
        A claim is only worth something if the row it names exists. So
        every mapping is checked against `priced` itself, and a claim
        about a row that is not there counts for nothing. */
-    if (!real.has(what)) { claimed.push(`${what} → ${key}`); continue; }
+    const row = priced.find((one) => one.what === what);
+    if (!row) { claimed.push(`${what} → ${key} (no such row)`); continue; }
+    /* ── And the row has to be ABOUT that price ────────────────────
+ 
+       The version above this one asked only whether the row existed, and
+       passed a mapping that pointed the Music.ai song-reading row at
+       `parts`. That row is `CREDITS.read`. So the named-stems price was
+       marked as shown and appeared nowhere — the `video` fault again, in
+       a different key, four hours later, with a check in place that was
+       written for it and could not see it.
+ 
+       A row is about a price when it charges that many credits. It is not
+       proof — two prices can share a number — but it catches every
+       mismatch where they do not, which is the whole class that has
+       actually happened twice. */
+    /* `key` comes out of a regex over the generator's source, so it is a
+       string and nothing has said it names a real price. Checked here
+       rather than cast away: a mapping that names a key which does not
+       exist is its own fault worth reporting, and the typechecker asking
+       for this is the typechecker being right. */
+    const prices = CREDITS as Readonly<Record<string, number>>;
+    if (!(key in prices)) {
+      claimed.push(`${what} → ${key} (no such price)`);
+      continue;
+    }
+    if (row.credits !== prices[key]) {
+      claimed.push(`${what} → ${key} (row charges ${row.credits}, ${key} is ${prices[key]})`);
+      continue;
+    }
     costed.add(key);
   }
 }
