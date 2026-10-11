@@ -157,6 +157,11 @@ const FINDABLE: Record<string, readonly string[] | null> = {
      with no door anywhere is a different state from one nobody can be sent
      to, and it was worth saying which. She answered; the door is back. */
   repaint: ['saying what to change'],
+  /* The room directory's own phrase for the other half of Grab. Not
+     'objects': the app says "the things in it" everywhere a person reads
+     it, and a directory that uses a different word for the same press is a
+     search that finds nothing. */
+  grab: ['the things in it'],
   /* The same film, rendered in the browser instead of bought out. One
      capability, one place; a second entry would be a second door that does
      not exist. */

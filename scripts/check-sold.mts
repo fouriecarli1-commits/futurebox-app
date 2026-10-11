@@ -99,8 +99,13 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      room and the question with her. She answered that the child version is
      the booth, so the door is back and so is the ordinary reason. */
   repaint: 'five credits to have a picture redrawn, inside the photo editor,'
-    + ' whose other tools are free because they run on her own phone. The'
-    + ' cards name the room; this is one press inside it',
+    + ' whose other tools use no credits because they run on her own phone.'
+    + ' The cards name the room; this is one press inside it',
+  grab: 'two credits to ask the engine what is in a picture, inside the photo'
+    + ' editor. The same case as `repaint` next door: the cards name rooms,'
+    + ' and a line for every press inside one is a card nobody reads. The'
+    + ' button itself says the price before it is pressed, which is where'
+    + ' somebody deciding actually looks',
   /* Priced before the screen that spends it exists, deliberately. Carli set
      the rule on 6 October — "elke keer wanneer iets afgelaai word kos dit
      krediete" — and a price agreed while the feature is being designed is a
@@ -222,17 +227,28 @@ for (const file of ['app/components/Account.tsx', 'app/components/Landing.tsx'])
    behind that sentence, so the sentence cannot outlive the prices: if
    dubbing ever comes down, or Maker's credits go up, this goes red and the
    card gets rewritten rather than quietly becoming wrong. */
+/* ── `songs * 10` was the credits, until a song stopped costing ten ────
+ 
+   This read a plan's monthly credits as its song count times ten, which
+   was exactly right while a song cost ten credits and silently wrong the
+   moment one did not. Carli put a two-minute song at R11.50 on 11 October
+   — eight credits — and this began reporting Maker as having 120 credits
+   when it has 100, and would have had somebody rewrite a card that was
+   correct.
+ 
+   `TIER_CREDITS` is the allowance. It was always the allowance; the
+   multiplication was a convenience that happened to agree. */
 const aMinute = dubCost(60);
 for (const tier of ['studio', 'label'] as const) {
-  const month = TIER_SPECS[tier].songs * 10;
+  const month = TIER_CREDITS[tier];
   ok(`${TIER_SPECS[tier].name} can actually afford the dubbing its card offers`,
     month >= aMinute,
     `${month} credits a month against ${aMinute} for one minute`);
 }
 ok('  and Maker still cannot, which is why its card says so',
-  TIER_SPECS.maker.songs * 10 < aMinute
+  TIER_CREDITS.maker < aMinute
     && TIER_SPECS.maker.includes.some((one) => /starts at Studio/.test(one)),
-  `Maker has ${TIER_SPECS.maker.songs * 10} credits against ${aMinute} — if that changed, the card must change with it`);
+  `Maker has ${TIER_CREDITS.maker} credits against ${aMinute} — if that changed, the card must change with it`);
 
 /* ── And the same arithmetic for everything else a card quotes a price for ─
 

@@ -170,11 +170,21 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     id: 'maker',
     name: 'Maker',
     rand: 149,
-    songs: 10,
+    /* ── Recounted 11 October 2026, when a song got cheaper ─────────
+ 
+       Carli put a two-minute song at R11.50, which is eight credits rather
+       than ten, so the same allowance buys MORE songs than this card used
+       to promise. `check:sold` compares the number on the card against what
+       the credits actually buy and failed the moment the price moved —
+       which is the card making a promise that is no longer true, in the
+       direction that costs nothing and still has to be fixed: a card that
+       undersells is a card somebody compares against a rival and puts
+       down. */
+    songs: 12,
     videos: 3,
     who: 'A song or two a week, kept and posted.',
     includes: [
-      '100 credits a month — 10 full songs, or 3 music videos',
+      '100 credits a month — 12 full songs, or 3 music videos',
       'The video engine, which the free tier does not have at all',
       'Your own voice, cloned, for reading and for the show',
       'The copilot, uncapped',
@@ -228,11 +238,11 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        reason never to move up, and `check:topups` measures it. */
     name: 'Studio',
     rand: 349,
-    songs: 21,
+    songs: 26,
     videos: 7,
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
-      '210 credits a month — 21 full songs, or 7 music videos',
+      '210 credits a month — 26 full songs, or 7 music videos',
       'Train a sound of your own on your own songs',
       'Everything in Maker, and three cloned voices',
       'Ask FutureBox to boost a collab',
@@ -265,7 +275,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     id: 'label',
     name: 'Label',
     rand: 899,
-    songs: 49,
+    songs: 61,
     videos: 16,
     // "Five seats on one account" was on this card and was never built —
     // nothing in the codebase adds a second person to an account. It came off
@@ -274,7 +284,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     // cannot afford to be caught doing is describing something it does not do.
     who: 'Running a catalogue, and releasing every week.',
     includes: [
-      '490 credits a month — 49 full songs, or 16 music videos',
+      '490 credits a month — 61 full songs, or 16 music videos',
       'Everything in Studio, and ten cloned voices',
       'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',

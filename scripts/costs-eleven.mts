@@ -1019,7 +1019,12 @@ say('');
    Die som sê iets anders, en dit staan hier uitgewerk eerder as in 'n
    gesprek verlore. */
 
-const SONG_OPTIONS = [10, 15, 20, 23] as const;
+/* The prices worth looking at beside the one in force. `CREDITS.song` is
+   included so the "(nou)" mark always has something to land on — it was a
+   literal 10 and stopped matching the moment Carli repriced a song to 8 on
+   11 October, which the typechecker caught and a reader would not have. */
+const SONG_OPTIONS = [...new Set<number>([CREDITS.song, 10, 15, 20, 23])]
+  .sort((a, b) => a - b);
 
 /** Wat die kapasiteit word as 'n lied N krediete kos, alles anders gelyk. */
 const capacityAt = (songCredits: number, scenario: Scenario): number => {

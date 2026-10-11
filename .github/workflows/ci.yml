@@ -1667,6 +1667,29 @@ jobs:
       - name: Her work is never described as free
         run: npm run check:verniet
 
+      # Finding the things in a photograph so one can be lifted out. Gemini
+      # answers a box as [ymin, xmin, ymax, xmax] on a 0-1000 grid — not x
+      # first, not 0-1 — and a reader that assumes the ordinary order gets a
+      # box that is plausible, drawable and wrong, which on a centred subject
+      # is ALMOST right. The mask arrives at its own size, so reading it by
+      # index instead of by proportion gives a cut that is recognisably the
+      # right shape and a few pixels adrift. Both look like a poor engine
+      # from the outside rather than like our arithmetic, so both are driven
+      # here, with no key and nothing spent.
+      - name: Objects are found and lifted where they really are
+        run: npm run check:gryp
+
+      # The price list she sets prices off is generated from the code, and
+      # this fails when the file on disk is not what the code says today. A
+      # price list goes stale silently, because nothing in a build reads
+      # one. It also counts: every price exactly once. The first generator
+      # put five prices in both tables, and the fix then took `video` —
+      # fifteen credits, the dearest common press — out of BOTH, which the
+      # first version of this check cheerfully passed because it took the
+      # generator's word that a row existed.
+      - name: The price list on disk is the price list in the code
+        run: npm run check:kaart
+
       # An image model cannot make transparency: asked for a see-through
       # background it draws a PICTURE of a checkerboard, and hers arrived as
       # a 35-pixel grid of grey and white squares. So the transparency is

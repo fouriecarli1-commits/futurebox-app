@@ -110,6 +110,7 @@ import {
 } from '../lib/cutout';
 import { NEARLY_ALL, takeGround } from '../lib/flatcut';
 import { MOST_COLOURS, repaint } from '../lib/repaint';
+import { liftWith, type Found } from '../lib/grabobject';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
@@ -299,7 +300,16 @@ const POST_LOWER: readonly BenchSpec[] = [
        the words that are printed inside a photograph — a poster, a sign, a
        label, a page — and hand them back as text. "Grab the words" says
        that, and it says it in two words a thumb can read on a bar. */
-    label: ['post.benchRead', 'Grab the words'],
+    /* ── "Grab", once it really grabs more than words ────────────────
+ 
+       Carli, 11 October 2026: *"Ek dink hierdie funksie by photo editor
+       moet net sê grab, dan moet die objekte en woorde gehighlight word."*
+ 
+       The rename waited for the second half to exist. A bench called
+       "Grab" that can only take the writing is a promise the button does
+       not keep: somebody presses it on a logo, nothing happens that they
+       wanted, and they report the feature as broken — correctly. */
+    label: ['post.benchRead', 'Grab'],
     what: [
       'post.benchReadWhat',
       'Words printed inside the photograph \u2014 a poster, a sign, a label, a page \u2014 turned into text you can use, on your own device. Put them on the post or copy them out.',
@@ -428,6 +438,21 @@ export default function PostStudio({
   const [picking, setPicking] = useState(false);
   const [found, setFound] = useState<readonly Pick[] | null>(null);
   const [picked, setPicked] = useState<Pick | null>(null);
+  /* ── The things in the picture, beside the words in it ────────────────
+ 
+     Carli, 11 October 2026: *"dan moet die objekte en woorde gehighlight
+     word, en dit moet dan rondgeskuif kan word en ge-edit word."*
+ 
+     They go into the SAME `found` list the reader fills, so a thing and a
+     line of writing get the same box and are tapped the same way — which is
+     what she described, and which means none of the drawing or the tapping
+     below had to learn a second shape.
+ 
+     What differs is what a tap DOES, and that is the only reason this map
+     exists: a word is lifted as text, a thing is lifted as pixels, and the
+     mask that makes the second possible has nowhere to live on a `Pick`. */
+  const things = useRef<Map<string, Found>>(new Map());
+  const [looking, setLooking] = useState(false);
   /* Cutting the background out. `whole` holds the picture as it was brought
      in, so the cut is never a one-way door — a member who cuts a photograph
      and does not like it has nothing to go back to otherwise but the camera
@@ -2268,6 +2293,158 @@ export default function PostStudio({
     }, () => setSaid(t('post.paintFailed', 'That could not be painted.')));
   };
 
+  /**
+   * Ask the engine what is in the picture.
+   *
+   * Charged, two credits, once per press however much is in the picture —
+   * `CREDITS.grab` carries why. The boxes land in the same list the reader
+   * fills, so they are drawn and tapped by the code that already existed.
+   */
+  const findThings = async (): Promise<void> => {
+    if (!picture || looking) return;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    /* `looked` and not `sheet`, deliberately. The paid export's canvas is
+       called `sheet`, and `check:postpaid` allows a maker through by the
+       name in front of the dot — so naming `sheet.toDataURL` to let this
+       request body through would have excused the paid road out with it.
+       The shelf's canvas is named `shelved` for the same reason. */
+    const looked = document.createElement('canvas');
+    looked.width = wide;
+    looked.height = tall;
+    looked.getContext('2d')?.drawImage(picture, 0, 0);
+    setLooking(true);
+    setSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/picture/objects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          /* Who is spending. A redirect carries no cookie session in this
+             app — there is none — so the token IS how the route learns who
+             to charge, and without it the press is refused as signed out.
+             `check:paidcall` and `check:signed` both hold it. */
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          /* Not a road out: this string is the request body, sent to our
+             own route and never handed to the person. `check:postpaid`
+             counts every `toDataURL` in this file because each one COULD
+             be a way to take a picture off the device without paying, and
+             this one is named in its allowlist for that reason. */
+          picture: looked.toDataURL('image/png').split(',')[1] ?? '',
+          mime: 'image/png',
+          wide,
+          tall,
+        }),
+      });
+      const body = (await answer.json().catch(() => ({}))) as {
+        found?: Found[]; message?: string;
+      };
+      if (!answer.ok) {
+        setSaid(body.message ?? t('post.thingsNo', 'The things in this picture could not be found.'));
+        return;
+      }
+      const rows = body.found ?? [];
+      if (!rows.length) {
+        setSaid(t('post.thingsNone', 'Nothing in this picture came back as a separate thing. A photograph of one subject on a plain ground usually does better with Take a plain background off.'));
+        return;
+      }
+      /* Shares, because that is the space `pickAt` and the highlights work
+         in — and a box handed over in pixels would land in the corner. */
+      const picks: Pick[] = rows.map((one) => {
+        const id = freshId();
+        things.current.set(id, one);
+        return {
+          id,
+          text: one.label,
+          sure: 100,
+          x: one.box.left / wide,
+          y: one.box.top / tall,
+          w: (one.box.right - one.box.left) / wide,
+          h: (one.box.bottom - one.box.top) / tall,
+        };
+      });
+      setFound([...(found ?? []), ...picks]);
+      setPicking(true);
+      setSaid(t('post.thingsFound', 'Tap one to lift it out. {n} found.')
+        .replace('{n}', String(picks.length)));
+    } catch {
+      setSaid(t('post.thingsNo', 'The things in this picture could not be found.'));
+    } finally {
+      setLooking(false);
+    }
+  };
+
+  /**
+   * Lift a found thing out of the photograph, with its mask as its edge.
+   *
+   * What comes back is the thing on nothing — so it can be moved, painted
+   * with the colours above, or saved as a PNG. `Put it back` restores the
+   * photograph, exactly as it does after the background remover.
+   */
+  const liftThing = (one: Pick): void => {
+    const thing = things.current.get(one.id);
+    if (!thing || !picture) return;
+    if (!thing.mask) {
+      /* A box with no mask is a box. Cutting a rectangle out and calling it
+         the thing would look like the engine being bad at edges, so it is
+         said instead. */
+      setSaid(t('post.thingNoMask', 'The engine found that one but did not send its shape, so it cannot be lifted out cleanly. Try Find the things again, or use Cut out a shape and draw round it.'));
+      return;
+    }
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    const whole = document.createElement('canvas');
+    whole.width = wide;
+    whole.height = tall;
+    const ctx = whole.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(picture, 0, 0);
+    const pixels = ctx.getImageData(0, 0, wide, tall);
+
+    const maskImg = new Image();
+    maskImg.onload = () => {
+      const maskSheet = document.createElement('canvas');
+      maskSheet.width = maskImg.naturalWidth || 1;
+      maskSheet.height = maskImg.naturalHeight || 1;
+      const mctx = maskSheet.getContext('2d', { willReadFrequently: true });
+      if (!mctx) return;
+      mctx.drawImage(maskImg, 0, 0);
+      const mask = mctx.getImageData(0, 0, maskSheet.width, maskSheet.height);
+      const cut = liftWith(
+        { data: pixels.data, width: wide, height: tall },
+        thing.box,
+        { data: mask.data, width: maskSheet.width, height: maskSheet.height },
+      );
+      if (!cut) {
+        setSaid(t('post.thingFailed', 'That one could not be lifted out.'));
+        return;
+      }
+      const out = document.createElement('canvas');
+      out.width = cut.width;
+      out.height = cut.height;
+      const octx = out.getContext('2d');
+      if (!octx) return;
+      const made = octx.createImageData(cut.width, cut.height);
+      made.data.set(cut.data);
+      octx.putImageData(made, 0, 0);
+      before(t('post.stepThing', 'lifting a thing out'));
+      asPicture(out, (img) => {
+        setWhole(picture);
+        setPicture(img);
+        setPicking(false);
+        setPicked(null);
+        setFound(null);
+        nothingBehind();
+        setSaid(t('post.thingDone', 'Lifted out, on nothing. Paint it, move it, or save it as a PNG — press Put it back for the photograph.'));
+      }, () => setSaid(t('post.thingFailed', 'That one could not be lifted out.')));
+    };
+    maskImg.onerror = () => setSaid(t('post.thingFailed', 'That one could not be lifted out.'));
+    maskImg.src = `data:image/png;base64,${thing.mask}`;
+  };
+
   /** Erase the line out of the photograph. */
   const dropLine = (one: Pick): boolean => {
     if (!picture) return false;
@@ -4103,6 +4280,26 @@ export default function PostStudio({
               ? `${Math.round(reading * 100)}%`
               : t('post.findWords', 'Find the words, so I can tap one')}
           </button>
+
+          {/* ── And the things in it, which is the other half of "Grab" ──
+ 
+              Charged, unlike the reader above it, and the button says so
+              before it is pressed. The engine draws nothing — it reads the
+              picture and answers where things are — so it is two credits,
+              the same as a transcription, and one press finds everything
+              rather than charging per thing. */}
+          <button
+            type="button"
+            data-postthingsgo
+            disabled={!picture || looking}
+            onClick={() => { void findThings(); }}
+            className={`${LEEG} disabled:opacity-60`}
+          >
+            {looking
+              ? t('post.thingsLooking', 'Looking…')
+              : t('post.thingsGo', 'Find the things in it \u00b7 {n} credits')
+                .replace('{n}', String(CREDITS.grab))}
+          </button>
           <p
             className="text-[12px] leading-relaxed"
             style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}
@@ -4814,7 +5011,19 @@ export default function PostStudio({
               ? `“${picked.text}”`
               : t('post.tapALine', 'Tap a line of writing on the picture.')}
           </p>
-          {picked && (
+          {picked && things.current.has(picked.id) && (
+            <div className={RY3}>
+              <button
+                type="button"
+                data-postthinglift
+                onClick={() => liftThing(picked)}
+                className={LEEG}
+              >
+                {t('post.thingLift', 'Lift it out')}
+              </button>
+            </div>
+          )}
+          {picked && !things.current.has(picked.id) && (
             <div className={RY3}>
               <button
                 type="button"

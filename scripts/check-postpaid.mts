@@ -107,6 +107,21 @@ const INSIDE: Readonly<Record<string, string>> = {
   'shelved.toBlob': 'the same keep, for the byte count the shelf records so it can'
     + ' say how much room it is using. The blob is measured and dropped — see'
     + ' `check:shelf`',
+  /* ── The picture on its way to be looked at, 11 October 2026 ──
+ 
+     Carli asked for the things in a photograph to be found so one can be
+     lifted out, and that means sending the picture to our own route. Its
+     canvas is `looked` rather than `sheet` for the reason the shelf's is
+     `shelved`: this list matches on the name in front of the dot, so
+     naming `sheet.toDataURL` here would have let the paid export out at
+     the same time.
+ 
+     Nothing a person can save comes of it: the string is a request body,
+     the answer is boxes and masks, and no anchor or object URL is made
+     from it anywhere in this file. */
+  'looked.toDataURL': 'the picture on its way to the engine that says what is in'
+    + ' it. It becomes a request body and nothing else — the answer is boxes and'
+    + ' masks, and nothing a person could save',
   /* ── The picture on its way to be redrawn ─────────────────────
  
      It was `sent.toDataURL` in this room on 9 October 2026, and on the 9th

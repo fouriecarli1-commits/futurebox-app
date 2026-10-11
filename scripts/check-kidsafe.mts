@@ -222,19 +222,33 @@ ok('three rooms cannot spend a credit at all',
    So the decision was made out loud by the person whose room it is, which is
    all this line has ever asked for. The number moves and the rule does not:
    the FOURTH paid door in this room reddens too. */
-ok('  and the photo editor spends on exactly the three things it is meant to',
+/* ── And the fourth door, decided out loud on 11 October 2026 ──────────
+ 
+   Carli: *"dan moet die objekte en woorde gehighlight word."* And when the
+   version that runs on the phone was offered as the cheap one: *"Niks is
+   gratis."* So finding the things in a picture asks Gemini and takes two
+   credits, and this line reddened exactly as the note above says it
+   should.
+ 
+   It changes nothing about a CHILD in this room, which is what this file
+   is really about: the photo editor is not one of the rooms a child is
+   left alone in, and the press says its price before it is pressed. The
+   rule stays as it is — the FIFTH paid door reddens too. */
+ok('  and the photo editor spends on exactly the four things it is meant to',
   JSON.stringify(spend.get('photo'))
-    === JSON.stringify(['/api/google/picture', '/api/post/export', '/api/video']),
+    === JSON.stringify([
+      '/api/google/picture', '/api/picture/objects', '/api/post/export', '/api/video',
+    ]),
   `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
-  + ' changing what is in it by saying what to change, and giving it a little'
-  + ' motion. Every other tool in that room runs on the device and is free. A'
-  + ' FOURTH paid door is a decision somebody has to make out loud, which is'
-  + ' what this line is for');
+  + ' changing what is in it by saying what to change, finding the things in'
+  + ' it, and giving it a little motion. Every other tool in that room runs'
+  + ' on the device and takes no credits. A FIFTH paid door is a decision'
+  + ' somebody has to make out loud, which is what this line is for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',
   FREE.includes('collab'),
-  'the collab room costs nothing and puts a child in a conversation with'
-  + ' strangers. If it ever stops being free this sentence needs rewriting,'
+  'the collab room takes no credits and puts a child in a conversation with'
+  + ' strangers. If it ever starts charging this sentence needs rewriting,'
   + ' and so does the write-up that rests on it');
 
 if (bad) {

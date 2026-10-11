@@ -142,12 +142,31 @@ import type { Tier } from './plans';
 
 export const CREDITS = {
   /** A full song: two minutes, clean, yours. */
-  song: 10,
+  /* Carli, 11 October 2026: *"a two minute song, R11.50"*. Eight credits is
+     R11.92 — 42c over her figure and the nearest whole credit; seven would
+     be R10.43, a rand under. Against R5.52 of ElevenLabs that keeps R6.40.
+ 
+     It is the PER-MINUTE rate that really moved: `songCost` charges
+     `halfSong` a minute, so a minute went from five credits to four and a
+     two-minute song follows it. The two have to move together or a half
+     song stops being half a song. */
+  /* ── Repriced by her, 11 October 2026 ──────────────────────────────────
+ 
+     She asked for the whole price list with the engine's cost and the profit
+     in rand beside each press — `docs/KREDIETE.md` — and then set four
+     prices off it in the same minute. Her words are on each one below.
+ 
+     Credits are whole numbers at R1.49 (the cheapest plan's rate), so a rand
+     figure cannot always be hit exactly. Each is the nearest credit, and the
+     rand it really lands on is written beside it. */
+  song: 8,
   /**
    * The free format: one minute, watermarked. Half a song, and the whole point
    * of it is that hearing the rest costs credits.
    */
-  halfSong: 5,
+  /* Four, because a song is this a minute and she put a two-minute song at
+     R11.50. R5.96 against R2.76 of ElevenLabs, which keeps R3.20. */
+  halfSong: 4,
   /**
    * **Five seconds** from the video engine, at the base grade. A unit, not a
    * clip — see `videoCost`.
@@ -429,13 +448,32 @@ export const CREDITS = {
    * The numbers are their rates plus the usual margin. See `perMinute` below.
    */
   /** Splitting a song into the voice and the backing, per minute. */
-  stems: 4,
+  /* Carli, 11 October 2026: *"Stems/cleaning/voice change = R8.50"*. Six
+     credits is R8.94, the nearest whole credit above it; five would be
+     R7.45. R2.21 of ElevenLabs, so it keeps R6.73 — up from R3.75.
+ 
+     She raised this one after the price list showed these three at 63%
+     margin while everything else in the app sat between 73% and 98%. They
+     are the thinnest lines and the most-pressed buttons, which is the worst
+     pair of facts to have together. */
+  stems: 6,
   /** Hearing what was actually sung, per minute. Their speech-to-text. */
-  transcribe: 2,
+  /* Carli, 11 October 2026: *"Transcribing per minute = R4.50"*. Three
+     credits is R4.47, three cents under her figure and the nearest whole
+     credit. ElevenLabs bill R0.07 a minute for it, so it keeps R4.40.
+ 
+     The multiple on this line reads as absurd — sixty-four times — and that
+     is the point she made about multiples: it was already forty-four times
+     and keeping R2.91, which is less actual money than almost anything else
+     in the app. A ratio is not a wage. */
+  transcribe: 3,
   /** Taking the room out of a recording, per minute. Their voice isolator. */
-  clean: 4,
+  /* Six, with stems and the voice change — her one decision covers all
+     three, and they share one supplier and one per-minute rate. */
+  clean: 6,
   /** A recording said again in another voice, per minute. */
-  voiceChange: 4,
+  /* Six, with stems and cleaning. Same decision, same supplier. */
+  voiceChange: 6,
   /**
    * A recording *sung* again in another voice, per minute. Kits.AI.
    *
@@ -446,7 +484,19 @@ export const CREDITS = {
    * making the better engine the cheaper one would have people picking the
    * worse one to save credits. One price, and the choice is about the result.
    */
-  sing: 4,
+  /* ── Raised with the voice change, 11 October 2026 ──────────────────
+ 
+     Not a price she set. Carli put stems, cleaning and the voice change at
+     R8.50 — six credits — and left this one alone, which made the BETTER
+     engine the cheaper one: Kits sings a line in a chosen voice, the voice
+     change converts an existing take, and this app's own rule is that
+     somebody must never be able to pick the worse engine to save credits.
+     `check:sing` failed on exactly that, which is what it is for.
+ 
+     So six, with them. R8.94 against R1.60 of Kits, which keeps R7.34 — the
+     fattest margin of the four, because Kits is the cheapest supplier of
+     them. */
+  sing: 6,
   /** Making a voice from a minute of somebody reading. Estimated. */
   clone: 20,
   /** Training a sound of your own. Estimated, and deliberately high. */
@@ -488,7 +538,28 @@ export const CREDITS = {
    * `check:kredietkoste` now holds every one of these against its real
    * upstream cost, so the next one cannot drift below the floor in silence.
    */
-  dub: 162,
+  /* ── Lowered to 110 by her, 11 October 2026 ─────────────────────────
+ 
+     Carli, with the whole price list and the engine's bill in front of her:
+     *"Dubbing moet hersien word, wat stel jy voor?"* — and, given the
+     arithmetic below, *"110 krediete, maak dit so"*.
+ 
+     162 credits was R241.38 a minute at the cheapest rate and kept R200.90
+     of it. The margin was never the problem. The problem is that nobody
+     dubs one minute: a ten-minute episode came to R2,414 and a half-hour
+     one to R7,241, which is a price that stops the press from ever being
+     pressed and makes the margin on it irrelevant.
+ 
+     110 credits is R163.90 a minute and keeps R123.42 — 4.0x, which is
+     exactly where the video tools she repriced in the same minute now sit,
+     so the list reads as one decision rather than one outlier. A ten-minute
+     episode is R1,639.
+ 
+     Not lower, because ElevenLabs genuinely bill R40.48 a minute: a
+     half-hour episode costs this business R1,214 before it earns anything.
+     It is the one press in the app where a pricing mistake is expensive
+     rather than annoying. */
+  dub: 110,
   /**
    * Reading a song: chords, key, tempo and where the sections are. Per minute.
    *
@@ -722,7 +793,12 @@ export const CREDITS = {
    * Estimated from a published page rather than an invoice, and
    * `check:kredietkoste` holds it against that page.
    */
-  cutout: 8,
+  /* Carli, 11 October 2026: *"a background out of video R6.50"*. Four
+     credits is R5.96, 54c under her figure and the nearest whole credit;
+     five would be R7.45, 95c over. Against R1.80 of Google that keeps
+     R4.16 — down from R10.12, which is her decision to make and she made
+     it with the engine's cost in front of her. */
+  cutout: 4,
   /**
    * Taking an item out of a clip and filling in what was behind it. Per five
    * seconds, like `cutout`.
@@ -737,7 +813,15 @@ export const CREDITS = {
    * R18.22 against the background's measured R1.80, **10.1x**. Same reasoning
    * as `clone` and `finetune`, and marked the same way.
    */
-  erase: 11,
+  /* Carli, 11 October 2026: *"An item taken out of a video moet ook
+     verander word. R7.00"*. Five credits is R7.45, the nearest whole
+     credit. Against R1.80 that keeps R5.65.
+ 
+     Still priced above `cutout` next door, which is the relationship that
+     matters: taking a named thing out is harder than taking the background
+     out, and a price list where the harder job costs less reads as a
+     mistake even when both numbers are deliberate. */
+  erase: 5,
   /**
    * Changing what is IN a still picture by saying what to change.
    *
@@ -775,6 +859,40 @@ export const CREDITS = {
    * `check:kredietkoste` holds it against that page.
    */
   repaint: 5,
+  /**
+   * Finding the things in a photograph so one can be lifted out.
+   *
+   * ── What it is ─────────────────────────────────────────────────────────
+   *
+   * Carli, 11 October 2026: *"dan moet die objekte en woorde gehighlight
+   * word, en dit moet dan rondgeskuif kan word en ge-edit word."* The words
+   * half runs on her own device. This half asks Gemini what is in the
+   * picture and where, and hands back a box and a mask for each thing.
+   *
+   * ── Two, from what it actually is ──────────────────────────────────────
+   *
+   * `repaint` is five because something is DRAWN: the engine generates a
+   * picture, which is the expensive thing an image model does. This draws
+   * nothing. It reads one picture and answers a few hundred bytes of JSON —
+   * the same shape of work as `transcribe`, which reads one recording and
+   * answers words, and which is two.
+   *
+   * So it is priced beside `transcribe` rather than beside `repaint`, and
+   * one press finds everything in the picture rather than charging per
+   * thing: a photograph with six objects in it is not six times the work,
+   * it is one call, and charging per result would make a busy picture cost
+   * six times a plain one for no reason anybody could explain.
+   *
+   * ── And why it is not nothing ──────────────────────────────────────────
+   *
+   * There is a version of this that runs on the phone — a flood fill from
+   * where you tapped — and it was offered. Her answer, in three words:
+   * *"Niks is gratis."* She is right twice over: it would not be free, it
+   * would be paid for in development and hosting rather than at the press,
+   * and it would cut a flat logo well and a dog on grass badly, which is a
+   * tool people stop trusting.
+   */
+  grab: 2,
 } as const;
 
 /**
