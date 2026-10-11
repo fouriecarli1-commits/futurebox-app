@@ -109,6 +109,7 @@ import {
   type BehindId, type EdgeId,
 } from '../lib/cutout';
 import { NEARLY_ALL, takeGround } from '../lib/flatcut';
+import { MOST_COLOURS, repaint } from '../lib/repaint';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
@@ -438,6 +439,20 @@ export default function PostStudio({
      a white shirt in the middle of it is not. The pixels cannot tell which,
      so it is a choice and not a guess. See `lib/flatcut.ts`. */
   const [groundReach, setGroundReach] = useState<'everywhere' | 'edges'>('everywhere');
+  /* ── Giving a cut-out shape a new colour ──────────────────────────────
+ 
+     Carli, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan
+     verander ... die pearlescent funksie ... waar twee na 3 kleure saam
+     blend vir 'n kleur skakering."*
+ 
+     She reached this with her own mark within the hour: navy line work, cut
+     out, that cannot be read on a dark page. `lib/repaint.ts` carries the
+     reasoning; what matters here is that it paints only where the picture
+     is not transparent, so it is the tool for after the background has come
+     off rather than a tint over a photograph. */
+  const [paintColours, setPaintColours] = useState<string[]>(['#ffffff']);
+  const [paintAngle, setPaintAngle] = useState(0);
+  const [paintShade, setPaintShade] = useState(true);
   /* The model's answer and the picture it was asked about, kept so the edge
      can be changed without six megabytes and a second of waiting. */
   const lastMask = useRef<{ readonly mask: HTMLCanvasElement; readonly of: HTMLImageElement } | null>(null);
@@ -2209,6 +2224,50 @@ export default function PostStudio({
     }, () => setSaid(t('post.groundFailed', 'That background could not be taken out.')));
   };
 
+  /**
+   * Paint what is left after the background came off.
+   *
+   * One colour is a flat change; two or three are her pearlescent blend. The
+   * alpha is never touched — see `lib/repaint.ts` — so this cannot undo the
+   * cut she has just made, which is the expensive part of the picture.
+   */
+  const paintShape = (): void => {
+    if (!picture) return;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    const sheet = document.createElement('canvas');
+    sheet.width = wide;
+    sheet.height = tall;
+    const ctx = sheet.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(picture, 0, 0);
+    const was = ctx.getImageData(0, 0, wide, tall);
+    const done = repaint(
+      { data: was.data, width: wide, height: tall },
+      { colours: paintColours, angle: paintAngle, keepShading: paintShade },
+    );
+    if (!done) {
+      /* Nothing to paint means nothing has been cut out yet. Said plainly,
+         because the button looks exactly as able as it does on a picture
+         that HAS been cut, and "nothing happened" is the worst answer. */
+      setSaid(t(
+        'post.paintNothing',
+        'There is nothing cut out to paint. Take the background off first — this paints the shape that is left and leaves the see-through part alone.',
+      ));
+      return;
+    }
+    was.data.set(done.data);
+    ctx.putImageData(was, 0, 0);
+    before(t('post.stepPaint', 'changing its colour'));
+    asPicture(sheet, (made) => {
+      setWhole(picture);
+      setPicture(made);
+      setSaid(paintColours.length > 1
+        ? t('post.paintBlended', 'Painted, with the colours blended across it. Turn the dial to run the blend another way, or press Put it back.')
+        : t('post.paintDone', 'Painted. The see-through part is untouched — press Put it back if you would rather have it as it was.'));
+    }, () => setSaid(t('post.paintFailed', 'That could not be painted.')));
+  };
+
   /** Erase the line out of the photograph. */
   const dropLine = (one: Pick): boolean => {
     if (!picture) return false;
@@ -3363,6 +3422,101 @@ export default function PostStudio({
           )}
           <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
             {t('post.groundWhat', 'For a logo, a drawing, or anything photographed on a plain sheet \u2014 including the grey-and-white squares a picture comes back with when it was asked for a see-through background. It works out what the background is from the edges of the frame. Free, and it happens on your own phone.')}
+          </span>
+        </div>
+        {/* ── And what colour the thing that is left should be ──────────
+ 
+            Carli, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan
+            verander. Ek dink ook wanneer dit kom by kleur, moet mens ook die
+            pearlescent funksie in sit waar twee na 3 kleure saam blend vir
+            'n kleur skakering."*
+ 
+            Under the remover and not beside it, because it only means
+            anything once something has been cut out: it paints what is left
+            and leaves the see-through part alone. `lib/repaint.ts` carries
+            why the alpha is never touched. */}
+        <div data-postpaint className="flex w-full flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: asRoom ? 'rgba(16,185,129,0.18)' : 'rgb(39,39,42)' }}>
+          <p className={MIKRO}>{t('post.paint', 'Its colour')}</p>
+
+          {paintColours.map((one, at) => (
+            <input
+              key={`paint-${at}`}
+              type="color"
+              value={one}
+              data-postpaintcolour={at}
+              aria-label={t('post.paintColour', 'Colour {n}').replace('{n}', String(at + 1))}
+              onChange={(e) => setPaintColours(
+                paintColours.map((was, which) => (which === at ? e.target.value : was)),
+              )}
+              className="h-11 w-11 flex-shrink-0 cursor-pointer rounded-xl border border-zinc-700 bg-transparent p-1"
+            />
+          ))}
+
+          {paintColours.length < MOST_COLOURS && (
+            <button
+              type="button"
+              data-postpaintmore
+              onClick={() => setPaintColours([...paintColours, '#9ad5ff'])}
+              className={LEEG}
+            >
+              {paintColours.length === 1
+                ? t('post.paintBlend', 'Blend a second colour in')
+                : t('post.paintThird', 'And a third')}
+            </button>
+          )}
+          {paintColours.length > 1 && (
+            <button
+              type="button"
+              data-postpaintfewer
+              onClick={() => setPaintColours(paintColours.slice(0, -1))}
+              className={LEEG}
+            >
+              {t('post.paintOneLess', 'One colour less')}
+            </button>
+          )}
+
+          {/* The dial only means something once there are two colours to run
+              between, so it is not offered for a flat change. */}
+          {paintColours.length > 1 && (
+            <label className="flex flex-1 items-center gap-2 text-[12px]" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+              {t('post.paintAngle', 'Which way it runs')}
+              <input
+                type="range"
+                min={0}
+                max={359}
+                step={15}
+                value={paintAngle}
+                data-postpaintangle
+                onChange={(e) => setPaintAngle(Number(e.target.value))}
+                className="h-11 min-w-[120px] flex-1"
+              />
+            </label>
+          )}
+
+          <button
+            type="button"
+            data-postpaintgo
+            onClick={paintShape}
+            className={LEEG}
+          >
+            {paintColours.length > 1
+              ? t('post.paintGoBlend', 'Paint it with the blend')
+              : t('post.paintGo', 'Paint it this colour')}
+          </button>
+
+          <label className="flex items-center gap-2 text-[12px]" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
+            <input
+              type="checkbox"
+              checked={paintShade}
+              data-postpaintshade
+              onChange={(e) => setPaintShade(e.target.checked)}
+              className="h-5 w-5"
+            />
+            {t('post.paintKeep', 'Keep its light and shade')}
+          </label>
+
+          <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
+            {t('post.paintWhat', 'Paints whatever is left after the background came off, and never the see-through part. One colour changes it flat; two or three blend across the shape for a pearlescent sheen. Keeping its light and shade matters for a photographed object and makes no difference to a flat logo. Free, and it happens on your own phone.')}
           </span>
         </div>
         {/* ── And the other thing to do with the same mask ──────────────

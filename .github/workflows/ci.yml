@@ -1643,6 +1643,17 @@ jobs:
       - name: A story prints as a booklet, on a parent's ink
         run: npm run check:boekie
 
+      # Giving a cut-out shape a new colour, flat or as a two-to-three colour
+      # blend. The expensive thing in the picture by then is the CUT — every
+      # soft edge and every hole inside a letter, all of it in the alpha —
+      # and one line of arithmetic puts a halo back or hardens an edge, which
+      # means cutting it out again. A ramp read backwards gives a mirror of
+      # the blend, which is wrong and looks deliberate; a blend pinned to the
+      # canvas instead of the shape comes out flat, which is exactly what
+      # "the pearlescent does not work" looks like.
+      - name: A shape can be recoloured without losing the cut
+        run: npm run check:verf
+
       # An image model cannot make transparency: asked for a see-through
       # background it draws a PICTURE of a checkerboard, and hers arrived as
       # a 35-pixel grid of grey and white squares. So the transparency is
