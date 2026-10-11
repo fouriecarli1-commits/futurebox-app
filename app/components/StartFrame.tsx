@@ -79,7 +79,7 @@ export default function StartFrame({
      rather than as something worth moving a rung for. */
   const why = t(
     'frame.why',
-    'Optional, and it costs nothing extra. A picture settles the look in one go — the same face, the same room, the same product in every clip — so the sentence only has to say what moves.',
+    'Optional, and it uses no extra credits. A picture settles the look in one go — the same face, the same room, the same product in every clip — so the sentence only has to say what moves.',
   );
 
   if (!supported) {

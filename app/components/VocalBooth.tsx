@@ -1490,7 +1490,7 @@ export default function VocalBooth({
                 className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-400 hover:text-emerald-300"
               >
                 {t('booth.listenWords', 'Listen to the words')}
-                <span className="pl-1.5 text-zinc-500">{t('play.free', 'free')}</span>
+                <span className="pl-1.5 text-zinc-500">{t('play.free', 'no credits')}</span>
               </button>
             )}
             <button
@@ -1687,7 +1687,7 @@ export default function VocalBooth({
             >
               <FileText className="w-4 h-4" />
               {t('booth.wholeSheet', 'All the words')}
-              <span className="pl-0.5 text-zinc-500">{t('play.free', 'free')}</span>
+              <span className="pl-0.5 text-zinc-500">{t('play.free', 'no credits')}</span>
             </button>
           )}
         </div>
@@ -2189,7 +2189,7 @@ export default function VocalBooth({
             title={
               proAllowed
                 ? t('booth.proWhat', 'Many lanes, cutting, tone and mixing. The words are not on screen there — this room is where you sing along with them.')
-                : t('booth.proPaid', 'Lanes, the grid, mixing, mastering and undo. It comes with every paid plan; this room, with the words on screen, stays free.')
+                : t('booth.proPaid', 'Lanes, the grid, mixing, mastering and undo. It comes with every paid plan; this room, with the words on screen, stays included.')
             }
             className={`${BAR} ${
               proAllowed

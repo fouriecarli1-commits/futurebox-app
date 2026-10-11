@@ -114,6 +114,7 @@ import { liftWith, type Found } from '../lib/grabobject';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
+import { stillWorthWaiting } from '../lib/jobwait';
 
 const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500';
 
@@ -557,6 +558,8 @@ export default function PostStudio({
      possible because of the closing frame added earlier the same day. */
   const [motion, setMotion] = useState<string>(MOTION_DEFAULT);
   const [liveJob, setLiveJob] = useState<string | null>(null);
+  /** When the current wait began, so a stalled job cannot wait for ever. */
+  const liveSince = useRef<number>(0);
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
   const [liveBusy, setLiveBusy] = useState(false);
   const [liveSaid, setLiveSaid] = useState('');
@@ -566,8 +569,24 @@ export default function PostStudio({
      refunds on a real failure — so a blip must not be read as one. */
   useEffect(() => {
     if (!liveJob) return undefined;
+    /* Started once per job, not once per run of this effect: `t` is a
+       dependency, so choosing a language re-runs it, and a clock restarted by
+       picking Afrikaans is a wait that never ends. */
+    if (liveSince.current === 0) liveSince.current = Date.now();
     let stopped = false;
     const ask = async (): Promise<void> => {
+      /* "No answer yet" and "this is never coming" look identical from here,
+         and the press that started this is disabled while the job is live —
+         so waiting for ever locks the room until somebody reloads the page.
+         Eight minutes, shared with every other room that polls a job. It
+         claims less than a failure would, because the job may well still be
+         running on the engine and a stall is not refunded. */
+      if (!stillWorthWaiting(liveSince.current, Date.now())) {
+        setLiveJob(null);
+        liveSince.current = 0;
+        setLiveSaid(t('post.liveSlow', 'It is taking longer than usual. It has not been lost — have a look in a little while.'));
+        return;
+      }
       try {
         const token = await accessToken();
         const answer = await fetch(`/api/video?id=${encodeURIComponent(liveJob)}`, {
@@ -579,9 +598,11 @@ export default function PostStudio({
         if (said.state === 'done' && said.url) {
           setLiveUrl(said.url);
           setLiveJob(null);
+          liveSince.current = 0;
           setLiveSaid(t('post.liveDone', 'Ready. It loops, so it plays over and over.'));
         } else if (said.state === 'failed') {
           setLiveJob(null);
+          liveSince.current = 0;
           setLiveSaid(said.message
             ?? t('post.liveFailed', 'The engine could not make that one. The credits have been given back.'));
         }
@@ -3467,7 +3488,7 @@ export default function PostStudio({
       <span className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
         {t(
           'post.askWhat',
-          'Say what you want and it is drawn; bring a picture in first and it changes that one instead. This is the only thing in this room that is NOT free and does not happen on your phone — the picture is drawn somewhere else, so it costs credits and takes a few seconds. It can write words INTO the picture, on a window or along a wall; for words on top in a real font, use Words below, which is free and can be moved afterwards. It will not put a real person into a picture, and it cannot make album art: a cover is made in the booth or bought from an artist.',
+          'Say what you want and it is drawn; bring a picture in first and it changes that one instead. This is the only thing in this room that uses credits and does not happen on your phone — the picture is drawn somewhere else, so it costs credits and takes a few seconds. It can write words INTO the picture, on a window or along a wall; for words on top in a real font, use Words below, which uses no credits and can be moved afterwards. It will not put a real person into a picture, and it cannot make album art: a cover is made in the booth or bought from an artist.',
         )}
       </span>
     </div>
@@ -3543,7 +3564,7 @@ export default function PostStudio({
           </button>
         )}
         <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-          {t('post.cutWhat', 'One press takes the background away and leaves the person. It only finds PEOPLE \u2014 for anything else, use Cut out a shape below. Free, and it happens on your own phone; the first time takes a moment while it downloads.')}
+          {t('post.cutWhat', 'One press takes the background away and leaves the person. It only finds PEOPLE — for anything else, use Cut out a shape below. Included in your plan, and it happens on your own phone, so it uses no credits; the first time takes a moment while it downloads.')}
         </span>
         {/* ── And the one for everything that is not a person ───────────
  
@@ -3598,7 +3619,7 @@ export default function PostStudio({
             </>
           )}
           <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-            {t('post.groundWhat', 'For a logo, a drawing, or anything photographed on a plain sheet \u2014 including the grey-and-white squares a picture comes back with when it was asked for a see-through background. It works out what the background is from the edges of the frame. Free, and it happens on your own phone.')}
+            {t('post.groundWhat', 'For a logo, a drawing, or anything photographed on a plain sheet — including the grey-and-white squares a picture comes back with when it was asked for a see-through background. It works out what the background is from the edges of the frame. Included in your plan, and it happens on your own phone, so it uses no credits.')}
           </span>
         </div>
         {/* ── And what colour the thing that is left should be ──────────
@@ -3693,7 +3714,7 @@ export default function PostStudio({
           </label>
 
           <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-            {t('post.paintWhat', 'Paints whatever is left after the background came off, and never the see-through part. One colour changes it flat; two or three blend across the shape for a pearlescent sheen. Keeping its light and shade matters for a photographed object and makes no difference to a flat logo. Free, and it happens on your own phone.')}
+            {t('post.paintWhat', 'Paints whatever is left after the background came off, and never the see-through part. One colour changes it flat; two or three blend across the shape for a pearlescent sheen. Keeping its light and shade matters for a photographed object and makes no difference to a flat logo. Included in your plan, and it happens on your own phone, so it uses no credits.')}
           </span>
         </div>
         {/* ── And the other thing to do with the same mask ──────────────
@@ -4189,7 +4210,7 @@ export default function PostStudio({
         ))}
 
         <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-          {t('post.lookFree', 'All of this happens on your own device and costs nothing, however many times you change it.')}
+          {t('post.lookFree', 'All of this happens on your own device and uses no credits, however many times you change it.')}
         </p>
       </div>
     )}
@@ -4348,7 +4369,7 @@ export default function PostStudio({
         )}
 
         <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-          {t('post.grabFree', 'The reading happens on your own device and costs nothing. The first time takes a moment while the reader downloads.')}
+          {t('post.grabFree', 'The reading happens on your own device, so it uses no credits. The first time takes a moment while the reader downloads.')}
         </p>
       </div>
     )}
@@ -4606,7 +4627,7 @@ export default function PostStudio({
         ? { borderColor: 'rgba(16,185,129,0.35)', background: 'rgba(52,211,153,0.10)', color: INK_DIM, boxShadow: RAISE }
         : { borderColor: 'rgb(39,39,42)', background: 'rgb(24,24,27)' }}
     >
-      {t('post.price', 'Building a picture here costs nothing. Taking one out costs')}
+      {t('post.price', 'Building a picture here uses no credits. Taking one out costs')}
       {' '}
       <strong style={asRoom ? { color: INK } : undefined}>{creditsSaid(CREDITS.postOut, t)}</strong>
       {' '}
@@ -4712,7 +4733,7 @@ export default function PostStudio({
       <p className="text-[12px] leading-relaxed text-zinc-500">
         {t(
           'post.keepHereWhy',
-          'Puts it on your Channel and makes it pickable in the cutting room. Free, because it stays on this device — saving it to your phone is the press above.',
+          'Puts it on your Channel and makes it pickable in the cutting room. No credits, because it stays on this device — saving it to your phone is the press above.',
         )}
       </p>
 
@@ -4741,7 +4762,7 @@ export default function PostStudio({
         </button>
       )}
       <p className="text-[12px] leading-relaxed text-zinc-500">
-        {t('post.freeUntil', 'Making it costs nothing. The credit is for taking it off the device, and the same post saved twice is charged once.')}
+        {t('post.freeUntil', 'Every tool in this room is included in your plan — they all run on your own phone. The credits are for taking the picture off the device, and the same post saved twice is charged once.')}
       </p>
       <button
         type="button"
@@ -5121,7 +5142,7 @@ export default function PostStudio({
         transport={false}
         upper={POST_UPPER}
         lower={POST_LOWER}
-        paidLine={t('post.paidHere', 'Everything here is free. Taking the picture out is the one press that spends, and it says the price before it does.')}
+        paidLine={t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
       >
         {bench ? benchFor[bench] : null}
       </RoomDock>

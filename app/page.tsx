@@ -376,11 +376,20 @@ export default function FutureBoxHome() {
   // Resolved after mount: guessing during render would bake one country's
   // prices into the static HTML that everybody is served.
   const [region, setRegion] = useState<Region>(REGIONS[0]);
-  const [regionBasis, setRegionBasis] = useState('Working it out…');
+  /* `guess.basis` — "Device timezone (Africa/Johannesburg)", "Server render —
+     no browser to ask" — is deliberately not kept here. It was, in a value
+     nothing read, which is how `check:intovoid` found it: the app worked out
+     WHY it had chosen a country, and threw the answer away.
+
+     Keeping it unread was the worst of the three options. It is dropped
+     rather than displayed because showing it is a change to what she sees,
+     and because the bigger gap it points at is not the explanation at all:
+     `setRegion` is called here and nowhere else, so a wrong guess cannot be
+     corrected by the person it is wrong about. That is written down in
+     docs/OPEN-QUESTIONS.md rather than fixed quietly. */
   useEffect(() => {
     const guess = guessRegion(lang);
     setRegion(guess.region);
-    setRegionBasis(guess.basis);
   }, [lang]);
   // The header and the locked cards advertise the cheapest paid tier, since
   // that is the smallest step someone is actually being asked to take.
@@ -1216,12 +1225,8 @@ export default function FutureBoxHome() {
    */
   const [asks, setAsks] = useState(0);
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
-  const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
-  // Studio Form State
-  const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
   const [title, setTitle] = useState('');
-  const [mediaLink, setMediaLink] = useState('');
 
   // AI Scanner & Stream Regeneration
   const [streamCycle, setStreamCycle] = useState(0);

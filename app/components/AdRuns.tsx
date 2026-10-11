@@ -148,7 +148,7 @@ export default function AdRuns({
 
       <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'run.whyTags',
-          'Four platforms sharing one plain link is one line in your analytics that says “direct”. A tagged link makes them four rows — free, today, with nobody’s permission, and nothing you build later can recover a click that already happened untagged.',
+          'Four platforms sharing one plain link is one line in your analytics that says “direct”. A tagged link makes them four rows — today, with nobody’s permission, and nothing you build later can recover a click that already happened untagged.',
         )}</Note>
 
       {runs.map((run) => {

@@ -384,7 +384,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               }`}
             >
               {option === 'browser'
-                ? t('video.here', 'Drawn here — free')
+                ? t('video.here', 'Drawn here — no credits')
                 : `${t('video.byEngine', 'The engine')} — ${videoCost('standard', engineSeconds)} ${t('video.credits', 'credits')}`}
             </button>
           ))}

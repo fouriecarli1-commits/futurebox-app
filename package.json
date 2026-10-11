@@ -125,6 +125,8 @@
     "check:filmcost": "tsx scripts/check-filmcost.mts",
     "check:solidroom": "tsx scripts/check-solidroom.mts",
     "check:oneroomname": "tsx scripts/check-oneroomname.mts",
+    "check:intovoid": "tsx scripts/check-intovoid.mts",
+    "check:jobwait": "tsx scripts/check-jobwait.mts",
     "check:adjust": "tsx scripts/check-adjust.mts",
     "check:videopaint": "tsx scripts/check-videopaint.mts",
     "check:videoquality": "tsx scripts/check-videoquality.mts",

@@ -525,7 +525,7 @@ export default function Sleeve({
             <>
               <p className="flex items-start gap-1.5 text-sm leading-snug text-amber-300/90">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-                {t('cover.owed', 'A cover was made for this song and never saved. It costs nothing to fetch it.')}
+                {t('cover.owed', 'A cover was made for this song and never saved. Fetching it uses no credits.')}
               </p>
               {keepButton}
             </>

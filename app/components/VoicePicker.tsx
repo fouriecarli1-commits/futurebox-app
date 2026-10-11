@@ -154,7 +154,7 @@ export default function VoicePicker({
                       ? t('voices.stop', 'Stop')
                       : t('voices.hear', 'Hear this voice')
                   }
-                  title={t('voices.free', 'A free listen — this costs nothing')}
+                  title={t('voices.free', 'A sample — no credits')}
                   className="flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-zinc-300 hover:text-white hover:border-zinc-600"
                 >
                   {loading === one.id ? (
@@ -173,7 +173,7 @@ export default function VoicePicker({
 
       <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'voices.note',
-          'The play button is a free sample — it costs nothing and generates nothing. Only a reading you ask for is charged.',
+          'The play button is a sample — it uses no credits and generates nothing. Only a reading you ask for is charged.',
         )}</Note>
     </div>
   );

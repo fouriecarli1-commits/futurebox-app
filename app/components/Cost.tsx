@@ -78,7 +78,7 @@ export default function Cost({
         ? `${each} — ${t('cost.about', 'about')} ${perMinute(seconds, rate)} ${t('cost.forThis', 'for this one')}`
         : each;
   } else if (credits === 0) {
-    price = t('cost.free', 'Costs nothing');
+    price = t('cost.free', 'No credits');
   } else if (typeof credits === 'number') {
     price = creditsSaid(credits, t);
   }

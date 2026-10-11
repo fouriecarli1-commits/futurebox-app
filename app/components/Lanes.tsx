@@ -308,7 +308,7 @@ export default function Lanes({
         <div className="space-y-2">
           <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'lanes.first',
-              'Separating happens once and is then kept on this device beside the song, so opening these lanes again costs nothing. The booth uses the same two files.',
+              'Separating happens once and is then kept on this device beside the song, so opening these lanes again uses no credits. The booth uses the same two files.',
             )}</Note>
           <Cost credits={price} />
           <button
