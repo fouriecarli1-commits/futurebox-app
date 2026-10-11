@@ -39,10 +39,14 @@
  *
  * `vibefy-web-lyart.vercel.app` came out on 2026-10-11 with the badge it was
  * for, by the same rule as the photographs above: a policy that allows what
- * nothing uses is wider than the app needs. **It has to go back in the same
- * commit as the badge.** Without it the image is blocked by this header and
- * the footer shows nothing — a failure that appears only in the console, which
- * is the kind that takes a week to find.
+ * nothing uses is wider than the app needs. **An entry has to go back in the
+ * same commit as the badge — for the host the new snippet uses, not for this
+ * one.** That host stopped existing when VibefyCode moved to its own domain,
+ * which is why the badge had been showing alt text for weeks; restoring this
+ * line verbatim would reproduce the original failure. Copy the host out of the
+ * snippet the console hands you. Without the right entry the image is blocked
+ * by this header and the footer shows nothing — a failure that appears only in
+ * the console, which is the kind that takes a week to find.
  *
  * `'unsafe-inline'` is on styles because Next inlines critical CSS, and on
  * scripts because its hydration bootstrap is an inline script. Removing either

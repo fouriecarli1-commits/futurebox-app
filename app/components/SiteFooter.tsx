@@ -13,10 +13,15 @@
  *
  * What has to come back with the badge, whenever it goes back:
  *
- *   · **The `img-src` entry for `vibefy-web-lyart.vercel.app` in
- *     `next.config.mjs`**, in the same commit. It came out with the badge,
- *     and without it this header blocks the image: the footer shows nothing
- *     and the only trace is a console error.
+ *   · **An `img-src` entry in `next.config.mjs` for the host the new snippet
+ *     actually uses**, in the same commit. Read it off the snippet rather than
+ *     off this note: what came out was `vibefy-web-lyart.vercel.app`, which is
+ *     the dead host that caused this in the first place, and putting that back
+ *     would block the image exactly as before. The console now serves badges
+ *     from `vibefycode.com`, so that is almost certainly the entry — but the
+ *     snippet is the authority, because it is what the browser requests.
+ *     Without the right entry this header blocks the image: the footer shows
+ *     nothing and the only trace is a console error.
  *   · It is a link to its own verification page and has to stay one. The
  *     licence does not permit the mark to appear without it, because a claim
  *     nobody can check is not evidence of anything. It pointed at
