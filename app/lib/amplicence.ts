@@ -142,6 +142,26 @@ export const mayBeSold = (id: string | undefined): boolean => licenceOf(id).comm
 export const needsCredit = (id: string | undefined): boolean => licenceOf(id).credit;
 
 /**
+ * Whether WE may pass a capture on — the catalogue question, which is a
+ * different question from the shelf's.
+ *
+ * The shelf asks "may a song made through this be sold", and a member who
+ * brought their own `cc-by-nc` capture may still make a song for themselves.
+ * The catalogue is FutureBox redistributing somebody's work to paying
+ * members, so the bar is the four licences that allow that outright — and a
+ * capture of one's own. `t3k` is not on the list for the reason above:
+ * what their own licence permits is theirs to tell us, and until they do
+ * the cautious answer is the one that cannot be wrong against a maker.
+ *
+ * Mirrored by the `check` constraint in `supabase/amps.sql`; `check:ampcatalogue`
+ * holds the two lists to each other.
+ */
+export const SHAREABLE: readonly LicenceId[] = ['cc0', 'cc-by', 'cc-by-sa', 'cc-by-nd', 'mine'];
+
+export const mayBeShared = (id: string | undefined): boolean =>
+  SHAREABLE.includes(licenceOf(id).id);
+
+/**
  * The line to print beside a song, or `null` when nothing is owed.
  *
  * The maker and not the site, because that is what the licence asks for. A

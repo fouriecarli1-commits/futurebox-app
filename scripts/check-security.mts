@@ -232,6 +232,13 @@ const ANONYMOUS: Record<string, string> = {
      It is a read. Nothing on this route writes anything. */
   'app/api/conduct/route.ts':
     'the conduct count — account-wide totals behind the owner door, returning no identity of any kind',
+  /* The amp catalogue — one list for everybody, which is what a catalogue
+     is. Reads need a signed-in member and return names, makers and
+     licences; the capture itself comes one row at a time. Writes are
+     behind `opened()`: the owner's session or POST_SECRET, nothing else.
+     Scoping to a caller would make it a shelf, and the shelf exists. */
+  'app/api/amps/route.ts':
+    'the amp catalogue — a shared list; writes behind the owner door, reads for signed-in members',
   /* ElevenLabs telling us a dub has finished. There is no caller by
      construction — that is what a webhook is — so the rule below cannot be
      satisfied and the question becomes what stands in its place.

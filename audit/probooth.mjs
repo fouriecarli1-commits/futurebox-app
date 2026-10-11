@@ -452,10 +452,14 @@ try {
   check('the amp row offers a capture off this phone',
     (await p.locator('input[type="file"][accept*="nam"]').count()) > 0,
     'the file picker is how a .nam already on the device gets in');
-  const browse = p.locator('[data-browsetone]').first();
-  check('  and a way out to TONE3000 beside it',
-    (await browse.count()) > 0 && await browse.isVisible().catch(() => false),
-    'Browse TONE3000 is the only way in for somebody who does not already'
+  /* The catalogue replaced "Browse TONE3000" on 11 October 2026 — "Ons kan
+     nie deur hulle website werk nie, want dit werk nie." It is the only way
+     in for somebody who does not already have a capture file, which is
+     almost everybody, so it has to be on the row and not behind a fold. */
+  const find = p.locator('[data-ampfind]').first();
+  check('  and the catalogue beside it',
+    (await find.count()) > 0 && await find.isVisible().catch(() => false),
+    'the catalogue is the only way in for somebody who does not already'
     + ' have a capture file, which is almost everybody');
 
   // ── Nothing costs anything unless it says so ────────────────────────

@@ -7038,6 +7038,14 @@ en dan op ons app te sit."* TONE3000 is the source and `docs/EPOS-TONE3000.md` a
 the putting-on. Written down here because it was asked in the middle of a different piece of
 work and would otherwise be lost in the scroll.
 
+**Built, 11 October 2026.** Not through their API — *"Ons kan nie deur hulle website werk nie,
+want dit werk nie."* She downloads a capture herself and adds it to the catalogue from inside
+the booth, with the maker and the licence; members search it under "Find an amp". Only the
+four licences that allow redistribution go in, the maker is on every row, and the engine reads
+a capture before anybody keeps it. `supabase/amps.sql`, `/api/amps`, `AmpCatalogue.tsx`,
+`check:ampcatalogue`. The "Browse TONE3000" button is gone from the booth; its routes stay for
+the landing. Still hers: run the migration, then add the first captures.
+
 **A listening test between the two Lyrias.** Both `lyria-002` and `lyria-3-pro-preview` answer
 on her project. The default is the documented one. Which actually sounds better on the same
 Afrikaans lyric is a thing to hear, not to reason about.
