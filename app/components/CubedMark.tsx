@@ -9,10 +9,44 @@
  * hê jy moet dit remake nie."* Four marks of mine came before it and all four
  * are in the git history and not in the app.
  *
- * ── The two files, and exactly what was done to each ─────────────────────
+ * ── Her own pair, one language each ──────────────────────────────────────
  *
- * `cubed-logo.jpg` is her file, byte for byte as it arrived, hash-pinned by
- * `check:cubed`. Nothing has been done to it at all.
+ * Carli, 11 October 2026, having checked both files were see-through and
+ * then: *"Ja, sit dit in die app."*
+ *
+ * `class-en.png` and `class-af.png` are her files, byte for byte as they
+ * arrived, both hash-pinned by `check:cubed`. They replace the lockup in the
+ * room for a reason that is not taste: `cubed-logo.jpg` carries BOTH marks
+ * and BOTH words side by side, so an English reader was shown "KLAS" beside
+ * "CLASS" and an Afrikaans reader was shown "CLASS". One file per language
+ * ends that.
+ *
+ * They are also transparent — measured before they went in: a real alpha
+ * channel, every corner empty, no white box and no grey halo, ink reaching
+ * full strength at `7,27,47` and `9,25,54`, and a leftover tint of 8 and 10
+ * out of 255 in the enclosed areas, which is about 4% opacity and invisible.
+ *
+ * ── And nothing is drawn behind them ─────────────────────────────────────
+ *
+ * Carli, 11 October 2026: *"Gebruik die transparent weergawe, die logo moenie
+ * 'n wit agtergrond hê nie."*
+ *
+ * A panel under a see-through file is the white background she asked not to
+ * have, drawn by us instead of baked into the picture. There was one, for
+ * about an hour, with a careful comment explaining why it had to be there.
+ *
+ * Her navy at 7,27,47 measured 1.15:1 against the near-black this room used
+ * to be — a logo nobody can see. The three ways out were a panel, recolouring
+ * her lines, or turning the light on in the room, and only the third leaves
+ * her drawing alone. *"Maak die kamer lig."* So the room is light, her navy
+ * reads at 16.7:1 on it, and nothing is drawn behind her file at all.
+ * `globals.css` carries the arithmetic and `check:cubed` holds it.
+ *
+ * ── The older file, kept ─────────────────────────────────────────────────
+ *
+ * `cubed-logo.jpg` is her file too, byte for byte as it arrived, and stays
+ * pinned. It is the pair as she first sent them and nothing is served from
+ * it any more.
  *
  * `cubed-mark-*.png` is the mark on its own, because she asked for it:
  * *"Gaan nou vir my die een mark sonder woorde maak."* It was made from her
@@ -44,10 +78,19 @@
 
 import React from 'react';
 
-/** Her lockup, exactly as she sent it: both marks, both words. */
+/** Her lockup as she first sent it: both marks, both words, on its own ground. */
 export const LOGO = '/brand/cubed-logo.jpg';
 export const LOGO_WIDE = 1408;
 export const LOGO_TALL = 768;
+
+/** Hers again, one language each, see-through, square. */
+export const LOGO_EN = '/brand/class-en.png';
+export const LOGO_AF = '/brand/class-af.png';
+export const LOCKUP = 1080;
+
+/** Which of her two files a reader of this language should be shown. */
+export const lockupFor = (lang: string): string => (lang === 'af' ? LOGO_AF : LOGO_EN);
+
 
 /** The mark alone, cropped out of her picture with the ground taken off. */
 export const MARK = '/brand/cubed-mark-512.png';
@@ -56,26 +99,31 @@ export const MARK_BIG = '/brand/cubed-mark-1024.png';
 
 export default function CubedMark({
   width = 420,
+  lang = 'en',
   title,
 }: {
-  /** How wide to draw it. The height follows her file's own proportions. */
+  /** How wide to draw it. Her file is square, so the height follows. */
   readonly width?: number;
+  /** Which of her two files to show. */
+  readonly lang?: string;
   /** Given where the logo is the only thing saying what this is. */
   readonly title?: string;
 }): React.ReactElement {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={LOGO}
-      alt={title ?? ''}
-      width={width}
-      height={Math.round((width * LOGO_TALL) / LOGO_WIDE)}
-      /* Her ground is part of her file. Rounding its corners is the least
-         that can be done about a pale rectangle on a dark page without
-         altering what is inside it. */
-      className="h-auto w-full max-w-full rounded-2xl"
+    <span
       data-cubedmark
-    />
+      className="block overflow-hidden rounded-2xl"
+      style={{ maxWidth: width }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={lockupFor(lang)}
+        alt={title ?? ''}
+        width={width}
+        height={width}
+        className="h-auto w-full max-w-full"
+      />
+    </span>
   );
 }
 

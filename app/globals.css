@@ -585,9 +585,36 @@ body:has([data-kidsroom]) {
 }
 
 
-/* Both selectors, and the second one is the one that matters.
- *
- * `[data-cubed]` alone paints the room and leaves the site footer — which the
+/* ── The Cubed room, in daylight ────────────────────────────────────────
+
+   Carli, 11 October 2026: *"Gebruik die transparent weergawe, die logo moenie
+   'n wit agtergrond hê nie."* And when shown what that costs: *"Maak die
+   kamer lig."*
+
+   The room was near-black, and her mark is navy line work at 7,27,47 — 1.15:1
+   against that page, which is a logo nobody can see. There were three ways
+   out and only one of them leaves her drawing alone: a panel under it (she
+   refused it), recolouring her lines (she has twice asked nobody to), or
+   turning the light on. So the light is on.
+
+   ── Where these numbers come from ──────────────────────────────────────
+
+   `theme.ts` already knows how a light surface is built: `LIGHT_L` inverts
+   the ramp so `bg-zinc-950` is the page and `bg-zinc-900` is a card, and the
+   text stops are SOLVED rather than mirrored, because a grey that reads on
+   near-black is far too faint on near-white.
+
+   The same arithmetic was run here. 400, 500 and 600 came off the raw ramp
+   at 40/45/54 and failed: `text-zinc-600` landed at 3.4:1 on this room's own
+   card, under the 4.5 floor, and the room uses that stop six times. Solving
+   against the app's global worst case — the 800 chip — pushed all three to
+   the same grey and flattened the hierarchy, so they are solved against the
+   ground THIS room actually has, which is `bg-zinc-900/60` over the page,
+   and then kept in order. They come out 6.1:1, 5.4:1 and 5.0:1 on the page.
+
+   Her navy on this page measures 16.7:1.
+
+    * `[data-cubed]` alone paints the room and leaves the site footer — which the
  * root layout renders as a SIBLING of the page — on the app's own light
  * theme, so a near-black room ended in a white band. `body:has(…)` hands the
  * palette to the whole document for the routes this room is on, footer
@@ -598,38 +625,34 @@ body:has([data-kidsroom]) {
  * rather than a new fault. */
 [data-cubed],
 body:has([data-cubed]) {
-  --fb-surface-50: 244 246 249;
-  --fb-surface-100: 226 230 236;
-  --fb-surface-200: 199 205 214;
-  --fb-surface-300: 168 177 189;
-  /* The three that carry body text on this page, bright enough to read on a
-     near-black ground — the lesson the booth's own ramp above records. */
-  --fb-surface-400: 158 168 182;
-  --fb-surface-500: 134 145 160;
-  --fb-surface-600: 110 121 137;
-  --fb-surface-700: 60 68 78;
-  --fb-surface-800: 38 43 51;
-  --fb-surface-900: 24 28 34;
-  --fb-surface-950: 12 14 17;
+  --fb-surface-50: 28 30 33;
+  --fb-surface-100: 40 43 46;
+  --fb-surface-200: 57 61 65;
+  --fb-surface-300: 76 81 87;
+  --fb-surface-400: 90 96 104;
+  --fb-surface-500: 97 104 112;
+  --fb-surface-600: 102 109 117;
+  --fb-surface-700: 168 173 179;
+  --fb-surface-800: 211 214 217;
+  --fb-surface-900: 236 237 238;
+  --fb-surface-950: 250 250 250;
 
-  /* Steel, not emerald. Brightest at 500 like every other ramp, so the same
-     class names go on meaning the same weights. */
-  --fb-primary-50: 14 20 26;
-  --fb-primary-100: 22 31 40;
-  --fb-primary-200: 34 46 58;
-  --fb-primary-300: 60 76 92;
-  --fb-primary-400: 118 136 155;
-  --fb-primary-500: 178 194 210;
-  --fb-primary-600: 150 166 183;
-  --fb-primary-700: 112 128 145;
-  --fb-primary-800: 78 92 107;
-  --fb-primary-900: 48 58 70;
-  --fb-primary-950: 26 33 41;
+  --fb-primary-50: 237 242 247;
+  --fb-primary-100: 216 226 238;
+  --fb-primary-200: 185 203 223;
+  --fb-primary-300: 142 171 204;
+  --fb-primary-400: 100 140 185;
+  --fb-primary-500: 71 112 158;
+  --fb-primary-600: 60 94 134;
+  --fb-primary-700: 49 77 109;
+  --fb-primary-800: 40 62 88;
+  --fb-primary-900: 32 50 70;
+  --fb-primary-950: 22 35 49;
 
-  --fb-page: 7 8 10;
-  --fb-ink: 237 240 244;
-  --fb-void: 4 5 7;
-  --fb-scrim: 3 4 6;
+  --fb-page: 250 250 250;
+  --fb-ink: 24 30 37;
+  --fb-void: 217 219 222;
+  --fb-scrim: 228 229 231;
 
   color: rgb(var(--fb-ink));
 }

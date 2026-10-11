@@ -97,7 +97,7 @@ export default function CubedRoom(): React.ReactElement {
             {/* Her file, at a size it can actually be read at. It brings its
                 own off-white ground with it, because it is her file and not a
                 redrawing of it — see CubedMark. */}
-            <CubedMark width={460} title={t('cubed.markAlt', 'Two cubes, threaded through each other')} />
+            <CubedMark width={460} lang={lang} title={t('cubed.markAlt', 'Two cubes, threaded through each other')} />
           </div>
 
           <h1

@@ -51,7 +51,9 @@ import {
   minutesOf, seriesById, splitAsSaid,
 } from '../app/lib/cubed.ts';
 import { createHash } from 'node:crypto';
-import { LOGO, LOGO_TALL, LOGO_WIDE, MARK } from '../app/components/CubedMark.tsx';
+import {
+  LOCKUP, LOGO, LOGO_AF, LOGO_EN, LOGO_TALL, LOGO_WIDE, MARK, lockupFor,
+} from '../app/components/CubedMark.tsx';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -192,27 +194,91 @@ ok('  and nothing in the app redraws it',
     /* Four marks were drawn here before hers. The check that they are gone
        is that nothing left in the app builds paths for one. */
     const drawn = /<path\b/.test(mark) || /viewBox/.test(mark);
-    return !drawn && /<img/.test(mark) && new RegExp(`src=\\{LOGO\\}`).test(mark);
+    return !drawn && /<img/.test(mark) && /src=\{lockupFor\(lang\)\}/.test(mark);
   })(),
   'a trace is a redrawing: it is this app\'s reconstruction of her lines and'
   + ' it differs from them wherever the tracing was imperfect. She asked for'
   + ' her file, so the app shows her file');
 
 ok('  and it is drawn at her file’s own proportions',
-  /height=\{Math\.round\(\(width \* LOGO_TALL\) \/ LOGO_WIDE\)\}/.test(mark)
-  && LOGO_WIDE === 1408 && LOGO_TALL === 768,
-  'squashing somebody’s logo into a square is the one thing about a logo'
+  /width=\{width\}\s*\n\s*height=\{width\}/.test(mark) && LOCKUP === 1080,
+  'her per-language files are square, so width and height are the same'
+  + ' number. Squashing somebody’s logo is the one thing about a logo'
   + ' everybody notices and nobody can say');
 
 ok('  and the room shows it big enough to read',
   /<CubedMark width=\{4\d\d\}/.test(room),
-  'her file is BOTH marks with a word under each. Below about four hundred'
-  + ' pixels wide it is a smudge of two logos rather than a logo');
+  'below about four hundred pixels wide the word under the mark is a smudge');
 
 ok('  and the small places do not shrink the lockup instead',
   !/<CubedMark/.test(page),
   'her lockup is BOTH marks with a word under each. At 48 pixels it is a'
   + ' smudge of two logos, so the door carries the single mark instead');
+
+/* ── 4a. One language each, and a ground to read them against ────────── */
+
+/**
+ * Her two files, pinned the day they arrived — 11 October 2026.
+ *
+ * Same reasoning as the lockup above: the hash of what ARRIVED. These are
+ * PNGs with alpha, and a build step that "optimises" images would flatten
+ * or re-quantise them without being asked, which is a silent change to
+ * somebody else's artwork.
+ */
+const HER_PAIR: Record<string, { readonly sha: string; readonly bytes: number }> = {
+  [LOGO_EN]: {
+    sha: '72e2bbba621763d67d5f8b7defc9401ea70aae57a11b9a525190d738d30fb733',
+    bytes: 419_627,
+  },
+  [LOGO_AF]: {
+    sha: 'cee32cbf5fbe7fd46a48b33049282c3d99e817a6018efd1829a24cea6c37bc2b',
+    bytes: 432_319,
+  },
+};
+
+for (const [path, want] of Object.entries(HER_PAIR)) {
+  const bytes = (() => {
+    try { return readFileSync(`public${path}`); } catch { return null; }
+  })();
+  ok(`${path} is in the app`, bytes !== null);
+  ok('  and it is the file she sent, byte for byte',
+    bytes !== null
+    && bytes.length === want.bytes
+    && createHash('sha256').update(bytes).digest('hex') === want.sha,
+    'her words, twice: "Ek wil nie hê jy moet dit remake nie"');
+  ok('  and it really is see-through',
+    /* Colour type 6 is RGBA, 4 is grey+alpha; the byte sits 25 in. A
+       lockup without an alpha channel brings a white rectangle with it and
+       lands as a white card on a near-black page. */
+    bytes !== null && (bytes[25] === 6 || bytes[25] === 4),
+    `colour type ${bytes ? bytes[25] : 'unreadable'}`);
+}
+
+ok('an English reader is shown CLASS and an Afrikaans reader KLAS',
+  lockupFor('en') === LOGO_EN && lockupFor('af') === LOGO_AF,
+  'the lockup she first sent carries BOTH marks and BOTH words, so every'
+  + ' reader was shown the other language beside their own');
+
+ok('  and anything unexpected falls to English rather than to nothing',
+  lockupFor('') === LOGO_EN && lockupFor('de') === LOGO_EN,
+  'a blank src is a broken picture where the logo should be');
+
+ok('  and the room hands it the language it is reading in',
+  /<CubedMark[^>]*lang=\{lang\}/.test(room),
+  'the component defaults to English, so a room that does not say which'
+  + ' language it is in shows CLASS to an Afrikaans reader and nothing'
+  + ' anywhere reports it');
+
+/* ── Her navy, on a ground it can be seen against ───────────────────── */
+
+ok('her lockup carries no ground of its own',
+  !/background: PAPER/.test(mark) && !/bg-(white|zinc-(50|100|200))/.test(
+    /data-cubedmark[\s\S]{0,400}/.exec(mark)?.[0] ?? '',
+  ),
+  'Carli, 11 October 2026: "Gebruik die transparent weergawe, die logo'
+  + ' moenie \u2019n wit agtergrond h\u00ea nie." A panel under a see-through'
+  + ' file is the white background she asked not to have, drawn by us'
+  + ' instead of baked into the picture');
 
 /* ── 4b. The mark on its own, which she asked for ─────────────────────── */
 
@@ -260,7 +326,7 @@ ok('  and the door sets it on something it can be seen against',
 
 /* ── 5. The room is dark through the theme, not around it ─────────────── */
 
-ok('the room declares its darkness to the theme',
+ok('the room declares its own light to the theme',
   /\[data-cubed\]/.test(css) && /data-cubed/.test(room),
   '`white` in this app is `--fb-ink`, which follows the theme — so a room'
   + ' that paints its own black and writes `text-white` on top draws every'
@@ -277,6 +343,92 @@ ok('  and no inline colour is left fighting the tokens',
   && !/borderColor: 'rgba/.test(room),
   'a room with half its colours in tokens and half in style attributes is a'
   + ' room that is wrong in one theme and nobody knows which');
+
+/**
+ * Her ink, and the arithmetic for whether anything can be read on anything.
+ *
+ * `7,27,47` is the darkest pixel in both of her files, measured rather than
+ * taken from a brand sheet nobody has.
+ */
+const HER_INK = [7, 27, 47];
+const channel = (one: number): number => {
+  const part = one / 255;
+  return part <= 0.03928 ? part / 12.92 : ((part + 0.055) / 1.055) ** 2.4;
+};
+const lit = (rgb: readonly number[]): number =>
+  0.2126 * channel(rgb[0]) + 0.7152 * channel(rgb[1]) + 0.0722 * channel(rgb[2]);
+
+/**
+ * The room is light, and light enough for her navy.
+ *
+ * Carli, 11 October 2026: *"Maak die kamer lig."* Her mark is navy line
+ * work and measured 1.15:1 against the near-black this room used to be —
+ * a logo nobody can see. The page is the only thing that was allowed to
+ * move: a panel under the mark she refused, and recolouring her lines she
+ * has twice asked nobody to do.
+ *
+ * So the rule is not "the page is pale", which is a taste anybody can
+ * argue with. It is that HER INK reads on it, which is arithmetic.
+ */
+const cubedBlock = (() => {
+  const at = css.indexOf('[data-cubed],');
+  return at === -1 ? '' : css.slice(at, css.indexOf('}', at));
+})();
+const stop = (name: string): number[] | null => {
+  const found = new RegExp(`--fb-${name}:\\s*(\\d+) (\\d+) (\\d+)`).exec(cubedBlock);
+  return found ? [Number(found[1]), Number(found[2]), Number(found[3])] : null;
+};
+const pageRgb = stop('page');
+
+ok('her navy reads on the room\'s page',
+  (() => {
+    if (!pageRgb) return false;
+    const against = (Math.max(lit(pageRgb), lit(HER_INK)) + 0.05)
+      / (Math.min(lit(pageRgb), lit(HER_INK)) + 0.05);
+    return against >= 4.5;
+  })(),
+  'the page went dark again and her mark is a ghost on it — which does not'
+  + ' look broken, it looks like a design choice, and nobody files a bug');
+
+ok('  and the page is what `bg-zinc-950` paints, not a second number',
+  (() => {
+    const surface = stop('surface-950');
+    return Boolean(pageRgb && surface
+      && surface.every((one, at) => Math.abs(one - pageRgb[at]) <= 2));
+  })(),
+  'the room paints itself with `bg-zinc-950` and the theme paints the body'
+  + ' with `--fb-page`. Two numbers for one surface is a seam down the page'
+  + ' that only shows where one of them ends');
+
+ok('  and the dimmest text in the room still clears AA on its own card',
+  (() => {
+    const page = pageRgb;
+    const card = stop('surface-900');
+    const dim = stop('surface-600');
+    if (!page || !card || !dim) return false;
+    /* The card is `bg-zinc-900/60` over the page, which is what the room
+       actually writes on. Solving against the app's global worst case
+       instead flattens 400, 500 and 600 onto one grey. */
+    const over = card.map((one, at) => one * 0.6 + page[at] * 0.4);
+    const against = (Math.max(lit(over), lit(dim)) + 0.05)
+      / (Math.min(lit(over), lit(dim)) + 0.05);
+    return against >= 4.5;
+  })(),
+  'this room uses `text-zinc-600` six times, and on the raw light ramp that'
+  + ' stop lands at 3.4:1 — readable on the screen it was designed on and'
+  + ' not on a laptop in daylight');
+
+ok('  and the three text stops keep their order after the solve',
+  (() => {
+    const four = stop('surface-400');
+    const five = stop('surface-500');
+    const six = stop('surface-600');
+    if (!four || !five || !six) return false;
+    return lit(four) < lit(five) && lit(five) < lit(six);
+  })(),
+  'solving three stops against one floor pushes them all onto the same grey,'
+  + ' and a page where emphasis and aside are the same colour has no'
+  + ' hierarchy left to read');
 
 ok('  and the palette reaches the footer the layout renders',
   /body:has\(\[data-cubed\]\)/.test(css),
