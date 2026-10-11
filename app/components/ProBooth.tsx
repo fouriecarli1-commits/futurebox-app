@@ -33,7 +33,8 @@ import {
   LICENCES, UNKNOWN, licenceOf, mayBeSold, needsCredit, type LicenceId,
 } from '../lib/amplicence';
 import {
-  AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, setAmpLicence, type Amp,
+  AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, setAmpLicence, setAmpMaker,
+  type Amp,
 } from '../lib/amps';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
@@ -5463,6 +5464,23 @@ function LaneRow({
                   'What did this capture come under? Three of the licences on TONE3000 say a song made through them may not be sold, so this is worth a moment now rather than a question later.',
                 )}
               </p>
+              {/* The maker, where the file did not say. The credit a cc-by asks
+                  for names a person, and a capture with no `modeled_by` would
+                  otherwise be credited to its own name. Prefilled from the
+                  file; hers to correct. */}
+              <label htmlFor="fb-ampmaker" className="block text-[11px] leading-snug text-zinc-400">
+                {t('pro.ampMakerAsk', 'Who made it? The name on the TONE3000 page, so the credit names a person.')}
+              </label>
+              <input
+                id="fb-ampmaker"
+                data-amplicencemaker
+                type="text"
+                maxLength={80}
+                value={shelf.find((one) => one.id === asking)?.maker ?? ''}
+                onChange={(event) => { setShelf(setAmpMaker(asking, event.target.value)); }}
+                placeholder={t('pro.ampMakerWho', 'The maker')}
+                className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+              />
               <select
                 data-amplicencepick
                 value={shelf.find((one) => one.id === asking)?.licence ?? UNKNOWN}

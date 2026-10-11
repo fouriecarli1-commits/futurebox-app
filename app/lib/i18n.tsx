@@ -1858,6 +1858,8 @@ export const STRINGS: Dict = {
   "amp.licUnknown": { en: "I do not know", af: "Ek weet nie" },
   "pro.ampAsk": { en: "What did this capture come under? Three of the licences on TONE3000 say a song made through them may not be sold, so this is worth a moment now rather than a question later.", af: "Onder watter lisensie het hierdie opname gekom? Drie van die lisensies op TONE3000 s\u00ea \u2019n liedjie wat daardeur gemaak is mag nie verkoop word nie, so dit is nou \u2019n oomblik werd eerder as \u2019n vraag later." },
   "pro.ampAskDone": { en: "That is right", af: "Dit is reg" },
+  "pro.ampMakerAsk": { en: "Who made it? The name on the TONE3000 page, so the credit names a person.", af: "Wie het dit gemaak? Die naam op die TONE3000-bladsy, sodat die erkenning \u2019n persoon noem." },
+  "pro.ampMakerWho": { en: "The maker", af: "Die maker" },
   "pro.ampCredits": { en: "Captures on this shelf that ask to be credited:", af: "Opnames op hierdie rak wat erkenning vra:" },
   "pro.ampNotForSale": { en: "Some of these say a song made through them may not be sold.", af: "Sommige van hulle s\u00ea \u2019n liedjie wat daardeur gemaak is mag nie verkoop word nie." },
   "post.showAll": { en: "Everything", af: "Alles" },

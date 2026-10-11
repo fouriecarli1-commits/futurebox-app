@@ -127,6 +127,28 @@ const noAf = KEYS.filter((key) =>
 ok(`the strip speaks Afrikaans — ${KEYS.length} keys`, KEYS.length >= 6 && noAf.length === 0,
   noAf.length ? noAf.join(', ') : `${KEYS.length} keys is fewer than this strip has sentences`);
 
+/* ── The maker can be typed where the file did not say ──────────────── */
+
+/* Carli, 11 October 2026: "ons maak dan net seker die eienaar van die amp
+   kry die eer." The credit line names the maker, and `ampMaker` reads one
+   out of the file — but not every capture carries `modeled_by`, and before
+   today a capture without one had nowhere for the name to go, so the shelf
+   credited it to its own name. Held structurally: the licence box carries a
+   maker field, the field writes through `setAmpMaker`, and an emptied field
+   goes back to unknown rather than to a blank that reads as a name. */
+{
+  const box = booth.slice(booth.indexOf('data-amplicence={asking}'), booth.indexOf('data-amplicencedone'));
+  ok('the licence box asks who made the capture',
+    /data-amplicencemaker/.test(box) && /setAmpMaker\(asking/.test(box),
+    'a capture with no modeled_by in it is credited to its own name, which is not the maker');
+  ok('  prefilled from the file, so a name that was there is not asked for twice',
+    /\.maker \?\? ''/.test(box),
+    'the field opens empty over a maker the file already named');
+  ok('  and emptied, the maker goes back to unknown',
+    /maker: said \|\| undefined/.test(shelf),
+    'an emptied field left as "" would print a credit to nobody');
+}
+
 /* ── And the thing it does not claim ─────────────────────────────────── */
 
 /* We ship no captures. Until TONE3000 answers about their library or about
