@@ -20,8 +20,45 @@ nommers is besluite wat die eienaar geneem het met die enjin se koste voor
 haar — sien `docs/KREDIETE.md`.
 
 **Moenie na `main` stoot nie.** `main` is direk aan Vercel gekoppel: wat daar
-land, is binne twee minute by betalende kliënte. Werk op 'n tak en maak 'n
-pull request.
+land, is binne twee minute by betalende kliënte. Werk op die tak wat in
+afdeling 1a staan.
+
+---
+
+## 1a. Waarheen jy stoot, en hoe die werk terugkom
+
+Daar is twee agente aan hierdie projek en net een `main`. Daarom:
+
+**Stoot alles na `antigravity/look`.** Net daardie tak. Nie `main` nie, en nie
+`claude/*` nie.
+
+```
+git checkout -b antigravity/look origin/main
+# … werk …
+git push -u origin antigravity/look
+```
+
+Dit is nie 'n hoflikheid nie, dit is wat die terugbring moontlik maak. Met
+alles op een genoemde tak is die hele estetiese werk 'n enkele ding wat
+ingetrek, gebou, deur die 294 kontroles gestuur, en dan ontplooi kan word. Op
+`main` ontplooi dit vóór die kontroles — en 'n `bg-white` wat 'n kamer swart
+verf is dan al by die kliënte.
+
+**Begin van `origin/main`, nie van 'n ou klone nie.** Hierdie projek kry
+daagliks stote. Trek eers:
+
+```
+git fetch origin main && git rebase origin/main
+```
+
+**Stoot gereeld, nie een keer aan die einde nie.** Tien klein stote op
+`antigravity/look` is tien keer makliker om in te trek as een groot een, en
+as twee van ons dieselfde lêer aangeraak het, wys 'n klein stoot dit terwyl
+dit nog 'n paar reëls is.
+
+**Moenie `git push --force` gebruik nie** behalve op `antigravity/look` self,
+en dan net as niemand anders dit uitgecheck het nie. Nooit op `main` of
+`claude/*` nie.
 
 ---
 
