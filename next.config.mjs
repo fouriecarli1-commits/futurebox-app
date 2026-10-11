@@ -35,9 +35,14 @@
  * one's own picture from its YouTube link. The photographs are gone and so is
  * the permission: a policy that allows what nothing uses is a wider policy
  * than the app needs, and this file is the place that is supposed to notice.
- *   vibefy-web-lyart.vercel.app  the VibefyCode badge in the footer, which
- *                      is deliberately served live rather than copied here
  *   blob:, data:       generated audio and artwork, made in the page itself
+ *
+ * `vibefy-web-lyart.vercel.app` came out on 2026-10-11 with the badge it was
+ * for, by the same rule as the photographs above: a policy that allows what
+ * nothing uses is wider than the app needs. **It has to go back in the same
+ * commit as the badge.** Without it the image is blocked by this header and
+ * the footer shows nothing — a failure that appears only in the console, which
+ * is the kind that takes a week to find.
  *
  * `'unsafe-inline'` is on styles because Next inlines critical CSS, and on
  * scripts because its hydration bootstrap is an inline script. Removing either
@@ -58,7 +63,7 @@ const CSP = [
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.public.blob.vercel-storage.com https://vibefy-web-lyart.vercel.app",
+  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.public.blob.vercel-storage.com",
   "media-src 'self' blob: data: https://*.supabase.co https://assets.mixkit.co https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
