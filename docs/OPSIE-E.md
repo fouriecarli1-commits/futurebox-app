@@ -6,9 +6,10 @@ Dit is gedoen. Hierdie bladsy is die volledige rekord: wat verander het, hoekom,
 wat dit aan die syfers doen, en wat sy self by Paystack en Vercel moet doen.
 
 Alles hier is die kreatiewe ateljee alleen. Vaste koste sonder ElevenLabs
-R3 687,74, geen werkswinkels, geen masterclass-inkomste.
+R3 797,73, geen werkswinkels, geen masterclass-inkomste.
 
-*Was R3 543,74 tot 24 September 2026, toe Supabase Pro van 'n aangenome $25 na
+*Was R3 687,74 tot 11 Oktober 2026, toe Antigravity (R109,99) op die rekening
+gekom het. Was R3 543,74 tot 24 September 2026, toe Supabase Pro van 'n aangenome $25 na
 haar werklike $34 beweeg het. Elke som op hierdie bladsy wat op die ou getal
 gebou is, is R144 per maand te optimisties.*
 

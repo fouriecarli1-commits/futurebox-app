@@ -10,8 +10,9 @@ die toelaag geprys asof krediete net op liedjies gaan. Vier liedjies vir Maker
 klink redelik tot jy onthou dat **een video van 30 sekondes 90 krediete is** —
 meer as die hele toelaag wat voorgestel is. Die voorstel was onbruikbaar.
 
-Alles hieronder is die kreatiewe ateljee alleen. Vaste koste R21 903,74,
-sonder werkswinkels, geen masterclass-inkomste.
+Alles hieronder is die kreatiewe ateljee alleen. Vaste koste R22 013,73,
+sonder werkswinkels, geen masterclass-inkomste. *Was R21 903,74 tot 11
+Oktober 2026, toe Antigravity (R109,99) bygekom het.*
 
 ---
 

@@ -23,8 +23,10 @@
  *      `docs/SWITCH-ON.md` — otherwise it is a cost with no way to switch it
  *      on, or a switch with no cost against it.
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { gatewayFee, GATEWAY_RATE, GATEWAY_FIXED, TIER_SPECS } from '../app/lib/plans.ts';
 import { FIXED_CORE } from './fixedcosts.mts';
 /* Comments blanked before either rule below reads a file. The first run of
@@ -136,7 +138,7 @@ const cents = (value: number): number => Math.round(value * 100);
 /* Zoho joined this list on 8 September 2026. It was on no cost page at all
    until Carli named it — not a sum that was wrong, a line that did not exist,
    and the kind nobody sees until the bank takes it. */
-const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI', 'Zoho', 'Domeine', 'Spaceship'];
+const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI', 'Zoho', 'Domeine', 'Spaceship', 'Antigravity'];
 const parts = lines.map(randFor);
 ok('every fixed line has a rand figure', parts.every((one) => one !== null),
   lines.filter((_, at) => parts[at] === null).join(', ') || parts.join(' + '));
@@ -169,6 +171,21 @@ ok('every fixed line has a rand figure', parts.every((one) => one !== null),
         : `the bill says ${onPage}, the generator says ${inList}`,
     );
   }
+}
+
+/* The other direction. Adding Antigravity to `fixedcosts.mts` on 11 October
+   2026 left every rule above green: the page is only asked about the lines
+   this list names, so a line that exists in the generator and on no page
+   was not a disagreement, it was invisible. The totals rule caught it two
+   rules later, by accident of the sum moving. A bill line nobody can read
+   on the bill page is the fault this file exists for. */
+{
+  const unnamed = Object.keys(FIXED_CORE).filter(
+    (key) => !lines.some((label) => key.startsWith(label) || label.startsWith(key)),
+  );
+  ok('every line in the generator is asked for on the bill page',
+    unnamed.length === 0,
+    unnamed.join(', ') || `${lines.length} lines`);
 }
 
 const base = parts.reduce((sum: number, one) => sum + (one ?? 0), 0);
@@ -433,6 +450,46 @@ ok('nothing carries the old 11-million-credit anchor',
   ok(`every document that names a fixed total names a current one (${live})`,
     stale.length === 0,
     `${stale.join('; ')} — one bill moved and a copy of the total went quietly wrong`);
+}
+
+/* ── The sums page is what the generator writes today ─────────────────
+
+   Found 11 October 2026 while adding one line to the bill. The page said
+   "Geskryf 2026-09-29" and a song was 10 credits on it; `credits.ts` had
+   made a song 8 credits since, and every capacity figure on the page —
+   where top-ups begin, 358 members against a real 258 — was twelve days
+   stale. The header of the page says not to edit it by hand and to run the
+   script instead, and nobody did, because nothing said the page was behind.
+   Every rule above read figures OFF the page and found them consistent with
+   each other, which they were: consistently out of date.
+
+   So the generator is run here, into a temp file, and the two are compared
+   with the date line taken out — the only line that may legitimately differ
+   between a page written yesterday and the same page written today. */
+{
+  const dir = mkdtempSync(join(tmpdir(), 'koste-'));
+  const fresh = join(dir, 'KOSTE-EN-WINS.md');
+  const ran = spawnSync('npx', ['tsx', 'scripts/costs-eleven.mts'], {
+    env: { ...process.env, KOSTE_OUT: fresh },
+    stdio: 'ignore',
+  });
+  const undated = (text: string): string =>
+    text.split('\n').filter((line) => !/^Geskryf \d{4}-\d{2}-\d{2}\./.test(line)).join('\n');
+  let same = false;
+  let detail = `the generator exited ${ran.status}`;
+  if (ran.status === 0) {
+    const today = undated(readFileSync(fresh, 'utf8'));
+    const kept = undated(readFileSync('docs/KOSTE-EN-WINS.md', 'utf8'));
+    same = today === kept;
+    if (!same) {
+      const a = kept.split('\n');
+      const b = today.split('\n');
+      const at = a.findIndex((line, i) => line !== b[i]);
+      detail = `first difference at line ${at + 1}: the page says "${(a[at] ?? '').slice(0, 70)}", today's run says "${(b[at] ?? '').slice(0, 70)}" — run \`npm run costs:eleven\``;
+    }
+  }
+  rmSync(dir, { recursive: true, force: true });
+  ok('the sums page is what the generator writes today', same, same ? 'to the line' : detail);
 }
 
 if (failures) {

@@ -157,8 +157,8 @@ en die wrappers wat mense rondstuur skraap 'n private eindpunt.
 
 Dit is die eerlike deel, en dit werk teen alles hierbo.
 
-`docs/MAANDELIKSE-KOSTE.md` reël 212: **ElevenLabs Business is R18 216 van
-R25 903,74 — 70,3%.** Daardie R18 216 is die **plan**, nie roepe nie. Jy kan
+`docs/MAANDELIKSE-KOSTE.md`, onder *Wat regtig die vorm van die besigheid
+bepaal*: **ElevenLabs Business is R18 216 van R26 013,73 — 70,0%.** Daardie R18 216 is die **plan**, nie roepe nie. Jy kan
 elke videogreep en elke omslag van ElevenLabs afhaal en daardie reël beweeg
 nie een sent nie.
 
