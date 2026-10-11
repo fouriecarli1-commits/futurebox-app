@@ -4462,7 +4462,26 @@ export default function PostStudio({
         }`}
       >
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-bold">
+          {/* ── Why the name of the room refuses to shrink ──────────────
+ 
+              Carli, 10 and 11 October 2026: *"Kyk hoe sny alles af op die
+              rekenaar se skerm"*, and then again *"Die kamer met die
+              afgesnyde woorde is ook nog nie reg op die rekenaar se website
+              nie."*
+ 
+              Measured rather than guessed, which is the only reason it was
+              found: on a 1512-wide screen this heading's box came out
+              **52 pixels** wide for the words "Photo Editor". Not hidden
+              under the navigation, as it looks — squeezed. Everything else
+              in this row is a button with its own intrinsic width, and a
+              flex child with none of its own gives up every pixel it is
+              asked for until the words wrap mid-syllable and the overflow
+              takes the rest. What she sees is "noto / ditor".
+ 
+              A phone has the same row and does not show it, because there
+              the row wraps instead. So it is a desk-only fault, and one
+              that no screenshot of a phone would ever have found. */}
+          <h2 className="flex-shrink-0 whitespace-nowrap text-lg font-bold">
             {asRoom ? t('rail.photo', 'Photo Editor') : t('post.title', 'Make a post')}
           </h2>
           {/* ── Simple, or everything ────────────────────────────────────

@@ -4343,11 +4343,46 @@ export default function FutureBoxHome() {
                 so a fourth room in the stage fixed the shape by existing.
  
                 `bare` for the same reason the cutting room is bare: the
-                room draws its own floor to the edges. */}
+                SHELL draws the floor to the edges — see the note below,
+                where the room's own attempt to do it turned out to be what
+                was cutting her words off. */}
+            {/* ── Why this room is NOT pulled out past its pane ──────────
+
+                Carli, 10 and 11 October 2026: *"Kyk hoe sny alles af op
+                die rekenaar se skerm"*, and a day later, still: *"Die
+                kamer met die afgesnyde woorde is ook nog nie reg op die
+                rekenaar se website nie."*
+
+                It carried `-m-3 md:-m-5` to make its floor reach the
+                edges of the screen. Measured on a 1512-wide screen, that
+                made the room twenty pixels wider than the pane holding
+                it, which made the pane scrollable sideways, and the first
+                thing the browser scrolled into view left it sitting at
+                `scrollLeft: 12`. Twelve pixels off the LEFT of every line
+                in the room: the P of "Photo Editor", the first letter of
+                every heading under it. On screen that looks exactly like
+                the navigation covering the text, which is what I assumed
+                twice and fixed neither time.
+
+                The pull-out was never needed. `[data-cutshell]` — the
+                shell this room sits in — is already painted this same
+                colour to all four edges of the screen, so the floor
+                reaches them whether this div does or not. Confirmed by
+                measurement, not by reasoning: with the margins gone the
+                pane's scrollWidth equals its clientWidth, it refuses a
+                sideways scroll when one is forced on it, and the floor
+                looks identical.
+
+                `overflow-x: hidden` was tried first and does NOT fix
+                this: a hidden overflow still scrolls when the browser
+                brings something into view. That was measured too.
+
+                `check:notcut` now walks a desk as well as a phone and
+                fails on any pane left scrolled sideways. */}
             {studioTab === 'photo' && (
               <div
                 data-photoroom
-                className="-m-3 md:-m-5 rounded-none"
+                className="rounded-none"
                 style={{ background: '#05180f' }}
               >
                 <PostStudio
@@ -4390,9 +4425,11 @@ export default function FutureBoxHome() {
 
                  `check:solidroom` holds both — no translucent stop, no
                  gradient, and the padding left where the scroller is. */
+              /* Same construction and the same fault as the photo editor
+                 above, measured on the same screen: see its note. */
               <div
                 data-cuttingroom
-                className="-m-3 md:-m-5 rounded-none"
+                className="rounded-none"
                 style={{ background: '#05180f' }}
               >
                 <VideoEditor
