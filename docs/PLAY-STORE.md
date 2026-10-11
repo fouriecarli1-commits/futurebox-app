@@ -102,6 +102,58 @@ do, and looking is a two-minute search on Dun & Bradstreet's site.
 > confirm it in the Console when you open the account, because it decides
 > your timeline.
 
+### How to actually get it
+
+Carli, 11 October 2026: *"Help my met die DUNS ding?"*
+
+**Step 1 — find out whether you already have one.** Many registered companies
+do, without ever asking. Apple runs a free public lookup that searches the
+same Dun & Bradstreet database Google reads, and it works whether or not you
+ever touch Apple: `developer.apple.com/enroll/duns-lookup`. Search
+**FUTUREBOXSTUDIO**. If a number comes back against the right company and the
+right address, you are done — the rest of this section is unnecessary.
+
+**Step 2 — if there is none, request one. It is free.** Google's own page
+says so in as many words, and warns that third parties will try to charge
+"high administrative fees" for it. If a site asks for money, it is not the
+one you want. There is a paid "expedited" option from D&B itself in some
+countries; you do not need it if you start now.
+
+The request starts at `dnb.com` → **Get a D-U-N-S Number**. Outside the
+United States, D&B hands the request to a local partner, and for South Africa
+that partner is widely reported to be **TransUnion** (`dnb@transunion.co.za`).
+*That address is from a third-party guide and could not be confirmed on an
+official page from here — check it against dnb.com's own country chooser
+before you rely on it.* If the form on dnb.com accepts a South African
+company directly, use the form; it is the authoritative route.
+
+**Step 3 — have these ready before you start.** Every one of them has to
+match **CIPC exactly**, because a mismatch is the ordinary reason an
+application comes back weeks later:
+
+| Field | What to put |
+|---|---|
+| Legal name | `FUTUREBOXSTUDIO (PTY) LTD` — exactly as CIPC has it. Not "FutureBox", not "FutureBox Studio", not the domain |
+| Registration number | `2026/714071/07` |
+| Registered address | The one on the CIPC certificate, exactly, including the postal code |
+| Trading name | Only if CIPC has one. A trade name on its own is refused |
+| Telephone | A number that answers — they may phone to verify |
+| Your name and title | The person signing, as a director |
+| Email | A company address, not a personal one, if you have it |
+| What the business does | "Software — a web and mobile application for music and video creation." Plain, not marketing |
+| Employees, and year started | Small numbers are fine and normal |
+
+**Step 4 — then wait, and build the rest.** Google says up to 30 days. Nothing
+else on this page depends on it, so the wrapper, the asset links and the
+listing are all work you can finish while the application sits.
+
+> Three things that go wrong, in order of how often:
+> 1. **The name does not match CIPC.** By far the commonest.
+> 2. **Somebody pays a reseller** and still waits the same 30 days.
+> 3. **Nobody checks first**, and requests a second number for a company that
+>    already had one — which then has to be merged, and that takes longer
+>    than the original request would have.
+
 ---
 
 ## Asset links — the one technical step **yours**
