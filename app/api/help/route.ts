@@ -52,6 +52,7 @@ import { TIERS, TIER_SPECS } from '@/app/lib/plans';
 import { surfaceDirectory } from '@/app/lib/surfaces';
 import { HANDBOOK } from '@/app/lib/server/handbook.generated';
 import { tooMany } from '@/app/lib/server/brake';
+import { noteConduct } from '@/app/lib/server/conduct';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { copilotAvailable } from '@/app/lib/server/aikey';
@@ -170,6 +171,14 @@ export async function POST(request: Request): Promise<Response> {
   if (!question) {
     return Response.json({ error: 'empty', message: 'Nothing to answer.' }, { status: 400 });
   }
+
+  /* Counted, and nothing more — see `lib/server/conduct.ts`. The help desk
+     matters more to this number than the copilot does: it is where somebody
+     goes when something has already gone wrong, so it is where a temper is
+     most likely to go, and it is the one surface where the difference between
+     an angry customer and an abusive one is worth knowing before a line is
+     drawn through either. */
+  noteConduct(request, question, null, 'help');
 
   // Four turns of context. A support conversation that needs more than that has
   // become something to answer by email, and every extra turn is paid for.

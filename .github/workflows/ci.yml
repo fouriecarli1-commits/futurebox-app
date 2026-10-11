@@ -289,6 +289,8 @@ jobs:
         run: npm run check:jobwait
       - name: A person can correct the country we price them in
         run: npm run check:pickcountry
+      - name: The conduct count measures being sworn at, and still does nothing with it
+        run: npm run check:conduct
       - name: The picture dials make a real filter, and the ones that are missing are named
         run: npm run check:adjust
       - name: The cutting room is one opaque colour, and the copilot is a button over it

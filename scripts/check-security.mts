@@ -211,6 +211,27 @@ const ANONYMOUS: Record<string, string> = {
      It is a read. Nothing on this route writes anything. */
   'app/api/aikoste/route.ts':
     'the caching measurement — account-wide totals per route, guarded by POST_SECRET instead of a caller',
+  /* The conduct count, which exists so a cut-off can be set from a real
+     number rather than a guess at one. It is account-wide by construction:
+     the question it answers is "how many people, and how is it spread", and
+     a count scoped to one caller cannot answer it.
+
+     What stands in place of the caller scope:
+
+     It goes through `opened()`, the shared owner door — signed in as the
+     owner, or POST_SECRET compared in constant time — and refuses outright
+     when neither is configured rather than defaulting to open.
+
+     It returns no identity at all. Owners and address hashes are read, used
+     to group, and thrown away; what comes back is a total, a number of
+     people, a worst case, a median and two thresholds. There is deliberately
+     no way to get from this answer to a person, because choosing a number
+     does not require knowing who, and a screen that names somebody invites
+     deciding about them before there is a policy to decide by.
+
+     It is a read. Nothing on this route writes anything. */
+  'app/api/conduct/route.ts':
+    'the conduct count — account-wide totals behind the owner door, returning no identity of any kind',
   /* ElevenLabs telling us a dub has finished. There is no caller by
      construction — that is what a webhook is — so the rule below cannot be
      satisfied and the question becomes what stands in its place.
