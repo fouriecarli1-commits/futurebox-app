@@ -333,8 +333,15 @@ export default function CutDock({
          trade and a cap would throw away a screen for a reason that does
          not apply. `check:lessenaar` holds that there is one cap and not
          two. */
-      className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[46dvh]'}`}
-      style={atDesk ? { width: 400, flexShrink: 0, borderLeft: `1px solid ${EDGE}` } : undefined}
+      /* 400 at a laptop, 520 past 1536. On her 1563-wide screen the picture
+         bench is a 2,365-pixel column in a 700-pixel window with an empty
+         canvas half the screen wide beside it — "kyk hoe sny alles af op die
+         rekenaar se skerm". A wider column is the cheapest honest fix: the
+         same controls, a third less scrolling, and nothing moved. */
+      className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[46dvh]'} ${
+        atDesk ? 'w-[400px] flex-shrink-0 2xl:w-[520px]' : ''
+      }`}
+      style={atDesk ? { borderLeft: `1px solid ${EDGE}` } : undefined}
     >
     <DeskSheet
       icon={here.icon}
