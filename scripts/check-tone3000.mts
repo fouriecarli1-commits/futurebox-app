@@ -26,7 +26,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { withoutComments } from './prose.mts';
 import { cameBack, pkce, renewWith, selectUrl, tradeFor, WANTS } from '../app/lib/server/tone3000';
-import { captureWith } from '../app/lib/server/tone3000session';
+import { captureWith, tokenRow } from '../app/lib/server/tone3000session';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -167,6 +167,55 @@ ok('the trade carries the verifier, which is the whole point of PKCE',
 
 ok('  and the renewal asks for a renewal',
   renewWith({ refresh: 'r', clientId: 'pk' }).get('grant_type') === 'refresh_token');
+
+/* ── What is kept when the token comes back ────────────────────────────
+
+   Carli, 11 October 2026, with the tables created and the sign-in going
+   through: *"tone3000 werk nogsteeds nie"*.
+
+   The handler refused the whole sign-in unless the answer carried a REFRESH
+   token. We never ask for one — the authorisation request sends no `scope`
+   — and a provider that issues them only for an offline scope answers with
+   an access token and nothing else. An hour of perfectly good access,
+   thrown away, for a renewal that is not wired: `renewWith()` builds the
+   body for one and is called from nowhere.
+
+   From the outside that is the same screen as a missing table and the same
+   screen as an expired token: sign in, come back, every amp says sign in
+   again. Three causes, one symptom, two days. */
+
+const hour = Date.parse('2026-10-11T12:00:00.000Z');
+
+const both = tokenRow('u', { access_token: 'a', refresh_token: 'r', expires_in: 60 }, hour);
+ok('a token answer is kept', both?.access === 'a' && both?.refresh === 'r');
+ok('  and it expires when they said', both?.dies_at === new Date(hour + 60_000).toISOString(),
+  String(both?.dies_at));
+
+const alone = tokenRow('u', { access_token: 'a' }, hour);
+ok('an answer with no refresh token is STILL kept',
+  alone?.access === 'a' && alone?.refresh === null,
+  'the sign-in is thrown away for a renewal this app does not perform, and'
+  + ' every amp afterwards says "sign in to TONE3000 again" — which is also'
+  + ' what a missing table says, and what an expired token says');
+ok('  and it is given an hour when they do not say',
+  alone?.dies_at === new Date(hour + 3_600_000).toISOString(),
+  String(alone?.dies_at));
+ok('  and a nonsense length does not become a token that never dies',
+  tokenRow('u', { access_token: 'a', expires_in: -1 }, hour)?.dies_at
+    === new Date(hour + 3_600_000).toISOString());
+
+ok('an answer with no access token is not kept',
+  tokenRow('u', { refresh_token: 'r' }) === null,
+  'a row with no access token is a sign-in that reads as done and refuses'
+  + ' every download afterwards');
+
+/* And the column has to allow it, or the refusal simply moves one layer
+   down into Postgres and comes back as `why=database`. */
+const sql = readFileSync('supabase/tone3000.sql', 'utf8');
+ok('  and the column lets it be absent',
+  /alter column refresh drop not null/.test(sql),
+  '`refresh text not null` refuses the row, so the fix above gets as far as'
+  + ' the database and no further');
 
 /* ── And no secret is anywhere near this file ──────────────────────────── */
 

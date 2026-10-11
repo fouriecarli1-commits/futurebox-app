@@ -155,6 +155,68 @@ export function landing(landed: Landed): Record<string, string> {
   return { t3k: 'no', why: landed.why };
 }
 
+export interface TokenAnswer {
+  readonly access_token?: string;
+  readonly refresh_token?: string;
+  readonly expires_in?: number;
+}
+
+/**
+ * What to store for a token answer, or nothing when there is nothing to store.
+ *
+ * ── Why a refresh token is not required ──────────────────────────────────
+ *
+ * Carli, 11 October 2026, after the tables were created and the sign-in went
+ * through: *"tone3000 werk nogsteeds nie"* — amps still would not come.
+ *
+ * This refused the WHOLE sign-in unless the answer carried a refresh token:
+ *
+ *     if (!got.access_token || !got.refresh_token) return refused
+ *
+ * We never ask for one. The authorisation request sends no `scope` at all,
+ * and a provider that only issues refresh tokens for an offline scope — most
+ * of them — answers with an access token and nothing else. Which is a
+ * perfectly good hour of access, thrown away.
+ *
+ * And thrown away for a renewal that does not happen: `renewWith()` builds
+ * the body for one and is called from nowhere in this app. So the old rule
+ * traded a working sign-in for a capability we do not have.
+ *
+ * From the outside that is indistinguishable from the fault it was confused
+ * with for two days — the sign-in succeeds, their page sends her back, the
+ * row is never written, and every amp afterwards says *"sign in to TONE3000
+ * again"*. Three different causes with one symptom, which is why the
+ * callback now says `why=` in the address and why this is a function on its
+ * own rather than a condition inside a sixty-line handler.
+ *
+ * So: an access token is the requirement. A refresh token is kept when it
+ * comes and is null when it does not — `tone3000.sql` drops the NOT NULL for
+ * exactly this, because a column that refuses the row is the same refusal
+ * one layer down.
+ *
+ * @param now injected so a check can assert the expiry rather than race it.
+ */
+export function tokenRow(owner: string, got: TokenAnswer, now = Date.now()): {
+  readonly owner: string;
+  readonly access: string;
+  readonly refresh: string | null;
+  readonly dies_at: string;
+  readonly updated_at: string;
+} | null {
+  if (!got.access_token) return null;
+  /* An hour when they do not say. Short rather than generous on purpose: a
+     guess that is too long means a token believed good and refused at the
+     supplier, which reads as their outage rather than as our arithmetic. */
+  const lasts = Number(got.expires_in) > 0 ? Number(got.expires_in) : 3600;
+  return {
+    owner,
+    access: got.access_token,
+    refresh: got.refresh_token ?? null,
+    dies_at: new Date(now + lasts * 1000).toISOString(),
+    updated_at: new Date(now).toISOString(),
+  };
+}
+
 /**
  * Finish a handshake.
  *
@@ -211,20 +273,11 @@ export async function finish(
   });
   if (!answer.ok) return { how: 'refused', why: 'exchange' };
 
-  const got = await answer.json() as {
-    access_token?: string; refresh_token?: string; expires_in?: number;
-  };
-  if (!got.access_token || !got.refresh_token) {
-    return { how: 'refused', why: 'exchange' };
-  }
+  const got = await answer.json() as TokenAnswer;
+  const row = tokenRow(data.owner, got);
+  if (!row) return { how: 'refused', why: 'exchange' };
 
-  const { error } = await client.from('tone3000_tokens').upsert({
-    owner: data.owner,
-    access: got.access_token,
-    refresh: got.refresh_token,
-    dies_at: new Date(Date.now() + (got.expires_in ?? 3600) * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  });
+  const { error } = await client.from('tone3000_tokens').upsert(row);
   if (error) return { how: 'refused', why: 'database' };
 
   /* Resolved AGAIN on the way out, not trusted because we wrote it. The row

@@ -85,6 +85,22 @@ create table if not exists public.tone3000_tokens (
   updated_at timestamptz not null default now()
 );
 
+-- ── Die refresh token mag ontbreek ────────────────────────────────────────
+--
+-- Carli, 11 Oktober 2026, nadat die tabelle gemaak is en die aanmelding
+-- deurgegaan het: "tone3000 werk nogsteeds nie".
+--
+-- Ons vra nooit vir 'n refresh token nie — die magtigingsversoek stuur glad
+-- geen `scope` nie — en 'n verskaffer wat hom net vir 'n offline-scope gee,
+-- antwoord met 'n access token en niks anders nie. Met NOT NULL hierbo word
+-- daardie ry geweier, die aanmelding is weg, en elke versterker se antwoord
+-- daarna is "teken weer by TONE3000 in".
+--
+-- Dit loop apart van die `create table` hierbo sodat 'n databasis wat die
+-- tabel reeds het, dit ook kry. Veilig om weer te loop.
+
+alter table public.tone3000_tokens alter column refresh drop not null;
+
 alter table public.tone3000_tokens enable row level security;
 
 -- ── Ruim op ────────────────────────────────────────────────────────────────
