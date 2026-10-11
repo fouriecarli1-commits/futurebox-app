@@ -165,6 +165,20 @@ het.
 
 ---
 
+## 5a. Een ding wat op 11 Oktober geleer is
+
+Die **Simple / Everything**-knoppie bo in *Make a song* en op die videolessenaar
+staan bo-aan die kamer, buite elke kaart, omdat Carli so gevra het. Moenie dit
+terug in 'n kaart skuif nie, en moenie die kamers se "Simple" verander om weer
+kaarte te wys nie: Simple is die copilot, een knoppie en 'n vier-reël opsomming.
+
+Die rede dit hier staan: ses-en-twintig blaaier-probes was agt commits lank rooi
+omdat hulle vir die ou uitleg geskryf is en niemand hulle vertel het die kamer
+het geskuif nie. As jy 'n kamer se vorm verander, sê dit in die commit-boodskap
+— dan weet die volgende een wat die probes regmaak waar om te kyk.
+
+---
+
 ## 6. Wat om te doen as jy dink 'n reël is verkeerd
 
 Sê dit, met die nommer. Elke reël hier is 'n keuse wat iemand gemaak het en

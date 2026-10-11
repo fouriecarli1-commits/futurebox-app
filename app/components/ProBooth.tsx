@@ -3684,6 +3684,7 @@ export default function ProBooth({
                       onClick={() => setHumVoice(one.id)}
                       aria-pressed={humVoice === one.id}
                       data-humvoice={one.id}
+                      data-tidycard
                       className={`block min-h-[44px] w-full rounded-xl border px-3 py-2 text-left ${
                         humVoice === one.id
                           ? 'border-sky-400/70 bg-sky-500/10'
@@ -3706,7 +3707,7 @@ export default function ProBooth({
             </div>
           </div>
 
-          <label className="flex items-start gap-2.5 text-xs text-zinc-400">
+          <label data-tidycard className="flex items-start gap-2.5 text-xs text-zinc-400">
             <input
               type="checkbox"
               checked={humSnap}
@@ -3735,7 +3736,7 @@ export default function ProBooth({
               onClick={() => void humIt()}
               disabled={!humLane || humming || busy || recording || making}
               data-humgo
-              className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
             >
               <Mic2 className="h-4 w-4 flex-shrink-0" />
               {humming

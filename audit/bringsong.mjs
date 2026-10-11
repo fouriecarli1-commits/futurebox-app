@@ -26,7 +26,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { dismissDoor, studio, toRoom, unfold } from './enter.mjs';
+import { dismissDoor, studio, toRoom, unfold, everything } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3071';
@@ -150,6 +150,9 @@ try {
     JSON.parse(window.localStorage.getItem('futurebox.tracks.v1') || '[]').length);
   /* Every panel starts folded now, and these probes reach their room
      without `toRoom`, which is where the unfolding lives. See enter.mjs. */
+  /* "Bring a song in" is the song under the film, which is behind Everything
+     since 10 October 2026. */
+  await everything(p);
   await unfold(p);
   const bring = room.locator('button').filter({ hasText: /Bring a song in/ }).first();
   check('the button is there before any song exists', (await bring.count()) === 1,

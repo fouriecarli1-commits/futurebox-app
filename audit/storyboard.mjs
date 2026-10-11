@@ -38,7 +38,7 @@
 import { statSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
-import { dismissDoor, studio, toRoom } from './enter.mjs';
+import { dismissDoor, studio, toRoom, everything } from './enter.mjs';
 
 const PORT = process.argv[2] || '3094';
 const af = process.argv[3] === 'af';
@@ -131,6 +131,8 @@ async function intoTheDesk() {
   await dismissDoor(p);
   await studio(p);
   await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
+  /* The storyboard card is behind Everything. */
+  await everything(p);
   await p.waitForTimeout(2200);
   return p.locator('div.fixed.inset-0.z-50').first();
 }
@@ -219,10 +221,16 @@ for (let n = 0; n < 3; n += 1) { await add.click(); await p.waitForTimeout(250);
 const boxes = () => room.locator('textarea[id^="shot-"]');
 check('three shots were added', (await boxes().count()) === 3, String(await boxes().count()));
 
+/* Each one over SHOT_MIN_WORDS (25, `lib/shotdepth.ts`). Since 1bcb9d7 —
+   "shots too short" — a shot under that is declined before it reaches the
+   engine, silently, and these three were ten words each: the probe pressed
+   Make, waited fourteen seconds, and counted nothing sent. Written as a
+   subject, a camera move, light and a detail, which is what the desk asks a
+   person for too. */
 const lines = [
-  'A tar road at dusk, slow push in, dust in the headlights',
-  'Hands on a steering wheel in close-up, city lights passing',
-  'A wide shot of the car leaving frame, the road empty behind',
+  'A tar road at dusk in the Karoo, the camera pushing in slowly along the centre line, dust lifting in the headlights, a single farmhouse light far off to the left',
+  'Hands on a cracked leather steering wheel in close-up, city lights sliding across the windscreen, the driver drumming two fingers in time, rain starting on the glass',
+  'A wide shot from the roadside as the car pulls away and leaves the frame, the road empty behind it, the last of the sun on the tar, nothing else moving',
 ];
 for (let n = 0; n < 3; n += 1) await boxes().nth(n).fill(lines[n]);
 await p.waitForTimeout(500);

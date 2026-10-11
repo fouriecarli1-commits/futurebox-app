@@ -268,7 +268,7 @@ try {
      Saying which one is chosen was also missing from the buttons
      themselves, so this found an accessibility gap on the way past. */
   const pressed = async (label) => {
-    const on = p.locator('div.fixed.inset-0.z-50 button[aria-pressed="true"]');
+    const on = p.locator('div.fixed.inset-0.z-50 button[aria-pressed="true"]:not([data-canvasmodepick])');
     const many = await on.count();
     const said = [];
     for (let at = 0; at < many; at += 1) said.push(((await on.nth(at).innerText()) ?? '').trim());
@@ -284,7 +284,11 @@ try {
      So this says which it is rather than failing. A probe that goes red
      for a missing API key reports the app as broken when it is fine, and
      that is the fault `enter.mjs` has a whole paragraph about. */
-  const anyShape = await p.locator('div.fixed.inset-0.z-50 button[aria-pressed]').count();
+  /* `:not([data-canvasmodepick])` — the Simple/Everything pill is an
+     `aria-pressed` button too, since 10 October 2026. Counted, it defeated
+     the engine guard below (one pressed button, and it was the pill) and
+     then read "Everything" back as the chosen shape. */
+  const anyShape = await p.locator('div.fixed.inset-0.z-50 button[aria-pressed]:not([data-canvasmodepick])').count();
   if (anyShape === 0) {
     console.log('  --   the shape and the length are not offered here: no video engine is configured,');
     console.log('       so the desk draws no shapes and no lengths. Not checked, and not a failure.');

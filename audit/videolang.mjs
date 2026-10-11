@@ -29,7 +29,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor, unfold } from './enter.mjs';
+import { dismissDoor, unfold, everything } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3073';
@@ -192,6 +192,9 @@ try {
   await p.waitForTimeout(2200);
   /* Every panel starts folded now, and these probes reach their room
      without `toRoom`, which is where the unfolding lives. See enter.mjs. */
+  /* And the shot box is behind Everything since 10 October 2026: Simple is
+     the copilot and one button, and has no textarea to find. */
+  await everything(p);
   await unfold(p);
 
   const box = room.locator('textarea').first();

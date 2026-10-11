@@ -24,7 +24,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { pressTab, dismissDoor } from './enter.mjs';
+import { pressTab, dismissDoor, everything } from './enter.mjs';
 import { agreeAndSubmit, launchOptions } from './where.mjs';
 import { ROOMS } from './rooms.mjs';
 
@@ -199,6 +199,12 @@ try {
       problems.push(`${room}: no way in`);
       continue;
     }
+    /* Two rooms open in Simple since 10 October 2026 — Make a song and the
+       video desk — and their cards are behind Everything. Counted on
+       Everything, because the question is whether the room CARRIES the card
+       shape, and it does; a count taken on Simple reported both as "nothing
+       yet" and asked for a reason beside a zero that was not one. */
+    await everything(p);
     /* A card header is the fold button inside a Card's own <section>. Not
        "any aria-expanded button" — the rooms are full of those, and counting
        a disclosure somebody wrote by hand would make this number a lie in

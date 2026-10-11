@@ -7313,6 +7313,16 @@ timeline that snap to it, and the two honest regenerate routes above.
 
 ## Nobody can correct the country we price them in — 11 October 2026
 
+**Answered the same day.** Carli: *"Maak 'n country picker"*. It is on both
+screens that show a price — the front page first, because that is the one a
+buyer reads before they have an account — as a plain `<select>` with "My
+device's country" as the way back to the guess, a line admitting the guess
+while it is one, and the sentence that keeps it honest: what a card is
+charged is set by the country of the card. `check:pickcountry` holds it,
+including the one silent fault that mattered — a stale code in storage
+falling through to dollars. The rest of this entry is kept as the record of
+what was wrong.
+
 Found while auditing the rooms for things that do not work, by a new check
 (`check:intovoid`) looking for state a screen keeps and never reads.
 

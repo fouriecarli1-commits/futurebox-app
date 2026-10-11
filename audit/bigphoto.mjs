@@ -21,7 +21,7 @@
  * raised — including unhandled promise rejections, which is the shape an
  * async file handler fails in and the shape `pageerror` alone does not catch.
  */
-import { enter, toRoom } from './enter.mjs';
+import { enter, toRoom, everything } from './enter.mjs';
 import { serve, shot } from './where.mjs';
 
 /* Its own server on its own port. A probe that borrows whatever is listening
@@ -78,6 +78,8 @@ await page.waitForTimeout(1400);
    which is what puts "The shot" on screen at all. The overlay is picked up
    separately afterwards. */
 await toRoom(page, 'Video desk', { folded: false });
+/* The picture strip is behind Everything. */
+console.log('everything:', await everything(page));
 await page.waitForTimeout(1200);
 const room = page.locator('div.fixed.inset-0.z-50').first();
 /* The grade that carries a start frame, found rather than named.

@@ -4149,8 +4149,17 @@ export default function FutureBoxHome() {
           >
             
             {/* Top Back Bar */}
+            {/* In a bare room the back button sits on the room's own gutter.
+
+                The shell pads 12 on a phone and 20 at a desk; a bare room's
+                rows pad another 12 inside that, so its words start at 24 and
+                32. This bar sits in the shell and not in the room, so without
+                the same 12 the back button started at 12 against everything
+                below it at 24 — `check:editor` measured it: "back 12, ask 24,
+                hint 24, first 24". Four pixels is not visible as four pixels;
+                twelve is visible as a bar lying under somebody else's page. */}
             <div className={`flex-shrink-0 flex items-center justify-between ${
-              bareRoom ? '' : 'border-b border-zinc-800 pb-4'
+              bareRoom ? 'px-3' : 'border-b border-zinc-800 pb-4'
             }`}>
               <button
                 onClick={stepOut}

@@ -46,7 +46,7 @@ import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
    words — "Later", "Close", "Continue" — and none of them is what the door
    says. It says "Not now". A probe that guesses at a word it could have
    imported is a probe that fails for a reason nobody can see. */
-import { toThePage } from './enter.mjs';
+import { toThePage, everything } from './enter.mjs';
 import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3253';
@@ -324,6 +324,9 @@ check('pressing it lands in the room, and the room stays',
    Below the "the room stays" assertion on purpose: that one is about the
    door coming back over the room a second later, and it has to read the
    screen as somebody arriving actually finds it. */
+/* The two phrases that identify Make a song live in StyleFinder, which is
+   behind Everything since 10 October 2026. */
+await everything(p);
 await unfold(p);
 words = await p.locator('body').innerText();
 check('and the room is the one that was offered',

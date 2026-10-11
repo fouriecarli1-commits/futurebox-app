@@ -261,6 +261,13 @@ try {
           if (el.tagName === 'LABEL') {
             const inner = Array.from(el.querySelectorAll('input, select, textarea'));
             if (inner.filter(shown).some(dragged)) continue;
+            /* A label that NAMES a control by `htmlFor` and wraps nothing is a
+               caption, not a surface: the input it names is counted on its
+               own, and the caption's height is the height of a line of text.
+               The Pro Booth's "Lane name" is that — 15 pixels of writing
+               above a 44-pixel field — and the first version of this rule
+               reported it as a 15-pixel control. */
+            if (inner.length === 0 && el.control && shown(el.control) && dragged(el.control)) continue;
           } else if (el.tagName === 'INPUT' && el.type === 'hidden') {
             continue;
           }
@@ -280,6 +287,14 @@ try {
                than a button, so it is held to the floor and not to the
                one-height rule. */
             many: el.tagName === 'TEXTAREA',
+            /* A card: a press that carries a name AND a line saying what it
+               is — the Pro Booth's hum voices, "Sub bass / Two octaves down".
+               Two lines is the design, and the second line's length is the
+               instrument's, so two cards in one column are not meant to be
+               one height. Held to the floor and not to the one-height rule,
+               and declared on the element so the exemption is a decision
+               somebody wrote down rather than a shape this file guesses. */
+            card: el.hasAttribute('data-tidycard'),
             /* No words on it: a glyph, not a bar. Held to the height rule
                with everything else, left out of the width rule — an info
                icon beside a button is not a ragged row, it is an icon. */
@@ -308,7 +323,7 @@ try {
         }
       }
 
-      const oneLine = seen.filter((one) => !one.many);
+      const oneLine = seen.filter((one) => !one.many && !one.card);
       const heights = [...new Set(oneLine.map((one) => one.h))].sort((a, b) => a - b);
       /* Named by height with an example each, because "34, 36, 44" on its own
          does not say which control to go and look at. */

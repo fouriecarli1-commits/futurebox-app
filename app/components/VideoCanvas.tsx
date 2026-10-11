@@ -56,7 +56,7 @@ import Subtitles, { NO_SUBTITLES, translated, type SubtitleChoice } from './Subt
 import Card from './Card';
 import { useOpenCard } from '../lib/opencard';
 import { useLang } from '../lib/i18n';
-import { useCopilotOps } from '../lib/copilotactions';
+import { useCopilotOps, useCopilotBusContext } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import ShareRow from './ShareRow';
 import { loadBrandKit, saveBrandKit } from '../lib/brandkit';
@@ -328,22 +328,93 @@ export default function VideoCanvas({
      live inside the same card, so they need no arrival of their own —
      opening it shows all three. See `lib/arrival.ts`. */
   const shotCard = useOpenCard();
+  /* A value handed in opens the whole desk before it opens its card.
+
+     Since 10 October this desk opens in Simple, and the shot box, the shape,
+     the length and the grade all live behind Everything. A hand-over from
+     the advert desk — "Open the room and start it" — set every one of them
+     and opened the shot card, and the card was inside a section that was
+     not on the screen. `check:adcarry` and `check:copilotcarry` both went
+     red that day with the same line: "a value in a shut card is a room that
+     looks untouched — this is the report". It is her oldest complaint about
+     this desk, back through a new door: *"die AI vul nie die afdelings vir
+     my in nie."*
+
+     `setAdvanced`, not `chooseMode`: the desk opens up for this visit so the
+     values are on the screen, and the stored preference stays whatever she
+     pressed. A hand-over is somebody else's hand on the desk; it should not
+     change what the desk looks like tomorrow. */
+  /* `arrived()` is also fired again once Everything has mounted. A card
+     takes the `openOn` it is BORN with as its baseline and opens on the next
+     change (`Card.tsx`: "the first render is skipped deliberately"), so a
+     card that mounts after the count has already moved sees nothing move —
+     which is how `check:adcarry` could report "the box exists and is folded
+     away" on a desk that had just opened Everything for it. The second
+     firing runs from the effect below, after the children have mounted. */
+  const openAfterMount = useRef(false);
+  const landed = useCallback(() => {
+    openAfterMount.current = true;
+    setAdvanced(true);
+    shotCard.arrived();
+  }, [shotCard]);
+
+  /* ── And a hand-over that carries only the storyboard's ops ───────────
+
+     `write_scenes` and `open_board` belong to `Storyboard`, which is not
+     mounted in Simple at all. The bus keeps an op nobody has registered for
+     and replays it when somebody does — but nobody ever does while the desk
+     stays in Simple, so a podcast's door, which hands over scenes and
+     nothing else, opened a desk with the scenes waiting in a queue and
+     nothing on the screen (`check:podvideo`).
+
+     So while the desk is in Simple, THIS component answers for those two:
+     it keeps the value, opens Everything, and hands the op on once the
+     storyboard has mounted. `dispatch` runs the first registered handler
+     and no other, which is why these are registered only while `!advanced`
+     — on Everything the storyboard answers for itself, and this must not
+     be standing in front of it.
+
+     Handed on from an effect keyed on `advanced` rather than from a timer:
+     a child's effects run before its parent's, so by the time this effect
+     sees `advanced` true the storyboard has already registered. A `setTimeout`
+     would be a guess about the same order. */
+  const bus = useCopilotBusContext();
+  const held = useRef<Record<string, string>>({});
+  const holdThenOpen = useCallback((op: string) => (value: string) => {
+    held.current[op] = value;
+    setAdvanced(true);
+  }, []);
+  useEffect(() => {
+    if (!advanced) return;
+    const kept = held.current;
+    held.current = {};
+    for (const [op, value] of Object.entries(kept)) bus.dispatch('canvas', op, value);
+    if (openAfterMount.current) {
+      openAfterMount.current = false;
+      shotCard.arrived();
+    }
+  }, [advanced, bus, shotCard]);
+
   useCopilotOps('canvas', {
+    ...(advanced ? {} : {
+      write_scenes: holdThenOpen('write_scenes'),
+      open_board: holdThenOpen('open_board'),
+    }),
     set_prompt: (value) => {
       setPrompt(value);
-      shotCard.arrived();
+      landed();
     },
     set_aspect: (value) => {
       const wanted = value.trim();
       if (wanted !== '16:9' && wanted !== '9:16' && wanted !== '1:1') return;
       setAspect(wanted);
-      shotCard.arrived();
+      landed();
     },
     set_seconds: (value) => {
       const wanted = Number.parseInt(value.trim(), 10);
       if (!LENGTHS.some((one) => one.seconds === wanted)) return;
       setSeconds(wanted);
-      shotCard.arrived();
+      landed();
     },
     /* ── The quality, which the copilot could not reach ────────────────
 
@@ -362,7 +433,7 @@ export default function VideoCanvas({
       if (!GRADES.some((one) => one.id === wanted)) return;
       if (engine && !engine.grades.includes(wanted as VideoGrade)) return;
       setGrade(wanted as VideoGrade);
-      shotCard.arrived();
+      landed();
     },
   });
   /**

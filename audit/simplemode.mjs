@@ -27,7 +27,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, unfold } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3086';
@@ -102,22 +102,25 @@ try {
      Opened once, by name, and then left open: everything this probe measures
      is inside it. Left to a helper that opens every fold in the room, a
      probe cannot say afterwards which card it was looking at. */
-  const made = room.locator('button[aria-expanded]')
-    .filter({ hasText: /^How it is made|^Hoe dit gemaak word/ }).first();
-  const openMade = async () => {
-    if ((await made.count()) && (await made.getAttribute('aria-expanded')) === 'false') {
-      await made.click();
-      await p.waitForTimeout(500);
-    }
-  };
-  check('the settings live behind one heading', (await made.count()) === 1,
-    'Simple, Everything and the length are all inside "How it is made"');
-  await openMade();
+  /* The pill is at the TOP of the room, outside every card — Carli, 10
+     October 2026: *"Bo in make a song moet daar 'n simple button wees, en 'n
+     everything."* This probe was written while it sat inside "How it is
+     made", four cards down, and asserted exactly that; the room moved and
+     the assertion stayed, so it reported her own instruction as a fault.
+     What is held now is what she asked for: the choice is met before the
+     desk is, and it is not inside any fold. */
+  const pill = room.locator('[data-makemode]').first();
+  check('the choice is at the top of the room, outside every card',
+    (await pill.count()) === 1
+      && (await pill.evaluate((el) => !el.closest('[aria-expanded]'))),
+    'the Simple/Everything pill is inside a card again');
 
   const mode = async (which) => {
-    await openMade();
-    await room.locator('button').filter({ hasText: new RegExp(`^${which}$`) }).first().click();
+    await pill.locator('button').filter({ hasText: new RegExp(`^${which}$`) }).first().click();
     await p.waitForTimeout(800);
+    /* The words this probe reads live inside cards, and every card starts
+       folded. The pill itself is not a fold. */
+    await unfold(p);
   };
   /** How tall the settings card is, which is the only thing the switch changes.
 
@@ -127,14 +130,31 @@ try {
       card, which the switch does not touch, and reported a difference of
       nothing forever. A ruler that survives the thing it measures being
       removed is not a ruler. */
+  /* The whole room's scroll height, which is what "Simple is shorter"
+     means to a thumb. The ruler before this was the section round "How it is
+     made" — and that card is behind Everything now, so in Simple the ruler
+     was not on the screen at all. */
+  /* The overlay itself is `overflow-hidden` and exactly the viewport tall,
+     so its scrollHeight is the viewport (844 against 844, measured). The
+     content's height is on the shell inside it — the first full-size child —
+     whose scrollHeight reports the content whether or not it scrolls. */
   const formHeight = async () =>
-    room.locator('section')
-      .filter({ has: p.locator('button[aria-expanded]').filter({ hasText: /^How it is made|^Hoe dit gemaak word/ }) })
-      .first()
-      .evaluate((el) => Math.round(el.scrollHeight));
+    room.locator('.w-full.h-full').first().evaluate((el) => Math.round(el.scrollHeight));
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 
   check('the room offers both', /Simple/.test(await says()) && /Everything/.test(await says()));
+
+  /* Something to summarise. Simple's four lines draw only once a title, words
+     or a sound has been set — on an empty room there is nothing to say and
+     it says nothing, which is right. The title field is the first visible
+     input in Everything, the same one `makesong` fills. */
+  await mode('Everything');
+  await room.locator('input:visible').first().fill('Karoo');
+  /* And a sound: the summary drops a row whose value is empty, so "Sound"
+     is only named once there is a sound to name. The words row always has a
+     value ("0 lines"), which is why that one was there without being set. */
+  await room.locator('textarea[placeholder*="afro house"]').first().fill('afro house, log drum, warm pads');
+  await p.waitForTimeout(300);
 
   await mode('Simple');
   const simpleTall = await formHeight();
@@ -147,7 +167,11 @@ try {
      "How long?" joined them after Carli went looking for it and it was not
      there. It is the one control behind the switch that changes what the song
      costs, so Simple was hiding the price while charging it. */
-  for (const want of ['What is it called?', 'The words', 'What should it sound like?', 'How long?']) {
+  /* Simple is a read-only summary since 10 October 2026 — "net 'n copilot" —
+     and the summary's rows are labelled by the room's own keys: make.name,
+     make.words, make.style ("Sound"), make.length. The sound row is "Sound",
+     not the question Everything asks. */
+  for (const want of ['What is it called?', 'The words', 'Sound', 'How long?']) {
     check(`Simple still asks: ${want.toLowerCase()}`, simpleWords.includes(want), '');
   }
   check('and it still has the button that makes it', simpleWords.includes('Make my song'));

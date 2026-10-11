@@ -33,7 +33,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
-import { unfold } from './enter.mjs';
+import { unfold, everything } from './enter.mjs';
 
 const PORT = process.argv[2] || '3245';
 
@@ -182,13 +182,22 @@ try {
   await p.waitForTimeout(1600);
   /* Every card starts shut now, and the words box is inside one. This walk
      in is hand-rolled rather than `toRoom`, so nothing opened it. */
+  /* Make a song and the video desk open in Simple since 10 October 2026, with
+     their cards behind Everything; elsewhere this presses nothing. */
+  console.log('everything:', await everything(p));
   await unfold(p);
   const room = p.locator('div.fixed.inset-0.z-50').first();
 
+  /* Said before the fill, because a thirty-second timeout on a locator says
+     what was looked for and nothing about what was there. */
+  console.log('textareas on the desk:', JSON.stringify(await room.locator('textarea').evaluateAll((all) =>
+    all.map((el) => (el.getAttribute('placeholder') ?? '').slice(0, 40)))));
   await room.locator('textarea[placeholder*="Verse 1"]').fill(WORDS);
   await room.locator('input:visible').first().fill('Die eerste een');
   await p.waitForTimeout(400);
-  await room.locator('button').filter({ hasText: /^Make my song$/ }).first().click();
+  /* `\b`, not `$`: the button carries its price now — "Make my song · 8
+     credits" — so an anchor on the end of the words stopped matching. */
+  await room.locator('button').filter({ hasText: /^Make my song\b/ }).first().click();
 
   /* The song has to arrive on the screen it was made on, and be a song rather
      than a name on it — the title is in the box that was typed into, so

@@ -11,7 +11,7 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { dismissDoor, studioDoor, toRoom } from './enter.mjs';
+import { dismissDoor, studioDoor, toRoom, everything, unfold } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3015);
 const af = process.argv[3] === 'af';
@@ -170,6 +170,10 @@ async function intoTheDesk() {
   await p.waitForTimeout(1800);
   const room = p.locator('div.fixed.inset-0.z-50').first();
   await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
+  /* The cast lives in the start frame, behind Everything since 10 October 2026. */
+  await everything(p);
+  /* The cast strip is inside the start-frame card, which mounts folded. */
+  await unfold(p);
   await p.waitForTimeout(2000);
   return room;
 }
@@ -215,7 +219,11 @@ check('the new name is saved against the row',
   written.some((one) => one.id && /Sarel die aanbieder/.test(one.name || '')),
   JSON.stringify(written.filter((o) => o.id)));
 
-const face = room.locator('button[aria-pressed]').first();
+/* `:not([data-canvasmodepick])`: the Simple/Everything pill is an
+   `aria-pressed` button too, since 10 October 2026, and it comes first in
+   the desk. Taken as "the member", it could be pressed and it did select —
+   itself — and the start frame then held no picture at all (null). */
+const face = room.locator('button[aria-pressed]:not([data-canvasmodepick])').first();
 check('the member can be pressed', (await face.count()) > 0);
 await face.click();
 await p.waitForTimeout(900);

@@ -39,7 +39,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { serve, shot } from './where.mjs';
-import { enter, studio, toRoom, unfold } from './enter.mjs';
+import { enter, studio, toRoom, unfold, everything } from './enter.mjs';
 
 const SECONDS = 6;
 const RATE = 44100;
@@ -88,6 +88,8 @@ const room = await studio(p);
 
 /* In through the video desk, which is where a file is brought in. */
 await toRoom(p, 'Video desk');
+/* The song input is behind Everything since 10 October 2026. */
+await everything(p);
 await unfold(p);
 await room.locator('input[type="file"][accept="audio/*"]').first().setInputFiles(song);
 await p.waitForTimeout(2500);
