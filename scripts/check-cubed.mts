@@ -54,6 +54,7 @@ import { createHash } from 'node:crypto';
 import {
   LOCKUP, LOGO, LOGO_AF, LOGO_EN, LOGO_TALL, LOGO_WIDE, MARK, lockupFor,
 } from '../app/components/CubedMark.tsx';
+import { CLASS_RAND, guestRand, randSaid, seriesRand } from '../app/lib/cubed.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -65,6 +66,7 @@ const room = withoutComments(readFileSync('app/components/CubedRoom.tsx', 'utf8'
 const mark = withoutComments(readFileSync('app/components/CubedMark.tsx', 'utf8'));
 const page = withoutComments(readFileSync('app/page.tsx', 'utf8'));
 const css = readFileSync('app/globals.css', 'utf8');
+const words = readFileSync('app/lib/i18n.tsx', 'utf8');
 
 /* ── 1. The rule the name means ───────────────────────────────────────── */
 
@@ -447,9 +449,50 @@ ok('  and the door carries her mark',
   'the tile is the button’s own argument: a row with nothing on its left is'
   + ' another row');
 
-ok('  and the section is called what she called it',
-  /t\('tab\.classes', 'Cubed classes'\)/.test(page),
-  '"Die masterclass section wil ek rename na Cubed classes"');
+ok('  and the pill is called what she called it',
+  /t\('tab\.classes', 'Cubed Class'\)/.test(page)
+  && /"tab\.classes": \{ en: "Cubed Class", af: "Kubieke Klas" \}/.test(words),
+  'Carli, 11 October 2026: "daai button se naam moet Cubed Class wees, of in'
+  + ' Afrikaans Kubieke Klas"');
+
+ok('  and pressing it opens the room rather than filtering the page',
+  /data-classdoor/.test(page) && /<Link key=\{tab\.id\} href="\/cubed"/.test(page),
+  '"As jy op daai button click dan moet die cubed kamer dadelik oopmaak."'
+  + ' A press that filters this page is a different thing from a door, and'
+  + ' the room is where the brand, the terms and the price are');
+
+ok('  and the listing it used to show is still reachable',
+  /searchParams\.get\('tab'\)/.test(page) && /data-cubedlisting/.test(room)
+  && /href="\/\?tab=masterclasses"/.test(room),
+  'the pill was the only way to that listing. A door that orphans a page is'
+  + ' a page quietly deleted, and nothing anywhere would say so');
+
+/* ── 7. What a class costs ──────────────────────────────────────────── */
+
+ok('the room says what a class costs',
+  /data-cubedprice/.test(room) && /randSaid\(CLASS_RAND\)/.test(room),
+  'Carli, 11 October 2026: "Ek beplan om R949 vir \u2019n cubed class te'
+  + ' vra." A guest deciding whether three evenings are worth it cannot work'
+  + ' that out from a percentage');
+
+ok('  and it is the price she said',
+  CLASS_RAND === 949, String(CLASS_RAND));
+
+ok('  and the series total is multiplied once, not typed',
+  seriesRand() === CLASS_RAND * CLASSES_IN_A_SERIES
+  && !/949/.test(room) && !/2847|2 847/.test(room),
+  'a price typed into a page is a price that disagrees with the agreement by'
+  + ' the end of the month');
+
+ok('  and what the guest keeps follows the split that is on the same page',
+  guestRand() === Math.round(seriesRand() * GUEST_SHARE),
+  `${guestRand()} is not ${Math.round(seriesRand() * GUEST_SHARE)} — the page`
+  + ' shows a split and a number, and a guest who adds them up and gets a'
+  + ' third answer stops trusting both');
+
+ok('  and a price reads as this country writes one',
+  randSaid(949) === 'R949' && randSaid(2847) === 'R2 847',
+  randSaid(2847));
 
 console.log(bad === 0
   ? '\n  Three to a masterclass, sixty to the guest, said in public — and her\n'

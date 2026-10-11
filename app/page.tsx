@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Cover from './components/Cover';
 import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
@@ -172,6 +173,28 @@ export default function FutureBoxHome() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
+
+  /* ── A way back to the class listing ────────────────────────────────
+ 
+     The Spotlight pill that used to show it is a door to the Cubed room
+     now — Carli, 11 October 2026 — so the listing needs an address of its
+     own or it is a page nobody can reach. `/?tab=masterclasses` is that
+     address, and the room links to it in words.
+ 
+     Read once on arrival and then taken out of the bar: a query string
+     left behind is a tab that springs back every time somebody presses
+     Spotlight, which reads as the app refusing to leave the page. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const here = new URL(window.location.href);
+    const asked = here.searchParams.get('tab');
+    const known = ['all', 'futurebox', 'masterclasses', 'creations', 'radar'] as const;
+    const found = known.find((one) => one === asked);
+    if (!found) return;
+    setActiveTab(found);
+    here.searchParams.delete('tab');
+    window.history.replaceState({}, '', here.toString());
+  }, []);
   
   // User Authentication & Profile
   const [user, setUser] = useState<{ email: string; name: string; handle: string; followers: number } | null>(null);
@@ -2800,25 +2823,54 @@ export default function FutureBoxHome() {
           {([
             { id: 'all', label: t('tab.all', 'Spotlight'), short: t('tab.all.s', 'Spotlight'), icon: Compass },
             { id: 'futurebox', label: t('tab.pods', 'FutureBox Podcasts'), short: t('tab.pods.s', 'Podcasts'), icon: Headphones },
-            { id: 'masterclasses', label: t('tab.classes', 'Cubed classes'), short: t('tab.classes.s', 'Cubed'), icon: GraduationCap },
+            { id: 'masterclasses', label: t('tab.classes', 'Cubed Class'), short: t('tab.classes.s', 'Cubed'), icon: GraduationCap },
             { id: 'creations', label: t('tab.creations', 'Creative AI Music & Video'), short: t('tab.creations.s', 'Music & video'), icon: Sparkles },
             { id: 'radar', label: t('tab.radar', 'AI Trends Radar'), short: t('tab.radar.s', 'Radar'), icon: TrendingUp },
           ] as const).map((tab) => {
             const Icon = tab.icon;
+            const look = `flex items-center gap-1.5 px-3 lg:px-4 py-2 min-h-[36px] rounded-full text-xs font-semibold transition-all ${
+              activeTab === tab.id
+                ? 'bg-emerald-500 text-onAccent shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+                : 'text-zinc-400 hover:text-white'
+            }`;
+            const inside = (
+              <>
+                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="lg:hidden">{tab.short}</span>
+                <span className="hidden lg:inline">{tab.label}</span>
+              </>
+            );
+            /* ── The one pill that is a door rather than a filter ────────
+ 
+                Carli, 11 October 2026: *"heel bo aan die bladsy by spotlight
+                click mens op masterclass, daai button se naam moet Cubed
+                Class wees... As jy op daai button click dan moet die cubed
+                kamer dadelik oopmaak."*
+ 
+                It used to filter this page to the class listing, which is a
+                different thing from opening the room, and the room is where
+                the brand, the terms and the price are. A `Link` rather than
+                a press that routes: it is a navigation, so it should be
+                middle-clickable, openable in a tab, and visible to a crawler
+                as an address.
+ 
+                The listing it used to show is not orphaned — `?tab=` below
+                reaches it, and the room links back to it in those words. */
+            if (tab.id === 'masterclasses') {
+              return (
+                <Link key={tab.id} href="/cubed" data-classdoor className={look}>
+                  {inside}
+                </Link>
+              );
+            }
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 aria-current={activeTab === tab.id ? 'page' : undefined}
-                className={`flex items-center gap-1.5 px-3 lg:px-4 py-2 min-h-[36px] rounded-full text-xs font-semibold transition-all ${
-                  activeTab === tab.id 
-                    ? 'bg-emerald-500 text-onAccent shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
-                    : 'text-zinc-400 hover:text-white'
-                }`}
+                className={look}
               >
-                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="lg:hidden">{tab.short}</span>
-                <span className="hidden lg:inline">{tab.label}</span>
+                {inside}
               </button>
             );
           })}

@@ -48,6 +48,45 @@
  */
 export const CLASSES_IN_A_SERIES = 3;
 
+/**
+ * What a Cubed class costs, in rand.
+ *
+ * Carli, 11 October 2026: *"Ek beplan om R949 vir 'n cubed class te vra."*
+ *
+ * Here rather than typed into the page, for the reason everything else in
+ * this file is here: the guest reads a split, the page shows a price, and
+ * the agreement quotes both. A number that lives in one screen is a number
+ * that disagrees with the other two by the end of the month.
+ *
+ * It is the price of a CLASS. A series is three of them —
+ * `CLASSES_IN_A_SERIES` — and `seriesRand()` does that multiplication once
+ * so nobody does it again differently.
+ */
+export const CLASS_RAND = 949;
+
+/** What a whole series costs, which is the thing a guest is paid a share of. */
+export const seriesRand = (): number => CLASS_RAND * CLASSES_IN_A_SERIES;
+
+/**
+ * A price as this country writes it: `R949`, `R2 847`.
+ *
+ * Grouped by hand rather than with `toLocaleString('en-ZA')`, which was the
+ * first version and is a trap: the separator it chooses comes from the
+ * runtime's ICU data, which is not the same on the server as on a phone and
+ * not the same on two phones. It handed back a NON-BREAKING space here and
+ * would hand back a comma on a build without full ICU — so the price on the
+ * page and the price in the agreement could differ by a character that
+ * nobody can see and nobody can search for.
+ *
+ * Found by a check asserting the obvious spelling and getting a string that
+ * looked identical and was not.
+ */
+export const randSaid = (amount: number): string =>
+  `R${Math.round(amount).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}`;
+
+/** What the guest keeps from one full series, at the split below. */
+export const guestRand = (): number => Math.round(seriesRand() * GUEST_SHARE);
+
 /** The guest's share of what a series earns, as a fraction. */
 export const GUEST_SHARE = 0.6;
 

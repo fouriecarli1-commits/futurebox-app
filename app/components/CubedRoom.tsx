@@ -36,8 +36,8 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  CLASSES_IN_A_SERIES, GUEST_TERMS, GUEST_SHARE, HOUSE_SHARE, SERIES,
-  minutesOf, splitAsSaid,
+  CLASS_RAND, CLASSES_IN_A_SERIES, GUEST_TERMS, GUEST_SHARE, HOUSE_SHARE, SERIES,
+  guestRand, minutesOf, randSaid, seriesRand, splitAsSaid,
 } from '../lib/cubed';
 import { useLang } from '../lib/i18n';
 import CubedMark from './CubedMark';
@@ -131,9 +131,53 @@ export default function CubedRoom(): React.ReactElement {
               </span>
               {t('cubed.split', 'to the guest')}
             </span>
+            {/* ── The price, beside the split and not under it ──────────
+ 
+                Carli, 11 October 2026: *"Ek beplan om R949 vir 'n cubed
+                class te vra."*
+ 
+                A guest reading this is deciding whether three evenings of
+                their time is worth it, and they cannot work that out from a
+                percentage alone. The split and the price belong on one line
+                for the reason the split is on the page at all: somebody who
+                knows the shape before the conversation starts arrives at it
+                already knowing.
+ 
+                Every number comes out of `lib/cubed.ts` — the series total
+                and the guest's share are multiplied there, once. */}
+            <span className="text-zinc-500">
+              <span data-cubedprice className="pr-2 text-2xl font-black text-zinc-200">
+                {randSaid(CLASS_RAND)}
+              </span>
+              {t('cubed.aClass', 'a class')}
+            </span>
           </div>
+
+          <p className="pt-4 text-sm text-zinc-600" data-cubedpricewhat>
+            {t(
+              'cubed.priceWhat',
+              'Three classes make one masterclass, so a full series is {s}. A guest keeps {g} of that.',
+            )
+              .replace('{s}', randSaid(seriesRand()))
+              .replace('{g}', randSaid(guestRand()))}
+          </p>
         </div>
       </div>
+
+      {/* ── And the way back to the listing ───────────────────────────────
+ 
+          The Spotlight pill that used to open the class listing is a door
+          into this room now. So the listing has to be reachable from here,
+          or it is a page nobody can get to. */}
+      <section className="mx-auto max-w-4xl px-6 pt-10">
+        <Link
+          href="/?tab=masterclasses"
+          data-cubedlisting
+          className="text-sm font-semibold text-emerald-500 underline underline-offset-4"
+        >
+          {t('cubed.seeList', 'See the classes on offer')}
+        </Link>
+      </section>
 
       {/* ── What is on ──────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-4xl px-6 py-16">
