@@ -20,6 +20,30 @@
  *
  * So transparency is made afterwards, here, by taking the background out.
  *
+ * ── It works, and here is the measurement ────────────────────────────────
+ *
+ * Carli reported this broken more than once — on 11 October 2026, flatly:
+ * *"Die transparency BG remover werk steeds nie in die app nie."* Every
+ * attempt to reproduce it passed, which is an uncomfortable place to leave a
+ * feature: a green check and a user saying no.
+ *
+ * Later the same day she sent two transparent logos to be looked at — *"Kyk
+ * gou of hierdie transparent is"* — and they were measured without either
+ * side knowing where they had come from. Only afterwards: *"Die cubed logo
+ * wat ek gegee het het ek op ons app gedoen"*. They are this remover's own
+ * output, on her real artwork, measured blind:
+ *
+ *   · a real alpha channel, colour type 6
+ *   · 64.2% of the picture fully see-through, 52.4% on the other
+ *   · every one of the eight corners exactly 0,0,0,0 — no white box
+ *   · ink reaching full strength, 255, at 7,27,47 and 9,25,54
+ *   · the worst leftover tint 8 and 10 out of 255 in the enclosed areas,
+ *     about 4% opacity, invisible on any background
+ *
+ * No halo, no staircase, no hole punched through the mark. That is the
+ * evidence this file had been missing, and it arrived by accident, which is
+ * the only reason it is worth anything: nobody was trying to make it pass.
+ *
  * ── Why this is a second background remover and not a change to the first ─
  *
  * `cutout.ts` finds PEOPLE. It runs a segmentation model that was trained on
