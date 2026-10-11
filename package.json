@@ -127,6 +127,7 @@
     "check:oneroomname": "tsx scripts/check-oneroomname.mts",
     "check:intovoid": "tsx scripts/check-intovoid.mts",
     "check:jobwait": "tsx scripts/check-jobwait.mts",
+    "check:pickcountry": "tsx scripts/check-pickcountry.mts",
     "check:adjust": "tsx scripts/check-adjust.mts",
     "check:videopaint": "tsx scripts/check-videopaint.mts",
     "check:videoquality": "tsx scripts/check-videoquality.mts",
