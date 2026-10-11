@@ -701,21 +701,54 @@ let signed = 0;
        that reloads every eight looks exactly like a film that plays. So
        this waits past one refresh and asks two things: did the picture keep
        moving, and is the element still pointed at what it was pointed at. */
-    const was = await clip.evaluate((el) => ({ at: el.currentTime, src: el.currentSrc }));
+    /* The clip the probe records above is 1.4 seconds long and the room's
+       element loops, so over eleven seconds `currentTime` wraps about eight
+       times. Comparing two readings of it told the runner that 0.80 -> 0.76
+       was "the file starting again" when it was the loop coming round —
+       which is a check failing for an adjacent reason, and the same check
+       passing locally only because the second reading happened to land
+       later in the loop than the first. So the element is watched instead:
+       the ground it covers is summed from every `timeupdate` (a loop wrap
+       is a negative step and is not counted; a reload drops it to nought the
+       same way), and a reload is caught by name — `loadstart` and `emptied`
+       fire when the browser throws the buffer away, and never on a wrap. */
+    const was = await clip.evaluate((el) => {
+      const tally = { covered: 0, reloads: 0, last: el.currentTime };
+      el.addEventListener('timeupdate', () => {
+        const step = el.currentTime - tally.last;
+        if (step > 0) tally.covered += step;
+        tally.last = el.currentTime;
+      });
+      for (const name of ['loadstart', 'emptied']) {
+        el.addEventListener(name, () => { tally.reloads += 1; });
+      }
+      el.__probeTally = tally;
+      return { at: el.currentTime, src: el.currentSrc };
+    });
     await p.waitForTimeout(11_000);
-    const now = await clip.evaluate((el) => ({ at: el.currentTime, src: el.currentSrc }));
+    const now = await clip.evaluate((el) => ({
+      at: el.currentTime,
+      src: el.currentSrc,
+      covered: el.__probeTally.covered,
+      reloads: el.__probeTally.reloads,
+    }));
     check('  and it keeps the same file when the room refreshes under it',
-      now.src === was.src,
-      `the address changed under it: …${was.src.slice(-26)} -> …${now.src.slice(-26)}.`
+      now.src === was.src && now.reloads === 0,
+      `the address went …${was.src.slice(-26)} -> …${now.src.slice(-26)} and the`
+      + ` element reloaded ${now.reloads} time(s).`
       + ' An `src` bound in the markup is rewritten on every refresh, and'
       + ' setting `src` makes the browser throw the buffer away');
-    /* `>` and not `>=`. Written with `>=` it passed on 0.00 -> 0.00 while the
-       film sat frozen at the start — a rule that accepts "no progress" as
-       progress, which is the whole fault wearing the assertion's own words. */
+    /* Four seconds of ground over eleven, not "more than before": written
+       as `>=` it once passed on 0.00 -> 0.00 while the film sat frozen at
+       the start, and written as `>` it failed on the loop above. A film
+       that reloads every eight seconds covers at most a second or two
+       before each reload wipes it; one that plays covers nearly all eleven,
+       and a slow runner still covers well over four. */
     check('  and the picture keeps moving across the refresh',
-      now.at > was.at,
-      `currentTime went ${was.at.toFixed(2)} -> ${now.at.toFixed(2)} over 11s —`
-      + ' going backwards is the file starting again, which is what she sees'
+      now.covered > 4,
+      `the film covered ${now.covered.toFixed(2)}s of ground in 11s`
+      + ` (currentTime ${was.at.toFixed(2)} -> ${now.at.toFixed(2)}) —`
+      + ' little or none is the file starting again, which is what she sees'
       + ' as a video that does not play');
     void press;
   }
