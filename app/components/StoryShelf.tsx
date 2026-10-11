@@ -32,12 +32,13 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BookOpen, Loader2, Pause, Play, Trash2 } from 'lucide-react';
+import { BookOpen, Loader2, Pause, Play, Printer, Trash2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import {
   allStories, forgetStory, onAccount, onDevice, type KeptStory,
 } from '../lib/storykeep';
 import { moveShelf } from '../lib/shelfmove';
+import StoryBook from './StoryBook';
 
 export default function StoryShelf({
   grownUp = false,
@@ -57,6 +58,9 @@ export default function StoryShelf({
   const [open, setOpen] = useState<KeptStory | null>(null);
   const [page, setPage] = useState(0);
   const [playing, setPlaying] = useState(false);
+  /* The story being looked at on paper. Separate from `open`, which plays a
+     reading aloud: printing is silent and does not turn pages. */
+  const [onPaper, setOnPaper] = useState<KeptStory | null>(null);
 
   const audio = useRef<HTMLAudioElement | null>(null);
   /* Every object URL handed out, revoked when the story is closed. A shelf
@@ -182,44 +186,58 @@ export default function StoryShelf({
   }
 
   return (
-    <ul className="space-y-2" data-shelf>
-      {shelf.map((story) => (
-        <li key={story.id} className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => openStory(story)}
-            data-shelfstory={story.id}
-            className="flex min-h-[64px] flex-1 items-center gap-3 rounded-2xl border border-zinc-700 bg-zinc-900/60 px-3 py-2 text-left"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={url(story.pages[0].picture)}
-              alt=""
-              className="h-12 w-12 flex-shrink-0 rounded-xl object-cover"
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-zinc-100">{story.title}</span>
-              <span className="block text-xs text-zinc-500">
-                {story.pages.length} {story.pages.length === 1
-                  ? t('shelf.page', 'page')
-                  : t('shelf.pages', 'pages')}
-              </span>
-            </span>
-            <BookOpen className="h-5 w-5 flex-shrink-0 text-emerald-400" />
-          </button>
-          {grownUp && (
+    <>
+      {onPaper && <StoryBook story={onPaper} onDone={() => setOnPaper(null)} />}
+      <ul className="space-y-2" data-shelf>
+        {shelf.map((story) => (
+          <li key={story.id} className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => { void forgetStory(story.id).then(look); }}
-              data-shelfforget={story.id}
-              aria-label={t('shelf.forget', 'Take it off the shelf')}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-500"
+              onClick={() => openStory(story)}
+              data-shelfstory={story.id}
+              className="flex min-h-[64px] flex-1 items-center gap-3 rounded-2xl border border-zinc-700 bg-zinc-900/60 px-3 py-2 text-left"
             >
-              <Trash2 className="h-4 w-4" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url(story.pages[0].picture)}
+                alt=""
+                className="h-12 w-12 flex-shrink-0 rounded-xl object-cover"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-bold text-zinc-100">{story.title}</span>
+                <span className="block text-xs text-zinc-500">
+                  {story.pages.length} {story.pages.length === 1
+                    ? t('shelf.page', 'page')
+                    : t('shelf.pages', 'pages')}
+                </span>
+              </span>
+              <BookOpen className="h-5 w-5 flex-shrink-0 text-emerald-400" />
             </button>
-          )}
-        </li>
-      ))}
-    </ul>
+            {grownUp && (
+              <button
+                type="button"
+                onClick={() => setOnPaper(story)}
+                data-shelfprint={story.id}
+                aria-label={t('shelf.print', 'Print it as a little book')}
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-400"
+              >
+                <Printer className="h-4 w-4" />
+              </button>
+            )}
+            {grownUp && (
+              <button
+                type="button"
+                onClick={() => { void forgetStory(story.id).then(look); }}
+                data-shelfforget={story.id}
+                aria-label={t('shelf.forget', 'Take it off the shelf')}
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-500"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

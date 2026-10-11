@@ -57,3 +57,4 @@ app/songfull/page.tsx
 app/songwindow/page.tsx
 app/staff/page.tsx
 app/videowords/page.tsx
+audit/*.pdf

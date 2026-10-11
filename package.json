@@ -340,6 +340,8 @@
     "check:cubed": "tsx scripts/check-cubed.mts",
     "check:kinderkleur": "tsx scripts/check-kinderkleur.mts",
     "check:kinderkuns": "tsx scripts/check-kinderkuns.mts",
+    "check:boekie": "tsx scripts/check-boekie.mts",
+    "check:boekiewalk": "node audit/boekie.mjs",
     "check:plateground": "tsx scripts/check-plateground.mts",
     "check:merklab": "tsx scripts/check-merklab.mts",
     "check:playstore": "tsx scripts/check-playstore.mts",

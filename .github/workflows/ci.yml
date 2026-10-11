@@ -1630,6 +1630,19 @@ jobs:
       - name: Google draws the children's pictures, as a set
         run: npm run check:kinderkuns
 
+      # A child's own story printed as a little booklet. Ink is the real
+      # constraint — this comes out of a parent's cartridge at home — so the
+      # pictures print and everything else is black on white. Every way that
+      # goes wrong is invisible on a screen: one `print-color-adjust: exact`
+      # added to make the preview and the paper agree starts costing four
+      # times as much per sheet; a booklet rendered anywhere but at the top
+      # of the body is hidden by its own print rule and eleven blank sheets
+      # come out; a dialog opened before the object URLs decode prints the
+      # words with every drawing missing; a cover counted as a page labels
+      # the first drawing 2.
+      - name: A story prints as a booklet, on a parent's ink
+        run: npm run check:boekie
+
       # An image model cannot make transparency: asked for a see-through
       # background it draws a PICTURE of a checkerboard, and hers arrived as
       # a 35-pixel grid of grey and white squares. So the transparency is
@@ -1865,7 +1878,7 @@ jobs:
           - group: rooms
             probes: check:forgotwalk check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:radarkeep check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops
           - group: whole
-            probes: check:firsthour check:writing check:wide check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
+            probes: check:boekiewalk check:firsthour check:writing check:wide check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for
           # what they click: `selfie` films a take against Chromium's fake
           # camera, and `contrast` reads the computed colour of every piece of

@@ -1152,3 +1152,165 @@ body:has([data-cubed]) {
     display: flex;
   }
 }
+
+/* ── The booklet ─────────────────────────────────────────────────────────
+
+   Carli, 10 October 2026: *"templates vir die kinders om op te druk"*, and
+   then *"Ja, die kinders se eie storie as 'n boekie."*
+
+   `lib/storybook.ts` carries the reasoning; this is the paper.
+
+   ── Why these are literal colours, and the only ones in this file ──────
+
+   Everything else in this app is a theme variable, and `check:theme` holds
+   it that way. A sheet of paper is not a surface of ours: it is white
+   because paper is white, and the words are black because that is what a
+   printer has most of. Following the person's chosen theme here would mean
+   a preview that lies about what comes out of the machine, and — if the
+   theme were ever allowed to reach the printed sheet — a page of ink.
+
+   Same bargain as the square an authenticator app scans: a thing that must
+   NOT follow the theme, said once, with the reason beside it.
+
+   ── Why no panel, tint or border anywhere below ────────────────────────
+
+   This prints at home, on a parent's cartridge. The pictures print because
+   the pictures ARE the story. Nothing else gets ink: no coloured heading
+   band, no tinted page, no ruled border. A browser will not print a
+   background unless something tells it to with `print-color-adjust`, and
+   nothing here does. `check:boekie` holds both halves of that. */
+
+[data-storybook] {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  padding: 0 1rem 4rem;
+  background: rgb(var(--fb-surface-950));
+}
+
+/* The bar belongs to the screen and never to the paper. It says how many
+   sheets this is BEFORE the print dialog opens, because the number of sheets
+   is the one fact a parent wants and the dialog tells them too late. */
+[data-storybookbar] {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  background: rgb(var(--fb-surface-950));
+}
+
+[data-sheet] {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 210mm;
+  margin: 0 auto 1rem;
+  padding: 14mm;
+  background: #ffffff;
+  color: #000000;
+  font-size: 13pt;
+  line-height: 1.6;
+  /* On screen only — a sheet needs an edge to read as a sheet, and the print
+     block below takes it away again rather than asking a printer for grey. */
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+
+[data-sheet='cover'] {
+  display: flex;
+  min-height: 60vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+[data-sheettitle] {
+  font-size: 30pt;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+[data-sheetcount] {
+  font-size: 11pt;
+}
+
+[data-sheetpicture] {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 8mm;
+}
+
+[data-sheetwords] {
+  font-size: 15pt;
+  line-height: 1.7;
+}
+
+[data-sheetnumber] {
+  margin-top: 8mm;
+  font-size: 10pt;
+  text-align: center;
+}
+
+@media print {
+  /* Nothing but the booklet reaches the printer. The booklet is put at the
+     top of `<body>` with a portal precisely so this rule can be this
+     simple — a `visibility: hidden` sweep over a whole app leaves the
+     app's own fixed bars and scrims behind on the first sheet. */
+  body > *:not([data-storybook]) {
+    display: none !important;
+  }
+
+  [data-storybook] {
+    position: static;
+    overflow: visible;
+    padding: 0;
+    background: none;
+  }
+
+  [data-storybookbar] {
+    display: none !important;
+  }
+
+  [data-sheet] {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  /* Or the last sheet is followed by a blank one, which is a parent's paper
+     spent on nothing. */
+  [data-sheet]:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  [data-sheet='cover'] {
+    min-height: 0;
+    /* A cover centred down the page on screen; on paper the sheet IS the
+       page, and `100vh` means something else in a print context. */
+    justify-content: flex-start;
+    padding-top: 30mm;
+  }
+
+  /* A picture that runs past the bottom of the sheet takes its words with
+     it onto a page of their own. Two thirds leaves room for the sentence. */
+  [data-sheetpicture] {
+    max-height: 60vh;
+    object-fit: contain;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+}
