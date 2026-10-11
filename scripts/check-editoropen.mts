@@ -65,10 +65,22 @@ ok('the explanation is long enough to actually explain',
   `${sub.length} characters across both languages — "half 'n verduideliking"`
   + ' is a paragraph, not a label');
 
-ok('  and says the cutting is free, because the plan cards sell this room',
-  /free|gratis/.test(sub),
+/* ── And says the cutting spends nothing, in the words the app now uses ──
+ 
+   This asked for the word "free", and it was right to ask for SOMETHING:
+   somebody arriving from a plan card needs to know what the meter does in
+   this room, where every frame is painted in their own browser.
+ 
+   Carli, 11 October 2026: *"Niks is gratis."* So the app stopped telling
+   her customers that her own tools are free — the fact kept, the giveaway
+   dropped — and this assertion, which demanded the giveaway, failed the
+   moment the copy was fixed. Which is the assertion doing its job: it is
+   the one place that had the old policy written down. `check:verniet`
+   holds the rule itself. */
+ok('  and says what the cutting spends, because the plan cards sell this room',
+  /no credits|geen krediete|included in your plan|ingesluit/i.test(sub),
   'somebody arriving from a plan card needs to know what the meter does here;'
-  + ' every frame is painted in this browser and costs nothing to serve');
+  + ' every frame is painted in this browser and spends nothing to serve');
 
 /* ── Two ways in, and both of them are on the opening ──────────────────── */
 

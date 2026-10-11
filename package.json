@@ -342,6 +342,7 @@
     "check:kinderkuns": "tsx scripts/check-kinderkuns.mts",
     "check:boekie": "tsx scripts/check-boekie.mts",
     "check:verf": "tsx scripts/check-verf.mts",
+    "check:verniet": "tsx scripts/check-verniet.mts",
     "check:boekiewalk": "node audit/boekie.mjs",
     "check:plateground": "tsx scripts/check-plateground.mts",
     "check:merklab": "tsx scripts/check-merklab.mts",

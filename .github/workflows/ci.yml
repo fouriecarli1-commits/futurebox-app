@@ -1654,6 +1654,19 @@ jobs:
       - name: A shape can be recoloured without losing the cut
         run: npm run check:verf
 
+      # Carli, 11 October 2026, in three words: "Niks is gratis." Sixty
+      # strings called one of her own tools free or said it costs nothing,
+      # which teaches somebody paying a monthly fee that what they are
+      # paying for is worth nothing. The fact underneath — this will not
+      # spend your credits — is kept and the giveaway is not. The free tier,
+      # the competition's legally required free entry route and other
+      # people's apps are named keys in an allowlist, not a free pass on a
+      # word, and a row changed in one language only is caught too: a reader
+      # sees one language, so a half-done rewrite is invisible to everybody
+      # who could report it.
+      - name: Her work is never described as free
+        run: npm run check:verniet
+
       # An image model cannot make transparency: asked for a see-through
       # background it draws a PICTURE of a checkerboard, and hers arrived as
       # a 35-pixel grid of grey and white squares. So the transparency is
