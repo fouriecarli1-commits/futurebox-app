@@ -144,15 +144,12 @@ ok('a list of a member’s voices that could not be read answers null',
   'never an empty list — "you have none" sends somebody off to train a voice'
   + ' they already have');
 
-ok('and so does the list of every claimed id',
-  (lib.match(/if \(error\) return null;/g) ?? []).length >= 2,
-  'a picker that is briefly short is a nuisance; one that is briefly'
-  + ' everybody’s is the fault');
-
-ok('the claimed-ids list hands back ids and never owners',
-  /\.select\('voice_id'\)/.test(lib) && !/\.select\('voice_id, owner'\)/.test(lib),
-  'a list naming every member’s voice would be the leak this file exists to'
-  + ' stop, delivered by the thing meant to stop it');
+/* There used to be two more rules here, on `claimedIds` — a list of every
+   claimed voice id for filtering a picker. Nothing ever called it: the voice
+   list filters through `mine()` per member, which is the narrower read and
+   the one these rules wanted. The function went on 11 October 2026 with the
+   rest of the dead exports (`check:deadexports`), and rules pinning the
+   source of a function nobody calls were holding a claim, not a behaviour. */
 
 ok('a release is scoped to the member as well as the voice',
   /\.delete\(\)[\s\S]{0,400}?\.eq\('owner', owner\)/.test(lib),

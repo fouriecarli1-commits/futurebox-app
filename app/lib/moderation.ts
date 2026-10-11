@@ -529,11 +529,3 @@ export function screen(text: string, surface: Surface): Refusal | null {
   return null;
 }
 
-/**
- * A quick yes/no for the browser, so the studio can warn before spending a
- * request. Never the only check: the real one runs on the server, because
- * anything the browser decides can be skipped by not using the browser.
- */
-export function looksRefusable(text: string, surface: Surface): boolean {
-  return screen(text, surface) !== null;
-}

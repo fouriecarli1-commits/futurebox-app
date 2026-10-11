@@ -311,12 +311,3 @@ export async function note(
   void import('./spendwatch').then((watch) => watch.watchGoogle(kind));
 }
 
-/** What is left on every engine, for a screen that has to say. */
-export async function leftAll(): Promise<Record<Kind, number | null>> {
-  const out = {} as Record<Kind, number | null>;
-  for (const kind of KINDS) {
-    const used = await usedMicros(kind);
-    out[kind] = used === null ? null : Math.max(0, ceilingFor(kind) - used);
-  }
-  return out;
-}

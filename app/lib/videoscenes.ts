@@ -201,10 +201,6 @@ export function lengthNote(seconds: number): string {
   return LENGTHS.find((one) => one.seconds === seconds)?.note ?? '';
 }
 
-export function sceneById(id: string): Scene | undefined {
-  return SCENES.find((one) => one.id === id);
-}
-
 /* ---------------------------------------------------------------------------
  * Genres, under the music tile.
  *
@@ -407,10 +403,6 @@ export const GENRES: readonly Genre[] = [
   },
 ];
 
-export function genreById(id: string): Genre | undefined {
-  return GENRES.find((one) => one.id === id);
-}
-
 /**
  * The lines that will be spoken, pulled out of a prompt.
  *
@@ -586,6 +578,3 @@ export const MUSIC_LOOKS: readonly MusicLook[] = [
   },
 ];
 
-export function musicLookById(id: string): MusicLook | undefined {
-  return MUSIC_LOOKS.find((look) => look.id === id);
-}

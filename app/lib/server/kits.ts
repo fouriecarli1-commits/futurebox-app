@@ -1464,8 +1464,6 @@ export async function conversionStatus(
 
 /* ── Splitting a song into its parts ─────────────────────────────────────── */
 
-/** What Kits will take apart. Their own list, and their own 50 MB ceiling. */
-export const SPLIT_TYPES = ['wav', 'webm', 'mp3', 'flac'] as const;
 export const SPLIT_MAX_BYTES = 50 * 1024 * 1024;
 
 /**

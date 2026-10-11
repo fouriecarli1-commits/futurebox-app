@@ -114,6 +114,7 @@
     "check:adformats": "tsx scripts/check-adformats.mts",
     "check:ampshelf": "tsx scripts/check-ampshelf.mts",
     "check:ampcatalogue": "tsx scripts/check-ampcatalogue.mts",
+    "check:deadexports": "tsx scripts/check-deadexports.mts",
     "check:billing": "tsx scripts/check-billing.mts",
     "check:authenticator": "tsx scripts/check-authenticator.mts",
     "check:forgot": "tsx scripts/check-forgot.mts",

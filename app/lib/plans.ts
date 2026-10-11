@@ -391,7 +391,6 @@ export const RAND_PER_USD = 16;
  * minute, watermarked, five credits — and a full song is the same rule twice.
  */
 export const PREVIEW_SECONDS = 60;
-export const FREE_PREVIEWS = 2;
 /** What a full song is, in minutes, for both costing and generation. */
 export const SONG_MINUTES = 2;
 
@@ -492,9 +491,6 @@ export function tierPrice(tier: Tier, region: Region): LocalPrice {
   return localised(spec.rand, region);
 }
 
-export function oneOffPrice(rand: number, region: Region): LocalPrice {
-  return localised(rand, region);
-}
 /**
  * What it costs to put your name on something here.
  *

@@ -48,7 +48,6 @@
  */
 export const ROW2 = 'grid grid-cols-2 gap-2';
 export const ROW3 = 'grid grid-cols-3 gap-2';
-export const ROW4 = 'grid grid-cols-4 gap-2';
 export const ROW5 = 'grid grid-cols-5 gap-2';
 
 /** A stack of full-width controls, spaced like a row of them. */
@@ -84,8 +83,3 @@ export const BAR_TIGHT = 'inline-flex min-h-[44px] w-full items-center justify-c
  */
 export const SLIDE = 'h-11 w-full cursor-pointer';
 
-/** A box to type one line into. */
-export const FIELD = 'min-h-[44px] w-full rounded-xl px-3 text-sm';
-
-/** A swatch of colour, which is a control and not a decoration. */
-export const SWATCH = 'h-11 w-14 cursor-pointer rounded-xl';

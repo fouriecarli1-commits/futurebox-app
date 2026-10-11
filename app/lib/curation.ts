@@ -48,18 +48,6 @@ export interface Verdict {
   readonly freshness: number;
 }
 
-export const BAND_LABELS: Record<Band, string> = {
-  signal: 'Signal',
-  solid: 'Solid',
-  noise: 'Below the bar',
-};
-
-export const BAND_STYLES: Record<Band, string> = {
-  signal: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10',
-  solid: 'text-cyan-300 border-cyan-500/40 bg-cyan-500/10',
-  noise: 'text-rose-300 border-rose-500/40 bg-rose-500/10',
-};
-
 /** Nothing below this renders. It is shown in the rejected drawer instead. */
 export const BAR = 55;
 

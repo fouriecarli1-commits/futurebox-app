@@ -316,4 +316,3 @@ export const kling: Provider = {
   check: checkVideo,
 };
 
-export const MODEL_NAME = MODEL;
