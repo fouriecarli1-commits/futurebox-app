@@ -32,6 +32,8 @@ import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
 import { attach } from '../lib/workfile';
+import { makeId, rememberMake } from '../lib/makes';
+import History from './History';
 
 export interface Voice {
   readonly id: string;
@@ -134,6 +136,15 @@ function Dial({
   );
 }
 
+/** The file extension a reading is saved under, from what the route sent. */
+function extOf(mime: string): string {
+  if (/mpeg|mp3/.test(mime)) return 'mp3';
+  if (/wav/.test(mime)) return 'wav';
+  if (/ogg/.test(mime)) return 'ogg';
+  if (/webm/.test(mime)) return 'webm';
+  return 'mp3';
+}
+
 export default function VoiceLab({
   state,
   onChanged,
@@ -222,6 +233,13 @@ export default function VoiceLab({
    *  is pressed rather than worked out on the way out. */
   const [changeSeconds, setChangeSeconds] = useState<number | null>(null);
   const [changed, setChanged] = useState<Blob | null>(null);
+  /* ── What this room has made, kept ──────────────────────────────────
+     `docs/FUNCTION_INVENTORY.md` named this room among the ones that make
+     something somebody would want back and keep none of it: a reading is
+     paid for, played once, and gone the moment the screen is left. Same
+     shelf as Hooks and the video desk — `lib/makes.ts` — and the strip at
+     the foot shows it. `kept` only tells the strip to look again. */
+  const [kept, setKept] = useState(0);
   const [takingClip, setTakingClip] = useState(false);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -396,6 +414,18 @@ export default function VoiceLab({
       }
       const audio = await response.blob();
       setSpoken(audio);
+      void rememberMake(
+        {
+          id: makeId('voice_studio'),
+          surface: 'voice_studio',
+          kind: 'audio',
+          title: script.trim().slice(0, 60),
+          createdAt: new Date().toISOString(),
+          ext: extOf(audio.type),
+          credits: readCost(script.length),
+        },
+        audio,
+      ).then(() => setKept((n) => n + 1));
       const player = playerRef.current;
       if (player) {
         if (urlRef.current) URL.revokeObjectURL(urlRef.current);
@@ -510,6 +540,18 @@ export default function VoiceLab({
       }
       const audio = await response.blob();
       setChanged(audio);
+      void rememberMake(
+        {
+          id: makeId('voice_studio'),
+          surface: 'voice_studio',
+          kind: 'audio',
+          title: toChange.name.replace(/\.[a-z0-9]+$/i, '').slice(0, 60),
+          createdAt: new Date().toISOString(),
+          seconds: changeSeconds ?? undefined,
+          ext: extOf(audio.type),
+        },
+        audio,
+      ).then(() => setKept((n) => n + 1));
       const player = changedRef.current;
       if (player) {
         if (changedUrlRef.current) URL.revokeObjectURL(changedUrlRef.current);
@@ -892,6 +934,8 @@ export default function VoiceLab({
             See `SayItWrong.tsx`: a report is a candidate, never a rule. */}
         <SayItWrong surface="voice_lab" spoken />
       </Card>
+
+      <History surface="voice_studio" reloadKey={kept} />
     </div>
   );
 }
