@@ -1,5 +1,5 @@
 import './globals.css';
-import { Fredoka } from 'next/font/google';
+import localFont from 'next/font/local';
 import type { Metadata, Viewport } from 'next';
 import { APP_LINE, APP_NAME, APP_SHORT, BAR_COLOUR } from './lib/brand';
 import { LanguageProvider } from './lib/i18n';
@@ -25,9 +25,18 @@ import { SITE_URL } from './lib/brand';
  * It is a variable and not a default: only `[data-kidsroom]` picks it up. A
  * rounded face on the cutting room would be a different app.
  */
-const fredoka = Fredoka({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+/* From `app/fonts/` and not from Google at build time. Twice on 11 and 12
+   October 2026 a CI build died on the runner's fetch of this very face —
+   "next/font/google queries have exactly one entry", which is their server
+   answering something other than a font — and a Vercel build can die the
+   same way on a bad minute. The files are the same woff2 Google serves,
+   under the SIL Open Font Licence (`app/fonts/OFL.txt`), and a build now
+   needs nothing from outside the repository. */
+const fredoka = localFont({
+  src: [
+    { path: './fonts/fredoka-latin.woff2', weight: '300 700', style: 'normal' },
+    { path: './fonts/fredoka-latin-ext.woff2', weight: '300 700', style: 'normal' },
+  ],
   variable: '--fb-font-round',
   display: 'swap',
 });

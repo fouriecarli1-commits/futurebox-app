@@ -42,18 +42,25 @@
  * them from this app's own origin, so no phone that opens a post ever asks
  * Google for anything.
  */
-import { Anton, Baloo_2, Caveat, Courier_Prime, Inter, Playfair_Display } from 'next/font/google';
+/* `next/font/local` and not `next/font/google` since 12 October 2026: the
+   files are in `app/fonts/`, so a build asks nothing of Google's servers.
+   See the note in `app/layout.tsx` and `app/fonts/README.md`. */
+import localFont from 'next/font/local';
 
-export const POSTER = Anton({
-  weight: '400',
-  subsets: ['latin'],
+export const POSTER = localFont({
+  src: [
+    { path: '../fonts/anton-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/anton-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
   display: 'swap',
   preload: false,
 });
 
-export const BOOK = Playfair_Display({
-  weight: '700',
-  subsets: ['latin'],
+export const BOOK = localFont({
+  src: [
+    { path: '../fonts/playfair-latin.woff2', weight: '400 900', style: 'normal' },
+    { path: '../fonts/playfair-latin-ext.woff2', weight: '400 900', style: 'normal' },
+  ],
   display: 'swap',
   preload: false,
 });
@@ -77,32 +84,40 @@ export const BOOK = Playfair_Display({
  
    All `preload: false` for the reason the display faces already are: wanted
    on one screen out of thirty. */
-export const HAND = Caveat({
-  weight: '700',
-  subsets: ['latin'],
+export const HAND = localFont({
+  src: [
+    { path: '../fonts/caveat-latin.woff2', weight: '400 700', style: 'normal' },
+    { path: '../fonts/caveat-latin-ext.woff2', weight: '400 700', style: 'normal' },
+  ],
   display: 'swap',
   preload: false,
 });
 
-export const TYPE = Courier_Prime({
-  weight: '700',
-  subsets: ['latin'],
+export const TYPE = localFont({
+  src: [
+    { path: '../fonts/courierprime-latin.woff2', weight: '700', style: 'normal' },
+    { path: '../fonts/courierprime-latin-ext.woff2', weight: '700', style: 'normal' },
+  ],
   display: 'swap',
   preload: false,
 });
 
-export const ROUND = Baloo_2({
-  weight: '800',
-  subsets: ['latin'],
+export const ROUND = localFont({
+  src: [
+    { path: '../fonts/baloo2-latin.woff2', weight: '400 800', style: 'normal' },
+    { path: '../fonts/baloo2-latin-ext.woff2', weight: '400 800', style: 'normal' },
+  ],
   display: 'swap',
   preload: false,
 });
 
 /* The plain one IS preloaded, because it is the default a post opens in and
    the one most posts will keep. */
-export const PLAIN = Inter({
-  weight: ['400', '700'],
-  subsets: ['latin'],
+export const PLAIN = localFont({
+  src: [
+    { path: '../fonts/inter-latin.woff2', weight: '100 900', style: 'normal' },
+    { path: '../fonts/inter-latin-ext.woff2', weight: '100 900', style: 'normal' },
+  ],
   display: 'swap',
 });
 
