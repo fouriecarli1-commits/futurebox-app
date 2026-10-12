@@ -355,6 +355,8 @@ jobs:
         run: npm run check:ampcatalogue
       - name: Nothing in app/lib is exported for nobody
         run: npm run check:deadexports
+      - name: The guide names every room, prices nothing by hand, and can be reached
+        run: npm run check:guide
       - name: The recurring payment can be seen, its card changed and the payment stopped
         run: npm run check:billing
       - name: The second lock is optional, says what it costs you, and a password alone does not open the studio

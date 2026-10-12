@@ -76,6 +76,9 @@ export function SiteFooter() {
             <a href="/help" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
               {t('foot.help', 'Help')}
             </a>
+            <a href="/guide" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
+              {t('foot.guide', 'The guide')}
+            </a>
             <a href="/privacy" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
               {t('foot.privacy', 'Privacy')}
             </a>

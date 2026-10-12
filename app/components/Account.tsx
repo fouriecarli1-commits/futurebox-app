@@ -325,6 +325,20 @@ export default function Account({
         {/* ── Where the other two things live ────────────────────────────── */}
         <section className="border-t border-zinc-800 pt-4 space-y-2">
           <a
+            href="/guide"
+            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
+          >
+            <BookOpen className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold leading-tight">
+                {t('account.guide', 'What every room does, and what it costs')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {t('account.guideNote', 'One page for the whole studio: the rooms, the prices, the words.')}
+              </span>
+            </span>
+          </a>
+          <a
             href="/help"
             className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
           >

@@ -48,6 +48,12 @@ export default function Help(): React.ReactElement {
             this app and a link is not exempt from it. */}
         <nav className="flex flex-wrap gap-x-5 border-t border-zinc-800 pt-4 text-sm">
           <Link
+            href="/guide"
+            className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
+          >
+            The guide
+          </Link>
+          <Link
             href="/terms"
             className="inline-flex min-h-[44px] items-center px-1.5 text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
           >

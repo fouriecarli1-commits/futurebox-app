@@ -188,7 +188,7 @@ const SAME_IN_BOTH = new Set([
      The same argument as the instrument above, ten times over. */
   'grave', 'largo', 'larghetto', 'adagio', 'andante', 'moderato',
   'allegro', 'vivace', 'presto', 'prestissimo',
-  'BPM', 'EQ', 'Tremolo',
+  'BPM', 'EQ', 'Tremolo', 'Stems', 'Hook',
 ]);
 const copied: string[] = [];
 for (const [i, match] of starts.entries()) {
