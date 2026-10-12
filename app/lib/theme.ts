@@ -595,7 +595,14 @@ export function applyTheme(theme: Theme): void {
   root.style.colorScheme = surface.mode;
 }
 
-const STORAGE_KEY = 'futurebox.theme.v1';
+/* `v2` since 12 October 2026, the evening the look changed to Emerald Studio.
+   A key bump is a one-time reset: every device, including one whose owner
+   once pressed a theme in the studio, opens on the new default once, and the
+   studio keeps working from there. Carli, that evening, looking at a phone
+   still painted in the old Clean: *"Asb verander net die app. Dit is wat ek
+   gevra het!"* A stored choice from the old look must not be the reason the
+   new one cannot reach her. */
+const STORAGE_KEY = 'futurebox.theme.v2';
 
 /**
  * A stored theme, and whether anybody actually asked for it.

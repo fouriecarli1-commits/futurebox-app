@@ -38,7 +38,7 @@ const { browser: b, page: p } = await enter({
     await page.addInitScript((words) => {
       try {
         // The light preset, which is also this app's default.
-        window.localStorage.setItem('futurebox.theme.v1', JSON.stringify({ preset: 'clean' }));
+        window.localStorage.setItem('futurebox.theme.v2', JSON.stringify({ preset: 'clean' }));
         window.localStorage.setItem('futurebox.tracks.v1', JSON.stringify([{
           id: 'song-1', title: 'Toetsliedjie', genre: 'Afrikaans', bpm: 96, key: 'Am',
           lyrics: words, style: 'warm', models: [], source: 'engine', seconds: 60,

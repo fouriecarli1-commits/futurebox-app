@@ -49,7 +49,7 @@ const { browser, page } = await enter({
   at: server.url,
   before: THEME
     ? (p) => p.addInitScript((stored) => {
-        try { window.localStorage.setItem('futurebox.theme.v1', JSON.stringify(stored)); } catch { /* storage off */ }
+        try { window.localStorage.setItem('futurebox.theme.v2', JSON.stringify(stored)); } catch { /* storage off */ }
       }, { ...THEMES[THEME], chosen: true })
     : undefined,
 });
