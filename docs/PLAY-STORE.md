@@ -310,13 +310,15 @@ user interaction.
 - [ ] The attorney has answered the Play Billing question
 - [ ] A business contact email, not a personal one
 - [~] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
-      3840 pixels on the long side. A first set of five real screens at
-      1080 x 1920 is in `docs/play/shots/`, taken 12 October 2026 off the
-      built app on a signed-up test account: the welcome, the studio, Make a
-      song, the video desk and the advert desk. **Retake them the day the
-      look is final** — Antigravity is still restyling rooms — and take
-      them with something made in the room rather than empty, which these
-      are not yet.
+      3840 pixels on the long side. Seven real screens at 1080 x 1920 are
+      in `docs/play/shots/`, retaken on the evening of 12 October 2026 off
+      the built app on a signed-up test account: the welcome, the studio,
+      Make a song, the video desk, the advert desk, the kids room (green,
+      with the typing box and the templates) and the Cubed room. The photo
+      editor is left out until it can be shot with a picture in it.
+      **Retake them the day the look is final**, and take the making rooms
+      with something made in them rather than empty, which these are not
+      yet.
 - [x] Feature graphic: 1024 x 500 — `docs/play/feature-graphic-1024x500.png`,
       drawn 12 October 2026 from the brand mark and `APP_LINE`. Redraw it the
       day either changes.
