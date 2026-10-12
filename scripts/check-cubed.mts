@@ -55,7 +55,7 @@ import { createHash } from 'node:crypto';
 import {
   LOCKUP, LOGO, LOGO_AF, LOGO_EN, LOGO_TALL, LOGO_WIDE, MARK, lockupFor,
 } from '../app/components/CubedMark.tsx';
-import { CLASS_RAND, guestRand, randSaid, seriesRand } from '../app/lib/cubed.ts';
+import { SERIES_RAND, guestRand, randSaid, seriesRand } from '../app/lib/cubed.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -511,22 +511,25 @@ ok('  and the listing it used to show is still reachable',
   'the pill was the only way to that listing. A door that orphans a page is'
   + ' a page quietly deleted, and nothing anywhere would say so');
 
-/* ── 7. What a class costs ──────────────────────────────────────────── */
+/* ── 7. What a masterclass costs ────────────────────────────────────── */
 
-ok('the room says what a class costs',
-  /data-cubedprice/.test(room) && /randSaid\(CLASS_RAND\)/.test(room),
+ok('the room says what a masterclass costs',
+  /data-cubedprice/.test(room) && /randSaid\(seriesRand\(\)\)/.test(room),
   'Carli, 11 October 2026: "Ek beplan om R949 vir \u2019n cubed class te'
   + ' vra." A guest deciding whether three evenings are worth it cannot work'
   + ' that out from a percentage');
 
-ok('  and it is the price she said',
-  CLASS_RAND === 949, String(CLASS_RAND));
+ok('  and it is the price she said, for all three classes together',
+  SERIES_RAND === 949 && seriesRand() === SERIES_RAND,
+  'Carli, 12 October 2026: "al drie klasse is gelykstaande aan R949"');
 
-ok('  and the series total is multiplied once, not typed',
-  seriesRand() === CLASS_RAND * CLASSES_IN_A_SERIES
-  && !/949/.test(room) && !/2847|2 847/.test(room),
-  'a price typed into a page is a price that disagrees with the agreement by'
-  + ' the end of the month');
+ok('  and nothing multiplies it into a per-class price or a series total',
+  !/CLASS_RAND|\* CLASSES_IN_A_SERIES|CLASSES_IN_A_SERIES \*/.test(room)
+  && !/949/.test(room) && !/2847|2 847/.test(room)
+  && /"cubed\.aClass": \{ en: "for all three classes"/.test(words)
+  && !/"cubed\.(price|aClass|fee|priceWhat)": \{[^\n]*\ba class\b/.test(words),
+  'a price typed into a page, or a page that does the arithmetic the other'
+  + ' way, is a page that disagrees with the agreement');
 
 ok('  and what the guest keeps follows the split that is on the same page',
   guestRand() === Math.round(seriesRand() * GUEST_SHARE),

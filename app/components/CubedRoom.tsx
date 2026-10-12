@@ -46,7 +46,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Clock, GraduationCap, Layers, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
 import {
-  CLASS_RAND, CLASSES_IN_A_SERIES, GUEST_TERMS, SERIES, minutesOf, randSaid, seriesRand,
+  CLASSES_IN_A_SERIES, GUEST_TERMS, SERIES, minutesOf, randSaid, seriesRand,
 } from '../lib/cubed';
 import { useLang } from '../lib/i18n';
 import CubedMark from './CubedMark';
@@ -147,18 +147,18 @@ export default function CubedRoom(): React.ReactElement {
               </div>
             </div>
 
-            {/* Metric 3: Admission per class */}
+            {/* Metric 3: What the masterclass costs — all three classes */}
             <div className="group relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 shadow-sm backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-900">
               <div className="flex items-center justify-between text-zinc-500">
-                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">{t('cubed.fee', 'Class fee')}</span>
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">{t('cubed.fee', 'Masterclass fee')}</span>
                 <GraduationCap className="h-4 w-4 text-emerald-500/80" />
               </div>
               <div className="mt-4 flex items-baseline gap-2">
                 <span data-cubedprice className="text-4xl font-black tracking-tight text-zinc-100">
-                  {randSaid(CLASS_RAND)}
+                  {randSaid(seriesRand())}
                 </span>
                 <span className="text-sm font-semibold text-zinc-400">
-                  {t('cubed.aClass', 'a class')}
+                  {t('cubed.aClass', 'for all three classes')}
                 </span>
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function CubedRoom(): React.ReactElement {
             <p className="text-sm leading-relaxed text-zinc-400" data-cubedpricewhat>
               {t(
                 'cubed.priceWhat',
-                'Three classes make one masterclass, so a full series is {s}.',
+                'Three classes make one masterclass, and {s} buys all three. There is no price per class.',
               ).replace('{s}', randSaid(seriesRand()))}
             </p>
           </div>

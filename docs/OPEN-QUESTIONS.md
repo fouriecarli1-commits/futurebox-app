@@ -7266,7 +7266,9 @@ nothing). If the door now says *run supabase/kinders.sql and supabase/skermtyd.s
 1 above — the same SQL. Cubed's third class is "What is next"; the 60/40 is off the public page
 and kept for the agreement; the room opens with her line; no Afrikaans is typed into any English
 screen, held by `check:taalvas`. The copilot names every song it writes and the room never says
-"Untitled". The contrast probe walks the dark theme and reads gradients, which is how it found
+"Untitled". **R949 is the price of the whole masterclass, all three classes** — "al drie klasse is
+gelykstaande aan R949" — not per class as the page said for a day; the room, the dictionary, the
+check and the presenter agreement say so now. The contrast probe walks the dark theme and reads gradients, which is how it found
 fifteen light-theme buttons at 2.73:1 — flat fills now.
 
 ---

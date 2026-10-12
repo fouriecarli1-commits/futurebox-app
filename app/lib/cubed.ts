@@ -52,23 +52,23 @@
 export const CLASSES_IN_A_SERIES = 3;
 
 /**
- * What a Cubed class costs, in rand.
+ * What a Cubed masterclass costs, in rand — all three classes together.
  *
  * Carli, 11 October 2026: *"Ek beplan om R949 vir 'n cubed class te vra."*
+ * Read for a day as the price of ONE class, with the series shown as three
+ * times that. Carli, 12 October 2026: *"Nee, jy verstaan verkeerd, al drie
+ * klasse is gelykstaande aan R949."* A "cubed class" IS the three classes;
+ * R949 buys the masterclass, and there is no per-class price.
  *
  * Here rather than typed into the page, for the reason everything else in
- * this file is here: the guest reads a split, the page shows a price, and
- * the agreement quotes both. A number that lives in one screen is a number
- * that disagrees with the other two by the end of the month.
- *
- * It is the price of a CLASS. A series is three of them —
- * `CLASSES_IN_A_SERIES` — and `seriesRand()` does that multiplication once
- * so nobody does it again differently.
+ * this file is here: the page shows a price and the agreement quotes it,
+ * and a number that lives in one screen disagrees with the other by the end
+ * of the month. `check:cubed` refuses a room that multiplies it.
  */
-export const CLASS_RAND = 949;
+export const SERIES_RAND = 949;
 
 /** What a whole series costs, which is the thing a guest is paid a share of. */
-export const seriesRand = (): number => CLASS_RAND * CLASSES_IN_A_SERIES;
+export const seriesRand = (): number => SERIES_RAND;
 
 /**
  * A price as this country writes it: `R949`, `R2 847`.
