@@ -3428,7 +3428,7 @@ export default function FutureBoxHome() {
                     {t('cubed.title', 'Cubed')}<sup className="ml-0.5 text-xs text-amber-400 font-extrabold select-none">3</sup>
                   </span>
                   <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-500/30">
-                    VIP Masterclass · 3 Klasse
+                    {t('cubed.badge', 'VIP masterclass · 3 classes')}
                   </span>
                 </span>
                 <span className="block text-xs leading-snug text-zinc-400 pt-0.5">

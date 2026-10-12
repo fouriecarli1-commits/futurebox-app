@@ -19,7 +19,7 @@
  * Because a guest has to be told before they agree, and "three classes" is a
  * thing somebody can plan a weekend around. One long talk is a lecture and
  * gets watched once; three is a shape with an arc — what it is, how it is
- * done, what goes wrong — and somebody who finishes the first comes back for
+ * done, what is next — and somebody who finishes the first comes back for
  * the second.
  *
  * `check:cubed` refuses a series that is not three, and refuses it in the
@@ -33,10 +33,13 @@
  * and a platform taking the larger half of somebody else's name is a platform
  * that cannot book the next one.
  *
- * It is in code because it is quoted TO GUESTS on a public page. A number in
- * a conversation is a number two people remember differently; a number on the
- * page a guest read before they said yes is an agreement. And a number in one
- * file cannot be sixty on the invitation and fifty-five in the contract.
+ * It is in code for the written agreement a guest signs, not for the page.
+ * Carli, 12 October 2026: *"Die Cubed classes kan nie die winsverdeling wys
+ * tussen my en die persoon wat die klas aanbied nie."* The public room says
+ * the series is shared and that the terms are written down before anybody
+ * says yes; the number itself stays between her and the guest. One file
+ * still, so it cannot be sixty in the agreement and fifty-five in a
+ * conversation — and `check:cubed` now refuses the room if it quotes it.
  */
 
 /**
@@ -168,10 +171,10 @@ export const SERIES: readonly Series[] = [
       },
       {
         part: 3,
-        title: ['What goes wrong', 'Wat verkeerd loop'],
+        title: ['What is next', 'Wat volgende kom'],
         outcome: [
-          'You know the three mistakes everybody makes and how to see them coming.',
-          'Jy weet watter drie foute almal maak en hoe om hulle te sien kom.',
+          'You know where this is going and what to build next, starting tomorrow.',
+          'Jy weet waarheen dit gaan en wat jy volgende moet bou, van môre af.',
         ],
         minutes: 18,
       },
@@ -203,12 +206,12 @@ export const minutesOf = (series: Series): number =>
  */
 export const GUEST_TERMS: readonly (readonly [en: string, af: string])[] = [
   [
-    `Three classes, not one. A Cubed class is ${CLASSES_IN_A_SERIES} sessions: what it is, how it is done, and what goes wrong. You are asked for three because one talk gets watched once and three gets finished.`,
-    `Drie klasse, nie een nie. ’n Cubed-klas is ${CLASSES_IN_A_SERIES} sessies: wat dit is, hoe dit gedoen word, en wat verkeerd loop. Jy word vir drie gevra omdat een gesprek een keer gekyk word en drie klaargemaak word.`,
+    `Three classes, not one. A Cubed class is ${CLASSES_IN_A_SERIES} sessions: what it is, how it is done, and what is next. You are asked for three because one talk gets watched once and three gets finished.`,
+    `Drie klasse, nie een nie. ’n Cubed-klas is ${CLASSES_IN_A_SERIES} sessies: wat dit is, hoe dit gedoen word, en wat volgende kom. Jy word vir drie gevra omdat een gesprek een keer gekyk word en drie klaargemaak word.`,
   ],
   [
-    `${Math.round(GUEST_SHARE * 100)}% of what the series earns is yours. FutureBox keeps ${Math.round(HOUSE_SHARE * 100)}% and carries the filming, the editing, the hosting and the audience.`,
-    `${Math.round(GUEST_SHARE * 100)}% van wat die reeks verdien is joune. FutureBox hou ${Math.round(HOUSE_SHARE * 100)}% en dra die verfilming, die redigering, die bediening en die gehoor.`,
+    'What the series earns is shared with you. The share is written into your agreement before you say yes, and FutureBox carries the filming, the editing, the hosting and the audience.',
+    'Wat die reeks verdien word met jou gedeel. Die deel word in jou ooreenkoms geskryf voor jy ja sê, en FutureBox dra die verfilming, die redigering, die bediening en die gehoor.',
   ],
   [
     'Your name is on it and it stays yours. Nothing is re-narrated, nothing is generated in your voice, and nothing is published without you seeing the cut.',

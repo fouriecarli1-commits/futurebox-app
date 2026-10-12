@@ -16,8 +16,8 @@ import CubedRoom from '../components/CubedRoom';
 export const metadata = {
   title: 'Cubed³ — FutureBox',
   description:
-    'Three classes to a masterclass: what it is, how it is done, and what goes wrong. '
-    + 'Taught by people who have done it, with 60% of what a series earns going to the guest.',
+    'Dive into the future and attend a class curated by a professional. '
+    + 'Three classes to a masterclass: what it is, how it is done, and what is next.',
 };
 
 export default function Cubed(): React.ReactElement {
