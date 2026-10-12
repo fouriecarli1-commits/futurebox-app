@@ -60,7 +60,11 @@ let failures = 0;
 let checked = 0;
 const unreachable = [];
 
-for (const name of ROOMS) {
+/* `ONLY=pages` walks the standalone pages alone — a minute instead of
+   four when the page being fixed is one of them. The whole walk is what CI
+   runs; this is for the person fixing. */
+const ONLY = process.env.ONLY ?? '';
+for (const name of ONLY === 'pages' ? [] : ROOMS) {
   /* Through the studio's front door, which is what the studio opens on.
 
      This used to click the rail directly and swallow the failure with
@@ -129,7 +133,7 @@ for (const name of ROOMS) {
 const TABS = ALL_TABS.filter((one) => one !== 'Make');
 const CHIPS = ['Music & video', 'Musiek en video'];
 
-for (const name of TABS) {
+for (const name of ONLY === 'pages' ? [] : TABS) {
   try {
     const bar = page.locator('nav[aria-label]').first();
     await bar.locator('button').filter({ hasText: new RegExp(`^${name}$`) }).first().click();
@@ -157,6 +161,44 @@ for (const name of TABS) {
     if (!opened) unreachable.push('the creative page: no chip matched');
     else score('creative page', await measure(page));
   }
+}
+
+/* ── The pages that are not the studio ──────────────────────────────────
+
+   Added 12 October 2026. The Cubed room, the guide, the help page and the
+   kids room are screens of their own, reached by address, and none of them
+   was in this walk: the kids room had just been repainted green and the
+   only measurement of it was a look at a screenshot. The kids room is
+   measured twice — the grown-up's door, and the child's room behind it with
+   the allowance route answered here so no row is written anywhere. */
+const PAGES = ['/cubed', '/guide', '/help'];
+for (const path of PAGES) {
+  try {
+    await page.goto(`${server.url}${path}`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(900);
+  } catch (why) {
+    unreachable.push(`page ${path}: ${String(why).slice(0, 80)}`);
+    continue;
+  }
+  score(`page ${path}`, await measure(page));
+}
+{
+  let open = false;
+  await page.route('**/api/kids', (route) => route.fulfill({
+    json: open ? { open: true, allowance: 20, spent: 0, left: 20, minutes: null, secondsLeft: null } : { open: false },
+  }));
+  try {
+    await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
+    await page.locator('[data-kidsdoor]').waitFor({ state: 'visible', timeout: 15000 });
+    score('page /kids · the door', await measure(page));
+    open = true;
+    await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
+    await page.locator('[data-kidsroom]').waitFor({ state: 'visible', timeout: 15000 });
+    score('page /kids · the room', await measure(page));
+  } catch (why) {
+    unreachable.push(`page /kids: ${String(why).slice(0, 80)}`);
+  }
+  await page.unroute('**/api/kids').catch(() => undefined);
 }
 
 console.log(`\n${checked} text nodes checked, ${failures} below AA. Lowest: ${worst.ratio}:1 — ${worst.what}`);
@@ -253,7 +295,7 @@ function score(name, result) {
     if (one.ratio < worst.ratio) worst = { ratio: one.ratio, what: `${name}: "${one.text}"` };
   }
   console.log(`${name.padEnd(16)} ${result.length} text nodes, ${bad.length} below AA`);
-  for (const one of bad.slice(0, 4)) {
+  for (const one of bad.slice(0, Number(process.env.SHOW ?? 4))) {
     console.log(`    ${one.ratio}:1 (needs ${one.need}) — "${one.text}"`);
   }
 }

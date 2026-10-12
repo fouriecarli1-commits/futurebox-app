@@ -536,9 +536,11 @@ body:has([data-kidsroom]) {
   --fb-surface-300: 160 224 184;
   --fb-surface-400: 110 200 148;
   --fb-surface-500: 56 170 108;
-  --fb-surface-600: 34 136 84;
-  --fb-surface-700: 24 104 66;
-  --fb-surface-800: 18 72 48;
+  /* 600 to 800 are text stops on the pale ground: 4.5:1 or better on
+     surface-50, measured by audit/contrast.mjs on the kids page. */
+  --fb-surface-600: 20 110 60;
+  --fb-surface-700: 16 86 48;
+  --fb-surface-800: 14 64 38;
   --fb-surface-900: 12 46 32;
   --fb-surface-950: 10 30 22;
 
@@ -610,16 +612,22 @@ body:has([data-kidsroom]) main {
 }
 
 [data-kidswheel] {
-  background: linear-gradient(180deg, rgb(var(--fb-highlight-400)), rgb(var(--fb-highlight-500)));
-  color: rgb(var(--fb-highlight-950));
-  box-shadow: 0 6px 0 rgb(var(--fb-highlight-700)), 0 10px 18px -4px rgba(211, 150, 9, 0.35);
-  border: 2px solid rgb(var(--fb-highlight-300));
+  /* Its own amber, not the highlight ramp's stops: on a light preset the
+     ramp's 400 is solved dark brown for text use, and the wheel became a
+     brown-to-amber gradient with dark words on the brown end — 2.6:1,
+     measured by audit/contrast.mjs. The kids room has a palette of its own
+     and this is part of it; the ink is the room's dark, at 6.5:1 on the
+     darker end. */
+  background: linear-gradient(180deg, #ffd43b, #f0a500);
+  color: #1a1206;
+  box-shadow: 0 6px 0 #8a6b10, 0 10px 18px -4px rgba(211, 150, 9, 0.35);
+  border: 2px solid #ffe08a;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
 [data-kidswheel]:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 0 rgb(var(--fb-highlight-700)), 0 14px 22px -4px rgba(211, 150, 9, 0.45);
+  box-shadow: 0 8px 0 #8a6b10, 0 14px 22px -4px rgba(211, 150, 9, 0.45);
 }
 
 [data-kidswheel]:active:not(:disabled) {

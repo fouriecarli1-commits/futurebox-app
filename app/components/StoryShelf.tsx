@@ -177,7 +177,7 @@ export default function StoryShelf({
   /* ── The shelf ─────────────────────────────────────────────────────── */
   if (!shelf.length) {
     return (
-      <p className="rounded-2xl border border-dashed border-zinc-700 px-4 py-5 text-center text-sm leading-relaxed text-zinc-500" data-shelfempty>
+      <p className="rounded-2xl border border-dashed border-zinc-700 px-4 py-5 text-center text-sm leading-relaxed text-zinc-600" data-shelfempty>
         {grownUp
           ? t('shelf.noneGrown', 'No stories yet. Make one in Story mode and press “Keep it for the kids room”.')
           : t('shelf.none', 'No stories yet. Ask a grown-up to make one.')}

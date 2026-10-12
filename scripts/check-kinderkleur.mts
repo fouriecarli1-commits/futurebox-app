@@ -30,7 +30,7 @@ import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { KID_SOUNDS, KID_TOPICS } from '../app/lib/kidsong.ts';
 import {
-  MASCOT_SAYS, PAINTS, SIZES, SOUND_PAINTS, brightnessOf, inkOn, paintOf,
+  MASCOT_SAYS, PAINTS, SIZES, SOUND_PAINTS, contrastOf, inkOn, paintOf,
   sizeAt, spin,
 } from '../app/lib/kidslook.ts';
 
@@ -77,7 +77,7 @@ ok('  and no two of them are the same colour',
 ok('the words on every bubble can be read',
   (() => {
     const hard = [...Object.entries(PAINTS), ...Object.entries(SOUND_PAINTS)]
-      .filter(([, p]) => Math.abs(brightnessOf(p.from) - brightnessOf(p.ink)) < 0.4)
+      .filter(([, p]) => Math.min(contrastOf(p.from, p.ink), contrastOf(p.to, p.ink)) < 4.5)
       .map(([id]) => id);
     if (hard.length) console.log(`         too close: ${hard.join(', ')}`);
     return hard.length === 0;
@@ -87,9 +87,17 @@ ok('the words on every bubble can be read',
 
 ok('  and the ink is chosen from the colour rather than typed',
   [...Object.values(PAINTS), ...Object.values(SOUND_PAINTS)]
-    .every((p) => p.ink === inkOn(p.from)),
+    .every((p) => p.ink === inkOn(p.from, p.to)),
   'an ink typed beside a colour is an ink that stays when somebody changes'
   + ' the colour');
+
+ok('  and the template tiles wear the same paints, not colours typed beside them',
+  (() => {
+    const tiles = withoutComments(readFileSync('app/lib/kidstemplates.ts', 'utf8'));
+    const picker = withoutComments(readFileSync('app/components/KidsTemplatesPicker.tsx', 'utf8'));
+    return !/\b(from|to|ink):\s*'#/.test(tiles) && /paintOf\(PAINTS, tpl\.topic\)/.test(picker);
+  })(),
+  'fourteen tiles with their own typed colours were fourteen places for a white-on-orange to come back');
 
 ok('  and a choice that does not exist still draws something',
   (() => {

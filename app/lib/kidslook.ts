@@ -36,25 +36,46 @@ export type Paint = {
 };
 
 /**
- * How bright a colour is, 0 to 1, the way an eye weighs it.
+ * Relative luminance as WCAG defines it: gamma-corrected, not a straight
+ * average of the channels.
  *
- * Rec. 709 luma. Used to choose the ink, because a yellow bubble with white
- * words on it is a bubble with no words on it, and the fault is invisible to
- * anybody who picked the yellow.
+ * The first version of this file used the straight average, called it
+ * brightness, and chose the ink from the FROM stop alone. `audit/contrast.mjs`,
+ * reading the kids room for the first time on 12 October 2026, found eight
+ * bubbles and the template tiles between 2.2:1 and 4.0:1 — a check green
+ * for something adjacent, which is the fault this repository exists to catch.
  */
-export function brightnessOf(hex: string): number {
+export function luminanceOf(hex: string): number {
   const at = hex.replace('#', '');
-  const r = parseInt(at.slice(0, 2), 16) / 255;
-  const g = parseInt(at.slice(2, 4), 16) / 255;
-  const b = parseInt(at.slice(4, 6), 16) / 255;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const lin = (two: string): number => {
+    const c = parseInt(two, 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * lin(at.slice(0, 2)) + 0.7152 * lin(at.slice(2, 4)) + 0.0722 * lin(at.slice(4, 6));
 }
 
-/** Near-black on a bright colour, near-white on a dark one. */
-export const inkOn = (hex: string): string =>
-  (brightnessOf(hex) > 0.5 ? '#1a1206' : '#fffaf2');
+/** WCAG contrast between two colours, 1 to 21. */
+export function contrastOf(a: string, b: string): number {
+  const [hi, lo] = [luminanceOf(a), luminanceOf(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
 
-const paint = (from: string, to: string): Paint => ({ from, to, ink: inkOn(from) });
+/** The two inks a bubble may carry: the room's own dark, and its warm white. */
+export const DARK_INK = '#1a1206';
+export const LIGHT_INK = '#fffaf2';
+
+/**
+ * The ink for a gradient, chosen against BOTH its stops: whichever ink keeps
+ * the better contrast at the worse end. A label sits across the whole
+ * bubble, so it has to read at the end that is hardest for it.
+ */
+export const inkOn = (from: string, to: string = from): string => {
+  const dark = Math.min(contrastOf(from, DARK_INK), contrastOf(to, DARK_INK));
+  const light = Math.min(contrastOf(from, LIGHT_INK), contrastOf(to, LIGHT_INK));
+  return dark >= light ? DARK_INK : LIGHT_INK;
+};
+
+const paint = (from: string, to: string): Paint => ({ from, to, ink: inkOn(from, to) });
 
 /**
  * One colour per topic, in the order the topics are listed.
@@ -66,18 +87,18 @@ const paint = (from: string, to: string): Paint => ({ from, to, ink: inkOn(from)
 export const PAINTS: Record<string, Paint> = {
   dog: paint('#ffb020', '#ff7a18'),
   cat: paint('#ff6fa5', '#ff3d7f'),
-  space: paint('#7b61ff', '#4b2fd6'),
-  birthday: paint('#ff5fd2', '#c42bb0'),
+  space: paint('#6b4fe6', '#4b2fd6'),
+  birthday: paint('#ff5fd2', '#d94dc0'),
   sea: paint('#2fd0e0', '#0e9bb8'),
-  rain: paint('#58a6ff', '#2b6fe0'),
+  rain: paint('#58a6ff', '#3f86f0'),
   brave: paint('#ff8a3d', '#e2521a'),
   dinos: paint('#53d86a', '#1f9e46'),
   farm: paint('#d6b24a', '#a67c1f'),
   bedtime: paint('#5a63b8', '#2f3578'),
   friends: paint('#ff9e7d', '#e85d3a'),
   counting: paint('#43c6ac', '#1a8f85'),
-  colours: paint('#ff4d6d', '#d61f45'),
-  school: paint('#45b7ff', '#1178cc'),
+  colours: paint('#ff4d6d', '#f0405f'),
+  school: paint('#45b7ff', '#2a8fe0'),
 };
 
 /**
@@ -92,9 +113,9 @@ export const PAINTS: Record<string, Paint> = {
 export const SOUND_PAINTS: Record<string, Paint> = {
   happy: paint('#ffd43b', '#f0a500'),
   quiet: paint('#9db8ff', '#5f7ee0'),
-  rock: paint('#ff5a3c', '#cf2a10'),
+  rock: paint('#ff5a3c', '#f0421f'),
   dance: paint('#49e0a0', '#18ae78'),
-  march: paint('#c9a227', '#8a6b10'),
+  march: paint('#c9a227', '#a8841a'),
   funny: paint('#ff8fe0', '#e04bbd'),
   country: paint('#e0a86b', '#b07434'),
   kwaito: paint('#6ee7f5', '#17a2bd'),

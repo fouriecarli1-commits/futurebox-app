@@ -186,7 +186,7 @@ export default function CubedRoom(): React.ReactElement {
           <Link
             href="/?tab=masterclasses"
             data-cubedlisting
-            className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-400 shadow-sm transition-all hover:border-emerald-500/60 hover:bg-emerald-500/20 hover:text-emerald-300"
+            className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:border-emerald-500/60 hover:bg-emerald-500/20 hover:text-emerald-800"
           >
             <span>{t('cubed.seeList', 'See the classes on offer')}</span>
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -236,7 +236,7 @@ export default function CubedRoom(): React.ReactElement {
                 {/* Status Badge */}
                 <div>
                   {series.stage === 'open' ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-400">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-700">
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
                       {t('cubed.open', 'Open')}
                     </span>
@@ -263,7 +263,7 @@ export default function CubedRoom(): React.ReactElement {
                   >
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-3xl font-black tracking-tighter text-zinc-700 transition-colors group-hover:text-zinc-500">
+                        <span className="text-3xl font-black tracking-tighter text-zinc-600 transition-colors group-hover:text-zinc-500">
                           0{part.part}
                         </span>
                         <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900 px-2.5 py-1 text-[11px] font-bold text-zinc-400">
