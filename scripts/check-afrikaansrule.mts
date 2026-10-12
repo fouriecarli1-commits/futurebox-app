@@ -52,7 +52,7 @@ let looked = 0;
 
 for (const path of all) {
   const source = readFileSync(path, 'utf8');
-  const name = path.slice(join(ROOT, 'app/api').length + 1);
+  const name = path.slice(join(ROOT, 'app/api').length + 1).replace(/\\/g, '/');
   /* Only routes that actually put a prompt to a language model. A route that
      names Afrikaans in a comment, or takes it as a language code to hand to a
      speech engine, has no prompt to guard — dialogue and presenter are both

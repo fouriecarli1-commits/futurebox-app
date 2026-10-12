@@ -125,9 +125,11 @@ import { spawn } from 'node:child_process';
  *            one server.
  */
 export async function serve(port, { tries = 40, every = 1500, env = {} } = {}) {
-  const child = spawn('npx', ['next', 'start', '-p', String(port)], {
+  const nextBin = join(dirname(HERE), 'node_modules', 'next', 'dist', 'bin', 'next');
+  const isWin = process.platform === 'win32';
+  const child = spawn(process.execPath, [nextBin, 'start', '-p', String(port)], {
     cwd: dirname(HERE),
-    detached: true,
+    detached: !isWin,
     stdio: 'ignore',
     env: { ...process.env, ...env },
   });
@@ -144,7 +146,13 @@ export async function serve(port, { tries = 40, every = 1500, env = {} } = {}) {
     // The whole group, because `next start` forks. Killing only the parent
     // leaves the worker holding the port, and the next run of the same probe
     // then finds a server it did not start and cannot restart.
-    try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already gone */ }
+    try {
+      if (isWin) {
+        child.kill();
+      } else {
+        process.kill(-child.pid, 'SIGKILL');
+      }
+    } catch { /* already gone */ }
   };
   /* Also on the way out, however the probe leaves.
      A probe that throws on its first assertion never reaches its own stop(),

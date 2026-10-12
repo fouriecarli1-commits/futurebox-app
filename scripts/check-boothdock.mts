@@ -203,7 +203,7 @@ ok(
 );
 ok(
   '  and it is given back however the room is left',
-  /return \(\) => \{\n\s*claims = Math\.max/.test(room),
+  /return \(\) => \{\r?\n\s*claims = Math\.max/.test(room),
   'a claim released only on a tidy exit is a tab bar that never comes back',
 );
 ok(

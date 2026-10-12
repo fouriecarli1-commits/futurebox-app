@@ -112,7 +112,7 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      price nobody has to argue about later. It goes on the cards the day the
      post studio opens; until then a card naming a button nobody can press is
      the worse of the two mistakes. */
-  postOut: 'two credits to take a finished post off the device, and the tools'
+  postOut: 'five credits to take a finished post off the device, and the tools'
     + ' that made it free, because they run on her own phone. The cards name'
     + ' ROOMS and what they cost to run, not every press inside one — a line'
     + ' for every action would be read by nobody, which is the fault this'

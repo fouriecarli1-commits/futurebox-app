@@ -51,6 +51,7 @@ import type { VoiceState } from './VoiceLab';
 import Cost from './Cost';
 import Card from './Card';
 import Note from './Note';
+import AvatarTemplatesPicker from './AvatarTemplatesPicker';
 
 /** How long the reading is, read off the file rather than guessed from words. */
 async function lengthOf(blob: Blob): Promise<number> {
@@ -494,13 +495,16 @@ export default function Presenter({
             )}</Note>
 
       {cast.length === 0 ? (
-        <p className="text-sm text-amber-400 leading-relaxed flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          {t(
-            'pres.noCast',
-            'Put somebody in your cast first — the picture above is who the presenter will be.',
-          )}
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-amber-400 leading-relaxed flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            {t(
+              'pres.noCast',
+              'Put somebody in your cast first — the picture above is who the presenter will be.',
+            )}
+          </p>
+          <AvatarTemplatesPicker />
+        </div>
       ) : (
         <>
           <div className="space-y-1.5">
@@ -531,6 +535,9 @@ export default function Presenter({
                   </button>
                 );
               })}
+            </div>
+            <div className="pt-2">
+              <AvatarTemplatesPicker />
             </div>
           </div>
 

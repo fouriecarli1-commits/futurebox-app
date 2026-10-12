@@ -40,11 +40,11 @@ import { useLang } from '../lib/i18n';
 export default function KidsPage(): React.ReactElement {
   const { t } = useLang();
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
+    <main className="min-h-screen bg-transparent text-ink">
       <div className="mx-auto w-full max-w-3xl px-5 pt-8">
         <Link
           href="/"
-          className="inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-zinc-400 hover:text-white"
+          className="inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-surface-700 hover:text-surface-950 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('kids.back', 'Back to the studio')}

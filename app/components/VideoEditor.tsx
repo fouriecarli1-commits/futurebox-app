@@ -68,8 +68,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
-  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic,
+  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2,
 } from 'lucide-react';
+import CanvasSizeModal from './CanvasSizeModal';
+import StudioTemplatesModal from './StudioTemplatesModal';
+import { type StudioTemplateItem } from '../lib/studiotemplates';
 import Card from './Card';
 import MakeSound from './MakeSound';
 import ShareRow from './ShareRow';
@@ -99,6 +102,7 @@ const SMALL = 'min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 p
   + ' text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600';
 import { BAR, BAR_TIGHT, ROW2, ROW3, ROW5, SLIDE } from '../lib/benchbar';
 import { STARTS, dressed } from '../lib/filmstart';
+import VideoTemplatesPicker from './VideoTemplatesPicker';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
@@ -1189,6 +1193,8 @@ export default function VideoEditor({
   const [markTurn, setMarkTurn] = useState(0);
   const [markSolid, setMarkSolid] = useState(MARK_OPACITY);
   const [markUnder, setMarkUnder] = useState(false);
+  const [showStudioTemplatesModal, setShowStudioTemplatesModal] = useState(false);
+  const [showCanvasSizeModal, setShowCanvasSizeModal] = useState(false);
 
   /* ── The shape the film is actually coming out in ───────────────────────
  
@@ -6690,48 +6696,34 @@ async function smallerFrame(url: string): Promise<string> {
                 a press that silently does nothing: nothing in this app can
                 film her show for her, and `lib/filmstart.ts` says why
                 pretending otherwise would be worse than no templates. */}
-            <div className="space-y-1.5">
-              <span className="text-sm text-zinc-400">{t('edit.start', 'Start from something')}</span>
-              {edit.pieces.length === 0 ? (
-                <p className="text-[12px] leading-relaxed text-zinc-500">
-                  {t(
-                    'edit.startEmpty',
-                    'Bring a clip in first. A starting point dresses your own film — one look across every shot, how they come in after one another, a title and a sign-off — it cannot film it for you.',
-                  )}
-                </p>
-              ) : (
-                <>
-                  <div className={ROW2}>
-                    {STARTS.map((one) => (
-                      <button
-                        key={one.id}
-                        type="button"
-                        data-editorstart={one.id}
-                        onClick={() => commit((was) => ({
-                          ...was,
-                          shape: one.shape,
-                          pieces: dressed(one, was.pieces, t),
-                        }))}
-                        className={`${BAR} border`}
-                        style={{
-                          borderColor: 'rgba(16,185,129,0.45)',
-                          background: 'rgba(52,211,153,0.18)',
-                          color: INK,
-                          boxShadow: RAISE,
-                        }}
-                      >
-                        {t(one.name[0], one.name[1])}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[12px] leading-relaxed text-zinc-500">
-                    {t(
-                      'edit.startWhy',
-                      'Each one sets the shape, one look across every shot, how the shots come in after one another, and a title and a sign-off. Change every part of it afterwards, and the arrows take it back. Words you have already typed are left alone.',
-                    )}
-                  </p>
-                </>
-              )}
+            {/* ── Modern Video Templates & Google Veo Scene Inspiration ─── */}
+            <VideoTemplatesPicker
+              piecesCount={edit.pieces.length}
+              currentShape={edit.shape}
+              onSelectStart={(one) => commit((was) => ({
+                ...was,
+                shape: one.shape,
+                pieces: was.pieces.length > 0 ? dressed(one, was.pieces, t) : was.pieces,
+              }))}
+            />
+
+            <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
+              <button
+                type="button"
+                onClick={() => setShowStudioTemplatesModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 px-3 py-2 text-xs font-semibold text-purple-200 hover:bg-purple-500/20 active:scale-95 transition-all"
+              >
+                <LayoutTemplate className="h-4 w-4 text-purple-400" />
+                <span>{t('stpl.openExplorer', 'Explore Templates...')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCanvasSizeModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-500/10 px-3 py-2 text-xs font-semibold text-teal-200 hover:bg-teal-500/20 active:scale-95 transition-all"
+              >
+                <Maximize2 className="h-4 w-4 text-teal-400" />
+                <span>{t('size.openCustom', 'All Standard & Custom Sizes...')}</span>
+              </button>
             </div>
 
             {/* ── The shape, which changes what you are looking at ────── */}
@@ -7256,6 +7248,35 @@ async function smallerFrame(url: string): Promise<string> {
           </div>
         )}
       </CutDock>
+
+      {showStudioTemplatesModal && (
+        <StudioTemplatesModal
+          onClose={() => setShowStudioTemplatesModal(false)}
+          onSelectTemplate={(tpl: StudioTemplateItem) => {
+            commit((was) => ({
+              ...was,
+              title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
+              shape: tpl.width > tpl.height ? 'wide' : tpl.height > tpl.width ? 'tall' : 'square',
+            }));
+            setShowStudioTemplatesModal(false);
+          }}
+        />
+      )}
+
+      {showCanvasSizeModal && (
+        <CanvasSizeModal
+          currentWidth={edit.shape === 'wide' ? 1920 : edit.shape === 'square' ? 1080 : 1080}
+          currentHeight={edit.shape === 'wide' ? 1080 : edit.shape === 'square' ? 1080 : 1920}
+          onClose={() => setShowCanvasSizeModal(false)}
+          onApplySize={(w: number, h: number) => {
+            commit((was) => ({
+              ...was,
+              shape: w > h ? 'wide' : h > w ? 'tall' : 'square',
+            }));
+            setShowCanvasSizeModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

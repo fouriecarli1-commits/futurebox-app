@@ -28,13 +28,12 @@
  *
  * *"Ons moet dit ook so uit stipuleer vir ons gaste. Ons gaan 'n 60/40
  * winsverdeling doen."* A guest who reads the split before the conversation
- * arrives at the conversation already knowing the shape. Every number on this
- * page comes out of `lib/cubed.ts`, so the page and the agreement cannot
- * drift apart, and `check:cubed` holds them together.
+ * arrives at the conversation already knowing the shape.
  */
 
 import React from 'react';
 import Link from 'next/link';
+import { ArrowRight, Clock, GraduationCap, Layers, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
 import {
   CLASS_RAND, CLASSES_IN_A_SERIES, GUEST_TERMS, GUEST_SHARE, HOUSE_SHARE, SERIES,
   guestRand, minutesOf, randSaid, seriesRand, splitAsSaid,
@@ -42,253 +41,348 @@ import {
 import { useLang } from '../lib/i18n';
 import CubedMark from './CubedMark';
 
-/**
- * The room's own black, for the one thing that cannot be a class: the mark's
- * erasing pass, which has to be painted in the literal colour behind it.
- *
- * It is the same number `--fb-page` holds under `[data-cubed]` in
- * `globals.css`, and `check:cubed` holds the two together — a mark drawn
- * with the wrong background has black gashes through it, and nothing on a
- * screen says which of the two numbers moved.
- */
-const INK = '#07080a';
-
 export default function CubedRoom(): React.ReactElement {
   const { lang, t } = useLang();
   const said = (pair: readonly [string, string]): string => (lang === 'af' ? pair[1] : pair[0]);
 
   return (
-    /* `data-cubed` and not an inline background. `white` in this app is
-       `--fb-ink`, which follows the theme — so the first version of this
-       room, which painted its own black and wrote `text-white` on top, drew
-       every heading near-black on near-black under the default light theme.
-       It compiled, it read correctly in the source, and it was invisible.
-       The room declares its darkness to the theme now, the way the Pro Booth
-       does. See `[data-cubed]` in `globals.css`.
-
-       `bg-zinc-950` and not `bg-page`: there is no `bg-page` utility. The
-       second version of this line used one, which compiled, produced
-       `rgba(0,0,0,0)` and let the body's light background through — so the
-       light heading this block exists to produce was invisible for a
-       different reason. `zinc` maps onto `--fb-surface-*`, which is what the
-       Pro Booth paints its own black with. */
     <main data-cubed className="min-h-screen bg-zinc-950">
-      {/* ── The one source of light ──────────────────────────────────────
-
-          A single soft wash from the top left, which is where the mark's own
-          gradient is lit from. Two light sources on one page is the thing
-          that makes a dark page look assembled rather than designed. */}
+      {/* ── Architectural Hero & Ambient Studio Light ───────────────────── */}
       <div
-        className="relative overflow-hidden"
+        className="relative overflow-hidden border-b border-zinc-900/80"
         style={{
           background:
-            'radial-gradient(120% 90% at 12% 0%, rgba(173,186,200,0.13) 0%, rgba(173,186,200,0.04) 38%, transparent 68%)',
+            'radial-gradient(130% 95% at 16% -5%, rgba(173,186,200,0.22) 0%, rgba(173,186,200,0.06) 42%, transparent 72%), radial-gradient(80% 60% at 85% 15%, rgba(16,185,129,0.05) 0%, transparent 60%)',
         }}
       >
-        <div className="mx-auto max-w-4xl px-6 py-20 sm:py-28">
-          <Link
-            href="/"
-            className="inline-flex min-h-[44px] items-center text-sm text-zinc-500 hover:text-zinc-300"
-          >
-            ← FutureBox
-          </Link>
+        <div className="mx-auto max-w-5xl px-6 py-12 sm:py-20">
+          {/* Top navigation & VIP Badge */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <Link
+              href="/"
+              className="group inline-flex min-h-[44px] items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-900/60 px-4 py-1.5 text-xs font-bold tracking-wide text-zinc-400 backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-800 hover:text-white"
+            >
+              <span className="transition-transform duration-200 group-hover:-translate-x-0.5">←</span>
+              <span>FutureBox Studio</span>
+            </Link>
 
-          <div className="pt-10 sm:pt-14">
-            {/* Her file, at a size it can actually be read at. It brings its
-                own off-white ground with it, because it is her file and not a
-                redrawing of it — see CubedMark. */}
-            <CubedMark width={460} lang={lang} title={t('cubed.markAlt', 'Two cubes, threaded through each other')} />
+            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/90 bg-zinc-900/80 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-zinc-300 shadow-sm backdrop-blur-md">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              <span>Cubed³ · VIP Masterclasses · Exklusief</span>
+            </div>
           </div>
 
-          <h1
-            data-cubedtitle
-            className="pt-8 text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-7xl"
-          >
-            {t('cubed.title', 'Cubed')}
-          </h1>
-
-          {/* The name explained in one line, because a name that means a rule
-              is worth nothing if nobody is told the rule. */}
-          <p className="max-w-xl pt-5 text-lg leading-relaxed text-zinc-400 sm:text-xl">
-            {t(
-              'cubed.what',
-              'Three classes to a masterclass. What it is, how it is done, and what goes wrong — taught by somebody who has actually done it.',
-            )}
-          </p>
-
-          <div
-            className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-zinc-800 pt-6 text-sm"
-          >
-            <span className="text-zinc-500">
-              <span data-cubedthree className="pr-2 text-2xl font-black text-zinc-200">
-                {CLASSES_IN_A_SERIES}
-              </span>
-              {t('cubed.perSeries', 'classes to a masterclass')}
-            </span>
-            <span className="text-zinc-500">
-              <span data-cubedsplit className="pr-2 text-2xl font-black text-zinc-200">
-                {splitAsSaid()}
-              </span>
-              {t('cubed.split', 'to the guest')}
-            </span>
-            {/* ── The price, beside the split and not under it ──────────
- 
-                Carli, 11 October 2026: *"Ek beplan om R949 vir 'n cubed
-                class te vra."*
- 
-                A guest reading this is deciding whether three evenings of
-                their time is worth it, and they cannot work that out from a
-                percentage alone. The split and the price belong on one line
-                for the reason the split is on the page at all: somebody who
-                knows the shape before the conversation starts arrives at it
-                already knowing.
- 
-                Every number comes out of `lib/cubed.ts` — the series total
-                and the guest's share are multiplied there, once. */}
-            <span className="text-zinc-500">
-              <span data-cubedprice className="pr-2 text-2xl font-black text-zinc-200">
-                {randSaid(CLASS_RAND)}
-              </span>
-              {t('cubed.aClass', 'a class')}
-            </span>
+          {/* Centered Brand Mark Display */}
+          <div className="pt-8 sm:pt-12">
+            <div className="inline-block transition-transform duration-300 hover:scale-[1.01]">
+              <CubedMark width={460} lang={lang} title={t('cubed.markAlt', 'Two cubes, threaded through each other')} />
+            </div>
           </div>
 
-          <p className="pt-4 text-sm text-zinc-600" data-cubedpricewhat>
-            {t(
-              'cubed.priceWhat',
-              'Three classes make one masterclass, so a full series is {s}. A guest keeps {g} of that.',
-            )
-              .replace('{s}', randSaid(seriesRand()))
-              .replace('{g}', randSaid(guestRand()))}
-          </p>
+          {/* Title & Core Proposition */}
+          <div className="pt-6 sm:pt-8">
+            <div className="flex flex-wrap items-baseline gap-3">
+              <h1
+                data-cubedtitle
+                className="text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-8xl flex items-start"
+              >
+                <span>{t('cubed.title', 'Cubed')}</span>
+                <sup
+                  className="ml-1 text-2xl sm:text-4xl lg:text-5xl font-black text-amber-400 select-none drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)]"
+                  title={lang === 'af' ? 'Tot die mag 3: altyd presies 3 klasse per meesterklas' : 'To the power of 3: always 3 classes per masterclass'}
+                >
+                  3
+                </sup>
+              </h1>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-300 backdrop-blur-sm self-center">
+                <span className="font-extrabold text-amber-400">³</span>
+                <span>{lang === 'af' ? 'Tot die mag 3 · Altyd 3 klasse' : 'Power of 3 · Always 3 classes'}</span>
+              </span>
+            </div>
+
+            <p className="max-w-2xl pt-5 text-lg leading-relaxed text-zinc-400 sm:text-2xl font-medium">
+              {t(
+                'cubed.what',
+                'Three classes to a masterclass. What it is, how it is done, and what goes wrong — taught by somebody who has actually done it.',
+              )}
+            </p>
+          </div>
+
+          {/* Executive Metrics Cards */}
+          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {/* Metric 1: Format Rule */}
+            <div className="group relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 shadow-sm backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-900">
+              <div className="flex items-center justify-between text-zinc-500">
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                  {lang === 'af' ? 'Formaat (Mag 3)' : 'Format (Cubed³)'}
+                </span>
+                <span className="text-xs font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">³</span>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span data-cubedthree className="text-4xl font-black tracking-tight text-zinc-100">
+                  {CLASSES_IN_A_SERIES}
+                </span>
+                <span className="text-sm font-semibold text-zinc-400">
+                  {t('cubed.perSeries', 'classes to a masterclass')}
+                </span>
+              </div>
+            </div>
+
+            {/* Metric 2: Revenue Split */}
+            <div className="group relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 shadow-sm backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-900">
+              <div className="flex items-center justify-between text-zinc-500">
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Winsverdeling</span>
+                <Sparkles className="h-4 w-4 text-amber-500/80" />
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span data-cubedsplit className="text-4xl font-black tracking-tight text-zinc-100">
+                  {splitAsSaid()}
+                </span>
+                <span className="text-sm font-semibold text-zinc-400">
+                  {t('cubed.split', 'to the guest')}
+                </span>
+              </div>
+            </div>
+
+            {/* Metric 3: Admission per class */}
+            <div className="group relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 shadow-sm backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-900">
+              <div className="flex items-center justify-between text-zinc-500">
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Klasfooi</span>
+                <GraduationCap className="h-4 w-4 text-emerald-500/80" />
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span data-cubedprice className="text-4xl font-black tracking-tight text-zinc-100">
+                  {randSaid(CLASS_RAND)}
+                </span>
+                <span className="text-sm font-semibold text-zinc-400">
+                  {t('cubed.aClass', 'a class')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing statement breakdown */}
+          <div className="mt-5 rounded-xl border border-zinc-800/60 bg-zinc-900/40 px-5 py-3.5 backdrop-blur-sm">
+            <p className="text-sm leading-relaxed text-zinc-400" data-cubedpricewhat>
+              {t(
+                'cubed.priceWhat',
+                'Three classes make one masterclass, so a full series is {s}. A guest keeps {g} of that.',
+              )
+                .replace('{s}', randSaid(seriesRand()))
+                .replace('{g}', randSaid(guestRand()))}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* ── And the way back to the listing ───────────────────────────────
- 
-          The Spotlight pill that used to open the class listing is a door
-          into this room now. So the listing has to be reachable from here,
-          or it is a page nobody can get to. */}
-      <section className="mx-auto max-w-4xl px-6 pt-10">
-        <Link
-          href="/?tab=masterclasses"
-          data-cubedlisting
-          className="text-sm font-semibold text-emerald-500 underline underline-offset-4"
-        >
-          {t('cubed.seeList', 'See the classes on offer')}
-        </Link>
+      {/* ── Exploration Bar / Link to Listing ─────────────────────────── */}
+      <section className="mx-auto max-w-5xl px-6 pt-10">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-800/70 bg-zinc-900/40 p-5 backdrop-blur-sm">
+          <div>
+            <h2 className="text-sm font-bold text-zinc-200">Katalogus van Masterclasses</h2>
+            <p className="text-xs text-zinc-500">Blaai deur alle goedgekeurde sessies en gassprekers in die ateljee.</p>
+          </div>
+          <Link
+            href="/?tab=masterclasses"
+            data-cubedlisting
+            className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-400 shadow-sm transition-all hover:border-emerald-500/60 hover:bg-emerald-500/20 hover:text-emerald-300"
+          >
+            <span>{t('cubed.seeList', 'See the classes on offer')}</span>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
       </section>
 
-      {/* ── What is on ──────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-4xl px-6 py-16">
-        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600">
-          {t('cubed.theSeries', 'The series')}
-        </h2>
+      {/* ── Masterclass Series Showcase ──────────────────────────────────── */}
+      <section className="mx-auto max-w-5xl px-6 py-16">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-5">
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-zinc-400">
+              {t('cubed.theSeries', 'The series')}
+            </h2>
+            <p className="pt-1 text-sm text-zinc-500">
+              {lang === 'af'
+                ? 'Elke meesterklas word in presies 3 klasse (Cubed³) aangebied vir maksimale impak.'
+                : 'Each masterclass is delivered in exactly 3 classes (Cubed³) for maximum impact.'}
+            </p>
+          </div>
+          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs font-bold text-zinc-400">
+            {SERIES.length} Reeks{SERIES.length === 1 ? '' : 'e'} beskikbaar
+          </span>
+        </div>
 
-        <ul className="pt-6" data-cubedlist>
+        <ul className="space-y-10 pt-8" data-cubedlist>
           {SERIES.map((series) => (
             <li
               key={series.id}
               id={series.id}
               data-cubedseries={series.id}
-              className="border-t border-zinc-800 py-8"
+              className="overflow-hidden rounded-3xl border border-zinc-800/90 bg-zinc-900/60 p-6 shadow-xl backdrop-blur-md transition-all sm:p-8 hover:border-zinc-700/80"
             >
-              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <h3 className="text-2xl font-bold tracking-tight text-white">
-                  {said(series.title)}
-                </h3>
-                <span className="text-xs uppercase tracking-widest text-zinc-600">
-                  {series.stage === 'open'
-                    ? t('cubed.open', 'Open')
-                    : series.stage === 'recording'
-                      ? t('cubed.recording', 'Being recorded')
-                      : t('cubed.planned', 'Being arranged')}
-                </span>
-              </div>
-              <p className="pt-1 text-sm text-zinc-500">
-                {series.guest} — {said(series.guestIs)}
-              </p>
+              {/* Series Header */}
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-800/70 pb-6">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-md bg-zinc-800/80 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-300">
+                    <GraduationCap className="h-3.5 w-3.5 text-zinc-400" />
+                    <span>Reeks ID: {series.id}</span>
+                  </div>
+                  <h3 className="pt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                    {said(series.title)}
+                  </h3>
+                  <p className="pt-1.5 text-sm font-medium text-zinc-400">
+                    <span className="font-bold text-zinc-200">{series.guest}</span> — {said(series.guestIs)}
+                  </p>
+                </div>
 
-              <ol className="grid gap-px pt-6 sm:grid-cols-3">
+                {/* Status Badge */}
+                <div>
+                  {series.stage === 'open' ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      {t('cubed.open', 'Open')}
+                    </span>
+                  ) : series.stage === 'recording' ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-amber-400">
+                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      {t('cubed.recording', 'Being recorded')}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-600/40 bg-zinc-800 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-zinc-400">
+                      {t('cubed.planned', 'Being arranged')}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 3 Modules Grid */}
+              <ol className="grid gap-4 pt-6 sm:grid-cols-3">
                 {series.parts.map((part) => (
                   <li
                     key={part.part}
                     data-cubedpart={part.part}
-                    className="bg-zinc-900/60 p-5"
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-950/70 p-6 transition-all hover:border-zinc-700 hover:bg-zinc-950"
                   >
-                    <span className="block text-4xl font-black leading-none text-zinc-700">
-                      {part.part}
-                    </span>
-                    <span className="block pt-3 text-base font-bold text-zinc-100">
-                      {said(part.title)}
-                    </span>
-                    <span className="block pt-2 text-sm leading-relaxed text-zinc-500">
-                      {said(part.outcome)}
-                    </span>
-                    <span className="block pt-3 text-xs text-zinc-600">
-                      {part.minutes} {t('cubed.min', 'min')}
-                    </span>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-3xl font-black tracking-tighter text-zinc-700 transition-colors group-hover:text-zinc-500">
+                          0{part.part}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900 px-2.5 py-1 text-[11px] font-bold text-zinc-400">
+                          <Clock className="h-3 w-3 text-zinc-500" />
+                          {part.minutes} {t('cubed.min', 'min')}
+                        </span>
+                      </div>
+
+                      <h4 className="pt-4 text-lg font-black leading-snug text-zinc-100">
+                        {said(part.title)}
+                      </h4>
+
+                      <p className="pt-2 text-sm leading-relaxed text-zinc-400">
+                        {said(part.outcome)}
+                      </p>
+                    </div>
+
+                    <div className="mt-6 border-t border-zinc-800/60 pt-3 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                      {lang === 'af' ? `Klas ${part.part} van ${CLASSES_IN_A_SERIES} · Cubed³` : `Class ${part.part} of ${CLASSES_IN_A_SERIES} · Cubed³`}
+                    </div>
                   </li>
                 ))}
               </ol>
-              <p className="pt-4 text-xs text-zinc-600">
-                {minutesOf(series)} {t('cubed.minTotal', 'minutes in all')}
-              </p>
+
+              {/* Total duration indicator */}
+              <div className="mt-6 flex items-center justify-between rounded-xl bg-zinc-950/40 px-5 py-3 text-xs text-zinc-400">
+                <span className="inline-flex items-center gap-1.5 font-semibold">
+                  <Clock className="h-3.5 w-3.5 text-zinc-500" />
+                  <span>Totale Meesterklas Tydsduur</span>
+                </span>
+                <span className="font-bold text-zinc-200">
+                  {minutesOf(series)} {t('cubed.minTotal', 'minutes in all')}
+                </span>
+              </div>
             </li>
           ))}
         </ul>
 
-        {/* Said rather than implied. A room listing one series while she
-            arranges the rest should say so: a page that looks finished and
-            is nearly empty reads as abandoned, and a page that says what is
-            coming reads as early. */}
-        <p
+        {/* Future Schedule Note */}
+        <div
           data-cubedmore
-          className="border-t border-zinc-800 pt-8 text-sm leading-relaxed text-zinc-500"
+          className="mt-10 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-sm leading-relaxed text-zinc-400 backdrop-blur-sm"
         >
-          {t(
-            'cubed.more',
-            'More are being arranged. They are not listed here until the guest has agreed and a date exists — a name on a page before that is a promise somebody else has not made.',
-          )}
-        </p>
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-0.5 h-5 w-5 flex-shrink-0 text-zinc-500" />
+            <p>
+              {t(
+                'cubed.more',
+                'More are being arranged. They are not listed here until the guest has agreed and a date exists — a name on a page before that is a promise somebody else has not made.',
+              )}
+            </p>
+          </div>
+        </div>
       </section>
 
-      {/* ── For a guest ─────────────────────────────────────────────────── */}
-      <section
-        className="border-t border-zinc-800 bg-zinc-900/40"
-      >
-        <div className="mx-auto max-w-4xl px-6 py-16">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600">
-            {t('cubed.forGuests', 'If you are asked to teach one')}
-          </h2>
-          <p className="max-w-2xl pt-6 text-lg leading-relaxed text-zinc-300">
-            {t(
-              'cubed.guestLead',
-              'Here are the terms, in public, before the conversation. Nothing below is negotiated afterwards.',
-            )}
-          </p>
-          <ol className="max-w-2xl space-y-5 pt-8" data-cubedterms>
+      {/* ── Executive Guest Charter & Covenant ─────────────────────────── */}
+      <section className="border-t border-zinc-800/90 bg-zinc-900/50 py-20 backdrop-blur-sm">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-zinc-400">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Ooreenkoms vir Gassprekers</span>
+            </div>
+
+            <h2 className="pt-4 text-xs font-black uppercase tracking-[0.25em] text-zinc-400">
+              {t('cubed.forGuests', 'If you are asked to teach one')}
+            </h2>
+
+            <p className="pt-4 text-xl font-bold leading-relaxed text-zinc-200 sm:text-2xl">
+              {t(
+                'cubed.guestLead',
+                'Here are the terms, in public, before the conversation. Nothing below is negotiated afterwards.',
+              )}
+            </p>
+          </div>
+
+          {/* Terms Grid */}
+          <ol className="grid gap-4 pt-10 sm:grid-cols-2" data-cubedterms>
             {GUEST_TERMS.map((term, at) => (
-              <li key={term[0]} className="flex gap-4">
-                <span className="w-6 flex-shrink-0 text-sm font-black tabular-nums text-zinc-700">
+              <li
+                key={term[0]}
+                className="flex gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-5 shadow-sm transition-all hover:border-zinc-700"
+              >
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-black tabular-nums text-zinc-400">
                   {String(at + 1).padStart(2, '0')}
                 </span>
-                <span className="text-base leading-relaxed text-zinc-400">{said(term)}</span>
+                <span className="text-sm leading-relaxed text-zinc-300 font-medium">
+                  {said(term)}
+                </span>
               </li>
             ))}
           </ol>
-          <p className="max-w-2xl pt-8 text-sm leading-relaxed text-zinc-600">
-            {t('cubed.splitSaid', 'The split is')} {Math.round(GUEST_SHARE * 100)}/
-            {Math.round(HOUSE_SHARE * 100)}
-            {t('cubed.splitSaidEnd', ' — yours first, because the audience and the name are yours.')}
-          </p>
-          <a
-            href="/help"
-            data-cubedask
-            className="mt-10 inline-flex min-h-[44px] items-center gap-2 border border-zinc-700 px-6 py-3 text-sm font-bold text-zinc-200 hover:border-zinc-500 hover:text-white"
-          >
-            {t('cubed.talk', 'Talk to us about teaching one')}
-          </a>
+
+          {/* Revenue split covenant callout */}
+          <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-950/10 p-6 backdrop-blur-md">
+            <p className="text-base font-semibold leading-relaxed text-zinc-300">
+              {t('cubed.splitSaid', 'The split is')}{' '}
+              <span className="font-black text-white">{Math.round(GUEST_SHARE * 100)}/
+              {Math.round(HOUSE_SHARE * 100)}</span>
+              {t('cubed.splitSaidEnd', ' — yours first, because the audience and the name are yours.')}
+            </p>
+          </div>
+
+          {/* Contact Action */}
+          <div className="pt-10">
+            <a
+              href="/help"
+              data-cubedask
+              className="group inline-flex min-h-[48px] items-center gap-3 rounded-2xl border border-zinc-700 bg-zinc-100 px-8 py-3.5 text-sm font-black text-zinc-900 shadow-xl transition-all hover:bg-zinc-200 hover:shadow-2xl hover:scale-[1.02]"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>{t('cubed.talk', 'Talk to us about teaching one')}</span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </a>
+          </div>
         </div>
       </section>
     </main>

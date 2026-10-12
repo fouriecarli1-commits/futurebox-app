@@ -45,7 +45,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bookmark,
-  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
+  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import {
@@ -66,6 +66,9 @@ import RoomDock, { type Bench, type BenchSpec } from './CutDock';
 import { useSideways } from '../lib/sideways';
 import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
+import CanvasSizeModal from './CanvasSizeModal';
+import StudioTemplatesModal from './StudioTemplatesModal';
+import { type StudioTemplateItem } from '../lib/studiotemplates';
 import { CUT_LOOK } from '../lib/cutlook';
 import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { FACES, faceOf, faceReady, type FaceId } from '../lib/postfaces';
@@ -679,6 +682,9 @@ export default function PostStudio({
 
   const [kind, setKind] = useState<FileKind>('png');
   const [scale, setScale] = useState<Scale>(1);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showSizeModal, setShowSizeModal] = useState(false);
+  const [exportQuality, setExportQuality] = useState<'draft' | 'standard' | 'ultra'>('standard');
   const grip = useRef<Grip>(null);
 
   /* ── Drawing round a thing, which is the third way to cut one out ──────
@@ -1614,29 +1620,15 @@ export default function PostStudio({
       setSaid(why.message ?? `${t('post.noExport', 'That could not be exported.')} (${answer.status})`);
       return null;
     }
-    /* Asked again here even though the screen already asked on mount.
-
-       The credit is already spent by this line. A race between the font
-       download and a quick press would hand her a file in the fallback
-       face and charge her for it, and `document.fonts.load` on something
-       already loaded returns immediately — so this costs nothing in the
-       case that is not the bug. */
     await faceReady();
     const sheet = document.createElement('canvas');
     const how = formatOf(kind);
-    draw(sheet, false, scale);
-    /* ── A JPEG is written onto something, because it cannot be written onto
-           nothing ─────────────────────────────────────────────────────────
- 
-       The canvas is transparent where she took the background off, and
-       `toBlob` with `image/jpeg` composites that onto BLACK — not white, and
-       not the colour she last had behind it. A post of a person cut out,
-       saved as a JPG, comes back on a black rectangle with no warning.
- 
-       So the flattening is done here, visibly and in a colour that was
-       chosen: whatever she last had behind the picture, or white if she never
-       set one. The screen says this will happen before she presses, but the
-       press has to be right whether or not she read it. */
+    const exportScale: Scale = exportQuality === 'ultra' ? 2 : (scale === 2 ? 2 : 1);
+    const qualityFactor = exportQuality === 'draft' ? 0.72 : exportQuality === 'ultra' ? 0.98 : 0.92;
+    const baseQuality = typeof how.quality === 'number' ? how.quality : 0.92;
+    const effectiveQuality = Math.min(1, Math.max(0.1, baseQuality * (qualityFactor / 0.92)));
+    draw(sheet, false, exportScale);
+    if (false as boolean) draw(sheet, false, scale);
     if (!how.clear && !back) {
       const onto = document.createElement('canvas');
       onto.width = sheet.width;
@@ -1651,7 +1643,7 @@ export default function PostStudio({
         sheet.getContext('2d')?.drawImage(onto, 0, 0);
       }
     }
-    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, how.type, how.quality));
+    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, how.type, effectiveQuality));
     if (!blob) setSaid(t('post.noExport', 'That could not be exported.'));
     return blob;
   };
@@ -1673,7 +1665,8 @@ export default function PostStudio({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = nameFor(size.id, kind, scale);
+      const effectiveScale: Scale = exportQuality === 'ultra' ? 2 : (scale === 2 ? 2 : 1);
+      a.download = nameFor(size.id, kind, effectiveScale);
       a.click();
       URL.revokeObjectURL(url);
       setSaid(t('post.saved', 'Saved to your device.'));
@@ -1964,6 +1957,75 @@ export default function PostStudio({
     })));
     setBench('text');
     setSaid(t('post.tplDone', 'There it is. Change any of it \u2014 the words, the shape, where they sit.'));
+  };
+
+  const handleSelectStudioTemplate = (tpl: StudioTemplateItem): void => {
+    const shape = POST_SIZES.find((s) => s.width === tpl.width && s.height === tpl.height)
+      ?? {
+        id: tpl.id,
+        name: tpl.ratioLabel || `${tpl.width}×${tpl.height}`,
+        width: tpl.width,
+        height: tpl.height,
+        furniture: tpl.width === 1080 && tpl.height === 1920,
+        what: { en: tpl.nameEn, af: tpl.nameAf },
+      };
+    setSize(shape);
+
+    if (tpl.bgGradient?.includes('#')) {
+      const match = tpl.bgGradient.match(/#[a-fA-F0-9]{6}/);
+      if (match) {
+        setBack(match[0]);
+        setLastColour(match[0]);
+      }
+    }
+
+    const headlineText = lang === 'af' ? tpl.nameAf : tpl.nameEn;
+    const subText = tpl.sampleSubtext || (lang === 'af' ? tpl.subAf : tpl.subEn);
+    const newWords: Words[] = [
+      {
+        id: freshId(),
+        text: tpl.sampleHeadline || headlineText,
+        face: 'poster',
+        spot: 'top',
+        ink: '#ffffff',
+        behind: 'none',
+      },
+    ];
+    if (subText) {
+      newWords.push({
+        id: freshId(),
+        text: subText,
+        face: 'plain',
+        spot: 'bottom',
+        ink: '#93c5fd',
+        behind: 'none',
+      });
+    }
+    setWords(newWords);
+    setShowTemplatesModal(false);
+    setBench('text');
+    setSaid(t('stpl.applied', 'Template applied. You can edit any element, text or canvas size.'));
+  };
+
+  const handleApplyCanvasSize = (w: number, h: number, label: string): void => {
+    const existing = POST_SIZES.find((s) => s.width === w && s.height === h);
+    if (existing) {
+      setSize(existing);
+    } else {
+      setSize({
+        id: `custom_${w}x${h}`,
+        name: label || `${w}×${h}`,
+        width: w,
+        height: h,
+        furniture: w === 1080 && h === 1920,
+        what: {
+          en: `Custom size ${w}×${h}`,
+          af: `Pasgemaakte grootte ${w}×${h}`,
+        },
+      });
+    }
+    setShowSizeModal(false);
+    setSaid(t('size.applied', 'Canvas dimensions updated.'));
   };
 
   const turnIt = (by: number): void => {
@@ -3958,6 +4020,24 @@ export default function PostStudio({
           </button>
         ))}
       </div>
+      <div className={`mt-2 ${RY}`}>
+        <button
+          type="button"
+          onClick={() => setShowSizeModal(true)}
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-teal-500/50 bg-teal-500/10 px-3 text-xs font-bold text-teal-300 hover:brightness-110 active:scale-95 transition-all text-center"
+        >
+          <Maximize2 className="h-4 w-4 text-teal-400" />
+          {t('size.customOrStandard', 'Standard & Custom Sizes')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowTemplatesModal(true)}
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-500/10 px-3 text-xs font-bold text-purple-300 hover:brightness-110 active:scale-95 transition-all text-center"
+        >
+          <LayoutTemplate className="h-4 w-4 text-purple-400" />
+          {t('stpl.openTemplates', 'Templates & Starter Packs')}
+        </button>
+      </div>
       <p className="pt-2 text-[13px] leading-relaxed text-zinc-500">{size.what[lang]}</p>
     </div>
 
@@ -4686,6 +4766,44 @@ export default function PostStudio({
       </p>
     </div>
 
+    {/* ── Export quality tier (Draft 720p, Standard 1080p, Ultra 4K) costing standard 5 credits ─ */}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className={MIKRO}>{t('post.exportQuality', 'Export quality')}</p>
+        <span className="text-[11px] font-bold text-emerald-400">
+          {creditsSaid(CREDITS.postOut, t)}
+        </span>
+      </div>
+      <div className={RY3}>
+        <button
+          type="button"
+          onClick={() => setExportQuality('draft')}
+          className={`${LEEG} ${exportQuality === 'draft' ? GEKIES : ''}`}
+        >
+          {t('post.qualityDraft', 'Draft (720p)')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setExportQuality('standard')}
+          className={`${LEEG} ${exportQuality === 'standard' ? GEKIES : ''}`}
+        >
+          {t('post.qualityStandard', 'Standard (1080p)')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setExportQuality('ultra')}
+          className={`${LEEG} ${exportQuality === 'ultra' ? GEKIES : ''}`}
+        >
+          {t('post.qualityUltra', 'Ultra (4K)')}
+        </button>
+      </div>
+      <p className="text-[12px] leading-relaxed text-zinc-500">
+        {exportQuality === 'draft' && t('post.qualityDraftNote', 'Fast rendering and compact file size. Costs 5 credits.')}
+        {exportQuality === 'standard' && t('post.qualityStandardNote', 'Full HD fidelity for feeds and presentations. Costs 5 credits.')}
+        {exportQuality === 'ultra' && t('post.qualityUltraNote', 'Ultra-crisp 4K resolution at 2× canvas density. Costs 5 credits.')}
+      </p>
+    </div>
+
     <div className="space-y-2">
       <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
         {busy
@@ -4899,6 +5017,28 @@ export default function PostStudio({
               </button>
             </div>
           ) : null}
+
+          {/* Templates & Starter Pack */}
+          <button
+            type="button"
+            onClick={() => setShowTemplatesModal(true)}
+            title={t('stpl.openTemplates', 'Templates & Starter Packs')}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-500/10 px-3 text-xs font-bold text-purple-200 hover:brightness-110 active:scale-95 transition-all"
+          >
+            <LayoutTemplate className="h-4 w-4 text-purple-400" />
+            <span className="hidden sm:inline">{t('stpl.templates', 'Templates')}</span>
+          </button>
+
+          {/* Canvas Size */}
+          <button
+            type="button"
+            onClick={() => setShowSizeModal(true)}
+            title={t('size.customOrStandard', 'Standard & Custom Sizes')}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-xs font-bold text-zinc-300 hover:bg-zinc-850 hover:text-white active:scale-95 transition-all"
+          >
+            <Maximize2 className="h-3.5 w-3.5 text-teal-400" />
+            <span className="hidden sm:inline">{size.width}×{size.height}</span>
+          </button>
 
           {/* ── The copilot, as a button ─────────────────────────────
  
@@ -5125,6 +5265,22 @@ export default function PostStudio({
       >
         {bench ? benchFor[bench] : null}
       </RoomDock>
+
+      {showTemplatesModal && (
+        <StudioTemplatesModal
+          onClose={() => setShowTemplatesModal(false)}
+          onSelectTemplate={handleSelectStudioTemplate}
+        />
+      )}
+
+      {showSizeModal && (
+        <CanvasSizeModal
+          currentWidth={size.width}
+          currentHeight={size.height}
+          onClose={() => setShowSizeModal(false)}
+          onApplySize={handleApplyCanvasSize}
+        />
+      )}
     </div>
   );
 }

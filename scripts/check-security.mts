@@ -380,7 +380,7 @@ const MAY_HOLD_IT = new Set([
   'app/lib/server/entity.ts',
 ]);
 for (const file of [...walk('app/api'), ...walk('app/components'), ...walk('app/lib')]) {
-  if (MAY_HOLD_IT.has(file)) continue;
+  if (MAY_HOLD_IT.has(file.replace(/\\/g, '/'))) continue;
   const raw = readFileSync(file, 'utf8');
   // Comments explain this rule and would otherwise trip it, the same way they
   // did in check:afrikaans.

@@ -82,14 +82,12 @@ import { useLang } from '../lib/i18n';
 import KidsDoor from './KidsDoor';
 import StoryShelf from './StoryShelf';
 import SongShelf from './SongShelf';
+import KidsTemplatesPicker from './KidsTemplatesPicker';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
-import { MOST_SONGS, keepSong } from '../lib/songkeep';
+import { askKidVideo, makeKidSong, startKidVideo, KID_TOPICS, KID_SOUNDS } from '../lib/kidsong';
 import { asClock, howMany, priceOf } from '../lib/kidsallowance';
-import {
-  KID_SOUNDS, KID_TOPICS, askKidVideo, makeKidSong, startKidVideo,
-} from '../lib/kidsong';
+import { keepSong, MOST_SONGS } from '../lib/songkeep';
 import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
-
 /** A picture a child can tell apart at a glance, per choice. */
 const FACES: Record<string, React.ReactNode> = {
   dog: <Dog className="h-8 w-8" />,
@@ -103,6 +101,9 @@ const FACES: Record<string, React.ReactNode> = {
   rock: <Guitar className="h-7 w-7" />,
   dance: <Music className="h-7 w-7" />,
 };
+
+/** Expressive playful avatars for the mascot. */
+const MASCOT_ICONS = ['👾', '🦄', '🌟', '🎸', '🐶', '🚀'] as const;
 
 /**
  * One choice, as a bubble in its own colour.
@@ -157,15 +158,17 @@ function Bubble({
         /* The chosen one lifts off the paper rather than changing colour:
            changing it would lose the one thing the bubble is for, and a
            child tracks "the big one that moved" more easily than a border. */
-        transform: on ? 'scale(1.06)' : undefined,
+        transform: on ? 'scale(1.08)' : undefined,
         boxShadow: on
-          ? '0 10px 0 rgba(0,0,0,0.18), 0 0 0 5px rgba(255,255,255,0.9)'
-          : '0 5px 0 rgba(0,0,0,0.14)',
+          ? '0 10px 0 rgba(0,0,0,0.22), 0 0 0 5px rgba(255,255,255,0.95), 0 16px 24px -4px rgba(0,0,0,0.25)'
+          : '0 5px 0 rgba(0,0,0,0.14), 0 8px 14px -3px rgba(0,0,0,0.1)',
       }}
-      className="flex flex-shrink-0 flex-col items-center justify-center gap-1 rounded-full px-2 transition-transform duration-150 disabled:opacity-40"
+      className="relative flex flex-shrink-0 flex-col items-center justify-center gap-1 rounded-full px-2 transition-transform duration-150 disabled:opacity-40"
     >
-      {face}
-      <span className="w-full px-1 text-center text-[11px] font-black leading-tight">
+      <div className="transition-transform duration-150">
+        {face}
+      </div>
+      <span className="w-full px-1 text-center text-[11px] font-black leading-tight select-none">
         {label}
       </span>
     </button>
@@ -257,8 +260,8 @@ export default function KidsRoom(): React.ReactElement {
 
   if (state === null) {
     return (
-      <p className="flex items-center gap-2 p-6 text-sm text-zinc-400">
-        <Loader2 className="h-4 w-4 animate-spin" />
+      <p className="flex items-center gap-2 p-6 text-sm text-surface-600">
+        <Loader2 className="h-4 w-4 animate-spin text-primary-500" />
         {t('kids.asking', 'Asking where the allowance stands…')}
       </p>
     );
@@ -291,17 +294,17 @@ export default function KidsRoom(): React.ReactElement {
     return (
       <div className="mx-auto w-full max-w-md space-y-6 p-6 text-center" data-kidstimeup>
         <p className="text-5xl" aria-hidden>⏰</p>
-        <h2 className="text-2xl font-extrabold tracking-tight text-white">
+        <h2 className="text-2xl font-extrabold tracking-tight text-surface-950">
           {t('kids.timeUp', 'Time is up')}
         </h2>
-        <p className="text-base leading-relaxed text-zinc-300">
+        <p className="text-base leading-relaxed text-surface-700">
           {t('kids.timeUpSay', 'That is all for now. Go and fetch a grown-up if you want some more.')}
         </p>
         <button
           type="button"
           data-kidsgrownup
           onClick={() => setAtDoor(true)}
-          className="min-h-[44px] text-sm text-zinc-500 underline underline-offset-4"
+          className="min-h-[44px] text-sm text-surface-600 underline underline-offset-4 hover:text-surface-900"
         >
           {t('kids.imTheGrownUp', 'I am the grown-up')}
         </button>
@@ -321,7 +324,7 @@ export default function KidsRoom(): React.ReactElement {
             <button
               type="button"
               onClick={() => setAtDoor(false)}
-              className="min-h-[44px] rounded-xl border border-zinc-700 px-4 text-sm font-bold text-zinc-200"
+              className="min-h-[44px] rounded-xl border border-surface-300 bg-surface-100/90 px-4 text-sm font-bold text-surface-800 hover:text-surface-950 transition-colors"
             >
               {t('kids.backIn', 'Back to the music')}
             </button>
@@ -422,20 +425,18 @@ export default function KidsRoom(): React.ReactElement {
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-5 text-ink" data-kidsroom>
-      {/* ── What is left, in songs ──────────────────────────────────────
-          In songs and not in credits, because a number of credits is a thing
-          a child has to be taught and a number of songs is a thing they
-          already understand. */}
+      {/* ── 2. Top bar: What is left in songs & clock, calm for the parent ─── */}
       <div
-        className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
+        className="flex items-center justify-between gap-3 rounded-2xl border-2 border-surface-200 bg-surface-50/90 px-4 py-3 shadow-sm backdrop-blur-sm"
         data-kidsleft
       >
-        <span className="min-w-0 text-sm font-bold text-emerald-300">
-          {songsLeft > 0
-            ? `${songsLeft} ${songsLeft === 1 ? t('kids.songLeft', 'song left') : t('kids.songsLeft', 'songs left')}`
-            : t('kids.noneLeft', 'All used up — ask a grown-up')}
+        <div className="min-w-0">
+          <span className="text-sm font-bold text-surface-900">
+            {songsLeft > 0
+              ? `${songsLeft} ${songsLeft === 1 ? t('kids.songLeft', 'song left') : t('kids.songsLeft', 'songs left')}`
+              : t('kids.noneLeft', 'All used up — ask a grown-up')}
+          </span>
           {/* ── And how long is left, beside how much ──────────────
-
               Only where there is a clock. A countdown that reads 0:00 and
               then the room vanishing is a better five minutes than a room
               that just stops, which is why it turns amber under five — a
@@ -444,19 +445,19 @@ export default function KidsRoom(): React.ReactElement {
           {clockLeft !== null && (
             <span
               data-kidsclockleft={clockLeft}
-              className={`block text-xs font-bold tabular-nums ${
-                nearlyOver ? 'text-amber-300' : 'text-emerald-400/80'
+              className={`block text-xs font-semibold tabular-nums ${
+                nearlyOver ? 'text-amber-800 font-bold' : 'text-surface-600'
               }`}
             >
               {asClock(clockLeft)} {t('kids.ofTime', 'left')}
             </span>
           )}
-        </span>
+        </div>
         <button
           type="button"
           onClick={() => setAtDoor(true)}
           data-kidsgrownup
-          className="min-h-[44px] flex-shrink-0 rounded-xl border border-emerald-500/40 px-3 text-xs font-bold text-emerald-200"
+          className="min-h-[44px] flex-shrink-0 rounded-xl border border-surface-300 bg-surface-100/90 px-3.5 text-xs font-bold text-surface-700 hover:border-surface-400 hover:text-surface-900 transition-colors"
         >
           {t('kids.grownUp', 'Grown-up')}
         </button>
@@ -478,7 +479,7 @@ export default function KidsRoom(): React.ReactElement {
           cannot be undone, and the grown-up's own page has the same shelf
           with it. */}
       <div className="space-y-3">
-        <h2 className="text-lg font-extrabold text-white">
+        <h2 className="text-lg font-black text-surface-950">
           {t('kids.stories', 'Stories')}
         </h2>
         <StoryShelf />
@@ -488,53 +489,48 @@ export default function KidsRoom(): React.ReactElement {
           Under the stories and above the making, because a child who has
           made songs before comes back for those first. */}
       <div className="space-y-3">
-        <h2 className="text-lg font-extrabold text-white">
+        <h2 className="text-lg font-black text-surface-950">
           {t('kids.mySongs', 'My songs')}
         </h2>
         <SongShelf again={shelfAgain} />
       </div>
 
-      {/* ── The mascot and the wheel, both Google's ideas ────────────────
+      {/* ── 3. The mascot and the wheel ──────────────────────────────────
  
           She took the question to Google and sent back what it drew. These
           two are from that: something that talks to a child who has just
           arrived, and a press for one who cannot decide. What was NOT taken
           from it — a nickname text box, a Render button that renders
           nothing — is written down in `lib/kidslook.ts`. */}
-      {/* `bg-white` is NOT white in this app — `white` is the ink token, so on
-          a light theme it paints near-black. That is the Cubed room's fault
-          exactly, and `check:theme` caught it here before it shipped a second
-          time. The paper is `surface-50`, which in this room's own block is a
-          warm near-white. */}
-      <div className="flex items-center gap-4 rounded-3xl border-4 border-surface-100 bg-surface-50/80 p-4 shadow-lg">
+      <div className="flex items-center gap-3 sm:gap-4 rounded-3xl border-4 border-surface-200/90 bg-surface-50/95 p-3.5 sm:p-4 shadow-xl backdrop-blur-sm">
         <button
           type="button"
           data-kidsmascot
           data-kidsbob
           onClick={() => setMascot((n) => (n + 1) % MASCOT_SAYS.length)}
           aria-label={t('kids.mascotSays', 'Say something else')}
-          className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-4xl"
-          style={{ background: 'linear-gradient(145deg,#7C4DFF,#FF4081)' }}
+          className="flex h-16 w-16 sm:h-18 sm:w-18 flex-shrink-0 items-center justify-center rounded-full text-4xl select-none"
         >
-          <span aria-hidden>👾</span>
+          <span aria-hidden>{MASCOT_ICONS[mascot % MASCOT_ICONS.length]}</span>
         </button>
-        <p data-kidsmascotsays className="min-w-0 flex-1 text-base font-black leading-tight">
-          {t(`kids.mascot${mascot}`, MASCOT_SAYS[mascot][0])}
-        </p>
+        <div className="relative min-w-0 flex-1 rounded-2xl border-2 border-surface-200 bg-surface-100/80 px-3.5 py-2.5 shadow-inner">
+          <p data-kidsmascotsays className="text-sm sm:text-base font-black leading-snug text-surface-950">
+            {t(`kids.mascot${mascot}`, MASCOT_SAYS[mascot][0])}
+          </p>
+        </div>
         <button
           type="button"
           data-kidswheel
           onClick={wheel}
           disabled={Boolean(busy) || Boolean(job)}
-          style={{ boxShadow: '0 6px 0 #b45309' }}
-          className="flex min-h-[56px] flex-shrink-0 items-center gap-2 rounded-2xl bg-amber-400 px-4 text-sm font-black text-amber-950 disabled:opacity-40"
+          className="flex min-h-[56px] flex-shrink-0 items-center gap-1.5 sm:gap-2 rounded-2xl px-3.5 sm:px-4 text-xs sm:text-sm font-black disabled:opacity-40"
         >
-          <span aria-hidden>🎲</span>
+          <span aria-hidden className="text-lg select-none">🎲</span>
           {t('kids.spin', 'Spin')}
         </button>
       </div>
 
-      {/* ── The sentence, which is what the headings used to be ──────────
+      {/* ── 4. The sentence, which is what the headings used to be ─────────
  
           Her words: *"selfs die uitleg moet anders en uniek wees as die
           status quo."* Two headings reading "What should the song be about?"
@@ -542,36 +538,53 @@ export default function KidsRoom(): React.ReactElement {
           said as the thing a child is about to get, filling in as they press
           — and it carries the colours of what they picked, so the answer to
           "what did I choose" is readable from across a room. */}
-      <p data-kidssentence className="px-1 text-[26px] font-black leading-tight sm:text-3xl" style={{ color: 'rgb(60,30,12)' }}>
-        {t('kids.aSongAbout', 'A song about')}{' '}
-        <span
-          data-kidssentencetopic
-          className="inline-block rounded-full px-3 py-0.5 align-middle"
-          style={{
-            background: `linear-gradient(145deg, ${topicPaint.from}, ${topicPaint.to})`,
-            color: topicPaint.ink,
-          }}
-        >
-          {topic
-            ? t(KID_TOPICS.find((one) => one.id === topic)!.says[0],
-              KID_TOPICS.find((one) => one.id === topic)!.says[1])
-            : t('kids.something', 'something')}
-        </span>{' '}
-        {t('kids.thatSounds', 'that sounds')}{' '}
-        <span
-          data-kidssentencesound
-          className="inline-block rounded-full px-3 py-0.5 align-middle"
-          style={{
-            background: `linear-gradient(145deg, ${soundPaint.from}, ${soundPaint.to})`,
-            color: soundPaint.ink,
-          }}
-        >
-          {sound
-            ? t(KID_SOUNDS.find((one) => one.id === sound)!.says[0],
-              KID_SOUNDS.find((one) => one.id === sound)!.says[1])
-            : t('kids.anyway', 'any way')}
-        </span>
-      </p>
+      <div className="rounded-3xl border-4 border-surface-200/90 bg-surface-50/90 p-4 sm:p-5 shadow-lg backdrop-blur-sm text-center">
+        <p data-kidssentence className="text-xl sm:text-2xl font-black leading-snug text-surface-950">
+          {t('kids.aSongAbout', 'A song about')}{' '}
+          <span
+            data-kidssentencetopic
+            className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base sm:text-lg font-black shadow-sm"
+            style={{
+              background: `linear-gradient(145deg, ${topicPaint.from}, ${topicPaint.to})`,
+              color: topicPaint.ink,
+            }}
+          >
+            {topic
+              ? t(KID_TOPICS.find((one) => one.id === topic)!.says[0],
+                KID_TOPICS.find((one) => one.id === topic)!.says[1])
+              : t('kids.something', 'something')}
+          </span>{' '}
+          {t('kids.thatSounds', 'that sounds')}{' '}
+          <span
+            data-kidssentencesound
+            className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base sm:text-lg font-black shadow-sm"
+            style={{
+              background: `linear-gradient(145deg, ${soundPaint.from}, ${soundPaint.to})`,
+              color: soundPaint.ink,
+            }}
+          >
+            {sound
+              ? t(KID_SOUNDS.find((one) => one.id === sound)!.says[0],
+                KID_SOUNDS.find((one) => one.id === sound)!.says[1])
+              : t('kids.anyway', 'any way')}
+          </span>
+        </p>
+      </div>
+
+      {/* ── 4b. Ready-made Adventure Templates ────────────────────────────
+          Carli, 11 October 2026: *"Die kids room het ook baie templates
+          nodig vir 'n kind om net van te kies."*
+          A child can pick a complete theme (topic + sound) in one tap. */}
+      <KidsTemplatesPicker
+        selectedTopic={topic}
+        selectedSound={sound}
+        onPick={(tpl) => {
+          setTopic(tpl.topic);
+          setSound(tpl.sound);
+          setMascot((n) => (n + 1) % MASCOT_SAYS.length);
+        }}
+        disabled={Boolean(busy) || Boolean(job)}
+      />
 
       {/* The sheet of topics. A wrapping row rather than a grid, so the
           three sizes can sit beside each other without a cell forcing them
@@ -617,8 +630,7 @@ export default function KidsRoom(): React.ReactElement {
         /* Round, hot pink, and the biggest thing on the page. Every choice
            in this room is already a colour, so the one button that MAKES
            something has to be a colour none of the choices are. */
-        style={{ boxShadow: '0 8px 0 rgb(173,12,90)' }}
-        className="mx-auto flex h-[92px] w-[92px] flex-col items-center justify-center gap-0.5 rounded-full bg-primary-500 text-[13px] font-black leading-tight text-white disabled:opacity-40 sm:h-[104px] sm:w-[104px]"
+        className="mx-auto flex h-[92px] w-[92px] flex-col items-center justify-center gap-0.5 rounded-full text-[13px] font-black leading-tight text-white disabled:opacity-40 sm:h-[104px] sm:w-[104px]"
       >
         {busy === 'song' ? (
           <>
@@ -634,55 +646,72 @@ export default function KidsRoom(): React.ReactElement {
       </button>
 
       {says && (
-        <p className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 text-sm text-zinc-200" data-kidssays>
+        <p className="rounded-2xl border-2 border-surface-200 bg-surface-50/90 px-4 py-3 text-sm font-semibold text-surface-900 shadow-sm" data-kidssays>
           {says}
         </p>
       )}
 
+      {/* ── 5. Player: boombox station with high-contrast action buttons ─── */}
       {song && (
-        <div className="space-y-3">
-          {/* The browser's own player. A child knows what it is, and a custom
-              one here would be a transport to build and maintain for a room
-              whose whole point is that it has two buttons in it. */}
+        <div className="space-y-4 rounded-3xl border-4 border-surface-200/90 bg-surface-50/95 p-5 shadow-2xl backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-primary-500/20 text-2xl select-none" data-kidsspin>
+              <span aria-hidden>💿</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black uppercase tracking-wider text-surface-600">
+                {t('kids.yourSong', 'Your Song')}
+              </p>
+              <h3 className="truncate text-base font-black text-surface-950">
+                {topic ? t(KID_TOPICS.find((o) => o.id === topic)?.says[0] ?? '', KID_TOPICS.find((o) => o.id === topic)?.says[1] ?? '') : ''} · {sound ? t(KID_SOUNDS.find((o) => o.id === sound)?.says[0] ?? '', KID_SOUNDS.find((o) => o.id === sound)?.says[1] ?? '') : ''}
+              </h3>
+            </div>
+          </div>
+
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio src={song} controls className="w-full" data-kidsplayer />
-          <button
-            type="button"
-            onClick={() => void keepIt()}
-            disabled={!songBlob || kept}
-            data-kidskeep
-            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-amber-500/50 bg-amber-500/10 text-base font-black text-amber-300 disabled:opacity-40"
-          >
-            <Heart className="h-5 w-5" fill={kept ? 'currentColor' : 'none'} />
-            {kept ? t('kids.keptIt', 'Kept') : t('kids.keep', 'Keep it')}
-          </button>
-          <button
-            type="button"
-            onClick={() => void film2()}
-            disabled={!canFilm}
-            data-kidsfilm
-            className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border border-emerald-500/50 bg-emerald-500/10 text-base font-black text-emerald-300 disabled:opacity-40"
-          >
-            {busy === 'video' || job ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                {t('kids.filming', 'Making your video…')}
-              </>
-            ) : (
-              <>
-                <Film className="h-5 w-5" />
-                {left >= videoPrice
-                  ? t('kids.film', 'Make a video of it')
-                  : t('kids.filmNotEnough', 'A video needs more than is left')}
-              </>
-            )}
-          </button>
+          <audio src={song} controls className="w-full rounded-2xl" data-kidsplayer />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => void keepIt()}
+              disabled={!songBlob || kept}
+              data-kidskeep
+              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-base font-black disabled:opacity-40"
+            >
+              <Heart className="h-5 w-5" fill={kept ? 'currentColor' : 'none'} />
+              {kept ? t('kids.keptIt', 'Kept') : t('kids.keep', 'Keep it')}
+            </button>
+            <button
+              type="button"
+              onClick={() => void film2()}
+              disabled={!canFilm}
+              data-kidsfilm
+              className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl text-base font-black disabled:opacity-40"
+            >
+              {busy === 'video' || job ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  {t('kids.filming', 'Making your video…')}
+                </>
+              ) : (
+                <>
+                  <Film className="h-5 w-5" />
+                  {left >= videoPrice
+                    ? t('kids.film', 'Make a video of it')
+                    : t('kids.filmNotEnough', 'A video needs more than is left')}
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
       {film && (
-        /* eslint-disable-next-line jsx-a11y/media-has-caption */
-        <video src={film} controls className="w-full rounded-2xl" data-kidsfilmout />
+        <div className="rounded-3xl border-4 border-surface-200/90 bg-surface-50/95 p-3 shadow-2xl overflow-hidden">
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video src={film} controls className="w-full rounded-2xl" data-kidsfilmout />
+        </div>
       )}
     </div>
   );

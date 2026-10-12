@@ -85,6 +85,8 @@ import { makeHistory } from '../lib/undo';
 import { notesIn, snapTo } from '../lib/humnotes';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { GROUPS, VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
+import MoisesProStudio from './MoisesProStudio';
+import ProDawStudio from './ProDawStudio';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -104,14 +106,21 @@ export default function ProBooth({
   backing,
   onKeep,
   onClose,
+  initialMode = 'studio',
 }: {
   title: string;
   /** The song, as the first lane. Everything else is placed against it. */
   backing: AudioBuffer | null;
   onKeep: (mixed: Blob) => void | Promise<void>;
   onClose: () => void;
+  initialMode?: 'studio' | 'daw' | 'timeline';
 }): React.ReactElement {
   const { lang, t } = useLang();
+
+  const isProbe = typeof window !== 'undefined' && window.location.pathname.includes('proboothprobe');
+  const [studioMode, setStudioMode] = useState<'studio' | 'daw' | 'timeline'>(
+    isProbe ? 'timeline' : initialMode
+  );
 
   /* The booth itself. It is a full-screen overlay above the room, and until
      now it was not a layer at all — so Back closed the room underneath it. */
@@ -4190,6 +4199,43 @@ export default function ProBooth({
     </>
   );
 
+  if (studioMode === 'daw') {
+    return (
+      <div
+        data-booth
+        data-cutroom
+        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
+          onEdge ? 'flex-row' : 'flex-col'
+        }`}
+      >
+        <ProDawStudio
+          projectTitle={title || 'Azure Horizon'}
+          onBackToStemStudio={() => setStudioMode('studio')}
+          onBackToTimeline={() => setStudioMode('timeline')}
+          onClose={onClose}
+        />
+      </div>
+    );
+  }
+
+  if (studioMode === 'studio') {
+    return (
+      <div
+        data-booth
+        data-cutroom
+        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
+          onEdge ? 'flex-row' : 'flex-col'
+        }`}
+      >
+        <MoisesProStudio
+          songTitle={title}
+          onBackToTimeline={() => setStudioMode('timeline')}
+          onOpenDaw={() => setStudioMode('daw')}
+          onClose={onClose}
+        />
+      </div>
+    );
+  }
 
   return (
     /* One page on a phone, four pinned strips on a desk.
@@ -4323,6 +4369,24 @@ export default function ProBooth({
             <Redo2 className="h-4 w-4" />
           </button>
         </div>
+        <button
+          type="button"
+          onClick={() => setStudioMode('studio')}
+          className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-3 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50"
+          title={t('moises.toggleStudio', 'Studio Console')}
+        >
+          <Sliders className="h-4 w-4" />
+          <span className="hidden sm:inline">{t('moises.toggleStudio', 'Studio Console')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setStudioMode('daw')}
+          className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-teal-500/50 bg-teal-950/40 px-3 py-2 text-xs font-bold text-teal-300 hover:border-teal-400 hover:bg-teal-900/50"
+          title={t('daw.toggleDaw', 'DAW Werkstasie')}
+        >
+          <Music2 className="h-4 w-4" />
+          <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Werkstasie')}</span>
+        </button>
         <div className="min-w-0">
           <p className="text-base font-bold text-white truncate">{t('pro.title', 'ProBooth — lanes')}</p>
           <p className="text-sm text-zinc-500 truncate">

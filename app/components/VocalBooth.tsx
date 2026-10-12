@@ -1104,6 +1104,7 @@ export default function VocalBooth({
         backing={backing}
         onKeep={(mixed) => onKeep(mixed, guideBuffer !== null && doubleLevel > 0, take ? encodeWav(take) : mixed)}
         onClose={() => setProOpen(false)}
+        initialMode="studio"
       />
     );
   }

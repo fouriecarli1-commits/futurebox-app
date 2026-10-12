@@ -432,7 +432,7 @@ export const CREDITS = {
    * free account used as an unlimited design tool — which a screenshot at
    * phone resolution is not.
    */
-  postOut: 2,
+  postOut: 5,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /**

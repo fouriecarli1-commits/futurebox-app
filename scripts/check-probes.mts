@@ -40,6 +40,10 @@ import { SURFACES } from '../app/lib/surfaces';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
+if (process.platform === 'win32' && !process.env.PATH?.toLowerCase().includes('git')) {
+  process.env.PATH = `C:\\Users\\fouri\\AppData\\Local\\Programs\\Git\\cmd;${process.env.PATH || ''}`;
+}
+
 /**
  * The code, without the prose about the code.
  *

@@ -41,7 +41,7 @@ import { ALL, boxOf, type Zone } from './safezones';
 export type Measure = (text: string, px: number) => number;
 
 export interface PostSize {
-  readonly id: 'square' | 'story' | 'wide' | 'portrait';
+  readonly id: string;
   readonly name: string;
   readonly width: number;
   readonly height: number;

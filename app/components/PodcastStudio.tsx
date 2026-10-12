@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import VoiceLab, { type VoiceState } from './VoiceLab';
 import TwoHosts from './TwoHosts';
+import AvatarTemplatesPicker from './AvatarTemplatesPicker';
 import DubEpisode from './DubEpisode';
 import Transcript from './Transcript';
 import Cost from './Cost';
@@ -483,6 +484,9 @@ export default function PodcastStudio({
           </div>
         )}
       </Card>
+
+      {/* ── Avatar Templates for Hosts ──────────────────────────────────── */}
+      <AvatarTemplatesPicker />
 
       {/* ── Voices ──────────────────────────────────────────────────────── */}
       <VoiceLab

@@ -3382,21 +3382,27 @@ export default function FutureBoxHome() {
             <a
               href="/cubed"
               data-cubeddoor
-              className="group flex items-center gap-4 rounded-2xl border border-zinc-800 bg-gradient-to-r from-zinc-950 to-zinc-900 px-5 py-4 hover:border-zinc-600"
+              className="group relative flex items-center gap-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-5 py-4 shadow-xl transition-all duration-300 hover:border-amber-400/60 hover:shadow-amber-500/10 hover:shadow-2xl overflow-hidden"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-emerald-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <CubedChip size={48} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-black tracking-tight text-white">
-                  {t('cubed.title', 'Cubed')}
+              <span className="min-w-0 flex-1 relative z-10">
+                <span className="flex items-center gap-2">
+                  <span className="block text-base font-black tracking-tight text-white group-hover:text-amber-300 transition-colors">
+                    {t('cubed.title', 'Cubed')}<sup className="ml-0.5 text-xs text-amber-400 font-extrabold select-none">3</sup>
+                  </span>
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-500/30">
+                    VIP Masterclass · 3 Klasse
+                  </span>
                 </span>
-                <span className="block text-xs leading-snug text-zinc-500">
+                <span className="block text-xs leading-snug text-zinc-400 pt-0.5">
                   {t(
                     'cubed.door',
                     'Three classes to a masterclass — what it is, how it is done, and what goes wrong.',
                   )}
                 </span>
               </span>
-              <ArrowRight className="h-4 w-4 flex-shrink-0 text-zinc-600 group-hover:text-zinc-300" />
+              <ArrowRight className="h-4 w-4 flex-shrink-0 text-amber-400 group-hover:translate-x-1 transition-transform relative z-10" />
             </a>
 
             {picksBar}

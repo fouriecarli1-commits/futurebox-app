@@ -568,20 +568,162 @@ body:has([data-kidsroom]) {
   background-attachment: fixed;
 }
 
+/* Make the page wrapper transparent while the kids room is open, so the wash
+   the designers already wrote is the one that shows. */
+body:has([data-kidsroom]) .min-h-screen,
+body:has([data-kidsroom]) main {
+  background-color: transparent;
+}
+
 /* The gentle bob Google asked for on the thing a child is meant to press
    first. Off for anybody who has said they do not want movement — this is a
    decoration, and a decoration is the first thing to go. */
 @keyframes fb-kids-bob {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(2.5deg); }
+  50% { transform: translateY(-8px) rotate(2.5deg); }
 }
 
 [data-kidsbob] {
   animation: fb-kids-bob 4s ease-in-out infinite;
 }
 
+/* ── Mascot & Wheel in the kids room ─────────────────────────────────── */
+[data-kidsmascot] {
+  background: linear-gradient(145deg, rgb(var(--fb-primary-400)), rgb(var(--fb-primary-600)));
+  box-shadow: 0 6px 0 rgb(var(--fb-primary-800)), 0 10px 18px -4px rgba(243, 45, 136, 0.4);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+[data-kidsmascot]:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 0 rgb(var(--fb-primary-800)), 0 14px 22px -4px rgba(243, 45, 136, 0.5);
+}
+
+[data-kidsmascot]:active {
+  transform: translateY(3px) scale(0.96);
+  box-shadow: 0 2px 0 rgb(var(--fb-primary-800));
+}
+
+[data-kidswheel] {
+  background: linear-gradient(180deg, rgb(var(--fb-highlight-400)), rgb(var(--fb-highlight-500)));
+  color: rgb(var(--fb-highlight-950));
+  box-shadow: 0 6px 0 rgb(var(--fb-highlight-700)), 0 10px 18px -4px rgba(211, 150, 9, 0.35);
+  border: 2px solid rgb(var(--fb-highlight-300));
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+[data-kidswheel]:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 0 rgb(var(--fb-highlight-700)), 0 14px 22px -4px rgba(211, 150, 9, 0.45);
+}
+
+[data-kidswheel]:active:not(:disabled) {
+  transform: translateY(3px) scale(0.97);
+  box-shadow: 0 2px 0 rgb(var(--fb-highlight-700));
+}
+
+/* ── Bubbles & Make button in the kids room ───────────────────────────── */
+[data-kidsbubble] {
+  position: relative;
+  overflow: hidden;
+  transition: transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 140ms ease;
+}
+
+[data-kidsbubble]::before {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 15%;
+  width: 70%;
+  height: 38%;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+[data-kidsbubble]:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+}
+
+[data-kidsbubble]:active:not(:disabled) {
+  transform: translateY(3px) scale(0.96);
+}
+
+[data-kidsmake] {
+  background: linear-gradient(145deg, rgb(var(--fb-primary-400)), rgb(var(--fb-primary-600)));
+  box-shadow: 0 8px 0 rgb(var(--fb-primary-800)), 0 14px 24px -4px rgba(243, 45, 136, 0.45);
+  border: 3px solid rgb(var(--fb-primary-300));
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+[data-kidsmake]:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 10px 0 rgb(var(--fb-primary-800)), 0 18px 28px -4px rgba(243, 45, 136, 0.55);
+}
+
+[data-kidsmake]:active:not(:disabled) {
+  transform: translateY(4px) scale(0.97);
+  box-shadow: 0 2px 0 rgb(var(--fb-primary-800));
+}
+
+/* ── Player actions in the kids room ─────────────────────────────────── */
+[data-kidskeep] {
+  background: linear-gradient(180deg, rgb(var(--fb-highlight-300)), rgb(var(--fb-highlight-400)));
+  color: rgb(var(--fb-highlight-950));
+  box-shadow: 0 5px 0 rgb(var(--fb-highlight-600)), 0 8px 16px rgba(211, 150, 9, 0.25);
+  border: 2px solid rgb(var(--fb-highlight-200));
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+[data-kidskeep]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 rgb(var(--fb-highlight-600)), 0 12px 20px rgba(211, 150, 9, 0.35);
+}
+
+[data-kidskeep]:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgb(var(--fb-highlight-600));
+}
+
+[data-kidsfilm] {
+  background: linear-gradient(180deg, rgb(var(--fb-primary-400)), rgb(var(--fb-primary-500)));
+  color: rgb(var(--fb-surface-50));
+  box-shadow: 0 5px 0 rgb(var(--fb-primary-700)), 0 8px 16px rgba(243, 45, 136, 0.3);
+  border: 2px solid rgb(var(--fb-primary-300));
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+[data-kidsfilm]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 rgb(var(--fb-primary-700)), 0 12px 20px rgba(243, 45, 136, 0.4);
+}
+
+[data-kidsfilm]:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgb(var(--fb-primary-700));
+}
+
+@keyframes fb-kids-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+[data-kidsspin] {
+  animation: fb-kids-spin 4s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  [data-kidsbob] { animation: none; }
+  [data-kidsbob],
+  [data-kidsmascot],
+  [data-kidswheel],
+  [data-kidsbubble],
+  [data-kidsmake],
+  [data-kidskeep],
+  [data-kidsfilm],
+  [data-kidsspin] {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 
