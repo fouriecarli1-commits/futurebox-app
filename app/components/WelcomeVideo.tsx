@@ -112,7 +112,10 @@ export default function WelcomeVideo() {
 
       {!playing && (
         <p className="absolute bottom-3 left-4 right-4 text-xs text-zinc-300/90 pointer-events-none">
-          {t('welcome.videoNote', 'Ten seconds on what this is. Sound on.')}
+          {/* No length in the line: the recording is whatever the variable points
+              at, and "ten seconds" was still on the screen under a twenty-second
+              one on 12 October 2026. */}
+          {t('welcome.videoNote', 'A short introduction to what this is. Sound on.')}
         </p>
       )}
     </div>

@@ -4086,7 +4086,7 @@ export const STRINGS: Dict = {
   "welcome.line2": { en: "Finished, and yours.", af: "Jou\u00a0kreatiwiteit." },
   "welcome.black": { en: "The whole studio, in one box.", af: "Die hele ateljee in een boks." },
   "welcome.play": { en: "Play the introduction", af: "Speel die inleiding" },
-  "welcome.videoNote": { en: "Ten seconds on what this is. Sound on.", af: "Tien sekondes oor wat dit is. Klank aan." },
+  "welcome.videoNote": { en: "A short introduction to what this is. Sound on.", af: "\u2019n Kort inleiding oor wat dit is. Klank aan." },
   "welcome.offer1": { en: "Songs you sing on", af: "Liedjies waarop jy sing" },
   "welcome.offer1n": { en: "Write it with the copilot, make the track, keep the stems", af: "Skryf dit met die copilot, genereer dit, hou die stamme" },
   "welcome.offer2": { en: "Your own voice, cloned", af: "Jou eie stem, gekloon" },
