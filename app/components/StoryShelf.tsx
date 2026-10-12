@@ -191,7 +191,10 @@ export default function StoryShelf({
           <a
             href="/story"
             data-shelfmakestory
-            className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-zinc-700 px-4 font-bold text-zinc-800 hover:border-emerald-500/60"
+            /* No colour of its own: it inherits the note's, which the contrast walk
+               measured on the door. A zinc-800 typed here read at 1.38:1 on the
+               kids palette and turned CI red on 12 October 2026. */
+            className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-zinc-700 px-4 font-bold hover:border-emerald-500/60"
           >
             {t('shelf.makeStory', 'Open Story mode')}
           </a>
