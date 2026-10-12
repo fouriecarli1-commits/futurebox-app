@@ -38,6 +38,9 @@
  * will not decode until play, the rectangle is what you get. A cover image is
  * the honest fix: it paints immediately, it is a few kilobytes, and it is the
  * frame we chose rather than whichever one lands a tenth of a second in.
+ * The English recording's cover ships in `public/` beside it since 12 October
+ * 2026, so the English page never falls back to the rectangle; the pairing of
+ * cover to recording is `lib/welcomevideo.ts`'s and `check:voordeur` holds it.
  *
  * All of them are written out in full below rather than looked up by a computed key.
  * Next inlines `process.env.NEXT_PUBLIC_*` at build time only where it can see

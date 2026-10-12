@@ -45,9 +45,11 @@
  * the first time one of them moves.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
-import { hasWelcomeVideo } from '../app/lib/welcomevideo.ts';
+import {
+  SHIPPED_COVER, SHIPPED_RECORDING, coverFor, hasWelcomeVideo, sourceFor,
+} from '../app/lib/welcomevideo.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -133,6 +135,69 @@ ok('  and the player decides by asking the same helper',
   'the player works out whether it has a recording with its own copy of the'
   + ' condition, so the page and the player can disagree — the page holds a'
   + ' column open and the player puts nothing in it, or the reverse');
+
+/* ── 4. The cover goes with the recording it is a frame of ───────────── */
+
+/* The English cover ships in `public/` because without one a phone paints a
+   black rectangle under the play button until somebody presses it. But it is
+   a frame OF the shipped recording. Point English at some other file through
+   a variable and that still is a card that lies about what is behind it — so
+   the helper must hand it out only beside the recording it came from. Driven
+   with the variables set and unset, like the recording above. */
+
+const ENGLISH_VARS = ['NEXT_PUBLIC_WELCOME_VIDEO_ENGLISH', 'NEXT_PUBLIC_WELCOME_VIDEO',
+  'NEXT_PUBLIC_WELCOME_VIDEO_COVERE', 'NEXT_PUBLIC_WELCOME_VIDEO_COVERA',
+  'NEXT_PUBLIC_WELCOME_VIDEO_AFRIKAANS'];
+for (const name of ENGLISH_VARS) delete process.env[name];
+
+ok('the shipped English recording has a shipped cover',
+  coverFor('en') === SHIPPED_COVER && sourceFor('en') === SHIPPED_RECORDING,
+  `with nothing set, English plays ${sourceFor('en')} under a cover of`
+  + ` '${coverFor('en')}' — the page is back to the black rectangle`);
+
+ok('  and that cover is a file in public/',
+  existsSync(`public${SHIPPED_COVER}`),
+  `\`public${SHIPPED_COVER}\` is not there, so the player asks for a picture`
+  + ' that 404s and paints nothing, which is the rectangle with an extra request');
+
+/* A JPEG's size is in its SOF0 marker (FF C0): two bytes of length, one of
+   precision, then height and width as big-endian shorts. The player holds a
+   16:9 box and paints the cover with `object-cover`, so a still of another
+   shape is cropped — the presenter's head, if the crop is top and bottom. */
+const jpeg = readFileSync(`public${SHIPPED_COVER}`);
+let coverW = 0; let coverH = 0;
+for (let at = 2; at + 9 < jpeg.length;) {
+  if (jpeg[at] !== 0xff) break;
+  const marker = jpeg[at + 1];
+  const size = jpeg.readUInt16BE(at + 2);
+  if (marker === 0xc0 || marker === 0xc2) {
+    coverH = jpeg.readUInt16BE(at + 5); coverW = jpeg.readUInt16BE(at + 7); break;
+  }
+  at += 2 + size;
+}
+ok('  and it is the shape of the box the player holds, 16:9',
+  coverW > 0 && Math.abs(coverW / coverH - 16 / 9) < 0.01,
+  `${coverW}×${coverH} — \`object-cover\` in a 16:9 box crops whatever does not fit`);
+
+process.env.NEXT_PUBLIC_WELCOME_VIDEO = 'https://example.test/other.mp4';
+ok('  but it does not go over somebody else\'s recording',
+  coverFor('en') === '',
+  `English pointed at another file still gets '${coverFor('en')}' — a still`
+  + ' from one recording over the play button of another');
+
+process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERE = 'https://example.test/other.jpg';
+ok('  and a cover set for that recording wins',
+  coverFor('en') === 'https://example.test/other.jpg',
+  `the variable is set and the helper answers '${coverFor('en')}'`);
+delete process.env.NEXT_PUBLIC_WELCOME_VIDEO;
+delete process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERE;
+
+process.env.NEXT_PUBLIC_WELCOME_VIDEO_AFRIKAANS = WITH;
+ok('  and the Afrikaans page never gets the English still',
+  coverFor('af') === '',
+  `Afrikaans, with its own recording and no cover, answers '${coverFor('af')}'`
+  + ' — the English presenter over an Afrikaans recording');
+delete process.env.NEXT_PUBLIC_WELCOME_VIDEO_AFRIKAANS;
 
 /* ── And the signed-in home, which is the same complaint ─────────────── */
 
