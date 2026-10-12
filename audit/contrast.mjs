@@ -171,7 +171,7 @@ for (const name of ONLY === 'pages' ? [] : TABS) {
    only measurement of it was a look at a screenshot. The kids room is
    measured twice — the grown-up's door, and the child's room behind it with
    the allowance route answered here so no row is written anywhere. */
-const PAGES = ['/cubed', '/guide', '/help'];
+const PAGES = ['/cubed', '/guide', '/help', '/story', '/blog', '/legal', '/privacy', '/terms', '/uitspraak'];
 for (const path of PAGES) {
   try {
     await page.goto(`${server.url}${path}`, { waitUntil: 'networkidle' });

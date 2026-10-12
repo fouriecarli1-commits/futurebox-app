@@ -5399,6 +5399,7 @@ export const STRINGS: Dict = {
   "shelf.done": { en: "Done", af: "Klaar" },
   "shelf.forget": { en: "Take it off the shelf", af: "Haal dit van die rak af" },
   "shelf.looking": { en: "Looking on the shelf…", af: "Kyk op die rak…" },
+  "shelf.makeStory": { en: "Open Story mode", af: "Maak Storiemodus oop" },
   "shelf.none": { en: "No stories yet. Ask a grown-up to make one.", af: "Nog geen stories nie. Vra ’n grootmens om een te maak." },
   "shelf.noneGrown": { en: "No stories yet. Make one in Story mode and press “Keep it for the kids room”.", af: "Nog geen stories nie. Maak een in Storiemodus en druk “Hou dit vir die kinderkamer”." },
   "shelf.page": { en: "page", af: "bladsy" },
