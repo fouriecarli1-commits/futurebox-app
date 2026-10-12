@@ -174,12 +174,27 @@ export function filmWithLyrics(
     const mdia = within(patched, one, 'mdia');
     const minf = mdia && within(patched, mdia, 'minf');
     const stbl = minf && within(patched, minf, 'stbl');
+    /* `stco` holds 32-bit chunk offsets; `co64` holds 64-bit ones, which is
+       what a modern encoder writes for anything it thinks might grow past
+       4 GB. The welcome recording of 12 October 2026 arrived with co64 and
+       this threw "no stco to move along" — on a real film from a real
+       encoder, which is the one claim this helper exists to test. */
     const stco = stbl && within(patched, stbl, 'stco');
-    if (!stco) throw new Error('a track in the film has no stco to move along');
-    const count = patched.readUInt32BE(stco.body + 4);
-    for (let n = 0; n < count; n += 1) {
-      const at = stco.body + 8 + 4 * n;
-      patched.writeUInt32BE(patched.readUInt32BE(at) + shift, at);
+    const co64 = stbl && within(patched, stbl, 'co64');
+    if (!stco && !co64) throw new Error('a track in the film has no stco or co64 to move along');
+    if (stco) {
+      const count = patched.readUInt32BE(stco.body + 4);
+      for (let n = 0; n < count; n += 1) {
+        const at = stco.body + 8 + 4 * n;
+        patched.writeUInt32BE(patched.readUInt32BE(at) + shift, at);
+      }
+    }
+    if (co64) {
+      const count = patched.readUInt32BE(co64.body + 4);
+      for (let n = 0; n < count; n += 1) {
+        const at = co64.body + 8 + 8 * n;
+        patched.writeBigUInt64BE(patched.readBigUInt64BE(at) + BigInt(shift), at);
+      }
     }
   }
 
@@ -225,7 +240,8 @@ export function firstChunkBytes(buf: Buffer, which: number, howMany = 24): strin
   const minf = mdia && within(buf, mdia, 'minf');
   const stbl = minf && within(buf, minf, 'stbl');
   const stco = stbl && within(buf, stbl, 'stco');
-  if (!stco) throw new Error(`track ${which} has no stco`);
-  const at = buf.readUInt32BE(stco.body + 8);
+  const co64 = stbl && within(buf, stbl, 'co64');
+  if (!stco && !co64) throw new Error(`track ${which} has no stco or co64`);
+  const at = stco ? buf.readUInt32BE(stco.body + 8) : Number(buf.readBigUInt64BE(co64!.body + 8));
   return buf.toString('hex', at, at + howMany);
 }
