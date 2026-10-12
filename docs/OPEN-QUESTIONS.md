@@ -7230,6 +7230,37 @@ lexicon's.
 
 ---
 
+## Still owed to her — 12 October 2026
+
+Written at the end of a night she slept through and a morning she went to work on, so that
+one place says what is hers to do and what is done.
+
+**Hers, in order:**
+
+1. **Run the SQL.** Paste `supabase/WATKORT.sql` in the Supabase SQL editor: one select, changes
+   nothing, lists what the project is missing. Then `supabase/ALMAL.sql` (everything, safe to run
+   twice) or just `supabase/amps.sql` for the catalogue. Until then the booth says the catalogue
+   is not set up.
+2. **Load the first amps.** On the live site, ProBooth → Lanes and mixing → a lane → Track
+   controls → Tone → Find an amp → Add to the catalogue. Only she sees that form. CC0, CC BY,
+   CC BY-SA and CC BY-ND go in; the NonCommercial ones are refused at the door.
+3. **The Play Billing question** to the attorney, before the listing — `docs/LEGAL-REVIEW.md` §6.
+   Everything else for the store is in `docs/PLAY-STORE.md`; the feature graphic and a first set
+   of screens are in `docs/play/`.
+4. **Tell Antigravity** that `docs/ANTIGRAVITY.md` has a section 5b with five things from the
+   first merge, and that the next branch goes to `antigravity/look` or any named branch — pushed,
+   not left on the laptop.
+5. Still from 8 October: the two Lyrias listened to side by side, Nano Banana Pro re-tried with
+   `/google`, `RAND_PER_USD` checked against the card, and the Omni rate off Google's pricing page.
+
+**Done since the 8 October list, so it is not looked for twice:** CI green on main; Antigravity
+on the bill at R109,99; the amp catalogue; the voice room's history; thirty dead exports and two
+dead modules out with a check that keeps them out; Antigravity's templates, canvas sizes and
+export tiers merged without the facades; the film picker repainted for contrast; the guide at
+`/guide`; the Play Store feature graphic and first screenshots.
+
+---
+
 ## Regenerating part of a song — 10 October 2026
 
 Carli: *"Kan die studio ook nie 'n drag funksie hê, wat ook natuurlike oorgange detect, en dan kan
