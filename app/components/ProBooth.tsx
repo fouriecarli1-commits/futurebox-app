@@ -4219,7 +4219,10 @@ export default function ProBooth({
           difference is visible, so it is written down rather than left to
           whoever next reads the line. */}
       <div className={`min-w-0 flex-1 flex-col overflow-hidden ${deskOpen ? 'hidden' : 'flex'}`}>
-      <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+      <div className="relative flex items-center gap-3 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-5 py-3 border-b border-cyan-500/25 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
+        {/* Subtle neon laser top accent line */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
+
         {/* Out of the room, and it says so.
 
             Carli: "the booth en the pro booth het nie 'n back knoppie nie."
@@ -4234,7 +4237,7 @@ export default function ProBooth({
         <button
           type="button"
           onClick={onClose}
-          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
+          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-2 text-sm font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('booth.back', 'Back')}
@@ -4288,17 +4291,32 @@ export default function ProBooth({
             <Redo2 className="h-4 w-4" />
           </button>
         </div>
-        <div className="min-w-0">
-          <p className="text-base font-bold text-white truncate">{t('pro.title', 'ProBooth — lanes')}</p>
-          <p className="text-sm text-zinc-500 truncate">
-            {title} · {lanes.length} {lanes.length === 1 ? t('pro.lane', 'lane') : t('pro.lanes', 'lanes')} ·{' '}
-            {clock(total)}
-          </p>
-          {/* Every lane, every take and the mix are made on the device. This is
-              the room with the most controls and the fewest of them cost
-              anything, which is exactly the room where somebody assumes they
-              all do. */}
-          <Cost credits={0} className="pt-0.5" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-black tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.7)] truncate">
+              {t('pro.title', 'ProBooth — lanes')}
+            </h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.35)] uppercase">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+              </span>
+              STUDIO DAW
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 text-xs">
+            <span className="font-semibold text-zinc-300 truncate max-w-[160px] sm:max-w-xs">{title}</span>
+            <span className="text-cyan-500/60 font-bold">·</span>
+            <span className="inline-flex items-center gap-1 rounded bg-zinc-800/80 px-1.5 py-0.5 text-[11px] font-medium text-cyan-300 border border-cyan-500/20">
+              <Waves className="h-3 w-3 text-cyan-400" />
+              {lanes.length} {lanes.length === 1 ? t('pro.lane', 'lane') : t('pro.lanes', 'lanes')}
+            </span>
+            <span className="text-cyan-500/60 font-bold">·</span>
+            <span className="font-mono text-[11px] font-bold text-emerald-300 bg-emerald-950/50 border border-emerald-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(16,185,129,0.25)]">
+              {clock(total)}
+            </span>
+            <Cost credits={0} className="pl-1" />
+          </div>
         </div>
       </div>
 

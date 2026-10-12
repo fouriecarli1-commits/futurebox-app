@@ -54,16 +54,16 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
  */
 const HATLESS: readonly { readonly bare: RegExp; readonly meant: string }[] = [
   /* `he` is nothing; `hê` is "have". */
-  { bare: /\bhe\b/, meant: 'hê' },
+  { bare: /(?<!\p{L})he(?!\p{L})/u, meant: 'hê' },
   /* `Se` capitalised opens a sentence, where only the imperative `Sê` can
      stand. Lowercase `se` is the possessive — "Jan se liedjie" — and is not
      matched. */
-  { bare: /\bSe\b/, meant: 'Sê' },
-  { bare: /\bgese\b/, meant: 'gesê' },
-  { bare: /\bnerens\b/, meant: 'nêrens' },
-  { bare: /\bwereld\b/, meant: 'wêreld' },
-  { bare: /\bseen\b/, meant: 'seën' },
-  { bare: /\bbrue\b/, meant: 'brûe' },
+  { bare: /(?<!\p{L})Se(?!\p{L})/u, meant: 'Sê' },
+  { bare: /(?<!\p{L})gese(?!\p{L})/u, meant: 'gesê' },
+  { bare: /(?<!\p{L})nerens(?!\p{L})/u, meant: 'nêrens' },
+  { bare: /(?<!\p{L})wereld(?!\p{L})/u, meant: 'wêreld' },
+  { bare: /(?<!\p{L})seen(?!\p{L})/u, meant: 'seën' },
+  { bare: /(?<!\p{L})brue(?!\p{L})/u, meant: 'brûe' },
 ];
 
 const source = readFileSync('app/lib/i18n.tsx', 'utf8');

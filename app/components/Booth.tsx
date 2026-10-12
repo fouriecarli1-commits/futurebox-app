@@ -366,15 +366,24 @@ export default function Booth({
       {/* ── What this room is ───────────────────────────────────────────── */}
       <div className="flex items-start gap-3">
         <span
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl"
-          style={{ background: 'rgba(56,189,248,0.16)', color: LIT, boxShadow: `0 0 0 1px ${EDGE}` }}
+          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-cyan-400/40 shadow-[0_0_16px_rgba(34,211,238,0.35)]"
+          style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.2) 0%, rgba(16,185,129,0.15) 100%)', color: LIT }}
         >
-          <Mic className="h-6 w-6" />
+          <Mic className="h-6 w-6 text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
         </span>
         <div className="min-w-0">
-          <h4 className="text-2xl font-black leading-tight tracking-tight" style={{ color: INK }}>
-            {t('booth.title')}
-          </h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-2xl font-black leading-tight tracking-tight bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_16px_rgba(34,211,238,0.6)]">
+              {t('booth.title')}
+            </h4>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)] uppercase">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+              </span>
+              STUDIO
+            </span>
+          </div>
           {/* Full strength. This is the sentence that says what the room is
               — the first thing read and the reason to go in — and it was
               drawn as though it were a caption under something else. */}

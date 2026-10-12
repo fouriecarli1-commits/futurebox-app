@@ -45,7 +45,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     if (name === 'node_modules' || name === '.next') continue;
-    const path = join(dir, name);
+    const path = join(dir, name).replace(/\\/g, '/');
     if (statSync(path).isDirectory()) walk(path, out);
     else if (/\.tsx?$/.test(path)) out.push(path);
   }

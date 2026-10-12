@@ -1128,7 +1128,9 @@ export default function VocalBooth({
        decision: see `check:boothline` and `lib/boothlook.ts`. */
     <div data-booth className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col"
       style={{ paddingBottom: barClearance(0) }}>
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+      <div className="relative flex items-center gap-3 px-5 py-3 border-b border-cyan-500/25 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
+        {/* Subtle neon laser top accent line */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
         {/* Out of the room, and it says so.
 
             Carli: "the booth en the pro booth het nie 'n back knoppie nie."
@@ -1143,14 +1145,25 @@ export default function VocalBooth({
         <button
           type="button"
           onClick={onClose}
-          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
+          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-2 text-sm font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('booth.back', 'Back')}
         </button>
-        <div className="min-w-0">
-          <p className="text-base font-bold text-white truncate">{t('booth.title', 'ProBooth')}</p>
-          <p className="text-sm text-zinc-500 truncate">{track.title}</p>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-black tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.7)] truncate">
+              {t('booth.title', 'ProBooth')}
+            </h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.35)] uppercase">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+              </span>
+              VOCAL SUITE
+            </span>
+          </div>
+          <p className="text-xs text-zinc-400 truncate pt-0.5">{track.title}</p>
         </div>
       </div>
 

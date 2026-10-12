@@ -64,6 +64,11 @@ export interface Template {
 
 const WHITE = '#ffffff';
 const GOLD = '#fbbf24';
+const NEON_CYAN = '#22d3ee';
+const NEON_PINK = '#f472b6';
+const NEON_EMERALD = '#34d399';
+const NEON_VIOLET = '#a78bfa';
+const NEON_LIME = '#a3e635';
 
 export const TEMPLATES: readonly Template[] = [
   {
@@ -89,6 +94,28 @@ export const TEMPLATES: readonly Template[] = [
     ],
   },
   {
+    id: 'neon_cyber',
+    name: ['post.tplNeonCyber', 'Neon Cyber Glow'],
+    what: ['post.tplNeonCyberWhat', 'Electric cyan and fuchsia typography with a sleek synthwave look.'],
+    size: 'story',
+    look: { bright: 0.92, contrast: 1.25, colour: 1.3 },
+    words: [
+      { says: ['post.tplNeonCyberOne', 'CYBER LIVE'], face: 'poster', spot: 'middle', ink: NEON_CYAN },
+      { says: ['post.tplNeonCyberTwo', 'Laser lights and synthesizer nights'], face: 'plain', spot: 'lower', ink: NEON_PINK },
+    ],
+  },
+  {
+    id: 'neon_club',
+    name: ['post.tplNeonClub', 'Neon Club Night'],
+    what: ['post.tplNeonClubWhat', 'Loud nightlife neon design for DJs, parties and dance tracks.'],
+    size: 'square',
+    look: { bright: 0.88, contrast: 1.3, colour: 1.35 },
+    words: [
+      { says: ['post.tplNeonClubOne', 'MIDNIGHT BEATS'], face: 'poster', spot: 'top', ink: NEON_EMERALD },
+      { says: ['post.tplNeonClubTwo', 'Doors open 10PM · Cape Town'], face: 'plain', spot: 'bottom', ink: NEON_PINK },
+    ],
+  },
+  {
     id: 'quote',
     name: ['post.tplQuote', 'Something somebody said'],
     what: ['post.tplQuoteWhat', 'A line in the middle, with the picture pulled back.'],
@@ -96,6 +123,17 @@ export const TEMPLATES: readonly Template[] = [
     look: { bright: 0.78, colour: 0.7, blur: 2 },
     words: [
       { says: ['post.tplQuoteOne', '“We made the whole thing on a phone.”'], face: 'book', spot: 'middle', ink: WHITE },
+    ],
+  },
+  {
+    id: 'neon_wave',
+    name: ['post.tplNeonWave', 'Neon Retro Wave'],
+    what: ['post.tplNeonWaveWhat', 'Vibrant ultraviolet glow with warm golden neon highlights.'],
+    size: 'portrait',
+    look: { bright: 0.9, contrast: 1.2, warmth: 0.15, colour: 1.25 },
+    words: [
+      { says: ['post.tplNeonWaveOne', 'NEON HORIZON'], face: 'poster', spot: 'middle', ink: NEON_VIOLET },
+      { says: ['post.tplNeonWaveTwo', 'New single streaming everywhere'], face: 'plain', spot: 'bottom', ink: GOLD },
     ],
   },
   {
@@ -117,6 +155,17 @@ export const TEMPLATES: readonly Template[] = [
     words: [
       { says: ['post.tplThanksOne', 'DANKIE'], face: 'poster', spot: 'middle', ink: WHITE },
       { says: ['post.tplThanksTwo', 'Every one of you'], face: 'plain', spot: 'bottom', ink: GOLD },
+    ],
+  },
+  {
+    id: 'neon_stage',
+    name: ['post.tplNeonStage', 'Neon Stage Lights'],
+    what: ['post.tplNeonStageWhat', 'Concert stadium lighting with electric lime and cyan glow.'],
+    size: 'wide',
+    look: { contrast: 1.22, colour: 1.3 },
+    words: [
+      { says: ['post.tplNeonStageOne', 'ELECTRIC ARENA TOUR'], face: 'poster', spot: 'middle', ink: NEON_LIME },
+      { says: ['post.tplNeonStageTwo', 'Tickets available now'], face: 'plain', spot: 'bottom', ink: NEON_CYAN },
     ],
   },
   {

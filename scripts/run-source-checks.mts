@@ -42,7 +42,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-const workflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+const workflow = readFileSync('.github/workflows/ci.yml', 'utf8').replace(/\r\n/g, '\n');
 
 /**
  * The `check` job's steps, up to where the next job begins.

@@ -48,6 +48,7 @@ export interface TemplateCategoryMeta {
 }
 
 export const TEMPLATE_CATEGORIES: readonly TemplateCategoryMeta[] = [
+  { id: 'neon', nameKey: 'tplcat.neon', nameEn: 'Neon & Cyber Glow', nameAf: 'Neon & Kuber-gloed', iconType: 'sparkles', colorBg: 'from-cyan-500/20 to-fuchsia-500/30' },
   { id: 'presentation', nameKey: 'tplcat.presentation', nameEn: 'Presentation', nameAf: 'Aanbieding', iconType: 'monitor', colorBg: 'from-amber-500/20 to-orange-500/30' },
   { id: 'poster', nameKey: 'tplcat.poster', nameEn: 'Poster', nameAf: 'Plakkaat', iconType: 'image', colorBg: 'from-purple-500/20 to-indigo-500/30' },
   { id: 'resume', nameKey: 'tplcat.resume', nameEn: 'Resume', nameAf: 'CV / Resume', iconType: 'file', colorBg: 'from-blue-500/20 to-sky-500/30' },
@@ -70,6 +71,158 @@ export const TEMPLATE_CATEGORIES: readonly TemplateCategoryMeta[] = [
 ];
 
 export const STARTER_TEMPLATES: readonly StudioTemplateItem[] = [
+  // ── 0. Neon & Cyber Studio Templates ──
+  {
+    id: 'tpl_neon_synthwave',
+    nameKey: 'tpl.neonSynthwave',
+    nameEn: 'Neon Synthwave Festival',
+    nameAf: 'Neon Sintetiseerder-fees',
+    subKey: 'tpl.neonSynthwaveSub',
+    subEn: 'Future Retro Tour 2026',
+    subAf: 'Toekomstige Retrogolf-toer 2026',
+    category: 'neon',
+    width: 1080,
+    height: 1920,
+    ratioLabel: '9:16',
+    sampleHeadline: 'NEON SYNTHWAVE',
+    sampleSubtext: 'FUTURE RETRO TOUR • 2026',
+    previewSvg: encodeSvg(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+        <defs>
+          <linearGradient id="neonSky" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#090514" />
+            <stop offset="55%" stop-color="#2a0845" />
+            <stop offset="75%" stop-color="#ec4899" />
+            <stop offset="100%" stop-color="#f59e0b" />
+          </linearGradient>
+          <linearGradient id="neonSun" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fef08a" />
+            <stop offset="40%" stop-color="#f43f5e" />
+            <stop offset="100%" stop-color="#d946ef" />
+          </linearGradient>
+        </defs>
+        <rect width="1080" height="1920" fill="#030014" />
+        <rect width="1080" height="1100" fill="url(#neonSky)" opacity="0.85" />
+        <circle cx="540" cy="950" r="320" fill="url(#neonSun)" />
+        <line x1="220" y1="900" x2="860" y2="900" stroke="#090514" stroke-width="12" />
+        <line x1="250" y1="950" x2="830" y2="950" stroke="#090514" stroke-width="18" />
+        <line x1="300" y1="1000" x2="780" y2="1000" stroke="#090514" stroke-width="24" />
+        <rect y="1100" width="1080" height="820" fill="#090014" />
+        <line x1="540" y1="1100" x2="540" y2="1920" stroke="#06b6d4" stroke-width="3" opacity="0.7" />
+        <line x1="540" y1="1100" x2="150" y2="1920" stroke="#06b6d4" stroke-width="3" opacity="0.6" />
+        <line x1="540" y1="1100" x2="930" y2="1920" stroke="#06b6d4" stroke-width="3" opacity="0.6" />
+        <line x1="540" y1="1100" x2="-200" y2="1920" stroke="#06b6d4" stroke-width="3" opacity="0.5" />
+        <line x1="540" y1="1100" x2="1280" y2="1920" stroke="#06b6d4" stroke-width="3" opacity="0.5" />
+        <line x1="0" y1="1180" x2="1080" y2="1180" stroke="#d946ef" stroke-width="3" opacity="0.6" />
+        <line x1="0" y1="1280" x2="1080" y2="1280" stroke="#d946ef" stroke-width="4" opacity="0.7" />
+        <line x1="0" y1="1420" x2="1080" y2="1420" stroke="#d946ef" stroke-width="5" opacity="0.8" />
+        <line x1="0" y1="1620" x2="1080" y2="1620" stroke="#d946ef" stroke-width="7" opacity="0.9" />
+        <text x="540" y="320" font-family="impact, sans-serif" font-weight="900" font-size="110" fill="#22d3ee" text-anchor="middle" letter-spacing="8">NEON SYNTHWAVE</text>
+        <text x="540" y="440" font-family="sans-serif" font-weight="800" font-size="44" fill="#f472b6" text-anchor="middle" letter-spacing="6">FUTURE RETRO TOUR • 2026</text>
+        <rect x="290" y="480" width="500" height="60" rx="30" fill="none" stroke="#22d3ee" stroke-width="4" />
+        <text x="540" y="522" font-family="monospace" font-weight="700" font-size="28" fill="#e0e7ff" text-anchor="middle" letter-spacing="4">CAPE TOWN ARENA • 28 OCT</text>
+      </svg>
+    `),
+  },
+  {
+    id: 'tpl_neon_club_night',
+    nameKey: 'tpl.neonClubNight',
+    nameEn: 'Neon Club & Bass Night',
+    nameAf: 'Neon Klub- en Basaand',
+    subKey: 'tpl.neonClubNightSub',
+    subEn: 'Electro Bass & Laser Visuals',
+    subAf: 'Elektro-bas en Laser Visuele Effekte',
+    category: 'neon',
+    width: 1080,
+    height: 1080,
+    ratioLabel: '1:1',
+    sampleHeadline: 'NEON CLUB NIGHT',
+    sampleSubtext: 'ELECTRO BASS & LASERS',
+    previewSvg: encodeSvg(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+        <rect width="1080" height="1080" fill="#050508" />
+        <rect x="60" y="60" width="960" height="960" rx="40" fill="none" stroke="#34d399" stroke-width="10" opacity="0.8" />
+        <rect x="80" y="80" width="920" height="920" rx="30" fill="none" stroke="#f43f5e" stroke-width="4" opacity="0.6" />
+        <polygon points="540,160 880,540 540,920 200,540" fill="none" stroke="#22d3ee" stroke-width="6" opacity="0.75" />
+        <circle cx="540" cy="540" r="160" fill="#09090b" stroke="#34d399" stroke-width="8" />
+        <text x="540" y="520" font-family="impact, sans-serif" font-weight="900" font-size="70" fill="#ffffff" text-anchor="middle" letter-spacing="4">NEON</text>
+        <text x="540" y="585" font-family="impact, sans-serif" font-weight="900" font-size="52" fill="#34d399" text-anchor="middle" letter-spacing="6">CLUB</text>
+        <text x="540" y="320" font-family="monospace" font-weight="800" font-size="34" fill="#f472b6" text-anchor="middle" letter-spacing="8">MIDNIGHT ELECTRO BASS</text>
+        <text x="540" y="760" font-family="monospace" font-weight="700" font-size="32" fill="#a7f3d0" text-anchor="middle" letter-spacing="6">DOORS OPEN 10PM • CAPE TOWN</text>
+      </svg>
+    `),
+  },
+  {
+    id: 'tpl_neon_soundscape',
+    nameKey: 'tpl.neonSoundscape',
+    nameEn: 'Neon Soundscape Studio',
+    nameAf: 'Neon Klanklandskap-ateljee',
+    subKey: 'tpl.neonSoundscapeSub',
+    subEn: 'Official Album Launch & 48kHz Audio',
+    subAf: 'Amptelike Albumvrystelling & 48kHz-klank',
+    category: 'neon',
+    width: 1920,
+    height: 1080,
+    ratioLabel: '16:9',
+    sampleHeadline: 'NEON SOUNDSCAPE',
+    sampleSubtext: 'OFFICIAL STUDIO ALBUM • OUT NOW',
+    previewSvg: encodeSvg(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+        <defs>
+          <linearGradient id="soundG" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#06b6d4" />
+            <stop offset="50%" stop-color="#a855f7" />
+            <stop offset="100%" stop-color="#ec4899" />
+          </linearGradient>
+        </defs>
+        <rect width="1920" height="1080" fill="#04020a" />
+        <g opacity="0.85">
+          <rect x="260" y="620" width="28" height="160" rx="14" fill="#06b6d4" />
+          <rect x="320" y="560" width="28" height="280" rx="14" fill="#06b6d4" />
+          <rect x="380" y="500" width="28" height="400" rx="14" fill="#3b82f6" />
+          <rect x="440" y="440" width="28" height="520" rx="14" fill="#6366f1" />
+          <rect x="500" y="380" width="28" height="640" rx="14" fill="#8b5cf6" />
+          <rect x="560" y="320" width="28" height="760" rx="14" fill="#a855f7" />
+          <rect x="620" y="280" width="28" height="840" rx="14" fill="#c084fc" />
+          <rect x="680" y="340" width="28" height="720" rx="14" fill="#d946ef" />
+          <rect x="740" y="420" width="28" height="560" rx="14" fill="#ec4899" />
+          <rect x="800" y="480" width="28" height="440" rx="14" fill="#f43f5e" />
+          <rect x="860" y="540" width="28" height="320" rx="14" fill="#fb7185" />
+          <rect x="920" y="600" width="28" height="200" rx="14" fill="#fda4af" />
+        </g>
+        <text x="1080" y="480" font-family="impact, sans-serif" font-weight="900" font-size="140" fill="url(#soundG)" letter-spacing="4">NEON SOUNDSCAPE</text>
+        <text x="1080" y="580" font-family="sans-serif" font-weight="800" font-size="44" fill="#f8fafc" letter-spacing="6">OFFICIAL STUDIO ALBUM • 48KHZ NEURAL</text>
+        <text x="1080" y="660" font-family="monospace" font-weight="700" font-size="32" fill="#22d3ee" letter-spacing="4">PRODUCED WITH FUTUREBOX &amp; GOOGLE LYRIA</text>
+      </svg>
+    `),
+  },
+  {
+    id: 'tpl_neon_story',
+    nameKey: 'tpl.neonStory',
+    nameEn: 'Neon Story Stage Live',
+    nameAf: 'Neon Storieverhoog Lewendig',
+    subKey: 'tpl.neonStorySub',
+    subEn: 'Live Performance at FutureBox Studio',
+    subAf: 'Lewendige Vertoning by FutureBox-ateljee',
+    category: 'neon',
+    width: 1080,
+    height: 1920,
+    ratioLabel: '9:16',
+    sampleHeadline: 'ELECTRIC NIGHTS',
+    sampleSubtext: 'LIVE AT FUTUREBOX STAGE',
+    previewSvg: encodeSvg(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+        <rect width="1080" height="1920" fill="#080312" />
+        <rect x="50" y="50" width="980" height="1820" rx="40" fill="none" stroke="#22d3ee" stroke-width="8" opacity="0.8" />
+        <circle cx="540" cy="720" r="280" fill="none" stroke="#f472b6" stroke-width="10" stroke-dasharray="30 15" opacity="0.85" />
+        <text x="540" y="690" font-family="impact, sans-serif" font-weight="900" font-size="120" fill="#ffffff" text-anchor="middle" letter-spacing="6">ELECTRIC</text>
+        <text x="540" y="800" font-family="impact, sans-serif" font-weight="900" font-size="100" fill="#22d3ee" text-anchor="middle" letter-spacing="8">NIGHTS</text>
+        <rect x="240" y="1120" width="600" height="90" rx="45" fill="#f43f5e" />
+        <text x="540" y="1178" font-family="sans-serif" font-weight="900" font-size="38" fill="#ffffff" text-anchor="middle" letter-spacing="4">LIVE CONCERT • 2026</text>
+        <text x="540" y="1320" font-family="monospace" font-weight="700" font-size="34" fill="#a5f3fc" text-anchor="middle" letter-spacing="4">STREAMING WORLDWIDE</text>
+      </svg>
+    `),
+  },
   // ── 1. Pitch Decks & Presentations (Screenshot 4) ──
   {
     id: 'tpl_pitch_deck',
