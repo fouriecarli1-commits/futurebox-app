@@ -57,6 +57,7 @@ import { useOpenCard } from '../lib/opencard';
 import SongStarts from './SongStarts';
 import PromptCards from './PromptCards';
 import { MOODS, type Mood } from '../data/songstarts';
+import { titleFromWords } from '../lib/songtitle';
 
 export interface Canvas {
   title: string;
@@ -804,7 +805,12 @@ export default function MakeMusic({
         setStatus(gate.reason);
         return;
       }
-      const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim() || 'Untitled';
+      /* Never "Untitled". A name read off the first line of the words, or
+         the style, before a sentence in the reader's language — see
+         `lib/songtitle.ts` and `check:titled`. */
+      const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim()
+        || titleFromWords(lyrics, canvas.style)
+        || t('make.noName', 'A song from today');
       const began = Date.now();
       setBusy(true);
       setStage(null);

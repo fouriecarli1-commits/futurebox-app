@@ -2889,6 +2889,7 @@ export const STRINGS: Dict = {
   "make.failed": { en: "That did not work. Try again.", af: "Dit het nie gewerk nie. Probeer weer." },
   "make.leftToday": { en: "left today.", af: "oor vandag." },
   "make.getMore": { en: "Get more", af: "Kry meer" },
+  "make.noName": { en: "A song from today", af: "\u2019n Liedjie van vandag" },
   "make.sketch": { en: "What you get right now is a rough sketch \u2014 real music, made on your device, so you can hear whether the speed and the mood are right before you commit. It is not sung and it is not the finished thing.", af: "Wat jy nou kry is ’n rowwe skets \u2014 regte klank, hier op jou toestel gemaak, sodat jy kan hoor of die spoed en gevoel reg is voor jy tyd mors. Dit sing nie, en dis nie die klaar ding nie." },
   "make.channel": { en: "Your channel", af: "Jou kanaal" },
   "make.song": { en: "song", af: "liedjie" },

@@ -31,6 +31,7 @@ import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { SINGERS } from '@/app/data/sound';
 import { craftBrief } from '@/app/data/songcraft';
 import { planActions } from '@/app/lib/copilotplan';
+import { ensureTitled } from '@/app/lib/songtitle';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { copilotAvailable } from '@/app/lib/server/aikey';
@@ -222,6 +223,12 @@ const SYSTEM = [
   '- But DO make the craft decisions. The shape of a video, its length, the look it shares, where an advert should run — these have right answers, you know them, and the person asking usually does not. Set them, and say in half a sentence why, so they can change it. Leaving a box empty that you could have filled correctly is not caution, it is work handed back.',
   '- So: when you set something up, set ALL of it. A shot written onto a video desk with the shape and the length left as they were is a job half done — a nine-second wide clip for something they told you was going on TikTok.',
   '- At most one generate and at most one go per reply, and it goes last.',
+  /* Carli, 12 October 2026: "copilot moet altyd 'n titel uit dink vir 'n
+     song." A song that reaches the shelf as "Untitled" is a song nobody can
+     find again, and the person in Simple mode never typed a title because
+     the whole point of Simple is that they do not have to. The model is
+     told; `ensureTitled` in `lib/songtitle.ts` makes sure. */
+  '- A song is never untitled. Whenever you write lyrics, set a style, or start a song and the context says there is no title yet, send set_title in the same reply with a real title you thought of: short, specific to the words, the kind of name a record has. Never "Untitled", "New song" or "My song", and never leave naming it to them.',
   /* The second half of the same fault. The first fix let a reply fill five
      fields in the room they are standing in; this lets it fill them in the
      room it is sending them to, which is what somebody asking for help with
@@ -500,7 +507,10 @@ export async function POST(request: Request): Promise<Response> {
        a contract, so they are applied here. `planActions` holds them on
        their own so they can be tested without an API key — see
        `app/lib/copilotplan.ts` and `scripts/check-copilotplan.mts`. */
-    return Response.json({ reply: parsed.reply, actions: planActions(parsed.actions ?? [], body.surface) });
+    return Response.json({
+      reply: parsed.reply,
+      actions: ensureTitled(planActions(parsed.actions ?? [], body.surface), body.title),
+    });
   } catch (error) {
     return aiFault(error, 'The copilot could not be reached.');
   }
