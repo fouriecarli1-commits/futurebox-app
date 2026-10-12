@@ -670,25 +670,12 @@ export default function KidsRoom(): React.ReactElement {
         </p>
       </div>
 
-      {/* ── 4b. Ready-made Adventure Templates ────────────────────────────
-          Carli, 11 October 2026: *"Die kids room het ook baie templates
-          nodig vir 'n kind om net van te kies."*
-          A child can pick a complete theme (topic + sound) in one tap. */}
-      <KidsTemplatesPicker
-        selectedTopic={topic}
-        selectedSound={sound}
-        onPick={(tpl) => {
-          setTopic(tpl.topic);
-          setSound(tpl.sound);
-          setMascot((n) => (n + 1) % MASCOT_SAYS.length);
-        }}
-        disabled={Boolean(busy) || Boolean(job)}
-      />
-
       {/* ── The child's own words ─────────────────────────────────────────
           A box for the ones who can type, and a button for the ones who
           would rather say it. What is said lands in the box, so it can be
-          read, fixed and heard back in the sentence above. */}
+          read, fixed and heard back in the sentence above. Directly under
+          that sentence, because it answers it — below the fourteen template
+          tiles it was a screen and a half down on a phone. */}
       <div
         data-kidsown
         className="mx-auto flex w-full max-w-md items-center gap-2 rounded-3xl border-4 border-surface-200/90 bg-surface-50/90 p-2 shadow-md"
@@ -737,6 +724,21 @@ export default function KidsRoom(): React.ReactElement {
           {t('kids.listening', 'Listening… press to stop')}
         </p>
       )}
+
+      {/* ── 4b. Ready-made Adventure Templates ────────────────────────────
+          Carli, 11 October 2026: *"Die kids room het ook baie templates
+          nodig vir 'n kind om net van te kies."*
+          A child can pick a complete theme (topic + sound) in one tap. */}
+      <KidsTemplatesPicker
+        selectedTopic={topic}
+        selectedSound={sound}
+        onPick={(tpl) => {
+          setTopic(tpl.topic);
+          setSound(tpl.sound);
+          setMascot((n) => (n + 1) % MASCOT_SAYS.length);
+        }}
+        disabled={Boolean(busy) || Boolean(job)}
+      />
 
       {/* The sheet of topics. A wrapping row rather than a grid, so the
           three sizes can sit beside each other without a cell forcing them
