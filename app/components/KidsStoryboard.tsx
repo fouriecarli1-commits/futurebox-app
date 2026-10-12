@@ -297,7 +297,7 @@ export default function KidsStoryboard({
                   className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-surface-300 px-4 text-xs font-bold text-surface-700 disabled:opacity-30"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  <span>{t('kids.back', 'Back')}</span>
+                  <span>{t('kids.storyBack', 'Back')}</span>
                 </button>
                 <button
                   type="button"
@@ -367,7 +367,7 @@ export default function KidsStoryboard({
                   className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-surface-300 px-4 text-xs font-bold text-surface-700"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  <span>{t('kids.back', 'Back')}</span>
+                  <span>{t('kids.storyBack', 'Back')}</span>
                 </button>
                 <button
                   type="button"
@@ -438,7 +438,7 @@ export default function KidsStoryboard({
           </div>
 
           {/* Book Page Card with SVG Illustration */}
-          <div className="rounded-3xl border-4 border-surface-200 bg-white p-4 sm:p-6 shadow-xl">
+          <div className="rounded-3xl border-4 border-surface-200 bg-surface-50 p-4 sm:p-6 shadow-xl">
             {/* Illustration */}
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-inner bg-surface-100 flex items-center justify-center">
               {story.pages[readerPage]?.picture && (

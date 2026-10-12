@@ -464,7 +464,12 @@ export default function MakeMusic({
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
-  const [verseGuideMode, setVerseGuideMode] = useState(true);
+  /* Off to start with. The verse-by-verse guide arrived on 12 October 2026
+     switched on, and that hid the plain words box — the one the photo flow
+     fills, the copilot writes into and the wand adds to. `check:makeroom`
+     types into that box and found it gone. The guide is a way of writing,
+     offered beside the box, not in place of it. */
+  const [verseGuideMode, setVerseGuideMode] = useState(false);
   const [showRepertoire, setShowRepertoire] = useState(false);
   const [weirdness, setWeirdness] = useState(15);
   /**
@@ -1295,7 +1300,7 @@ export default function MakeMusic({
                   : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
               }`}
             >
-              ✍️ {t('make.freeWrite', 'Free Lyrics')}
+              ✍️ {t('make.freeWrite', 'Write it yourself')}
             </button>
           </div>
 

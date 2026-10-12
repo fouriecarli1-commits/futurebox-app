@@ -44,7 +44,11 @@ export default function KidsPage(): React.ReactElement {
       <div className="mx-auto w-full max-w-3xl px-5 pt-8">
         <Link
           href="/"
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-sm px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-sm transition-all"
+          /* A solid accent pill, because this one link stands on two grounds: the
+             pale door before a grown-up opens the room, and the dark emerald
+             wash once it is open. Ink picked for either fails on the other;
+             the accent pair is solved against itself. */
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-emerald-400/40 bg-emerald-500 px-4 py-1.5 text-sm font-black text-onAccent hover:bg-emerald-400 shadow-sm transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('kids.back', 'Back to the studio')}

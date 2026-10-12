@@ -102,13 +102,18 @@ function laneList(raw: unknown): LaneNow[] {
 
 import { addressOf, configured as googleConfigured } from '@/app/lib/server/google';
 
+/* Whether the Gemini path can be tried. Beside `copilotAvailable()` rather
+   than inside it: that gate speaks for the rooms Anthropic answers, and this
+   room is the one that can also answer through her Google account. */
+const googleCopilot = (): boolean => Boolean(process.env.GOOGLE_VERTEX_KEY) || googleConfigured();
+
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('mixdesk', request, LIMITS)) {
     return Response.json({ error: 'rate_limited', message: 'Too many at once. Try again in a moment.' }, { status: 429 });
   }
 
-  const hasGoogle = Boolean(process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || googleConfigured());
-  const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
+  const hasGoogle = googleCopilot();
+  const hasAnthropic = copilotAvailable();
 
   if (!hasGoogle && !hasAnthropic) {
     return Response.json({ error: 'no_key', message: 'The copilot is not switched on.' }, { status: 503 });
@@ -148,7 +153,7 @@ export async function POST(request: Request): Promise<Response> {
   /* ── 1. Google Gemini 2.5 Flash (Google Workspace & Vertex AI) ────── */
   if (hasGoogle) {
     try {
-      const key = process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || '';
+      const key = process.env.GOOGLE_VERTEX_KEY ?? '';
       const endpoint = addressOf('gemini-2.5-flash', 'generateContent');
       const googleRes = await fetch(endpoint, {
         method: 'POST',
@@ -246,5 +251,5 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function GET(): Promise<Response> {
-  return Response.json({ available: copilotAvailable() });
+  return Response.json({ available: googleCopilot() || copilotAvailable() });
 }

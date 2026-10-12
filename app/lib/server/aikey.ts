@@ -77,5 +77,12 @@ export function noteKeyRefused(): void {
  * `Boolean(process.env.ANTHROPIC_API_KEY)`.
  */
 export function copilotAvailable(): boolean {
-  return Boolean(process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || (process.env.ANTHROPIC_API_KEY && !refused));
+  /* The Anthropic key, and only that. On 12 October 2026 a Google key was
+     added to this line because the mix desk had grown a Gemini path — but
+     every OTHER room that asks this question still calls Anthropic, so a
+     deployment with a Google key and no Anthropic key was told "available"
+     in rooms where every ask would fail, and on a deployment with both keys
+     a refused Anthropic key no longer switched anything off. The mix desk
+     asks its own question about Google beside this one. */
+  return Boolean(process.env.ANTHROPIC_API_KEY) && !refused;
 }

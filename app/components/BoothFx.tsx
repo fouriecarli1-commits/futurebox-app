@@ -642,7 +642,8 @@ function Unit({
 }
 
 /**
- * AI Studio Presets for One-Click Sound Sculpting.
+ * Studio presets for one-click sound sculpting. Presets, not a model: the
+ * label stopped saying "AI" on 12 October 2026 because nothing here asks one.
  */
 interface AiPreset {
   id: string;
@@ -796,7 +797,7 @@ export default function BoothFx({
             </span>
             <div>
               <p className="text-xs font-black uppercase tracking-wider text-emerald-300">
-                {t('fx.aiSculpt', 'AI Sound Sculptor')}
+                {t('fx.aiSculpt', 'Sound sculptor')}
               </p>
               <p className="text-[11px] leading-tight text-emerald-400/70">
                 {t('fx.aiSculptWhat', 'One-click studio presets to sculpt tone, warmth, dynamics and space.')}

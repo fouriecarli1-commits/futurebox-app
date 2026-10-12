@@ -37,9 +37,10 @@ ok('there is a list worth calling a list', INSTRUMENTS.length >= 20, String(INST
 ok('every instrument has its own id', new Set(INSTRUMENTS.map((one) => one.id)).size === INSTRUMENTS.length);
 ok('and its own name key', new Set(INSTRUMENTS.map((one) => one.name)).size === INSTRUMENTS.length);
 /* A mixer's channel list is grouped, and so is this: drums, bass, keys,
-   guitars, winds, texture. A flat list of twenty-three is a wall. */
+   guitars, winds, texture, and since 12 October 2026 chords. A flat list
+   of twenty-nine is a wall. */
 const families = new Set(INSTRUMENTS.map((one) => one.family));
-ok('and they are grouped the way a channel list is', families.size === 6, [...families].join(', '));
+ok('and they are grouped the way a channel list is', families.size === 7, [...families].join(', '));
 ok('every family has something in it',
   [...families].every((family) => INSTRUMENTS.filter((one) => one.family === family).length >= 3));
 

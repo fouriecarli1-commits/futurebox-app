@@ -96,8 +96,8 @@ true of anything.
   character cost ElevenLabs returns. Named here rather than counted as none,
   because "no console.log" was true in September and stopped being true
   without anybody deciding it had.
-- **61 eslint suppressions**, every one in a category with a reason:
-  31 × `no-img-element` for blob and data URLs a Next `<Image>` cannot take,
+- **66 eslint suppressions**, every one in a category with a reason:
+  36 × `no-img-element` for blob and data URLs a Next `<Image>` cannot take,
   15 × `jsx-a11y/media-has-caption` for generated audio and video,
   10 × `exhaustive-deps` where a re-run would fire a generation,
   1 × `no-await-in-loop` where three decodes at once is the memory spike the
