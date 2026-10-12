@@ -105,6 +105,10 @@ export default function VideoTemplatesPicker({
               key={start.id}
               type="button"
               data-editorstart={start.id}
+              /* A card, not a bar: a name, a line on what it does and three chips.
+                 `audit/tidybars.mjs` holds every control in a bench to one
+                 height and lets a card declare itself. */
+              data-tidycard=""
               onClick={() => handleApplyStart(start)}
               className="group flex min-h-[44px] flex-col justify-between rounded-xl border p-3 text-left transition-all"
               style={{

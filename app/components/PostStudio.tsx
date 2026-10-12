@@ -4951,7 +4951,11 @@ export default function PostStudio({
           atDesk ? 'max-w-5xl' : 'max-w-2xl'
         }`}
       >
-        <div className="flex items-center justify-between gap-3">
+        {/* Wrapping, since 12 October 2026: the templates and size buttons went on
+            this row and the Ask button ran 34px off a 390-pixel phone — `audit/wide.mjs`
+            measured it on the runner. The title keeps its place; the buttons take a
+            second line when they must. */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {/* ── Why the name of the room refuses to shrink ──────────────
  
               Carli, 10 and 11 October 2026: *"Kyk hoe sny alles af op die
