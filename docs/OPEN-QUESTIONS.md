@@ -7259,6 +7259,16 @@ dead modules out with a check that keeps them out; Antigravity's templates, canv
 export tiers merged without the facades; the film picker repainted for contrast; the guide at
 `/guide`; the Play Store feature graphic and first screenshots.
 
+**And from what she sent on 12 October while at work:** the kids room is a highlight on the
+greeting, a row on the rail and a block on the guide, and its door says why when an allowance
+does not take (she had reached it from the sign-in screen with no session, and the door said
+nothing). If the door now says *run supabase/kinders.sql and supabase/skermtyd.sql*, that is item
+1 above — the same SQL. Cubed's third class is "What is next"; the 60/40 is off the public page
+and kept for the agreement; the room opens with her line; no Afrikaans is typed into any English
+screen, held by `check:taalvas`. The copilot names every song it writes and the room never says
+"Untitled". The contrast probe walks the dark theme and reads gradients, which is how it found
+fifteen light-theme buttons at 2.73:1 — flat fills now.
+
 ---
 
 ## Regenerating part of a song — 10 October 2026

@@ -357,6 +357,10 @@ jobs:
         run: npm run check:deadexports
       - name: The guide names every room, prices nothing by hand, and can be reached
         run: npm run check:guide
+      - name: A song is never untitled — the copilot names it, the route makes sure, the room never says Untitled
+        run: npm run check:titled
+      - name: No Afrikaans typed into the English screen of any room
+        run: npm run check:taalvas
       - name: The recurring payment can be seen, its card changed and the payment stopped
         run: npm run check:billing
       - name: The second lock is optional, says what it costs you, and a password alone does not open the studio
@@ -1933,7 +1937,7 @@ jobs:
       matrix:
         include:
           - group: doors
-            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: rooms

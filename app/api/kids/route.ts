@@ -104,12 +104,23 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  if (!(await openKids(caller.id, allowance, minutes))) {
-    return Response.json({ message: 'That could not be saved. Try again.' }, { status: 503 });
+  const opened = await openKids(caller.id, allowance, minutes);
+  if (opened !== true) {
+    return Response.json({ message: opened }, { status: 503 });
   }
 
   const room = await kidsRoom(caller.id);
-  return Response.json(room ? { open: true, ...room } : { open: false });
+  /* Saved and then not readable is a database half set up — the row went
+     in, and reading it back (or the `kids_time_left` function) failed. An
+     `open: false` here would draw the door again in silence, which is what
+     "the kids room goes no further than the parental page" looked like. */
+  if (!room) {
+    return Response.json(
+      { message: 'Saved, but the room could not be read back: run supabase/skermtyd.sql.' },
+      { status: 503 },
+    );
+  }
+  return Response.json({ open: true, ...room });
 }
 
 /**
