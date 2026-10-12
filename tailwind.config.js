@@ -25,6 +25,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        surface: family('surface'),
+        primary: family('primary'),
         zinc: family('surface'),
         emerald: family('primary'),
         teal: family('primary'),

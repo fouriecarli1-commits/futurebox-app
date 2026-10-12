@@ -44,7 +44,7 @@ export default function KidsPage(): React.ReactElement {
       <div className="mx-auto w-full max-w-3xl px-5 pt-8">
         <Link
           href="/"
-          className="inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-surface-700 hover:text-surface-950 transition-colors"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-sm px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-sm transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('kids.back', 'Back to the studio')}

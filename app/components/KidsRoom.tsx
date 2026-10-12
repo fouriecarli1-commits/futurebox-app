@@ -746,14 +746,14 @@ export default function KidsRoom(): React.ReactElement {
       {activeTab === 'shelf' && (
         <div className="space-y-6">
           <div className="space-y-3">
-            <h2 className="text-lg font-black text-surface-950">
+            <h2 className="text-lg font-black text-white drop-shadow-sm">
               {t('kids.stories', 'Stories')}
             </h2>
             <StoryShelf />
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-lg font-black text-surface-950">
+            <h2 className="text-lg font-black text-white drop-shadow-sm">
               {t('kids.mySongs', 'My songs')}
             </h2>
             <SongShelf again={shelfAgain} />

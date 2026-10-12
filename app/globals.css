@@ -566,12 +566,13 @@ body:has([data-kidsroom]) {
    three-colour wash, and it is right: it gives the page somewhere to be
    without putting anything in it that a child has to read past. */
 body:has([data-kidsroom]) {
-  /* Three greens, lime to teal, so the wash reads as one colour with light
-     in it rather than three different rooms. */
+  /* FutureBox emerald green ground with luminous ambient light */
+  background-color: #047857;
   background-image:
-    radial-gradient(70rem 40rem at 12% -8%, rgba(190, 242, 100, 0.30), transparent 60%),
-    radial-gradient(60rem 40rem at 92% 8%, rgba(16, 185, 129, 0.20), transparent 60%),
-    radial-gradient(70rem 48rem at 50% 108%, rgba(0, 200, 170, 0.22), transparent 60%);
+    radial-gradient(55rem 38rem at 15% 0%, rgba(52, 211, 153, 0.40), transparent 65%),
+    radial-gradient(50rem 38rem at 88% 25%, rgba(16, 185, 129, 0.35), transparent 65%),
+    radial-gradient(60rem 45rem at 50% 100%, rgba(6, 78, 59, 0.55), transparent 70%),
+    linear-gradient(165deg, #059669 0%, #047857 40%, #064e3b 100%);
   background-attachment: fixed;
 }
 
