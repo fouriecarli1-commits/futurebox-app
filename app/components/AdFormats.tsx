@@ -198,7 +198,7 @@ export default function AdFormats({
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Compass className="w-4 h-4" />}
           {picks ? t('shape.again', 'Think again') : t('shape.go', 'Work out what to make')}
         </button>
-        <span className="text-xs text-zinc-500">{t('shape.free', 'This costs nothing.')}</span>
+        <span className="text-xs text-zinc-500">{t('shape.free', 'This uses no credits.')}</span>
       </div>
       {busy && (
         <p className="text-xs text-zinc-500">

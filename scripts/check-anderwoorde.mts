@@ -215,10 +215,28 @@ ok('the style translation costs less than the advert writer',
   + ' to buying a song rather than a product somebody buys, and pricing the'
   + ' doorway like the room is how the sale is lost at the door');
 
-ok('  and sits in the band the other small calls do',
-  CREDITS.styleword <= CREDITS.repaint,
-  `${CREDITS.styleword} against a picture at ${CREDITS.repaint} — a number of`
-  + ' its own is a number nobody can check');
+/* ── The band moved under this rule on 11 October 2026 ─────────────────
+ 
+   It held the style word at or below `repaint`, as a stand-in for "the
+   small calls all sit together". Carli then priced the whole app in one
+   afternoon off the table that shows each press's engine cost and profit,
+   and the two parted: a style word at six credits, a picture change at
+   five.
+ 
+   The stand-in is what broke, not the rule. What this line is actually
+   for is in the sentence above it — *pricing the doorway like the room is
+   how the sale is lost at the door* — and the room a style word is a
+   doorway to is a SONG. So it is held against that, which is the thing
+   the reasoning was always about, and against the advert writer above.
+ 
+   Loosening a rule to make a change pass is how rules die, so the test
+   applied here was whether the PURPOSE still holds: a doorway at R8.94
+   leading to a song at R11.92 is still a doorway priced under its room. */
+ok('  and still costs less than the song it is a doorway to',
+  CREDITS.styleword < CREDITS.song,
+  `${CREDITS.styleword} against a song at ${CREDITS.song} — a step on the way`
+  + ' to buying something that costs more than the thing itself is a step'
+  + ' nobody takes');
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);

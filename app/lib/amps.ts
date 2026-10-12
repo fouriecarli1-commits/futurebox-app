@@ -176,6 +176,24 @@ export function setAmpLicence(id: string, licence: LicenceId): Amp[] {
   return kept;
 }
 
+/**
+ * Who made it, typed in where the file did not say.
+ *
+ * Carli, 11 October 2026, on the captures she downloads from TONE3000 by
+ * hand: *"ons maak dan net seker die eienaar van die amp kry die eer."* The
+ * file carries `modeled_by` often, not always, and a credit line that falls
+ * back to the capture's own name is not the maker's credit. Emptied, the
+ * field goes back to unknown rather than to an empty string that reads as a
+ * name.
+ */
+export function setAmpMaker(id: string, maker: string): Amp[] {
+  const said = maker.trim().slice(0, 80);
+  const kept = loadAmps().map((one) =>
+    one.id === id ? { ...one, maker: said || undefined } : one);
+  write(kept);
+  return kept;
+}
+
 export function renameAmp(id: string, name: string): Amp[] {
   const said = name.trim().slice(0, 60);
   if (!said) return loadAmps();

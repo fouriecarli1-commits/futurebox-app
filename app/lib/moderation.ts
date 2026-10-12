@@ -109,7 +109,20 @@ export type Rule =
   | 'weapons'
   | 'drugs'
   | 'fraud'
-  | 'self-harm';
+  | 'self-harm'
+  /**
+   * Somebody swearing AT the assistant, rather than about anything.
+   *
+   * The odd one out on this list, and deliberately so: it refuses nothing,
+   * blocks nothing and counts against nobody. `screen()` never returns it —
+   * it is written straight to the log by `lib/server/conduct.ts` so that a
+   * cut-off can one day be set from a real number rather than a guess.
+   *
+   * It is a `Rule` at all because the log's evidence is only worth anything
+   * if everything in it is filed under a name that is declared here. A row
+   * with a rule nobody can find in this type is a row nobody can explain.
+   */
+  | 'abuse';
 
 export interface Refusal {
   readonly rule: Rule;
@@ -516,11 +529,3 @@ export function screen(text: string, surface: Surface): Refusal | null {
   return null;
 }
 
-/**
- * A quick yes/no for the browser, so the studio can warn before spending a
- * request. Never the only check: the real one runs on the server, because
- * anything the browser decides can be skipped by not using the browser.
- */
-export function looksRefusable(text: string, surface: Surface): boolean {
-  return screen(text, surface) !== null;
-}

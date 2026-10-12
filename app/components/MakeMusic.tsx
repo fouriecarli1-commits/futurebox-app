@@ -176,6 +176,27 @@ export default function MakeMusic({
      has the whole of it, including why only the first one scrolls. */
   const wordsCard = useOpenCard();
   const soundCard = useOpenCard();
+  /* A value handed in opens the whole room before it opens its card.
+
+     Since 10 October this room opens in Simple — the copilot, one button and
+     a read-only summary — and the words and sound cards are behind
+     Everything. The advert desk's hand-over set the title, the words and the
+     sound and opened the words card, and the card was not on the screen:
+     `check:adcarry` read "this room opened completely empty". The same fault
+     the video desk had the same day, by the same door.
+
+     Two things, for the same reason as `VideoCanvas`: `setAdvanced` rather
+     than `chooseMode`, so the stored preference stays whatever she pressed;
+     and `arrived()` fired once more from the effect below, after Everything
+     has mounted, because a card takes the `openOn` it is born with as its
+     baseline and a card that mounts after the count moved sees nothing
+     move. */
+  const openAfterMount = useRef(false);
+  const landedInMake = (card: { arrived: () => void }): void => {
+    openAfterMount.current = true;
+    setAdvanced(true);
+    card.arrived();
+  };
   useCopilotOps('make', {
     /* ── Start again, and mean it ─────────────────────────────────────
 
@@ -198,11 +219,11 @@ export default function MakeMusic({
        arrive in a row, and each has to see the one before it. */
     set_song_title: (value) => {
       setCanvas((was) => ({ ...was, title: value.trim() }));
-      wordsCard.arrived();
+      landedInMake(wordsCard);
     },
     set_words: (value) => {
       setCanvas((was) => ({ ...was, lyrics: value }));
-      wordsCard.arrived();
+      landedInMake(wordsCard);
     },
     /* ── The song arrives a section at a time ─────────────────────────
 
@@ -229,11 +250,11 @@ export default function MakeMusic({
         ...was,
         lyrics: was.lyrics.trim() ? `${was.lyrics.trimEnd()}\n\n${part}` : part,
       }));
-      wordsCard.arrived();
+      landedInMake(wordsCard);
     },
     set_sound: (value) => {
       setCanvas((was) => ({ ...was, style: value.trim() }));
-      soundCard.arrived();
+      landedInMake(soundCard);
     },
     /* ── The feeling, asked for rather than picked ────────────────────
 
@@ -421,6 +442,12 @@ export default function MakeMusic({
       // Storage off. Simple is the right answer when nothing is known.
     }
   }, []);
+  useEffect(() => {
+    if (!advanced || !openAfterMount.current) return;
+    openAfterMount.current = false;
+    wordsCard.arrived();
+    soundCard.arrived();
+  }, [advanced, wordsCard, soundCard]);
   const chooseMode = useCallback((next: boolean) => {
     setAdvanced(next);
     try {
@@ -643,7 +670,6 @@ export default function MakeMusic({
   }, [videoFor]);
   /** What has been paid for. Refreshed after a payment returns. */
   const [owned, setOwned] = useState<Owned>(NOTHING);
-  const [buying, setBuying] = useState<string | null>(null);
   useEffect(() => {
     loadOwned().then(setOwned);
   }, []);

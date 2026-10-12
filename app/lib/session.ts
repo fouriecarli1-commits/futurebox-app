@@ -717,18 +717,6 @@ export async function readSession(
 }
 
 /**
- * One lane on its own, as a buffer, with nothing else in the session in it.
- *
- * What separation and voice conversion are handed. A lane sitting at 40
- * seconds is sent as itself, from its own first sample — not as forty seconds
- * of silence with a take on the end, which is what taking it out of the mix
- * would give and which would be paid for by the minute.
- */
-export function laneAlone(lane: Lane): AudioBuffer {
-  return lane.audio;
-}
-
-/**
  * The part of a lane that plays, as a buffer of its own.
  *
  * What gets separated, voice-changed or read has to be what she can hear. A

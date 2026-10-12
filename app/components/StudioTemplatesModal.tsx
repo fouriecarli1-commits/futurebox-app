@@ -28,6 +28,8 @@ import {
   FileText, Globe, Table, Share2, CreditCard,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
+import { barClearance } from './TabBar';
 import {
   STARTER_TEMPLATES, TEMPLATE_CATEGORIES,
   type StudioTemplateItem, type TemplateCategoryMeta,
@@ -41,6 +43,8 @@ export default function StudioTemplatesModal({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
+  /* A layer, so Back closes this and not the room under it. */
+  useBackLayer(true, onClose);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -107,8 +111,11 @@ export default function StudioTemplatesModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('stpl.modalTitle', 'Verken Templates')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md"
+      aria-label={t('stpl.modalTitle', 'Templates Explorer & Starter Packs')}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim backdrop-blur-md"
+      /* Below the tab bar, so the strip stays reachable — the rule every
+         overlay under z-50 keeps; `check:belowtabs` holds it by name. */
+      style={{ paddingBottom: barClearance(16) }}
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-4xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Top Header & Search Bar (Screenshots 3 & 4) */}
@@ -131,17 +138,17 @@ export default function StudioTemplatesModal({
                       TEMPLATE_CATEGORIES.find((c) => c.id === selectedCategory)?.nameKey ?? '',
                       TEMPLATE_CATEGORIES.find((c) => c.id === selectedCategory)?.nameAf ?? 'Templates',
                     )
-                    : t('stpl.modalTitle', 'Verken Templates')}
+                    : t('stpl.modalTitle', 'Templates Explorer & Starter Packs')}
                 </h2>
                 <p className="text-xs text-zinc-400">
-                  {t('stpl.modalSub', 'Kies ’n professionele template om jou foto of video van te begin.')}
+                  {t('stpl.modalSub', 'Start straight away from a professional video or photo template.')}
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              aria-label={t('stpl.close', 'Maak toe')}
+              aria-label={t('stpl.close', 'Close template explorer')}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
             >
               <X className="h-4 w-4" />
@@ -157,7 +164,7 @@ export default function StudioTemplatesModal({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('stpl.searchPlaceholder', 'Soek templates (bv. Pitch Deck, Video, Poster)...')}
+              placeholder={t('stpl.searchPlaceholder', 'Search templates (e.g. Pitch deck, Nature, Flyer)...')}
               className="w-full rounded-2xl border border-zinc-700/80 bg-zinc-900/90 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 shadow-inner focus:border-amber-400 focus:outline-none"
             />
             <div className="absolute right-3.5 flex items-center text-zinc-400 hover:text-zinc-200 cursor-pointer">
@@ -166,7 +173,7 @@ export default function StudioTemplatesModal({
           </div>
 
           {/* Horizontal Category Badges Bar (Screenshot 3) */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          <div className="flex flex-wrap items-center gap-2 pb-1">
             <button
               type="button"
               onClick={() => setSelectedCategory(null)}
@@ -177,7 +184,7 @@ export default function StudioTemplatesModal({
               }`}
             >
               <Layout className="h-3.5 w-3.5" />
-              {t('stpl.allCategories', 'Alles')}
+              {t('stpl.allCategories', 'All Categories')}
             </button>
             {TEMPLATE_CATEGORIES.map((cat: TemplateCategoryMeta) => {
               const isSelected = selectedCategory === cat.id;
@@ -217,7 +224,7 @@ export default function StudioTemplatesModal({
                     className="flex flex-col rounded-2xl border border-zinc-800/80 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-lg"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
                       <img
                         src={tpl.previewSvg}
                         alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
@@ -240,7 +247,7 @@ export default function StudioTemplatesModal({
               </div>
               {filteredTemplates.length === 0 && (
                 <div className="py-12 text-center text-xs text-zinc-500">
-                  {t('stpl.noResults', 'Geen templates gevind vir jou soektog nie.')}
+                  {t('stpl.noResults', 'No templates match your search.')}
                 </div>
               )}
             </div>
@@ -250,7 +257,7 @@ export default function StudioTemplatesModal({
               {/* Recently viewed carousel */}
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
-                  {t('stpl.recentlyViewed', 'Onlangs bekyk')}
+                  {t('stpl.recentlyViewed', 'Recently viewed')}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   {recentTemplates.map((tpl) => (
@@ -264,7 +271,7 @@ export default function StudioTemplatesModal({
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-1.5 flex items-center justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
                         <img
                           src={tpl.previewSvg}
                           alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
@@ -285,7 +292,7 @@ export default function StudioTemplatesModal({
               {/* Inspired by your designs carousel */}
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
-                  {t('stpl.inspired', 'Geïnspireer deur jou ontwerpe')}
+                  {t('stpl.inspired', 'Inspired by your designs')}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   {inspiredTemplates.map((tpl) => (
@@ -299,7 +306,7 @@ export default function StudioTemplatesModal({
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-1.5 flex items-center justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
                         <img
                           src={tpl.previewSvg}
                           alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
@@ -320,7 +327,7 @@ export default function StudioTemplatesModal({
               {/* Pitch Decks & Proposals matching Screenshot 4 */}
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
-                  {t('stpl.pitchDecks', 'Aanbiedings & Pitch Decks')}
+                  {t('stpl.pitchDecks', 'Pitch Decks & Presentations')}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'presentation').map((tpl) => (
@@ -334,7 +341,7 @@ export default function StudioTemplatesModal({
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
                         <img
                           src={tpl.previewSvg}
                           alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}

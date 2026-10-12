@@ -124,9 +124,26 @@ const PRODUCT = 6;
 
 for (const one of priced) {
   const sold = one.credits * WORST;
-  const over = sold / one.cost;
-  const line = `${one.what}: ${one.credits} credits = R${sold.toFixed(2)}, costs R${one.cost.toFixed(2)} — ${over.toFixed(1)}x`;
-  if (over < FLOOR) {
+  /* ── A press with no supplier has no multiple ──────────────────────
+ 
+     Eight of these are rendered in the customer's own browser: no call
+     goes out, no invoice exists, and the whole charge is margin. Dividing
+     by nought printed "Infinityx", which is not a number anybody can use
+     and looks like a fault in the table rather than a fact about the
+     press.
+ 
+     Nothing below it applies either. `FLOOR` asks whether a price covers
+     its cost — a cost of nought is covered by any price — and
+     `OVER_SUPPLIER` is Carli's rule that whatever a supplier bills, the
+     app charges that and one credit more. There is no supplier to be a
+     credit above. */
+  const free = one.cost === 0;
+  const over = free ? Infinity : sold / one.cost;
+  const line = `${one.what}: ${one.credits} credits = R${sold.toFixed(2)}, costs `
+    + (free ? 'nothing — the browser renders it, so all of it is margin' : `R${one.cost.toFixed(2)} — ${over.toFixed(1)}x`);
+  if (free) {
+    say(true, line);
+  } else if (over < FLOOR) {
     say(false, `${line}  ← SOLD BELOW COST`);
   } else if (!one.rate && sold < one.cost + OVER_SUPPLIER) {
     /* Above cost but not by a whole credit — see `OVER_SUPPLIER`. */

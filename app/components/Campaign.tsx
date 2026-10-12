@@ -116,8 +116,19 @@ const STEPS: readonly Step[] = [
   {
     en: 'It writes the adverts',
     af: 'Dit skryf die advertensies',
-    noteEn: 'Several, each doing something different. Free.',
-    noteAf: 'Verskeie, elk wat iets anders doen. Gratis.',
+    /* The price, not a word for it, and read off `CREDITS` so this line and
+       the button that charges cannot disagree.
+
+       It said "Free." / "Gratis." — on the same screen as a button reading
+       "40 credits", because `CREDITS.adLines` went from six to forty on 30
+       September and this note was not touched. Two wrongs at once: a paid
+       step described as free, after she said *"Niks is gratis"*, and a
+       sentence contradicted by the button directly below it.
+
+       `check:verniet` was green through all of it. It reads the dictionary,
+       and these four lines are written in the component. */
+    noteEn: `Several, each doing something different. ${CREDITS.adLines} credits.`,
+    noteAf: `Verskeie, elk wat iets anders doen. ${CREDITS.adLines} krediete.`,
   },
   {
     en: 'Film it, and read the line',

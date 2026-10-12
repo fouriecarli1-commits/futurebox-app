@@ -33,9 +33,11 @@ import {
   LICENCES, UNKNOWN, licenceOf, mayBeSold, needsCredit, type LicenceId,
 } from '../lib/amplicence';
 import {
-  AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, setAmpLicence, type Amp,
+  AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, setAmpLicence, setAmpMaker,
+  type Amp,
 } from '../lib/amps';
 import { accessToken } from '../lib/cloud';
+import AmpCatalogue from './AmpCatalogue';
 import VoicePicker from './VoicePicker';
 import type { VoiceState } from './VoiceLab';
 import { CREDITS, perMinute } from '../lib/credits';
@@ -85,8 +87,6 @@ import { makeHistory } from '../lib/undo';
 import { notesIn, snapTo } from '../lib/humnotes';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { GROUPS, VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
-import MoisesProStudio from './MoisesProStudio';
-import ProDawStudio from './ProDawStudio';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -106,21 +106,14 @@ export default function ProBooth({
   backing,
   onKeep,
   onClose,
-  initialMode = 'studio',
 }: {
   title: string;
   /** The song, as the first lane. Everything else is placed against it. */
   backing: AudioBuffer | null;
   onKeep: (mixed: Blob) => void | Promise<void>;
   onClose: () => void;
-  initialMode?: 'studio' | 'daw' | 'timeline';
 }): React.ReactElement {
   const { lang, t } = useLang();
-
-  const isProbe = typeof window !== 'undefined' && window.location.pathname.includes('proboothprobe');
-  const [studioMode, setStudioMode] = useState<'studio' | 'daw' | 'timeline'>(
-    isProbe ? 'timeline' : initialMode
-  );
 
   /* The booth itself. It is a full-screen overlay above the room, and until
      now it was not a layer at all — so Back closed the room underneath it. */
@@ -1678,46 +1671,7 @@ export default function ProBooth({
      lane: the lane she pressed on may be gone by then. What comes back
      lands on the SHELF, which is storage rather than state, so every lane
      row sees it and one press puts it on any of them. */
-  const [t3kBusy, setT3kBusy] = useState(false);
   const [t3kSaid, setT3kSaid] = useState('');
-
-  /* The errand behind "Browse TONE3000", which was shipped, pulled twice,
-     and is back.
-
-     Both pulls were written as findings about the door. Neither was. The
-     first said the return landed at the studio door; a probe that went into
-     the booth first counted `data-atdoor` and got zero. The second said the
-     return was untested, which was true and was not the whole of it: the
-     reason no probe could reach these lanes is the reason SHE could not
-     reach them either — a full page load restored the room and not the song
-     she was on, so `VocalBooth` never mounted and neither did this screen.
-
-     `lib/singingon.ts` is that fault, fixed for the room rather than for the
-     journey, and `audit/boothback.mjs` now walks the whole way back. */
-  const browseTone3000 = useCallback(async () => {
-    setT3kBusy(true);
-    setT3kSaid('');
-    try {
-      const token = await accessToken();
-      /* The route answers with the address rather than a redirect: a
-         redirect a `fetch` receives is one the page cannot usefully
-         follow, and the room should decide where it opens anyway. */
-      const answer = await fetch(`/api/tone3000/start?room=booth&taal=${lang}`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const said = await answer.json().catch(() => null) as { url?: string } | null;
-      if (!answer.ok || !said?.url) {
-        setT3kSaid(t('pro.t3kNo', 'TONE3000 could not be reached just now.'));
-        setT3kBusy(false);
-        return;
-      }
-      window.location.assign(said.url);
-    } catch {
-      setT3kSaid(t('pro.t3kNo', 'TONE3000 could not be reached just now.'));
-      setT3kBusy(false);
-    }
-  }, [lang, t]);
 
   /**
    * The tone she chose, proved and put on the shelf.
@@ -1730,7 +1684,6 @@ export default function ProBooth({
    */
   const takeTone = useCallback(async (toneId: string) => {
     if (!toneId) return;
-    setT3kBusy(true);
     setT3kSaid('');
     try {
       const token = await accessToken();
@@ -1792,8 +1745,6 @@ export default function ProBooth({
       setT3kSaid(t('pro.t3kGot', 'It is on your amp shelf. Put it on a track.'));
     } catch {
       setT3kSaid(t('pro.t3kGone', 'That amp could not be brought in.'));
-    } finally {
-      setT3kBusy(false);
     }
   }, [t]);
 
@@ -2477,7 +2428,7 @@ export default function ProBooth({
             <Hint>
               {t(
                 'pro.cutAtWhat',
-                'Splits this lane in two at the playhead, and costs nothing. Both halves point at the same recording, so nothing is lost — drag an edge back and it is whole again. Move the white line first: the cut happens where the line is.',
+                'Splits this lane in two at the playhead, and uses no credits. Both halves point at the same recording, so nothing is lost — drag an edge back and it is whole again. Move the white line first: the cut happens where the line is.',
               )}
             </Hint>
             {/* No `?? lanes[0]`. With nothing picked this printed the FIRST
@@ -2607,8 +2558,6 @@ export default function ProBooth({
             onUseTempo={(bpm, root) =>
               setMeter((was) => sane({ ...was, bpm, key: root ?? was.key }))
             }
-            onBrowseAmps={() => void browseTone3000()}
-            browsing={t3kBusy}
             onSave={(what) => void saveLane(lane, what)}
             busy={busy}
           />
@@ -3615,7 +3564,7 @@ export default function ProBooth({
         title={t('hum.title', 'Hum it, and have it played')}
         what={t(
           'hum.what',
-          'Record yourself humming or tapping the rhythm on a lane, pick an instrument, and it comes back played. Free and unlimited — none of it leaves this device.',
+          'Record yourself humming or tapping the rhythm on a lane, pick an instrument, and it comes back played. No credits and no limit — none of it leaves this device.',
         )}
       >
         <div className="space-y-3" data-humcard>
@@ -3693,6 +3642,7 @@ export default function ProBooth({
                       onClick={() => setHumVoice(one.id)}
                       aria-pressed={humVoice === one.id}
                       data-humvoice={one.id}
+                      data-tidycard
                       className={`block min-h-[44px] w-full rounded-xl border px-3 py-2 text-left ${
                         humVoice === one.id
                           ? 'border-sky-400/70 bg-sky-500/10'
@@ -3715,7 +3665,7 @@ export default function ProBooth({
             </div>
           </div>
 
-          <label className="flex items-start gap-2.5 text-xs text-zinc-400">
+          <label data-tidycard className="flex items-start gap-2.5 text-xs text-zinc-400">
             <input
               type="checkbox"
               checked={humSnap}
@@ -3744,7 +3694,7 @@ export default function ProBooth({
               onClick={() => void humIt()}
               disabled={!humLane || humming || busy || recording || making}
               data-humgo
-              className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
             >
               <Mic2 className="h-4 w-4 flex-shrink-0" />
               {humming
@@ -4199,43 +4149,6 @@ export default function ProBooth({
     </>
   );
 
-  if (studioMode === 'daw') {
-    return (
-      <div
-        data-booth
-        data-cutroom
-        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
-          onEdge ? 'flex-row' : 'flex-col'
-        }`}
-      >
-        <ProDawStudio
-          projectTitle={title || 'Azure Horizon'}
-          onBackToStemStudio={() => setStudioMode('studio')}
-          onBackToTimeline={() => setStudioMode('timeline')}
-          onClose={onClose}
-        />
-      </div>
-    );
-  }
-
-  if (studioMode === 'studio') {
-    return (
-      <div
-        data-booth
-        data-cutroom
-        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
-          onEdge ? 'flex-row' : 'flex-col'
-        }`}
-      >
-        <MoisesProStudio
-          songTitle={title}
-          onBackToTimeline={() => setStudioMode('timeline')}
-          onOpenDaw={() => setStudioMode('daw')}
-          onClose={onClose}
-        />
-      </div>
-    );
-  }
 
   return (
     /* One page on a phone, four pinned strips on a desk.
@@ -4369,24 +4282,6 @@ export default function ProBooth({
             <Redo2 className="h-4 w-4" />
           </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setStudioMode('studio')}
-          className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-3 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50"
-          title={t('moises.toggleStudio', 'Studio Console')}
-        >
-          <Sliders className="h-4 w-4" />
-          <span className="hidden sm:inline">{t('moises.toggleStudio', 'Studio Console')}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setStudioMode('daw')}
-          className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-teal-500/50 bg-teal-950/40 px-3 py-2 text-xs font-bold text-teal-300 hover:border-teal-400 hover:bg-teal-900/50"
-          title={t('daw.toggleDaw', 'DAW Werkstasie')}
-        >
-          <Music2 className="h-4 w-4" />
-          <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Werkstasie')}</span>
-        </button>
         <div className="min-w-0">
           <p className="text-base font-bold text-white truncate">{t('pro.title', 'ProBooth — lanes')}</p>
           <p className="text-sm text-zinc-500 truncate">
@@ -4416,7 +4311,7 @@ export default function ProBooth({
           {saveFailed ? (
             <span className="font-semibold text-amber-300">
               {saveFailed === 'full'
-                ? t('pro.keptFull', 'This device has no room left, so the session is not being saved. Mix it down, or free some space.')
+                ? t('pro.keptFull', 'This device has no room left, so the session is not being saved. Mix it down, or make some space.')
                 : t('pro.keptNo', 'This browser will not keep the session, so leaving the room will lose it. Mix it down before you go.')}
             </span>
           ) : (
@@ -4634,8 +4529,6 @@ function LaneRow({
   reading,
   found,
   onUseTempo,
-  onBrowseAmps,
-  browsing,
   onSave,
   busy,
 }: {
@@ -4656,17 +4549,6 @@ function LaneRow({
   reading: boolean;
   found?: { tempo: number | null; key: string | null; spans: Span[]; saw: string[] };
   onUseTempo: (bpm: number, key: string | null) => void;
-  /**
-   * Out to TONE3000 to choose an amp, which is a room-level errand.
-   *
-   * Handed down rather than done here because the journey leaves the page:
-   * she goes to their site, signs in, picks, and comes back on a FRESH page
-   * where this lane may not exist. The room owns what happens on the way
-   * back, and the shelf — which is storage, not state — is where the
-   * capture lands, so one press afterwards puts it on any lane.
-   */
-  onBrowseAmps: () => void;
-  browsing: boolean;
   /** Take this lane out of the room: `wav` is the sound, `mid` is the notes. */
   onSave: (what: 'wav' | 'midi') => void;
   busy: boolean;
@@ -5158,7 +5040,7 @@ function LaneRow({
         <Hint className="ml-1">
           {t(
             'pro.whatRow',
-            'Two halves: lift the voice off this lane, so the singing and the music become two lanes. Layers: split it into named parts — drums, bass, and the rest. Magnifier: read the chords, key and tempo. Microphone: sing this lane in another voice. Bin: remove the lane. The first four cost credits and each one says how many; the bin costs nothing. The scissors above are a plain cut and cost nothing.',
+            'Two halves: lift the voice off this lane, so the singing and the music become two lanes. Layers: split it into named parts — drums, bass, and the rest. Magnifier: read the chords, key and tempo. Microphone: sing this lane in another voice. Bin: remove the lane. The first four cost credits and each one says how many; the bin uses none. The scissors above are a plain cut and use none.',
           )}
         </Hint>
       </div>
@@ -5412,37 +5294,15 @@ function LaneRow({
                 />
               </label>
             )}
-            {/* ── Out to their screens ──────────────────────────────────
-
-                Beside "Bring in an amp" because it is the same errand with
-                a different cupboard: one reads a file off this phone, the
-                other fetches one off TONE3000's. Outside the amped/not-amped
-                choice above, because what comes back lands on the SHELF
-                rather than on this lane — so it is as useful on a lane that
-                already has an amp, where swapping is the thing somebody is
-                actually doing.
-
-                Shipped, pulled, and now back with proof rather than hope.
-                `audit/boothback.mjs` walks the whole way: into the booth on
-                a real song, the page thrown away, the landing address, and
-                the sentence this room says when it gets there. Two earlier
-                probes could not reach these lanes at all, which is the only
-                reason this button spent a day out of the room.
-
-                Their logo is still not here. The design requirements ask
-                for the mark and we do not have the asset; an almost-right
-                logo is a brand problem rather than a missing feature. */}
-            <button
-              type="button"
-              data-browsetone=""
-              onClick={onBrowseAmps}
-              disabled={browsing || amping}
-              className="px-2.5 py-1.5 min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white disabled:text-zinc-600"
-            >
-              {browsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-              {t('pro.t3kBrowse', 'Browse TONE3000')}
-            </button>
           </div>
+          {/* ── The catalogue ─────────────────────────────────────────
+              Captures she chose and uploaded, credited to their makers,
+              for every member to search. It replaced "Browse TONE3000",
+              which went out through their site and on her phone did not
+              come back: "Ons kan nie deur hulle website werk nie, want dit
+              werk nie." What is pressed here lands on the shelf below with
+              the maker and the licence already on it. */}
+          <AmpCatalogue onShelf={() => setShelf(loadAmps())} />
           {/* ── The ones you keep ──────────────────────────────────────
               One press to put an amp that is already here onto this lane.
               Drawn whether or not a lane is amped, because swapping one for
@@ -5526,6 +5386,23 @@ function LaneRow({
                   'What did this capture come under? Three of the licences on TONE3000 say a song made through them may not be sold, so this is worth a moment now rather than a question later.',
                 )}
               </p>
+              {/* The maker, where the file did not say. The credit a cc-by asks
+                  for names a person, and a capture with no `modeled_by` would
+                  otherwise be credited to its own name. Prefilled from the
+                  file; hers to correct. */}
+              <label htmlFor="fb-ampmaker" className="block text-[11px] leading-snug text-zinc-400">
+                {t('pro.ampMakerAsk', 'Who made it? The name on the TONE3000 page, so the credit names a person.')}
+              </label>
+              <input
+                id="fb-ampmaker"
+                data-amplicencemaker
+                type="text"
+                maxLength={80}
+                value={shelf.find((one) => one.id === asking)?.maker ?? ''}
+                onChange={(event) => { setShelf(setAmpMaker(asking, event.target.value)); }}
+                placeholder={t('pro.ampMakerWho', 'The maker')}
+                className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+              />
               <select
                 data-amplicencepick
                 value={shelf.find((one) => one.id === asking)?.licence ?? UNKNOWN}

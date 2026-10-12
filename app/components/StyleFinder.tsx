@@ -278,7 +278,7 @@ export default function StyleFinder({
             </div>
 
             {shelf.length === 0 && (
-              <Note>{t('style.noneFound', 'Nothing by that name. The style field takes your own words too — it is free text.')}</Note>
+              <Note>{t('style.noneFound', 'Nothing by that name. The style field takes your own words too — any words will do.')}</Note>
             )}
 
             <div className="max-h-96 overflow-y-auto space-y-2 pr-1">

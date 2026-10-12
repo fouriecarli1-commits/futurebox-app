@@ -22,7 +22,10 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight, Check, Cpu } from 'lucide-react';
 import WelcomeVideo from './WelcomeVideo';
 import { hasWelcomeVideo } from '../lib/welcomevideo';
-import { guessRegion, REGIONS, type Region } from '../lib/pricing';
+import {
+  guessRegion, keepRegion, keptRegion, REGIONS, regionByCode, regionsByName,
+  type Region,
+} from '../lib/pricing';
 import { TIER_SPECS, TIERS, tierPrice } from '../lib/plans';
 import { useLang } from '../lib/i18n';
 import LanguagePicker from './LanguagePicker';
@@ -37,12 +40,45 @@ export default function Landing({
 }) {
   const { t, lang } = useLang();
   const [region, setRegion] = useState<Region>(REGIONS[0]);
+  /** Whether this is still only a guess, which decides whether it says so. */
+  const [regionGuessed, setRegionGuessed] = useState(true);
 
-  // Guessed after mount, never during render: the server has no idea where the
-  // visitor is, and a price that changes on hydration is a price nobody trusts.
+  /* Guessed after mount, never during render: the server has no idea where the
+     visitor is, and a price that changes on hydration is a price nobody
+     trusts.
+
+     A choice this visitor made before beats the guess. This matters more here
+     than anywhere else in the app: this is the page somebody reads BEFORE
+     they have an account, so it is where a price in the wrong currency costs
+     a sale rather than a support message. The guess is one hand-written
+     timezone list away from being wrong, and `lib/pricing.ts` records it
+     being wrong already — an Afrikaans reader on a phone quoted "$119.00 per
+     maand". */
   useEffect(() => {
+    const chosen = keptRegion();
+    if (chosen) {
+      setRegion(chosen);
+      setRegionGuessed(false);
+      return;
+    }
     setRegion(guessRegion(lang).region);
+    setRegionGuessed(true);
   }, [lang]);
+
+  /* Kept on the device, so somebody who sets it here does not set it again
+     inside the app. An empty value forgets the choice and goes back to the
+     guess, which is the only way back once somebody has picked wrong. */
+  const chooseRegion = (code: string): void => {
+    if (code === '') {
+      keepRegion(null);
+      setRegion(guessRegion(lang).region);
+      setRegionGuessed(true);
+      return;
+    }
+    keepRegion(code);
+    setRegion(regionByCode(code));
+    setRegionGuessed(false);
+  };
 
   /* ── Is there anything to put beside the words ─────────────────────────
  
@@ -245,6 +281,49 @@ export default function Landing({
             'A month at a time, cancelled from inside the app whenever you like. Everything included is a monthly allowance — songs, videos, and the voice work that goes with them.',
           )}
         </p>
+
+        {/* ── Which country these prices are in ────────────────────────
+ 
+            Carli, 11 October 2026: *"Maak 'n country picker"*.
+ 
+            A plain `<select>`, so the operating system draws it: nineteen
+            countries on a 390px phone is the one job a native picker does
+            better than anything built here, and it costs no code to open,
+            close, search or reach with a keyboard.
+ 
+            The first option forgets a choice rather than making one, because
+            without it there is no way back to the guess. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-6">
+          <label htmlFor="welcome-region" className="text-sm text-zinc-400">
+            {t('pay.pricesIn', 'Prices in')}
+          </label>
+          <select
+            id="welcome-region"
+            value={regionGuessed ? '' : region.code}
+            onChange={(event) => chooseRegion(event.target.value)}
+            className="bg-zinc-950/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+          >
+            <option value="">
+              {t('pay.regionAuto', 'My device’s country')}
+              {regionGuessed ? ` — ${region.name}` : ''}
+            </option>
+            {regionsByName().map((one) => (
+              <option key={one.code} value={one.code}>
+                {one.name} · {one.currency}
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* Only while it is a guess. Said about somebody's own choice it is
+            noise — and the second half of the sentence is doing real work: it
+            stops the picker reading as a way to buy South African pricing
+            from anywhere, which it is not. */}
+        {regionGuessed && (
+          <p className="text-xs text-zinc-500 pt-2 max-w-2xl leading-relaxed">
+            {t('pay.regionGuess',
+              'Worked out from your device, so it can be wrong — change it above if it is. What you are charged is set by the country of your card either way.')}
+          </p>
+        )}
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-8">
           {TIERS.map((tier) => {

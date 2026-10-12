@@ -237,8 +237,9 @@ confidence rather than hesitation, and it is the honest shape of the business
 | $4 000 | R73 600 | 284 |
 
 *Margin of R272,06 per paying member, realistic case without the workshops,
-from `docs/KOSTE-EN-WINS.md`. Fixed costs excluding ElevenLabs: R3 687,74 —
-Supabase Pro moved from an assumed $25 to her real $34 on 24 September 2026.*
+from `docs/KOSTE-EN-WINS.md`. Fixed costs excluding ElevenLabs: R3 797,73 —
+Supabase Pro moved from an assumed $25 to her real $34 on 24 September 2026,
+and Google Antigravity (R109,99) joined the bill on 11 October.*
 
 **Corrected 18 September 2026.** This table was built on a margin of R221 and
 a break-even of 99, both from the cost model before task #155 found it

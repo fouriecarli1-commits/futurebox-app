@@ -87,6 +87,27 @@ const RESEARCH: Readonly<Record<string, string>> = {
   'docs/OPEN-QUESTIONS.md':
     'the open question asks her for three real adverts because those sites '
     + 'could not be reached',
+  /* ── Her own sentence about where the demand comes from ────────────
+ 
+     Carli, 11 October 2026, settling what `grab` should cost: *"dit is
+     wat ek \u2019n duisend keer gebruik op canva en wat ek die meeste
+     nodig het."*
+ 
+     That is market research in one line — who the customer is, which
+     tool they leave, and how often they reach for the press — and it is
+     the stated REASON for a price. It makes no claim about a design and
+     copies no control.
+ 
+     Quoted rather than paraphrased because the price rests on it, and
+     taking the company out of somebody's own sentence to satisfy a rule
+     is editing the evidence.
+ 
+     Wider than it should be: this exempts a 1,000-line file rather than
+     one line. Worth narrowing to a count, the way `check:theme` holds
+     its allowlisted files, the next time anything here is touched. */
+  'app/lib/credits.ts':
+    'quotes her own sentence about which tool she leaves and how often, as '
+    + 'the stated reason for a price \u2014 market research, not a design claim',
 };
 
 const WHERE = ['app', 'scripts', 'audit', 'supabase', 'docs'];

@@ -17,6 +17,8 @@ import {
   Image as ImageIcon, Presentation, FileText, Music, Sparkles,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
+import { barClearance } from './TabBar';
 
 export interface StandardSizePreset {
   readonly id: string;
@@ -134,6 +136,8 @@ export default function CanvasSizeModal({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
+  /* A layer, so Back closes this and not the room under it. */
+  useBackLayer(true, onClose);
   const [width, setWidth] = useState<number>(currentWidth || 1080);
   const [height, setHeight] = useState<number>(currentHeight || 1080);
   const [lockRatio, setLockRatio] = useState<boolean>(true);
@@ -178,8 +182,11 @@ export default function CanvasSizeModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('size.modalTitle', 'Kies Doekgrootte')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md"
+      aria-label={t('size.modalTitle', 'Canvas Size & Dimensions')}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim backdrop-blur-md"
+      /* Below the tab bar, so the strip stays reachable — the rule every
+         overlay under z-50 keeps; `check:belowtabs` holds it by name. */
+      style={{ paddingBottom: barClearance(16) }}
     >
       <div className="relative flex h-full max-h-[90dvh] w-full max-w-xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}
@@ -190,17 +197,17 @@ export default function CanvasSizeModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black text-zinc-100">
-                {t('size.modalTitle', 'Kies Doekgrootte')}
+                {t('size.modalTitle', 'Canvas Size & Dimensions')}
               </h3>
               <p className="text-xs text-zinc-400">
-                {t('size.modalSub', 'Kies standaard afmetings vir sosiaal en video, of tik jou eie pasgemaakte grootte in.')}
+                {t('size.modalSub', 'Pick standard sizes for social media and video, or set custom dimensions.')}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label={t('size.close', 'Maak toe')}
+            aria-label={t('size.close', 'Close canvas size picker')}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
           >
             <X className="h-4 w-4" />
@@ -213,7 +220,7 @@ export default function CanvasSizeModal({
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
-                {t('size.customLabel', 'Pasgemaakte Grootte (Custom Size)')}
+                {t('size.customLabel', 'Custom Size')}
               </span>
               <button
                 type="button"
@@ -225,14 +232,14 @@ export default function CanvasSizeModal({
                 }`}
               >
                 {lockRatio ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
-                {lockRatio ? t('size.locked', 'Sluit verhouding') : t('size.unlocked', 'Vrye skaal')}
+                {lockRatio ? t('size.locked', 'Lock aspect ratio') : t('size.unlocked', 'Unlock aspect ratio')}
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3 items-center">
               <div>
                 <label className="block text-[11px] font-bold text-zinc-400 mb-1">
-                  {t('size.width', 'Breedte (px)')}
+                  {t('size.width', 'Width (px)')}
                 </label>
                 <input
                   type="number"
@@ -245,7 +252,7 @@ export default function CanvasSizeModal({
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-zinc-400 mb-1">
-                  {t('size.height', 'Hoogte (px)')}
+                  {t('size.height', 'Height (px)')}
                 </label>
                 <input
                   type="number"
@@ -260,7 +267,7 @@ export default function CanvasSizeModal({
 
             {/* Quick scale multiplier buttons */}
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-[11px] text-zinc-500 font-semibold">{t('size.scalePreset', 'Skaal:')}</span>
+              <span className="text-[11px] text-zinc-500 font-semibold">{t('size.scalePreset', 'Quick Scale')}</span>
               {[
                 { label: '0.5×', mult: 0.5 },
                 { label: '1× HD', mult: 1 },
@@ -285,7 +292,7 @@ export default function CanvasSizeModal({
           {/* Standard Sizes Presets */}
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
-              {t('size.standardPresets', 'Standaard Groottes')}
+              {t('size.standardPresets', 'Standard Sizes')}
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {STANDARD_SIZES.map((preset) => {
@@ -333,7 +340,7 @@ export default function CanvasSizeModal({
         {/* Action Footer */}
         <div className="flex flex-shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-950">
           <div className="text-xs text-zinc-400">
-            {t('size.selected', 'Gekies:')} <span className="font-mono font-bold text-zinc-200">{width} × {height} px</span>
+            {t('size.selected', 'Selected')} <span className="font-mono font-bold text-zinc-200">{width} × {height} px</span>
           </div>
           <button
             type="button"
@@ -341,7 +348,7 @@ export default function CanvasSizeModal({
             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-amber-500 px-5 text-sm font-black text-black hover:bg-amber-400 shadow-lg active:scale-95 transition-all"
           >
             <Check className="h-4 w-4 stroke-[3]" />
-            {t('size.apply', 'Pas Grootte Toe')}
+            {t('size.apply', 'Apply Size')}
           </button>
         </div>
       </div>

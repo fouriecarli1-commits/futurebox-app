@@ -1833,7 +1833,3 @@ export function noteVoiceTaken(): void {
   };
 }
 
-/** Cleared between tests. Not used by the app. */
-export function forgetVoiceRoom(): void {
-  room = null;
-}

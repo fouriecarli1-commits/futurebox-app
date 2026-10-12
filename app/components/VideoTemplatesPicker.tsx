@@ -109,7 +109,7 @@ export default function VideoTemplatesPicker({
           </div>
           <div>
             <h3 className="text-sm font-black tracking-tight text-zinc-100">
-              {t('edit.start', 'Video Templates')}
+              {t('edit.start', 'Start from something')}
             </h3>
             <p className="text-[11px] text-zinc-400">
               {t(
@@ -246,7 +246,7 @@ export default function VideoTemplatesPicker({
                     <>
                       <Check className="h-3 w-3 text-emerald-400" />
                       <span className="text-emerald-400">
-                        {t('video.veoCopied', 'Veo prompt copied!')}
+                        {t('video.veoCopied', 'Veo prompt copied for Google AI!')}
                       </span>
                     </>
                   ) : (

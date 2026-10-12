@@ -93,12 +93,3 @@ export interface Short {
   readonly message: string;
 }
 
-export function shortOf(payload: unknown): Short | null {
-  const body = payload as { needsCredits?: boolean; need?: number; balance?: number; message?: string };
-  if (!body?.needsCredits) return null;
-  return {
-    need: typeof body.need === 'number' ? body.need : 0,
-    balance: typeof body.balance === 'number' ? body.balance : 0,
-    message: body.message ?? 'That needs more credits than you have.',
-  };
-}

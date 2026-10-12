@@ -98,13 +98,3 @@ export function useSetPlain(): (on: boolean) => void {
   }, []);
 }
 
-/**
- * For a check, and for a test that needs to start from nothing.
- *
- * Exported rather than reached for through the module's innards, so that a
- * second way of resetting it cannot come to exist and disagree with this one.
- */
-export function forgetPlain(): void {
-  plain = null;
-  tell();
-}

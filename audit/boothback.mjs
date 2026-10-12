@@ -158,7 +158,18 @@ try {
      outcome, no network of ours involved. It is the cheapest possible proof
      that the reader MOUNTED: nothing else in the app says this sentence. */
 
-  await page.goto(`${server.url}/?t3k=af&room=booth`, { waitUntil: 'networkidle' });
+  /* `load`, not `networkidle`. This walk passed on every local run and
+     failed on every CI run with the same line — "page.goto: Timeout 30000ms
+     exceeded … waiting until networkidle" — because the TONE3000 landing
+     fires a request that never settles on the runner, where the host is
+     reachable and slow, and fails fast here, where it is not reachable at
+     all. The probe never needed the network to be idle: everything it reads
+     is behind a fixed wait and a locator. The start route is answered here
+     too, so nothing on this page can leave the machine. */
+  await page.route('**/api/tone3000/start*', (route) => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ url: 'about:blank' }),
+  }));
+  await page.goto(`${server.url}/?t3k=af&room=booth`, { waitUntil: 'load' });
   await page.waitForTimeout(4000);
 
   const said = page.locator('[data-t3ksaid]').first();
@@ -198,7 +209,7 @@ try {
     body: JSON.stringify({ nam: '{"this":"is not a capture"}', name: 'stub.nam' }),
   }));
 
-  await page.goto(`${server.url}/?t3k=ja&tone=boothback-tone&room=booth`, { waitUntil: 'networkidle' });
+  await page.goto(`${server.url}/?t3k=ja&tone=boothback-tone&room=booth`, { waitUntil: 'load' });
   await page.waitForTimeout(5000);
 
   const second = page.locator('[data-t3ksaid]').first();

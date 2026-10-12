@@ -85,6 +85,7 @@ import SongShelf from './SongShelf';
 import KidsTemplatesPicker from './KidsTemplatesPicker';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
 import { askKidVideo, makeKidSong, startKidVideo, KID_TOPICS, KID_SOUNDS } from '../lib/kidsong';
+import { stillWorthWaiting } from '../lib/jobwait';
 import { asClock, howMany, priceOf } from '../lib/kidsallowance';
 import { keepSong, MOST_SONGS } from '../lib/songkeep';
 import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
@@ -197,6 +198,8 @@ export default function KidsRoom(): React.ReactElement {
   const [kept, setKept] = useState(false);
   const [shelfAgain, setShelfAgain] = useState(0);
   const [job, setJob] = useState<string | null>(null);
+  /** When the current wait started, so a stalled job cannot wait for ever. */
+  const waitingSince = useRef<number>(0);
   const [film, setFilm] = useState('');
 
   /* The last object URL handed out, revoked when another replaces it. Without
@@ -239,16 +242,47 @@ export default function KidsRoom(): React.ReactElement {
      reload mid-wait costs nothing and loses only the waiting. */
   useEffect(() => {
     if (!job) return undefined;
+    /* Started once per job, not once per run of this effect. Choosing the
+       language re-runs it — `t` is a dependency — and a clock restarted by
+       picking Afrikaans is a wait that never ends. */
+    if (waitingSince.current === 0) waitingSince.current = Date.now();
     let stopped = false;
     const ask = async (): Promise<void> => {
       const answer = await askKidVideo(job);
-      if (stopped || !answer) return;
+      if (stopped) return;
+      /* `askKidVideo` answers `null` for three different things: still being
+         made, signed out, and any network blip. Treating all three as "keep
+         waiting" is right for a few minutes and wrong for ever — and while a
+         job is live every control in this room is disabled, so a job that
+         never lands locks a six-year-old out of the room until somebody
+         thinks to reload the page.
+
+         Eight minutes, the same ceiling the grown-up video path uses in
+         `lib/engines.ts`, for the same reason: Kling's own limit for a clip
+         this length is under five, and the rest is room for a queue.
+
+         What it says is deliberately short of a promise. The job may well
+         still be running on the engine, so "it failed" would be untrue; the
+         credits are not refunded on a stall, so "you can try again free"
+         would be worse; and there is no kids' video shelf to send anybody
+         to, so naming a screen would send a child looking for a page that
+         does not exist. It stops the waiting, unlocks the room, and points
+         at the one person who can actually do something. */
+      if (!stillWorthWaiting(waitingSince.current, Date.now())) {
+        setJob(null);
+        waitingSince.current = 0;
+        setSays(t('kids.filmSlow', 'Your video is still being made. It is taking longer than usual — tell a grown-up.'));
+        return;
+      }
+      if (!answer) return;
       if ('url' in answer) {
         setFilm(answer.url);
         setJob(null);
+        waitingSince.current = 0;
         setSays(t('kids.filmDone', 'Your video is ready!'));
       } else {
         setJob(null);
+        waitingSince.current = 0;
         setSays(answer.says);
       }
       void kidsNow().then(setState);
@@ -397,7 +431,7 @@ export default function KidsRoom(): React.ReactElement {
     if (put === 'kept') {
       setKept(true);
       setShelfAgain((was) => was + 1);
-      setSays(t('kids.kept', 'Kept! You can play it again any time, and it costs nothing.'));
+      setSays(t('kids.kept', 'Kept! You can play it again any time, and it uses no credits.'));
     } else if (put === 'shelfFull') {
       setSays(t('kids.shelfFull', 'Your shelf is full — it holds {n} songs. Ask a grown-up to take one off.')
         .replace('{n}', String(MOST_SONGS)));

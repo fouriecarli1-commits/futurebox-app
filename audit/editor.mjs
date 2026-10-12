@@ -2721,15 +2721,33 @@ try {
       `${seen} — the button opening an empty sheet is the copilot gone, not moved`);
 
     if (seen === 1) {
+      /* The dock has two shapes. On a phone it is a bar along the bottom, and
+         "behind it" means the box's bottom edge is past the bar's top. On a
+         desk — this pass — it is a rail down the left edge (`CutDock`'s
+         `edge`), and the same subtraction compares the box's bottom with the
+         rail's TOP, which is near the top of the window: every box on the
+         page is "under" a rail by that arithmetic, and this reported 796px of
+         a box that was entirely to the rail's right. Measured by the shape
+         the dock actually has. */
       const clear = await box.evaluate((el) => {
         const r = el.getBoundingClientRect();
         const dock = document.querySelector('[data-cutdock]');
-        const d = dock ? dock.getBoundingClientRect().top : window.innerHeight;
-        return { bottom: Math.round(r.bottom), dock: Math.round(d), hidden: Math.round(r.bottom - d) };
+        if (!dock) return { hidden: 0, says: 'no dock' };
+        const d = dock.getBoundingClientRect();
+        const rail = d.height > d.width;
+        /* A rail can stand on either edge — it is on the right at a desk —
+           so "behind it" is the width the two boxes share, not a difference
+           of one pair of edges. The first version subtracted the rail's
+           right from the box's left, which on a right-hand rail reports the
+           whole width of the room as hidden. */
+        const shared = Math.min(r.right, d.right) - Math.max(r.left, d.left);
+        return rail
+          ? { hidden: Math.round(shared), says: `box ${Math.round(r.left)}–${Math.round(r.right)}, rail ${Math.round(d.left)}–${Math.round(d.right)}` }
+          : { hidden: Math.round(r.bottom - d.top), says: `box ends ${Math.round(r.bottom)}, bar starts ${Math.round(d.top)}` };
       });
       check('  and that box is clear of the bar, not behind it',
         clear.hidden <= 0,
-        `${clear.hidden}px of it is under the dock — box ends ${clear.bottom}, bar starts ${clear.dock};`
+        `${clear.hidden}px of it is under the dock — ${clear.says};`
         + ' a chat panel you have to close before you can press play is a chat panel'
         + ' that has taken the room away');
 

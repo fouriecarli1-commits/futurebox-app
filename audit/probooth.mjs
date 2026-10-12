@@ -452,10 +452,14 @@ try {
   check('the amp row offers a capture off this phone',
     (await p.locator('input[type="file"][accept*="nam"]').count()) > 0,
     'the file picker is how a .nam already on the device gets in');
-  const browse = p.locator('[data-browsetone]').first();
-  check('  and a way out to TONE3000 beside it',
-    (await browse.count()) > 0 && await browse.isVisible().catch(() => false),
-    'Browse TONE3000 is the only way in for somebody who does not already'
+  /* The catalogue replaced "Browse TONE3000" on 11 October 2026 — "Ons kan
+     nie deur hulle website werk nie, want dit werk nie." It is the only way
+     in for somebody who does not already have a capture file, which is
+     almost everybody, so it has to be on the row and not behind a fold. */
+  const find = p.locator('[data-ampfind]').first();
+  check('  and the catalogue beside it',
+    (await find.count()) > 0 && await find.isVisible().catch(() => false),
+    'the catalogue is the only way in for somebody who does not already'
     + ' have a capture file, which is almost everybody');
 
   // ── Nothing costs anything unless it says so ────────────────────────
@@ -1055,8 +1059,21 @@ try {
   const heightAt = async (width) => {
     await p.setViewportSize({ width, height: 900 });
     await p.waitForTimeout(400);
+    /* `[data-lanenamefield]`, not the aria-label this asked for until 11
+       October 2026.
+
+       That selector could never have matched: the field has never carried an
+       aria-label. It is labelled the better way — a real `<label htmlFor>`
+       above it — which makes an aria-label redundant and is why there is not
+       one. So this assertion has been reaching for something that was never
+       there, and failing on a timeout rather than on what it set out to
+       measure.
+
+       The hook is also the right selector on its own merits: the old one had
+       to carry both languages and would have gone quiet the day either
+       translation was reworded. */
     return p
-      .locator('input[aria-label="Lane name"], input[aria-label="Baan se naam"]')
+      .locator('[data-lanenamefield]')
       .first()
       .evaluate((node) => {
         const row = node.closest('div.flex-wrap');

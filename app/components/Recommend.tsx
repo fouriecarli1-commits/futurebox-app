@@ -199,7 +199,7 @@ export default function Recommend({
           {hint ??
             `${t('pick.hintA', 'Reads what you have written and chooses')} ${what}, ${t(
               'pick.hintB',
-              'then says why. It costs nothing and you can change it after.',
+              'then says why. It uses no credits and you can change it after.',
             )}`}
         </span>
       )}

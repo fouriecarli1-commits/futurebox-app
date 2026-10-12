@@ -21,7 +21,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
-import { unfold } from './enter.mjs';
+import { unfold, everything } from './enter.mjs';
 
 const PORT = process.argv[2] || '3144';
 
@@ -116,6 +116,9 @@ async function run(browser, hasModel) {
   await room.waitFor({ state: 'visible', timeout: 20000 });
   /* Every card starts shut now, and the camera is inside one. This walk in
      is hand-rolled rather than `toRoom`, so nothing opened it. */
+  /* Make a song and the video desk open in Simple since 10 October 2026, with
+     their cards behind Everything; elsewhere this presses nothing. */
+  await everything(p);
   await unfold(p);
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 

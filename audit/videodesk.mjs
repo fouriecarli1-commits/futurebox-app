@@ -15,7 +15,7 @@
  */
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
-import { studio, toRoom } from './enter.mjs';
+import { studio, toRoom, everything, unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3012';
 const af = process.argv[3] === 'af';
@@ -90,6 +90,10 @@ await p.waitForTimeout(400);
    whichever of the two is actually in front. */
 const room = await studio(p);
 await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
+/* Every one of the twelve things below is behind Everything. */
+await everything(p);
+/* Everything mounts its cards folded, like every panel since 13 September. */
+await unfold(p);
 await p.waitForTimeout(2200);
 
 const words = await room.innerText();
@@ -115,8 +119,12 @@ check('it says how long this grade goes, and where longer lives',
 // ── 4. Pick for me explains itself before it is pressed ──────────────────
 check('Pick for me says what it will choose',
   af ? /Lees wat jy geskryf het en kies/.test(words) : /Reads what you have written and chooses/.test(words));
-check('and that it costs nothing',
-  af ? /Dit kos niks/.test(words) : /It costs nothing/.test(words));
+/* "uses no credits", not "costs nothing": the desk's wording moved on 11
+   October 2026 with "Niks is gratis", and this line kept asking for the old
+   sentence. The fact being checked is unchanged — Pick for me spends
+   nothing — so the regex follows the dictionary row (`pick.hintB`). */
+check('and that it spends no credits',
+  af ? /gebruik geen krediete/.test(words) : /uses no credits/.test(words));
 
 // ── 5. The picture attachment ────────────────────────────────────────────
 check('the picture attachment is named',

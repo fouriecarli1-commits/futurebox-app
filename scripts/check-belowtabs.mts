@@ -187,6 +187,11 @@ const under = [...new Set(rooms)].sort();
  */
 const KNOWN: readonly string[] = [
   'app/components/Account.tsx',
+  /* Antigravity's two pickers, merged 12 October 2026: the canvas size and
+     the template explorer, both full-screen over the post studio and the
+     cutting room. */
+  'app/components/CanvasSizeModal.tsx',
+  'app/components/StudioTemplatesModal.tsx',
   'app/components/ArtMarket.tsx',
   'app/components/OutOfCredits.tsx',
   /* The post studio, 6 October 2026. Written down rather than counted, so

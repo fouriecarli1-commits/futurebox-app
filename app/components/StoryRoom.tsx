@@ -197,7 +197,7 @@ export default function StoryRoom(): React.ReactElement {
         setOnShelf(true);
         setSays(t(
           'story.kept',
-          'It is on the shelf. A child can play it in the kids room, and hearing it costs nothing.',
+          'It is on the shelf. A child can play it in the kids room, and hearing it uses no credits.',
         ));
       } else if (put === 'shelfFull') {
         setSays(t('story.shelfFull', 'The shelf is full \u2014 it holds {n} stories. Take one off in the kids room first.')
@@ -363,7 +363,7 @@ export default function StoryRoom(): React.ReactElement {
             <Film className="h-5 w-5" />
             {t('story.film', 'Make it a film')}
             <span className="text-emerald-500/80">
-              · {runsFor(shown).toFixed(0)}s · {t('story.free', 'free')}
+              · {runsFor(shown).toFixed(0)}s · {t('story.free', 'no credits')}
             </span>
           </button>
           {busy && at > 0 && (
@@ -388,7 +388,7 @@ export default function StoryRoom(): React.ReactElement {
             {onShelf
               ? t('story.onShelf', 'On the shelf for the kids room')
               : t('story.shelve', 'Keep it for the kids room')}
-            <span className="text-amber-500/80">· {t('story.free', 'free')}</span>
+            <span className="text-amber-500/80">· {t('story.free', 'no credits')}</span>
           </button>
         </div>
       )}

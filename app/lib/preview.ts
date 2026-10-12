@@ -60,11 +60,6 @@ function rootOf(key: string): { hz: number; minor: boolean } {
   return { hz: 55 * Math.pow(2, semitone / 12), minor };
 }
 
-/** Exported only so the checks can assert on the parse rather than the sound. */
-export function readKey(key: string): { hz: number; minor: boolean } {
-  return rootOf(key);
-}
-
 /** "124 BPM" → 124, and a sane fallback for anything unparseable. */
 function tempoOf(bpm: string): number {
   const found = Number(/\d+/.exec(bpm)?.[0]);

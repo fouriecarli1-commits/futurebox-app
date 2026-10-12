@@ -283,6 +283,14 @@ jobs:
         run: npm run check:filmcost
       - name: A room is called one thing, and its screen reads the rail's own key
         run: npm run check:oneroomname
+      - name: No control writes into a void — every piece of state a screen keeps is read
+        run: npm run check:intovoid
+      - name: No room waits for a job that is never coming
+        run: npm run check:jobwait
+      - name: A person can correct the country we price them in
+        run: npm run check:pickcountry
+      - name: The conduct count measures being sworn at, and still does nothing with it
+        run: npm run check:conduct
       - name: The picture dials make a real filter, and the ones that are missing are named
         run: npm run check:adjust
       - name: The cutting room is one opaque colour, and the copilot is a button over it
@@ -343,6 +351,10 @@ jobs:
         run: npm run check:priceonit
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
+      - name: The amp catalogue passes on only what may be passed on, and credits the maker
+        run: npm run check:ampcatalogue
+      - name: Nothing in app/lib is exported for nobody
+        run: npm run check:deadexports
       - name: The recurring payment can be seen, its card changed and the payment stopped
         run: npm run check:billing
       - name: The second lock is optional, says what it costs you, and a password alone does not open the studio
@@ -1893,7 +1905,7 @@ jobs:
       # so it comes after.
 
       - name: Build
-        run: npx next build
+        run: npm run build
 
       - name: No write to the database throws its answer away
         run: npm run check:writes
@@ -1951,8 +1963,17 @@ jobs:
 
       # Built once here. The eight probes that need their own probe page
       # rebuild on top of this; the rest start the server against it.
+      #
+      # `npm run build`, not the bare next command: the amp engine's binary is
+      # gitignored and copied into public/nam/ by the `prebuild` script, which
+      # only npm runs. Built directly, the runner served a 404 for nam.wasm
+      # and check:boothback read "That amp could not be brought in" — the
+      # catch-all for an engine that never loaded — on a machine where the
+      # same probe passed every time, because that machine had built with
+      # npm once. The probes' own rebuilds may stay direct: the copy survives
+      # them.
       - name: Build
-        run: npx next build
+        run: npm run build
 
       - name: ${{ matrix.group }}
         run: |

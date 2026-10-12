@@ -38,7 +38,7 @@
  * reading it in Afrikaans, which is exactly what §W was about.
  */
 import { spawn } from 'node:child_process';
-import { dismissDoor, enter, studio, unfold } from './enter.mjs';
+import { dismissDoor, enter, studio, unfold, everything } from './enter.mjs';
 
 const PORT = 3322;
 const HERE = `http://localhost:${PORT}`;
@@ -123,6 +123,9 @@ try {
        for writing is inside a card nobody has opened. Unfolded here for the
        same reason `makesong` does it: a probe that reaches its room without
        `toRoom` does not get the unfolding that lives there. */
+    /* Make a song and the video desk open in Simple since 10 October 2026, with
+       their cards behind Everything; elsewhere this presses nothing. */
+    await everything(page);
     await unfold(page);
     await page.waitForTimeout(600);
     if (/Advert/i.test(name)) {

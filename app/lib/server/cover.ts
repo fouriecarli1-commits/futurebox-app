@@ -157,4 +157,3 @@ export async function checkCover(id: string): Promise<Progress> {
   return { state: 'running' };
 }
 
-export const COVER_MODEL = MODEL;

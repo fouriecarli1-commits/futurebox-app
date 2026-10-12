@@ -155,11 +155,6 @@ async function tell(supplier: Supplier, step: number, subject: string, body: str
   }
 }
 
-/** Cleared between tests. Not used by the app. */
-export function forgetTold(): void {
-  tried.clear();
-}
-
 /** What the ElevenLabs letter says at this step. Separate so a check can read it. */
 export function elevenLetter(used: number, ceiling: number, step: number): { subject: string; body: string } {
   const left = Math.max(0, ceiling - used);

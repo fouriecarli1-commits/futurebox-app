@@ -294,7 +294,3 @@ export async function note(seconds: number, kind: Kind, owner?: string | null): 
   );
 }
 
-/** Cleared between tests. Not used by the app. */
-export function forgetCount(): void {
-  cached = { seconds: 0, until: 0 };
-}

@@ -353,13 +353,6 @@ export function oldestReview(now: Date = new Date()): number {
   return AD_STYLES.reduce((worst, one) => Math.max(worst, daysSince(one.reviewed, now)), 0);
 }
 
-/** The styles that suit one format, for the model to choose within. */
-export function stylesFor(format: AdFormat | null): readonly AdStyle[] {
-  if (!format) return AD_STYLES;
-  const fits = AD_STYLES.filter((one) => one.formats.includes(format.id));
-  return fits.length > 0 ? fits : AD_STYLES;
-}
-
 /**
  * The catalogue, written out for the model.
  *

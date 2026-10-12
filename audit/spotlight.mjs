@@ -70,7 +70,9 @@ try {
   }
 
   /* ── Two: the one big class is not behind one ─────────────────────── */
-  const watch = p.locator('button').filter({ hasText: /Watch it free|Kyk dit gratis/i }).first();
+  /* "Watch it", not "Watch it free": the word came off every tool on 11
+     October 2026 with "Niks is gratis", and this line kept asking for it. */
+  const watch = p.locator('button, a').filter({ hasText: /^Watch it$|^Kyk dit$/i }).first();
   check('the one big class is on the screen without opening anything',
     (await watch.count()) > 0 && (await watch.isVisible()),
     'it is the offer; it does not go behind a chevron');

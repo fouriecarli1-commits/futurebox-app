@@ -29,7 +29,10 @@ import { loadPairs, type Pair } from './lib/pairs';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
 import SongSections from './components/SongSections';
-import { guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
+import {
+  guessRegion, keepRegion, keptRegion, priceFor, REGIONS, regionByCode, regionsByName,
+  type Region,
+} from './lib/pricing';
 import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import MakeMusic from './components/MakeMusic';
@@ -376,12 +379,49 @@ export default function FutureBoxHome() {
   // Resolved after mount: guessing during render would bake one country's
   // prices into the static HTML that everybody is served.
   const [region, setRegion] = useState<Region>(REGIONS[0]);
-  const [regionBasis, setRegionBasis] = useState('Working it out…');
+  /**
+   * Whether this region is still only a guess.
+   *
+   * It decides one thing: whether the price list says so. A guessed region
+   * carries a line admitting it; a chosen one does not, because telling
+   * somebody their own choice might be wrong is noise.
+   */
+  const [regionGuessed, setRegionGuessed] = useState(true);
+  /* A choice beats a guess, and is read in the same effect rather than during
+     render — reading storage while rendering would disagree with the HTML
+     every visitor is served.
+
+     `keptRegion` validates against `REGIONS` and answers null for anything
+     else, so a stale or hand-edited code reads as "no choice" and we guess
+     again. Falling through to the list's first entry instead would move a
+     South African to dollars, which is the fault this whole path exists to
+     stop. */
   useEffect(() => {
+    const chosen = keptRegion();
+    if (chosen) {
+      setRegion(chosen);
+      setRegionGuessed(false);
+      return;
+    }
     const guess = guessRegion(lang);
     setRegion(guess.region);
-    setRegionBasis(guess.basis);
+    setRegionGuessed(true);
   }, [lang]);
+  /* Remembered on the device, so it is answered once rather than every visit.
+     `null` forgets it and goes back to the guess, which is what the first
+     option in the picker is for. */
+  const chooseRegion = (code: string): void => {
+    if (code === '') {
+      keepRegion(null);
+      const guess = guessRegion(lang);
+      setRegion(guess.region);
+      setRegionGuessed(true);
+      return;
+    }
+    keepRegion(code);
+    setRegion(regionByCode(code));
+    setRegionGuessed(false);
+  };
   // The header and the locked cards advertise the cheapest paid tier, since
   // that is the smallest step someone is actually being asked to take.
   const entryPrice = tierPrice('maker', region);
@@ -1216,12 +1256,8 @@ export default function FutureBoxHome() {
    */
   const [asks, setAsks] = useState(0);
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
-  const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
-  // Studio Form State
-  const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
   const [title, setTitle] = useState('');
-  const [mediaLink, setMediaLink] = useState('');
 
   // AI Scanner & Stream Regeneration
   const [streamCycle, setStreamCycle] = useState(0);
@@ -3743,6 +3779,57 @@ export default function FutureBoxHome() {
               </button>
             </div>
 
+            {/* ── Which country these prices are in ──────────────────────
+ 
+                Carli, 11 October 2026: *"Maak 'n country picker"*.
+ 
+                Here rather than in the appearance panel or an account screen,
+                because this is the one place the number it changes is on the
+                screen: somebody who thinks the price is wrong is looking at
+                the price when they think it.
+ 
+                A plain `<select>`, not a custom drop list. Nineteen countries
+                on a 390px phone is exactly the job the operating system's own
+                picker does better than anything built here — it is
+                searchable, it is reachable with a keyboard, and it needs no
+                code to close itself.
+ 
+                The first option forgets the choice rather than setting one,
+                which is the only way back to the guess once somebody has
+                picked wrong. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pb-1">
+              <label htmlFor="fb-region" className="text-sm text-zinc-400">
+                {t('pay.pricesIn', 'Prices in')}
+              </label>
+              <select
+                id="fb-region"
+                value={regionGuessed ? '' : region.code}
+                onChange={(event) => chooseRegion(event.target.value)}
+                className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+              >
+                <option value="">
+                  {t('pay.regionAuto', 'My device’s country')}
+                  {regionGuessed ? ` — ${region.name}` : ''}
+                </option>
+                {regionsByName().map((one) => (
+                  <option key={one.code} value={one.code}>
+                    {one.name} · {one.currency}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Only when it is a guess. Saying it about a choice somebody made
+                themselves is noise, and the sentence has a second job: it
+                stops the picker reading as a way to buy South African pricing
+                from anywhere, which it is not. What a card is charged is
+                decided by the country of the card. */}
+            {regionGuessed && (
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                {t('pay.regionGuess',
+                  'Worked out from your device, so it can be wrong — change it above if it is. What you are charged is set by the country of your card either way.')}
+              </p>
+            )}
+
             {/* Every tier, free included. Leaving free off this screen made an
                 upgrade look like the only way to use the app, and left the
                 person on it with no idea what they already had. */}
@@ -4068,8 +4155,17 @@ export default function FutureBoxHome() {
           >
             
             {/* Top Back Bar */}
+            {/* In a bare room the back button sits on the room's own gutter.
+
+                The shell pads 12 on a phone and 20 at a desk; a bare room's
+                rows pad another 12 inside that, so its words start at 24 and
+                32. This bar sits in the shell and not in the room, so without
+                the same 12 the back button started at 12 against everything
+                below it at 24 — `check:editor` measured it: "back 12, ask 24,
+                hint 24, first 24". Four pixels is not visible as four pixels;
+                twelve is visible as a bar lying under somebody else's page. */}
             <div className={`flex-shrink-0 flex items-center justify-between ${
-              bareRoom ? '' : 'border-b border-zinc-800 pb-4'
+              bareRoom ? 'px-3' : 'border-b border-zinc-800 pb-4'
             }`}>
               <button
                 onClick={stepOut}

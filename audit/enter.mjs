@@ -520,6 +520,37 @@ export async function pressTab(page, label) {
  * On a desk the rail is right there and the door is not in the way, so the
  * rail is used when it is visible.
  */
+/**
+ * Open the whole video desk, the way she would: by pressing Everything.
+ *
+ * Since 10 October 2026 (`953b3e7`, "The video desk, Simple and Everything")
+ * the desk opens in Simple — the copilot and one button — and the grade
+ * picker, the lengths and shapes, the start frame, the logo and the
+ * storyboard are all behind `advanced &&`. Three probes written for the full
+ * desk went red that day and stayed red, because none of them knew the pill
+ * existed: `bigphoto` found no picture strip, `videodesk` found none of the
+ * twelve things it names, and `storyboard` found no card.
+ *
+ * Pressed rather than set in storage behind the desk's back, for the reason
+ * `bigphoto` already gives about grades: the button is what she presses, and
+ * a probe that reaches the state another way is not walking her path.
+ *
+ * Idempotent: a desk already on Everything is left alone.
+ */
+export async function everything(page) {
+  /* Two desks carry the pill: the video desk (`data-canvasmodepick`) and
+     Make a song (`data-makemodepick`, same day, same words from her — "Bo in
+     make a song moet daar 'n simple button wees"). `greeting` and `bringsong`
+     were the second pair to go red for the same reason as the first three:
+     StyleFinder and "Bring a song in" are both behind Everything. */
+  const pill = page.locator('[data-canvasmodepick="all"], [data-makemodepick="all"]').first();
+  if ((await pill.count()) === 0) return false;
+  if ((await pill.getAttribute('aria-pressed')) === 'true') return true;
+  await pill.click();
+  await page.waitForTimeout(500);
+  return (await pill.getAttribute('aria-pressed')) === 'true';
+}
+
 export async function toRoom(page, name, { folded = false } = {}) {
   /** The one button among these whose FIRST LINE is the room's name.
    *

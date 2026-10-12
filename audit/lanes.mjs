@@ -160,7 +160,10 @@ const words = await room.innerText();
 check('it says what two tracks can and cannot do',
   af ? /Nie 'n menger nie/.test(words) : /Not a mixer/.test(words));
 check('it says the separation is paid for once',
-  af ? /kos niks/.test(words) : /costs nothing/.test(words));
+  /* "uses no credits", following the dictionary row (`lanes.first`): the
+     wording moved on 11 October 2026 with "Niks is gratis". The fact is the
+     same — reopening kept lanes spends nothing — so the regex follows it. */
+  af ? /gebruik geen krediete/.test(words) : /uses no credits/.test(words));
 check('it puts a price on it before anything is spent', /\d+/.test(words) && /credit|krediet/i.test(words));
 
 await room.locator('button').filter({ hasText: af ? /^Deel dit op in klankbane/ : /^Split it into tracks/ }).first().click();

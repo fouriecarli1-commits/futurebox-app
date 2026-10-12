@@ -468,21 +468,3 @@ export interface GeneratedCompetition {
   readonly theme: string;
 }
 
-export function generateCompetition(category: CompetitionCategory, seed: number): GeneratedCompetition {
-  const pool = COMPETITION_SEEDS[category];
-  const constraint = pool.constraint[seed % pool.constraint.length];
-  const theme = pool.theme[Math.floor(seed / pool.constraint.length) % pool.theme.length];
-  const titles: Record<CompetitionCategory, string> = {
-    music: `Track about ${theme}, ${constraint}`,
-    video: `Video about ${theme}, ${constraint}`,
-    app: `App for ${theme}, ${constraint}`,
-    idea: `Idea for ${theme}, ${constraint}`,
-  };
-  return {
-    title: titles[category],
-    category,
-    constraint,
-    theme,
-    brief: `Make it about ${theme}. One hard constraint: ${constraint}. The constraint is the point — entries that ignore it are disqualified before judging, however good they are.`,
-  };
-}

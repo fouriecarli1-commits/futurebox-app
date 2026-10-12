@@ -248,6 +248,3 @@ export function assetId(): string {
   return `asset:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** What the library will take, said in one place so every caller agrees. */
-export const ASSET_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-export const ASSET_MAX_BYTES = 4 * 1024 * 1024;

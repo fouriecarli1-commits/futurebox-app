@@ -623,7 +623,7 @@ export default function Storyboard({
           the top of this file. */}
       <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'board.writeFirst',
-          'Write them all first. A list of sentences is free to reorder and free to throw away, and seeing them together is when you notice two shots are the same idea.',
+          'Write them all first. A list of sentences is easy to reorder and easy to throw away, and seeing them together is when you notice two shots are the same idea.',
         )}</Note>
 
       <div className="space-y-2">

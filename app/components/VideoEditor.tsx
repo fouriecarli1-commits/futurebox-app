@@ -133,6 +133,7 @@ import {
 } from '../lib/logomark';
 import { fit } from '../lib/imagefile';
 import { accessToken } from '../lib/cloud';
+import { stillWorthWaiting } from '../lib/jobwait';
 import { broughtIn, cameFromChannel, madeHere, mustOwn, type Came } from '../lib/filmrights';
 import { broughtFrom, fileIt, loadBrought, posterOf, readBrought, starBrought, type Brought } from '../lib/brought';
 import { myVideos, type MyVideo } from '../lib/filmed';
@@ -1779,6 +1780,8 @@ export default function VideoEditor({
   };
 
   const [shotJob, setShotJob] = useState<string | null>(null);
+  /** When the current wait began, so a stalled job cannot wait for ever. */
+  const shotSince = useRef<number>(0);
   const [shotReady, setShotReady] = useState<string | null>(null);
   const [shotSaid, setShotSaid] = useState('');
   const [shotSeconds, setShotSeconds] = useState<4 | 6 | 8>(4);
@@ -1803,8 +1806,24 @@ export default function VideoEditor({
    */
   useEffect(() => {
     if (!shotJob) return undefined;
+    /* Started once per job, not once per run of this effect: `t` is a
+       dependency, so choosing a language re-runs it, and a clock restarted by
+       picking Afrikaans is a wait that never ends. */
+    if (shotSince.current === 0) shotSince.current = Date.now();
     let stopped = false;
     const ask = async (): Promise<void> => {
+      /* "No answer yet" and "this is never coming" look identical from here,
+         and the press that started this is disabled while the job is live —
+         so waiting for ever locks the desk until somebody reloads the page.
+         Eight minutes, shared with every other room that polls a job. It
+         claims less than a failure would, because the job may well still be
+         running on the engine and a stall is not refunded. */
+      if (!stillWorthWaiting(shotSince.current, Date.now())) {
+        setShotJob(null);
+        shotSince.current = 0;
+        setShotSaid(t('edit.shotSlow', 'It is taking longer than usual. It has not been lost — have a look in a little while.'));
+        return;
+      }
       try {
         const token = await accessToken();
         const answer = await fetch(`/api/video?id=${encodeURIComponent(shotJob)}`, {
@@ -1816,9 +1835,11 @@ export default function VideoEditor({
         if (said.state === 'done' && said.url) {
           setShotReady(said.url);
           setShotJob(null);
+          shotSince.current = 0;
           setShotSaid(t('edit.shotDone', 'Ready. Look at it, then put it on the clock.'));
         } else if (said.state === 'failed') {
           setShotJob(null);
+          shotSince.current = 0;
           setShotSaid(said.message
             ?? t('edit.shotFailedMake', 'The engine could not make that one. The credits have been given back.'));
         }
@@ -3525,7 +3546,7 @@ async function smallerFrame(url: string): Promise<string> {
                   {t('rail.videoedit', 'Video Editor')}
                 </h4>
                 <p className="max-w-2xl pt-1 text-sm leading-snug sm:text-base" style={{ color: INK }}>
-                  {t('edit.room.sub', 'Your own footage, on a clock. Bring clips in, cut them where you want, put words and a look and your logo on them, and lay a song underneath — all of it on this device, free, as many times as you like. Only putting the finished film together costs anything, and it shows the bill first.')}
+                  {t('edit.room.sub', 'Your own footage, on a clock. Bring clips in, cut them where you want, put words and a look and your logo on them, and lay a song underneath — all of it on this device, with no credits, as many times as you like. Only putting the finished film together costs anything, and it shows the bill first.')}
                 </p>
               </div>
             </div>
@@ -7221,7 +7242,7 @@ async function smallerFrame(url: string): Promise<string> {
           <Note>
             {t(
               'edit.realTime',
-              'Cutting, fades, looks and words are free however long you take. Putting the film together is what costs, and it plays the film through once to record it — so it takes about as long as the film is.',
+              'It plays the film through once to record it, so it takes about as long as the film is. That is the trade for it costing nothing.',
             )}
           </Note>
 

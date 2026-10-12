@@ -20,7 +20,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor, unfold } from './enter.mjs';
+import { dismissDoor, unfold, everything } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3093';
@@ -203,11 +203,20 @@ try {
   await p.waitForTimeout(1600);
   /* Every panel starts folded now, and these probes reach their room
      without `toRoom`, which is where the unfolding lives. See enter.mjs. */
+  /* The words and the sound are behind Everything since 10 October 2026:
+     Simple is the copilot and one button, with no cards to fold. */
+  await everything(p);
   await unfold(p);
   const room = p.locator('div.fixed.inset-0.z-50').first();
 
-  /* Simple, which is where somebody starts and where she was looking. */
-  await room.locator('button').filter({ hasText: /^Simple$/ }).first().click();
+  /* Everything, since 10 October 2026. This section was written for a
+     Simple that still had the words and sound cards in it; Carli then asked
+     for Simple to be "net 'n copilot" — the copilot, one button, and a
+     four-line read-only summary of what the song will be. The cards, the
+     lengths and the words box are all behind Everything now, so that is
+     where the card shape is asserted. Simple is looked at on its own terms
+     below. */
+  await room.locator('button').filter({ hasText: /^Everything$/ }).first().click();
   await p.waitForTimeout(700);
   /* Again, after the mode: choosing Simple re-renders the room and the
      cards it draws are new ones, folded like every other. Unfolding only
@@ -267,7 +276,6 @@ try {
   await p.waitForTimeout(500);
   check('and pressing it again brings the box back', (await wordsBox.count()) === 1);
 
-  check('Simple asks how long the song should be', (await says()).includes('How long?'));
   /* Not "the words How long are on the page" — the buttons themselves, because
      a label over nothing pressable is the same bug in a different shape. */
   const lengths = room.locator('button').filter({ hasText: /credits$/ });
@@ -291,7 +299,24 @@ try {
      first input in the room found one of those and waited a minute for
      something invisible to become fillable. */
   await room.locator('input:visible').first().fill('Karoo');
-  await room.locator('button').filter({ hasText: /^Make my song$/ }).first().click();
+  /* Simple, on its own terms, once there is something to summarise — the
+     summary draws only when a title, words or a sound has been set, and
+     before that there is honestly nothing to show. So it is looked at here,
+     after the words and the title: a read-only summary that names the length,
+     because it is the one control behind the switch that changes what the
+     song costs — Simple must not hide the price while charging it. Then back
+     to Everything, where the rest of this probe's controls live. */
+  await room.locator('button').filter({ hasText: /^Simple$/ }).first().click();
+  await p.waitForTimeout(700);
+  const summary = room.locator('[data-makesimpleread]');
+  check('Simple shows what the song will be, read-only', (await summary.count()) === 1);
+  check('and names how long it will be', /How long\?/.test((await summary.innerText().catch(() => '')) ?? ''));
+  await room.locator('button').filter({ hasText: /^Everything$/ }).first().click();
+  await p.waitForTimeout(700);
+  await unfold(p);
+  /* `\b`, not `$`: the button carries its price now — "Make my song · 8
+     credits" — so an anchor on the end of the words stopped matching. */
+  await room.locator('button').filter({ hasText: /^Make my song\b/ }).first().click();
   for (let waited = 0; waited < 40 && !sent; waited += 1) await p.waitForTimeout(500);
 
   check('pressing Make sends a request to the music route', Boolean(sent));

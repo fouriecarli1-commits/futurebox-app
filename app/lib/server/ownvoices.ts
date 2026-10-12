@@ -110,28 +110,6 @@ export async function mine(owner: string): Promise<readonly Owned[] | null> {
   }));
 }
 
-/**
- * Every claimed voice id, so a list can be filtered.
- *
- * Ids only — never who owns them. The page that calls this is building a
- * picker for one member, and a list naming every member's voice would be the
- * leak this file exists to stop, delivered by the thing meant to stop it.
- *
- * Null when the table could not be read, and the caller shows no trained
- * voices at all rather than all of them. A picker that is briefly short is a
- * nuisance; one that is briefly everybody's is the fault.
- */
-export async function claimedIds(supplier = SUPPLIER): Promise<readonly string[] | null> {
-  const db = admin();
-  if (!db) return [];
-  const { data, error } = await db
-    .from('voice_owners')
-    .select('voice_id')
-    .eq('supplier', supplier);
-  if (error) return null;
-  return (data ?? []).map((one) => String(one.voice_id));
-}
-
 export const capFor = (tier: Tier): number => VOICE_CAPS[tier] ?? 0;
 
 export type Refusal =

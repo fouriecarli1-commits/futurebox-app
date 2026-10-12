@@ -25,7 +25,7 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { dismissDoor, toRoom, unfold } from './enter.mjs';
+import { dismissDoor, toRoom, unfold, everything } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3021);
 const af = process.argv[3] === 'af';
@@ -87,10 +87,11 @@ const PIXEL = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   'base64',
 );
-await p.route('**/api/cast*', async (route) => route.fulfill({
+let castAsked = 0;
+await p.route('**/api/cast*', async (route) => (castAsked += 1, route.fulfill({
   status: 200, contentType: 'application/json',
   body: JSON.stringify({ cast: [{ id: 'm1', name: 'Sarel', note: '', path: `${WHO.id}/1700000000000.webp`, created_at: new Date().toISOString() }] }),
-}));
+})));
 await p.route('**/storage/v1/object/**', async (route) =>
   route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }));
 
@@ -209,8 +210,18 @@ await p.waitForTimeout(2200);
    `unfold` opens the cards and deliberately leaves the question marks alone,
    because a hint is an absolutely-positioned tooltip that lands on top of
    whatever is under the heading. */
+/* Make a song and the video desk open in Simple since 10 October 2026, with
+   their cards behind Everything; elsewhere this presses nothing. */
+await everything(p);
 await unfold(p);
 await p.waitForTimeout(800);
+/* Once more, after the presenter has had time to arrive. The card returns
+   null until the voice route has said it is available, so it mounts — folded,
+   like every card — AFTER the first unfold has already run; the title was then
+   on the desk and the body was not, and this probe read "no cast" off a shut
+   card whose cast had in fact been fetched twice. */
+await unfold(p);
+await p.waitForTimeout(400);
 
 const words = await room.innerText();
 check('the presenter is on the desk',
@@ -219,6 +230,13 @@ check('it says it speaks the language you write in',
   af ? /Afrikaans inkluis/.test(words) : /Afrikaans included/.test(words));
 check('the cast member is offered as who says it',
   (await room.locator('button[aria-pressed]').filter({ hasText: /Sarel/ }).count()) > 0);
+/* Said out loud when the cast is not there, because the thirty-second
+   timeout on the script box that follows says what was looked for and
+   nothing about why. */
+if ((await room.locator('button[aria-pressed]').filter({ hasText: /Sarel/ }).count()) === 0) {
+  console.log('cast asked for:', castAsked, 'time(s)');
+  console.log('presenter card says:', ((await room.locator('section').filter({ hasText: /A presenter who says your script|Aanbieder wat jou skrif/i }).first().innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ').slice(0, 300));
+}
 
 await room.locator('#presenter-script').fill('Hallo, ek is Sarel, en vandag wys ek jou iets nuuts.');
 await p.waitForTimeout(400);

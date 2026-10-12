@@ -75,4 +75,9 @@ export const FIXED_CORE: Record<string, number> = {
      rand-bedrag hier ingetik: verander die koers en hierdie reël volg saam.
      'n Ingetikte R210,24 sou stilweg verouder. */
   Spaceship: 13.14 * RAND_PER_USD,
+  /* Google Antigravity — die ontwerp-werkbank waarin die voorkoms van die
+     toep gedoen word (sien `docs/ANTIGRAVITY.md`). Carli, 11 Oktober 2026:
+     "Antigravity kos R109.99." 'n Randbedrag van haar af, nie 'n plakkerprys
+     nie, en dit was tot vandag op geen kostelys nie. */
+  'Antigravity (Google)': 109.99,
 };

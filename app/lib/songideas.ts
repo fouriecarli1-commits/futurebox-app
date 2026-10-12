@@ -50,9 +50,3 @@ const POOLS: Record<'continue' | 'style' | 'polish', Idea[]> = {
   polish: POLISH_MOVES,
 };
 
-/** Four at a time, rotating on each roll so pressing again gives new ones. */
-export function offlineIdeas(mode: 'continue' | 'style' | 'polish', roll: number): Idea[] {
-  const pool = POOLS[mode];
-  const start = (roll * 4) % pool.length;
-  return Array.from({ length: 4 }, (_, i) => pool[(start + i) % pool.length]);
-}

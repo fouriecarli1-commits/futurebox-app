@@ -1353,7 +1353,7 @@ export default function BoothTimeline({
                     aria-label={t('pro.marks', 'Where this lane changes')}
                     title={t(
                       'pro.marksWhat',
-                      'Listen to this lane and mark where it changes — a section, a key, a new instrument coming in. The marks sit along the bottom of the clip. It costs nothing and nothing is sent anywhere.',
+                      'Listen to this lane and mark where it changes — a section, a key, a new instrument coming in. The marks sit along the bottom of the clip. It uses no credits and nothing is sent anywhere.',
                     )}
                     className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center"
                   >

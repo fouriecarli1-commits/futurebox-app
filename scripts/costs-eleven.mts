@@ -1113,7 +1113,13 @@ say('wat vier keer gelykbreek is. As daardie dag kom, is twintig krediete die');
 say('regte skuif en hierdie tabel is die som. Tot dan koop dit niks en kos dit');
 say('die helfte van die aanbod.');
 say('');
-writeFileSync(new URL('../docs/KOSTE-EN-WINS.md', import.meta.url), out.join('\n') + '\n');
+/* `KOSTE_OUT` is for `check:koste`, which writes today's page somewhere else
+   and compares it to the one in docs/ — the page is only ever right on the
+   day it was generated, and nothing else notices the day after. */
+writeFileSync(
+  process.env.KOSTE_OUT ?? new URL('../docs/KOSTE-EN-WINS.md', import.meta.url),
+  out.join('\n') + '\n',
+);
 
 /* ─────────────────────────────────────────────── kort op die skerm ──── */
 

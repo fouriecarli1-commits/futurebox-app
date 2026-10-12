@@ -47,6 +47,7 @@ reggemaak is, net in die ander rigting.
 | 12 | **Zoho** | die posbus agter die domein | R241,50 (BTW in) | vas | **ja** — van haar staat af, 8 Sept |
 | 13 | **Domeine** | die name self | R168 | vas | **ja** — van haar staat af, 8 Sept |
 | 14 | **Spaceship** | domeinregistrateur | $13,14 = R210,24 | vas | **ja** — van haar staat af, 8 Sept |
+| 15 | **Antigravity** | Google se ontwerp-werkbank, waarin die voorkoms van die toep gedoen word — sien `docs/ANTIGRAVITY.md` | R109,99 | vas | **ja** — bedrag van Carli af, 11 Okt |
 
 ### Die vaste totaal, uitgewerk
 
@@ -60,14 +61,19 @@ reggemaak is, net in die ander rigting.
 | Zoho | 241,50 |
 | Domeine | 168 |
 | Spaceship | 210,24 |
-| **Sonder ElevenLabs, sonder werkswinkels** | **3 687,74** |
+| Antigravity | 109,99 |
+| **Sonder ElevenLabs, sonder werkswinkels** | **3 797,73** |
 | Werkswinkels | 4 000 |
-| **Sonder ElevenLabs, met werkswinkels** | **7 687,74** |
+| **Sonder ElevenLabs, met werkswinkels** | **7 797,73** |
 | ElevenLabs Business | 18 216 |
-| **Alles saam** | **25 903,74** |
+| **Alles saam** | **26 013,73** |
 
-Dít is waar `R3 687,74` en `R7 687,74` in `docs/KOSTE-EN-WINS.md` vandaan kom,
-en `R25 903,74` is die getal waarteen gelykbreek uitgewerk word.
+Dít is waar `R3 797,73` en `R7 797,73` in `docs/KOSTE-EN-WINS.md` vandaan kom,
+en `R26 013,73` is die getal waarteen gelykbreek uitgewerk word.
+
+*Was R3 687,74 / R7 687,74 / R25 903,74 tot 11 Oktober 2026, toe Antigravity
+(reël 15) bygekom het — "Antigravity kos R109.99." Die som is met
+`scripts/fixedcosts.mts` saam geskuif, nie met die hand nie.*
 
 ### Een vraag oor hierdie twee reëls, en dit raak geld
 
@@ -209,7 +215,7 @@ Twee dinge om na te gaan sodra jy die volledige pakket koop:
 
 ## Wat regtig die vorm van die besigheid bepaal
 
-Kyk na die tabel. **ElevenLabs Business is R18 216 van R25 903,74 — 70,3%.**
+Kyk na die tabel. **ElevenLabs Business is R18 216 van R26 013,73 — 70,0%.**
 
 Elke ander besluit op hierdie bladsy is klein daarnaas. Kits.AI is 3% van die
 rekening. Vercel en Supabase saam is 3%. Die werkswinkels is 18% en is die

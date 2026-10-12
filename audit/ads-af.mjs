@@ -136,7 +136,9 @@ const WANT = [
   ['step 2',         /Dit skryf die advertensies/],
   ['step 3',         /Verfilm dit|Verfilm/],
   ['step 4',         /Sit dit uit/],
-  ['brand kit',      /Vir wie hierdie advertensies is/],
+  /* `kit.title` — the card is "Jou handelsmerkpak" now; the sentence this
+     asked for was its old heading. */
+  ['brand kit',      /Jou handelsmerkpak/],
   ['kit hint',       /Stel dit een keer/],
   ['kit name',       /Wat word dit genoem\?/],
   ['kit voice',      /Hoe klink dit\?/],
@@ -151,7 +153,9 @@ const WANT = [
   ['tone label',     /Hoe moet dit klink\?/],
   ['market label',   /Geskryf in/],
   ['write button',   /Skryf die advertensies/],
-  ['free',           /gratis/i],
+  /* "Gratis" came off the desk on 11 October 2026 with "Niks is gratis"; the
+     second step names its price in credits instead, read off CREDITS. */
+  ['step 2 price',   /krediete/i],
 ];
 for (const [what, re] of WANT) {
   const found = re.test(text);
