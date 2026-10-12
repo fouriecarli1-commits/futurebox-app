@@ -7275,7 +7275,12 @@ screen, held by `check:taalvas`. The copilot names every song it writes and the 
 "Untitled". **R949 is the price of the whole masterclass, all three classes** — "al drie klasse is
 gelykstaande aan R949" — not per class as the page said for a day; the room, the dictionary, the
 check and the presenter agreement say so now. The contrast probe walks the dark theme and reads gradients, which is how it found
-fifteen light-theme buttons at 2.73:1 — flat fills now.
+fifteen light-theme buttons at 2.73:1 — flat fills now. Later the same day the contrast walk and the
+width probe learned to read the eleven screens outside the studio — Cubed, the guide, help, the kids
+room, story mode, the blog, legal, privacy, terms, the pronunciation booth — and the first pass found 49
+labels below AA in the kids room and on Cubed, now fixed with real WCAG contrast in `lib/kidslook.ts`;
+every page fits at 360, 375, 390, 768, 820 and 1024. The grown-up's story shelf has a door to Story
+mode again, since the footer no longer sits under the kids pages.
 
 ---
 
