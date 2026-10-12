@@ -807,7 +807,7 @@ export default function BoothFx({
           <button
             type="button"
             onClick={() => onChange({})}
-            className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-700/60 bg-zinc-900/80 px-2.5 text-[11px] font-bold text-zinc-300 transition-all hover:bg-zinc-800"
+            className="flex min-h-[44px] items-center gap-1.5 rounded-lg border border-zinc-700/60 bg-zinc-900/80 px-2.5 text-[11px] font-bold text-zinc-300 transition-all hover:bg-zinc-800"
             title={t('fx.preset.reset', 'Reset Rack')}
           >
             <RefreshCw className="h-3 w-3" />
@@ -822,13 +822,13 @@ export default function BoothFx({
               key={preset.id}
               type="button"
               onClick={() => onChange({ ...preset.fx })}
-              className="flex min-h-[44px] flex-col items-start justify-center rounded-xl border border-white/10 bg-zinc-900/60 p-2 text-left transition-all hover:border-emerald-500/50 hover:bg-emerald-950/30 active:scale-[0.98]"
+              className="flex h-11 flex-col items-start justify-center rounded-xl border border-white/10 bg-zinc-900/60 px-2 py-1 leading-tight text-left transition-all hover:border-emerald-500/50 hover:bg-emerald-950/30 active:scale-[0.98]"
             >
               <span className="flex items-center gap-1.5 text-xs font-black text-zinc-100">
                 <span>{preset.icon}</span>
                 <span className="truncate">{t(preset.nameKey, preset.nameFallback)}</span>
               </span>
-              <span className="line-clamp-1 text-[10px] text-zinc-400">
+              <span className="line-clamp-1 text-[10px] leading-tight text-zinc-400">
                 {t(preset.descKey, preset.descFallback)}
               </span>
             </button>

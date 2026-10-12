@@ -760,11 +760,14 @@ export default function FollowWords({
                  it to her while she films herself.
 
                  It went unnoticed because it fails in the direction nobody
-                 checks. The lines she is *not* singing use `text-zinc-700`,
-                 and `zinc` is remapped onto the surface family, which is light
-                 here — they measure 8.79 and look right. So the screen reads
+                 checks. The lines she is *not* singing used `text-zinc-700`,
+                 and `zinc` is remapped onto the surface family, which was light
+                 then — they measured 8.79 and looked right. So the screen read
                  as working: there are words on it, they move, and the only one
-                 missing is the one in the middle.
+                 missing was the one in the middle. Since the default theme went
+                 dark on 12 October 2026 the same class measured 2.23 the other
+                 way, so those lines are `INK_DIM` now: fixed, like every other
+                 word drawn over the film, and the theme cannot reach them.
 
                  `LiveChannel` carries this same note and the same fix. */
               <p
@@ -778,7 +781,7 @@ export default function FollowWords({
                    to guess. */
                 {...(now ? { 'data-sungline': '' } : {})}
                 className={`transition-all duration-300 leading-tight ${
-                  now ? 'text-3xl sm:text-5xl font-black' : 'text-xl sm:text-2xl text-zinc-700'
+                  now ? 'text-3xl sm:text-5xl font-black' : `text-xl sm:text-2xl ${INK_DIM}`
                 }`}
                 style={
                   now

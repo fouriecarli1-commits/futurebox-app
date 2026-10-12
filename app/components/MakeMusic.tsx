@@ -527,8 +527,11 @@ export default function MakeMusic({
     if (seconds !== 60) said.push(`${seconds}s`);
     if (singItYourself) said.push(t('make.singSelf'));
     if (ownSound) said.push(t('make.useOwnSound', 'Make it in a sound of my own'));
+    /* The weirdness slider arrived on 12 October 2026 at 15, and a setting
+       that applies behind the switch is printed here or it is a silent one. */
+    if (weirdness !== 15) said.push(`${t('make.weirdness', 'Weirdness')} ${weirdness}%`);
     return said;
-  }, [bpm, songKey, seconds, singItYourself, ownSound, t]);
+  }, [bpm, songKey, seconds, singItYourself, ownSound, weirdness, t]);
   const [busy, setBusy] = useState(false);
 
   /**

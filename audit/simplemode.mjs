@@ -232,7 +232,7 @@ try {
  
      A setting made here and then put away by Simple still goes to the engine,
      so Simple has to say so. This is the assertion the whole design rests on. */
-  const speed = room.locator('input[type="range"]').first();
+  const speed = room.locator('#make-bpm');
   await speed.evaluate((el) => {
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
     setter?.call(el, '140');
@@ -251,7 +251,7 @@ try {
 
   await mode('Everything');
   await p.waitForTimeout(600);
-  const back = await room.locator('input[type="range"]').first().inputValue();
+  const back = await room.locator('#make-bpm').inputValue();
   check('and the value itself came back untouched', back === '140', back);
 
   /* ── The choice is remembered ───────────────────────────────────────── */
