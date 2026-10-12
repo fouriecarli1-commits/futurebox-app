@@ -79,17 +79,32 @@ ok('  and the only way out is the grown-up\'s own page',
   + ' closing the app — and a parent who cannot find the way out turns the'
   + ' whole thing off instead');
 
-/* ── 2. Nothing is typed ────────────────────────────────────────────── */
+/* ── 2. One line is typed, and only for the song ────────────────────────
+
+   This held "nothing in the room can be typed into" — a child typing into a
+   prompt that reaches a music model and a video model, and a moderation
+   gate is not a design. Carli, 12 October 2026: *"Die kids room moet ook
+   'n tikboks hê, daar is kinders wat kan tik, wat oulik sal wees as dit 'n
+   record button het sodat 'n kind kan praat en woorde so prompt."*
+
+   Her room, her call, and the rule narrows rather than goes: ONE single-line
+   box, capped, whose words go to the song through /api/music where `guard`
+   reads every prompt — and never to the video, which still takes only the
+   bubbles' ids. A textarea, a second box, or words handed to the video is
+   the thing this rule still refuses. */
 
 const typed = [
-  /<input/.test(room) && 'an input',
   /<textarea/.test(room) && 'a textarea',
   /contentEditable/i.test(room) && 'a contenteditable',
+  (room.match(/<input(?![^>]*type="(checkbox|radio|range|color)")/g) ?? []).length > 1 && 'a second input',
 ].filter(Boolean);
-ok('nothing in the room can be typed into',
-  typed.length === 0,
+ok('one line can be typed into, for the song, and nothing else',
+  typed.length === 0 && /data-kidstype/.test(room) && /maxLength=\{KID_WORDS_MOST\}/.test(room),
   `${typed.join(', ')} — that is a child typing into a prompt that reaches a`
   + ' music model and a video model, and a moderation gate is not a design');
+ok('  and the typed words never reach the video',
+  !/startKidVideo\([^)]*words/.test(room) && /makeKidSong\(topic, sound, words\)/.test(room),
+  'a child\u2019s free text is a song prompt read by guard(); the video still takes only the bubbles\u2019 ids');
 
 ok('  and every choice is a closed list somebody wrote',
   KID_TOPICS.length >= 4 && KID_SOUNDS.length >= 3

@@ -684,7 +684,7 @@ export default function Presenter({
                 type="button"
                 onClick={() => void make()}
                 disabled={busy !== null || !consent || !face}
-                className="w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full min-h-[44px] py-3 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {busy === 'make' ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

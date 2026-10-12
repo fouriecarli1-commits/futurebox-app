@@ -169,6 +169,21 @@ export default function Guide(): React.ReactElement {
             </article>
           );
         })}
+        {/* Not in ROOMS, because it is not a surface of the studio: a page
+            of its own that a grown-up opens and hands over. On the guide
+            because "Ek sien nerens die kids room nie" was said about an app
+            that had it. */}
+        <div className="space-y-2 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-5" data-guidekids>
+          <h3 className="text-lg font-bold text-white">
+            <Link href="/kids" className="hover:text-amber-200">{t('hello.kids', 'The kids room')}</Link>
+          </h3>
+          <p className="text-sm leading-relaxed text-zinc-400">
+            {t(
+              'guide.kids',
+              'A page of its own, off the rail, for a child. A grown-up sets how many credits the child may spend and how long the sitting lasts, then hands the phone over. In the room there are two presses, a song and a video of it, and nothing else: no shop, no strangers, no paid door. When the credits or the time run out the room closes and asks for a grown-up. The prices in there are the same ones in the song and video rooms above.',
+            )}
+          </p>
+        </div>
         <p className="text-sm leading-relaxed text-zinc-500">
           {t(
             'guide.everyPress',

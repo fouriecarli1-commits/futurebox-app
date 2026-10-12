@@ -140,6 +140,53 @@ try {
     );
     if (!ok) problems.push(`${room}: ${found.worst[0].what} over by ${found.worst[0].over}px`);
   }
+
+  /* ── The pages that are not the studio ──────────────────────────────
+
+     Added 12 October 2026, the day the contrast walk learned the same
+     lesson: `tooWide` reads `div.fixed.inset-0.z-50 *`, which is the studio
+     overlay and nothing else, so the Cubed room, the guide, the help page
+     and the kids room were never measured at any width. Here they are read
+     as whole documents. The kids room is measured as the child's room, with
+     the allowance route answered here so nothing is written anywhere. */
+  const PAGES = ['/cubed', '/guide', '/help', '/kids'];
+  const pageTooWide = () =>
+    p.evaluate((slack) => {
+      const vw = document.documentElement.clientWidth;
+      const seen = [];
+      for (const el of document.querySelectorAll('body *')) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) continue;
+        if (r.right <= vw + slack && r.left >= -slack) continue;
+        seen.push({
+          over: Math.round(Math.max(r.right - vw, -r.left)),
+          what: `${el.tagName}.${(el.className || '').toString().slice(0, 46)}`,
+          says: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 34),
+        });
+      }
+      return { vw, worst: seen.sort((a, b) => b.over - a.over).slice(0, 3), count: seen.length };
+    }, SLACK);
+  await p.route('**/api/kids', (route) => route.fulfill({
+    json: { open: true, allowance: 20, spent: 0, left: 20, minutes: null, secondsLeft: null },
+  }));
+  for (const path of PAGES) {
+    try {
+      await p.goto(`http://localhost:${PORT}${path}`, { waitUntil: 'networkidle' });
+      await p.waitForTimeout(900);
+    } catch (why) {
+      problems.push(`page ${path}: no way in — ${String(why).slice(0, 60)}`);
+      console.log(`  FAIL page ${path} — no way in`);
+      continue;
+    }
+    const found = await pageTooWide();
+    const ok = found.count === 0;
+    console.log(
+      `${ok ? '  ok  ' : '  FAIL'} ${`page ${path}`.padEnd(13)} ${
+        ok ? 'fits' : `${found.count} over — ${found.worst.map((one) => `+${one.over}px ${one.what} "${one.says}"`).join(' | ')}`
+      }`,
+    );
+    if (!ok) problems.push(`page ${path}: ${found.worst[0].what} over by ${found.worst[0].over}px`);
+  }
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }

@@ -179,7 +179,7 @@ het geskuif nie. As jy 'n kamer se vorm verander, sê dit in die commit-boodskap
 
 ---
 
-## 5b. Vyf dinge wat op 12 Oktober geleer is, uit die eerste saamvoeging
+## 5b. Ses dinge wat op 12 Oktober geleer is, uit die eerste saamvoeging
 
 Die eerste tak van Antigravity is op 12 Oktober ingetrek. Die sjablone, die
 doekgroottes en die uitvoer-vlakke is ingeneem en werk; die res is
@@ -207,6 +207,13 @@ uitgelaat, en dít is hoekom:
    afhanklikheid geskuif terwyl `package.json` dieselfde gebly het, en
    `npm ci` op die bediener sou geweier het. Loop `npm install` en stoot
    albei, of nie een nie.
+6. **Geen Afrikaans in die opmaak nie — net in die woordeboek.** Die
+   Cubed-kamer het "Winsverdeling", "Klasfooi", "Katalogus van
+   Masterclasses" en "Ooreenkoms vir Gassprekers" reguit in die JSX gehad,
+   en die Engelse leser het dit so gekry. Elke woord wat 'n leser sien gaan
+   deur `t('sleutel', 'English fallback')` met 'n `af`-ry in
+   `app/lib/i18n.tsx`; `lang === 'af' ? … : …` in die opmaak is ook nie die
+   manier nie. `check:taalvas` lees elke kamer daarvoor.
 
 En wat wél reg was, sodat dit herhaal word: die twee modale het hul eie
 `t()`-sleutels met Afrikaans gehad, die prysverandering het die kontrole

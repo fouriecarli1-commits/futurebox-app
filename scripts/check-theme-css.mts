@@ -22,7 +22,7 @@ import { DEFAULT_THEME, PRESETS, SURFACES, themeVariables, type Theme } from '..
 
 const want = themeVariables(DEFAULT_THEME);
 
-const css = readFileSync('app/globals.css', 'utf8');
+const css = readFileSync('app/globals.css', 'utf8').replace(/\r\n/g, '\n');
 const open = css.indexOf(':root {');
 if (open === -1) {
   console.error('check:theme — no :root block in app/globals.css');

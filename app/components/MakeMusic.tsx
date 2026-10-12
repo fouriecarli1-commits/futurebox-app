@@ -57,6 +57,7 @@ import { useOpenCard } from '../lib/opencard';
 import SongStarts from './SongStarts';
 import PromptCards from './PromptCards';
 import { MOODS, type Mood } from '../data/songstarts';
+import { titleFromWords } from '../lib/songtitle';
 
 export interface Canvas {
   title: string;
@@ -804,7 +805,12 @@ export default function MakeMusic({
         setStatus(gate.reason);
         return;
       }
-      const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim() || 'Untitled';
+      /* Never "Untitled". A name read off the first line of the words, or
+         the style, before a sentence in the reader's language — see
+         `lib/songtitle.ts` and `check:titled`. */
+      const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim()
+        || titleFromWords(lyrics, canvas.style)
+        || t('make.noName', 'A song from today');
       const began = Date.now();
       setBusy(true);
       setStage(null);
@@ -1840,7 +1846,7 @@ export default function MakeMusic({
           type="button"
           onClick={() => make()}
           disabled={busy}
-          className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 py-5 text-lg font-extrabold tracking-tight text-onAccent shadow-[0_8px_30px_rgba(16,185,129,0.28)] hover:opacity-90 disabled:opacity-60 disabled:shadow-none"
+          className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 py-5 text-lg font-extrabold tracking-tight text-onAccent shadow-[0_8px_30px_rgba(16,185,129,0.28)] hover:opacity-90 disabled:opacity-60 disabled:shadow-none"
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
           {busy ? `${t('make.going')} ${elapsed}s` : t('make.go')}

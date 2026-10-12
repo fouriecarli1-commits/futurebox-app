@@ -875,7 +875,7 @@ export default function Hooks({
                 type="button"
                 onClick={() => onBuildOn?.({ title: shared.title, by: shared.by, style: shared.style })}
                 disabled={!onBuildOn}
-                className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent flex items-center gap-2 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-onAccent flex items-center gap-2 disabled:opacity-50"
               >
                 <Wand2 className="w-4 h-4" />
                 {t('buildon.make', 'Make a song from this')}

@@ -46,6 +46,7 @@
 
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
+import { before } from './order.mts';
 import {
   CLASSES_IN_A_SERIES, GUEST_SHARE, GUEST_TERMS, HOUSE_SHARE, SERIES,
   minutesOf, seriesById, splitAsSaid,
@@ -54,7 +55,7 @@ import { createHash } from 'node:crypto';
 import {
   LOCKUP, LOGO, LOGO_AF, LOGO_EN, LOGO_TALL, LOGO_WIDE, MARK, lockupFor,
 } from '../app/components/CubedMark.tsx';
-import { CLASS_RAND, guestRand, randSaid, seriesRand } from '../app/lib/cubed.ts';
+import { SERIES_RAND, guestRand, randSaid, seriesRand } from '../app/lib/cubed.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -100,9 +101,15 @@ ok('  and the length adds up',
   SERIES.every((one) => minutesOf(one) === one.parts.reduce((s, p) => s + p.minutes, 0)),
   'a total that is not the sum of the parts is a number the page invented');
 
-/* ── 2. The split, which is quoted to guests ──────────────────────────── */
+/* ── 2. The split, which is NOT quoted to guests ──────────────────────
 
-ok('sixty per cent goes to the guest',
+   It was, until Carli, 12 October 2026: "Die Cubed classes kan nie die
+   winsverdeling wys tussen my en die persoon wat die klas aanbied nie." The
+   number stays in `lib/cubed.ts` for the written agreement, and the room,
+   the page's metadata and the dictionary say the series is shared and that
+   the terms are written down — never what the share is. */
+
+ok('sixty per cent goes to the guest, in the agreement',
   GUEST_SHARE === 0.6,
   'her number, and the direction matters: the guest has the audience and the'
   + ' reputation at stake');
@@ -116,30 +123,67 @@ ok('  and it is said the way a person says it',
   splitAsSaid() === '60/40',
   splitAsSaid());
 
-ok('  and the guest terms quote the real numbers',
+ok('the guest terms say the series is shared, without the number',
   (() => {
-    const one = GUEST_TERMS.map((term) => term[0]).join(' ');
-    return one.includes('60%') && one.includes('40%')
-      && one.includes(`${CLASSES_IN_A_SERIES} sessions`);
+    const all = GUEST_TERMS.map((term) => `${term[0]} ${term[1]}`).join(' ');
+    return /shared with you/.test(all) && /written into your agreement/.test(all)
+      && !/%/.test(all) && !/\b60\b|\b40\b/.test(all)
+      && all.includes(`${CLASSES_IN_A_SERIES} sessions`);
   })(),
-  'a number in a conversation is a number two people remember differently; a'
-  + ' number on the page a guest read before saying yes is an agreement');
+  '"Die Cubed classes kan nie die winsverdeling wys ... nie" — the share is'
+  + ' in the agreement, not on the page');
 
 ok('  and every term is written in both languages',
   GUEST_TERMS.every((term) => term[0].trim() && term[1].trim() && term[0] !== term[1]),
   'a guest reading Afrikaans is being asked to agree to something in another'
   + ' language');
 
-ok('  and the room prints the split rather than a number of its own',
-  /splitAsSaid\(\)/.test(room) && /Math\.round\(GUEST_SHARE \* 100\)/.test(room)
-  && !/\b60\/40\b/.test(room),
-  'a 60/40 typed into the page is a number that stays 60/40 the day the'
-  + ' constant moves');
+const cubedPage = withoutComments(readFileSync('app/cubed/page.tsx', 'utf8'));
+const cubedRows = words.split('\n').filter((line) => /^\s*"cubed\./.test(line)).join('\n');
+
+ok('the room does not print the split, by name or by number',
+  !/splitAsSaid|GUEST_SHARE|HOUSE_SHARE|guestRand|data-cubedsplit/.test(room)
+  && !/\b60\s*\/\s*40\b|\b60\s*% (of|van)|sixty per ?cent/i.test(room),
+  'the split is quoted TO GUESTS nowhere public');
+
+ok('  nor does the page’s description, nor the dictionary',
+  !/\b60\s*%|\b60\s*\/\s*40\b|going to the guest/.test(cubedPage)
+  && !/\b60\s*%|\b60\s*\/\s*40\b|keeps \{g\}|hou \{g\}/.test(cubedRows),
+  'a number in the metadata is a number in every search result');
 
 ok('  and the room says the terms out loud',
   /data-cubedterms/.test(room) && /GUEST_TERMS\.map/.test(room),
   '"Ons moet dit ook so uit stipuleer vir ons gaste" — in public, before the'
   + ' conversation');
+
+/* ── 2b. The third class, and the opening line ────────────────────────
+
+   Carli, 12 October 2026: "klas nommer 3 moet nie gaan oor what goes wrong
+   nie, eerder, what is next" — and, of the top of the page, "iets soos dive
+   into the future and attend a class curated by a professional". */
+
+ok('the third class is about what is next, not what goes wrong',
+  SERIES.every((one) => {
+    const third = one.parts.find((part) => part.part === 3);
+    return Boolean(third) && /what is next/i.test(third!.title[0]) && /volgende/i.test(third!.title[1])
+      && !/wrong|verkeerd/i.test(`${third!.title.join(' ')} ${third!.outcome.join(' ')}`);
+  }),
+  '"klas nommer 3 moet nie gaan oor what goes wrong nie, eerder, what is next"');
+
+ok('  and nothing public still says "what goes wrong"',
+  !/goes wrong|verkeerd loop/i.test(room) && !/goes wrong/i.test(cubedPage) && !/goes wrong|verkeerd loop/i.test(cubedRows)
+  && !GUEST_TERMS.some((term) => /goes wrong|verkeerd loop/i.test(term.join(' '))),
+  'the old shape of three, left in one place, is a page that disagrees with itself');
+
+ok('the room opens with her line, in both languages',
+  /data-cubedlead/.test(room) && /t\('cubed\.lead'/.test(room)
+  && /"cubed\.lead": \{ en: "Dive into the future and attend a class curated by a professional\."/.test(words)
+  && /"cubed\.lead": \{[^\n]*af: "Duik die toekoms in/.test(words),
+  '"iets soos dive into the future and attend a class curated by a professional"');
+
+ok('  above the three-classes line',
+  before(room, 'data-cubedlead', "'cubed.what'"),
+  'the invitation first, then what the three classes are');
 
 /* ── 3. Nothing is promised that is not arranged ──────────────────────── */
 
@@ -467,22 +511,25 @@ ok('  and the listing it used to show is still reachable',
   'the pill was the only way to that listing. A door that orphans a page is'
   + ' a page quietly deleted, and nothing anywhere would say so');
 
-/* ── 7. What a class costs ──────────────────────────────────────────── */
+/* ── 7. What a masterclass costs ────────────────────────────────────── */
 
-ok('the room says what a class costs',
-  /data-cubedprice/.test(room) && /randSaid\(CLASS_RAND\)/.test(room),
+ok('the room says what a masterclass costs',
+  /data-cubedprice/.test(room) && /randSaid\(seriesRand\(\)\)/.test(room),
   'Carli, 11 October 2026: "Ek beplan om R949 vir \u2019n cubed class te'
   + ' vra." A guest deciding whether three evenings are worth it cannot work'
   + ' that out from a percentage');
 
-ok('  and it is the price she said',
-  CLASS_RAND === 949, String(CLASS_RAND));
+ok('  and it is the price she said, for all three classes together',
+  SERIES_RAND === 949 && seriesRand() === SERIES_RAND,
+  'Carli, 12 October 2026: "al drie klasse is gelykstaande aan R949"');
 
-ok('  and the series total is multiplied once, not typed',
-  seriesRand() === CLASS_RAND * CLASSES_IN_A_SERIES
-  && !/949/.test(room) && !/2847|2 847/.test(room),
-  'a price typed into a page is a price that disagrees with the agreement by'
-  + ' the end of the month');
+ok('  and nothing multiplies it into a per-class price or a series total',
+  !/CLASS_RAND|\* CLASSES_IN_A_SERIES|CLASSES_IN_A_SERIES \*/.test(room)
+  && !/949/.test(room) && !/2847|2 847/.test(room)
+  && /"cubed\.aClass": \{ en: "for all three classes"/.test(words)
+  && !/"cubed\.(price|aClass|fee|priceWhat)": \{[^\n]*\ba class\b/.test(words),
+  'a price typed into a page, or a page that does the arithmetic the other'
+  + ' way, is a page that disagrees with the agreement');
 
 ok('  and what the guest keeps follows the split that is on the same page',
   guestRand() === Math.round(seriesRand() * GUEST_SHARE),
@@ -495,7 +542,7 @@ ok('  and a price reads as this country writes one',
   randSaid(2847));
 
 console.log(bad === 0
-  ? '\n  Three to a masterclass, sixty to the guest, said in public — and her\n'
+  ? '\n  Three to a masterclass, the terms said in public and the split kept for the agreement — and her\n'
     + '  own logo is on the page, as the file she sent and not as a drawing of it.'
   : `\n  ${bad} not right.`);
 process.exit(bad === 0 ? 0 : 1);

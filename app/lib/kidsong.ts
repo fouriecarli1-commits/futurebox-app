@@ -130,13 +130,27 @@ const choice = (list: readonly Choice[], id: string): Choice | undefined =>
  * own 402 and is passed through rather than replaced, because "ask a
  * grown-up" is better said once in one place.
  */
+/** The most a child's own words may run to. Typed or spoken, one line. */
+export const KID_WORDS_MOST = 120;
+
+/** A child's words, trimmed to one line of the length the room allows. */
+export const kidWords = (words: string | null | undefined): string =>
+  (words ?? '').replace(/\s+/g, ' ').trim().slice(0, KID_WORDS_MOST);
+
 export async function makeKidSong(
   topic: string,
   sound: string,
+  words = '',
 ): Promise<{ audio: Blob } | { says: string }> {
   const what = choice(KID_TOPICS, topic);
   const how = choice(KID_SOUNDS, sound);
-  if (!what || !how) return { says: 'Pick something to sing about, and how it should sound.' };
+  const own = kidWords(words);
+  /* A bubble OR the child's own words say what it is about; a bubble says
+     how it sounds. Carli, 12 October 2026: "daar is kinders wat kan tik".
+     The words go to /api/music exactly like a grown-up's prompt, which is
+     where `guard` reads every prompt before anything is made — the room
+     does not get a softer door for being a child's. */
+  if ((!what && !own) || !how) return { says: 'Pick something to sing about, and how it should sound.' };
 
   const token = await accessToken();
   if (!token) return { says: 'Sign in first.' };
@@ -152,7 +166,7 @@ export async function makeKidSong(
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        prompt: what.words,
+        prompt: [what?.words, own].filter(Boolean).join('. '),
         style: how.words,
         seconds: KID_SECONDS,
         /* Explicit, and the point of this file. A child wrote no words and

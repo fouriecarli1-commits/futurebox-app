@@ -111,6 +111,11 @@ baie korter: een uur, een mikrofoon, en 'n lys op 'n skerm.
 Die vorm: `docs/SANGER-UITSPRAAK.md`. Geen model word gemaak nie, niemand anders hoor die opname
 nie, en dit is 'n baie makliker ding om vir iemand te vra.
 
+**Die lys self is `docs/LEESLYS-AFRIKAANS.md`** — 175 genommerde reëls, die app se eie woorde
+eerste. Carli, 12 Oktober 2026: *"Gaan jy 'n lang teks opstel wat iemand kan lees en jy presies
+weet watter woord hoort waar?"* Nie 'n lang teks nie: 'n lys, en die spreker sê elke nommer
+hardop voor die woord, sodat die nommer in die opname self staan en niemand hoef te raai nie.
+
 **Wat om te laat lees, in hierdie orde:**
 
 1. **Die woorde wat die app self sê.** Nie 'n woordeboek nie — die app se eie woorde. `SING_RULES`

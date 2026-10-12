@@ -101,10 +101,10 @@ export async function openKids(
   owner: string,
   allowance: number,
   minutes: number | null = null,
-): Promise<boolean> {
-  if (!sane(allowance) || !saneMinutes(minutes)) return false;
+): Promise<true | string> {
+  if (!sane(allowance) || !saneMinutes(minutes)) return 'That allowance is not one the room takes.';
   const client = admin();
-  if (!client) return false;
+  if (!client) return 'The database is not configured on this server.';
   const { error } = await client
     .from('kids_mode')
     .upsert({
@@ -121,7 +121,19 @@ export async function openKids(
          running when the parent took the clock off. */
       sitting_from: minutes === null ? null : new Date().toISOString(),
     }, { onConflict: 'owner' });
-  return !error;
+  if (!error) return true;
+  /* Said in words a person can act on, because the two ways this fails in
+     practice are both "a file in supabase/ has not been run" — and "could
+     not be saved, try again" sends somebody to try again forever. 42P01 is
+     Postgres for a table that is not there; 42703 for a column that is
+     not. */
+  if (error.code === '42P01') {
+    return 'The kids room is not in the database yet: run supabase/kinders.sql and supabase/skermtyd.sql.';
+  }
+  if (error.code === '42703') {
+    return 'The kids table is missing the screen-time columns: run supabase/skermtyd.sql.';
+  }
+  return 'That could not be saved. Try again.';
 }
 
 /**

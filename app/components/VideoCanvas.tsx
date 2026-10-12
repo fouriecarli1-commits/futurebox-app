@@ -1623,7 +1623,7 @@ export default function VideoCanvas({
           type="button"
           onClick={make}
           disabled={busy || ready === false}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
           {busy

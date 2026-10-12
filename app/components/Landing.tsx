@@ -110,7 +110,7 @@ export default function Landing({
       <header className="max-w-6xl mx-auto px-6 pt-10">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center">
               <Cpu className="w-5 h-5 text-onAccent" />
             </div>
             <span className="text-xl font-extrabold tracking-tight text-white">
@@ -161,7 +161,7 @@ export default function Landing({
         <div className={beside ? 'lg:grid lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:items-center' : 'max-w-3xl'}>
           <div className="min-w-0">
           <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_60px_rgba(16,185,129,0.25)]">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-[0_0_60px_rgba(16,185,129,0.25)]">
               <Cpu className="w-7 h-7 sm:w-9 sm:h-9 md:w-14 md:h-14 text-onAccent" />
             </div>
             <p className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
@@ -190,7 +190,7 @@ export default function Landing({
             <button
               type="button"
               onClick={onStart}
-              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
+              className="px-6 py-3.5 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
             >
               {t('landing.startFree', 'Start free')}
               <ArrowRight className="w-4 h-4" />

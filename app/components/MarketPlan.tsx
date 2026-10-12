@@ -267,7 +267,7 @@ export default function MarketPlan({
           type="button"
           onClick={() => void work()}
           disabled={busy}
-          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
           {plan ? t('plan.again', 'Work it out again') : t('plan.go', 'Work out the plan')}

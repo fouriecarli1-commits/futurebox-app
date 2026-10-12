@@ -2414,7 +2414,7 @@ export default function FutureBoxHome() {
                 type="submit"
                 disabled={authBusy}
                 data-setpassword
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
+                className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
               >
                 {authBusy ? t('auth.working') : t('auth.resetSave')}
               </button>
@@ -2474,7 +2474,7 @@ export default function FutureBoxHome() {
             type="submit"
             disabled={authBusy}
             data-mfaanswer
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
+            className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
           >
             {authBusy ? t('auth.working') : t('mfa.askGo', 'Carry on')}
           </button>
@@ -2578,7 +2578,7 @@ export default function FutureBoxHome() {
                   <button
                     type="submit"
                     disabled={authBusy || code.replace(/[^0-9]/g, '').length < 6}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
+                    className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
                   >
                     {authBusy ? t('auth.working') : t('auth.verify', 'Confirm and go in')}
                   </button>
@@ -2643,7 +2643,7 @@ export default function FutureBoxHome() {
                   type="submit"
                   disabled={authBusy || (authMode === 'signup' && !agreed)}
                   data-authgo={authMode}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
+                  className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
                 >
                   {authBusy
                     ? t('auth.working')
@@ -2779,7 +2779,7 @@ export default function FutureBoxHome() {
 
       <button
         onClick={handleAiScanRefresh}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] active:translate-y-px flex-shrink-0"
+        className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-emerald-500 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] active:translate-y-px flex-shrink-0"
       >
         <RefreshCw className="w-3.5 h-3.5" />
         <span>{t('home.otherPicks', 'Show me different ones')}</span>
@@ -2816,14 +2816,14 @@ export default function FutureBoxHome() {
           quarter of every screen, on every screen. */}
       <header className="static sm:sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-zinc-800/80 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
             <Cpu className="w-5 h-5 text-onAccent font-bold" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-wider text-white flex items-center space-x-2">
               <span>FUTURE<span className="text-emerald-400">BOX</span></span>
               {userPlan !== 'free' && (
-                <span className="text-[10px] bg-gradient-to-r from-amber-400 to-amber-600 text-onAccent font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.4)]">
+                <span className="text-[10px] bg-amber-500 text-onAccent font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.4)]">
                   <Crown className="w-3 h-3" />
                   <span>PRO</span>
                 </span>
@@ -2928,7 +2928,7 @@ export default function FutureBoxHome() {
                 title={t('account.title', 'Your account')}
                 className="flex items-center space-x-2 text-xs font-semibold"
               >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-extrabold flex items-center justify-center text-[10px]">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 text-onAccent font-extrabold flex items-center justify-center text-[10px]">
                   {(artistName || user.name).charAt(0)}
                 </div>
                 <div className="hidden sm:block text-left">
@@ -2977,7 +2977,7 @@ export default function FutureBoxHome() {
           {userPlan === 'free' ? (
             <button
               onClick={() => setPricingModalOpen(true)}
-              className="min-h-[44px] hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-onAccent font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              className="min-h-[44px] hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-amber-500 hover:from-amber-400 hover:to-amber-500 text-onAccent font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
             >
               <Crown className="w-3.5 h-3.5 fill-current" />
               <span>{t('common.upgrade')} ({entryPrice.display})</span>
@@ -3018,7 +3018,7 @@ export default function FutureBoxHome() {
               The door is the screen that shows all of them. */}
           <button
             onClick={() => { setAtDoor(true); setUploadModalOpen(true); }}
-            className="min-h-[44px] flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-xs font-bold rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            className="min-h-[44px] flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-onAccent text-xs font-bold rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
           >
             <UploadCloud className="w-4 h-4" />
             <span className="hidden sm:inline">{t('common.studio')}</span>
@@ -3428,7 +3428,7 @@ export default function FutureBoxHome() {
                     {t('cubed.title', 'Cubed')}<sup className="ml-0.5 text-xs text-amber-400 font-extrabold select-none">3</sup>
                   </span>
                   <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-500/30">
-                    VIP Masterclass · 3 Klasse
+                    {t('cubed.badge', 'VIP masterclass · 3 classes')}
                   </span>
                 </span>
                 <span className="block text-xs leading-snug text-zinc-400 pt-0.5">
@@ -3884,7 +3884,7 @@ export default function FutureBoxHome() {
                       }}
                       className={`min-h-[44px] w-full py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 ${
                         featured
-                          ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-onAccent'
+                          ? 'bg-amber-500 text-onAccent'
                           : 'bg-zinc-800 text-white hover:bg-zinc-700'
                       }`}
                     >
@@ -4374,7 +4374,32 @@ export default function FutureBoxHome() {
                     );
                   };
 
-                  if (theme.layout !== 'rail') return [home, ...SURFACE_IDS.map(row)];
+                  /* The kids room, on the rail as well as on the door.
+
+                     An `<a>` to a page of its own, not a room in this list:
+                     the child's screen must not carry this rail beside it
+                     (`check:kidsafe`), but the grown-up looking for the room
+                     must find it — "Ek sien nerens die kids room nie". */
+                  const kids = (
+                    <a
+                      key="kids"
+                      href="/kids"
+                      data-railkids
+                      title={t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Two presses in there: a song, and a video of it.')}
+                      className={`min-h-[44px] flex-shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
+                        theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
+                      } border-amber-500/30 bg-amber-500/[0.08] text-zinc-300 hover:border-amber-400/60 hover:bg-amber-500/[0.14] hover:text-white`}
+                    >
+                      <Baby className="w-[18px] h-[18px] flex-shrink-0 text-amber-300" />
+                      <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
+                        <span className="block text-sm font-semibold leading-tight">
+                          {t('rail.kids', 'Kids room')}
+                        </span>
+                      </span>
+                    </a>
+                  );
+
+                  if (theme.layout !== 'rail') return [home, ...SURFACE_IDS.map(row), kids];
 
                   return (
                     <>
@@ -4392,6 +4417,8 @@ export default function FutureBoxHome() {
                         <div className="hidden md:block h-px bg-zinc-800 mx-3.5 my-4" />
                       )}
                       {standaloneSurfaces().map(row)}
+                      <div className="hidden md:block h-px bg-zinc-800 mx-3.5 my-4" />
+                      {kids}
                     </>
                   );
                 })()}
@@ -5091,7 +5118,7 @@ export default function FutureBoxHome() {
                 setUploadModalOpen(true);
                 setMadeTrack(null);
               }}
-              className="min-h-[44px] px-3 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent"
+              className="min-h-[44px] px-3 py-2 rounded-xl text-sm font-semibold bg-emerald-500 text-onAccent"
             >
               {t('video.suggestGo')}
             </button>
@@ -5251,7 +5278,7 @@ export default function FutureBoxHome() {
           
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center">
                 <Cpu className="w-4 h-4 text-onAccent font-bold" />
               </div>
               <span className="text-lg font-black text-white">FUTURE<span className="text-emerald-400">BOX</span></span>

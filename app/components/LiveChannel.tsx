@@ -1178,7 +1178,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             const first = room.posts.find(playable);
             if (first) setOpenAt(first.id);
           }}
-          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold"
+          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 text-onAccent font-bold"
         >
           <Play className="h-4 w-4" />
           {t('live.playRoom', 'Play the room')}

@@ -231,7 +231,7 @@ export default function Charts({
         <button
           type="button"
           onClick={onOpenRadar}
-          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-3 text-sm font-bold text-onAccent"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 text-sm font-bold text-onAccent"
         >
           <Radar className="h-4 w-4" />
           {t('chart.openRadar', 'Open the radar')}

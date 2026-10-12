@@ -39,7 +39,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Sparkles, Sliders, Mic, Video, Clapperboard, Smartphone, ListMusic,
   Handshake, Radio, Mic2, AudioWaveform, Megaphone, Palette, ArrowRight, Scissors,
-  Image as ImageIcon,
+  Image as ImageIcon, Baby,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { habitOf, suggest, partOfDay, type Habit } from '../lib/habits';
@@ -362,7 +362,7 @@ export default function Greeting({
             <button
               type="button"
               onClick={() => onGo(said.room)}
-              className="min-h-[44px] w-full flex-shrink-0 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2 sm:w-auto"
+              className="min-h-[44px] w-full flex-shrink-0 px-5 py-3 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 sm:w-auto"
             >
               {/* The room's own name, not "Open <name>".
 
@@ -377,6 +377,34 @@ export default function Greeting({
           </div>
         )}
       </div>
+
+      {/* ── The kids room, where it cannot be missed ─────────────────────
+
+          Carli, 12 October 2026: *"Ek sien nerens die kids room nie, waar kry
+          ek dit?"* and then *"die kids room kan nie weggesteek word nie, dit
+          moet 'n highlight wees."* It lived at `/kids` behind a line in the
+          account page and one in the footer. This is the grown-up's door —
+          the greeting is the first thing a signed-in person sees — so it is
+          here, in its own colour, above the rooms. The child never sees this
+          page; the room behind the link is the one built for them. */}
+      <a
+        href="/kids"
+        data-kidsdoorhome
+        className="group flex min-h-[44px] items-center gap-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 transition-colors hover:border-amber-400/70 hover:bg-amber-500/15"
+      >
+        <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl border border-amber-500/40 bg-amber-500/15">
+          <Baby className="h-6 w-6 text-amber-300" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-base font-extrabold leading-tight text-white">
+            {t('hello.kids', 'The kids room')}
+          </span>
+          <span className="block pt-0.5 text-xs leading-snug text-zinc-400">
+            {t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Two presses in there: a song, and a video of it.')}
+          </span>
+        </span>
+        <ArrowRight className="h-4 w-4 flex-shrink-0 text-amber-300 transition-transform group-hover:translate-x-1" />
+      </a>
 
       {/* ── Or straight to a room ────────────────────────────────────────── */}
       <div className="space-y-3">

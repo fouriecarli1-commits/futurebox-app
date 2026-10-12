@@ -26,6 +26,7 @@ import React, { useState } from 'react';
 import { Sparkles, Check, Wand2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { KID_TEMPLATES, type KidTemplate } from '../lib/kidstemplates';
+import { PAINTS, paintOf } from '../lib/kidslook';
 
 export default function KidsTemplatesPicker({
   selectedTopic,
@@ -98,6 +99,9 @@ export default function KidsTemplatesPicker({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {visibleTemplates.map((tpl) => {
           const isSelected = selectedTopic === tpl.topic && selectedSound === tpl.sound;
+          /* The tile wears its topic's own paint: the same two stops and the
+             same ink the bubble below it has, chosen against both stops. */
+          const look = paintOf(PAINTS, tpl.topic);
           return (
             <button
               key={tpl.id}
@@ -107,8 +111,8 @@ export default function KidsTemplatesPicker({
               data-kidstemplate={tpl.id}
               aria-pressed={isSelected}
               style={{
-                background: `linear-gradient(145deg, ${tpl.from}, ${tpl.to})`,
-                color: tpl.ink,
+                background: `linear-gradient(145deg, ${look.from}, ${look.to})`,
+                color: look.ink,
                 transform: isSelected ? 'scale(1.04)' : undefined,
                 boxShadow: isSelected
                   ? '0 10px 0 rgba(0,0,0,0.22), 0 0 0 4px rgba(255,255,255,0.95), 0 16px 24px -4px rgba(0,0,0,0.25)'
@@ -132,7 +136,7 @@ export default function KidsTemplatesPicker({
                   className="rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider backdrop-blur-md"
                   style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.18)',
-                    color: tpl.ink,
+                    color: look.ink,
                   }}
                 >
                   {t(tpl.badge[0], tpl.badge[1])}

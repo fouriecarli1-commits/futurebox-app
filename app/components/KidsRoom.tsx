@@ -75,8 +75,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Cake, CloudRain, Dog, Film, Guitar, Heart, Loader2, Moon, Music, Rocket, ShieldCheck,
-  Smile, Sparkles, Waves,
+  Cake, CloudRain, Dog, Film, Guitar, Heart, Loader2, Mic, Moon, Music, Rocket, ShieldCheck,
+  Smile, Sparkles, Square, Waves, X,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import KidsDoor from './KidsDoor';
@@ -84,7 +84,7 @@ import StoryShelf from './StoryShelf';
 import SongShelf from './SongShelf';
 import KidsTemplatesPicker from './KidsTemplatesPicker';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
-import { askKidVideo, makeKidSong, startKidVideo, KID_TOPICS, KID_SOUNDS } from '../lib/kidsong';
+import { askKidVideo, makeKidSong, startKidVideo, kidWords, KID_TOPICS, KID_SOUNDS, KID_WORDS_MOST } from '../lib/kidsong';
 import { stillWorthWaiting } from '../lib/jobwait';
 import { asClock, howMany, priceOf } from '../lib/kidsallowance';
 import { keepSong, MOST_SONGS } from '../lib/songkeep';
@@ -102,6 +102,30 @@ const FACES: Record<string, React.ReactNode> = {
   rock: <Guitar className="h-7 w-7" />,
   dance: <Music className="h-7 w-7" />,
 };
+
+/**
+ * The browser's own speech recogniser, or nothing.
+ *
+ * Chrome and Android have it under the old `webkit` name, Safari on an
+ * iPhone has had it since iOS 14.5, and Firefox has none — so the room asks
+ * once and draws the button only where pressing it could work. Nothing is
+ * recorded by this app: the browser listens and hands back words.
+ */
+type Recogniser = new () => {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((got: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+function recogniser(): Recogniser | null {
+  if (typeof window === 'undefined') return null;
+  const w = window as unknown as { SpeechRecognition?: Recogniser; webkitSpeechRecognition?: Recogniser };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
 
 /** Expressive playful avatars for the mascot. */
 const MASCOT_ICONS = ['👾', '🦄', '🌟', '🎸', '🐶', '🚀'] as const;
@@ -177,7 +201,7 @@ function Bubble({
 }
 
 export default function KidsRoom(): React.ReactElement {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [state, setState] = useState<KidsState | null>(null);
   /* The grown-up's page, reached on purpose rather than by going back. */
   const [atDoor, setAtDoor] = useState(false);
@@ -187,6 +211,45 @@ export default function KidsRoom(): React.ReactElement {
   const [mascot, setMascot] = useState(0);
   const [topic, setTopic] = useState('');
   const [sound, setSound] = useState('');
+  /**
+   * The child's own words, typed or spoken.
+   *
+   * Carli, 12 October 2026: *"Die kids room moet ook 'n tikboks hê, daar is
+   * kinders wat kan tik, wat oulik sal wees as dit 'n record button het
+   * sodat 'n kind kan praat en woorde so prompt."*
+   *
+   * The bubbles stay — a six-year-old presses, a nine-year-old types, and
+   * either can hold the button and talk. Speaking uses the browser's own
+   * recogniser (the Web Speech API), which costs no credits and sends no
+   * recording to a server of ours; where a browser has none, the button is
+   * not drawn and the box still works.
+   */
+  const [words, setWords] = useState('');
+  const [listening, setListening] = useState(false);
+  const [canSpeak, setCanSpeak] = useState(false);
+  const hearing = useRef<{ stop: () => void } | null>(null);
+  useEffect(() => {
+    setCanSpeak(Boolean(recogniser()));
+  }, []);
+  const speak = (): void => {
+    if (listening) { hearing.current?.stop(); return; }
+    const Heard = recogniser();
+    if (!Heard) return;
+    const ear = new Heard();
+    ear.lang = lang === 'af' ? 'af-ZA' : 'en-ZA';
+    ear.interimResults = false;
+    ear.maxAlternatives = 1;
+    ear.onresult = (got: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => {
+      const said = Array.from(got.results).map((one) => one[0]?.transcript ?? '').join(' ');
+      setWords((was) => kidWords(`${was} ${said}`));
+    };
+    ear.onerror = () => { setListening(false); setSays(t('kids.heardNothing', 'I did not hear that. Try again, a bit closer.')); };
+    ear.onend = () => { setListening(false); hearing.current = null; };
+    hearing.current = ear;
+    setSays('');
+    setListening(true);
+    try { ear.start(); } catch { setListening(false); }
+  };
   const [busy, setBusy] = useState<'' | 'song' | 'video'>('');
   const [says, setSays] = useState('');
   const [song, setSong] = useState('');
@@ -376,14 +439,14 @@ export default function KidsRoom(): React.ReactElement {
   const nearlyOver = clockLeft !== null && clockLeft <= 300;
   const videoPrice = priceOf('video');
   const songsLeft = howMany(left, 'song');
-  const canSong = Boolean(topic) && Boolean(sound) && left >= songPrice && !busy && !job;
+  const canSong = (Boolean(topic) || Boolean(kidWords(words))) && Boolean(sound) && left >= songPrice && !busy && !job;
   const canFilm = Boolean(song) && left >= videoPrice && !busy && !job;
 
   const make = async (): Promise<void> => {
     setBusy('song');
     setSays('');
     setFilm('');
-    const answer = await makeKidSong(topic, sound);
+    const answer = await makeKidSong(topic, sound, words);
     setBusy('');
     void kidsNow().then(setState);
     if ('says' in answer) { setSays(answer.says); return; }
@@ -583,10 +646,12 @@ export default function KidsRoom(): React.ReactElement {
               color: topicPaint.ink,
             }}
           >
-            {topic
-              ? t(KID_TOPICS.find((one) => one.id === topic)!.says[0],
-                KID_TOPICS.find((one) => one.id === topic)!.says[1])
-              : t('kids.something', 'something')}
+            {kidWords(words)
+              ? kidWords(words)
+              : topic
+                ? t(KID_TOPICS.find((one) => one.id === topic)!.says[0],
+                  KID_TOPICS.find((one) => one.id === topic)!.says[1])
+                : t('kids.something', 'something')}
           </span>{' '}
           {t('kids.thatSounds', 'that sounds')}{' '}
           <span
@@ -604,6 +669,61 @@ export default function KidsRoom(): React.ReactElement {
           </span>
         </p>
       </div>
+
+      {/* ── The child's own words ─────────────────────────────────────────
+          A box for the ones who can type, and a button for the ones who
+          would rather say it. What is said lands in the box, so it can be
+          read, fixed and heard back in the sentence above. Directly under
+          that sentence, because it answers it — below the fourteen template
+          tiles it was a screen and a half down on a phone. */}
+      <div
+        data-kidsown
+        className="mx-auto flex w-full max-w-md items-center gap-2 rounded-3xl border-4 border-surface-200/90 bg-surface-50/90 p-2 shadow-md"
+      >
+        <input
+          type="text"
+          data-kidstype
+          value={words}
+          maxLength={KID_WORDS_MOST}
+          disabled={Boolean(busy) || Boolean(job)}
+          onChange={(e) => setWords(e.target.value)}
+          placeholder={t('kids.typeIt', 'Or type what your song is about…')}
+          aria-label={t('kids.typeIt', 'Or type what your song is about…')}
+          className="min-h-[48px] min-w-0 flex-1 rounded-2xl border-2 border-surface-200 bg-surface-50 px-4 text-base font-bold text-surface-950 placeholder:text-surface-500 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+        />
+        {canSpeak && (
+          <button
+            type="button"
+            data-kidsspeak
+            onClick={speak}
+            disabled={Boolean(busy) || Boolean(job)}
+            aria-pressed={listening}
+            aria-label={listening ? t('kids.listening', 'Listening… press to stop') : t('kids.speak', 'Say it')}
+            className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-white shadow-md disabled:opacity-50 ${
+              listening ? 'animate-pulse bg-rose-500' : 'bg-primary-500'
+            }`}
+          >
+            {listening ? <Square className="h-5 w-5" /> : <Mic className="h-6 w-6" />}
+          </button>
+        )}
+        {words && (
+          <button
+            type="button"
+            data-kidsclearwords
+            onClick={() => setWords('')}
+            disabled={Boolean(busy) || Boolean(job)}
+            aria-label={t('kids.clearWords', 'Clear the words')}
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2 border-surface-200 bg-surface-50 text-surface-700 disabled:opacity-50"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+      {listening && (
+        <p data-kidslistening className="text-center text-sm font-bold text-rose-600">
+          {t('kids.listening', 'Listening… press to stop')}
+        </p>
+      )}
 
       {/* ── 4b. Ready-made Adventure Templates ────────────────────────────
           Carli, 11 October 2026: *"Die kids room het ook baie templates

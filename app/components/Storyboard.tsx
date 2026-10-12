@@ -1142,7 +1142,7 @@ export default function Storyboard({
             type="button"
             onClick={() => void cut()}
             disabled={Boolean(cutting) || short > 0 || !canStitch()}
-            className="w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full min-h-[44px] py-3 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {cutting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Film className="w-4 h-4" />}
             {cutting

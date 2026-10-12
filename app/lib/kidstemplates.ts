@@ -27,9 +27,6 @@ export interface KidTemplate {
   readonly sub: readonly [string, string];
   readonly badge: readonly [string, string];
   readonly icon: string;
-  readonly from: string;
-  readonly to: string;
-  readonly ink: string;
   readonly veoPrompt: string;
 }
 
@@ -43,9 +40,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplSpaceSub', 'Zoom past planets with rock guitars'],
     badge: ['kids.tplSpaceBadge', 'Galactic Rock'],
     icon: '🚀',
-    from: '#7b61ff',
-    to: '#4b2fd6',
-    ink: '#fffaf2',
     veoPrompt: 'A colourful cartoon rocket ship zooming through starry nebulae and ringed planets.',
   },
   {
@@ -57,9 +51,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplDogSub', 'Catch balls and dance with your best dog friend'],
     badge: ['kids.tplDogBadge', 'Sunny Pop'],
     icon: '🐶',
-    from: '#ffb020',
-    to: '#ff7a18',
-    ink: '#1a1206',
     veoPrompt: 'A playful golden puppy wagging its tail and jumping joyfully in a sunny backyard.',
   },
   {
@@ -71,9 +62,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplDinoSub', 'Stomp big heavy feet to high energy dance beats'],
     badge: ['kids.tplDinoBadge', 'Dino Dance'],
     icon: '🦕',
-    from: '#53d86a',
-    to: '#1f9e46',
-    ink: '#1a1206',
     veoPrompt: 'A friendly smiling baby dinosaur doing funny dance moves with party balloons.',
   },
   {
@@ -85,9 +73,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplBirthdaySub', 'Blow out candles with confetti and singing'],
     badge: ['kids.tplBirthdayBadge', 'Party Time'],
     icon: '🎂',
-    from: '#ff5fd2',
-    to: '#c42bb0',
-    ink: '#fffaf2',
     veoPrompt: 'A glowing birthday cake with sparkling candles, colourful confetti and party hats.',
   },
   {
@@ -99,9 +84,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplSeaSub', 'Dive under turquoise waves with funny little fish'],
     badge: ['kids.tplSeaBadge', 'Ocean Waves'],
     icon: '🐬',
-    from: '#2fd0e0',
-    to: '#0e9bb8',
-    ink: '#1a1206',
     veoPrompt: 'Two friendly dolphins leaping over sunny ocean waves with sparkling splashes.',
   },
   {
@@ -113,9 +95,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplBedtimeSub', 'Soft warm lullaby for cozy peaceful dreams'],
     badge: ['kids.tplBedtimeBadge', 'Sweet Dreams'],
     icon: '🌙',
-    from: '#5a63b8',
-    to: '#2f3578',
-    ink: '#fffaf2',
     veoPrompt: 'A cozy crescent moon gently rocking a sleeping teddy bear among stars.',
   },
   {
@@ -127,9 +106,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplFarmSub', 'Cows and chickens singing on the red barn porch'],
     badge: ['kids.tplFarmBadge', 'Farm Country'],
     icon: '🚜',
-    from: '#d6b24a',
-    to: '#a67c1f',
-    ink: '#1a1206',
     veoPrompt: 'A sunny farm yard with a red tractor and friendly barnyard animals swaying to music.',
   },
   {
@@ -141,9 +117,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplBraveSub', 'Stand tall and strong with your superhero cape on'],
     badge: ['kids.tplBraveBadge', 'Hero Anthem'],
     icon: '🦸',
-    from: '#ff8a3d',
-    to: '#e2521a',
-    ink: '#fffaf2',
     veoPrompt: 'A cheerful little superhero flying with a cape over cartoon clouds in blue skies.',
   },
   {
@@ -155,9 +128,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplRainSub', 'Jump in muddy puddles with squeaky yellow boots'],
     badge: ['kids.tplRainBadge', 'Silly Splash'],
     icon: '☔',
-    from: '#58a6ff',
-    to: '#2b6fe0',
-    ink: '#fffaf2',
     veoPrompt: 'Bright yellow rainboots splashing cheerfully in puddles under a colourful umbrella.',
   },
   {
@@ -169,9 +139,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplColoursSub', 'Splash every bright colour in a cheerful dance party'],
     badge: ['kids.tplColoursBadge', 'Vivid Dance'],
     icon: '🌈',
-    from: '#ff4d6d',
-    to: '#d61f45',
-    ink: '#fffaf2',
     veoPrompt: 'An explosion of rainbow paint droplets dancing playfully to rhythm across the screen.',
   },
   {
@@ -183,9 +150,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplCountSub', 'March in step from one to ten with steady snare drums'],
     badge: ['kids.tplCountBadge', 'Parade March'],
     icon: '🥁',
-    from: '#43c6ac',
-    to: '#1a8f85',
-    ink: '#1a1206',
     veoPrompt: 'A marching parade of wooden number blocks holding little flags and playing drums.',
   },
   {
@@ -197,9 +161,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplCatSub', 'Sneak around and pounce on a yarn ball all night'],
     badge: ['kids.tplCatBadge', 'Playful Pop'],
     icon: '🐱',
-    from: '#ff6fa5',
-    to: '#ff3d7f',
-    ink: '#fffaf2',
     veoPrompt: 'A cute fluffy cartoon kitten batting a rolling yarn ball and doing silly pounces.',
   },
   {
@@ -211,9 +172,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplFriendsSub', 'Silly sound effects and tuba toons with best friends'],
     badge: ['kids.tplFriendsBadge', 'Silly Giggle'],
     icon: '🎪',
-    from: '#ff9e7d',
-    to: '#e85d3a',
-    ink: '#1a1206',
     veoPrompt: 'Two cheerful cartoon friends wearing clown hats balancing balls and laughing.',
   },
   {
@@ -225,9 +183,6 @@ export const KID_TEMPLATES: readonly KidTemplate[] = [
     sub: ['kids.tplSchoolSub', 'Grab your satchel and pencil and make brand new friends'],
     badge: ['kids.tplSchoolBadge', 'School Cheer'],
     icon: '🎒',
-    from: '#45b7ff',
-    to: '#1178cc',
-    ink: '#fffaf2',
     veoPrompt: 'A bright cartoon classroom with an open backpack smiling and welcoming new pupils.',
   },
 ] as const;

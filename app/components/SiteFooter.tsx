@@ -46,11 +46,23 @@
  */
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useLang } from '../lib/i18n';
+
+/**
+ * The routes a child is handed the phone on. No footer there: Help, Terms,
+ * Who we are and a compliance badge are nine links out of a room that was
+ * built to have two presses in it. Carli, 12 October 2026, with a photograph
+ * of the kids room's foot: *"Hierdie onderste goed moet nie in die kids room
+ * wees nie."* The story room is the same screen for the same child.
+ */
+export const NO_FOOTER = ['/kids', '/story'] as const;
 
 export function SiteFooter() {
   const { t } = useLang();
+  const path = usePathname() ?? '';
   const year = new Date().getFullYear();
+  if (NO_FOOTER.some((one) => path === one || path.startsWith(`${one}/`))) return null;
 
   return (
     <footer data-chrome className="mt-24 border-t border-zinc-800/80">
@@ -118,22 +130,12 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <a
-          href="https://vibefy-web-lyart.vercel.app/a/futurebox-app-afed88"
-          rel="noopener"
-          target="_blank"
-          style={{ display: 'inline-block', padding: 32 }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://vibefy-web-lyart.vercel.app/badge/lNwQYUNS5Nrxq-ENYlfa7w.svg?size=128"
-            width={128}
-            height={128}
-            alt="Verified by VibefyCode — futurebox-app, Rubric v1.0.0, assessed 2026-08-31. Scope-limited assessment, not a security guarantee."
-            loading="lazy"
-            decoding="async"
-          />
-        </a>
+        {/* The "Verified by VibefyCode" badge that hung here since 31 August is
+            gone: its host answers nothing any more, so every visitor got a
+            broken-image glyph and a sentence of alt text at the foot of every
+            page — Carli's photograph of the kids room, 12 October 2026, shows
+            it. A badge that does not load is a claim nobody can check. Put it
+            back the day the host serves it again. */}
       </div>
     </footer>
   );

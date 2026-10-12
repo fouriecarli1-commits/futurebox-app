@@ -196,13 +196,21 @@ ok('the story row says whether the CHILD can reach it, not whether a file exists
       + ' the page is quoting a price for something that cannot be pressed'
       + ' from where the parent is standing');
 
-/* And the room it is NOT reachable from is the one that cannot have a story
-   typed into it, which is why. Asserted so that "ready: false" stays a
-   consequence of a rule rather than a line somebody forgot to update. */
-ok('  and the child\'s room is still the one with nothing to type into',
-  !/<textarea|<input(?![^>]*type="checkbox")/.test(withoutComments(kidsRoom)),
-  'the kids room grew somewhere to type, so the reason story mode is not in'
-  + ' it no longer holds — and `check:kinderkamer` should have caught that'
+/* And the room it is NOT reachable from is the one where a story cannot be
+   typed, which is why. Since 12 October 2026 the child\'s room has ONE line
+   to type into ("daar is kinders wat kan tik") and it goes to the song only;
+   a story is still the grown-up\'s to make. Asserted so that "ready: false"
+   stays a consequence of a rule rather than a line somebody forgot to
+   update. */
+ok('  and the child\'s room has no way to type a story',
+  (() => {
+    const plain = withoutComments(kidsRoom);
+    return !/<textarea/.test(plain)
+      && (plain.match(/<input(?![^>]*type="(checkbox|radio|range|color)")/g) ?? []).length === 1
+      && !/story[^\n]*words|words[^\n]*story/i.test(plain);
+  })(),
+  'the kids room grew a way to type a story, so the reason story mode is not'
+  + ' in it no longer holds — and `check:kinderkamer` should have caught that'
   + ' first');
 
 /* ── One rule, not a list ────────────────────────────────────────────────

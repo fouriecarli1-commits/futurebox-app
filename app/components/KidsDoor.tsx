@@ -44,7 +44,7 @@ import {
   ALLOWANCE_STEPS, KID_PRICES, MINUTE_STEPS, asClock, howMany, type KidThing,
 } from '../lib/kidsallowance';
 import {
-  endKids, endSitting, giveAllowance, kidsNow, sitAgain, type KidsState,
+  endKids, endSitting, failed, giveAllowance, kidsNow, sitAgain, type KidsFail, type KidsState,
 } from '../lib/kidsdoor';
 import StoryShelf from './StoryShelf';
 import SongShelf from './SongShelf';
@@ -78,6 +78,25 @@ export default function KidsDoor({
    * another allowance does not have to set the clock again.
    */
   const [wantMinutes, setWantMinutes] = useState<number | null>(null);
+  /**
+   * Why the last press did not take, in a sentence, or nothing.
+   *
+   * Carli, 12 October 2026: *"Wel die kids room gaan nie verder as die
+   * parental page nie."* It did not, because every failure came back as
+   * `null` and `null` drew nothing. A door that does nothing when pressed is
+   * indistinguishable from a door that is broken, so every way a press can
+   * fail now ends in a sentence under the buttons.
+   */
+  const [fail, setFail] = useState('');
+  const say = (why: KidsFail): string => {
+    if (why.fail === 'signedOut') {
+      return t('kids.signedOut', 'Sign in first — the allowance belongs to your account. Go back to the studio, sign in, and come back here.');
+    }
+    if (why.fail === 'network') {
+      return t('kids.noNet', 'That did not reach the server. Check the connection and try again.');
+    }
+    return why.fail;
+  };
 
   useEffect(() => {
     void kidsNow().then((now) => {
@@ -88,9 +107,17 @@ export default function KidsDoor({
 
   const give = async (allowance: number): Promise<void> => {
     setBusy(true);
+    setFail('');
     const next = await giveAllowance(allowance, wantMinutes);
     setBusy(false);
-    if (!next) return;
+    if (failed(next)) { setFail(say(next)); return; }
+    /* Saved and then read back as shut: the row went in but the room could
+       not be read, which is a database half set up. Silence here was the
+       second way the door "did not go further". */
+    if (!next.open) {
+      setFail(t('kids.notOpened', 'The allowance was saved but the room did not open. Try again; if it keeps happening, tell us on the help page.'));
+      return;
+    }
     setState(next);
     onIn?.(next);
   };
@@ -98,16 +125,20 @@ export default function KidsDoor({
   /** Another sitting, or this one ended early. Neither touches the money. */
   const clockIt = async (sitting: boolean): Promise<void> => {
     setBusy(true);
+    setFail('');
     const next = sitting ? await sitAgain() : await endSitting();
     setBusy(false);
-    if (next) setState(next);
+    if (failed(next)) { setFail(say(next)); return; }
+    setState(next);
   };
 
   const end = async (): Promise<void> => {
     setBusy(true);
+    setFail('');
     const next = await endKids();
     setBusy(false);
-    if (next) setState(next);
+    if (failed(next)) { setFail(say(next)); return; }
+    setState(next);
   };
 
   const songPrice = KID_PRICES.find((one) => one.id === 'song')?.credits ?? 0;
@@ -125,6 +156,28 @@ export default function KidsDoor({
           )}
         </p>
       </div>
+
+      {/* ── Nobody signed in ─────────────────────────────────────────────
+          The sign-in screen links here, so a grown-up can arrive with no
+          account behind them. Then the allowance buttons are a lie: every
+          press goes nowhere. One step instead, saying what to do. */}
+      {state?.signedIn === false && (
+        <div
+          data-kidssignin
+          role="alert"
+          className="space-y-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4"
+        >
+          <p className="text-sm leading-relaxed text-zinc-100">
+            {t('kids.signedOut', 'Sign in first — the allowance belongs to your account. Go back to the studio, sign in, and come back here.')}
+          </p>
+          <a
+            href="/"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-amber-500/60 bg-amber-500/15 px-4 text-sm font-bold text-amber-200 hover:bg-amber-500/25"
+          >
+            {t('kids.signIn', 'Go and sign in')}
+          </a>
+        </div>
+      )}
 
       {/* ── The framework ────────────────────────────────────────────────
           Her second message, and the part that makes the number mean
@@ -268,6 +321,15 @@ export default function KidsDoor({
         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500">
           {t('kids.howMuch', 'How much may they spend?')}
         </h3>
+        {fail && (
+          <p
+            data-kidsfail
+            role="alert"
+            className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm leading-relaxed text-rose-100"
+          >
+            {fail}
+          </p>
+        )}
         <div className="grid gap-2 sm:grid-cols-2">
           {ALLOWANCE_STEPS.map((step) => {
             const chosen = state?.open && state.allowance === step;
@@ -275,7 +337,9 @@ export default function KidsDoor({
               <button
                 key={step}
                 type="button"
-                disabled={busy}
+                /* Nobody signed in: the sign-in step above is the only
+                   press that can lead anywhere. */
+                disabled={busy || state?.signedIn === false}
                 onClick={() => void give(step)}
                 aria-pressed={Boolean(chosen)}
                 data-kidsstep={step}

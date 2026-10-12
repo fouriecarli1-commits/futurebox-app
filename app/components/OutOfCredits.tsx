@@ -157,7 +157,7 @@ export default function OutOfCredits({
               <button
                 type="button"
                 onClick={onPlans}
-                className="w-full min-h-[44px] rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-3 font-bold text-onAccent"
+                className="w-full min-h-[44px] rounded-2xl bg-emerald-500 px-4 py-3 font-bold text-onAccent"
               >
                 {t('credits.seePlans', 'See the plans')}
               </button>

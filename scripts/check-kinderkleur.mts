@@ -30,7 +30,7 @@ import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { KID_SOUNDS, KID_TOPICS } from '../app/lib/kidsong.ts';
 import {
-  MASCOT_SAYS, PAINTS, SIZES, SOUND_PAINTS, brightnessOf, inkOn, paintOf,
+  MASCOT_SAYS, PAINTS, SIZES, SOUND_PAINTS, contrastOf, inkOn, paintOf,
   sizeAt, spin,
 } from '../app/lib/kidslook.ts';
 
@@ -77,7 +77,7 @@ ok('  and no two of them are the same colour',
 ok('the words on every bubble can be read',
   (() => {
     const hard = [...Object.entries(PAINTS), ...Object.entries(SOUND_PAINTS)]
-      .filter(([, p]) => Math.abs(brightnessOf(p.from) - brightnessOf(p.ink)) < 0.4)
+      .filter(([, p]) => Math.min(contrastOf(p.from, p.ink), contrastOf(p.to, p.ink)) < 4.5)
       .map(([id]) => id);
     if (hard.length) console.log(`         too close: ${hard.join(', ')}`);
     return hard.length === 0;
@@ -87,9 +87,17 @@ ok('the words on every bubble can be read',
 
 ok('  and the ink is chosen from the colour rather than typed',
   [...Object.values(PAINTS), ...Object.values(SOUND_PAINTS)]
-    .every((p) => p.ink === inkOn(p.from)),
+    .every((p) => p.ink === inkOn(p.from, p.to)),
   'an ink typed beside a colour is an ink that stays when somebody changes'
   + ' the colour');
+
+ok('  and the template tiles wear the same paints, not colours typed beside them',
+  (() => {
+    const tiles = withoutComments(readFileSync('app/lib/kidstemplates.ts', 'utf8'));
+    const picker = withoutComments(readFileSync('app/components/KidsTemplatesPicker.tsx', 'utf8'));
+    return !/\b(from|to|ink):\s*'#/.test(tiles) && /paintOf\(PAINTS, tpl\.topic\)/.test(picker);
+  })(),
+  'fourteen tiles with their own typed colours were fourteen places for a white-on-orange to come back');
 
 ok('  and a choice that does not exist still draws something',
   (() => {
@@ -137,11 +145,28 @@ ok('the room has a palette of its own',
   'near-black with one green in it is right for somebody editing a film at'
   + ' night and wrong for a six-year-old');
 
-ok('  and it reaches the footer the layout renders',
+ok('  and it reaches the ground the layout renders',
   /body:has\(\[data-kidsroom\]\)/.test(css),
-  'the site footer is a SIBLING of the page, so a selector on the room alone'
+  'the page wrapper is a SIBLING of the room, so a selector on the room alone'
   + ' ends a sunlit room in a near-black band. That was learned on the Cubed'
   + ' room and is not going to be learned twice');
+
+ok('  and it is green, not orange',
+  (() => {
+    const block = css.slice(css.indexOf('[data-kidsroom],'), css.indexOf('/* ── The ground the room sits on'));
+    const m = block.match(/--fb-surface-500:\s*(\d+)\s+(\d+)\s+(\d+)/);
+    if (!m) return false;
+    const [r, g, b] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    return g > r + 60 && g > b + 30;
+  })(),
+  '"die tema moet groen wees eerder as oranje" — the surface ramp\u2019s middle stop has to be green');
+
+ok('  and the site footer is not drawn under a child\u2019s screen',
+  (() => {
+    const foot = withoutComments(readFileSync('app/components/SiteFooter.tsx', 'utf8'));
+    return /usePathname/.test(foot) && /'\/kids'/.test(foot) && /'\/story'/.test(foot) && /return null/.test(foot);
+  })(),
+  '"Hierdie onderste goed moet nie in die kids room wees nie" — nine links out of a room with two presses');
 
 /* ── 5. What was taken from Google's version, and what was not ────────── */
 
@@ -184,14 +209,18 @@ ok('  and no compliance claim is drawn on the wall as decoration',
 
 /* ── 6. Brighter is not looser ────────────────────────────────────────── */
 
-ok('there is still nothing to type in this room',
-  !/<input(?![^>]*type="(checkbox|radio|range|color)")/.test(room)
-  && !/<textarea/.test(room),
-  'a text box is a child typing anything into a prompt that reaches a music'
-  + ' model. The colour changed; that rule did not');
+/* This held "nothing to type in this room" until Carli, 12 October 2026:
+   "daar is kinders wat kan tik." One box, then, and only one — and what is
+   typed goes to /api/music where `guard` reads every prompt, capped to one
+   line (`check:kinderliedjie` holds both). The rule is narrower, not gone. */
+ok('there is one box to type in, and nothing else',
+  (room.match(/<input(?![^>]*type="(checkbox|radio|range|color)")/g) ?? []).length === 1
+  && /data-kidstype/.test(room) && !/<textarea/.test(room),
+  'one line for what the song is about; a second box or a textarea is a'
+  + ' prompt editor, and this is not that room');
 
 console.log(bad === 0
   ? '\n  Twenty-three choices, twenty-three colours, every label readable on the\n'
-    + '  one under it — and still nothing in the room to type into.'
+    + '  one under it — one green room, one box to type in, and no footer under it.'
   : `\n  ${bad} not right.`);
 process.exit(bad === 0 ? 0 : 1);

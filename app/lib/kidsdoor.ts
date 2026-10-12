@@ -28,34 +28,81 @@ export interface KidsState {
    * page a child could change the phone's clock to extend.
    */
   readonly secondsLeft?: number | null;
+  /**
+   * False when there is nobody signed in to belong to. The door draws a
+   * sign-in step instead of allowance buttons, because an allowance pressed
+   * with no account behind it goes nowhere — see `KidsFail` below.
+   */
+  readonly signedIn?: boolean;
 }
+
+/**
+ * Why a press did not take.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────────
+ *
+ * Carli, 12 October 2026: *"Wel die kids room gaan nie verder as die parental
+ * page nie."* Every call here used to answer `null` for four different
+ * things — signed out, a network blip, a 4xx with a sentence in it, a 503 —
+ * and the door swallowed the null and did nothing. A parent pressing "20
+ * credits" and watching nothing happen is exactly what she saw: the door was
+ * reached from the sign-in screen, there was no session, and the silence
+ * was the whole report.
+ *
+ * `signedOut` and `network` are named so the door can say them in the
+ * reader's language; anything else is the server's own sentence, which the
+ * route already writes for a person.
+ */
+export interface KidsFail {
+  readonly fail: 'signedOut' | 'network' | string;
+}
+
+/** Narrow an answer to the failure it is. */
+export const failed = (answer: KidsState | KidsFail): answer is KidsFail =>
+  'fail' in answer;
 
 const shut: KidsState = { open: false };
 
 async function ask(
   how: 'GET' | 'POST' | 'PUT' | 'DELETE',
   body?: unknown,
-): Promise<KidsState | null> {
+): Promise<KidsState | KidsFail> {
+  /* Sent even with no token. The server answers 401 for nobody, and that
+     answer is the signed-out signal — the page does not decide for itself.
+     Deciding here was the first version, and it meant a probe with the
+     route stubbed could never get past the door, so the door's own
+     behaviour on a good answer was unmeasured. */
   const token = await accessToken();
-  /* No token is not an error worth a message: the page behind this is only
-     reachable signed in, and a session that has just expired should send
-     somebody to sign in rather than show them a failure about credits. */
-  if (!token) return null;
-  const answer = await fetch('/api/kids', {
-    method: how,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-  });
-  if (!answer.ok) return null;
-  return (await answer.json().catch(() => null)) as KidsState | null;
+  let answer: Response;
+  try {
+    answer = await fetch('/api/kids', {
+      method: how,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+  } catch {
+    return { fail: 'network' };
+  }
+  const said = (await answer.json().catch(() => null)) as
+    | (KidsState & { message?: string })
+    | null;
+  if (answer.status === 401) return { fail: 'signedOut' };
+  if (!answer.ok) return { fail: said?.message || `The server answered ${answer.status}.` };
+  if (!said) return { fail: 'network' };
+  return said;
 }
 
-/** Where the allowance stands. `shut` when nothing is set. */
+/**
+ * Where the allowance stands. `shut` when nothing is set, and `shut` with
+ * `signedIn: false` when there is nobody to ask about.
+ */
 export async function kidsNow(): Promise<KidsState> {
-  return (await ask('GET')) ?? shut;
+  const now = await ask('GET');
+  if (!failed(now)) return now;
+  return now.fail === 'signedOut' ? { ...shut, signedIn: false } : shut;
 }
 
 /**
@@ -68,21 +115,21 @@ export async function kidsNow(): Promise<KidsState> {
 export async function giveAllowance(
   allowance: number,
   minutes: number | null = null,
-): Promise<KidsState | null> {
+): Promise<KidsState | KidsFail> {
   return ask('POST', { allowance, minutes });
 }
 
 /** Another sitting, without touching the allowance. The grown-up's press. */
-export async function sitAgain(): Promise<KidsState | null> {
+export async function sitAgain(): Promise<KidsState | KidsFail> {
   return ask('PUT', { sit: true });
 }
 
 /** End this sitting now, keeping the room and its allowance. */
-export async function endSitting(): Promise<KidsState | null> {
+export async function endSitting(): Promise<KidsState | KidsFail> {
   return ask('PUT', { sit: false });
 }
 
 /** Shut the room. The child's spending cap goes with it. */
-export async function endKids(): Promise<KidsState | null> {
+export async function endKids(): Promise<KidsState | KidsFail> {
   return ask('DELETE');
 }

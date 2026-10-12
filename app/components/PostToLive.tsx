@@ -203,7 +203,7 @@ export default function PostToLive({
               <button
                 type="button"
                 onClick={() => void post(true)}
-                className="min-h-[44px] flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-3 font-bold text-onAccent"
+                className="min-h-[44px] flex-1 rounded-xl bg-emerald-500 px-4 py-3 font-bold text-onAccent"
               >
                 {t('buildon.yes', 'Yes, others may')}
               </button>

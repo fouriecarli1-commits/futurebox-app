@@ -3092,7 +3092,7 @@ export default function ProBooth({
               type="button"
               onClick={() => void makePart()}
               disabled={making}
-              className="min-h-[44px] w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-3 font-bold text-onAccent flex items-center justify-center gap-2 disabled:opacity-50"
+              className="min-h-[44px] w-full rounded-xl bg-emerald-500 px-4 py-3 font-bold text-onAccent flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {making ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music2 className="w-4 h-4" />}
               {making ? t('part.making', 'Generating\u2026') : t('part.make', 'Generate it')}

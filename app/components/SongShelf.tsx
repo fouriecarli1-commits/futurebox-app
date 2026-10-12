@@ -100,7 +100,7 @@ export default function SongShelf({
   if (!shelf.length) {
     return (
       <p
-        className="rounded-2xl border border-dashed border-zinc-700 px-4 py-4 text-center text-sm text-zinc-500"
+        className="rounded-2xl border border-dashed border-zinc-700 px-4 py-4 text-center text-sm text-zinc-600"
         data-songshelfempty
       >
         {t('songshelf.none', 'No songs kept yet. Make one, then press Keep it.')}
