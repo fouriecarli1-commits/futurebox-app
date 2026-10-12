@@ -7207,8 +7207,10 @@ dictionary and `check:hoorwoord` holds that no route does either — because an 
 off sounds a bit off, while a phoneme rule that is wrong makes the voice say a DIFFERENT WORD with
 total confidence.
 
-Still to build: the booth itself — record, hear it back, keep it. The library and the model
-candidate are in; the room is not.
+The booth is built: `/uitspraak`, an owner's tool behind the `POST_SECRET` key — record the word, write
+down the sounds, hear it read back in the voice, keep it, push the dictionary. (This line said "still to
+build" until 12 October, and I repeated it to her that morning; it was wrong by then.) The reading list
+for the Afrikaans session is `docs/LEESLYS-AFRIKAANS.md`.
 
 **And those languages are the ones where rules actually work.** isiZulu, isiXhosa, Sesotho,
 Setswana and Afrikaans are written almost exactly as they sound: a letter is a sound, nearly every
@@ -7258,6 +7260,10 @@ on the bill at R109,99; the amp catalogue; the voice room's history; thirty dead
 dead modules out with a check that keeps them out; Antigravity's templates, canvas sizes and
 export tiers merged without the facades; the film picker repainted for contrast; the guide at
 `/guide`; the Play Store feature graphic and first screenshots.
+
+**Where to record the words:** `/uitspraak` on the live site, with the `POST_SECRET` key from Vercel
+typed into its key box. Say the word, press *Write down the sounds*, listen, *Keep it*, and *Push* when a
+batch is done. The Afrikaans list to read is `docs/LEESLYS-AFRIKAANS.md`.
 
 **And from what she sent on 12 October while at work:** the kids room is a highlight on the
 greeting, a row on the rail and a block on the guide, and its door says why when an allowance
