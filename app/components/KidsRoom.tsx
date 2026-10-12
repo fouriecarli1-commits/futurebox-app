@@ -83,6 +83,7 @@ import KidsDoor from './KidsDoor';
 import StoryShelf from './StoryShelf';
 import SongShelf from './SongShelf';
 import KidsTemplatesPicker from './KidsTemplatesPicker';
+import KidsStoryboard from './KidsStoryboard';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
 import { askKidVideo, makeKidSong, startKidVideo, kidWords, KID_TOPICS, KID_SOUNDS, KID_WORDS_MOST } from '../lib/kidsong';
 import { stillWorthWaiting } from '../lib/jobwait';
@@ -225,6 +226,8 @@ export default function KidsRoom(): React.ReactElement {
    * not drawn and the box still works.
    */
   const [words, setWords] = useState('');
+  const [activeTab, setActiveTab] = useState<'songs' | 'stories' | 'games' | 'shelf'>('songs');
+  const [stars, setStars] = useState(7);
   const [listening, setListening] = useState(false);
   const [canSpeak, setCanSpeak] = useState(false);
   const hearing = useRef<{ stop: () => void } | null>(null);
@@ -520,6 +523,63 @@ export default function KidsRoom(): React.ReactElement {
     setMascot((n) => (n + 3) % MASCOT_SAYS.length);
   };
 
+  const playSpark = (kind: string): void => {
+    try {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+      if (kind === 'rocket') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(700, now + 0.35);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (kind === 'sparkle') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.1);
+        osc.frequency.setValueAtTime(783.99, now + 0.2);
+        osc.frequency.setValueAtTime(1046.5, now + 0.3);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      } else if (kind === 'drum') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.2);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (kind === 'bell') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.25);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      }
+    } catch {
+      // Audio context muted
+    }
+  };
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-5 text-ink" data-kidsroom>
       {/* ── 2. Top bar: What is left in songs & clock, calm for the parent ─── */}
@@ -533,12 +593,6 @@ export default function KidsRoom(): React.ReactElement {
               ? `${songsLeft} ${songsLeft === 1 ? t('kids.songLeft', 'song left') : t('kids.songsLeft', 'songs left')}`
               : t('kids.noneLeft', 'All used up — ask a grown-up')}
           </span>
-          {/* ── And how long is left, beside how much ──────────────
-              Only where there is a clock. A countdown that reads 0:00 and
-              then the room vanishing is a better five minutes than a room
-              that just stops, which is why it turns amber under five — a
-              child who can see it coming puts the last song on the shelf
-              instead of losing it mid-press. */}
           {clockLeft !== null && (
             <span
               data-kidsclockleft={clockLeft}
@@ -560,37 +614,176 @@ export default function KidsRoom(): React.ReactElement {
         </button>
       </div>
 
-      {/* ── The stories a grown-up has made ───────────────────────────────
- 
-          Carli, 9 October 2026: *"Gaan aan met die shelf van stories in die
-          kids kamer."*
- 
-          Above the song, because a story is the thing to reach for when
-          somebody has already made one and the song is what to do when they
-          have not. Nothing in here spends: the pictures and the readings
-          were paid for when the book was made, so a child can hear the same
-          story all afternoon and the allowance is untouched.
- 
-          The bin is not drawn for a child — `grownUp` is false here. Losing
-          a story somebody made them is the one press in this room that
-          cannot be undone, and the grown-up's own page has the same shelf
-          with it. */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-black text-surface-950">
-          {t('kids.stories', 'Stories')}
-        </h2>
-        <StoryShelf />
+      {/* ── Mode Navigation Bar: Clean, fun, chunky tabs on mobile & desktop ─── */}
+      <div className="grid grid-cols-4 gap-2 rounded-2xl bg-surface-100/90 p-1.5 border-2 border-surface-200 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setActiveTab('songs')}
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl py-2 px-1 text-xs font-black transition-all ${
+            activeTab === 'songs'
+              ? 'bg-primary-500 text-white shadow-md scale-102'
+              : 'text-surface-700 hover:bg-surface-200/60'
+          }`}
+        >
+          <span className="text-base">🎵</span>
+          <span className="truncate">{t('kids.tabSongs', 'Song Studio')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('stories')}
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl py-2 px-1 text-xs font-black transition-all ${
+            activeTab === 'stories'
+              ? 'bg-amber-500 text-white shadow-md scale-102'
+              : 'text-surface-700 hover:bg-surface-200/60'
+          }`}
+        >
+          <span className="text-base">📖</span>
+          <span className="truncate">{t('kids.tabStories', 'Story Studio')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('games')}
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl py-2 px-1 text-xs font-black transition-all ${
+            activeTab === 'games'
+              ? 'bg-purple-500 text-white shadow-md scale-102'
+              : 'text-surface-700 hover:bg-surface-200/60'
+          }`}
+        >
+          <span className="text-base">🎲</span>
+          <span className="truncate">{t('kids.tabGames', 'Games')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('shelf')}
+          className={`flex flex-col sm:flex-row items-center justify-center gap-1 rounded-xl py-2 px-1 text-xs font-black transition-all ${
+            activeTab === 'shelf'
+              ? 'bg-sky-500 text-white shadow-md scale-102'
+              : 'text-surface-700 hover:bg-surface-200/60'
+          }`}
+        >
+          <span className="text-base">📚</span>
+          <span className="truncate">{t('kids.tabShelf', 'My Shelf')}</span>
+        </button>
       </div>
 
-      {/* ── The songs this child has kept ────────────────────────────────
-          Under the stories and above the making, because a child who has
-          made songs before comes back for those first. */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-black text-surface-950">
-          {t('kids.mySongs', 'My songs')}
-        </h2>
-        <SongShelf again={shelfAgain} />
-      </div>
+      {/* ── Active Tab Views ──────────────────────────────────────────────── */}
+      {activeTab === 'stories' && (
+        <KidsStoryboard
+          onDone={() => setActiveTab('songs')}
+          onStoryKept={() => {
+            setShelfAgain((n) => n + 1);
+            setStars((s) => s + 3);
+            setActiveTab('shelf');
+          }}
+        />
+      )}
+
+      {activeTab === 'games' && (
+        <div className="space-y-5 rounded-3xl border-4 border-purple-200/90 bg-surface-50/95 p-5 sm:p-6 shadow-xl backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3 border-b-2 border-surface-200 pb-3">
+            <div>
+              <h3 className="text-lg font-black text-purple-950 flex items-center gap-2">
+                <span>🎲</span> {t('kids.tabGames', 'Games')}
+              </h3>
+              <p className="text-xs font-bold text-surface-600">
+                {t('kids.gameSparksSub', 'Tap to make cheerful animal and space sounds!')}
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-black text-amber-900 shadow-sm">
+              <span>⭐</span>
+              <span>{stars} {t('kids.gameStars', 'Stars collected')}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-2.5">
+            {[
+              { id: 'rocket', emoji: '🚀', label: 'Rocket Zoom', tone: 'from-blue-400 to-indigo-600' },
+              { id: 'sparkle', emoji: '🦄', label: 'Magic Fairy', tone: 'from-pink-400 to-rose-500' },
+              { id: 'drum', emoji: '🥁', label: 'Drum Roll', tone: 'from-amber-400 to-orange-500' },
+              { id: 'bell', emoji: '🔔', label: 'Magic Bell', tone: 'from-emerald-400 to-teal-500' },
+              { id: 'dog', emoji: '🐶', label: 'Puppy Bark', tone: 'from-yellow-400 to-amber-500' },
+              { id: 'alien', emoji: '👾', label: 'Alien Beep', tone: 'from-purple-400 to-violet-600' },
+            ].map((spark) => (
+              <button
+                key={spark.id}
+                type="button"
+                onClick={() => {
+                  playSpark(spark.id);
+                  setStars((s) => s + 1);
+                }}
+                className={`flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${spark.tone} p-4 text-white shadow-md hover:scale-105 active:scale-95 transition-transform`}
+              >
+                <span className="text-3xl">{spark.emoji}</span>
+                <span className="text-xs font-black">{spark.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                wheel();
+                setActiveTab('songs');
+              }}
+              className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-500 text-white font-black text-xs sm:text-sm shadow-md hover:bg-primary-600 transition-colors"
+            >
+              <span>🎵</span>
+              <span>{t('kids.mysterySong', 'Mystery Song Spin')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('stories')}
+              className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 text-white font-black text-xs sm:text-sm shadow-md hover:bg-amber-600 transition-colors"
+            >
+              <span>📖</span>
+              <span>{t('kids.mysteryStory', 'Mystery Story Spin')}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'shelf' && (
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <h2 className="text-lg font-black text-surface-950">
+              {t('kids.stories', 'Stories')}
+            </h2>
+            <StoryShelf />
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-lg font-black text-surface-950">
+              {t('kids.mySongs', 'My songs')}
+            </h2>
+            <SongShelf again={shelfAgain} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'songs' && (
+        <>
+          {/* Quick link banner to story studio */}
+          <div className="flex items-center justify-between gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50/95 p-3 sm:p-3.5 shadow-sm">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-2xl sm:text-3xl">✨</span>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm font-black text-amber-950 truncate">
+                  {t('kids.storyboardTitle', 'Magic Storyboard Studio')}
+                </p>
+                <p className="text-[11px] font-bold text-amber-800 truncate">
+                  {t('kids.storyboardSub', 'Choose your storyline & visuals to make your storybook!')}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('stories')}
+              className="flex-shrink-0 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-black text-white shadow-md hover:bg-amber-600 transition-colors"
+            >
+              {t('kids.buildStoryBtn', 'Build a Story')}
+            </button>
+          </div>
 
       {/* ── 3. The mascot and the wheel ──────────────────────────────────
  
@@ -866,6 +1059,8 @@ export default function KidsRoom(): React.ReactElement {
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video src={film} controls className="w-full rounded-2xl" data-kidsfilmout />
         </div>
+      )}
+        </>
       )}
     </div>
   );
