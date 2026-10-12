@@ -309,9 +309,14 @@ user interaction.
       `/.well-known/assetlinks.json` shows them
 - [ ] The attorney has answered the Play Billing question
 - [ ] A business contact email, not a personal one
-- [ ] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
-      3840 pixels on the long side. Four or five is better. **Yours** — they
-      have to be real screens of the app.
+- [~] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
+      3840 pixels on the long side. A first set of five real screens at
+      1080 x 1920 is in `docs/play/shots/`, taken 12 October 2026 off the
+      built app on a signed-up test account: the welcome, the studio, Make a
+      song, the video desk and the advert desk. **Retake them the day the
+      look is final** — Antigravity is still restyling rooms — and take
+      them with something made in the room rather than empty, which these
+      are not yet.
 - [x] Feature graphic: 1024 x 500 — `docs/play/feature-graphic-1024x500.png`,
       drawn 12 October 2026 from the brand mark and `APP_LINE`. Redraw it the
       day either changes.
