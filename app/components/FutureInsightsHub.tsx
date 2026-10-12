@@ -92,7 +92,7 @@ export default function FutureInsightsHub({
           <div className="flex flex-wrap items-center gap-2 pb-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-950/50 px-3 py-1 text-xs font-black text-emerald-300">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              {t('insight.adFreeBadge', '100% Ad-Free • Advertensievry')}
+              {t('insight.adFreeBadge', 'Zero Ads • Clean Ground')}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-950/40 px-3 py-1 text-xs font-bold text-teal-300">
               <Star className="h-3.5 w-3.5 text-teal-400 fill-teal-400/30" />
@@ -274,7 +274,7 @@ export default function FutureInsightsHub({
                           title={t('insight.openInPodcastStudio', 'Open in Podcast Studio')}
                         >
                           <Mic className="h-3.5 w-3.5 text-teal-400" />
-                          <span className="hidden sm:inline">{t('insight.openInPodcastStudio', 'Studio')}</span>
+                          <span className="hidden sm:inline">{t('insight.openInPodcastStudioShort', 'Studio')}</span>
                         </button>
                       )}
                       <button
@@ -314,7 +314,7 @@ export default function FutureInsightsHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 sm:p-6 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/85 p-4 sm:p-6 backdrop-blur-md overflow-y-auto"
           /* Below the tab bar, so the strip stays reachable — the rule every
              overlay under z-50 keeps; `check:belowtabs` holds it by name. */
           style={{ paddingBottom: barClearance(16) }}
@@ -330,7 +330,7 @@ export default function FutureInsightsHub({
                   {readingArticle.sourceName}
                 </span>
                 <span className="rounded-full border border-emerald-500/20 bg-emerald-950/30 px-3 py-1 text-xs font-bold text-emerald-400">
-                  {t('insight.noAdsGuaranteed', '100% Ad-Free')}
+                  {t('insight.noAdsGuaranteed', 'Zero Ads Guaranteed')}
                 </span>
               </div>
               <button

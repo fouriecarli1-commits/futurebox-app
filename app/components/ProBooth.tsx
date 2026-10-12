@@ -3010,7 +3010,7 @@ export default function ProBooth({
             {/* Grouped the way a mixer's channel list is grouped. Chords and harmonic
                 progressions sit at the front alongside drums, bass and keys. */}
             <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2 space-y-3">
-            {(['chords', 'drums', 'bass', 'keys', 'guitars', 'winds', 'texture'] as Family[]).map((family) => (
+            {(['drums', 'bass', 'keys', 'guitars', 'winds', 'texture'] as Family[]).map((family) => (
               <div key={family} className="space-y-1.5">
                 <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">
                   {t(`part.family.${family}`, family)}

@@ -357,12 +357,12 @@ export default function Landing({
               <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
                 {t(
                   'landing.roomInsightsNote',
-                  '100% ad-free visionary articles and podcasts rated 96%–99% on source credibility across AI, vibecoding, tech, and business.',
+                  '100% zero-ad visionary articles and podcasts rated 96%–99% on source credibility across AI, vibecoding, tech, and business.',
                 )}
               </p>
             </div>
             <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-              <span>{t('landing.adFreeRating', 'Ad-Free · 96%–99% Credibility')}</span>
+              <span>{t('landing.adFreeRating', 'Zero-Ad · 96%–99% Credibility')}</span>
             </div>
           </div>
         </div>

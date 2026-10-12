@@ -1295,7 +1295,7 @@ export default function MakeMusic({
                   : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
               }`}
             >
-              ✍️ {t('make.freeWrite', 'Free Lyrics')}
+              ✍️ {t('make.freeWrite', 'Custom Lyrics')}
             </button>
           </div>
 
