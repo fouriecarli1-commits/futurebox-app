@@ -40,8 +40,12 @@ export const SITE_HOST = process.env.NEXT_PUBLIC_SITE_HOST || 'futurebox-app.ver
  *
  * The ground, not the accent. Starting the app should not be a green bar
  * followed by a white page.
+ *
+ * `#0f1412` is `--fb-page` of the Emerald Studio preset, the default since
+ * 12 October 2026 (it was `#fafaf9`, Clean's, before). `check:launchmark`
+ * holds this and the manifest to the page the CSS actually paints.
  */
-export const BAR_COLOUR = '#fafaf9';
+export const BAR_COLOUR = '#0f1412';
 
 /** Where somebody writes when something needs a person. */
 /* There is deliberately no exported contact address.

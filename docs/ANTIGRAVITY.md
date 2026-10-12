@@ -71,6 +71,14 @@ en dan net as niemand anders dit uitgecheck het nie. Nooit op `main` of
 **byna swart**. Dieselfde geld vir `bg-white/70`, `bg-white/5`, en elke ander
 deursigtigheid daarvan.
 
+**Die verstek-tema is sedert 12 Oktober 2026 donker: "Emerald Studio"**
+(`surface: 'forest'`, smarag as aksent, siaan as tweede). Dit is die kamer
+waarvoor jou "Dark Luxury Cyber-Emerald" geteken is, en dit is die rede
+hoekom jou donker klasse nou donker lyk. Maar die reël hierbo staan steeds:
+"Clean" (byna wit) is een druk weg in die Styl-ateljee, en elke klas wat jy
+skryf word ook dáár geverf. Skryf dus steeds in tokens, nooit in hekse nie —
+`check:theme` keer `bg-[#06140d]` en sy maats.
+
 Dit is nie teorie nie: presies hierdie fout is vier keer gemaak, een keer drie
 dae ná dit die eerste keer neergeskryf is.
 

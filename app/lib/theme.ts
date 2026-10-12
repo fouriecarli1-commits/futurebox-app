@@ -63,7 +63,7 @@ export interface Theme {
 // -----------------------------------------------------------------------------
 
 export const SURFACES: readonly SurfaceFamily[] = [
-  { id: 'midnight', name: 'Midnight', mode: 'dark', hue: 240, sat: 6, blurb: 'Near-black, faint blue. The default.' },
+  { id: 'midnight', name: 'Midnight', mode: 'dark', hue: 240, sat: 6, blurb: 'Near-black, faint blue.' },
   { id: 'carbon', name: 'Carbon', mode: 'dark', hue: 0, sat: 0, blurb: 'True neutral grey, no colour cast at all.' },
   { id: 'ink', name: 'Deep Ink', mode: 'dark', hue: 220, sat: 22, blurb: 'Navy-leaning, like a studio at night.' },
   { id: 'ember', name: 'Ember', mode: 'dark', hue: 20, sat: 12, blurb: 'Warm dark. Easier on the eyes late.' },
@@ -163,16 +163,29 @@ export interface Preset extends Theme {
 }
 
 export const PRESETS: readonly Preset[] = [
-  /* The default, and the reason it is light.
-     A creative tool spends most of its screen on the person's own work — their
-     words, their artwork, their waveform. A near-black room makes every one of
-     those things glow, which is flattering for one card and exhausting for a
-     page of them, and it forces every panel to earn separation with a border,
-     a gradient or a shadow. Cumulatively that is what "busy" is made of.
-     Near-white separates panels with nothing but space, so the loudest thing on
-     screen is whatever the person just made. One accent, and amber kept back
-     for the few places where money is involved. */
-  { id: 'clean', name: 'Clean', blurb: 'Near-white, one accent, nothing shouting. The default.', surface: 'paper', primary: 'emerald', secondary: 'slate', highlight: 'amber', tertiary: 'slate', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
+  /* The default, and why it changed on 12 October 2026.
+
+     From 21 September the default was Clean, the near-white one below, on
+     the reasoning in its own note: a creative tool spends its screen on the
+     person's work, and a pale room separates panels with nothing but space.
+     That reasoning was mine. On 12 October Carli had Antigravity redo the
+     whole look — "Dark Luxury Cyber-Emerald", in its words: deep green
+     grounds, glass, glow — and asked for all of it. Every class it wrote
+     goes through the theme engine, so under a light default its dark
+     grounds came out pale and the design was invisible everywhere but the
+     rooms with a fixed palette. Her words, the same evening: *"Ek is baie
+     opgewonde vir die verandering, net om te sien jy vat nie die nuwe
+     designs nie."* The default is the room that design was drawn for.
+
+     Green-tinted dark rather than near-black, so the ground itself carries
+     the brand; emerald as the one accent; cyan for the second so the neon
+     lines in the booths read. Clean stays one press away in the studio. */
+  { id: 'emerald', name: 'Emerald Studio', blurb: 'Deep green, glass and glow. The default.', surface: 'forest', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
+  /* Near-white separates panels with nothing but space, so the loudest thing
+     on screen is whatever the person just made. One accent, and amber kept
+     back for the few places where money is involved. The default from 21
+     September to 12 October 2026. */
+  { id: 'clean', name: 'Clean', blurb: 'Near-white, one accent, nothing shouting.', surface: 'paper', primary: 'emerald', secondary: 'slate', highlight: 'amber', tertiary: 'slate', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
   { id: 'futurebox', name: 'Midnight', blurb: 'The old house style. Near-black.', surface: 'midnight', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
   { id: 'studio', name: 'Studio Dark', blurb: 'Neutral grey, one accent. Nothing shouts.', surface: 'carbon', primary: 'slate', secondary: 'sky', highlight: 'amber', tertiary: 'slate', radius: 'soft', density: 'compact', font: 'grotesk', layout: 'rail', motion: 'full' },
   { id: 'neon', name: 'Neon Club', blurb: 'Loud. For a dance channel.', surface: 'plum', primary: 'fuchsia', secondary: 'cyan', highlight: 'lime', tertiary: 'violet', radius: 'pill', density: 'comfortable', font: 'geometric', layout: 'top', motion: 'full' },
