@@ -77,5 +77,5 @@ export function noteKeyRefused(): void {
  * `Boolean(process.env.ANTHROPIC_API_KEY)`.
  */
 export function copilotAvailable(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY) && !refused;
+  return Boolean(process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || (process.env.ANTHROPIC_API_KEY && !refused));
 }

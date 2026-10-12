@@ -2000,6 +2000,16 @@ export default function PostStudio({
       }
     }
 
+    if (tpl.previewSvg) {
+      const img = new Image();
+      img.onload = () => {
+        setWhole(img);
+        setPicture(img);
+        setCrop(MIDDLE);
+      };
+      img.src = tpl.previewSvg;
+    }
+
     const headlineText = lang === 'af' ? tpl.nameAf : tpl.nameEn;
     const subText = tpl.sampleSubtext || (lang === 'af' ? tpl.subAf : tpl.subEn);
     const newWords: Words[] = [
@@ -5048,10 +5058,10 @@ export default function PostStudio({
             type="button"
             onClick={() => setShowTemplatesModal(true)}
             title={t('stpl.openTemplates', 'Templates & Starter Packs')}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-500/10 px-3 text-xs font-bold text-purple-200 hover:brightness-110 active:scale-95 transition-all"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-950/40 px-3 text-xs font-bold text-purple-200 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] active:scale-95 transition-all"
           >
             <LayoutTemplate className="h-4 w-4 text-purple-400" />
-            <span className="hidden sm:inline">{t('stpl.templates', 'Templates')}</span>
+            <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
           </button>
 
           {/* Canvas Size */}
@@ -5059,10 +5069,10 @@ export default function PostStudio({
             type="button"
             onClick={() => setShowSizeModal(true)}
             title={t('size.customOrStandard', 'Standard & Custom Sizes')}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-xs font-bold text-zinc-300 hover:bg-zinc-850 hover:text-white active:scale-95 transition-all"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 text-xs font-bold text-zinc-300 hover:border-zinc-500 hover:text-white active:scale-95 transition-all"
           >
             <Maximize2 className="h-3.5 w-3.5 text-teal-400" />
-            <span className="hidden sm:inline">{size.width}×{size.height}</span>
+            <span>{size.name || `${size.width}×${size.height}`}</span>
           </button>
 
           {/* ── The copilot, as a button ─────────────────────────────

@@ -24,6 +24,7 @@ import { inOrder, saidIn } from '../lib/blog';
 import { useLang } from '../lib/i18n';
 import HereNow from './HereNow';
 import Charts from './Charts';
+import FutureInsightsHub from './FutureInsightsHub';
 
 export default function Spotlight({
   onGo,
@@ -43,7 +44,7 @@ export default function Spotlight({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-3xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
+      <section className="relative overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-b from-emerald-950/25 via-zinc-900/80 to-zinc-950/90 p-8 md:p-12 shadow-[0_0_40px_rgba(16,185,129,0.08)]">
         <div className="max-w-4xl space-y-6">
           <HereNow />
           <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-[1.05]">
@@ -156,6 +157,9 @@ export default function Spotlight({
           on it, which is what brings them back. Shut to start with, so four
           bars are four lines rather than four screens. */}
       <Charts onOpenRadar={onOpenRadar} onOpenLive={onOpenLive} />
+
+      {/* ── Future Insights & Ad-Free Curated Knowledge ─────────────── */}
+      <FutureInsightsHub onOpenStudio={() => onGo('make')} />
 
       {/* ── How it works ────────────────────────────────────
 

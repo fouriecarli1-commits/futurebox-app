@@ -100,11 +100,17 @@ function laneList(raw: unknown): LaneNow[] {
   }).filter((lane) => lane.id);
 }
 
+import { addressOf, configured as googleConfigured } from '@/app/lib/server/google';
+
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('mixdesk', request, LIMITS)) {
     return Response.json({ error: 'rate_limited', message: 'Too many at once. Try again in a moment.' }, { status: 429 });
   }
-  if (!process.env.ANTHROPIC_API_KEY) {
+
+  const hasGoogle = Boolean(process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || googleConfigured());
+  const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
+
+  if (!hasGoogle && !hasAnthropic) {
     return Response.json({ error: 'no_key', message: 'The copilot is not switched on.' }, { status: 503 });
   }
 
@@ -139,43 +145,104 @@ export async function POST(request: Request): Promise<Response> {
     `They say: ${question}`,
   ].join('\n');
 
-  const client = new Anthropic();
-  try {
-    const response = await client.messages.parse({
-      model: 'claude-opus-5',
-      max_tokens: 4000,
-      system: cachedSystem(SYSTEM),
-      thinking: { type: 'adaptive' },
-      output_config: { effort: 'low', format: zodOutputFormat(AnswerSchema) },
-      messages: [{ role: 'user' as const, content: desk }],
-    });
-    await notecache('mixdesk', response.usage);
+  /* ── 1. Google Gemini 2.5 Flash (Google Workspace & Vertex AI) ────── */
+  if (hasGoogle) {
+    try {
+      const key = process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || '';
+      const endpoint = addressOf('gemini-2.5-flash', 'generateContent');
+      const googleRes = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(key ? { 'x-goog-api-key': key } : {}),
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: `${SYSTEM}\n\n${desk}\n\nRespond with valid JSON matching:\n{\n  "reply": "string (in the language of the request)",\n  "moves": [\n    { "laneId": "string", "gain": number | null, "pan": number | null, "fxOn": string | null, "fxOff": string | null, "why": "string" }\n  ]\n}`,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
 
-    if (response.stop_reason === 'refusal') {
-      return Response.json({ reply: 'I cannot help with that one.', moves: [] }, { status: 200 });
+      if (googleRes.ok) {
+        const data = (await googleRes.json().catch(() => null)) as {
+          candidates?: { content?: { parts?: { text?: string }[] } }[];
+        } | null;
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          const raw = JSON.parse(text);
+          const parsed = AnswerSchema.safeParse(raw);
+          if (parsed.success) {
+            const moves = planMix(
+              (parsed.data.moves ?? []).map((one) => ({
+                laneId: one.laneId,
+                gain: one.gain ?? undefined,
+                pan: one.pan ?? undefined,
+                fxOn: one.fxOn ?? undefined,
+                fxOff: one.fxOff ?? undefined,
+                why: one.why,
+              })),
+              lanes,
+            );
+            return Response.json({ reply: parsed.data.reply, moves });
+          }
+        }
+      }
+    } catch {
+      /* Fall through to Anthropic if Google call fails and Anthropic is present */
     }
-    const parsed = response.parsed_output;
-    if (!parsed) {
-      return Response.json({ error: 'unparsed', message: 'That reply came back mangled.' }, { status: 502 });
-    }
-
-    /* The schema asks for the ranges and a model is not a contract, so
-       `planMix` applies them. See the note at the top of `lib/mixplan.ts`. */
-    const moves = planMix(
-      (parsed.moves ?? []).map((one) => ({
-        laneId: one.laneId,
-        gain: one.gain ?? undefined,
-        pan: one.pan ?? undefined,
-        fxOn: one.fxOn ?? undefined,
-        fxOff: one.fxOff ?? undefined,
-        why: one.why,
-      })),
-      lanes,
-    );
-    return Response.json({ reply: parsed.reply, moves });
-  } catch (error) {
-    return aiFault(error, 'The copilot could not be reached.');
   }
+
+  /* ── 2. Fallback to Anthropic Claude Opus if configured ─────────── */
+  if (hasAnthropic) {
+    const client = new Anthropic();
+    try {
+      const response = await client.messages.parse({
+        model: 'claude-opus-5',
+        max_tokens: 4000,
+        system: cachedSystem(SYSTEM),
+        thinking: { type: 'adaptive' },
+        output_config: { effort: 'low', format: zodOutputFormat(AnswerSchema) },
+        messages: [{ role: 'user' as const, content: desk }],
+      });
+      await notecache('mixdesk', response.usage);
+
+      if (response.stop_reason === 'refusal') {
+        return Response.json({ reply: 'I cannot help with that one.', moves: [] }, { status: 200 });
+      }
+      const parsed = response.parsed_output;
+      if (!parsed) {
+        return Response.json({ error: 'unparsed', message: 'That reply came back mangled.' }, { status: 502 });
+      }
+
+      const moves = planMix(
+        (parsed.moves ?? []).map((one) => ({
+          laneId: one.laneId,
+          gain: one.gain ?? undefined,
+          pan: one.pan ?? undefined,
+          fxOn: one.fxOn ?? undefined,
+          fxOff: one.fxOff ?? undefined,
+          why: one.why,
+        })),
+        lanes,
+      );
+      return Response.json({ reply: parsed.reply, moves });
+    } catch (error) {
+      return aiFault(error, 'The copilot could not be reached.');
+    }
+  }
+
+  return Response.json({ error: 'no_key', message: 'The copilot could not be reached.' }, { status: 503 });
 }
 
 export async function GET(): Promise<Response> {

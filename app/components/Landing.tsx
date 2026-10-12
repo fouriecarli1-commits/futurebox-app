@@ -19,7 +19,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Check, Cpu } from 'lucide-react';
+import { ArrowRight, Check, Cpu, Music2, Palette, Sparkles, Video } from 'lucide-react';
 import WelcomeVideo from './WelcomeVideo';
 import { hasWelcomeVideo } from '../lib/welcomevideo';
 import {
@@ -267,6 +267,104 @@ export default function Landing({
               </span>
             </span>
           ))}
+        </div>
+      </section>
+
+      {/* ── Creative Studio Suite Showcase ──────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-6 py-16 border-t border-zinc-800/70">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-10">
+          <div>
+            <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+              {t('landing.suiteTag', 'Creative Studio Suite')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight pt-1">
+              {t('landing.suiteTitle', 'Engineered for the Next Creative Era')}
+            </h2>
+          </div>
+          <p className="text-sm text-zinc-400 max-w-md">
+            {t(
+              'landing.suiteSub',
+              'FutureBox connects world-class generative intelligence with dedicated workstation studios — built exclusively on Google DeepMind and Vertex AI models.',
+            )}
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Photo & Artwork Studio */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+            <div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+                <Palette className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-black text-white">{t('landing.roomPhoto', 'Post & Photo Studio')}</h3>
+              <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
+                {t(
+                  'landing.roomPhotoNote',
+                  'Instant vector artwork templates, layered graphics canvas, rich typographic inspector, and multi-format release exports.',
+                )}
+              </p>
+            </div>
+            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <span>{t('landing.geminiReady', 'Google Gemini Vision')}</span>
+            </div>
+          </div>
+
+          {/* Card 2: Video Desk & Teleprompter */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+            <div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+                <Video className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-black text-white">{t('landing.roomVideo', 'Cinema Video Desk')}</h3>
+              <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
+                {t(
+                  'landing.roomVideoNote',
+                  '9:16 reels and 16:9 widescreen scenes directed by Google Veo with cinematic camera movements, prompts, and auto-scroll prompters.',
+                )}
+              </p>
+            </div>
+            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <span>{t('landing.veoReady', 'Google Veo Generative Engine')}</span>
+            </div>
+          </div>
+
+          {/* Card 3: ProBooth Audio Workstation */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+            <div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+                <Music2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-black text-white">{t('landing.roomBooth', 'ProBooth Multi-Track')}</h3>
+              <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
+                {t(
+                  'landing.roomBoothNote',
+                  'Full session lanes, Google Lyria AI neural chord progressions and instrument generation, plus Google Gemini Flash mixing engineer.',
+                )}
+              </p>
+            </div>
+            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <span>{t('landing.lyriaReady', 'Google Lyria 48kHz Neural Audio')}</span>
+            </div>
+          </div>
+
+          {/* Card 4: Future Insights & Spotlight */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+            <div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-black text-white">{t('landing.roomInsights', 'Future Insights & Podcasts')}</h3>
+              <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
+                {t(
+                  'landing.roomInsightsNote',
+                  '100% ad-free visionary articles and podcasts rated 96%–99% on source credibility across AI, vibecoding, tech, and business.',
+                )}
+              </p>
+            </div>
+            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <span>{t('landing.adFreeRating', 'Ad-Free · 96%–99% Credibility')}</span>
+            </div>
+          </div>
         </div>
       </section>
 

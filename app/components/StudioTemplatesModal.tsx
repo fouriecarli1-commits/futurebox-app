@@ -25,7 +25,8 @@ import React, { useState, useMemo } from 'react';
 import {
   Search, Mic, X, Sparkles, Layout, Monitor, Smartphone, Film,
   Image as ImageIcon, Check, ChevronRight, ArrowLeft, Video,
-  FileText, Globe, Table, Share2, CreditCard,
+  FileText, Globe, Table, Share2, CreditCard, Mail, BookOpen, Coffee,
+  Grid, Circle, Square,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
@@ -102,6 +103,23 @@ export default function StudioTemplatesModal({
         return <Share2 className={cls} />;
       case 'credit-card':
         return <CreditCard className={cls} />;
+      case 'mail':
+        return <Mail className={cls} />;
+      case 'sparkles':
+        return <Sparkles className={cls} />;
+      case 'book':
+        return <BookOpen className={cls} />;
+      case 'coffee':
+        return <Coffee className={cls} />;
+      case 'grid':
+        return <Grid className={cls} />;
+      case 'circle':
+        return <Circle className={cls} />;
+      case 'square':
+        return <Square className={cls} />;
+      case 'file-text':
+      case 'file':
+        return <FileText className={cls} />;
       default:
         return <Layout className={cls} />;
     }
@@ -331,6 +349,191 @@ export default function StudioTemplatesModal({
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'presentation').map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => {
+                        onSelectTemplate(tpl);
+                        onClose();
+                      }}
+                      className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
+                    >
+                      <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
+                        <img
+                          src={tpl.previewSvg}
+                          alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <h4 className="text-xs font-bold text-zinc-100 group-hover:text-amber-300">
+                          {lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400">
+                          {lang === 'af' ? tpl.subAf : tpl.subEn}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Posters & Flyers */}
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
+                  {t('stpl.postersFlyers', 'Posters & Flyers')}
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {STARTER_TEMPLATES.filter((t) => t.category === 'poster' || t.category === 'flyer').map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => {
+                        onSelectTemplate(tpl);
+                        onClose();
+                      }}
+                      className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
+                    >
+                      <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
+                        <img
+                          src={tpl.previewSvg}
+                          alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <h4 className="text-xs font-bold text-zinc-100 group-hover:text-amber-300">
+                          {lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400">
+                          {lang === 'af' ? tpl.subAf : tpl.subEn}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Branding, Business Cards & Resumes */}
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
+                  {t('stpl.brandingBusiness', 'Branding, Business Cards & Resumes')}
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {STARTER_TEMPLATES.filter((t) => t.category === 'logo' || t.category === 'business_card' || t.category === 'resume').map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => {
+                        onSelectTemplate(tpl);
+                        onClose();
+                      }}
+                      className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
+                    >
+                      <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
+                        <img
+                          src={tpl.previewSvg}
+                          alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <h4 className="text-xs font-bold text-zinc-100 group-hover:text-amber-300">
+                          {lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400">
+                          {lang === 'af' ? tpl.subAf : tpl.subEn}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social Media & Stories */}
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
+                  {t('stpl.socialStories', 'Social Media Posts & Stories')}
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {STARTER_TEMPLATES.filter((t) => t.category === 'ig_post' || t.category === 'ig_story' || t.category === 'facebook_post').map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => {
+                        onSelectTemplate(tpl);
+                        onClose();
+                      }}
+                      className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
+                    >
+                      <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
+                        <img
+                          src={tpl.previewSvg}
+                          alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <h4 className="text-xs font-bold text-zinc-100 group-hover:text-amber-300">
+                          {lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400">
+                          {lang === 'af' ? tpl.subAf : tpl.subEn}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cinematic Video Creations */}
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
+                  {t('stpl.videoCinematic', 'Cinematic Video Creations')}
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {STARTER_TEMPLATES.filter((t) => t.category === 'landscape_video' || t.category === 'mobile_video').map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => {
+                        onSelectTemplate(tpl);
+                        onClose();
+                      }}
+                      className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
+                    >
+                      <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a data: URI drawn on the device; next/image has nothing to fetch or optimise */}
+                        <img
+                          src={tpl.previewSvg}
+                          alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <h4 className="text-xs font-bold text-zinc-100 group-hover:text-amber-300">
+                          {lang === 'af' ? tpl.nameAf : tpl.nameEn}
+                        </h4>
+                        <p className="text-[11px] text-zinc-400">
+                          {lang === 'af' ? tpl.subAf : tpl.subEn}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Web, Editorial, Menus & Sheets */}
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
+                  {t('stpl.publishingWeb', 'Web, Editorial, Menus & Sheets')}
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {STARTER_TEMPLATES.filter((t) => t.category === 'website' || t.category === 'menu' || t.category === 'sheet' || t.category === 'brochure' || t.category === 'doc' || t.category === 'email' || t.category === 'photo_collage' || t.category === 'invitation').map((tpl) => (
                     <button
                       key={tpl.id}
                       type="button"

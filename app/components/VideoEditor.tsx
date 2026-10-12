@@ -6732,15 +6732,15 @@ async function smallerFrame(url: string): Promise<string> {
               <button
                 type="button"
                 onClick={() => setShowStudioTemplatesModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 px-3 py-2 text-xs font-semibold text-purple-200 hover:bg-purple-500/20 active:scale-95 transition-all"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-950/40 px-3 py-2 text-xs font-bold text-purple-200 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] active:scale-95 transition-all"
               >
                 <LayoutTemplate className="h-4 w-4 text-purple-400" />
-                <span>{t('stpl.openExplorer', 'Explore Templates...')}</span>
+                <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setShowCanvasSizeModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-500/10 px-3 py-2 text-xs font-semibold text-teal-200 hover:bg-teal-500/20 active:scale-95 transition-all"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-950/40 px-3 py-2 text-xs font-bold text-teal-200 hover:border-teal-400 hover:shadow-[0_0_15px_rgba(20,184,166,0.2)] active:scale-95 transition-all"
               >
                 <Maximize2 className="h-4 w-4 text-teal-400" />
                 <span>{t('size.openCustom', 'All Standard & Custom Sizes...')}</span>
@@ -7279,6 +7279,19 @@ async function smallerFrame(url: string): Promise<string> {
               title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
               shape: tpl.width > tpl.height ? 'wide' : tpl.height > tpl.width ? 'tall' : 'square',
             }));
+            if (tpl.isVideo) {
+              const prompt = tpl.id === 'tpl_village_video'
+                ? (lang === 'af' ? 'Kinematiese 4K hommeltuig-skoot van ’n pragtige vallei en bergdorpie, sagte sonlig, ultra-helder' : 'Cinematic 4K drone shot of a scenic valley mountain village, golden hour light, ultra-detailed')
+                : tpl.id === 'tpl_nature_video'
+                ? (lang === 'af' ? 'Diep dennewoud met mis en sagte sonstrale tussen hoë bome deur, 4K film' : 'Deep evergreen pine forest with gentle mist and sunbeams breaking through high canopies, 4K film')
+                : tpl.id === 'tpl_cyber_video'
+                ? (lang === 'af' ? 'Futuristiese kuberstad-nagvlug met neon ligte en glinsterende wolkekrabbers, 4K film' : 'Futuristic cyberpunk night flight with neon light trails and towering skyscrapers, 4K film')
+                : tpl.id === 'tpl_workout_reel'
+                ? (lang === 'af' ? 'Dinamiese hoë-energie fiksheidsoefening met vinnige kamerabeweging en lewendige beligting' : 'High-energy athletic workout with rapid cinematic camera pans and intense neon gym lighting')
+                : (lang === 'af' ? 'Reisavontuur deur Kaapstad se strate en kuse, lewendige kleure, 4K' : 'Travel exploration through scenic Cape Town coastal roads and vibrant culture, 4K cinematic');
+              setShotWords(prompt);
+              setBench('folder');
+            }
             setShowStudioTemplatesModal(false);
           }}
         />

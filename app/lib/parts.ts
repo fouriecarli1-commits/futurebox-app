@@ -35,7 +35,7 @@
  */
 
 /** What can be asked for. Grouped the way a mixer's channel list is grouped. */
-export type Family = 'drums' | 'bass' | 'keys' | 'guitars' | 'winds' | 'texture';
+export type Family = 'drums' | 'bass' | 'keys' | 'guitars' | 'winds' | 'texture' | 'chords';
 
 export interface Instrument {
   readonly id: string;
@@ -94,6 +94,15 @@ export const INSTRUMENTS: readonly Instrument[] = [
   { id: 'ambient', family: 'texture', name: 'part.ambient', english: 'Ambient bed', style: 'ambient texture, evolving, no rhythm' },
   { id: 'riser', family: 'texture', name: 'part.riser', english: 'Riser', style: 'rising noise sweep building to a peak, no drums' },
   { id: 'vinyl', family: 'texture', name: 'part.vinyl', english: 'Vinyl and room', style: 'vinyl crackle and quiet room tone, no music' },
+
+  /* Chords and harmonic progressions. Synthesized by Google Lyria directly
+     in the key and tempo of the current session. */
+  { id: 'chords_rhodes', family: 'chords', name: 'part.chords_rhodes', english: 'Neo-Soul Rhodes Chords', style: 'warm Rhodes electric piano chord progression, lush 7th and 9th chords, soft tremolo, neo-soul jazz harmony, dry' },
+  { id: 'chords_piano', family: 'chords', name: 'part.chords_piano', english: 'Cinematic Piano Chords', style: 'grand piano emotional chord progression, rich voicing, gentle dynamics, cinematic chords' },
+  { id: 'chords_acoustic', family: 'chords', name: 'part.chords_acoustic', english: 'Acoustic Guitar Chords', style: 'acoustic guitar rhythm chord progression, steel string, clean strumming, warm harmonic flow' },
+  { id: 'chords_synth', family: 'chords', name: 'part.chords_synth', english: 'Analog Synth Chords', style: 'warm analog synthesizer sustained chord changes, polyphonic, lush filter, vintage chorus' },
+  { id: 'chords_strings', family: 'chords', name: 'part.chords_strings', english: 'Orchestral String Harmony', style: 'orchestral string section lush chord progression, legato violins and cellos, emotive harmonic swell' },
+  { id: 'chords_ambient', family: 'chords', name: 'part.chords_ambient', english: 'Ambient Shimmer Swells', style: 'ambient guitar swells and harmonic chord bed, ethereal reverb, lush peaceful chords' },
 ];
 
 /** How many bars may be asked for at once. */

@@ -192,6 +192,7 @@ const KNOWN: readonly string[] = [
      cutting room. */
   'app/components/CanvasSizeModal.tsx',
   'app/components/StudioTemplatesModal.tsx',
+  'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
   'app/components/OutOfCredits.tsx',
   /* The post studio, 6 October 2026. Written down rather than counted, so

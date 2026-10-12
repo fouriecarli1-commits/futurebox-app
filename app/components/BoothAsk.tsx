@@ -97,6 +97,12 @@ export default function BoothAsk({
 
   return (
     <div className="space-y-3 px-4 pb-4">
+      {/* Google Gemini Flash mixing intelligence badge */}
+      <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300">
+        <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="truncate">{t('dock.aiGoogle', 'Google Gemini 2.5 Flash Mixing Intelligence')}</span>
+      </div>
+
       {/* What it can see, before it is asked anything. */}
       <p className="pt-1 text-[11px] leading-snug" style={{ color: INK_DIM }}>
         {t(
@@ -105,13 +111,41 @@ export default function BoothAsk({
         )}
       </p>
 
+      {/* Quick AI Suggestions Chips */}
+      <div className="space-y-1.5 pt-1">
+        <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400/80">
+          {t('ask.quickTips', 'Quick suggestions')}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {([
+            ['ask.chipVoice', 'Lift the voice above drums and bass'],
+            ['ask.chipMuddiness', 'Clean up muddy low-end frequencies'],
+            ['ask.chipSpace', 'Create an expansive stereo atmosphere'],
+            ['ask.chipWarmth', 'Add warm tape saturation and analog glue'],
+            ['ask.chipPunch', 'Make drums punchier with tighter dynamics'],
+          ] as const).map(([k, fallback]) => {
+            const promptText = t(k, fallback);
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setQuestion(promptText)}
+                className="rounded-lg border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-emerald-500/40 hover:bg-emerald-950/30 hover:text-emerald-200 active:scale-[0.98]"
+              >
+                {promptText}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <textarea
         value={question}
         onChange={(event) => setQuestion(event.target.value)}
         rows={3}
         placeholder={t('ask.placeholder', 'The voice is buried under the drums and the guitar is all on one side.')}
         aria-label={t('ask.label', 'What do you want changed about the mix?')}
-        className="w-full rounded-xl p-3 text-sm"
+        className="w-full rounded-xl p-3 text-sm focus:border-emerald-500 focus:outline-none"
         style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: INK }}
       />
 
@@ -119,8 +153,7 @@ export default function BoothAsk({
         type="button"
         onClick={() => void ask()}
         disabled={asking || !question.trim()}
-        className="flex min-h-[44px] items-center gap-2 rounded-xl px-4 text-sm font-bold disabled:opacity-40"
-        style={{ background: LIT, color: '#05060a' }}
+        className="flex min-h-[44px] items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 px-5 text-sm font-bold text-zinc-950 shadow-md shadow-emerald-950/50 hover:opacity-90 disabled:opacity-40 transition-all"
       >
         {asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
         {asking ? t('ask.asking', 'Reading the desk…') : t('ask.go', 'Ask')}
