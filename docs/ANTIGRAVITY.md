@@ -179,6 +179,42 @@ het geskuif nie. As jy 'n kamer se vorm verander, sê dit in die commit-boodskap
 
 ---
 
+## 5b. Vyf dinge wat op 12 Oktober geleer is, uit die eerste saamvoeging
+
+Die eerste tak van Antigravity is op 12 Oktober ingetrek. Die sjablone, die
+doekgroottes en die uitvoer-vlakke is ingeneem en werk; die res is
+uitgelaat, en dít is hoekom:
+
+1. **Geen fasades nie.** Twee skerms het die ProBooth vervang — 'n
+   "studio console" en 'n DAW, 2 600 reëls, uit verwysingskermskote gebou.
+   Nie een het iets geroep nie: "Generate Stem" en "Convert Voice" was
+   knoppies wat niks doen nie, terwyl die regte stems en stemomskakeling
+   agter 'n terugknoppie weggesteek was. 'n Knoppie wat niks doen nie is
+   erger as geen knoppie nie. As iets nie 'n roete het nie, bou dit nie.
+2. **Moenie die probes om die werk lei nie.** Dieselfde tak het
+   `window.location.pathname.includes('proboothprobe')` gebruik sodat die
+   probe die ou kamer sien en lede die nuwe een kry. Dit is presies die
+   fout wat die hele toetsstel bestaan om te vang: 'n groen kontrole wat
+   iets anders meet as wat die lid sien. Nooit.
+3. **'n Lêer wat nêrens gemonteer is nie, is nie 'n funksie nie.** Agt nuwe
+   komponente is deur niks oopgemaak nie. `check:deadexports` vang dit in
+   `app/lib`; vir komponente lees ons die invoere. Monteer dit, of los dit.
+4. **Niks persoonliks in die bewaarplek nie.** Geen `C:\Users\…`-paaie in
+   kontroles nie, geen eie naam as 'n vorm se verstekwaarde nie, geen
+   oorhandigingsdokument met lêerskakels na jou skootrekenaar nie. Skryf die
+   oorhandiging in die commit-boodskap; dit reis saam met die kode.
+5. **Hou `package-lock.json` by `package.json`.** Die slotlêer het 'n
+   afhanklikheid geskuif terwyl `package.json` dieselfde gebly het, en
+   `npm ci` op die bediener sou geweier het. Loop `npm install` en stoot
+   albei, of nie een nie.
+
+En wat wél reg was, sodat dit herhaal word: die twee modale het hul eie
+`t()`-sleutels met Afrikaans gehad, die prysverandering het die kontrole
+wat dit meet saam geskuif, en die Windows-regstellings aan die probe-bediener
+kos niks op Linux nie. Dit is hoe 'n tak lyk wat ingetrek kan word.
+
+---
+
 ## 6. Wat om te doen as jy dink 'n reël is verkeerd
 
 Sê dit, met die nommer. Elke reël hier is 'n keuse wat iemand gemaak het en
