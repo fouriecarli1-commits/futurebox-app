@@ -312,6 +312,8 @@ user interaction.
 - [ ] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
       3840 pixels on the long side. Four or five is better. **Yours** — they
       have to be real screens of the app.
-- [ ] Feature graphic: 1024 x 500. Tell me and I will make one.
+- [x] Feature graphic: 1024 x 500 — `docs/play/feature-graphic-1024x500.png`,
+      drawn 12 October 2026 from the brand mark and `APP_LINE`. Redraw it the
+      day either changes.
 - [ ] A test on a real Android phone, installed from the internal testing
       track, before anything goes public
