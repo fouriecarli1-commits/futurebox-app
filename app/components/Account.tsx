@@ -29,7 +29,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen } from 'lucide-react';
+import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen, Paintbrush } from 'lucide-react';
 import RecordingName from './RecordingName';
 import Connections from './Connections';
 import DeleteAccount from './DeleteAccount';
@@ -56,6 +56,7 @@ export default function Account({
   onGoToChannel,
   onNamed,
   onSignOut,
+  onAppearance,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
@@ -70,6 +71,8 @@ export default function Account({
   readonly onGoToChannel: () => void;
   /** The saved row, so the app above can redraw the name it is showing. */
   readonly onNamed?: (creator: Creator) => void;
+  /** Open the Theme / Style customizer. */
+  readonly onAppearance?: () => void;
 }): React.ReactElement | null {
   const { t, lang } = useLang();
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
@@ -376,6 +379,26 @@ export default function Account({
               </span>
             </span>
           </button>
+          {onAppearance && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onAppearance();
+              }}
+              className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 text-left hover:border-emerald-500/60 hover:text-white text-zinc-300"
+            >
+              <Paintbrush className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold leading-tight">
+                  {t('account.appearance', 'App appearance, style and colors')}
+                </span>
+                <span className="block text-xs text-zinc-500 leading-snug">
+                  {t('account.appearanceNote', 'Customize primary colors, accents, dark surfaces, fonts and layout.')}
+                </span>
+              </span>
+            </button>
+          )}
 
           {/* ── The two rooms nothing led to ────────────────────────
 

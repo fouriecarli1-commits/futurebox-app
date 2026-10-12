@@ -222,3 +222,75 @@ export async function ampJson(id: string): Promise<string | null> {
 export function ampId(): string {
   return `amp:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`;
 }
+
+/**
+ * Built-in Stock Amp Modelers.
+ *
+ * Provides ready-to-play valve and solid-state guitar amp models built straight
+ * into the browser with Web Audio tone shaping DSP — guaranteed to work immediately
+ * without requiring Tone3000 credentials or external .nam file uploads.
+ */
+export interface StockAmp {
+  readonly id: string;
+  readonly name: string;
+  readonly category: 'Clean' | 'Crunch' | 'High Gain' | 'Bass' | 'Acoustic';
+  readonly descEn: string;
+  readonly descAf: string;
+  readonly tone: {
+    readonly drive: number;
+    readonly colour: number;
+    readonly cabinet: boolean;
+    readonly mix: number;
+  };
+}
+
+export const STOCK_AMPS: readonly StockAmp[] = [
+  {
+    id: 'stock-tweed-59',
+    name: "Tweed Clean '59",
+    category: 'Clean',
+    descEn: 'Warm vintage valve tone with gentle chime and open dynamic response.',
+    descAf: 'Warm vintage buisklank met sagte klokhelderheid en natuurlike dinamika.',
+    tone: { drive: 0.12, colour: 0.62, cabinet: true, mix: 1 },
+  },
+  {
+    id: 'stock-british-800',
+    name: 'British Crunch 800',
+    category: 'Crunch',
+    descEn: 'Classic hard-rock crunch with punchy midrange and tight bass bite.',
+    descAf: 'Klassieke harde rots-crunch met ferm middeltoon en bytende bas.',
+    tone: { drive: 0.48, colour: 0.58, cabinet: true, mix: 1 },
+  },
+  {
+    id: 'stock-fire-lead',
+    name: 'High Gain Fire Lead',
+    category: 'High Gain',
+    descEn: 'Screaming sustain, heavy harmonic saturation and modern scooped definition.',
+    descAf: 'Skreiende sustain, ryk harmoniese vervorming en moderne metaal-definisie.',
+    tone: { drive: 0.88, colour: 0.44, cabinet: true, mix: 1 },
+  },
+  {
+    id: 'stock-tube-bass',
+    name: 'Vintage Tube Bass SVT',
+    category: 'Bass',
+    descEn: 'Thick, rounded low-end growl with punchy cabinet presence for basslines.',
+    descAf: 'Druk, geronde lae-eind brom met kragtige kabinet-teenwoordigheid vir baslyne.',
+    tone: { drive: 0.35, colour: 0.32, cabinet: true, mix: 1 },
+  },
+  {
+    id: 'stock-cali-overdrive',
+    name: 'Cali D-Style Overdrive',
+    category: 'Crunch',
+    descEn: 'Silky smooth boutique bloom with expressive touch-sensitive overdrive.',
+    descAf: 'Sagte boetiek-buisoordryf met ryk gevoel-sensitiewe harmonieke.',
+    tone: { drive: 0.38, colour: 0.68, cabinet: true, mix: 1 },
+  },
+  {
+    id: 'stock-acoustic-sparkle',
+    name: 'Acoustic Body & Sparkle',
+    category: 'Acoustic',
+    descEn: 'Studio DI sparkle with high-shelf sheen, warmth and body compensation.',
+    descAf: 'Ateljee-akoestiese helderheid met luukse glans, warmte en klankkas-balans.',
+    tone: { drive: 0.04, colour: 0.82, cabinet: false, mix: 0.95 },
+  },
+];

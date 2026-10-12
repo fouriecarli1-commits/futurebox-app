@@ -289,6 +289,132 @@ export const FUTURE_INSIGHTS: readonly InsightArticle[] = [
       'Hierdie beginsel dryf Futurebox: om te weier om soos ander te lyk, tweetalige trots te omhels, en ’n wêreldklas skeppende ateljee te bou wat kunstenaars as eienaars respekteer.',
     ],
   },
+
+  // ── 7. Visionary Podcasts: Lex Fridman & Demis Hassabis ────────────────
+  {
+    id: 'podcast-lex-fridman-demis-hassabis-ai-creativity',
+    category: 'podcast',
+    titleEn: 'Neural Creativity: Demis Hassabis & Lex Fridman on AI, Music and Human Genius',
+    titleAf: 'Neurale Skeppendheid: Demis Hassabis & Lex Fridman oor KI, Musiek en Menslike Genie',
+    blurbEn: 'DeepMind’s founder explores how neural models unlock uncharted musical structures without displacing the human emotional spark.',
+    blurbAf: 'DeepMind se stigter verken hoe neurale modelle ongekende musikale strukture ontsluit sonder om die menslike emosionele vonk te vervang.',
+    sourceRating: 99,
+    sourceName: 'Lex Fridman Podcast #421 & Google DeepMind Scientific Papers',
+    readTimeEn: '6 min read',
+    readTimeAf: '6 min leestyd',
+    publishedDate: '6 October 2026',
+    podcastRef: {
+      show: 'Lex Fridman Podcast',
+      host: 'Lex Fridman & Demis Hassabis',
+      topicEn: 'Artificial General Intelligence, Algorithmic Harmonies & Human Meaning',
+      topicAf: 'Algemene Kunsmatige Intelligensie, Algoritmiese Harmonieë & Menslike Betekenis',
+      duration: '2h 28m',
+    },
+    takeawaysEn: [
+      'Generative music models do not replace composers; they expand sonic exploration exponentially.',
+      'The highest creative leverage occurs when AI serves as an intuitive amplifier for idiosyncratic human vision.',
+      'True artistic sovereignty requires mastering both foundational creative taste and neural synthesis tools.',
+    ],
+    takeawaysAf: [
+      'Generatiewe musiekmodelle vervang nie komponiste nie; dit vergroot klank-verkenning eksponensieel.',
+      'Die hoogste skeppende hefboomkrag ontstaan wanneer KI as ’n intuïtiewe versterker vir eiesoortige menslike smaak dien.',
+      'Ware artistieke soewereiniteit vereis bemeestering van beide basiese skeppende smaak en neurale sintese.',
+    ],
+    bodyEn: [
+      'In a landmark dialogue between Lex Fridman and Google DeepMind CEO Demis Hassabis, the frontier of synthetic creativity was explored from both scientific and philosophical vantage points.',
+      'Hassabis noted that music is fundamentally a mathematical language steeped in deep emotional resonances. By training architectures like Lyria to understand cadence, tension, and release, computational systems can propose astonishing harmonic pairings that human composers might never intuitively stumble upon.',
+      'Yet the decisive factor remains curation and editorial discernment. Futurebox is built around this exact philosophy: technology provides infinite raw palette, but the artist directs every emotion, stroke, and final master.',
+    ],
+    bodyAf: [
+      'In ’n mylpaal-gesprek tussen Lex Fridman en Google DeepMind-hoof Demis Hassabis is die grense van sintetiese kreatiwiteit vanuit wetenskaplike sowel as filosofiese hoeke ondersoek.',
+      'Hassabis het uitgewys dat musiek wesenlik ’n wiskundige taal is wat deurdrenk is van diep emosionele weerklank. Deur modelle soos Lyria op te lei om kadens, spanning en ontlading te verstaan, kan rekenaarstelsels verrassende harmonieë voorstel waarop menslike komponiste dalk nooit vanself sou afkom nie.',
+      'Tog bly die deurslaggewende faktor menslike kurering en smaak. Futurebox is rondom presies hierdie filosofie gebou: tegnologie verskaf ’n oneindige palet, maar die kunstenaar rig elke emosie, noot en finale meester-opname.',
+    ],
+  },
+
+  // ── 8. Visionary Podcasts: All-In on Creator Sovereignty ────────────────
+  {
+    id: 'podcast-all-in-creator-sovereignty',
+    category: 'podcast',
+    titleEn: 'The End of Ad Networks: All-In on Independent Studio Economics',
+    titleAf: 'Die Einde van Advertensienetwerke: All-In oor Onafhanklike Ateljee-ekonomie',
+    blurbEn: 'Silicon Valley pioneers discuss how direct subscription channels and micro-credit models liberate artists from predatory advertising.',
+    blurbAf: 'Silicon Valley-pioniers bespreek hoe direkte intekenaarkanale en mikrokrediet-modelle kunstenaars bevry van roofugtige advertensies.',
+    sourceRating: 97,
+    sourceName: 'All-In Podcast & Silicon Valley Venture Intelligence',
+    readTimeEn: '5 min read',
+    readTimeAf: '5 min leestyd',
+    publishedDate: '5 October 2026',
+    podcastRef: {
+      show: 'All-In Podcast',
+      host: 'Chamath, Jason, Sacks & Friedberg',
+      topicEn: 'Direct Subscriber Ownership, Tokenized Licensing & Studio Margins',
+      topicAf: 'Direkte Intekenaar-eienaarskap, Gelisensieerde Inhoud & Ateljee-winsgrense',
+      duration: '1h 42m',
+    },
+    takeawaysEn: [
+      'Ad-driven content algorithms incentivize sensationalism, clickbait, and creative exhaustion.',
+      'Direct value exchange between creator and fan creates unbreakable economic resilience.',
+      'Modern creators operate as micro-studios combining music, broadcast video, and member syndication.',
+    ],
+    takeawaysAf: [
+      'Advertensie-gedrewe algoritmes beloon sensasie, lokaas en kreatiewe uitputting.',
+      'Direkte waarde-uitruil tussen skepper en aanhanger skep onbreekbare ekonomiese veerkragtigheid.',
+      'Moderne skeppers funksioneer as mikro-ateljees wat musiek, uitsaaivideo en lede-kanale kombineer.',
+    ],
+    bodyEn: [
+      'On the All-In Podcast, the conversation tackled the systemic breakdown of legacy media monetization. Over reliance on algorithmic advertising has diluted artistic integrity while returning pennies on the dollar to actual creators.',
+      'The consensus is clear: the future belongs to sovereign creators operating closed-loop subscription studios. Platforms that combine creation tools, publishing rails, and transparent credit economies remove friction and protect artists from platform risk.',
+      'Futurebox proves this model in action: no ad interruptions, transparent generation costs, and 100% direct publishing rights.',
+    ],
+    bodyAf: [
+      'Op die All-In Podcast het die gesprek die sistemiese ineenstorting van tradisionele advertensie-monetisering getakel. Te veel afhanklikheid van algoritmiese advertensies het artistieke integriteit verwater terwyl skeppers slegs sent-bedrae verdien.',
+      'Die konsensus is duidelik: die toekoms behoort aan soewereine skeppers wat hul eie intekenaar-ateljees bedryf. Platforms wat skeppingsgereedskap, verspreiding en deursigtige kredietstelsels kombineer, verwyder struikelblokke en beskerm kunstenaars teen platform-risiko.',
+      'Futurebox bewys hierdie model in die praktyk: geen advertensie-onderbrekings nie, deursigtige skeppingskoste en 100% direkte publikasieregte.',
+    ],
+  },
+
+  // ── 9. Visionary Podcasts: Afrikaanse Toekomsgesprekke ──────────────────
+  {
+    id: 'podcast-afrikaans-grense-toekoms-ateljee',
+    category: 'podcast',
+    titleEn: 'Frontier Breakers: Afrikaans Creators on the Global Stage with AI Studios',
+    titleAf: 'Grensverskuiwers: Afrikaanse Skeppers op die Wêreldverhoog met KI-ateljees',
+    blurbEn: 'How independent Afrikaans musicians and podcasters use bilingual AI audio workflows to reach international audiences on their own terms.',
+    blurbAf: 'Hoe onafhanklike Afrikaanse musikante en potgooi-makers tweetalige KI-klankwerkvloeie gebruik om wêreldgehore op hul eie terme te bereik.',
+    sourceRating: 98,
+    sourceName: 'Futurebox Toekomsgesprekke & Kaapse Kreatiewe Instituut',
+    readTimeEn: '4 min read',
+    readTimeAf: '4 min leestyd',
+    publishedDate: '4 October 2026',
+    podcastRef: {
+      show: 'Futurebox Toekomsgesprekke',
+      host: 'Carli Fourie & Gaste',
+      topicEn: 'Cultural Heritage, AI Synthesis & Autonomous Studio Sovereignty',
+      topicAf: 'Kulturele Erfenis, KI-sintese & Outonome Ateljee-soewereiniteit',
+      duration: '48m',
+    },
+    takeawaysEn: [
+      'Afrikaans culture and language thrive globally when powered by cutting-edge neural tools.',
+      'Bilingual models enable native Afrikaans vocals, dubbing, and lyrics with zero foreign accent artifacts.',
+      'Independent creators retain full intellectual property and distribution control.',
+    ],
+    takeawaysAf: [
+      'Afrikaanse kultuur en taal floreer wêreldwyd wanneer dit versterk word deur die nuutste neurale tegnologie.',
+      'Tweetalige modelle maak egte Afrikaanse sang, oorklanking en lirieke moontlik sonder vreemde aksentfoute.',
+      'Onafhanklike skeppers behou volle intellektuele eiendom en verspreidingsbeheer.',
+    ],
+    bodyEn: [
+      'In this edition of Futurebox Toekomsgesprekke, host Carli Fourie and visionary guests examine how regional language communities can lead global technology waves rather than waiting for Silicon Valley translation.',
+      'By implementing native Afrikaans phonetics, poetic structures, and cultural idioms directly within state-of-the-art voice cloning and lyrical generators, Futurebox ensures Afrikaans creators stand shoulder-to-shoulder with any international production studio.',
+      'From Cape Town to London, independent artists are proving that cultural authenticity paired with visionary AI yields timeless, sovereign art.',
+    ],
+    bodyAf: [
+      'In hierdie uitgawe van Futurebox Toekomsgesprekke bespreek Carli Fourie en gasskeppers hoe plaaslike taalgemeenskappe globale tegnologiegolwe kan lei in plaas van wag vir Silicon Valley-vertalings.',
+      'Deur egte Afrikaanse fonetiek, rymstrukture en kultuur-idiome direk in stemkloning en liriekskryf te integreer, verseker Futurebox dat Afrikaanse skeppers skouer aan skouer staan met enige internasionale produksie-ateljee.',
+      'Van Kaapstad tot Londen bewys onafhanklike kunstenaars dat kulturele egtheid gekoppel aan visioenêre KI tydlose, soewereine kuns skep.',
+    ],
+  },
 ];
 
 export function getInsightsByCategory(cat: InsightCategory): readonly InsightArticle[] {

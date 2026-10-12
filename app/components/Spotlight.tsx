@@ -18,11 +18,12 @@
  */
 
 import React from 'react';
-import { Check, BookOpen } from 'lucide-react';
+import { Check, BookOpen, Paintbrush, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { inOrder, saidIn } from '../lib/blog';
 import { useLang } from '../lib/i18n';
 import HereNow from './HereNow';
+import LanguagePicker from './LanguagePicker';
 import Charts from './Charts';
 import FutureInsightsHub from './FutureInsightsHub';
 
@@ -46,7 +47,36 @@ export default function Spotlight({
     <div className="space-y-4">
       <section className="relative overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-b from-emerald-950/25 via-zinc-900/80 to-zinc-950/90 p-8 md:p-12 shadow-[0_0_40px_rgba(16,185,129,0.08)]">
         <div className="max-w-4xl space-y-6">
-          <HereNow />
+          {/* ── Top Bar: Active Users, Direct Language Switcher & Theme Customizer ── */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-5">
+            <HereNow />
+            <div className="flex flex-wrap items-center gap-2">
+              <LanguagePicker />
+              <button
+                type="button"
+                onClick={onAppearance}
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/40 bg-zinc-900/90 hover:bg-emerald-950/40 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-300 hover:border-emerald-400 transition-all shadow-sm"
+                title={t('hero.themeTooltip', 'Customize app style, colors and appearance')}
+              >
+                <Paintbrush className="w-4 h-4 text-emerald-400" />
+                <span>{t('hero.customizeTheme', 'Customize Style & Colors')}</span>
+                <span className="flex items-center gap-1 pl-0.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-1 ring-white/20" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-teal-400 ring-1 ring-white/20" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 ring-1 ring-white/20" />
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* ── Forward-Thinking Google Pro Studio Engine Badge ── */}
+          <div className="flex items-center gap-2 pt-1">
+            <span className="inline-flex items-center gap-2 rounded-full border border-teal-500/40 bg-gradient-to-r from-teal-950/70 via-emerald-950/40 to-zinc-900 px-3.5 py-1.5 text-xs font-bold text-teal-300 shadow-[0_0_20px_rgba(20,184,166,0.15)]">
+              <Sparkles className="h-3.5 w-3.5 text-teal-400 flex-shrink-0" />
+              <span>{t('hero.googleEngineBadge', 'Google DeepMind & Vertex AI • Lyria 3 Music • Veo 3.1 4K Video • Gemini Pro Copilot')}</span>
+            </span>
+          </div>
+
           <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-[1.05]">
             {t('hero.yourVoice', 'Your voice.')}{' '}
             <span className="text-emerald-400">{t('hero.yourSongs', 'Your songs.')}</span>{' '}
@@ -110,7 +140,28 @@ export default function Spotlight({
             ))}
           </ul>
 
-          <p className="text-base text-zinc-400 leading-relaxed">
+          {/* ── Choose your own style and colors callout ── */}
+          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-zinc-900/60 to-zinc-950/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <Paintbrush className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>{t('hero.styleTitle', 'Choose your own style and colors')}</span>
+              </p>
+              <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                {t('hero.styleDesc', 'Adjust primary colors, accents, dark surfaces, fonts and layout to your taste.')}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onAppearance}
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-zinc-950 shadow-md transition-all flex-shrink-0"
+            >
+              <Paintbrush className="w-4 h-4 text-zinc-950" />
+              <span>{t('hero.openThemeStudio', 'Open Style Studio')}</span>
+            </button>
+          </div>
+
+          <p className="text-xs text-zinc-500 leading-relaxed">
             {t('hero.style', 'This is the app that lets you choose your own style.')}{' '}
             <button
               type="button"
@@ -159,7 +210,10 @@ export default function Spotlight({
       <Charts onOpenRadar={onOpenRadar} onOpenLive={onOpenLive} />
 
       {/* ── Future Insights & Ad-Free Curated Knowledge ─────────────── */}
-      <FutureInsightsHub onOpenStudio={() => onGo('make')} />
+      <FutureInsightsHub
+        onOpenStudio={() => onGo('make')}
+        onOpenPodcast={() => onGo('podcast')}
+      />
 
       {/* ── How it works ────────────────────────────────────
 

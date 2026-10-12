@@ -4037,6 +4037,10 @@ export default function FutureBoxHome() {
         region={region}
         onSeePlans={() => setPricingModalOpen(true)}
         onSignOut={handleSignOut}
+        onAppearance={() => {
+          setAccountOpen(false);
+          setThemeOpen(true);
+        }}
         onGoToChannel={() => {
           setUploadModalOpen(true);
           setAtDoor(false);
@@ -4170,7 +4174,7 @@ export default function FutureBoxHome() {
               <button
                 onClick={stepOut}
                 data-backout
-                aria-label={t('feed.backToPlatform')}
+                aria-label={atDoor ? t('feed.backToPlatform') : t('room.backToAll', 'Alle Kamers')}
                 className="flex items-center justify-center sm:justify-start space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 min-h-[44px] min-w-[44px] sm:min-w-0 rounded-xl transition-all flex-shrink-0"
               >
                 <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
@@ -4178,7 +4182,9 @@ export default function FutureBoxHome() {
                     FutureBox" wraps to two lines at 390 pixels and takes a
                     third of the header with it, for a control whose meaning a
                     left arrow in the top-left corner already carries. */}
-                <span className="hidden sm:inline">{t('feed.backToPlatform')}</span>
+                <span className="hidden sm:inline">
+                  {atDoor ? t('feed.backToPlatform') : t('room.backToAll', 'Alle Kamers')}
+                </span>
               </button>
 
               {!bareRoom && (
@@ -4240,24 +4246,40 @@ export default function FutureBoxHome() {
                   under the same headings the rail uses.
 
                   Green because on a phone this is the only way out of a room. */}
-              <button
-                type="button"
-                onClick={() => setAtDoor(true)}
-                /* Not in the cutting room: the arrow in the top-left corner
-                   already makes this exact press. See `bareRoom`. */
-                className={`${bareRoom ? 'hidden' : 'md:hidden'} w-full flex items-center gap-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-3 text-left flex-shrink-0`}
-              >
-                <Cpu className="w-[18px] h-[18px] text-emerald-400 flex-shrink-0" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold text-emerald-300 leading-tight truncate">
-                    {t('rail.all', 'All rooms')}
+              <div className={`${bareRoom ? 'hidden' : 'md:hidden'} w-full flex items-center gap-2 flex-shrink-0`}>
+                <button
+                  type="button"
+                  onClick={() => setAtDoor(true)}
+                  className="flex-1 flex items-center gap-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-3 text-left min-h-[44px]"
+                >
+                  <Cpu className="w-[18px] h-[18px] text-emerald-400 flex-shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold text-emerald-300 leading-tight truncate">
+                      {t('rail.all', 'All rooms')}
+                    </span>
+                    <span className="block text-xs text-emerald-400/70 leading-tight truncate">
+                      {ROOM_META[studioTab].label}
+                    </span>
                   </span>
-                  <span className="block text-xs text-emerald-400/70 leading-tight truncate">
-                    {ROOM_META[studioTab].label}
-                  </span>
-                </span>
-                <ArrowLeft className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              </button>
+                  <ArrowLeft className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = document.querySelector<HTMLElement>('[data-copilot-ask], [data-postask], [data-videoask], [data-booth-ai]');
+                    if (target) {
+                      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      if ('focus' in target && typeof target.focus === 'function') target.focus();
+                    }
+                  }}
+                  data-roomai-mobile
+                  aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
+                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-emerald-300 flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
+                >
+                  <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span className="hidden xs:inline">{t('room.aiCopilot', 'AI Assistent')}</span>
+                </button>
+              </div>
 
 
               {/* sideways on purpose: `hidden md:flex` — this rail does not
@@ -4428,6 +4450,41 @@ export default function FutureBoxHome() {
                 ref={workPane}
                 className={`${copilotFirst ? 'order-3 md:order-none' : ''} flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1`}
               >
+                {!bareRoom && !atDoor && (
+                  <div className="hidden md:flex items-center justify-between gap-3 p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800">
+                    <button
+                      type="button"
+                      onClick={() => setAtDoor(true)}
+                      data-roomback
+                      aria-label={t('room.backToAll', 'Alle Kamers')}
+                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white hover:border-emerald-500 transition-all"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-emerald-400" />
+                      <span>{t('room.backToAll', 'Alle Kamers')}</span>
+                    </button>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-extrabold text-zinc-300 truncate">
+                        {ROOM_META[studioTab]?.label}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = document.querySelector<HTMLElement>('[data-copilot-ask], [data-postask], [data-videoask], [data-booth-ai]');
+                        if (target) {
+                          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          if ('focus' in target && typeof target.focus === 'function') target.focus();
+                        }
+                      }}
+                      data-roomai
+                      aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
+                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all"
+                    >
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span>{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
+                    </button>
+                  </div>
+                )}
 
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
@@ -4568,7 +4625,7 @@ export default function FutureBoxHome() {
               >
                 <PostStudio
                   asRoom
-                  onClose={() => goToRoom('canvas')}
+                  onClose={() => setAtDoor(true)}
                   onIntoFilm={setPostCover}
                   /* Inside, as a sheet off the bar, rather than in a column
                      below the room — see `copilotInside`. */

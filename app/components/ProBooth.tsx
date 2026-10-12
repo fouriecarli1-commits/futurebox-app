@@ -34,6 +34,7 @@ import {
 } from '../lib/amplicence';
 import {
   AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, setAmpLicence, setAmpMaker,
+  STOCK_AMPS,
   type Amp,
 } from '../lib/amps';
 import { accessToken } from '../lib/cloud';
@@ -4577,7 +4578,7 @@ function LaneRow({
   onSave: (what: 'wav' | 'midi') => void;
   busy: boolean;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const quiet = audible(lanes).indexOf(lane) < 0;
   const [open, setOpen] = useState(false);
   /** Whether the take-it-away menu is down. */
@@ -5271,6 +5272,51 @@ function LaneRow({
             'pro.toneWhat',
             'A tone stack built here, not a model of a named amplifier: a soft clip, a tilt, and the band a guitar speaker passes. Turning the drive up changes the shape and not the level, so it cannot be pushed just because louder sounded better.',
           )}</Note>
+
+        {/* ── Built-in Stock Amp Modelers ── */}
+        <div className="pt-2 border-t border-zinc-800 space-y-1.5 min-w-0">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+              <span>{t('pro.stockAmps', 'Stock Amp Modelers (Built-in)')}</span>
+            </span>
+            <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+              Offline Ready
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {STOCK_AMPS.map((amp) => {
+              const isActive =
+                Math.abs(tone.drive - amp.tone.drive) < 0.02 &&
+                Math.abs(tone.colour - amp.tone.colour) < 0.02 &&
+                tone.cabinet === amp.tone.cabinet;
+              return (
+                <button
+                  key={amp.id}
+                  type="button"
+                  onClick={() => onChange({ tone: amp.tone })}
+                  aria-pressed={isActive}
+                  title={lang === 'af' ? amp.descAf : amp.descEn}
+                  className={`min-h-[44px] px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                    isActive
+                      ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                      : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:text-white'
+                  }`}
+                >
+                  <span className="block text-xs font-bold">{amp.name}</span>
+                  <span className="block text-[10px] text-zinc-500 font-normal">
+                    {amp.category}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] leading-snug text-zinc-500">
+            {t(
+              'pro.stockAmpsWhy',
+              'Ready-to-use valve and solid-state guitar amp models built straight into your browser — no Tone3000 connection needed.',
+            )}
+          </p>
+        </div>
 
         {/* ── A real amplifier, captured ────────────────────────────────
             The stack above is honest about being a stack. This is the other

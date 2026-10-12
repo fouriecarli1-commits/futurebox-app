@@ -200,7 +200,7 @@ export default function CollabRadar({
 
   const tabs: Array<{ id: RadarTab; label: string; icon: typeof Mic }> = [
     { id: 'podcasts', label: t('radar.tab.podcasts', 'Podcast Match'), icon: Mic },
-    { id: 'live', label: t('radar.tab.live', 'TikTok Live Room'), icon: Radio },
+    { id: 'live', label: t('radar.tab.live', 'Live Room'), icon: Radio },
     { id: 'posts', label: t('radar.tab.posts', 'Viral Post Lab'), icon: Flame },
   ];
 
@@ -482,13 +482,13 @@ export default function CollabRadar({
             <div className="flex items-center space-x-2">
               <Video className="w-4 h-4 text-rose-400" />
               <p className="text-xs font-bold text-white">
-                {t('radar.tiktokNotYet', '@futurebox on TikTok — not created yet')}
+                {t('radar.liveNotYet', 'Live channel — not created yet')}
               </p>
             </div>
             <p className="text-[13px] text-zinc-400 leading-relaxed">
               {t(
                 'radar.liveFirst',
-                'A live collab cannot be booked before the room exists, and TikTok gates LIVE behind follower and age minimums that change. Work the list, then invite a co-host.',
+                'A live collab cannot be booked before the room exists. Work the list, then invite a co-host.',
               )}
             </p>
             <div className="space-y-1.5">

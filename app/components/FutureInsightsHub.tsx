@@ -31,6 +31,10 @@ import {
   BookOpen,
   Star,
   ExternalLink,
+  Play,
+  Pause,
+  Mic,
+  Volume2,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { barClearance } from './TabBar';
@@ -44,6 +48,7 @@ import {
 
 interface FutureInsightsHubProps {
   onOpenStudio?: () => void;
+  onOpenPodcast?: () => void;
 }
 
 const CATEGORY_ICONS: Record<string, React.ReactElement> = {
@@ -58,12 +63,26 @@ const CATEGORY_ICONS: Record<string, React.ReactElement> = {
 
 export default function FutureInsightsHub({
   onOpenStudio,
+  onOpenPodcast,
 }: FutureInsightsHubProps): React.ReactElement {
   const { lang, t } = useLang();
+  const [viewFilter, setViewFilter] = useState<'all' | 'podcasts' | 'articles'>('all');
   const [activeCategory, setActiveCategory] = useState<InsightCategory>('all');
   const [readingArticle, setReadingArticle] = useState<InsightArticle | null>(null);
+  const [isPlayingPodcast, setIsPlayingPodcast] = useState(false);
 
-  const displayedArticles = getInsightsByCategory(activeCategory);
+  const displayedArticles = FUTURE_INSIGHTS.filter((item) => {
+    if (viewFilter === 'podcasts' && item.category !== 'podcast' && !item.podcastRef) {
+      return false;
+    }
+    if (viewFilter === 'articles' && (item.category === 'podcast' || item.podcastRef)) {
+      return false;
+    }
+    if (activeCategory !== 'all' && item.category !== activeCategory) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <section className="space-y-6 pt-4" data-futureinsights>
@@ -91,17 +110,69 @@ export default function FutureInsightsHub({
             )}
           </p>
         </div>
+
+        {/* Quick View Filter: All, Visionary Podcasts, or Curated Articles */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setViewFilter('all');
+              setActiveCategory('all');
+            }}
+            className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              viewFilter === 'all'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md font-black'
+                : 'border border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{t('insight.quickAll', 'All Insights')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setViewFilter('podcasts');
+              setActiveCategory('all');
+            }}
+            className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              viewFilter === 'podcasts'
+                ? 'bg-teal-500 text-zinc-950 shadow-md font-black'
+                : 'border border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Headphones className="h-3.5 w-3.5" />
+            <span>{t('insight.quickPodcasts', 'Visionary Podcasts')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setViewFilter('articles');
+              setActiveCategory('all');
+            }}
+            className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              viewFilter === 'articles'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md font-black'
+                : 'border border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:text-white'
+            }`}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>{t('insight.quickArticles', 'Curated Articles')}</span>
+          </button>
+        </div>
       </div>
 
       {/* ── 2. Category Selector Chips ─────────────────────────────────── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         {INSIGHT_CATEGORIES.map((cat) => {
-          const isSelected = activeCategory === cat.id;
+          const isSelected = activeCategory === cat.id && viewFilter === 'all';
           return (
             <button
               key={cat.id}
               type="button"
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => {
+                setViewFilter('all');
+                setActiveCategory(cat.id);
+              }}
               className={`inline-flex min-h-[44px] flex-shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                 isSelected
                   ? 'border border-emerald-400 bg-emerald-950 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
@@ -121,18 +192,30 @@ export default function FutureInsightsHub({
           const title = lang === 'af' ? article.titleAf : article.titleEn;
           const blurb = lang === 'af' ? article.blurbAf : article.blurbEn;
           const readTime = lang === 'af' ? article.readTimeAf : article.readTimeEn;
+          const isPodcast = article.category === 'podcast' || Boolean(article.podcastRef);
 
           return (
             <article
               key={article.id}
-              className="flex flex-col justify-between rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950/90 p-5 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.12)] transition-all group"
+              className={`flex flex-col justify-between rounded-2xl border p-5 transition-all group ${
+                isPodcast
+                  ? 'border-teal-500/30 bg-gradient-to-b from-teal-950/20 via-zinc-900/80 to-zinc-950/90 hover:border-teal-400/60 hover:shadow-[0_0_25px_rgba(20,184,166,0.15)]'
+                  : 'border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950/90 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]'
+              }`}
             >
               <div className="space-y-3">
                 {/* Meta row: Category pill & Source Rating badge */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-mono font-bold text-emerald-300">
-                    {article.category.toUpperCase()}
-                  </span>
+                  {isPodcast ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-teal-950/70 border border-teal-500/40 px-2 py-0.5 text-[11px] font-mono font-bold text-teal-300">
+                      <Headphones className="h-3 w-3 text-teal-400" />
+                      <span>{t('insight.podcastBadge', 'Visionary Podcast')}</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-mono font-bold text-emerald-300">
+                      {article.category.toUpperCase()}
+                    </span>
+                  )}
                   <span
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-300"
                     title={t('insight.sourceTooltip', 'Source Reliability Rating')}
@@ -143,7 +226,11 @@ export default function FutureInsightsHub({
                 </div>
 
                 {/* Title */}
-                <h4 className="text-base font-bold text-white leading-snug group-hover:text-emerald-300 transition-colors">
+                <h4 className={`text-base font-bold leading-snug transition-colors ${
+                  isPodcast
+                    ? 'text-white group-hover:text-teal-300'
+                    : 'text-white group-hover:text-emerald-300'
+                }`}>
                   {title}
                 </h4>
 
@@ -152,26 +239,70 @@ export default function FutureInsightsHub({
                   {blurb}
                 </p>
 
+                {/* Podcast reference details if available */}
+                {article.podcastRef && (
+                  <div className="rounded-xl border border-teal-500/25 bg-teal-950/30 p-2.5 flex items-center justify-between gap-2 text-xs">
+                    <span className="font-bold text-teal-200 truncate">
+                      {article.podcastRef.show} · {article.podcastRef.host}
+                    </span>
+                    <span className="text-[11px] font-mono text-teal-400/90 flex-shrink-0">
+                      {article.podcastRef.duration}
+                    </span>
+                  </div>
+                )}
+
                 {/* Source citation */}
                 <p className="text-[11px] text-zinc-500 font-mono truncate">
                   {t('insight.sourceBy', 'Source:')} {article.sourceName}
                 </p>
               </div>
 
-              {/* Bottom footer: Read time & Open Reader button */}
+              {/* Bottom footer: Read time & Open Reader / Listen button */}
               <div className="pt-4 border-t border-zinc-800/80 flex items-center justify-between gap-2 mt-4">
                 <span className="inline-flex items-center gap-1 text-xs text-zinc-400">
                   <Clock className="h-3.5 w-3.5 text-zinc-500" />
                   <span>{readTime}</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setReadingArticle(article)}
-                  className="inline-flex min-h-[44px] items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 group-hover:translate-x-0.5 transition-transform"
-                >
-                  <span>{t('insight.readArticle', 'Read Insights')}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {isPodcast ? (
+                    <>
+                      {onOpenPodcast && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenPodcast()}
+                          className="inline-flex min-h-[44px] items-center gap-1 rounded-xl border border-teal-500/30 bg-teal-950/40 hover:bg-teal-900/50 px-2.5 py-1.5 text-xs font-bold text-teal-300 transition-colors"
+                          title={t('insight.openInPodcastStudio', 'Open in Podcast Studio')}
+                        >
+                          <Mic className="h-3.5 w-3.5 text-teal-400" />
+                          <span className="hidden sm:inline">{t('insight.openInPodcastStudio', 'Studio')}</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReadingArticle(article);
+                          setIsPlayingPodcast(true);
+                        }}
+                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 px-3.5 py-1.5 text-xs font-black text-zinc-950 transition-colors shadow-sm"
+                      >
+                        <Headphones className="h-3.5 w-3.5" />
+                        <span>{t('insight.listenPodcast', 'Listen to Podcast')}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReadingArticle(article);
+                        setIsPlayingPodcast(false);
+                      }}
+                      className="inline-flex min-h-[44px] items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 group-hover:translate-x-0.5 transition-transform"
+                    >
+                      <span>{t('insight.readArticle', 'Read Insights')}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </article>
           );
@@ -204,7 +335,10 @@ export default function FutureInsightsHub({
               </div>
               <button
                 type="button"
-                onClick={() => setReadingArticle(null)}
+                onClick={() => {
+                  setReadingArticle(null);
+                  setIsPlayingPodcast(false);
+                }}
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700 hover:text-white"
                 aria-label={t('insight.close', 'Close')}
               >
@@ -224,20 +358,82 @@ export default function FutureInsightsHub({
               </div>
             </div>
 
-            {/* Podcast Reference Banner if present */}
+            {/* Podcast Player Card with Live Waveform Animation if present */}
             {readingArticle.podcastRef && (
-              <div className="rounded-2xl border border-teal-500/40 bg-teal-950/30 p-4 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-300">
-                  <Headphones className="h-4 w-4" />
-                  <span>{t('insight.featuredPodcast', 'Featured Visionary Podcast')}</span>
+              <div className="rounded-2xl border border-teal-500/40 bg-gradient-to-r from-teal-950/60 via-zinc-900 to-zinc-950 p-5 space-y-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-300">
+                    <Headphones className="h-4 w-4" />
+                    <span>{t('insight.featuredPodcast', 'Featured Visionary Podcast')}</span>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-teal-400">
+                    {readingArticle.podcastRef.duration}
+                  </span>
                 </div>
-                <h4 className="text-sm font-bold text-white">
-                  {readingArticle.podcastRef.show} — {readingArticle.podcastRef.host}
-                </h4>
-                <p className="text-xs text-zinc-300">
-                  {lang === 'af' ? readingArticle.podcastRef.topicAf : readingArticle.podcastRef.topicEn}
-                  {' '}({readingArticle.podcastRef.duration})
-                </p>
+
+                <div className="space-y-1">
+                  <h4 className="text-base font-bold text-white">
+                    {readingArticle.podcastRef.show} — {readingArticle.podcastRef.host}
+                  </h4>
+                  <p className="text-xs text-zinc-300">
+                    {lang === 'af' ? readingArticle.podcastRef.topicAf : readingArticle.podcastRef.topicEn}
+                  </p>
+                </div>
+
+                {/* Audio Simulation Player */}
+                <div className="rounded-xl border border-teal-500/20 bg-zinc-900/90 p-3.5 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsPlayingPodcast(!isPlayingPodcast)}
+                      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 transition-colors font-bold flex-shrink-0"
+                      aria-label={isPlayingPodcast ? t('insight.pausePreview', 'Pause Audio Preview') : t('insight.playPreview', 'Play Audio Preview')}
+                    >
+                      {isPlayingPodcast ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
+                    </button>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                        <span className="flex items-center gap-1.5 text-teal-300 font-bold truncate">
+                          {isPlayingPodcast && <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping flex-shrink-0" />}
+                          <span>{isPlayingPodcast ? t('insight.playingEpisode', 'Playing Visionary Episode') : t('insight.playPreview', 'Play Audio Preview')}</span>
+                        </span>
+                        <span className="flex-shrink-0">{isPlayingPodcast ? '02:45 / ' + readingArticle.podcastRef.duration : '00:00 / ' + readingArticle.podcastRef.duration}</span>
+                      </div>
+                      {/* Animated Equalizer wave bars */}
+                      <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex items-center gap-0.5 px-0.5">
+                        {[40, 70, 95, 60, 80, 50, 100, 75, 45, 90, 65, 85, 30, 95, 55, 75, 85, 60].map((h, i) => (
+                          <div
+                            key={i}
+                            className={`flex-1 rounded-full transition-all duration-300 ${
+                              isPlayingPodcast ? 'bg-teal-400' : 'bg-zinc-700'
+                            }`}
+                            style={{
+                              height: isPlayingPodcast ? `${Math.max(20, (h + (i % 3) * 15) % 100)}%` : '30%',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {onOpenPodcast && (
+                  <div className="pt-1 flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReadingArticle(null);
+                        setIsPlayingPodcast(false);
+                        onOpenPodcast();
+                      }}
+                      className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-teal-500/40 bg-teal-950/60 hover:bg-teal-900/80 px-4 py-2 text-xs font-bold text-teal-200 transition-colors"
+                    >
+                      <Mic className="h-4 w-4 text-teal-400" />
+                      <span>{t('insight.openInPodcastStudio', 'Open in Podcast Studio')}</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-teal-400" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -271,7 +467,10 @@ export default function FutureInsightsHub({
               </span>
               <button
                 type="button"
-                onClick={() => setReadingArticle(null)}
+                onClick={() => {
+                  setReadingArticle(null);
+                  setIsPlayingPodcast(false);
+                }}
                 className="min-h-[44px] rounded-xl bg-emerald-500 hover:bg-emerald-400 px-5 text-sm font-bold text-zinc-950 transition-colors"
               >
                 {t('insight.doneReading', 'Done Reading')}

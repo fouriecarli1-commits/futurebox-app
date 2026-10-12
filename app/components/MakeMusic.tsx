@@ -59,6 +59,8 @@ import SongStarts from './SongStarts';
 import PromptCards from './PromptCards';
 import { MOODS, type Mood } from '../data/songstarts';
 import { titleFromWords } from '../lib/songtitle';
+import VerseWriter from './VerseWriter';
+import StyleRepertoireModal from './StyleRepertoireModal';
 
 export interface Canvas {
   title: string;
@@ -462,6 +464,9 @@ export default function MakeMusic({
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
+  const [verseGuideMode, setVerseGuideMode] = useState(true);
+  const [showRepertoire, setShowRepertoire] = useState(false);
+  const [weirdness, setWeirdness] = useState(15);
   /**
    * A sound of your own, trained in the channel on your own songs.
    *
@@ -740,6 +745,11 @@ export default function MakeMusic({
     singDirection(singWanted).forEach((word) => {
       if (parts.indexOf(word) === -1) parts.push(word);
     });
+    if (weirdness >= 75) {
+      parts.push('avant-garde textures', 'experimental production', 'unconventional rhythm');
+    } else if (weirdness >= 45) {
+      parts.push('creative harmonies', 'eclectic instrumentation');
+    }
     /* The four generic production words that used to go on every request are
        gone. They said nothing about how a song should sound — "balanced mix",
        "dynamic performance" — and together with the server's own padding they
@@ -1263,13 +1273,49 @@ export default function MakeMusic({
             />
           }
         >
-          <textarea
-            value={lyrics}
-            onChange={(e) => setLyrics(e.target.value)}
-            placeholder={t('make.wordsPlaceholder')}
-            rows={8}
-            className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y"
-          />
+          {/* Toggle between guided verse-by-verse writing and free-form lyric text box */}
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => setVerseGuideMode(true)}
+              className={`min-h-[44px] px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                verseGuideMode
+                  ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                  : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
+              }`}
+            >
+              🎵 {t('make.verseGuide', 'Verse-by-Verse Guide')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setVerseGuideMode(false)}
+              className={`min-h-[44px] px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                !verseGuideMode
+                  ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                  : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
+              }`}
+            >
+              ✍️ {t('make.freeWrite', 'Free Lyrics')}
+            </button>
+          </div>
+
+          {verseGuideMode ? (
+            <VerseWriter
+              lyrics={lyrics}
+              onLyricsChange={setLyrics}
+              songTitle={title}
+              about={canvas.about || ''}
+              style={canvas.style}
+            />
+          ) : (
+            <textarea
+              value={lyrics}
+              onChange={(e) => setLyrics(e.target.value)}
+              placeholder={t('make.wordsPlaceholder')}
+              rows={8}
+              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y"
+            />
+          )}
           <p className="text-sm text-zinc-500 pt-1">
             {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
           </p>
@@ -1350,6 +1396,18 @@ export default function MakeMusic({
             </>
           }
         >
+          {/* 🎵 Style Repertoire modal trigger */}
+          <div className="mb-2">
+            <button
+              type="button"
+              onClick={() => setShowRepertoire(true)}
+              className="w-full min-h-[44px] rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-xs sm:text-sm font-bold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-500 flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+            >
+              <Music className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <span>{t('make.openRepertoire', 'Browse Style Repertoire (64 Auditionable Styles)')}</span>
+            </button>
+          </div>
+
           <textarea
             value={canvas.style}
             onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
@@ -1359,8 +1417,38 @@ export default function MakeMusic({
           />
           <p className="text-sm text-zinc-500 pt-1">{t('make.soundNote')}</p>
 
-          {/* Point at something instead of describing it.
+          {/* 🎚️ Weirdness Slider */}
+          <div className="mt-4 p-3.5 rounded-xl border border-zinc-800 bg-zinc-950/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="make-weirdness" className="text-xs sm:text-sm font-bold text-zinc-200 flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-emerald-400" />
+                <span>{t('make.weirdness', 'Weirdness')}</span>
+              </label>
+              <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold border border-zinc-700 bg-zinc-900 text-zinc-300">
+                {weirdness <= 30
+                  ? t('make.weirdnessLow', 'Conventional & Clean')
+                  : weirdness <= 69
+                    ? t('make.weirdnessMid', 'Creative & Eclectic')
+                    : t('make.weirdnessHigh', 'Avant-garde & Wild')}{' '}
+                ({weirdness}%)
+              </span>
+            </div>
+            <input
+              id="make-weirdness"
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={weirdness}
+              onChange={(e) => setWeirdness(Number(e.target.value))}
+              className="w-full accent-emerald-500 h-11 touch-manipulation cursor-pointer"
+            />
+            <p className="text-[11px] text-zinc-500 leading-snug">
+              {t('make.weirdnessWhy', 'Controls how unconventional the sound design, chords and instrumental textures will be.')}
+            </p>
+          </div>
 
+          {/* Point at something instead of describing it.
               Describing a sound in words is the hardest thing this room asks
               for, and getting it wrong costs a generation — which is what
               "ek mors letterlik my geld" was about. Everybody has a song or a
@@ -2150,6 +2238,21 @@ export default function MakeMusic({
           </p>
         )}
       </div>
+
+      {showRepertoire && (
+        <StyleRepertoireModal
+          currentStyle={canvas.style}
+          onClose={() => setShowRepertoire(false)}
+          onSelectStyle={(snippet, append) => {
+            const cur = canvas.style.trim();
+            if (append && cur) {
+              setCanvas({ ...canvas, style: `${cur}, ${snippet}` });
+            } else {
+              setCanvas({ ...canvas, style: snippet });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

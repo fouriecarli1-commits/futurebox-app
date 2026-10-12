@@ -146,7 +146,7 @@ const SAME_IN_BOTH = new Set([
      genoem word. As dit te lank is net BG remover."* Hers, in both
      languages — it is what people in this country call the tool, and
      "Agtergrondverwyderaar" is a word nobody has ever said out loud. */
-  'BG remover', 'Magic eraser',
+  'BG remover',
   /* The room's own name, hers in both languages. Carli, 4 October 2026, asked
      directly which name she meant: *"Nee, Video Editor."* "Video-redigeerder"
      is the dictionary answer and is not what anybody in this country calls it. */

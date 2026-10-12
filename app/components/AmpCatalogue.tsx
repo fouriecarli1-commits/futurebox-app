@@ -37,7 +37,7 @@ import { Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 import { LICENCES, mayBeShared, SHAREABLE, type LicenceId } from '../lib/amplicence';
-import { AMP_MAX_BYTES, ampId, rememberAmp } from '../lib/amps';
+import { AMP_MAX_BYTES, ampId, rememberAmp, STOCK_AMPS } from '../lib/amps';
 import { ampMaker, ampName, loads } from '../lib/nam';
 
 interface Row {
@@ -58,7 +58,7 @@ type Answer = {
 };
 
 export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
@@ -225,11 +225,47 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
           {state === 'loading' && rows.length === 0 && (
             <p className="text-[11px] text-zinc-500 flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" />{t('pro.ampFetching', 'Fetching it…')}</p>
           )}
-          {state === 'off' && <p className="text-[11px] text-amber-400">{t('pro.ampCatalogueOff', 'The catalogue is not set up yet.')}</p>}
+          {state === 'off' && (
+            <div className="space-y-1.5">
+              <p className="text-[11px] text-amber-400">
+                {t('pro.ampCatalogueOff', 'The catalogue is not set up yet.')}
+              </p>
+              <p className="text-[11px] text-zinc-400">
+                {t('pro.stockAmpsWhy', 'Ready-to-use valve and solid-state guitar amp models built straight into your browser — no Tone3000 connection needed.')}
+              </p>
+            </div>
+          )}
           {state === 'signin' && <p className="text-[11px] text-amber-400">{t('pro.ampSignIn', 'Sign in to search the catalogue.')}</p>}
           {state === 'ready' && rows.length === 0 && (
             <p className="text-[11px] text-zinc-500">{q ? t('pro.ampNone', 'Nothing in the catalogue matches that yet.') : t('pro.ampEmpty', 'The catalogue is empty for now.')}</p>
           )}
+
+          {/* 🎸 Built-in Stock Amp Modelers */}
+          <div className="pt-2 border-t border-zinc-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-zinc-200">
+                {t('pro.stockAmps', 'Stock Amp Modelers (Built-in)')}
+              </span>
+              <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                Offline Ready
+              </span>
+            </div>
+            <ul className="space-y-1.5">
+              {STOCK_AMPS.map((amp) => (
+                <li key={amp.id} className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="block text-xs font-bold text-white truncate">{amp.name}</span>
+                    <span className="block text-[11px] text-zinc-400 leading-tight">
+                      {lang === 'af' ? amp.descAf : amp.descEn}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-zinc-400 px-2 py-1 rounded-lg bg-zinc-800/80 shrink-0">
+                    {amp.category}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {rows.length > 0 && (
             <ul className="space-y-1" data-ampresults>

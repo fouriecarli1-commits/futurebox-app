@@ -44,6 +44,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowLeft,
   Bookmark,
   Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
 } from 'lucide-react';
@@ -313,7 +314,7 @@ const POST_LOWER: readonly BenchSpec[] = [
        "Grab" that can only take the writing is a promise the button does
        not keep: somebody presses it on a logo, nothing happens that they
        wanted, and they report the feature as broken — correctly. */
-    label: ['post.benchRead', 'Grab'],
+    label: ['post.benchRead', 'Extract items'],
     what: [
       'post.benchReadWhat',
       'Words printed inside the photograph \u2014 a poster, a sign, a label, a page \u2014 turned into text you can use, on your own device. Put them on the post or copy them out.',
@@ -5102,7 +5103,18 @@ export default function PostStudio({
           {/* A room is left by the menu, like every other room. A close
               button here would be a second way out that only this room has,
               and the one it leads back to depends on how you arrived. */}
-          {!asRoom && (
+          {asRoom ? (
+            <button
+              type="button"
+              onClick={onClose}
+              data-roomback
+              aria-label={t('room.backToAll', 'Alle Kamers')}
+              className={`${LEEG} w-auto px-3 text-emerald-400 hover:text-emerald-300 font-bold`}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-xs">{t('room.backToAll', 'Alle Kamers')}</span>
+            </button>
+          ) : (
             <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className={LEEG}>
               <X className="h-4 w-4" />
             </button>
