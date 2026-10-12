@@ -311,7 +311,7 @@ export default function StyleFrom({
             type="button"
             onClick={() => void writeFromPicture()}
             disabled={busy !== null}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-3 text-sm font-bold text-onAccent disabled:opacity-60"
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 text-sm font-bold text-onAccent disabled:opacity-60"
           >
             {busy === 'writing' ? <Loader2 className="h-4 w-4 animate-spin" /> : <PenLine className="h-4 w-4" />}
             {busy === 'writing'

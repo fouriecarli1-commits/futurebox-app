@@ -25,7 +25,35 @@ const PORT = process.argv[2] || '3074';
    behind it was sitting in the repository while the line she is meant to sing
    measured 1.02:1 on the singing screen. */
 const server = await serve(PORT);
-const { browser, page } = await enter({ at: server.url });
+/* ── Which theme ─────────────────────────────────────────────────────────
+
+   `THEME=futurebox` runs the same walk on the Midnight preset — the dark
+   house style — and `check:contrastdark` is that run under its own name in
+   CI. The app ships light, so without this every number this probe has ever
+   reported was a light-theme number, and docs/FUNCTION_INVENTORY.md has said
+   since 5 October that "the dark ramp is untouched, but no dark screenshot
+   has been taken since". The preset is written into storage the way the
+   theme studio writes it (`saveTheme` in lib/theme.ts: the theme's fields and
+   `chosen: true`), before the page loads, so the first paint is already in
+   that theme. The fields are the Midnight preset's own, copied rather than
+   imported because this file is plain JavaScript and `lib/theme.ts` is not. */
+const THEMES = {
+  futurebox: {
+    surface: 'midnight', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet',
+    radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full',
+  },
+};
+const THEME = process.env.THEME ?? '';
+if (THEME && !THEMES[THEME]) throw new Error(`no such theme preset here: ${THEME}`);
+const { browser, page } = await enter({
+  at: server.url,
+  before: THEME
+    ? (p) => p.addInitScript((stored) => {
+        try { window.localStorage.setItem('futurebox.theme.v1', JSON.stringify(stored)); } catch { /* storage off */ }
+      }, { ...THEMES[THEME], chosen: true })
+    : undefined,
+});
+if (THEME) console.log(`theme: ${THEME} (${THEMES[THEME].surface})`);
 const room = await studio(page);
 let worst = { ratio: 99, what: '' };
 let failures = 0;
@@ -156,10 +184,36 @@ async function measure(target) {
       return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     };
     const parse = (s) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
-    const opaque = (el) => {
+    /* The colour behind a piece of text, walking up until something opaque.
+
+       A gradient counts, since 12 October 2026. This read `backgroundColor`
+       only, and a button painted `bg-gradient-to-r from-emerald-500` has a
+       transparent background-color with its colour in `background-image` —
+       so every gradient button in the app was measured against the PAGE
+       behind it: dark ink on a near-white page passed by accident on the
+       light theme, and the first dark-theme run reported "Make my song" at
+       1.02:1, dark on dark, for a button that is plainly readable. A probe
+       that never looked at the thing the text sits on. The worst stop is
+       taken — the one closest in luminance to the text — because a label
+       that runs across a gradient has to read at its least-contrasting end. */
+    const stops = (image) => {
+      if (!/gradient\(/.test(image)) return [];
+      return (image.match(/rgba?\([^)]*\)/g) ?? [])
+        .map((one) => (one.match(/[\d.]+/g) ?? []).map(Number))
+        .filter((parts) => parts.length >= 3 && (parts.length < 4 || parts[3] > 0.85))
+        .map((parts) => parts.slice(0, 3));
+    };
+    const opaque = (el, fg) => {
       let node = el;
       while (node) {
-        const bg = getComputedStyle(node).backgroundColor;
+        const style = getComputedStyle(node);
+        const painted = stops(style.backgroundImage);
+        if (painted.length) {
+          const l = lum(fg);
+          return painted.reduce((worst, one) =>
+            Math.abs(lum(one) - l) < Math.abs(lum(worst) - l) ? one : worst);
+        }
+        const bg = style.backgroundColor;
         const parts = (bg.match(/[\d.]+/g) ?? []).map(Number);
         if (parts.length >= 3 && (parts.length < 4 || parts[3] > 0.85)) return parts.slice(0, 3);
         node = node.parentElement;
@@ -179,7 +233,7 @@ async function measure(target) {
       if (style.visibility === 'hidden' || Number(style.opacity) < 0.5) continue;
       const fg = parse(style.color);
       if (fg.length < 3) continue;
-      const bg = opaque(el);
+      const bg = opaque(el, fg);
       const a = lum(fg), b = lum(bg);
       const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
       const size = parseFloat(style.fontSize);

@@ -239,7 +239,7 @@ export default function MakeSound({
             data-makesoundgo
             onClick={() => void make()}
             disabled={busy || length < FEWEST_CHARACTERS}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 py-3 font-bold text-onAccent disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 font-bold text-onAccent disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
             {busy

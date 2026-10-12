@@ -182,7 +182,7 @@ export default function Queue({
           type="button"
           onClick={() => void add()}
           disabled={busy}
-          className="min-h-[44px] w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+          className="min-h-[44px] w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
           {t('queue.add', 'Put it in the queue')}

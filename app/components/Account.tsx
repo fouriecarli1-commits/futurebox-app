@@ -125,7 +125,7 @@ export default function Account({
         {/* ── Who ────────────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-black flex items-center justify-center text-lg flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-onAccent font-black flex items-center justify-center text-lg flex-shrink-0">
               {(name ?? email ?? '?').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
@@ -210,7 +210,7 @@ export default function Account({
               onClose();
               onSeePlans();
             }}
-            className="min-h-[44px] w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2"
+            className="min-h-[44px] w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2"
           >
             {plan === 'free'
               ? t('account.seePlans', 'See the plans')

@@ -124,7 +124,7 @@ export default function Spotlight({
             <button
               type="button"
               onClick={() => onGo('make')}
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-sm font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+              className="px-5 py-3 rounded-xl bg-emerald-500 text-onAccent text-sm font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.3)]"
             >
               {t('hero.start', 'Make a song')}
             </button>

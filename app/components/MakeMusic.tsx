@@ -1840,7 +1840,7 @@ export default function MakeMusic({
           type="button"
           onClick={() => make()}
           disabled={busy}
-          className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 py-5 text-lg font-extrabold tracking-tight text-onAccent shadow-[0_8px_30px_rgba(16,185,129,0.28)] hover:opacity-90 disabled:opacity-60 disabled:shadow-none"
+          className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 py-5 text-lg font-extrabold tracking-tight text-onAccent shadow-[0_8px_30px_rgba(16,185,129,0.28)] hover:opacity-90 disabled:opacity-60 disabled:shadow-none"
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
           {busy ? `${t('make.going')} ${elapsed}s` : t('make.go')}

@@ -362,7 +362,7 @@ export default function Greeting({
             <button
               type="button"
               onClick={() => onGo(said.room)}
-              className="min-h-[44px] w-full flex-shrink-0 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2 sm:w-auto"
+              className="min-h-[44px] w-full flex-shrink-0 px-5 py-3 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 sm:w-auto"
             >
               {/* The room's own name, not "Open <name>".
 

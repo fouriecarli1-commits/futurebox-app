@@ -662,7 +662,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
             type="button"
             onClick={mode === 'engine' ? makeWithEngine : make}
             disabled={busy}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
             {busy ? t('video.making') : t('video.go')}

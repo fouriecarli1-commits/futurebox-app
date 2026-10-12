@@ -270,7 +270,7 @@ export default function Authenticators(): React.ReactElement | null {
                 onClick={() => void confirm()}
                 disabled={busy}
                 data-mfaconfirm
-                className="min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent disabled:opacity-60"
+                className="min-h-[44px] px-3.5 py-2 rounded-xl text-sm font-semibold bg-emerald-500 text-onAccent disabled:opacity-60"
               >
                 {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : t('mfa.switchOn', 'Switch it on')}
               </button>
