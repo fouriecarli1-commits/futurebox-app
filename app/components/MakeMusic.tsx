@@ -40,6 +40,7 @@ import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import Note from './Note';
 import Hint from './Hint';
+import SayItWrong from './SayItWrong';
 import { STARTERS, LENGTH_CHOICES } from '../data/sound';
 import { CREDITS, songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
@@ -2102,6 +2103,13 @@ export default function MakeMusic({
                     <VideoIcon className="w-3.5 h-3.5" />
                     {t('video.make')}
                   </button>
+                  <SayItWrong
+                    surface="music_studio"
+                    spoken
+                    said={track.title}
+                    alwaysShow
+                    variant="button"
+                  />
                   <button
                     type="button"
                     onClick={() => remove(track)}

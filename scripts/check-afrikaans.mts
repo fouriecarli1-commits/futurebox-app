@@ -82,6 +82,10 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* Carli, 12 October 2026: 'Verbeter Afrikaans' on the feedback button in
+     both English and Afrikaans sides so Afrikaans speakers using the English
+     UI recognise the pronunciation feedback control immediately. */
+  'Verbeter Afrikaans',
   /* The word on the solo button, spoken. `Solo` is the word in both
      languages — it is Italian in both — and the badge already says S in
      both. Added when `check:eensin` split the aria-label off the letter. */
