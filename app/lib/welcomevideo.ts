@@ -46,6 +46,24 @@ export type WelcomeLang = string;
 const afrikaans = (lang: WelcomeLang): boolean => lang === 'af';
 
 /**
+ * The English recording that ships in `public/`, and the still that goes
+ * with it.
+ *
+ * The still exists because of what the player does without one. With no
+ * cover it asks the browser for the recording's metadata and a frame a tenth
+ * of a second in, and on a phone that will not decode until somebody presses
+ * play — which is most of them — that is a black rectangle under a play
+ * button, which reads as a player that failed. The cover is 50 kilobytes and
+ * paints at once. It is the frame eleven seconds in, chosen by looking:
+ * the presenter smiling straight at the camera, mouth closed, hands down.
+ *
+ * Both constants are exported so the check that keeps them paired can name
+ * them rather than retype them.
+ */
+export const SHIPPED_RECORDING = '/welcome.mp4';
+export const SHIPPED_COVER = '/welcome-cover.jpg';
+
+/**
  * The recording for this language, or `''` for none.
  *
  * English falls back to `/welcome.mp4`, which ships in `public/`, so English
@@ -61,7 +79,7 @@ export function sourceFor(lang: WelcomeLang): string {
   return (
     process.env.NEXT_PUBLIC_WELCOME_VIDEO_ENGLISH
     ?? process.env.NEXT_PUBLIC_WELCOME_VIDEO
-    ?? '/welcome.mp4'
+    ?? SHIPPED_RECORDING
   );
 }
 
@@ -70,11 +88,19 @@ export function sourceFor(lang: WelcomeLang): string {
  *
  * The cover follows the recording it belongs to. A cover set for the other
  * language is not a fallback: it would put an Afrikaans title card over an
- * English recording, which is worse than no card at all.
+ * English recording, which is worse than no card at all. The same rule holds
+ * one step further down: the cover that ships in `public/` belongs to the
+ * recording that ships beside it, and to no other.
  */
 export function coverFor(lang: WelcomeLang): string {
   if (afrikaans(lang)) return process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERA ?? '';
-  return process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERE ?? '';
+  if (process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERE) return process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERE;
+  // The shipped cover is a frame OF the shipped recording, so it goes with
+  // that recording and nothing else. A variable pointing English at some
+  // other file gets no cover rather than this one, for the same reason the
+  // Afrikaans page gets no English cover: a still from one recording over the
+  // play button of another is a card that lies about what is behind it.
+  return sourceFor(lang) === SHIPPED_RECORDING ? SHIPPED_COVER : '';
 }
 
 /**

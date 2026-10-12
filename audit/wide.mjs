@@ -113,7 +113,9 @@ try {
       return { vw, worst: seen.sort((a, b) => b.over - a.over).slice(0, 3), count: seen.length };
     }, SLACK);
 
-  for (const room of ROOMS) {
+  /* `ONLY=pages` skips the rooms — a minute instead of five while a page
+     is being fixed. The whole walk is what CI runs. */
+  for (const room of process.env.ONLY === 'pages' ? [] : ROOMS) {
     if (!(await intoRoom(room))) {
       problems.push(`${room}: no way in`);
       console.log(`  FAIL ${room} — no way in`);
@@ -149,7 +151,7 @@ try {
      and the kids room were never measured at any width. Here they are read
      as whole documents. The kids room is measured as the child's room, with
      the allowance route answered here so nothing is written anywhere. */
-  const PAGES = ['/cubed', '/guide', '/help', '/kids'];
+  const PAGES = ['/cubed', '/guide', '/help', '/kids', '/story', '/blog', '/legal', '/privacy', '/terms', '/uitspraak'];
   const pageTooWide = () =>
     p.evaluate((slack) => {
       const vw = document.documentElement.clientWidth;

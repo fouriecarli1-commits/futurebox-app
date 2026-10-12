@@ -112,12 +112,19 @@ npm run check:notcut            # in 'n ander
 |---|---|
 | `check:theme` | elke kleur volg die tema; geen letterlike kleur sonder 'n rede |
 | `check:notcut` | geen naam of opskrif word afgesny — op 'n 390px foon **en** 'n 1512px skerm, in albei tale; geen paneel skuif sywaarts nie |
-| `check:contrast` | elke stukkie teks teen wat werklik agter dit geverf is |
+| `check:contrast` | elke stukkie teks teen wat werklik agter dit geverf is — elke kamer, elke oortjie, én die elf bladsye buite die ateljee (Cubed, die gids, hulp, die kinderkamer, storiemodus, die blog, regs, privaatheid, terme, die uitspraakhokkie); `check:contrastdark` is dieselfde loop op die donker tema |
+| `check:wide` en `check:widetablet` | niks loop van die glas af nie — elke kamer en elke bladsy op 390px en op 1024px met 'n muis |
+| `check:taalbladsye` | die bladsye buite die ateljee praat die taal wat gekies is, en net daardie een |
 | `check:kappies` | hoofletters en opskrifte |
 | `check:cardtone` | kaarte se toon bly dieselfde |
 | `check:sideborder` | die rand langs die rol |
 | `check:solidroom` | 'n kamer se vloer is solied, geen gradiënt |
 | `check:reachable` | elke kontrole is bereikbaar |
+
+Vinnig terwyl jy werk: `ONLY=pages node audit/contrast.mjs` en
+`ONLY=pages node audit/wide.mjs 3091 390` loop net die bladsye buite die ateljee
+(´n minuut in plaas van vier), en `SHOW=20` laat die kontrasloop meer as die
+ergste vier etikette per skerm druk. Die volle loop is wat CI doen.
 
 Daar is ook twee blaaier-toetse wat nie 'n `check:` naam het nie en met die
 hand geloop word — `node audit/touch.mjs` (niks te klein om met 'n duim te

@@ -177,11 +177,29 @@ export default function StoryShelf({
   /* ── The shelf ─────────────────────────────────────────────────────── */
   if (!shelf.length) {
     return (
-      <p className="rounded-2xl border border-dashed border-zinc-700 px-4 py-5 text-center text-sm leading-relaxed text-zinc-600" data-shelfempty>
-        {grownUp
-          ? t('shelf.noneGrown', 'No stories yet. Make one in Story mode and press “Keep it for the kids room”.')
-          : t('shelf.none', 'No stories yet. Ask a grown-up to make one.')}
-      </p>
+      <div className="rounded-2xl border border-dashed border-zinc-700 px-4 py-5 text-center text-sm leading-relaxed text-zinc-600" data-shelfempty>
+        <p>
+          {grownUp
+            ? t('shelf.noneGrown', 'No stories yet. Make one in Story mode and press “Keep it for the kids room”.')
+            : t('shelf.none', 'No stories yet. Ask a grown-up to make one.')}
+        </p>
+        {/* The way there, since 12 October 2026. The site footer no longer
+            sits under the kids pages, so "make one in Story mode" had become
+            a sentence with no door beside it. The child's shelf gets no
+            link: the child's screen stays two presses and nothing else. */}
+        {grownUp && (
+          <a
+            href="/story"
+            data-shelfmakestory
+            /* No colour of its own: it inherits the note's, which the contrast walk
+               measured on the door. A zinc-800 typed here read at 1.38:1 on the
+               kids palette and turned CI red on 12 October 2026. */
+            className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-zinc-700 px-4 font-bold hover:border-emerald-500/60"
+          >
+            {t('shelf.makeStory', 'Open Story mode')}
+          </a>
+        )}
+      </div>
     );
   }
 
