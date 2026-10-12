@@ -4947,7 +4947,13 @@ export default function PostStudio({
            the look she objected to. The cap stays, because a photograph
            stretched across 2,000 pixels of browser is not better, it is
            just bigger. */
-        className={`mx-auto flex w-full min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 ${
+        /* `min-w-0`, since 12 October 2026: at a desk the bench sits BESIDE
+           this pane in a flex row, and a flex child's floor is its content's
+           width unless told otherwise. On a 1024-pixel tablet with a fine
+           pointer the picture would not give, the bench was pushed 33px off
+           the glass, and `audit/wide.mjs 1024` measured it. Below its
+           content's width the pane scrolls inside itself instead. */
+        className={`mx-auto flex w-full min-w-0 min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 ${
           atDesk ? 'max-w-5xl' : 'max-w-2xl'
         }`}
       >
@@ -5076,7 +5082,7 @@ export default function PostStudio({
               type="button"
               data-postask
               aria-pressed={asking}
-              onClick={() => setAsking(true)}
+              onClick={() => { setAsking(true); if (onEdge) setBench(null); }}
               className={`${LEEG} w-auto px-3`}
             >
               <Sparkles className="h-4 w-4" />
@@ -5255,9 +5261,17 @@ export default function PostStudio({
  
           The same sheet the benches use, so it opens and closes with the same
           word as everything else in the room, and capped so the bar
-          underneath it stays reachable. */}
+          underneath it stays reachable.
+
+          On an edge it is a column beside the picture, and it shares that
+          side with the bench: one or the other, never both. With both open a
+          1024-pixel tablet with a mouse had the copilot (305px), the bench
+          sheet (400px) and its buttons (120px) in a 732-pixel row, and the
+          buttons ran 33px off the glass — `audit/wide.mjs 1024` measured it
+          on 12 October 2026. `check:wide` runs the phone; the tablet widths
+          are run by hand with the same file. */}
       {copilot && asking && (
-        <div className="flex min-h-0 max-h-[72dvh] flex-col">
+        <div className={onEdge ? 'flex min-h-0 h-full w-[320px] flex-shrink-0 flex-col' : 'flex min-h-0 max-h-[72dvh] flex-col'}>
           <DeskSheet
             icon={<Sparkles className="h-4 w-4" />}
             title={t('post.ask.title', 'Ask the copilot')}
@@ -5279,7 +5293,7 @@ export default function PostStudio({
 
       <RoomDock
         open={bench}
-        onOpen={setBench}
+        onOpen={(next) => { setBench(next); if (next && onEdge) setAsking(false); }}
         playing={false}
         onPlay={() => undefined}
         onSkip={() => undefined}
