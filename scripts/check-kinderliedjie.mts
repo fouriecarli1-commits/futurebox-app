@@ -177,6 +177,38 @@ for (const one of [...KID_TOPICS, ...KID_SOUNDS]) {
 }
 
 /* And the prompt a child's song is actually built from carries both. */
+/* ── The child's own words ───────────────────────────────────────────
+   Carli, 12 October 2026: "Die kids room moet ook 'n tikboks hê, daar is
+   kinders wat kan tik, wat oulik sal wees as dit 'n record button het sodat
+   'n kind kan praat en woorde so prompt." */
+{
+  const made = withoutComments(readFileSync('app/lib/kidsong.ts', 'utf8'));
+  ok('the room has a box for the child\u2019s own words',
+    /data-kidstype/.test(room) && /maxLength=\{KID_WORDS_MOST\}/.test(room),
+    'typed words with no cap are a prompt with no cap');
+  ok('  and the words go to the song with the bubbles',
+    /makeKidSong\(topic, sound, words\)/.test(room) && /words = ''/.test(made)
+    && /prompt: \[what\?\.words, own\]\.filter\(Boolean\)\.join/.test(made),
+    'a box whose words go nowhere is decoration');
+  ok('  through the same door every grown-up\u2019s prompt goes through',
+    /fetch\('\/api\/music'/.test(made) && !/\/api\/kids\/song/.test(made),
+    '/api/music is where guard() reads every prompt; a route of its own would be a softer door');
+  ok('  and the words are enough on their own, with a sound',
+    /\(Boolean\(topic\) \|\| Boolean\(kidWords\(words\)\)\) && Boolean\(sound\)/.test(room),
+    'a child who typed should not also have to press a bubble');
+  ok('  and trimmed to one line of the length the room allows',
+    /KID_WORDS_MOST = 120/.test(made) && /slice\(0, KID_WORDS_MOST\)/.test(made));
+  ok('saying it uses the browser\u2019s own recogniser, not a paid transcription',
+    /webkitSpeechRecognition/.test(room) && /data-kidsspeak/.test(room)
+    && !/api\/transcribe|MediaRecorder|getUserMedia/.test(room),
+    'a child talking must not spend credits or send a recording anywhere');
+  ok('  and the button is drawn only where pressing it could work',
+    /\{canSpeak && \(/.test(room) && /setCanSpeak\(Boolean\(recogniser\(\)\)\)/.test(room),
+    'a microphone button on a browser with no recogniser is a button that does nothing');
+  ok('  and listens in the child\u2019s language',
+    /lang === 'af' \? 'af-ZA' : 'en-ZA'/.test(room));
+}
+
 ok('the song asks for the topic AND the sound',
   (() => {
     const made = withoutComments(readFileSync('app/lib/kidsong.ts', 'utf8'));

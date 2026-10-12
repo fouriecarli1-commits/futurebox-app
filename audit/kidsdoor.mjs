@@ -17,9 +17,16 @@
  *      reached it, from the sign-in screen's link. Before today both were
  *      silent, and silence was the whole report.
  *
+ *   4. "Daar is kinders wat kan tik": the child's own words. Typing in the
+ *      box puts the words into the sentence; pressing the microphone, with
+ *      the browser's recogniser faked to hear "a cat in a hat", puts those
+ *      words into the box. No real microphone, no server: the recogniser is
+ *      the browser's own.
+ *
  * Mutation that proved it: with the POST stub answering `open: false` the
  * second finding fails ("the child's room is not shown"); with the sign-in
- * box's selector removed the third fails.
+ * box's selector removed the third fails; with the fake recogniser's words
+ * changed the fourth fails.
  */
 import { chromium } from 'playwright';
 import { enter, studio } from './enter.mjs';
@@ -56,6 +63,18 @@ async function stubKids(page, onPost) {
 {
   const { browser, page, problems: entering } = await enter({ width: 1280, height: 900, at: server.url });
   await stubKids(page, () => ({ json: OPEN }));
+  /* A recogniser that hears one thing. Installed before the kids page
+     loads, so the room finds it where a phone's browser would have one. */
+  await page.addInitScript(() => {
+    class Heard {
+      start() {
+        setTimeout(() => this.onresult?.({ results: [[{ transcript: 'a cat in a hat' }]] }), 60);
+        setTimeout(() => this.onend?.(), 120);
+      }
+      stop() { this.onend?.(); }
+    }
+    window.SpeechRecognition = Heard;
+  });
   /* Into the studio, where the rail is. `studio()` is the place, not the
      press — see enter.mjs. */
   await studio(page);
@@ -96,6 +115,28 @@ async function stubKids(page, onPost) {
   check("giving an allowance shows the child's room", await room.isVisible().catch(() => false));
   check('  and takes the door away', (await door.count()) === 0);
   check('  with nothing said about a failure', (await page.locator('[data-kidsfail]').count()) === 0);
+
+  /* ── 4. The child's own words ─────────────────────────────────────── */
+  const box = page.locator('[data-kidstype]');
+  check('the room has a box to type in', (await box.count()) === 1);
+  await box.fill('a dog on the moon');
+  await page.waitForTimeout(200);
+  const sentence = (await page.locator('[data-kidssentencetopic]').textContent().catch(() => '')) ?? '';
+  check('  and typing puts the words into the sentence', sentence.includes('a dog on the moon'), sentence);
+  await page.locator('[data-kidsclearwords]').click();
+  await page.waitForTimeout(150);
+  check('  and the words can be cleared again', (await box.inputValue()) === '');
+  const mic = page.locator('[data-kidsspeak]');
+  check('  and there is a button to say it instead, where the browser can listen', (await mic.count()) === 1);
+  await mic.click();
+  await page.waitForTimeout(500);
+  check('  and what is said lands in the box', (await box.inputValue()).includes('a cat in a hat'), await box.inputValue());
+  check('  and in the sentence', ((await page.locator('[data-kidssentencetopic]').textContent().catch(() => '')) ?? '').includes('a cat in a hat'));
+  check('  and listening stops by itself', (await page.locator('[data-kidslistening]').count()) === 0);
+  /* Words and a sound are enough: the make button comes on without a topic bubble. */
+  await page.locator('[data-kidssounds] button').first().click();
+  await page.waitForTimeout(200);
+  check('  and words plus a sound are enough to make a song', await page.locator('[data-kidsmake]').isEnabled());
   await page.screenshot({ path: shot('kids-door-through.png'), fullPage: false });
   check('the way in threw nothing', entering.length === 0, entering.join(' | '));
   await browser.close();

@@ -522,22 +522,25 @@ body:has([data-kidsroom]) {
      system one. */
   --fb-font-sans: var(--fb-font-round), "Trebuchet MS", system-ui, sans-serif;
 
-  /* Warm paper rather than white: a screen of pure white is a lamp, and this
-     is a room somebody small sits close to. */
-  --fb-page: 255 247 237;
-  --fb-ink: 32 24 14;
+  /* Soft green rather than white: a screen of pure white is a lamp, and this
+     is a room somebody small sits close to. Green, not the warm orange it
+     opened with — Carli, 12 October 2026: *"die tema moet groen wees eerder
+     as oranje"* — and the same green family as the rest of FutureBox, so
+     the room is the app's own and not somebody else's. */
+  --fb-page: 240 251 244;
+  --fb-ink: 10 30 22;
 
-  --fb-surface-50: 255 251 245;
-  --fb-surface-100: 255 243 227;
-  --fb-surface-200: 255 230 199;
-  --fb-surface-300: 253 211 164;
-  --fb-surface-400: 247 183 120;
-  --fb-surface-500: 234 146 72;
-  --fb-surface-600: 199 110 44;
-  --fb-surface-700: 154 80 30;
-  --fb-surface-800: 104 52 20;
-  --fb-surface-900: 60 30 12;
-  --fb-surface-950: 32 24 14;
+  --fb-surface-50: 243 252 246;
+  --fb-surface-100: 228 247 234;
+  --fb-surface-200: 199 238 211;
+  --fb-surface-300: 160 224 184;
+  --fb-surface-400: 110 200 148;
+  --fb-surface-500: 56 170 108;
+  --fb-surface-600: 34 136 84;
+  --fb-surface-700: 24 104 66;
+  --fb-surface-800: 18 72 48;
+  --fb-surface-900: 12 46 32;
+  --fb-surface-950: 10 30 22;
 
   /* The accent is a hot pink rather than the app's green: in a room where
      every choice is already a colour, the one button that MAKES something
@@ -561,10 +564,12 @@ body:has([data-kidsroom]) {
    three-colour wash, and it is right: it gives the page somewhere to be
    without putting anything in it that a child has to read past. */
 body:has([data-kidsroom]) {
+  /* Three greens, lime to teal, so the wash reads as one colour with light
+     in it rather than three different rooms. */
   background-image:
-    radial-gradient(70rem 40rem at 12% -8%, rgba(255, 214, 0, 0.22), transparent 60%),
-    radial-gradient(60rem 40rem at 92% 8%, rgba(255, 64, 129, 0.18), transparent 60%),
-    radial-gradient(70rem 48rem at 50% 108%, rgba(0, 229, 255, 0.20), transparent 60%);
+    radial-gradient(70rem 40rem at 12% -8%, rgba(190, 242, 100, 0.30), transparent 60%),
+    radial-gradient(60rem 40rem at 92% 8%, rgba(16, 185, 129, 0.20), transparent 60%),
+    radial-gradient(70rem 48rem at 50% 108%, rgba(0, 200, 170, 0.22), transparent 60%);
   background-attachment: fixed;
 }
 
