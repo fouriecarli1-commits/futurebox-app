@@ -5288,7 +5288,7 @@ export default function PostStudio({
                 {one.id === 'square' ? '🔲 1:1' : one.id === 'story' ? '📱 9:16' : '🖥️ 16:9'}
               </button>
             ))}
-            <span className="mx-1 h-4 w-px bg-white/10" aria-hidden />
+            <span className="mx-1 h-4 w-px bg-zinc-700/40" aria-hidden />
             <button type="button" onClick={() => setBench('read')} className={`${LEEG} w-auto border-cyan-500/40 bg-cyan-500/10 px-2.5 text-xs text-cyan-300`}>
               🪄 {t('post.quickGrab', 'Magic Grab')}
             </button>

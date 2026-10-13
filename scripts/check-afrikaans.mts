@@ -193,6 +193,14 @@ const SAME_IN_BOTH = new Set([
   'grave', 'largo', 'larghetto', 'adagio', 'andante', 'moderato',
   'allegro', 'vivace', 'presto', 'prestissimo',
   'BPM', 'EQ', 'Tremolo', 'Stems', 'Hook',
+  /* Names on Google's page designs, 13 October 2026: a product, a pack, a
+     line of neon words or a platform's own name is the same in both
+     languages because it is a name. "Drop" is what a musician says in
+     Afrikaans too, the way "Hook" above is. */
+  'Loft Jack', '& drops', '30s Reel', 'Drop', 'FutureBox TV', 'Google DeepMind',
+  'Platform', 'GOOGLE VEO', 'Blog', 'Suite', 'VideoEditor NLE', 'ProBooth DAW',
+  'Neon', 'Synthwave', 'Hologram', 'PHANTASM', 'FUTURE PRO', 'Phantasm 2026',
+  'PHANTASM 2026', 'Future Pro', 'Static Wave',
 ]);
 const copied: string[] = [];
 for (const [i, match] of starts.entries()) {

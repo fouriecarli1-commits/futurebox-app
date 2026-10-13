@@ -301,7 +301,7 @@ export default function Spotlight({
                 key={tag}
                 type="button"
                 onClick={() => onGo('make')}
-                className="min-h-[36px] rounded-full border border-white/10 bg-white/5 px-3 text-xs text-zinc-300 transition hover:border-emerald-500/50 hover:bg-emerald-500/20 hover:text-emerald-400"
+                className="min-h-[36px] rounded-full border border-white/10 bg-zinc-800/40 px-3 text-xs text-zinc-300 transition hover:border-emerald-500/50 hover:bg-emerald-500/20 hover:text-emerald-400"
               >
                 #{tag.replace(/\s+/g, '')}
               </button>
@@ -316,7 +316,7 @@ export default function Spotlight({
               { icon: <Compass className="h-4 w-4" />, tone: 'border-violet-500/40 bg-violet-500/20 text-violet-400', name: t('spot.radarName', 'Collab Radar'), sub: t('spot.radarSub', 'Makers near your key and tempo'), go: onOpenRadar },
               { icon: <Radio className="h-4 w-4" />, tone: 'border-cyan-500/40 bg-cyan-500/20 text-cyan-400', name: t('spot.liveName', 'Live room'), sub: t('spot.liveSub', 'Where shared songs play and get counted'), go: onOpenLive },
             ].map((one) => (
-              <div key={one.name} className="flex items-center justify-between rounded-xl p-2 transition hover:bg-white/5">
+              <div key={one.name} className="flex items-center justify-between rounded-xl p-2 transition hover:bg-zinc-800/40">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border ${one.tone}`}>{one.icon}</div>
                   <div className="min-w-0">

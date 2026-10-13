@@ -44,7 +44,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Smartphone, Loader2, Download, Film, Play, Plus, Scissors, Square, Music, Trash2, Radio, Wand2 } from 'lucide-react';
+import { Smartphone, Loader2, Download, Film, Play, Plus, Scissors, Square, Music, Trash2, Radio, Wand2, Zap } from 'lucide-react';
 import { loadTracks, downloadBlob, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
@@ -65,6 +65,42 @@ import { cutHook, soundOf } from '../lib/videoclip';
 import { fetchCreator, nameOf } from '../lib/radar';
 
 const LENGTHS = [15, 30];
+
+interface Peaks {
+  readonly left: Float32Array;
+  readonly right: Float32Array;
+  readonly seconds: number;
+}
+
+/** The loudest sample in each of `bins` slices, per channel. Mono is drawn twice. */
+function peaksOf(buffer: AudioBuffer, bins = 400): Peaks {
+  const read = (channel: number): Float32Array => {
+    const data = buffer.getChannelData(Math.min(channel, buffer.numberOfChannels - 1));
+    const out = new Float32Array(bins);
+    const step = Math.max(1, Math.floor(data.length / bins));
+    for (let bin = 0; bin < bins; bin += 1) {
+      let loudest = 0;
+      const from = bin * step;
+      const to = Math.min(data.length, from + step);
+      for (let at = from; at < to; at += 1) {
+        const level = Math.abs(data[at]);
+        if (level > loudest) loudest = level;
+      }
+      out[bin] = loudest;
+    }
+    return out;
+  };
+  return { left: read(0), right: read(1), seconds: buffer.duration };
+}
+
+/** The region colours, in the order the moments are found. Google's page: emerald, pink, cyan. */
+const REGION = [
+  { edge: 'border-emerald-400', wash: 'bg-emerald-500/20', ink: 'text-emerald-300', tag: 'bg-emerald-400 text-onAccent', glow: 'shadow-[0_0_24px_rgba(52,211,153,0.35)]' },
+  { edge: 'border-pink-500', wash: 'bg-pink-500/20', ink: 'text-pink-300', tag: 'bg-pink-500 text-onAccent', glow: 'shadow-[0_0_24px_rgba(236,72,153,0.35)]' },
+  { edge: 'border-cyan-400', wash: 'bg-cyan-500/20', ink: 'text-cyan-300', tag: 'bg-cyan-400 text-onAccent', glow: 'shadow-[0_0_24px_rgba(34,211,238,0.35)]' },
+  { edge: 'border-amber-400', wash: 'bg-amber-500/20', ink: 'text-amber-300', tag: 'bg-amber-400 text-onAccent', glow: 'shadow-[0_0_24px_rgba(251,191,36,0.35)]' },
+  { edge: 'border-violet-400', wash: 'bg-violet-500/20', ink: 'text-violet-300', tag: 'bg-violet-400 text-onAccent', glow: 'shadow-[0_0_24px_rgba(167,139,250,0.35)]' },
+];
 
 /** A song somebody put in the room and said others may build on. */
 interface Shared {
@@ -126,6 +162,18 @@ export default function Hooks({
   /** The sound behind whatever is chosen, made once and kept. */
   const heardFrom = useRef<{ key: string; url: string; own: boolean } | null>(null);
   const [hooks, setHooks] = useState<Hook[]>([]);
+  /**
+   * The sound itself, as a picture.
+   *
+   * Google's page draws the song as a stereo waveform with the found moments
+   * boxed on it, and that is drawable from what the room already decodes:
+   * the same `AudioBuffer` the finder reads. Four hundred bins per channel,
+   * kept rather than recomputed, because the buffer is tens of megabytes and
+   * the picture is three kilobytes.
+   */
+  const [peaks, setPeaks] = useState<Peaks | null>(null);
+  /** Which found moment is lit on the waveform. An index into `hooks`. */
+  const [picked, setPicked] = useState(0);
   const [seconds, setSeconds] = useState(15);
   const [finding, setFinding] = useState(false);
   const [cutting, setCutting] = useState<number | null>(null);
@@ -250,20 +298,37 @@ export default function Hooks({
         const audio = await readAudio(track.id);
         if (!audio) return;
         const buffer = await decodeTrack(audio);
+        setPeaks(peaksOf(buffer));
+        setPicked(0);
+        /* The same clamp a short video and a shared song already get. A
+           song shorter than the clip length used to come back with no
+           moments at all and no reason — the finder walks windows of the
+           asked-for length and finds none that fit. The whole of a short
+           song is the moment, said as such. */
+        const room = Math.max(1, Math.floor(buffer.duration) - 1);
+        const fits = Math.min(clipSeconds, room);
         // The plan first, where there is one: the app knows where the chorus
         // is, and a known boundary beats a loudness peak. Analysis fills in
         // behind it, and a duplicate start is dropped rather than offered
         // twice under two names.
-        const named = sectionHooks(track.parts ?? [], buffer.duration, clipSeconds);
-        const found = findHooks(buffer, clipSeconds, 3).filter(
+        const named = sectionHooks(track.parts ?? [], buffer.duration, fits);
+        const found = findHooks(buffer, fits, 3).filter(
           (one) => !named.some((part) => Math.abs(part.startSeconds - one.startSeconds) < 2),
         );
-        setHooks(named.concat(found).slice(0, 5));
+        const all = named.concat(found).slice(0, 5);
+        setHooks(
+          all.length
+            ? all
+            : [{ startSeconds: 0, seconds: Math.max(1, Math.min(clipSeconds, buffer.duration)), kind: 'steady', score: 0 }],
+        );
+        if (fits < clipSeconds) {
+          setProblem(t('hooks.songShorter', 'That song is shorter than the clip length, so the whole of it is the moment.'));
+        }
       } finally {
         setFinding(false);
       }
     },
-    [clip],
+    [clip, t],
   );
 
   /** A song off the device, the same store the video rooms use. */
@@ -313,6 +378,8 @@ export default function Hooks({
       const file = await answer.blob();
       const sound = await decodeTrack(file);
       setShared({ ...post, file });
+      setPeaks(peaksOf(sound));
+      setPicked(0);
 
       /* The same clamp a short video gets: `findHooks` walks windows of the
          asked-for length and returns nothing at all when none fit, which
@@ -367,6 +434,8 @@ export default function Hooks({
         return;
       }
       setVideo({ name: file.name.replace(/\.[a-z0-9]+$/i, ''), file, sound });
+      setPeaks(peaksOf(sound));
+      setPicked(0);
 
       /* A clip cannot be longer than what it is cut from.
  
@@ -640,8 +709,77 @@ export default function Hooks({
     return t('hooks.safe');
   };
 
+  /* ── The waveform ─────────────────────────────────────────────────────
+
+     Drawn from the decoded sound, not decorated: left channel up, right
+     channel down, the way a stereo file is shown in every editor. A mono
+     file is drawn twice, which is also what an editor does. Redrawn when
+     the song changes or the box is resized. */
+  const wave = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const art = wave.current;
+    const ctx = art?.getContext('2d');
+    if (!art || !ctx) return undefined;
+    const draw = (): void => {
+      const w = (art.width = art.clientWidth);
+      const h = (art.height = art.clientHeight);
+      ctx.clearRect(0, 0, w, h);
+      const mid = h / 2;
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(0, mid - 0.5, w, 1);
+      if (!peaks) return;
+      const bins = peaks.left.length;
+      const bar = w / bins;
+      for (let bin = 0; bin < bins; bin += 1) {
+        const up = Math.max(1, peaks.left[bin] * (mid - 4));
+        const down = Math.max(1, peaks.right[bin] * (mid - 4));
+        const x = bin * bar;
+        ctx.fillStyle = bin % 7 === 0 ? '#22d3ee' : '#34d399';
+        ctx.fillRect(x, mid - up, Math.max(1, bar - 0.6), up);
+        ctx.fillStyle = bin % 7 === 0 ? 'rgba(34,211,238,0.55)' : 'rgba(52,211,153,0.55)';
+        ctx.fillRect(x, mid, Math.max(1, bar - 0.6), down);
+      }
+    };
+    draw();
+    const watch = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(draw);
+    watch?.observe(art);
+    return () => watch?.disconnect();
+  }, [peaks]);
+
+  /** The song on the table, by whichever of the three ways it came in. */
+  const cuttingFrom = shared ? shared.title : video ? video.name : selected?.title ?? '';
+  const chosen = hooks[picked] ?? hooks[0] ?? null;
+  const strongest = hooks.reduce((best, one) => (one.score > best ? one.score : best), 0);
+  const sources = tracks.length + brought.length + open.length;
+
+  /** A short name for a region's badge: the section's own name where there is one. */
+  const regionName = (hook: Hook): string => {
+    if (hook.kind === 'section' && hook.label) return hook.label;
+    if (hook.kind === 'arrival') return t('hooks.kindArrival', 'Drop');
+    if (hook.kind === 'fullest') return t('hooks.kindFullest', 'Peak');
+    return t('hooks.kindSteady', 'Steady');
+  };
+
+  /** Where a region sits on the picture, as a share of the whole song. */
+  const placeOf = (hook: Hook): { left: string; width: string } => {
+    const whole = peaks?.seconds || 1;
+    return {
+      left: `${Math.max(0, Math.min(100, (hook.startSeconds / whole) * 100))}%`,
+      width: `${Math.max(2, Math.min(100, (hook.seconds / whole) * 100))}%`,
+    };
+  };
+
+  const ruler = peaks
+    ? [0, 0.25, 0.5, 0.75, 1].map((share) => formatMoment(peaks.seconds * share))
+    : ['0:00', '', '', '', ''];
+
+  const SOURCE_ON = 'w-full text-left p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-xs font-bold text-emerald-300 flex items-center justify-between gap-2 min-h-[44px]';
+  const SOURCE_OFF = 'w-full text-left p-2.5 rounded-xl bg-zinc-800/40 hover:bg-zinc-700/40 border border-white/5 text-xs text-zinc-300 flex items-center justify-between gap-2 min-h-[44px] disabled:opacity-50';
+  const PANEL = 'rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md';
+  const BRING = 'w-full py-2 min-h-[44px] rounded-xl bg-zinc-800/40 border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition flex items-center justify-center gap-1.5 disabled:opacity-50';
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4" data-hooksroom>
       {/* The one player the whole room shares.
 
           In the document rather than `new Audio()`, so a probe can ask it
@@ -649,170 +787,165 @@ export default function Hooks({
           the same song is twelve decodes, and on a phone that is the
           memory the tab gets thrown away for. */}
       <audio ref={player} data-hearplayer hidden />
-      <div>
-        <h4 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <Smartphone className="w-6 h-6 text-emerald-400" />
-          {t('hooks.title')}
-        </h4>
-        <p className="text-base text-zinc-400 pt-1 max-w-2xl leading-relaxed">{t('hooks.sub')}</p>
-        {/* Finding and cutting both happen in the browser, so nothing here
-            spends. Said rather than left blank: a room that hands you a
-            finished clip and says nothing about money is read as hiding one. */}
-        <Cost credits={0} className="pt-1.5" />
+
+      {/* ── The bar across the top ──────────────────────────────────────
+          Google's page: the brand mark and the room's name, the length as
+          two pills, a lit chip, and the one button that does the work. */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-gradient-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+            <Smartphone className="w-4 h-4 text-onAccent" />
+          </div>
+          <div className="min-w-0">
+            <h4 className="text-base font-extrabold text-white tracking-tight leading-tight">
+              {t('hooks.title')} <span className="text-zinc-400 font-mono text-xs uppercase tracking-wider">{t('hooks.andDrops', '& drops')}</span>
+            </h4>
+            <p className="text-[11px] text-zinc-400 truncate">{t('hooks.tagline', 'The bit of your song worth posting.')}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="bg-zinc-950 p-1 rounded-full border border-white/10 flex items-center text-xs font-bold" data-hooklengths>
+            {LENGTHS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                data-hooklength={option}
+                onClick={() => {
+                  setSeconds(option);
+                  if (selected) void look(selected, option);
+                }}
+                className={`px-3 py-1.5 min-h-[36px] rounded-full transition ${
+                  seconds === option ? 'bg-emerald-500 text-onAccent font-extrabold' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {option === 15 ? t('hooks.short15', '15s Short') : t('hooks.reel30', '30s Reel')}
+              </button>
+            ))}
+          </div>
+          {hooks.length > 0 && (
+            <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs font-extrabold text-emerald-300" data-hookcount>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              {hooks.length === 1 ? t('hooks.foundOne') : `${hooks.length} · ${t('hooks.found')}`}
+            </span>
+          )}
+          <Cost credits={0} />
+        </div>
       </div>
 
-      {/* ── What to cut from ─────────────────────────────────────────────
-
-          The channel, then anything brought in, then the two ways to bring
-          something in. An empty channel is no longer a dead end: the room
-          used to print "make a song first" over the whole screen, which is
-          the wrong answer for anybody who already has a recording — or a
-          video they filmed.
-
-          The video button is the honest half of "can this pull clips out of
-          YouTube". It cannot, and no app can lawfully: their Terms allow
-          access only through the playback pages, the embeddable player, or a
-          means they designate. A file you own is a different thing entirely,
-          and it is the thing that was actually wanted. */}
-      <>
-          {/* Boxed, like every other room.
-
-              This section had no box at all: a loose paragraph, then chips,
-              then two more loose paragraphs down the page. `docs/PACKAGING.md`
-              §2 is one shape for all thirteen rooms and this was one of the
-              ones still writing its own. */}
-          <Card title={t('hooks.fromTitle', 'What are we cutting from?')}>
-            <p className="text-sm text-zinc-400">
-              {tracks.length === 0 && brought.length === 0 ? t('hooks.none') : t('hooks.pick')}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {[...tracks, ...brought].map((track) => (
-                <button
-                  key={track.id}
-                  type="button"
-                  onClick={() => look(track, seconds)}
-                  className={`min-h-[44px] px-3 py-2 rounded-xl text-sm border transition-all flex items-center gap-2 ${
-                    selected?.id === track.id
-                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
-                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                  }`}
-                >
-                  <Music className="w-3.5 h-3.5" />
-                  {track.title}
-                </button>
-              ))}
-
-              {video && (
-                <span className="px-3 py-2 rounded-xl text-sm border bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold flex items-center gap-2">
-                  <Film className="w-3.5 h-3.5" />
-                  {video.name}
-                </span>
-              )}
-
-              {/* Songs the room is open on. In the same row as her own, because
-                  they are the same choice — what am I cutting from — and a
-                  second list further down would be a second place to look.
-                  The name under the title is the point of the whole thing:
-                  whose song this is, before anything is done to it. */}
-              {open.map((post) => (
-                <button
-                  key={post.id}
-                  type="button"
-                  onClick={() => void pickShared(post)}
-                  disabled={taking}
-                  className={`min-h-[44px] px-3 py-2 rounded-xl text-sm border transition-all flex items-center gap-2 disabled:opacity-50 ${
-                    shared?.id === post.id
-                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
-                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                  }`}
-                >
-                  <Radio className="w-3.5 h-3.5" />
-                  <span className="text-left leading-tight">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        {/* ── Column one: what we are cutting from ──────────────────── */}
+        <aside className={`${PANEL} space-y-3 min-w-0`} data-hooksources>
+          <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs font-bold uppercase text-white">
+            <span>{t('hooks.fromTitle', 'What are we cutting from?')}</span>
+            <span className="text-[10px] text-emerald-300 font-mono">{sources} {t('hooks.tracks', 'TRACKS')}</span>
+          </div>
+          <p className="text-xs text-zinc-400 leading-relaxed">{t('hooks.sub')}</p>
+          <p className="text-xs text-zinc-500">
+            {tracks.length === 0 && brought.length === 0 ? t('hooks.none') : t('hooks.pick')}
+          </p>
+          <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+            {[...tracks, ...brought].map((track) => (
+              <button
+                key={track.id}
+                type="button"
+                onClick={() => look(track, seconds)}
+                className={selected?.id === track.id ? SOURCE_ON : SOURCE_OFF}
+              >
+                <span className="truncate flex items-center gap-2"><Music className="w-3.5 h-3.5 shrink-0" />{track.title}</span>
+                {selected?.id === track.id && (
+                  <span className="text-[9px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded font-mono shrink-0">{t('hooks.active', 'ACTIVE')}</span>
+                )}
+              </button>
+            ))}
+            {video && (
+              <span className={SOURCE_ON}>
+                <span className="truncate flex items-center gap-2"><Film className="w-3.5 h-3.5 shrink-0" />{video.name}</span>
+                <span className="text-[9px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded font-mono shrink-0">{t('hooks.active', 'ACTIVE')}</span>
+              </span>
+            )}
+            {/* Songs the room is open on. In the same list as her own, because
+                they are the same choice — what am I cutting from. The name
+                under the title is the point: whose song this is, before
+                anything is done to it. */}
+            {open.map((post) => (
+              <button
+                key={post.id}
+                type="button"
+                onClick={() => void pickShared(post)}
+                disabled={taking}
+                className={shared?.id === post.id ? SOURCE_ON : SOURCE_OFF}
+              >
+                <span className="truncate flex items-center gap-2">
+                  <Radio className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-left leading-tight truncate">
                     {post.title}
-                    <span className="block text-xs opacity-70">{post.by}</span>
+                    <span className="block text-[10px] opacity-70">{post.by}</span>
                   </span>
-                </button>
-              ))}
+                </span>
+                {shared?.id === post.id && (
+                  <span className="text-[9px] bg-emerald-400 text-onAccent px-1.5 py-0.5 rounded font-mono shrink-0">{t('hooks.active', 'ACTIVE')}</span>
+                )}
+              </button>
+            ))}
+          </div>
 
+          <div className="pt-3 border-t border-white/10 space-y-2">
+            <button type="button" onClick={() => songFile.current?.click()} disabled={taking} className={BRING}>
+              {taking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              {t('board.bringSong', 'Bring a song in')}
+            </button>
+            <input
+              ref={songFile}
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(event) => {
+                void bringSong(event.target.files?.[0] ?? null);
+                event.target.value = '';
+              }}
+            />
+            <button type="button" onClick={() => videoFile.current?.click()} disabled={taking} className={BRING}>
+              {taking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Film className="w-3.5 h-3.5" />}
+              {t('hooks.bringVideo', 'Bring a video in')}
+            </button>
+            <input
+              ref={videoFile}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={(event) => {
+                void bringVideo(event.target.files?.[0] ?? null);
+                event.target.value = '';
+              }}
+            />
+            {(shared || video) && (
               <button
                 type="button"
-                onClick={() => songFile.current?.click()}
-                disabled={taking}
-                className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2 disabled:opacity-50"
-              >
-                {taking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                {t('board.bringSong', 'Bring a song in')}
-              </button>
-              <input
-                ref={songFile}
-                type="file"
-                accept="audio/*"
-                className="hidden"
-                onChange={(event) => {
-                  void bringSong(event.target.files?.[0] ?? null);
-                  event.target.value = '';
+                onClick={() => {
+                  setShared(null);
+                  setVideo(null);
+                  setHooks([]);
+                  setPeaks(null);
                 }}
-              />
-
-              <button
-                type="button"
-                onClick={() => videoFile.current?.click()}
-                disabled={taking}
-                className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2 disabled:opacity-50"
+                className={BRING}
               >
-                {taking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Film className="w-3.5 h-3.5" />}
-                {t('hooks.bringVideo', 'Bring a video in')}
+                <Trash2 className="w-3.5 h-3.5" />
+                {t('board.dropSong', 'Take it back out')}
               </button>
-              <input
-                ref={videoFile}
-                type="file"
-                accept="video/*"
-                className="hidden"
-                onChange={(event) => {
-                  void bringVideo(event.target.files?.[0] ?? null);
-                  event.target.value = '';
-                }}
-              />
-
-              {shared && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShared(null);
-                    setHooks([]);
-                  }}
-                  className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-all flex items-center gap-2"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  {t('board.dropSong', 'Take it back out')}
-                </button>
-              )}
-
-              {video && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVideo(null);
-                    setHooks([]);
-                  }}
-                  className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-all flex items-center gap-2"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  {t('board.dropSong', 'Take it back out')}
-                </button>
-              )}
-            </div>
-            <Note className="text-xs text-zinc-500">
-              {t(
-                'hooks.bringWhy',
-                'A song or a video you have on this device. A video is cut with the sound that is on it, and the moments are found in that sound. Nothing can be taken from YouTube or another site — their terms do not allow it, and this app will not pretend otherwise.',
-              )}
-            </Note>
-            {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-          </Card>
+            )}
+          </div>
+          <Note className="text-xs text-zinc-500">
+            {t(
+              'hooks.bringWhy',
+              'A song or a video you have on this device. A video is cut with the sound that is on it, and the moments are found in that sound. Nothing can be taken from YouTube or another site — their terms do not allow it, and this app will not pretend otherwise.',
+            )}
+          </Note>
+          {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
           {/* The length, as its own card with the choices as the small buttons
-              along the bottom — which is exactly what the `tools` row is for. */}
+              along the bottom. The pills in the bar above are the same two
+              choices; this card is the one the copilot opens when it sets
+              the length for you. See `lib/opencard.ts`. */}
           <div ref={lengthCard.mine} className="scroll-mt-4">
           <Card
             openOn={lengthCard.openOn}
@@ -841,20 +974,97 @@ export default function Hooks({
             </p>
           </Card>
           </div>
+        </aside>
 
-          {/* The other half of what the permission allows.
+        {/* ── Column two: the waveform and the moments on it ────────── */}
+        <div className="space-y-4 min-w-0">
+        <main className={`${PANEL} space-y-4 min-w-0`} data-hookwave>
+          <div className="flex flex-col gap-2 pb-3 border-b border-white/10 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold text-white truncate">
+                {cuttingFrom
+                  ? `${cuttingFrom} — ${t('hooks.stereoWave', 'stereo waveform')}`
+                  : t('hooks.noneYet', 'Nothing on the table yet')}
+              </h2>
+              <p className="text-[11px] text-emerald-300 font-mono">
+                {peaks
+                  ? `${formatMoment(peaks.seconds)} · ${hooks.length} ${t('hooks.regionsFound', 'moments found in the sound')}`
+                  : t('hooks.pickToDraw', 'Pick a song on the left and it is drawn here.')}
+              </p>
+            </div>
+            {chosen && (
+              <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-extrabold text-emerald-300 font-mono shrink-0">
+                {chosen.score >= strongest - 0.001 ? t('hooks.strongest') : `${Math.round(chosen.score * 100)}% ${t('hooks.ofStrongest', 'of the strongest')}`}
+              </span>
+            )}
+          </div>
 
-              Placed above the moments rather than beside each one: every
-              moment of the same song hands over the same style, the same
-              title and the same name, so a button on each of five cards is
-              the same button five times.
+          <div className="bg-black/70 rounded-xl border border-white/10 p-3 sm:p-4 relative overflow-hidden">
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono mb-2">
+              {ruler.map((mark, at) => <span key={at}>{mark}</span>)}
+            </div>
+            <div className="relative h-44 sm:h-48 w-full">
+              <canvas ref={wave} className="absolute inset-0 w-full h-full" data-hookcanvas />
+              {hooks.map((hook, index) => {
+                const look_ = REGION[index % REGION.length];
+                const lit = index === picked;
+                return (
+                  <button
+                    key={hook.startSeconds}
+                    type="button"
+                    data-hookregion={index}
+                    onClick={() => setPicked(index)}
+                    style={placeOf(hook)}
+                    className={`absolute inset-y-1 border-2 rounded-xl p-1.5 flex flex-col justify-between text-left transition min-w-[3.5rem] ${look_.edge} ${look_.wash} ${lit ? `${look_.glow} scale-[1.03] z-10` : 'opacity-80 hover:opacity-100'}`}
+                    aria-pressed={lit}
+                    title={reasonFor(hook)}
+                  >
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono self-start truncate max-w-full ${look_.tag}`}>{regionName(hook)}</span>
+                    <span className="text-center">
+                      <span className="block text-[11px] font-extrabold text-white leading-tight">{formatMoment(hook.startSeconds)}</span>
+                      <span className={`block text-[9px] font-mono ${look_.ink}`}>{hook.seconds}s</span>
+                    </span>
+                    <span className="text-[8px] text-zinc-300 font-mono self-end">{Math.round(hook.score * 100)}%</span>
+                  </button>
+                );
+              })}
+              {finding && (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-zinc-400 gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />{t('hooks.looking')}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono mt-3 pt-2 border-t border-white/5">
+              <span>{t('hooks.aspectNote', '9:16 · cut in this browser')}</span>
+              <span>{t('hooks.noFade', 'No fade: the clip starts on the moment')}</span>
+            </div>
+          </div>
 
-              The sentence under it is not decoration. Somebody who presses
-              this expecting the new song to *sound* like the old one has
-              understood the app as most people would, and will only find out
-              otherwise from a result that disappoints them. The engine takes
-              text. Saying so before the press is the whole of being honest
-              about it. */}
+          {/* The meter. Google's page calls it a viral potential analyzer and
+              prints 98.5%. The number this room has is the finder's own
+              score for the moment — how strongly something arrives there,
+              against the song's own loudest point — and that is what the
+              bar shows, under its real name. Nobody here can predict
+              views, and a bar that claims to would be a lie with a
+              gradient on it. */}
+          {chosen && (
+            <div className="rounded-xl border border-emerald-500/30 bg-zinc-950/60 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3" data-hookmeter>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                  <Zap className="w-4 h-4 text-emerald-300" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white">{t('hooks.energyTitle', 'How strongly something arrives here')}</div>
+                  <div className="text-[10px] text-zinc-400 truncate">{reasonFor(chosen)}</div>
+                </div>
+              </div>
+              <div className="w-full sm:w-48 bg-black h-3 rounded-full overflow-hidden border border-white/10 shrink-0">
+                <div className="bg-gradient-to-r from-emerald-500 via-cyan-400 to-pink-500 h-full" style={{ width: `${Math.round(chosen.score * 100)}%` }} />
+              </div>
+            </div>
+          )}
+
+          {/* The other half of what a shared song's permission allows. */}
           {shared && (
             <Card title={t('buildon.makeTitle', 'Start your own from this')}>
               <p className="text-sm text-zinc-400 leading-snug">
@@ -889,27 +1099,35 @@ export default function Hooks({
             </Card>
           )}
 
-          {finding && <p className="text-sm text-zinc-500">{t('hooks.looking')}</p>}
-
+          {/* Each moment as a card: hear it, cut it, take it to the video
+              desk. The cards are the regions above, opened up — the region
+              is where, the card is what to do about it. */}
           {hooks.length > 0 && (
             <div className="space-y-2.5">
               <p className="text-sm font-semibold text-zinc-300">
                 {hooks.length === 1 ? t('hooks.foundOne') : `${hooks.length} · ${t('hooks.found')}`}
               </p>
               <div className="grid md:grid-cols-3 gap-3">
-                {hooks.map((hook, index) => (
-                  <div key={hook.startSeconds} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
+                {hooks.map((hook, index) => {
+                  const look_ = REGION[index % REGION.length];
+                  return (
+                  <div
+                    key={hook.startSeconds}
+                    data-hookcard={index}
+                    className={`rounded-2xl border bg-zinc-950/60 p-3 space-y-2 ${index === picked ? look_.edge : 'border-white/10'}`}
+                  >
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="text-lg font-bold text-white">
+                      <p className="text-base font-bold text-white">
+                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded mr-2 align-middle ${look_.tag}`}>{regionName(hook)}</span>
                         {t('hooks.at')} {formatMoment(hook.startSeconds)}
                       </p>
                       {hook.score >= 0.99 && (
-                        <span className="text-sm text-emerald-400 font-semibold">{t('hooks.strongest')}</span>
+                        <span className="text-xs text-emerald-400 font-semibold">{t('hooks.strongest')}</span>
                       )}
                     </div>
-                    <p className="text-sm text-zinc-400">{reasonFor(hook)}</p>
+                    <p className="text-xs text-zinc-400">{reasonFor(hook)}</p>
                     <div className="h-1 rounded-full bg-zinc-800 overflow-hidden">
-                      <div className="h-full bg-emerald-400" style={{ width: `${Math.round(hook.score * 100)}%` }} />
+                      <div className={`h-full ${look_.tag.split(' ')[0]}`} style={{ width: `${Math.round(hook.score * 100)}%` }} />
                     </div>
                     {/* Hear it first. Above the cut, because it is the
                         cheaper of the two and the one that decides whether
@@ -917,7 +1135,7 @@ export default function Hooks({
                     <button
                       type="button"
                       data-hear={index}
-                      onClick={() => void hear(hook, index)}
+                      onClick={() => { setPicked(index); void hear(hook, index); }}
                       className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-sky-500 hover:text-sky-300 flex items-center justify-center gap-1.5"
                     >
                       {hearing === index ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -927,9 +1145,9 @@ export default function Hooks({
                     </button>
                     <button
                       type="button"
-                      onClick={() => cut(hook, index)}
+                      onClick={() => { setPicked(index); void cut(hook, index); }}
                       disabled={cutting !== null || !videoSupported()}
-                      className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-extrabold bg-emerald-500 text-onAccent hover:bg-emerald-400 flex items-center justify-center gap-1.5 disabled:opacity-50"
                     >
                       {cutting === index ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Scissors className="w-3.5 h-3.5" />}
                       {cutting === index ? t('hooks.cutting') : t('hooks.cut')}
@@ -987,7 +1205,8 @@ export default function Hooks({
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -995,11 +1214,54 @@ export default function Hooks({
           {!videoSupported() && hooks.length > 0 && (
             <p className="text-sm text-amber-300">{t('video.unsupported')}</p>
           )}
+        </main>
 
+        {/* ── Under the waveform: where it goes, and the clip when there is one ── */}
+        <aside className={`${PANEL} space-y-3`} data-hookexports>
+          <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs font-bold uppercase text-white">
+            <span>{t('hooks.presetsTitle', 'Export presets')}</span>
+            <span className="text-[10px] text-emerald-300 font-mono">{clip ? t('hooks.presetReady', 'READY') : t('hooks.presetWaiting', 'CUT ONE')}</span>
+          </div>
+          {/* Three places a hook goes, and the honest thing about them: they
+              all take the same upright file. A preset here sets the length
+              that platform likes; the cut is the same cut. */}
+          <div className="grid gap-2 sm:grid-cols-3">
+          {([
+            ['tiktok', 15, t('hooks.presetTiktok', 'TikTok Sound'), t('hooks.presetTiktokSub', '15s, upright')],
+            ['reels', 30, t('hooks.presetReels', 'Instagram Reels'), t('hooks.presetReelsSub', '30s, upright')],
+            ['shorts', 15, t('hooks.presetShorts', 'YouTube Shorts'), t('hooks.presetShortsSub', '15s, upright')],
+          ] as const).map(([id, length, name, sub]) => (
+            <button
+              key={id}
+              type="button"
+              data-hookpreset={id}
+              onClick={() => {
+                setSeconds(length);
+                if (selected) void look(selected, length);
+              }}
+              className={`w-full p-3 min-h-[44px] rounded-xl border text-left transition flex items-center justify-between gap-2 ${
+                seconds === length ? 'bg-emerald-500/15 border-emerald-500/40' : 'bg-zinc-800/40 hover:bg-zinc-700/40 border-white/5'
+              }`}
+            >
+              <span className="min-w-0">
+                <span className="block text-xs font-bold text-white">{name}</span>
+                <span className="block text-[9px] text-zinc-400 font-mono">{sub}</span>
+              </span>
+              <span className="text-[10px] font-bold text-emerald-300 shrink-0">{length}s →</span>
+            </button>
+          ))}
+          </div>
+          <Note className="text-xs text-zinc-500 leading-snug">
+            {t('hooks.presetsWhy', 'All three take the same 9:16 file. A preset only sets the length that platform likes; the cut is the same cut, and posting it is done from the phone’s own share sheet.')}
+          </Note>
+
+          {/* The clip, where the page drew its "test with video preview":
+              a real upright player of the real file, not a modal with a
+              note in it. */}
           {clip && (selected || video || shared) && (
-            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-4 space-y-3">
-              <p className="text-sm text-emerald-300">{t('hooks.ready')}</p>
-              <video src={clip.url} controls className="rounded-xl border border-zinc-800 bg-black max-h-96 mx-auto" />
+            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-3 space-y-3" data-hookclip>
+              <p className="text-sm text-emerald-300 font-semibold">{t('hooks.ready')}</p>
+              <video src={clip.url} controls className="rounded-xl border border-zinc-800 bg-black w-full max-h-80 mx-auto" />
               <button
                 type="button"
                 onClick={() =>
@@ -1014,19 +1276,15 @@ export default function Hooks({
                     ),
                   )
                 }
-                className="min-h-[44px] px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                className="min-h-[44px] w-full px-3 py-2 rounded-xl text-sm bg-emerald-500 text-onAccent font-extrabold hover:bg-emerald-400 flex items-center justify-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" />
                 {t('video.save')}
               </button>
 
-              {/* A hook exists to be posted. Offering that here, where the file
-                  is, saves somebody working out the caption twice.
-
-                  Only for a song made here. A clip cut out of somebody's own
-                  video is not necessarily theirs to post with our hashtags on
-                  it, and a share row that assumes it is would be this app
-                  making a claim about a file it has never seen. */}
+              {/* A hook exists to be posted. Only for a song made here: a
+                  clip cut out of somebody's own video is not necessarily
+                  theirs to post with our hashtags on it. */}
               {selected && (
                 <ShareRow
                   title={selected.title}
@@ -1034,8 +1292,7 @@ export default function Hooks({
                   hashtags={['newmusic', selected.genre.replace(/[^A-Za-z0-9]/g, '').toLowerCase()].filter(Boolean)}
                   /* The clip itself, so the phone's own share sheet hands the
                      video to whichever app she picks rather than a caption
-                     with nothing attached. Nothing else can reach this blob —
-                     it is in this room's state and it is not in storage. */
+                     with nothing attached. */
                   file={async () =>
                     new File(
                       [clip.blob],
@@ -1047,9 +1304,11 @@ export default function Hooks({
               )}
             </div>
           )}
-      </>
-      <History surface="hooks_feed" reloadKey={kept} />
+        </aside>
+        </div>
+      </div>
 
+      <History surface="hooks_feed" reloadKey={kept} />
     </div>
   );
 }
