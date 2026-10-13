@@ -1203,7 +1203,7 @@ export default function BoothTimeline({
               .map((one) => (
               <span
                 key={`${one.label}-${one.at}`}
-                className="pointer-events-none absolute bottom-1 truncate text-[10px] font-black rounded-full px-2 py-0.5 bg-[rgba(15,16,21,0.95)] text-cyan-300 border border-cyan-400/50 shadow-[0_0_8px_rgba(6,182,212,0.4)] select-none"
+                className="pointer-events-none absolute bottom-1 truncate text-[10px] font-black rounded-full px-2 py-0.5 bg-cyan-950/90 text-cyan-300 border border-cyan-400/50 shadow-[0_0_8px_rgba(6,182,212,0.4)] select-none"
                 style={{ left: `${percent(one.at)}%`, transform: 'translateX(2px)', maxWidth: 100 }}
               >
                 {one.label}

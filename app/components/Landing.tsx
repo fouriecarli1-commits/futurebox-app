@@ -173,24 +173,25 @@ export default function Landing({
             {t('welcome.black', 'The black box of the future.')}
           </p>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.02] pt-8">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.02] pt-8">
             {t('welcome.line1', 'Put your voice in.')}{' '}
-            <span className="text-emerald-400">{t('welcome.line2', 'Take a record out.')}</span>
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+              {t('welcome.line2', 'Take a record out.')}
+            </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-zinc-400 leading-relaxed pt-5 max-w-2xl">
+          <p className="text-lg md:text-xl text-zinc-300 leading-relaxed pt-5 max-w-2xl">
             {t(
               'welcome.sub',
               'FutureBox is the black box of the future — the whole studio in one place. Write it with AI, sing it yourself, clone your voice for the show, and put a video to it.',
             )}
           </p>
 
-
           <div className="flex flex-wrap items-center gap-3 pt-9">
             <button
               type="button"
               onClick={onStart}
-              className="px-6 py-3.5 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
+              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-black flex items-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               {t('landing.startFree', 'Start free')}
               <ArrowRight className="w-4 h-4" />
@@ -249,7 +250,7 @@ export default function Landing({
              six moved out from under the words when the hero became two
              columns. At `max-w-3xl` in two columns they were two long lines
              of text with half a monitor empty beside them. */
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3.5 pt-14"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-14"
         >
           {[
             [t('welcome.offer1', 'Songs you sing on'), t('welcome.offer1n', 'Write it with the copilot, generate it, keep the stems')],
@@ -259,13 +260,18 @@ export default function Landing({
             [t('welcome.offer5', 'Masterclasses'), t('welcome.offer5n', 'Real lectures, not a course somebody spun up')],
             [t('welcome.offer6', 'Collaboration'), t('welcome.offer6n', 'Ask another maker, and work in a room together')],
           ].map(([title, note]) => (
-            <span key={title} className="flex gap-2.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-1" />
-              <span className="min-w-0">
-                <span className="block text-base text-zinc-200 font-semibold leading-snug">{title}</span>
-                <span className="block text-sm text-zinc-500 leading-snug">{note}</span>
-              </span>
-            </span>
+            <div
+              key={title}
+              className="flex items-start gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-4 transition-all hover:border-emerald-500/40 hover:bg-zinc-900/60 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+            >
+              <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+                <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-base text-zinc-100 font-bold leading-snug">{title}</span>
+                <span className="block text-xs sm:text-sm text-zinc-400 leading-snug pt-1">{note}</span>
+              </div>
+            </div>
           ))}
         </div>
       </section>
@@ -291,12 +297,12 @@ export default function Landing({
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Photo & Artwork Studio */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+          <div className="group rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/50 hover:bg-zinc-900/60 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] hover:-translate-y-1 transition-all">
             <div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4 group-hover:scale-105 transition-transform">
                 <Palette className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-black text-white">{t('landing.roomPhoto', 'Post & Photo Studio')}</h3>
+              <h3 className="text-lg font-black text-white group-hover:text-emerald-300 transition-colors">{t('landing.roomPhoto', 'Post & Photo Studio')}</h3>
               <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
                 {t(
                   'landing.roomPhotoNote',
@@ -305,17 +311,18 @@ export default function Landing({
               </p>
             </div>
             <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span>{t('landing.geminiReady', 'Google Gemini Vision')}</span>
             </div>
           </div>
 
           {/* Card 2: Video Desk & Teleprompter */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+          <div className="group rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-cyan-500/50 hover:bg-zinc-900/60 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] hover:-translate-y-1 transition-all">
             <div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-400 mb-4 group-hover:scale-105 transition-transform">
                 <Video className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-black text-white">{t('landing.roomVideo', 'Cinema Video Desk')}</h3>
+              <h3 className="text-lg font-black text-white group-hover:text-cyan-300 transition-colors">{t('landing.roomVideo', 'Cinema Video Desk')}</h3>
               <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
                 {t(
                   'landing.roomVideoNote',
@@ -323,18 +330,19 @@ export default function Landing({
                 )}
               </p>
             </div>
-            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-cyan-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
               <span>{t('landing.veoReady', 'Google Veo Generative Engine')}</span>
             </div>
           </div>
 
           {/* Card 3: ProBooth Audio Workstation */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+          <div className="group rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/50 hover:bg-zinc-900/60 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] hover:-translate-y-1 transition-all">
             <div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4 group-hover:scale-105 transition-transform">
                 <Music2 className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-black text-white">{t('landing.roomBooth', 'ProBooth Multi-Track')}</h3>
+              <h3 className="text-lg font-black text-white group-hover:text-emerald-300 transition-colors">{t('landing.roomBooth', 'ProBooth Multi-Track')}</h3>
               <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
                 {t(
                   'landing.roomBoothNote',
@@ -343,17 +351,18 @@ export default function Landing({
               </p>
             </div>
             <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span>{t('landing.lyriaReady', 'Google Lyria 48kHz Neural Audio')}</span>
             </div>
           </div>
 
           {/* Card 4: Future Insights & Spotlight */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+          <div className="group rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 flex flex-col justify-between hover:border-teal-500/50 hover:bg-zinc-900/60 hover:shadow-[0_0_30px_rgba(20,184,166,0.15)] hover:-translate-y-1 transition-all">
             <div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 mb-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-500/15 text-teal-400 mb-4 group-hover:scale-105 transition-transform">
                 <Sparkles className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-black text-white">{t('landing.roomInsights', 'Future Insights & Podcasts')}</h3>
+              <h3 className="text-lg font-black text-white group-hover:text-teal-300 transition-colors">{t('landing.roomInsights', 'Future Insights & Podcasts')}</h3>
               <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
                 {t(
                   'landing.roomInsightsNote',
@@ -361,7 +370,8 @@ export default function Landing({
                 )}
               </p>
             </div>
-            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold text-teal-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
               <span>{t('landing.adFreeRating', 'Ad-Free · 96%–99% Credibility')}</span>
             </div>
           </div>
@@ -433,15 +443,16 @@ export default function Landing({
             return (
               <div
                 key={tier}
-                className={`rounded-2xl border p-5 flex flex-col ${
+                className={`rounded-2xl border p-5 flex flex-col transition-all ${
                   lead
-                    ? 'border-emerald-500 bg-emerald-500/[0.06] shadow-[0_0_30px_rgba(16,185,129,0.12)]'
-                    : 'border-zinc-800 bg-zinc-950/60'
+                    ? 'border-emerald-400 bg-gradient-to-b from-emerald-950/40 via-zinc-950/90 to-black shadow-[0_0_35px_rgba(16,185,129,0.2)] ring-1 ring-emerald-400/40 scale-[1.02]'
+                    : 'border-zinc-800 bg-zinc-950/60 hover:border-zinc-700'
                 }`}
               >
                 {lead && (
-                  <span className="text-xs font-black uppercase tracking-wider text-emerald-400 pb-1.5">
-                    {t('welcome.most', 'Most people')}
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-400 pb-1.5 flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-emerald-400" />
+                    <span>{t('welcome.most', 'Most people')}</span>
                   </span>
                 )}
                 <p className="text-lg font-black text-white">{spec.name}</p>
@@ -475,9 +486,9 @@ export default function Landing({
                 <button
                   type="button"
                   onClick={onStart}
-                  className={`min-h-[44px] w-full mt-5 py-2.5 rounded-xl text-sm font-bold ${
+                  className={`min-h-[44px] w-full mt-5 py-2.5 rounded-xl text-sm font-black transition-all ${
                     lead
-                      ? 'bg-emerald-500 text-onAccent'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02]'
                       : 'bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300'
                   }`}
                 >

@@ -3674,7 +3674,7 @@ async function smallerFrame(url: string): Promise<string> {
               </div>
 
               {/* ── Photo 1: Live Interactive NLE Studio Stage & Timeline ──── */}
-              <div className="rounded-2xl border border-emerald-950/60 bg-gradient-to-b from-[#0b1414] to-[#070c0d] p-3 sm:p-4 shadow-2xl space-y-4">
+              <div className="rounded-2xl border border-emerald-950/60 bg-gradient-to-b from-zinc-950 via-zinc-900 to-black p-3 sm:p-4 shadow-2xl space-y-4">
                 {/* Top Monitor Header */}
                 <div className="flex items-center justify-between text-xs text-zinc-400 border-b border-zinc-800/80 pb-2 px-1">
                   <span className="font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
@@ -3771,8 +3771,8 @@ async function smallerFrame(url: string): Promise<string> {
                   <div className="relative space-y-1.5 overflow-x-auto pb-1">
                     {/* Glowing Tall Playhead at ~48% */}
                     <div className="absolute top-0 bottom-0 left-[48%] z-30 pointer-events-none flex flex-col items-center">
-                      <div className="h-3.5 w-2.5 rounded-sm bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
-                      <div className="w-[1.5px] flex-1 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                      <div className="h-3.5 w-2.5 rounded-sm bg-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
+                      <div className="w-[1.5px] flex-1 bg-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
                     </div>
 
                     {/* Track 1: V1 Video */}
