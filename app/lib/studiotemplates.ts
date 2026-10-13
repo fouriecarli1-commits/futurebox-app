@@ -812,11 +812,11 @@ export const STARTER_TEMPLATES: readonly StudioTemplateItem[] = [
         <rect x="30" y="30" width="990" height="540" rx="16" fill="none" stroke="#10b981" stroke-width="4" opacity="0.7" />
         <circle cx="140" cy="140" r="50" fill="#064e3b" stroke="#34d399" stroke-width="4" />
         <text x="140" y="156" font-family="serif" font-weight="900" font-size="44" fill="#34d399" text-anchor="middle">FB</text>
-        <text x="140" y="320" font-family="sans-serif" font-weight="900" font-size="56" fill="#f4f4f5" letter-spacing="2">CARLI FOURIE</text>
-        <text x="140" y="375" font-family="monospace" font-weight="700" font-size="28" fill="#10b981" letter-spacing="4">FOUNDER &amp; CHIEF CREATIVE OFFICER</text>
+        <text x="140" y="320" font-family="sans-serif" font-weight="900" font-size="56" fill="#f4f4f5" letter-spacing="2">STUDIO DIRECTOR</text>
+        <text x="140" y="375" font-family="monospace" font-weight="700" font-size="28" fill="#10b981" letter-spacing="4">CREATIVE PRO &amp; DESIGN</text>
         <line x1="140" y1="420" x2="600" y2="420" stroke="#27272a" stroke-width="3" />
-        <text x="140" y="470" font-family="sans-serif" font-size="24" fill="#a1a1aa">carli@futurebox.app • +27 82 000 0000</text>
-        <text x="140" y="510" font-family="sans-serif" font-size="24" fill="#a1a1aa">Cape Town, South Africa • futurebox.app</text>
+        <text x="140" y="470" font-family="sans-serif" font-size="24" fill="#a1a1aa">hello@example.com • +27 11 555 0199</text>
+        <text x="140" y="510" font-family="sans-serif" font-size="24" fill="#a1a1aa">Cape Town, South Africa • example.com</text>
       </svg>
     `),
   },
@@ -840,8 +840,8 @@ export const STARTER_TEMPLATES: readonly StudioTemplateItem[] = [
         <text x="100" y="240" font-family="impact, sans-serif" font-weight="900" font-size="82" fill="#ffffff" letter-spacing="6">STUDIO DIRECT</text>
         <text x="100" y="310" font-family="monospace" font-weight="700" font-size="30" fill="#38bdf8" letter-spacing="4">CREATIVE &amp; MOTION DIRECTION</text>
         <line x1="100" y1="360" x2="700" y2="360" stroke="#334155" stroke-width="4" />
-        <text x="100" y="430" font-family="sans-serif" font-weight="500" font-size="26" fill="#94a3b8">HELLO@STUDIODIRECT.CO</text>
-        <text x="100" y="480" font-family="sans-serif" font-weight="500" font-size="26" fill="#94a3b8">WWW.STUDIODIRECT.CO</text>
+        <text x="100" y="430" font-family="sans-serif" font-weight="500" font-size="26" fill="#94a3b8">hello@example.com</text>
+        <text x="100" y="480" font-family="sans-serif" font-weight="500" font-size="26" fill="#94a3b8">www.example.com</text>
         <rect x="840" y="380" width="110" height="110" fill="#ffffff" rx="8" />
         <rect x="855" y="395" width="80" height="80" fill="#000000" />
       </svg>
@@ -1080,7 +1080,7 @@ export const STARTER_TEMPLATES: readonly StudioTemplateItem[] = [
         <line x1="300" y1="980" x2="900" y2="980" stroke="#ca8a04" stroke-width="4" />
         <text x="600" y="1120" font-family="monospace" font-weight="700" font-size="52" fill="#ffffff" text-anchor="middle">SATURDAY • 14 NOVEMBER</text>
         <text x="600" y="1220" font-family="sans-serif" font-weight="700" font-size="40" fill="#ca8a04" text-anchor="middle">BLACK TIE ATTIRE • 19:00</text>
-        <text x="600" y="1380" font-family="sans-serif" font-size="34" fill="#94a3b8" text-anchor="middle">RSVP BY 1 NOVEMBER • CONCIERGE@FUTUREBOX.APP</text>
+        <text x="600" y="1380" font-family="sans-serif" font-size="34" fill="#94a3b8" text-anchor="middle">RSVP BY 1 NOVEMBER • concierge@example.com</text>
       </svg>
     `),
   },

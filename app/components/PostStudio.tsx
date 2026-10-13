@@ -5068,7 +5068,7 @@ export default function PostStudio({
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-950/40 px-3 text-xs font-bold text-purple-200 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] active:scale-95 transition-all"
           >
             <LayoutTemplate className="h-4 w-4 text-purple-400" />
-            <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
+            <span className="hidden sm:inline">{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
           </button>
 
           {/* Canvas Size */}
@@ -5079,7 +5079,7 @@ export default function PostStudio({
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 text-xs font-bold text-zinc-300 hover:border-zinc-500 hover:text-white active:scale-95 transition-all"
           >
             <Maximize2 className="h-3.5 w-3.5 text-teal-400" />
-            <span>{size.name || `${size.width}×${size.height}`}</span>
+            <span className="hidden sm:inline">{size.name || `${size.width}×${size.height}`}</span>
           </button>
 
           {/* ── The copilot, as a button ─────────────────────────────
@@ -5121,7 +5121,8 @@ export default function PostStudio({
           )}
         </div>
 
-        <canvas
+        <div className="relative w-full select-none">
+  <canvas
           ref={canvas}
           data-postcanvas
           data-postmovable={movable ? 'yes' : 'no'}
@@ -5150,6 +5151,31 @@ export default function PostStudio({
             cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
           }}
         />
+
+          {!picture && words.length === 0 && (
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+              <div className="pointer-events-auto flex flex-col items-center gap-3 rounded-2xl border border-purple-500/20 bg-zinc-950/85 p-5 backdrop-blur-md shadow-2xl max-w-sm">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                  <LayoutTemplate className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">{t('stpl.starterTitle', 'Start with a Design or Photo')}</h4>
+                  <p className="mt-1 text-xs text-zinc-400">{t('stpl.starterDesc', 'Choose a starter pack or upload your image to begin creating.')}</p>
+                </div>
+                <div className="flex w-full flex-col gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowTemplatesModal(true)}
+                    className="inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 text-xs font-bold text-white hover:bg-purple-500 transition-all shadow-md active:scale-95"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ── The photograph's own size, for a probe to read ────────────
  

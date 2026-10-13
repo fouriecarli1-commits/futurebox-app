@@ -4277,7 +4277,7 @@ export default function FutureBoxHome() {
                   className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-emerald-300 flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
                 >
                   <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span className="hidden xs:inline">{t('room.aiCopilot', 'AI Assistent')}</span>
+                  <span className="hidden xs:inline">{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
                 </button>
               </div>
 

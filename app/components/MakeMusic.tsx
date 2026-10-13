@@ -464,7 +464,7 @@ export default function MakeMusic({
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
-  const [verseGuideMode, setVerseGuideMode] = useState(true);
+  const [verseGuideMode, setVerseGuideMode] = useState(false);
   const [showRepertoire, setShowRepertoire] = useState(false);
   const [weirdness, setWeirdness] = useState(15);
   /**
@@ -1295,7 +1295,7 @@ export default function MakeMusic({
                   : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
               }`}
             >
-              ✍️ {t('make.freeWrite', 'Free Lyrics')}
+              ✍️ {t('make.freeWrite', 'Custom Lyrics')}
             </button>
           </div>
 
