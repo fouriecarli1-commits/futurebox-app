@@ -16,6 +16,9 @@
 
 export type Both = readonly [string, string];
 
+/** The two cards' paint, from Google's page: neon green and neon cyan. */
+export const RATHER_PAINT: readonly [string, string] = ['#39ff88', '#00ffcc'];
+
 export interface Rather {
   readonly a: Both;
   readonly b: Both;

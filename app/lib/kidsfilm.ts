@@ -36,6 +36,9 @@ export const FRAMES_MOST = 8;
 export const VOICE_MOST_SECONDS = 60;
 /** The song under the voice, quietly. */
 export const SONG_GAIN = 0.3;
+/** The puzzle pieces' paint on the timeline, from Google's page, round and round. */
+export const PIECE_PAINT: readonly string[] = ['#39ff88', '#ffe600', '#ff007f', '#00ffcc', '#a855f7', '#f97316', '#ec4899', '#4da6ff'];
+
 /** The ground between frames and under a picture that is not square. */
 export const FILM_GROUND = '#0a1410';
 

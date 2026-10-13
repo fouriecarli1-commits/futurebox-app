@@ -162,30 +162,61 @@ export default function KidsStoryboard({
       {/* ── Wizard Step Navigation (Steps 0..4) ────────────────────── */}
       {activeStep < 5 && (
         <div className="pt-4 space-y-4">
-          {/* Quick Ideas Chips */}
-          <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* ── Google's "Drone Director", 13 October 2026 ──────────────
+              A guide bar with the drone and the three steps, and the quick
+              ideas as world cards rather than chips. The page's "AI Story
+              Remix" (it prepended "AI generated:" to the words) and "Play
+              Complete Video" (it cycled emoji and said "Movie Complete!")
+              made nothing and are not here; the real steps below are. */}
+          <div className="flex items-center gap-4 rounded-3xl border-2 border-cyan-400 bg-surface-50/90 px-4 py-3.5 shadow-[0_0_18px_rgba(52,211,153,0.25)]" data-kidsdronebar>
+            <span className="fb-kids-float text-4xl" aria-hidden>🛸</span>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base font-black text-cyan-300">{t('kids.droneTitle', 'Drone Director\u2019s Mission')}</h3>
+              <p className="text-xs font-semibold text-surface-800">
+                {t('kids.droneHow', 'Pick a story world, build your scenes, and press Make my story to bring it alive!')}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[
+                  [0, t('kids.droneStep1', '1. Choose a world')],
+                  [1, t('kids.droneStep2', '2. Build the scenes')],
+                  [5, t('kids.droneStep3', '3. Watch it')],
+                ].map(([at, label]) => {
+                  const on = at === 5 ? activeStep >= 5 : at === 0 ? activeStep === 0 : activeStep >= 1 && activeStep <= 4;
+                  return (
+                    <span key={String(at)} className={`rounded-xl px-3 py-1 text-[11px] font-black ${on ? 'bg-cyan-400 text-onAccent shadow-[0_0_10px_rgba(52,211,153,0.8)]' : 'border border-surface-300 bg-surface-100 text-surface-700'}`}>
+                      {label}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* The worlds: one press fills every step. */}
+          <div className="space-y-2" data-kidsworlds>
             <span className="text-xs font-black uppercase tracking-wider text-surface-600">
-              {t('kids.quickIdeas', 'Quick Ideas:')}
+              {t('kids.worldsTitle', 'Story worlds (one press fills it in)')}
             </span>
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {QUICK_STORY_SEEDS.map((seed) => (
                 <button
                   key={seed.id}
                   type="button"
                   onClick={() => applySeed(seed.id)}
-                  className="inline-flex items-center gap-1 rounded-full border-2 border-surface-200 bg-surface-100/90 px-3 py-1 text-xs font-bold text-surface-800 hover:border-amber-400 hover:bg-amber-100 transition-colors"
+                  data-kidsworld={seed.id}
+                  className="flex items-center gap-2.5 rounded-2xl border-2 border-cyan-500/60 bg-surface-100/90 px-3 py-2.5 text-left transition-transform hover:-translate-y-1 hover:border-cyan-300"
                 >
-                  <span>{seed.emoji}</span>
-                  <span>{t(seed.label[0], seed.label[1])}</span>
+                  <span className="text-3xl" aria-hidden>{seed.emoji}</span>
+                  <span className="min-w-0 text-xs font-black leading-tight text-surface-950">{t(seed.label[0], seed.label[1])}</span>
                 </button>
               ))}
               <button
                 type="button"
                 onClick={spinAll}
                 disabled={spinning}
-                className="inline-flex items-center gap-1 rounded-full border-2 border-purple-300 bg-purple-100 px-3 py-1 text-xs font-black text-purple-900 hover:bg-purple-200 transition-transform active:scale-95"
+                className="flex items-center gap-2.5 rounded-2xl border-2 border-primary-400 bg-primary-500/15 px-3 py-2.5 text-left text-xs font-black text-surface-950 disabled:opacity-50"
               >
-                <Dices className={`h-3.5 w-3.5 ${spinning ? 'animate-spin' : ''}`} />
+                <Dices className={`h-6 w-6 text-primary-300 ${spinning ? 'animate-spin' : ''}`} />
                 <span>{t('kids.magicSpinAll', 'Mystery Spin!')}</span>
               </button>
             </div>

@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { Volume2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { soundContext } from '../lib/kidsbeat';
-import { SKILLS, TEACH, WOULD_YOU_RATHER, type Skill, type Both } from '../lib/kidsquiz';
+import { RATHER_PAINT, SKILLS, TEACH, WOULD_YOU_RATHER, type Skill, type Both } from '../lib/kidsquiz';
 import { confetti } from '../lib/kidsconfetti';
 
 type Mode = 'rather' | Skill;
@@ -91,8 +91,9 @@ export default function KidsQuiz({ onSpark }: { readonly onSpark: (n: number) =>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[rather.a, rather.b].map((side, which) => (
               <button key={which} type="button" onClick={() => choose(which)} data-kidsratherpick={which}
+                style={{ background: picked === which ? undefined : RATHER_PAINT[which] }}
                 className={`fb-kids-bouncy flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-3xl border-4 border-white/80 px-4 py-5 text-base font-black leading-snug text-onAccent shadow-[0_6px_20px_rgba(0,0,0,0.6)] ${
-                  picked === which ? 'bg-amber-300 ring-4 ring-amber-200' : which === 0 ? 'bg-cyan-400' : 'bg-cyan-300'
+                  picked === which ? 'bg-amber-300 ring-4 ring-amber-200' : ''
                 }`}>
                 <span className="text-6xl drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" aria-hidden>{rather.icons[which]}</span>
                 <span className="text-center">{say(side)}</span>
