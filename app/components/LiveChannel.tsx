@@ -48,6 +48,7 @@ import SaysDone from './SaysDone';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
 import Card from './Card';
+import LiveJam from './LiveJam';
 
 /** Often enough that the room never blinks out, rare enough to be polite. */
 const HELLO_EVERY = 30_000;
@@ -555,6 +556,8 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
    * next one, and it is why Live is on a tab at all.
    */
   const [openAt, setOpenAt] = useState<string | null>(null);
+  /** Google's two modes on the Live page: the room's feed, and the jam room. */
+  const [mode, setMode] = useState<'feed' | 'jam'>('feed');
   const [showElsewhere, setShowElsewhere] = useState(false);
   /** What is typed into the box that narrows the list of your own songs. */
   const [looking, setLooking] = useState('');
@@ -774,6 +777,29 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
         </h4>
         <p className="text-base text-zinc-400 pt-1 max-w-2xl">{t('live.sub')}</p>
       </div>
+      {/* ── Feed or jam ─────────────────────────────────────────────
+          Google's Live page, 13 October 2026: two pills in the bar. The feed
+          is the room as it was; the jam room is `LiveJam`. */}
+      <div className="flex flex-wrap items-center gap-2" data-livemodes>
+        <div className="bg-zinc-950 p-1 rounded-full border border-white/10 flex items-center text-xs font-bold">
+          <button
+            type="button"
+            data-livemode="feed"
+            onClick={() => setMode('feed')}
+            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'feed' ? 'bg-emerald-500 text-onAccent font-extrabold' : 'text-zinc-400 hover:text-white'}`}
+          >
+            {t('live.modeFeed', 'Room feed')}
+          </button>
+          <button
+            type="button"
+            data-livemode="jam"
+            onClick={() => setMode('jam')}
+            className={`min-h-[40px] rounded-full px-4 py-1.5 transition ${mode === 'jam' ? 'bg-emerald-500 text-onAccent font-extrabold' : 'text-zinc-400 hover:text-white'}`}
+          >
+            {t('live.modeJam', 'Live jam room')}
+          </button>
+        </div>
+      </div>
 
       {/* The counts could not be read.
 
@@ -805,6 +831,9 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
+      {mode === 'feed' && (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <aside className="space-y-4 min-w-0" data-liveputin>
       {/* ── The two questions the room opens on ─────────────────────────
 
           "die live kamer moet oop maak met die vraag of jy self liedjies wil
@@ -1054,6 +1083,8 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
         </Card>
       )}
 
+      </aside>
+      <main className="space-y-4 min-w-0" data-livefeed>
       {/* ── Who is live right now ───────────────────────────────────────
 
           Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as
@@ -1208,6 +1239,11 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
           ))}
         </div>
       )}
+
+      </main>
+      </div>
+      )}
+      {mode === 'jam' && <LiveJam here={room.here} name="" />}
 
       {openAt && (
         <RoomScreen

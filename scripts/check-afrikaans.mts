@@ -201,6 +201,8 @@ const SAME_IN_BOTH = new Set([
   'Platform', 'GOOGLE VEO', 'Blog', 'Suite', 'VideoEditor NLE', 'ProBooth DAW',
   'Neon', 'Synthwave', 'Hologram', 'PHANTASM', 'FUTURE PRO', 'Phantasm 2026',
   'PHANTASM 2026', 'Future Pro', 'Static Wave',
+  /* Drum pads say what drummers say, in both languages. */
+  'KICK', 'SNARE', 'HI-HAT', 'RISER', 'beatmaker99',
 ]);
 const copied: string[] = [];
 for (const [i, match] of starts.entries()) {
