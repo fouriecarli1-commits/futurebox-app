@@ -245,7 +245,7 @@ interface Words {
    the same room with different work in them. The floor is the one Carli
    picked for the cutting room; INK and INK_DIM are its text, and RAISE is
    what lifts a control off the floor instead of a border drawn round it. */
-const FLOOR = '#05180f';
+const FLOOR = '#0A0C10';
 const INK = '#d7f5e4';
 const INK_DIM = 'rgba(215,245,228,0.62)';
 const RAISE = '0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.35)';

@@ -4620,7 +4620,7 @@ export default function FutureBoxHome() {
               <div
                 data-photoroom
                 className="rounded-none"
-                style={{ background: '#05180f' }}
+                style={{ background: '#0A0C10' }}
               >
                 <PostStudio
                   asRoom
@@ -4650,7 +4650,7 @@ export default function FutureBoxHome() {
                  every word in it — the hint, the empty note, Back and Forward
                  — went grey on grey. A room you can see through is not a room.
 
-                 One flat colour now, the same `#05180f` the dock and the
+                 One flat colour now, the same `#0A0C10` the dock and the
                  benches are painted, so the floor, the walls and the bar are
                  one surface rather than three shades of one.
 
@@ -4667,7 +4667,7 @@ export default function FutureBoxHome() {
               <div
                 data-cuttingroom
                 className="rounded-none"
-                style={{ background: '#05180f' }}
+                style={{ background: '#0A0C10' }}
               >
                 <VideoEditor
                   plan={userPlan}

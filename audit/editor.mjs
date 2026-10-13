@@ -149,9 +149,13 @@ try {
     const found = `${style.backgroundImage} ${style.backgroundColor}`;
     return [...found.matchAll(/rgba?\((\d+),\s*(\d+),\s*(\d+)/g)].map((m) => m.slice(1).map(Number));
   }).catch(() => []);
+  /* Obsidian since 13 October 2026 — the "Video Editor" page Google drew.
+     The room's own colour is now a cool near-black, #0A0C10, and the thing
+     measured is that: every channel under 24 and blue not under green. The
+     studio's zinc is lighter than that, so the two still cannot be confused. */
   check('the cutting room is painted its own colour, not the studio\u2019s zinc',
-    paint.some(([r, g, bl]) => g > r + 6 && g > bl + 6),
-    `painted ${JSON.stringify(paint)} — zinc is grey, so green has to lead`);
+    paint.some(([r, g, bl]) => r < 24 && g < 24 && bl < 24 && bl >= g),
+    `painted ${JSON.stringify(paint)} — obsidian is every channel under 24, cool rather than green`);
 
   const room = p.locator('[data-videoeditor]');
   check('with no accounts configured the room opens, as every other room does',

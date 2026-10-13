@@ -1009,17 +1009,22 @@ body:has([data-cubed]) {
  */
 [data-cuttingroom],
 [data-cutshell] {
-  --fb-surface-50: 240 250 244;
-  --fb-surface-100: 223 242 230;
-  --fb-surface-200: 198 228 210;
-  --fb-surface-300: 170 208 185;
-  --fb-surface-400: 162 200 178;
-  --fb-surface-500: 143 184 160;
-  --fb-surface-600: 124 166 142;
-  --fb-surface-700: 56 82 66;
-  --fb-surface-800: 38 60 47;
-  --fb-surface-900: 23 42 31;
-  --fb-surface-950: 8 22 14;
+  /* Obsidian, 13 October 2026 — the "Video Editor" page Google drew, under
+     the rule for the whole redesign: a cool near-black surface, a white
+     hairline, and the one emerald light. The ramp keeps its orientation
+     (50 pale, 950 deep) because the room writes `text-zinc-400` for its
+     words; 600, the dimmest it writes in, clears AA on the floor. */
+  --fb-surface-50: 241 243 245;
+  --fb-surface-100: 226 232 240;
+  --fb-surface-200: 203 210 220;
+  --fb-surface-300: 170 178 190;
+  --fb-surface-400: 158 167 181;
+  --fb-surface-500: 140 149 163;
+  --fb-surface-600: 122 131 145;
+  --fb-surface-700: 48 58 76;
+  --fb-surface-800: 30 38 56;
+  --fb-surface-900: 18 22 31;
+  --fb-surface-950: 10 12 16;
 
   /* The accent is left alone, unlike the booth's.
  
@@ -1029,11 +1034,11 @@ body:has([data-cubed]) {
      own primary ramp is already the right accent here. Changing it would be
      taking the room's identity away in the name of consistency. */
 
-  --fb-page: 5 24 15;
-  --fb-ink: 236 253 245;
+  --fb-page: 10 12 16;
+  --fb-ink: 226 232 240;
   /* `bg-black/40` means a real inset in here, because the room really is dark. */
-  --fb-void: 2 10 6;
-  --fb-scrim: 1 6 4;
+  --fb-void: 6 8 11;
+  --fb-scrim: 5 6 8;
 
   color: rgb(var(--fb-ink));
 }

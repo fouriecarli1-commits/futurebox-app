@@ -1,6 +1,14 @@
 /**
  * The cutting room's own surface, ink and light.
  *
+ * ── Obsidian, 13 October 2026 ────────────────────────────────────────────
+ *
+ * Carli, with the "Video Editor" page Google drew and the rule for the whole
+ * redesign — *"ons transform en totally redesign"*: the room is obsidian
+ * now, `#0A0C10`, with `#12161F` raised off it, a white hairline between
+ * things, and the one emerald light kept. Green no longer leads in the
+ * surface; it leads in the light. `check:solidroom` measures the new rule.
+ *
  * ── Why this file exists ─────────────────────────────────────────────────
  *
  * Carli, 4 October 2026, with four photographs of the room: *"Niks is duidelik
@@ -29,7 +37,7 @@
  */
 
 /** The deepest ground. A real inset reads against this. */
-export const VOID = '#020a06';
+export const VOID = '#06080b';
 
 /**
  * The room, the bar and every bench. One colour, and `check:solidroom` holds
@@ -39,7 +47,7 @@ export const VOID = '#020a06';
  * until 4 October, which is nine over red and five over blue — green in a
  * colour picker and black to an eye, and `audit/editor.mjs` said so.
  */
-export const PANEL = '#05180f';
+export const PANEL = '#0A0C10';
 
 /**
  * A panel lifted off the room: the body of a bench, a card inside one.
@@ -49,13 +57,13 @@ export const PANEL = '#05180f';
  * screen with one picture on it, and a body that jumps away from its own
  * header is the "three panels" look the rebuild was undoing.
  */
-export const RAISED = '#0a2415';
+export const RAISED = '#12161F';
 
 /** Between things. Green rather than white, so it belongs to this room. */
-export const EDGE = 'rgba(16,185,129,0.22)';
+export const EDGE = 'rgba(255,255,255,0.10)';
 
 /** Words. */
-export const INK = '#ecfdf5';
+export const INK = '#E2E8F0';
 
 /**
  * Words that are not the point: a hint, a unit, a label beside a slider.
@@ -69,10 +77,10 @@ export const INK = '#ecfdf5';
  * `audit/contrast.mjs` measures it with the benches open now, which is the
  * half it was missing.
  */
-export const INK_DIM = 'rgba(236,253,245,0.72)';
+export const INK_DIM = 'rgba(226,232,240,0.72)';
 
 /** Barely there: a disabled control, a tick on a ruler. Never a word to read. */
-export const INK_FAINT = 'rgba(236,253,245,0.34)';
+export const INK_FAINT = 'rgba(226,232,240,0.34)';
 
 /** The light. Green, because this room is the green one. */
 export const LIT = '#34d399';
@@ -94,8 +102,8 @@ export const COIN = 'rgba(250,204,21,0.9)';
  * `press` is the same two edges reversed, for `:active` — the button has to
  * move when it is pressed or it is a picture of a button.
  */
-export const RAISE = '0 1px 0 0 rgba(236,253,245,0.14) inset, 0 -1px 0 0 rgba(0,0,0,0.45) inset, 0 1px 2px 0 rgba(0,0,0,0.45)';
-export const PRESS = '0 1px 0 0 rgba(0,0,0,0.45) inset, 0 -1px 0 0 rgba(236,253,245,0.10) inset';
+export const RAISE = '0 1px 0 0 rgba(226,232,240,0.14) inset, 0 -1px 0 0 rgba(0,0,0,0.45) inset, 0 1px 2px 0 rgba(0,0,0,0.45)';
+export const PRESS = '0 1px 0 0 rgba(0,0,0,0.45) inset, 0 -1px 0 0 rgba(226,232,240,0.10) inset';
 
 /**
  * The body of a bench in THIS room, which is see-through.
@@ -121,7 +129,7 @@ export const PRESS = '0 1px 0 0 rgba(0,0,0,0.45) inset, 0 -1px 0 0 rgba(236,253,
  * the thing that becomes unreadable, and it is also the part somebody aims
  * at to close the bench.
  */
-export const GLASS = 'rgba(10,36,21,0.55)';
+export const GLASS = 'rgba(18,22,31,0.6)';
 
 /** The blur that makes words legible over whatever is moving behind them. */
 export const GLASS_BLUR = 'blur(14px)';

@@ -99,12 +99,17 @@ ok('  and does carry one flat background of its own',
 const HEX = /#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/.exec(WRAPPER);
 const rgb = HEX ? HEX.slice(1, 4).map((pair) => parseInt(pair, 16)) : null;
 
-ok('  and the green in it actually leads, rather than merely being present',
-  rgb !== null && rgb[1] > rgb[0] + 6 && rgb[1] > rgb[2] + 6,
+/* Obsidian since 13 October 2026 — Carli, with the "Video Editor" page
+   Google drew: a cool near-black, `#0A0C10`, where the room used to lead
+   with green. The rule is the page's: every channel under 24, and blue not
+   under green, so a warm or green floor cannot creep back in and call
+   itself obsidian. `audit/editor.mjs` applies the same rule to the painted
+   pixel. */
+ok('  and it is obsidian: near-black, and cool rather than green',
+  rgb !== null && rgb.every((one) => one < 24) && rgb[2] >= rgb[1],
   rgb
-    ? `rgb(${rgb.join(', ')}) — green is ${rgb[1] - rgb[0]} over red and`
-      + ` ${rgb[1] - rgb[2]} over blue, and audit/editor.mjs wants more than six`
-      + ' of each before it will call a room green'
+    ? `rgb(${rgb.join(', ')}) — obsidian is every channel under 24 with blue`
+      + ' not under green, which is what Google\'s page paints'
     : 'no colour to read');
 
 /* ── One source for the colour, not three files agreeing by hand ────────
