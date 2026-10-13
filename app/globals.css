@@ -419,15 +419,21 @@ button:disabled {
      · `bg-transparent` — a control drawn deliberately without a surface.
 
    `:not()` chains rather than a class somebody has to remember to add: a rule
-   you opt into is a rule the next button forgets. */
-button[class*="border"]:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-transparent"]):not(:disabled),
-label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([class*="bg-amber"]) {
+   you opt into is a rule the next button forgets.
+
+   And not the kids room: it has a palette of its own, where the free things
+   are emerald and gold and the one paid thing is pink, and this wash was
+   painting every bordered button in there the pink of the paid thing. Found
+   on 13 October 2026 by a probe reading the computed colour of a lit beat
+   square, which was pink at nine per cent over a class that said emerald. */
+button[class*="border"]:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-transparent"]):not(:disabled):not([data-kidsroom] *),
+label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([class*="bg-amber"]):not([data-kidsroom] *) {
   background-color: rgb(var(--fb-primary-500) / 0.09);
   border-color: rgb(var(--fb-primary-500) / 0.32);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  button[class*="border"]:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-transparent"]):not(:disabled):hover {
+  button[class*="border"]:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-transparent"]):not(:disabled):not([data-kidsroom] *):hover {
     background-color: rgb(var(--fb-primary-500) / 0.17);
     border-color: rgb(var(--fb-primary-500) / 0.55);
   }
@@ -514,31 +520,40 @@ body:has([data-kidsroom]) {
      system one. */
   --fb-font-sans: var(--fb-font-round), "Trebuchet MS", system-ui, sans-serif;
 
-  /* Soft green rather than white: a screen of pure white is a lamp, and this
-     is a room somebody small sits close to. Green, not the warm orange it
-     opened with — Carli, 12 October 2026: *"die tema moet groen wees eerder
-     as oranje"* — and the same green family as the rest of FutureBox, so
-     the room is the app's own and not somebody else's. */
-  --fb-page: 240 251 244;
-  --fb-ink: 10 30 22;
+  /* ── Deep emerald, not pale mint ──────────────────────────────────────
+     Carli, 13 October 2026, with the "Kids Dream Studio" page Google drew:
+     *"Kom ons begin om die app self te upgrade."* That page is a dark
+     emerald kingdom — near-black green cards, mint and gold words on them,
+     a bright emerald for the thing you press — and this block is that
+     page's palette, written as the app's own ramps so every card, shelf and
+     storyboard in here follows it without a class changing.
 
-  --fb-surface-50: 243 252 246;
-  --fb-surface-100: 228 247 234;
-  --fb-surface-200: 199 238 211;
-  --fb-surface-300: 160 224 184;
-  --fb-surface-400: 110 200 148;
-  --fb-surface-500: 56 170 108;
-  /* 600 to 800 are text stops on the pale ground: 4.5:1 or better on
-     surface-50, measured by audit/contrast.mjs on the kids page. */
-  --fb-surface-600: 20 110 60;
-  --fb-surface-700: 16 86 48;
-  --fb-surface-800: 14 64 38;
-  --fb-surface-900: 12 46 32;
-  --fb-surface-950: 10 30 22;
+     The surface ramp therefore runs DARK to LIGHT: `bg-surface-50` is the
+     deepest ground and `text-surface-900` is pale mint. 600 to 900 are text
+     stops, 4.5:1 or better on surface-50 and surface-100, measured by
+     audit/contrast.mjs on the kids page. Green, still — the 500 stop is the
+     emerald `check:kinderkleur` reads — and the rule "die tema moet groen
+     wees eerder as oranje" holds. */
+  --fb-page: 2 44 34;
+  --fb-ink: 240 253 244;
+  --fb-void: 2 44 34;
+
+  --fb-surface-50: 3 46 36;
+  --fb-surface-100: 5 58 46;
+  --fb-surface-200: 6 78 59;
+  --fb-surface-300: 4 110 80;
+  --fb-surface-400: 16 150 110;
+  --fb-surface-500: 52 211 153;
+  --fb-surface-600: 110 231 183;
+  --fb-surface-700: 167 243 208;
+  --fb-surface-800: 209 250 229;
+  --fb-surface-900: 236 253 245;
+  --fb-surface-950: 240 253 244;
 
   /* The accent is a hot pink rather than the app's green: in a room where
      every choice is already a colour, the one button that MAKES something
-     has to be a colour none of the choices are. */
+     — a real song, a real video, both of which spend the allowance — has to
+     be a colour none of the free things are. */
   --fb-primary-50: 255 240 248;
   --fb-primary-100: 255 219 238;
   --fb-primary-200: 255 184 219;
@@ -550,29 +565,88 @@ body:has([data-kidsroom]) {
   --fb-primary-800: 130 12 70;
   --fb-primary-900: 92 12 52;
   --fb-primary-950: 56 6 31;
+
+  /* The bright emerald of Google's page, for everything free: play, tabs,
+     lit squares. Pinned here rather than taken from the chosen theme, so a
+     grown-up's Midnight or Clean does not reach into the child's room. */
+  --fb-secondary-50: 236 253 245;
+  --fb-secondary-100: 209 250 229;
+  --fb-secondary-200: 167 243 208;
+  --fb-secondary-300: 110 231 183;
+  --fb-secondary-400: 52 211 153;
+  --fb-secondary-500: 16 185 129;
+  --fb-secondary-600: 5 150 105;
+  --fb-secondary-700: 4 120 87;
+  --fb-secondary-800: 6 95 70;
+  --fb-secondary-900: 6 78 59;
+  --fb-secondary-950: 2 44 34;
+
+  /* And its gold, for stars and "surprise me". Fixed stops for the same
+     reason the Cubed room fixes its amber: a light preset solves 400 dark. */
+  --fb-highlight-50: 254 252 232;
+  --fb-highlight-100: 254 249 195;
+  --fb-highlight-200: 254 240 138;
+  --fb-highlight-300: 253 224 71;
+  --fb-highlight-400: 250 204 21;
+  --fb-highlight-500: 234 179 8;
+  --fb-highlight-600: 202 138 4;
+  --fb-highlight-700: 161 98 7;
+  --fb-highlight-800: 133 77 14;
+  --fb-highlight-900: 113 63 18;
+  --fb-highlight-950: 66 32 6;
+  --fb-on-accent: 2 44 34;
 }
 
 /* ── The ground the room sits on ────────────────────────────────────────
- 
-   A flat colour is a wall. Google's version of this room came back with a
-   three-colour wash, and it is right: it gives the page somewhere to be
-   without putting anything in it that a child has to read past. */
+
+   A flat colour is a wall. Google's page sits on one radial wash, lit at
+   the top and falling to near-black at the edges, and it is right: it gives
+   the page somewhere to be without putting anything in it that a child has
+   to read past. */
 body:has([data-kidsroom]) {
-  /* FutureBox emerald green ground with luminous ambient light */
-  background-color: #047857;
-  background-image:
-    radial-gradient(55rem 38rem at 15% 0%, rgba(52, 211, 153, 0.40), transparent 65%),
-    radial-gradient(50rem 38rem at 88% 25%, rgba(16, 185, 129, 0.35), transparent 65%),
-    radial-gradient(60rem 45rem at 50% 100%, rgba(6, 78, 59, 0.55), transparent 70%),
-    linear-gradient(165deg, #059669 0%, #047857 40%, #064e3b 100%);
+  background-color: #022c22;
+  background-image: radial-gradient(circle at 50% 15%, #065f46 0%, #064e3b 45%, #022c22 100%);
   background-attachment: fixed;
 }
 
 /* Make the page wrapper transparent while the kids room is open, so the wash
-   the designers already wrote is the one that shows. */
+   is the one that shows. */
 body:has([data-kidsroom]) .min-h-screen,
 body:has([data-kidsroom]) main {
   background-color: transparent;
+}
+
+/* The fat rounded headline face of Google's page, local in `layout.tsx`. */
+[data-kidsroom] .fb-kids-bubble {
+  font-family: var(--fb-font-bubble), var(--fb-font-round), "Trebuchet MS", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Every button on Google's page sat on a thick dark shelf and sank into it
+   when pressed. One class, so the hundred buttons in here do it the same
+   way and a child learns it once. */
+[data-kidsroom] .fb-kids-bouncy {
+  transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 150ms ease;
+  box-shadow: 0 6px 0 rgba(1, 40, 24, 0.7), 0 10px 18px rgba(0, 0, 0, 0.35);
+}
+
+[data-kidsroom] .fb-kids-bouncy:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 9px 0 rgba(1, 40, 24, 0.8), 0 14px 22px rgba(0, 0, 0, 0.4);
+}
+
+[data-kidsroom] .fb-kids-bouncy:active:not(:disabled) {
+  transform: translateY(4px) scale(0.98);
+  box-shadow: 0 1px 0 rgba(1, 40, 24, 0.9), 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes fb-kids-floaty {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-7px) rotate(1.5deg); }
+}
+
+[data-kidsroom] .fb-kids-float {
+  animation: fb-kids-floaty 3.2s ease-in-out infinite;
 }
 
 /* The gentle bob Google asked for on the thing a child is meant to press
@@ -726,7 +800,9 @@ body:has([data-kidsroom]) main {
   [data-kidsmake],
   [data-kidskeep],
   [data-kidsfilm],
-  [data-kidsspin] {
+  [data-kidsspin],
+  [data-kidsroom] .fb-kids-float,
+  [data-kidsroom] .fb-kids-bouncy {
     animation: none !important;
     transition: none !important;
   }

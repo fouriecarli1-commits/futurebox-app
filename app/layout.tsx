@@ -41,6 +41,20 @@ const fredoka = localFont({
   display: 'swap',
 });
 
+/* The headline face of the kids room — Carli, 13 October 2026, with the
+   "Kids Dream Studio" page Google drew: its headings were Bubblegum Sans, a
+   fat rounded display face a child reads as a toy. Local for the same reason
+   as Fredoka, and a variable for the same reason: only `.fb-kids-bubble`
+   inside `[data-kidsroom]` picks it up. */
+const bubblegum = localFont({
+  src: [
+    { path: './fonts/bubblegum-latin.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/bubblegum-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  variable: '--fb-font-bubble',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   /**
    * Where every relative link in this metadata is resolved from.
@@ -132,7 +146,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={fredoka.variable}>
+    <html lang="en" className={`${fredoka.variable} ${bubblegum.variable}`}>
       <body className="min-h-screen antialiased selection:bg-emerald-500 selection:text-onAccent">
         <LanguageProvider>
           {/* Listening before any room draws. See the note in the component:
