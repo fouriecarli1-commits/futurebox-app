@@ -100,8 +100,18 @@ export default function MakeMusic({
   onGoToSound,
   onGoToArt,
   engineReady,
+  onMode,
+  copilot,
 }: {
   userPlan: Plan;
+  /**
+   * Which mode is on, told to the page. Carli, 13 October 2026: *"As 'n
+   * mens op simple click dan moet copilot onder toe spring onder make a
+   * song."* The page lays the copilot out, so the page has to know.
+   */
+  onMode?: (advanced: boolean) => void;
+  /** The copilot pane, handed in on Simple to be drawn under the button. */
+  copilot?: React.ReactNode;
   onUpgrade: () => void;
   /** Carried over from the Songwriter, when you came from there. */
   incoming?: { title: string; lyrics: string; style: string } | null;
@@ -453,6 +463,7 @@ export default function MakeMusic({
     wordsCard.arrived();
     soundCard.arrived();
   }, [advanced, wordsCard, soundCard]);
+  useEffect(() => { onMode?.(advanced); }, [advanced, onMode]);
   const chooseMode = useCallback((next: boolean) => {
     setAdvanced(next);
     try {
@@ -1250,18 +1261,16 @@ export default function MakeMusic({
             all of it for editing and nothing is lost in either direction. */}
         {!advanced && (
           <div data-makesimple className="relative overflow-hidden space-y-4 rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 via-zinc-900/80 to-zinc-950 p-6 shadow-[0_0_35px_rgba(16,185,129,0.08)]">
-            <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-300">
-                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                Gemini Copilot Mode
-              </span>
-            </div>
-            <p className="text-sm sm:text-base leading-relaxed text-zinc-300">
-              {t(
-                'make.simpleSay',
-                'Open the copilot and tell it what you want \u2014 "a happy song about my dog", in any language. It writes the words, the style, the voice and the length. Then press the button.',
-              )}
-            </p>
+            {/* The badge and the paragraph that stood here went on
+                13 October 2026 — "Dan hoef daardie explanation nie daar te
+                wees nie" — because the copilot now sits directly under this
+                panel on a phone, and a sentence telling somebody to open it
+                is a sentence about the thing they are looking at. */}
+            {!(title.trim() || lyrics.trim() || canvas.style.trim()) && (
+              <p className="text-sm text-zinc-400" data-makesimpleempty>
+                {t('make.simpleEmpty', 'Nothing written yet. Tell the copilot below what you want, and it lands here.')}
+              </p>
+            )}
 
             {/* What the copilot has put there. Only drawn once there is
                 something: an empty frame under a sentence asking somebody to
@@ -2011,6 +2020,13 @@ export default function MakeMusic({
         </button>
 
         {busy && <Progress stage={stage} elapsed={elapsed} asked={seconds} t={t} />}
+
+        {/* On Simple, the copilot right here under the button. */}
+        {!advanced && copilot && (
+          <div data-makecopilot className="rounded-2xl border border-zinc-800 bg-zinc-950/60">
+            {copilot}
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* What is left, and only where there is a number that is true.

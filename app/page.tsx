@@ -767,7 +767,12 @@ export default function FutureBoxHome() {
      and type second — everywhere else the working surface is the point
      and a chat panel above it is 352 px between you and the thing you
      came for. */
-  const copilotFirst = studioTab === 'make';
+  /* Simple puts the copilot under the song form (Carli, 13 October 2026:
+     "As 'n mens op simple click dan moet copilot onder toe spring onder
+     make a song"); Everything keeps it above, for the reason just given.
+     The room reports its mode through `onMode`. */
+  const [makeAdvanced, setMakeAdvanced] = useState(true);
+  const copilotFirst = studioTab === 'make' && makeAdvanced;
 
   /* Every room, and how to draw it. Read by the rail on a desktop and by the
      phone's room menu, so a room cannot be named one thing in one and another
@@ -1945,7 +1950,11 @@ export default function FutureBoxHome() {
      not scroll, so a column under it is a screenful nobody reaches — and,
      worse, it makes the page scroll again and the room's own bar can be
      scrolled off the bottom. `audit/underbar.mjs` found exactly that. */
+  /* And the song room on Simple: the copilot is drawn under the song
+     button, inside the room (Carli, 13 October 2026). On Everything it is
+     the column above, as before. */
   const copilotInside = studioTab === 'voice_studio' || studioTab === 'videoedit'
+    || (studioTab === 'make' && !makeAdvanced)
     || studioTab === 'photo';
 
   /* ── The rooms that ARE the screen ──────────────────────────────────────
@@ -2767,7 +2776,8 @@ export default function FutureBoxHome() {
        footer in `layout.tsx` is, and it renders after this — so padding here
        leaves a gap in the middle and still strands the footer's links under
        the bar. The reserve is on `SiteFooter`, which is always last. */
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
+    /* Transparent, so the grid the body paints shows through on every page. */
+    <div className="min-h-screen bg-transparent text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
       
       {/* 1. Header with Auth & Creator Channel Info */}
       {/* Wraps, because it did not.
@@ -4750,6 +4760,8 @@ export default function FutureBoxHome() {
             {/* MAKE: the button people came for */}
             {studioTab === 'make' && (
               <MakeMusic
+                onMode={setMakeAdvanced}
+                copilot={!makeAdvanced ? copilotPane : null}
                 userPlan={userPlan}
                 onUpgrade={() => setPricingModalOpen(true)}
                 incoming={handoff}

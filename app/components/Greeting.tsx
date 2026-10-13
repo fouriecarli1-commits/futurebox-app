@@ -384,7 +384,7 @@ export default function Greeting({
       <a
         href="/kids"
         data-kidsdoorhome
-        className="group relative overflow-hidden flex min-h-[44px] flex-col items-stretch rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-950/20 to-zinc-950 px-5 py-4 transition-all hover:border-emerald-400/70"
+        className="group relative overflow-hidden flex min-h-[44px] flex-col items-stretch rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-950/20 to-zinc-950 p-0 transition-all hover:border-emerald-400/70"
       >
         {/* Her picture, 13 October 2026, one per language. */}
         <img

@@ -279,6 +279,21 @@ body {
   background-color: rgb(var(--fb-page));
   color: rgb(var(--fb-ink));
   font-family: var(--fb-font-sans);
+  /* ── The landing page's light, under every page ──────────────────────
+     Carli, 13 October 2026: "Kan daai grid futuristic agtergrond wat op
+     die landing page is nie op elke blad wees nie?" Two pools of the
+     theme's own colour blurred past recognition and a faint grid, fixed,
+     so the page scrolls over them. In the theme's colours rather than the
+     landing's literals, so the light preset gets a pale version of the
+     same thing. The kids room paints its photograph over this. */
+  background-image:
+    radial-gradient(circle at 8% 4%, rgb(var(--fb-primary-500) / 0.16) 0%, transparent 28%),
+    radial-gradient(circle at 96% 36%, rgb(var(--fb-secondary-500) / 0.12) 0%, transparent 30%),
+    radial-gradient(circle at 24% 100%, rgb(var(--fb-primary-700) / 0.14) 0%, transparent 26%),
+    linear-gradient(to right, rgb(var(--fb-ink) / 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--fb-ink) / 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  background-attachment: fixed;
 }
 
 /* Reduced motion is a theme choice here, and also honoured when the operating

@@ -6443,6 +6443,7 @@ export const STRINGS: Dict = {
   "kids.droneStep2": { en: "2. Build the scenes", af: "2. Bou die tonele" },
   "kids.droneStep3": { en: "3. Watch it", af: "3. Kyk daarna" },
   "kids.worldsTitle": { en: "Story worlds (one press fills it in)", af: "Storiewêrelde (een druk vul dit in)" },
+  "make.simpleEmpty": { en: "Nothing written yet. Tell the copilot below what you want, and it lands here.", af: "Nog niks geskryf nie. S\u00ea vir die copilot hieronder wat jy wil h\u00ea, en dit land hier." },
   "landing.heroTag": { en: "NEXT-GEN MUSIC & MEDIA STUDIO", af: "VOLGENDE-GESLAG MUSIEK- & MEDIA-ATELJEE" },
   "landing.heroTitle": { en: "THE WHOLE STUDIO,", af: "DIE HELE ATELJEE," },
   "landing.heroTitle2": { en: "IN ONE BLACK BOX.", af: "IN EEN SWART BOKS." },
