@@ -12,7 +12,6 @@ import { Check, Music, Pause, Play, Search, Volume2, X } from 'lucide-react';
 import { GENRE_CATEGORIES, GENRE_SAMPLES, type GenreSample } from '../data/genres';
 import { sketch, supported, type Sketch } from '../lib/preview';
 import { useLang } from '../lib/i18n';
-import { useBackLayer } from '../lib/backstack';
 
 interface StyleRepertoireModalProps {
   readonly currentStyle: string;
@@ -26,8 +25,6 @@ export default function StyleRepertoireModal({
   onSelectStyle,
 }: StyleRepertoireModalProps): React.ReactElement {
   const { t, lang } = useLang();
-  /* Painted over the whole app, so Back closes it — `check:backlayers`. */
-  useBackLayer(true, onClose);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [playingName, setPlayingName] = useState<string | null>(null);
@@ -88,7 +85,7 @@ export default function StyleRepertoireModal({
       role="dialog"
       aria-modal="true"
       aria-label={t('repertoire.title', 'Song Style Repertoire')}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
     >
       <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
         {/* Header */}
@@ -99,7 +96,7 @@ export default function StyleRepertoireModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <span>{t('repertoire.title', 'Song Style Repertoire')}</span>
+                <span>{t('repertoire.title', 'Style Repertoire')}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/30">
                   {GENRE_SAMPLES.length} {t('repertoire.styles', 'styles')}
                 </span>
@@ -154,7 +151,7 @@ export default function StyleRepertoireModal({
           </div>
 
           {/* Category Chips */}
-          <div className="flex flex-wrap items-center gap-1.5 pb-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
             {allCategories.map((cat) => {
               const active = selectedCategory === cat;
               return (

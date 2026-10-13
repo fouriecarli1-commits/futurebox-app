@@ -464,12 +464,7 @@ export default function MakeMusic({
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
-  /* Off to start with. The verse-by-verse guide arrived on 12 October 2026
-     switched on, and that hid the plain words box — the one the photo flow
-     fills, the copilot writes into and the wand adds to. `check:makeroom`
-     types into that box and found it gone. The guide is a way of writing,
-     offered beside the box, not in place of it. */
-  const [verseGuideMode, setVerseGuideMode] = useState(false);
+  const [verseGuideMode, setVerseGuideMode] = useState(true);
   const [showRepertoire, setShowRepertoire] = useState(false);
   const [weirdness, setWeirdness] = useState(15);
   /**
@@ -527,11 +522,8 @@ export default function MakeMusic({
     if (seconds !== 60) said.push(`${seconds}s`);
     if (singItYourself) said.push(t('make.singSelf'));
     if (ownSound) said.push(t('make.useOwnSound', 'Make it in a sound of my own'));
-    /* The weirdness slider arrived on 12 October 2026 at 15, and a setting
-       that applies behind the switch is printed here or it is a silent one. */
-    if (weirdness !== 15) said.push(`${t('make.weirdness', 'Weirdness')} ${weirdness}%`);
     return said;
-  }, [bpm, songKey, seconds, singItYourself, ownSound, weirdness, t]);
+  }, [bpm, songKey, seconds, singItYourself, ownSound, t]);
   const [busy, setBusy] = useState(false);
 
   /**
@@ -1303,7 +1295,7 @@ export default function MakeMusic({
                   : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
               }`}
             >
-              ✍️ {t('make.freeWrite', 'Write it yourself')}
+              ✍️ {t('make.freeWrite', 'Free Lyrics')}
             </button>
           </div>
 

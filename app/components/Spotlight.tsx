@@ -73,7 +73,7 @@ export default function Spotlight({
           <div className="flex items-center gap-2 pt-1">
             <span className="inline-flex items-center gap-2 rounded-full border border-teal-500/40 bg-gradient-to-r from-teal-950/70 via-emerald-950/40 to-zinc-900 px-3.5 py-1.5 text-xs font-bold text-teal-300 shadow-[0_0_20px_rgba(20,184,166,0.15)]">
               <Sparkles className="h-3.5 w-3.5 text-teal-400 flex-shrink-0" />
-              <span>{t('hero.googleEngineBadge', 'Google DeepMind & Vertex AI • Lyria 3 music • Veo 3.1 video • Nano Banana pictures')}</span>
+              <span>{t('hero.googleEngineBadge', 'Google DeepMind & Vertex AI • Lyria 3 Music • Veo 3.1 4K Video • Gemini Pro Copilot')}</span>
             </span>
           </div>
 
@@ -154,9 +154,9 @@ export default function Spotlight({
             <button
               type="button"
               onClick={onAppearance}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-onAccent shadow-md transition-all flex-shrink-0"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-zinc-950 shadow-md transition-all flex-shrink-0"
             >
-              <Paintbrush className="w-4 h-4 text-onAccent" />
+              <Paintbrush className="w-4 h-4 text-zinc-950" />
               <span>{t('hero.openThemeStudio', 'Open Style Studio')}</span>
             </button>
           </div>

@@ -44,6 +44,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowLeft,
   Bookmark,
   Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
 } from 'lucide-react';
@@ -5067,10 +5068,7 @@ export default function PostStudio({
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-950/40 px-3 text-xs font-bold text-purple-200 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] active:scale-95 transition-all"
           >
             <LayoutTemplate className="h-4 w-4 text-purple-400" />
-            {/* Icon alone on a phone, as before 12 October 2026: with the
-                label the bar wrapped to four rows, the canvas slid under the
-                cut-shape strip, and a dragged square selected text instead. */}
-            <span className="hidden sm:inline">{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
+            <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
           </button>
 
           {/* Canvas Size */}
@@ -5081,7 +5079,7 @@ export default function PostStudio({
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 text-xs font-bold text-zinc-300 hover:border-zinc-500 hover:text-white active:scale-95 transition-all"
           >
             <Maximize2 className="h-3.5 w-3.5 text-teal-400" />
-            <span className="hidden sm:inline">{size.name || `${size.width}×${size.height}`}</span>
+            <span>{size.name || `${size.width}×${size.height}`}</span>
           </button>
 
           {/* ── The copilot, as a button ─────────────────────────────
@@ -5105,7 +5103,18 @@ export default function PostStudio({
           {/* A room is left by the menu, like every other room. A close
               button here would be a second way out that only this room has,
               and the one it leads back to depends on how you arrived. */}
-          {!asRoom && (
+          {asRoom ? (
+            <button
+              type="button"
+              onClick={onClose}
+              data-roomback
+              aria-label={t('room.backToAll', 'Alle Kamers')}
+              className={`${LEEG} w-auto px-3 text-emerald-400 hover:text-emerald-300 font-bold`}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-xs">{t('room.backToAll', 'Alle Kamers')}</span>
+            </button>
+          ) : (
             <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className={LEEG}>
               <X className="h-4 w-4" />
             </button>

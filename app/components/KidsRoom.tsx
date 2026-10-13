@@ -89,7 +89,7 @@ import { askKidVideo, makeKidSong, startKidVideo, kidWords, KID_TOPICS, KID_SOUN
 import { stillWorthWaiting } from '../lib/jobwait';
 import { asClock, howMany, priceOf } from '../lib/kidsallowance';
 import { keepSong, MOST_SONGS } from '../lib/songkeep';
-import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin, DARK_INK } from '../lib/kidslook';
+import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
 /** A picture a child can tell apart at a glance, per choice. */
 const FACES: Record<string, React.ReactNode> = {
   dog: <Dog className="h-8 w-8" />,
@@ -764,20 +764,14 @@ export default function KidsRoom(): React.ReactElement {
       {activeTab === 'songs' && (
         <>
           {/* Quick link banner to story studio */}
-          <div
-            className="flex items-center justify-between gap-3 rounded-2xl border-2 p-3 sm:p-3.5 shadow-sm"
-            /* Fixed amber, like the wheel: the theme's highlight stops are not
-               solved against each other inside the kids palette, and the walk
-               measured the title at 1.46:1 on them. */
-            style={{ background: '#fff4cc', borderColor: '#f0a500', color: DARK_INK }}
-          >
+          <div className="flex items-center justify-between gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50/95 p-3 sm:p-3.5 shadow-sm">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="text-2xl sm:text-3xl">✨</span>
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-black truncate">
+                <p className="text-xs sm:text-sm font-black text-amber-950 truncate">
                   {t('kids.storyboardTitle', 'Magic Storyboard Studio')}
                 </p>
-                <p className="text-[11px] font-bold truncate" style={{ color: '#6b4a12' }}>
+                <p className="text-[11px] font-bold text-amber-800 truncate">
                   {t('kids.storyboardSub', 'Choose your storyline & visuals to make your storybook!')}
                 </p>
               </div>

@@ -4174,7 +4174,7 @@ export default function FutureBoxHome() {
               <button
                 onClick={stepOut}
                 data-backout
-                aria-label={atDoor ? t('feed.backToPlatform') : t('room.backToAll', 'All Rooms')}
+                aria-label={atDoor ? t('feed.backToPlatform') : t('room.backToAll', 'Alle Kamers')}
                 className="flex items-center justify-center sm:justify-start space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 min-h-[44px] min-w-[44px] sm:min-w-0 rounded-xl transition-all flex-shrink-0"
               >
                 <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
@@ -4183,7 +4183,7 @@ export default function FutureBoxHome() {
                     third of the header with it, for a control whose meaning a
                     left arrow in the top-left corner already carries. */}
                 <span className="hidden sm:inline">
-                  {atDoor ? t('feed.backToPlatform') : t('room.backToAll', 'All Rooms')}
+                  {atDoor ? t('feed.backToPlatform') : t('room.backToAll', 'Alle Kamers')}
                 </span>
               </button>
 
@@ -4273,11 +4273,11 @@ export default function FutureBoxHome() {
                     }
                   }}
                   data-roomai-mobile
-                  aria-label={t('room.aiCopilot', 'Room AI Copilot')}
-                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-400/40 bg-emerald-500 text-onAccent flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
+                  aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
+                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-emerald-300 flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
                 >
-                  <Sparkles className="w-4 h-4 text-onAccent flex-shrink-0" />
-                  <span className="hidden xs:inline">{t('room.aiCopilot', 'Room AI Copilot')}</span>
+                  <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span className="hidden xs:inline">{t('room.aiCopilot', 'AI Assistent')}</span>
                 </button>
               </div>
 
@@ -4456,11 +4456,11 @@ export default function FutureBoxHome() {
                       type="button"
                       onClick={() => setAtDoor(true)}
                       data-roomback
-                      aria-label={t('room.backToAll', 'All Rooms')}
+                      aria-label={t('room.backToAll', 'Alle Kamers')}
                       className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white hover:border-emerald-500 transition-all"
                     >
                       <ArrowLeft className="w-4 h-4 text-emerald-400" />
-                      <span>{t('room.backToAll', 'All Rooms')}</span>
+                      <span>{t('room.backToAll', 'Alle Kamers')}</span>
                     </button>
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-xs font-extrabold text-zinc-300 truncate">
@@ -4477,11 +4477,11 @@ export default function FutureBoxHome() {
                         }
                       }}
                       data-roomai
-                      aria-label={t('room.aiCopilot', 'Room AI Copilot')}
-                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500 border border-emerald-400/40 text-xs font-bold text-onAccent hover:bg-emerald-400 transition-all"
+                      aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
+                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all"
                     >
-                      <Sparkles className="w-4 h-4 text-onAccent" />
-                      <span>{t('room.aiCopilot', 'Room AI Copilot')}</span>
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span>{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
                     </button>
                   </div>
                 )}

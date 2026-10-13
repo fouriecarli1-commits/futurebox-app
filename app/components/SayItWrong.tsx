@@ -34,7 +34,6 @@
 import React, { useState } from 'react';
 import { Ear, Check, Loader2, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
-import { useBackLayer } from '../lib/backstack';
 import { accessToken } from '../lib/cloud';
 
 export default function SayItWrong({
@@ -67,8 +66,6 @@ export default function SayItWrong({
 }): React.ReactElement | null {
   const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
-  /* The dialog paints over the whole app, so Back closes it — `check:backlayers`. */
-  useBackLayer(open, () => setOpen(false));
   const [word, setWord] = useState('');
   const [heard, setHeard] = useState('');
   const [should, setShould] = useState('');
