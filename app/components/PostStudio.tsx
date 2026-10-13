@@ -49,6 +49,10 @@ import {
   Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
+import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
+import {
+  MARK_INKS, MARK_SIZES, MARK_SPECS, MARK_SPOTS, drawMark, newMark, type Mark,
+} from '../lib/postshapes';
 import {
   fromFrame, maskFor as maskOfLine, middleOf, ontoFrame, pickAt, picksFrom,
   shareOf as shareOfLine, type Pick,
@@ -230,6 +234,12 @@ interface Words {
    * drawn. `posttext.ts` carries why a shadow is not enough.
    */
   readonly behind?: Backdrop;
+  /**
+   * The light the line gives off — Carli, 13 October 2026: "Neon,
+   * futuristic, phantasm". Absent is none. `lib/postglow.ts` says how it
+   * is drawn so that it exports.
+   */
+  readonly glow?: GlowId;
 }
 
 /**
@@ -676,6 +686,9 @@ export default function PostStudio({
   const [said, setSaid] = useState('');
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
+  /* The shapes on the picture — `lib/postshapes.ts`. Drawn under the words
+     and over the photograph, and exported with both. */
+  const [marks, setMarks] = useState<Mark[]>([]);
   /* ── Cutting the photograph down, which is not the same as framing it ───
  
      Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
@@ -983,6 +996,10 @@ export default function PostStudio({
       }
     }
 
+    /* The shapes, under the words: a ring behind a word is a halo, a
+       word behind a ring is a mistake. */
+    for (const mark of marks) drawMark(ctx, mark, size.width, size.height);
+
     for (const one of words) {
       if (!one.text.trim()) continue;
       const chosen = faceOf(one.face);
@@ -1091,14 +1108,36 @@ export default function PostStudio({
         h: (fit.lines.length * fit.px * lineGap + fit.px * 0.3) / size.height,
       });
 
-      ctx.shadowColor = 'rgba(0,0,0,0.55)';
-      ctx.shadowBlur = Math.max(2, fit.px * 0.12);
-      let y = put.y;
-      for (const line of fit.lines) {
-        writeLine(line, put.x, y);
-        y += fit.px * lineGap;
+      /* ── The glow, if the line has one ─────────────────────────────
+          Written three times over with a widening, changing shadow — far
+          halo, near halo, core — and then once crisp on top with no shadow
+          at all. A canvas has one shadow per fill, and a neon tube is not
+          one shadow. The same passes light the shapes, so a lit word and a
+          lit ring beside it are the same light. */
+      const glow = glowOf(one.glow);
+      const passes = haloPasses(glow, fit.px);
+      const writeBlock = (): void => {
+        let y = put.y;
+        for (const line of fit.lines) {
+          writeLine(line, put.x, y);
+          y += fit.px * lineGap;
+        }
+      };
+      if (passes.length) {
+        for (const pass of passes) {
+          ctx.shadowColor = pass.colour;
+          ctx.shadowBlur = pass.blur;
+          writeBlock();
+        }
+        ctx.shadowColor = 'rgba(0,0,0,0)';
+        ctx.shadowBlur = 0;
+        writeBlock();
+      } else {
+        ctx.shadowColor = 'rgba(0,0,0,0.55)';
+        ctx.shadowBlur = Math.max(2, fit.px * 0.12);
+        writeBlock();
+        ctx.shadowBlur = 0;
       }
-      ctx.shadowBlur = 0;
     }
 
     /* ── The crop box, over everything, and never on the exported file ───
@@ -1976,6 +2015,8 @@ export default function PostStudio({
       face: word.face,
       spot: word.spot,
       ink: word.ink,
+      ...(word.glow ? { glow: word.glow } : {}),
+      ...(word.letterGap !== undefined ? { letterGap: word.letterGap } : {}),
     })));
     setBench('text');
     setSaid(t('post.tplDone', 'There it is. Change any of it \u2014 the words, the shape, where they sit.'));
@@ -4488,11 +4529,54 @@ export default function PostStudio({
             data-posttemplate={one.id}
             onClick={() => startFrom(one)}
             title={t(one.what[0], one.what[1])}
-            className={LEEG}
+            /* A starter pack wears its own look on the button — Carli, 13
+               October 2026, with Google's tiles. The plain ones stay plain. */
+            className={one.tile ? `${LEEG} !h-auto !items-start flex-col gap-1 py-3 text-left border-white/15` : LEEG}
+            style={one.tile ? { background: `linear-gradient(135deg, ${one.tile[0]}, #000 55%, ${one.tile[1]})` } : undefined}
           >
-            {t(one.name[0], one.name[1])}
+            {one.tile ? (
+              <>
+                <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-300">{t(one.what[0], one.what[1]).split(':')[0]}</span>
+                <span
+                  className="text-sm font-black tracking-tight text-white"
+                  style={{ textShadow: `0 0 10px ${one.words[0]?.ink ?? '#fff'}, 0 0 22px ${one.tile[1]}` }}
+                >
+                  {t(one.words[0]?.says[0] ?? one.name[0], one.words[0]?.says[1] ?? one.name[1])}
+                </span>
+                <span className="text-[10px] text-zinc-300">{t(one.name[0], one.name[1])}</span>
+              </>
+            ) : t(one.name[0], one.name[1])}
           </button>
         ))}
+      </div>
+      {/* ── The neon words: one press, one lit line ─────────────────────
+          Carli, 13 October 2026: "amazing futuristic text … Neon,
+          futuristic, phantasm". Each chip is drawn in its own face, ink
+          and glow, so the chip is a sample of the line it adds. */}
+      <p className={MIKRO}>{t('post.neonWords', 'Neon words')}</p>
+      <div className={RY} data-postneonwords>
+        {NEON_WORDS.map((one) => {
+          const face = faceOf(one.face);
+          const halo = glowOf(one.glow).halo;
+          return (
+            <button
+              key={one.id}
+              type="button"
+              data-postneonword={one.id}
+              onClick={() => setWords((was) => [...was, {
+                id: freshId(), text: t(one.says[0], one.says[1]), face: one.face,
+                spot: was.length === 0 ? 'middle' : 'top', ink: one.ink, glow: one.glow, letterGap: one.letterGap,
+              }])}
+              className={`${LEEG} !bg-black border-white/15`}
+              style={{
+                fontFamily: face.css, fontWeight: face.weight, color: one.ink, letterSpacing: `${one.letterGap * 0.4}em`,
+                textShadow: halo.length ? `0 0 8px ${halo[2]}, 0 0 16px ${halo[1]}, 0 0 28px ${halo[0]}` : undefined,
+              }}
+            >
+              {t(one.says[0], one.says[1])}
+            </button>
+          );
+        })}
       </div>
       <p className="text-[12px] leading-relaxed text-zinc-500">
         {t(
@@ -4616,6 +4700,21 @@ export default function PostStudio({
                     : t('post.backBar', 'Solid bar')}
               </button>
             ))}
+            {/* ── The light it gives off ───────────────────────────────── */}
+            {GLOWS.map((glow) => (
+              <button
+                key={glow.id}
+                type="button"
+                data-postglow={glow.id}
+                aria-pressed={(one.glow ?? 'none') === glow.id}
+                onClick={() => setWords((was) => was.map((w) => (
+                  w.id === one.id ? { ...w, glow: glow.id } : w)))}
+                className={`${LEEG} ${(one.glow ?? 'none') === glow.id ? GEKIES : ''}`}
+                style={glow.halo.length ? { textShadow: `0 0 6px ${glow.halo[2]}, 0 0 14px ${glow.halo[1]}` } : undefined}
+              >
+                {t(glow.name[0], glow.name[1])}
+              </button>
+            ))}
             <input
               type="color"
               value={one.ink}
@@ -4691,6 +4790,105 @@ export default function PostStudio({
           )}
         </div>
       ))}
+    </div>
+
+    {/* ── The shapes ───────────────────────────────────────────────────
+        Carli, 13 October 2026: "ons kort amazing … shape templates." The
+        four Google's page drew — a cube, a ring, a grid, a frame — as real
+        layers in `lib/postshapes.ts`: drawn, lit with the same glow the
+        words use, put in one of five places at one of three sizes, and
+        exported with the picture. Not draggable yet; the five places are
+        the presses. */}
+    <div className="space-y-3" data-postmarks>
+      <div className="flex items-center justify-between gap-2">
+        <p className={MIKRO}>{t('post.shapes', 'Shapes')}</p>
+        <span className="text-[11px] text-zinc-500">{t('post.shapesWhy', 'Lit, and in the exported file.')}</span>
+      </div>
+      <div className={RY}>
+        {MARK_SPECS.map((spec) => (
+          <button
+            key={spec.id}
+            type="button"
+            data-postaddmark={spec.id}
+            onClick={() => setMarks((was) => [...was, newMark(spec.id, freshId())])}
+            className={`${LEEG} inline-flex items-center gap-1.5`}
+          >
+            <span aria-hidden>{spec.icon}</span>
+            {t(spec.name[0], spec.name[1])}
+          </button>
+        ))}
+      </div>
+      {marks.map((mark) => {
+        const spec = MARK_SPECS.find((one) => one.id === mark.kind) ?? MARK_SPECS[0];
+        return (
+          <div key={mark.id} data-postmark={mark.kind} className="space-y-2 rounded-xl border border-zinc-800 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-zinc-100"><span aria-hidden>{spec.icon}</span> {t(spec.name[0], spec.name[1])}</span>
+              <button
+                type="button"
+                onClick={() => setMarks((was) => was.filter((m) => m.id !== mark.id))}
+                aria-label={t('post.removeShape', 'Remove this shape')}
+                className={`${LEEG} w-auto px-3`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className={RY}>
+              {MARK_SPOTS.map((spot) => (
+                <button
+                  key={spot.id}
+                  type="button"
+                  data-postmarkspot={spot.id}
+                  aria-pressed={mark.x === spot.x && mark.y === spot.y}
+                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, x: spot.x, y: spot.y } : m)))}
+                  className={`${LEEG} ${mark.x === spot.x && mark.y === spot.y ? GEKIES : ''}`}
+                >
+                  {t(`post.markSpot.${spot.id}`, spot.id)}
+                </button>
+              ))}
+              {MARK_SIZES.map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  data-postmarksize={one.id}
+                  aria-pressed={mark.size === one.share}
+                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, size: one.share } : m)))}
+                  className={`${LEEG} ${mark.size === one.share ? GEKIES : ''}`}
+                >
+                  {t(`post.markSize.${one.id}`, one.id)}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {MARK_INKS.map((ink) => (
+                <button
+                  key={ink}
+                  type="button"
+                  data-postmarkink={ink}
+                  aria-pressed={mark.ink === ink}
+                  aria-label={ink}
+                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, ink } : m)))}
+                  className={`h-9 w-9 rounded-full border-2 ${mark.ink === ink ? 'border-white' : 'border-zinc-700'}`}
+                  style={{ background: ink, boxShadow: mark.ink === ink ? `0 0 12px ${ink}` : undefined }}
+                />
+              ))}
+              {GLOWS.map((glow) => (
+                <button
+                  key={glow.id}
+                  type="button"
+                  data-postmarkglow={glow.id}
+                  aria-pressed={mark.glow === glow.id}
+                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, glow: glow.id } : m)))}
+                  className={`${LEEG} w-auto px-3 ${mark.glow === glow.id ? GEKIES : ''}`}
+                  style={glow.halo.length ? { textShadow: `0 0 6px ${glow.halo[2]}, 0 0 14px ${glow.halo[1]}` } : undefined}
+                >
+                  {t(glow.name[0], glow.name[1])}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
     </div>
   );
@@ -5071,6 +5269,36 @@ export default function PostStudio({
             <span className="hidden sm:inline">{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
           </button>
 
+          {/* ── The strip Google's page put across the top ───────────────
+              Three canvas sizes as one press each, and the three AI tools
+              as the benches they already are: Magic Grab is the extract
+              bench, BG Remover is the picture bench, Generative Fill is
+              the picture bench's ask-for-a-picture. Nothing new behind any
+              of them; only a shorter way there. */}
+          <div className="hidden items-center gap-1.5 md:flex" data-postquick>
+            {POST_SIZES.filter((one) => ['square', 'story', 'wide'].includes(one.id)).map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                data-postquicksize={one.id}
+                aria-pressed={size.id === one.id}
+                onClick={() => setSize(one)}
+                className={`${LEEG} w-auto px-2.5 text-xs ${size.id === one.id ? GEKIES : ''}`}
+              >
+                {one.id === 'square' ? '🔲 1:1' : one.id === 'story' ? '📱 9:16' : '🖥️ 16:9'}
+              </button>
+            ))}
+            <span className="mx-1 h-4 w-px bg-white/10" aria-hidden />
+            <button type="button" onClick={() => setBench('read')} className={`${LEEG} w-auto border-cyan-500/40 bg-cyan-500/10 px-2.5 text-xs text-cyan-300`}>
+              🪄 {t('post.quickGrab', 'Magic Grab')}
+            </button>
+            <button type="button" onClick={() => setBench('pic')} className={`${LEEG} w-auto border-purple-500/40 bg-purple-500/10 px-2.5 text-xs text-purple-300`}>
+              ✂️ {t('post.quickBg', 'BG Remover')}
+            </button>
+            <button type="button" onClick={() => setBench('pic')} className={`${LEEG} w-auto border-emerald-500/40 bg-emerald-500/10 px-2.5 text-xs text-emerald-300`}>
+              ✨ {t('post.quickFill', 'Generative Fill')}
+            </button>
+          </div>
           {/* Canvas Size */}
           <button
             type="button"

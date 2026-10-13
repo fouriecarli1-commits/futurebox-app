@@ -1,13 +1,13 @@
 # The faces, served from here
 
-Eight families, the same woff2 files Google Fonts serves, kept in the
+Nine families, the same woff2 files Google Fonts serves, kept in the
 repository so that a build asks nothing of Google's servers. Twice on 11 and
 12 October 2026 a CI build died on the runner's fetch of one of them —
 "next/font/google queries have exactly one entry" — and a Vercel build can die
 the same way. `app/layout.tsx` and `app/lib/postfaces.ts` load these through
 `next/font/local`.
 
-All eight are under the SIL Open Font License, Version 1.1 — the text is in
+All nine are under the SIL Open Font License, Version 1.1 — the text is in
 `OFL.txt` beside this file, which the licence asks to travel with the fonts.
 The copyright lines, from each family's own licence file:
 
@@ -20,6 +20,7 @@ The copyright lines, from each family's own licence file:
 | `caveat-*` | Caveat (variable, 400–700) | Copyright 2014 The Caveat Project Authors (https://github.com/googlefonts/caveat) |
 | `anton-*` | Anton (400) | Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFont.git) |
 | `bubblegum-*` | Bubblegum Sans (400) | Copyright 2011 The Bubblegum Sans Project Authors (https://github.com/googlefonts/bubblegum-sans) |
+| `orbitron-*` | Orbitron (variable, 500–900; latin only, which is all Google serves) | Copyright 2009 The Orbitron Project Authors (https://github.com/theleagueof/orbitron) |
 | `courierprime-*` | Courier Prime (700) | Copyright 2015 The Courier Prime Project Authors (https://github.com/quoteunquoteapps/CourierPrime) |
 
 `latin` and `latin-ext` subsets only, which is what the app asked Google for:

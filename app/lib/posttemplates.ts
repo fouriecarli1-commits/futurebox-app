@@ -38,6 +38,7 @@
  */
 
 import type { FaceId } from './postfaces';
+import type { GlowId } from './postglow';
 import type { Look } from './postlook';
 
 /** Where on the picture a line sits. The same three the room offers. */
@@ -49,6 +50,9 @@ export interface TemplateWords {
   readonly face: FaceId;
   readonly spot: Spot;
   readonly ink: string;
+  /** The light the line gives off. Absent is none, which every older template is. */
+  readonly glow?: GlowId;
+  readonly letterGap?: number;
 }
 
 export interface Template {
@@ -60,6 +64,13 @@ export interface Template {
   /** What to do to the picture. Nothing is left as it came. */
   readonly look?: Partial<Look>;
   readonly words: readonly TemplateWords[];
+  /**
+   * The two ends of the tile the picker draws for it — Carli, 13 October
+   * 2026, with Google's page: a starter pack is chosen by its look, so the
+   * button that chooses it has to carry the look. Absent draws a plain
+   * button, which is what every template had until today.
+   */
+  readonly tile?: readonly [string, string];
 }
 
 const WHITE = '#ffffff';
@@ -71,6 +82,58 @@ const NEON_VIOLET = '#a78bfa';
 const NEON_LIME = '#a3e635';
 
 export const TEMPLATES: readonly Template[] = [
+  /* ── The futuristic and phantasm starter packs ────────────────────────
+     Carli, 13 October 2026: "ons kort amazing futuristic text, foto, en
+     shape templates. Neon, futuristic, phantasm, etc." The four Google's
+     page drew, with the glow and the face that make them what they are. */
+  {
+    id: 'phantasm',
+    name: ['post.tplPhantasm', 'Phantasm 2026'],
+    what: ['post.tplPhantasmWhat', 'Synthwave: pink and violet light over a dark picture, for a night that is a show.'],
+    size: 'square',
+    look: { bright: 0.84, contrast: 1.28, colour: 1.3 },
+    tile: ['#581c87', '#831843'],
+    words: [
+      { says: ['post.tplPhantasmOne', 'PHANTASM 2026'], face: 'poster', spot: 'middle', ink: '#fbcfe8', glow: 'synth', letterGap: 0.12 },
+      { says: ['post.tplPhantasmTwo', 'Neon cyber glow, all night'], face: 'plain', spot: 'lower', ink: '#f472b6', glow: 'synth' },
+    ],
+  },
+  {
+    id: 'matrix',
+    name: ['post.tplMatrix', 'Future Pro'],
+    what: ['post.tplMatrixWhat', 'Emerald and cyan on near-black: the quantum grid, for anything made with the machine.'],
+    size: 'story',
+    look: { bright: 0.8, contrast: 1.3, colour: 1.1 },
+    tile: ['#022c22', '#083344'],
+    words: [
+      { says: ['post.tplMatrixOne', 'FUTURE PRO'], face: 'future', spot: 'middle', ink: '#ecfdf5', glow: 'neon', letterGap: 0.22 },
+      { says: ['post.tplMatrixTwo', 'Made in the black box'], face: 'type', spot: 'lower', ink: '#34d399', glow: 'neon', letterGap: 0.16 },
+    ],
+  },
+  {
+    id: 'glitch',
+    name: ['post.tplGlitch', 'Static Wave'],
+    what: ['post.tplGlitchWhat', 'Glitch art: ice-blue light with a wide, cold tracking, for a drop or a remix.'],
+    size: 'square',
+    look: { bright: 0.9, contrast: 1.35, colour: 0.85 },
+    tile: ['#172554', '#3b0764'],
+    words: [
+      { says: ['post.tplGlitchOne', 'STATIC WAVE'], face: 'future', spot: 'top', ink: '#e0f2fe', glow: 'ice', letterGap: 0.3 },
+      { says: ['post.tplGlitchTwo', 'Remix out now'], face: 'type', spot: 'bottom', ink: '#67e8f9', glow: 'holo', letterGap: 0.2 },
+    ],
+  },
+  {
+    id: 'golden',
+    name: ['post.tplGolden', 'Studio Art'],
+    what: ['post.tplGoldenWhat', 'Golden hour: warm light and a serif, for a portrait or an album moment.'],
+    size: 'portrait',
+    look: { bright: 0.96, contrast: 1.12, colour: 1.18 },
+    tile: ['#451a03', '#1c1917'],
+    words: [
+      { says: ['post.tplGoldenOne', 'STUDIO ART'], face: 'book', spot: 'top', ink: '#fde68a', glow: 'gold', letterGap: 0.2 },
+      { says: ['post.tplGoldenTwo', 'Shot in the golden hour'], face: 'hand', spot: 'bottom', ink: '#fef3c7', glow: 'gold' },
+    ],
+  },
   {
     id: 'show',
     name: ['post.tplShow', 'A show on Friday'],

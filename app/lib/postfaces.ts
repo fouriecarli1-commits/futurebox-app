@@ -113,6 +113,18 @@ export const ROUND = localFont({
 
 /* The plain one IS preloaded, because it is the default a post opens in and
    the one most posts will keep. */
+/**
+ * The futuristic face — Carli, 13 October 2026: "amazing futuristic text".
+ * Orbitron, the geometric display face Google's page set its neon words
+ * in; local like the rest, latin only, which is all Google serves of it.
+ */
+export const FUTURE = localFont({
+  src: [
+    { path: '../fonts/orbitron-latin.woff2', weight: '500 900', style: 'normal' },
+  ],
+  display: 'swap',
+});
+
 export const PLAIN = localFont({
   src: [
     { path: '../fonts/inter-latin.woff2', weight: '100 900', style: 'normal' },
@@ -143,6 +155,7 @@ export const FACES = [
   { id: 'hand', name: 'Handwritten', css: `${HAND.style.fontFamily}, cursive`, weight: 700 },
   { id: 'type', name: 'Typewriter', css: `${TYPE.style.fontFamily}, ui-monospace, monospace`, weight: 700 },
   { id: 'round', name: 'Rounded', css: `${ROUND.style.fontFamily}, system-ui, sans-serif`, weight: 800 },
+  { id: 'future', name: 'Future', css: `${FUTURE.style.fontFamily}, 'Orbitron', system-ui, sans-serif`, weight: 800 },
 ] as const satisfies readonly Face[];
 
 export type FaceId = (typeof FACES)[number]['id'];
