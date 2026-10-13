@@ -92,6 +92,7 @@ import { useLang } from '../lib/i18n';
 import { loadTracks, type Track } from '../lib/library';
 import { square } from '../lib/imagefile';
 import { previewOf } from '../lib/artmark';
+import ArtMaker from './ArtMaker';
 import {
   ART_MAX_BYTES, ART_SIDE, ART_SIZE_SAID, ART_RAND, ARTIST_RAND, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '../data/artmarket';
@@ -570,7 +571,7 @@ export default function ArtMarket(): React.ReactElement {
   const [said, setSaid] = useState('');
   const [loading, setLoading] = useState(true);
   /** Which of the three the screen is showing. */
-  const [tab, setTab] = useState<'works' | 'artists' | 'mine'>('works');
+  const [tab, setTab] = useState<'works' | 'artists' | 'make' | 'mine'>('works');
   /** Whose buttons-only conversation is open. */
   const [asking, setAsking] = useState<Artist | null>(null);
   /** Whose profile is open — their words and their whole body of work. */
@@ -808,6 +809,9 @@ export default function ArtMarket(): React.ReactElement {
   const TABS = [
     { id: 'works' as const, said: t('art.tab.works'), count: wall.length },
     { id: 'artists' as const, said: t('art.tab.artists'), count: market?.artists.length ?? 0 },
+    /* Before Mine, not after it: the art room probe reads the LAST tab as
+       the one with the panels on it. Google's page, 13 October 2026. */
+    { id: 'make' as const, said: t('art.tab.make', 'AI art, download only'), count: 0 },
     { id: 'mine' as const, said: t('art.tab.mine'), count: market?.bought.length ?? 0 },
   ];
 
@@ -1016,6 +1020,9 @@ export default function ArtMarket(): React.ReactElement {
           )}
         </section>
       )}
+
+      {/* ── The AI art studio, download only ─────────────────────────── */}
+      {!loading && tab === 'make' && <ArtMaker />}
 
       {/* ── MYNE ────────────────────────────────────────────────────────
           Everything that is about you rather than about them. Folds here,
