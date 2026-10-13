@@ -24,6 +24,7 @@ import CollabRadar from './components/CollabRadar';
 import MusicQuiz from './components/MusicQuiz';
 import CollabFinder from './components/CollabFinder';
 import CollabRoom from './components/CollabRoom';
+import CollabDesk from './components/CollabDesk';
 import PairStrip from './components/PairStrip';
 import { loadPairs, type Pair } from './lib/pairs';
 import Channel from './components/Channel';
@@ -4950,10 +4951,13 @@ export default function FutureBoxHome() {
 
             {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
             {studioTab === 'collab' && (
-              <div className="space-y-6">
-                {/* Anything waiting on an answer comes first — a request sitting
-                    unanswered under two screens of matching is a request that
-                    goes unanswered. Then the matching, then the pitch tools. */}
+              /* Google's Collab Radar page, 13 October 2026, over the same
+                  three pieces: the room (requests, lobby, thread), the finder
+                  (profile, sweep, matches) and the podcast desk. `CollabDesk`
+                  lays them out and switches between the radar and the room;
+                  every hand-off below is unchanged. */
+              <CollabDesk
+                room={(
                 <CollabRoom
                   reloadKey={collabSignal}
                   me={artistName}
@@ -5006,16 +5010,21 @@ export default function FutureBoxHome() {
                     );
                   }}
                 />
+                )}
+                finder={(
                 <CollabFinder
                   reloadKey={trackCount}
                   onAsked={() => setCollabSignal((n) => n + 1)}
                 />
+                )}
+                radar={(
                 <CollabRadar
                 profile={creatorProfile}
                 userPlan={userPlan}
                 onUpgrade={() => setPricingModalOpen(true)}
                 />
-              </div>
+                )}
+              />
             )}
 
 

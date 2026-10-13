@@ -17,6 +17,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Copy, ExternalLink, Handshake, Loader2, Radar, Users } from 'lucide-react';
+import RadarSweep, { type Blip } from './RadarSweep';
 import { loadTracks, type Track } from '../lib/library';
 import { matchTracks, type TrackMatch } from '../lib/matching';
 import {
@@ -35,10 +36,21 @@ const BLANK: Creator = { name: '', handle: '', about: '', links: {} };
 export default function CollabFinder({
   reloadKey,
   onAsked,
+  part = 'all',
 }: {
   reloadKey: number;
   /** Bumped so the rooms above this panel pick up a request the moment it is sent. */
   onAsked?: () => void;
+  /**
+   * Which of its cards to draw.
+   *
+   * Google's Collab Radar page, 13 October 2026, puts the profile down the
+   * left and the sweep in the middle. The data is one request either way;
+   * `CollabDesk` mounts this twice with two parts rather than this file
+   * growing a layout of its own. `all` is the old stack, for anything that
+   * still mounts it on its own.
+   */
+  part?: 'all' | 'profile' | 'radar';
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -52,6 +64,10 @@ export default function CollabFinder({
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  /** The blip somebody pressed on the sweep. */
+  const [picked, setPicked] = useState<string | null>(null);
+  /** Narrowing the matches to one genre of theirs. */
+  const [genre, setGenre] = useState('all');
 
   useEffect(() => {
     setMine(loadTracks());
@@ -98,6 +114,31 @@ export default function CollabFinder({
     return found.sort((a, b) => b.match.score - a.match.score).slice(0, 12);
   }, [catalogue, creator.handle, mine]);
 
+  /* Everybody on the radar as a blip, placed by the best score any song of
+     theirs got against any song of yours. No score puts them on the outer
+     ring, which is where "here, but not measured" belongs. */
+  const blips = useMemo<Blip[]>(() => today.map((person) => {
+    let best: number | null = null;
+    for (const entry of matches) {
+      if (entry.match.track.handle && entry.match.track.handle === person.handle) {
+        best = best === null ? entry.match.score : Math.max(best, entry.match.score);
+      }
+    }
+    return { id: person.handle || person.name, name: person.name, handle: person.handle, score: best };
+  }), [matches, today]);
+  const pickedPerson = useMemo(
+    () => today.find((person) => (person.handle || person.name) === picked) ?? null,
+    [picked, today],
+  );
+  const genres = useMemo(
+    () => Array.from(new Set(others.map((one) => one.genre).filter(Boolean))).sort(),
+    [others],
+  );
+  const shownMatches = useMemo(
+    () => (genre === 'all' ? matches : matches.filter((entry) => entry.match.track.genre === genre)),
+    [genre, matches],
+  );
+
   const toggleShare = useCallback(async (track: Track) => {
     setBusy(track.id);
     setProblem(null);
@@ -129,6 +170,275 @@ export default function CollabFinder({
     `Your "${entry.match.track.title}" and my "${entry.from.title}" line up: ` +
     `${entry.match.reasons.join('; ')}. ` +
     `${entry.match.collabWhy} Fancy trying a ${entry.match.collabFormat.toLowerCase()}?`;
+
+  const matchesCard = (
+    <>
+      {/* ── Who is near your sound ───────────────────────────────────────── */}
+      <Card
+        title={t('radar.matches', 'Near your sound')}
+        icon={<Radar className="w-4 h-4" />}
+        tools={genres.length > 1 ? (
+          <select
+            value={genre}
+            onChange={(event) => setGenre(event.target.value)}
+            data-radargenre
+            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-none"
+          >
+            <option value="all">{t('radar.allGenres', 'All genres')}</option>
+            {genres.map((one) => <option key={one} value={one}>{one}</option>)}
+          </select>
+        ) : undefined}
+      >
+
+        {loading ? (
+          <p className="text-sm text-zinc-500 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {t('radar.looking', 'Looking…')}
+          </p>
+        ) : shownMatches.length === 0 ? (
+          <p className="text-sm text-zinc-500 leading-snug">
+            {others.length === 0
+              ? t('radar.empty', 'Nobody has put a song on the radar yet. Yours can be the first — turn one on above.')
+              : t('radar.noneYet', 'Nothing close enough yet. More songs, on either side, will change that.')}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {shownMatches.map((entry) => {
+              const them = byId.get(entry.match.track.id);
+              const note = message(entry);
+              return (
+                <div
+                  key={`${entry.from.id}-${entry.match.track.id}`}
+                  className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-white truncate">
+                        {entry.match.track.title}
+                        <span className="text-zinc-500 font-normal"> · {entry.match.track.creator}</span>
+                      </p>
+                      <p className="text-sm text-zinc-500 truncate">
+                        {t('radar.against', 'against your')} “{entry.from.title}”
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold text-emerald-400 tabular-nums flex-shrink-0">
+                      {Math.round(entry.match.score * 100)}
+                    </span>
+                  </div>
+
+                  {/* The reasons, because a score on its own is not an argument. */}
+                  <ul className="space-y-0.5">
+                    {entry.match.reasons.map((reason) => (
+                      <li key={reason} className="text-sm text-zinc-400 leading-snug">· {reason}</li>
+                    ))}
+                  </ul>
+
+                  <p className="text-sm text-emerald-300 flex items-start gap-1.5 leading-snug">
+                    <Handshake className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    {entry.match.collabFormat} — {entry.match.collabWhy}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {/* Two asks, not one. The smaller of them — an ear on
+                        one song — is the one most people say yes to, and
+                        folding it into "work together" is how it stops
+                        being on offer at all. */}
+                    <AskToCollab
+                      handle={entry.match.track.handle}
+                      because={entry.match.reasons.join('; ')}
+                      wanting="input"
+                      song={entry.from.title}
+                      onAsked={() => onAsked?.()}
+                    />
+                    <AskToCollab
+                      handle={entry.match.track.handle}
+                      because={entry.match.reasons.join('; ')}
+                      wanting="room"
+                      onAsked={() => onAsked?.()}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void navigator.clipboard?.writeText(note);
+                        setCopied(entry.match.track.id);
+                        setTimeout(() => setCopied(null), 1500);
+                      }}
+                      className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
+                    >
+                      {copied === entry.match.track.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied === entry.match.track.id ? t('make.copied', 'Copied') : t('radar.copyNote', 'Copy the message')}
+                    </button>
+                    {them && Object.keys(them.links).length > 0
+                      ? Object.entries(them.links).map(([where, url]) => (
+                          <a
+                            key={where}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            {where}
+                          </a>
+                        ))
+                      : (
+                        <span className="text-sm text-zinc-600">
+                          {t('radar.noLinks', 'No links yet — nowhere to send this')}
+                        </span>
+                      )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </>
+  );
+
+  const sweep = (
+    <Card title={t('radar.sweepTitle', '360° sweep')} icon={<Radar className="w-4 h-4" />}>
+      <p className="text-xs text-zinc-400 leading-relaxed">
+        {t('radar.sweepSub', 'Everybody who put a name on the radar. Nearer the middle means their songs scored nearer yours; the outer ring is people with nothing scored yet. Press a blip.')}
+      </p>
+      {loading ? (
+        <p className="text-sm text-zinc-500 flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          {t('radar.looking', 'Looking…')}
+        </p>
+      ) : (
+        <RadarSweep blips={blips} picked={picked} onPick={(id) => setPicked((was) => (was === id ? null : id))} />
+      )}
+      {!loading && today.length === 0 && (
+        <Note>{t(
+          'radar.nobodyYet',
+          'Nobody else has filled their name in yet. The moment somebody does they appear here, whether or not either of you has shown a song.',
+        )}</Note>
+      )}
+      {pickedPerson && (
+        <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/[0.06] p-3 space-y-1.5" data-radarpicked>
+          <p className="text-sm font-bold text-white truncate">
+            {pickedPerson.name}
+            {pickedPerson.handle && <span className="font-normal text-zinc-500"> {pickedPerson.handle}</span>}
+          </p>
+          {pickedPerson.about && (
+            <p className="text-sm text-zinc-400 leading-snug line-clamp-3">{pickedPerson.about}</p>
+          )}
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <AskToCollab
+              handle={pickedPerson.handle}
+              because={t(
+                'radar.hereAsk',
+                'We are both on FutureBox and I would like to make something with somebody.',
+              )}
+              onAsked={() => onAsked?.()}
+            />
+            {!pickedPerson.handle && (
+              <span className="text-sm text-zinc-600">
+                {t('radar.noHandle', 'No handle yet — nothing to address a request to.')}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+      <p className="text-[11px] text-zinc-500">
+        {t('radar.sweepHonest', 'The sweep is a picture. The people on it are real, and come from one read of the radar when this opens.')}
+      </p>
+    </Card>
+  );
+
+  if (part === 'radar') {
+    return (
+      <div className="space-y-4" data-radarpart>
+        {sweep}
+        {matchesCard}
+      </div>
+    );
+  }
+
+  if (part === 'profile') {
+    return (
+      <div className="space-y-4" data-radarprofile>
+      {/* ── Who you are ──────────────────────────────────────────────────── */}
+      <Card title={t('radar.you', 'How people find you')} icon={<Users className="w-4 h-4" />}>
+        <Note>{t('radar.youNote', 'A name and somewhere to be reached. Without these a match has nobody to write to.')}</Note>
+        <div className="grid sm:grid-cols-2 gap-2">
+          <input
+            value={creator.name}
+            onChange={(event) => setCreator({ ...creator, name: event.target.value })}
+            placeholder={t('radar.name', 'Your name')}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+          />
+          <input
+            value={creator.handle}
+            onChange={(event) => setCreator({ ...creator, handle: event.target.value })}
+            placeholder={t('radar.handle', 'handle')}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+          />
+        </div>
+        <div className="grid sm:grid-cols-3 gap-2">
+          {LINKS.map((key) => (
+            <input
+              key={key}
+              value={creator.links[key] ?? ''}
+              onChange={(event) =>
+                setCreator({ ...creator, links: { ...creator.links, [key]: event.target.value } })
+              }
+              placeholder={`https:// — ${key}`}
+              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            />
+          ))}
+        </div>
+        {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={busy === 'me'}
+          className="min-h-[44px] w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          {busy === 'me' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          {saved ? t('radar.saved', 'Saved') : t('radar.save', 'Save')}
+        </button>
+      </Card>
+
+      {/* ── What you are showing ─────────────────────────────────────────── */}
+      <Card title={t('radar.showing', 'Songs on the radar')}>
+        <Note>{t('radar.showingNote', 'Off by default, one at a time, and you can turn it back off. Only the tempo, key and style words are shared — never the audio.')}</Note>
+        {mine.length === 0 ? (
+          <p className="text-sm text-zinc-500">{t('radar.noSongs', 'Make a song first.')}</p>
+        ) : (
+          <div className="space-y-1.5">
+            {mine.slice(0, 12).map((track) => {
+              const on = sharedIds.indexOf(track.id) !== -1;
+              return (
+                <label
+                  key={track.id}
+                  className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={busy === track.id}
+                    onChange={() => void toggleShare(track)}
+                    className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-white truncate">{track.title}</span>
+                    <span className="block text-sm text-zinc-500">
+                      {track.genre} · {track.bpm} BPM · {track.key}
+                    </span>
+                  </span>
+                  {busy === track.id && <Loader2 className="w-4 h-4 animate-spin text-zinc-500" />}
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -267,112 +577,7 @@ export default function CollabFinder({
         )}
       </Card>
 
-      {/* ── Who is near your sound ───────────────────────────────────────── */}
-      <Card title={t('radar.matches', 'Near your sound')} icon={<Radar className="w-4 h-4" />}>
-
-        {loading ? (
-          <p className="text-sm text-zinc-500 flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            {t('radar.looking', 'Looking…')}
-          </p>
-        ) : matches.length === 0 ? (
-          <p className="text-sm text-zinc-500 leading-snug">
-            {others.length === 0
-              ? t('radar.empty', 'Nobody has put a song on the radar yet. Yours can be the first — turn one on above.')
-              : t('radar.noneYet', 'Nothing close enough yet. More songs, on either side, will change that.')}
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {matches.map((entry) => {
-              const them = byId.get(entry.match.track.id);
-              const note = message(entry);
-              return (
-                <div
-                  key={`${entry.from.id}-${entry.match.track.id}`}
-                  className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-white truncate">
-                        {entry.match.track.title}
-                        <span className="text-zinc-500 font-normal"> · {entry.match.track.creator}</span>
-                      </p>
-                      <p className="text-sm text-zinc-500 truncate">
-                        {t('radar.against', 'against your')} “{entry.from.title}”
-                      </p>
-                    </div>
-                    <span className="text-sm font-bold text-emerald-400 tabular-nums flex-shrink-0">
-                      {Math.round(entry.match.score * 100)}
-                    </span>
-                  </div>
-
-                  {/* The reasons, because a score on its own is not an argument. */}
-                  <ul className="space-y-0.5">
-                    {entry.match.reasons.map((reason) => (
-                      <li key={reason} className="text-sm text-zinc-400 leading-snug">· {reason}</li>
-                    ))}
-                  </ul>
-
-                  <p className="text-sm text-emerald-300 flex items-start gap-1.5 leading-snug">
-                    <Handshake className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                    {entry.match.collabFormat} — {entry.match.collabWhy}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {/* Two asks, not one. The smaller of them — an ear on
-                        one song — is the one most people say yes to, and
-                        folding it into "work together" is how it stops
-                        being on offer at all. */}
-                    <AskToCollab
-                      handle={entry.match.track.handle}
-                      because={entry.match.reasons.join('; ')}
-                      wanting="input"
-                      song={entry.from.title}
-                      onAsked={() => onAsked?.()}
-                    />
-                    <AskToCollab
-                      handle={entry.match.track.handle}
-                      because={entry.match.reasons.join('; ')}
-                      wanting="room"
-                      onAsked={() => onAsked?.()}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void navigator.clipboard?.writeText(note);
-                        setCopied(entry.match.track.id);
-                        setTimeout(() => setCopied(null), 1500);
-                      }}
-                      className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
-                    >
-                      {copied === entry.match.track.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copied === entry.match.track.id ? t('make.copied', 'Copied') : t('radar.copyNote', 'Copy the message')}
-                    </button>
-                    {them && Object.keys(them.links).length > 0
-                      ? Object.entries(them.links).map(([where, url]) => (
-                          <a
-                            key={where}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            {where}
-                          </a>
-                        ))
-                      : (
-                        <span className="text-sm text-zinc-600">
-                          {t('radar.noLinks', 'No links yet — nowhere to send this')}
-                        </span>
-                      )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
+      {matchesCard}
     </div>
   );
 }

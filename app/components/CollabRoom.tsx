@@ -49,6 +49,9 @@ export default function CollabRoom({
   onOpenInBooth,
   onOpenPair,
   me,
+  view = 'all',
+  openId,
+  onEnter,
 }: {
   reloadKey: number;
   /** Your own recording name, to sign an invite with. */
@@ -57,11 +60,27 @@ export default function CollabRoom({
   onOpenInBooth?: (title: string) => void;
   /** Go into the two-person room that was just opened. */
   onOpenPair?: (pair: Pair) => void;
+  /**
+   * Which half to draw.
+   *
+   * Google's Collab Radar page, 13 October 2026: the requests and the lobby
+   * sit beside the radar, and the room itself is its own view with the
+   * thread in it. `lobby` is the first, `room` the second, `all` the old
+   * stack. The threads load the same way whichever is drawn.
+   */
+  view?: 'all' | 'lobby' | 'room';
+  /** The room to stand in, when the desk outside decides. */
+  openId?: string | null;
+  /** Said when a room is entered here, so the desk can switch to it. */
+  onEnter?: (id: string) => void;
 }): React.ReactElement {
   const { t } = useLang();
 
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(openId ?? null);
+  useEffect(() => {
+    if (openId !== undefined) setOpen(openId);
+  }, [openId]);
   /** Which room is being opened, so its button spins and the rest sit still. */
   const [opening, setOpening] = useState<string | null>(null);
   const [pairProblem, setPairProblem] = useState('');
@@ -157,9 +176,12 @@ export default function CollabRoom({
         return;
       }
       refresh();
-      if (yes) setOpen(id);
+      if (yes) {
+        setOpen(id);
+        onEnter?.(id);
+      }
     },
-    [refresh],
+    [onEnter, refresh],
   );
 
   const send = useCallback(
@@ -272,12 +294,15 @@ export default function CollabRoom({
   }
 
 
+  const showLobby = view !== 'room';
+  const showRoom = view !== 'lobby';
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-collabview={view}>
       {/* ── What this is for ─────────────────────────────────────────────
           Asked for, and worth the space: a Handshake icon and an empty list
           do not tell anybody what collaborating here actually means, and
           somebody who does not know will not press anything. */}
+      {showLobby && (
       <Card title={t('collab.whatTitle', 'Making something with somebody else')}>
         <p className="text-sm text-zinc-400 leading-relaxed">
           {t(
@@ -290,9 +315,10 @@ export default function CollabRoom({
             'Nothing is shared until you send it, and neither of you can read a word of the thread until you have both agreed — that is enforced in the database, not by a screen.',
           )}</Note>
       </Card>
+      )}
 
       {/* ── Waiting on you ───────────────────────────────────────────── */}
-      {waiting.length > 0 && (
+      {showLobby && waiting.length > 0 && (
         <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.06] p-4 space-y-3">
           <p className="text-base font-bold text-white flex items-center gap-2">
             <Handshake className="w-4 h-4 text-emerald-400 flex-shrink-0" />
@@ -332,7 +358,42 @@ export default function CollabRoom({
         </div>
       )}
 
+      {/* ── The lobby: every room you are in, and the way into it ───────
+          Google's page calls it the Active Session Lobby. Each card is a
+          real accepted collaboration; "Enter" opens its thread. */}
+      {showLobby && view === 'lobby' && (
+        <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 space-y-3" data-collablobby>
+          <p className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+            <Handshake className="w-4 h-4 text-emerald-400" />
+            {t('collab.lobby', 'Active session lobby')}
+          </p>
+          {rooms.length === 0 ? (
+            <Note>{t('collab.noRooms', 'None yet. Find somebody whose sound is near yours below, and ask.')}</Note>
+          ) : (
+            rooms.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                data-enterroom={one.id}
+                onClick={() => {
+                  setOpen(one.id);
+                  onEnter?.(one.id);
+                }}
+                className="w-full rounded-xl border border-white/10 bg-zinc-950/60 p-3 text-left hover:border-emerald-500/60 transition"
+              >
+                <span className="block text-sm font-bold text-white truncate">
+                  {one.name} <span className="font-normal text-zinc-500">{one.handle}</span>
+                </span>
+                <span className="mt-1.5 inline-flex min-h-[36px] items-center rounded-lg bg-emerald-500 px-3 text-xs font-extrabold text-onAccent">
+                  {t('collab.enterRoom', 'Enter the room')}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
       {/* ── The rooms ────────────────────────────────────────────────── */}
+      {showRoom && (
       <div ref={working.mine} className="scroll-mt-4">
       <Card title={t('collab.rooms', 'Working together')} openOn={working.openOn}>
         <Note>{t(
@@ -496,9 +557,10 @@ export default function CollabRoom({
         )}
       </Card>
       </div>
+      )}
 
       {/* ── Waiting on them ──────────────────────────────────────────── */}
-      {sent.length > 0 && (
+      {showLobby && sent.length > 0 && (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-2">
           <p className="text-sm font-bold text-white">{t('collab.sent', 'Asked, waiting')}</p>
           {sent.map((one) => (
@@ -516,7 +578,7 @@ export default function CollabRoom({
           Last, because it is the least common of the things this screen does
           and the first two — answering a request, and the room itself — are
           what somebody opens it for. */}
-      <InviteLink from={me} />
+      {showLobby && <InviteLink from={me} />}
     </div>
   );
 }
