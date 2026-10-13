@@ -66,6 +66,8 @@ import { EDGE, INK_DIM, LIT, PANEL } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
+import MoisesProStudio from './MoisesProStudio';
+import ProDawStudio from './ProDawStudio';
 import BoothAsk from './BoothAsk';
 import { applyMove, type LaneNow, type Move } from '../lib/mixplan';
 import { canMove, move } from '../lib/laneorder';
@@ -107,8 +109,11 @@ export default function ProBooth({
   backing,
   onKeep,
   onClose,
+  initialMode = 'studio',
 }: {
   title: string;
+  /** Antigravity's two screens over the lanes: the studio console and the DAW. Carli, 13 October 2026: its work, as it is. */
+  initialMode?: 'studio' | 'daw' | 'timeline';
   /** The song, as the first lane. Everything else is placed against it. */
   backing: AudioBuffer | null;
   onKeep: (mixed: Blob) => void | Promise<void>;
@@ -247,6 +252,12 @@ export default function ProBooth({
      app nie."* `lib/atdesk.ts` carries why these are two questions. */
   const atDesk = useAtDesk();
   const onEdge = sideways || atDesk;
+  /* Antigravity's screens, mounted as its branch e97f2f7 mounted them (left
+     out of 1d28749, put back on 13 October 2026 by Carli's decision). */
+  const isProbe = typeof window !== 'undefined' && window.location.pathname.includes('proboothprobe');
+  const [studioMode, setStudioMode] = useState<'studio' | 'daw' | 'timeline'>(
+    isProbe ? 'timeline' : initialMode
+  );
   const metronomeRef = useRef<Metronome | null>(null);
 
   /* ── Singing a lane in somebody else's voice ────────────────────────────
@@ -4157,6 +4168,44 @@ export default function ProBooth({
   );
 
 
+  if (studioMode === 'daw') {
+    return (
+      <div
+        data-booth
+        data-cutroom
+        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
+          onEdge ? 'flex-row' : 'flex-col'
+        }`}
+      >
+        <ProDawStudio
+          projectTitle={title || 'Azure Horizon'}
+          onBackToStemStudio={() => setStudioMode('studio')}
+          onBackToTimeline={() => setStudioMode('timeline')}
+          onClose={onClose}
+        />
+      </div>
+    );
+  }
+
+  if (studioMode === 'studio') {
+    return (
+      <div
+        data-booth
+        data-cutroom
+        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
+          onEdge ? 'flex-row' : 'flex-col'
+        }`}
+      >
+        <MoisesProStudio
+          songTitle={title}
+          onBackToTimeline={() => setStudioMode('timeline')}
+          onOpenDaw={() => setStudioMode('daw')}
+          onClose={onClose}
+        />
+      </div>
+    );
+  }
+
   return (
     /* One page on a phone, four pinned strips on a desk.
 
@@ -4290,6 +4339,24 @@ export default function ProBooth({
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white active:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600 disabled:hover:border-zinc-800"
           >
             <Redo2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setStudioMode('studio')}
+            className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-3 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400"
+            title={t('moises.toggleStudio', 'Studio Console')}
+          >
+            <Sliders className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('moises.toggleStudio', 'Studio Console')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStudioMode('daw')}
+            className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-teal-500/50 bg-teal-950/40 px-3 py-2 text-xs font-bold text-teal-300 hover:border-teal-400"
+            title={t('daw.toggleDaw', 'DAW Werkstasie')}
+          >
+            <Music2 className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Werkstasie')}</span>
           </button>
         </div>
         <div className="min-w-0 flex-1">
