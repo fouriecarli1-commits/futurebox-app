@@ -15,84 +15,80 @@
  * `themeVariables(DEFAULT_THEME)` or the two will disagree again.
  */
 :root {
-  --fb-surface-50: 0 0 0;
-  --fb-surface-100: 19 18 17;
-  --fb-surface-200: 36 34 31;
-  --fb-surface-300: 56 53 47;
-  --fb-surface-400: 74 70 63;
-  --fb-surface-500: 88 83 75;
-  --fb-surface-600: 98 93 84;
-  --fb-surface-700: 180 176 167;
-  --fb-surface-800: 217 215 211;
-  --fb-surface-900: 239 238 236;
-  --fb-surface-950: 250 250 249;
-
-  --fb-primary-50: 7 31 20;
-  --fb-primary-100: 13 56 36;
-  --fb-primary-200: 18 75 49;
-  --fb-primary-300: 22 92 59;
-  --fb-primary-400: 25 105 68;
+  --fb-surface-50: 250 251 250;
+  --fb-surface-100: 230 237 233;
+  --fb-surface-200: 209 221 215;
+  --fb-surface-300: 185 203 194;
+  --fb-surface-400: 167 189 178;
+  --fb-surface-500: 152 177 164;
+  --fb-surface-600: 136 166 151;
+  --fb-surface-700: 61 81 71;
+  --fb-surface-800: 44 58 51;
+  --fb-surface-900: 29 38 33;
+  --fb-surface-950: 15 20 18;
+  --fb-primary-50: 234 250 243;
+  --fb-primary-100: 210 244 228;
+  --fb-primary-200: 172 236 206;
+  --fb-primary-300: 131 226 182;
+  --fb-primary-400: 90 216 157;
   --fb-primary-500: 53 208 135;
   --fb-primary-600: 42 178 114;
   --fb-primary-700: 34 145 93;
   --fb-primary-800: 27 116 74;
   --fb-primary-900: 21 91 58;
   --fb-primary-950: 15 62 40;
-
-  --fb-secondary-50: 24 27 33;
-  --fb-secondary-100: 43 50 59;
-  --fb-secondary-200: 57 66 79;
-  --fb-secondary-300: 71 82 98;
-  --fb-secondary-400: 81 93 111;
-  --fb-secondary-500: 111 128 151;
-  --fb-secondary-600: 92 107 127;
-  --fb-secondary-700: 75 87 104;
-  --fb-secondary-800: 60 69 83;
-  --fb-secondary-900: 47 55 65;
-  --fb-secondary-950: 32 37 44;
-
-  --fb-highlight-50: 36 25 1;
-  --fb-highlight-100: 65 46 3;
-  --fb-highlight-200: 86 62 4;
-  --fb-highlight-300: 106 76 4;
-  --fb-highlight-400: 121 86 5;
+  --fb-secondary-50: 232 249 252;
+  --fb-secondary-100: 205 243 249;
+  --fb-secondary-200: 163 233 245;
+  --fb-secondary-300: 117 221 240;
+  --fb-secondary-400: 71 210 235;
+  --fb-secondary-500: 30 200 230;
+  --fb-secondary-600: 22 171 197;
+  --fb-secondary-700: 18 139 161;
+  --fb-secondary-800: 14 111 129;
+  --fb-secondary-900: 11 88 101;
+  --fb-secondary-950: 8 60 69;
+  --fb-highlight-50: 254 247 231;
+  --fb-highlight-100: 253 237 201;
+  --fb-highlight-200: 251 223 157;
+  --fb-highlight-300: 249 207 108;
+  --fb-highlight-400: 247 191 59;
   --fb-highlight-500: 245 176 15;
   --fb-highlight-600: 211 150 9;
   --fb-highlight-700: 171 122 7;
   --fb-highlight-800: 137 98 6;
   --fb-highlight-900: 108 77 4;
   --fb-highlight-950: 73 52 3;
-
-  --fb-tertiary-50: 24 27 33;
-  --fb-tertiary-100: 43 50 59;
-  --fb-tertiary-200: 57 66 79;
-  --fb-tertiary-300: 71 82 98;
-  --fb-tertiary-400: 81 93 111;
-  --fb-tertiary-500: 111 128 151;
-  --fb-tertiary-600: 92 107 127;
-  --fb-tertiary-700: 75 87 104;
-  --fb-tertiary-800: 60 69 83;
-  --fb-tertiary-900: 47 55 65;
-  --fb-tertiary-950: 32 37 44;
-
-  --fb-danger-50: 56 9 16;
-  --fb-danger-100: 99 16 27;
-  --fb-danger-200: 130 21 36;
-  --fb-danger-300: 158 26 43;
-  --fb-danger-400: 180 29 50;
-  --fb-danger-500: 225 69 89;
+  --fb-tertiary-50: 241 234 251;
+  --fb-tertiary-100: 224 209 245;
+  --fb-tertiary-200: 198 171 237;
+  --fb-tertiary-300: 170 129 228;
+  --fb-tertiary-400: 142 87 219;
+  --fb-tertiary-500: 151 101 222;
+  --fb-tertiary-600: 98 38 181;
+  --fb-tertiary-700: 80 31 147;
+  --fb-tertiary-800: 64 25 118;
+  --fb-tertiary-900: 50 20 93;
+  --fb-tertiary-950: 34 13 63;
+  --fb-danger-50: 251 233 236;
+  --fb-danger-100: 247 207 212;
+  --fb-danger-200: 241 167 177;
+  --fb-danger-300: 234 123 138;
+  --fb-danger-400: 226 80 99;
+  --fb-danger-500: 225 70 90;
   --fb-danger-600: 189 31 52;
   --fb-danger-700: 154 25 42;
   --fb-danger-800: 123 20 34;
   --fb-danger-900: 96 16 26;
   --fb-danger-950: 66 11 18;
-
-  --fb-page: 250 250 249;
-  --fb-ink: 19 18 17;
-  --fb-void: 222 220 216;
-  --fb-on-accent: 22 21 19;
-  --fb-scrim: 17 16 14;
-
+  --fb-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fb-root-size: 16px;
+  --fb-page: 15 20 18;
+  --fb-ink: 232 235 233;
+  --fb-void: 9 12 10;
+  --fb-on-accent: 18 23 20;
+  --fb-scrim: 13 17 15;
+  --fb-motion: 200ms;
   --fb-radius-sm: 2.00px;
   --fb-radius: 4.00px;
   --fb-radius-md: 6.00px;
@@ -100,10 +96,6 @@
   --fb-radius-xl: 12.00px;
   --fb-radius-2xl: 16.00px;
   --fb-radius-3xl: 24.00px;
-
-  --fb-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --fb-root-size: 16px;
-  --fb-motion: 200ms;
 }
 
 html {

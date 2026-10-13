@@ -96,7 +96,7 @@ export default function StyleRepertoireModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <span>{t('repertoire.title', 'Style Repertoire')}</span>
+                <span>{t('repertoire.title', 'Song Style Repertoire')}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/30">
                   {GENRE_SAMPLES.length} {t('repertoire.styles', 'styles')}
                 </span>

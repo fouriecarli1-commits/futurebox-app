@@ -4401,6 +4401,40 @@ export default function ProBooth({
         onRegion={setRegion}
       />
 
+      {lanes.length <= 2 && (
+        <div className="mx-3 my-3 flex flex-wrap items-center gap-2 rounded-2xl border border-white/5 bg-zinc-950/60 p-3 backdrop-blur-md">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/80">
+            {t('pro.quickSlots', 'Studio Track Slots')}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setDeskOpen('stems')}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 text-xs font-semibold text-emerald-300 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all"
+            >
+              <Layers className="h-3.5 w-3.5 text-emerald-400" />
+              <span>{t('pro.splitStemsAction', 'Split Stems (Vocals, Drums, Bass, Instruments)')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeskOpen('voice')}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
+            >
+              <Mic2 className="h-3.5 w-3.5 text-sky-400" />
+              <span>{t('pro.addVocalTrack', 'Add Vocal / Harmony Track')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeskOpen('tracks')}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all"
+            >
+              <Music2 className="h-3.5 w-3.5 text-purple-400" />
+              <span>{t('pro.addInstrumentTrack', 'Add Instrument / Neural Part')}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       </div>
 
       {/* ── What went wrong, wherever you are ─────────────────────

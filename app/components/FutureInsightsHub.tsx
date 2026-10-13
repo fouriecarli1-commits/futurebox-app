@@ -274,7 +274,7 @@ export default function FutureInsightsHub({
                           title={t('insight.openInPodcastStudio', 'Open in Podcast Studio')}
                         >
                           <Mic className="h-3.5 w-3.5 text-teal-400" />
-                          <span className="hidden sm:inline">{t('insight.openInPodcastStudio', 'Studio')}</span>
+                          <span className="hidden sm:inline">{t('insight.studioShort', 'Studio')}</span>
                         </button>
                       )}
                       <button

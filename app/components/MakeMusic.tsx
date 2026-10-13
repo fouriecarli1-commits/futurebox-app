@@ -438,12 +438,13 @@ export default function MakeMusic({
      mode row says so whenever anything is away from its default, because a
      setting that applies silently because its control is out of sight is
      worse than a crowded screen. */
-  const [advanced, setAdvanced] = useState(false);
+  const [advanced, setAdvanced] = useState(true);
   useEffect(() => {
     try {
-      setAdvanced(window.localStorage.getItem(MODE_KEY) === 'advanced');
+      const saved = window.localStorage.getItem(MODE_KEY);
+      setAdvanced(saved === null ? true : saved === 'advanced');
     } catch {
-      // Storage off. Simple is the right answer when nothing is known.
+      // Storage off. Everything is the right answer when nothing is known.
     }
   }, []);
   useEffect(() => {
@@ -464,7 +465,7 @@ export default function MakeMusic({
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
-  const [verseGuideMode, setVerseGuideMode] = useState(true);
+  const [verseGuideMode, setVerseGuideMode] = useState(false);
   const [showRepertoire, setShowRepertoire] = useState(false);
   const [weirdness, setWeirdness] = useState(15);
   /**
@@ -1295,7 +1296,7 @@ export default function MakeMusic({
                   : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
               }`}
             >
-              ✍️ {t('make.freeWrite', 'Free Lyrics')}
+              ✍️ {t('make.freeWrite', 'Custom Lyrics')}
             </button>
           </div>
 

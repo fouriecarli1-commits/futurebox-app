@@ -602,7 +602,7 @@ export function applyTheme(theme: Theme): void {
    still painted in the old Clean: *"Asb verander net die app. Dit is wat ek
    gevra het!"* A stored choice from the old look must not be the reason the
    new one cannot reach her. */
-const STORAGE_KEY = 'futurebox.theme.v2';
+const STORAGE_KEY = 'futurebox.theme.v3';
 
 /**
  * A stored theme, and whether anybody actually asked for it.
