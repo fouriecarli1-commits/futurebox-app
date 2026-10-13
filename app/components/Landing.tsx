@@ -49,6 +49,7 @@ import { TIER_SPECS, TIERS, tierPrice } from '../lib/plans';
 import { useLang } from '../lib/i18n';
 import LanguagePicker from './LanguagePicker';
 import ThemeSwitch from './ThemeSwitch';
+import KidsBanner from './KidsBanner';
 
 type Mode = 'signin' | 'signup' | 'forgot';
 
@@ -229,6 +230,7 @@ export default function Landing({
             <button type="button" onClick={to('suite')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navPlatform', 'Platform')}</button>
             <button type="button" onClick={to('features')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navFeatures', 'Features')}</button>
             <button type="button" onClick={to('pricing')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navPricing', 'Pricing')}</button>
+            <button type="button" onClick={to('kids')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navKids', 'Kids')}</button>
             <LanguagePicker compact />
           </nav>
 
@@ -471,6 +473,24 @@ export default function Landing({
                 </div>
               </button>
             ))}
+          </div>
+        </section>
+
+        {/* ── The kids room, for the parent reading this ──────────────────
+            Carli, 13 October 2026: "die kids studio moet baie duidelik en
+            gefeature wees ook op die landing page. Dit moet ouers gerus
+            stel." Her picture, and under it only what the room really does. */}
+        <section id="kids" className={`${GUTTER} scroll-mt-24 border-t border-zinc-800/80 py-24`} data-landingkids>
+          <div className="mx-auto mb-10 max-w-3xl space-y-4 text-center">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+              {t('landing.kidsTag', 'Kids Dream Studio')}
+            </h2>
+            <h3 className="text-3xl font-black text-white sm:text-4xl">
+              {t('landing.kidsTitle', 'A studio of their own, with you holding the keys.')}
+            </h3>
+          </div>
+          <div className="mx-auto max-w-4xl">
+            <KidsBanner onPlans={to('pricing')} />
           </div>
         </section>
 

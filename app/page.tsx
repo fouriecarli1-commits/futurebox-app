@@ -56,6 +56,7 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import KidsBanner from './components/KidsBanner';
 import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
 import ArtMarket from './components/ArtMarket';
@@ -2688,15 +2689,8 @@ export default function FutureBoxHome() {
           deliberately off the rail — the rail beside it is a shop, a
           conversation with strangers and every paid door in the app,
           which is what `check:kidsafe` measured. */}
-      <div className="border-t border-zinc-800 pt-4">
-        <a
-          href="/kids"
-          data-authkids
-          className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-sm font-bold text-zinc-200 hover:border-emerald-500/60 hover:text-white"
-        >
-          <Baby className="h-4 w-4 flex-shrink-0 text-emerald-400" />
-          {t('auth.kids', 'Go to the kids room')}
-        </a>
+      <div className="border-t border-zinc-800 pt-4" data-authkidsdoor>
+        <KidsBanner compact />
         <p className="pt-2 text-center text-xs leading-relaxed text-zinc-600">
           {t(
             'auth.kidsWhy',

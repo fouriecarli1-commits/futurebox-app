@@ -384,8 +384,17 @@ export default function Greeting({
       <a
         href="/kids"
         data-kidsdoorhome
-        className="group relative overflow-hidden flex min-h-[44px] items-center gap-4 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-amber-950/20 to-zinc-950 px-5 py-4 transition-all hover:border-amber-400/80 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+        className="group relative overflow-hidden flex min-h-[44px] flex-col items-stretch rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-amber-950/20 to-zinc-950 px-5 py-4 transition-all hover:border-amber-400/80 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
       >
+        {/* Her picture, 13 October 2026, one per language. */}
+        <img
+          src={lang === 'af' ? '/kids/banner-af.jpg' : '/kids/banner-en.jpg'}
+          alt=""
+          aria-hidden="true"
+          className="block aspect-[2000/520] w-full object-cover"
+          loading="lazy"
+        />
+        <span className="flex items-center gap-4 p-4">
         <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl border border-amber-500/50 bg-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105">
           <Baby className="h-6 w-6 text-amber-300" />
         </span>
@@ -403,6 +412,7 @@ export default function Greeting({
           </span>
         </span>
         <ArrowRight className="h-5 w-5 flex-shrink-0 text-amber-300 transition-transform group-hover:translate-x-1.5" />
+        </span>
       </a>
 
       {/* ── Or straight to a room ────────────────────────────────────────── */}
