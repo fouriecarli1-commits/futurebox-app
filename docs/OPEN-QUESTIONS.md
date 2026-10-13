@@ -76,7 +76,7 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 | Of §1(I) se *"internal business operations"* 'n skeppende lid dek | Die enigste ding in die OEM-terme wat die antwoord nog kan omdraai. Die ElevenAgents-weergawe van dieselfde klousule sê *"or personal use"*; die OEM-een nie. Dit is nou die skerpste vraag in die verkoopse-pos. |
 | Of `creatify-aurora` 'n Beta Service is | Beta-addendum §3(a) verbied kommersiële of produksie-gebruik van 'n Beta Service heeltemal, en §2 verbied dat 'n mens se stem daarheen gaan. Een sin van ondersteuning beantwoord dit. |
 | Die **Music Terms** | Nog nooit gelees nie, en die Music Marketplace-addendum §3(c) wys na 'n lys **verbode bedrywe** daarin. Daar is 'n lys bedrywe wat ons musiek nie mag bedien nie en ons het dit nog nooit gesien nie. Gevra in die verkoopse-pos. |
-| Of Kits se §1.1-uitsetlisensie deur na lede loop | Kits het niks soos die OEM-terme nie — stil, nie verbied nie. Hulle antwoord hulptoonbank-kaartjies, anders as ElevenLabs, so dit is een kort e-pos. `docs/KITS-TERME.md` §3. |
+| Of Kits se §1.1-uitsetlisensie deur na lede loop | Kits het niks soos die OEM-terme nie — stil, nie verbied nie. `docs/KITS-TERME.md` §3. **13 Oktober 2026: Kits se hulptoonbank (Jerome) het geantwoord** — die DPA, bewaring, oorgrens-oordragte en eindgebruiker-lisensiëring is buite hulle bereik en is aangestuur na "die regte span", wat direk sal terugskryf. Dus oop, nie verbied nie; wag op daardie span. |
 | Betaal iemand al? | **Nee** — bevestig 10 September. Dit maak die R349-verandering 'n omruil en nie 'n migrasie nie, en dit beteken die terme-verandering skuld niemand 'n e-pos nie. **Albei hou net solank dit waar bly.** |
 
 ### En die een ding om te onthou uit 15 September
@@ -254,6 +254,15 @@ samples changed, block-size independent to 0.00e+0, and non-captures refused.
 Still open: whether to pull the TONE3000 **library** over their OAuth API so
 somebody can browse and load captures inside the app, rather than only using
 the ones we ship.
+
+**13 October 2026, their answer to the enquiry:** the bulk route that returns
+an entire `.zip` is restricted to partners who specifically need it; they
+prefer the on-demand route that downloads one model at a time, and asked
+whether there is a technical reason we cannot use it. There is none: the app
+has only ever called `GET /tones/{id}/download`, the per-model route, through
+`lib/server/tone3000session.ts`, and never the bulk one. The reply says so and
+asks the two questions the enquiry raised that this answer does not touch:
+the attribution wording they want, and whether commercial terms attach.
 
 ### A3. Voice cloning and consent
 
