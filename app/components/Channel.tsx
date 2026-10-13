@@ -740,7 +740,7 @@ export default function Channel({
           </div>
 
           {/* The vault's three shelves, as pills that jump to them. */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/10 text-xs font-bold" data-chanvaulttabs>
+          <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-white/10 text-xs font-bold" data-chanvaulttabs>
             {([
               ['songs', `${t('chan.vaultSongs', 'Songs')} (${tracks.length})`],
               ['videos', t('chan.vaultVideos', 'Videos')],

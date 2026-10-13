@@ -237,6 +237,9 @@ export default function Spotlight({
             </div>
           </div>
 
+          {/* Sideways on purpose: this is the chart shelf from Google's
+              Spotlight page, with the two arrow buttons above it moving it
+              a card at a time. Wrapped, the arrows would have nothing to do. */}
           <div ref={shelf} className="flex gap-4 overflow-x-auto scroll-smooth pb-4" data-spotlightshelf>
             {chart.music.length > 0
               ? chart.music.map((row, at) => (
@@ -274,7 +277,7 @@ export default function Spotlight({
           {chart.music.length > 0 && (
             <div className="mt-2">
               <h2 className="mb-3 text-sm font-bold text-white">{t('spot.rooms', 'Four production rooms')}</h2>
-              <div className="flex gap-4 overflow-x-auto pb-2">{rooms.map(roomCard)}</div>
+              <div className="flex flex-wrap gap-4 pb-2">{rooms.map(roomCard)}</div>
             </div>
           )}
         </div>

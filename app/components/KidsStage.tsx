@@ -243,7 +243,7 @@ export default function KidsStage({
         </div>
         <div className="rounded-2xl border border-surface-300 bg-surface-100/70 p-3">
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-surface-800">💃 {t('kids.addDancer', 'Add a dancer')}</p>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="flex flex-wrap items-center gap-2 pb-1">
             {STICKERS.map((one) => (
               <button
                 key={one}

@@ -170,12 +170,17 @@ console.log('');
 /* ── 3. The figures the write-up rests on ───────────────────────────── */
 /* Named rather than counted, so a room that becomes free and a room that
    stops being free both fail rather than cancelling out. */
-const FREE = ['albumart', 'collab', 'hooks_feed'];
+/* 13 October 2026: the album art room left this list. Carli: *"Ek dink album
+   art moet ons die keuse gee R280 cash, of ons moet krediet in dieselfde
+   waarde uitwerk"* — a sleeve can now be bought with credits through
+   `/api/artmarket`, and the room's AI tab makes pictures for credits, so it
+   is a room a credit can leave. Two rooms are left that cannot spend. */
+const FREE = ['collab', 'hooks_feed'];
 const nowFree = [...spend].filter(([, routes]) => routes.length === 0).map(([room]) => room).sort();
-ok('three rooms cannot spend a credit at all',
+ok('two rooms cannot spend a credit at all',
   JSON.stringify(nowFree) === JSON.stringify([...FREE].sort()),
   `${JSON.stringify(nowFree)} against ${JSON.stringify(FREE)} —`
-  + ' `docs/OPEN-QUESTIONS.md` says which three, and a write-up whose figures'
+  + ' `docs/OPEN-QUESTIONS.md` says which two, and a write-up whose figures'
   + ' have quietly changed is worse than none');
 
 /* ── This assertion changed on 9 October 2026, and how it changed matters ─

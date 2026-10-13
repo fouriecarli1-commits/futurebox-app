@@ -43,11 +43,6 @@ export const GLOWS = [
 
 export type GlowId = (typeof GLOWS)[number]['id'];
 
-export const GLOW_IDS: readonly GlowId[] = GLOWS.map((one) => one.id);
-
-export const isGlow = (value: unknown): value is GlowId =>
-  typeof value === 'string' && (GLOW_IDS as readonly string[]).includes(value);
-
 export const glowOf = (id: string | undefined): Glow =>
   GLOWS.find((one) => one.id === id) ?? GLOWS[0];
 

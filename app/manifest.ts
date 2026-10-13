@@ -64,7 +64,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     /* The literal and not `BAR_COLOUR`, because `check:launchmark` reads this
        file as text and holds the hex to `--fb-page` in globals.css. Same value. */
-    background_color: '#0f1412',
+    background_color: '#080c0a',
     theme_color: BAR_COLOUR,
     icons: [
       { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
