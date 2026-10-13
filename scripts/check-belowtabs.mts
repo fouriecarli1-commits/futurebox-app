@@ -75,6 +75,20 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
     why: 'clears it with pb-24',
     holds: (s) => /pb-24/.test(s),
   },
+  /* The two front doors Google drew on 13 October 2026, neither of which
+     sits under the app's bar at all. The kids room is `/kids`, a page of
+     its own with no tab bar (see `check:kidsafe`); its one fixed layer is
+     Pip's modal over that page. The welcome page is the signed-out front
+     door, and its fixed layer is the ambient background behind everything,
+     `pointer-events-none`, which is not a room anybody can be under. */
+  'app/components/KidsRoom.tsx': {
+    why: 'a page of its own with no tab bar; the fixed layer is Pip’s modal over the kids page',
+    holds: (s) => /data-kidsroom/.test(s) && !/<TabBar/.test(s),
+  },
+  'app/components/Landing.tsx': {
+    why: 'the signed-out front door; the fixed layer is the ambient background, pointer-events-none',
+    holds: (s) => /pointer-events-none fixed inset-0 z-0/.test(s) && !/<TabBar/.test(s),
+  },
   /* The two full-bleed media rooms. Padding the container would letterbox the
      video, which is the thing the room is for. Their controls are laid out
      against the viewport rather than against the container, so the fix — if
@@ -194,6 +208,8 @@ const KNOWN: readonly string[] = [
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
+  'app/components/KidsRoom.tsx',
+  'app/components/Landing.tsx',
   'app/components/OutOfCredits.tsx',
   /* The post studio, 6 October 2026. Written down rather than counted, so
      that it dropping out of the scan is a failure rather than a smaller
