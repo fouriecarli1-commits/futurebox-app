@@ -426,27 +426,31 @@ const stop = (name: string): number[] | null => {
 };
 const pageRgb = stop('page');
 
-/* Carli, 13 October 2026, with the room Google drew: the page is obsidian
-   again, by her own instruction this time, and her navy cannot read on
-   obsidian. So the room sets the lockup on a pale plate — `bg-zinc-50`,
-   the 50 stop of this block — and the thing measured is the plate, which
-   is what her ink actually sits on. */
-const plateRgb = stop('surface-50');
+/* Carli, 13 October 2026, with the room Google drew, then in her own words:
+   "Maak die cubed class se logo transparent, en maak die logo en woorde
+   very neon en bright." Her file stays hers; a filter inverts the navy to
+   light on the way to the screen and tints it. So the thing measured is
+   her ink INVERTED — which is what the screen shows — against the page. */
+const INVERTED = HER_INK.map((one) => 255 - one);
 
-ok('her navy reads on the plate the room sets it on',
+ok('her ink, inverted by the neon filter, reads on the page',
   (() => {
-    if (!plateRgb) return false;
-    const against = (Math.max(lit(plateRgb), lit(HER_INK)) + 0.05)
-      / (Math.min(lit(plateRgb), lit(HER_INK)) + 0.05);
+    if (!pageRgb) return false;
+    const against = (Math.max(lit(pageRgb), lit(INVERTED)) + 0.05)
+      / (Math.min(lit(pageRgb), lit(INVERTED)) + 0.05);
     return against >= 4.5;
   })(),
-  'the plate went dark and her mark is a ghost on it — which does not'
-  + ' look broken, it looks like a design choice, and nobody files a bug');
+  'the page went light or the filter went, and her mark is a ghost again');
 
-ok('  and the room actually sets the lockup on that plate',
-  /data-cubedplate[^>]*\bbg-zinc-50\b/.test(room) && /<CubedMark/.test(room.slice(room.indexOf('data-cubedplate'))),
-  'the plate is the only reason her navy reads in an obsidian room, and a'
+ok('  and the room actually sends the lockup through that filter',
+  /\[data-cubedneon\] img \{[^}]*invert\(1\)/.test(css)
+  && /data-cubedneon/.test(room) && /<CubedMark/.test(room.slice(room.indexOf('data-cubedneon'))),
+  'the filter is the only reason her navy reads in an obsidian room, and a'
   + ' lockup drawn outside it is navy on near-black');
+
+ok('  and nothing sets a plate under it any more',
+  !/data-cubedplate/.test(room),
+  'she asked for the logo transparent; a plate is the opposite of that');
 
 ok('  and the page is what `bg-zinc-950` paints, not a second number',
   (() => {

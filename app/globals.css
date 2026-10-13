@@ -859,10 +859,8 @@ body:has([data-cubed]) {
      the dimmest the room writes in, clears AA on a card over the page —
      `check:cubed` does that arithmetic.
 
-     Her navy lockup does not read on this page, and recolouring her lines
-     is the one thing she asked nobody to do — so the room sets the lockup
-     on a pale plate (`bg-zinc-50`, the 50 stop below) inside the hero card,
-     and the check measures her ink against THAT. */
+     Her navy lockup does not read on this page as it is; the rule under
+     this block turns it neon on the way to the screen, at her word. */
   --fb-surface-50: 250 250 250;
   --fb-surface-100: 241 243 245;
   --fb-surface-200: 226 232 240;
@@ -894,6 +892,18 @@ body:has([data-cubed]) {
   --fb-on-accent: 10 12 16;
 
   color: rgb(var(--fb-ink));
+}
+
+/* ── Her lockup, neon ──────────────────────────────────────────────────
+   Carli, 13 October 2026: "Maak die cubed class se logo transparent, en
+   maak die logo en woorde very neon en bright." The file is hers and is
+   not redrawn: the navy is inverted to light on the way to the screen,
+   tinted to the room's emerald, and set glowing. `check:cubed` works out
+   what the inversion does to her ink and measures that against the page. */
+[data-cubedneon] img {
+  filter: invert(1) sepia(1) saturate(6) hue-rotate(100deg) brightness(1.15)
+    drop-shadow(0 0 10px rgba(52, 211, 153, 0.9))
+    drop-shadow(0 0 28px rgba(16, 185, 129, 0.55));
 }
 
 [data-booth] {

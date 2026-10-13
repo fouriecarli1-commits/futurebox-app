@@ -98,9 +98,14 @@ export default function CubedRoom(): React.ReactElement {
               behind the mark and nothing else lit. */}
           <div className="relative flex flex-col items-center text-center">
             <div className="pointer-events-none absolute inset-0 -top-10 rounded-full bg-emerald-500/10 blur-[120px]" aria-hidden />
+            {/* Carli, 13 October 2026: *"Maak die cubed class se logo
+                transparent, en maak die logo en woorde very neon en
+                bright."* Her file is untouched; the light is a filter on
+                the way to the screen (`[data-cubedneon]` in globals.css),
+                which turns the navy lines bright and sets them glowing. */}
             <div
-              data-cubedplate
-              className="relative mb-6 flex w-full max-w-[460px] items-center justify-center rounded-3xl border border-emerald-500/30 bg-zinc-50 p-4 shadow-2xl shadow-emerald-900/40 transition-transform duration-500 hover:scale-[1.02]"
+              data-cubedneon
+              className="relative mb-6 flex w-full max-w-[460px] items-center justify-center p-4 transition-transform duration-500 hover:scale-[1.02]"
             >
               <CubedMark width={420} lang={lang} title={t('cubed.markAlt', 'Two cubes, threaded through each other')} />
             </div>
@@ -109,6 +114,7 @@ export default function CubedRoom(): React.ReactElement {
               <h1
                 data-cubedtitle
                 className="flex items-start text-4xl font-extrabold tracking-tight text-white md:text-6xl"
+                style={{ textShadow: '0 0 18px rgba(52,211,153,0.55), 0 0 40px rgba(16,185,129,0.35)' }}
               >
                 <span>{t('cubed.title', 'Cubed')}</span>
                 <sup
