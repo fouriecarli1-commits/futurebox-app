@@ -92,14 +92,7 @@ import { loadTracks, type Track } from '../lib/library';
 import { square } from '../lib/imagefile';
 import { previewOf } from '../lib/artmark';
 import {
-  ART_MAX_BYTES,
-  ART_SIDE,
-  ART_SIZE_SAID,
-  ART_RAND,
-  ARTIST_RAND,
-  UNIQUE_RAND,
-  WINDOWS,
-  split,
+  ART_MAX_BYTES, ART_SIDE, ART_SIZE_SAID, ART_RAND, ARTIST_RAND, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '../data/artmarket';
 
 /* ────────────────────────────────────────────────────────────── the skin ── */
@@ -1200,6 +1193,14 @@ export default function ArtMarket(): React.ReactElement {
           artist={market?.artists.find((one) => one.id === sheet.artist) ?? null}
           onClose={() => setSheet(null)}
           onBuy={() => void pay({ kind: 'art', work: sheet.id })}
+          onBuyCredits={() => {
+            void doIt({ what: 'buy', work: sheet.id }).then((ok) => {
+              if (!ok) return;
+              setSheet(null);
+              setTab('mine');
+              setSaid(t('art.creditsDone'));
+            });
+          }}
           onArtist={(artist) => {
             setSheet(null);
             setProfile(artist);
@@ -1310,6 +1311,7 @@ function WorkSheet({
   artist,
   onClose,
   onBuy,
+  onBuyCredits,
   onArtist,
   t,
 }: {
@@ -1317,6 +1319,8 @@ function WorkSheet({
   readonly artist: Artist | null;
   readonly onClose: () => void;
   readonly onBuy: () => void;
+  /** The same piece, paid in credits worth the same R280. */
+  readonly onBuyCredits: () => void;
   /** Take the once-off pass that makes somebody a bidder. */
   readonly onArtist: (artist: Artist) => void;
   readonly t: (key: string) => string;
@@ -1412,6 +1416,14 @@ function WorkSheet({
           <button type="button" onClick={onBuy} className={VUL}>
             {t('art.buyIt')} · R{ART_RAND}
           </button>
+          {/* ── Or the same R280 in credits ────────────────────────────
+              Carli, 13 October 2026: *"die keuse gee R280 cash, of ons
+              moet krediet in dieselfde waarde uitwerk."* The number is
+              `ART_CREDITS`, worked out at the top-up rate, never typed. */}
+          <button type="button" onClick={onBuyCredits} data-buycredits className={`${LEEG} mt-2 w-full`}>
+            {t('art.payCredits')} · {ART_CREDITS}
+          </button>
+          <p className={`${MIKRO} pt-2`}>{ART_CREDITS} {t('art.creditsWhy')}</p>
         </div>
       </div>
     </div>

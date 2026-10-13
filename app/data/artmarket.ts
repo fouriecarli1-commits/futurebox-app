@@ -29,6 +29,7 @@
  */
 
 import { gatewayFee } from '../lib/plans';
+import { RAND_PER_TOPUP_CREDIT } from '../lib/credits';
 
 /**
  * The floor the database puts on `art_works.rand`.
@@ -85,6 +86,25 @@ export const ART_RAND = 280;
  * kind of thing an artist finds on a bank statement and never forgets.
  */
 export const ARTIST_RAND = 200;
+
+/**
+ * The same R280, paid in credits.
+ *
+ * Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
+ * cash, of ons moet krediet in dieselfde waarde uitwerk."*
+ *
+ * Worked out at the top-up rate — what a credit actually sells for on its
+ * own, `RAND_PER_TOPUP_CREDIT` — and rounded up to a whole credit, so the
+ * credits are never worth less than the cash. One number, derived rather
+ * than typed, so the day the top-up rate moves this moves with it.
+ *
+ * What does NOT change with the way of paying: the artist is paid
+ * `ARTIST_RAND` in rand, by the owner, from her own account. A credit sale
+ * brings no new cash in, so the statement still lists the piece as owing
+ * R200 and the studio carries it — which is the trade she chose when she
+ * asked for the choice, and is written down in `docs/ARTIST-AGREEMENT.md`.
+ */
+export const ART_CREDITS = Math.ceil(ART_RAND / RAND_PER_TOPUP_CREDIT);
 
 
 

@@ -20,9 +20,10 @@
  * shortfall that grows, and a bank finds it rather than a test.
  */
 
+import { RAND_PER_TOPUP_CREDIT } from '../app/lib/credits';
 import {
   split, UNIQUE_RAND, ARTIST_SHARE, WINDOWS,
-  ART_RAND, ARTIST_RAND, wallSplit,
+  ART_RAND, ARTIST_RAND, ART_CREDITS, wallSplit,
 } from '../app/data/artmarket';
 import { gatewayFee } from '../app/lib/plans';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -674,6 +675,48 @@ ok('the sale is granted to whoever paid for an unsold piece',
   /\.is\('sold_to', null\)/.test(grant) && !/\.eq\('won_by'/.test(grant),
   'sell-once is `.is(sold_to, null)` and that is the whole guarantee now.'
   + ' Requiring a winner as well refuses every sale the new wall can make');
+
+/* ── Or the same R280 in credits ──────────────────────────────────────────
+
+   Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
+   cash, of ons moet krediet in dieselfde waarde uitwerk."*
+
+   The number is derived, never typed: the wall price over what a credit
+   sells for on its own, rounded UP so the credits are never worth less than
+   the cash. The route takes the credits before it sells the piece and gives
+   them back if the piece turns out to be gone — the other order is a piece
+   given away. And the artist's R200 does not move with the way of paying. */
+ok(`the credit price is worked out from the wall price at the top-up rate (${ART_CREDITS} credits)`,
+  ART_CREDITS === Math.ceil(ART_RAND / RAND_PER_TOPUP_CREDIT),
+  `${ART_CREDITS} against ceil(${ART_RAND} / ${RAND_PER_TOPUP_CREDIT})`);
+ok('  and the credits are never worth less than the cash',
+  ART_CREDITS * RAND_PER_TOPUP_CREDIT >= ART_RAND,
+  `${ART_CREDITS} × R${RAND_PER_TOPUP_CREDIT} = R${ART_CREDITS * RAND_PER_TOPUP_CREDIT}`);
+
+const market = withoutComments(readFileSync('app/api/artmarket/route.ts', 'utf8'));
+const buyAt = market.indexOf("case 'buy':");
+const buy = buyAt === -1 ? '' : market.slice(buyAt, market.indexOf("case 'paidout':", buyAt));
+ok(`the art route sells a piece for credits (${buy.length} characters)`, buy.length > 200,
+  'no `buy` case between the wall and the statement');
+const chargeAt = buy.indexOf('charge(request, ART_CREDITS');
+const sellAt = buy.indexOf(".is('sold_to', null)");
+ok('  charging the credits from the one constant, before the piece is sold',
+  chargeAt !== -1 && sellAt !== -1 && chargeAt < sellAt,
+  'sell first and fail to charge is a piece given away');
+ok('  and giving them back when somebody got there first',
+  /paid\.refund\(\)/.test(buy.slice(sellAt)),
+  'a lost race that keeps the credits is a charge for nothing');
+ok('  and writing the wall price as what was paid, so the statement owes the artist the same R200',
+  /paid_rand: ART_RAND/.test(buy),
+  'a credit sale with no `paid_rand` owes the artist whatever the old column says');
+ok('  and never a price off the row',
+  !/\brand\b/.test(buy.split('\n').filter((one) => /\.select\(/.test(one)).join(' ')),
+  '`art_works.rand` is a number an artist typed');
+
+const sleeve = withoutComments(readFileSync('app/components/ArtMarket.tsx', 'utf8'));
+ok('the sleeve offers the credits beside the cash, with the same number the route charges',
+  /data-buycredits/.test(sleeve) && /\{ART_CREDITS\}/.test(sleeve) && !/\b112\b/.test(sleeve),
+  'the number on the button must be the constant, or the two drift apart');
 
 if (failures) {
   console.error(

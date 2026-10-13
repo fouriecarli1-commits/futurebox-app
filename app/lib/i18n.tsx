@@ -2286,6 +2286,9 @@ export const STRINGS: Dict = {
   "art.ofWall": { en: "of the", af: "van die" },
   "art.priceIs": { en: "Price", af: "Prys" },
   "art.buyIt": { en: "Buy it", af: "Koop dit" },
+  "art.payCredits": { en: "Pay with credits instead", af: "Betaal eerder met krediete" },
+  "art.creditsWhy": { en: "credits, the same R280 at the rate a credit sells for. The artist is paid the same either way.", af: "krediete, dieselfde R280 teen die prys waarvoor ’n krediet verkoop. Die kunstenaar word in albei gevalle dieselfde betaal." },
+  "art.creditsDone": { en: "It is yours. It is under Mine, ready to go on a song.", af: "Dit is joune. Dit is onder Myne, gereed om op ’n liedjie te gaan." },
   "art.howFixed": { en: "One price, one buyer. Press buy and it is yours \u2014 there is nothing to bid on and no clock to watch.", af: "Een prys, een koper. Druk koop en dit is joune \u2014 daar is niks om op te bie nie en geen klok om dop te hou nie." },
   "art.oneOnly": {
     en: "This piece is sold once. When you buy it, it leaves the gallery and it is yours alone — nobody else can put it on a song.",

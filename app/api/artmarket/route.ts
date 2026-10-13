@@ -37,11 +37,12 @@
  */
 
 import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
+import { charge } from '@/app/lib/server/credits';
 import { wrote } from '../../lib/server/wrote';
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import {
-  ART_MAX_BYTES, ART_RAND, ARTIST_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split,
+  ART_MAX_BYTES, ART_RAND, ARTIST_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '@/app/data/artmarket';
 
 export const runtime = 'nodejs';
@@ -1087,6 +1088,55 @@ export async function POST(request: Request): Promise<Response> {
        a payout that can be un-recorded silently is a payout somebody
        eventually claims twice. `paid_note` is her own reference off the
        bank statement, in her own words. */
+    /* ── A piece off the wall, paid in credits ────────────────────────
+
+       Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee
+       R280 cash, of ons moet krediet in dieselfde waarde uitwerk."*
+
+       The card path is `/api/checkout` and the webhook, and this is its
+       twin for credits: the same refusals (unsold, not your own), the same
+       conditional update that sells a piece once, and `paid_rand` written
+       as the wall price so the owner's statement owes the artist exactly
+       what a card sale owes. The credits are taken FIRST and given back if
+       the piece turns out to be gone, because the other order — sell, then
+       fail to charge — is a piece given away. */
+    case 'buy': {
+      const workId = String(body.work ?? '');
+      if (!workId) return Response.json({ error: 'bad_request', message: 'Which piece?' }, { status: 400 });
+      const { data: row } = await client
+        .from('art_works')
+        .select('id, title, artist, sold_to')
+        .eq('id', workId)
+        .maybeSingle();
+      const work = (row ?? null) as { id: string; title: string; artist: string; sold_to: string | null } | null;
+      if (!work || work.sold_to) {
+        return Response.json({ error: 'sold', message: 'That piece has already been sold.' }, { status: 409 });
+      }
+      const { data: they } = await client
+        .from('art_artists')
+        .select('owner')
+        .eq('id', work.artist)
+        .maybeSingle();
+      if ((they as { owner: string | null } | null)?.owner === caller.id) {
+        return Response.json({ error: 'own', message: 'That one is yours already.' }, { status: 400 });
+      }
+
+      const paid = await charge(request, ART_CREDITS, 'art', `art:${work.id}`);
+      if (!paid.ok) return paid.response;
+
+      const { data: sold, error: sellError } = await client
+        .from('art_works')
+        .update({ sold_to: caller.id, sold_at: new Date().toISOString(), paid_rand: ART_RAND })
+        .eq('id', work.id)
+        .is('sold_to', null)
+        .select('id, title');
+      if (sellError || !(sold ?? []).length) {
+        await paid.refund();
+        return Response.json({ error: 'sold', message: 'Somebody got there first. Your credits are back.' }, { status: 409 });
+      }
+      return Response.json({ ok: true, title: work.title, credits: ART_CREDITS });
+    }
+
     case 'paidout': {
       if (!callerIsOwner(caller)) {
         return Response.json({ error: 'not_yours', message: 'That is not yours to do.' }, { status: 403 });
