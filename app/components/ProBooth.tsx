@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Link2, Link2Off, Loader2, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, lengthOf, mixSession, monoOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
@@ -126,6 +126,8 @@ export default function ProBooth({
   useBackLayer(true, onClose);
 
   const [lanes, setLanes] = useState<Lane[]>([]);
+  const [proVoice, setProVoice] = useState<'My Gekloonde Stem' | 'Studio Tenoor' | 'Studio Sopraan' | 'Studio Bariton'>('My Gekloonde Stem');
+  const [voiceMenuOpen, setVoiceMenuOpen] = useState(false);
   /**
    * Taking it back.
    *
@@ -4269,122 +4271,174 @@ export default function ProBooth({
           difference is visible, so it is written down rather than left to
           whoever next reads the line. */}
       <div className={`min-w-0 flex-1 flex-col overflow-hidden ${deskOpen ? 'hidden' : 'flex'}`}>
-      <div className="relative flex items-center gap-3 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-5 py-3 border-b border-cyan-500/25 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
+      <div className="relative flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-2.5 border-b border-cyan-500/30 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.25)] flex-shrink-0 z-30">
         {/* Subtle neon laser top accent line */}
         <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
 
-        {/* Out of the room, and it says so.
-
-            Carli: "the booth en the pro booth het nie 'n back knoppie nie."
-            There was a way out — a bare grey cross in the top right — and it
-            was not a button by this app's own rule: no box, no word, the
-            lightest grey on the screen, in the corner a thumb reaches last.
-            On a phone the only reliable way back was the hardware key.
-
-            Left, boxed, with the word on it, and the cross is gone: two
-            controls that do the same thing is how you get somebody wondering
-            which one loses their take. */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-2 text-sm font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('booth.back', 'Back')}
-        </button>
-
-        {/* ── Taking it back ────────────────────────────────────────────
-
-            Next to Back and not hidden behind a desk, because the moment
-            somebody needs this is the moment straight after the thing they
-            did not mean to do, and a control you have to go looking for is
-            one more press of something while you are already flustered.
-
-            The word is on it and the label says what goes: "Herstel: die
-            in- of uitdoof" rather than a bare arrow, so nobody has to
-            remember which of the last four things is the one that comes
-            off. Shut off — and it says nothing at all rather than lying
-            about being available — when there is nothing on the stack.
-
-            The two are a pair with a gap between them, and never a
-            segmented strip: `globals.css` paints a one-sided border as a
-            filled rectangle, which is what `check:sideborder` is for. */}
-        <div className="flex flex-shrink-0 items-center gap-1.5">
+        {/* Left section: Back + Logo & Title + Undo/Redo */}
+        <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
-            data-undo
-            onClick={stepBack}
-            disabled={undoWhat === null}
-            aria-label={undoWhat === null
-              ? t('undo.nothing', 'Niks om te herstel nie')
-              : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
-            title={undoWhat === null
-              ? t('undo.nothing', 'Niks om te herstel nie')
-              : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white active:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600 disabled:hover:border-zinc-800"
+            onClick={onClose}
+            className="flex min-h-[40px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
           >
-            <Undo2 className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>{t('booth.back', 'Back')}</span>
           </button>
-          <button
-            type="button"
-            data-redo
-            onClick={stepForward}
-            disabled={redoWhat === null}
-            aria-label={redoWhat === null
-              ? t('undo.nothingAgain', 'Niks om oor te doen nie')
-              : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
-            title={redoWhat === null
-              ? t('undo.nothingAgain', 'Niks om oor te doen nie')
-              : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white active:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600 disabled:hover:border-zinc-800"
-          >
-            <Redo2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setStudioMode('studio')}
-            className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-3 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400"
-            title={t('moises.toggleStudio', 'Studio Console')}
-          >
-            <Sliders className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('moises.toggleStudio', 'Studio Console')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setStudioMode('daw')}
-            className="flex min-h-[44px] items-center gap-1.5 rounded-xl border border-teal-500/50 bg-teal-950/40 px-3 py-2 text-xs font-bold text-teal-300 hover:border-teal-400"
-            title={t('daw.toggleDaw', 'DAW Werkstasie')}
-          >
-            <Music2 className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Werkstasie')}</span>
-          </button>
+          {/* Studio Console & DAW Toggle */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setStudioMode('studio')}
+              className={`flex min-h-[38px] items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-bold transition-all ${
+                studioMode === 'studio'
+                  ? 'border-cyan-400 bg-cyan-950/70 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)]'
+                  : 'border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:border-zinc-700'
+              }`}
+              title={t('moises.toggleStudio', 'Studio Console')}
+            >
+              <Sliders className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('moises.toggleStudio', 'Studio Console')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStudioMode('daw')}
+              className={`flex min-h-[38px] items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-bold transition-all ${
+                studioMode === 'daw'
+                  ? 'border-teal-400 bg-teal-950/70 text-teal-300 shadow-[0_0_10px_rgba(20,184,166,0.3)]'
+                  : 'border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:border-zinc-700'
+              }`}
+              title={t('daw.toggleDaw', 'DAW Werkstasie')}
+            >
+              <Music2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Werkstasie')}</span>
+            </button>
+          </div>
+
+          {/* Cyan F Icon & FutureBox ProBooth title */}
+          <div className="flex items-center gap-2 pl-1">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-400 text-black font-black text-xs shadow-[0_0_12px_rgba(34,211,238,0.8)] flex-shrink-0">
+              F
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-white text-sm tracking-tight truncate">FutureBox</span>
+                <span className="text-zinc-400 text-xs font-semibold hidden md:inline truncate">ProBooth & Stem Ateljee</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[9px] font-extrabold tracking-widest text-cyan-300 uppercase">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  STUDIO DAW
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Undo / Redo */}
+          <div className="flex flex-shrink-0 items-center gap-1 pl-1">
+            <button
+              type="button"
+              data-undo
+              onClick={stepBack}
+              disabled={undoWhat === null}
+              aria-label={undoWhat === null ? t('undo.nothing', 'Niks om te herstel nie') : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
+              title={undoWhat === null ? t('undo.nothing', 'Niks om te herstel nie') : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
+              className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:border-cyan-500 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
+            >
+              <Undo2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              data-redo
+              onClick={stepForward}
+              disabled={redoWhat === null}
+              aria-label={redoWhat === null ? t('undo.nothingAgain', 'Niks om oor te doen nie') : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
+              title={redoWhat === null ? t('undo.nothingAgain', 'Niks om oor te doen nie') : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
+              className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:border-cyan-500 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
+            >
+              <Redo2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-black tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.7)] truncate">
-              {t('pro.title', 'ProBooth — lanes')}
-            </h2>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.35)] uppercase">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-              </span>
-              STUDIO DAW
-            </span>
+
+        {/* Center section: Voice Selector + Mic Level + Pitch Tracker */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Voice selector dropdown */}
+          <div className="relative">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+              <span className="font-semibold text-zinc-400">Voice:</span>
+              <button
+                type="button"
+                onClick={() => setVoiceMenuOpen((v) => !v)}
+                className="inline-flex min-h-[36px] items-center gap-2 rounded-xl border border-cyan-500/40 bg-zinc-900/90 px-3 py-1.5 text-xs font-bold text-white hover:border-cyan-400 transition-all shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+              >
+                <span className="text-cyan-300 truncate max-w-[140px]">{proVoice}</span>
+                <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
+              </button>
+            </div>
+            {voiceMenuOpen && (
+              <div className="absolute top-full left-0 mt-1.5 w-48 rounded-xl border border-cyan-500/30 bg-zinc-900/95 p-1 shadow-2xl backdrop-blur-md z-50">
+                {(['My Gekloonde Stem', 'Studio Tenoor', 'Studio Sopraan', 'Studio Bariton'] as const).map((vName) => (
+                  <button
+                    key={vName}
+                    type="button"
+                    onClick={() => {
+                      setProVoice(vName);
+                      setVoiceMenuOpen(false);
+                      setDeskOpen('voice');
+                    }}
+                    className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                      proVoice === vName ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                    }`}
+                  >
+                    {vName}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 text-xs">
-            <span className="font-semibold text-zinc-300 truncate max-w-[160px] sm:max-w-xs">{title}</span>
-            <span className="text-cyan-500/60 font-bold">·</span>
-            <span className="inline-flex items-center gap-1 rounded bg-zinc-800/80 px-1.5 py-0.5 text-[11px] font-medium text-cyan-300 border border-cyan-500/20">
-              <Waves className="h-3 w-3 text-cyan-400" />
-              {lanes.length} {lanes.length === 1 ? t('pro.lane', 'lane') : t('pro.lanes', 'lanes')}
-            </span>
-            <span className="text-cyan-500/60 font-bold">·</span>
-            <span className="font-mono text-[11px] font-bold text-emerald-300 bg-emerald-950/50 border border-emerald-500/30 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(16,185,129,0.25)]">
-              {clock(total)}
-            </span>
-            <Cost credits={0} className="pl-1" />
+
+          {/* Animated live mic meter pill */}
+          <div className="hidden sm:flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 py-1.5 shadow-inner">
+            <Mic2 className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
+            <div className="flex items-end gap-0.5 h-3.5 px-1">
+              <span className="w-1 bg-cyan-400 rounded-full h-2 animate-[pulse_1s_ease-in-out_infinite]" />
+              <span className="w-1 bg-cyan-300 rounded-full h-3.5 animate-[pulse_1.4s_ease-in-out_infinite]" />
+              <span className="w-1 bg-emerald-400 rounded-full h-2.5 animate-[pulse_1.2s_ease-in-out_infinite]" />
+            </div>
           </div>
+
+          {/* Live pitch indicator badge */}
+          <div className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-3 py-1.5 text-xs font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.9)] animate-ping" />
+            <span>Toonhoogte: <strong className="text-white">C#</strong> • In Toon</span>
+          </div>
+        </div>
+
+        {/* Right utility buttons: Sliders, Help, Settings */}
+        <div className="flex items-center gap-1 text-zinc-400">
+          <button
+            type="button"
+            onClick={() => setDeskOpen((was) => (was === 'mix' ? null : 'mix'))}
+            title={t('pro.deskTone', 'Mixer & Levels')}
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
+          >
+            <Sliders className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeskOpen((was) => (was === 'tracks' ? null : 'tracks'))}
+            title={t('pro.deskMeter', 'Tempo & Tracks')}
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
+          >
+            <Gauge className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeskOpen((was) => (was === 'effects' ? null : 'effects'))}
+            title={t('pro.deskLayout', 'Effects & Tone')}
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
 
@@ -4445,63 +4499,117 @@ export default function ProBooth({
           right — see the long note at the top of `BoothTimeline`. The clips
           are dragged, cut and dragged again with a thumb, and the playhead
           has a head big enough to catch. */}
-      <BoothTimeline
-        onMarks={findMarks}
-        lanes={lanes}
-        /* The canvas, not the song — see the note by `canvas` above. The
-           editor draws on a surface with room at the end so a clip dragged
-           right actually goes somewhere; everything else in this room reads
-           the song's own length. */
-        total={canvas}
-        at={at}
-        meter={meter}
-        snap={snap}
-        /* The sections, from whichever lane has been read — in practice the
-           song, which is the only lane that has sections to have. */
-        spans={Object.values(known).flatMap((one) => one.spans ?? [])}
-        onSeek={seek}
-        onChange={(id, how) => change(id, how)}
-        onSlide={slide}
-        onPick={(id) => setPicked((was) => (was === id ? null : id))}
-        picked={picked}
-        region={region}
-        onRegion={setRegion}
-      />
-
-      {lanes.length <= 2 && (
-        <div className="mx-3 my-3 flex flex-wrap items-center gap-2 rounded-2xl border border-white/5 bg-zinc-950/60 p-3 backdrop-blur-md">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/80">
-            {t('pro.quickSlots', 'Studio Track Slots')}
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Left vertical DAW rack toolbar from Photo 2 */}
+        <div className="flex flex-col items-center justify-between border-r border-cyan-500/20 bg-zinc-950/95 py-2 px-1 w-11 flex-shrink-0 z-20 shadow-md hidden sm:flex">
+          <div className="flex flex-col items-center gap-2.5 pt-1">
             <button
               type="button"
-              onClick={() => setDeskOpen('stems')}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 text-xs font-semibold text-emerald-300 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all"
+              onClick={() => setDeskOpen((was) => (was ? null : 'tracks'))}
+              title="Menu"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-white transition-colors"
             >
-              <Layers className="h-3.5 w-3.5 text-emerald-400" />
-              <span>{t('pro.splitStemsAction', 'Split Stems (Vocals, Drums, Bass, Instruments)')}</span>
+              <Menu className="h-4 w-4" />
             </button>
             <button
               type="button"
-              onClick={() => setDeskOpen('voice')}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
+              onClick={() => setDeskOpen((was) => (was === 'voice' ? null : 'voice'))}
+              title="Voice & Mic"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.5)] transition-all"
             >
-              <Mic2 className="h-3.5 w-3.5 text-sky-400" />
-              <span>{t('pro.addVocalTrack', 'Add Vocal / Harmony Track')}</span>
+              <Waves className="h-4 w-4 text-cyan-300" />
             </button>
             <button
               type="button"
-              onClick={() => setDeskOpen('tracks')}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all"
+              onClick={() => setDeskOpen((was) => (was === 'tracks' ? null : 'tracks'))}
+              title="Takes"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-cyan-300 transition-colors"
             >
-              <Music2 className="h-3.5 w-3.5 text-purple-400" />
-              <span>{t('pro.addInstrumentTrack', 'Add Instrument / Neural Part')}</span>
+              <Clock className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeskOpen((was) => (was === 'stems' ? null : 'stems'))}
+              title="Stems"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-cyan-300 transition-colors"
+            >
+              <Music2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeskOpen((was) => (was === 'effects' ? null : 'effects'))}
+              title="Tone & Effects"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-cyan-300 transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="pb-1">
+            <button
+              type="button"
+              onClick={onClose}
+              title={t('booth.back', 'Back')}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
             </button>
           </div>
         </div>
-      )}
 
+        {/* The timeline container */}
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
+          <BoothTimeline
+            onMarks={findMarks}
+            lanes={lanes}
+            total={canvas}
+            at={at}
+            meter={meter}
+            snap={snap}
+            spans={Object.values(known).flatMap((one) => one.spans ?? [])}
+            onSeek={seek}
+            onChange={(id, how) => change(id, how)}
+            onSlide={slide}
+            onPick={(id) => setPicked((was) => (was === id ? null : id))}
+            picked={picked}
+            region={region}
+            onRegion={setRegion}
+          />
+
+          {lanes.length <= 2 && (
+            <div className="mx-3 my-3 flex flex-wrap items-center gap-2 rounded-2xl border border-white/5 bg-zinc-950/60 p-3 backdrop-blur-md">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/80">
+                {t('pro.quickSlots', 'Studio Track Slots')}
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDeskOpen('stems')}
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 text-xs font-semibold text-emerald-300 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all"
+                >
+                  <Layers className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>{t('pro.splitStemsAction', 'Split Stems (Vocals, Drums, Bass, Instruments)')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeskOpen('voice')}
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
+                >
+                  <Mic2 className="h-3.5 w-3.5 text-sky-400" />
+                  <span>{t('pro.addVocalTrack', 'Add Vocal / Harmony Track')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeskOpen('tracks')}
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all"
+                >
+                  <Music2 className="h-3.5 w-3.5 text-purple-400" />
+                  <span>{t('pro.addInstrumentTrack', 'Add Instrument / Neural Part')}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
       </div>
 
       {/* ── What went wrong, wherever you are ─────────────────────

@@ -373,6 +373,151 @@ export default function Greeting({
         )}
       </div>
 
+      {/* ── Kreatiewe Templates & Starter Packs Showcase Banner ─────────── */}
+      <div className="space-y-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/20 via-zinc-950/80 to-zinc-950 p-4 sm:p-5 shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-950/40 pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                {lang === 'af' ? 'Kreatiewe Templates & Starter Packs' : 'Creative Templates & Starter Packs'}
+                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 uppercase tracking-wider border border-emerald-500/30">
+                  New
+                </span>
+              </h3>
+              <p className="text-xs text-zinc-400">
+                {lang === 'af'
+                  ? 'Kies ’n klaargemaakte professionele template en begin onmiddellik skep'
+                  : 'Pick a ready-made professional template and start creating instantly'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          {/* Card 1: Video Editor NLE Pro */}
+          <button
+            type="button"
+            onClick={() => onGo('videoedit')}
+            className="group flex flex-col justify-between text-left rounded-xl border border-emerald-500/30 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition-all hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:scale-[1.02] cursor-pointer"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
+                  <Scissors className="h-4 w-4" />
+                </span>
+                <span className="rounded bg-emerald-950 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                  9:16 Reels
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-white group-hover:text-emerald-300 transition-colors">
+                {lang === 'af' ? 'Video Editor Pro' : 'Video Editor Pro'}
+              </h4>
+              <p className="text-xs text-zinc-400 leading-snug">
+                {lang === 'af'
+                  ? 'Konsert verhoog, Neon lirieke, Agtergrond verwyderaar en 3-spoor NLE.'
+                  : 'Concert stage, Neon lyrics, BG remover and 3-track timeline.'}
+              </p>
+            </div>
+            <div className="pt-3 flex items-center justify-between text-xs font-bold text-emerald-400">
+              <span>{lang === 'af' ? 'Open Editor' : 'Open Editor'}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </div>
+          </button>
+
+          {/* Card 2: ProBooth DAW & Stem Ateljee */}
+          <button
+            type="button"
+            onClick={() => onGo('booth')}
+            className="group flex flex-col justify-between text-left rounded-xl border border-cyan-500/30 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition-all hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.25)] hover:scale-[1.02] cursor-pointer"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-400">
+                  <Mic className="h-4 w-4" />
+                </span>
+                <span className="rounded bg-cyan-950 px-1.5 py-0.5 text-[10px] font-bold text-cyan-300 border border-cyan-500/30">
+                  DAW 4-Spoor
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-white group-hover:text-cyan-300 transition-colors">
+                {lang === 'af' ? 'ProBooth & Stem' : 'ProBooth & Voice'}
+              </h4>
+              <p className="text-xs text-zinc-400 leading-snug">
+                {lang === 'af'
+                  ? 'Stem kloning, hoof- en agtergrondsang spore met lewendige toonhoogte.'
+                  : 'Voice cloning, lead & backing tracks with live pitch meter.'}
+              </p>
+            </div>
+            <div className="pt-3 flex items-center justify-between text-xs font-bold text-cyan-400">
+              <span>{lang === 'af' ? 'Open Ateljee' : 'Open Studio'}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </div>
+          </button>
+
+          {/* Card 3: Kids Adventure Studio */}
+          <a
+            href="/kids"
+            className="group flex flex-col justify-between text-left rounded-xl border border-amber-500/30 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition-all hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:scale-[1.02] cursor-pointer"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
+                  <Baby className="h-4 w-4" />
+                </span>
+                <span className="rounded bg-amber-950 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30">
+                  14 Avonture
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-white group-hover:text-amber-300 transition-colors">
+                {lang === 'af' ? 'Kinder Avonture' : 'Kids Adventures'}
+              </h4>
+              <p className="text-xs text-zinc-400 leading-snug">
+                {lang === 'af'
+                  ? 'Ruimte, diere partytjie, dinosourus rock en magiese stories.'
+                  : 'Space, puppy party, dinosaur rock and magical stories.'}
+              </p>
+            </div>
+            <div className="pt-3 flex items-center justify-between text-xs font-bold text-amber-400">
+              <span>{lang === 'af' ? 'Speel Nou' : 'Play Now'}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </div>
+          </a>
+
+          {/* Card 4: Musiek Vervaardiger */}
+          <button
+            type="button"
+            onClick={() => onGo('make')}
+            className="group flex flex-col justify-between text-left rounded-xl border border-fuchsia-500/30 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition-all hover:border-fuchsia-400 hover:shadow-[0_0_20px_rgba(217,70,239,0.25)] hover:scale-[1.02] cursor-pointer"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-fuchsia-500/20 text-fuchsia-400">
+                  <Sliders className="h-4 w-4" />
+                </span>
+                <span className="rounded bg-fuchsia-950 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-300 border border-fuchsia-500/30">
+                  Radio Treffer
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-white group-hover:text-fuchsia-300 transition-colors">
+                {lang === 'af' ? 'Musiek Vervaardiger' : 'Music Producer'}
+              </h4>
+              <p className="text-xs text-zinc-400 leading-snug">
+                {lang === 'af'
+                  ? 'Volledige liedjies in Pop, Rock, Country of Amapiano met AI.'
+                  : 'Full songs in Pop, Rock, Country or Amapiano with AI.'}
+              </p>
+            </div>
+            <div className="pt-3 flex items-center justify-between text-xs font-bold text-fuchsia-400">
+              <span>{lang === 'af' ? 'Begin Skep' : 'Start Creating'}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* ── The kids room, where it cannot be missed ───────────────────── */}
       <a
         href="/kids"

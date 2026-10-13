@@ -785,6 +785,19 @@ export default function KidsRoom(): React.ReactElement {
             </button>
           </div>
 
+          {/* ── Visual Magic Adventure Templates Picker ── */}
+          <KidsTemplatesPicker
+            selectedTopic={topic}
+            selectedSound={sound}
+            onPick={(tpl) => {
+              setTopic(tpl.topic);
+              setSound(tpl.sound);
+              playSpark('sparkle');
+              setStars((s) => s + 1);
+            }}
+            disabled={Boolean(busy) || Boolean(job)}
+          />
+
       {/* ── 3. The mascot and the wheel ──────────────────────────────────
  
           She took the question to Google and sent back what it drew. These

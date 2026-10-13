@@ -1203,8 +1203,8 @@ export default function BoothTimeline({
               .map((one) => (
               <span
                 key={`${one.label}-${one.at}`}
-                className="pointer-events-none absolute bottom-0.5 truncate text-[10px] font-bold"
-                style={{ left: `${percent(one.at)}%`, color: '#7dd3fc', transform: 'translateX(2px)', maxWidth: 90 }}
+                className="pointer-events-none absolute bottom-1 truncate text-[10px] font-black rounded-full px-2 py-0.5 bg-[rgba(15,16,21,0.95)] text-cyan-300 border border-cyan-400/50 shadow-[0_0_8px_rgba(6,182,212,0.4)] select-none"
+                style={{ left: `${percent(one.at)}%`, transform: 'translateX(2px)', maxWidth: 100 }}
               >
                 {one.label}
               </span>
@@ -1300,8 +1300,8 @@ export default function BoothTimeline({
                        that was already truncating in 96 pixels. */
                     className="absolute left-0 right-11 top-0 h-11 px-1.5 pt-1 text-left"
                   >
-                    <span className="block w-full truncate text-[11px] font-bold leading-tight" style={{ color: INK }}>
-                      {lane.name}
+                    <span className="block w-full truncate text-[11px] font-extrabold leading-tight tracking-wide" style={{ color: on ? '#38bdf8' : INK }}>
+                      {index === 0 && !lane.name.includes('Hoofsang') ? `Track 1 Hoofsang (${lane.name})` : index === 1 && !lane.name.includes('Agtergrondsang') ? `Track 2 Agtergrondsang (${lane.name})` : index === 2 && !lane.name.includes('Harmonie') ? `Track 3 Harmonie (${lane.name})` : index === 3 && !lane.name.includes('Begeleiding') ? `Track 4 Begeleiding (${lane.name})` : `Track ${index + 1} ${lane.name}`}
                     </span>
                   </button>
 
@@ -1622,6 +1622,10 @@ export default function BoothTimeline({
                       onSlide(moving.map((one) => ({ id: one.id, at: one.at + shift })));
                     }}
                   >
+                    <span className="pointer-events-none absolute left-2 top-1.5 z-10 flex items-center gap-1 rounded bg-cyan-950/80 px-2 py-0.5 text-[9px] font-black tracking-widest text-cyan-300 border border-cyan-400/40 shadow-[0_0_8px_rgba(6,182,212,0.3)] uppercase select-none">
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      <span>{index === 0 ? 'Lead Vocal' : index === 1 ? 'Backing Vocals' : index === 2 ? 'Harmony' : index === 3 ? 'Backing Track' : lane.name}</span>
+                    </span>
                     <Wave lane={lane} />
                     {/* ── Where it goes round ────────────────────────
 
@@ -2008,13 +2012,19 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
        the seams drawn over the top line up with them. */
     const times = repeatOf(lane);
     const pass = width / times;
-    paint.fillStyle = 'rgba(16,185,129,0.85)';
+    const grad = paint.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, '#22d3ee');
+    grad.addColorStop(0.5, '#06b6d4');
+    grad.addColorStop(1, '#0891b2');
+    paint.fillStyle = grad;
     for (let x = 0; x < width; x += 1) {
       const inPass = pass > 0 ? (x % pass) / pass : 0;
       const which = first + Math.floor(inPass * (last - first));
-      const size = Math.max(1, (shape[which] ?? 0) * (height - 4));
+      const size = Math.max(2, (shape[which] ?? 0) * (height - 6));
       paint.fillRect(x, height / 2 - size / 2, 1, size);
     }
+    paint.fillStyle = 'rgba(255,255,255,0.45)';
+    paint.fillRect(0, Math.floor(height / 2), width, 1);
   });
   return <canvas ref={canvas} className="pointer-events-none h-full w-full" />;
 }

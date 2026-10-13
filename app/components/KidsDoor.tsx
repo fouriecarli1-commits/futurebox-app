@@ -62,7 +62,7 @@ export default function KidsDoor({
   /** Taken once an allowance is set, so the child can go in. */
   readonly onIn?: (state: KidsState) => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [state, setState] = useState<KidsState | null>(null);
   const [busy, setBusy] = useState(false);
   /**
@@ -146,15 +146,55 @@ export default function KidsDoor({
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8 p-5" data-kidsdoor>
       <div className="space-y-2">
-        <h2 className="text-2xl font-extrabold tracking-tight text-white">
-          {t('kids.title', 'Before you hand the phone over')}
+        <h2 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <span className="text-3xl">✨</span>
+          <span>{t('kids.title', 'Before you hand the phone over')}</span>
         </h2>
-        <p className="text-sm leading-relaxed text-zinc-400">
+        <p className="text-sm leading-relaxed text-zinc-300">
           {t(
             'kids.what',
             'Set how many of your credits this child may spend. When it runs out the room says so and asks for you. Nothing here can spend past the number you pick.',
           )}
         </p>
+      </div>
+
+      {/* ── Magical Kids Studio Preview Showcase ──────────────────────── */}
+      <div className="relative overflow-hidden rounded-3xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-950/40 via-purple-950/30 to-zinc-950 p-5 shadow-[0_0_40px_rgba(245,158,11,0.15)] backdrop-blur-md space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/20 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400/20 text-lg">🎨</span>
+            <span className="text-sm sm:text-base font-black text-amber-200">
+              {lang === 'af' ? 'Wat jou kind kan skep in die Kids Studio' : 'What your child can create in the Kids Studio'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onIn?.({ open: true, left: 100, minutes: null, signedIn: true })}
+            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-1.5 text-xs font-black text-zinc-950 shadow-md hover:scale-105 active:scale-95 transition-transform"
+          >
+            <span>🚀</span>
+            <span>{lang === 'af' ? 'Gaan dadelik na Kids Studio' : 'Enter Kids Studio Now'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {[
+            { emoji: '🚀', title: lang === 'af' ? 'Ruimte Avontuur' : 'Space Adventure', tone: 'from-blue-500/20 to-indigo-600/30 border-blue-400/40 text-blue-300' },
+            { emoji: '🐶', title: lang === 'af' ? 'Hondjie Partytjie' : 'Puppy Party', tone: 'from-amber-500/20 to-orange-600/30 border-amber-400/40 text-amber-300' },
+            { emoji: '🎂', title: lang === 'af' ? 'Verjaarsdag Rock' : 'Birthday Rock', tone: 'from-pink-500/20 to-rose-600/30 border-pink-400/40 text-pink-300' },
+            { emoji: '🌊', title: lang === 'af' ? 'Oseaan Golwe' : 'Ocean Waves', tone: 'from-cyan-500/20 to-teal-600/30 border-cyan-400/40 text-cyan-300' },
+            { emoji: '⚡', title: lang === 'af' ? 'Superheld Krag' : 'Superhero Power', tone: 'from-yellow-500/20 to-amber-600/30 border-yellow-400/40 text-yellow-300' },
+            { emoji: '🦄', title: lang === 'af' ? 'Towerland Melodie' : 'Fairyland Melody', tone: 'from-purple-500/20 to-fuchsia-600/30 border-purple-400/40 text-purple-300' },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className={`flex items-center gap-2 rounded-2xl border bg-gradient-to-br ${item.tone} p-2.5 shadow-sm transition-transform hover:scale-[1.02]`}
+            >
+              <span className="text-2xl">{item.emoji}</span>
+              <span className="text-xs font-black leading-tight text-white">{item.title}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── Nobody signed in ─────────────────────────────────────────────
