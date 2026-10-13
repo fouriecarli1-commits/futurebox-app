@@ -532,7 +532,7 @@ export default function Booth({
 
         <p className="flex items-start gap-1.5 pt-1 text-xs leading-snug" style={{ color: INK_DIM }}>
           <Music className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-          {t('booth.free', 'Singing, redoing a line and mixing use no credits. The paid steps inside — cleaning a take, splitting a song — say their own price at their own button.')}
+          {t('booth.free', 'Singing and redoing a line use no credits. Keeping a take mixes it into a song, paid by the minute like the Pro Booth’s bounce — the button says the price. The paid steps inside — cleaning a take, splitting a song — say their own price at their own button.')}
         </p>
       </div>
 

@@ -198,7 +198,7 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     area: 'The Booth',
     caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
-    freeNote: 'The Booth itself is free and always will be \u2014 record, sing over a track, as many takes as you like, no counter. The Pro Booth is the multitrack version: lanes, the grid, the metronome, mixing, mastering and undo.',
+    freeNote: 'The Booth itself is open on the free plan too \u2014 record, sing over a track, as many takes as you like. Keeping a take is paid by the minute, like the Pro Booth\u2019s bounce. The Pro Booth is the multitrack version: lanes, the grid, the metronome, mixing, mastering and undo.',
   },
   'video.editor': {
     label: 'The cutting room',

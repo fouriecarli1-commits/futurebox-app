@@ -60,7 +60,7 @@ import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLi
 import { linesIn, sheetOf } from '../lib/wholesheet';
 import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
-import { CREDITS } from '../lib/credits';
+import { CREDITS, creditsSaid, perMinute } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import type { Track } from '../lib/library';
@@ -924,6 +924,47 @@ export default function VocalBooth({
     }, 30);
   }, [inKey, recorded, scale, strength, t]);
 
+  /* ── Keeping a take is paid, by the minute ─────────────────────────────
+
+     Carli, 13 October 2026: *"Niks is verniet nie, ons is juis hier om geld
+     te maak … Vir al op plekke soos photo editor, video editor en
+     probooth."* Until then this was the one door in the booth a finished
+     song left through for nothing: a take mixed over the backing and kept
+     into the channel. The Pro Booth's bounce has paid `CREDITS.mixOut` a
+     minute through `/api/madehere` since 11 October; this is the same mix
+     leaving the same room, so it pays the same price the same way, and the
+     button says it before it is pressed.
+
+     The reference is built from what the mix is made of — the song, the
+     take's length and the three levels — so the same mix kept twice is one
+     charge, the way the Pro Booth's signature works. */
+  const keepRef = useCallback((length: number): string => [
+    'keep', track.id.slice(0, 24), Math.round(length * 100), Math.round(nudge),
+    Math.round(backingLevel * 100), Math.round(takeLevel * 100),
+    guideBuffer ? Math.round(doubleLevel * 100) : 0,
+  ].join(':').slice(0, 80), [track.id, nudge, backingLevel, takeLevel, guideBuffer, doubleLevel]);
+
+  const payForKeep = useCallback(async (length: number): Promise<boolean> => {
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/madehere', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ kind: 'mix', seconds: length, ref: keepRef(length) }),
+      });
+      if (answer.ok) return true;
+      const said = (await answer.json().catch(() => null)) as { message?: string } | null;
+      setProblem(said?.message ?? t('take.notPaid', 'That could not be paid for just now.'));
+      return false;
+    } catch {
+      setProblem(t('take.notPaid', 'That could not be paid for just now.'));
+      return false;
+    }
+  }, [keepRef, t]);
+
   const keep = useCallback(async () => {
     if (!backing || !take) return;
     setBusy(true);
@@ -943,6 +984,7 @@ export default function VocalBooth({
         setProblem(t('take.mixFailed', 'The mix could not be made.'));
         return;
       }
+      if (!(await payForKeep(take.duration))) return;
       // The take goes with it, so this mix can be opened up and changed again.
       await onKeep(mixed, guideBuffer !== null && doubleLevel > 0, encodeWav(take));
     } catch {
@@ -950,7 +992,7 @@ export default function VocalBooth({
     } finally {
       setBusy(false);
     }
-  }, [backing, backingLevel, doubleLevel, guideBuffer, nudge, onKeep, t, take, takeLevel]);
+  }, [backing, backingLevel, doubleLevel, guideBuffer, nudge, onKeep, t, take, takeLevel, payForKeep]);
 
   /**
    * The take with the room taken off it.
@@ -2233,6 +2275,13 @@ export default function VocalBooth({
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             {t('take.keep', 'Keep this take')}
+            {/* The price, on the button, before it is pressed: the same rule
+                the Pro Booth's bounce and the cutting room's export keep. */}
+            {take && (
+              <span data-keepprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
+                {creditsSaid(perMinute(take.duration, CREDITS.mixOut), t)}
+              </span>
+            )}
           </button>
         </div>
         </>

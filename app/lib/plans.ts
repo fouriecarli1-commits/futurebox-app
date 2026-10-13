@@ -121,7 +121,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        part people stay for. */
     includes: [
       'Unlimited browser sketches — real audio and real video, made on your own device',
-      'The recording booth, with no limit at all: sing, record, mix, master',
+      'The recording booth: sing and record as many takes as you like. Keeping a mixed take is 3 credits a minute',
       'Hooks, the timeline, the sound trainer and the radar',
       'Style previews, so you can hear a sound before you buy anything',
       'A generated song is on a plan — every one of them costs real money to make',
@@ -160,7 +160,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          may not be able to afford: 162 credits a minute against Maker's 100
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
-      'The Booth is free and always will be — record, sing over a track, as many takes as you like. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan. Bouncing a finished mix out of it is 1 credit a minute.',
+      'The Booth is open on every plan — record, sing over a track, as many takes as you like; keeping a mixed take is 3 credits a minute. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan. Bouncing a finished mix out of it is 3 credits a minute too.',
       'The Video Editor is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and free, because it runs in your own browser. Putting the finished film together is what costs: 10 credits per 30 seconds plus 3 for each function you used. This plan holds no credits, so you can build and try everything here, and the film waits for you.',
       'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 40 credits, eight advert lines 20.',
       'Dubbing an episode into another language is the dearest thing here: 162 credits a minute, so it needs Studio or Label.',
@@ -208,7 +208,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          may not be able to afford: 162 credits a minute against Maker's 100
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
-      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 6 credits a minute, changing a voice 6.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing is 162 credits a minute — more than this plan holds, so it starts at Studio.',
@@ -265,7 +265,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          may not be able to afford: 162 credits a minute against Maker's 100
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
-      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 6 credits a minute, changing a voice 6.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 190.',
@@ -306,7 +306,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          may not be able to afford: 162 credits a minute against Maker's 100
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
-      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 6 credits a minute, changing a voice 6.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 440.',
