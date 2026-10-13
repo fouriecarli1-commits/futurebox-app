@@ -23,7 +23,7 @@
  *   npm run check:gallery
  */
 import { readFileSync } from 'node:fs';
-import { GALLERY_THEME, themeVariables } from '../app/lib/theme';
+import { DEFAULT_THEME, GALLERY_THEME, themeVariables } from '../app/lib/theme';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -63,10 +63,20 @@ if (open >= 0) {
   ok('  the wall is dark enough for a painting to glow', page.length === 3 && bright < 60,
     `the page is rgb(${page.join(' ')}) — a gallery at an evening viewing is not a pale room`);
 
+  /* Carli, 13 October 2026: *"Verander asb net die art gallery, die oranje
+     lyk sleg."* The accent was gold and this rule held it there. The gallery
+     is the house green now, with gold kept for the highlight family the
+     price chips draw from — so the rule holds the new truth: the accent is
+     the app's own, and the money is still gold. */
   const accent = (want['--fb-primary-500'] ?? '').split(' ').map(Number);
-  ok('  and the accent is gold rather than the app green',
-    accent.length === 3 && accent[0] > 200 && accent[2] < 100,
-    `primary-500 is rgb(${accent.join(' ')})`);
+  const house = (themeVariables(DEFAULT_THEME)['--fb-primary-500'] ?? '').split(' ').map(Number);
+  ok('  and the accent is the app’s own green, not the gold it used to be',
+    accent.length === 3 && accent.join(' ') === house.join(' '),
+    `primary-500 is rgb(${accent.join(' ')}) against the house rgb(${house.join(' ')})`);
+  const gold = (want['--fb-highlight-500'] ?? '').split(' ').map(Number);
+  ok('  and the money is still gold',
+    gold.length === 3 && gold[0] > 200 && gold[2] < 100,
+    `highlight-500 is rgb(${gold.join(' ')})`);
 }
 
 /* ── And it is on the shell, not on the room ──────────────────────────────

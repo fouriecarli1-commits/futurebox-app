@@ -277,17 +277,22 @@ export const DEFAULT_THEME: Theme = { ...PRESETS[0] };
  * the two.
  */
 export const GALLERY_THEME: Theme = {
-  surface: 'ember',
-  primary: 'amber',
+  /* Carli, 13 October 2026, with Google's album art page and the new house
+     look: *"Verander asb net die art gallery, die oranje lyk sleg."* The
+     ember wall and the gold accent go; the gallery stands on the same
+     green-black as the rest of the app, lit mint, and keeps amber only as
+     the highlight family — which is where the price chips draw from. */
+  surface: 'greenblack',
+  primary: 'mint',
   /* Everything that is not the work and not the money stays out of the way.
      Slate twice on purpose: a second and third accent in a gallery is two
      more things competing with the paintings. */
-  secondary: 'slate',
+  secondary: 'cyan',
   highlight: 'amber',
   tertiary: 'slate',
-  radius: 'soft',
+  radius: 'round',
   density: 'spacious',
-  font: 'editorial',
+  font: 'jakarta',
   /* Layout and motion are the person's, not the room's: these two are about
      how somebody gets around and how much movement they can stand, and a
      room has no business overriding either. They are carried here only

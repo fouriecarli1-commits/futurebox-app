@@ -1143,6 +1143,11 @@ body:has([data-cubed]) {
    auction catalogue are set in a serif, which here is a convention and not
    decoration.
 
+   Then, 13 October 2026: *"Verander asb net die art gallery, die oranje
+   lyk sleg."* The gallery stands on the house green-black now, lit mint,
+   in Plus Jakarta Sans, with amber kept only as the highlight family the
+   price chips draw from. `GALLERY_THEME` says so and this block follows.
+
    Generated, never typed: this is `themeVariables(GALLERY_THEME)` from
    `app/lib/theme.ts`, run through the same ramp maths and the same AA solve
    as every preset the person can pick. `check:gallery` regenerates it and
@@ -1154,39 +1159,39 @@ body:has([data-cubed]) {
    in here: how somebody gets around, and how much movement they can stand,
    stay theirs. */
 [data-gallery] {
-  --fb-surface-50: 246 244 244;
-  --fb-surface-100: 235 231 229;
-  --fb-surface-200: 217 210 206;
-  --fb-surface-300: 200 191 186;
-  --fb-surface-400: 188 176 169;
-  --fb-surface-500: 177 163 156;
-  --fb-surface-600: 167 151 142;
-  --fb-surface-700: 80 69 63;
-  --fb-surface-800: 57 49 45;
-  --fb-surface-900: 37 32 29;
-  --fb-surface-950: 20 17 16;
-  --fb-primary-50: 254 247 231;
-  --fb-primary-100: 253 237 201;
-  --fb-primary-200: 251 223 157;
-  --fb-primary-300: 249 207 108;
-  --fb-primary-400: 247 191 59;
-  --fb-primary-500: 245 176 15;
-  --fb-primary-600: 211 150 9;
-  --fb-primary-700: 171 122 7;
-  --fb-primary-800: 137 98 6;
-  --fb-primary-900: 108 77 4;
-  --fb-primary-950: 73 52 3;
-  --fb-secondary-50: 240 242 244;
-  --fb-secondary-100: 222 226 231;
-  --fb-secondary-200: 196 203 212;
-  --fb-secondary-300: 166 176 191;
-  --fb-secondary-400: 137 150 169;
-  --fb-secondary-500: 111 127 151;
-  --fb-secondary-600: 92 107 127;
-  --fb-secondary-700: 75 87 104;
-  --fb-secondary-800: 60 69 83;
-  --fb-secondary-900: 47 55 65;
-  --fb-secondary-950: 32 37 44;
+  --fb-surface-50: 255 255 255;
+  --fb-surface-100: 233 241 236;
+  --fb-surface-200: 209 226 216;
+  --fb-surface-300: 182 208 193;
+  --fb-surface-400: 162 195 176;
+  --fb-surface-500: 143 184 161;
+  --fb-surface-600: 126 173 146;
+  --fb-surface-700: 56 87 69;
+  --fb-surface-800: 40 62 50;
+  --fb-surface-900: 26 40 32;
+  --fb-surface-950: 14 22 17;
+  --fb-primary-50: 229 255 244;
+  --fb-primary-100: 199 255 231;
+  --fb-primary-200: 153 255 211;
+  --fb-primary-300: 102 255 189;
+  --fb-primary-400: 51 255 167;
+  --fb-primary-500: 5 255 147;
+  --fb-primary-600: 0 219 124;
+  --fb-primary-700: 0 179 101;
+  --fb-primary-800: 0 143 81;
+  --fb-primary-900: 0 112 64;
+  --fb-primary-950: 0 77 43;
+  --fb-secondary-50: 232 249 252;
+  --fb-secondary-100: 205 243 249;
+  --fb-secondary-200: 163 233 245;
+  --fb-secondary-300: 117 221 240;
+  --fb-secondary-400: 71 210 235;
+  --fb-secondary-500: 30 200 230;
+  --fb-secondary-600: 22 171 197;
+  --fb-secondary-700: 18 139 161;
+  --fb-secondary-800: 14 111 129;
+  --fb-secondary-900: 11 88 101;
+  --fb-secondary-950: 8 60 69;
   --fb-highlight-50: 254 247 231;
   --fb-highlight-100: 253 237 201;
   --fb-highlight-200: 251 223 157;
@@ -1203,7 +1208,7 @@ body:has([data-cubed]) {
   --fb-tertiary-200: 196 203 212;
   --fb-tertiary-300: 166 176 191;
   --fb-tertiary-400: 137 150 169;
-  --fb-tertiary-500: 111 127 151;
+  --fb-tertiary-500: 112 129 152;
   --fb-tertiary-600: 92 107 127;
   --fb-tertiary-700: 75 87 104;
   --fb-tertiary-800: 60 69 83;
@@ -1214,37 +1219,27 @@ body:has([data-cubed]) {
   --fb-danger-200: 241 167 177;
   --fb-danger-300: 234 123 138;
   --fb-danger-400: 226 80 99;
-  --fb-danger-500: 225 68 89;
+  --fb-danger-500: 225 71 91;
   --fb-danger-600: 189 31 52;
   --fb-danger-700: 154 25 42;
   --fb-danger-800: 123 20 34;
   --fb-danger-900: 96 16 26;
   --fb-danger-950: 66 11 18;
-  --fb-font-sans: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --fb-font-sans: var(--fb-font-jakarta), "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
   --fb-root-size: 17.5px;
-  --fb-page: 20 17 16;
-  --fb-ink: 234 231 230;
-  --fb-void: 11 10 9;
-  --fb-on-accent: 23 20 18;
-  --fb-scrim: 17 15 13;
+  --fb-page: 8 12 10;
+  --fb-ink: 235 238 236;
+  --fb-void: 6 9 7;
+  --fb-on-accent: 16 24 20;
+  --fb-scrim: 12 18 15;
   --fb-motion: 200ms;
-  --fb-radius-sm: 1.00px;
-  --fb-radius: 2.00px;
-  --fb-radius-md: 3.00px;
-  --fb-radius-lg: 4.00px;
-  --fb-radius-xl: 6.00px;
-  --fb-radius-2xl: 8.00px;
-  --fb-radius-3xl: 12.00px;
-
-  color: rgb(var(--fb-ink));
-  /* And the face, declared and not merely redefined.
-
-     `body` above resolves `--fb-font-sans` once, and every child then
-     inherits the RESULT, not the variable — so overriding the variable
-     here changed nothing at all and the gallery came out in the app's
-     sans. The booth never noticed because it does not change the font.
-     Declared here, the whole room reads in a book face. */
-  font-family: var(--fb-font-sans);
+  --fb-radius-sm: 2.00px;
+  --fb-radius: 4.00px;
+  --fb-radius-md: 6.00px;
+  --fb-radius-lg: 8.00px;
+  --fb-radius-xl: 12.00px;
+  --fb-radius-2xl: 16.00px;
+  --fb-radius-3xl: 24.00px;
 }
 /* ── A press you can see, on a screen with no hover ──────────────────────
 
