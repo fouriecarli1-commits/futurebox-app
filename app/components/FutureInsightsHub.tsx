@@ -314,7 +314,7 @@ export default function FutureInsightsHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 sm:p-6 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/85 p-4 sm:p-6 backdrop-blur-md overflow-y-auto"
           /* Below the tab bar, so the strip stays reachable — the rule every
              overlay under z-50 keeps; `check:belowtabs` holds it by name. */
           style={{ paddingBottom: barClearance(16) }}
