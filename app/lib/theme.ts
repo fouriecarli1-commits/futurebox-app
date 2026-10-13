@@ -29,6 +29,17 @@ export interface SurfaceFamily {
   readonly hue: number;
   readonly sat: number;
   readonly blurb: string;
+  /**
+   * The page's own lightness, where it is darker than the 950 stop.
+   *
+   * Google's home page, 13 October 2026: the body is #080D0A and the cards
+   * on it #0E1712 — the ground is a step below the darkest panel, so a card
+   * sits ON the page rather than dissolving into it. The ramp's 950 stop is
+   * what every `bg-zinc-950` panel paints, and the page used to be the same
+   * number; this lets a surface put the page under it. Omitted, the page is
+   * the 950 stop as it always was.
+   */
+  readonly floor?: number;
 }
 
 export interface AccentFamily {
@@ -68,6 +79,10 @@ export const SURFACES: readonly SurfaceFamily[] = [
   { id: 'ink', name: 'Deep Ink', mode: 'dark', hue: 220, sat: 22, blurb: 'Navy-leaning, like a studio at night.' },
   { id: 'ember', name: 'Ember', mode: 'dark', hue: 20, sat: 12, blurb: 'Warm dark. Easier on the eyes late.' },
   { id: 'forest', name: 'Forest', mode: 'dark', hue: 150, sat: 14, blurb: 'Green-tinted dark, quiet and organic.' },
+  /* The overall look Google drew on 13 October 2026: a green-black ground
+     (#080D0A) with the cards a step above it. Hue and saturation read off
+     that page; the floor is what puts the page under the panels. */
+  { id: 'greenblack', name: 'Green black', mode: 'dark', hue: 146, sat: 22, floor: 4, blurb: 'Deep green-black, the cards a step above the page.' },
   { id: 'plum', name: 'Plum', mode: 'dark', hue: 290, sat: 16, blurb: 'Purple-tinted dark, a bit more theatrical.' },
   { id: 'paper', name: 'Paper', mode: 'light', hue: 40, sat: 8, blurb: 'Warm off-white. Reads like a page.' },
   { id: 'daylight', name: 'Daylight', mode: 'light', hue: 220, sat: 10, blurb: 'Cool white with a blue cast.' },
@@ -75,6 +90,9 @@ export const SURFACES: readonly SurfaceFamily[] = [
 
 export const ACCENTS: readonly AccentFamily[] = [
   { id: 'emerald', name: 'Emerald', hue: 152, sat: 62 },
+  /* #00F087, the mint of the 13 October 2026 look: the same green, fully
+     saturated, so a button and a lit word read as light rather than paint. */
+  { id: 'mint', name: 'Mint', hue: 154, sat: 100 },
   { id: 'cyan', name: 'Cyan', hue: 189, sat: 80 },
   { id: 'sky', name: 'Sky', hue: 205, sat: 82 },
   { id: 'indigo', name: 'Indigo', hue: 245, sat: 65 },
@@ -103,6 +121,14 @@ export const DENSITIES = [
 ] as const;
 
 export const FONTS: readonly FontChoice[] = [
+  /* Plus Jakarta Sans, local in `app/fonts/`, the face of the 13 October
+     2026 look. `--fb-font-jakarta` is set on <html> by `app/layout.tsx`. */
+  {
+    id: 'jakarta',
+    name: 'Jakarta',
+    stack: 'var(--fb-font-jakarta), "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, sans-serif',
+    blurb: 'Geometric and warm. The house face.',
+  },
   {
     id: 'system',
     name: 'System',
@@ -180,7 +206,12 @@ export const PRESETS: readonly Preset[] = [
      Green-tinted dark rather than near-black, so the ground itself carries
      the brand; emerald as the one accent; cyan for the second so the neon
      lines in the booths read. Clean stays one press away in the studio. */
-  { id: 'emerald', name: 'Emerald Studio', blurb: 'Deep green, glass and glow. The default.', surface: 'forest', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
+  /* And again on 13 October 2026, with the home page Google drew for the
+     overall look: the ground goes green-black with the cards a step above
+     it, the accent goes to mint (#00F087), and the face is Plus Jakarta
+     Sans. Same bones, pulled darker and brighter. */
+  { id: 'emerald', name: 'Pro Studio', blurb: 'Green-black, mint and glass. The default.', surface: 'greenblack', primary: 'mint', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'jakarta', layout: 'rail', motion: 'full' },
+  { id: 'forestglass', name: 'Emerald Studio', blurb: 'Deep green, glass and glow. The 12 October look.', surface: 'forest', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
   /* Near-white separates panels with nothing but space, so the loudest thing
      on screen is whatever the person just made. One accent, and amber kept
      back for the few places where money is involved. The default from 21
@@ -565,11 +596,11 @@ export function themeVariables(theme: Theme): Record<string, string> {
     ...scale('danger', 352, 72, ramp(352, 72)),
     '--fb-font-sans': font.stack,
     '--fb-root-size': `${density.size}px`,
-    '--fb-page': hslToRgbChannels(surface.hue, surface.sat, surfaceRamp[10]),
+    '--fb-page': hslToRgbChannels(surface.hue, surface.sat, surface.floor ?? surfaceRamp[10]),
     '--fb-ink': hslToRgbChannels(surface.hue, Math.min(surface.sat, 8), surfaceScale[1]),
     // `bg-black/40` means "an inset, darker than the page" — which on a light
     // surface has to be a pale grey, not actual black.
-    '--fb-void': hslToRgbChannels(surface.hue, surface.sat, surface.mode === 'light' ? 86 : 4),
+    '--fb-void': hslToRgbChannels(surface.hue, surface.sat, surface.mode === 'light' ? 86 : Math.min(4, (surface.floor ?? 7) - 1)),
     '--fb-on-accent': onAccent.join(' '),
     // The wash behind a modal. It is the one thing that must NOT follow the
     // surface: on a light theme an inverted scrim is a pale sheet over a pale

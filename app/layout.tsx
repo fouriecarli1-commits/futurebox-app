@@ -55,6 +55,20 @@ const bubblegum = localFont({
   display: 'swap',
 });
 
+/* The face of the whole app — Carli, 13 October 2026, with the home page
+   Google drew for the overall look: Plus Jakarta Sans, a geometric
+   humanist that reads warm at small sizes and sharp in a heading. Local for
+   the same reason as the two above. The theme engine's `jakarta` font
+   choice points at this variable, and the default preset chooses it. */
+const jakarta = localFont({
+  src: [
+    { path: './fonts/jakarta-latin.woff2', weight: '200 800', style: 'normal' },
+    { path: './fonts/jakarta-latin-ext.woff2', weight: '200 800', style: 'normal' },
+  ],
+  variable: '--fb-font-jakarta',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   /**
    * Where every relative link in this metadata is resolved from.
@@ -146,7 +160,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fredoka.variable} ${bubblegum.variable}`}>
+    <html lang="en" className={`${fredoka.variable} ${bubblegum.variable} ${jakarta.variable}`}>
       <body className="min-h-screen antialiased selection:bg-emerald-500 selection:text-onAccent">
         <LanguageProvider>
           {/* Listening before any room draws. See the note in the component:

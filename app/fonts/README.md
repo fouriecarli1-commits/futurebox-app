@@ -22,6 +22,7 @@ The copyright lines, from each family's own licence file:
 | `bubblegum-*` | Bubblegum Sans (400) | Copyright 2011 The Bubblegum Sans Project Authors (https://github.com/googlefonts/bubblegum-sans) |
 | `orbitron-*` | Orbitron (variable, 500–900; latin only, which is all Google serves) | Copyright 2009 The Orbitron Project Authors (https://github.com/theleagueof/orbitron) |
 | `courierprime-*` | Courier Prime (700) | Copyright 2015 The Courier Prime Project Authors (https://github.com/quoteunquoteapps/CourierPrime) |
+| `jakarta-*` | Plus Jakarta Sans (variable, 200–800) | Copyright 2020 The Plus Jakarta Sans Project Authors (https://github.com/tokotype/PlusJakartaSans) |
 
 `latin` and `latin-ext` subsets only, which is what the app asked Google for:
 Afrikaans sits inside them. To update a family, fetch the css2 stylesheet
