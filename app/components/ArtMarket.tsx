@@ -87,6 +87,7 @@ import { accessToken, getStorageClient } from '../lib/cloud';
 import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
 import { useBackLayer } from '../lib/backstack';
+import { creditsSaid } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { loadTracks, type Track } from '../lib/library';
 import { square } from '../lib/imagefile';
@@ -1421,7 +1422,7 @@ function WorkSheet({
               moet krediet in dieselfde waarde uitwerk."* The number is
               `ART_CREDITS`, worked out at the top-up rate, never typed. */}
           <button type="button" onClick={onBuyCredits} data-buycredits className={`${LEEG} mt-2 w-full`}>
-            {t('art.payCredits')} · {ART_CREDITS}
+            {t('art.payCredits')} · {creditsSaid(ART_CREDITS, t)}
           </button>
           <p className={`${MIKRO} pt-2`}>{ART_CREDITS} {t('art.creditsWhy')}</p>
         </div>

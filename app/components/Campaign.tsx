@@ -650,7 +650,7 @@ export default function Campaign({
     'w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5" data-adsdesk>
       <div>
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <Megaphone className="w-5 h-5 text-emerald-400" />
@@ -673,6 +673,18 @@ export default function Campaign({
       {/* Who it is all for. Above the platforms because it is the thing that
           is true of every advert this desk will ever write for this person,
           and folded shut once it has been filled in. */}
+      {/* ── Google's Adverts & Commercial Studio, 13 October 2026 ─────────
+          Two panels side by side on a desk: the campaign setup (who it is
+          for, where it goes, what it is about, the button that writes) and
+          the multi-format preview (every advert written, with its poster,
+          and the doors to film it and read it). The page's deploy button,
+          sonic logo and voice talent with stock faces are not here; the
+          sentence at the foot of the preview says why. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
+      <aside className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4 min-w-0" data-adsetup>
+        <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white">
+          <span>{t('ads.setupTitle', 'Campaign setup')}</span>
+        </div>
       <BrandKit onChange={setKit} />
 
       {/* Where it is going, before it is written rather than after.
@@ -1018,6 +1030,19 @@ export default function Campaign({
           `logoWords` in `lib/adposter.ts` says it must be the ONLY mark and
           must be COPIED rather than redrawn, because a logo restyled is not
           her logo. */}
+      </aside>
+      <main className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4 min-w-0" data-adpreview>
+        <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white">
+          <span>{t('ads.previewTitle', 'Multi-format creative preview')}</span>
+          <span className="rounded border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] text-emerald-300">
+            {ads.length} {ads.length === 1 ? t('ads.assetReady', 'asset ready') : t('ads.assetsReady', 'assets ready')}
+          </span>
+        </div>
+        {ads.length === 0 && (
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t('ads.previewEmpty', 'Nothing written yet. Fill in what you are selling on the left and press “Write the adverts”; every format lands here with its poster.')}
+          </p>
+        )}
       {ads.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3">
           <span className="text-xs text-zinc-500">
@@ -1249,6 +1274,12 @@ export default function Campaign({
           app review and a verified company and the numbers are worth having
           before either exists. */}
       <AdReport />
+
+        <p className="text-[11px] text-zinc-500 leading-snug border-t border-white/10 pt-3">
+          {t('ads.notDeploy', 'No “deploy to Meta or Google Ads” button, no sonic logo and no voice talent with faces: the adverts go out through your own share sheet, and the reading goes to the voice studio, where the voices are real.')}
+        </p>
+      </main>
+      </div>
 
       {/* ── The paid half ───────────────────────────────────────────────
 

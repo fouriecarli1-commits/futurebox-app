@@ -69,6 +69,10 @@ const ALLOWED = new Set([
   'arena.rubricNote',
   /* Other people's apps. */
   'mfa.getOne',
+  /* The welcome page's header button, 13 October 2026, from Google's
+     landing design: "Get Started Free" is the free tier, which is real and
+     not a trial — the same thing `landing.startFree` beside it says. */
+  'landing.getStarted',
 ]);
 
 /**
