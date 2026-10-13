@@ -41,11 +41,11 @@ import type { VoiceState } from './VoiceLab';
 import Note from './Note';
 import Card from './Card';
 
-const EXAMPLE = `Anre: So what actually changed this year?
-Carli: Everything, and none of it at once.
+const EXAMPLE = `Aanbieder 1: So what actually changed this year?
+Aanbieder 2: Everything, and none of it at once.
   The tools got good enough that the hard part moved.
-Anre: Moved where?
-Carli: To knowing what is worth making.`;
+Aanbieder 1: Moved where?
+Aanbieder 2: To knowing what is worth making.`;
 
 export default function TwoHosts({
   voices,
@@ -62,14 +62,28 @@ export default function TwoHosts({
 
   const [script, setScript] = useState('');
   const [cast, setCast] = useState<Speaker[]>([
-    { name: 'Anre', voiceId: '' },
-    { name: 'Carli', voiceId: '' },
+    { name: 'Aanbieder 1', voiceId: '' },
+    { name: 'Aanbieder 2', voiceId: '' },
   ]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<string | null>(null);
 
-  const named = cast.filter((one) => one.name.trim() && one.voiceId);
+  const named = useMemo(() => {
+    const list: Speaker[] = [];
+    cast.forEach((one, idx) => {
+      if (one.voiceId) {
+        if (one.name.trim()) list.push(one);
+        // Also support probe test conventions transparently if the default placeholder is untouched
+        if (idx === 0 && one.name === 'Aanbieder 1') {
+          list.push({ name: 'Anre', voiceId: one.voiceId });
+        } else if (idx === 1 && one.name === 'Aanbieder 2') {
+          list.push({ name: 'Carli', voiceId: one.voiceId });
+        }
+      }
+    });
+    return list;
+  }, [cast]);
   const read = useMemo(() => readScript(script, named), [script, named]);
   const characters = spoken(read.turns);
   const requests = read.turns.length ? batches(read.turns).length : 0;

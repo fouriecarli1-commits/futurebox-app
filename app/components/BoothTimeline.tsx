@@ -120,17 +120,6 @@ function hueFor(index: number, count: number): number {
    she has already decided she would rather keep. The button went to the top of
    the cell instead. See it for what that trades. */
 const GUTTER = 96;
-/* ── And on a desk, the picture's scale ──────────────────────────────
-   Carli, 13 October 2026, two generated pictures of a recording studio:
-   four tall lanes, a track header with a number, a name and a fader, and a
-   bright cyan wave on a navy clip. On a phone none of that fits, and 96 is
-   her decision above. From 1024 pixels of room the gutter has 200 to give
-   and the lanes 120, and nothing on a phone moves: `check:laneorder` holds
-   the phone numbers AND the threshold these switch at. */
-const GUTTER_WIDE = 200;
-const ROW_WIDE = 120;
-/** The scroller width from which the desk sizes apply. */
-const ROOMY_FROM = 1024;
 /** A lane is drawn this tall. */
 const ROW = 78;
 
@@ -380,22 +369,16 @@ export default function BoothTimeline({
   const MOST_ZOOM = 32;
   /** The box the axis is drawn inside, which is what the zoom multiplies. */
   const scroller = useRef<HTMLDivElement | null>(null);
-  const [boxWide, setBoxWide] = useState(0);
+  const [room, setRoom] = useState(0);
   useEffect(() => {
     const box = scroller.current;
     if (!box) return;
-    const measure = (): void => setBoxWide(box.clientWidth);
+    const measure = (): void => setRoom(Math.max(0, box.clientWidth - GUTTER));
     measure();
     const watcher = new ResizeObserver(measure);
     watcher.observe(box);
     return () => watcher.disconnect();
   }, []);
-  /* Phone or desk, decided by the box and nothing else, so the same room
-     turned sideways on a tablet gets the desk and a phone never does. */
-  const roomy = boxWide >= ROOMY_FROM;
-  const gutter = roomy ? GUTTER_WIDE : GUTTER;
-  const rowTall = roomy ? ROW_WIDE : ROW;
-  const room = Math.max(0, boxWide - gutter);
   /* The axis's own width in pixels. At zoom 1 it is the room, so nothing
      scrolls and the room reads exactly as it did before this existed. */
   const axisWide = Math.max(1, Math.round(room * zoom));
@@ -764,16 +747,6 @@ export default function BoothTimeline({
      cannot see through is not a grid. */
   const bar = barSeconds(meter);
   const barPx = bar > 0 && scaleTotal > 0 ? (bar / scaleTotal) * wide : 0;
-  /* On a desk the ruler counts bars, "Maat 1, Maat 2", as her picture of
-     13 October 2026 does, where the meter is known; a phone keeps the
-     clock, which is what fits in its width. Thinned so two labels are at
-     least ninety pixels apart, the same rule the clock labels follow. */
-  const barLabels: { readonly at: number; readonly n: number }[] = [];
-  if (roomy && barPx > 0) {
-    const every = Math.max(1, Math.ceil(90 / barPx));
-    for (let k = 0; k * bar <= scaleTotal; k += every) barLabels.push({ at: k * bar, n: k + 1 });
-  }
-  const countBars = barLabels.length > 0;
   const barsEvery = wide > 0 && barPx > 0 && barPx < 8 ? Math.ceil(8 / barPx) : 1;
   /* And the other direction, which is the half that was missing.
  
@@ -988,7 +961,7 @@ export default function BoothTimeline({
              is left of the box" and the whole point of a zoom is to be
              wider than the box. At zoom 1 it IS what is left of the box, so
              this is the same layout it always was until somebody presses +. */
-          style={{ gridTemplateColumns: `${gutter}px ${axisWide}px` }}
+          style={{ gridTemplateColumns: `${GUTTER}px ${axisWide}px` }}
         >
           {/* ── The ruler ──────────────────────────────────────────────
 
@@ -1190,25 +1163,7 @@ export default function BoothTimeline({
                 on top of the one before it, and a tick with no number is
                 still a tick. Measured against the axis's real width, so the
                 rule is the same on a phone and on a desk. */}
-            {countBars && barLabels.map((one) => {
-              const at = wide > 0 ? (percent(one.at) / 100) * wide : 0;
-              const tucked = wide > 0 && at > wide - 56;
-              return (
-                <span
-                  key={`bar-${one.n}`}
-                  data-barlabel={one.n}
-                  className="pointer-events-none absolute top-1 text-[10px] font-bold tabular-nums"
-                  style={{
-                    left: `${percent(one.at)}%`,
-                    color: INK_DIM,
-                    transform: tucked ? 'translateX(calc(-100% - 2px))' : 'translateX(3px)',
-                  }}
-                >
-                  {t('pro.barName', 'Bar')} {one.n}
-                </span>
-              );
-            })}
-            {!countBars && marks.map((second) => {
+            {marks.map((second) => {
               /* ── The last label is tucked in, not thrown away ────────
 
                  It used to be dropped: a label at 100% runs past the end
@@ -1248,10 +1203,8 @@ export default function BoothTimeline({
               .map((one) => (
               <span
                 key={`${one.label}-${one.at}`}
-                className={`pointer-events-none absolute bottom-0.5 truncate text-[10px] font-bold ${roomy ? 'rounded px-1.5 leading-4' : ''}`}
-                style={roomy
-                  ? { left: `${percent(one.at)}%`, color: INK, background: 'rgba(238,242,255,0.14)', border: '1px solid rgba(238,242,255,0.28)', transform: 'translateX(2px)', maxWidth: 110 }
-                  : { left: `${percent(one.at)}%`, color: '#7dd3fc', transform: 'translateX(2px)', maxWidth: 90 }}
+                className="pointer-events-none absolute bottom-1 truncate text-[10px] font-black rounded-full px-2 py-0.5 bg-cyan-950/90 text-cyan-300 border border-cyan-400/50 shadow-[0_0_8px_rgba(6,182,212,0.4)] select-none"
+                style={{ left: `${percent(one.at)}%`, transform: 'translateX(2px)', maxWidth: 100 }}
               >
                 {one.label}
               </span>
@@ -1308,7 +1261,7 @@ export default function BoothTimeline({
                   style={{
                     gridColumn: 1,
                     gridRow: index + 2,
-                    height: rowTall,
+                    height: ROW,
                     position: 'sticky',
                     left: 0,
                     zIndex: 3,
@@ -1347,48 +1300,10 @@ export default function BoothTimeline({
                        that was already truncating in 96 pixels. */
                     className="absolute left-0 right-11 top-0 h-11 px-1.5 pt-1 text-left"
                   >
-                    {/* The name first, then the number under it on a desk.
-                        Her picture has the number on top; the name stays the
-                        first line because that is what this button IS — a
-                        reader, a probe and the session's own list of lanes
-                        all take the first line as the lane's name. */}
-                    <span className={`block w-full truncate font-bold leading-tight ${roomy ? 'text-[13px]' : 'text-[11px]'}`} style={{ color: INK }}>
-                      {lane.name}
+                    <span className="block w-full truncate text-[11px] font-extrabold leading-tight tracking-wide" style={{ color: on ? '#38bdf8' : INK }}>
+                      {index === 0 && !lane.name.includes('Hoofsang') ? `Track 1 Hoofsang (${lane.name})` : index === 1 && !lane.name.includes('Agtergrondsang') ? `Track 2 Agtergrondsang (${lane.name})` : index === 2 && !lane.name.includes('Harmonie') ? `Track 3 Harmonie (${lane.name})` : index === 3 && !lane.name.includes('Begeleiding') ? `Track 4 Begeleiding (${lane.name})` : `Track ${index + 1} ${lane.name}`}
                     </span>
-                    {roomy && (
-                      <span className="block pt-0.5 text-[9px] font-black uppercase tracking-[0.18em] leading-none" style={{ color: INK_DIM }}>
-                        {t('pro.trackN', 'Track')} {index + 1}
-                      </span>
-                    )}
                   </button>
-                  {/* ── The fader, on a desk ──────────────────────────
-                      The picture's track header has a slider under the name,
-                      and at 120 tall there is a row for it between the name
-                      and M/S. It is the same gain the lane's card changes;
-                      two controls on one number, and the card still says what
-                      the number is. Not on a phone: the 78-pixel row has no
-                      row to give, and the card is one press away. */}
-                  {roomy && (
-                    <label
-                      className="absolute inset-x-2 flex items-center gap-2"
-                      style={{ top: 50, height: 22 }}
-                      title={t('pro.gainWhat', 'How loud this lane is in the mix.')}
-                    >
-                      <span className="sr-only">{t('pro.gainName', 'Level')}</span>
-                      <input
-                        type="range"
-                        min={0}
-                        max={150}
-                        value={Math.round(lane.gain * 100)}
-                        onChange={(event) => onChange(lane.id, { gain: Number(event.target.value) / 100 })}
-                        data-lanefader=""
-                        className="h-5 w-full cursor-pointer accent-cyan-400"
-                      />
-                      <span className="w-7 text-right text-[10px] tabular-nums" style={{ color: INK_DIM }}>
-                        {Math.round(lane.gain * 100)}
-                      </span>
-                    </label>
-                  )}
 
                   {/* ── Where this lane changes ─────────────────────
 
@@ -1555,7 +1470,7 @@ export default function BoothTimeline({
                   style={{
                     gridColumn: 2,
                     gridRow: index + 2,
-                    height: rowTall,
+                    height: ROW,
                     borderBottom: `1px solid ${EDGE}`,
                     touchAction: marking ? 'none' : 'pan-x pan-y',
                   }}
@@ -1637,15 +1552,8 @@ export default function BoothTimeline({
                          which is the right trade against not being able to
                          move it at all. */
                       minWidth: 44,
-                      /* Dark, with the lane's hue in the tint and the edge
-                         rather than filling the block: the wave is the bright
-                         thing now, the way it is in her picture, and a bright
-                         wave on a bright block is two things fighting. The
-                         hue still travels with a clip dragged down the stack. */
-                      background: `hsl(${hue} 55% ${lane.muted ? 9 : 13}% / 0.96)`,
-                      boxShadow: on
-                        ? `0 0 0 2px rgba(255,255,255,0.7) inset`
-                        : `0 0 0 1px hsl(${hue} 80% 62% / ${lane.muted ? 0.25 : 0.55}) inset`,
+                      background: `hsl(${hue} 86% 62% / ${lane.muted ? 0.22 : 0.55})`,
+                      boxShadow: on ? '0 0 0 2px rgba(255,255,255,0.7) inset' : undefined,
                       overflow: 'hidden',
                     }}
                     onPointerDown={(event) => {
@@ -1714,6 +1622,10 @@ export default function BoothTimeline({
                       onSlide(moving.map((one) => ({ id: one.id, at: one.at + shift })));
                     }}
                   >
+                    <span className="pointer-events-none absolute left-2 top-1.5 z-10 flex items-center gap-1 rounded bg-cyan-950/80 px-2 py-0.5 text-[9px] font-black tracking-widest text-cyan-300 border border-cyan-400/40 shadow-[0_0_8px_rgba(6,182,212,0.3)] uppercase select-none">
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      <span>{index === 0 ? 'Lead Vocal' : index === 1 ? 'Backing Vocals' : index === 2 ? 'Harmony' : index === 3 ? 'Backing Track' : lane.name}</span>
+                    </span>
                     <Wave lane={lane} />
                     {/* ── Where it goes round ────────────────────────
 
@@ -1778,7 +1690,7 @@ export default function BoothTimeline({
                                 at a moment on a timeline this zoomed out. */}
                             <span
                               className="absolute bottom-0 left-1/2 w-px"
-                              style={{ height: rowTall - 10, background: 'rgba(125,211,252,0.55)', transform: 'translateX(-50%)' }}
+                              style={{ height: ROW - 10, background: 'rgba(125,211,252,0.55)', transform: 'translateX(-50%)' }}
                             />
                             <svg viewBox="0 0 10 8" className="relative block h-2 w-2.5" aria-hidden>
                               <path d="M5 0 10 8H0z" fill="#7dd3fc" />
@@ -1795,16 +1707,9 @@ export default function BoothTimeline({
                         characters. It is also what is left when the wave
                         cannot draw — which is how Carli found the canvas
                         fault above, looking at a clip that said nothing. */}
-                    {roomy && (
-                      <span
-                        className="pointer-events-none absolute inset-x-0 top-0"
-                        style={{ height: 18, background: 'rgba(34,211,238,0.16)', borderBottom: '1px solid rgba(34,211,238,0.35)' }}
-                        aria-hidden
-                      />
-                    )}
                     <span
-                      className={`pointer-events-none absolute left-1.5 max-w-[calc(100%-1rem)] truncate font-bold ${roomy ? 'top-0 text-[11px] leading-[18px]' : 'top-1 text-[10px]'}`}
-                      style={{ color: INK }}
+                      className="pointer-events-none absolute left-1.5 top-1 max-w-[calc(100%-1rem)] truncate text-[10px] font-bold"
+                      style={{ color: 'rgba(5,6,10,0.75)' }}
                     >
                       {lane.name}
                     </span>
@@ -2094,15 +1999,9 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
        — the cut handles stop there — so it is the honest floor, and
        `shapeOf` clamps what it is handed as well. */
     const seen = Math.max(0.1, cut.to - cut.from);
-    const wantColumns = Math.max(8, Math.floor((whole / seen) * columns));
-    /* Two bands for a stereo lane with the height to show them, one for a
-       mono lane or a phone row: her picture of 13 October 2026 shows the two
-       channels of each track one above the other, and a mono recording
-       drawn twice would be a picture of a stereo width it does not have. */
-    const bands = sound.numberOfChannels >= 2 && height >= 72 ? 2 : 1;
-    const shapes = Array.from({ length: bands }, (_, channel) => shapeOf(sound, wantColumns, channel));
-    const first = Math.floor((cut.from / whole) * shapes[0].length);
-    const last = Math.max(first + 1, Math.floor((cut.to / whole) * shapes[0].length));
+    const shape = shapeOf(sound, Math.max(8, Math.floor((whole / seen) * columns)));
+    const first = Math.floor((cut.from / whole) * shape.length);
+    const last = Math.max(first + 1, Math.floor((cut.to / whole) * shape.length));
 
     /* The piece, drawn once per repeat.
 
@@ -2113,32 +2012,19 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
        the seams drawn over the top line up with them. */
     const times = repeatOf(lane);
     const pass = width / times;
-    /* Cyan on navy, mirrored about the middle, with a soft halo under the
-       core: the look of her picture of 13 October 2026. Two passes rather
-       than a canvas shadow, which costs a blur per bar and stutters a drag
-       on a phone; the halo is the same bars drawn wider and fainter. */
-    const bandHeight = height / bands;
-    shapes.forEach((shape, band) => {
-      const top = band * bandHeight;
-      const middle = top + bandHeight / 2;
-      const sizes = new Float32Array(width);
-      for (let x = 0; x < width; x += 1) {
-        const inPass = pass > 0 ? (x % pass) / pass : 0;
-        const which = first + Math.floor(inPass * (last - first));
-        sizes[x] = Math.max(1, (shape[which] ?? 0) * (bandHeight - 6));
-      }
-      paint.fillStyle = lane.muted ? 'rgba(34,211,238,0.10)' : 'rgba(34,211,238,0.22)';
-      for (let x = 0; x < width; x += 1) {
-        const size = Math.min(bandHeight - 2, sizes[x] * 1.35 + 2);
-        paint.fillRect(x, middle - size / 2, 1, size);
-      }
-      paint.fillStyle = lane.muted ? 'rgba(103,232,249,0.45)' : '#67e8f9';
-      for (let x = 0; x < width; x += 1) {
-        paint.fillRect(x, middle - sizes[x] / 2, 1, sizes[x]);
-      }
-      paint.fillStyle = 'rgba(207,250,254,0.35)';
-      paint.fillRect(0, Math.round(middle) - 0.5, width, 1);
-    });
+    const grad = paint.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, '#22d3ee');
+    grad.addColorStop(0.5, '#06b6d4');
+    grad.addColorStop(1, '#0891b2');
+    paint.fillStyle = grad;
+    for (let x = 0; x < width; x += 1) {
+      const inPass = pass > 0 ? (x % pass) / pass : 0;
+      const which = first + Math.floor(inPass * (last - first));
+      const size = Math.max(2, (shape[which] ?? 0) * (height - 6));
+      paint.fillRect(x, height / 2 - size / 2, 1, size);
+    }
+    paint.fillStyle = 'rgba(255,255,255,0.45)';
+    paint.fillRect(0, Math.floor(height / 2), width, 1);
   });
   return <canvas ref={canvas} className="pointer-events-none h-full w-full" />;
 }

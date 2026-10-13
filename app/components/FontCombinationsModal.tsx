@@ -69,7 +69,7 @@ export default function FontCombinationsModal({
   const [strokeColor, setStrokeColor] = useState('#09090b');
   const [gradientFrom, setGradientFrom] = useState('#f97316');
   const [gradientTo, setGradientTo] = useState('#ec4899');
-  const [signatureName, setSignatureName] = useState('Carli Fourie');
+  const [signatureName, setSignatureName] = useState('FutureBox Creator');
   const [craftCurve, setCraftCurve] = useState(25);
   const [craftStyle, setCraftStyle] = useState<'arch' | 'wave' | 'bulge' | 'pinch'>('arch');
   const [motionPreset, setMotionPreset] = useState<'pop' | 'typewriter' | 'slide' | 'wave' | 'bounce'>('pop');
@@ -693,7 +693,7 @@ export default function FontCombinationsModal({
                           type="text"
                           value={signatureName}
                           onChange={(e) => setSignatureName(e.target.value)}
-                          placeholder="Carli Fourie"
+                          placeholder="FutureBox Creator"
                           className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
                         />
                       </label>

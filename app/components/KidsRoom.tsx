@@ -90,6 +90,7 @@ import { stillWorthWaiting } from '../lib/jobwait';
 import { asClock, howMany, priceOf } from '../lib/kidsallowance';
 import { keepSong, MOST_SONGS } from '../lib/songkeep';
 import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
+import { studioAudio } from '../lib/demoaudio';
 /** A picture a child can tell apart at a glance, per choice. */
 const FACES: Record<string, React.ReactNode> = {
   dog: <Dog className="h-8 w-8" />,
@@ -525,55 +526,14 @@ export default function KidsRoom(): React.ReactElement {
 
   const playSpark = (kind: string): void => {
     try {
-      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!Ctx) return;
-      const ctx = new Ctx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      const now = ctx.currentTime;
-      if (kind === 'rocket') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(120, now);
-        osc.frequency.exponentialRampToValueAtTime(700, now + 0.35);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-        osc.start(now);
-        osc.stop(now + 0.35);
-      } else if (kind === 'sparkle') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.setValueAtTime(659.25, now + 0.1);
-        osc.frequency.setValueAtTime(783.99, now + 0.2);
-        osc.frequency.setValueAtTime(1046.5, now + 0.3);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-        osc.start(now);
-        osc.stop(now + 0.4);
-      } else if (kind === 'drum') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(160, now);
-        osc.frequency.exponentialRampToValueAtTime(45, now + 0.2);
-        gain.gain.setValueAtTime(0.35, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now);
-        osc.stop(now + 0.2);
+      if (kind === 'sparkle') {
+        studioAudio.playAudioEffect('sparkle');
       } else if (kind === 'bell') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-        osc.start(now);
-        osc.stop(now + 0.5);
+        studioAudio.playAudioEffect('chime');
+      } else if (kind === 'drum' || kind === 'rocket') {
+        studioAudio.playAudioEffect('tap');
       } else {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.25);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-        osc.start(now);
-        osc.stop(now + 0.25);
+        studioAudio.playAudioEffect('magic');
       }
     } catch {
       // Audio context muted

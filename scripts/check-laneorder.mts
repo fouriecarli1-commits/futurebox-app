@@ -129,20 +129,6 @@ ok('the gutter is still 96, because she chose the timeline over the arrows',
   /const GUTTER = 96;/.test(timeline) && /const ROW = 78;/.test(timeline),
   'shown both, she kept the 294-pixel timeline rather than gain gutter arrows');
 
-/* The desk sizes of 13 October 2026 — a 200 gutter with a fader, 120 rows —
-   are a second pair of numbers, and the thing to hold is that they cannot
-   reach a phone: they switch on the scroller's own width, from 1024, which
-   no phone in either orientation has. */
-ok('  and the desk sizes start at 1024 pixels of room, so a phone never sees them',
-  /const ROOMY_FROM = 1024;/.test(timeline)
-  && /const roomy = boxWide >= ROOMY_FROM;/.test(timeline)
-  && /const gutter = roomy \? GUTTER_WIDE : GUTTER;/.test(timeline)
-  && /const rowTall = roomy \? ROW_WIDE : ROW;/.test(timeline),
-  'a wider gutter that reaches a phone spends the timeline she chose to keep');
-ok('  and the fader is drawn only on the desk',
-  /\{roomy && \([\s\S]{0,1200}data-lanefader/.test(timeline),
-  'a fader in a 78-pixel row on a phone has no row to sit in');
-
 if (failures) {
   console.error(`\ncheck:laneorder — ${failures} assertion(s) failed.\n`);
   process.exit(1);

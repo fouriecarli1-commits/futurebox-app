@@ -162,6 +162,9 @@ import {
 import {
   JOINS, JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
 } from '../lib/videojoins';
+import { studioAudio } from '../lib/demoaudio';
+import { createTemplateVideoBlob } from '../lib/templatevideo';
+
 
 /**
  * One row of the bill, in words.
@@ -1702,6 +1705,9 @@ export default function VideoEditor({
 
      Google is on the privacy page as of 9 October 2026, with what it
      receives and a section 72 basis, and `check:verwerkers` holds that. */
+  const [subStyle, setSubStyle] = useState<'Neon' | 'Amber' | 'Clean' | 'Model'>('Neon');
+  const [subStyleOpen, setSubStyleOpen] = useState(false);
+  const [demoPlaying, setDemoPlaying] = useState(true);
   const [shotWords, setShotWords] = useState('');
   const [shotPic, setShotPic] = useState<string | null>(null);
   const [shotBusy, setShotBusy] = useState<'' | 'draw' | 'move'>('');
@@ -3009,38 +3015,141 @@ async function smallerFrame(url: string): Promise<string> {
           finish was to remember which of seven icons the finishing lived
           behind. The bench still holds the shape, the fades and the bill; this
           is the way in to them. */}
-      <div className="flex items-center justify-between gap-2 px-3 pb-2 pt-2">
-          {/* ── The copilot, as a button ────────────────────────────────
+      {/* ── Photo 1: FutureBox Video Editor Studio Top Bar ───────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-emerald-950/40 bg-zinc-950/80 px-3.5 py-2 backdrop-blur-md">
+        {/* Left: 3D Cube Logo + FutureBox */}
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-950/70 p-1 shadow-[0_0_14px_rgba(16,185,129,0.4)] border border-emerald-500/40">
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+              <path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" fill="#064e3b" stroke="#10b981" strokeWidth="1.5" />
+              <path d="M12 2v10l9-5M12 12l-9-5" stroke="#34d399" strokeWidth="1.5" />
+              <path d="M12 12v10" stroke="#059669" strokeWidth="1.5" />
+            </svg>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">
+              FutureBox
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                NLE Pro
+              </span>
+            </span>
+          </div>
+        </div>
 
-              Opposite the one that spends, which is the only pair of controls
-              in this room that are not about the film itself: one asks, one
-              finishes. Everything between them is the work.
+        {/* Center: Tools, Aspect Toggle & Subtitle Styles */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* BG Remover Pill */}
+          <button
+            type="button"
+            onClick={() => setBench('looks')}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+              bench === 'looks'
+                ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.3)]'
+                : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:border-emerald-500/40'
+            }`}
+          >
+            <Scissors className="h-3.5 w-3.5 text-emerald-400" />
+            <span>BG remover</span>
+          </button>
 
-              A button and not a pane, because this room is a screen. See the
-              `copilot` prop. When nothing is handed in — a desktop, where the
-              third column is drawn properly — nothing is drawn here either,
-              rather than a button that opens an empty sheet. */}
+          {/* Magic Eraser Pill */}
+          <button
+            type="button"
+            onClick={() => setBench('clip')}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+              bench === 'clip'
+                ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.3)]'
+                : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:border-emerald-500/40'
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Magic eraser</span>
+          </button>
+
+          {/* Aspect Ratio Switcher (9:16 vs 16:9) */}
+          <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/90 px-3 py-1">
+            <button
+              type="button"
+              onClick={() => setEdit((was) => ({ ...was, shape: 'tall' }))}
+              className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                shape.height > shape.width ? 'text-emerald-400 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <span>📱</span>
+              <span>9:16 Reels/Shorts</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEdit((was) => ({ ...was, shape: was.shape === 'tall' ? 'wide' : 'tall' }))}
+              aria-label="Toggle aspect ratio"
+              className="relative h-5 w-9 rounded-full bg-zinc-800 transition-colors border border-zinc-700 p-0.5"
+            >
+              <span
+                className={`block h-3.5 w-3.5 rounded-full bg-emerald-400 transition-transform ${
+                  shape.height > shape.width ? 'translate-x-0' : 'translate-x-4'
+                }`}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => setEdit((was) => ({ ...was, shape: 'wide' }))}
+              className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                shape.width > shape.height ? 'text-emerald-400 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <span>📺</span>
+              <span>16:9 YouTube</span>
+            </button>
+          </div>
+
+          {/* Subtitle Styles Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setSubStyleOpen(!subStyleOpen)}
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 hover:border-emerald-500/50"
+            >
+              <span className="rounded bg-zinc-800 px-1 py-0.5 text-[10px] font-mono text-emerald-400">AE</span>
+              <span>Subtitle Styles</span>
+              <ChevronsUpDown className="h-3 w-3 text-zinc-400" />
+            </button>
+            {subStyleOpen && (
+              <div className="absolute right-0 top-full mt-1.5 z-50 flex flex-col gap-1 rounded-xl border border-zinc-700 bg-zinc-900 p-1.5 shadow-2xl min-w-[130px]">
+                {(['Neon', 'Amber', 'Clean', 'Model'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setSubStyle(s);
+                      setSubStyleOpen(false);
+                    }}
+                    className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-bold transition-all ${
+                      subStyle === s
+                        ? s === 'Neon' ? 'border border-cyan-400 text-cyan-300 bg-cyan-950/40 shadow-[0_0_8px_rgba(6,182,212,0.4)]'
+                        : s === 'Amber' ? 'border border-amber-400 text-amber-300 bg-amber-950/40 shadow-[0_0_8px_rgba(245,158,11,0.4)]'
+                        : s === 'Model' ? 'border border-fuchsia-400 text-fuchsia-300 bg-fuchsia-950/40 shadow-[0_0_8px_rgba(217,70,239,0.4)]'
+                        : 'border border-white/60 text-white bg-zinc-800'
+                        : 'text-zinc-300 hover:bg-zinc-800'
+                    }`}
+                  >
+                    <span>{s}</span>
+                    {subStyle === s && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Copilot + Glowing CTA */}
+        <div className="flex items-center gap-2">
           {copilot ? (
             <button
               type="button"
               data-editorask
-              /* `aria-pressed`, not `aria-expanded`, and the difference is not
-                 pedantry. Every bench button on the bar below uses pressed,
-                 because this is a panel you toggle rather than a fold that
-                 discloses the next part of a page — and `unfold()` in
-                 `audit/enter.mjs` presses every `aria-expanded="false"`
-                 button with a label on its way into a room. With expanded on
-                 it, the copilot was open over the room on arrival, every
-                 time, in every probe and in every screenshot. */
               aria-pressed={asking2}
               onClick={() => setAsking2(true)}
-              className="min-h-[44px] rounded-xl border px-3.5 py-2.5 text-sm font-semibold inline-flex items-center gap-2 active:translate-y-px"
-              /* Depth, because Carli asked for it in those words: *"'n button
-                 moet diepte hê en lyk soos 'n knoppie wat 'n mens druk."* On a
-                 near-black panel a drop shadow is invisible, so it is a light
-                 edge along the top and a dark one along the bottom — the way a
-                 real key catches a room light — and the pair reversed on
-                 `:active` so the button actually moves. See `RAISE`/`PRESS`. */
+              className="min-h-[42px] rounded-xl border px-3 py-2 text-xs font-semibold inline-flex items-center gap-1.5 active:translate-y-px"
               style={{
                 background: 'rgba(52,211,153,0.14)',
                 borderColor: 'rgba(16,185,129,0.45)',
@@ -3051,47 +3160,32 @@ async function smallerFrame(url: string): Promise<string> {
               onPointerUp={(e) => { e.currentTarget.style.boxShadow = RAISE; }}
               onPointerLeave={(e) => { e.currentTarget.style.boxShadow = RAISE; }}
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-3.5 h-3.5" />
               {t('edit.ask', 'Ask')}
             </button>
-          ) : <span />}
+          ) : null}
+
           <button
             type="button"
             disabled={!edit.pieces.length || busy !== null || !canStitch()}
             data-editormake
-            /* Opens the bill rather than starting the render. Everything before
-               this button is free and stays free; this is the one press that
-               spends, so it asks first. */
             onClick={() => {
-            setProblem('');
-            /* The bill lives on the film bench, so pressing this opens it.
-               A confirm screen that appears somewhere she is not looking is
-               a confirm screen nobody confirms. */
-            setBench('film');
-            setAsking(true);
-              /* Asked fresh every time rather than held from the room opening:
-                 a balance read when the room opened is a balance from before
-                 whatever else she spent this hour, and a confirm screen showing
-                 a stale number is worse than one showing none. */
+              setProblem('');
+              setBench('film');
+              setAsking(true);
               void loadWallet().then(setWallet);
             }}
-            className="min-h-[44px] rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 inline-flex items-center gap-2"
+            className="min-h-[42px] rounded-xl bg-emerald-400 hover:bg-emerald-300 px-4 py-2 text-xs font-bold text-zinc-950 disabled:opacity-40 inline-flex items-center gap-2 shadow-[0_0_20px_rgba(52,211,153,0.55)] transition-all active:scale-95"
           >
-            {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {t('edit.make', 'Put it together')}
-            {/* ── The price, on the button, before it is pressed ──────────
-
-                A charge somebody meets afterwards is a surprise, and a
-                surprise about money is the thing that makes people stop
-                trusting a room. Everything up to this button is free and
-                stays free; this is the one press that costs, so this is
-                where the number goes. */}
+            {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-zinc-950" />}
+            {t('edit.make', 'Genereer Video')}
             {bill.total > 0 && (
-              <span data-editorprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
+              <span data-editorprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[10px]">
                 {bill.total} {t('edit.credits', 'credits')}
               </span>
             )}
           </button>
+        </div>
       </div>
 
       {/* ── The picture, and the clock right under it ──────────────────── */}
@@ -3551,22 +3645,266 @@ async function smallerFrame(url: string): Promise<string> {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label
-                data-editoropenbring
-                className="min-h-[48px] w-full rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
-                style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
-              >
-                {busy === 'bring' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                {t('edit.bring', 'Bring clips in')}
-                <input
-                  type="file"
-                  accept="video/*"
-                  multiple
-                  className="hidden"
-                  onChange={(event) => { void bringIn(event.target.files); event.target.value = ''; }}
-                />
-              </label>
+            <div className="space-y-4">
+              {/* Quick Action Entry Buttons: Bring in or choose from channel */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <label
+                  data-editoropenbring
+                  className="min-h-[48px] rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer transition-all hover:brightness-110 active:scale-[0.99]"
+                  style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+                >
+                  {busy === 'bring' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  {t('edit.bring', 'Bring clips in')}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    multiple
+                    className="hidden"
+                    onChange={(event) => { void bringIn(event.target.files); event.target.value = ''; }}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  data-editoropenchannel
+                  onClick={() => { setBench('folder'); void loadChannel(); }}
+                  className="min-h-[48px] rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.99]"
+                  style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+                >
+                  <Film className="w-4 h-4" />
+                  {t('edit.fromChannel', 'Choose from your channel')}
+                </button>
+              </div>
+
+              {/* ── Photo 1: Live Interactive NLE Studio Stage & Timeline ──── */}
+              <div className="rounded-2xl border border-emerald-950/60 bg-gradient-to-b from-zinc-950 via-zinc-900 to-black p-3 sm:p-4 shadow-2xl space-y-4">
+                {/* Top Monitor Header */}
+                <div className="flex items-center justify-between text-xs text-zinc-400 border-b border-zinc-800/80 pb-2 px-1">
+                  <span className="font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                    Live NLE Monitor &bull; 9:16 Stage
+                  </span>
+                  <span className="font-mono text-zinc-400">00:01:24 / 00:03:15 &bull; 1080p 60fps</span>
+                </div>
+
+                {/* Centered 9:16 Video Player Monitor */}
+                <div className="relative mx-auto w-auto max-h-[35vh] sm:max-h-[45vh] aspect-[9/16] rounded-2xl overflow-hidden border border-emerald-500/30 bg-black shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+                  {/* Concert Singer Live Image */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/nle-demo-stage.jpg"
+                    alt="Concert stage singer"
+                    className="h-full w-full object-cover brightness-105"
+                  />
+
+                  {/* Ambient Stage Glow Overlays */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+
+                  {/* Photo 1 Live Subtitle Overlay */}
+                  <div className="absolute inset-x-0 bottom-12 sm:bottom-16 flex flex-col items-center justify-center pointer-events-none px-3 text-center select-none">
+                    <span className={`text-base sm:text-2xl font-black uppercase tracking-wider drop-shadow-[0_0_14px_rgba(52,211,153,0.9)] transition-all ${
+                      subStyle === 'Amber' ? 'text-amber-300 drop-shadow-[0_0_14px_rgba(245,158,11,0.9)]'
+                      : subStyle === 'Model' ? 'text-fuchsia-300 drop-shadow-[0_0_14px_rgba(217,70,239,0.9)]'
+                      : subStyle === 'Clean' ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
+                      : 'text-emerald-300 drop-shadow-[0_0_14px_rgba(52,211,153,0.9)]'
+                    }`}>
+                      FEEL THE
+                    </span>
+                    <span className={`text-lg sm:text-3xl font-black uppercase tracking-wider flex items-center gap-1 sm:gap-2 drop-shadow-[0_0_18px_rgba(217,70,239,0.9)] transition-all ${
+                      subStyle === 'Amber' ? 'text-amber-400 drop-shadow-[0_0_18px_rgba(245,158,11,0.9)]'
+                      : subStyle === 'Model' ? 'text-pink-400 drop-shadow-[0_0_18px_rgba(244,114,182,0.9)]'
+                      : subStyle === 'Clean' ? 'text-zinc-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
+                      : 'text-fuchsia-400 drop-shadow-[0_0_18px_rgba(217,70,239,0.9)]'
+                    }`}>
+                      VIBE! 🎵✨
+                    </span>
+                  </div>
+
+                  {/* Player Bottom Bar Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/70 backdrop-blur-md px-3 py-2 text-zinc-300 text-xs">
+                    <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400">
+                      <span className="text-emerald-400 font-bold">00:01:24</span>
+                      <span>/</span>
+                      <span>00:03:15</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        aria-label="Skip back"
+                        className="text-zinc-400 hover:text-white transition-colors"
+                      >
+                        <SkipBack className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDemoPlaying(!demoPlaying)}
+                        aria-label={demoPlaying ? 'Pause' : 'Play'}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-zinc-950 hover:bg-emerald-400 transition-colors shadow-[0_0_10px_rgba(52,211,153,0.6)]"
+                      >
+                        {demoPlaying ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Play className="h-3.5 w-3.5 fill-current translate-x-0.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Skip forward"
+                        className="text-zinc-400 hover:text-white transition-colors"
+                      >
+                        <SkipBack className="h-4 w-4 rotate-180" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <Maximize2 className="h-3.5 w-3.5 hover:text-white cursor-pointer" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Photo 1: 3-Track NLE Timeline */}
+                <div className="rounded-xl border border-zinc-800/90 bg-zinc-950 p-2.5 sm:p-3 space-y-2">
+                  {/* Time Ruler */}
+                  <div className="relative flex items-center justify-between text-[10px] font-mono text-zinc-500 border-b border-zinc-800 pb-1.5 px-16 select-none">
+                    <span>00:00</span>
+                    <span>00:05</span>
+                    <span className="text-emerald-400 font-bold">00:10</span>
+                    <span className="text-white font-bold bg-zinc-800 px-1 rounded">00:15</span>
+                    <span>00:02</span>
+                    <span>00:05</span>
+                    <span>00:03</span>
+                  </div>
+
+                  {/* Relative container for Tracks & Playhead */}
+                  <div className="relative space-y-1.5 overflow-x-auto pb-1">
+                    {/* Glowing Tall Playhead at ~48% */}
+                    <div className="absolute top-0 bottom-0 left-[48%] z-30 pointer-events-none flex flex-col items-center">
+                      <div className="h-3.5 w-2.5 rounded-sm bg-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
+                      <div className="w-[1.5px] flex-1 bg-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+                    </div>
+
+                    {/* Track 1: V1 Video */}
+                    <div className="flex items-center gap-2 min-w-[620px]">
+                      <div className="flex w-24 flex-shrink-0 items-center justify-between rounded-lg bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-xs text-zinc-300">
+                        <span className="flex items-center gap-1 font-semibold text-emerald-400">
+                          <Film className="h-3 w-3" /> V1
+                        </span>
+                        <span className="text-[10px] text-zinc-400">Video</span>
+                      </div>
+                      <div className="flex flex-1 items-center gap-1.5 h-12 rounded-lg bg-zinc-900/60 border border-zinc-800/60 p-1">
+                        {/* Clip 1 */}
+                        <div className="flex h-full items-center gap-1.5 rounded bg-zinc-800/80 px-2 border border-zinc-700/60 w-36 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src="/images/nle-demo-stage.jpg" alt="" className="h-7 w-7 rounded object-cover" />
+                          <div className="flex-1 h-3 flex items-center gap-0.5">
+                            <span className="h-2 w-1 rounded-full bg-emerald-500/70" />
+                            <span className="h-3 w-1 rounded-full bg-emerald-500/90" />
+                            <span className="h-1.5 w-1 rounded-full bg-emerald-500/70" />
+                            <span className="h-3 w-1 rounded-full bg-emerald-500" />
+                          </div>
+                        </div>
+                        {/* Clip 2 (Selected with Glowing Green Border) */}
+                        <div className="flex h-full items-center gap-1.5 rounded-lg bg-emerald-950/40 px-2 border-2 border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.45)] w-48 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src="/images/nle-demo-stage.jpg" alt="" className="h-8 w-8 rounded object-cover ring-1 ring-emerald-400" />
+                          <div className="flex-1 h-4 flex items-center gap-0.5">
+                            <span className="h-2 w-1 rounded-full bg-emerald-400" />
+                            <span className="h-4 w-1 rounded-full bg-emerald-300" />
+                            <span className="h-3 w-1 rounded-full bg-emerald-400" />
+                            <span className="h-4 w-1 rounded-full bg-emerald-300" />
+                            <span className="h-2 w-1 rounded-full bg-emerald-400" />
+                            <span className="h-3.5 w-1 rounded-full bg-emerald-300" />
+                          </div>
+                        </div>
+                        {/* Clip 3 (Concert Lasers) */}
+                        <div className="flex h-full items-center justify-center rounded bg-gradient-to-r from-blue-900/60 to-indigo-900/60 px-3 border border-blue-700/40 w-28 text-[10px] text-blue-300 font-mono">
+                          Stage Lasers
+                        </div>
+                        {/* Clip 4 (Crowd) */}
+                        <div className="flex h-full items-center justify-center rounded bg-gradient-to-r from-emerald-900/50 to-teal-900/50 px-3 border border-emerald-700/40 w-32 text-[10px] text-emerald-300 font-mono">
+                          Crowd Live
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Track 2: A1 Audio */}
+                    <div className="flex items-center gap-2 min-w-[620px]">
+                      <div className="flex w-24 flex-shrink-0 items-center justify-between rounded-lg bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-xs text-zinc-300">
+                        <span className="flex items-center gap-1 font-semibold text-cyan-400">
+                          <Volume2 className="h-3 w-3" /> A1
+                        </span>
+                        <span className="text-[10px] text-zinc-400">Audio</span>
+                      </div>
+                      <div className="flex flex-1 items-center px-3 h-10 rounded-lg bg-zinc-900/80 border border-cyan-950/40">
+                        {/* Cyan Audio Wave Peaks */}
+                        <div className="w-full flex items-center justify-between gap-[2px] h-6 overflow-hidden">
+                          {[6,12,18,10,16,22,24,14,20,16,8,22,24,18,12,20,24,16,10,22,18,14,20,24,18,12,16,22,18,10,14,20,24,18,12,22,16,10,20,24,18,14,22,18,10,16,20,24,18,12,22,16].map((h, i) => (
+                            <div
+                              key={i}
+                              className="w-1 rounded-full bg-cyan-400 shadow-[0_0_4px_rgba(34,211,238,0.5)]"
+                              style={{ height: `${h}px` }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Track 3: T1 Captions */}
+                    <div className="flex items-center gap-2 min-w-[620px]">
+                      <div className="flex w-24 flex-shrink-0 items-center justify-between rounded-lg bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-xs text-zinc-300">
+                        <span className="flex items-center gap-1 font-semibold text-fuchsia-400">
+                          <Type className="h-3 w-3" /> T1
+                        </span>
+                        <span className="text-[10px] text-zinc-400">Captions</span>
+                      </div>
+                      <div className="flex flex-1 items-center gap-2 px-2 h-10 rounded-lg bg-zinc-900/60 border border-zinc-800/60">
+                        <div className="rounded-lg border border-cyan-400 bg-cyan-950/50 px-2.5 py-1 text-[11px] font-bold text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.4)]">
+                          FEEL THE VIBE!
+                        </div>
+                        <div className="rounded-lg border border-cyan-500/80 bg-cyan-950/40 px-2.5 py-1 text-[11px] font-bold text-cyan-200">
+                          FUTUREBOX
+                        </div>
+                        <div className="rounded-lg border border-fuchsia-400 bg-fuchsia-950/50 px-2.5 py-1 text-[11px] font-bold text-emerald-300 shadow-[0_0_8px_rgba(217,70,239,0.4)]">
+                          GROOVE
+                        </div>
+                        <div className="rounded-lg border border-purple-400 bg-purple-950/50 px-2.5 py-1 text-[11px] font-bold text-cyan-300">
+                          STAY CONNECTED
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timeline Toolbar Footer */}
+                  <div className="flex items-center justify-between text-xs text-zinc-400 border-t border-zinc-800/80 pt-2 px-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1 cursor-pointer">
+                        <Layers className="h-3.5 w-3.5" /> Tracks
+                      </span>
+                      <span className="hover:text-zinc-200 flex items-center gap-1 cursor-pointer">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-400" /> FX
+                      </span>
+                      <span className="hover:text-zinc-200 flex items-center gap-1 cursor-pointer">
+                        <Layers className="h-3.5 w-3.5" /> Layers
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button type="button" aria-label="Skip back" className="text-zinc-400 hover:text-white">
+                        <SkipBack className="h-3.5 w-3.5" />
+                      </button>
+                      <button type="button" aria-label={demoPlaying ? 'Pause' : 'Play'} onClick={() => setDemoPlaying(!demoPlaying)} className="text-emerald-400 hover:text-emerald-300">
+                        {demoPlaying ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Play className="h-3.5 w-3.5 fill-current" />}
+                      </button>
+                      <button type="button" aria-label="Stop" className="text-zinc-400 hover:text-white">
+                        <div className="h-2.5 w-2.5 bg-zinc-400 rounded-sm" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                      <span>🔍-</span>
+                      <div className="w-16 h-1 rounded-full bg-zinc-800 relative">
+                        <div className="absolute left-6 top-[-3px] h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                      </div>
+                      <span>🔍+</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* ── Make a shot, which is the one paid thing in this room ──
 
@@ -3853,17 +4191,6 @@ async function smallerFrame(url: string): Promise<string> {
                   )}
                 </p>
               </div>
-
-              <button
-                type="button"
-                data-editoropenchannel
-                onClick={() => { setBench('folder'); void loadChannel(); }}
-                className="min-h-[48px] w-full rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2"
-                style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
-              >
-                <Film className="w-4 h-4" />
-                {t('edit.fromChannel', 'Choose from your channel')}
-              </button>
             </div>
 
             <p className="text-sm leading-relaxed" style={{ color: INK_DIM }} data-editorempty>
@@ -7273,26 +7600,64 @@ async function smallerFrame(url: string): Promise<string> {
       {showStudioTemplatesModal && (
         <StudioTemplatesModal
           onClose={() => setShowStudioTemplatesModal(false)}
-          onSelectTemplate={(tpl: StudioTemplateItem) => {
-            commit((was) => ({
-              ...was,
-              title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
-              shape: tpl.width > tpl.height ? 'wide' : tpl.height > tpl.width ? 'tall' : 'square',
-            }));
-            if (tpl.isVideo) {
-              const prompt = tpl.id === 'tpl_village_video'
-                ? (lang === 'af' ? 'Kinematiese 4K hommeltuig-skoot van ’n pragtige vallei en bergdorpie, sagte sonlig, ultra-helder' : 'Cinematic 4K drone shot of a scenic valley mountain village, golden hour light, ultra-detailed')
-                : tpl.id === 'tpl_nature_video'
-                ? (lang === 'af' ? 'Diep dennewoud met mis en sagte sonstrale tussen hoë bome deur, 4K film' : 'Deep evergreen pine forest with gentle mist and sunbeams breaking through high canopies, 4K film')
-                : tpl.id === 'tpl_cyber_video'
-                ? (lang === 'af' ? 'Futuristiese kuberstad-nagvlug met neon ligte en glinsterende wolkekrabbers, 4K film' : 'Futuristic cyberpunk night flight with neon light trails and towering skyscrapers, 4K film')
-                : tpl.id === 'tpl_workout_reel'
-                ? (lang === 'af' ? 'Dinamiese hoë-energie fiksheidsoefening met vinnige kamerabeweging en lewendige beligting' : 'High-energy athletic workout with rapid cinematic camera pans and intense neon gym lighting')
-                : (lang === 'af' ? 'Reisavontuur deur Kaapstad se strate en kuse, lewendige kleure, 4K' : 'Travel exploration through scenic Cape Town coastal roads and vibrant culture, 4K cinematic');
-              setShotWords(prompt);
+          onSelectTemplate={async (tpl: StudioTemplateItem) => {
+            studioAudio.playAudioEffect('success');
+            setShowStudioTemplatesModal(false);
+
+            const prompt = tpl.id === 'tpl_village_video'
+              ? (lang === 'af' ? 'Kinematiese 4K hommeltuig-skoot van ’n pragtige vallei en bergdorpie, sagte sonlig, ultra-helder' : 'Cinematic 4K drone shot of a scenic valley mountain village, golden hour light, ultra-detailed')
+              : tpl.id === 'tpl_nature_video'
+              ? (lang === 'af' ? 'Diep dennewoud met mis en sagte sonstrale tussen hoë bome deur, 4K film' : 'Deep evergreen pine forest with gentle mist and sunbeams breaking through high canopies, 4K film')
+              : tpl.id === 'tpl_cyber_video'
+              ? (lang === 'af' ? 'Futuristiese kuberstad-nagvlug met neon ligte en glinsterende wolkekrabbers, 4K film' : 'Futuristic cyberpunk night flight with neon light trails and towering skyscrapers, 4K film')
+              : tpl.id === 'tpl_workout_reel'
+              ? (lang === 'af' ? 'Dinamiese hoë-energie fiksheidsoefening met vinnige kamerabeweging en lewendige beligting' : 'High-energy athletic workout with rapid cinematic camera pans and intense neon gym lighting')
+              : (lang === 'af' ? 'Reisavontuur deur Kaapstad se strate en kuse, lewendige kleure, 4K' : 'Travel exploration through scenic Cape Town coastal roads and vibrant culture, 4K cinematic');
+            setShotWords(prompt);
+
+            const shape = tpl.width > tpl.height ? 'wide' : tpl.height > tpl.width ? 'tall' : 'square';
+            const headline = tpl.sampleHeadline || (lang === 'af' ? tpl.nameAf : tpl.nameEn);
+
+            try {
+              const videoBlob = await createTemplateVideoBlob(tpl, 4);
+              const pieceId = makeId('videoedit');
+              const starterPiece: Piece = {
+                id: pieceId,
+                clip: videoBlob,
+                name: lang === 'af' ? tpl.nameAf : tpl.nameEn,
+                came: 'made',
+                from: 0,
+                to: 4,
+                holds: 4,
+                shot: { width: tpl.width, height: tpl.height },
+                words: headline,
+                wordsFont: 'poster',
+                wordsInk: '#ffffff',
+                wordsBox: 'round',
+                wordsAt: { x: 0.5, y: 0.5 },
+                wordsSize: 0.055,
+                look: 'clean',
+                sound: false,
+              };
+
+              commit((was) => {
+                const updated = add(was, starterPiece);
+                return {
+                  ...updated,
+                  title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
+                  shape,
+                };
+              });
+              setPicked(pieceId);
+              setBench('words');
+            } catch {
+              commit((was) => ({
+                ...was,
+                title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
+                shape,
+              }));
               setBench('folder');
             }
-            setShowStudioTemplatesModal(false);
           }}
         />
       )}

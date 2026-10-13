@@ -390,7 +390,7 @@ export const FUTURE_INSIGHTS: readonly InsightArticle[] = [
     publishedDate: '4 October 2026',
     podcastRef: {
       show: 'Futurebox Toekomsgesprekke',
-      host: 'Carli Fourie & Gaste',
+      host: 'FutureBox Ateljee & Gaste',
       topicEn: 'Cultural Heritage, AI Synthesis & Autonomous Studio Sovereignty',
       topicAf: 'Kulturele Erfenis, KI-sintese & Outonome Ateljee-soewereiniteit',
       duration: '48m',

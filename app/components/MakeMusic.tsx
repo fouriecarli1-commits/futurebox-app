@@ -1168,6 +1168,60 @@ export default function MakeMusic({
         </p>
       )}
 
+      {/* ── Sleek Top Recent Track / Quick Player Banner ──────────────────────
+          Mobile priority: In 390px phone view, users should never have to
+          scroll past 10 cards to hear their newest creation or see player state.
+          This docked card gives immediate playback & jump-to-channel controls. */}
+      {tracks.length > 0 && (() => {
+        const activeTrack = (playing ? tracks.find((t) => t.id === playing) : null) ?? tracks[0];
+        const isPlayingThis = playing === activeTrack.id;
+        return (
+          <div
+            data-top-mini-player
+            className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-zinc-900/80 p-3 sm:p-4 backdrop-blur-sm"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => void toggle(activeTrack)}
+                aria-label={isPlayingThis ? t('player.pause', 'Pause track') : t('player.play', 'Play track')}
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-zinc-950 transition-all hover:bg-emerald-400 active:scale-95 shadow-md shadow-emerald-500/20"
+              >
+                {isPlayingThis ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+              </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    {isPlayingThis ? t('make.playing', 'Speel nou') : t('make.latestSong', 'Nuutste Liedjie')}
+                  </span>
+                  <span className="text-xs text-zinc-400 font-mono">
+                    {Math.floor(activeTrack.seconds / 60)}:{String(activeTrack.seconds % 60).padStart(2, '0')}
+                  </span>
+                </div>
+                <p className="truncate text-sm font-bold text-white leading-tight mt-0.5">
+                  {activeTrack.title}
+                </p>
+                <p className="truncate text-xs text-zinc-400">
+                  {activeTrack.genre} · {activeTrack.bpm} BPM
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                document.getElementById('made-tracks-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex-shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+            >
+              <span>{t('make.jumpToTracks', 'Kanaal')}</span>
+              <span className="text-zinc-400">({tracks.length})</span>
+              <span>↓</span>
+            </button>
+          </div>
+        );
+      })()}
+
       {/* ── Set it up ───────────────────────────────────────────────────
 
           No box around the boxes. This used to be one bordered panel with
@@ -1319,8 +1373,8 @@ export default function MakeMusic({
               value={lyrics}
               onChange={(e) => setLyrics(e.target.value)}
               placeholder={t('make.wordsPlaceholder')}
-              rows={8}
-              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y"
+              rows={4}
+              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 sm:py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y sm:rows-6"
             />
           )}
           <p className="text-sm text-zinc-500 pt-1">
@@ -2010,7 +2064,7 @@ export default function MakeMusic({
       </div>
 
       {/* Your channel */}
-      <div className="space-y-3">
+      <div id="made-tracks-section" className="space-y-3 scroll-mt-6">
         <div className="flex items-baseline justify-between gap-3">
           <h5 className="text-lg font-bold text-white">{t('make.channel')}</h5>
           <span className="text-sm text-zinc-500">{tracks.length} {tracks.length === 1 ? t('make.song') : t('make.songs')}</span>

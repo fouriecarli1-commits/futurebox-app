@@ -33,6 +33,7 @@ import {
   matchPodcasts, buildPitch, buildLiveBrief, buildPosts,
   type CreatorProfile,
 } from '../lib/matching';
+import { studioAudio } from '../lib/demoaudio';
 
 type RadarTab = 'podcasts' | 'live' | 'posts';
 
@@ -83,6 +84,109 @@ function ScoreBar({ score, none }: { score: number | null; none: string }) {
         <div className={`h-full ${tone} rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
       <span className="text-[13px] text-zinc-400 w-8 text-right">{pct}%</span>
+    </div>
+  );
+}
+
+function RadarHUD({
+  matches,
+  selectedId,
+  onSelect,
+  t,
+}: {
+  readonly matches: Array<{ podcast: PodcastTarget; score: number | null }>;
+  readonly selectedId: string | null;
+  readonly onSelect: (podcast: PodcastTarget) => void;
+  readonly t: (key: string, fallback: string) => string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-zinc-950 via-cyan-950/20 to-black p-4 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.12)]">
+      {/* Top telemetry status line */}
+      <div className="flex items-center justify-between pb-3 border-b border-cyan-500/20 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+          <span className="font-mono font-bold tracking-wider text-cyan-300">
+            {t('radar.hudLive', '360° LIVE RADAR SWEEP')}
+          </span>
+        </div>
+        <div className="font-mono text-zinc-400">
+          <span>{matches.length}</span>{' '}
+          <span>{t('radar.hudTargets', 'targets tracked')}</span>
+        </div>
+      </div>
+
+      {/* The Circular Radar Scope */}
+      <div className="relative my-4 mx-auto w-full max-w-[280px] sm:max-w-[320px] aspect-square rounded-full border-2 border-cyan-500/40 bg-zinc-950/90 shadow-[inset_0_0_50px_rgba(6,182,212,0.15)] flex items-center justify-center overflow-hidden">
+        {/* Radar concentric rings */}
+        <div className="absolute inset-[14%] rounded-full border border-cyan-500/25 pointer-events-none" />
+        <div className="absolute inset-[28%] rounded-full border border-cyan-500/20 pointer-events-none" />
+        <div className="absolute inset-[42%] rounded-full border border-cyan-500/15 pointer-events-none" />
+
+        {/* Crosshairs */}
+        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-cyan-500/25 pointer-events-none" />
+        <div className="absolute left-0 right-0 top-1/2 h-px bg-cyan-500/25 pointer-events-none" />
+
+        {/* Rotating sweep line */}
+        <div
+          className="absolute inset-0 pointer-events-none animate-spin"
+          style={{ animationDuration: '6s', animationTimingFunction: 'linear' }}
+        >
+          <div className="w-1/2 h-1/2 origin-bottom-right bg-gradient-to-tl from-cyan-400/35 via-cyan-500/10 to-transparent" />
+        </div>
+
+        {/* Center Studio Beacon */}
+        <div className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/20 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.8)]">
+          <div className="h-2.5 w-2.5 rounded-full bg-cyan-300 animate-pulse" />
+        </div>
+
+        {/* Dynamic Target Blips */}
+        {matches.map(({ podcast, score }, idx) => {
+          const total = Math.max(1, matches.length);
+          const angle = (idx / total) * 2 * Math.PI - Math.PI / 2;
+          const dist = score !== null ? Math.max(0.22, 0.88 - score * 0.6) : 0.88;
+          const leftPct = 50 + Math.cos(angle) * dist * 44;
+          const topPct = 50 + Math.sin(angle) * dist * 44;
+          const isSelected = selectedId === podcast.id;
+
+          return (
+            <button
+              key={podcast.id}
+              type="button"
+              onClick={() => {
+                studioAudio.playAudioEffect('radar');
+                onSelect(podcast);
+              }}
+              style={{ left: `${leftPct}%`, top: `${topPct}%` }}
+              title={podcast.name}
+              aria-label={podcast.name}
+              className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center transition-all ${
+                isSelected ? 'scale-125' : 'hover:scale-110'
+              }`}
+            >
+              <span
+                className={`relative flex h-5 w-5 items-center justify-center rounded-full ${
+                  isSelected
+                    ? 'bg-emerald-400 text-zinc-950 shadow-[0_0_16px_rgba(52,211,153,1)]'
+                    : score !== null && score >= 0.7
+                    ? 'bg-emerald-500 text-zinc-950 shadow-[0_0_10px_rgba(16,185,129,0.7)]'
+                    : 'bg-cyan-500 text-zinc-950 shadow-[0_0_8px_rgba(6,182,212,0.6)]'
+                }`}
+              >
+                {isSelected && (
+                  <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                )}
+                <span className="text-[9px] font-black">{idx + 1}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Range legend */}
+      <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 pt-2 border-t border-cyan-500/10">
+        <span>{t('radar.innerRange', 'Center: 100% Match')}</span>
+        <span>{t('radar.outerRange', 'Perimeter: Unscored')}</span>
+      </div>
     </div>
   );
 }
@@ -267,7 +371,14 @@ export default function CollabRadar({
       {/* Podcast matching + outreach drafting                              */}
       {/* ---------------------------------------------------------------- */}
       {tab === 'podcasts' && (
-        <div className="grid lg:grid-cols-2 gap-4 [&>*]:min-w-0">
+        <div className="space-y-4">
+          <RadarHUD
+            matches={podcastMatches}
+            selectedId={selectedPodcast?.id ?? null}
+            onSelect={(podcast) => openPitch(podcast, 'email')}
+            t={t}
+          />
+          <div className="grid lg:grid-cols-2 gap-4 [&>*]:min-w-0">
           <div className="space-y-2.5">
             {podcastMatches.map(({ podcast, score, shared, verdict }) => (
               <div
@@ -471,6 +582,7 @@ export default function CollabRadar({
             )}
           </div>
         </div>
+      </div>
       )}
 
       {/* ---------------------------------------------------------------- */}
