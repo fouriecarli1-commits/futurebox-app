@@ -75,14 +75,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Cake, CloudRain, Dog, Film, Guitar, Heart, Loader2, Mic, Moon, Music, Rocket, ShieldCheck,
-  Smile, Sparkles, Square, Waves, X,
+  Bell, BookOpen, Cake, Cat, CloudRain, Disc, Dog, Film, Guitar, Heart, Laugh,
+  Loader2, Mic, Moon, Music, Palette, Radio, Rocket, ShieldCheck,
+  Smile, Sparkles, Square, Sun, Volume2, Waves, X,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import KidsDoor from './KidsDoor';
 import StoryShelf from './StoryShelf';
 import SongShelf from './SongShelf';
-import KidsTemplatesPicker from './KidsTemplatesPicker';
 import KidsStoryboard from './KidsStoryboard';
 import { kidsNow, type KidsState } from '../lib/kidsdoor';
 import { askKidVideo, makeKidSong, startKidVideo, kidWords, KID_TOPICS, KID_SOUNDS, KID_WORDS_MOST } from '../lib/kidsong';
@@ -93,16 +93,35 @@ import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib
 import { studioAudio } from '../lib/demoaudio';
 /** A picture a child can tell apart at a glance, per choice. */
 const FACES: Record<string, React.ReactNode> = {
-  dog: <Dog className="h-8 w-8" />,
-  space: <Rocket className="h-8 w-8" />,
-  birthday: <Cake className="h-8 w-8" />,
-  sea: <Waves className="h-8 w-8" />,
-  rain: <CloudRain className="h-8 w-8" />,
-  brave: <ShieldCheck className="h-8 w-8" />,
+  dog: <Dog className="h-7 w-7" />,
+  space: <Rocket className="h-7 w-7" />,
+  birthday: <Cake className="h-7 w-7" />,
+  sea: <Waves className="h-7 w-7" />,
+  rain: <CloudRain className="h-7 w-7" />,
+  brave: <ShieldCheck className="h-7 w-7" />,
+  cat: <Cat className="h-7 w-7" />,
+  dino: <span className="text-2xl select-none" role="img" aria-label="dino">🦖</span>,
+  dinos: <span className="text-2xl select-none" role="img" aria-label="dino">🦖</span>,
+  farm: <Sun className="h-7 w-7" />,
+  sleep: <Moon className="h-7 w-7" />,
+  bedtime: <Moon className="h-7 w-7" />,
+  friends: <Heart className="h-7 w-7" />,
+  count: <span className="text-xl font-black select-none tracking-tight">123</span>,
+  counting: <span className="text-xl font-black select-none tracking-tight">123</span>,
+  colors: <Palette className="h-7 w-7" />,
+  colours: <Palette className="h-7 w-7" />,
+  school: <BookOpen className="h-7 w-7" />,
   happy: <Smile className="h-7 w-7" />,
   quiet: <Moon className="h-7 w-7" />,
-  rock: <Guitar className="h-7 w-7" />,
+  loud: <Volume2 className="h-7 w-7" />,
   dance: <Music className="h-7 w-7" />,
+  rock: <Guitar className="h-7 w-7" />,
+  march: <Radio className="h-7 w-7" />,
+  silly: <Laugh className="h-7 w-7" />,
+  funny: <Laugh className="h-7 w-7" />,
+  country: <Guitar className="h-7 w-7" />,
+  kwaito: <Disc className="h-7 w-7" />,
+  musicbox: <Bell className="h-7 w-7" />,
 };
 
 /**
@@ -723,27 +742,6 @@ export default function KidsRoom(): React.ReactElement {
 
       {activeTab === 'songs' && (
         <>
-          {/* Quick link banner to story studio */}
-          <div className="flex items-center justify-between gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50/95 p-3 sm:p-3.5 shadow-sm">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-2xl sm:text-3xl">✨</span>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-black text-amber-950 truncate">
-                  {t('kids.storyboardTitle', 'Magic Storyboard Studio')}
-                </p>
-                <p className="text-[11px] font-bold text-amber-800 truncate">
-                  {t('kids.storyboardSub', 'Choose your storyline & visuals to make your storybook!')}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveTab('stories')}
-              className="flex-shrink-0 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-black text-white shadow-md hover:bg-amber-600 transition-colors"
-            >
-              {t('kids.buildStoryBtn', 'Build a Story')}
-            </button>
-          </div>
 
       {/* ── 3. The mascot and the wheel ──────────────────────────────────
  
@@ -878,20 +876,6 @@ export default function KidsRoom(): React.ReactElement {
         </p>
       )}
 
-      {/* ── 4b. Ready-made Adventure Templates ────────────────────────────
-          Carli, 11 October 2026: *"Die kids room het ook baie templates
-          nodig vir 'n kind om net van te kies."*
-          A child can pick a complete theme (topic + sound) in one tap. */}
-      <KidsTemplatesPicker
-        selectedTopic={topic}
-        selectedSound={sound}
-        onPick={(tpl) => {
-          setTopic(tpl.topic);
-          setSound(tpl.sound);
-          setMascot((n) => (n + 1) % MASCOT_SAYS.length);
-        }}
-        disabled={Boolean(busy) || Boolean(job)}
-      />
 
       {/* The sheet of topics. A wrapping row rather than a grid, so the
           three sizes can sit beside each other without a cell forcing them
