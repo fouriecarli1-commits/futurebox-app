@@ -426,15 +426,27 @@ const stop = (name: string): number[] | null => {
 };
 const pageRgb = stop('page');
 
-ok('her navy reads on the room\'s page',
+/* Carli, 13 October 2026, with the room Google drew: the page is obsidian
+   again, by her own instruction this time, and her navy cannot read on
+   obsidian. So the room sets the lockup on a pale plate — `bg-zinc-50`,
+   the 50 stop of this block — and the thing measured is the plate, which
+   is what her ink actually sits on. */
+const plateRgb = stop('surface-50');
+
+ok('her navy reads on the plate the room sets it on',
   (() => {
-    if (!pageRgb) return false;
-    const against = (Math.max(lit(pageRgb), lit(HER_INK)) + 0.05)
-      / (Math.min(lit(pageRgb), lit(HER_INK)) + 0.05);
+    if (!plateRgb) return false;
+    const against = (Math.max(lit(plateRgb), lit(HER_INK)) + 0.05)
+      / (Math.min(lit(plateRgb), lit(HER_INK)) + 0.05);
     return against >= 4.5;
   })(),
-  'the page went dark again and her mark is a ghost on it — which does not'
+  'the plate went dark and her mark is a ghost on it — which does not'
   + ' look broken, it looks like a design choice, and nobody files a bug');
+
+ok('  and the room actually sets the lockup on that plate',
+  /data-cubedplate[^>]*\bbg-zinc-50\b/.test(room) && /<CubedMark/.test(room.slice(room.indexOf('data-cubedplate'))),
+  'the plate is the only reason her navy reads in an obsidian room, and a'
+  + ' lockup drawn outside it is navy on near-black');
 
 ok('  and the page is what `bg-zinc-950` paints, not a second number',
   (() => {

@@ -33,6 +33,17 @@
  * en die persoon wat die klas aanbied nie."* That number lives in the written
  * agreement, and `check:cubed` refuses this file if it quotes it.
  *
+ * ── Obsidian, 13 October 2026 ────────────────────────────────────────────
+ *
+ * Carli, with the "Cubed room" page Google drew, and the rule for the whole
+ * redesign: *"ons transform en totally redesign."* The room is obsidian
+ * again, lit by one pool of emerald behind the mark, glass cards with a
+ * hairline, and the fee and the format as two cards under the title. The
+ * palette is in `globals.css` under `[data-cubed]`. Her navy lockup cannot
+ * read on obsidian and her lines are not to be recoloured, so the hero sets
+ * it on a pale plate — the one plate in the room, and `check:cubed`
+ * measures her ink against it.
+ *
  * ── Two languages, one dictionary ────────────────────────────────────────
  *
  * Every word on this page comes through `t()`. The first version had
@@ -50,6 +61,7 @@ import {
 } from '../lib/cubed';
 import { useLang } from '../lib/i18n';
 import CubedMark from './CubedMark';
+import LanguagePicker from './LanguagePicker';
 
 export default function CubedRoom(): React.ReactElement {
   const { lang, t } = useLang();
@@ -58,57 +70,55 @@ export default function CubedRoom(): React.ReactElement {
   return (
     <main data-cubed className="min-h-screen bg-zinc-950">
       {/* ── Architectural Hero & Ambient Studio Light ───────────────────── */}
-      <div
-        className="relative overflow-hidden border-b border-zinc-900/80"
-        style={{
-          background:
-            'radial-gradient(130% 95% at 16% -5%, rgba(173,186,200,0.22) 0%, rgba(173,186,200,0.06) 42%, transparent 72%), radial-gradient(80% 60% at 85% 15%, rgba(16,185,129,0.05) 0%, transparent 60%)',
-        }}
-      >
-        <div className="mx-auto max-w-5xl px-6 py-12 sm:py-20">
-          {/* Top navigation & VIP Badge */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <Link
-              href="/"
-              className="group inline-flex min-h-[44px] items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-900/60 px-4 py-1.5 text-xs font-bold tracking-wide text-zinc-400 backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-800 hover:text-white"
+      {/* ── The bar across the top: back, the badge, the language ─────── */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-zinc-950/90 px-4 py-3 backdrop-blur-md lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/"
+            className="group inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-4 text-xs font-semibold text-zinc-300 transition-all hover:bg-zinc-800 hover:text-white"
+          >
+            <ArrowRight className="h-4 w-4 rotate-180 text-emerald-400 transition-transform group-hover:-translate-x-0.5" />
+            <span>{t('cubed.back', 'Back to FutureBox Studio')}</span>
+          </Link>
+          <div className="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-emerald-400 md:inline-flex">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            <span>{t('cubed.exclusive', 'Cubed³ · VIP masterclasses · By invitation')}</span>
+          </div>
+          <LanguagePicker compact />
+        </div>
+      </header>
+
+      <div className="relative overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+          {/* ── The mark, the title, the line ─────────────────────────────
+              Centred, as Google drew it, with one pool of emerald light
+              behind the mark and nothing else lit. */}
+          <div className="relative flex flex-col items-center text-center">
+            <div className="pointer-events-none absolute inset-0 -top-10 rounded-full bg-emerald-500/10 blur-[120px]" aria-hidden />
+            <div
+              data-cubedplate
+              className="relative mb-6 flex w-full max-w-[460px] items-center justify-center rounded-3xl border border-emerald-500/30 bg-zinc-50 p-4 shadow-2xl shadow-emerald-900/40 transition-transform duration-500 hover:scale-[1.02]"
             >
-              <span className="transition-transform duration-200 group-hover:-translate-x-0.5">←</span>
-              <span>FutureBox Studio</span>
-            </Link>
-
-            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/90 bg-zinc-900/80 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-zinc-300 shadow-sm backdrop-blur-md">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              </span>
-              <span>{t('cubed.exclusive', 'Cubed³ · VIP masterclasses · By invitation')}</span>
+              <CubedMark width={420} lang={lang} title={t('cubed.markAlt', 'Two cubes, threaded through each other')} />
             </div>
-          </div>
 
-          {/* Centered Brand Mark Display */}
-          <div className="pt-8 sm:pt-12">
-            <div className="inline-block transition-transform duration-300 hover:scale-[1.01]">
-              <CubedMark width={460} lang={lang} title={t('cubed.markAlt', 'Two cubes, threaded through each other')} />
-            </div>
-          </div>
-
-          {/* Title & Core Proposition */}
-          <div className="pt-6 sm:pt-8">
-            <div className="flex flex-wrap items-baseline gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <h1
                 data-cubedtitle
-                className="text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-8xl flex items-start"
+                className="flex items-start text-4xl font-extrabold tracking-tight text-white md:text-6xl"
               >
                 <span>{t('cubed.title', 'Cubed')}</span>
                 <sup
-                  className="ml-1 text-2xl sm:text-4xl lg:text-5xl font-black text-amber-400 select-none drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)]"
+                  className="ml-0.5 select-none text-2xl font-extrabold text-emerald-400 md:text-4xl"
                   title={t('cubed.power3Title', 'To the power of 3: always 3 classes to a masterclass')}
                 >
                   3
                 </sup>
               </h1>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-300 backdrop-blur-sm self-center">
-                <span className="font-extrabold text-amber-400">³</span>
+              <span className="inline-flex items-center gap-1.5 self-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
                 <span>{t('cubed.power3', 'To the power of 3 · Always 3 classes')}</span>
               </span>
             </div>
@@ -116,10 +126,10 @@ export default function CubedRoom(): React.ReactElement {
             {/* The opening line, hers: "iets soos dive into the future and
                 attend a class curated by a professional". The lead is the
                 invitation; the line under it is what the three classes are. */}
-            <p data-cubedlead className="max-w-2xl pt-5 text-xl font-bold leading-snug text-zinc-100 sm:text-3xl">
+            <p data-cubedlead className="max-w-2xl pt-4 text-xl font-bold leading-snug text-zinc-100 md:text-2xl">
               {t('cubed.lead', 'Dive into the future and attend a class curated by a professional.')}
             </p>
-            <p className="max-w-2xl pt-3 text-base leading-relaxed text-zinc-400 sm:text-xl font-medium">
+            <p className="max-w-3xl pt-3 text-sm leading-relaxed text-zinc-400 md:text-base">
               {t(
                 'cubed.what',
                 'Three classes to a masterclass: what it is, how it is done, and what is next — taught by somebody who has actually done it and knows where it is going.',
@@ -128,44 +138,48 @@ export default function CubedRoom(): React.ReactElement {
           </div>
 
           {/* Executive Metrics Cards */}
-          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Metric 1: Format Rule */}
-            <div className="group relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 shadow-sm backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-900">
+            <div className="relative flex items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 p-6">
+              <div>
               <div className="flex items-center justify-between text-zinc-500">
-                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
                   {t('cubed.format', 'Format (Cubed³)')}
                 </span>
-                <span className="text-xs font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">³</span>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
                 <span data-cubedthree className="text-4xl font-black tracking-tight text-zinc-100">
                   {CLASSES_IN_A_SERIES}
                 </span>
-                <span className="text-sm font-semibold text-zinc-400">
+                <span className="text-lg font-semibold text-zinc-300">
                   {t('cubed.perSeries', 'classes to a masterclass')}
                 </span>
               </div>
+              </div>
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xl font-extrabold text-emerald-400">³</div>
             </div>
 
             {/* Metric 3: What the masterclass costs — all three classes */}
-            <div className="group relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 shadow-sm backdrop-blur-md transition-all hover:border-zinc-700 hover:bg-zinc-900">
+            <div className="relative flex items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 p-6">
+              <div>
               <div className="flex items-center justify-between text-zinc-500">
-                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">{t('cubed.fee', 'Masterclass fee')}</span>
-                <GraduationCap className="h-4 w-4 text-emerald-500/80" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">{t('cubed.fee', 'Masterclass fee')}</span>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
                 <span data-cubedprice className="text-4xl font-black tracking-tight text-zinc-100">
                   {randSaid(seriesRand())}
                 </span>
-                <span className="text-sm font-semibold text-zinc-400">
+                <span className="text-lg font-semibold text-zinc-300">
                   {t('cubed.aClass', 'for all three classes')}
                 </span>
               </div>
+              </div>
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"><GraduationCap className="h-5 w-5" /></div>
             </div>
           </div>
 
           {/* Pricing statement breakdown */}
-          <div className="mt-5 rounded-xl border border-zinc-800/60 bg-zinc-900/40 px-5 py-3.5 backdrop-blur-sm">
+          <div className="mt-5 rounded-xl border border-white/10 bg-zinc-900/60 px-5 py-3.5">
             <p className="text-sm leading-relaxed text-zinc-400" data-cubedpricewhat>
               {t(
                 'cubed.priceWhat',
@@ -177,8 +191,8 @@ export default function CubedRoom(): React.ReactElement {
       </div>
 
       {/* ── Exploration Bar / Link to Listing ─────────────────────────── */}
-      <section className="mx-auto max-w-5xl px-6 pt-10">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-800/70 bg-zinc-900/40 p-5 backdrop-blur-sm">
+      <section className="mx-auto max-w-7xl px-4 pt-4 lg:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-zinc-900 p-5">
           <div>
             <h2 className="text-sm font-bold text-zinc-200">{t('cubed.listTitle', 'The masterclasses on offer')}</h2>
             <p className="text-xs text-zinc-500">{t('cubed.listHint', 'Every class and guest that has been arranged, in the studio.')}</p>
@@ -186,7 +200,7 @@ export default function CubedRoom(): React.ReactElement {
           <Link
             href="/?tab=masterclasses"
             data-cubedlisting
-            className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:border-emerald-500/60 hover:bg-emerald-500/20 hover:text-emerald-800"
+            className="group inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-onAccent shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400"
           >
             <span>{t('cubed.seeList', 'See the classes on offer')}</span>
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -195,8 +209,8 @@ export default function CubedRoom(): React.ReactElement {
       </section>
 
       {/* ── Masterclass Series Showcase ──────────────────────────────────── */}
-      <section className="mx-auto max-w-5xl px-6 py-16">
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-5">
+      <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+        <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
             <h2 className="text-xs font-black uppercase tracking-[0.25em] text-zinc-400">
               {t('cubed.theSeries', 'The series')}
@@ -216,14 +230,14 @@ export default function CubedRoom(): React.ReactElement {
               key={series.id}
               id={series.id}
               data-cubedseries={series.id}
-              className="overflow-hidden rounded-3xl border border-zinc-800/90 bg-zinc-900/60 p-6 shadow-xl backdrop-blur-md transition-all sm:p-8 hover:border-zinc-700/80"
+              className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-xl transition-all sm:p-8 hover:border-emerald-500/40 hover:shadow-[0_0_35px_rgba(15,157,110,0.25)]"
             >
               {/* Series Header */}
               <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-800/70 pb-6">
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-md bg-zinc-800/80 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-300">
                     <GraduationCap className="h-3.5 w-3.5 text-zinc-400" />
-                    <span>Reeks ID: {series.id}</span>
+                    <span>{t('cubed.seriesId', 'Series')}: {series.id}</span>
                   </div>
                   <h3 className="pt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
                     {said(series.title)}
@@ -236,7 +250,7 @@ export default function CubedRoom(): React.ReactElement {
                 {/* Status Badge */}
                 <div>
                   {series.stage === 'open' ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-700">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-400">
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
                       {t('cubed.open', 'Open')}
                     </span>
@@ -259,11 +273,11 @@ export default function CubedRoom(): React.ReactElement {
                   <li
                     key={part.part}
                     data-cubedpart={part.part}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-950/70 p-6 transition-all hover:border-zinc-700 hover:bg-zinc-950"
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/70 p-6 transition-all hover:border-emerald-500/40"
                   >
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-3xl font-black tracking-tighter text-zinc-600 transition-colors group-hover:text-zinc-500">
+                        <span className="text-3xl font-black tracking-tighter text-emerald-500/60 transition-colors group-hover:text-emerald-400">
                           0{part.part}
                         </span>
                         <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900 px-2.5 py-1 text-[11px] font-bold text-zinc-400">
@@ -320,8 +334,8 @@ export default function CubedRoom(): React.ReactElement {
       </section>
 
       {/* ── Executive Guest Charter & Covenant ─────────────────────────── */}
-      <section className="border-t border-zinc-800/90 bg-zinc-900/50 py-20 backdrop-blur-sm">
-        <div className="mx-auto max-w-5xl px-6">
+      <section className="border-t border-white/10 bg-zinc-900/50 py-20">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-zinc-400">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
@@ -362,7 +376,7 @@ export default function CubedRoom(): React.ReactElement {
             <a
               href="/help"
               data-cubedask
-              className="group inline-flex min-h-[48px] items-center gap-3 rounded-2xl border border-zinc-700 bg-zinc-100 px-8 py-3.5 text-sm font-black text-zinc-900 shadow-xl transition-all hover:bg-zinc-200 hover:shadow-2xl hover:scale-[1.02]"
+              className="group inline-flex min-h-[48px] items-center gap-3 rounded-2xl bg-emerald-500 px-8 py-3.5 text-sm font-black text-onAccent shadow-xl shadow-emerald-500/20 transition-all hover:bg-emerald-400 hover:scale-[1.02]"
             >
               <MessageSquare className="h-4 w-4" />
               <span>{t('cubed.talk', 'Talk to us about teaching one')}</span>

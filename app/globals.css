@@ -849,34 +849,49 @@ body:has([data-kidsroom]) main {
  * rather than a new fault. */
 [data-cubed],
 body:has([data-cubed]) {
-  --fb-surface-50: 28 30 33;
-  --fb-surface-100: 40 43 46;
-  --fb-surface-200: 57 61 65;
-  --fb-surface-300: 76 81 87;
-  --fb-surface-400: 90 96 104;
-  --fb-surface-500: 97 104 112;
-  --fb-surface-600: 102 109 117;
-  --fb-surface-700: 168 173 179;
-  --fb-surface-800: 211 214 217;
-  --fb-surface-900: 236 237 238;
-  --fb-surface-950: 250 250 250;
+  /* ── Obsidian, with one emerald ──────────────────────────────────────
+     Carli, 13 October 2026, with the "Cubed room" page Google drew: a
+     near-black page lit by one pool of emerald, glass cards with a
+     hairline, grey type that is allowed to be large. The ramp runs the
+     app's own way for a dark room: 950 is the page and 100 is the brightest
+     word on it. 400 to 600 are the three text stops, each a step brighter
+     than the last so emphasis and aside stay two different greys, and 600,
+     the dimmest the room writes in, clears AA on a card over the page —
+     `check:cubed` does that arithmetic.
 
-  --fb-primary-50: 237 242 247;
-  --fb-primary-100: 216 226 238;
-  --fb-primary-200: 185 203 223;
-  --fb-primary-300: 142 171 204;
-  --fb-primary-400: 100 140 185;
-  --fb-primary-500: 71 112 158;
-  --fb-primary-600: 60 94 134;
-  --fb-primary-700: 49 77 109;
-  --fb-primary-800: 40 62 88;
-  --fb-primary-900: 32 50 70;
-  --fb-primary-950: 22 35 49;
+     Her navy lockup does not read on this page, and recolouring her lines
+     is the one thing she asked nobody to do — so the room sets the lockup
+     on a pale plate (`bg-zinc-50`, the 50 stop below) inside the hero card,
+     and the check measures her ink against THAT. */
+  --fb-surface-50: 250 250 250;
+  --fb-surface-100: 241 243 245;
+  --fb-surface-200: 226 232 240;
+  --fb-surface-300: 203 210 220;
+  --fb-surface-400: 122 131 145;
+  --fb-surface-500: 140 149 163;
+  --fb-surface-600: 158 167 181;
+  --fb-surface-700: 48 58 76;
+  --fb-surface-800: 30 38 56;
+  --fb-surface-900: 18 22 31;
+  --fb-surface-950: 10 12 16;
 
-  --fb-page: 250 250 250;
-  --fb-ink: 24 30 37;
-  --fb-void: 217 219 222;
-  --fb-scrim: 228 229 231;
+  --fb-primary-50: 236 253 245;
+  --fb-primary-100: 209 250 229;
+  --fb-primary-200: 167 243 208;
+  --fb-primary-300: 110 231 183;
+  --fb-primary-400: 52 211 153;
+  --fb-primary-500: 16 185 129;
+  --fb-primary-600: 15 157 110;
+  --fb-primary-700: 4 120 87;
+  --fb-primary-800: 6 95 70;
+  --fb-primary-900: 6 78 59;
+  --fb-primary-950: 2 44 34;
+
+  --fb-page: 10 12 16;
+  --fb-ink: 226 232 240;
+  --fb-void: 10 12 16;
+  --fb-scrim: 10 12 16;
+  --fb-on-accent: 10 12 16;
 
   color: rgb(var(--fb-ink));
 }

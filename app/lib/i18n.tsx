@@ -6201,6 +6201,8 @@ export const STRINGS: Dict = {
   "spot.kidsName": { en: "Kids Dream Studio", af: "Kinder-Droomateljee" },
   "spot.kidsSub": { en: "An allowance a grown-up sets", af: "’n Toelaag wat ’n grootmens stel" },
   "spot.plays": { en: "plays", af: "luisters" },
+  "cubed.back": { en: "Back to FutureBox Studio", af: "Terug na FutureBox-ateljee" },
+  "cubed.seriesId": { en: "Series", af: "Reeks" },
   "repertoire.title": { en: "Song Style Repertoire", af: "Liedjiestyl-repertoire" },
   "repertoire.styles": { en: "Styles", af: "Style" },
   "repertoire.subtitle": { en: "Audition and pick from 64 curated musical styles and textures for your track.", af: "Luister en kies uit 64 saamgestelde musikale style en teksture vir jou liedjie." },
