@@ -2494,6 +2494,221 @@ export default function FutureBoxHome() {
     </div>
   ) : null;
 
+  /* ── The door's form, as a value ───────────────────────────────────────
+
+     Carli, 13 October 2026, with the welcome page Google drew: the sign-in
+     is a card in the hero, not a modal over it. This is the real form —
+     Supabase, the six-digit code, the forgotten-password letter, the kids
+     room door — and it is handed to `Landing` to draw inside that card.
+     Held as a value so nothing about signing in moved when the page did. */
+  const authForm = (
+    <>
+      {authError && (
+        <p className="text-sm text-rose-400 text-center leading-relaxed">{authError}</p>
+      )}
+      {authNotice && (
+        <p className="text-sm text-emerald-400 text-center leading-relaxed">{authNotice}</p>
+      )}
+      {verifying ? (
+        /* ── The six digits ────────────────────────────────────────
+           A new account is not signed in until the address is proved,
+           and the proof is typed here rather than clicked in a letter.
+
+           A link opens in whichever browser the mail app prefers,
+           which on a phone is routinely not the one the person signed
+           up in — so they come back to a session that is not theirs
+           and a screen still asking them to confirm. Six digits typed
+           into the window that is already open cannot land anywhere
+           else.
+
+           Signing in afterwards never sees this screen again: the
+           address is proved once and the password carries it from
+           then on. */
+        <form onSubmit={handleVerify} className="space-y-3">
+          <p className="text-sm text-zinc-400 leading-relaxed text-center">
+            {t('auth.codeSent', 'We sent a six-digit code to')}{' '}
+            <span className="text-white font-semibold break-all">{verifying}</span>
+          </p>
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="000000"
+            maxLength={7}
+            required
+            aria-label={t('auth.codeLabel', 'The code from the email')}
+            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-white placeholder-zinc-700 focus:outline-none focus:border-emerald-500"
+          />
+          <button
+            type="submit"
+            disabled={authBusy || code.replace(/[^0-9]/g, '').length < 6}
+            className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
+          >
+            {authBusy ? t('auth.working') : t('auth.verify', 'Confirm and go in')}
+          </button>
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => void handleResend()}
+              disabled={resendIn > 0}
+              className="text-sm text-emerald-400 hover:underline disabled:text-zinc-600 disabled:no-underline min-h-[32px]"
+            >
+              {resendIn > 0
+                ? `${t('auth.resendIn', 'Send it again in')} ${resendIn}s`
+                : t('auth.resend', 'Send it again')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setVerifying(null); setCode(''); setAuthError(null); }}
+              className="text-sm text-zinc-500 hover:text-zinc-300 min-h-[32px]"
+            >
+              {t('common.cancel', 'Cancel')}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <>
+      {/* The providers carry the same gate as the form under them.
+          Creating an account with Google is still creating an
+          account, and `needsAgreement` stops the redirect until the
+          box below is ticked — see `components/SignInWith.tsx`. */}
+      <SignInWith
+        onProblem={setAuthError}
+        needsAgreement={authMode === 'signup' && !agreed}
+        onAgreed={() => cloud.markAgreed()}
+      />
+      <form onSubmit={handleAuthSubmit} className="space-y-3">
+        <input
+          type="email"
+          value={authEmail}
+          onChange={(e) => setAuthEmail(e.target.value)}
+          placeholder={t('auth.emailHint', 'you@example.com')}
+          required
+          className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+        />
+        {/* No password on the way back in. The person asking is the
+            one who does not know it, and a box for it would be a
+            field nobody can fill. */}
+        {authMode !== 'forgot' && (
+          <PasswordField
+            value={authPassword}
+            onChange={setAuthPassword}
+            placeholder={t('home.password', 'Password')}
+            autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+            required
+            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+          />
+        )}
+        {authMode === 'forgot' && (
+          <p className="text-sm text-zinc-500 leading-relaxed">{t('auth.resetWhat')}</p>
+        )}
+        {authMode === 'signup' && <AgreeToTerms checked={agreed} onChange={setAgreed} />}
+        <button
+          type="submit"
+          disabled={authBusy || (authMode === 'signup' && !agreed)}
+          data-authgo={authMode}
+          className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
+        >
+          {authBusy
+            ? t('auth.working')
+            : authMode === 'signin'
+              ? t('common.signIn')
+              : authMode === 'forgot'
+                ? t('auth.resetSend')
+                : t('common.createAccount')}
+        </button>
+      </form>
+      {/* ── The way back in ──────────────────────────────────────
+          Under the form rather than beside the password box, because
+          somebody reaching for it has already failed to sign in and
+          is looking at the bottom of the screen. Drawn only on the
+          sign-in form: offering it while somebody is creating an
+          account is offering to recover an account that does not
+          exist yet. */}
+      {authMode === 'signin' && (
+        <p className="text-sm text-center">
+          <button
+            type="button"
+            onClick={() => openAuth('forgot')}
+            data-forgot
+            className="min-h-[44px] text-zinc-400 hover:text-emerald-300 hover:underline"
+          >
+            {t('auth.forgot')}
+          </button>
+        </p>
+      )}
+      <p className="text-sm text-zinc-500 text-center">
+        {authMode === 'signin' ? t('common.noAccount') : t('common.haveAccount')}{' '}
+        <button
+          onClick={() => openAuth(authMode === 'signin' ? 'signup' : 'signin')}
+          className="text-emerald-400 hover:underline"
+        >
+          {authMode === 'signin' ? t('landing.startFree') : t('common.signIn')}
+        </button>
+      </p>
+
+      {/* ── Into the kids room ───────────────────────────
+
+          Carli, 10 October 2026: *"Ek dink die kids afdeling moet by
+          login page wees. Daar moet dan die opsie wees om in die kids
+          channel in te log."*
+
+          Here, on the sign-in screen, because this is the screen a
+          child is looking at when they pick up the phone. Until today
+          the only way in was for a grown-up to open the studio, find
+          the account sheet and press a row in it — which is a grown-up
+          doing four things before a child can press one.
+
+          Separated by a rule and said as a question rather than
+          dressed as a third sign-in option, because it is not one: an
+          allowance belongs to an account, so a grown-up signs in once
+          and sets it, and after that this door is what the child
+          presses. `/kids` asks for a grown-up itself when nobody is
+          signed in, which is the honest answer rather than a door that
+          opens onto a failure.
+
+          An `<a>` and not a router push: it is a page of its own,
+          deliberately off the rail — the rail beside it is a shop, a
+          conversation with strangers and every paid door in the app,
+          which is what `check:kidsafe` measured. */}
+      <div className="border-t border-zinc-800 pt-4">
+        <a
+          href="/kids"
+          data-authkids
+          className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-sm font-bold text-zinc-200 hover:border-emerald-500/60 hover:text-white"
+        >
+          <Baby className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+          {t('auth.kids', 'Go to the kids room')}
+        </a>
+        <p className="pt-2 text-center text-xs leading-relaxed text-zinc-600">
+          {t(
+            'auth.kidsWhy',
+            'A grown-up sets an allowance and how long they may have it. When the time is up the room closes itself.',
+          )}
+        </p>
+      </div>
+        </>
+      )}
+      {!cloud.configured() && (
+        <p className="text-sm text-zinc-600 text-center leading-relaxed">
+          {t('common.localOnly')}
+        </p>
+      )}
+    </>
+  );
+
+  /* Where a press on the welcome page goes: the card in the hero, in the
+     mode that was asked for, scrolled into view. The modal is for the
+     signed-in app; out here the card is the door, so the flag that would
+     open the modal is left down. */
+  const toDoor = (mode: 'signin' | 'signup' | 'forgot'): void => {
+    openAuth(mode);
+    setAuthModalOpen(false);
+    document.getElementById('door')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   if (!user) {
     return (
       <>
@@ -2506,233 +2721,13 @@ export default function FutureBoxHome() {
         {inviteBanner}
         <LanguageSwitched />
         <Landing
-          onStart={() => openAuth('signup')}
+          onStart={() => toDoor('signup')}
+          onSignIn={() => toDoor('signin')}
           onGoogle={() => void handleGoogle()}
+          mode={authMode}
+          onMode={toDoor}
+          door={authForm}
         />
-
-        {/* The auth and pricing overlays are shared with the signed-in app. */}
-        {authModalOpen && (
-          <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
-            <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-                <h3 className="text-lg font-extrabold text-white">
-                  {authMode === 'signin' ? t('common.welcomeBack') : t('landing.startFree')}
-                </h3>
-                <button onClick={() => setAuthModalOpen(false)} className="text-zinc-500 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              {/* Above the form, not below it: for most people this is the
-                  whole sign-in, and burying it under two fields makes them
-                  invent a password they will have to reset. */}
-              {/* Whichever of Google, Apple and Facebook the project actually
-                  has switched on. Drawn from `/auth/v1/settings` rather than
-                  hard-coded, so a button never sends somebody out to a consent
-                  screen that refuses them — see `components/SignInWith.tsx`. */}
-              {/* What went wrong, and what went right, above the branch.
-
-                  These sat inside the sign-in half, so the code screen — the
-                  one place a person is most likely to get something wrong —
-                  refused a wrong code in complete silence. Found by a probe
-                  asking whether anything at all was said, rather than whether
-                  the right words were: the message a project sends back is
-                  its own, it changes between versions, and it is translated. */}
-              {authError && (
-                <p className="text-sm text-rose-400 text-center leading-relaxed">{authError}</p>
-              )}
-              {authNotice && (
-                <p className="text-sm text-emerald-400 text-center leading-relaxed">{authNotice}</p>
-              )}
-              {verifying ? (
-                /* ── The six digits ────────────────────────────────────────
-                   A new account is not signed in until the address is proved,
-                   and the proof is typed here rather than clicked in a letter.
-
-                   A link opens in whichever browser the mail app prefers,
-                   which on a phone is routinely not the one the person signed
-                   up in — so they come back to a session that is not theirs
-                   and a screen still asking them to confirm. Six digits typed
-                   into the window that is already open cannot land anywhere
-                   else.
-
-                   Signing in afterwards never sees this screen again: the
-                   address is proved once and the password carries it from
-                   then on. */
-                <form onSubmit={handleVerify} className="space-y-3">
-                  <p className="text-sm text-zinc-400 leading-relaxed text-center">
-                    {t('auth.codeSent', 'We sent a six-digit code to')}{' '}
-                    <span className="text-white font-semibold break-all">{verifying}</span>
-                  </p>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="000000"
-                    maxLength={7}
-                    required
-                    aria-label={t('auth.codeLabel', 'The code from the email')}
-                    className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-white placeholder-zinc-700 focus:outline-none focus:border-emerald-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={authBusy || code.replace(/[^0-9]/g, '').length < 6}
-                    className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
-                  >
-                    {authBusy ? t('auth.working') : t('auth.verify', 'Confirm and go in')}
-                  </button>
-                  <div className="flex items-center justify-between gap-3 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => void handleResend()}
-                      disabled={resendIn > 0}
-                      className="text-sm text-emerald-400 hover:underline disabled:text-zinc-600 disabled:no-underline min-h-[32px]"
-                    >
-                      {resendIn > 0
-                        ? `${t('auth.resendIn', 'Send it again in')} ${resendIn}s`
-                        : t('auth.resend', 'Send it again')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setVerifying(null); setCode(''); setAuthError(null); }}
-                      className="text-sm text-zinc-500 hover:text-zinc-300 min-h-[32px]"
-                    >
-                      {t('common.cancel', 'Cancel')}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <>
-              {/* The providers carry the same gate as the form under them.
-                  Creating an account with Google is still creating an
-                  account, and `needsAgreement` stops the redirect until the
-                  box below is ticked — see `components/SignInWith.tsx`. */}
-              <SignInWith
-                onProblem={setAuthError}
-                needsAgreement={authMode === 'signup' && !agreed}
-                onAgreed={() => cloud.markAgreed()}
-              />
-              <form onSubmit={handleAuthSubmit} className="space-y-3">
-                <input
-                  type="email"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder={t('auth.emailHint', 'you@example.com')}
-                  required
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
-                />
-                {/* No password on the way back in. The person asking is the
-                    one who does not know it, and a box for it would be a
-                    field nobody can fill. */}
-                {authMode !== 'forgot' && (
-                  <PasswordField
-                    value={authPassword}
-                    onChange={setAuthPassword}
-                    placeholder={t('home.password', 'Password')}
-                    autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
-                    required
-                    className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
-                  />
-                )}
-                {authMode === 'forgot' && (
-                  <p className="text-sm text-zinc-500 leading-relaxed">{t('auth.resetWhat')}</p>
-                )}
-                {authMode === 'signup' && <AgreeToTerms checked={agreed} onChange={setAgreed} />}
-                <button
-                  type="submit"
-                  disabled={authBusy || (authMode === 'signup' && !agreed)}
-                  data-authgo={authMode}
-                  className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-60"
-                >
-                  {authBusy
-                    ? t('auth.working')
-                    : authMode === 'signin'
-                      ? t('common.signIn')
-                      : authMode === 'forgot'
-                        ? t('auth.resetSend')
-                        : t('common.createAccount')}
-                </button>
-              </form>
-              {/* ── The way back in ──────────────────────────────────────
-                  Under the form rather than beside the password box, because
-                  somebody reaching for it has already failed to sign in and
-                  is looking at the bottom of the screen. Drawn only on the
-                  sign-in form: offering it while somebody is creating an
-                  account is offering to recover an account that does not
-                  exist yet. */}
-              {authMode === 'signin' && (
-                <p className="text-sm text-center">
-                  <button
-                    type="button"
-                    onClick={() => openAuth('forgot')}
-                    data-forgot
-                    className="min-h-[44px] text-zinc-400 hover:text-emerald-300 hover:underline"
-                  >
-                    {t('auth.forgot')}
-                  </button>
-                </p>
-              )}
-              <p className="text-sm text-zinc-500 text-center">
-                {authMode === 'signin' ? t('common.noAccount') : t('common.haveAccount')}{' '}
-                <button
-                  onClick={() => openAuth(authMode === 'signin' ? 'signup' : 'signin')}
-                  className="text-emerald-400 hover:underline"
-                >
-                  {authMode === 'signin' ? t('landing.startFree') : t('common.signIn')}
-                </button>
-              </p>
-
-              {/* ── Into the kids room ───────────────────────────
-
-                  Carli, 10 October 2026: *"Ek dink die kids afdeling moet by
-                  login page wees. Daar moet dan die opsie wees om in die kids
-                  channel in te log."*
-
-                  Here, on the sign-in screen, because this is the screen a
-                  child is looking at when they pick up the phone. Until today
-                  the only way in was for a grown-up to open the studio, find
-                  the account sheet and press a row in it — which is a grown-up
-                  doing four things before a child can press one.
-
-                  Separated by a rule and said as a question rather than
-                  dressed as a third sign-in option, because it is not one: an
-                  allowance belongs to an account, so a grown-up signs in once
-                  and sets it, and after that this door is what the child
-                  presses. `/kids` asks for a grown-up itself when nobody is
-                  signed in, which is the honest answer rather than a door that
-                  opens onto a failure.
-
-                  An `<a>` and not a router push: it is a page of its own,
-                  deliberately off the rail — the rail beside it is a shop, a
-                  conversation with strangers and every paid door in the app,
-                  which is what `check:kidsafe` measured. */}
-              <div className="border-t border-zinc-800 pt-4">
-                <a
-                  href="/kids"
-                  data-authkids
-                  className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-sm font-bold text-zinc-200 hover:border-emerald-500/60 hover:text-white"
-                >
-                  <Baby className="h-4 w-4 flex-shrink-0 text-emerald-400" />
-                  {t('auth.kids', 'Go to the kids room')}
-                </a>
-                <p className="pt-2 text-center text-xs leading-relaxed text-zinc-600">
-                  {t(
-                    'auth.kidsWhy',
-                    'A grown-up sets an allowance and how long they may have it. When the time is up the room closes itself.',
-                  )}
-                </p>
-              </div>
-                </>
-              )}
-              {!cloud.configured() && (
-                <p className="text-sm text-zinc-600 text-center leading-relaxed">
-                  {t('common.localOnly')}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
 
         {themeOpen && <ThemeStudio theme={theme} setTheme={setTheme} onClose={() => setThemeOpen(false)} />}
       </>

@@ -11,5 +11,14 @@ import React from 'react';
 import Landing from '../components/Landing';
 
 export default function P(): React.ReactElement {
-  return <Landing onStart={() => {}} onGoogle={() => {}} />;
+  return (
+    <Landing
+      onStart={() => {}}
+      onSignIn={() => {}}
+      onGoogle={() => {}}
+      mode="signin"
+      onMode={() => {}}
+      door={<p className="text-sm text-zinc-400">door</p>}
+    />
+  );
 }
