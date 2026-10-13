@@ -29,7 +29,9 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen, Paintbrush } from 'lucide-react';
+import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen, Paintbrush, Music, Film, Zap } from 'lucide-react';
+import { loadTracks } from '../lib/library';
+import { loadMakes } from '../lib/makes';
 import RecordingName from './RecordingName';
 import Connections from './Connections';
 import DeleteAccount from './DeleteAccount';
@@ -80,6 +82,8 @@ export default function Account({
   const [asked, setAsked] = useState(false);
   const [taste, setTaste] = useState<Taste>(NO_TASTE);
   const [forgetting, setForgetting] = useState(false);
+  /** What is on this device, counted for the vault card: songs, and videos from any room. */
+  const [made, setMade] = useState({ songs: 0, videos: 0 });
 
   useEffect(() => {
     if (!open) return;
@@ -91,6 +95,10 @@ export default function Account({
     });
     void loadTaste().then((got) => {
       if (live) setTaste(got);
+    });
+    setMade({
+      songs: loadTracks().length,
+      videos: loadMakes().filter((one) => one.kind === 'video' || one.kind === 'clip').length,
     });
     return () => {
       live = false;
@@ -124,26 +132,91 @@ export default function Account({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-2xl my-auto rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-7 space-y-5">
-        {/* ── Who ────────────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-onAccent font-black flex items-center justify-center text-lg flex-shrink-0">
-              {(name ?? email ?? '?').charAt(0).toUpperCase()}
+      <div className="w-full max-w-4xl my-auto rounded-3xl border border-white/10 bg-zinc-950 p-5 sm:p-7 space-y-5" data-accountsheet>
+        {/* ── Google's profile page, 13 October 2026 ──────────────────
+            The banner: who, with the plan as a badge, and the credit wallet
+            as a gauge beside it. Under it the modules: what is on this
+            device, the plan in full, and where else you are. The page's
+            API-keys module and its storage gauge are not here: keys never
+            go on a screen, and nothing here measures gigabytes. */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-950 p-5" data-accountbanner>
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="h-20 w-20 shrink-0 rounded-2xl bg-gradient-to-tr from-emerald-500 via-cyan-500 to-violet-600 p-1 shadow-xl">
+                <div className="flex h-full w-full items-center justify-center rounded-xl bg-zinc-950 text-3xl font-black text-white">
+                  {(name ?? email ?? '?').charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-2xl font-black text-white leading-tight truncate">
+                    {name || t('account.title', 'Your account')}
+                  </p>
+                  <span className="rounded-full border border-emerald-500/40 bg-emerald-500/20 px-3 py-0.5 text-xs font-extrabold text-emerald-300">
+                    {spec.name}{plan !== 'free' && ` · ${price.display}/${t('account.mo', 'mo')}`}
+                  </span>
+                </div>
+                {handle && <p className="mt-1 font-mono text-xs text-emerald-300 truncate">{handle}</p>}
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-zinc-400 truncate">
+                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                  {email || '—'}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-lg font-black text-white leading-tight truncate">
-                {name || t('account.title', 'Your account')}
+        {/* ── What is left in the wallet ─────────────────────────────────── */}
+        <section className="rounded-xl border border-emerald-500/30 bg-zinc-900/80 p-4 space-y-2 lg:w-80 shrink-0" data-accountwallet>
+          <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-emerald-400" />
+            {t('account.credits', 'Credits')}
+          </p>
+          {/* Held blank rather than shown as zero until the answer arrives: a
+              real balance flashing as nothing is how somebody decides the app
+              has lost their money. */}
+          {/* And the three ways there is no number are three different
+              sentences. `wallet.ts` keeps them apart on purpose — a request
+              that never arrived used to look exactly like a working free
+              account — so this screen keeps them apart too. */}
+          {!asked ? (
+            <p className="text-2xl font-black text-white tabular-nums">&nbsp;</p>
+          ) : wallet.failed ? (
+            <p className="text-sm text-amber-400 leading-snug">
+              {t(
+                'account.creditsUnreachable',
+                'Your balance could not be fetched just now. Nothing has been spent — try again in a moment.',
+              )}
+            </p>
+          ) : !wallet.metered ? (
+            <Note>{t('account.creditsOff', 'This app has no accounts set up, so nothing is counted.')}</Note>
+          ) : (
+            <>
+              <p className="text-2xl font-black text-white tabular-nums">
+                {wallet.balance} <span className="text-xs font-bold text-emerald-300">{t('account.creditsWord', 'credits')}</span>
               </p>
-              {/* The address they signed up with, which is the thing somebody
-                  opening this screen most often wants to check. */}
-              <p className="text-sm text-zinc-400 truncate flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                {email || '—'}
-              </p>
-              {handle && <p className="text-sm text-emerald-400 truncate">{handle}</p>}
-            </div>
+              {wallet.monthly > 0 && (
+                <>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full border border-white/10 bg-black">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-violet-500"
+                      style={{ width: `${Math.max(0, Math.min(100, Math.round((wallet.balance / wallet.monthly) * 100)))}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-zinc-500 tabular-nums">
+                    {wallet.monthly} {t('account.creditsMonthly', 'a month on this plan')} · {Math.max(0, Math.min(100, Math.round((wallet.balance / wallet.monthly) * 100)))}%
+                  </p>
+                </>
+              )}
+            </>
+          )}
+          <Note>{t(
+              'account.creditsNote',
+              'What a generation costs is said on the button before you press it. Credits from your plan land each month; anything you buy on top does not expire.',
+            )}</Note>
+        </section>
+
           </div>
+        </div>
+        <div className="flex justify-end -mt-2">
           <button
             type="button"
             onClick={onClose}
@@ -154,29 +227,45 @@ export default function Account({
           </button>
         </div>
 
-        {/* ── The name your work goes out under ──────────────────────────
-
-            On this screen because this is where somebody looks for their own
-            name, and it is the same component the channel carries. The name in
-            the corner of the app used to be a fragment of a sign-up email with
-            nowhere to change it; the one on their releases was somewhere else
-            entirely. Both are this. */}
-        <RecordingName onSaved={(row) => onNamed?.(row)} compact />
-
-        {/* ── Where else you are ─────────────────────────────────────────
-
-            "ek dink binne iemand se profile moet al die connection buttons
-             wees."
-
-            They were inside the Collab Radar, behind a panel about how
-            matches are computed. That is a fine place to be reminded a handle
-            makes a link work and a strange place for the only screen in the
-            app where somebody says who they are elsewhere. Directly under the
-            name their work goes out under, which is the thing it is about. */}
-        <Connections />
-
+        {/* ── The modules ─────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <section className="rounded-2xl border border-white/10 bg-zinc-900/60 p-4 flex flex-col justify-between gap-3" data-accountvault>
+            <div>
+              <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-emerald-300">
+                <span>{t('account.vault', 'My productions')}</span>
+                <span className="font-mono text-zinc-500">{t('account.vaultWord', 'VAULT')}</span>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-zinc-950/60 p-3">
+                  <div>
+                    <p className="text-xs font-bold text-white">{t('account.songs', 'Songs')}</p>
+                    <p className="font-mono text-lg font-black text-emerald-300">{made.songs}</p>
+                  </div>
+                  <Music className="w-5 h-5 text-emerald-300" />
+                </div>
+                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-zinc-950/60 p-3">
+                  <div>
+                    <p className="text-xs font-bold text-white">{t('account.videos', 'Videos and clips')}</p>
+                    <p className="font-mono text-lg font-black text-cyan-300">{made.videos}</p>
+                  </div>
+                  <Film className="w-5 h-5 text-cyan-300" />
+                </div>
+                <p className="text-[11px] text-zinc-500">{t('account.vaultNote', 'Counted on this device. The channel holds them.')}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onGoToChannel();
+              }}
+              className="min-h-[44px] w-full rounded-xl border border-white/10 bg-zinc-800/40 text-xs font-bold text-zinc-300 hover:text-white"
+            >
+              {t('account.viewVault', 'View the vault →')}
+            </button>
+          </section>
         {/* ── The plan ───────────────────────────────────────────────────── */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
+          <section className="rounded-2xl border border-white/10 bg-zinc-900/60 p-4 space-y-3 md:col-span-2 lg:col-span-2" data-accountplan>
           <div className="flex items-baseline justify-between gap-3 flex-wrap">
             <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-400" />
@@ -222,48 +311,31 @@ export default function Account({
           </button>
         </section>
 
+        </div>
+
+        {/* ── The name your work goes out under ──────────────────────────
+
+            On this screen because this is where somebody looks for their own
+            name, and it is the same component the channel carries. The name in
+            the corner of the app used to be a fragment of a sign-up email with
+            nowhere to change it; the one on their releases was somewhere else
+            entirely. Both are this. */}
+        <RecordingName onSaved={(row) => onNamed?.(row)} compact />
+
+        {/* ── Where else you are ─────────────────────────────────────────
+
+            "ek dink binne iemand se profile moet al die connection buttons
+             wees."
+
+            They were inside the Collab Radar, behind a panel about how
+            matches are computed. That is a fine place to be reminded a handle
+            makes a link work and a strange place for the only screen in the
+            app where somebody says who they are elsewhere. Directly under the
+            name their work goes out under, which is the thing it is about. */}
+        <Connections />
+
         {/* ── A second lock, for the people who want one ─────────────────── */}
         <Authenticators />
-
-        {/* ── What is left in the wallet ─────────────────────────────────── */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
-          <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-emerald-400" />
-            {t('account.credits', 'Credits')}
-          </p>
-          {/* Held blank rather than shown as zero until the answer arrives: a
-              real balance flashing as nothing is how somebody decides the app
-              has lost their money. */}
-          {/* And the three ways there is no number are three different
-              sentences. `wallet.ts` keeps them apart on purpose — a request
-              that never arrived used to look exactly like a working free
-              account — so this screen keeps them apart too. */}
-          {!asked ? (
-            <p className="text-2xl font-black text-white tabular-nums">&nbsp;</p>
-          ) : wallet.failed ? (
-            <p className="text-sm text-amber-400 leading-snug">
-              {t(
-                'account.creditsUnreachable',
-                'Your balance could not be fetched just now. Nothing has been spent — try again in a moment.',
-              )}
-            </p>
-          ) : !wallet.metered ? (
-            <Note>{t('account.creditsOff', 'This app has no accounts set up, so nothing is counted.')}</Note>
-          ) : (
-            <>
-              <p className="text-2xl font-black text-white tabular-nums">{wallet.balance}</p>
-              {wallet.monthly > 0 && (
-                <p className="text-sm text-zinc-500 tabular-nums">
-                  {wallet.monthly} {t('account.creditsMonthly', 'a month on this plan')}
-                </p>
-              )}
-            </>
-          )}
-          <Note>{t(
-              'account.creditsNote',
-              'What a generation costs is said on the button before you press it. Credits from your plan land each month; anything you buy on top does not expire.',
-            )}</Note>
-        </section>
 
         {/* ── What the app has noticed, and a way to make it stop ────────── */}
         {taste.ready && (
