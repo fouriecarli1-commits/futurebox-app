@@ -18,7 +18,7 @@ const VOICES: VoiceState = {
   tier: 'studio',
   caps: { voices: 3, speakChars: 6000, speakPerDay: 60, clean: true, publish: true },
   mine: [{ id: 'v-anre', name: 'Anre (mine)' }],
-  stock: [{ id: 'v-carli', name: 'Carli (stock)' }],
+  stock: [{ id: 'v-carli', name: 'Stem 2 (stock)' }],
 };
 
 export default function HostsCheck() {

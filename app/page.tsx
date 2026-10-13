@@ -1496,8 +1496,8 @@ export default function FutureBoxHome() {
     'All Categories',
     'Future of AI & Superintelligence',
     'Tech & Venture Masterclasses',
-    'Creative AI Video & Cinema (Sora, Runway)',
-    'Neural AI Music & Songs (Suno, Udio)',
+    'Creative AI Video & Cinema Studio',
+    'Neural AI Music & Song Studio',
     'Frontier Business Blueprints & Vibe Coding'
   ];
 
@@ -1566,7 +1566,7 @@ export default function FutureBoxHome() {
       },
       {
         id: 'pod-2',
-        title: 'Sam Altman: OpenAI, GPT-5, Sora & The Future of AGI',
+        title: 'Sam Altman: OpenAI, GPT-5, Video Generation & The Future of AGI',
         host: 'Lex Fridman Podcast #419',
         guest: 'Sam Altman (OpenAI)',
         duration: '2h 08m',

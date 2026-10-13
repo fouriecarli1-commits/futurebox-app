@@ -162,6 +162,9 @@ import {
 import {
   JOINS, JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
 } from '../lib/videojoins';
+import { studioAudio } from '../lib/demoaudio';
+import { createTemplateVideoBlob } from '../lib/templatevideo';
+
 
 /**
  * One row of the bill, in words.
@@ -3685,7 +3688,7 @@ async function smallerFrame(url: string): Promise<string> {
                 </div>
 
                 {/* Centered 9:16 Video Player Monitor */}
-                <div className="relative mx-auto w-full max-w-[340px] sm:max-w-[380px] aspect-[9/16] rounded-2xl overflow-hidden border border-emerald-500/30 bg-black shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+                <div className="relative mx-auto w-auto max-h-[35vh] sm:max-h-[45vh] aspect-[9/16] rounded-2xl overflow-hidden border border-emerald-500/30 bg-black shadow-[0_0_30px_rgba(0,0,0,0.8)]">
                   {/* Concert Singer Live Image */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -3698,8 +3701,8 @@ async function smallerFrame(url: string): Promise<string> {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
                   {/* Photo 1 Live Subtitle Overlay */}
-                  <div className="absolute inset-x-0 bottom-16 flex flex-col items-center justify-center pointer-events-none px-4 text-center select-none">
-                    <span className={`text-2xl sm:text-3xl font-black uppercase tracking-wider drop-shadow-[0_0_14px_rgba(52,211,153,0.9)] transition-all ${
+                  <div className="absolute inset-x-0 bottom-12 sm:bottom-16 flex flex-col items-center justify-center pointer-events-none px-3 text-center select-none">
+                    <span className={`text-base sm:text-2xl font-black uppercase tracking-wider drop-shadow-[0_0_14px_rgba(52,211,153,0.9)] transition-all ${
                       subStyle === 'Amber' ? 'text-amber-300 drop-shadow-[0_0_14px_rgba(245,158,11,0.9)]'
                       : subStyle === 'Model' ? 'text-fuchsia-300 drop-shadow-[0_0_14px_rgba(217,70,239,0.9)]'
                       : subStyle === 'Clean' ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
@@ -3707,7 +3710,7 @@ async function smallerFrame(url: string): Promise<string> {
                     }`}>
                       FEEL THE
                     </span>
-                    <span className={`text-3xl sm:text-4xl font-black uppercase tracking-wider flex items-center gap-2 drop-shadow-[0_0_18px_rgba(217,70,239,0.9)] transition-all ${
+                    <span className={`text-lg sm:text-3xl font-black uppercase tracking-wider flex items-center gap-1 sm:gap-2 drop-shadow-[0_0_18px_rgba(217,70,239,0.9)] transition-all ${
                       subStyle === 'Amber' ? 'text-amber-400 drop-shadow-[0_0_18px_rgba(245,158,11,0.9)]'
                       : subStyle === 'Model' ? 'text-pink-400 drop-shadow-[0_0_18px_rgba(244,114,182,0.9)]'
                       : subStyle === 'Clean' ? 'text-zinc-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
@@ -7597,26 +7600,64 @@ async function smallerFrame(url: string): Promise<string> {
       {showStudioTemplatesModal && (
         <StudioTemplatesModal
           onClose={() => setShowStudioTemplatesModal(false)}
-          onSelectTemplate={(tpl: StudioTemplateItem) => {
-            commit((was) => ({
-              ...was,
-              title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
-              shape: tpl.width > tpl.height ? 'wide' : tpl.height > tpl.width ? 'tall' : 'square',
-            }));
-            if (tpl.isVideo) {
-              const prompt = tpl.id === 'tpl_village_video'
-                ? (lang === 'af' ? 'Kinematiese 4K hommeltuig-skoot van ’n pragtige vallei en bergdorpie, sagte sonlig, ultra-helder' : 'Cinematic 4K drone shot of a scenic valley mountain village, golden hour light, ultra-detailed')
-                : tpl.id === 'tpl_nature_video'
-                ? (lang === 'af' ? 'Diep dennewoud met mis en sagte sonstrale tussen hoë bome deur, 4K film' : 'Deep evergreen pine forest with gentle mist and sunbeams breaking through high canopies, 4K film')
-                : tpl.id === 'tpl_cyber_video'
-                ? (lang === 'af' ? 'Futuristiese kuberstad-nagvlug met neon ligte en glinsterende wolkekrabbers, 4K film' : 'Futuristic cyberpunk night flight with neon light trails and towering skyscrapers, 4K film')
-                : tpl.id === 'tpl_workout_reel'
-                ? (lang === 'af' ? 'Dinamiese hoë-energie fiksheidsoefening met vinnige kamerabeweging en lewendige beligting' : 'High-energy athletic workout with rapid cinematic camera pans and intense neon gym lighting')
-                : (lang === 'af' ? 'Reisavontuur deur Kaapstad se strate en kuse, lewendige kleure, 4K' : 'Travel exploration through scenic Cape Town coastal roads and vibrant culture, 4K cinematic');
-              setShotWords(prompt);
+          onSelectTemplate={async (tpl: StudioTemplateItem) => {
+            studioAudio.playAudioEffect('success');
+            setShowStudioTemplatesModal(false);
+
+            const prompt = tpl.id === 'tpl_village_video'
+              ? (lang === 'af' ? 'Kinematiese 4K hommeltuig-skoot van ’n pragtige vallei en bergdorpie, sagte sonlig, ultra-helder' : 'Cinematic 4K drone shot of a scenic valley mountain village, golden hour light, ultra-detailed')
+              : tpl.id === 'tpl_nature_video'
+              ? (lang === 'af' ? 'Diep dennewoud met mis en sagte sonstrale tussen hoë bome deur, 4K film' : 'Deep evergreen pine forest with gentle mist and sunbeams breaking through high canopies, 4K film')
+              : tpl.id === 'tpl_cyber_video'
+              ? (lang === 'af' ? 'Futuristiese kuberstad-nagvlug met neon ligte en glinsterende wolkekrabbers, 4K film' : 'Futuristic cyberpunk night flight with neon light trails and towering skyscrapers, 4K film')
+              : tpl.id === 'tpl_workout_reel'
+              ? (lang === 'af' ? 'Dinamiese hoë-energie fiksheidsoefening met vinnige kamerabeweging en lewendige beligting' : 'High-energy athletic workout with rapid cinematic camera pans and intense neon gym lighting')
+              : (lang === 'af' ? 'Reisavontuur deur Kaapstad se strate en kuse, lewendige kleure, 4K' : 'Travel exploration through scenic Cape Town coastal roads and vibrant culture, 4K cinematic');
+            setShotWords(prompt);
+
+            const shape = tpl.width > tpl.height ? 'wide' : tpl.height > tpl.width ? 'tall' : 'square';
+            const headline = tpl.sampleHeadline || (lang === 'af' ? tpl.nameAf : tpl.nameEn);
+
+            try {
+              const videoBlob = await createTemplateVideoBlob(tpl, 4);
+              const pieceId = makeId('videoedit');
+              const starterPiece: Piece = {
+                id: pieceId,
+                clip: videoBlob,
+                name: lang === 'af' ? tpl.nameAf : tpl.nameEn,
+                came: 'made',
+                from: 0,
+                to: 4,
+                holds: 4,
+                shot: { width: tpl.width, height: tpl.height },
+                words: headline,
+                wordsFont: 'poster',
+                wordsInk: '#ffffff',
+                wordsBox: 'round',
+                wordsAt: { x: 0.5, y: 0.5 },
+                wordsSize: 0.055,
+                look: 'clean',
+                sound: false,
+              };
+
+              commit((was) => {
+                const updated = add(was, starterPiece);
+                return {
+                  ...updated,
+                  title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
+                  shape,
+                };
+              });
+              setPicked(pieceId);
+              setBench('words');
+            } catch {
+              commit((was) => ({
+                ...was,
+                title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
+                shape,
+              }));
               setBench('folder');
             }
-            setShowStudioTemplatesModal(false);
           }}
         />
       )}

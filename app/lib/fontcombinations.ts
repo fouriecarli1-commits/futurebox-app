@@ -416,8 +416,8 @@ export const FONT_COMBINATIONS: readonly FontComboPreset[] = [
     words: [
       {
         textKey: 'combo.signatureHead',
-        defaultEn: 'Carli Fourie Signature',
-        defaultAf: 'Carli Fourie Handtekening',
+        defaultEn: 'FutureBox Signature',
+        defaultAf: 'FutureBox Handtekening',
         face: 'hand',
         spot: 'middle',
         ink: '#c4b5fd',

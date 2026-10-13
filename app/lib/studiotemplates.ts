@@ -804,7 +804,7 @@ export const STARTER_TEMPLATES: readonly StudioTemplateItem[] = [
     width: 1050,
     height: 600,
     ratioLabel: '3.5:2',
-    sampleHeadline: 'CARLI FOURIE',
+    sampleHeadline: 'FUTUREBOX STUDIO',
     sampleSubtext: 'FOUNDER & CHIEF CREATIVE OFFICER',
     previewSvg: encodeSvg(`
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 600">

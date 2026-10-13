@@ -6,14 +6,14 @@
  * Fully liberated modern studio experience:
  * - High-tech cyber-emerald and deep onyx aesthetic
  * - 4 Interactive Pro Studio Suite showcase cards (VideoEditor NLE, ProBooth DAW,
- *   Lyria 3 / Suno Music Lab, and Kids Adventure Studio)
+ *   Neurale Musiek & Rym Lab, and Kids Adventure Studio)
  * - Live interactive waveform equalizer audio demo bar
  * - The 8 distinctive superpowers in a glowing visual matrix
  * - Direct doors into song generation, voice recording, podcasts, radar, and themes
  * - Full audit compliance: data-spotlightblog, href="/blog", onOpenLive, Charts & Insights
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Check,
   BookOpen,
@@ -43,6 +43,7 @@ import HereNow from './HereNow';
 import LanguagePicker from './LanguagePicker';
 import Charts from './Charts';
 import FutureInsightsHub from './FutureInsightsHub';
+import { studioAudio } from '../lib/demoaudio';
 
 export default function Spotlight({
   onGo,
@@ -60,6 +61,18 @@ export default function Spotlight({
 }): React.ReactElement {
   const { lang, t } = useLang();
   const [isPlayingDemo, setIsPlayingDemo] = useState(false);
+
+  useEffect(() => {
+    return studioAudio.subscribe(setIsPlayingDemo);
+  }, []);
+
+  const toggleDemoAudio = () => {
+    if (isPlayingDemo) {
+      studioAudio.stopStudioDemoTrack();
+    } else {
+      studioAudio.playStudioDemoTrack();
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -163,7 +176,7 @@ export default function Spotlight({
               <div className="flex items-center gap-3.5">
                 <button
                   type="button"
-                  onClick={() => setIsPlayingDemo((prev) => !prev)}
+                  onClick={toggleDemoAudio}
                   className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all hover:bg-emerald-400 hover:scale-105 active:scale-95"
                   title={isPlayingDemo ? 'Pouseer demonstrasie' : 'Speel voorbeeld'}
                 >
@@ -177,10 +190,10 @@ export default function Spotlight({
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
                   </div>
                   <h4 className="text-sm font-bold text-white sm:text-base">
-                    Carli Fourie &amp; FutureBox — &quot;Feel The Vibe&quot; (Afrikaans Master)
+                    FutureBox Studio — &quot;Feel The Vibe&quot; (Afrikaans Master)
                   </h4>
                   <p className="text-xs text-zinc-400">
-                    Stereo 48kHz • 124 BPM • Toonsoort F-Majoor • Lyria 3 &amp; Suno Engine
+                    Stereo 48kHz • 124 BPM • Toonsoort F-Majoor • FutureBox Neurale Klank Enjin
                   </p>
                 </div>
               </div>
@@ -299,7 +312,7 @@ export default function Spotlight({
                 </div>
               </div>
 
-              {/* Suite 3: Lyria 3 & Suno Musiekateljee */}
+              {/* Suite 3: Neurale Musiekateljee */}
               <div
                 onClick={() => onGo('make')}
                 role="button"
@@ -317,7 +330,7 @@ export default function Spotlight({
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-amber-400">KI Musiek</span>
                       <h4 className="text-base font-black text-white group-hover:text-amber-300 transition-colors">
-                        Lyria 3 &amp; Suno Ateljee
+                        Neurale Musiek &amp; Rym Ateljee
                       </h4>
                     </div>
                   </div>
@@ -333,7 +346,7 @@ export default function Spotlight({
                 <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
                   <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                    <span>Lyria 3 • Suno • Afrikaanse Rym</span>
+                    <span>FutureBox • Afrikaanse Rym • Studio Master</span>
                   </div>
                   <span className="text-xs font-bold text-amber-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     {lang === 'af' ? 'Skep Liedjie' : 'Create Track'} →

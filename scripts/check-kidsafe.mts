@@ -69,7 +69,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir)) {
-    const full = join(dir, name);
+    const full = join(dir, name).replace(/\\/g, '/');
     if (statSync(full).isDirectory()) walk(full, out);
     else if (/\.(ts|tsx)$/.test(full)) out.push(full);
   }
@@ -94,7 +94,7 @@ ok('the routes that spend credits can be read off the code',
   + ' not finding them rather than that the app got cheaper');
 
 /* ── 2. Which room can reach one ────────────────────────────────────── */
-const page = code.get(join(ROOT, 'page.tsx')) ?? '';
+const page = code.get('app/page.tsx') ?? code.get(join(ROOT, 'page.tsx')) ?? '';
 const rooms = new Map<string, Set<string>>();
 for (const m of page.matchAll(/studioTab === '([a-z_]+)' &&\s*(?:\(\s*)?[\s\S]{0,400}?<([A-Z][A-Za-z0-9]*)/g)) {
   const list = rooms.get(m[1]) ?? new Set<string>();
@@ -146,7 +146,7 @@ const reaches = (file: string | undefined, seen = new Set<string>()): string[] =
     || src.includes(`"${one}`) || src.includes(`\`${one}`));
   const hits = onlyAsks(src) ? [] : named;
   for (const m of src.matchAll(/from\s+'(\.[^']+)'/g)) {
-    const base = join(file, '..', m[1]);
+    const base = join(file, '..', m[1]).replace(/\\/g, '/');
     for (const ext of ['.tsx', '.ts']) {
       if (code.has(base + ext)) { hits.push(...reaches(base + ext, seen)); break; }
     }
