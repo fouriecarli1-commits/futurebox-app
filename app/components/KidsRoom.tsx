@@ -101,7 +101,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Bell, BookOpen, Cake, Cat, CloudRain, Disc, Dog, Film, Guitar, Heart, Laugh,
   Loader2, Mic, Moon, Music, Palette, Radio, Rocket, ShieldCheck,
-  Smile, Sparkles, Square, Sun, Volume2, Waves, X,
+  Settings, Smile, Sparkles, Square, Sun, Volume2, Waves, X,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import KidsDoor from './KidsDoor';
@@ -120,6 +120,14 @@ import KidsArcade from './KidsArcade';
 import { beatEngine } from '../lib/kidsbeat';
 import { confetti } from '../lib/kidsconfetti';
 import { PIP_ASKS, pipLine, sayAloud, type PipAsk } from '../lib/kidspip';
+import KidsSleep from './KidsSleep';
+import KidsGallery from './KidsGallery';
+import KidsDrawBoard from './KidsDrawBoard';
+import KidsQuiz from './KidsQuiz';
+import { BADGES, levelOf, towardNext, type Counts } from '../lib/kidslevel';
+import { allSongs } from '../lib/songkeep';
+import { allStories } from '../lib/storykeep';
+import { allPieces } from '../lib/kidsgallery';
 /** A picture a child can tell apart at a glance, per choice. */
 const FACES: Record<string, React.ReactNode> = {
   dog: <Dog className="h-7 w-7" />,
@@ -180,16 +188,62 @@ function recogniser(): Recogniser | null {
 /** Expressive playful avatars for the mascot. */
 const MASCOT_ICONS = ['👾', '🦄', '🌟', '🎸', '🐶', '🚀'] as const;
 
-type Tab = 'music' | 'video' | 'story' | 'games' | 'tv';
+type Tab = 'home' | 'music' | 'video' | 'story' | 'games' | 'draw' | 'quiz' | 'tv' | 'gallery' | 'badges';
 
-/** The five doors, in the order Google's page had them. */
-const TABS: readonly { readonly id: Tab; readonly icon: string; readonly says: readonly [string, string] }[] = [
-  { id: 'music', icon: '🎵', says: ['kids.tabMusic', 'Music Maker'] },
-  { id: 'video', icon: '🎬', says: ['kids.tabVideo', 'Video Studio'] },
-  { id: 'story', icon: '📖', says: ['kids.tabStory', 'Story Maker'] },
-  { id: 'games', icon: '🎮', says: ['kids.tabArcade', 'Arcade Fun'] },
-  { id: 'tv', icon: '📺', says: ['kids.tabTv', 'FutureBox TV'] },
+/**
+ * ── The six doors, 13 October 2026 ──────────────────────────────────────
+ *
+ * Carli, with a second page Google drew and the room's photograph: *"Ek wil
+ * hê jy moet 'n nuwe kids kamer maak wat meer futureristic is… ek wil hê jy
+ * moet direk die foto gebruik wat ek jou gee as agtergrond, en dan die
+ * funksies wat daarop moet kom."*
+ *
+ * The page has six glass doors on the photograph and four buttons along the
+ * foot. The doors here are those, in that order, and each line under a door
+ * names a thing the room behind it really does — the page's lines were the
+ * brief, and a line is kept only once the thing exists. `check:kinderkleur`
+ * holds the older rule the same way: nothing in here pretends.
+ */
+interface Door {
+  readonly id: Tab;
+  readonly icon: string;
+  readonly says: readonly [string, string];
+  readonly lines: readonly (readonly [string, string])[];
+}
+
+const DOORS: readonly Door[] = [
+  { id: 'music', icon: '🎵', says: ['kids.doorMusic', 'Create Music!'], lines: [
+    ['kids.doorMusic1', 'Press the bubbles, or type or say your own idea'],
+    ['kids.doorMusic2', 'A real song, and a beat machine to bang on'],
+  ] },
+  { id: 'video', icon: '🎬', says: ['kids.doorVideo', 'Music Videos & Stories!'], lines: [
+    ['kids.doorVideo1', 'A video of your song, on your own stage'],
+    ['kids.doorVideo2', 'Build a story page by page, with pictures'],
+  ] },
+  { id: 'draw', icon: '🎨', says: ['kids.doorDraw', 'Magic Drawing Board!'], lines: [
+    ['kids.doorDraw1', 'Draw with your finger, ten crayons'],
+    ['kids.doorDraw2', 'Keep it on your gallery wall'],
+  ] },
+  { id: 'games', icon: '🎹', says: ['kids.doorGames', 'Studio Games & Beats!'], lines: [
+    ['kids.doorGames1', 'Catch the gems, pop the bubbles'],
+    ['kids.doorGames2', 'Make a beat with eight squares'],
+  ] },
+  { id: 'quiz', icon: '🧠', says: ['kids.doorQuiz', 'Mega Quizzes & Skills!'], lines: [
+    ['kids.doorQuiz1', 'Would you rather?'],
+    ['kids.doorQuiz2', 'Music, story, video and picture questions'],
+  ] },
 ];
+
+/** The four buttons along the foot of the page. */
+const FOOT: readonly { readonly id: Tab; readonly icon: string; readonly says: readonly [string, string] }[] = [
+  { id: 'home', icon: '🏠', says: ['kids.tabHome', 'Home'] },
+  { id: 'tv', icon: '📁', says: ['kids.tabProjects', 'My Projects'] },
+  { id: 'gallery', icon: '🖼️', says: ['kids.tabGallery', 'Gallery'] },
+  { id: 'badges', icon: '🏆', says: ['kids.tabBadges', 'Achievements'] },
+];
+
+/** Which door an inner screen belongs to, for the title above it. */
+const DOOR_OF: Partial<Record<Tab, Tab>> = { story: 'video' };
 
 const STARS_KEY = 'futurebox.kids.stars.v1';
 
@@ -289,7 +343,11 @@ export default function KidsRoom(): React.ReactElement {
    */
   const [words, setWords] = useState('');
   /* The five doors across the top of Google's page, and which is open. */
-  const [tab, setTab] = useState<Tab>('music');
+  const [tab, setTab] = useState<Tab>('home');
+  /* The gallery wall looks again when something is kept on it. */
+  const [wallAgain, setWallAgain] = useState(0);
+  /* What the shelves hold, for the badges. Counted when the door opens. */
+  const [counts, setCounts] = useState<Counts | null>(null);
   /* Inside Music Maker: the real song, or the free beat machine. The real
      one first, because it is the thing the room exists for. */
   const [music, setMusic] = useState<'song' | 'beat'>('song');
@@ -367,6 +425,16 @@ export default function KidsRoom(): React.ReactElement {
   const held = useRef<string>('');
 
   useEffect(() => { void kidsNow().then(setState); }, []);
+
+  useEffect(() => {
+    if (tab !== 'badges') return undefined;
+    let live = true;
+    void Promise.all([allSongs().catch(() => []), allStories().catch(() => []), allPieces().catch(() => [])])
+      .then(([songs, stories, pieces]) => {
+        if (live) setCounts({ stars, songs: songs.length, stories: stories.length, pieces: pieces.length });
+      });
+    return () => { live = false; };
+  }, [tab, stars, wallAgain, shelfAgain]);
 
   /**
    * ── The clock, counted down here and owned by the server ─────────
@@ -670,66 +738,77 @@ export default function KidsRoom(): React.ReactElement {
   );
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5 p-3 text-ink sm:p-5" data-kidsroom>
-      {/* ── 1. The top of Google's page: the name, the stars, Pip, five doors ── */}
-      <header className="rounded-3xl border-b-4 border-cyan-400/40 bg-surface-50/90 px-4 py-3 shadow-lg backdrop-blur-md">
+    <div className="mx-auto w-full max-w-5xl space-y-5 p-3 pb-28 text-ink sm:p-5 sm:pb-28" data-kidsroom>
+      {/* ── 1. The top of the page: Pip and the level, the name, the grown-up ── */}
+      <header className="rounded-3xl border-2 border-cyan-400/50 bg-surface-50/85 px-4 py-3 shadow-[0_0_30px_rgba(52,211,153,0.25)] backdrop-blur-md">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <span
-              className="fb-kids-float relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border-2 border-cyan-200 text-3xl text-onAccent shadow-lg"
-              style={{ background: 'linear-gradient(45deg, #10b981, #2dd4bf, #fde047)' }}
-              aria-hidden
-            >
-              📦
-              <span className="absolute -right-1 -top-1 text-xs">✨</span>
-            </span>
-            <div className="min-w-0">
-              <h1 className="fb-kids-bubble text-xl font-bold leading-tight text-surface-900 sm:text-2xl" data-kidsdreamtitle>
-                {t('kids.dreamTitle', 'FutureBox Kids Dream Studio')}
-              </h1>
-              <p className="truncate text-xs font-medium text-surface-700">
-                {t('kids.dreamSub', 'Sparky the Dragon & Pip the Sprite’s Creative Kingdom')}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div data-kidsstars className="flex items-center gap-2 rounded-2xl border-2 border-cyan-400/50 bg-surface-100/90 px-3 py-1.5 shadow-inner">
-              <span className="text-lg" data-kidsspin aria-hidden>⭐</span>
-              <span className="text-lg font-bold text-amber-300" data-kidsstarcount>{stars}</span>
-              <span className="hidden text-xs text-surface-700 md:inline">{t('kids.starSparks', 'Star Sparks')}</span>
-            </div>
+          <div className="flex items-center gap-3">
             <button
               type="button"
               data-kidspip
               onClick={() => { setPip(true); spark(1); }}
-              className="fb-kids-bouncy flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-amber-100 px-3.5 font-bold text-onAccent"
-              style={{ background: 'linear-gradient(90deg, #facc15, #6ee7b7)' }}
+              aria-label={t('kids.askPip', 'Ask Pip!')}
+              title={t('kids.askPip', 'Ask Pip!')}
+              className="fb-kids-float relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border-2 border-cyan-300 bg-surface-100 text-3xl shadow-[0_0_18px_rgba(52,211,153,0.6)]"
             >
-              <span className="text-xl" aria-hidden>🧚</span>
-              <span className="fb-kids-bubble hidden text-sm sm:inline">{t('kids.askPip', 'Ask Pip!')}</span>
+              <span aria-hidden>🤖</span>
             </button>
+            {/* The level is the stars, in steps — `lib/kidslevel.ts`. */}
+            <div data-kidslevel={levelOf(stars)} className="rounded-2xl border-2 border-cyan-400/50 bg-surface-100/90 px-3 py-1.5 shadow-inner">
+              <div data-kidsstars className="flex items-center gap-2 text-sm font-black text-amber-300">
+                <span data-kidsspin aria-hidden>⭐</span>
+                <span>{t('kids.level', 'Level')} {levelOf(stars)}</span>
+                <span className="text-xs font-bold text-surface-700">
+                  <span data-kidsstarcount>{stars}</span> {t('kids.starSparks', 'Star Sparks')}
+                </span>
+              </div>
+              <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-surface-200" aria-hidden>
+                <div className="h-full rounded-full bg-amber-300 transition-all" style={{ width: `${Math.round(towardNext(stars) * 100)}%` }} />
+              </div>
+            </div>
           </div>
+          <div className="min-w-0 text-center" aria-label={t('kids.dreamTitle', 'FutureBox Kids Dream Studio')}>
+            <h1 data-kidsdreamtitle className="text-xl font-black tracking-wider text-surface-950 sm:text-2xl">
+              FUTURE<span className="text-cyan-300">BOX</span>
+            </h1>
+            <p className="fb-kids-bubble text-sm">
+              <span className="text-amber-300">{t('kids.dreamKids', 'KIDS DREAM')}</span>{' '}
+              <span className="text-cyan-300">{t('kids.dreamStudio', 'STUDIO')}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAtDoor(true)}
+            data-kidsgrownup
+            aria-label={t('kids.grownUp', 'Grown-up')}
+            title={t('kids.grownUp', 'Grown-up')}
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2 border-cyan-400/50 bg-surface-100/90 text-cyan-300"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
         </div>
-        <nav className="mt-3 flex flex-wrap items-center gap-2" data-kidstabs aria-label={t('kids.dreamTitle', 'FutureBox Kids Dream Studio')}>
-          {TABS.map((one) => (
-            <button
-              key={one.id}
-              type="button"
-              data-kidstab={one.id}
-              aria-pressed={tab === one.id}
-              onClick={() => setTab(one.id)}
-              className={`flex min-h-[44px] items-center gap-2 rounded-2xl px-3.5 text-sm font-bold transition-colors sm:px-4 sm:text-base ${
-                tab === one.id
-                  ? 'bg-cyan-400 text-onAccent shadow-md'
-                  : 'bg-surface-200/80 text-surface-800 hover:bg-surface-300'
-              }`}
-            >
-              <span aria-hidden>{one.icon}</span>
-              <span>{t(one.says[0], one.says[1])}</span>
-            </button>
-          ))}
-        </nav>
       </header>
+
+      {/* ── Inside a door: the way home, and which door this is ─────────── */}
+      {tab !== 'home' && (
+        <div className="flex items-center gap-3" data-kidsinside={tab}>
+          <button
+            type="button"
+            data-kidshome
+            onClick={() => setTab('home')}
+            className="flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-cyan-400/50 bg-surface-50/85 px-4 text-sm font-black text-surface-900 backdrop-blur-md"
+          >
+            <span aria-hidden>🏠</span> {t('kids.tabHome', 'Home')}
+          </button>
+          <h2 className="fb-kids-bubble min-w-0 truncate text-lg text-surface-900">
+            {(() => {
+              const door = DOORS.find((one) => one.id === (DOOR_OF[tab] ?? tab));
+              const foot = FOOT.find((one) => one.id === tab);
+              return door ? `${door.icon} ${t(door.says[0], door.says[1])}` : foot ? `${foot.icon} ${t(foot.says[0], foot.says[1])}` : '';
+            })()}
+          </h2>
+        </div>
+      )}
 
       {/* ── 2. What is left in songs & clock, calm for the parent ─────────── */}
       <div
@@ -812,6 +891,33 @@ export default function KidsRoom(): React.ReactElement {
               <span aria-hidden>🔊</span> {t('kids.pipRead', 'Read it to me')}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── 2b. Home: the six doors on the photograph ─────────────────── */}
+      {tab === 'home' && (
+        <div className="flex flex-wrap justify-center gap-4" data-kidsdoors>
+          {DOORS.map((door) => (
+            <button
+              key={door.id}
+              type="button"
+              data-kidstab={door.id}
+              data-kidsroomdoor={door.id}
+              onClick={() => setTab(door.id)}
+              className="group flex min-h-[210px] w-full flex-col items-center justify-end rounded-3xl sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.7rem)] border-2 border-cyan-400/70 bg-surface-50/80 p-5 text-center shadow-[0_0_30px_rgba(52,211,153,0.3)] backdrop-blur-md transition-transform hover:scale-[1.02]"
+            >
+              <span className="fb-kids-float mb-3 text-6xl drop-shadow-[0_0_14px_rgba(52,211,153,0.8)]" aria-hidden>{door.icon}</span>
+              <span className="fb-kids-bubble text-2xl text-surface-950">{t(door.says[0], door.says[1])}</span>
+              <ul className="mt-2 space-y-1 text-xs font-bold text-surface-800">
+                {door.lines.map((line) => (
+                  <li key={line[0]} className="flex items-center justify-center gap-1.5">
+                    <span className="inline-block h-2.5 w-5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" aria-hidden />
+                    {t(line[0], line[1])}
+                  </li>
+                ))}
+              </ul>
+            </button>
+          ))}
         </div>
       )}
 
@@ -1079,6 +1185,18 @@ export default function KidsRoom(): React.ReactElement {
       )}
 
       {/* ── 4. Video Studio: the stage, and the real video on it ─────────── */}
+      {(tab === 'video' || tab === 'story') && (
+        <div className="flex flex-wrap gap-2" data-kidsvideomode>
+          <button type="button" aria-pressed={tab === 'video'} onClick={() => setTab('video')}
+            className={`fb-kids-bouncy flex min-h-[44px] items-center gap-2 rounded-2xl px-4 text-sm font-bold ${tab === 'video' ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200/80 text-surface-800'}`}>
+            <span aria-hidden>🎬</span> {t('kids.subVideo', 'Music video')}
+          </button>
+          <button type="button" aria-pressed={tab === 'story'} onClick={() => setTab('story')}
+            className={`fb-kids-bouncy flex min-h-[44px] items-center gap-2 rounded-2xl px-4 text-sm font-bold ${tab === 'story' ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200/80 text-surface-800'}`}>
+            <span aria-hidden>📖</span> {t('kids.tabStory', 'Story Maker')}
+          </button>
+        </div>
+      )}
       {tab === 'video' && (
         <>
           <KidsStage caption={caption} onSpark={spark}>
@@ -1165,7 +1283,7 @@ export default function KidsRoom(): React.ReactElement {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="fb-kids-bubble flex items-center gap-2 text-xl font-bold text-surface-900 sm:text-2xl">
-                <span aria-hidden>📺</span> {t('kids.tabTv', 'FutureBox TV')}
+                <span aria-hidden>📁</span> {t('kids.tabProjects', 'My Projects')}
               </h2>
               <p className="text-xs text-surface-700">
                 {t('kids.tvWhy', 'Everything you kept, ready to play again. It uses no credits.')}
@@ -1194,6 +1312,9 @@ export default function KidsRoom(): React.ReactElement {
                 {t('kids.mySongs', 'My songs')}
               </h3>
               <SongShelf again={shelfAgain} />
+              {/* Carli, 13 October 2026: "'n playlist funksie sodat kinders
+                  letterlik aan die slaap kan raak op hulle playlist." */}
+              <KidsSleep again={shelfAgain} onSpark={spark} />
             </div>
           )}
 
@@ -1207,6 +1328,88 @@ export default function KidsRoom(): React.ReactElement {
           )}
         </div>
       )}
+
+      {/* ── 8. The Magic Drawing Board ────────────────────────────────── */}
+      {tab === 'draw' && (
+        <KidsDrawBoard onSpark={spark} onKept={() => { setWallAgain((n) => n + 1); confetti(60); }} />
+      )}
+
+      {/* ── 9. Mega Quizzes ───────────────────────────────────────────── */}
+      {tab === 'quiz' && <KidsQuiz onSpark={spark} />}
+
+      {/* ── 10. The gallery wall ──────────────────────────────────────── */}
+      {tab === 'gallery' && (
+        <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-sm sm:p-6" data-kidsgallerywall>
+          <p className="text-xs text-surface-700">
+            {t('kids.galleryWhy', 'Your drawings and pictures, on your own wall. Looking uses no credits.')}
+          </p>
+          <KidsGallery again={wallAgain} />
+        </div>
+      )}
+
+      {/* ── 11. Achievements: badges counted off the real shelves ─────── */}
+      {tab === 'badges' && (
+        <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-sm sm:p-6" data-kidsbadges>
+          <p className="text-xs text-surface-700">
+            {t('kids.badgesWhy', 'Every badge is counted off what you really made and kept.')}
+          </p>
+          {counts === null ? (
+            <p className="flex items-center gap-2 text-sm text-surface-700">
+              <Loader2 className="h-4 w-4 animate-spin" /> {t('songshelf.looking', 'Looking…')}
+            </p>
+          ) : (
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {BADGES.map((badge) => {
+                const got = badge.earned(counts);
+                return (
+                  <li
+                    key={badge.id}
+                    data-kidsbadge={badge.id}
+                    data-kidsbadgegot={got ? 'yes' : 'no'}
+                    className={`flex flex-col items-center gap-1.5 rounded-3xl border-2 p-4 text-center ${
+                      got ? 'border-amber-300 bg-amber-300/15 shadow-[0_0_20px_rgba(253,224,71,0.35)]' : 'border-surface-200 bg-surface-100/60 opacity-70'
+                    }`}
+                  >
+                    <span className={`text-4xl ${got ? 'fb-kids-float' : 'grayscale'}`} aria-hidden>{badge.icon}</span>
+                    <span className="fb-kids-bubble text-sm text-surface-900">{t(badge.says[0], badge.says[1])}</span>
+                    <span className="text-[11px] font-semibold text-surface-700">
+                      {got ? t('kids.badgeGot', 'Earned!') : t(badge.how[0], badge.how[1])}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* ── The four buttons along the foot, as Google's page had them ──── */}
+      <nav
+        data-kidstabs
+        aria-label={t('kids.dreamTitle', 'FutureBox Kids Dream Studio')}
+        className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-cyan-400/50 bg-surface-50/95 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] backdrop-blur-md"
+      >
+        <div className="mx-auto flex max-w-5xl items-stretch justify-around px-2 py-1.5">
+          {FOOT.map((one) => {
+            const on = one.id === 'home' ? !FOOT.some((f) => f.id === tab && f.id !== 'home') : tab === one.id;
+            return (
+              <button
+                key={one.id}
+                type="button"
+                data-kidstab={one.id}
+                aria-pressed={on}
+                onClick={() => setTab(one.id)}
+                className={`flex min-h-[56px] min-w-[72px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-[11px] font-black ${
+                  on ? 'bg-cyan-400/20 text-cyan-300' : 'text-surface-800'
+                }`}
+              >
+                <span className="text-2xl" aria-hidden>{one.icon}</span>
+                <span>{t(one.says[0], one.says[1])}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

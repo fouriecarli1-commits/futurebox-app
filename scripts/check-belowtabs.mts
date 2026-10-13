@@ -85,6 +85,10 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
     why: 'a page of its own with no tab bar; the fixed layer is Pip’s modal over the kids page',
     holds: (s) => /data-kidsroom/.test(s) && !/<TabBar/.test(s),
   },
+  'app/components/KidsSleep.tsx': {
+    why: 'the sleep playlist’s dark screen over the kids page, which has no tab bar; a tap brings the room back',
+    holds: (s) => /data-kidsdim/.test(s) && !/<TabBar/.test(s),
+  },
   'app/components/Landing.tsx': {
     why: 'the signed-out front door; the fixed layer is the ambient background, pointer-events-none',
     holds: (s) => /pointer-events-none fixed inset-0 z-0/.test(s) && !/<TabBar/.test(s),
@@ -209,6 +213,7 @@ const KNOWN: readonly string[] = [
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
   'app/components/KidsRoom.tsx',
+  'app/components/KidsSleep.tsx',
   'app/components/Landing.tsx',
   'app/components/OutOfCredits.tsx',
   /* The post studio, 6 October 2026. Written down rather than counted, so

@@ -605,7 +605,19 @@ body:has([data-kidsroom]) {
    to read past. */
 body:has([data-kidsroom]) {
   background-color: #022c22;
-  background-image: radial-gradient(circle at 50% 15%, #065f46 0%, #064e3b 45%, #022c22 100%);
+  /* ── Her photograph, 13 October 2026 ──────────────────────────────────
+     Carli: "ek wil hê jy moet direk die foto gebruik wat ek jou gee as
+     agtergrond, en dan die funksies wat daarop moet kom." The room she had
+     drawn — green lightning, a city through the window, two children at a
+     console — is the ground now, under a green-black wash so the glass
+     panels on it stay readable (audit/contrast.mjs walks this page). The
+     radial wash is the fallback for the moment before the picture lands. */
+  background-image:
+    linear-gradient(180deg, rgba(2, 44, 34, 0.55) 0%, rgba(2, 30, 24, 0.7) 60%, rgba(1, 18, 14, 0.9) 100%),
+    url('/kids/room.jpg'),
+    radial-gradient(circle at 50% 15%, #065f46 0%, #064e3b 45%, #022c22 100%);
+  background-size: cover, cover, cover;
+  background-position: center top, center top, center;
   background-attachment: fixed;
 }
 
