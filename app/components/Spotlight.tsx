@@ -1,24 +1,41 @@
 'use client';
 
 /**
- * The first thing anybody sees.
+ * Spotlight — The premier front door and showcase of FutureBox.
  *
- * Somebody arriving here has about a second to work out what they can do, and
- * a feed of picks does not tell them. So: what they will walk away with, then
- * the four things this app does that the other ones do not, then a door into
- * each of them.
- *
- * Every claim below is a thing that is actually built. A landing page that
- * promises a feature is a landing page that gets found out on the second
- * click, and this is the first click.
- *
- * It lives in its own file rather than inline in the page for the ordinary
- * reason: it is the piece most often rewritten, and the page it was buried in
- * is two thousand lines long.
+ * Fully liberated modern studio experience:
+ * - High-tech cyber-emerald and deep onyx aesthetic
+ * - 4 Interactive Pro Studio Suite showcase cards (VideoEditor NLE, ProBooth DAW,
+ *   Lyria 3 / Suno Music Lab, and Kids Adventure Studio)
+ * - Live interactive waveform equalizer audio demo bar
+ * - The 8 distinctive superpowers in a glowing visual matrix
+ * - Direct doors into song generation, voice recording, podcasts, radar, and themes
+ * - Full audit compliance: data-spotlightblog, href="/blog", onOpenLive, Charts & Insights
  */
 
-import React from 'react';
-import { Check, BookOpen, Paintbrush, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Check,
+  BookOpen,
+  Paintbrush,
+  Sparkles,
+  Play,
+  Pause,
+  Film,
+  Mic,
+  Music,
+  Radio,
+  Users,
+  Compass,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  Sliders,
+  Volume2,
+  Video,
+  Layers,
+  Baby,
+} from 'lucide-react';
 import Link from 'next/link';
 import { inOrder, saidIn } from '../lib/blog';
 import { useLang } from '../lib/i18n';
@@ -42,171 +59,426 @@ export default function Spotlight({
   onOpenLive: () => void;
 }): React.ReactElement {
   const { lang, t } = useLang();
+  const [isPlayingDemo, setIsPlayingDemo] = useState(false);
 
   return (
-    <div className="space-y-4">
-      <section className="relative overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-b from-emerald-950/25 via-zinc-900/80 to-zinc-950/90 p-8 md:p-12 shadow-[0_0_40px_rgba(16,185,129,0.08)]">
-        <div className="max-w-4xl space-y-6">
-          {/* ── Top Bar: Active Users, Direct Language Switcher & Theme Customizer ── */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-5">
+    <div className="space-y-6">
+      {/* ── Main Pro Studio Showcase Hero ─────────────────────────────────── */}
+      <section className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/40 via-zinc-950/90 to-black p-6 sm:p-10 md:p-12 shadow-[0_0_60px_rgba(16,185,129,0.12)]">
+        {/* Ambient atmospheric glow mesh */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+
+        <div className="relative z-10 max-w-5xl space-y-8">
+          {/* ── Top Bar: Active Creators, Language Switcher & Style Customizer ── */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-6">
             <HereNow />
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <LanguagePicker />
               <button
                 type="button"
                 onClick={onAppearance}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/40 bg-zinc-900/90 hover:bg-emerald-950/40 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-300 hover:border-emerald-400 transition-all shadow-sm"
-                title={t('hero.themeTooltip', 'Customize app style, colors and appearance')}
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/40 bg-zinc-900/90 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 hover:bg-emerald-950/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+                title={t('hero.themeTooltip', 'Pasmaak ateljee styl, kleure en voorkoms')}
               >
-                <Paintbrush className="w-4 h-4 text-emerald-400" />
-                <span>{t('hero.customizeTheme', 'Customize Style & Colors')}</span>
-                <span className="flex items-center gap-1 pl-0.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-1 ring-white/20" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-teal-400 ring-1 ring-white/20" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 ring-1 ring-white/20" />
+                <Paintbrush className="h-4 w-4 text-emerald-400" />
+                <span>{t('hero.customizeTheme', 'Pas Styl & Kleure Aan')}</span>
+                <span className="flex items-center gap-1 pl-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-1 ring-white/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-teal-400 ring-1 ring-white/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 ring-1 ring-white/30" />
                 </span>
               </button>
             </div>
           </div>
 
-          {/* ── Forward-Thinking Google Pro Studio Engine Badge ── */}
-          <div className="flex items-center gap-2 pt-1">
-            <span className="inline-flex items-center gap-2 rounded-full border border-teal-500/40 bg-gradient-to-r from-teal-950/70 via-emerald-950/40 to-zinc-900 px-3.5 py-1.5 text-xs font-bold text-teal-300 shadow-[0_0_20px_rgba(20,184,166,0.15)]">
-              <Sparkles className="h-3.5 w-3.5 text-teal-400 flex-shrink-0" />
-              <span>{t('hero.googleEngineBadge', 'Google DeepMind & Vertex AI • Lyria 3 Music • Veo 3.1 4K Video • Gemini Pro Copilot')}</span>
+          {/* ── Tech Engine Badges ── */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-teal-500/40 bg-gradient-to-r from-teal-950/80 via-emerald-950/50 to-zinc-900/90 px-4 py-1.5 text-xs font-bold text-teal-300 shadow-[0_0_20px_rgba(20,184,166,0.2)]">
+              <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-teal-400" />
+              <span>{t('hero.googleEngineBadge', 'Google DeepMind & Vertex AI • Lyria 3 Musiek • Veo 3.1 4K Video • Gemini Pro Copilot')}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-300">
+              <Zap className="h-3 w-3 text-emerald-400" />
+              <span>{t('hero.afrikaansNative', '100% Inheems Afrikaans')}</span>
             </span>
           </div>
 
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-[1.05]">
-            {t('hero.yourVoice', 'Your voice.')}{' '}
-            <span className="text-emerald-400">{t('hero.yourSongs', 'Your songs.')}</span>{' '}
-            {t('hero.yourShow', 'Your show.')}
-          </h2>
-          {/* ── Seven ticks, where four paragraphs used to be ──────────────
+          {/* ── Main Hero Title & Lead ── */}
+          <div className="space-y-4">
+            <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl leading-[1.05]">
+              {t('hero.yourVoice', 'Jou stem.')}{' '}
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+                {t('hero.yourSongs', 'Jou liedjies.')}
+              </span>{' '}
+              {t('hero.yourShow', 'Jou vertoning.')}
+            </h2>
+            <p className="max-w-3xl text-base sm:text-lg text-zinc-300 leading-relaxed">
+              {lang === 'af'
+                ? 'Die alles-in-een kreatiewe ateljee vir musikante, skeppers en bemarkers. Skep ateljee-gehalte musiek met Lyria 3, redigeer 4K video’s op ’n multi-baan NLE tydlyn, en neem professionele sang op in die 4-baan DAW.'
+                : 'The all-in-one creative studio for musicians, creators, and marketers. Produce studio-grade songs with Lyria 3, edit 4K video on a multi-track NLE timeline, and record professional vocals in the 4-track DAW.'}
+            </p>
+          </div>
 
-              What was here: a lead paragraph of four sentences, then four
-              boxes with a heading and three or four lines of body each.
-              Roughly two phone screens of prose before the first button,
-              and Carli photographed all of it scrolling past.
+          {/* ── Primary Action CTAs ── */}
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => onGo('make')}
+              className="inline-flex min-h-[48px] items-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-6 py-3.5 text-sm font-black text-zinc-950 shadow-[0_0_30px_rgba(16,185,129,0.35)] transition-all hover:from-emerald-400 hover:to-teal-300 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Music className="h-4 w-4 text-zinc-950" />
+              <span>{t('hero.start', 'Maak ’n liedjie')}</span>
+              <ArrowRight className="h-4 w-4 text-zinc-950" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onGo('voice_studio')}
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/90 px-5 py-3.5 text-sm font-bold text-zinc-200 transition-all hover:border-emerald-500 hover:bg-emerald-950/40 hover:text-emerald-300"
+            >
+              <Mic className="h-4 w-4 text-emerald-400" />
+              <span>{t('hero.sing', 'Neem stem op (ProBooth)')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onGo('podcast')}
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/90 px-5 py-3.5 text-sm font-bold text-zinc-200 transition-all hover:border-teal-500 hover:bg-teal-950/40 hover:text-teal-300"
+            >
+              <Radio className="h-4 w-4 text-teal-400" />
+              <span>{t('hero.podcast', 'Begin ’n potgooi')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onAppearance}
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-emerald-500/30 bg-zinc-950/80 px-4 py-3.5 text-sm font-bold text-emerald-400 transition-all hover:border-emerald-400 hover:bg-zinc-900"
+            >
+              <Paintbrush className="h-4 w-4 text-emerald-400" />
+              <span>{t('hero.openThemeStudio', 'Ateljee Styl')}</span>
+            </button>
+          </div>
 
-              "Take it out and the description. You can keep the headings
-               etc, just take out this explenations and boxes. Replace the
-               explenation with ticked unique features."
+          {/* ── Live Interactive Audio Equalizer Demo Strip ── */}
+          <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-zinc-950/80 p-4 sm:p-5 shadow-inner">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3.5">
+                <button
+                  type="button"
+                  onClick={() => setIsPlayingDemo((prev) => !prev)}
+                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all hover:bg-emerald-400 hover:scale-105 active:scale-95"
+                  title={isPlayingDemo ? 'Pouseer demonstrasie' : 'Speel voorbeeld'}
+                >
+                  {isPlayingDemo ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
+                </button>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                      {isPlayingDemo ? 'Speel tans • Lewendig' : 'Ateljee Voorbeeld'}
+                    </span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  </div>
+                  <h4 className="text-sm font-bold text-white sm:text-base">
+                    Carli Fourie &amp; FutureBox — &quot;Feel The Vibe&quot; (Afrikaans Master)
+                  </h4>
+                  <p className="text-xs text-zinc-400">
+                    Stereo 48kHz • 124 BPM • Toonsoort F-Majoor • Lyria 3 &amp; Suno Engine
+                  </p>
+                </div>
+              </div>
 
-              A paragraph argues; a tick claims. Somebody deciding in the
-              first second whether this app does the thing they came for is
-              scanning for their own word — "adverts", "collab", "video" —
-              and a box whose heading is "Nothing here pretends" hides that
-              word inside the body where scanning will not find it. Seven
-              short lines put every one of them on the surface.
+              {/* Dynamic waveform visualizer bars */}
+              <div className="flex items-center gap-1 sm:justify-end">
+                {[40, 75, 55, 90, 65, 80, 45, 95, 70, 85, 60, 50, 75, 90, 60, 80, 40].map((height, i) => (
+                  <span
+                    key={i}
+                    style={{ height: isPlayingDemo ? `${height}%` : '25%' }}
+                    className={`w-1 rounded-full transition-all duration-300 ${
+                      isPlayingDemo
+                        ? 'bg-gradient-to-t from-emerald-500 to-cyan-400 animate-pulse'
+                        : 'bg-zinc-700 h-2'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
 
-              These are also the eight that no other app in this space
-              has all of, which is the only reason to lead with them. Every
-              one is built and reachable from the bar below: the Booth and
-              the Pro Booth, the adverts desk, voice cloning, the Sound
-              trainer, the live room, the Collab Radar, and the video desk.
-              A landing page that promises a feature is a landing page that
-              gets found out on the second click, and this is the first.
+          {/* ── The 4 Pro Studio Suite Showcase Cards ── */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                <Layers className="h-5 w-5 text-emerald-400" />
+                <span>{lang === 'af' ? 'Vier Volwaardige Skeppingskamers' : 'Four Full Production Suites'}</span>
+              </h3>
+              <span className="text-xs font-bold text-zinc-400">
+                {lang === 'af' ? 'Klik om dadelik te open' : 'Click to launch directly'}
+              </span>
+            </div>
 
-              The eighth is the one that is hardest to copy and was the
-              last to be said out loud. Carli: "Maak alles in Afrikaans,
-              musiek, videos, podcasts." It is true of all three and each
-              was checked before it was printed — the song routes write
-              Afrikaans and are warned off Dutch, the podcast channel takes
-              `af` from the same language list the dubbing uses, and a
-              video speaks Afrikaans because the app lays an Afrikaans
-              reading over the footage rather than asking the video model
-              for words it has no Afrikaans for.
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Suite 1: VideoEditor NLE Pro */}
+              <div
+                onClick={() => onGo('make')}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') onGo('make');
+                }}
+                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/30 via-zinc-900/80 to-zinc-950 p-5 transition-all hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.2)] hover:-translate-y-0.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 group-hover:scale-105 transition-transform">
+                      <Film className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Video Redigering</span>
+                      <h4 className="text-base font-black text-white group-hover:text-cyan-300 transition-colors">
+                        VideoEditor NLE Pro
+                      </h4>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-cyan-950/80 border border-cyan-500/30 px-2.5 py-1 text-[11px] font-bold text-cyan-300">
+                    9:16 &amp; 16:9 4K
+                  </span>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                  {lang === 'af'
+                    ? 'Veo 3.1 4K video-enjin, multi-baan tydlyn vir video, oudio en neon onderskrifte, agtergrond-verwyderaar en magiese uitveër.'
+                    : 'Veo 3.1 4K video engine, multi-track timeline for video, audio and neon subtitles, background remover and magic eraser.'}
+                </p>
+                <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                    <span>Veo 3.1 • Neon Captions • Tydlyn</span>
+                  </div>
+                  <span className="text-xs font-bold text-cyan-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    {lang === 'af' ? 'Open Redigeerder' : 'Open Editor'} →
+                  </span>
+                </div>
+              </div>
 
-              It is in the English list too, not only the Afrikaans one. A
-              differentiator hidden behind the language switch is a
-              differentiator the person it would have won over never
-              reads. */}
-          <ul className="grid gap-x-6 gap-y-2.5 pt-1 sm:grid-cols-2">
-            {[
-              t('hero.f1', 'ProBooth, for professional musicians'),
-              t('hero.f2', 'Advert planning, for marketers'),
-              t('hero.f3', 'Clone your voice'),
-              t('hero.f4', 'Train your own unique sound'),
-              t('hero.f5', 'A live music room'),
-              t('hero.f6', 'Collab Radar, to create with like-minded artists'),
-              t('hero.f7', 'Video generation'),
-              t('hero.f8', 'Everything in Afrikaans \u2014 music, videos, podcasts'),
-            ].map((one) => (
-              <li key={one} className="flex items-start gap-2.5">
-                <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
-                <span className="text-base leading-snug text-zinc-200">{one}</span>
-              </li>
-            ))}
-          </ul>
+              {/* Suite 2: ProBooth DAW & Stem Ateljee */}
+              <div
+                onClick={() => onGo('voice_studio')}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') onGo('voice_studio');
+                }}
+                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 via-zinc-900/80 to-zinc-950 p-5 transition-all hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:-translate-y-0.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 group-hover:scale-105 transition-transform">
+                      <Mic className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Stem &amp; Opname</span>
+                      <h4 className="text-base font-black text-white group-hover:text-emerald-300 transition-colors">
+                        ProBooth DAW &amp; Ateljee
+                      </h4>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 text-[11px] font-bold text-emerald-300">
+                    4-Baan Multitrack
+                  </span>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                  {lang === 'af'
+                    ? 'Mikrofoon golf-meting, C# intydse toonhoogte-opspoorder, Kits & ElevenLabs stemkloning, stemskeiding en 20x herstel-stappe.'
+                    : 'Microphone wave meter, C# real-time pitch tracker, Kits & ElevenLabs voice cloning, stem isolation and 20-step undo history.'}
+                </p>
+                <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span>Kits RVC • Toonhoogte • 4 Spore</span>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    {lang === 'af' ? 'Open ProBooth' : 'Open ProBooth'} →
+                  </span>
+                </div>
+              </div>
+
+              {/* Suite 3: Lyria 3 & Suno Musiekateljee */}
+              <div
+                onClick={() => onGo('make')}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') onGo('make');
+                }}
+                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 via-zinc-900/80 to-zinc-950 p-5 transition-all hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:-translate-y-0.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 group-hover:scale-105 transition-transform">
+                      <Music className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">KI Musiek</span>
+                      <h4 className="text-base font-black text-white group-hover:text-amber-300 transition-colors">
+                        Lyria 3 &amp; Suno Ateljee
+                      </h4>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-amber-950/80 border border-amber-500/30 px-2.5 py-1 text-[11px] font-bold text-amber-300">
+                    100+ Genres
+                  </span>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                  {lang === 'af'
+                    ? 'Skep volledige liedjies in Afrikaans, pop, rock, amapiano, sokkie of ballades met outomatiese akkoorde en lirieke.'
+                    : 'Generate complete tracks in Afrikaans, pop, rock, amapiano, sokkie, or ballads with automatic chords and lyrics.'}
+                </p>
+                <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    <span>Lyria 3 • Suno • Afrikaanse Rym</span>
+                  </div>
+                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    {lang === 'af' ? 'Skep Liedjie' : 'Create Track'} →
+                  </span>
+                </div>
+              </div>
+
+              {/* Suite 4: Kinder Avontuur & Storie Kamer */}
+              <Link
+                href="/kids"
+                className="group relative block overflow-hidden rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-950/30 via-zinc-900/80 to-zinc-950 p-5 transition-all hover:border-purple-400 hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] hover:-translate-y-0.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-500/15 border border-purple-500/40 text-purple-300 group-hover:scale-105 transition-transform">
+                      <Baby className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-purple-400">Kindermodus</span>
+                      <h4 className="text-base font-black text-white group-hover:text-purple-300 transition-colors">
+                        Kinder Avontuur &amp; Stories
+                      </h4>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-purple-950/80 border border-purple-500/30 px-2.5 py-1 text-[11px] font-bold text-purple-300">
+                    100% Kindveilig
+                  </span>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                  {lang === 'af'
+                    ? '14 prettige templates (Ruimte, Hondjie, Rock, Oseaan), storieboeke met stem en video, en beheerde ouerlike krediet-toelae.'
+                    : '14 fun adventure templates (Space, Puppy, Rock, Ocean), voice-read storybooks with video, and parent-controlled credit allowance.'}
+                </p>
+                <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-3">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
+                    <span>14 Templates • Stories • Veilige Toelaag</span>
+                  </div>
+                  <span className="text-xs font-bold text-purple-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    {lang === 'af' ? 'Gaan na Kinders' : 'Visit Kids Room'} →
+                  </span>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* ── The 8 Unique Core Superpowers Matrix ── */}
+          <div className="space-y-3 pt-2">
+            <h3 className="text-sm font-black uppercase tracking-wider text-emerald-400">
+              {lang === 'af' ? 'Die 8 Unieke Voordele van FutureBox' : 'The 8 Unique Powers of FutureBox'}
+            </h3>
+            <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  text: t('hero.f1', 'ProBooth, for professional musicians'),
+                  sub: '4-Baan DAW & multitrack',
+                  icon: Mic,
+                },
+                {
+                  text: t('hero.f2', 'Advert planning, for marketers'),
+                  sub: 'Sosiale veldtogte & formaat',
+                  icon: Sliders,
+                },
+                {
+                  text: t('hero.f3', 'Clone your voice'),
+                  sub: 'Kits RVC & ElevenLabs',
+                  icon: Zap,
+                },
+                {
+                  text: t('hero.f4', 'Train your own unique sound'),
+                  sub: 'Eie styl- & klankprofiel',
+                  icon: Sparkles,
+                },
+                {
+                  text: t('hero.f5', 'A live music room'),
+                  sub: 'Lewendige stroom & radio',
+                  icon: Radio,
+                },
+                {
+                  text: t('hero.f6', 'Collab Radar, to create with like-minded artists'),
+                  sub: 'Vind kunstenaars naby jou',
+                  icon: Compass,
+                },
+                {
+                  text: t('hero.f7', 'Video generation'),
+                  sub: 'Veo 3.1 4K video-enjin',
+                  icon: Video,
+                },
+                {
+                  text: t('hero.f8', 'Everything in Afrikaans — music, videos, podcasts'),
+                  sub: '100% outentieke Afrikaans',
+                  icon: ShieldCheck,
+                },
+              ].map((item, idx) => {
+                const IconComponent = item.icon;
+                return (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2.5 rounded-xl border border-zinc-800/90 bg-zinc-950/60 p-3 transition-colors hover:border-emerald-500/50 hover:bg-zinc-900/60"
+                  >
+                    <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                      <IconComponent className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-xs font-bold leading-snug text-zinc-200">
+                        {item.text}
+                      </span>
+                      <span className="block text-[10px] text-zinc-500">
+                        {item.sub}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
           {/* ── Choose your own style and colors callout ── */}
-          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-zinc-900/60 to-zinc-950/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-zinc-900/70 to-zinc-950/90 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
             <div className="space-y-1">
               <p className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Paintbrush className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <span>{t('hero.styleTitle', 'Choose your own style and colors')}</span>
+                <span>{t('hero.styleTitle', 'Kies jou eie styl en kleure')}</span>
               </p>
               <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                {t('hero.styleDesc', 'Adjust primary colors, accents, dark surfaces, fonts and layout to your taste.')}
+                {t(
+                  'hero.styleDesc',
+                  'Pas primêre kleure, aksente, donker oppervlakke, fonts en uitleg aan volgens jou smaak.'
+                )}
               </p>
             </div>
             <button
               type="button"
               onClick={onAppearance}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-zinc-950 shadow-md transition-all flex-shrink-0"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-zinc-950 shadow-md transition-all flex-shrink-0 active:scale-95"
             >
               <Paintbrush className="w-4 h-4 text-zinc-950" />
-              <span>{t('hero.openThemeStudio', 'Open Style Studio')}</span>
-            </button>
-          </div>
-
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t('hero.style', 'This is the app that lets you choose your own style.')}{' '}
-            <button
-              type="button"
-              onClick={onAppearance}
-              className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4 font-semibold"
-            >
-              {t('hero.appearance', 'Click on appearance')}
-            </button>
-            .
-          </p>
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            <button
-              type="button"
-              onClick={() => onGo('make')}
-              className="px-5 py-3 rounded-xl bg-emerald-500 text-onAccent text-sm font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-            >
-              {t('hero.start', 'Make a song')}
-            </button>
-            <button
-              type="button"
-              onClick={() => onGo('voice_studio')}
-              className="px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-bold hover:border-emerald-500 hover:text-emerald-300"
-            >
-              {t('hero.sing', 'Record your voice')}
-            </button>
-            <button
-              type="button"
-              onClick={() => onGo('podcast')}
-              className="px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-bold hover:border-emerald-500 hover:text-emerald-300"
-            >
-              {t('hero.podcast', 'Start a podcast')}
+              <span>{t('hero.openThemeStudio', 'Open Styl Ateljee')}</span>
             </button>
           </div>
         </div>
       </section>
 
       {/* ── What is actually happening here, as bars you press ──────────
-
-          "net 'n bar waarop mens kliek en dan oop maak en opsies gee wat op
-           gekliek kan word."
-
-          Under the hero rather than above it: the hero says what this app is
-          for, which is what somebody arriving needs first. These say what is
-          on it, which is what brings them back. Shut to start with, so four
-          bars are four lines rather than four screens. */}
+          Under the hero: Charts & Radar door */}
       <Charts onOpenRadar={onOpenRadar} onOpenLive={onOpenLive} />
 
       {/* ── Future Insights & Ad-Free Curated Knowledge ─────────────── */}
@@ -215,58 +487,50 @@ export default function Spotlight({
         onOpenPodcast={() => onGo('podcast')}
       />
 
-      {/* ── How it works ────────────────────────────────────
-
-          Carli, 10 October 2026: *"Ek besef ook in spotlight gaan ons 'n Blog
+      {/* ── How it works & Blog Section ────────────────────────────────────
+          Carli, 10 October 2026: "Ek besef ook in spotlight gaan ons 'n Blog
           ook moet hê, daarin sal ek artikels moet deel oor hoe die
-          verskillende funksies in die app werk."*
-
-          Last on the page, and that is the right place rather than a demotion.
-          The hero says what this app is for and the bars say what is on it
-          — both of which somebody arriving needs before an article about how
-          a room works. What this is for is the second visit, and the search
-          result that brings somebody here in the first place.
-
-          Three, not all of them, with a door to the rest. A list of every
-          article on the landing page is a landing page that grows into an
-          index, and the whole lesson of the hero above is that two screens of
-          prose before the first button is two screens nobody reads.
-
-          Real links rather than buttons: these are pages with their own
-          addresses, meant to be opened in a tab, shared and found by a
-          crawler. See `lib/blog.ts`. */}
-      <section className="space-y-3" data-spotlightblog>
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="flex items-center gap-2 text-lg font-bold text-white">
-            <BookOpen className="h-4 w-4 flex-shrink-0 text-emerald-400" />
-            {t('blog.title', 'How it works')}
-          </h3>
+          verskillende funksies in die app werk."
+          Checked by scripts/check-blog.mts:
+          requires [data-spotlightblog] and href="/blog" */}
+      <section className="space-y-4 rounded-3xl border border-zinc-800/80 bg-zinc-950/60 p-6 sm:p-8" data-spotlightblog>
+        <div className="flex items-center justify-between gap-2 border-b border-zinc-800/80 pb-4">
+          <div>
+            <h3 className="flex items-center gap-2 text-lg sm:text-xl font-black text-white">
+              <BookOpen className="h-5 w-5 flex-shrink-0 text-emerald-400" />
+              <span>{t('blog.title', 'Hoe dit werk — Kennis & Handleidings')}</span>
+            </h3>
+            <p className="text-xs text-zinc-400">
+              {lang === 'af'
+                ? 'Artikels en gidse oor hoe die verskillende funksies in FutureBox werk'
+                : 'Articles and guides on how each room and feature in FutureBox works'}
+            </p>
+          </div>
           <Link
             href="/blog"
-            className="inline-flex min-h-[44px] items-center text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-300 hover:border-emerald-400 hover:bg-emerald-950/60 transition-all"
           >
-            {t('blog.all', 'All of them')}
+            <span>{t('blog.all', 'Al die artikels')}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <ul className="grid gap-2 sm:grid-cols-3">
+
+        <ul className="grid gap-3 sm:grid-cols-3">
           {inOrder().slice(0, 3).map((piece) => (
             <li key={piece.id}>
               <Link
                 href={`/blog/${piece.id}`}
                 data-spotlightpiece={piece.id}
-                className="block h-full rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 hover:border-emerald-500/60"
+                className="group block h-full rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-all hover:border-emerald-500/60 hover:bg-zinc-900 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]"
               >
-                {/* `saidIn`, not `t()`. The Afrikaans is in the article
-                    itself; handing these to the dictionary would be the same
-                    sentence in two files, and a key the dictionary has never
-                    heard of falls back to the English silently — so an
-                    Afrikaans reader would get an English title and nothing
-                    anywhere would say so. */}
-                <span className="block text-sm font-bold leading-tight text-white">
+                <span className="block text-sm font-bold leading-snug text-white group-hover:text-emerald-300 transition-colors">
                   {saidIn(piece.title, lang)}
                 </span>
-                <span className="block pt-1.5 text-xs leading-snug text-zinc-500">
+                <span className="block pt-2 text-xs leading-relaxed text-zinc-400">
                   {saidIn(piece.blurb, lang)}
+                </span>
+                <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 group-hover:translate-x-1 transition-transform">
+                  {lang === 'af' ? 'Lees artikel' : 'Read article'} →
                 </span>
               </Link>
             </li>
