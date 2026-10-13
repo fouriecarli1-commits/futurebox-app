@@ -125,6 +125,8 @@ import KidsGallery from './KidsGallery';
 import KidsDrawBoard from './KidsDrawBoard';
 import KidsQuiz from './KidsQuiz';
 import KidsPictureMaker from './KidsPictureMaker';
+import KidsPiano from './KidsPiano';
+import KidsEditor from './KidsEditor';
 import { ALIVE_WORDS, KID_STYLES, KID_SUBJECTS, makeKidPicture, packDrawing, pictureWords } from '../lib/kidsalive';
 import { keepPiece } from '../lib/kidsgallery';
 import { BADGES, levelOf, towardNext, type Counts } from '../lib/kidslevel';
@@ -191,7 +193,7 @@ function recogniser(): Recogniser | null {
 /** Expressive playful avatars for the mascot. */
 const MASCOT_ICONS = ['👾', '🦄', '🌟', '🎸', '🐶', '🚀'] as const;
 
-type Tab = 'home' | 'music' | 'video' | 'story' | 'games' | 'draw' | 'quiz' | 'tv' | 'gallery' | 'badges';
+type Tab = 'home' | 'music' | 'video' | 'story' | 'games' | 'draw' | 'edit' | 'quiz' | 'tv' | 'gallery' | 'badges';
 
 /**
  * ── The six doors, 13 October 2026 ──────────────────────────────────────
@@ -229,7 +231,11 @@ const DOORS: readonly Door[] = [
   ] },
   { id: 'games', icon: '🎹', says: ['kids.doorGames', 'Studio Games & Beats!'], lines: [
     ['kids.doorGames1', 'Catch the gems, pop the bubbles'],
-    ['kids.doorGames2', 'Make a beat with eight squares'],
+    ['kids.doorGames2', 'Play the piano, copy a tune, keep it as a song'],
+  ] },
+  { id: 'edit', icon: '✂️', says: ['kids.doorEdit', 'Easy Editing!'], lines: [
+    ['kids.doorEdit1', 'Your drawings become a film, with your voice telling the story'],
+    ['kids.doorEdit2', 'A song underneath, and a drawing brought to life as a frame'],
   ] },
   { id: 'quiz', icon: '🧠', says: ['kids.doorQuiz', 'Mega Quizzes & Skills!'], lines: [
     ['kids.doorQuiz1', 'Would you rather?'],
@@ -1301,6 +1307,11 @@ export default function KidsRoom(): React.ReactElement {
       {/* ── 6. Arcade ────────────────────────────────────────────────────── */}
       {tab === 'games' && (
         <>
+          {/* Carli, 13 October 2026: "a game section to play with music,
+              piano… and creating their own songs on a childs way with
+              guidance." The piano and its copy-me game; a kept tune lands
+              on the song shelf, so it plays at bedtime with the rest. */}
+          <KidsPiano onSpark={spark} onKept={() => setShelfAgain((n) => n + 1)} />
           <KidsArcade onSpark={spark} />
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
@@ -1424,6 +1435,27 @@ export default function KidsRoom(): React.ReactElement {
             says={picSays}
           />
         </>
+      )}
+
+      {/* ── 8b. Easy Editing: a film from the wall, made on the phone ─── */}
+      {tab === 'edit' && (
+        <KidsEditor
+          onSpark={spark}
+          again={wallAgain}
+          onKept={() => { setWallAgain((n) => n + 1); confetti(80); }}
+          alive={(piece) => (
+            <button
+              type="button"
+              onClick={() => void alive(piece.blob)}
+              disabled={!canPicture}
+              data-kidsframealive={piece.id}
+              className="flex min-h-[36px] w-full items-center justify-center gap-1 rounded-xl bg-primary-500 px-2 text-[11px] font-black text-white disabled:opacity-40"
+            >
+              {busy === 'picture' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              {t('kids.aliveShort', 'To life')} · {picturePrice}
+            </button>
+          )}
+        />
       )}
 
       {/* ── 9. Mega Quizzes ───────────────────────────────────────────── */}
