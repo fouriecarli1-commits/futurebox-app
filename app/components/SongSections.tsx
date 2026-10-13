@@ -19,6 +19,18 @@
  * in-place edit and quietly returning a fresh song would be worse than
  * refusing.
  *
+ * ## Obsidian, 13 October 2026
+ *
+ * Carli, with the "Studio" page Google drew — a regeneration banner with
+ * one gradient button, section cards with a coloured chip, a preview line,
+ * a time range and a row of small controls, a stem deck under them — and
+ * the rule for the whole redesign: *"ons transform en totally redesign."*
+ * The room is that page now. What the page drew and this room cannot
+ * honestly do is left out and said on screen: a "regenerate this section
+ * only" button, because the engine makes the whole song from the whole
+ * plan; and four stems, because the separation here makes two, the voice
+ * and everything else, which is what `Lanes` draws.
+ *
  * ## Arranging
  *
  * Renaming a section and rewriting its words was all this could do, and the
@@ -43,7 +55,10 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronUp, Copy, Loader2, Mic, Music4, Pause, Play, Plus, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-react';
+import {
+  ChevronDown, ChevronRight, ChevronUp, Copy, GripVertical, ListMusic, Loader2, Mic, Music4, Pause, Play, Plus,
+  RefreshCw, SlidersHorizontal, Sparkles, Trash2, Waves,
+} from 'lucide-react';
 import { loadTracks } from '../lib/library';
 import { splitSections } from '../lib/engines';
 import { readAudio } from '../lib/trackaudio';
@@ -69,13 +84,13 @@ function clock(seconds: number): string {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
 
-/** Section colours, cycled, so two next to each other never match. */
-const SHADES = [
-  'bg-emerald-500/25 border-emerald-500/60',
-  'bg-cyan-500/25 border-cyan-500/60',
-  'bg-violet-500/25 border-violet-500/60',
-  'bg-amber-500/25 border-amber-500/60',
-  'bg-rose-500/25 border-rose-500/60',
+/** The chip a section's name sits in, cycled so two next to each other never match. */
+const CHIPS = [
+  'border-emerald-800 bg-emerald-950 text-emerald-400',
+  'border-cyan-800 bg-cyan-950 text-cyan-400',
+  'border-amber-800 bg-amber-950 text-amber-400',
+  'border-violet-800 bg-violet-950 text-violet-400',
+  'border-rose-800 bg-rose-950 text-rose-400',
 ];
 
 /**
@@ -495,69 +510,125 @@ export default function SongSections({
     </Card>
   );
 
+  /* Which section cards are folded to their header. Open by default, as
+     Google drew them: the words are what the room is for. */
+  const [folded, setFolded] = useState<Set<number>>(() => new Set());
+  const fold = (index: number): void => {
+    setFolded((was) => {
+      const next = new Set(was);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      return next;
+    });
+  };
+
+  /** The chip colour for a section, cycled so neighbours never match. */
+  const chipOf = (index: number): string => CHIPS[index % CHIPS.length];
+
   if (!usable.length) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-6 text-center space-y-2">
-        <Music4 className="w-6 h-6 text-emerald-400 mx-auto" />
-        <p className="text-base font-bold text-white">{t('sec.none', 'No song to lay out yet')}</p>
-        <Note>{t('sec.noneNote', 'Make a song with words in it and it appears here, in its own sections.')}</Note>
-        {/* What the room is, said here too. An empty Studio is still a
-            Studio, and somebody standing in it deserves the same sentence as
-            somebody with eleven songs in it. */}
-        <p className="text-sm text-zinc-400 leading-relaxed">
-          {t(
-            'sec.whatFor',
-            'This is a regeneration room. Move a song\u2019s sections, repeat one, take one out \u2014 then send the plan back and a new take is made from it, from the start.',
-          )}
-        </p>
-        <div className="pt-2 text-left">{regenerationNotice}</div>
+      <div className="space-y-4" data-studioroom>
+        <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-6 text-center space-y-2 backdrop-blur-md">
+          <Music4 className="w-6 h-6 text-emerald-400 mx-auto" />
+          <p className="text-base font-bold text-white">{t('sec.none', 'No song to lay out yet')}</p>
+          <Note>{t('sec.noneNote', 'Make a song with words in it and it appears here, in its own sections.')}</Note>
+          {/* What the room is, said here too. An empty Studio is still a
+              Studio, and somebody standing in it deserves the same sentence as
+              somebody with eleven songs in it. */}
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            {t(
+              'sec.whatFor',
+              'This is a regeneration room. Move a song’s sections, repeat one, take one out — then send the plan back and a new take is made from it, from the start.',
+            )}
+          </p>
+          <div className="pt-2 text-left">{regenerationNotice}</div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {/* What this room is for, before anything in it.
+  const progress = duration > 0 ? Math.min(100, (at / duration) * 100) : 0;
 
-          Carli: "studio moet bo set wat is die doel van studio. dit is die
-          plek waar liedjies ge-edit kan word en geregenerate word." The room
-          opened straight into "Which song?", which is a question, not an
-          answer — somebody who has not been told what the room does cannot
-          tell from a song picker whether they are in the right one. */}
-      <p className="text-sm text-zinc-400 leading-relaxed">
-        {t(
-          'sec.whatFor',
-          'This is a regeneration room. Move a song\u2019s sections, repeat one, take one out \u2014 then send the plan back and a new take is made from it, from the start.',
-        )}
-      </p>
+  return (
+    <div className="space-y-5" data-studioroom>
+      {/* ── The banner: what this room is, and the one button that makes ──
+          Google's page opened on a glass bar with a chip reading
+          "Regeneration Room", a sentence, and a gradient button to
+          regenerate the full take. The sentence is the room's own, and the
+          button is `remake`, which is the only regeneration there is. */}
+      <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-emerald-400">
+              {t('sec.roomChip', 'Regeneration Room')}
+            </span>
+            <p className="text-xs font-medium text-zinc-300">
+              {t('sec.whatFor', 'This is a regeneration room. Move a song’s sections, repeat one, take one out — then send the plan back and a new take is made from it, from the start.')}
+            </p>
+          </div>
+          {track && (
+            <p className="text-[11px] text-zinc-400">
+              {t('sec.editing', 'Editing')} “{track.title}” — {t('sec.stemsNote', 'Stems are separated once and kept on this device beside the song.')}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={remake}
+          data-regenfull
+          className="flex min-h-[44px] flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 text-xs font-extrabold text-onAccent shadow-lg shadow-emerald-500/20 transition-all hover:from-emerald-400 hover:to-cyan-400"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>{t('sec.regenFull', 'Regenerate full take')}</span>
+        </button>
+      </div>
 
       {regenerationNotice}
 
-      <Card title={t('sec.whichSong', 'Which song?')}>
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <select
-            value={track?.id ?? ''}
-            onChange={(event) => setChosen(event.target.value)}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none min-w-0 flex-1"
-          >
-            {usable.map((one) => (
-              <option key={one.id} value={one.id}>{one.title}</option>
-            ))}
-          </select>
+      {/* ── Transport: which song, play, where we are ───────────────────── */}
+      <div className="space-y-3 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md" data-studiotransport>
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={toggle}
             disabled={loading}
-            className="w-11 h-11 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+            aria-label={playing ? t('common.pause', 'Pause') : t('common.play', 'Play')}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent shadow-lg shadow-emerald-500/20 transition-transform hover:scale-105 disabled:opacity-50"
           >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : playing ? (
-              <Pause className="w-5 h-5" />
-            ) : (
-              <Play className="w-5 h-5 ml-0.5" />
-            )}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
           </button>
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-white/10 bg-zinc-950 px-3 py-1.5">
+            <Music4 className="h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
+            <select
+              value={track?.id ?? ''}
+              onChange={(event) => setChosen(event.target.value)}
+              aria-label={t('sec.whichSong', 'Which song?')}
+              className="min-w-0 flex-1 bg-transparent text-xs font-semibold text-white focus:outline-none"
+            >
+              {usable.map((one) => (
+                <option key={one.id} value={one.id}>{one.title}</option>
+              ))}
+            </select>
+            <span className="hidden flex-shrink-0 rounded border border-emerald-800/60 bg-emerald-950/80 px-2 py-0.5 font-mono text-[9px] text-emerald-400 sm:inline">
+              {clock(duration)} • {parts.length} {t('sec.sections', 'sections')}
+            </span>
+          </div>
+          <div className="flex w-full flex-col text-[11px] sm:w-48">
+            <div className="mb-1 flex justify-between font-mono text-[10px] text-zinc-400">
+              <span>{clock(at)}</span>
+              <span>{clock(duration)}</span>
+            </div>
+            <button
+              type="button"
+              aria-label={t('sec.jumpTo', 'Jump to this section')}
+              onClick={(event) => {
+                const box = event.currentTarget.getBoundingClientRect();
+                seek(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)) * duration);
+              }}
+              className="h-1.5 w-full cursor-pointer overflow-hidden rounded-full bg-zinc-800"
+            >
+              <span className="block h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all" style={{ width: `${progress}%` }} />
+            </button>
+          </div>
         </div>
 
         <canvas
@@ -566,161 +637,161 @@ export default function SongSections({
             const box = event.currentTarget.getBoundingClientRect();
             seek(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)) * duration);
           }}
-          className="w-full h-20 cursor-pointer rounded-lg"
-          style={{ background: peaks ? 'transparent' : 'rgba(39,39,42,0.4)' }}
+          className="h-20 w-full cursor-pointer rounded-xl border border-white/5"
+          style={{ background: peaks ? 'rgba(0,0,0,0.4)' : 'rgba(39,39,42,0.4)' }}
         />
-        <div className="flex items-center justify-between text-sm text-zinc-500 tabular-nums">
-          <span>{clock(at)}</span>
-          <span>{clock(duration)}</span>
-        </div>
 
         {/* And the same song as a shape, under its own waveform.
-
-            `docs/MUSIEKDENKE.md` §3.1. This room's whole subject is the
-            sections, so it is where naming the form belongs: the waveform
-            says how loud, the strip says what. Nothing is taught and nothing
-            is asked — the letters a musician would put under these parts are
-            simply written under them. */}
+            `docs/MUSIEKDENKE.md` §3.1: the waveform says how loud, the strip
+            says what. */}
         <SongForm parts={parts} />
 
-        {/* Where the boundaries came from. A measured plan and a guess off the
-            words look identical on a waveform, and only one of them is worth
-            trusting to the second. */}
         {track && estimated(track) && (
           <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'sec.estimated',
               'These sections are worked out from the words — this song did not carry a plan, so the times are close rather than exact. Everything you change here still travels through in full.',
             )}</Note>
         )}
-      </Card>
-
-      {/* ── The song in tracks ──────────────────────────────────────────
-          Under the transport and above the sections, which is the order the
-          work goes in: hear it, take it apart, then change what is said. Shut
-          by default — it is a second player and a paid separation, and neither
-          should start because somebody opened a room. */}
-      {track && (
-        lanesOpen ? (
-          <Lanes
-            trackId={track.id}
-            title={track.title}
-            audio={playable}
-            seconds={peaks?.duration || track.seconds || 0}
-            onOpen={() => {
-              // One transport at a time. Two players on one song is how a
-              // screen ends up playing it twice, slightly apart.
-              audioRef.current?.pause();
-              setPlaying(false);
-            }}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setLanesOpen(true)}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-600"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            {t('sec.lanes', 'Lay it out in tracks')}
-          </button>
-        )
-      )}
-
-      {/* The sections themselves: what is sung, and when. */}
-      <div className="space-y-2">
-        {parts.map((part, index) => {
-          const mark = marks[index];
-          const here = mark && at >= mark.start && at < mark.end;
-          return (
-            <div
-              key={index}
-              className={`rounded-2xl border p-3 space-y-2 transition-all ${
-                here ? SHADES[index % SHADES.length] : 'border-zinc-800 bg-zinc-950/60'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <input
-                  value={part.name}
-                  onChange={(event) => {
-                    const next = parts.slice();
-                    next[index] = { ...part, name: event.target.value };
-                    setParts(next);
-                  }}
-                  className="bg-transparent text-sm font-bold text-white focus:outline-none min-w-0 flex-1"
-                />
-                <div className="flex items-center gap-0.5 flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => mark && seek(mark.start)}
-                    className="text-sm text-zinc-400 hover:text-emerald-300 tabular-nums px-1.5"
-                  >
-                    {mark ? clock(mark.start) : '—'}
-                  </button>
-                  {/* Arrangement. Disabled at the ends rather than hidden, so
-                      the row does not change shape as things move. */}
-                  <button
-                    type="button"
-                    onClick={() => move(index, index - 1)}
-                    disabled={index === 0}
-                    title={t('sec.up', 'Move it earlier')}
-                    aria-label={t('sec.up', 'Move it earlier')}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-300 hover:bg-zinc-800 disabled:opacity-25 disabled:hover:bg-transparent"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(index, index + 1)}
-                    disabled={index === parts.length - 1}
-                    title={t('sec.down', 'Move it later')}
-                    aria-label={t('sec.down', 'Move it later')}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-300 hover:bg-zinc-800 disabled:opacity-25 disabled:hover:bg-transparent"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => again(index)}
-                    title={t('sec.again', 'Say it again')}
-                    aria-label={t('sec.again', 'Say it again')}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-300 hover:bg-zinc-800"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => drop(index)}
-                    disabled={parts.length <= 1}
-                    title={t('sec.drop', 'Take it out')}
-                    aria-label={t('sec.drop', 'Take it out')}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800 disabled:opacity-25 disabled:hover:bg-transparent"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <textarea
-                value={part.lines.join('\n')}
-                onChange={(event) => {
-                  const next = parts.slice();
-                  next[index] = { ...part, lines: event.target.value.split('\n') };
-                  setParts(next);
-                }}
-                rows={Math.min(8, Math.max(2, part.lines.length))}
-                className="w-full bg-black/40 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
-              />
-            </div>
-          );
-        })}
       </div>
 
-      <button
-        type="button"
-        onClick={add}
-        className="min-h-[44px] w-full py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-semibold text-zinc-400 hover:border-emerald-500/60 hover:text-emerald-300 flex items-center justify-center gap-1.5"
-      >
-        <Plus className="w-4 h-4" />
-        {t('sec.add', 'Put another section in')}
-      </button>
+      {/* ── 1. The structure: section cards, as Google drew them ────────── */}
+      <section className="space-y-3" data-studiosections>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white">
+            <ListMusic className="h-4 w-4 text-emerald-400" />
+            {t('sec.structure', 'Song structure & section lyrics')}
+          </h2>
+          <button
+            type="button"
+            onClick={add}
+            className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900 px-3 text-xs font-semibold text-emerald-400 transition-all hover:bg-zinc-800 hover:text-emerald-300"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>{t('sec.addSection', 'Add section')}</span>
+          </button>
+        </div>
+        <p className="text-[11px] leading-relaxed text-zinc-500">
+          {t('sec.noSectionsYet', 'Nothing to regenerate per section: the engine makes the whole song from the whole plan, so every change here goes into one new take.')}
+        </p>
+
+        <div className="space-y-3">
+          {parts.map((part, index) => {
+            const mark = marks[index];
+            const here = mark && at >= mark.start && at < mark.end;
+            const shut = folded.has(index);
+            const preview = part.lines.find((line) => line.trim()) ?? '';
+            return (
+              <div
+                key={index}
+                data-studiosection
+                className={`overflow-hidden rounded-2xl border backdrop-blur-md transition-all ${
+                  here ? 'border-emerald-500/60 bg-zinc-900/90 shadow-[0_0_25px_rgba(15,157,110,0.25)]' : 'border-white/10 bg-zinc-900/80'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 bg-zinc-800/60 p-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <GripVertical className="h-4 w-4 flex-shrink-0 text-zinc-600" aria-hidden />
+                    <input
+                      value={part.name}
+                      onChange={(event) => {
+                        const next = parts.slice();
+                        next[index] = { ...part, name: event.target.value };
+                        setParts(next);
+                      }}
+                      aria-label={t('sec.structure', 'Song structure & section lyrics')}
+                      className={`w-24 flex-shrink-0 rounded border px-2 py-0.5 font-mono text-xs font-bold focus:outline-none sm:w-28 ${chipOf(index)}`}
+                    />
+                    <span className="hidden min-w-0 truncate text-xs font-semibold text-zinc-300 sm:inline">{preview}</span>
+                    <button
+                      type="button"
+                      onClick={() => mark && seek(mark.start)}
+                      title={t('sec.jumpTo', 'Jump to this section')}
+                      className="flex-shrink-0 font-mono text-[10px] text-zinc-500 hover:text-emerald-300"
+                    >
+                      ({mark ? clock(mark.start) : '—'} - {mark ? clock(mark.end) : '—'})
+                    </button>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-1">
+                    <button type="button" onClick={() => move(index, index - 1)} disabled={index === 0} title={t('sec.up', 'Move it earlier')} aria-label={t('sec.up', 'Move it earlier')} className="min-h-[32px] min-w-[32px] rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-25">
+                      <ChevronUp className="mx-auto h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => move(index, index + 1)} disabled={index === parts.length - 1} title={t('sec.down', 'Move it later')} aria-label={t('sec.down', 'Move it later')} className="min-h-[32px] min-w-[32px] rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-25">
+                      <ChevronDown className="mx-auto h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => again(index)} title={t('sec.again', 'Say it again')} aria-label={t('sec.again', 'Say it again')} className="min-h-[32px] min-w-[32px] rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-emerald-300">
+                      <Copy className="mx-auto h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => drop(index)} disabled={parts.length <= 1} title={t('sec.drop', 'Take it out')} aria-label={t('sec.drop', 'Take it out')} className="min-h-[32px] min-w-[32px] rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-red-400 disabled:opacity-25">
+                      <Trash2 className="mx-auto h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => fold(index)} aria-expanded={!shut} aria-label={shut ? t('sec.unfold', 'Unfold') : t('sec.fold', 'Fold')} className="min-h-[32px] min-w-[32px] rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white">
+                      {shut ? <ChevronRight className="mx-auto h-3.5 w-3.5" /> : <ChevronDown className="mx-auto h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+                {!shut && (
+                  <div className="space-y-2 border-t border-white/5 bg-zinc-950/50 p-4">
+                    <label className="block text-[11px] font-semibold text-zinc-400">{t('sec.lyricsLabel', 'Lyrics')}</label>
+                    <textarea
+                      value={part.lines.join('\n')}
+                      onChange={(event) => {
+                        const next = parts.slice();
+                        next[index] = { ...part, lines: event.target.value.split('\n') };
+                        setParts(next);
+                      }}
+                      rows={Math.min(8, Math.max(2, part.lines.length))}
+                      className="w-full resize-y rounded-xl border border-white/10 bg-zinc-900 p-3 text-xs leading-relaxed text-white focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── 2. The stem deck: the song in tracks ─────────────────────────
+          Under the structure and above the remake, which is the order the
+          work goes in: hear it, take it apart, then change what is said.
+          Shut by default — it is a second player and a paid separation,
+          and neither should start because somebody opened a room. */}
+      {track && (
+        <section className="space-y-3 border-t border-white/10 pt-4" data-studiostems>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-white">
+                <Waves className="h-4 w-4 text-cyan-400" />
+                {t('sec.stemDeck', 'Stem extraction deck')}
+              </h2>
+              <p className="text-xs text-zinc-400">{t('sec.stemDeckSub', 'Split the voice from everything else, solo or mute either, balance them, and keep the mix as a file.')}</p>
+            </div>
+            {!lanesOpen && (
+              <button
+                type="button"
+                onClick={() => setLanesOpen(true)}
+                className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/10 bg-zinc-900 px-3.5 text-xs font-semibold text-cyan-400 transition-all hover:bg-zinc-800"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                {t('sec.lanes', 'Lay it out in tracks')}
+              </button>
+            )}
+          </div>
+          {lanesOpen && (
+            <Lanes
+              trackId={track.id}
+              title={track.title}
+              audio={playable}
+              seconds={peaks?.duration || track.seconds || 0}
+              onOpen={() => {
+                // One transport at a time. Two players on one song is how a
+                // screen ends up playing it twice, slightly apart.
+                audioRef.current?.pause();
+                setPlaying(false);
+              }}
+            />
+          )}
+        </section>
+      )}
 
       <Card title={t('sec.remakeTitle', 'Make it again')}>
         {/* Said here rather than as a slider that does nothing: lengths are not
@@ -731,7 +802,7 @@ export default function SongSections({
         <button
           type="button"
           onClick={remake}
-          className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-onAccent font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
         >
           <Sparkles className="w-4 h-4" />
           {t('sec.remake', 'Make a new take with these changes')}
