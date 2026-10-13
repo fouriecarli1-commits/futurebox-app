@@ -31,7 +31,6 @@ import { writeFileSync } from 'node:fs';
    `globals.css` sets them. */
 const MINT = '#05ff93';
 const CYAN = '#47d2eb';
-const GROUND = '#080c0a';
 
 const glyph = `
   <rect width="16" height="16" x="4" y="4" rx="2"/>
@@ -46,19 +45,24 @@ const glyph = `
  * ground and shrinks the tile into the safe zone; otherwise the corners are
  * transparent and the tile fills the square but for the glow's room.
  */
+/* Carli, 13 October 2026, shown the plain tile and the dark-ground one:
+   "Die een" — the plain one. So the maskable file is the same green all the
+   way to the edge, the chip inside the safe zone, and a launcher that cuts
+   a circle cuts green, not a dark square. */
 const page = (size, filled) => {
-  const inset = filled ? size * 0.14 : size * 0.06;
+  const inset = filled ? 0 : size * 0.06;
   const tile = size - inset * 2;
-  const radius = tile * 0.24;
+  const radius = filled ? 0 : tile * 0.24;
   const glow = tile * 0.18;
-  return `<!doctype html><html><body style="margin:0;background:${filled ? GROUND : 'transparent'}">
-<div id="icon" style="position:relative;width:${size}px;height:${size}px;background:${filled ? GROUND : 'transparent'}">
+  const chip = filled ? size * 0.5 : tile * 0.58;
+  return `<!doctype html><html><body style="margin:0;background:transparent">
+<div id="icon" style="position:relative;width:${size}px;height:${size}px;background:transparent">
   <div style="position:absolute;left:${inset}px;top:${inset}px;width:${tile}px;height:${tile}px;
        border-radius:${radius}px;
        background:linear-gradient(135deg,${CYAN} 0%,${MINT} 55%,#2bff9e 100%);
-       box-shadow:0 0 ${glow * 0.45}px rgba(5,255,147,0.9),0 0 ${glow}px rgba(5,255,147,0.45);
+       box-shadow:${filled ? 'none' : `0 0 ${glow * 0.45}px rgba(5,255,147,0.9),0 0 ${glow}px rgba(5,255,147,0.45)`};
        display:flex;align-items:center;justify-content:center">
-    <svg width="${tile * 0.58}" height="${tile * 0.58}" viewBox="0 0 24 24" fill="none"
+    <svg width="${chip}" height="${chip}" viewBox="0 0 24 24" fill="none"
          stroke="#06110c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph}</svg>
   </div>
 </div></body></html>`;
