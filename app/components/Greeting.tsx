@@ -384,7 +384,7 @@ export default function Greeting({
       <a
         href="/kids"
         data-kidsdoorhome
-        className="group relative overflow-hidden flex min-h-[44px] flex-col items-stretch rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-amber-950/20 to-zinc-950 px-5 py-4 transition-all hover:border-amber-400/80 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+        className="group relative overflow-hidden flex min-h-[44px] flex-col items-stretch rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-950/20 to-zinc-950 px-5 py-4 transition-all hover:border-emerald-400/70"
       >
         {/* Her picture, 13 October 2026, one per language. */}
         <img
@@ -395,23 +395,23 @@ export default function Greeting({
           loading="lazy"
         />
         <span className="flex items-center gap-4 p-4">
-        <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl border border-amber-500/50 bg-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105">
-          <Baby className="h-6 w-6 text-amber-300" />
+        <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl border border-emerald-500/50 bg-emerald-500/20 shadow-[0_0_15px_rgba(52,211,153,0.3)] transition-transform group-hover:scale-105">
+          <Baby className="h-6 w-6 text-emerald-300" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="block text-base font-black leading-tight text-white">
               {t('hello.kids', 'The kids room')}
             </span>
-            <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase tracking-wider">
-              Safe Studio
+            <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
+              {t('hello.kidsSafe', 'Safe studio')}
             </span>
           </span>
           <span className="block pt-0.5 text-xs leading-snug text-zinc-300">
-            {t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Two presses in there: a song, and a video of it.')}
+            {t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Six doors in there: music, videos and stories, drawing, games, editing and quizzes.')}
           </span>
         </span>
-        <ArrowRight className="h-5 w-5 flex-shrink-0 text-amber-300 transition-transform group-hover:translate-x-1.5" />
+        <ArrowRight className="h-5 w-5 flex-shrink-0 text-emerald-300 transition-transform group-hover:translate-x-1.5" />
         </span>
       </a>
 
