@@ -36,8 +36,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  ArrowRight, Baby, Check, ChevronRight, Cpu, GraduationCap, Globe, Languages, LayoutGrid, LogIn,
-  Lock, Mic2, Music2, Palette, Podcast, Rss, Sparkles, Tags, Video, Wand2,
+  Baby, Check, Cpu, LogIn, Lock, Tags,
 } from 'lucide-react';
 import WelcomeVideo from './WelcomeVideo';
 import { hasWelcomeVideo } from '../lib/welcomevideo';
@@ -127,57 +126,8 @@ export default function Landing({
   };
 
   /* The six rooms, each one built and reachable from the rail inside. */
-  const rooms: readonly {
-    readonly icon: React.ReactNode; readonly badge: string; readonly title: string;
-    readonly note: string; readonly tone: string;
-  }[] = [
-    {
-      icon: <Music2 className="h-5 w-5" />, badge: t('landing.badgeBooth', 'AUDIO ENGINE'),
-      title: t('landing.roomBooth', 'ProBooth Multi-Track'),
-      note: t('landing.roomBoothNote', 'Full session lanes, Google Lyria AI neural chord progressions and instrument generation, plus Google Gemini Flash mixing engineer.'),
-      tone: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-    },
-    {
-      icon: <Video className="h-5 w-5" />, badge: t('landing.badgeVideo', 'GOOGLE VEO'),
-      title: t('landing.roomVideo', 'Cinema Video Desk'),
-      note: t('landing.roomVideoNote', '9:16 reels and 16:9 widescreen scenes directed by Google Veo with cinematic camera movements, prompts, and auto-scroll prompters.'),
-      tone: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',
-    },
-    {
-      icon: <Mic2 className="h-5 w-5" />, badge: t('landing.badgeVoice', 'VOICE SYNTHESIS'),
-      title: t('landing.roomVoice', 'Your Own Voice, Cloned'),
-      note: t('landing.roomVoiceNote', 'Read a script in your own voice for the show, with your consent on record before a word is made.'),
-      tone: 'text-violet-400 bg-violet-500/10 border-violet-500/30',
-    },
-    {
-      icon: <Palette className="h-5 w-5" />, badge: t('landing.badgeArt', 'ART & DESIGN'),
-      title: t('landing.roomPhoto', 'Post & Photo Studio'),
-      note: t('landing.roomPhotoNote', 'Instant vector artwork templates, layered graphics canvas, rich typographic inspector, and multi-format release exports.'),
-      tone: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
-    },
-    {
-      icon: <Podcast className="h-5 w-5" />, badge: t('landing.badgeInsights', 'MEDIA HUB'),
-      title: t('landing.roomInsights', 'Future Insights & Podcasts'),
-      note: t('landing.roomInsightsNote', '100% ad-free visionary articles and podcasts rated 96%–99% on source credibility across AI, vibecoding, tech, and business.'),
-      tone: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
-    },
-    {
-      icon: <GraduationCap className="h-5 w-5" />, badge: t('landing.badgeCubed', 'CLASSES & COLLAB'),
-      title: t('landing.roomCubed', 'Cubed³ Masterclasses & Collab'),
-      note: t('landing.roomCubedNote', 'Real lectures, three to a masterclass, and a room where you ask another maker and work together.'),
-      tone: 'text-sky-400 bg-sky-500/10 border-sky-500/30',
-    },
-  ];
 
   /* Six things the app can promise, because each one is in the code. */
-  const trust: readonly [React.ReactNode, string, string][] = [
-    [<Tags key="t1" className="h-5 w-5 text-emerald-400" />, t('landing.trust1', 'Rand pricing'), t('landing.trust1n', 'Converted for {n} countries').replace('{n}', String(REGIONS.length))],
-    [<Languages key="t2" className="h-5 w-5 text-cyan-400" />, t('landing.trust2', 'Afrikaans & English'), t('landing.trust2n', 'Every room, both languages')],
-    [<Lock key="t3" className="h-5 w-5 text-emerald-400" />, t('landing.trust3', 'Your voice, your consent'), t('landing.trust3n', 'On record before a clone is made')],
-    [<Sparkles key="t4" className="h-5 w-5 text-cyan-400" />, t('landing.trust4', 'Says what made it'), t('landing.trust4n', 'On every release, every time')],
-    [<Baby key="t5" className="h-5 w-5 text-emerald-400" />, t('landing.trust5', 'A kids room'), t('landing.trust5n', 'With an allowance a grown-up sets')],
-    [<Rss key="t6" className="h-5 w-5 text-amber-400" />, t('landing.trust6', 'Real podcast feeds'), t('landing.trust6n', 'Ones Apple and Spotify accept')],
-  ];
 
   const doorTitle = mode === 'signin'
     ? t('landing.doorSignIn', 'Sign in to FutureBox')
@@ -227,8 +177,6 @@ export default function Landing({
           </button>
 
           <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-300 md:flex" aria-label={t('landing.navPlatform', 'Platform')}>
-            <button type="button" onClick={to('suite')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navPlatform', 'Platform')}</button>
-            <button type="button" onClick={to('features')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navFeatures', 'Features')}</button>
             <button type="button" onClick={to('pricing')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navPricing', 'Pricing')}</button>
             <button type="button" onClick={to('kids')} className="min-h-[44px] transition-colors hover:text-emerald-400">{t('landing.navKids', 'Kids')}</button>
             <LanguagePicker compact />
@@ -265,8 +213,8 @@ export default function Landing({
       <main className="relative z-10">
         {/* ── Hero: the pitch, and the door beside it ──────────────────── */}
         <section id="top" className={`${GUTTER} pb-16 pt-12 lg:pb-24 lg:pt-20`}>
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.4fr_1fr]">
-            <div className="space-y-8 text-left">
+          <div className="mx-auto max-w-3xl">
+            <div className="space-y-6 text-left">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/60 px-3.5 py-1.5 text-xs font-semibold text-emerald-400">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -296,140 +244,17 @@ export default function Landing({
                 {t('landing.heroDesc', 'Write it with the copilot, sing it yourself, clone your voice for the show, and put a video to it. Built on Google DeepMind, Vertex AI, Gemini and Veo.')}
               </p>
 
-              <div className="flex flex-wrap gap-2.5">
-                {[
-                  [<Wand2 key="a" className="h-3 w-3 text-emerald-400" />, t('landing.tagDeepMind', 'Google DeepMind')],
-                  [<Globe key="b" className="h-3 w-3 text-cyan-400" />, t('landing.tagVertex', 'Vertex AI Engine')],
-                  [<Sparkles key="c" className="h-3 w-3 text-amber-400" />, t('landing.tagGemini', 'Gemini & Veo Integrated')],
-                ].map(([icon, label]) => (
-                  <span key={String(label)} className="flex items-center gap-1.5 rounded-md border border-zinc-700/50 bg-zinc-800/80 px-3 py-1 text-[11px] font-medium text-zinc-300">
-                    {icon} {label}
-                  </span>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {[
-                  ['emerald', t('landing.hl1', 'Pro Audio & Voice Studio'), t('landing.hl1n', 'Stem separation, your voice cloned with consent, and a multi-track booth.')],
-                  ['cyan', t('landing.hl2', 'AI Video & Visuals'), t('landing.hl2n', 'Music videos drawn from your audio, or directed by Google Veo.')],
-                ].map(([tone, title, note]) => (
-                  <div key={title} className="flex items-start gap-3">
-                    <div className={`mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border ${tone === 'cyan' ? 'border-cyan-500/30 bg-cyan-500/10' : 'border-emerald-500/30 bg-emerald-500/10'}`}>
-                      <Check className={`h-3 w-3 ${tone === 'cyan' ? 'text-cyan-400' : 'text-emerald-400'}`} />
-                    </div>
-                    <p className="text-xs text-zinc-300">
-                      <strong className="block font-semibold text-white">{title}</strong>
-                      {note}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col items-stretch gap-4 pt-2 sm:flex-row sm:items-center">
-                <button
-                  type="button"
-                  onClick={onStart}
-                  className="flex min-h-[52px] items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-8 text-sm font-extrabold tracking-wide text-onAccent shadow-lg shadow-emerald-500/25 transition-all hover:-translate-y-0.5 hover:from-emerald-400 hover:to-cyan-400"
-                >
-                  <span>{t('landing.startFree', 'Start free')}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={onGoogle}
-                  /* Literal white, deliberately outside the theme. Google's
-                     sign-in button is theirs and their guidelines say what it
-                     looks like: a white field with dark text beside their
-                     mark. It is the one control here that must not follow a
-                     palette, and `check:theme` knows this line by name. */
-                  className="flex min-h-[52px] items-center justify-center gap-2.5 rounded-xl bg-[#ffffff] px-6 text-sm font-bold text-[#1f1f1f] transition-opacity hover:opacity-90"
-                >
-                  <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
-                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />
-                    <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.1 5.5c4.2-3.8 6.6-9.5 6.6-16.2z" />
-                    <path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.8-6.1C1 17 0 20.4 0 24s1 7 2.6 10.1l7.8-5.4z" />
-                    <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-9.1l-7.8 5.4C6.5 42.6 14.6 48 24 48z" />
-                  </svg>
-                  {t('welcome.google', 'Continue with Google')}
-                </button>
-                <button type="button" onClick={to('pricing')} className="min-h-[44px] px-2 text-sm font-semibold text-zinc-400 hover:text-white">
-                  {t('welcome.seePlans', 'See the plans')}
-                </button>
-              </div>
-
               <p className="text-sm text-zinc-500">
                 {t('landing.noCard', 'No card to start. The free tier is a real one, not a trial.')}
               </p>
             </div>
 
-            {/* ── The door ──────────────────────────────────────────────
-                Google drew a sign-in card in the hero, and it is the right
-                place for it: somebody who already has an account should not
-                have to find a button to get to a form. The form is the real
-                one from `page.tsx`, handed in as `door`. */}
-            <div id="door" className="scroll-mt-24">
-              <div className={`${GLASS} group relative overflow-hidden rounded-2xl p-6 shadow-2xl sm:p-8`} data-landingdoor>
-                <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-emerald-500/10 blur-3xl" />
-                <div className="relative mb-6 flex items-center justify-between border-b border-zinc-800 pb-4">
-                  <div className="min-w-0">
-                    <h2 className="flex items-center gap-2 text-lg font-bold text-white">
-                      <Lock className="h-4 w-4 flex-shrink-0 text-emerald-400" />
-                      <span>{doorTitle}</span>
-                    </h2>
-                    <p className="mt-0.5 text-xs text-zinc-400">{t('landing.doorSub', 'Open your studio and everything you made in it.')}</p>
-                  </div>
-                </div>
-
-                <div className="relative mb-6 flex rounded-xl border border-zinc-800 bg-zinc-950/80 p-1" role="tablist">
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={mode !== 'signup'}
-                    onClick={() => onMode('signin')}
-                    className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode !== 'signup' ? 'bg-emerald-500 text-onAccent shadow' : 'text-zinc-400 hover:text-white'}`}
-                  >
-                    {t('landing.tabSignIn', 'Sign In')}
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={mode === 'signup'}
-                    onClick={() => onMode('signup')}
-                    className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode === 'signup' ? 'bg-emerald-500 text-onAccent shadow' : 'text-zinc-400 hover:text-white'}`}
-                  >
-                    {t('landing.tabCreate', 'Create Account')}
-                  </button>
-                </div>
-
-                <div className="relative space-y-5">
-                  {door}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Six facts ─────────────────────────────────────────────────── */}
-        <section className="border-y border-zinc-800/80 bg-zinc-950/40 py-8 backdrop-blur-md">
-          <div className={GUTTER}>
-            <p className="mb-6 text-center text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-              {t('landing.trustTitle', 'What you can count on')}
-            </p>
-            <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-3 lg:grid-cols-6">
-              {trust.map(([icon, title, note]) => (
-                <div key={title} className="rounded-xl border border-zinc-800/60 bg-zinc-900/40 p-3">
-                  <div className="mb-1 flex justify-center">{icon}</div>
-                  <h3 className="text-xs font-bold text-white">{title}</h3>
-                  <p className="text-[10px] text-zinc-400">{note}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
         {/* ── The video, when this language has one ─────────────────────── */}
         {video && (
-          <section className={`${GUTTER} pt-16`}>
+          <section className={`${GUTTER} pt-4`} data-landingvideo>
             <div className="mx-auto w-full max-w-3xl">
               <p className="pb-4 text-center text-xs font-bold uppercase tracking-widest text-emerald-400">
                 {t('landing.seeIt', 'See it in thirty seconds')}
@@ -439,40 +264,77 @@ export default function Landing({
           </section>
         )}
 
-        {/* ── The six rooms ─────────────────────────────────────────────── */}
-        <section id="suite" className={`${GUTTER} scroll-mt-24 py-24`}>
-          <div className="mx-auto mb-16 max-w-3xl space-y-4 text-center">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400">
-              {t('landing.suiteTag', 'Creative Studio Suite')}
-            </h2>
-            <h3 className="text-3xl font-black text-white sm:text-4xl">
-              {t('landing.suiteTitle2', 'One Suite. Six Creative Rooms.')}
-            </h3>
-            <p className="text-sm text-zinc-400">
-              {t('landing.suiteSub2', 'From a voice in a microphone to a video on a channel, every room is inside the same black box.')}
-            </p>
-          </div>
+        {/* ── The door, under the video ──────────────────────────────
+            Carli, 13 October 2026: "Die video moet bo die log in wees. Net
+            onder die login moet die kids room bemark word, en dan daarna
+            die pricing." The form is the real one from `page.tsx`, handed
+            in as `door`; the hero no longer carries a second way in. */}
+        <section className={`${GUTTER} pt-12`}>
+          <div className="mx-auto w-full max-w-md">
+        {/* ── The door ──────────────────────────────────────────────
+            Google drew a sign-in card in the hero, and it is the right
+            place for it: somebody who already has an account should not
+            have to find a button to get to a form. The form is the real
+            one from `page.tsx`, handed in as `door`. */}
+        <div id="door" className="scroll-mt-24">
+          <div className={`${GLASS} group relative overflow-hidden rounded-2xl p-6 shadow-2xl sm:p-8`} data-landingdoor>
+            <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-emerald-500/10 blur-3xl" />
+            <div className="relative mb-6 flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="min-w-0">
+                <h2 className="flex items-center gap-2 text-lg font-bold text-white">
+                  <Lock className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+                  <span>{doorTitle}</span>
+                </h2>
+                <p className="mt-0.5 text-xs text-zinc-400">{t('landing.doorSub', 'Open your studio and everything you made in it.')}</p>
+              </div>
+            </div>
 
-          <div id="features" className="grid grid-cols-1 gap-8 scroll-mt-24 md:grid-cols-2 lg:grid-cols-3">
-            {rooms.map((room) => (
+            <div className="relative mb-6 flex rounded-xl border border-zinc-800 bg-zinc-950/80 p-1" role="tablist">
               <button
-                key={room.title}
                 type="button"
-                onClick={onStart}
-                className="group relative rounded-2xl border border-zinc-800 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-6 text-left backdrop-blur-md transition-all hover:-translate-y-1 hover:border-emerald-500/50 hover:shadow-[0_12px_30px_-10px_rgba(16,185,129,0.25)]"
+                role="tab"
+                aria-selected={mode !== 'signup'}
+                onClick={() => onMode('signin')}
+                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode !== 'signup' ? 'bg-emerald-500 text-onAccent shadow' : 'text-zinc-400 hover:text-white'}`}
               >
-                <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl border transition-transform group-hover:scale-110 ${room.tone}`}>
-                  {room.icon}
-                </div>
-                <span className="rounded border border-zinc-700 bg-zinc-800 px-2 py-0.5 font-mono text-[10px] text-zinc-300">{room.badge}</span>
-                <h4 className="mb-2 mt-2 text-xl font-bold text-white">{room.title}</h4>
-                <p className="mb-4 text-xs leading-relaxed text-zinc-400">{room.note}</p>
-                <div className="flex items-center justify-between border-t border-zinc-800/80 pt-4 text-xs">
-                  <span className="font-medium text-emerald-400">{t('landing.explore', 'Explore')}</span>
-                  <ChevronRight className="h-4 w-4 text-zinc-500 transition-transform group-hover:translate-x-1" />
-                </div>
+                {t('landing.tabSignIn', 'Sign In')}
               </button>
-            ))}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'signup'}
+                onClick={() => onMode('signup')}
+                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode === 'signup' ? 'bg-emerald-500 text-onAccent shadow' : 'text-zinc-400 hover:text-white'}`}
+              >
+                {t('landing.tabCreate', 'Create Account')}
+              </button>
+            </div>
+
+            <div className="relative space-y-5">
+              {door}
+              {/* Google, under the form. Literal white, deliberately outside
+                  the theme: Google's sign-in button is theirs and their
+                  guidelines say what it looks like, a white field with dark
+                  text beside their mark. It is the one control here that must
+                  not follow a palette, and `check:theme-css` knows this line
+                  by name. */}
+              <button
+                type="button"
+                onClick={onGoogle}
+                data-landinggoogle
+                className="flex min-h-[48px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#ffffff] px-6 text-sm font-bold text-[#1f1f1f] transition-opacity hover:opacity-90"
+              >
+                <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
+                  <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />
+                  <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.1 5.5c4.2-3.8 6.6-9.5 6.6-16.2z" />
+                  <path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.8-6.1C1 17 0 20.4 0 24s1 7 2.6 10.1l7.8-5.4z" />
+                  <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-9.1l-7.8 5.4C6.5 42.6 14.6 48 24 48z" />
+                </svg>
+                {t('welcome.google', 'Continue with Google')}
+              </button>
+            </div>
+          </div>
+        </div>
           </div>
         </section>
 
@@ -610,62 +472,12 @@ export default function Landing({
       </main>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <footer className="relative z-10 border-t border-zinc-800 bg-black py-12 text-xs text-zinc-400">
-        <div className={`${GUTTER} mb-12 grid grid-cols-1 gap-8 md:grid-cols-4`}>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm font-bold text-white">FUTUREBOX</span>
-            </div>
-            <p className="leading-relaxed text-zinc-500">
-              {t('landing.footBlurb', 'The whole studio in one black box: songs, voices, podcasts, videos, classes, and the people to make them with.')}
-            </p>
-          </div>
-          <div>
-            <h5 className="mb-3 font-bold uppercase tracking-wider text-white">{t('landing.footPlatform', 'Platform')}</h5>
-            <ul className="space-y-2">
-              {rooms.slice(0, 4).map((room) => (
-                <li key={room.title}>
-                  <button type="button" onClick={to('suite')} className="transition-colors hover:text-emerald-400">{room.title}</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h5 className="mb-3 font-bold uppercase tracking-wider text-white">{t('landing.footResources', 'Resources')}</h5>
-            <ul className="space-y-2">
-              <li><a href="/guide" className="transition-colors hover:text-emerald-400">{t('landing.footGuide', 'Guide')}</a></li>
-              <li><a href="/help" className="transition-colors hover:text-emerald-400">{t('landing.footHelp', 'Help')}</a></li>
-              <li><a href="/blog" className="transition-colors hover:text-emerald-400">{t('landing.footBlog', 'Blog')}</a></li>
-              <li><a href="/uitspraak" className="transition-colors hover:text-emerald-400">{t('landing.footSay', 'Pronunciation')}</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="mb-3 font-bold uppercase tracking-wider text-white">{t('landing.footLegal', 'Legal')}</h5>
-            <ul className="space-y-2">
-              <li><a href="/privacy" className="transition-colors hover:text-emerald-400">{t('landing.footPrivacy', 'Privacy Policy')}</a></li>
-              <li><a href="/terms" className="transition-colors hover:text-emerald-400">{t('landing.footTerms', 'Terms of Service')}</a></li>
-              <li><a href="/legal" className="transition-colors hover:text-emerald-400">{t('landing.footLegalPage', 'Legal & Company')}</a></li>
-              <li className="pt-2 text-zinc-500">
-                {t('landing.region', 'Region')}: <span className="text-emerald-400">{region.name} ({region.currency})</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className={`${GUTTER} flex flex-col items-center justify-between gap-3 border-t border-zinc-900 pt-6 text-[11px] text-zinc-600 sm:flex-row`}>
-          {/* The copyright line and the policy links are the site footer's,
-              drawn under this one on every page — so this row carries only
-              what that one does not. */}
-          <p>{t('welcome.footer', 'Everything made here says what made it, on the release.')}</p>
-          <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-mono text-[10px] text-emerald-400">futurebox.studio</span>
-        </div>
-      </footer>
 
       {/* ── On a phone, a bar along the bottom ─────────────────────────── */}
       <div className={`fixed inset-x-0 bottom-0 z-40 flex items-center justify-around p-2 md:hidden ${GLASS} border-x-0 border-b-0`} data-landingbar>
-        <button type="button" onClick={to('suite')} className="flex min-h-[44px] flex-col items-center justify-center gap-1 px-4 text-[10px] text-zinc-400 hover:text-emerald-400">
-          <LayoutGrid className="h-4 w-4" />
-          <span>{t('landing.navSuite', 'Suite')}</span>
+        <button type="button" onClick={to('kids')} className="flex min-h-[44px] flex-col items-center justify-center gap-1 px-4 text-[10px] text-zinc-400 hover:text-emerald-400">
+          <Baby className="h-4 w-4" />
+          <span>{t('landing.navKids', 'Kids')}</span>
         </button>
         <button type="button" onClick={to('pricing')} className="flex min-h-[44px] flex-col items-center justify-center gap-1 px-4 text-[10px] text-zinc-400 hover:text-emerald-400">
           <Tags className="h-4 w-4" />
