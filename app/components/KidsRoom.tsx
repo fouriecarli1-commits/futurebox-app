@@ -104,6 +104,7 @@ import {
   Settings, Smile, Sparkles, Square, Sun, Volume2, Waves, X,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 import KidsDoor from './KidsDoor';
 import StoryShelf from './StoryShelf';
 import SongShelf from './SongShelf';
@@ -388,6 +389,8 @@ export default function KidsRoom(): React.ReactElement {
   const [pip, setPip] = useState(false);
   const [pipAsk, setPipAsk] = useState<PipAsk | null>(null);
   const [pipAt, setPipAt] = useState(0);
+  /* Pip's card paints over the whole room, so Back closes it first. */
+  useBackLayer(pip, () => setPip(false));
   /* The beat stops with the room: on the way out, and at the door. */
   useEffect(() => () => beatEngine.stop(), []);
   const [listening, setListening] = useState(false);

@@ -107,8 +107,11 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'rate_limited', message: 'Too many at once. Try again in a moment.' }, { status: 429 });
   }
 
-  const hasGoogle = Boolean(process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || googleConfigured());
-  const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
+  /* `googleConfigured()` is the one place that knows the Google key, and
+     `copilotAvailable()` the one that knows whether the Anthropic key is
+     accepted — a key the supplier is refusing is not an available copilot. */
+  const hasGoogle = Boolean(process.env.GOOGLE_VERTEX_KEY || googleConfigured());
+  const hasAnthropic = copilotAvailable();
 
   if (!hasGoogle && !hasAnthropic) {
     return Response.json({ error: 'no_key', message: 'The copilot is not switched on.' }, { status: 503 });
@@ -148,7 +151,7 @@ export async function POST(request: Request): Promise<Response> {
   /* ── 1. Google Gemini 2.5 Flash (Google Workspace & Vertex AI) ────── */
   if (hasGoogle) {
     try {
-      const key = process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || '';
+      const key = process.env.GOOGLE_VERTEX_KEY || '';
       const endpoint = addressOf('gemini-2.5-flash', 'generateContent');
       const googleRes = await fetch(endpoint, {
         method: 'POST',

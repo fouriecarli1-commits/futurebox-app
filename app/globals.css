@@ -529,7 +529,9 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
    near-black band. That was learned on the Cubed room and is not going to be
    learned twice. */
 [data-kidsroom],
-body:has([data-kidsroom]) {
+[data-kidsdoor],
+body:has([data-kidsroom]),
+body:has([data-kidsdoor]) {
   /* The rounded face, loaded in `layout.tsx` and used only here. Google's
      own answer when she took the question to it: a playful face, not the
      system one. */
@@ -618,7 +620,8 @@ body:has([data-kidsroom]) {
    the top and falling to near-black at the edges, and it is right: it gives
    the page somewhere to be without putting anything in it that a child has
    to read past. */
-body:has([data-kidsroom]) {
+body:has([data-kidsroom]),
+body:has([data-kidsdoor]) {
   background-color: #022c22;
   /* ── Her photograph, 13 October 2026 ──────────────────────────────────
      Carli: "ek wil hê jy moet direk die foto gebruik wat ek jou gee as
@@ -639,12 +642,15 @@ body:has([data-kidsroom]) {
 /* Make the page wrapper transparent while the kids room is open, so the wash
    is the one that shows. */
 body:has([data-kidsroom]) .min-h-screen,
-body:has([data-kidsroom]) main {
+body:has([data-kidsroom]) main,
+body:has([data-kidsdoor]) .min-h-screen,
+body:has([data-kidsdoor]) main {
   background-color: transparent;
 }
 
 /* The fat rounded headline face of Google's page, local in `layout.tsx`. */
-[data-kidsroom] .fb-kids-bubble {
+[data-kidsroom] .fb-kids-bubble,
+[data-kidsdoor] .fb-kids-bubble {
   font-family: var(--fb-font-bubble), var(--fb-font-round), "Trebuchet MS", sans-serif;
   letter-spacing: 0.02em;
 }
@@ -652,17 +658,20 @@ body:has([data-kidsroom]) main {
 /* Every button on Google's page sat on a thick dark shelf and sank into it
    when pressed. One class, so the hundred buttons in here do it the same
    way and a child learns it once. */
-[data-kidsroom] .fb-kids-bouncy {
+[data-kidsroom] .fb-kids-bouncy,
+[data-kidsdoor] .fb-kids-bouncy {
   transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 150ms ease;
   box-shadow: 0 6px 0 rgba(1, 40, 24, 0.7), 0 10px 18px rgba(0, 0, 0, 0.35);
 }
 
-[data-kidsroom] .fb-kids-bouncy:hover:not(:disabled) {
+[data-kidsroom] .fb-kids-bouncy:hover:not(:disabled),
+[data-kidsdoor] .fb-kids-bouncy:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 9px 0 rgba(1, 40, 24, 0.8), 0 14px 22px rgba(0, 0, 0, 0.4);
 }
 
-[data-kidsroom] .fb-kids-bouncy:active:not(:disabled) {
+[data-kidsroom] .fb-kids-bouncy:active:not(:disabled),
+[data-kidsdoor] .fb-kids-bouncy:active:not(:disabled) {
   transform: translateY(4px) scale(0.98);
   box-shadow: 0 1px 0 rgba(1, 40, 24, 0.9), 0 4px 8px rgba(0, 0, 0, 0.2);
 }
@@ -672,7 +681,8 @@ body:has([data-kidsroom]) main {
   50% { transform: translateY(-7px) rotate(1.5deg); }
 }
 
-[data-kidsroom] .fb-kids-float {
+[data-kidsroom] .fb-kids-float,
+[data-kidsdoor] .fb-kids-float {
   animation: fb-kids-floaty 3.2s ease-in-out infinite;
 }
 

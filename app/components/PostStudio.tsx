@@ -75,6 +75,7 @@ import CanvasSizeModal from './CanvasSizeModal';
 import StudioTemplatesModal from './StudioTemplatesModal';
 import { type StudioTemplateItem } from '../lib/studiotemplates';
 import { CUT_LOOK } from '../lib/cutlook';
+import { PHOTO } from '../lib/photolook';
 import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { FACES, faceOf, faceReady, type FaceId } from '../lib/postfaces';
 import {
@@ -186,6 +187,8 @@ const LEEG = KNOP;
  * `check:chosen` holds that every `aria-pressed` chip in this room says so
  * with more than a colour.
  */
+/** A toolkit tab: a bench's icon and name, lit with `GEKIES` when open. */
+const TAB = 'inline-flex min-h-[44px] flex-shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border px-2.5 text-[11px] font-bold';
 const GEKIES = 'border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.35)]';
 const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100';
 
@@ -5113,6 +5116,24 @@ export default function PostStudio({
     </div>
   );
 
+  /* The feed preview: the canvas drawn at its own size, as a picture. */
+  const [social, setSocial] = useState<string | null>(null);
+  useBackLayer(social !== null, () => setSocial(null));
+  const showSocial = (): void => {
+    const off = document.createElement('canvas');
+    draw(off, false);
+    setSocial(off.toDataURL('image/jpeg', 0.85));
+  };
+  /* Escape shuts the open bench, as the bar's own sheet did, so the way out
+     of a bench is the same whichever layout drew it. */
+  useEffect(() => {
+    if (!bench) return undefined;
+    const key = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') { event.stopPropagation(); setBench(null); }
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [bench]);
   const benchFor: Record<string, React.ReactNode> = {
     pic: picBench,
     frame: frameBench,
@@ -5121,6 +5142,652 @@ export default function PostStudio({
     text: textBench,
     save: saveBench,
   };
+
+  /* ── Google's page, over the same machinery ───────────────────────────
+
+     Carli, 13 October 2026, with Google's "Photo Editor v4.2" page: *"ons
+     hou nie die oud en sit hierdie by nie, ons transform en totally
+     redesign"* — and that evening, of this room: *"Photo editor is ook
+     nogsteeds oud en dieselfde."* The packs and the glow had gone in on 13
+     October and the room around them had not changed, which from her side
+     is the same as nothing having changed.
+
+     Google's page is a control bar across the top — brand, the starter
+     packs, three canvas sizes, three AI tools, a social preview and the
+     export — over three panels: a toolkit on the left, the canvas in the
+     middle in its own card with its size written over it, an inspector on
+     the right with the layers in it. That is the room now, at a desk. On an
+     upright phone the same three stack, as Google's own `lg:flex-row`
+     does: the canvas stays at the top of the scroll and the toolkit and the
+     inspector run under it, so no panel is ever drawn OVER the picture —
+     which was her complaint about the pop-out bars on 9 October.
+
+     Nothing behind a button is new. The six benches are the same six, under
+     the same `data-cutbench` the probes press; the toolkit's tabs are those
+     benches, and the open one is drawn in the toolkit instead of in a sheet
+     over the glass. The "layers" in the inspector are the real things on
+     the canvas — the photograph, the background, each line of words, each
+     shape — and pressing one opens the bench it lives on. The social
+     preview is the real canvas drawn into a feed card; Google's mock had a
+     sponsor line and a like count, and those are left out because they
+     would be invented.
+
+     A phone turned on its side keeps the bar's own rail (`RoomDock`), which
+     was built for exactly that shape and measured there. */
+  const sidewaysPhone = sideways && !atDesk;
+  const ALL_BENCHES: readonly BenchSpec[] = [...POST_UPPER, ...POST_LOWER];
+  const here = ALL_BENCHES.find((one) => one.id === bench) ?? null;
+  const panelStyle: React.CSSProperties = { background: PHOTO.surface, border: `1px solid ${PHOTO.edge}` };
+  const chipStyle: React.CSSProperties = { background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` };
+  const ratio = (size.width / size.height).toFixed(4);
+  const glassCap = atDesk ? '62dvh' : '44dvh';
+  const openBench = (next: Exclude<Bench, null>): void => {
+    setBench(bench === next ? null : next);
+    if (bench !== next && onEdge) setAsking(false);
+  };
+
+  const header = (
+    <header
+      data-postbar
+      className="sticky top-0 z-20 flex flex-shrink-0 flex-wrap items-center gap-2 px-3 py-2"
+      style={{ background: PHOTO.floorGlass, borderBottom: `1px solid ${PHOTO.edge}`, backdropFilter: 'blur(12px)' }}
+    >
+      <div className="flex flex-shrink-0 items-center gap-2">
+        <span
+          className="flex h-8 w-8 items-center justify-center rounded-xl"
+          style={{ background: PHOTO.accent, boxShadow: PHOTO.glowEmerald, color: PHOTO.floor }}
+          aria-hidden
+        >
+          <ImageIcon className="h-4 w-4" />
+        </span>
+        {/* The name of the room refuses to shrink: on a 1512-wide screen a
+            heading with no width of its own was squeezed to 52 pixels and
+            read "noto / ditor" — see the note of 10 and 11 October above. */}
+        <h2 className="flex-shrink-0 whitespace-nowrap text-sm font-extrabold tracking-tight">
+          {asRoom ? (
+            <>
+              FUTURE<span style={{ color: PHOTO.accent }}>BOX</span>
+              <span className="ml-2 font-mono text-[10px] font-semibold uppercase tracking-wider" style={{ color: INK_DIM }}>
+                {t('rail.photo', 'Photo Editor')}
+              </span>
+            </>
+          ) : t('post.title', 'Make a post')}
+        </h2>
+      </div>
+      {/* Sideways on purpose: Google's control strip scrolls across, which
+          is what keeps nine buttons on one 390-pixel line without any of
+          them running off the glass — `audit/wide.mjs` measured the row
+          that did. */}
+      <div data-postquick className="order-last flex w-full min-w-0 items-center gap-1.5 overflow-x-auto py-1">
+        <button
+          type="button"
+          onClick={() => setShowTemplatesModal(true)}
+          title={t('stpl.openTemplates', 'Templates & Starter Packs')}
+          className="inline-flex min-h-[44px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold"
+          style={{ background: PHOTO.accentWash, border: `1px solid ${PHOTO.accentDim}`, color: PHOTO.accent }}
+        >
+          <LayoutTemplate className="h-4 w-4" />
+          <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
+        </button>
+        <span className="mx-1 h-4 w-px flex-shrink-0" style={{ background: PHOTO.edge }} aria-hidden />
+        {POST_SIZES.filter((one) => ['square', 'story', 'wide'].includes(one.id)).map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            data-postquicksize={one.id}
+            aria-pressed={size.id === one.id}
+            onClick={() => setSize(one)}
+            className={`${TAB} ${size.id === one.id ? GEKIES : ''}`}
+            style={size.id === one.id ? undefined : chipStyle}
+          >
+            {one.id === 'square' ? '🔲 ' : one.id === 'story' ? '📱 ' : '🖥️ '}
+            {one.name} ({one.id === 'square' ? '1:1' : one.id === 'story' ? '9:16' : '16:9'})
+          </button>
+        ))}
+        <button
+          type="button"
+          data-postcustomsize
+          onClick={() => setShowSizeModal(true)}
+          title={t('size.customOrStandard', 'Standard & Custom Sizes')}
+          className={TAB}
+          style={chipStyle}
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+          {`${size.width}×${size.height}`}
+        </button>
+        <span className="mx-1 h-4 w-px flex-shrink-0" style={{ background: PHOTO.edge }} aria-hidden />
+        {/* The three AI tools as the benches they already are: Magic Grab
+            is the extract bench, BG Remover is the picture bench, and the
+            fill is the picture bench's ask-for-a-picture. Only a shorter
+            way there. */}
+        <button
+          type="button"
+          data-postquickgrab
+          onClick={() => openBench('read')}
+          className={TAB}
+          style={{ background: PHOTO.cyanWash, border: `1px solid ${PHOTO.cyan}`, color: PHOTO.cyan }}
+        >
+          🪄 {t('post.quickGrab', 'Magic Grab')}
+        </button>
+        <button
+          type="button"
+          data-postquickbg
+          onClick={() => openBench('pic')}
+          className={TAB}
+          style={{ background: PHOTO.purpleWash, border: `1px solid ${PHOTO.purple}`, color: PHOTO.purple }}
+        >
+          ✂️ {t('post.quickBg', 'BG Remover')}
+        </button>
+        <button
+          type="button"
+          data-postquickfill
+          onClick={() => openBench('pic')}
+          className={TAB}
+          style={{ background: PHOTO.accentWash, border: `1px solid ${PHOTO.accentDim}`, color: PHOTO.accent }}
+        >
+          ✨ {t('post.quickFill', 'Generative Fill')}
+        </button>
+      </div>
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+        {/* Simple, or everything — see `lib/plainmode.ts`. */}
+        <button
+          type="button"
+          data-postsimple
+          aria-pressed={!plain}
+          onClick={() => setPlain(!plain)}
+          title={plain
+            ? t('post.showAllWhat', 'Show every setting there is')
+            : t('post.showLessWhat', 'One button per tool, at the setting that is right most of the time')}
+          className={`${LEEG} w-auto px-3 text-xs`}
+          style={chipStyle}
+        >
+          {plain ? t('post.showAll', 'Everything') : t('post.showLess', 'Simple')}
+        </button>
+        {/* One step back, where it can always be reached: the tools it
+            undoes are on five different benches. It says what it undoes. */}
+        {picture !== null || told > 0 ? (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              data-postundo
+              disabled={history.current.undoable() === null}
+              onClick={stepBack}
+              title={history.current.undoable()
+                ? `${t('post.undo', 'Put back')} — ${history.current.undoable()}`
+                : t('post.undoNone', 'Nothing to put back yet')}
+              aria-label={history.current.undoable()
+                ? `${t('post.undo', 'Put back')} — ${history.current.undoable()}`
+                : t('post.undoNone', 'Nothing to put back yet')}
+              className={`${LEEG} w-auto px-3 disabled:opacity-35`}
+              style={chipStyle}
+            >
+              <Undo2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              data-postredo
+              disabled={history.current.redoable() === null}
+              onClick={stepOn}
+              title={history.current.redoable()
+                ? `${t('post.redo', 'Do it again')} — ${history.current.redoable()}`
+                : t('post.redoNone', 'Nothing to do again')}
+              aria-label={history.current.redoable()
+                ? `${t('post.redo', 'Do it again')} — ${history.current.redoable()}`
+                : t('post.redoNone', 'Nothing to do again')}
+              className={`${LEEG} w-auto px-3 disabled:opacity-35`}
+              style={chipStyle}
+            >
+              <Redo2 className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
+        {/* The copilot, as a button — Carli: *"Die copilot kan ook net 'n
+            button wees wat uit pop"*. */}
+        {copilot ? (
+          <button
+            type="button"
+            data-postask
+            aria-pressed={asking}
+            onClick={() => { setAsking(true); if (onEdge) setBench(null); }}
+            className={`${LEEG} w-auto px-3 text-xs`}
+            style={chipStyle}
+          >
+            <Sparkles className="h-4 w-4" />
+            {t('post.ask', 'Ask')}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          data-postsocial
+          onClick={showSocial}
+          className="inline-flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-extrabold text-white"
+          style={{ background: PHOTO.social, boxShadow: PHOTO.glowCyan }}
+        >
+          👁️ <span className="hidden sm:inline">{t('post.social', 'How it looks on social')}</span>
+        </button>
+        <button
+          type="button"
+          data-postexportopen
+          aria-pressed={bench === 'save'}
+          onClick={() => openBench('save')}
+          className="inline-flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-xl px-4 text-xs font-extrabold uppercase tracking-wider"
+          style={{ background: PHOTO.accent, color: PHOTO.floor, boxShadow: PHOTO.glowEmerald }}
+        >
+          <Download className="h-3.5 w-3.5" />
+          {t('post.exportNow', 'Export')}
+        </button>
+        {/* A room is left by the menu, like every other room; the overlay
+            form has its own close. */}
+        {asRoom ? (
+          <button
+            type="button"
+            onClick={onClose}
+            data-roomback
+            aria-label={t('room.backToAll', 'Alle Kamers')}
+            className={`${LEEG} w-auto px-3 font-bold`}
+            style={{ ...chipStyle, color: PHOTO.accent }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-xs">{t('room.backToAll', 'Alle Kamers')}</span>
+          </button>
+        ) : (
+          <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className={LEEG} style={chipStyle}>
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </header>
+  );
+
+  /* ── The canvas, in its card ─────────────────────────────────────────
+     Google's centre panel: a header with a live dot and the size in
+     monospace, the glass in an emerald frame, and a footer with the zoom
+     and what is on it. The glass is capped by the screen's height so the
+     whole picture is always in view — `min(100%, cap × ratio)` keeps the
+     aspect ratio whichever way the frame is shaped. */
+  const canvasCard = (
+    <section data-postcanvascard className="flex flex-shrink-0 flex-col rounded-2xl p-3" style={panelStyle}>
+      <div className="flex items-center justify-between gap-3 pb-2 text-xs font-bold" style={{ borderBottom: `1px solid ${PHOTO.edge}` }}>
+        <span className="flex items-center gap-2">
+          <span className="h-2 w-2 animate-ping rounded-full" style={{ background: PHOTO.accent }} aria-hidden />
+          <span>{t('post.canvasTitle', 'Studio canvas')}</span>
+        </span>
+        <span data-postdims className="truncate font-mono" style={{ color: INK_DIM }}>
+          {`${size.width}px × ${size.height}px · ${size.name}`}
+        </span>
+      </div>
+      <div
+        className="relative mx-auto my-3 w-full select-none"
+        style={{ width: `min(100%, calc(${glassCap} * ${ratio}))` }}
+      >
+        <canvas
+          ref={canvas}
+          data-postcanvas
+          data-postmovable={movable ? 'yes' : 'no'}
+          onPointerDown={grab}
+          onPointerMove={drag}
+          onPointerUp={letGo}
+          onPointerCancel={letGo}
+          className="w-full rounded-xl"
+          style={{
+            aspectRatio: `${size.width} / ${size.height}`,
+            border: `2px solid ${PHOTO.accentDim}`,
+            boxShadow: PHOTO.glowEmerald,
+            background: PHOTO.black,
+            /* Only while there is something to pan, crop, trace or move: a
+               permanent `touch-action: none` is a dead zone in the middle of
+               a page that scrolls, which reads as the app being frozen. */
+            touchAction: movable || cropBox || traced || words.length > 0 ? 'none' : 'auto',
+            cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
+          }}
+        />
+        {!picture && words.length === 0 && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+            <div
+              className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-2xl p-5 shadow-2xl backdrop-blur-md"
+              style={{ background: PHOTO.floorGlass, border: `1px solid ${PHOTO.accentDim}` }}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: PHOTO.accentWash, color: PHOTO.accent, border: `1px solid ${PHOTO.accentDim}` }}>
+                <LayoutTemplate className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">{t('stpl.starterTitle', 'Start with a Design or Photo')}</h4>
+                <p className="mt-1 text-xs text-zinc-400">{t('stpl.starterDesc', 'Choose a starter pack or upload your image to begin creating.')}</p>
+              </div>
+              <div className="flex w-full flex-col gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowTemplatesModal(true)}
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-xs font-extrabold uppercase tracking-wider"
+                  style={{ background: PHOTO.accent, color: PHOTO.floor }}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openBench('pic')}
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold"
+                  style={chipStyle}
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>{t('post.bringIn', 'Bring a picture in')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 font-mono text-[11px]" style={{ borderTop: `1px solid ${PHOTO.edge}`, color: INK_DIM }}>
+        <span>{`${t('post.zoom', 'Zoom')} ${crop.zoom.toFixed(2)}x`}</span>
+        <span data-poststatus className="truncate">
+          {picture
+            ? `${t('post.statusPicture', 'Photograph in')} · ${picture.naturalWidth || picture.width}×${picture.naturalHeight || picture.height}`
+            : t('post.statusNoPicture', 'No photograph yet')}
+          {` · ${words.length} ${t('post.statusWords', 'lines of words')} · ${marks.length} ${t('post.statusMarks', 'shapes')}`}
+        </span>
+      </div>
+      {/* The photograph's own size, for a probe to read: the canvas is the
+          FRAME and stays 1080x1920 whatever is cut away. */}
+      {picture && (
+        <span
+          hidden
+          data-postpicturesize
+          data-w={picture.naturalWidth || picture.width}
+          data-h={picture.naturalHeight || picture.height}
+        />
+      )}
+      {covered && (
+        <p data-postclash className="mt-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-relaxed text-amber-300">
+          {t('post.covered', 'Some of your words are where the app prints its own caption and buttons. They are moved clear in the saved file; the shaded bands show where.')}
+        </p>
+      )}
+      {said && <p data-postsaid className="mt-2 text-[13px] leading-relaxed text-emerald-400">{said}</p>}
+    </section>
+  );
+
+  /* ── The toolkit's tabs: the six benches ───────────────────────────── */
+  const tabs = (
+    <div data-postbenches className={atDesk ? 'grid grid-cols-2 gap-1.5' : 'flex gap-1.5'}>
+      {ALL_BENCHES.map((spec) => (
+        <button
+          key={spec.id}
+          type="button"
+          data-cutbench={spec.id}
+          aria-pressed={bench === spec.id}
+          title={t(spec.what[0], spec.what[1])}
+          onClick={() => openBench(spec.id)}
+          className={`${TAB} ${bench === spec.id ? GEKIES : ''}`}
+          style={bench === spec.id ? undefined : chipStyle}
+        >
+          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center">{spec.icon}</span>
+          <span className="truncate">{t(spec.label[0], spec.label[1])}</span>
+          {spec.paid ? <span className="text-[9px]" style={{ color: PHOTO.accent }}>●</span> : null}
+        </button>
+      ))}
+    </div>
+  );
+
+  /* The open bench, drawn in the toolkit rather than in a sheet over the
+     glass. The same `DeskSheet` the bar used, so its title, its one line of
+     what it does, its paid mark and its close are the same. */
+  const benchPanel = here ? (
+    <div data-postbenchpanel className="flex min-h-0 flex-col">
+      <DeskSheet
+        icon={here.icon}
+        title={t(here.label[0], here.label[1])}
+        what={t(here.what[0], here.what[1])}
+        paid={here.paid}
+        paidSays={t('dock.paidSays', 'Some of this costs credits.')}
+        paidLine={t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
+        closeSays={t('cut.shut', 'Close this bench')}
+        look={CUT_LOOK}
+        single
+        onClose={() => setBench(null)}
+      >
+        {benchFor[here.id]}
+      </DeskSheet>
+    </div>
+  ) : (
+    <p data-posttoolkithint className="px-1 py-3 text-center text-xs leading-relaxed" style={{ color: INK_DIM }}>
+      {t('post.toolkitHint', 'Pick a bench above and its tools open here, beside the picture rather than over it.')}
+    </p>
+  );
+
+  /* ── The inspector: what is on the canvas, and the way out ─────────── */
+  const layers: readonly { id: string; dot: string; name: string; note: string; bench: Exclude<Bench, null> }[] = [
+    {
+      id: 'picture',
+      dot: picture ? PHOTO.accent : PHOTO.edge,
+      name: picture ? t('post.layerPicture', 'Photograph') : t('post.layerNoPicture', 'No photograph yet'),
+      note: picture ? `${picture.naturalWidth || picture.width}×${picture.naturalHeight || picture.height}` : t('post.layerBring', 'Bring one in'),
+      bench: 'pic',
+    },
+    {
+      id: 'ground',
+      dot: back ?? PHOTO.edge,
+      name: back ? t('post.layerGround', 'Background colour') : t('post.layerNoGround', 'See-through background'),
+      note: back ?? '',
+      bench: 'pic',
+    },
+    ...words.map((one) => ({ id: one.id, dot: one.ink, name: `“${one.text}”`, note: t('post.layerWords', 'Words'), bench: 'text' as const })),
+    ...marks.map((mark) => ({ id: mark.id, dot: PHOTO.purple, name: t('post.layerMark', 'Shape'), note: String(mark.kind), bench: 'text' as const })),
+  ];
+  const inspector = (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between pb-2 text-xs font-bold uppercase" style={{ borderBottom: `1px solid ${PHOTO.edge}` }}>
+        <span>{t('post.inspector', 'Inspector')}</span>
+        <span className="font-mono text-[10px] normal-case" style={{ color: PHOTO.accent }}>
+          {plain ? t('post.showLess', 'Simple') : t('post.showAll', 'Everything')}
+        </span>
+      </div>
+      <div>
+        <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase" style={{ color: INK_DIM }}>
+          <span>{t('post.layers', 'Layers')}</span>
+          <button type="button" data-postaddlayer onClick={() => openBench('text')} className="min-h-[32px] font-mono text-[10px] normal-case" style={{ color: PHOTO.accent }}>
+            + {t('post.layerAdd', 'Add words')}
+          </button>
+        </div>
+        <ul data-postlayers className="space-y-1.5">
+          {layers.map((one) => (
+            <li key={one.id}>
+              <button
+                type="button"
+                data-postlayer={one.id}
+                onClick={() => openBench(one.bench)}
+                className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left text-xs"
+                style={chipStyle}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: one.dot }} aria-hidden />
+                  <span className="truncate font-bold text-white">{one.name}</span>
+                </span>
+                <span className="flex-shrink-0 font-mono text-[9px]" style={{ color: INK_DIM }}>{one.note}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="rounded-xl p-3" style={{ background: PHOTO.surfaceLight, border: `1px solid ${PHOTO.edge}` }}>
+        <div className="mb-2 flex items-center justify-between text-xs font-bold">
+          <span>{t('post.aiTools', 'AI tools')}</span>
+          <span className="font-mono text-[10px]" style={{ color: PHOTO.cyan }}>{t('post.aiToolsNote', 'for credits')}</span>
+        </div>
+        <div className="grid gap-1.5">
+          <button type="button" onClick={() => openBench('read')} className="min-h-[44px] rounded-xl px-3 text-left text-xs font-bold" style={{ background: PHOTO.cyanWash, border: `1px solid ${PHOTO.cyan}`, color: PHOTO.cyan }}>
+            🪄 {t('post.quickGrab', 'Magic Grab')}
+          </button>
+          <button type="button" onClick={() => openBench('pic')} className="min-h-[44px] rounded-xl px-3 text-left text-xs font-bold" style={{ background: PHOTO.purpleWash, border: `1px solid ${PHOTO.purple}`, color: PHOTO.purple }}>
+            ✂️ {t('post.quickBg', 'BG Remover')}
+          </button>
+          <button type="button" onClick={() => openBench('pic')} className="min-h-[44px] rounded-xl px-3 text-left text-xs font-bold" style={{ background: PHOTO.accentWash, border: `1px solid ${PHOTO.accentDim}`, color: PHOTO.accent }}>
+            ✨ {t('post.fixPart', 'Fix a part of it')}
+          </button>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => openBench('save')}
+        className="min-h-[44px] w-full rounded-xl px-3 text-xs font-extrabold uppercase tracking-wider"
+        style={{ background: PHOTO.accent, color: PHOTO.floor, boxShadow: PHOTO.glowEmerald }}
+      >
+        {t('post.exportNow', 'Export')} · {creditsSaid(CREDITS.postOut, t)}
+      </button>
+    </div>
+  );
+
+  /* ── The bars that sit on the glass itself ─────────────────────────── */
+  const strips = (
+    <>
+      {cropStrip}
+      {traceStrip}
+      {/* The line she tapped, and the three things to do with it — on the
+          screen rather than on a bench, so the button is never behind the
+          thing she is aiming at. */}
+      {picking && (
+        <div
+          data-postlinebar
+          className="flex-shrink-0 space-y-2 rounded-2xl px-4 py-3"
+          style={panelStyle}
+        >
+          <p data-postlinesaid className="text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
+            {picked
+              ? `“${picked.text}”`
+              : t('post.tapALine', 'Tap a line of writing on the picture.')}
+          </p>
+          {picked && things.current.has(picked.id) && (
+            <div className={RY3}>
+              <button type="button" data-postthinglift onClick={() => liftThing(picked)} className={LEEG}>
+                {t('post.thingLift', 'Lift it out')}
+              </button>
+            </div>
+          )}
+          {picked && !things.current.has(picked.id) && (
+            <div className={RY3}>
+              <button type="button" data-postlinegrab onClick={() => grabLine(picked)} className={LEEG}>
+                {t('post.lineGrab', 'Lift it onto the picture')}
+              </button>
+              <button type="button" data-postlinedrop onClick={() => dropLine(picked)} className={LEEG}>
+                {t('post.lineDrop', 'Take it out')}
+              </button>
+              {/* Both, which is what moving a line is. */}
+              <button
+                type="button"
+                data-postlinemove
+                onClick={() => { const one = picked; if (dropLine(one)) grabLine(one); }}
+                className={LEEG}
+              >
+                {t('post.lineMove', 'Move it')}
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            data-postlinedone
+            onClick={() => { setPicking(false); setFound(null); setPicked(null); setBench('read'); }}
+            className={VUL}
+          >
+            {t('post.lineDone', 'Done with the words')}
+          </button>
+        </div>
+      )}
+      {(picture !== null || words.length > 0) && movingWords ? (
+        <div data-postmovebar className="flex-shrink-0 space-y-2 rounded-2xl px-4 py-3" style={panelStyle}>
+          <p className="text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
+            {t('post.moveWordsHow', 'Put your finger on a line of words and drag it where you want it.')}
+          </p>
+          <button
+            type="button"
+            data-postmovedone
+            onClick={() => { setMovingWords(false); setBench('text'); }}
+            className={VUL}
+          >
+            {t('post.moveWordsDone', 'Done moving')}
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
+
+  /* ── The copilot, as a column beside the picture or a sheet under it ── */
+  const copilotPane = copilot && asking ? (
+    <div className={onEdge ? 'flex min-h-0 h-full w-[320px] flex-shrink-0 flex-col' : 'flex min-h-0 max-h-[72dvh] flex-col'}>
+      <DeskSheet
+        icon={<Sparkles className="h-4 w-4" />}
+        title={t('post.ask.title', 'Ask the copilot')}
+        what={t(
+          'post.ask.what',
+          'It knows which room you are in. Ask it what a tool does, or what to try next on this picture.',
+        )}
+        closeSays={t('post.ask.shut', 'Close the copilot')}
+        look={CUT_LOOK}
+        plain
+        onClose={() => setAsking(false)}
+      >
+        {/* `Copilot.tsx`'s root is `h-full min-h-0`, so it needs a parent
+            with a height to be full of. */}
+        <div className="flex min-h-0 flex-1 flex-col">{copilot}</div>
+      </DeskSheet>
+    </div>
+  ) : null;
+
+  /* ── The social preview: the real canvas in a feed card ─────────────── */
+  const socialModal = social ? (
+    <div
+      data-postsocialmodal
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-md"
+      style={{ background: PHOTO.scrim }}
+      onClick={() => setSocial(null)}
+    >
+      <div
+        className="relative w-full max-w-md rounded-2xl p-5"
+        style={{ background: PHOTO.surface, border: `1px solid ${PHOTO.purple}`, boxShadow: PHOTO.glowEmerald }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          data-postsocialclose
+          onClick={() => setSocial(null)}
+          aria-label={t('post.socialClose', 'Close the preview')}
+          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-xl"
+          style={chipStyle}
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <h3 className="text-lg font-bold text-white">{t('post.socialTitle', 'How it looks in a feed')}</h3>
+        <p className="mb-4 font-mono text-xs" style={{ color: PHOTO.purple }}>{t('post.socialWhat', 'Your picture, in a post card, at the size the feed shows it.')}</p>
+        <div className="mb-4 overflow-hidden rounded-xl p-3" style={{ background: PHOTO.black, border: `1px solid ${PHOTO.edge}` }}>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="h-7 w-7 rounded-full" style={{ background: PHOTO.accent }} aria-hidden />
+            <div>
+              <div className="text-xs font-bold text-white">{t('post.socialYou', 'Your page')}</div>
+              <div className="text-[9px]" style={{ color: INK_DIM }}>{t('post.socialNow', 'Just now')}</div>
+            </div>
+          </div>
+          <img
+            src={social}
+            alt=""
+            data-postsocialpicture
+            className="my-2 block w-full rounded-lg"
+            style={{ aspectRatio: `${size.width} / ${size.height}`, objectFit: 'cover', border: `1px solid ${PHOTO.edge}` }}
+          />
+          <div className="flex items-center gap-4 pt-2 text-base" style={{ color: INK_DIM }} aria-hidden>
+            <span>♡</span><span>💬</span><span>↗</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setSocial(null)}
+          className="min-h-[44px] w-full rounded-xl text-xs font-bold"
+          style={{ background: PHOTO.accent, color: PHOTO.floor }}
+        >
+          {t('post.socialDone', 'Looks right, close it')}
+        </button>
+      </div>
+    </div>
+  ) : null;
 
   return (
     <div
@@ -5143,451 +5810,93 @@ export default function PostStudio({
           : {}),
       }}
     >
-      {/* ── The picture, which never leaves the glass ──────────────────
- 
-          The one thing a photo editor must not do is hide the photograph
-          behind the control you are using on it. The cutting room already
-          knows this — its sheet is capped so the frame stays visible — and
-          this room now works the same way. */}
-      <div
-        /* Wider at a desk. `max-w-2xl` is 672 pixels, which on a phone is
-           the whole screen and at a desk is a phone-shaped strip down the
-           middle of a monitor with grey either side — which is precisely
-           the look she objected to. The cap stays, because a photograph
-           stretched across 2,000 pixels of browser is not better, it is
-           just bigger. */
-        /* `min-w-0`, since 12 October 2026: at a desk the bench sits BESIDE
-           this pane in a flex row, and a flex child's floor is its content's
-           width unless told otherwise. On a 1024-pixel tablet with a fine
-           pointer the picture would not give, the bench was pushed 33px off
-           the glass, and `audit/wide.mjs 1024` measured it. Below its
-           content's width the pane scrolls inside itself instead. */
-        className={`mx-auto flex w-full min-w-0 min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 ${
-          atDesk ? 'max-w-5xl' : 'max-w-2xl'
-        }`}
-      >
-        {/* Wrapping, since 12 October 2026: the templates and size buttons went on
-            this row and the Ask button ran 34px off a 390-pixel phone — `audit/wide.mjs`
-            measured it on the runner. The title keeps its place; the buttons take a
-            second line when they must. */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* ── Why the name of the room refuses to shrink ──────────────
- 
-              Carli, 10 and 11 October 2026: *"Kyk hoe sny alles af op die
-              rekenaar se skerm"*, and then again *"Die kamer met die
-              afgesnyde woorde is ook nog nie reg op die rekenaar se website
-              nie."*
- 
-              Measured rather than guessed, which is the only reason it was
-              found: on a 1512-wide screen this heading's box came out
-              **52 pixels** wide for the words "Photo Editor". Not hidden
-              under the navigation, as it looks — squeezed. Everything else
-              in this row is a button with its own intrinsic width, and a
-              flex child with none of its own gives up every pixel it is
-              asked for until the words wrap mid-syllable and the overflow
-              takes the rest. What she sees is "noto / ditor".
- 
-              A phone has the same row and does not show it, because there
-              the row wraps instead. So it is a desk-only fault, and one
-              that no screenshot of a phone would ever have found. */}
-          <h2 className="flex-shrink-0 whitespace-nowrap text-lg font-bold">
-            {asRoom ? t('rail.photo', 'Photo Editor') : t('post.title', 'Make a post')}
-          </h2>
-          {/* ── Simple, or everything ────────────────────────────────────
- 
-              In words rather than behind a gear, because the way to the rest
-              of the app should not be a thing to be discovered. It says what
-              it will GIVE you, not what mode you are in: "Everything" is a
-              promise, "Simple mode is on" is a status nobody reads. */}
-          <button
-            type="button"
-            data-postsimple
-            aria-pressed={!plain}
-            onClick={() => setPlain(!plain)}
-            title={plain
-              ? t('post.showAllWhat', 'Show every setting there is')
-              : t('post.showLessWhat', 'One button per tool, at the setting that is right most of the time')}
-            className={`${LEEG} w-auto px-3`}
-          >
-            {plain ? t('post.showAll', 'Everything') : t('post.showLess', 'Simple')}
-          </button>
-
-          {/* ── One step back, where it can always be reached ───────────
- 
-              In the room's header rather than on a bench, because the tools
-              it undoes are on five different benches and a button you have
-              to go and find is a button you find after you have decided to
-              live with the mistake.
- 
-              It says what it undoes, in the title and to a screen reader:
-              "Put back taking the background out" is a different promise
-              from "Undo", and the difference matters when four destructive
-              things have happened in a row. */}
-          {picture !== null || told > 0 ? (
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                data-postundo
-                disabled={history.current.undoable() === null}
-                onClick={stepBack}
-                title={history.current.undoable()
-                  ? `${t('post.undo', 'Put back')} \u2014 ${history.current.undoable()}`
-                  : t('post.undoNone', 'Nothing to put back yet')}
-                aria-label={history.current.undoable()
-                  ? `${t('post.undo', 'Put back')} \u2014 ${history.current.undoable()}`
-                  : t('post.undoNone', 'Nothing to put back yet')}
-                className={`${LEEG} w-auto px-3 disabled:opacity-35`}
-              >
-                <Undo2 className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                data-postredo
-                disabled={history.current.redoable() === null}
-                onClick={stepOn}
-                title={history.current.redoable()
-                  ? `${t('post.redo', 'Do it again')} \u2014 ${history.current.redoable()}`
-                  : t('post.redoNone', 'Nothing to do again')}
-                aria-label={history.current.redoable()
-                  ? `${t('post.redo', 'Do it again')} \u2014 ${history.current.redoable()}`
-                  : t('post.redoNone', 'Nothing to do again')}
-                className={`${LEEG} w-auto px-3 disabled:opacity-35`}
-              >
-                <Redo2 className="h-4 w-4" />
-              </button>
-            </div>
-          ) : null}
-
-          {/* Templates & Starter Pack */}
-          <button
-            type="button"
-            onClick={() => setShowTemplatesModal(true)}
-            title={t('stpl.openTemplates', 'Templates & Starter Packs')}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-950/40 px-3 text-xs font-bold text-purple-200 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] active:scale-95 transition-all"
-          >
-            <LayoutTemplate className="h-4 w-4 text-purple-400" />
-            <span className="hidden sm:inline">{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
-          </button>
-
-          {/* ── The strip Google's page put across the top ───────────────
-              Three canvas sizes as one press each, and the three AI tools
-              as the benches they already are: Magic Grab is the extract
-              bench, BG Remover is the picture bench, Generative Fill is
-              the picture bench's ask-for-a-picture. Nothing new behind any
-              of them; only a shorter way there. */}
-          <div className="hidden items-center gap-1.5 md:flex" data-postquick>
-            {POST_SIZES.filter((one) => ['square', 'story', 'wide'].includes(one.id)).map((one) => (
-              <button
-                key={one.id}
-                type="button"
-                data-postquicksize={one.id}
-                aria-pressed={size.id === one.id}
-                onClick={() => setSize(one)}
-                className={`${LEEG} w-auto px-2.5 text-xs ${size.id === one.id ? GEKIES : ''}`}
-              >
-                {one.id === 'square' ? '🔲 1:1' : one.id === 'story' ? '📱 9:16' : '🖥️ 16:9'}
-              </button>
-            ))}
-            <span className="mx-1 h-4 w-px bg-zinc-700/40" aria-hidden />
-            <button type="button" onClick={() => setBench('read')} className={`${LEEG} w-auto border-cyan-500/40 bg-cyan-500/10 px-2.5 text-xs text-cyan-300`}>
-              🪄 {t('post.quickGrab', 'Magic Grab')}
-            </button>
-            <button type="button" onClick={() => setBench('pic')} className={`${LEEG} w-auto border-purple-500/40 bg-purple-500/10 px-2.5 text-xs text-purple-300`}>
-              ✂️ {t('post.quickBg', 'BG Remover')}
-            </button>
-            <button type="button" onClick={() => setBench('pic')} className={`${LEEG} w-auto border-emerald-500/40 bg-emerald-500/10 px-2.5 text-xs text-emerald-300`}>
-              ✨ {t('post.quickFill', 'Generative Fill')}
-            </button>
+      {sidewaysPhone ? (
+        <>
+          <div className="mx-auto flex w-full min-w-0 min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+            {header}
+            <div className="flex flex-col gap-3 px-3 pb-3">{canvasCard}{strips}</div>
           </div>
-          {/* Canvas Size */}
-          <button
-            type="button"
-            onClick={() => setShowSizeModal(true)}
-            title={t('size.customOrStandard', 'Standard & Custom Sizes')}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 text-xs font-bold text-zinc-300 hover:border-zinc-500 hover:text-white active:scale-95 transition-all"
+          {copilotPane}
+          <RoomDock
+            open={bench}
+            onOpen={(next) => { setBench(next); if (next && onEdge) setAsking(false); }}
+            playing={false}
+            onPlay={() => undefined}
+            onSkip={() => undefined}
+            transport={false}
+            upper={POST_UPPER}
+            lower={POST_LOWER}
+            paidLine={t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
           >
-            <Maximize2 className="h-3.5 w-3.5 text-teal-400" />
-            <span className="hidden sm:inline">{size.name || `${size.width}×${size.height}`}</span>
-          </button>
-
-          {/* ── The copilot, as a button ─────────────────────────────
- 
-              Carli asked for this shape in the cutting room — *"Die copilot
-              kan ook net 'n button wees wat uit pop"* — and the reason is the
-              same here: in a room that is a screen with a bar at its foot,
-              a column underneath is a screenful nobody scrolls to. */}
-          {copilot ? (
-            <button
-              type="button"
-              data-postask
-              aria-pressed={asking}
-              onClick={() => { setAsking(true); if (onEdge) setBench(null); }}
-              className={`${LEEG} w-auto px-3`}
-            >
-              <Sparkles className="h-4 w-4" />
-              {t('post.ask', 'Ask')}
-            </button>
-          ) : null}
-          {/* A room is left by the menu, like every other room. A close
-              button here would be a second way out that only this room has,
-              and the one it leads back to depends on how you arrived. */}
-          {asRoom ? (
-            <button
-              type="button"
-              onClick={onClose}
-              data-roomback
-              aria-label={t('room.backToAll', 'Alle Kamers')}
-              className={`${LEEG} w-auto px-3 text-emerald-400 hover:text-emerald-300 font-bold`}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="text-xs">{t('room.backToAll', 'Alle Kamers')}</span>
-            </button>
-          ) : (
-            <button type="button" onClick={onClose} data-backout aria-label={t('post.close', 'Close')} className={LEEG}>
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        <div className="relative w-full select-none">
-  <canvas
-          ref={canvas}
-          data-postcanvas
-          data-postmovable={movable ? 'yes' : 'no'}
-          onPointerDown={grab}
-          onPointerMove={drag}
-          onPointerUp={letGo}
-          onPointerCancel={letGo}
-          className="w-full rounded-xl border border-zinc-800"
-          style={{
-            aspectRatio: `${size.width} / ${size.height}`,
-            /* Only while there is something to pan.
- 
-               `touch-action: none` on this canvas permanently would be a
-               tall dead zone in the middle of a sheet that scrolls — she
-               puts her thumb on the picture, pulls, and the page refuses to
-               move, which reads as the app being frozen. With no slack
-               there is nothing to drag, so the page gets the gesture. */
-            /* `none` while cropping as well as while panning. A corner drag
-               that the page treats as a scroll moves the room instead of the
-               box, and on a phone that reads as the handle not working. */
-            /* And with words on it. Once there are any, the glass is an
-               editing surface: a drag means move this word, or pan the
-               picture under it, and the page scrolling instead means
-               neither. */
-            touchAction: movable || cropBox || traced || words.length > 0 ? 'none' : 'auto',
-            cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
-          }}
-        />
-
-          {!picture && words.length === 0 && (
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-              <div className="pointer-events-auto flex flex-col items-center gap-3 rounded-2xl border border-purple-500/20 bg-zinc-950/85 p-5 backdrop-blur-md shadow-2xl max-w-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                  <LayoutTemplate className="h-6 w-6" />
+            {bench ? benchFor[bench] : null}
+          </RoomDock>
+        </>
+      ) : atDesk ? (
+        <>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {header}
+            <div className="flex min-h-0 flex-1 gap-3 p-3">
+              <aside
+                data-posttoolkit
+                className="flex w-[360px] flex-shrink-0 min-h-0 flex-col gap-3 overflow-y-auto rounded-2xl p-3 2xl:w-[420px]"
+                style={panelStyle}
+              >
+                {tabs}
+                {benchPanel}
+              </aside>
+              <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
+                {canvasCard}
+                {strips}
+              </main>
+              <aside
+                data-postinspector
+                className="w-[300px] flex-shrink-0 min-h-0 overflow-y-auto rounded-2xl p-3"
+                style={panelStyle}
+              >
+                {inspector}
+              </aside>
+            </div>
+          </div>
+          {copilotPane}
+        </>
+      ) : (
+        <>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {header}
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-3">
+              {/* The canvas stays at the top of the scroll — Carli, 7 October
+                  2026: the picture *"slid off the top the moment she opened
+                  anything"* — and everything under it scrolls beneath. */}
+              <div className="sticky top-0 z-10 px-3 pt-3" style={{ background: PHOTO.floor }}>
+                {canvasCard}
+              </div>
+              <div className="flex flex-col gap-3 px-3">
+                {strips}
+                {/* `data-cutdock` here, because `audit/postwalk.mjs` and
+                    `audit/underbar.mjs` take the bar's top as the floor of the
+                    glass; under the canvas, it is. */}
+                {/* Sideways on purpose: six benches on one phone line, each a
+                    thumb wide, scrolling across like Google's strip above. */}
+                <div data-cutdock="" className="overflow-x-auto rounded-2xl p-2" style={panelStyle}>
+                  {tabs}
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white">{t('stpl.starterTitle', 'Start with a Design or Photo')}</h4>
-                  <p className="mt-1 text-xs text-zinc-400">{t('stpl.starterDesc', 'Choose a starter pack or upload your image to begin creating.')}</p>
-                </div>
-                <div className="flex w-full flex-col gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowTemplatesModal(true)}
-                    className="inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 text-xs font-bold text-white hover:bg-purple-500 transition-all shadow-md active:scale-95"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>{t('stpl.openTemplates', 'Templates & Starter Packs')}</span>
-                  </button>
+                {benchPanel}
+                <div data-postinspector className="rounded-2xl p-3" style={panelStyle}>
+                  {inspector}
                 </div>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* ── The photograph's own size, for a probe to read ────────────
- 
-            The canvas is the FRAME and stays 1080x1920 whatever is cut away,
-            so nothing on the screen says how big the photograph itself is —
-            and "did Cut really cut it" is exactly that question.
- 
-            A hidden span rather than an attribute on the canvas, because the
-            canvas's own `width` and `height` mean something else already and
-            a second meaning on the same element is how a probe comes to
-            measure the wrong one. */}
-        {picture && (
-          <span
-            hidden
-            data-postpicturesize
-            data-w={picture.naturalWidth || picture.width}
-            data-h={picture.naturalHeight || picture.height}
-          />
-        )}
-
-        {covered && (
-          <p data-postclash className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-relaxed text-amber-300">
-            {t('post.covered', 'Some of your words are where the app prints its own caption and buttons. They are moved clear in the saved file; the shaded bands show where.')}
-          </p>
-        )}
-
-        {said && <p data-postsaid className="text-[13px] leading-relaxed text-emerald-400">{said}</p>}
-      </div>
-
-      {cropStrip}
-      {traceStrip}
-      {/* ── The line she tapped, and the three things to do with it ────
-
-          On the screen rather than on a bench, for the reason the crop bar
-          and the cut bar are: the bench covers the middle of the picture,
-          and a Take-it-out button behind the thing she is aiming at is a
-          button nobody can press. */}
-      {picking && (
-        <div
-          data-postlinebar
-          className="flex-shrink-0 space-y-2 border-t px-4 py-3"
-          style={asRoom
-            ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
-            : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
-        >
-          <p
-            data-postlinesaid
-            className="text-[12px] leading-relaxed"
-            style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}
-          >
-            {picked
-              ? `“${picked.text}”`
-              : t('post.tapALine', 'Tap a line of writing on the picture.')}
-          </p>
-          {picked && things.current.has(picked.id) && (
-            <div className={RY3}>
-              <button
-                type="button"
-                data-postthinglift
-                onClick={() => liftThing(picked)}
-                className={LEEG}
-              >
-                {t('post.thingLift', 'Lift it out')}
-              </button>
-            </div>
-          )}
-          {picked && !things.current.has(picked.id) && (
-            <div className={RY3}>
-              <button
-                type="button"
-                data-postlinegrab
-                onClick={() => grabLine(picked)}
-                className={LEEG}
-              >
-                {t('post.lineGrab', 'Lift it onto the picture')}
-              </button>
-              <button
-                type="button"
-                data-postlinedrop
-                onClick={() => dropLine(picked)}
-                className={LEEG}
-              >
-                {t('post.lineDrop', 'Take it out')}
-              </button>
-              {/* Both, which is what moving a line is. One press, because a
-                  line left in the photograph AND added as words reads as
-                  the app having duplicated it. */}
-              <button
-                type="button"
-                data-postlinemove
-                onClick={() => { const one = picked; if (dropLine(one)) grabLine(one); }}
-                className={LEEG}
-              >
-                {t('post.lineMove', 'Move it')}
-              </button>
-            </div>
-          )}
-          <button
-            type="button"
-            data-postlinedone
-            onClick={() => { setPicking(false); setFound(null); setPicked(null); setBench('read'); }}
-            className={VUL}
-          >
-            {t('post.lineDone', 'Done with the words')}
-          </button>
-        </div>
+          </div>
+          {copilotPane}
+        </>
       )}
-      {picture !== null || words.length > 0 ? movingWords && (
-        <div
-          data-postmovebar
-          className="flex-shrink-0 space-y-2 border-t px-4 py-3"
-          style={asRoom
-            ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
-            : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
-        >
-          <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
-            {t('post.moveWordsHow', 'Put your finger on a line of words and drag it where you want it.')}
-          </p>
-          <button
-            type="button"
-            data-postmovedone
-            onClick={() => { setMovingWords(false); setBench('text'); }}
-            className={VUL}
-          >
-            {t('post.moveWordsDone', 'Done moving')}
-          </button>
-        </div>
-      ) : null}
-
-      {/* ── The copilot, over the room ────────────────────────────────
- 
-          The same sheet the benches use, so it opens and closes with the same
-          word as everything else in the room, and capped so the bar
-          underneath it stays reachable.
-
-          On an edge it is a column beside the picture, and it shares that
-          side with the bench: one or the other, never both. With both open a
-          1024-pixel tablet with a mouse had the copilot (305px), the bench
-          sheet (400px) and its buttons (120px) in a 732-pixel row, and the
-          buttons ran 33px off the glass — `audit/wide.mjs 1024` measured it
-          on 12 October 2026. `check:wide` runs the phone; the tablet widths
-          are run by hand with the same file. */}
-      {copilot && asking && (
-        <div className={onEdge ? 'flex min-h-0 h-full w-[320px] flex-shrink-0 flex-col' : 'flex min-h-0 max-h-[72dvh] flex-col'}>
-          <DeskSheet
-            icon={<Sparkles className="h-4 w-4" />}
-            title={t('post.ask.title', 'Ask the copilot')}
-            what={t(
-              'post.ask.what',
-              'It knows which room you are in. Ask it what a tool does, or what to try next on this picture.',
-            )}
-            closeSays={t('post.ask.shut', 'Close the copilot')}
-            look={CUT_LOOK}
-            plain
-            onClose={() => setAsking(false)}
-          >
-            {/* `Copilot.tsx`'s root is `h-full min-h-0`, so it needs a parent
-                with a height to be full of. */}
-            <div className="flex min-h-0 flex-1 flex-col">{copilot}</div>
-          </DeskSheet>
-        </div>
-      )}
-
-      <RoomDock
-        open={bench}
-        onOpen={(next) => { setBench(next); if (next && onEdge) setAsking(false); }}
-        playing={false}
-        onPlay={() => undefined}
-        onSkip={() => undefined}
-        transport={false}
-        upper={POST_UPPER}
-        lower={POST_LOWER}
-        paidLine={t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
-      >
-        {bench ? benchFor[bench] : null}
-      </RoomDock>
-
+      {socialModal}
       {showTemplatesModal && (
         <StudioTemplatesModal
           onClose={() => setShowTemplatesModal(false)}
           onSelectTemplate={handleSelectStudioTemplate}
         />
       )}
-
       {showSizeModal && (
         <CanvasSizeModal
           currentWidth={size.width}

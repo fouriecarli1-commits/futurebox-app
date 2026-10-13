@@ -146,7 +146,12 @@ export async function POST(request: Request): Promise<Response> {
   }
   for (const one of asList) {
     const row = one && typeof one === 'object' ? one as { data?: unknown; mime?: unknown } : null;
-    const data = String(row?.data ?? '');
+    /* A data URL is accepted and cut to its base64, so a caller that packs
+       the whole URL is not answered with Google's own "Base64 decoding
+       failed" — which is what the kids drawing board got on 13 October
+       2026, in a box on a child's screen. */
+    const raw = String(row?.data ?? '');
+    const data = raw.startsWith('data:') ? raw.slice(raw.indexOf(',') + 1) : raw;
     const mime = String(row?.mime ?? '');
     if (!data || !MIMES.has(mime)) {
       return Response.json(

@@ -117,6 +117,10 @@ async function stubKids(page, onPost) {
   check('  with nothing said about a failure', (await page.locator('[data-kidsfail]').count()) === 0);
 
   /* ── 4. The child's own words ─────────────────────────────────────── */
+  /* Since 13 October 2026 the room opens on six doors, and the box to type
+     in is behind the music one. */
+  await page.locator('[data-kidsroomdoor="music"]').first().click();
+  await page.waitForTimeout(600);
   const box = page.locator('[data-kidstype]');
   check('the room has a box to type in', (await box.count()) === 1);
   await box.fill('a dog on the moon');

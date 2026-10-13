@@ -28,6 +28,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2, Moon, Pause, Play, SkipForward } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 import { allSongs, type KeptSong } from '../lib/songkeep';
 import { asClock } from '../lib/kidsallowance';
 
@@ -52,6 +53,9 @@ export default function KidsSleep({
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [left, setLeft] = useState<number | null>(null);
   const [dim, setDim] = useState(false);
+  /* The dimmed screen paints over the whole app, so Back wakes it rather
+     than unwinding past it to the studio. */
+  useBackLayer(dim, () => setDim(false));
   const audio = useRef<HTMLAudioElement | null>(null);
   const url = useRef<string>('');
 
@@ -237,7 +241,7 @@ export default function KidsSleep({
           data-kidsdim
           onClick={() => setDim(false)}
           aria-label={t('kids.sleepWake', 'Tap to see the room again')}
-          className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-black/95 text-center"
+          className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-scrim/95 text-center"
         >
           <span className="fb-kids-float text-7xl" aria-hidden>🌙</span>
           <span className="text-sm font-bold text-zinc-500">

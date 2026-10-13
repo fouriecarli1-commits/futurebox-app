@@ -93,7 +93,14 @@ export async function packDrawing(drawing: Blob): Promise<{ data: string; mime: 
     ink.fillStyle = '#ffffff';
     ink.fillRect(0, 0, canvas.width, canvas.height);
     ink.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return { data: canvas.toDataURL('image/png'), mime: 'image/png' };
+    /* Bare base64, past the comma. Carli, 13 October 2026, with a
+       photograph of the room: *"Om 'n prent na lewe te bring wil nie werk
+       nie"* — Google answered `Base64 decoding failed for "data:image/png;
+       base64,…"`, because this sent the whole data URL and the route hands
+       the string straight to `inline_data`. `packpicture.ts` had always cut
+       the prefix; this did not. */
+    const url = canvas.toDataURL('image/png');
+    return { data: url.slice(url.indexOf(',') + 1), mime: 'image/png' };
   } finally {
     URL.revokeObjectURL(url);
   }

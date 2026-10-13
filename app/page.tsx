@@ -4395,7 +4395,7 @@ export default function FutureBoxHome() {
                       key="kids"
                       href="/kids"
                       data-railkids
-                      title={t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Two presses in there: a song, and a video of it.')}
+                      title={t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Six doors in there: music, videos and stories, drawing, games, editing and quizzes.')}
                       className={`min-h-[44px] flex-shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
                         theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
                       } border-amber-500/30 bg-amber-500/[0.08] text-zinc-300 hover:border-amber-400/60 hover:bg-amber-500/[0.14] hover:text-white`}
