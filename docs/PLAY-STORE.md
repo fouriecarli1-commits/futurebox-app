@@ -55,7 +55,7 @@ The practical consequences, said plainly:
 | | Where |
 |---|---|
 | App manifest with id, scope, language, categories, orientation | `app/manifest.ts` |
-| Icons at 192 and 512, one of them maskable | `public/icon-192.png`, `public/icon-512.png` |
+| Icons at 192 and 512, one of them maskable | `public/icon-neon-192.png`, `public/icon-neon-512.png`, `public/icon-neon-512-maskable.png` |
 | Asset links, read from the environment | `app/.well-known/assetlinks.json/route.ts` |
 | Public privacy page | `/privacy` |
 | In-app account deletion | `DeleteAccount.tsx` |

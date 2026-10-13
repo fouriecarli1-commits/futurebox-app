@@ -160,9 +160,6 @@ for (const preset of PRESETS) {
  * the allowlist becoming a habit.
  */
 const HOW_MANY: Record<string, number> = {
-  /* Google's sign-in button: their white fill and their near-black text,
-     both specified by them. */
-  'app/components/Landing.tsx': 2,
   /* Nine brand buttons, a fill and a text colour each: Google, Apple,
      Facebook, Spotify, Discord, Twitch, GitHub, LinkedIn and one more. Each
      pair is the company's own specification and a themed version is
@@ -217,8 +214,9 @@ for (const file of walk('app')) {
      not a grandfathering: a colour that must NOT follow the theme. */
   const brandOrOverPicture = new Set([
     /* Sign-in buttons. Google, Apple and Facebook each specify their
-       button's exact colours, and a themed version is off-brand. */
-    'app/components/Landing.tsx',
+       button's exact colours, and a themed version is off-brand. The
+       landing page left this list on 13 October 2026: its Google button
+       went, the door's own one being the only way in. */
     'app/components/SignInWith.tsx',
     /* Words printed over somebody's artwork or video. White with a scrim
        under it, because the surface behind is a photograph and not a

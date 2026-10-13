@@ -16,11 +16,16 @@
  *
  *     node scripts/icon.mjs
  *
+ * The files carry "neon" in their names since 13 October 2026, when the
+ * tile was redrawn: a browser and a launcher cache an icon by its address,
+ * and the same address with a new picture behind it kept showing the old
+ * one on her phone. A new name is a new picture everywhere at once.
+ *
  * Five files:
- *   public/icon-512.png            the icon, transparent corners ("any")
- *   public/icon-512-maskable.png   the same on a full dark square, the tile
+ *   public/icon-neon-512.png       the icon, transparent corners ("any")
+ *   public/icon-neon-512-maskable.png  the same green to the edge, the chip
  *                                  inside the 80% safe zone ("maskable")
- *   public/icon-192.png            the small one
+ *   public/icon-neon-192.png       the small one
  *   app/apple-icon.png             iOS ignores transparency, so the full square
  *   app/icon.png                   the favicon
  */
@@ -70,9 +75,9 @@ const page = (size, filled) => {
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const files = [
-  ['public/icon-512.png', 512, false],
-  ['public/icon-512-maskable.png', 512, true],
-  ['public/icon-192.png', 192, false],
+  ['public/icon-neon-512.png', 512, false],
+  ['public/icon-neon-512-maskable.png', 512, true],
+  ['public/icon-neon-192.png', 192, false],
   ['app/apple-icon.png', 180, true],
   ['app/icon.png', 32, false],
 ];

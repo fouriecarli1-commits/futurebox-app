@@ -61,7 +61,6 @@ const GLASS = 'bg-zinc-900/75 backdrop-blur-xl border border-white/10';
 export default function Landing({
   onStart,
   onSignIn,
-  onGoogle,
   mode,
   onMode,
   door,
@@ -71,7 +70,8 @@ export default function Landing({
   /** "Sign in": the card in sign-in mode. */
   readonly onSignIn: () => void;
   /** Sign in with a Google account. Returns a reason when it cannot. */
-  readonly onGoogle: () => void;
+  /** Kept on the type for `page.tsx`; the door carries Google's button itself. */
+  readonly onGoogle?: () => void;
   /** Which face the card is showing. */
   readonly mode: Mode;
   readonly onMode: (mode: Mode) => void;
@@ -158,10 +158,11 @@ export default function Landing({
       <header className={`sticky top-0 z-40 w-full ${GLASS} border-x-0 border-t-0`}>
         <div className={`${GUTTER} flex h-20 items-center justify-between gap-3`}>
           <button type="button" onClick={to('top')} className="flex items-center gap-3 text-left">
-            <span className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-500/20">
-              <span className="flex h-full w-full items-center justify-center rounded-[10px] bg-black">
-                <Cpu className="h-5 w-5 text-emerald-400" />
-              </span>
+            {/* The app icon's own tile (`scripts/icon.mjs`): green, lit, the
+                chip black. Carli, 13 October 2026: "die groen om die icon
+                moet brighter en neon wees, en die swart lyne bly swart". */}
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-emerald-500 shadow-[0_0_18px_rgba(5,255,147,0.55)]">
+              <Cpu className="h-5 w-5 text-onAccent" />
             </span>
             <span>
               {/* The word is hidden on a phone: beside the language switch
@@ -312,26 +313,6 @@ export default function Landing({
 
             <div className="relative space-y-5">
               {door}
-              {/* Google, under the form. Literal white, deliberately outside
-                  the theme: Google's sign-in button is theirs and their
-                  guidelines say what it looks like, a white field with dark
-                  text beside their mark. It is the one control here that must
-                  not follow a palette, and `check:theme-css` knows this line
-                  by name. */}
-              <button
-                type="button"
-                onClick={onGoogle}
-                data-landinggoogle
-                className="flex min-h-[48px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#ffffff] px-6 text-sm font-bold text-[#1f1f1f] transition-opacity hover:opacity-90"
-              >
-                <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
-                  <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />
-                  <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.1 5.5c4.2-3.8 6.6-9.5 6.6-16.2z" />
-                  <path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.8-6.1C1 17 0 20.4 0 24s1 7 2.6 10.1l7.8-5.4z" />
-                  <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-9.1l-7.8 5.4C6.5 42.6 14.6 48 24 48z" />
-                </svg>
-                {t('welcome.google', 'Continue with Google')}
-              </button>
             </div>
           </div>
         </div>

@@ -35,8 +35,8 @@
  * is the whole finding.
  */
 import { readFileSync } from 'node:fs';
-import { CREDITS } from '../app/lib/credits.ts';
-import { RAND_PER_USD } from '../app/lib/plans.ts';
+import { CREDITS, TIER_CREDITS } from '../app/lib/credits.ts';
+import { RAND_PER_USD, TIER_SPECS } from '../app/lib/plans.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -102,8 +102,20 @@ const rand = (usd: number): number => usd * RAND_PER_USD;
 
 /* The LOW end of what a credit is worth to us, because that is the plan
    where the margin is thinnest and the only one worth pricing against. A
-   price that works on the generous plan and loses on the mean one loses. */
-const CREDIT_RAND_LOW = 0.23;
+   price that works on the generous plan and loses on the mean one loses.
+
+   Read off the tiers, not typed. This was `0.23` — true on 8 October, when
+   the figures were sent, and false from 13 October, when Carli repriced
+   the credit ("Sal the credits more expensive … all the plans pay that
+   same price"): a credit now sells for R1.49 at the thinnest plan, and a
+   typed 0.23 kept this check saying MiniMax loses money and a song runs
+   at a loss, which had both stopped being true. `check:graadbaan` reads
+   its credit the same way, for the same reason. */
+const CREDIT_RAND_LOW = Math.min(
+  ...Object.entries(TIER_SPECS)
+    .filter(([id, one]) => one.rand > 0 && TIER_CREDITS[id as keyof typeof TIER_CREDITS] > 0)
+    .map(([id, one]) => one.rand / TIER_CREDITS[id as keyof typeof TIER_CREDITS]),
+);
 const takenFor5s = CREDITS.video * CREDIT_RAND_LOW;
 
 console.log('');
@@ -131,21 +143,26 @@ console.log('');
 
 /* ── The findings the write-up rests on ─────────────────────────────── */
 
-ok('buying MiniMax directly loses money on a five-second clip at our price',
-  rand(MINIMAX.videoPerSecond.max_768 * 5) > takenFor5s,
+/* Before 13 October 2026 these read the other way: at R0.23 a credit a
+   five-second clip brought in R3.45 and every MiniMax row lost money. At
+   R1.49 it brings in R22.35 and every row is in profit — the doc's dated
+   table carries the old figures and says so at its top. */
+ok('buying MiniMax directly is in profit on a five-second clip at our price',
+  rand(MINIMAX.videoPerSecond.max_768 * 5) < takenFor5s,
   `R${rand(MINIMAX.videoPerSecond.max_768 * 5).toFixed(2)} to buy against`
-  + ` R${takenFor5s.toFixed(2)} taken — if this ever passes, `
-  + ' `docs/MINIMAX-PRYSE.md` is telling her the opposite of the truth');
+  + ` R${takenFor5s.toFixed(2)} taken — if this ever fails, the credit has`
+  + ' been repriced under the engine and `docs/MINIMAX-PRYSE.md` needs its'
+  + ' note rewritten');
 
-ok('  and the cheapest direct resolution still loses on the thinnest plan',
-  rand(MINIMAX.videoPerSecond.max_480 * 5) > takenFor5s,
-  `480P is R${rand(MINIMAX.videoPerSecond.max_480 * 5).toFixed(2)} against`
+ok('  and even the dearest direct resolution still is, on the thinnest plan',
+  rand(MINIMAX.videoPerSecond.h3_2k * 5) < takenFor5s,
+  `2K is R${rand(MINIMAX.videoPerSecond.h3_2k * 5).toFixed(2)} against`
   + ` R${takenFor5s.toFixed(2)}`);
 
-ok('  but the same model through OpenArt’s biggest plan does not',
-  rand(IN_CREDITS.h3MaxTurbo5s768 * perCredit('wonder')) < takenFor5s,
-  `R${rand(IN_CREDITS.h3MaxTurbo5s768 * perCredit('wonder')).toFixed(2)} against`
-  + ` R${takenFor5s.toFixed(2)}`);
+ok('  and at least twice over, which is the house floor on a generation',
+  rand(MINIMAX.videoPerSecond.max_768 * 5) * 2 <= takenFor5s,
+  `R${rand(MINIMAX.videoPerSecond.max_768 * 5).toFixed(2)} twice is`
+  + ` R${(rand(MINIMAX.videoPerSecond.max_768 * 5) * 2).toFixed(2)} against R${takenFor5s.toFixed(2)}`);
 
 ok('a reseller is CHEAPER than the supplier it resells, which is the finding',
   IN_CREDITS.h3Max5s768 * perCredit('wonder') < MINIMAX.videoPerSecond.max_768 * 5,
@@ -232,18 +249,18 @@ for (const [name, usd] of [
 }
 console.log('');
 
-ok('a song costs us more than it brings in today, on the thinnest plan',
-  rand(SONG_NOW) > CREDITS.song * CREDIT_RAND_LOW,
+ok('a song brings in more than it costs us today, on the thinnest plan',
+  rand(SONG_NOW) < CREDITS.song * CREDIT_RAND_LOW,
   `R${rand(SONG_NOW).toFixed(2)} to make against`
   + ` R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)} taken — this is the`
   + ' biggest single cost in the app and the one the whole credit scale was'
-  + ' built round');
+  + ' built round; it ran at a loss until the 13 October repricing');
 
 ok('  and Mureka’s working model makes it cost a fraction of that',
   MUREKA.songFromLyrics.v8v9 < SONG_NOW / 5,
   `$${MUREKA.songFromLyrics.v8v9} against $${SONG_NOW.toFixed(2)}`);
 
-ok('  which turns the song from a loss into a margin',
+ok('  which widens the margin on it several times over',
   rand(MUREKA.songFromLyrics.v8v9) < CREDITS.song * CREDIT_RAND_LOW,
   `R${rand(MUREKA.songFromLyrics.v8v9).toFixed(2)} against`
   + ` R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)}`);

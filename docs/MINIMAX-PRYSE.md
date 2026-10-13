@@ -4,6 +4,16 @@
 betaal-soos-jy-gaan tabelle, en OpenArt se vier planne met die kredietkoste
 van elke model daarop.*
 
+> **Nota, 13 Oktober 2026.** Die krediet is dié dag herprys: Maker R149 vir
+> 100 krediete, Studio R349 vir 210, Label R899 vir 490 — **R1,49 per
+> krediet op die karigste plan**, nie meer R0,23 nie. Elke "marge" hieronder
+> is dus teen die ou krediet gereken. Teen R1,49 bring vyf sekondes video
+> R22,35 in, en elke ry in die videotabel is in wins (die duurste, MiniMax
+> H3 2K teen R10,40, hou R11,95). 'n Liedjie bring R11,92 in teen R4,80
+> (R5,52 met BTW) om te maak. Die verskaffersyfers self is onveranderd;
+> `check:minimax` lees die krediet nou van die planne af en hou die nuwe
+> gevolgtrekkings.
+
 ## Waar hierdie syfers vandaan kom
 
 **Ek kon nie een van die twee bladsye self lees nie.** Die uitgaande netwerk

@@ -67,12 +67,12 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#080c0a',
     theme_color: BAR_COLOUR,
     icons: [
-      { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/icon-neon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icon-neon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
       /* The maskable one is its own file: the whole square painted the
          page's ground, the tile inside the safe zone, so a launcher that
          cuts a circle cuts into dark and not into the glow. */
-      { src: '/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: '/icon-neon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
 }
