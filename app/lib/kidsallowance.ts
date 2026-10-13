@@ -39,8 +39,8 @@
 
 import { CREDITS, readCost, videoCost } from './credits';
 
-/** The three things she named. */
-export type KidThing = 'song' | 'video' | 'story';
+/** The three things she named on 9 October, and the picture of 13 October. */
+export type KidThing = 'song' | 'video' | 'story' | 'picture';
 
 /**
  * Ten seconds, because that is what the rest of the app treats as a clip —
@@ -105,6 +105,16 @@ export const KID_PRICES: readonly Priced[] = [
        nothing, which is the point of the shelf and is said on the page. */
     ready: true,
     says: ['kids.priceStory', 'A story read out loud, eight pages with a picture each'],
+  },
+  {
+    id: 'picture',
+    /* Carli, 13 October 2026: a drawing "made realistically alive" and
+       "prompting images (kids friendly)". Both are one press on
+       `/api/google/picture`, which charges `CREDITS.repaint` — the same
+       price the photo editor pays for the same engine. */
+    credits: CREDITS.repaint,
+    ready: true,
+    says: ['kids.pricePicture', 'A picture: a drawing brought to life, or one from the bubbles'],
   },
 ];
 

@@ -54,6 +54,7 @@ const MANY: Record<KidThing, readonly [string, string, string]> = {
   song: ['kids.manySong', 'song', 'songs'],
   video: ['kids.manyVideo', 'video', 'videos'],
   story: ['kids.manyStory', 'story', 'stories'],
+  picture: ['kids.manyPicture', 'picture', 'pictures'],
 };
 
 export default function KidsDoor({

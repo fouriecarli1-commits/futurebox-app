@@ -124,6 +124,9 @@ import KidsSleep from './KidsSleep';
 import KidsGallery from './KidsGallery';
 import KidsDrawBoard from './KidsDrawBoard';
 import KidsQuiz from './KidsQuiz';
+import KidsPictureMaker from './KidsPictureMaker';
+import { ALIVE_WORDS, KID_STYLES, KID_SUBJECTS, makeKidPicture, packDrawing, pictureWords } from '../lib/kidsalive';
+import { keepPiece } from '../lib/kidsgallery';
 import { BADGES, levelOf, towardNext, type Counts } from '../lib/kidslevel';
 import { allSongs } from '../lib/songkeep';
 import { allStories } from '../lib/storykeep';
@@ -222,7 +225,7 @@ const DOORS: readonly Door[] = [
   ] },
   { id: 'draw', icon: '🎨', says: ['kids.doorDraw', 'Magic Drawing Board!'], lines: [
     ['kids.doorDraw1', 'Draw with your finger, ten crayons'],
-    ['kids.doorDraw2', 'Keep it on your gallery wall'],
+    ['kids.doorDraw2', 'Bring it to life, or make a magic picture'],
   ] },
   { id: 'games', icon: '🎹', says: ['kids.doorGames', 'Studio Games & Beats!'], lines: [
     ['kids.doorGames1', 'Catch the gems, pop the bubbles'],
@@ -404,7 +407,12 @@ export default function KidsRoom(): React.ReactElement {
     setListening(true);
     try { ear.start(); } catch { setListening(false); }
   };
-  const [busy, setBusy] = useState<'' | 'song' | 'video'>('');
+  const [busy, setBusy] = useState<'' | 'song' | 'video' | 'picture'>('');
+  /* The last picture back from the engine, and what it said. */
+  const [picture, setPicture] = useState('');
+  const [picSays, setPicSays] = useState('');
+  const heldPicture = useRef<string>('');
+  useEffect(() => () => { if (heldPicture.current) URL.revokeObjectURL(heldPicture.current); }, []);
   const [says, setSays] = useState('');
   const [song, setSong] = useState('');
   /* The song itself, not only its address. An object URL cannot be stored —
@@ -607,6 +615,44 @@ export default function KidsRoom(): React.ReactElement {
   const nearlyOver = clockLeft !== null && clockLeft <= 300;
   const videoPrice = priceOf('video');
   const songsLeft = howMany(left, 'song');
+  const picturePrice = priceOf('picture');
+  const canPicture = left >= picturePrice && !busy && !job;
+
+  /* ── A picture, two ways ───────────────────────────────────────────
+     Carli, 13 October 2026: a drawing "made realistically alive", and
+     "prompting images (kids friendly)". One route, one price, and the
+     allowance refuses it at the server the moment it is spent. What comes
+     back goes straight onto the gallery wall: there is no download in this
+     room, so the wall is where a thing lives. */
+  const took = async (words: string, from: { data: string; mime: string } | null, title: string): Promise<void> => {
+    setBusy('picture');
+    setPicSays('');
+    const answer = await makeKidPicture(words, from);
+    setBusy('');
+    void kidsNow().then(setState);
+    if ('says' in answer) { setPicSays(answer.says); return; }
+    if (heldPicture.current) URL.revokeObjectURL(heldPicture.current);
+    heldPicture.current = URL.createObjectURL(answer.picture);
+    setPicture(heldPicture.current);
+    const put = await keepPiece({ id: `picture-${Date.now()}`, made: Date.now(), kind: 'picture', title, blob: answer.picture });
+    setPicSays(put === 'kept'
+      ? t('kids.picDone', 'Here is your picture! It is on your gallery wall.')
+      : t('kids.picDoneNoWall', 'Here is your picture! The wall is full, so it stays here until you leave.'));
+    setWallAgain((n) => n + 1);
+    spark(20);
+    confetti();
+  };
+  const alive = async (drawing: Blob): Promise<void> => {
+    const packed = await packDrawing(drawing);
+    if (!packed) { setPicSays(t('kids.picNotRead', 'That drawing could not be read. Try again.')); return; }
+    await took(ALIVE_WORDS, packed, t('kids.aliveTitle', 'My drawing, alive'));
+  };
+  const makePicture = (subject: string, style: string): void => {
+    const what = KID_SUBJECTS.find((one) => one.id === subject);
+    const how = KID_STYLES.find((one) => one.id === style);
+    if (!what || !how) return;
+    void took(pictureWords(what, how), null, `${t(what.says[0], what.says[1])} · ${t(how.says[0], how.says[1])}`);
+  };
   const canSong = (Boolean(topic) || Boolean(kidWords(words))) && Boolean(sound) && left >= songPrice && !busy && !job;
   const canFilm = Boolean(song) && left >= videoPrice && !busy && !job;
 
@@ -1331,7 +1377,53 @@ export default function KidsRoom(): React.ReactElement {
 
       {/* ── 8. The Magic Drawing Board ────────────────────────────────── */}
       {tab === 'draw' && (
-        <KidsDrawBoard onSpark={spark} onKept={() => { setWallAgain((n) => n + 1); confetti(60); }} />
+        <>
+          <KidsDrawBoard
+            onSpark={spark}
+            onKept={() => { setWallAgain((n) => n + 1); confetti(60); }}
+            alive={(drawing) => (
+              <div className="space-y-3" data-kidsaliveblock>
+                <button
+                  type="button"
+                  onClick={() => void alive(drawing)}
+                  disabled={!canPicture}
+                  data-kidsalive
+                  className="mx-auto flex min-h-[64px] w-full max-w-md items-center justify-center gap-2 rounded-full bg-primary-500 px-6 text-base font-black text-white shadow-lg disabled:opacity-40"
+                >
+                  {busy === 'picture' ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                  {busy === 'picture'
+                    ? t('kids.aliveMaking', 'Bringing it to life…')
+                    : left >= picturePrice
+                      ? t('kids.alive', 'Bring it to life!')
+                      : t('kids.aliveNotEnough', 'A picture needs more than is left')}
+                  {busy !== 'picture' && (
+                    <span className="rounded-lg bg-black/25 px-2 py-0.5 text-xs" data-kidsaliveprice={picturePrice}>
+                      {picturePrice} {t('kids.credits', 'credits')}
+                    </span>
+                  )}
+                </button>
+                {picSays && (
+                  <p className="rounded-2xl border-2 border-surface-200 bg-surface-100/80 px-4 py-3 text-sm font-semibold text-surface-900" data-kidsalivesays>
+                    {picSays}
+                  </p>
+                )}
+                {picture && (
+                  <div className="mx-auto w-full max-w-md overflow-hidden rounded-3xl border-4 border-amber-300 shadow-2xl" data-kidsaliveout>
+                    <img src={picture} alt={t('kids.picYour', 'Your picture')} className="block aspect-square w-full object-cover" />
+                  </div>
+                )}
+              </div>
+            )}
+          />
+          <KidsPictureMaker
+            price={picturePrice}
+            canMake={canPicture}
+            busy={busy === 'picture'}
+            onMake={makePicture}
+            picture={picture}
+            says={picSays}
+          />
+        </>
       )}
 
       {/* ── 9. Mega Quizzes ───────────────────────────────────────────── */}
