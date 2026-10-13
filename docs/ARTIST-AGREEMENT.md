@@ -113,10 +113,11 @@ and the Artist is paid **R200** of it. The same two numbers on every piece,
 every month. There is nothing to bid on, no clock, and no door fee.
 
 **A buyer may pay the R280 in credits.** The app works the same R280 out at
-the rate a credit sells for on its own (the top-up rate), rounded up to a
-whole credit. It is the same sale: the piece leaves the wall once, and the
-Artist is paid **R200** by the Studio in rand exactly as for a card sale. How
-the buyer paid is the Studio's business, not the Artist's.
+the cheapest price a credit is sold for on any plan, rounded up to a whole
+credit, and every plan pays that same number of credits. It is the same
+sale: the piece leaves the wall once, and the Artist is paid **R200** by the
+Studio in rand exactly as for a card sale. How the buyer paid is the Studio's
+business, not the Artist's.
 
 The Artist does **not** set the price. It is the Studio's price for the wall,
 and it is on every piece before a buyer presses anything.

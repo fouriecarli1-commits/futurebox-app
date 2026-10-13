@@ -20,10 +20,11 @@
  * shortfall that grows, and a bank finds it rather than a test.
  */
 
-import { RAND_PER_TOPUP_CREDIT } from '../app/lib/credits';
+import { RAND_PER_TOPUP_CREDIT, TIER_CREDITS } from '../app/lib/credits';
+import { TIERS, TIER_SPECS } from '../app/lib/plans';
 import {
   split, UNIQUE_RAND, ARTIST_SHARE, WINDOWS,
-  ART_RAND, ARTIST_RAND, ART_CREDITS, wallSplit,
+  ART_RAND, ARTIST_RAND, ART_CREDITS, CHEAPEST_RAND_PER_CREDIT, wallSplit,
 } from '../app/data/artmarket';
 import { gatewayFee } from '../app/lib/plans';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -681,17 +682,30 @@ ok('the sale is granted to whoever paid for an unsold piece',
    Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
    cash, of ons moet krediet in dieselfde waarde uitwerk."*
 
-   The number is derived, never typed: the wall price over what a credit
-   sells for on its own, rounded UP so the credits are never worth less than
-   the cash. The route takes the credits before it sells the piece and gives
-   them back if the piece turns out to be gone — the other order is a piece
-   given away. And the artist's R200 does not move with the way of paying. */
-ok(`the credit price is worked out from the wall price at the top-up rate (${ART_CREDITS} credits)`,
-  ART_CREDITS === Math.ceil(ART_RAND / RAND_PER_TOPUP_CREDIT),
-  `${ART_CREDITS} against ceil(${ART_RAND} / ${RAND_PER_TOPUP_CREDIT})`);
-ok('  and the credits are never worth less than the cash',
-  ART_CREDITS * RAND_PER_TOPUP_CREDIT >= ART_RAND,
-  `${ART_CREDITS} × R${RAND_PER_TOPUP_CREDIT} = R${ART_CREDITS * RAND_PER_TOPUP_CREDIT}`);
+   And her second word on it: *"make the credits more expensive and on the
+   more expensive rand to credit, and all the plans pay that same price."*
+
+   The number is derived, never typed: the wall price over the CHEAPEST rand
+   a credit is sold for on any paid plan, rounded UP, so a piece costs the
+   most credits it can and nobody buys it through credits that came in
+   cheap. One number for every plan. The route takes the credits before it
+   sells the piece and gives them back if the piece turns out to be gone —
+   the other order is a piece given away. And the artist's R200 does not
+   move with the way of paying. */
+const cheapest = Math.min(...TIERS.filter((tier) => TIER_SPECS[tier].rand > 0 && TIER_CREDITS[tier] > 0)
+  .map((tier) => TIER_SPECS[tier].rand / TIER_CREDITS[tier]));
+ok(`the cheapest credit on any plan is R${cheapest.toFixed(3)}, and that is the rate the art is priced at`,
+  Math.abs(CHEAPEST_RAND_PER_CREDIT - cheapest) < 1e-9,
+  `data/artmarket.ts says R${CHEAPEST_RAND_PER_CREDIT}`);
+ok(`  so a piece is R${ART_RAND} at that rate, rounded up (${ART_CREDITS} credits), on every plan`,
+  ART_CREDITS === Math.ceil(ART_RAND / cheapest),
+  `${ART_CREDITS} against ceil(${ART_RAND} / ${cheapest})`);
+ok('  which is dearer in credits than the top-up rate would make it',
+  ART_CREDITS >= Math.ceil(ART_RAND / RAND_PER_TOPUP_CREDIT),
+  'a plan credit is cheaper than a top-up credit, so the piece must cost more of them');
+ok('  and the credits are never worth less than the cash on any plan',
+  TIERS.filter((tier) => TIER_SPECS[tier].rand > 0).every((tier) => ART_CREDITS * (TIER_SPECS[tier].rand / TIER_CREDITS[tier]) >= ART_RAND - 1e-9),
+  'a plan whose credits buy the piece for under R280 is a plan selling art at a loss');
 
 const market = withoutComments(readFileSync('app/api/artmarket/route.ts', 'utf8'));
 const buyAt = market.indexOf("case 'buy':");

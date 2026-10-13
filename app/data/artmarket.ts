@@ -28,8 +28,8 @@
  * the same fault with money attached.
  */
 
-import { gatewayFee } from '../lib/plans';
-import { RAND_PER_TOPUP_CREDIT } from '../lib/credits';
+import { gatewayFee, TIERS, TIER_SPECS } from '../lib/plans';
+import { TIER_CREDITS } from '../lib/credits';
 
 /**
  * The floor the database puts on `art_works.rand`.
@@ -91,20 +91,33 @@ export const ARTIST_RAND = 200;
  * The same R280, paid in credits.
  *
  * Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
- * cash, of ons moet krediet in dieselfde waarde uitwerk."*
+ * cash, of ons moet krediet in dieselfde waarde uitwerk."* And, told that
+ * a plan's credits come in cheaper than the top-up rate: *"make the credits
+ * more expensive and on the more expensive rand to credit, and all the
+ * plans pay that same price."*
  *
- * Worked out at the top-up rate — what a credit actually sells for on its
- * own, `RAND_PER_TOPUP_CREDIT` — and rounded up to a whole credit, so the
- * credits are never worth less than the cash. One number, derived rather
- * than typed, so the day the top-up rate moves this moves with it.
+ * So the rate is the one that makes the piece cost the MOST credits: the
+ * cheapest rand a credit is sold for on any paid plan (Maker, at R1.49).
+ * R280 at that rate, rounded up to a whole credit, and every plan pays that
+ * same number. Nobody can buy a piece for less than it cost the studio
+ * through credits that came in cheap, and nobody on a dearer plan is asked
+ * for more than the member on the cheapest one.
+ *
+ * Derived from the plan table and the credit table rather than typed, so
+ * the day a plan's price or allowance moves this moves with it, and
+ * `check:artmarket` holds the derivation.
  *
  * What does NOT change with the way of paying: the artist is paid
  * `ARTIST_RAND` in rand, by the owner, from her own account. A credit sale
  * brings no new cash in, so the statement still lists the piece as owing
- * R200 and the studio carries it — which is the trade she chose when she
- * asked for the choice, and is written down in `docs/ARTIST-AGREEMENT.md`.
+ * R200 and the studio carries it, which is written down in
+ * `docs/ARTIST-AGREEMENT.md`.
  */
-export const ART_CREDITS = Math.ceil(ART_RAND / RAND_PER_TOPUP_CREDIT);
+export const CHEAPEST_RAND_PER_CREDIT = Math.min(
+  ...TIERS.filter((tier) => TIER_SPECS[tier].rand > 0 && TIER_CREDITS[tier] > 0)
+    .map((tier) => TIER_SPECS[tier].rand / TIER_CREDITS[tier]),
+);
+export const ART_CREDITS = Math.ceil(ART_RAND / CHEAPEST_RAND_PER_CREDIT);
 
 
 
