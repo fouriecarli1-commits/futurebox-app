@@ -1394,18 +1394,35 @@ body:has([data-cubed]) {
   justify-content: center;
   width: 5.5rem;
   height: 5.5rem;
-  border-radius: 1.5rem;
-  /* The same gradient the landing page and the app icon are drawn with —
-     emerald-500 to cyan-400 — so the thing on the home screen and the thing
-     that opens are one picture. */
-  background-image: linear-gradient(to top right, rgb(16, 185, 129), rgb(34, 211, 238));
-  box-shadow: 0 0 60px rgba(16, 185, 129, 0.25);
+  border-radius: 1.4rem;
+  /* The same tile the app icon (`scripts/icon.mjs`) and the landing page's
+     header are drawn with, since 13 October 2026: a near-black square inside
+     a mint-to-cyan ring, lit — so the thing on the home screen and the thing
+     that opens are one picture. Literal colours on purpose: a theme preset
+     must not reach into the brand mark. */
+  padding: 0.3rem;
+  background-image: linear-gradient(135deg, #05ff93, #47d2eb);
+  box-shadow: 0 0 10px rgba(5, 255, 147, 0.75), 0 0 28px rgba(5, 255, 147, 0.35);
+}
+
+[data-launchmarktile]::before {
+  content: '';
+  position: absolute;
+  inset: 0.3rem;
+  border-radius: 1.1rem;
+  background-image: radial-gradient(circle at 50% 38%, #0f3324 0%, #080c0a 72%);
+}
+
+[data-launchmarktile] {
+  position: relative;
 }
 
 [data-launchmarktile] > svg {
+  position: relative;
   width: 3rem;
   height: 3rem;
-  color: rgb(var(--fb-on-accent));
+  color: #05ff93;
+  filter: drop-shadow(0 0 2px #05ff93) drop-shadow(0 0 6px rgba(5, 255, 147, 0.7));
 }
 
 [data-launchmarkword] {
