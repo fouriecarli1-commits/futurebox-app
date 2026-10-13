@@ -226,6 +226,8 @@ export default function Channel({
   const [queue, setQueue] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  /** Which shelf of the vault the pills point at. Jumped to, not hidden. */
+  const [vault, setVault] = useState<'songs' | 'videos' | 'pictures'>('songs');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
@@ -487,76 +489,45 @@ export default function Channel({
   );
 
   return (
-    <div className="space-y-5">
-      {/* ── Who this is ──────────────────────────────────────────────────── */}
-      <div className="rounded-3xl border border-zinc-800 bg-gradient-to-br from-emerald-500/10 via-zinc-900/70 to-zinc-950 p-5 md:p-7">
-        <div className="flex items-center gap-4 flex-wrap">
-          {/* Their own face if they put one there, and the generated cover
-              if not — never a grey silhouette, which reads as broken. */}
-          <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 border border-zinc-800">
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photo}
-                alt={creator?.name ? `${creator.name}` : t('photo.alt', 'Your profile picture')}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Cover seed={handle || 'futurebox'} label={creator?.name ?? 'Channel'} className="w-full h-full" />
-            )}
-          </div>
-          {/* A basis, so the row breaks before the name does.
- 
-              The row already wrapped, and it never did: `flex-1` on this
-              block means it SHRINKS rather than moves, so at 390 pixels the
-              name had 145 and wanted 150 and the channel was called "Your
-              chan…". Five pixels, on the default name — a real one loses
-              considerably more, and the one thing on this card that must not
-              be guessed at is whose channel it is.
- 
-              Eleven rem is wide enough that the Share button cannot fit
-              beside it on a phone, so Share is what drops to the second
-              line, and the name then grows into the whole width. Exactly the
-              fix `Card` carries for the same fault in its own header, for
-              the same reason. */}
-          <div className="min-w-0 flex-1 basis-[11rem]">
-            <p className="text-2xl font-black text-white leading-tight truncate">
-              {creator?.name || t('chan.yours', 'Your channel')}
-            </p>
-            <p className="text-sm text-emerald-400">{handle}</p>
-            <p className="text-sm text-zinc-500">
-              {tracks.length} {tracks.length === 1 ? t('make.song', 'song') : t('make.songs', 'songs')}
-              {lists.length > 0 && ` · ${lists.length} ${t('chan.lists', 'playlists')}`}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              void navigator.clipboard?.writeText(
-                `${window.location.origin}/${handle || ''}`.replace(/\/$/, ''),
-              );
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
-            }}
-            className="min-h-[44px] px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5 flex-shrink-0"
-          >
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-            {copied ? t('make.copied', 'Copied') : t('chan.share', 'Share')}
-          </button>
-        </div>
-      </div>
+    <div className="space-y-4" data-channelroom>
+      {/* ── Google's Channel Hub & Vault, 13 October 2026 ────────────────
 
-      {/* ── The name that goes on a release ──────────────────────────────
-
-          The header showed a name and there was nowhere to set one, so it
-          read "Your channel" for everybody and the live room introduced each
-          song by its owner's @handle. An address is not a name.
-
-          The field itself lives in `RecordingName` now, because the account
-          panel behind **You** needs the identical thing and two copies of one
-          form is two places for it to drift. */}
-      <RecordingName creator={creator} onSaved={setCreator} />
-
+          Two columns on a desk: the channel's identity down the left, the
+          hub and the vault on the right. Everything behind the buttons is
+          what this room already had; what is left out of the page design is
+          what would be fake here — a Subscribe button with nobody
+          subscribing, a tip jar with no payment behind it, a VERIFIED badge
+          nobody verified, stream counts nobody counted, and a row of
+          community remixes by invented names. The vault's three sections
+          are jumped to rather than hidden behind tabs, because a video she
+          just made has to be on the screen she lands on. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
+        {/* ── Column one: who this is ──────────────────────────────── */}
+        <aside className="space-y-4 min-w-0" data-chanidentity>
+          <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs font-bold uppercase tracking-wider text-white">
+              <span>{t('chan.identity', 'Channel identity')}</span>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4 text-center">
+              <div className="mx-auto mb-3 h-20 w-20 rounded-2xl bg-gradient-to-tr from-emerald-500 via-violet-500 to-pink-500 p-1 shadow-lg shadow-emerald-500/20">
+                <div className="h-full w-full overflow-hidden rounded-xl bg-zinc-950">
+                  {photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={photo}
+                      alt={creator?.name ? `${creator.name}` : t('photo.alt', 'Your profile picture')}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Cover seed={handle || 'futurebox'} label={creator?.name ?? 'Channel'} className="w-full h-full" />
+                  )}
+                </div>
+              </div>
+              <p className="text-base font-black text-white leading-tight truncate">
+                {creator?.name || t('chan.yours', 'Your channel')}
+              </p>
+              <p className="text-xs font-mono text-emerald-300">{handle}</p>
+            </div>
       {/* ── The picture ──────────────────────────────────────────────────
           Only with an account behind it: a photo kept on one device is not a
           profile picture, it is a file, and offering it would be a promise
@@ -571,75 +542,22 @@ export default function Channel({
         </div>
       )}
 
-      {/* ── The videos ───────────────────────────────────────────────────
-
-          "Ek het nou net 'n video gegenerate, en toe gesê sit dit in my
-           channel, en nou kry ek dit nie in my channel nie."
-
-          It was not in the channel because nothing ever put it there. A
-          generated clip is kept under the room that made it — the video desk,
-          or Make a song — and the only two places it showed up were that
-          room's own history at the foot of the page and the Find tab. The
-          channel is what the Library tab opens and it held songs and nothing
-          else, so "my channel" was the one place it could not be.
-
-          Every room's videos, because somebody looking for their video is not
-          thinking about which desk it came off. Open on arrival: this is the
-          list she came for, not yesterday's work at the bottom of a room. */}
-      <Card
-        title={t('chan.videos', 'Your videos')}
-        icon={<Film className="w-4 h-4" />}
-      >
-        <History
-          only={['video', 'clip']}
-          title={t('chan.videosMade', 'Made in this app')}
-          startOpen
-          whenEmpty={t(
-            'chan.noVideos',
-            'No videos yet. Make one at the Video desk and it appears here on its own — there is nothing to move.',
-          )}
-        />
-        <Note className="text-xs text-zinc-500 leading-relaxed">
-          {t(
-            'chan.videosNote',
-            'Every video you make anywhere in this app arrives here by itself — there is nothing to press and nothing to move. Kept on this device, like your songs. Post it opens the composers; nothing is published until you say so.',
-          )}
-        </Note>
-      </Card>
-
-      {/* ── Your pictures ───────────────────────────────────
-
-          Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto
-          binne die app te bêrge. Daar moet dalk ’n gallery in channel
-          gestoor word."*
-
-          The shelf itself is not new — `lib/assets.ts` has held twenty
-          pictures per device since the brand kit needed them, and the start
-          frame and the video canvas both pick from it. What was missing was
-          anywhere to SEE it. A shelf three rooms can write to and no room
-          can look at is a drawer with no handle: she had no way to know what
-          was on it, what it was called, or that it was there at all.
-
-          Beside the songs and the videos, because that is what this page is:
-          the place everything made in this app arrives by itself. */}
-      <Card
-        title={t('chan.pictures', 'Your pictures')}
-        icon={<ImageIcon className="w-4 h-4" />}
-      >
-        <div data-chanpictures>
-          {/* A picker with nothing to pick INTO, which is the honest shape of
-              a gallery here: choosing one shows it big, renaming and starring
-              work, and the rooms that really need a picture mount the same
-              strip where the picture is used. */}
-          <Pictures value={null} onChange={() => undefined} from="channel" />
-        </div>
-        <Note className="text-xs text-zinc-500 leading-relaxed">
-          {t(
-            'chan.picturesNote',
-            'Press “Keep it in the app” in the photo editor and the picture arrives here. The cutting room and the video canvas pick from this same shelf, so a logo or a poster is chosen once rather than found in your files every time. Kept on this device, like your songs — saving one to your phone is a separate press in the photo editor, and that is the one that costs.',
-          )}
-        </Note>
-      </Card>
+      <RecordingName creator={creator} onSaved={setCreator} />
+          <button
+            type="button"
+            onClick={() => {
+              void navigator.clipboard?.writeText(
+                `${window.location.origin}/${handle || ''}`.replace(/\/$/, ''),
+              );
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            className="min-h-[44px] w-full px-3 py-2 rounded-xl bg-zinc-800/40 border border-white/10 text-zinc-300 text-sm font-bold flex items-center justify-center gap-1.5"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+            {copied ? t('make.copied', 'Copied') : t('chan.shareLink', 'Share channel link')}
+          </button>
+          </div>
 
       {/* ── Playlists ────────────────────────────────────────────────────── */}
       <Card
@@ -785,6 +703,67 @@ export default function Channel({
         )}
       </Card>
 
+
+          <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-3">
+            <Subscription />
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              {t('chan.helpBefore', 'A question about any of this?')}{' '}
+              <a
+                href="/help"
+                className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300 inline-flex items-center min-h-[32px]"
+              >
+                {t('chan.helpLink', 'Ask, or write to a person')}
+              </a>
+              .
+            </p>
+          </div>
+        </aside>
+
+        {/* ── Column two: the hub and the vault ───────────────────── */}
+        <main className="space-y-4 min-w-0" data-chanvault>
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-violet-950/70 via-zinc-900 to-emerald-950/60 p-5">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
+            <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-2xl font-black text-white tracking-tight truncate">
+                  {creator?.name || t('chan.yours', 'Your channel')}
+                </h2>
+                <p className="text-xs font-mono text-emerald-300 mt-0.5">
+                  {handle ? `${handle} · ` : ''}{tracks.length} {tracks.length === 1 ? t('make.song', 'song') : t('make.songs', 'songs')}
+                  {lists.length > 0 && ` · ${lists.length} ${t('chan.lists', 'playlists')}`}
+                </p>
+                <p className="text-[11px] text-zinc-300 mt-2 max-w-md">
+                  {t('chan.hubNote', 'Everything you make in this app arrives here by itself, and stays on this device until you post it.')}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* The vault's three shelves, as pills that jump to them. */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/10 text-xs font-bold" data-chanvaulttabs>
+            {([
+              ['songs', `${t('chan.vaultSongs', 'Songs')} (${tracks.length})`],
+              ['videos', t('chan.vaultVideos', 'Videos')],
+              ['pictures', t('chan.vaultPictures', 'Pictures')],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                data-chanvaulttab={id}
+                onClick={() => {
+                  setVault(id);
+                  document.querySelector(`[data-chanshelf="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className={`min-h-[40px] whitespace-nowrap rounded-full px-4 py-1.5 transition ${
+                  vault === id ? 'bg-emerald-500 text-onAccent font-extrabold' : 'bg-zinc-800/40 text-zinc-300 hover:text-white border border-white/10'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-4 scroll-mt-20" data-chanshelf="songs">
       {/* ── The music ────────────────────────────────────────────────────── */}
 
       {/* Bring one in.
@@ -865,7 +844,7 @@ export default function Channel({
           {t('chan.noSongs', 'Nothing here yet. Make a song and it lands in your channel \u2014 or bring one in from a file and sing over that.')}
         </p>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {shown.map((track) => (
             <article key={track.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
               <div className="relative">
@@ -1319,6 +1298,86 @@ export default function Channel({
         </div>
       )}
 
+          </div>
+
+          <div className="scroll-mt-20" data-chanshelf="videos">
+      {/* ── The videos ───────────────────────────────────────────────────
+
+          "Ek het nou net 'n video gegenerate, en toe gesê sit dit in my
+           channel, en nou kry ek dit nie in my channel nie."
+
+          It was not in the channel because nothing ever put it there. A
+          generated clip is kept under the room that made it — the video desk,
+          or Make a song — and the only two places it showed up were that
+          room's own history at the foot of the page and the Find tab. The
+          channel is what the Library tab opens and it held songs and nothing
+          else, so "my channel" was the one place it could not be.
+
+          Every room's videos, because somebody looking for their video is not
+          thinking about which desk it came off. Open on arrival: this is the
+          list she came for, not yesterday's work at the bottom of a room. */}
+      <Card
+        title={t('chan.videos', 'Your videos')}
+        icon={<Film className="w-4 h-4" />}
+      >
+        <History
+          only={['video', 'clip']}
+          title={t('chan.videosMade', 'Made in this app')}
+          startOpen
+          whenEmpty={t(
+            'chan.noVideos',
+            'No videos yet. Make one at the Video desk and it appears here on its own — there is nothing to move.',
+          )}
+        />
+        <Note className="text-xs text-zinc-500 leading-relaxed">
+          {t(
+            'chan.videosNote',
+            'Every video you make anywhere in this app arrives here by itself — there is nothing to press and nothing to move. Kept on this device, like your songs. Post it opens the composers; nothing is published until you say so.',
+          )}
+        </Note>
+      </Card>
+
+          </div>
+
+          <div className="scroll-mt-20" data-chanshelf="pictures">
+      {/* ── Your pictures ───────────────────────────────────
+
+          Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto
+          binne die app te bêrge. Daar moet dalk ’n gallery in channel
+          gestoor word."*
+
+          The shelf itself is not new — `lib/assets.ts` has held twenty
+          pictures per device since the brand kit needed them, and the start
+          frame and the video canvas both pick from it. What was missing was
+          anywhere to SEE it. A shelf three rooms can write to and no room
+          can look at is a drawer with no handle: she had no way to know what
+          was on it, what it was called, or that it was there at all.
+
+          Beside the songs and the videos, because that is what this page is:
+          the place everything made in this app arrives by itself. */}
+      <Card
+        title={t('chan.pictures', 'Your pictures')}
+        icon={<ImageIcon className="w-4 h-4" />}
+      >
+        <div data-chanpictures>
+          {/* A picker with nothing to pick INTO, which is the honest shape of
+              a gallery here: choosing one shows it big, renaming and starring
+              work, and the rooms that really need a picture mount the same
+              strip where the picture is used. */}
+          <Pictures value={null} onChange={() => undefined} from="channel" />
+        </div>
+        <Note className="text-xs text-zinc-500 leading-relaxed">
+          {t(
+            'chan.picturesNote',
+            'Press “Keep it in the app” in the photo editor and the picture arrives here. The cutting room and the video canvas pick from this same shelf, so a logo or a poster is chosen once rather than found in your files every time. Kept on this device, like your songs — saving one to your phone is a separate press in the photo editor, and that is the one that costs.',
+          )}
+        </Note>
+      </Card>
+
+          </div>
+        </main>
+      </div>
+
       {playing && queue.length > 0 && (
         <button
           type="button"
@@ -1340,7 +1399,6 @@ export default function Channel({
       {/* Stopping the payment sits above deleting the account, because they
           are different decisions and the milder one should be reachable
           without reading past the other. */}
-      <Subscription />
 
       {/* Before the way out, the way to ask.
 
@@ -1349,16 +1407,6 @@ export default function Channel({
           cancellation if there is nowhere to put it. The footer carries the
           same link, but the studio covers the footer — so it is here too, in
           the one room where the decision is being made. */}
-      <p className="text-sm text-zinc-500 leading-relaxed">
-        {t('chan.helpBefore', 'A question about any of this?')}{' '}
-        <a
-          href="/help"
-          className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300 inline-flex items-center min-h-[32px]"
-        >
-          {t('chan.helpLink', 'Ask, or write to a person')}
-        </a>
-        .
-      </p>
 
       {/* Deleting the account is not here any more. It sat between a help
           link and the copilot, in the room somebody works in, where it was one
