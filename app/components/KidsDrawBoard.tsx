@@ -24,7 +24,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Eraser, Heart, Trash2, Undo2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
-import { BOARD_MOST, BRUSHES, CRAYONS, PAPER, UNDO_MOST, type Brush } from '../lib/kidsdraw';
+import { ALIVE_GLOW, BOARD_MOST, BRUSHES, CRAYONS, PAPER, STAMPS, STAMP_SHARE, UNDO_MOST, type Brush } from '../lib/kidsdraw';
 import { keepPiece } from '../lib/kidsgallery';
 
 export default function KidsDrawBoard({
@@ -167,6 +167,24 @@ export default function KidsDrawBoard({
     setPng(null);
   };
 
+  /* A stamp: the glyph, big, in the middle of the paper. The child draws
+     around it, which is the point of a stamp. */
+  const stamp = (glyph: string): void => {
+    const paper = canvas.current;
+    const ink = paper?.getContext('2d');
+    if (!paper || !ink) return;
+    undo.current.push(ink.getImageData(0, 0, paper.width, paper.height));
+    if (undo.current.length > UNDO_MOST) undo.current.shift();
+    const size = Math.round(paper.width * STAMP_SHARE);
+    ink.font = `${size}px serif`;
+    ink.textAlign = 'center';
+    ink.textBaseline = 'middle';
+    ink.fillText(glyph, paper.width / 2, paper.height / 2);
+    setStrokes((n) => n + 1);
+    setKept(false);
+    setPng(null);
+  };
+
   const toPng = (): Promise<Blob | null> => new Promise((resolve) => {
     canvas.current?.toBlob((blob) => resolve(blob), 'image/png');
   });
@@ -215,88 +233,111 @@ export default function KidsDrawBoard({
         </p>
       </div>
 
-      {/* The crayons: round, one colour each, the chosen one lifted. */}
-      <div className="flex flex-wrap justify-center gap-2" data-kidscrayons>
-        {CRAYONS.map((one) => (
+      {/* The toolbar from Google's page: the dots, the brushes, the bin. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-cyan-400 bg-surface-100/90 px-4 py-3 shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+        <div className="flex flex-wrap items-center gap-2" data-kidscrayons>
+          {CRAYONS.map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              aria-pressed={crayon === one.id && !erasing}
+              aria-label={t(one.says[0], one.says[1])}
+              title={t(one.says[0], one.says[1])}
+              data-kidscrayon={one.id}
+              onClick={() => { setCrayon(one.id); setErasing(false); }}
+              style={{ background: one.hex, boxShadow: crayon === one.id && !erasing ? `0 0 14px ${one.hex}` : undefined }}
+              className={`h-9 w-9 rounded-full border-2 border-white transition-transform ${crayon === one.id && !erasing ? 'scale-125' : ''}`}
+            />
+          ))}
           <button
-            key={one.id}
             type="button"
-            aria-pressed={crayon === one.id && !erasing}
-            aria-label={t(one.says[0], one.says[1])}
-            title={t(one.says[0], one.says[1])}
-            data-kidscrayon={one.id}
-            onClick={() => { setCrayon(one.id); setErasing(false); }}
-            style={{ background: one.hex }}
-            className={`h-11 w-11 rounded-full border-4 transition-transform ${
-              crayon === one.id && !erasing ? 'scale-110 border-white shadow-lg' : 'border-surface-200/60'
-            }`}
-          />
-        ))}
-        <button
-          type="button"
-          aria-pressed={erasing}
-          aria-label={t('kids.eraser', 'Eraser')}
-          title={t('kids.eraser', 'Eraser')}
-          data-kidseraser
-          onClick={() => setErasing((was) => !was)}
-          className={`flex h-11 w-11 items-center justify-center rounded-full border-4 bg-surface-200 text-surface-900 ${
-            erasing ? 'scale-110 border-white shadow-lg' : 'border-surface-200/60'
-          }`}
-        >
-          <Eraser className="h-5 w-5" />
+            aria-pressed={erasing}
+            aria-label={t('kids.eraser', 'Eraser')}
+            title={t('kids.eraser', 'Eraser')}
+            data-kidseraser
+            onClick={() => setErasing((was) => !was)}
+            className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-surface-300 text-surface-950 transition-transform ${erasing ? 'scale-125 shadow-[0_0_14px_rgba(255,255,255,0.9)]' : ''}`}
+          >
+            <Eraser className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2" data-kidsbrushes>
+          {BRUSHES.map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              aria-pressed={brush === one.id}
+              data-kidsbrush={one.id}
+              onClick={() => setBrush(one.id)}
+              className={`min-h-[40px] rounded-xl border border-cyan-400 px-3.5 text-xs font-black ${
+                brush === one.id ? 'bg-cyan-400 text-onAccent' : 'bg-surface-50 text-surface-900'
+              }`}
+            >
+              {t(one.says[0], one.says[1])}
+            </button>
+          ))}
+        </div>
+        <button type="button" onClick={clear} disabled={strokes === 0} data-kidsclear
+          className="flex min-h-[40px] items-center gap-2 rounded-xl bg-primary-500 px-4 text-xs font-black text-white disabled:opacity-40">
+          <Trash2 className="h-4 w-4" /> {t('kids.clearPaper', 'Clear')}
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2" data-kidsbrushes>
-        {BRUSHES.map((one) => (
-          <button
-            key={one.id}
-            type="button"
-            aria-pressed={brush === one.id}
-            data-kidsbrush={one.id}
-            onClick={() => setBrush(one.id)}
-            className={`flex min-h-[44px] items-center gap-2 rounded-2xl px-4 text-sm font-black ${
-              brush === one.id ? 'bg-cyan-400 text-onAccent shadow-md' : 'bg-surface-200/80 text-surface-800'
-            }`}
-          >
-            <span aria-hidden className="inline-block rounded-full bg-current" style={{ width: one.px / 2 + 6, height: one.px / 2 + 6 }} />
-            {t(one.says[0], one.says[1])}
+      {/* The stamp shelf. */}
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-cyan-400/40 bg-surface-100/70 px-3.5 py-2.5" data-kidsstamps>
+        <span className="text-xs font-black text-surface-700">{t('kids.stamps', 'Stamps:')}</span>
+        {STAMPS.map((one) => (
+          <button key={one.id} type="button" onClick={() => stamp(one.glyph)} data-kidsstamp={one.id}
+            className="flex min-h-[40px] items-center gap-1.5 rounded-xl border border-cyan-500/40 bg-surface-50 px-2.5 text-sm font-black text-surface-900 transition-transform hover:scale-110">
+            <span className="text-2xl" aria-hidden>{one.glyph}</span> {t(one.says[0], one.says[1])}
           </button>
         ))}
       </div>
 
-      <div ref={frame} className="mx-auto w-full" style={{ maxWidth: BOARD_MOST }}>
-        <canvas
-          ref={canvas}
-          data-kidspaper
-          data-kidsstrokes={strokes}
-          onPointerDown={down}
-          onPointerMove={move}
-          onPointerUp={up}
-          onPointerCancel={up}
-          onPointerLeave={up}
-          className="block w-full touch-none rounded-3xl border-4 border-cyan-400/60 shadow-2xl"
-          style={{ background: PAPER }}
-          aria-label={t('kids.drawTitle', 'Magic Drawing Board')}
-        />
-      </div>
+      {/* Left the doodle, right what the engine makes of it. */}
+      <div className={`grid grid-cols-1 gap-4 ${alive ? 'lg:grid-cols-2' : ''}`}>
+        <div className="flex flex-col items-center rounded-3xl border-2 border-cyan-400 bg-surface-50 p-3.5 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]">
+          <p className="mb-2 self-start text-sm font-black text-cyan-300">✏️ {t('kids.drawStep1', 'Step 1: draw your doodle here')}</p>
+          <div ref={frame} className="w-full" style={{ maxWidth: BOARD_MOST }}>
+            <canvas
+              ref={canvas}
+              data-kidspaper
+              data-kidsstrokes={strokes}
+              onPointerDown={down}
+              onPointerMove={move}
+              onPointerUp={up}
+              onPointerCancel={up}
+              onPointerLeave={up}
+              className="block w-full touch-none rounded-2xl border border-dashed border-cyan-400/40"
+              style={{ background: PAPER }}
+              aria-label={t('kids.drawTitle', 'Magic Drawing Board')}
+            />
+          </div>
+          <div className="mt-3 grid w-full grid-cols-2 gap-2">
+            <button type="button" onClick={undoOne} disabled={undo.current.length === 0} data-kidsundo
+              className="flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-surface-200/80 text-sm font-black text-surface-900 disabled:opacity-40">
+              <Undo2 className="h-4 w-4" /> {t('kids.undo', 'Undo')}
+            </button>
+            <button type="button" onClick={() => void keep()} disabled={strokes === 0 || kept} data-kidskeepdrawing
+              className="fb-kids-bouncy flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-cyan-400 text-sm font-black text-onAccent disabled:opacity-40">
+              <Heart className="h-4 w-4" fill={kept ? 'currentColor' : 'none'} /> {kept ? t('kids.keptIt', 'Kept') : t('kids.keep', 'Keep it')}
+            </button>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <button type="button" onClick={undoOne} disabled={undo.current.length === 0} data-kidsundo
-          className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-surface-200/80 text-sm font-black text-surface-900 disabled:opacity-40">
-          <Undo2 className="h-4 w-4" /> {t('kids.undo', 'Undo')}
-        </button>
-        <button type="button" onClick={clear} disabled={strokes === 0} data-kidsclear
-          className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-surface-200/80 text-sm font-black text-surface-900 disabled:opacity-40">
-          <Trash2 className="h-4 w-4" /> {t('kids.clearPaper', 'Clean paper')}
-        </button>
-        <button type="button" onClick={() => void keep()} disabled={strokes === 0 || kept} data-kidskeepdrawing
-          className="fb-kids-bouncy col-span-2 flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-cyan-400 text-sm font-black text-onAccent disabled:opacity-40">
-          <Heart className="h-4 w-4" fill={kept ? 'currentColor' : 'none'} /> {kept ? t('kids.keptIt', 'Kept') : t('kids.keep', 'Keep it')}
-        </button>
+        {alive && (
+          <div className="flex flex-col items-center rounded-3xl border-2 border-cyan-400 bg-surface-50 p-3.5 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]" data-kidsalivedeck>
+            <p className="mb-2 self-start text-sm font-black text-cyan-300">✨ {t('kids.drawStep2', 'Step 2: bring it to life!')}</p>
+            <div className="flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-cyan-300/60 p-3" style={{ minHeight: 220, background: ALIVE_GLOW }}>
+              {png && strokes > 0 ? alive(png) : (
+                <p className="px-4 text-center text-sm font-bold text-surface-700">
+                  {t('kids.drawAliveEmpty', 'Draw something on the left, and the button to bring it to life appears here.')}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-
-      {alive && png && strokes > 0 && alive(png)}
 
       {says && (
         <p className="rounded-2xl border-2 border-surface-200 bg-surface-100/80 px-4 py-3 text-sm font-semibold text-surface-900" data-kidsdrawsays>

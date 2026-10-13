@@ -64,7 +64,7 @@ export interface Pressed {
 }
 
 /** The keys' own paint: ivory, ebony, the lit black key, and the ink on a lit white one. */
-export const IVORY = '#fffdf5';
+export const IVORY = 'linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%)';
 export const EBONY = '#111827';
 export const LIT_EBONY = '#34d399';
 export const LIT_INK = '#ffffff';

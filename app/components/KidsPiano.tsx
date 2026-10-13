@@ -25,6 +25,11 @@ import { confetti } from '../lib/kidsconfetti';
 
 type Mode = 'play' | 'copy';
 
+/** The computer key under each piano key, printed small on it. */
+const LETTERS: Record<string, string> = {
+  c4: 'A', cs4: 'W', d4: 'S', ds4: 'E', e4: 'D', f4: 'F', fs4: 'T', g4: 'G', gs4: 'Y', a4: 'H', as4: 'U', b4: 'J', c5: 'K',
+};
+
 export default function KidsPiano({
   onSpark,
   onKept,
@@ -50,6 +55,24 @@ export default function KidsPiano({
   const timers = useRef<number[]>([]);
 
   useEffect(() => () => { timers.current.forEach((one) => window.clearTimeout(one)); }, []);
+
+  /* Google's page: the computer keyboard plays too — A to K on the white
+     keys, W E T Y U on the black ones. Only while this door is open. */
+  const pressRef = useRef<(id: string) => void>(() => undefined);
+  useEffect(() => {
+    const map: Record<string, string> = {
+      KeyA: 'c4', KeyW: 'cs4', KeyS: 'd4', KeyE: 'ds4', KeyD: 'e4', KeyF: 'f4', KeyT: 'fs4',
+      KeyG: 'g4', KeyY: 'gs4', KeyH: 'a4', KeyU: 'as4', KeyJ: 'b4', KeyK: 'c5',
+    };
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.repeat || !map[event.code]) return;
+      const target = event.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
+      pressRef.current(map[event.code]);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const light = useCallback((id: string, ms = 220): void => {
     setLit(id);
@@ -91,6 +114,8 @@ export default function KidsPiano({
       }
     }
   };
+
+  pressRef.current = press;
 
   /** Play the chosen phrase with the keys lighting, then hand over. */
   const show = (): void => {
@@ -198,6 +223,9 @@ export default function KidsPiano({
         </div>
       )}
 
+      <p className="text-center text-xs font-black text-cyan-300">
+        ✨ {t('kids.pianoBanner', 'Tap any key, or press A S D F G H J K on a keyboard!')}
+      </p>
       {/* The keys. White ones in a row; black ones floated over the gaps. */}
       <div
         className="relative mx-auto h-44 w-full max-w-2xl select-none touch-none sm:h-52"
@@ -215,10 +243,11 @@ export default function KidsPiano({
               aria-label={key.name}
               onPointerDown={(e) => { e.preventDefault(); press(key.id); }}
               onPointerEnter={() => { if (down.current) press(key.id); }}
-              style={{ background: lit === key.id ? key.colour : IVORY, color: lit === key.id ? LIT_INK : key.colour }}
-              className="flex flex-1 items-end justify-center rounded-b-2xl border-2 border-surface-300 pb-2 text-sm font-black shadow-md transition-colors"
+              style={{ background: lit === key.id ? key.colour : IVORY, color: lit === key.id ? LIT_INK : key.colour, boxShadow: lit === key.id ? `0 0 15px ${key.colour}` : undefined }}
+              className="flex flex-1 flex-col items-center justify-end rounded-b-lg border border-surface-300 pb-2 text-sm font-black transition-colors"
             >
-              {key.name}
+              <span>{key.name}</span>
+              <span className="text-[10px] font-bold opacity-60">{LETTERS[key.id] ?? ''}</span>
             </button>
           ))}
         </div>
@@ -234,9 +263,11 @@ export default function KidsPiano({
               aria-label={key.name}
               onPointerDown={(e) => { e.preventDefault(); press(key.id); }}
               onPointerEnter={() => { if (down.current) press(key.id); }}
-              style={{ left: `calc(${left}% - 5%)`, width: '10%', background: lit === key.id ? LIT_EBONY : EBONY }}
-              className="absolute top-0 h-[58%] rounded-b-xl border-2 border-surface-300 shadow-lg transition-colors"
-            />
+              style={{ left: `calc(${left}% - 5%)`, width: '10%', background: lit === key.id ? LIT_EBONY : EBONY, boxShadow: lit === key.id ? `0 0 15px ${LIT_EBONY}` : undefined }}
+              className="absolute top-0 flex h-[58%] items-end justify-center rounded-b-lg border border-surface-400 pb-1.5 text-[10px] font-bold text-white shadow-lg transition-colors"
+            >
+              {LETTERS[key.id] ?? ''}
+            </button>
           );
         })}
       </div>

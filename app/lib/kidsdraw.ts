@@ -18,17 +18,18 @@ export interface Crayon {
   readonly says: readonly [string, string];
 }
 
+/* Google's page, 13 October 2026: five neon crayons on a dark paper — green,
+   cyan, yellow, pink, white — and three more so a sky, a sun and a dragon
+   can each have their own. */
 export const CRAYONS: readonly Crayon[] = [
-  { id: 'black', hex: '#1f2937', says: ['kids.crayonBlack', 'Black'] },
-  { id: 'red', hex: '#ef4444', says: ['kids.crayonRed', 'Red'] },
-  { id: 'orange', hex: '#f97316', says: ['kids.crayonOrange', 'Orange'] },
-  { id: 'yellow', hex: '#facc15', says: ['kids.crayonYellow', 'Yellow'] },
-  { id: 'green', hex: '#22c55e', says: ['kids.crayonGreen', 'Green'] },
-  { id: 'blue', hex: '#3b82f6', says: ['kids.crayonBlue', 'Blue'] },
-  { id: 'purple', hex: '#a855f7', says: ['kids.crayonPurple', 'Purple'] },
-  { id: 'pink', hex: '#ec4899', says: ['kids.crayonPink', 'Pink'] },
-  { id: 'brown', hex: '#92400e', says: ['kids.crayonBrown', 'Brown'] },
-  { id: 'sky', hex: '#67e8f9', says: ['kids.crayonSky', 'Sky'] },
+  { id: 'green', hex: '#39ff88', says: ['kids.crayonGreen', 'Green'] },
+  { id: 'cyan', hex: '#00ffcc', says: ['kids.crayonCyan', 'Cyan'] },
+  { id: 'yellow', hex: '#ffe600', says: ['kids.crayonYellow', 'Yellow'] },
+  { id: 'pink', hex: '#ff007f', says: ['kids.crayonPink', 'Pink'] },
+  { id: 'white', hex: '#ffffff', says: ['kids.crayonWhite', 'White'] },
+  { id: 'orange', hex: '#ff8c1a', says: ['kids.crayonOrange', 'Orange'] },
+  { id: 'blue', hex: '#4da6ff', says: ['kids.crayonBlue', 'Blue'] },
+  { id: 'purple', hex: '#c084fc', says: ['kids.crayonPurple', 'Purple'] },
 ];
 
 export interface Brush {
@@ -38,13 +39,32 @@ export interface Brush {
 }
 
 export const BRUSHES: readonly Brush[] = [
-  { id: 'thin', px: 4, says: ['kids.brushThin', 'Thin'] },
-  { id: 'medium', px: 10, says: ['kids.brushMedium', 'Medium'] },
-  { id: 'fat', px: 22, says: ['kids.brushFat', 'Fat'] },
+  { id: 'thin', px: 5, says: ['kids.brushThin', 'Fine'] },
+  { id: 'medium', px: 12, says: ['kids.brushMedium', 'Medium'] },
+  { id: 'fat', px: 24, says: ['kids.brushFat', 'Glow thick'] },
 ];
 
-/** The paper. Warm white, so a yellow crayon still shows. */
-export const PAPER = '#fffdf5';
+/** The paper: Google's dark neon ground, so the crayons glow on it. */
+export const PAPER = '#061517';
+
+/** The stamps on the shelf: pressed, one lands in the middle of the paper. */
+export interface Stamp {
+  readonly id: string;
+  readonly glyph: string;
+  readonly says: readonly [string, string];
+}
+export const STAMPS: readonly Stamp[] = [
+  { id: 'dino', glyph: '🦖', says: ['kids.stampDino', 'Dino'] },
+  { id: 'rocket', glyph: '🚀', says: ['kids.stampRocket', 'Rocket'] },
+  { id: 'star', glyph: '⭐', says: ['kids.stampStar', 'Star'] },
+  { id: 'rainbow', glyph: '🌈', says: ['kids.stampRainbow', 'Rainbow'] },
+  { id: 'robot', glyph: '🤖', says: ['kids.stampRobot', 'Robot'] },
+];
+/** The glow behind the picture that comes back, from Google's page. */
+export const ALIVE_GLOW = 'radial-gradient(circle at center, #0a302a 0%, #020b0d 80%)';
+
+/** A stamp's size on the paper, as a share of its side. */
+export const STAMP_SHARE = 0.22;
 
 /** How many strokes can be undone. A child presses undo a lot. */
 export const UNDO_MOST = 25;

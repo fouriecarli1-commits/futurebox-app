@@ -86,13 +86,16 @@ export default function KidsQuiz({ onSpark }: { readonly onSpark: (n: number) =>
       {mode === 'rather' ? (
         <div className="space-y-3" data-kidsrather>
           <p className="fb-kids-bubble text-center text-xl text-surface-900">{t('kids.quizRather', 'Would you rather?')}</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* Google's page: two tall cards, one green and one cyan, a big
+              picture on each and the words under it. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[rather.a, rather.b].map((side, which) => (
               <button key={which} type="button" onClick={() => choose(which)} data-kidsratherpick={which}
-                className={`fb-kids-bouncy min-h-[88px] rounded-3xl border-4 px-4 py-3 text-base font-black leading-snug ${
-                  picked === which ? 'border-amber-300 bg-amber-300 text-onAccent' : 'border-cyan-400/60 bg-surface-100 text-surface-900'
+                className={`fb-kids-bouncy flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-3xl border-4 border-white/80 px-4 py-5 text-base font-black leading-snug text-onAccent shadow-[0_6px_20px_rgba(0,0,0,0.6)] ${
+                  picked === which ? 'bg-amber-300 ring-4 ring-amber-200' : which === 0 ? 'bg-cyan-400' : 'bg-cyan-300'
                 }`}>
-                {say(side)}
+                <span className="text-6xl drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" aria-hidden>{rather.icons[which]}</span>
+                <span className="text-center">{say(side)}</span>
               </button>
             ))}
           </div>
@@ -112,7 +115,7 @@ export default function KidsQuiz({ onSpark }: { readonly onSpark: (n: number) =>
               <Volume2 className="h-4 w-4" /> {t('kids.quizListen', 'Play the two notes')}
             </button>
           )}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3">
             {teach.choices.map((side, which) => {
               const shown = picked !== null;
               const tone = !shown
@@ -124,8 +127,9 @@ export default function KidsQuiz({ onSpark }: { readonly onSpark: (n: number) =>
                     : 'border-surface-200 bg-surface-100/60 text-surface-700';
               return (
                 <button key={which} type="button" onClick={() => choose(which)} data-kidsteachpick={which}
-                  className={`fb-kids-bouncy min-h-[72px] rounded-3xl border-4 px-4 py-3 text-base font-black leading-snug ${tone}`}>
-                  {say(side)}
+                  className={`fb-kids-bouncy flex min-h-[72px] items-center gap-3 rounded-3xl border-4 px-4 py-3 text-left text-base font-black leading-snug ${tone}`}>
+                  {teach.icons?.[which] && <span className="text-3xl" aria-hidden>{teach.icons[which]}</span>}
+                  <span>{say(side)}</span>
                 </button>
               );
             })}

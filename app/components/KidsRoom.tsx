@@ -127,6 +127,8 @@ import KidsQuiz from './KidsQuiz';
 import KidsPictureMaker from './KidsPictureMaker';
 import KidsPiano from './KidsPiano';
 import KidsEditor from './KidsEditor';
+import KidsLoops from './KidsLoops';
+import KidsPads from './KidsPads';
 import { ALIVE_WORDS, KID_STYLES, KID_SUBJECTS, makeKidPicture, packDrawing, pictureWords } from '../lib/kidsalive';
 import { keepPiece } from '../lib/kidsgallery';
 import { BADGES, levelOf, towardNext, type Counts } from '../lib/kidslevel';
@@ -219,7 +221,7 @@ interface Door {
 const DOORS: readonly Door[] = [
   { id: 'music', icon: '🎵', says: ['kids.doorMusic', 'Create Music!'], lines: [
     ['kids.doorMusic1', 'Press the bubbles, or type or say your own idea'],
-    ['kids.doorMusic2', 'A real song, and a beat machine to bang on'],
+    ['kids.doorMusic2', 'Four loops to tap, a real song, a beat machine'],
   ] },
   { id: 'video', icon: '🎬', says: ['kids.doorVideo', 'Music Videos & Stories!'], lines: [
     ['kids.doorVideo1', 'A video of your song, on your own stage'],
@@ -230,7 +232,7 @@ const DOORS: readonly Door[] = [
     ['kids.doorDraw2', 'Bring it to life, or make a magic picture'],
   ] },
   { id: 'games', icon: '🎹', says: ['kids.doorGames', 'Studio Games & Beats!'], lines: [
-    ['kids.doorGames1', 'Catch the gems, pop the bubbles'],
+    ['kids.doorGames1', 'Four drum pads, the gems and the bubbles'],
     ['kids.doorGames2', 'Play the piano, copy a tune, keep it as a song'],
   ] },
   { id: 'edit', icon: '✂️', says: ['kids.doorEdit', 'Easy Editing!'], lines: [
@@ -976,6 +978,12 @@ export default function KidsRoom(): React.ReactElement {
       {/* ── 3. Music Maker ───────────────────────────────────────────────── */}
       {tab === 'music' && (
         <>
+          {/* Google's "Create Music Studio", 13 October 2026: four loop
+              cards for the little ones first, the big kids' deck under. */}
+          <KidsLoops onSpark={spark} />
+          <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400 bg-cyan-400/15 px-3.5 py-1.5 text-sm font-black text-cyan-300">
+            🎙️ {t('kids.bigKidsDeck', 'Make a real song (type or say your idea, big kids!)')}
+          </p>
           <div className="flex flex-wrap gap-2" data-kidsmusicmode>
             <button
               type="button"
@@ -1311,6 +1319,7 @@ export default function KidsRoom(): React.ReactElement {
               piano… and creating their own songs on a childs way with
               guidance." The piano and its copy-me game; a kept tune lands
               on the song shelf, so it plays at bedtime with the rest. */}
+          <KidsPads onSpark={spark} />
           <KidsPiano onSpark={spark} onKept={() => setShelfAgain((n) => n + 1)} />
           <KidsArcade onSpark={spark} />
           <div className="flex flex-col gap-3 sm:flex-row">
