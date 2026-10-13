@@ -4251,7 +4251,7 @@ export default function ProBooth({
       /* The marker `check:lessenaar` finds this wrapper by. */
       data-cutroom
       className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
-        onEdge ? 'flex-row' : 'flex-col'
+        onEdge ? 'flex-row-reverse' : 'flex-col'
       }`}
     >
       {/* Everything but the dock, in a column of its own. In portrait that
@@ -4269,7 +4269,7 @@ export default function ProBooth({
           difference is visible, so it is written down rather than left to
           whoever next reads the line. */}
       <div className={`min-w-0 flex-1 flex-col overflow-hidden ${deskOpen ? 'hidden' : 'flex'}`}>
-      <div className="relative flex items-center gap-3 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-5 py-3 border-b border-cyan-500/25 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
+      <div className="relative flex flex-wrap items-center gap-3 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-5 py-3 border-b border-cyan-500/25 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
         {/* Subtle neon laser top accent line */}
         <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
 
@@ -4359,10 +4359,12 @@ export default function ProBooth({
             <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Werkstasie')}</span>
           </button>
         </div>
-        <div className="min-w-0 flex-1">
+        {/* On a phone the five buttons before this leave it a sliver, so it
+            takes the next row whole; from `sm` it sits beside them as before. */}
+        <div className="min-w-0 basis-full sm:basis-0 sm:flex-1">
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-lg font-black tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.7)] truncate">
-              {t('pro.title', 'ProBooth — lanes')}
+              {t('pro.title', 'ProBooth & Stem Studio')}
             </h2>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.35)] uppercase">
               <span className="relative flex h-1.5 w-1.5">
@@ -4384,6 +4386,14 @@ export default function ProBooth({
               {clock(total)}
             </span>
             <Cost credits={0} className="pl-1" />
+            {sane(meter).key ? (
+              <span
+                data-keynow
+                className="inline-flex items-center gap-1 rounded border border-cyan-500/30 bg-zinc-800/80 px-1.5 py-0.5 text-[11px] font-semibold text-cyan-300"
+              >
+                {t('pro.keyNow', 'Key')}: {sane(meter).key}
+              </span>
+            ) : null}
           </div>
         </div>
       </div>

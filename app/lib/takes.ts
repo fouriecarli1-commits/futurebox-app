@@ -131,8 +131,10 @@ const MOST = 20_000;
  * the one that allocates and a rule that lives next to the allocation is one
  * a second caller cannot forget.
  */
-export function shapeOf(buffer: AudioBuffer, columns: number): Float32Array {
-  const data = buffer.getChannelData(0);
+export function shapeOf(buffer: AudioBuffer, columns: number, channel = 0): Float32Array {
+  /* `channel` since 13 October 2026: a stereo lane on a desk draws its two
+     channels one above the other, the way her picture of the booth has it. */
+  const data = buffer.getChannelData(Math.max(0, Math.min(channel, buffer.numberOfChannels - 1)));
   const want = Math.min(MOST, Math.max(8, Math.floor(columns) || 8));
   const per = Math.max(1, Math.floor(data.length / want));
   const out = new Float32Array(want);
