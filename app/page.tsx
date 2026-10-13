@@ -2809,10 +2809,14 @@ export default function FutureBoxHome() {
           Below sm it scrolls with the page. Losing a pinned header on a phone
           costs a scroll back up to reach the studio; keeping it costs a
           quarter of every screen, on every screen. */}
-      <header className="static sm:sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-zinc-800/80 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
+      <header className="static sm:sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-            <Cpu className="w-5 h-5 text-onAccent font-bold" />
+          {/* The mark as Google's pages draw it: a gradient hairline round
+              a black squircle with the chip inside. */}
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-500/20">
+            <div className="w-full h-full rounded-[10px] bg-black flex items-center justify-center">
+              <Cpu className="w-5 h-5 text-emerald-400" />
+            </div>
           </div>
           <div>
             <h1 className="text-lg font-black tracking-wider text-white flex items-center space-x-2">
@@ -2843,7 +2847,7 @@ export default function FutureBoxHome() {
             the full one where there is room. Five short pills fall into two
             rows at 390 px, which is two rows of buttons you can see rather
             than one row you cannot. */}
-        <nav className="flex flex-wrap items-center gap-1 bg-zinc-900/90 p-1.5 rounded-2xl lg:rounded-full border border-zinc-800">
+        <nav className="flex flex-wrap items-center gap-1 bg-zinc-900/90 p-1.5 rounded-2xl lg:rounded-full border border-white/10">
           {/* `as const` on the ids rather than `as any` on the setter.
 
               It was the one `as any` left in the app, and it was load-bearing
