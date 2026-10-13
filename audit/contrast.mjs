@@ -42,6 +42,12 @@ const THEMES = {
     surface: 'midnight', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet',
     radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full',
   },
+  /* The daylight twin of the default, 13 October 2026: what the switch on
+     the home page turns on. `THEME=prolight` walks every page in it. */
+  prolight: {
+    surface: 'daylight', primary: 'mint', secondary: 'cyan', highlight: 'amber', tertiary: 'violet',
+    radius: 'round', density: 'comfortable', font: 'jakarta', layout: 'rail', motion: 'full',
+  },
 };
 const THEME = process.env.THEME ?? '';
 if (THEME && !THEMES[THEME]) throw new Error(`no such theme preset here: ${THEME}`);
@@ -49,7 +55,12 @@ const { browser, page } = await enter({
   at: server.url,
   before: THEME
     ? (p) => p.addInitScript((stored) => {
-        try { window.localStorage.setItem('futurebox.theme.v2', JSON.stringify(stored)); } catch { /* storage off */ }
+        /* v3 is the key `lib/theme.ts` reads today; v2 is kept so an older
+           build walked with this file still turns. */
+        try {
+          window.localStorage.setItem('futurebox.theme.v3', JSON.stringify(stored));
+          window.localStorage.setItem('futurebox.theme.v2', JSON.stringify(stored));
+        } catch { /* storage off */ }
       }, { ...THEMES[THEME], chosen: true })
     : undefined,
 });

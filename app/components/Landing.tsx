@@ -48,6 +48,7 @@ import {
 import { TIER_SPECS, TIERS, tierPrice } from '../lib/plans';
 import { useLang } from '../lib/i18n';
 import LanguagePicker from './LanguagePicker';
+import ThemeSwitch from './ThemeSwitch';
 
 type Mode = 'signin' | 'signup' | 'forgot';
 
@@ -232,6 +233,9 @@ export default function Landing({
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* The dark-or-light switch stays out of the desktop-only nav:
+                a phone must be able to flip it on the home page too. */}
+            <ThemeSwitch />
             <span className="md:hidden"><LanguagePicker compact /></span>
             <button
               type="button"

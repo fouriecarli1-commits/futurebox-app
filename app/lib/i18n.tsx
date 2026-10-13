@@ -3210,6 +3210,8 @@ export const STRINGS: Dict = {
   "account.videos": { en: "Videos and clips", af: "Video’s en grepe" },
   "account.vaultNote": { en: "Counted on this device. The channel holds them.", af: "Op hierdie toestel getel. Die kanaal hou hulle." },
   "account.viewVault": { en: "View the vault →", af: "Kyk na die kluis →" },
+  "theme.toDark": { en: "Switch to dark", af: "Skakel na donker" },
+  "theme.toLight": { en: "Switch to light", af: "Skakel na lig" },
   "account.aMonth": { en: "a month", af: "per maand" },
   "account.seePlans": { en: "See the plans", af: "Sien die planne" },
   "account.changePlan": { en: "Change your plan", af: "Verander jou plan" },

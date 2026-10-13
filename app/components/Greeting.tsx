@@ -50,6 +50,7 @@ import { loadTaste } from '../lib/taste';
 import { publicUrl } from '../lib/avatar';
 import { STAGES, standaloneSurfaces, surfacesInStage, type SurfaceId } from '../lib/surfaces';
 import Cover from './Cover';
+import ThemeSwitch from './ThemeSwitch';
 
 /** `{name}` and friends, filled in. `t()` returns whole sentences per language. */
 function fill(text: string, into: Record<string, string>): string {
@@ -317,9 +318,14 @@ export default function Greeting({
               Pro Studio Edition
             </span>
           </div>
-          <div className="inline-flex items-center gap-1.5 text-xs text-zinc-400">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="font-semibold text-zinc-300">DeepMind & Vertex AI</span>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:inline-flex items-center gap-1.5 text-xs text-zinc-400">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="font-semibold text-zinc-300">DeepMind & Vertex AI</span>
+            </div>
+            {/* Dark or light, right here on the home page — her ask of 13
+                October 2026, so nobody has to find the theme studio first. */}
+            <ThemeSwitch />
           </div>
         </div>
 

@@ -102,7 +102,7 @@ import { PACKS } from './lib/credits';
 import type { Short } from './lib/wallet';
 import type { Pack } from './lib/credits';
 import { useLang } from './lib/i18n';
-import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
+import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, THEME_EVENT, type Theme } from './lib/theme';
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
 import { accessToken } from './lib/cloud';
@@ -453,6 +453,20 @@ export default function FutureBoxHome() {
     setTheme(saved);
     applyTheme(saved);
     setThemeLoaded(true);
+  }, []);
+  /* The switch on the home page writes and applies the theme itself; this
+     keeps the studio's copy the same, so the appearance panel opens on what
+     is actually on. Marked as loaded-from so the save effect below does not
+     write it a second time. */
+  useEffect(() => {
+    const follow = (event: Event): void => {
+      const next = (event as CustomEvent<Theme>).detail;
+      if (!next) return;
+      loadedTheme.current = next;
+      setTheme(next);
+    };
+    window.addEventListener(THEME_EVENT, follow);
+    return () => window.removeEventListener(THEME_EVENT, follow);
   }, []);
   useEffect(() => {
     // Until the load has landed in state, `theme` here is still the default

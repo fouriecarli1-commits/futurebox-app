@@ -211,6 +211,12 @@ export const PRESETS: readonly Preset[] = [
      it, the accent goes to mint (#00F087), and the face is Plus Jakarta
      Sans. Same bones, pulled darker and brighter. */
   { id: 'emerald', name: 'Pro Studio', blurb: 'Green-black, mint and glass. The default.', surface: 'greenblack', primary: 'mint', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'jakarta', layout: 'rail', motion: 'full' },
+  /* The same look in daylight — Carli, 13 October 2026: *"Die ligte tema
+     moet nogsteeds die spectaculat neon en futuristic theme hê."* Cool
+     white ground, the same mint, cyan and violet, solved for AA on white by
+     the same ramp. The switch on the home page goes between this and the
+     default; both stay one press away in the theme studio. */
+  { id: 'prolight', name: 'Pro Studio Light', blurb: 'The same neon, in daylight.', surface: 'daylight', primary: 'mint', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'jakarta', layout: 'rail', motion: 'full' },
   { id: 'forestglass', name: 'Emerald Studio', blurb: 'Deep green, glass and glow. The 12 October look.', surface: 'forest', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
   /* Near-white separates panels with nothing but space, so the loudest thing
      on screen is whatever the person just made. One accent, and amber kept
@@ -228,6 +234,17 @@ export const PRESETS: readonly Preset[] = [
 ];
 
 export const DEFAULT_THEME: Theme = { ...PRESETS[0] };
+
+/** The daylight twin of the default, for the dark/light switch on the home page. */
+export const LIGHT_THEME: Theme = { ...(PRESETS.find((one) => one.id === 'prolight') ?? PRESETS[0]) };
+
+/** Which way a theme faces, read off its surface rather than its name. */
+export function modeOf(theme: Theme): ThemeMode {
+  return (SURFACES.find((s) => s.id === theme.surface) ?? SURFACES[0]).mode;
+}
+
+/** The name of the event the home page's switch sends, so the studio's own copy of the theme follows. */
+export const THEME_EVENT = 'futurebox:theme';
 
 /**
  * The gallery, which is the album art room and everything around it.
