@@ -4290,11 +4290,7 @@ export default function ProBooth({
             <button
               type="button"
               onClick={() => setStudioMode('studio')}
-              className={`flex min-h-[38px] items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-bold transition-all ${
-                studioMode === 'studio'
-                  ? 'border-cyan-400 bg-cyan-950/70 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)]'
-                  : 'border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:border-zinc-700'
-              }`}
+              className="flex min-h-[38px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 py-1 text-xs font-bold text-zinc-400 hover:border-cyan-400 hover:text-cyan-300 transition-all"
               title={t('moises.toggleStudio', 'Studio Console')}
             >
               <Sliders className="h-3.5 w-3.5" />
@@ -4303,11 +4299,7 @@ export default function ProBooth({
             <button
               type="button"
               onClick={() => setStudioMode('daw')}
-              className={`flex min-h-[38px] items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-bold transition-all ${
-                studioMode === 'daw'
-                  ? 'border-teal-400 bg-teal-950/70 text-teal-300 shadow-[0_0_10px_rgba(20,184,166,0.3)]'
-                  : 'border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:border-zinc-700'
-              }`}
+              className="flex min-h-[38px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 py-1 text-xs font-bold text-zinc-400 hover:border-teal-400 hover:text-teal-300 transition-all"
               title={t('daw.toggleDaw', 'DAW Werkstasie')}
             >
               <Music2 className="h-3.5 w-3.5" />
