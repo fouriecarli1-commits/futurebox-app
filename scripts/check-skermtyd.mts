@@ -178,14 +178,20 @@ ok('  and the room re-asks the server rather than trusting its own count',
 
 /* ── 5. The door she asked for ───────────────────────────────────────── */
 
+/* 13 October 2026: the door's own row went — the kids banner sits directly
+   under the door on the landing page, with the same button and the same
+   sentence, and twice in a row was once too many. The banner is the door
+   now, so it is what is read. */
+const banner = readFileSync('app/components/KidsBanner.tsx', 'utf8');
+
 ok('the sign-in screen has a door into the kids room',
-  /data-authkids/.test(page) && /href="\/kids"/.test(page),
+  /data-authkids/.test(banner) && /href="\/kids"/.test(banner) && /<KidsBanner/.test(readFileSync('app/components/Landing.tsx', 'utf8')),
   'her words: "die kids afdeling moet by login page wees". Until today a'
   + ' grown-up had to open the studio, find the account sheet and press a row'
   + ' in it before a child could press anything');
 
 ok('  and it says what a grown-up has to do first',
-  /auth\.kidsWhy/.test(page),
+  /kidsbanner\.how/.test(banner),
   'an allowance belongs to an account, so a door with no sentence under it is'
   + ' a door that opens onto a sign-in screen for no stated reason');
 
