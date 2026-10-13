@@ -233,12 +233,13 @@ export default function VideoCanvas({
    * worse than a crowded screen, and this app has already hidden four working
    * features once by taking things away.
    */
-  const [advanced, setAdvanced] = useState(false);
+  const [advanced, setAdvanced] = useState(true);
   useEffect(() => {
     try {
-      setAdvanced(window.localStorage.getItem(MODE_KEY) === 'advanced');
+      const saved = window.localStorage.getItem(MODE_KEY);
+      setAdvanced(saved === null ? true : saved === 'advanced');
     } catch {
-      // Storage off. Simple is the right answer when nothing is known.
+      // Storage off. Everything is the right answer when nothing is known.
     }
   }, []);
   const chooseMode = useCallback((next: boolean) => {
