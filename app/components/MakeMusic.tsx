@@ -1195,8 +1195,14 @@ export default function MakeMusic({
             saying what the song is going to be. Pressing Everything opens
             all of it for editing and nothing is lost in either direction. */}
         {!advanced && (
-          <div data-makesimple className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
-            <p className="text-sm leading-relaxed text-zinc-300">
+          <div data-makesimple className="relative overflow-hidden space-y-4 rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 via-zinc-900/80 to-zinc-950 p-6 shadow-[0_0_35px_rgba(16,185,129,0.08)]">
+            <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-300">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                Gemini Copilot Mode
+              </span>
+            </div>
+            <p className="text-sm sm:text-base leading-relaxed text-zinc-300">
               {t(
                 'make.simpleSay',
                 'Open the copilot and tell it what you want \u2014 "a happy song about my dog", in any language. It writes the words, the style, the voice and the length. Then press the button.',

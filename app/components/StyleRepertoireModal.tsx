@@ -85,7 +85,7 @@ export default function StyleRepertoireModal({
       role="dialog"
       aria-modal="true"
       aria-label={t('repertoire.title', 'Song Style Repertoire')}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
     >
       <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
         {/* Header */}

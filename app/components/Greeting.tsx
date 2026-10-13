@@ -249,9 +249,9 @@ export default function Greeting({
 
            The raised surface comes from `globals.css`, which gives it to every
            boxed button in the app rather than to this one. */
-        className="group min-h-[44px] w-full rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3.5 text-left transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/[0.13] focus-visible:border-emerald-500 flex items-start gap-3"
+        className="group relative min-h-[44px] w-full rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3.5 text-left transition-all hover:border-emerald-400/60 hover:bg-emerald-500/[0.14] hover:shadow-[0_0_20px_rgba(16,185,129,0.18)] focus-visible:border-emerald-500 flex items-start gap-3 backdrop-blur-sm"
       >
-        <span className="mt-0.5 grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl border border-emerald-500/25 bg-emerald-500/10 transition-colors group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15">
+        <span className="mt-0.5 grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-all group-hover:border-emerald-400/60 group-hover:bg-emerald-500/25 group-hover:scale-105">
           <Icon className="h-[18px] w-[18px] text-emerald-400" />
         </span>
         <span className="min-w-0 flex-1">
@@ -277,7 +277,7 @@ export default function Greeting({
               that already fits changes shape. Found by the fit measuring in
               `audit/afrikaans.mjs`, which walks both languages and compares
               the same box in each. */}
-          <span className="block break-words text-sm font-bold leading-tight text-white">
+          <span className="block break-words text-sm font-black leading-tight text-white group-hover:text-emerald-300 transition-colors">
             {roomName(id)}
           </span>
           {/* The floor under the line is what keeps a row of cards the same
@@ -286,7 +286,7 @@ export default function Greeting({
               there is nothing beside it to line up with — see the grid. */}
           <span
             data-roomhint
-            className="mt-0.5 block min-h-[2rem] text-xs leading-snug text-zinc-500"
+            className="mt-0.5 block min-h-[2rem] text-xs leading-snug text-zinc-400"
           >
             {t(`${RAIL_KEY[id]}.hint`)}
           </span>
@@ -303,28 +303,31 @@ export default function Greeting({
        onto a desktop. */
     <div className="mx-auto w-full max-w-5xl space-y-7 py-2">
       {/* ── Who they are, and where they are ─────────────────────────────── */}
-      {/* Tighter than it was, and laid out as one row on a wide screen.
+      <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-zinc-900/90 to-zinc-950 p-6 md:p-8 shadow-[0_0_50px_rgba(16,185,129,0.12)]">
+        {/* Glow orb */}
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
 
-          It held a mark, a name, a line and a button in a box with 2rem of
-          padding, and on a desktop it came out as a large panel that was
-          mostly empty — the first thing anybody sees, saying very little with
-          a great deal of room. The parts have not changed; the space around
-          them has, and the call to action now sits beside the name rather than
-          under a gap. */}
-      <div className="rounded-3xl border border-zinc-800 bg-gradient-to-br from-emerald-500/10 via-zinc-900/70 to-zinc-950 p-5 md:p-6">
-        <div className="mb-5 flex items-center gap-3">
-          {/* The mark, so the screen says which place this is before it says
-              anything about the person. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon-192.png" alt="" aria-hidden="true" className="w-8 h-8 rounded-lg" />
-          <span className="text-base font-black tracking-tight text-white">FutureBox</span>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon-192.png" alt="" aria-hidden="true" className="w-8 h-8 rounded-lg ring-1 ring-emerald-500/30" />
+            <span className="text-base font-black tracking-tight text-white">FutureBox</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Pro Studio Edition
+            </span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 text-xs text-zinc-400">
+            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="font-semibold text-zinc-300">DeepMind & Vertex AI</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-4 md:flex-nowrap">
           {/* Their own face if they put one on their channel, and the
               generated cover if not — never a grey silhouette, which reads as
               something failing to load. Same rule as the channel itself. */}
-          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border border-zinc-800 md:h-16 md:w-16">
+          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border border-emerald-500/40 ring-2 ring-emerald-500/20 md:h-16 md:w-16 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -340,37 +343,29 @@ export default function Greeting({
           {/* Held at a fixed height while the name is fetched, so the row does
               not grow under the reader's eye a quarter-second in. */}
           <div className="min-w-0 flex-1 min-h-[68px] flex flex-col justify-center">
-            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight truncate">
+            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight truncate tracking-tight">
               {habit
                 ? habit.name
                   ? fill(t('hello.hi', 'Hello, {name}!'), { name: habit.name })
                   : t('hello.hiNoName', 'Hello!')
                 : ' '}
             </h2>
-            <p className="text-sm md:text-base text-zinc-400 leading-snug">{welcome()}</p>
+            <p className="text-sm md:text-base text-zinc-300 leading-snug">{welcome()}</p>
           </div>
         </div>
 
         {/* ── The one thing worth doing next ─────────────────────────────── */}
-        {/* On a wide screen the prompt and its button sit on one line, the
-            sentence to the left and the button hard right. Stacked, they left
-            a band of empty card to the right of a short sentence, which is the
-            largest piece of nothing on the first screen anybody sees. */}
         {said && (
-          <div className="mt-5 flex flex-col gap-3 border-t border-zinc-800/80 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-base font-semibold leading-snug text-emerald-300 md:text-lg">{ask()}</p>
+          <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-base font-bold leading-snug text-emerald-300 md:text-lg flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+              <span>{ask()}</span>
+            </p>
             <button
               type="button"
               onClick={() => onGo(said.room)}
-              className="min-h-[44px] w-full flex-shrink-0 px-5 py-3 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 sm:w-auto"
+              className="min-h-[44px] w-full flex-shrink-0 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-onAccent font-extrabold inline-flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:opacity-95 transition-all sm:w-auto hover:scale-[1.02]"
             >
-              {/* The room's own name, not "Open <name>".
-
-                  Every room here is already named with a verb — "Make a song",
-                  "Maak ’n liedjie" — so a verb in front of it read "Open Make a
-                  song" in English and "Maak Maak ’n liedjie oop" in Afrikaans.
-                  The name and an arrow say the same thing and cannot collide
-                  with a name whatever it turns out to be. */}
               {roomName(said.room)}
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -378,71 +373,44 @@ export default function Greeting({
         )}
       </div>
 
-      {/* ── The kids room, where it cannot be missed ─────────────────────
-
-          Carli, 12 October 2026: *"Ek sien nerens die kids room nie, waar kry
-          ek dit?"* and then *"die kids room kan nie weggesteek word nie, dit
-          moet 'n highlight wees."* It lived at `/kids` behind a line in the
-          account page and one in the footer. This is the grown-up's door —
-          the greeting is the first thing a signed-in person sees — so it is
-          here, in its own colour, above the rooms. The child never sees this
-          page; the room behind the link is the one built for them. */}
+      {/* ── The kids room, where it cannot be missed ───────────────────── */}
       <a
         href="/kids"
         data-kidsdoorhome
-        className="group flex min-h-[44px] items-center gap-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 transition-colors hover:border-amber-400/70 hover:bg-amber-500/15"
+        className="group relative overflow-hidden flex min-h-[44px] items-center gap-4 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-amber-950/20 to-zinc-950 px-5 py-4 transition-all hover:border-amber-400/80 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
       >
-        <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl border border-amber-500/40 bg-amber-500/15">
+        <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl border border-amber-500/50 bg-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105">
           <Baby className="h-6 w-6 text-amber-300" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-base font-extrabold leading-tight text-white">
-            {t('hello.kids', 'The kids room')}
+          <span className="flex items-center gap-2">
+            <span className="block text-base font-black leading-tight text-white">
+              {t('hello.kids', 'The kids room')}
+            </span>
+            <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+              Safe Studio
+            </span>
           </span>
-          <span className="block pt-0.5 text-xs leading-snug text-zinc-400">
+          <span className="block pt-0.5 text-xs leading-snug text-zinc-300">
             {t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Two presses in there: a song, and a video of it.')}
           </span>
         </span>
-        <ArrowRight className="h-4 w-4 flex-shrink-0 text-amber-300 transition-transform group-hover:translate-x-1" />
+        <ArrowRight className="h-5 w-5 flex-shrink-0 text-amber-300 transition-transform group-hover:translate-x-1.5" />
       </a>
 
       {/* ── Or straight to a room ────────────────────────────────────────── */}
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-zinc-300">
+      <div className="space-y-4">
+        <p className="text-sm font-bold text-zinc-300 tracking-wide">
           {t('hello.rooms', 'Or go straight to')}
         </p>
         {STAGES.map((stage) => (
-          <div key={stage.id} className="space-y-2.5">
-            {/* The label with a rule running out from it. The stages are a
-                real sequence — make it, show it, put it out, sell it — and a
-                line of grey capitals on its own did not read as a section
-                heading at all; it read as a caption on the row below. */}
+          <div key={stage.id} className="space-y-3">
             <div className="flex items-center gap-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-400">
                 {lang === 'af' ? stage.af : stage.en}
-              </p>
-              <span className="h-px flex-1 bg-zinc-800" aria-hidden="true" />
+              </span>
+              <span className="h-px flex-1 bg-gradient-to-r from-emerald-500/20 via-zinc-800 to-transparent" aria-hidden="true" />
             </div>
-            {/* ── The odd one out fills the row ────────────────────────
-
-                Carli, 20 September 2026, with a photograph of MAKE IT:
-                *"Daai sound trainer box moet daai wit gaping vol maak. So
-                stretch dit uit en maak die bar bietjie dunner."*
-
-                Five rooms in a two-column grid leaves the fifth alone with
-                an empty square beside it, and an empty square in a grid of
-                cards reads as something missing rather than as space.
-
-                Done in the grid rather than by giving one room a flag: the
-                card that stretches is whichever one happens to be last and
-                odd, so adding a sixth room to a stage fixes itself. Only at
-                two columns — at three and four the arithmetic is different
-                and the last card is usually not alone.
-
-                Wider means shorter: the hint that needed two lines in a
-                half-width card needs one across the row, so the floor under
-                it comes off and the padding comes in. That is the "bar
-                bietjie dunner". */}
             <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4 [&>:last-child:nth-child(odd)]:col-span-2 [&>:last-child:nth-child(odd)]:py-2.5 [&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-0 md:[&>:last-child:nth-child(odd)]:col-span-1 md:[&>:last-child:nth-child(odd)]:py-3.5 md:[&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-[2rem]">
               {surfacesInStage(stage.id).map((id) => (
                 <QuickButton key={id} id={id} />
@@ -465,7 +433,7 @@ export default function Greeting({
         <button
           type="button"
           onClick={onClose}
-          className="min-h-[44px] w-full sm:w-auto rounded-xl border border-zinc-800 bg-zinc-950/60 px-4 py-2.5 text-sm font-semibold text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+          className="min-h-[44px] w-full sm:w-auto rounded-xl border border-emerald-500/25 bg-zinc-950/70 px-5 py-2.5 text-sm font-bold text-zinc-300 hover:border-emerald-400/60 hover:text-emerald-300 transition-all shadow-sm"
         >
           {t('hello.skip', 'Not now — take me to the feed')}
         </button>
