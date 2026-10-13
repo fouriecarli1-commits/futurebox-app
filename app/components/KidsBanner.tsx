@@ -62,7 +62,7 @@ export default function KidsBanner({
       <div className={`space-y-4 ${compact ? 'p-4' : 'p-5 sm:p-7'}`}>
         <div className="space-y-1">
           <h3 className={`font-black tracking-tight text-white ${compact ? 'text-lg' : 'text-2xl sm:text-3xl'}`}>
-            {t('kidsbanner.title', 'A safe room for your child to make things')}
+            {t('kidsbanner.title', 'A safe room where your child can be creative')}
           </h3>
           <p className="text-sm leading-relaxed text-zinc-300">
             {t('kidsbanner.sub', 'Real songs, videos, stories, drawings and games, in a room built for small hands — and for the grown-up who hands the phone over.')}

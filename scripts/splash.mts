@@ -87,17 +87,12 @@ const drawing = (w: number, h: number): string => {
      gap:${Math.round(tile * 0.3)}px;
      font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
   <div style="width:${tile}px;height:${tile}px;border-radius:${Math.round(tile * 0.24)}px;
-       padding:${Math.max(2, Math.round(tile * 0.055))}px;box-sizing:border-box;
-       background:linear-gradient(135deg,#05ff93,#47d2eb);
-       box-shadow:0 0 ${Math.round(tile * 0.08)}px rgba(5,255,147,0.75),0 0 ${Math.round(tile * 0.16)}px rgba(5,255,147,0.35)">
-    <div style="width:100%;height:100%;border-radius:${Math.round(tile * 0.24) - Math.max(2, Math.round(tile * 0.055))}px;
-         background:radial-gradient(circle at 50% 38%,#0f3324 0%,#080c0a 72%);
-         display:flex;align-items:center;justify-content:center">
-    <svg width="${Math.round(tile * 0.56)}" height="${Math.round(tile * 0.56)}"
-         viewBox="0 0 24 24" fill="none" stroke="#05ff93" stroke-width="2.1"
-         stroke-linecap="round" stroke-linejoin="round"
-         style="filter:drop-shadow(0 0 ${Math.round(tile * 0.02)}px #05ff93) drop-shadow(0 0 ${Math.round(tile * 0.06)}px rgba(5,255,147,0.7))">${glyph}</svg>
-    </div>
+       background:linear-gradient(135deg,#47d2eb 0%,#05ff93 55%,#2bff9e 100%);
+       display:flex;align-items:center;justify-content:center;
+       box-shadow:0 0 ${Math.round(tile * 0.08)}px rgba(5,255,147,0.9),0 0 ${Math.round(tile * 0.18)}px rgba(5,255,147,0.45)">
+    <svg width="${Math.round(tile * 0.58)}" height="${Math.round(tile * 0.58)}"
+         viewBox="0 0 24 24" fill="none" stroke="#06110c" stroke-width="2.2"
+         stroke-linecap="round" stroke-linejoin="round">${glyph}</svg>
   </div>
   <p style="margin:0;font-size:${word}px;line-height:1;font-weight:900;
      letter-spacing:-0.05em;color:${INK}">FUTURE<span

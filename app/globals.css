@@ -1395,34 +1395,20 @@ body:has([data-cubed]) {
   width: 5.5rem;
   height: 5.5rem;
   border-radius: 1.4rem;
-  /* The same tile the app icon (`scripts/icon.mjs`) and the landing page's
-     header are drawn with, since 13 October 2026: a near-black square inside
-     a mint-to-cyan ring, lit — so the thing on the home screen and the thing
-     that opens are one picture. Literal colours on purpose: a theme preset
-     must not reach into the brand mark. */
-  padding: 0.3rem;
-  background-image: linear-gradient(135deg, #05ff93, #47d2eb);
-  box-shadow: 0 0 10px rgba(5, 255, 147, 0.75), 0 0 28px rgba(5, 255, 147, 0.35);
-}
-
-[data-launchmarktile]::before {
-  content: '';
-  position: absolute;
-  inset: 0.3rem;
-  border-radius: 1.1rem;
-  background-image: radial-gradient(circle at 50% 38%, #0f3324 0%, #080c0a 72%);
-}
-
-[data-launchmarktile] {
-  position: relative;
+  /* The same tile the app icon (`scripts/icon.mjs`) is drawn with, since
+     13 October 2026: the brightest green the page owns, lit from behind,
+     the chip on it black. Carli: "die groen om die icon moet brighter en
+     neon wees, en die swart lyne bly swart … net nie geel nie." Literal
+     colours on purpose: a theme preset must not reach into the brand
+     mark. */
+  background-image: linear-gradient(135deg, #47d2eb 0%, #05ff93 55%, #2bff9e 100%);
+  box-shadow: 0 0 10px rgba(5, 255, 147, 0.9), 0 0 28px rgba(5, 255, 147, 0.45);
 }
 
 [data-launchmarktile] > svg {
-  position: relative;
-  width: 3rem;
-  height: 3rem;
-  color: #05ff93;
-  filter: drop-shadow(0 0 2px #05ff93) drop-shadow(0 0 6px rgba(5, 255, 147, 0.7));
+  width: 3.2rem;
+  height: 3.2rem;
+  color: #06110c;
 }
 
 [data-launchmarkword] {

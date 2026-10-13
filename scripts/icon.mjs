@@ -1,13 +1,13 @@
 /**
  * The FutureBox app icon, drawn neon.
  *
- * Carli, 13 October 2026, with her home screen: *"Huidiglik lyk die icon
- * so. Ek sal wil hê dit moet neon wees sodat dit tussen ander apps
- * uitstaan."* The icon was a flat teal tile with a black chip on it — the
- * look of the page in September. The page has since gone green-black with a
- * neon mint, and the header's tile is a black square inside a glowing
- * gradient ring with a lit chip on it. This is that tile, so the thing on
- * the home screen and the thing that opens are one picture.
+ * Carli, 13 October 2026, with her home screen: *"Ek sal wil hê dit moet
+ * neon wees sodat dit tussen ander apps uitstaan."* And, seeing a first
+ * version that put a lit chip on a black tile: *"Ek dink weer eerder die
+ * groen om die icon moet brighter en neon wees, en die swart lyne bly
+ * swart … Nee net nie geel nie."* So: the tile is the brightest green the
+ * page owns, lit from behind, and the chip on it is black. No yellow, no
+ * dark tile.
  *
  * Rendered in the browser (the same way `brand-mark.mjs` renders the mark
  * for email), because a neon glow is a blur, and a blur is the one thing a
@@ -47,24 +47,19 @@ const glyph = `
  * transparent and the tile fills the square but for the glow's room.
  */
 const page = (size, filled) => {
-  const inset = filled ? size * 0.14 : size * 0.05;
+  const inset = filled ? size * 0.14 : size * 0.06;
   const tile = size - inset * 2;
-  const ring = Math.max(2, Math.round(tile * 0.055));
   const radius = tile * 0.24;
-  const glow = tile * 0.16;
+  const glow = tile * 0.18;
   return `<!doctype html><html><body style="margin:0;background:${filled ? GROUND : 'transparent'}">
 <div id="icon" style="position:relative;width:${size}px;height:${size}px;background:${filled ? GROUND : 'transparent'}">
   <div style="position:absolute;left:${inset}px;top:${inset}px;width:${tile}px;height:${tile}px;
-       border-radius:${radius}px;padding:${ring}px;box-sizing:border-box;
-       background:linear-gradient(135deg,${MINT},${CYAN});
-       box-shadow:0 0 ${glow * 0.5}px rgba(5,255,147,0.75),0 0 ${glow}px rgba(5,255,147,0.35)">
-    <div style="width:100%;height:100%;border-radius:${radius - ring}px;
-         background:radial-gradient(circle at 50% 38%,#0f3324 0%,${GROUND} 72%);
-         display:flex;align-items:center;justify-content:center">
-      <svg width="${tile * 0.56}" height="${tile * 0.56}" viewBox="0 0 24 24" fill="none"
-           stroke="${MINT}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"
-           style="filter:drop-shadow(0 0 ${tile * 0.02}px ${MINT}) drop-shadow(0 0 ${tile * 0.06}px rgba(5,255,147,0.7))">${glyph}</svg>
-    </div>
+       border-radius:${radius}px;
+       background:linear-gradient(135deg,${CYAN} 0%,${MINT} 55%,#2bff9e 100%);
+       box-shadow:0 0 ${glow * 0.45}px rgba(5,255,147,0.9),0 0 ${glow}px rgba(5,255,147,0.45);
+       display:flex;align-items:center;justify-content:center">
+    <svg width="${tile * 0.58}" height="${tile * 0.58}" viewBox="0 0 24 24" fill="none"
+         stroke="#06110c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph}</svg>
   </div>
 </div></body></html>`;
 };

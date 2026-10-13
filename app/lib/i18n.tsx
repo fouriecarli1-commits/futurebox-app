@@ -6226,7 +6226,7 @@ export const STRINGS: Dict = {
   "kids.tvStories": { en: "My storybooks", af: "My storieboeke" },
   "kids.tvWhy": { en: "Everything you kept, ready to play again. It uses no credits.", af: "Alles wat jy gebêre het, gereed om weer te speel. Dit gebruik geen krediete nie." },
   "kidsbanner.alt": { en: "FutureBox Kids Dream Studio", af: "FutureBox Kinder Droomateljee" },
-  "kidsbanner.title": { en: "A safe room for your child to make things", af: "\u2019n Veilige kamer waar jou kind dinge kan maak" },
+  "kidsbanner.title": { en: "A safe room where your child can be creative", af: "\u2019n Veilige plek waar jou kind kreatief kan wees" },
   "kidsbanner.sub": { en: "Real songs, videos, stories, drawings and games, in a room built for small hands \u2014 and for the grown-up who hands the phone over.", af: "Regte liedjies, video\u2019s, stories, tekeninge en speletjies, in \u2019n kamer gebou vir klein handjies \u2014 en vir die grootmens wat die foon oorhandig." },
   "kidsbanner.clock": { en: "You set the allowance and the clock. When the time is up, the room closes itself.", af: "Jy stel die toelaag en die horlosie. Wanneer die tyd om is, maak die kamer homself toe." },
   "kidsbanner.door": { en: "One room with no way out of it: no shop, no chat, no strangers, nothing shared.", af: "Een kamer sonder \u2019n uitgang: geen winkel, geen klets, geen vreemdelinge, niks wat gedeel word nie." },
