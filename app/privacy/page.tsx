@@ -36,7 +36,7 @@ export const metadata = {
    Music API terms 2(D) require a privacy policy that says how information is
    shared "including with ElevenLabs and third parties". Naming them in a
    list of suppliers was most of the way there; it was not all of it. */
-const UPDATED = '24 September 2026';
+const UPDATED = '14 October 2026';
 
 /* Same as the terms: contact is a page, not an address. See the note there. */
 const CONTACT_PAGE = '/help';
@@ -216,10 +216,10 @@ export default function Privacy(): React.ReactElement {
 
         <Section title="Children">
           <p>
-            An account is held by somebody 18 or older. FutureBox is not built for children, and an
-            account is not knowingly created for anybody under 18 — where a younger person uses it,
-            a parent or guardian holds the account and agrees to this on their behalf. If you
-            believe an account has been created for a child without that, say so on the{' '}
+            An account is held by somebody 18 or older. An account is not knowingly created for
+            anybody under 18 — where a younger person uses FutureBox, a parent or guardian holds the
+            account and, as the child&apos;s competent person under POPIA, agrees to this on their
+            behalf. If you believe an account has been created for a child without that, say so on the{' '}
             <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
               help page
             </Link>{' '}
@@ -230,6 +230,19 @@ export default function Privacy(): React.ReactElement {
               Voice Data from children under the age of 18 available to us".
               No parental-consent carve-out, unlike their use policy 9(r).
               For a singing app the stricter rule is the one to build to. */}
+          <p>
+            <strong className="text-white">The kids room.</strong> A grown-up opens it on their own
+            account and hands the phone over. Nothing about the child is asked for or kept — no name,
+            no age, no photograph, no location. What the child makes is sent where it has to go to be
+            made, and nowhere else: the words they type or say to the music engine for a song, their
+            drawing to the picture and video engines to bring it to life, and a story&apos;s text to the
+            reading voice (a stock voice, never the child&apos;s). The microphone in the room turns
+            speech into words using the phone&apos;s own speech recogniser, which on many Android
+            phones is Google&apos;s; a recording made in the kids editor stays on the phone. Stories
+            and songs are kept only when the grown-up or the child keeps them on the shelf, and go
+            when they are taken off it or the account is deleted. Nothing made in the room is shown
+            to anybody else, and there is no chat, no advertising and no tracking for advertising.
+          </p>
           <p>
             <strong className="text-white">One rule has no exception.</strong> No recording of anybody under 18 may be sent to the voice engine &mdash; not with a parent&apos;s permission, not on a parent&apos;s account. So where an account is held by a parent for a younger person, the voice features are off: no cloning, no singing conversion, no reading in your own voice. Everything else works.
           </p>

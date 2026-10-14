@@ -2415,10 +2415,7 @@ export default function PostStudio({
           'post.groundMost',
           'That took nearly the whole picture away, which is right for a small mark on a big empty sheet and wrong if the subject has gone with it. Look at it, and press Put it back if it has.',
         )
-        : t(
-          'post.groundDone',
-          'Background gone, and there is nothing behind it now — the squares are how the picture shows you that. Save it as PNG to keep it see-through; JPG cannot.',
-        ));
+        : t('post.cutDoneShort', 'Background removed. Save as PNG to keep it see-through.'));
     }, () => setSaid(t('post.groundFailed', 'That background could not be taken out.')));
   };
 
@@ -2877,9 +2874,14 @@ export default function PostStudio({
     try {
       const cut = await cutOut(picture, (part) => setCutting(part), edgeOf(edge));
       if (!cut.ok) {
-        setSaid(cut.why === 'nobody'
-          ? t('post.cutNobody', 'No person found in this picture. This one only knows people \u2014 a face and shoulders, not a close-up of hair or an object. Use Cut out a shape below and draw round what you want instead.')
-          : t('post.cutFailed', 'The background could not be taken out of that picture.'));
+        /* One button for both kinds of picture (Carli, 14 October 2026:
+           "Die transparency en background remover werk alweer nie reg
+           nie"). She had pressed the plain-background one on a photograph
+           of a person, which takes only what matches the edge of the frame.
+           So the person model goes first, and only when it finds nobody —
+           a logo, a drawing, a product on a sheet — does the plain one run. */
+        if (cut.why === 'nobody') { takeFlatGround(); return; }
+        setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.'));
         return;
       }
       lastMask.current = { mask: cut.mask, of: picture };
@@ -2888,10 +2890,7 @@ export default function PostStudio({
         setWhole(picture);
         setPicture(one);
         nothingBehind();
-        setSaid(t(
-          'post.cutDone',
-          'Background gone, and there is nothing behind it now — the squares are how the picture shows you that. Save it as PNG to keep it see-through; JPG cannot. Put a colour behind it below if you want one.',
-        ));
+        setSaid(t('post.cutDoneShort', 'Background removed. Save as PNG to keep it see-through.'));
       }, () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')));
     } finally {
       setCutting(null);
@@ -3716,7 +3715,7 @@ export default function PostStudio({
           </button>
         )}
         <span className="w-full text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(113,113,122)' }}>
-          {t('post.cutWhat', 'One press takes the background away and leaves the person. It only finds PEOPLE — for anything else, use Cut out a shape below. Included in your plan, and it happens on your own phone, so it uses no credits; the first time takes a moment while it downloads.')}
+          {t('post.cutWhatOne', 'One press: a person is cut out cleanly; a logo or drawing loses its plain background. On your phone, no credits.')}
         </span>
         {/* ── And the one for everything that is not a person ───────────
  
@@ -3735,6 +3734,7 @@ export default function PostStudio({
             correct and useless. This one knows nothing about what is in the
             picture — it learns the background off the edge of the frame.
             Two tools, each honest about what it does. */}
+        {!plain && (
         <div data-postground className="flex w-full flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: asRoom ? 'rgba(16,185,129,0.18)' : 'rgb(39,39,42)' }}>
           <p className={MIKRO}>{t('post.ground', 'Plain background')}</p>
           <button
@@ -3743,7 +3743,7 @@ export default function PostStudio({
             onClick={takeFlatGround}
             className={LEEG}
           >
-            {t('post.groundGo', 'Take a plain background off')}
+            {t('post.groundOnly', 'Only a plain background (logos, drawings)')}
           </button>
           {/* The pixels cannot say which of these is wanted, so it is asked
               rather than guessed: a logo's own holes ARE background, and a
@@ -3774,6 +3774,7 @@ export default function PostStudio({
             {t('post.groundWhat', 'For a logo, a drawing, or anything photographed on a plain sheet — including the grey-and-white squares a picture comes back with when it was asked for a see-through background. It works out what the background is from the edges of the frame. Included in your plan, and it happens on your own phone, so it uses no credits.')}
           </span>
         </div>
+        )}
         {/* ── And what colour the thing that is left should be ──────────
  
             Carli, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan
@@ -5365,6 +5366,7 @@ export default function PostStudio({
           type="button"
           onClick={onClose}
           data-roomback
+          data-backout
           aria-label={t('room.backToAll', 'Alle Kamers')}
           className="flex h-9 w-9 items-center justify-center rounded-lg"
           style={{ ...chipStyle, color: PHOTO.accent }}
@@ -5376,7 +5378,7 @@ export default function PostStudio({
           <X className="h-4 w-4" />
         </button>
       )}
-      <div className="min-w-0 flex-shrink">
+      <div className="min-w-0 flex-1 overflow-hidden">
         {/* The name of the room refuses to shrink to nothing: on a 1512-wide
             screen a heading with no width of its own was squeezed to 52
             pixels and read "noto / ditor". */}
@@ -5389,10 +5391,12 @@ export default function PostStudio({
           data-postcustomsize
           onClick={() => setShowSizeModal(true)}
           title={t('size.customOrStandard', 'Standard & Custom Sizes')}
-          className="block truncate font-mono text-[10px] leading-tight"
+          className="block max-w-full truncate text-left font-mono text-[10px] leading-tight"
           style={{ color: INK_DIM }}
         >
-          {`${size.width}×${size.height} · ${size.name} ▾`}
+          {/* The name only where there is room for it: on a phone the
+              numbers and the arrow, so nothing runs under the buttons. */}
+          {upright ? `${size.width}×${size.height} ▾` : `${size.width}×${size.height} · ${size.name} ▾`}
         </button>
       </div>
       {onEdge && (
@@ -5479,7 +5483,10 @@ export default function PostStudio({
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
-      {!picture && words.length === 0 && (
+      {/* Gone the moment a tool is open. Carli, 14 October 2026, with the
+          templates open over it: "Die oomblik wanneer mens op templates
+          kliek dan moet daai hele bar verdwyn anders is dit in die pad." */}
+      {!picture && words.length === 0 && bench === null && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center">
           <div
             className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-2xl p-5 shadow-2xl backdrop-blur-md"

@@ -76,7 +76,7 @@ export const metadata = {
    does not need to enjoy reading it, but it has to be here and it has to be
    plain, because the alternative is a clause somebody agreed to without being
    told. */
-const UPDATED = '15 September 2026';
+const UPDATED = '14 October 2026';
 
 /* Contact is a page, not an address.
 
@@ -248,6 +248,23 @@ export default function Terms(): React.ReactElement {
           <p>You need to be 18 or older to hold an account and to pay for a plan. If you are younger than that, a parent or guardian holds the account and is responsible for what is made on it.</p>
         </Section>
 
+        {/* Carli, 14 October 2026: "Onthou ons het nou 'n kids room by so
+            daardie legal goed moet ook in gesit word." What the room is, who
+            answers for it, and how its own credits behave — each line true
+            of the code: the door is on the welcome page only, kids credits
+            are taken only while the room is open (supabase/kinderkrediete.sql),
+            a monthly pack is stopped from the parents page (/api/kids/pack),
+            and no child's recording reaches a voice engine. */}
+        <Section title="The kids room">
+          <p>The kids room is part of a grown-up&apos;s account. The account holder, who is 18 or older, opens it from the welcome page, decides how much may be spent and for how long, and hands the phone over. That grown-up agrees to these terms for the child and is responsible for what is made in the room and for keeping an eye on it.</p>
+          <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
+            <li><strong className="text-white">What it does.</strong> A child makes songs, videos, stories, pictures, games and quizzes from words they type or say and from what they draw. The songs, stories, pictures and videos are made by AI engines, which can get things wrong; look at what was made before it goes anywhere else.</li>
+            <li><strong className="text-white">What it does not have.</strong> No chat, no strangers, no shop and no sharing from inside the room. Buying happens on the parents page, which is the grown-up&apos;s.</li>
+            <li><strong className="text-white">The clock and the allowance are tools for the grown-up.</strong> When the time or the credits run out the room closes and asks for a grown-up. They are not a promise that a child cannot reach the rest of a phone.</li>
+            <li><strong className="text-white">A child&apos;s own voice is never sent to a voice engine.</strong> The microphone in the room turns speech into typed words; a recording made in the kids editor stays on the phone.</li>
+          </ul>
+        </Section>
+
         <Section title="Credits, plans and what expires">
           <p>Generating costs credits. A plan includes an allowance every month; a top-up pack is bought separately.</p>
           <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
@@ -255,6 +272,8 @@ export default function Terms(): React.ReactElement {
             <li><strong className="text-white">Bought credits do not expire</strong> while your account exists, and are used before the month&apos;s allowance.</li>
             <li><strong className="text-white">A failed generation is refunded.</strong> Credits are taken before the work is asked for and given back if it does not happen. If you believe something was charged and not delivered, write and it will be put right.</li>
             <li>A top-up pack costs more per credit than a plan does. That is stated where the packs are shown; the plan is the cheaper way to get credits every month.</li>
+            <li><strong className="text-white">Kids credits are for the kids room only.</strong> A kids pack puts credits on a balance of their own. They are spent only in the kids room, before any allowance set from the account&apos;s own credits; they cannot be moved to the account, used elsewhere in the app or paid out. They do not expire while the account exists, and a failed generation in the kids room is given back to that balance.</li>
+            <li><strong className="text-white">A monthly kids pack renews until you stop it.</strong> Stop it any time from the parents page in the kids room. A month already paid for is not refunded and its credits stay; nothing more is charged after that.</li>
           </ul>
         </Section>
 

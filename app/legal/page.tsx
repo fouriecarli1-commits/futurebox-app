@@ -256,6 +256,11 @@ export default function Legal(): React.ReactElement {
             Inside the app, what a generation costs in credits is printed on the button before you
             press it, not discovered afterwards.
           </p>
+          <p>
+            The kids room is priced on its own, on the same pricing section: Kids Try (R59 once,
+            30 kids credits), Kids Monthly (R119 a month, 65 kids credits) and Kids Plus (R229 a
+            month, 135 kids credits). Kids credits are spent only in the kids room and need no plan.
+          </p>
         </Section>
 
         <Section title="Paying, and the security of it">
@@ -274,6 +279,10 @@ export default function Legal(): React.ReactElement {
           <p>
             Cancelling is immediate and self-service, and there is no cancellation fee. A plan
             already paid for runs to the end of its month.
+          </p>
+          <p>
+            A monthly kids pack is stopped the same way, from the parents page in the kids room:
+            one press, no fee, and the kids credits already bought stay on the balance.
           </p>
           <p>
             Where a generation fails, the credits for it are returned automatically — that is in the

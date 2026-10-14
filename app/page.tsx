@@ -4163,9 +4163,12 @@ export default function FutureBoxHome() {
                 below it at 24 — `check:editor` measured it: "back 12, ask 24,
                 hint 24, first 24". Four pixels is not visible as four pixels;
                 twelve is visible as a bar lying under somebody else's page. */}
+            {/* Not over the photo editor: it has its own back arrow at the
+                left of its own bar, and two back buttons one above the other
+                was what Carli photographed on 14 October 2026. */}
             <div className={`flex-shrink-0 flex items-center justify-between ${
               bareRoom ? 'px-3' : 'border-b border-zinc-800 pb-4'
-            }`}>
+            } ${studioTab === 'photo' && !atDoor ? 'hidden' : ''}`}>
               <button
                 onClick={stepOut}
                 data-backout

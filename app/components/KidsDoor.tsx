@@ -44,7 +44,7 @@ import {
   ALLOWANCE_STEPS, KID_PRICES, MINUTE_STEPS, asClock, howMany, type KidThing,
 } from '../lib/kidsallowance';
 import {
-  buyKidsPack, endKids, endSitting, failed, giveAllowance, kidsNow, sitAgain, type KidsFail, type KidsState,
+  buyKidsPack, endKids, endSitting, failed, giveAllowance, kidsMonthly, kidsNow, sitAgain, stopKidsMonthly, type KidsFail, type KidsState,
 } from '../lib/kidsdoor';
 import { KIDS_PACKS } from '../lib/kidspacks';
 import {
@@ -194,6 +194,20 @@ export default function KidsDoor({
     setFail(say(went));
   };
   const bought = state?.bought ?? 0;
+
+  /* The monthly pack, and the one press that stops it. The terms promise a
+     monthly pack can be stopped any time from here; the membership's own
+     "stop" on the account screen does not reach it. */
+  const [monthly, setMonthly] = useState<{ pack: string; nextPaymentAt: string | null }[]>([]);
+  useEffect(() => { void kidsMonthly().then(setMonthly); }, []);
+  const stopMonthly = async (): Promise<void> => {
+    setBusy(true);
+    setFail('');
+    const done = await stopKidsMonthly();
+    setBusy(false);
+    if ('fail' in done) { setFail(say(done)); return; }
+    setMonthly([]);
+  };
 
   const songPrice = KID_PRICES.find((one) => one.id === 'song')?.credits ?? 0;
   const chosenStep = state?.open ? state.allowance : null;
@@ -458,6 +472,28 @@ export default function KidsDoor({
         <p className="text-xs leading-relaxed text-surface-700">
           {t('kids.packsHow', 'Kids credits are spent only in the kids room, before any allowance below. Card or EFT at Paystack; a monthly pack renews until you cancel it.')}
         </p>
+        {monthly.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 border-cyan-400/50 bg-surface-100/80 px-4 py-3" data-kidsmonthly>
+            <p className="min-w-0 text-sm font-bold text-surface-950">
+              {monthly.map((one) => {
+                const pack = KIDS_PACKS.find((p) => p.id === one.pack);
+                const name = pack ? (lang === 'af' ? pack.name[1] : pack.name[0]) : one.pack;
+                return one.nextPaymentAt
+                  ? `${name} · ${t('kids.renews', 'renews')} ${new Date(one.nextPaymentAt).toLocaleDateString(lang === 'af' ? 'af-ZA' : 'en-ZA')}`
+                  : name;
+              }).join(' · ')}
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void stopMonthly()}
+              data-kidsstoppack
+              className="min-h-[44px] rounded-xl border-2 border-cyan-400/60 px-4 text-sm font-black text-surface-950 disabled:opacity-50"
+            >
+              {t('kids.stopMonthly', 'Stop the monthly pack')}
+            </button>
+          </div>
+        )}
         {bought > 0 && !state?.open && (
           <button
             type="button"

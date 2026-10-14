@@ -180,7 +180,7 @@ export default function Guide(): React.ReactElement {
           <p className="text-sm leading-relaxed text-zinc-400">
             {t(
               'guide.kids',
-              'A page of its own, off the rail, for a child. A grown-up sets how many credits the child may spend and how long the sitting lasts, then hands the phone over. In the room there are two presses, a song and a video of it, and nothing else: no shop, no strangers, no paid door. When the credits or the time run out the room closes and asks for a grown-up. The prices in there are the same ones in the song and video rooms above.',
+              'A room of its own for a child, opened from the welcome page and not from inside the studio. A grown-up buys kids credits there (Kids Try R59, Kids Monthly R119, Kids Plus R229) or sets an allowance from their own credits, sets how long the sitting lasts, and hands the phone over. Six doors inside: music, videos and stories, drawing, games, editing and quizzes. No shop, no chat, no strangers, nothing shared. When the credits or the time run out the room closes and asks for a grown-up. A monthly pack is stopped from the parents page.',
             )}
           </p>
         </div>

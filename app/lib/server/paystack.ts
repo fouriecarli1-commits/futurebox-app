@@ -262,3 +262,44 @@ export async function stopRenewing(
   }
   return { ok: true };
 }
+
+/** A monthly kids pack standing at Paystack, for the parents page to show and stop. */
+export interface KidsArrangement {
+  readonly pack: string;
+  readonly subscriptionCode: string;
+  readonly emailToken: string;
+  readonly status: string;
+  readonly nextPaymentAt: string | null;
+}
+
+/**
+ * Every monthly kids pack this customer has at Paystack.
+ *
+ * `arrangementOf` reads only memberships — it skips any plan that is not a
+ * tier — so a kids pack needs its own reading of the same customer record.
+ */
+export async function kidsArrangementsOf(customerCode: string): Promise<KidsArrangement[]> {
+  const data = await get<{
+    subscriptions?: Array<{
+      subscription_code?: string;
+      email_token?: string;
+      status?: string;
+      next_payment_date?: string | null;
+      plan?: { plan_code?: string } | string;
+    }>;
+  }>(`/customer/${encodeURIComponent(customerCode)}`);
+  const out: KidsArrangement[] = [];
+  for (const one of data?.subscriptions ?? []) {
+    const code = typeof one.plan === 'string' ? one.plan : (one.plan?.plan_code ?? '');
+    const pack = kidsPackOfPlan(code);
+    if (!pack || !one.subscription_code || !one.email_token) continue;
+    out.push({
+      pack,
+      subscriptionCode: one.subscription_code,
+      emailToken: one.email_token,
+      status: one.status ?? 'active',
+      nextPaymentAt: one.next_payment_date ?? null,
+    });
+  }
+  return out;
+}

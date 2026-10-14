@@ -160,3 +160,31 @@ export async function buyKidsPack(pack: string): Promise<{ url: string } | KidsF
   if (!answer.ok || !said?.url) return { fail: said?.message || `The server answered ${answer.status}.` };
   return { url: said.url };
 }
+
+/** The monthly kids packs standing at Paystack for this account. */
+export async function kidsMonthly(): Promise<{ pack: string; nextPaymentAt: string | null }[]> {
+  const token = await accessToken();
+  try {
+    const answer = await fetch('/api/kids/pack', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    if (!answer.ok) return [];
+    const said = (await answer.json().catch(() => null)) as { monthly?: { pack: string; nextPaymentAt: string | null }[] } | null;
+    return said?.monthly ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Stop every monthly kids pack. The credits already bought stay. */
+export async function stopKidsMonthly(): Promise<{ stopped: number } | KidsFail> {
+  const token = await accessToken();
+  let answer: Response;
+  try {
+    answer = await fetch('/api/kids/pack', { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  } catch {
+    return { fail: 'network' };
+  }
+  const said = (await answer.json().catch(() => null)) as { stopped?: number; message?: string } | null;
+  if (answer.status === 401) return { fail: 'signedOut' };
+  if (!answer.ok) return { fail: said?.message || `The server answered ${answer.status}.` };
+  return { stopped: said?.stopped ?? 0 };
+}
