@@ -3587,7 +3587,7 @@ export default function ProBooth({
             {lanes.map((lane) => (
               <li key={lane.id} className="space-y-1">
                 <span className="block truncate text-xs text-zinc-300">{lane.name}</span>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     data-proimprove={lane.id}
@@ -3596,7 +3596,7 @@ export default function ProBooth({
                     className="inline-flex h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 px-3 text-xs font-bold text-emerald-300 disabled:opacity-50"
                   >
                     <Wand2 className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="truncate">
+                    <span className="line-clamp-2 text-center leading-tight">
                       {t('pro.improveAi', 'Clean with AI')} · {perMinute(lane.audio.duration, CREDITS.clean)} {t('video.credits', 'credits')}
                     </span>
                   </button>
@@ -3605,7 +3605,7 @@ export default function ProBooth({
                     data-prosaveone={lane.id}
                     onClick={() => void saveLane(lane, 'wav')}
                     aria-label={`${t('pro.saveOne', 'Download')} ${lane.name}`}
-                    className="inline-flex h-[44px] items-center rounded-xl border border-zinc-700 px-3 text-xs font-bold text-zinc-200"
+                    className="inline-flex h-[44px] min-w-0 items-center justify-center rounded-xl border border-zinc-700 px-3 text-xs font-bold text-zinc-200"
                   >
                     WAV
                   </button>
@@ -4470,7 +4470,11 @@ export default function ProBooth({
             onRegion={setRegion}
           />
 
-          {lanes.length <= 2 && (
+          {/* Not on a phone held sideways: there the room is under three
+              hundred pixels tall, these three wrap into rows, and the
+              timeline above was left two pixels (`check:probooth`). The rail
+              beside it opens the same three desks. */}
+          {lanes.length <= 2 && !sideways && (
             <div className="mx-3 my-3 flex flex-wrap items-center gap-2 rounded-2xl border border-white/5 bg-zinc-950/60 p-3 backdrop-blur-md">
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/80">
                 {t('pro.quickSlots', 'Studio Track Slots')}

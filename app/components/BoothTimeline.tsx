@@ -1817,10 +1817,14 @@ export default function BoothTimeline({
                               aria-valuenow={Math.round((edge === 'in' ? fadeIn : fadeOut) * 10) / 10}
                               tabIndex={0}
                               title={edge === 'in' ? t('pro.fadeIn', 'Fade in') : t('pro.fadeOut', 'Fade out')}
-                              className="absolute top-0 z-20 flex h-5 w-5 cursor-ew-resize touch-none items-start justify-center"
+                              /* No wider than the trim grip under it, which is a
+                                 quarter of the clip at most: a corner wider than
+                                 that on a short clip covers the middle, and the
+                                 clip can no longer be picked up (`check:boothmagnet`). */
+                              className="absolute top-0 z-20 flex h-5 cursor-ew-resize touch-none items-start justify-center"
                               style={edge === 'in'
-                                ? { left: `calc(${inShare}% - ${fadeIn > 0 ? 10 : 0}px)` }
-                                : { right: `calc(${outShare}% - ${fadeOut > 0 ? 10 : 0}px)` }}
+                                ? { width: Math.min(20, gripEnd), left: `calc(${inShare}% - ${fadeIn > 0 ? Math.min(20, gripEnd) / 2 : 0}px)` }
+                                : { width: Math.min(20, gripEnd), right: `calc(${outShare}% - ${fadeOut > 0 ? Math.min(20, gripEnd) / 2 : 0}px)` }}
                               onPointerDown={(event) => {
                                 event.stopPropagation();
                                 grab(event);
@@ -1837,7 +1841,7 @@ export default function BoothTimeline({
                                 onChange(lane.id, edge === 'in' ? { fadeIn: next } : { fadeOut: next });
                               }}
                             >
-                              <svg viewBox="0 0 10 10" className="h-3 w-3" aria-hidden>
+                              <svg viewBox="0 0 10 10" className="h-3 w-3 max-w-full" aria-hidden>
                                 <polygon points={edge === 'in' ? '0,0 10,0 0,10' : '0,0 10,0 10,10'} fill="#ffffff" stroke="rgba(0,0,0,0.6)" strokeWidth="1" />
                               </svg>
                             </span>
