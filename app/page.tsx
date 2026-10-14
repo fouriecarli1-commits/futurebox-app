@@ -3848,13 +3848,15 @@ export default function FutureBoxHome() {
                       </div>
                       <p className="text-3xl font-black text-white pt-1">{tierPrice(id, region).display}</p>
                       {spec.rand > 0 && <p className="text-sm text-zinc-500">{t('pay.perMonth')}</p>}
-                      <p className="text-sm text-zinc-400 pt-2 leading-relaxed">{spec.who}</p>
+                      <p className="text-sm text-zinc-400 pt-2 leading-relaxed">{t(`plan.${spec.id}.who`, spec.who)}</p>
                     </div>
                     <ul className="space-y-1.5 flex-1">
-                      {spec.includes.map((line) => (
+                      {spec.includes.map((line, i) => (
                         <li key={line} className="text-sm text-zinc-300 flex gap-2 leading-relaxed">
                           <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-1" />
-                          <span>{line}</span>
+                          {/* In the app's language, as the welcome page and
+                              the account screen already draw them. */}
+                          <span>{t(`plan.${spec.id}.inc.${i}`, line)}</span>
                         </li>
                       ))}
                     </ul>

@@ -12,6 +12,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Note from './Note';
+import { currentAccount } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import {
   Mic, Radio, Music, Send, Copy, Check, ExternalLink, Users, Sparkles,
@@ -245,6 +246,45 @@ export default function CollabRadar({
   const [showConnectNote, setShowConnectNote] = useState(false);
   const [boostFor, setBoostFor] = useState<string | null>(null);
   const [boostUrl, setBoostUrl] = useState('');
+  const [boostSaid, setBoostSaid] = useState('');
+  /**
+   * The request, sent to FutureBox — it used to stay on the phone.
+   *
+   * The plans review of 14 October 2026 found "Ask FutureBox to boost"
+   * queued the request in this browser and nowhere else, while the panel
+   * said "we look at boost requests by hand": nobody could look at it. It
+   * goes through the enquiry route now, the same inbox the help desk
+   * writes to, with the member's own address to answer.
+   */
+  const sendBoost = async (postUrl: string, note: string, where: string): Promise<boolean> => {
+    const account = await currentAccount().catch(() => null);
+    if (!account?.email) {
+      setBoostSaid(t('radar.boostSignIn', 'Sign in first, so we know who to answer.'));
+      return false;
+    }
+    try {
+      const answer = await fetch('/api/enquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: account.email,
+          name: account.name || account.handle,
+          where: 'Collab Radar — boost request',
+          message: `Please boost this ${where} post: ${postUrl}\n\n${note}`,
+        }),
+      });
+      if (!answer.ok) {
+        const why = (await answer.json().catch(() => null)) as { message?: string } | null;
+        setBoostSaid(why?.message ?? t('radar.boostFailed', 'That did not reach us. Try again in a moment.'));
+        return false;
+      }
+      setBoostSaid(t('radar.boostSent', 'Sent. We answer by email once we have looked at it.'));
+      return true;
+    } catch {
+      setBoostSaid(t('radar.boostFailed', 'That did not reach us. Try again in a moment.'));
+      return false;
+    }
+  };
 
   // Read after mount: localStorage during render would disagree with the
   // server-rendered HTML.
@@ -966,24 +1006,29 @@ export default function CollabRadar({
                      everything, and all three read as broken. */
                   title={!boostUrl.trim() ? t('radar.needsLink', 'Paste the link to your post first.') : undefined}
                   onClick={() => {
-                    const next = [
-                      ...boosts,
-                      {
-                        id: `${platform.id}-${boosts.length}`,
-                        platformId: platform.id,
-                        postUrl: boostUrl.trim(),
-                        note: boostFor.slice(0, 120),
-                        createdAt: new Date().toISOString(),
-                      },
-                    ];
-                    setBoosts(next);
-                    saveBoosts(next);
-                    setBoostFor(null);
-                    setBoostUrl('');
+                    const postUrl = boostUrl.trim();
+                    const note = boostFor.slice(0, 120);
+                    void sendBoost(postUrl, boostFor, platform.id).then((sent) => {
+                      if (!sent) return;
+                      const next = [
+                        ...boosts,
+                        {
+                          id: `${platform.id}-${boosts.length}`,
+                          platformId: platform.id,
+                          postUrl,
+                          note,
+                          createdAt: new Date().toISOString(),
+                        },
+                      ];
+                      setBoosts(next);
+                      saveBoosts(next);
+                      setBoostFor(null);
+                      setBoostUrl('');
+                    });
                   }}
                   className="min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-semibold bg-cyan-500/20 border border-cyan-500 text-cyan-200 disabled:opacity-40"
                 >
-                  {t('radar.queueIt', "Queue it")}
+                  {t('radar.sendIt', 'Send it to FutureBox')}
                 </button>
                 <button type="button" onClick={() => setBoostFor(null)} className="text-sm text-zinc-400 hover:text-white">
                   {t('radar.cancel', "Cancel")}
@@ -992,12 +1037,13 @@ export default function CollabRadar({
               <p className="text-[13px] text-zinc-400 leading-relaxed">
                 {t('radar.byHand', "We look at boost requests by hand, so this is a request rather than an automatic repost.")}
               </p>
+              {boostSaid && <p className="text-[13px] text-cyan-200" role="status" data-radarboostsaid>{boostSaid}</p>}
             </div>
           )}
 
           {boosts.length > 0 && (
             <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-1.5">
-              <p className="text-sm font-bold text-white">Queued for a boost · {boosts.length}</p>
+              <p className="text-sm font-bold text-white">{t('radar.boostsSent', 'Sent for a boost')} · {boosts.length}</p>
               {boosts.map((b) => (
                 <p key={b.id} className="text-sm text-zinc-400 truncate">
                   {platformById(b.platformId).name} — {b.postUrl}

@@ -3297,8 +3297,8 @@ export default function ProBooth({
                   id: 'smooth',
                   icon: <Waves className="h-4 w-4" />,
                   title: t('pro.magicSmooth', 'Smooth the transition'),
-                  says: t('pro.magicSmoothWhat', 'The loudness glides from the front of the mark to its end instead of jumping. Free, and written into the sound.'),
-                  price: t('pro.free', 'Free'),
+                  says: t('pro.magicSmoothWhat', 'The loudness glides from the front of the mark to its end instead of jumping. No credits, and written into the sound.'),
+                  price: t('pro.free', 'No credits'),
                   run: regionSmooth,
                 },
                 {
@@ -3322,7 +3322,7 @@ export default function ProBooth({
                   icon: <Music2 className="h-4 w-4" />,
                   title: t('pro.magicHum', 'Play it as instruments'),
                   says: `${t('pro.magicHumWhat', 'The tune in this piece, played by')} ${humVoices.map((id) => { const v = voiceById(id); return v ? t(v.says[0], v.says[1]) : id; }).join(', ')} — ${t('pro.magicHumEach', 'a stem each.')}`,
-                  price: t('pro.free', 'Free'),
+                  price: t('pro.free', 'No credits'),
                   run: () => regionSend('hum'),
                 },
               ] as const).map((one) => (

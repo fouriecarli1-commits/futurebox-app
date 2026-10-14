@@ -1400,6 +1400,10 @@ jobs:
       - name: Song sliders, the Afrikaans word button, and the podcast room's language
         run: npm run check:ligswaar
 
+      # The plan cards quote today's prices and promise nothing unbuilt.
+      - name: The plan cards say only what is true
+        run: npm run check:kaartwaar
+
       # A shot the copilot writes has to be deep enough to make a video
       # from: the instruction's own worked example clears the desk's floor,
       # the shot list is separated by blank lines rather than newlines, and

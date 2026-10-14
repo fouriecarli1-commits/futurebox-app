@@ -162,8 +162,8 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          somebody to find the wall. */
       'The Booth is open on every plan — record, sing over a track, as many takes as you like; keeping a mixed take is 3 credits a minute. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan. Bouncing a finished mix out of it is 3 credits a minute too.',
       'The Video Editor is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and free, because it runs in your own browser. Putting the finished film together is what costs: 10 credits per 30 seconds plus 3 for each function you used. This plan holds no credits, so you can build and try everything here, and the film waits for you.',
-      'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 40 credits, eight advert lines 20.',
-      'Dubbing an episode into another language is the dearest thing here: 162 credits a minute, so it needs Studio or Label.',
+      'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 15 credits, eight advert lines 40.',
+      'Dubbing an episode into another language is the dearest thing here: 110 credits a minute, so it needs Studio or Label.',
     ],
   },
   maker: {
@@ -208,10 +208,10 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          may not be able to afford: 162 credits a minute against Maker's 100
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
-      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 6 credits a minute, changing a voice 6.',
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 8 credits a minute, changing a voice 8.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
-      'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
-      'Dubbing is 162 credits a minute — more than this plan holds, so it starts at Studio.',
+      'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
+      'Dubbing is 110 credits a minute — more than this plan holds, so it starts at Studio.',
     ],
   },
   studio: {
@@ -243,10 +243,15 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
       '210 credits a month — 26 full songs, or 5 music videos',
-      'Train a sound of your own on your own songs',
+      /* 300 credits against 210 a month (the plans review, 14 October 2026):
+         said on the card, so nobody finds the wall after paying. */
+      'Train a sound of your own on your own songs — 300 credits, so it takes a top-up or two months\u2019 credits',
       'Everything in Maker, and three cloned voices',
+      /* Kept, and made true on 14 October 2026: the request used to stay
+         on the phone; it now reaches FutureBox's inbox (CollabRadar). */
       'Ask FutureBox to boost a collab',
-      'The full radar — every item, every reason',
+      /* "The full radar" came off the same day: the radar is the same on
+         every paid plan, so it was not something Studio adds. */
       'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
          24 September 2026. Carli: *"Ek dink net ons moet ons gratis
@@ -265,10 +270,10 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          may not be able to afford: 162 credits a minute against Maker's 100
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
-      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 6 credits a minute, changing a voice 6.',
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 8 credits a minute, changing a voice 8.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
-      'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
-      'Dubbing into another language, in the same voice — 162 credits a minute out of your 190.',
+      'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
+      'Dubbing into another language, in the same voice — 110 credits a minute out of your 210.',
     ],
   },
   label: {
@@ -286,8 +291,10 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     includes: [
       '490 credits a month — 61 full songs, or 13 music videos',
       'Everything in Studio, and ten cloned voices',
-      'The feed uncapped — every item, no daily ceiling anywhere',
-      'A say in which workshops get made',
+      /* "No daily ceiling anywhere" was not true — readings still have a
+         daily number on every plan — and the workshop vote was never built.
+         Both came off on 14 October 2026. */
+      'The feed uncapped — every item',
       'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
          24 September 2026. Carli: *"Ek dink net ons moet ons gratis
@@ -306,10 +313,10 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          may not be able to afford: 162 credits a minute against Maker's 100
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
-      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 6 credits a minute, changing a voice 6.',
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 8 credits a minute, changing a voice 8.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
-      'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
-      'Dubbing into another language, in the same voice — 162 credits a minute out of your 440.',
+      'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
+      'Dubbing into another language, in the same voice — 110 credits a minute out of your 490.',
     ],
   },
 };

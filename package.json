@@ -324,6 +324,7 @@
     "check:knipwand": "tsx scripts/check-knipwand.mts",
     "check:magieraak": "tsx scripts/check-magieraak.mts",
     "check:ligswaar": "tsx scripts/check-ligswaar.mts",
+    "check:kaartwaar": "tsx scripts/check-kaartwaar.mts",
     "check:skootdiepte": "tsx scripts/check-skootdiepte.mts",
     "check:knipvenster": "tsx scripts/check-knipvenster.mts",
     "check:neurie": "tsx scripts/check-neurie.mts",
