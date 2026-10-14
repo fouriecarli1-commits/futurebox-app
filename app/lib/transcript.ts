@@ -127,6 +127,7 @@ export function linesFrom(words: readonly Heard[]): TimedLine[] {
       opensSection: out.length === 0,
       start: held[0].start,
       end: held[held.length - 1].end,
+      words: held.map((word) => ({ text: word.text, start: word.start, end: word.end })),
     });
     held = [];
   };

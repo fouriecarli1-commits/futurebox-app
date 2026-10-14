@@ -75,7 +75,8 @@
 import React from 'react';
 import Hint from './Hint';
 import { useLang } from '../lib/i18n';
-import type { TimedLine } from '../lib/timeline';
+import { wordsOf, type TimedLine } from '../lib/timeline';
+import { SWEEP_DONE, SWEEP_GLOW, SWEEP_REST } from '../lib/sunglook';
 
 /**
  * The size of the line being sung.
@@ -84,6 +85,8 @@ import type { TimedLine } from '../lib/timeline';
  * asserts the relationship. Two numbers that must agree, written once.
  */
 export const SUNG_SIZE = 'clamp(1.35rem, 5.2vh, 3rem)';
+/** While a take is running the words have the whole phone, so they grow. */
+export const SUNG_SIZE_FULL = 'clamp(1.7rem, 6.6vh, 3.6rem)';
 /** `leading-tight` × two lines. */
 export const SUNG_LINES = 2.5;
 
@@ -101,6 +104,53 @@ export interface SungWordsProps {
   readonly count: number;
   /** Whether the song has been split, which takes the AI voice off it. */
   readonly split: boolean;
+  /**
+   * Where the song is, in seconds. With it, a neon colour runs over the line
+   * being sung, word by word; without it the line is plain.
+   */
+  readonly at?: number;
+  /** A take is running: the words fill the phone and more lines show. */
+  readonly full?: boolean;
+}
+
+/**
+ * One line, with the neon running over it.
+ *
+ * Carli, 14 October 2026: *"daar moet meer lyne by mekaar wees, en dan
+ * hardloop daar 'n neon kleur oor die woorde, om te wys waar die woorde is."*
+ * Each word fills from the left as it is sung — the colour clipped to the
+ * letters, so it reads as the word lighting up rather than a bar behind it —
+ * and a word already sung stays lit. The times are the transcriber's own
+ * when the song was listened to, and a fair division of the line when not.
+ */
+function Swept({ line, at }: { line: TimedLine; at: number }): React.ReactElement {
+  const words = wordsOf([line]);
+  return (
+    <>
+      {words.map((word, index) => {
+        const length = Math.max(0.05, word.end - word.start);
+        const done = Math.max(0, Math.min(1, (at - word.start) / length));
+        const edge = `${(done * 100).toFixed(1)}%`;
+        return (
+          <React.Fragment key={`${index}-${word.text}`}>
+            <span
+              data-sweep={done >= 1 ? 'done' : done > 0 ? 'now' : 'later'}
+              style={{
+                backgroundImage: `linear-gradient(90deg, ${SWEEP_DONE} ${edge}, ${SWEEP_REST} ${edge})`,
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                color: 'transparent',
+                filter: done > 0 ? `drop-shadow(0 0 10px ${SWEEP_GLOW})` : undefined,
+              }}
+            >
+              {word.text}
+            </span>
+            {index < words.length - 1 ? ' ' : null}
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
 }
 
 export default function SungWords({
@@ -111,6 +161,8 @@ export default function SungWords({
   counting,
   count,
   split,
+  at,
+  full = false,
 }: SungWordsProps): React.ReactElement {
   const { t } = useLang();
 
@@ -130,8 +182,15 @@ export default function SungWords({
   /* Always something to read: the line you are in, or the one you are about
      to be in. "Ready" only when the song is over. */
   const sung = current >= 0 ? lines[current].text : next ? next.text : t('booth.ready', 'Ready');
+  const sungLine = current >= 0 ? lines[current] : next;
   const before = !counting && current > 0 ? lines[current - 1].text : BLANK;
+  const earlier = full && !counting && current > 1 ? lines[current - 2].text : BLANK;
   const after = current >= 0 && next ? next.text : BLANK;
+  /* More of the song in view: the two lines after the next one, always in
+     the layout (blank when there are none) so the block never changes
+     height — `check:wordsteady` measures that. */
+  const nextAt = next ? lines.indexOf(next) : -1;
+  const later = [1, 2].map((ahead) => (current >= 0 && nextAt >= 0 && lines[nextAt + ahead] ? lines[nextAt + ahead].text : BLANK));
   /* The bar keeps its row whether or not it has anything to say. */
   const runUp = untilNext < 4 ? Math.max(0, Math.min(100, (1 - untilNext / 4) * 100)) : 0;
 
@@ -139,10 +198,15 @@ export default function SungWords({
     <div
       data-words
       className="flex flex-col items-center gap-3 px-6 py-4 text-center"
-      style={{ ['--sung' as string]: SUNG_SIZE }}
+      style={{ ['--sung' as string]: full ? SUNG_SIZE_FULL : SUNG_SIZE }}
     >
+      {full && (
+        <p data-slot="earlier" className="h-7 w-full max-w-3xl truncate text-lg leading-7 text-zinc-700">
+          {earlier}
+        </p>
+      )}
       {/* The line before. One line, always. */}
-      <p data-slot="before" className="h-6 w-full max-w-3xl truncate text-base leading-6 text-zinc-600">
+      <p data-slot="before" className={`w-full max-w-3xl truncate text-zinc-600 ${full ? 'h-8 text-xl leading-8' : 'h-6 text-base leading-6'}`}>
         {before}
       </p>
 
@@ -156,15 +220,24 @@ export default function SungWords({
           <span className="text-5xl font-black leading-none text-emerald-400 tabular-nums">{count}</span>
         ) : (
           <p className="line-clamp-2 font-black leading-tight text-white" style={{ fontSize: 'var(--sung)' }}>
-            {sung}
+            {at !== undefined && sungLine ? <Swept line={sungLine} at={at} /> : sung}
           </p>
         )}
       </div>
 
       {/* The line after. One line, always. */}
-      <p data-slot="after" className="h-7 w-full max-w-3xl truncate text-lg leading-7 text-zinc-500">
+      <p data-slot="after" className={`w-full max-w-3xl truncate text-zinc-400 ${full ? 'h-10 text-2xl font-bold leading-10' : 'h-7 text-lg leading-7'}`}>
         {after}
       </p>
+      {later.map((text, index) => (
+        <p
+          key={index}
+          data-slot="later"
+          className={`w-full max-w-3xl truncate ${index ? 'text-zinc-700' : 'text-zinc-600'} ${full ? 'h-8 text-xl leading-8' : 'h-6 text-base leading-6'}`}
+        >
+          {text}
+        </p>
+      ))}
 
       {/* The run-up. A bar that empties is easier to sing to than a number.
 
@@ -194,7 +267,7 @@ export default function SungWords({
           arrived on the screen at the exact moment recording started and
           shoved the first line down. It is a fact about the backing, not
           about the phase, so it now says so throughout. */}
-      {!split && (
+      {!split && !full && (
         <p className="flex max-w-md items-center gap-1 text-sm leading-snug text-emerald-400/80">
           {t('booth.withAi', 'The AI singer is on this backing — sing along with it.')}
           <Hint>

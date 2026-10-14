@@ -38,6 +38,17 @@ export interface TimedLine {
    * language it is in, and this is a subtitle rather than a replacement.
    */
   readonly also?: string;
+  /**
+   * When each word was really sung, if the song was listened to.
+   *
+   * Carli, 14 October 2026: *"dan hardloop daar 'n neon kleur oor die woorde,
+   * om te wys waar die woorde is"*. The sweep runs over the word being sung,
+   * and a transcriber hands back a start and an end for every word — which
+   * `linesFrom` used to throw away when it joined them into lines. Absent on
+   * lines placed from the lyric sheet, where `wordsOf` spreads the line's
+   * words across it instead.
+   */
+  readonly words?: readonly TimedWord[];
 }
 
 /** Splits a lyric sheet on its [Section] tags. No timing, just the shape. */
@@ -168,6 +179,8 @@ export interface TimedWord {
 export function wordsOf(lines: readonly TimedLine[]): TimedWord[] {
   const out: TimedWord[] = [];
   lines.forEach((line) => {
+    // Heard, not guessed: the transcriber's own times, kept on the line.
+    if (line.words?.length) { out.push(...line.words); return; }
     const words = line.text.split(/\s+/).filter(Boolean);
     if (!words.length) return;
     let total = 0;

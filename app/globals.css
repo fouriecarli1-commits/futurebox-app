@@ -1658,3 +1658,11 @@ body:has([data-cubed]) {
     linear-gradient(to bottom, rgb(var(--fb-ink) / 0.045) 1px, transparent 1px) !important;
   background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px !important;
 }
+
+/* ── The singing booth, while a take runs ─────────────────────────────
+   Carli, 14 October 2026: "Die woorde gaan oor die hele foon moet wys en die
+   buttons moet dan dissapear en al wat oor bly is dan die record, pause en
+   stop buttons." Everything marked `fb-livehide` steps aside from the press
+   on record until the stop; the words and the dock are what is left. */
+[data-booth][data-live] .fb-livehide { display: none !important; }
+html[data-singing] [data-tabbar] { display: none !important; }

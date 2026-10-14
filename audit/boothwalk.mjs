@@ -294,6 +294,20 @@ try {
     check('and stopping the take is',
       (await room.locator('button').filter({ hasText: /^Stop|Hou op/ }).count()) > 0);
 
+    /* Carli, 14 October 2026: "Die woorde gaan oor die hele foon moet wys en
+       die buttons moet dan dissapear en al wat oor bly is dan die record,
+       pause en stop buttons." The header, the read row and the word report
+       step aside too, and the words take the space: the back button is gone
+       for the length of the take, and the words block is the biggest thing
+       on the screen. */
+    check('  and the header with its back button steps aside',
+      (await room.locator('button').filter({ hasText: /^Back$|^Terug$/ }).count()) === 0
+        || !(await room.locator('button').filter({ hasText: /^Back$|^Terug$/ }).first().isVisible()));
+    const wordsTall = await room.locator('[data-words]').first().boundingBox().catch(() => null);
+    check('  and the words take most of the phone',
+      Boolean(wordsTall) && wordsTall.height >= 844 * 0.4, wordsTall ? `${Math.round(wordsTall.height)}px of 844` : 'no words block');
+    await page.screenshot({ path: shot('boothwalk-take.png'), fullPage: false });
+
     for (let waited = 0; waited < 40; waited += 1) {
       await page.waitForTimeout(1000);
       /* Whether the take is still running, watched rather than assumed.

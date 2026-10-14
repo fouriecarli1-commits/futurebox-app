@@ -174,6 +174,7 @@ export default function TabBar({
          the note in that file: its five words were enough to keep the panel
          off a screen that had nothing else on it at all. */
       data-chrome
+      data-tabbar
       aria-label={t('tab.nav', 'The five parts of the app')}
       className="fixed bottom-0 inset-x-0 z-[95] border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-xl"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}

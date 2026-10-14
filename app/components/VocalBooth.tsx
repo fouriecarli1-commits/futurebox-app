@@ -314,7 +314,12 @@ export default function VocalBooth({
   const lines = useMemo(
     () =>
       wordsShift
-        ? placed.map((line) => ({ ...line, start: line.start + wordsShift, end: line.end + wordsShift }))
+        ? placed.map((line) => ({
+          ...line,
+          start: line.start + wordsShift,
+          end: line.end + wordsShift,
+          ...(line.words ? { words: line.words.map((word) => ({ ...word, start: word.start + wordsShift, end: word.end + wordsShift })) } : {}),
+        }))
         : placed,
     [placed, wordsShift],
   );
@@ -683,10 +688,31 @@ export default function VocalBooth({
     }
   }, [t]);
 
+  /* ── Listening to the song before the first take ───────────────────
+     Carli, 14 October 2026: *"Die masjien gaan outomaties altyd na 'n
+     liedjie moet luister om die woorde reg te kry, so ons moet daai
+     krediete outomaties hef wanneer hulle op die record knoppie druk."*
+     So the press on record reads the words off the song first when that has
+     not been done for this song — the same paid read as the button, priced
+     on the record button before it is pressed — and every take after it
+     uses what was heard, kept on this device, at no charge. A read that
+     fails (no credits, no network) does not stop the take: it is sung to
+     the lyric sheet's timing, as before. */
+  const [listening, setListening] = useState(false);
+  const heardRef = useRef<Heard[] | null>(null);
+  heardRef.current = heard;
+  const readRef = useRef<(() => Promise<void>) | null>(null);
+  const hasSheet = lines.length > 0;
+  const willListen = !heard && hasSheet;
+
   const start = useCallback(
     async (from: number) => {
       setProblem(null);
       hush();
+      if (!heardRef.current && hasSheet && readRef.current) {
+        setListening(true);
+        try { await readRef.current(); } finally { setListening(false); }
+      }
       const stream = await openMic();
       const element = audioRef.current;
       if (!stream || !element) return;
@@ -730,7 +756,7 @@ export default function VocalBooth({
       setPaused(false);
       setPhase('recording');
     },
-    [hush, openMic, speed, withGuide],
+    [hasSheet, hush, openMic, speed, withGuide],
   );
 
   /* ── Holding a take, and picking it up again ─────────────────────────
@@ -1101,7 +1127,19 @@ export default function VocalBooth({
     return Math.max(0, Math.min(1, (event.clientX - box.left) / box.width)) * duration;
   };
 
+  readRef.current = readWords;
   const busyOrLive = phase === 'recording' || phase === 'counting';
+  /** The words have the whole phone: from the press on record to the stop. */
+  const fullScreen = busyOrLive || listening;
+  /* The app's own tab bar steps aside too, for the length of the take: it
+     is drawn over this room, and five tabs under the words is five more
+     buttons than record, pause and stop. */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (fullScreen) root.setAttribute('data-singing', '');
+    else root.removeAttribute('data-singing');
+    return () => root.removeAttribute('data-singing');
+  }, [fullScreen]);
 
   /* ── The whole lyric, as a sheet ──────────────────────────────────────
  
@@ -1169,9 +1207,9 @@ export default function VocalBooth({
        timeline already carries, so every `zinc` in the file below means what
        it says, on whatever theme somebody picks. Same flag, same file, one
        decision: see `check:boothline` and `lib/boothlook.ts`. */
-    <div data-booth className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col"
-      style={{ paddingBottom: barClearance(0) }}>
-      <div className="relative flex items-center gap-3 px-5 py-3 border-b border-cyan-500/25 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
+    <div data-booth data-live={fullScreen ? '' : undefined} className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col"
+      style={{ paddingBottom: fullScreen ? 'env(safe-area-inset-bottom, 0px)' : barClearance(0) }}>
+      <div className="fb-livehide relative flex items-center gap-3 px-5 py-3 border-b border-cyan-500/25 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
         {/* Subtle neon laser top accent line */}
         <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-600 via-emerald-400 to-cyan-400 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
         {/* Out of the room, and it says so.
@@ -1271,6 +1309,8 @@ export default function VocalBooth({
           counting={phase === 'counting'}
           count={count}
           split={stems !== null}
+          at={at}
+          full={fullScreen}
         />
 
       {/* ── The phone's own instrument ──────────────────────────────────
@@ -1289,7 +1329,7 @@ export default function VocalBooth({
           So the phone gets the part that answers her, and not the parts that
           need a mouse. */}
       <TakeStrip
-        className="sm:hidden flex-shrink-0 px-5 pb-2"
+        className="fb-livehide sm:hidden flex-shrink-0 px-5 pb-2"
         at={at}
         guide={guide}
         trail={trailRef.current}
@@ -1320,7 +1360,7 @@ export default function VocalBooth({
           it is where the words are dragged back into time. Both are real and
           both want a wide screen and a mouse. The same song opened on a
           laptop still has them. */}
-      <div className="hidden sm:block flex-shrink-0 px-5 pb-2 space-y-1.5">
+      <div className="fb-livehide hidden sm:block flex-shrink-0 px-5 pb-2 space-y-1.5">
         <NoteBar
           onHold={() => {
             holdRef.current = { at, shift: wordsShift };
@@ -1475,7 +1515,7 @@ export default function VocalBooth({
             features vanished from every phone because they happened to sit
             under a canvas in the same box. Nothing said so; the room simply
             had less in it. */}
-        <div className="hidden sm:block space-y-2">
+        <div className="fb-livehide hidden sm:block space-y-2">
         <canvas
           ref={canvasRef}
           className={`w-full rounded-xl bg-zinc-900/60 ${pointing ? 'cursor-copy ring-2 ring-amber-400' : 'cursor-crosshair'}`}
@@ -1650,7 +1690,7 @@ export default function VocalBooth({
             So: one row that cannot change height, the sentence behind the
             mark where every other explanation in this app already lives,
             and the price on the button rather than under it. */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
+        <div className="fb-livehide rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
           <Ear className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <span className="text-sm font-semibold text-zinc-300">
             {t('booth.heardWhat', 'The words as sung')}
@@ -1783,7 +1823,7 @@ export default function VocalBooth({
             carry: the word, how it sounded, how it should sound — kept for the
             owner's list that fixes how the voices say Afrikaans. In the booth
             because this is where she hears a sung word closest. */}
-        <div className="flex justify-end" data-boothsayitwrong>
+        <div className="fb-livehide flex justify-end" data-boothsayitwrong>
           <SayItWrong surface="booth" spoken said={track.title} alwaysShow variant="button" />
         </div>
 
@@ -1873,7 +1913,7 @@ export default function VocalBooth({
             "Separating the voice…" is longer than "Separate the voice", so
             pressing it re-wrapped the row. */}
         {!stems && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
+          <div className="fb-livehide rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
             <Users className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span className="text-sm font-semibold text-zinc-300">
               {t('booth.splitWhat', 'Sing beside the voice')}
@@ -2166,13 +2206,21 @@ export default function VocalBooth({
             rather than an omission of her list. `ProBooth` replaces this
             room, so a press on it mid-take is a take thrown away with no
             warning. It is one press away the moment the take stops. */}
-        {busyOrLive ? (
-          <div className="flex items-center gap-2">
+        {busyOrLive || listening ? (
+          <div className="flex items-center gap-2" data-boothlivedock>
+            {/* The record light: the third of the three things left on the
+                screen while a take runs, with pause and stop. */}
+            <span
+              className={`h-3 w-3 flex-shrink-0 rounded-full ${phase === 'recording' && !paused ? 'animate-pulse bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-amber-400'}`}
+              aria-hidden
+            />
             <span
               className="flex-1 min-w-0 truncate text-xs font-bold tabular-nums text-rose-300"
               role="status"
             >
-              {phase === 'counting'
+              {listening
+                ? t('booth.listening', 'Listening to the song to time the words\u2026')
+                : phase === 'counting'
                 ? t('booth.countingIn', 'Counting you in\u2026')
                 : paused
                   ? t('booth.held', 'Held \u2014 press play to carry on')
@@ -2192,7 +2240,8 @@ export default function VocalBooth({
             <button
               type="button"
               onClick={() => void stop()}
-              className={`${BAR} w-auto flex-shrink-0 px-6 bg-red-500/20 border-red-500 text-red-300`}
+              disabled={listening}
+              className={`${BAR} w-auto flex-shrink-0 px-6 bg-red-500/20 border-red-500 text-red-300 disabled:opacity-50`}
             >
               <Square className="h-4 w-4 fill-current" />
               {t('take.stop', 'Stop')}
@@ -2234,6 +2283,11 @@ export default function VocalBooth({
           >
             {region ? <Scissors className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
             {region ? t('booth.punch', 'Sing just this part') : t('booth.record', 'Record from the top')}
+            {willListen && (
+              <span className="text-xs font-semibold opacity-80" data-boothrecordcost>
+                · {creditsSaid(perMinute(duration || track.seconds || 0, CREDITS.transcribe), t)} {t('booth.toTime', 'to time the words')}
+              </span>
+            )}
           </button>
 
           <button
