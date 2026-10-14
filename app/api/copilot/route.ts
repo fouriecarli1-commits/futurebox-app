@@ -35,6 +35,7 @@ import { ensureTitled } from '@/app/lib/songtitle';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { copilotAvailable } from '@/app/lib/server/aikey';
+import { askGemini, isGeminiConfigured } from '@/app/lib/server/gemini';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -416,6 +417,51 @@ function systemFor(body: Body): string {
 }
 
 
+async function replyWithGemini(body: Body): Promise<Response> {
+  const prompt = `${contextFor(body)}
+
+CRITICAL: Return strictly valid JSON with this shape:
+{
+  "reply": "What you say back (2-3 sentences in the requested language)",
+  "actions": [
+    {
+      "kind": "none",
+      "op": "",
+      "value": "",
+      "room": ""
+    }
+  ]
+}
+Where kind is one of: "none" | "set_title" | "set_style" | "set_lyrics" | "generate" | "go" | "surface_op".`;
+
+  const res = await askGemini({
+    prompt,
+    systemInstruction: systemFor(body),
+    jsonOutput: true,
+    temperature: 0.7,
+  });
+
+  if (!res.ok || !res.json) {
+    return aiFault(new Error(res.error || 'Gemini error'), 'The copilot could not be reached.');
+  }
+
+  const parsed = ReplySchema.safeParse(res.json);
+  if (!parsed.success) {
+    if (typeof (res.json as Record<string, unknown>)?.reply === 'string') {
+      return Response.json({
+        reply: (res.json as Record<string, unknown>).reply,
+        actions: [],
+      });
+    }
+    return Response.json({ error: 'unparsed', message: 'That reply came back mangled.' }, { status: 502 });
+  }
+
+  return Response.json({
+    reply: parsed.data.reply,
+    actions: ensureTitled(planActions(parsed.data.actions ?? [], body.surface), body.title),
+  });
+}
+
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('copilot', request, LIMITS)) {
     return Response.json(
@@ -424,7 +470,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY && !isGeminiConfigured()) {
     return Response.json(
       { error: 'no_key', message: 'The copilot is switched off for this app.' },
       { status: 503 },
@@ -464,6 +510,10 @@ export async function POST(request: Request): Promise<Response> {
       { reply: refused.message, action: { kind: 'none', value: '' } },
       { status: 200 },
     );
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return replyWithGemini(body);
   }
 
   const client = new Anthropic();
@@ -512,6 +562,13 @@ export async function POST(request: Request): Promise<Response> {
       actions: ensureTitled(planActions(parsed.actions ?? [], body.surface), body.title),
     });
   } catch (error) {
+    if (isGeminiConfigured()) {
+      try {
+        return await replyWithGemini(body);
+      } catch {
+        // Fall through to aiFault
+      }
+    }
     return aiFault(error, 'The copilot could not be reached.');
   }
 }

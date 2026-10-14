@@ -76,7 +76,9 @@ export function noteKeyRefused(): void {
  * The answer every `GET` on an AI route should give, in place of
  * `Boolean(process.env.ANTHROPIC_API_KEY)`.
  */
+import { isGeminiConfigured } from './gemini';
+
 export function copilotAvailable(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY) && !refused;
+  return (Boolean(process.env.ANTHROPIC_API_KEY) && !refused) || isGeminiConfigured();
 }
 

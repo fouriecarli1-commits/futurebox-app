@@ -31,7 +31,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { Loader2, MessagesSquare, Play, Users } from 'lucide-react';
+import { Loader2, MessagesSquare, Play, Sparkles, Users, Wand2, X } from 'lucide-react';
 import { batches, readScript, spoken, type Speaker } from '../lib/dialogue';
 import { readCost } from '../lib/credits';
 import Cost from './Cost';
@@ -57,7 +57,7 @@ export default function TwoHosts({
   onAudio: (audio: Blob) => void;
   onUpgrade: () => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const all = useMemo(() => [...voices.mine, ...voices.stock], [voices]);
 
   const [script, setScript] = useState('');
@@ -68,6 +68,47 @@ export default function TwoHosts({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const [made, setMade] = useState<string | null>(null);
+
+  // Gemini dialogue generator state
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiTone, setAiTone] = useState<'visionary' | 'casual' | 'debate'>('visionary');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState('');
+
+  const generateWithGemini = async () => {
+    if (!aiTopic.trim()) return;
+    setAiBusy(true);
+    setAiError('');
+    try {
+      const res = await fetch('/api/podcast/script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: aiTopic.trim(),
+          language: lang,
+          tone: aiTone,
+          host1Name: cast[0]?.name || 'Aanbieder 1',
+          host2Name: cast[1]?.name || 'Aanbieder 2',
+          turns: 6,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setAiError(data?.message || 'Could not generate dialogue from Gemini.');
+        return;
+      }
+      if (data?.script) {
+        setScript(data.script);
+        setIsAiModalOpen(false);
+        setAiTopic('');
+      }
+    } catch {
+      setAiError('Network error connecting to Gemini.');
+    } finally {
+      setAiBusy(false);
+    }
+  };
 
   const named = useMemo(() => {
     const list: Speaker[] = [];
@@ -159,13 +200,133 @@ export default function TwoHosts({
         ))}
       </div>
 
+      {/* ── The script header & Gemini Generator ──────────────────────── */}
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+          {t('hosts.scriptLabel', 'Dialogue Script')}
+        </label>
+        <button
+          type="button"
+          onClick={() => setIsAiModalOpen(true)}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 px-3 py-1 text-xs font-bold text-emerald-300 transition-all shadow-sm"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          <span>{lang === 'af' ? 'Skep met Gemini' : 'Generate with Gemini'}</span>
+        </button>
+      </div>
+
+      {/* ── Gemini Generator Modal / Drawer ─────────────────────────────── */}
+      {isAiModalOpen && (
+        <div className="rounded-xl border border-emerald-500/40 bg-zinc-950/95 p-4 space-y-3.5 shadow-xl animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <h4 className="text-sm font-black text-white">
+                {lang === 'af' ? 'Google Gemini Gesprek-skrywer' : 'Google Gemini Podcast Scriptwriter'}
+              </h4>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAiModalOpen(false)}
+              className="p-1 rounded-lg text-zinc-500 hover:text-white"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-zinc-400">
+              {lang === 'af' ? 'Waaroor gaan die episode?' : 'What is the conversation about?'}
+            </label>
+            <input
+              value={aiTopic}
+              onChange={(e) => setAiTopic(e.target.value)}
+              placeholder={
+                lang === 'af'
+                  ? 'bv. Die toekoms van AI en soewereine skeppers in Afrika'
+                  : 'e.g. The Future of AI Agents and Autonomous Creators'
+              }
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            />
+            {/* Quick Topic Chips */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {[
+                { en: 'Frontier AI & Vibecoding', af: 'KI & Vibecoding' },
+                { en: 'Future of African Music', af: 'Toekoms van Afrika-musiek' },
+                { en: 'Creator Sovereignty & Web3', af: 'Skeppersoewereiniteit' },
+                { en: 'Deep Tech & Autonomous Agents', af: 'Dieptegnologie & Agente' },
+              ].map((chip) => (
+                <button
+                  key={chip.en}
+                  type="button"
+                  onClick={() => setAiTopic(lang === 'af' ? chip.af : chip.en)}
+                  className="rounded-full border border-zinc-800 bg-zinc-900/60 hover:border-emerald-500/50 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition-colors"
+                >
+                  {lang === 'af' ? chip.af : chip.en}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tone Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500 font-medium">{lang === 'af' ? 'Toonaard:' : 'Tone:'}</span>
+            {(['visionary', 'casual', 'debate'] as const).map((tMode) => (
+              <button
+                key={tMode}
+                type="button"
+                onClick={() => setAiTone(tMode)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-bold capitalize transition-colors ${
+                  aiTone === tMode
+                    ? 'bg-emerald-500 text-zinc-950'
+                    : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white'
+                }`}
+              >
+                {tMode}
+              </button>
+            ))}
+          </div>
+
+          {aiError && <p className="text-xs text-rose-400 font-medium">{aiError}</p>}
+
+          <div className="flex items-center justify-end gap-2 pt-1 border-t border-zinc-800/80">
+            <button
+              type="button"
+              onClick={() => setIsAiModalOpen(false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white"
+            >
+              {lang === 'af' ? 'Kanselleer' : 'Cancel'}
+            </button>
+            <button
+              type="button"
+              onClick={generateWithGemini}
+              disabled={aiBusy || !aiTopic.trim()}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 font-bold px-4 py-1.5 text-xs transition-colors"
+            >
+              {aiBusy ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>{lang === 'af' ? 'Gemini dink...' : 'Gemini is writing...'}</span>
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-3.5 h-3.5" />
+                  <span>{lang === 'af' ? 'Skep Gesprek' : 'Generate Dialogue'}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── The script ──────────────────────────────────────────────────── */}
       <textarea
         value={script}
         onChange={(event) => setScript(event.target.value)}
         rows={8}
         placeholder={EXAMPLE}
-        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y leading-relaxed"
+        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y leading-relaxed font-mono"
       />
 
       {/* ── What will actually happen, before it happens ────────────────── */}

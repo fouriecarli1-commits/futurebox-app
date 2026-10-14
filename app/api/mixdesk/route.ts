@@ -110,7 +110,7 @@ export async function POST(request: Request): Promise<Response> {
   /* `googleConfigured()` is the one place that knows the Google key, and
      `copilotAvailable()` the one that knows whether the Anthropic key is
      accepted — a key the supplier is refusing is not an available copilot. */
-  const hasGoogle = Boolean(process.env.GOOGLE_VERTEX_KEY || googleConfigured());
+  const hasGoogle = Boolean(process.env.GOOGLE_VERTEX_KEY || process.env.GEMINI_API_KEY || googleConfigured());
   const hasAnthropic = copilotAvailable();
 
   if (!hasGoogle && !hasAnthropic) {

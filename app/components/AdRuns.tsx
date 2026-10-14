@@ -37,14 +37,43 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarClock, Check, Copy, ExternalLink, Plus, Trash2 } from 'lucide-react';
-import { PLATFORMS } from '../data/social';
+import { DESTINATIONS, PLATFORMS } from '../data/social';
 import {
-  MOST_RUNS, loadRuns, progress, runId, saveRuns, sorted, standingOf, tagged,
+  MOST_RUNS, loadRuns, progress, runId, saveRuns, sorted, standingOf, tagged, defaultMedium,
   type Run, type Standing,
 } from '../lib/adrun';
 import { useLang } from '../lib/i18n';
 import Card from './Card';
 import Note from './Note';
+
+interface RunChannel {
+  readonly id: string;
+  readonly name: string;
+  readonly composerUrl: string;
+  readonly isPaid?: boolean;
+}
+
+function resolveChannel(id: string): RunChannel | null {
+  const dest = DESTINATIONS.find((one) => one.id === id);
+  if (dest) {
+    return {
+      id: dest.id,
+      name: dest.name,
+      composerUrl: dest.composerUrl ?? '',
+      isPaid: dest.isPaid,
+    };
+  }
+  const plat = PLATFORMS.find((one) => one.id === id);
+  if (plat) {
+    return {
+      id: plat.id,
+      name: plat.name,
+      composerUrl: plat.composerUrl,
+      isPaid: false,
+    };
+  }
+  return null;
+}
 
 const TONE: Record<Standing, string> = {
   overdue: 'border-rose-500/50 bg-rose-500/5',
@@ -91,6 +120,11 @@ export default function AdRuns({
   }, [ready, runs]);
 
   const add = useCallback(() => {
+    const initialSteps = [
+      { platform: 'google_ads', done: false },
+      { platform: 'meta_ads', done: false },
+      ...PLATFORMS.map((one) => ({ platform: one.id, done: false })),
+    ];
     setRuns((was) => [
       {
         id: runId(),
@@ -99,9 +133,7 @@ export default function AdRuns({
         link: '',
         when: '',
         createdAt: new Date().toISOString(),
-        // Every platform, unticked. Somebody takes out what they do not use,
-        // which is one press; remembering to add each is four.
-        steps: PLATFORMS.map((one) => ({ platform: one.id, done: false })),
+        steps: initialSteps,
       },
       ...was,
     ].slice(0, MOST_RUNS));
@@ -217,12 +249,12 @@ export default function AdRuns({
 
             <ul className="space-y-1.5">
               {run.steps.map((step) => {
-                const platform = PLATFORMS.find((one) => one.id === step.platform);
-                if (!platform) return null;
+                const channel = resolveChannel(step.platform);
+                if (!channel) return null;
                 const link = run.link
                   ? tagged(run.link, {
-                      source: platform.id,
-                      medium: 'social',
+                      source: channel.id,
+                      medium: defaultMedium(channel.id),
                       campaign: run.campaign || run.headline || 'campaign',
                     })
                   : '';
@@ -240,7 +272,12 @@ export default function AdRuns({
                       }`}
                     >
                       {step.done ? <Check className="w-4 h-4" /> : <span className="w-4 h-4" />}
-                      {platform.name}
+                      <span>{channel.name}</span>
+                      {channel.isPaid && (
+                        <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-1 py-0.5 rounded">
+                          Ad
+                        </span>
+                      )}
                     </button>
 
                     {link && (
@@ -251,23 +288,25 @@ export default function AdRuns({
                         <button
                           type="button"
                           onClick={() => void copy(key, link)}
-                          aria-label={`${t('run.copy', 'Copy the tagged link for')} ${platform.name}`}
-                          className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center"
+                          aria-label={`${t('run.copy', 'Copy the tagged link for')} ${channel.name}`}
+                          className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center flex-shrink-0"
                         >
                           {copied === key ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                         </button>
                       </>
                     )}
 
-                    <a
-                      href={platform.composerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${t('run.open', 'Open')} ${platform.name}`}
-                      className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
+                    {channel.composerUrl ? (
+                      <a
+                        href={channel.composerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${t('run.open', 'Open')} ${channel.name}`}
+                        className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center flex-shrink-0"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    ) : null}
                   </li>
                 );
               })}

@@ -266,6 +266,15 @@ const CORNER_AT: Record<Corner, { readonly x: number; readonly y: number }> = {
   bottomRight: { x: 0.87, y: 0.86 },
 };
 
+/** Preset atmospheric styles for Google Gemini Omni Flash video transformations. */
+const OMNI_PRESETS = [
+  { id: 'golden', label: 'Goue Uur / Golden Hour', prompt: 'Cinematic golden hour sunlight, warm amber rim lighting, glowing atmosphere, cinematic depth' },
+  { id: 'cyberpunk', label: 'Cyberpunk Neon', prompt: 'Futuristic cyberpunk neon reflections, teal and magenta ambient lighting, rainy city night glow' },
+  { id: 'vintage', label: '35mm Filmkorrel', prompt: 'Vintage 35mm film aesthetic, subtle grain, retro cinematic color grading, warm nostalgic tones' },
+  { id: 'noir', label: 'Dramatiese Noir', prompt: 'High-contrast dramatic noir lighting, deep shadows, cinematic monochrome edge lighting' },
+  { id: 'dream', label: 'Dromerige Mistiek', prompt: 'Dreamy soft mist, ethereal bloom, pastel morning atmosphere, gentle motion glow' },
+] as const;
+
 /**
  * How close to an edge anything on the frame may be put, as a fraction.
  *
@@ -2231,6 +2240,24 @@ async function smallerFrame(url: string): Promise<string> {
       setBusy(null);
     }
   }, [edit, commit, t]);
+
+  /* ── Google Veo Video AI Frame Animation ─────────────────────────── */
+  const animateFrameWithVeo = useCallback(async (presetWords?: string) => {
+    const node = viewer.current;
+    if (!node || !piece) return;
+    const shot = await frameFrom(node, shape.width, shape.height, piece.fill ?? false);
+    if (!shot) return;
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(shot);
+    });
+    setShotPic(dataUrl);
+    setDrawInto('start');
+    if (presetWords) setShotWords(presetWords);
+    setBench('folder');
+  }, [piece, shape]);
 
   /**
    * Ask the server what is in her channel.
@@ -5888,6 +5915,48 @@ async function smallerFrame(url: string): Promise<string> {
                 </div>
               ))
             )}
+          </div>
+
+          {/* ── Google Veo 3.1 AI Frame Animation ────────────────────────── */}
+          <div className="space-y-2 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3.5" data-editorgeminiveo>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span className="text-sm font-semibold text-emerald-200">
+                {t('veo.title', 'Animeer hierdie raamwerk met Google Veo / Animate with Google Veo')}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {t(
+                'veo.desc',
+                'Neem die huidige raamwerk uit jou video en animeer dit met Google Veo 3.1 naatloos in die Maak \'n Shot-ateljee.',
+              )}
+            </p>
+
+            {/* Presets */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {OMNI_PRESETS.map((pre) => (
+                <button
+                  key={pre.id}
+                  type="button"
+                  onClick={() => {
+                    void animateFrameWithVeo(pre.prompt);
+                  }}
+                  className="rounded-lg border border-zinc-700 bg-zinc-900/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                >
+                  {pre.label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              disabled={!piece}
+              onClick={() => void animateFrameWithVeo()}
+              className="mt-2 min-h-[40px] w-full px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/20 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50 inline-flex items-center justify-center gap-2 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {t('veo.action', 'Gryp raamwerk & Animeer met Veo / Grab frame & Animate')}
+            </button>
           </div>
 
           </div>

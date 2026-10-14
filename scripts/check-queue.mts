@@ -19,6 +19,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
 
 let bad = 0;
 const check = (label: string, ok: boolean, detail = ''): void => {
@@ -38,7 +39,7 @@ const check = (label: string, ok: boolean, detail = ''): void => {
    real module is not an option: it is a client module that pulls in the
    Supabase client, and none of that belongs in a child process whose whole job
    is to answer what `new Date('2026-06-09T18:00')` does under a given `TZ`. */
-const source = readFileSync(new URL('../app/lib/queue.ts', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../app/lib/queue.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 
 function lift(name: string): string {
   const at = source.indexOf(`export function ${name}(`);
@@ -74,7 +75,7 @@ check('the functions were lifted cleanly, with no types left in them',
  * Johannesburg" and then "what would it do in Denver" in the same run.
  */
 function under(tz: string, body: string): string {
-  const code = `import { instantOf, today } from ${JSON.stringify(MODULE)};\n${body}`;
+  const code = `import { instantOf, today } from ${JSON.stringify(pathToFileURL(MODULE).href)};\n${body}`;
   return execFileSync(process.execPath, ['--input-type=module', '-e', code], {
     env: { ...process.env, TZ: tz },
     encoding: 'utf8',

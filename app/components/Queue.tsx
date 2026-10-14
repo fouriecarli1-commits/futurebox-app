@@ -31,7 +31,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarClock, Loader2, X, Check, AlertTriangle } from 'lucide-react';
 import { useLang } from '../lib/i18n';
-import { PLATFORMS } from '../data/social';
+import { DESTINATIONS, PLATFORMS } from '../data/social';
 import {
   cancel, instantOf, loadQueue, schedule, today, NO_QUEUE, type Queue as Waiting,
 } from '../lib/queue';
@@ -41,6 +41,8 @@ import Note from './Note';
 /** The platform's own name. The row held the id, and `tiktok` next to a date
  *  reads like a field out of a database rather than a plan. */
 function named(id: string): string {
+  const dest = DESTINATIONS.find((one) => one.id === id);
+  if (dest) return dest.name;
   return PLATFORMS.find((one) => one.id === id)?.name ?? id;
 }
 
@@ -143,11 +145,20 @@ export default function Queue({
             onChange={(event) => setPlatform(event.target.value)}
             className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
           >
-            {PLATFORMS.map((one) => (
-              <option key={one.id} value={one.id}>
-                {one.name}
-              </option>
-            ))}
+            <optgroup label={lang === 'af' ? 'Betaalde Advertensies' : 'Paid Advertising'}>
+              <option value="google_ads">Google Ads</option>
+              <option value="meta_ads">Meta Ads Manager</option>
+            </optgroup>
+            <optgroup label={lang === 'af' ? 'Sosiale Platforms' : 'Social Platforms'}>
+              {PLATFORMS.map((one) => (
+                <option key={one.id} value={one.id}>
+                  {one.name}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label={lang === 'af' ? 'Ander Bestemmings' : 'Other Destinations'}>
+              <option value="web">{lang === 'af' ? 'Jou eie webwerf' : 'Your own website'}</option>
+            </optgroup>
           </select>
           <label className="sr-only" htmlFor="queue-date">
             {t('queue.date', 'Which day')}

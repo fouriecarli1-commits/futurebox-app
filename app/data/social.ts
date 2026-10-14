@@ -212,9 +212,35 @@ export interface Destination {
   /** One line on the tick, so nobody has to guess what they are choosing. */
   readonly en: string;
   readonly af: string;
+  /** Direct link to the ad creation or campaign console. */
+  readonly composerUrl?: string;
+  /** Whether this is a paid advertising destination. */
+  readonly isPaid?: boolean;
 }
 
 export const DESTINATIONS: readonly Destination[] = [
+  {
+    id: 'google_ads',
+    name: 'Google Ads',
+    bestFormat: 'Responsive Search (15 headlines ≤30c, 4 descriptions ≤90c) & YouTube video (16:9 / 9:16)',
+    hookWindow: 'the first headline and first 3 seconds of video',
+    maxHashtags: 0,
+    en: 'Google Ads (Search, YouTube & Display)',
+    af: 'Google Ads (Soek, YouTube & Vertoon)',
+    composerUrl: 'https://ads.google.com/aw/campaigns/new',
+    isPaid: true,
+  },
+  {
+    id: 'meta_ads',
+    name: 'Meta Ads Manager',
+    bestFormat: 'Reels/Stories (9:16) & Feed (1:1 / 4:5), 125-char primary text, 40-char headline',
+    hookWindow: 'the first 2 seconds of video',
+    maxHashtags: 3,
+    en: 'Meta Ads Manager (Facebook & Instagram)',
+    af: 'Meta Advertensiebestuurder (Facebook & Instagram)',
+    composerUrl: 'https://adsmanager.facebook.com/adsmanager/manage/campaigns',
+    isPaid: true,
+  },
   {
     id: 'web',
     name: 'Your own website',
@@ -225,5 +251,7 @@ export const DESTINATIONS: readonly Destination[] = [
     maxHashtags: 0,
     en: 'Your own website or landing page',
     af: 'Jou eie webwerf of bestemmingsblad',
+    composerUrl: '',
+    isPaid: false,
   },
 ];

@@ -34,7 +34,8 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X, Image as ImageIcon } from 'lucide-react';
+import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X, Image as ImageIcon, CalendarClock } from 'lucide-react';
+import AdScheduleModal from './AdScheduleModal';
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
@@ -260,6 +261,7 @@ export default function Campaign({
      account: it has no handle to show, nothing to connect, and nothing the
      posting queue can schedule to. See `DESTINATIONS` in data/social.ts. */
   const places = DESTINATIONS.filter((one) => going.indexOf(one.id) !== -1);
+  const [schedulingAd, setSchedulingAd] = useState<{ ad: Ad; index: number } | null>(null);
 
   const [ads, setAds] = useState<Ad[]>(() => before.ads.map((one) => ({ ...one, hashtags: [...one.hashtags] })));
   /* ── And written down again whenever it changes ──────────────────────
@@ -1151,7 +1153,7 @@ export default function Campaign({
           {/* What each platform wants for this one. Not advice in general - the
               shape, the hook window and the hashtag ceiling for the platforms
               actually chosen above, so the clip is cut right the first time. */}
-          {chosen.length > 0 && (
+          {(chosen.length > 0 || places.length > 0) && (
             <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2">
               <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
                 {t('ads.fit', 'Cut it for')}
@@ -1161,6 +1163,13 @@ export default function Campaign({
                   <li key={one.id} className="text-sm text-zinc-300 leading-relaxed">
                     <span className="font-semibold text-zinc-200">{one.name}</span> —{' '}
                     {t(`social.format.${one.id}`, one.bestFormat)},{' '}
+                    {t('ads.hookIn', 'hook in')} {one.hookWindow}
+                  </li>
+                ))}
+                {places.map((one) => (
+                  <li key={one.id} className="text-sm text-zinc-300 leading-relaxed">
+                    <span className="font-semibold text-zinc-200">{lang === 'af' ? one.af : one.en}</span> —{' '}
+                    {t(`dest.format.${one.id}`, one.bestFormat)},{' '}
                     {t('ads.hookIn', 'hook in')} {one.hookWindow}
                   </li>
                 ))}
@@ -1239,6 +1248,14 @@ export default function Campaign({
                 {t('ads.read', 'Read this one')}
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setSchedulingAd({ ad, index })}
+              className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
+            >
+              <CalendarClock className="w-3.5 h-3.5 text-emerald-400" />
+              {lang === 'af' ? 'Skeduleer na Google & Meta' : 'Schedule to Google & Meta'}
+            </button>
           </div>
 
           {poster[`${index}`] && (
@@ -1357,6 +1374,14 @@ export default function Campaign({
           ))}
         </ul>
       </details>
+
+      {schedulingAd && (
+        <AdScheduleModal
+          ad={schedulingAd.ad}
+          campaignName={what || schedulingAd.ad.headline}
+          onClose={() => setSchedulingAd(null)}
+        />
+      )}
     </div>
   );
 }

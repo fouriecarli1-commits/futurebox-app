@@ -19,6 +19,7 @@ import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { tooMany } from '@/app/lib/server/brake';
 import { copilotAvailable } from '@/app/lib/server/aikey';
+import { askGemini, isGeminiConfigured } from '@/app/lib/server/gemini';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -129,12 +130,49 @@ export async function POST(request: Request) {
     return Response.json({ error: refused.message, rule: refused.rule }, { status: 422 });
   }
 
+async function replyWithGeminiSongwriter(body: Body): Promise<Response> {
+  const prompt = `${promptFor(body)}
+
+CRITICAL: Return strictly valid JSON with this shape:
+{
+  "suggestions": [
+    {
+      "label": "Three or four words naming the idea",
+      "text": "The actual lines, or the actual style tags",
+      "why": "One sentence on what this does for the song"
+    }
+  ]
+}
+Provide exactly 4 distinct suggestions.`;
+
+  const res = await askGemini({
+    prompt,
+    systemInstruction: SYSTEM,
+    jsonOutput: true,
+    temperature: 0.7,
+  });
+
+  if (!res.ok || !res.json) {
+    return aiFault(new Error(res.error || 'Gemini error'), 'The writing help could not be reached.');
+  }
+
+  const parsed = SuggestionsSchema.safeParse(res.json);
+  if (!parsed.success) {
+    return Response.json({ error: 'unparsed', detail: 'The reply did not match the expected shape.' }, { status: 502 });
+  }
+
+  return Response.json({ suggestions: parsed.data.suggestions });
+}
+
   if (!process.env.ANTHROPIC_API_KEY) {
+    if (isGeminiConfigured()) {
+      return replyWithGeminiSongwriter(body);
+    }
     return Response.json(
       {
         error: 'no_key',
         detail:
-          'No ANTHROPIC_API_KEY is configured, so the writing help is off. Add one to the deployment environment and it turns on with no code change.',
+          'No AI API key is configured, so the writing help is off. Add one to the deployment environment and it turns on with no code change.',
       },
       { status: 503 },
     );
@@ -173,6 +211,13 @@ export async function POST(request: Request) {
 
     return Response.json({ suggestions: parsed.suggestions });
   } catch (error) {
+    if (isGeminiConfigured()) {
+      try {
+        return await replyWithGeminiSongwriter(body);
+      } catch {
+        // Fall through
+      }
+    }
     return aiFault(error, 'The writing help could not be reached.');
   }
 }
