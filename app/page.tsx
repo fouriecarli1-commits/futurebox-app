@@ -4726,6 +4726,13 @@ export default function FutureBoxHome() {
                      not waste it" rather than "find the good part", and
                      those are different conversations. */
                   goToRoom('canvas', { id: 'hook_video', subject: hook.title ?? '' });
+                  /* Straight down to the copilot, where the hook's brief now
+                     is — Carli, 14 October 2026: *"dan moet die video desk
+                     kamer direk spring na die heel onder kant van die kamer
+                     waar copilot is."* */
+                  window.setTimeout(() => {
+                    document.querySelector('[data-copilotaside]')?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+                  }, 700);
                 }}
                 /* A song somebody opened up, carried into Make a song. The
                    same hand-off the Studio's Remake uses — canvas, handoff,
@@ -5101,6 +5108,7 @@ export default function FutureBoxHome() {
                    page's padding and says nothing about whether anybody can
                    reach the thing they type into. */
                 <aside
+                  data-copilotaside=""
                   className={`${copilotFirst ? 'order-2 md:order-none pb-0 md:pb-[var(--bar-clear)]' : 'pb-[var(--bar-clear)]'} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
                   /* Reserved through a variable rather than straight onto
                      `paddingBottom`, because the answer is different at the

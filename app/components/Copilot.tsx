@@ -138,6 +138,25 @@ export default function Copilot({
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [turns, busy]);
 
+  /* ── A new room is a new conversation ────────────────────────────────
+     Carli, 14 October 2026: *"As iemand nie wil prompt nie en uit die kamer
+     gaan, dan moet die prompt uit copilot gevee word, want ek sien daai
+     prompt bly in copilot al gaan jy weer na ander kamers toe."* One copilot
+     is mounted for the whole studio and only its room changes, so whatever
+     was handed to it in one room, and whatever she had half typed, walked
+     with her into the next. Cleared when the room changes.
+
+     Declared above `useCopilotOps` on purpose: effects run in the order they
+     are written, so a brief handed over in the same move as the room change
+     is delivered after this clears, and arrives. */
+  const roomWas = useRef(context.surface);
+  useEffect(() => {
+    if (roomWas.current === context.surface) return;
+    roomWas.current = context.surface;
+    setTurns([]);
+    setDraft('');
+  }, [context.surface]);
+
   /* ── What the last room handed over ──────────────────────────────────
  
      Carli, 20 September 2026: *"Die advert room se prompts spring
