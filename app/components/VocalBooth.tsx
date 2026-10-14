@@ -1172,7 +1172,7 @@ export default function VocalBooth({
       style={{ paddingBottom: barClearance(0) }}>
       <div className="relative flex items-center gap-3 px-5 py-3 border-b border-cyan-500/25 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
         {/* Subtle neon laser top accent line */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-600 via-emerald-400 to-cyan-400 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
         {/* Out of the room, and it says so.
 
             Carli: "the booth en the pro booth het nie 'n back knoppie nie."
@@ -1192,20 +1192,50 @@ export default function VocalBooth({
           <ArrowLeft className="h-4 w-4" />
           {t('booth.back', 'Back')}
         </button>
+        {/* ── Google's ProBooth bar ──────────────────────────────────────
+            Carli, 13 and 14 October 2026: the booth *"lyk oud en nie soos ek
+            voorgestel het nie"*, with Google's "ProBooth DAW & Voice
+            Recording Studio" page as the picture of it. Its top bar is the
+            mark, the room's badge and the song; then a transport pill with
+            the tempo, the key, a light that says what the room is doing and
+            a running clock. All of it is real here: the tempo and key are
+            the song's own, the light is the recorder's own phase, and the
+            clock is where the song is. The record and play presses stay the
+            big buttons at the foot of the room, where a thumb is. */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-black tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.7)] truncate">
-              {t('booth.title', 'ProBooth')}
-            </h2>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.35)] uppercase">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-              </span>
-              VOCAL SUITE
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="hidden text-base font-extrabold text-white sm:inline">
+              FUTURE<span className="text-emerald-500">BOX</span>
+            </span>
+            <span className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-extrabold uppercase text-emerald-500">
+              {t('booth.title', 'ProBooth')} · {t('booth.badge', 'DAW & vocal studio')}
             </span>
           </div>
-          <p className="text-xs text-zinc-400 truncate pt-0.5">{track.title}</p>
+          <p className="truncate pt-0.5 text-xs text-zinc-400">{track.title}</p>
+        </div>
+        <div
+          data-boothtransport
+          className="flex flex-shrink-0 items-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 font-mono text-xs"
+        >
+          {(track.bpm ?? 0) > 0 && (
+            <span className="hidden text-zinc-400 sm:inline">
+              <span className="font-bold text-emerald-500">{Math.round(track.bpm ?? 0)}</span> BPM
+              {track.key ? <span className="text-zinc-200"> · {track.key}</span> : null}
+            </span>
+          )}
+          <span className="hidden h-4 w-px bg-white/10 sm:inline-block" aria-hidden />
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${
+              phase === 'recording' ? 'animate-pulse bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]'
+                : phase === 'playing' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
+                  : phase === 'counting' ? 'animate-pulse bg-amber-400'
+                    : 'bg-zinc-600'
+            }`}
+            aria-hidden
+          />
+          <span className={`font-bold tracking-wider tabular-nums ${phase === 'recording' ? 'text-red-400' : 'text-zinc-200'}`}>
+            [{String(Math.floor(at / 60)).padStart(2, '0')}:{String(Math.floor(at % 60)).padStart(2, '0')}]
+          </span>
         </div>
       </div>
 

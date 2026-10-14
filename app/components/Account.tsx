@@ -29,7 +29,9 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen, Paintbrush, Music, Film, Zap } from 'lucide-react';
+import {
+  X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen, Paintbrush, Mic, User, CheckCircle2,
+} from 'lucide-react';
 import { loadTracks } from '../lib/library';
 import { loadMakes } from '../lib/makes';
 import RecordingName from './RecordingName';
@@ -45,6 +47,11 @@ import Subscription from './Subscription';
 import Authenticators from './Authenticators';
 import Note from './Note';
 import { buildLine } from '../lib/whichbuild';
+import { PHOTO } from '../lib/photolook';
+import {
+  PROFILE_BACKDROP, PROFILE_BACKDROP_PLACE, PROFILE_BACKDROP_SIZE, PROFILE_CARD, PROFILE_GLASS, voiceWave,
+} from '../lib/profilelook';
+import { accessToken } from '../lib/cloud';
 
 export default function Account({
   open,
@@ -59,6 +66,7 @@ export default function Account({
   onNamed,
   onSignOut,
   onAppearance,
+  onGoToVoices,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
@@ -75,6 +83,8 @@ export default function Account({
   readonly onNamed?: (creator: Creator) => void;
   /** Open the Theme / Style customizer. */
   readonly onAppearance?: () => void;
+  /** The Your voice room, where cloned voices are made and kept. */
+  readonly onGoToVoices?: () => void;
 }): React.ReactElement | null {
   const { t, lang } = useLang();
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
@@ -83,7 +93,44 @@ export default function Account({
   const [taste, setTaste] = useState<Taste>(NO_TASTE);
   const [forgetting, setForgetting] = useState(false);
   /** What is on this device, counted for the vault card: songs, and videos from any room. */
-  const [made, setMade] = useState({ songs: 0, videos: 0 });
+  const [made, setMade] = useState({ songs: 0, videos: 0, lastSong: '', lastVideo: '' });
+  /** Her cloned voices, as `/api/voice` lists them for this account. */
+  const [voices, setVoices] = useState<{ mine: { id: string; name: string }[]; room: number } | null>(null);
+  /** On a phone the four columns are tabs, as the headings in her picture are. */
+  const [column, setColumn] = useState<'made' | 'voices' | 'links' | 'store'>('made');
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    void accessToken().then((token) =>
+      fetch('/api/voice', { headers: token ? { Authorization: `Bearer ${token}` } : undefined })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((said: { mine?: { id: string; name: string }[]; caps?: { voices?: number } } | null) => {
+          if (live && said) setVoices({ mine: said.mine ?? [], room: said.caps?.voices ?? 0 });
+        })
+        .catch(() => undefined),
+    );
+    return () => { live = false; };
+  }, [open]);
+  /**
+   * What this browser holds for the app, as the browser itself counts it.
+   *
+   * Google's page had a storage gauge in gigabytes of cloud. Nothing here
+   * measures a cloud, but the browser does measure what it keeps on the
+   * device — songs, clips, projects — and that is a real number.
+   */
+  const [store, setStore] = useState<{ used: number; quota: number } | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    const ask = typeof navigator !== 'undefined' ? navigator.storage?.estimate?.() : undefined;
+    if (!ask) return undefined;
+    void ask.then((got) => {
+      if (live && got && typeof got.usage === 'number' && typeof got.quota === 'number') {
+        setStore({ used: got.usage, quota: got.quota });
+      }
+    }).catch(() => undefined);
+    return () => { live = false; };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -99,6 +146,8 @@ export default function Account({
     setMade({
       songs: loadTracks().length,
       videos: loadMakes().filter((one) => one.kind === 'video' || one.kind === 'clip').length,
+      lastSong: loadTracks()[0]?.title ?? '',
+      lastVideo: loadMakes().find((one) => one.kind === 'video' || one.kind === 'clip')?.title ?? '',
     });
     return () => {
       live = false;
@@ -119,504 +168,462 @@ export default function Account({
 
   const spec = TIER_SPECS[plan];
   const price = tierPrice(plan, region);
+  const pct = wallet.monthly > 0 ? Math.max(0, Math.min(100, Math.round((wallet.balance / wallet.monthly) * 100))) : 0;
+  const gig = (bytes: number): string => (bytes >= 1024 ** 3 ? `${(bytes / 1024 ** 3).toFixed(1)} GB` : `${Math.round(bytes / 1024 ** 2)} MB`);
+  const panel: React.CSSProperties = PROFILE_GLASS;
+  const well: React.CSSProperties = { background: PHOTO.surfaceLight, border: `1px solid ${PHOTO.edge}` };
+  const chip: React.CSSProperties = { background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` };
+  /* The plan's lines, in Google's three columns rather than one list. */
+  const lines = spec.includes.map((one, i) => t(`plan.${spec.id}.inc.${i}`, one));
+  const per = Math.max(1, Math.ceil(lines.length / 3));
+  const columns = [
+    { icon: '🎵', says: t('account.planCol1', 'Credits & feed'), rows: lines.slice(0, per) },
+    { icon: '🎙️', says: t('account.planCol2', 'Studio & booth'), rows: lines.slice(per, per * 2) },
+    { icon: '🎬', says: t('account.planCol3', 'Video, art & extras'), rows: lines.slice(per * 2) },
+  ].filter((one) => one.rows.length > 0);
+  const linkRow = 'min-h-[44px] rounded-xl px-4 py-3 flex items-center gap-3 text-left text-zinc-300 hover:text-white';
 
+  /* ── Google's profile page, 13 October 2026 ──────────────────────────
+     Carli: *"Die You gedeelte van my eie profile lyk ook nie soos ek vir
+     jou gegee het nie."* It had the page's banner and wallet in the app's
+     own grey sheet, and the rest of the page was not there. Now it is the
+     page: the obsidian floor, a control bar with the credits and a refill
+     on it, the banner with the wallet gauge beside it, four modules in a
+     row, and the plan as a matrix under them. The page's API-keys module is
+     not here — a key never goes on a screen — and in its place is the one
+     thing a profile is actually for: where else you are. */
   return (
     <div
-      /* The bottom padding clears the tab bar, which sits over this panel so
-         somebody can leave it by pressing a tab rather than hunting for an X. */
-      className="fixed inset-0 z-[60] bg-scrim/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 pb-24 sm:p-6 sm:pb-24 overflow-y-auto"
+      className="fixed inset-0 z-[60] overflow-y-auto pb-24"
+      style={{ backgroundColor: PHOTO.floor, backgroundImage: PROFILE_BACKDROP, backgroundSize: PROFILE_BACKDROP_SIZE, backgroundPosition: PROFILE_BACKDROP_PLACE, backgroundAttachment: 'fixed', color: PHOTO.ink }}
       role="dialog"
       aria-modal="true"
       aria-label={t('account.title', 'Your account')}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
+      data-accountsheet
     >
-      <div className="w-full max-w-4xl my-auto rounded-3xl border border-white/10 bg-zinc-950 p-5 sm:p-7 space-y-5" data-accountsheet>
-        {/* ── Google's profile page, 13 October 2026 ──────────────────
-            The banner: who, with the plan as a badge, and the credit wallet
-            as a gauge beside it. Under it the modules: what is on this
-            device, the plan in full, and where else you are. The page's
-            API-keys module and its storage gauge are not here: keys never
-            go on a screen, and nothing here measures gigabytes. */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-950 p-5" data-accountbanner>
-          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
-          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4 min-w-0">
-              <div className="h-20 w-20 shrink-0 rounded-2xl bg-gradient-to-tr from-emerald-500 via-cyan-500 to-violet-600 p-1 shadow-xl">
-                <div className="flex h-full w-full items-center justify-center rounded-xl bg-zinc-950 text-3xl font-black text-white">
-                  {(name ?? email ?? '?').charAt(0).toUpperCase()}
+      {/* ── The bar across the top, as her picture has it ───────────── */}
+      <header
+        className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md lg:px-8"
+        style={{ background: 'rgba(3,8,7,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <span className="flex items-center gap-2 text-lg font-bold text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: PHOTO.accent, color: PHOTO.floor }} aria-hidden>
+            <User className="h-4 w-4" />
+          </span>
+          FutureBox <span style={{ color: PHOTO.accent }}>Pro</span>
+        </span>
+        <span className="ml-auto hidden items-center gap-2 text-sm text-zinc-300 sm:flex">
+          <User className="h-4 w-4" /> {t('account.creatorAccount', 'Creator account')}
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t('account.close', 'Close')}
+          className="ml-auto flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-zinc-300 hover:text-white sm:ml-0"
+          style={PROFILE_CARD}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </header>
+
+      <div className="mx-auto w-full max-w-6xl space-y-6 p-4 lg:p-8">
+        <h1 className="text-2xl font-bold text-white sm:text-3xl">{t('account.pageTitle', 'My profile & creator account')}</h1>
+
+        {/* ── The banner: who, and the wallet with its refill ──────────── */}
+        <div className="rounded-2xl p-5" style={PROFILE_GLASS} data-accountbanner>
+          <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="relative flex-shrink-0">
+                <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-400 via-cyan-400 to-violet-500 p-1 shadow-xl">
+                  <div className="flex h-full w-full items-center justify-center rounded-full text-4xl font-black text-white" style={{ background: PHOTO.floor }}>
+                    {(name ?? email ?? '?').charAt(0).toUpperCase()}
+                  </div>
                 </div>
+                <span className="absolute bottom-1 right-1 h-5 w-5 rounded-full" style={{ background: PHOTO.accent, border: `3px solid ${PHOTO.floor}` }} aria-hidden />
               </div>
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-2xl font-black text-white leading-tight truncate">
-                    {name || t('account.title', 'Your account')}
-                  </p>
-                  <span className="rounded-full border border-emerald-500/40 bg-emerald-500/20 px-3 py-0.5 text-xs font-extrabold text-emerald-300">
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="truncate text-2xl font-bold text-white sm:text-3xl">{name || t('account.title', 'Your account')}</p>
+                  <span className="rounded-full px-3 py-0.5 text-sm font-semibold" style={{ background: PHOTO.accentWash, border: `1px solid ${PHOTO.accent}`, color: PHOTO.accent }}>
                     {spec.name}{plan !== 'free' && ` · ${price.display}/${t('account.mo', 'mo')}`}
                   </span>
                 </div>
-                {handle && <p className="mt-1 font-mono text-xs text-emerald-300 truncate">{handle}</p>}
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-zinc-400 truncate">
-                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                  {email || '—'}
+                {handle && <p className="mt-1 truncate font-mono text-sm text-zinc-400">{handle}</p>}
+                <p className="mt-1.5 flex items-center gap-2 truncate text-sm text-zinc-300">
+                  <Mail className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{email || '—'}</span>
                 </p>
               </div>
             </div>
-        {/* ── What is left in the wallet ─────────────────────────────────── */}
-        <section className="rounded-xl border border-emerald-500/30 bg-zinc-900/80 p-4 space-y-2 lg:w-80 shrink-0" data-accountwallet>
-          <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-emerald-400" />
-            {t('account.credits', 'Credits')}
-          </p>
-          {/* Held blank rather than shown as zero until the answer arrives: a
-              real balance flashing as nothing is how somebody decides the app
-              has lost their money. */}
-          {/* And the three ways there is no number are three different
-              sentences. `wallet.ts` keeps them apart on purpose — a request
-              that never arrived used to look exactly like a working free
-              account — so this screen keeps them apart too. */}
-          {!asked ? (
-            <p className="text-2xl font-black text-white tabular-nums">&nbsp;</p>
-          ) : wallet.failed ? (
-            <p className="text-sm text-amber-400 leading-snug">
-              {t(
-                'account.creditsUnreachable',
-                'Your balance could not be fetched just now. Nothing has been spent — try again in a moment.',
-              )}
-            </p>
-          ) : !wallet.metered ? (
-            <Note>{t('account.creditsOff', 'This app has no accounts set up, so nothing is counted.')}</Note>
-          ) : (
-            <>
-              <p className="text-2xl font-black text-white tabular-nums">
-                {wallet.balance} <span className="text-xs font-bold text-emerald-300">{t('account.creditsWord', 'credits')}</span>
-              </p>
-              {wallet.monthly > 0 && (
-                <>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full border border-white/10 bg-black">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-violet-500"
-                      style={{ width: `${Math.max(0, Math.min(100, Math.round((wallet.balance / wallet.monthly) * 100)))}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-zinc-500 tabular-nums">
-                    {wallet.monthly} {t('account.creditsMonthly', 'a month on this plan')} · {Math.max(0, Math.min(100, Math.round((wallet.balance / wallet.monthly) * 100)))}%
+            {/* ── What is left in the wallet ─────────────────────────────── */}
+            <section className="flex flex-shrink-0 flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center lg:w-[480px]" style={PROFILE_CARD} data-accountwallet>
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-2 text-sm text-zinc-300">
+                  <CreditCard className="h-4 w-4" style={{ color: PHOTO.accent }} />
+                  {t('account.walletTitle', 'Credit wallet')}
+                </p>
+                {/* Held blank until the answer arrives, and the three ways
+                    there is no number are three different sentences. */}
+                {!asked ? (
+                  <p className="text-2xl font-bold text-white">&nbsp;</p>
+                ) : wallet.failed ? (
+                  <p className="text-sm leading-snug text-amber-400">
+                    {t('account.creditsUnreachable', 'Your balance could not be fetched just now. Nothing has been spent — try again in a moment.')}
                   </p>
-                </>
-              )}
-            </>
-          )}
+                ) : !wallet.metered ? (
+                  <Note>{t('account.creditsOff', 'This app has no accounts set up, so nothing is counted.')}</Note>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-white tabular-nums">
+                      {wallet.balance} <span className="text-base font-medium">{t('account.creditsAvailable', 'credits available')}</span>
+                    </p>
+                    {wallet.monthly > 0 && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-2.5 flex-1 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: PHOTO.accent }} />
+                        </div>
+                        <span className="text-xs text-zinc-300 tabular-nums">{pct}%</span>
+                      </div>
+                    )}
+                    {wallet.monthly > 0 && (
+                      <p className="mt-1 text-xs text-zinc-400 tabular-nums">{wallet.monthly} {t('account.creditsMonthly', 'a month on this plan')}</p>
+                    )}
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => { onClose(); onSeePlans(); }}
+                className="min-h-[48px] flex-shrink-0 rounded-full px-6 text-sm font-semibold"
+                style={{ border: `2px solid ${PHOTO.accent}`, color: PHOTO.accent, background: PHOTO.accentWash }}
+              >
+                {t('account.refill', 'Quick refill')}
+              </button>
+            </section>
+          </div>
           <Note>{t(
-              'account.creditsNote',
-              'What a generation costs is said on the button before you press it. Credits from your plan land each month; anything you buy on top does not expire.',
-            )}</Note>
-        </section>
+            'account.creditsNote',
+            'What a generation costs is said on the button before you press it. Credits from your plan land each month; anything you buy on top does not expire.',
+          )}</Note>
+        </div>
 
+        {/* ── One glass panel, four columns ───────────────────────────────
+            Her picture: four headings across the top of one panel, the first
+            underlined in green, a thin line between the columns. On a phone
+            the headings are tabs and one column shows at a time; at a desk
+            all four stand side by side. Google's "API & integration keys"
+            column is "Connections" here — a key never goes on a screen — and
+            its gigabytes of cloud are what this browser really stores. */}
+        <div className="rounded-2xl p-4 sm:p-5" style={PROFILE_GLASS}>
+          <div className="mb-4 grid grid-cols-2 gap-x-4 sm:grid-cols-4" role="tablist">
+            {([
+              { id: 'made' as const, says: t('account.vault', 'My productions') },
+              { id: 'voices' as const, says: t('account.voicesModule', 'Cloned voice models') },
+              { id: 'links' as const, says: t('account.connectionsModule', 'Connections') },
+              { id: 'store' as const, says: t('account.storageModule', 'Storage on this device') },
+            ]).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                data-accounttab={tab.id}
+                aria-selected={column === tab.id}
+                onClick={() => setColumn(tab.id)}
+                className="min-h-[44px] border-b-2 pb-2 text-left text-xs font-semibold uppercase tracking-wider sm:text-sm"
+                style={column === tab.id
+                  ? { borderColor: PHOTO.accent, color: PHOTO.accent }
+                  : { borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(226,232,240,0.7)' }}
+              >
+                {tab.says}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:divide-x lg:divide-white/10">
+            {/* My productions */}
+            <section className={`space-y-3 lg:block lg:pr-4 ${column === 'made' ? 'block' : 'hidden'}`} data-accountvault>
+              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+                <p className="text-sm text-zinc-300">{t('account.songs', 'Songs')}</p>
+                <p className="text-xl font-bold text-white">{made.songs} {t('account.tracks', 'tracks')}</p>
+                {made.lastSong && <p className="truncate text-xs text-zinc-400">{t('account.recent', 'Recent')}: {made.lastSong}</p>}
+              </div>
+              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+                <p className="text-sm text-zinc-300">{t('account.videos', 'Videos and clips')}</p>
+                <p className="text-xl font-bold text-white">{made.videos} {t('account.clips', 'clips')}</p>
+                {made.lastVideo && <p className="truncate text-xs text-zinc-400">{t('account.recent', 'Recent')}: {made.lastVideo}</p>}
+              </div>
+              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+                <p className="text-sm text-zinc-300">{t('account.voiceModels', 'Voice models')}</p>
+                <p className="text-xl font-bold text-white">{voices ? voices.mine.length : '–'} {t('account.models', 'models')}</p>
+                {voices && voices.mine[0] && <p className="truncate text-xs text-zinc-400">{t('account.latest', 'Latest')}: {voices.mine[0].name}</p>}
+              </div>
+              <p className="text-[11px] text-zinc-500">{t('account.vaultNote', 'Counted on this device. The channel holds them.')}</p>
+              <button
+                type="button"
+                onClick={() => { onClose(); onGoToChannel(); }}
+                className="min-h-[44px] w-full rounded-xl text-xs font-bold text-zinc-200 hover:text-white"
+                style={PROFILE_CARD}
+              >
+                {t('account.viewVault', 'View the vault →')}
+              </button>
+            </section>
+
+            {/* Cloned voices */}
+            <section className={`space-y-3 lg:block lg:px-4 ${column === 'voices' ? 'block' : 'hidden'}`} data-accountvoices>
+              {voices === null ? (
+                <p className="flex items-center gap-2 text-xs text-zinc-400"><Loader2 className="h-3.5 w-3.5 animate-spin" />{t('account.voicesAsking', 'Asking for your voices…')}</p>
+              ) : voices.mine.length === 0 ? (
+                <div className="rounded-xl p-3" style={PROFILE_CARD}>
+                  <p className="text-sm font-semibold text-white">{t('account.voicesNone', 'No cloned voices yet')}</p>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    {voices.room > 0
+                      ? t('account.voicesRoom', 'Your plan keeps up to {n}. Clone yours once in the Your voice room and use it everywhere.').replace('{n}', String(voices.room))
+                      : t('account.voicesPlan', 'Cloning a voice comes with a paid plan.')}
+                  </p>
+                </div>
+              ) : (
+                voices.mine.map((one) => (
+                  <div key={one.id} className="rounded-xl p-3" style={PROFILE_CARD}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-base font-bold text-white">{one.name}</p>
+                      <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: PHOTO.accent }} />
+                    </div>
+                    <p className="text-xs" style={{ color: PHOTO.accent }}>{t('account.voiceReady', 'Trained and ready')}</p>
+                    <svg viewBox="0 0 200 32" className="my-2 h-8 w-full" aria-hidden>
+                      <polyline points={voiceWave(one.name)} fill="none" stroke={PHOTO.accent} strokeWidth="1.6" />
+                    </svg>
+                  </div>
+                ))
+              )}
+              {onGoToVoices && (
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onGoToVoices(); }}
+                  className="min-h-[44px] w-full rounded-xl text-xs font-semibold"
+                  style={{ border: `1px solid ${PHOTO.accent}`, color: PHOTO.accent, background: PHOTO.accentWash }}
+                >
+                  <Mic className="mr-1 inline h-3.5 w-3.5" />
+                  {t('account.goVoices', 'Manage in Your voice')}
+                </button>
+              )}
+            </section>
+
+            {/* Connections: the name your work goes out under, and where else
+                you are — "binne iemand se profile moet al die connection
+                buttons wees." */}
+            <section className={`space-y-3 lg:block lg:px-4 ${column === 'links' ? 'block' : 'hidden'}`} data-accountconnections>
+              <RecordingName onSaved={(row) => onNamed?.(row)} compact />
+              <Connections />
+            </section>
+
+            {/* Storage on this device */}
+            <section className={`space-y-3 lg:block lg:pl-4 ${column === 'store' ? 'block' : 'hidden'}`} data-accountstorage>
+              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+                {store ? (
+                  <>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-lg font-bold text-white">{gig(store.used)} <span className="text-xs font-normal text-zinc-400">{t('account.storageOf', 'of')} {gig(store.quota)}</span></p>
+                      <span className="text-xs text-zinc-400">{store.quota > 0 ? Math.round((store.used / store.quota) * 100) : 0}% {t('account.storageUsed', 'used')}</span>
+                    </div>
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${store.quota > 0 ? Math.max(1, Math.min(100, Math.round((store.used / store.quota) * 100))) : 0}%`, background: PHOTO.accent }} />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-zinc-400">{t('account.storageNone', 'This browser does not say how much it holds.')}</p>
+                )}
+              </div>
+              <p className="text-[11px] text-zinc-500">{t('account.storageNote', 'What this browser keeps for the app — songs, clips and projects — counted by the browser itself.')}</p>
+              <button
+                type="button"
+                onClick={() => { onClose(); onGoToChannel(); }}
+                className="min-h-[44px] w-full rounded-xl text-xs font-semibold"
+                style={{ border: `1px solid ${PHOTO.accent}`, color: PHOTO.accent, background: PHOTO.accentWash }}
+              >
+                {t('account.channel', 'Your channel and your picture')}
+              </button>
+            </section>
           </div>
         </div>
-        <div className="flex justify-end -mt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('account.close', 'Close')}
-            className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center flex-shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
 
-        {/* ── The modules ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <section className="rounded-2xl border border-white/10 bg-zinc-900/60 p-4 flex flex-col justify-between gap-3" data-accountvault>
+        {/* ── The plan, as a matrix ───────────────────────────────────── */}
+        <section className="rounded-2xl p-6" style={panel} data-accountplan>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-4" style={{ borderColor: PHOTO.edge }}>
             <div>
-              <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-emerald-300">
-                <span>{t('account.vault', 'My productions')}</span>
-                <span className="font-mono text-zinc-500">{t('account.vaultWord', 'VAULT')}</span>
-              </div>
-              <div className="mt-3 space-y-2">
-                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-zinc-950/60 p-3">
-                  <div>
-                    <p className="text-xs font-bold text-white">{t('account.songs', 'Songs')}</p>
-                    <p className="font-mono text-lg font-black text-emerald-300">{made.songs}</p>
-                  </div>
-                  <Music className="w-5 h-5 text-emerald-300" />
-                </div>
-                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-zinc-950/60 p-3">
-                  <div>
-                    <p className="text-xs font-bold text-white">{t('account.videos', 'Videos and clips')}</p>
-                    <p className="font-mono text-lg font-black text-cyan-300">{made.videos}</p>
-                  </div>
-                  <Film className="w-5 h-5 text-cyan-300" />
-                </div>
-                <p className="text-[11px] text-zinc-500">{t('account.vaultNote', 'Counted on this device. The channel holds them.')}</p>
-              </div>
+              <h2 className="flex flex-wrap items-center gap-2 text-base font-extrabold text-white">
+                <Sparkles className="h-4 w-4" style={{ color: PHOTO.accent }} />
+                <span>{t('account.plan', 'Your plan')}:</span>
+                <span className="font-mono" style={{ color: PHOTO.accent }}>
+                  {spec.name}{plan !== 'free' && ` · ${price.display} ${t('account.aMonth', 'a month')}`}
+                </span>
+              </h2>
+              {/* Same dictionary keys as the sales page, so the plan somebody
+                  bought is described in the words they bought it in. */}
+              <p className="mt-0.5 text-xs text-zinc-400">{t(`plan.${spec.id}.who`, spec.who)}</p>
             </div>
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                onGoToChannel();
-              }}
-              className="min-h-[44px] w-full rounded-xl border border-white/10 bg-zinc-800/40 text-xs font-bold text-zinc-300 hover:text-white"
+              onClick={() => { onClose(); onSeePlans(); }}
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 text-xs font-bold text-zinc-300 hover:text-white"
+              style={chip}
             >
-              {t('account.viewVault', 'View the vault →')}
+              {plan === 'free'
+                ? t('account.seePlans', 'See the plans')
+                : t('account.changePlan', 'Change your plan')}
+              <ArrowRight className="w-4 h-4" />
             </button>
-          </section>
-        {/* ── The plan ───────────────────────────────────────────────────── */}
-          <section className="rounded-2xl border border-white/10 bg-zinc-900/60 p-4 space-y-3 md:col-span-2 lg:col-span-2" data-accountplan>
-          <div className="flex items-baseline justify-between gap-3 flex-wrap">
-            <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              {t('account.plan', 'Your plan')}
-            </p>
-            <p className="text-sm text-zinc-400 tabular-nums">
-              <span className="text-white font-bold">{spec.name}</span>
-              {plan !== 'free' && ` · ${price.display} ${t('account.aMonth', 'a month')}`}
-            </p>
           </div>
-          {/* Same dictionary keys as the sales page, so the plan somebody
-              bought is described to them in the same words they bought it in. */}
-          <p className="text-sm text-zinc-500 leading-snug">{t(`plan.${spec.id}.who`, spec.who)}</p>
-          {/* Every line, not the first four.
-              It was `slice(0, 4)`, and the plan lists are five to seven long
-              — so the last line of all four plans was on the sales page and
-              on no screen a member who had already paid could reach. That
-              line is the album art, which she asked for by name: *"Kyk ook
-              dat die nuwe album art afdeling deel van die free, en betalings
-              pakkette vorm en wys."* It formed part of them and it did not
-              show. A list that silently drops its own tail is worse than a
-              short list, because nothing on the screen says it is short. */}
-          <ul className="text-sm text-zinc-400 space-y-1">
-            {spec.includes.map((one, i) => (
-              <li key={one} className="flex items-start gap-2">
-                <span className="text-emerald-400 mt-0.5">·</span>
-                <span>{t(`plan.${spec.id}.inc.${i}`, one)}</span>
-              </li>
+          {/* Every line, not the first four — the last line of each plan is
+              the album art she asked for by name, and a list that silently
+              drops its tail is worse than a short one. */}
+          <div className="grid grid-cols-1 gap-4 text-xs leading-relaxed text-zinc-300 md:grid-cols-2 lg:grid-cols-3">
+            {columns.map((column) => (
+              <div key={column.says} className="rounded-xl p-3.5" style={well}>
+                <strong className="mb-1 block" style={{ color: PHOTO.accent }}>{column.icon} {column.says}</strong>
+                <ul className="space-y-1 text-[11px] text-zinc-400">
+                  {column.rows.map((row) => (
+                    <li key={row} className="flex items-start gap-2">
+                      <span className="mt-0.5" style={{ color: PHOTO.accent }}>·</span>
+                      <span>{row}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onSeePlans();
-            }}
-            className="min-h-[44px] w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2"
-          >
-            {plan === 'free'
-              ? t('account.seePlans', 'See the plans')
-              : t('account.changePlan', 'Change your plan')}
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          </div>
         </section>
 
+        {/* ── The subscription itself, a second lock, and what is noticed ── */}
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div className="rounded-2xl p-5" style={panel}><Subscription /></div>
+          <div className="space-y-5">
+            <div className="rounded-2xl p-5" style={panel}><Authenticators /></div>
+            {taste.ready && (
+              <section className="space-y-3 rounded-2xl p-5" style={panel}>
+                <p className="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                  <Brain className="h-4 w-4" style={{ color: PHOTO.accent }} />
+                  {t('account.taste', 'What the app has noticed')}
+                </p>
+                {taste.lines.length === 0 ? (
+                  <Note>{t('account.tasteNone', 'Nothing yet. Make a few things and it will start suggesting the kind you actually make.')}</Note>
+                ) : (
+                  <ul className="space-y-1 text-sm text-zinc-400">
+                    {taste.lines.slice(0, 8).map((one) => (
+                      <li key={`${one.kind}:${one.label}`} className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0 truncate">
+                          {one.label}
+                          <span className="text-zinc-600">
+                            {' '}
+                            · {one.kind === 'genre'
+                              ? t('account.tasteGenre', 'what you make')
+                              : t('account.tasteRoom', 'where you work')}
+                          </span>
+                        </span>
+                        <span className="flex-shrink-0 tabular-nums text-zinc-500">{one.times}×</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <Note className="text-xs leading-relaxed text-zinc-500">{t(
+                  'account.tasteNote',
+                  'A count of each kind and when it last happened — not a record of when you work. It is what lets the welcome screen and the copilot suggest the kind of thing you actually make.',
+                )}</Note>
+                {taste.lines.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={forgetting}
+                    onClick={() => {
+                      setForgetting(true);
+                      void forgetTaste().then((done) => {
+                        setForgetting(false);
+                        if (done) setTaste({ lines: [], ready: true });
+                      });
+                    }}
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white"
+                    style={chip}
+                  >
+                    {forgetting && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {t('account.tasteForget', 'Clear this and start again')}
+                  </button>
+                )}
+              </section>
+            )}
+          </div>
         </div>
 
-        {/* ── The name your work goes out under ──────────────────────────
-
-            On this screen because this is where somebody looks for their own
-            name, and it is the same component the channel carries. The name in
-            the corner of the app used to be a fragment of a sign-up email with
-            nowhere to change it; the one on their releases was somewhere else
-            entirely. Both are this. */}
-        <RecordingName onSaved={(row) => onNamed?.(row)} compact />
-
-        {/* ── Where else you are ─────────────────────────────────────────
-
-            "ek dink binne iemand se profile moet al die connection buttons
-             wees."
-
-            They were inside the Collab Radar, behind a panel about how
-            matches are computed. That is a fine place to be reminded a handle
-            makes a link work and a strange place for the only screen in the
-            app where somebody says who they are elsewhere. Directly under the
-            name their work goes out under, which is the thing it is about. */}
-        <Connections />
-
-        {/* ── A second lock, for the people who want one ─────────────────── */}
-        <Authenticators />
-
-        {/* ── What the app has noticed, and a way to make it stop ────────── */}
-        {taste.ready && (
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
-            <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-              <Brain className="w-4 h-4 text-emerald-400" />
-              {t('account.taste', 'What the app has noticed')}
-            </p>
-            {/* Shown in full, because a screen that says "we remember some
-                things about you" without saying which is worse than one that
-                says nothing. It is a short list on purpose — there is nothing
-                here but counts. */}
-            {taste.lines.length === 0 ? (
-              <Note>{t('account.tasteNone', 'Nothing yet. Make a few things and it will start suggesting the kind you actually make.')}</Note>
-            ) : (
-              <ul className="text-sm text-zinc-400 space-y-1">
-                {taste.lines.slice(0, 8).map((one) => (
-                  <li key={`${one.kind}:${one.label}`} className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0 truncate">
-                      {one.label}
-                      <span className="text-zinc-600">
-                        {' '}
-                        · {one.kind === 'genre'
-                          ? t('account.tasteGenre', 'what you make')
-                          : t('account.tasteRoom', 'where you work')}
-                      </span>
-                    </span>
-                    <span className="tabular-nums text-zinc-500 flex-shrink-0">
-                      {one.times}×
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Note className="text-xs text-zinc-500 leading-relaxed">{t(
-                'account.tasteNote',
-                'A count of each kind and when it last happened — not a record of when you work. It is what lets the welcome screen and the copilot suggest the kind of thing you actually make, on any device you sign in on.',
-              )}</Note>
-            {taste.lines.length > 0 && (
-              <button
-                type="button"
-                disabled={forgetting}
-                onClick={() => {
-                  setForgetting(true);
-                  void forgetTaste().then((done) => {
-                    setForgetting(false);
-                    if (done) setTaste({ lines: [], ready: true });
-                  });
-                }}
-                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white inline-flex items-center gap-2 disabled:opacity-60"
-              >
-                {forgetting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {t('account.tasteForget', 'Clear this and start again')}
-              </button>
-            )}
-          </section>
-        )}
-
-        {/* ── The subscription itself, and the way out of it ─────────────── */}
-        <Subscription />
-
-        {/* ── Where the other two things live ────────────────────────────── */}
-        <section className="border-t border-zinc-800 pt-4 space-y-2">
-          <a
-            href="/guide"
-            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
-          >
-            <BookOpen className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+        {/* ── Where the other things live ─────────────────────────────── */}
+        <section className="grid grid-cols-1 gap-2 rounded-2xl p-5 md:grid-cols-2" style={panel}>
+          <a href="/guide" className={linkRow} style={chip}>
+            <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
-              <span className="block text-sm font-bold leading-tight">
-                {t('account.guide', 'What every room does, and what it costs')}
-              </span>
-              <span className="block text-xs text-zinc-500 leading-snug">
-                {t('account.guideNote', 'One page for the whole studio: the rooms, the prices, the words.')}
-              </span>
+              <span className="block text-sm font-bold leading-tight">{t('account.guide', 'What every room does, and what it costs')}</span>
+              <span className="block text-xs leading-snug text-zinc-500">{t('account.guideNote', 'One page for the whole studio: the rooms, the prices, the words.')}</span>
             </span>
           </a>
-          <a
-            href="/help"
-            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
-          >
-            <LifeBuoy className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <a href="/help" className={linkRow} style={chip}>
+            <LifeBuoy className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
-              <span className="block text-sm font-bold leading-tight">
-                {t('account.help', 'A question, or a problem')}
-              </span>
-              <span className="block text-xs text-zinc-500 leading-snug">
-                {t(
-                  'account.helpNote',
-                  'Ask about the app, your plan or a charge and get an answer here — or write to a person.',
-                )}
-              </span>
+              <span className="block text-sm font-bold leading-tight">{t('account.help', 'A question, or a problem')}</span>
+              <span className="block text-xs leading-snug text-zinc-500">{t('account.helpNote', 'Ask about the app, your plan or a charge and get an answer here — or write to a person.')}</span>
             </span>
           </a>
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onGoToChannel();
-            }}
-            className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 text-left hover:border-emerald-500/60 hover:text-white text-zinc-300"
-          >
-            <ListMusic className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <button type="button" onClick={() => { onClose(); onGoToChannel(); }} className={`w-full ${linkRow}`} style={chip}>
+            <ListMusic className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
-              <span className="block text-sm font-bold leading-tight">
-                {t('account.channel', 'Your channel and your picture')}
-              </span>
-              <span className="block text-xs text-zinc-500 leading-snug">
-                {t(
-                  'account.channelNote',
-                  'Your songs, your playlists, your profile picture.',
-                )}
-              </span>
+              <span className="block text-sm font-bold leading-tight">{t('account.channel', 'Your channel and your picture')}</span>
+              <span className="block text-xs leading-snug text-zinc-500">{t('account.channelNote', 'Your songs, your playlists, your profile picture.')}</span>
             </span>
           </button>
           {onAppearance && (
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onAppearance();
-              }}
-              className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 text-left hover:border-emerald-500/60 hover:text-white text-zinc-300"
-            >
-              <Paintbrush className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <button type="button" onClick={() => { onClose(); onAppearance(); }} className={`w-full ${linkRow}`} style={chip}>
+              <Paintbrush className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
               <span className="min-w-0">
-                <span className="block text-sm font-bold leading-tight">
-                  {t('account.appearance', 'App appearance, style and colors')}
-                </span>
-                <span className="block text-xs text-zinc-500 leading-snug">
-                  {t('account.appearanceNote', 'Customize primary colors, accents, dark surfaces, fonts and layout.')}
-                </span>
+                <span className="block text-sm font-bold leading-tight">{t('account.appearance', 'App appearance, style and colors')}</span>
+                <span className="block text-xs leading-snug text-zinc-500">{t('account.appearanceNote', 'Customize primary colors, accents, dark surfaces, fonts and layout.')}</span>
               </span>
             </button>
           )}
-
-          {/* ── The two rooms nothing led to ────────────────────────
-
-              Carli, 10 October 2026: *"Waar lewe die kids funksie"*. Nowhere
-              anybody could get to. `/kids` and `/story` are both pages of
-              their own — deliberately, because the rail beside them is a shop,
-              a conversation with strangers and every paid door in the app, and
-              `check:kidsafe` is the measurement of why a child must not be
-              looking at it. But a page off the rail still has to be reachable
-              from somewhere, and neither of these was: the only mention of
-              `/kids` in the whole app was a sentence in a comment. Two finished
-              rooms, both working, both unreachable unless you typed the
-              address.
-
-              Here, because this is the grown-up's screen: an allowance is a
-              grown-up's decision and so is handing over the phone.
-              `check:bereikbaar` now holds every page in the app to having a
-              way in. */}
-          <a
-            href="/kids"
-            data-accountkids
-            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
-          >
-            <Baby className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          {/* The two rooms off the rail, reachable from the grown-up's screen:
+              an allowance is a grown-up's decision and so is handing over the
+              phone. `check:bereikbaar` holds every page to having a way in. */}
+          <a href="/kids" data-accountkids className={linkRow} style={chip}>
+            <Baby className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
-              <span className="block text-sm font-bold leading-tight">
-                {t('account.kids', 'The kids room')}
-              </span>
-              <span className="block text-xs text-zinc-500 leading-snug">
-                {t(
-                  'account.kidsNote',
-                  'Set an allowance, then hand the phone over. Two presses in there and nothing else — make a song, make a video of it — and the allowance holds wherever they end up.',
-                )}
-              </span>
+              <span className="block text-sm font-bold leading-tight">{t('account.kids', 'The kids room')}</span>
+              <span className="block text-xs leading-snug text-zinc-500">{t('account.kidsNote', 'Set an allowance and a clock, then hand the phone over. Six doors in there, and the allowance holds wherever they go.')}</span>
             </span>
           </a>
-          <a
-            href="/story"
-            data-accountstory
-            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
-          >
-            <BookOpen className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <a href="/story" data-accountstory className={linkRow} style={chip}>
+            <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
-              <span className="block text-sm font-bold leading-tight">
-                {t('account.story', 'Story mode')}
-              </span>
-              <span className="block text-xs text-zinc-500 leading-snug">
-                {t(
-                  'account.storyNote',
-                  'A story written and drawn a page at a time, read aloud, and kept on the shelf.',
-                )}
-              </span>
+              <span className="block text-sm font-bold leading-tight">{t('account.story', 'Story mode')}</span>
+              <span className="block text-xs leading-snug text-zinc-500">{t('account.storyNote', 'A story written and drawn a page at a time, read aloud, and kept on the shelf.')}</span>
             </span>
           </a>
         </section>
 
-        {/* The engine bill used to be here, and is gone.
-
-            "haal die elevenlabs en kling kaart heeltemal uit."
-
-            It appeared the hour OWNER_EMAIL was set and read, from her side,
-            as the app putting two suppliers' names on her own profile. It was
-            hers and only hers — no member ever had it — and it was still the
-            wrong thing on this screen. Removed rather than folded: the whole
-            chain behind it went too, because a route that assembles somebody's
-            spend and sends it to nothing is worse than one that never did.
-
-            What it told her lives where an operator actually looks for a bill:
-            the ElevenLabs and Kling dashboards, and `/api/analyse/setup`. */}
-
-        {/* ── Deleting the account ─────────────────────────────────────
-
-            Here, and last, and nowhere else.
-
-            It used to sit in the channel, between a help link and the copilot
-            — a red button in the middle of the room somebody works in, which
-            is the one place it must never be. Carli: "mense gaan dit per
-            ongeluk druk en alles gaan delete." A destruction somebody can
-            reach by mistake is not a feature, it is a trap.
-
-            This screen is where a person comes to deal with their account
-            rather than to make something, and the bottom of it is where they
-            arrive last. The confirmation — typing your own address — stays
-            where it is, and is now the second thing standing between somebody
-            and losing everything rather than the only one. */}
-        {/* Signing out, above deleting.
-
-            It lived only in the page header, which the front door covers — so
-            once landing on Make became the rule, the way out of an account was
-            behind the first screen somebody sees. This is where account things
-            live now; the header keeps its copy for anybody already looking at
-            the feed.
-
-            Above the delete, and drawn quietly, because they are the two
-            buttons on this screen nobody wants to press by accident and the
-            gentler one should not be the harder to find. */}
-        <section className="pt-1">
+        {/* ── Signing out, above deleting: the two buttons nobody wants to
+            press by accident, the gentler one not the harder to find. ── */}
+        <section className="space-y-3 rounded-2xl p-5" style={panel}>
           <button
             type="button"
-            onClick={() => {
-              onClose();
-              onSignOut();
-            }}
-            className="min-h-[44px] w-full rounded-xl border border-zinc-700 px-4 text-sm font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white"
+            onClick={() => { onClose(); onSignOut(); }}
+            className="min-h-[44px] w-full rounded-xl px-4 text-sm font-semibold text-zinc-300 hover:text-white"
+            style={chip}
           >
             {t('auth.signOut', 'Sign out')}
           </button>
+          {email && <DeleteAccount email={email} />}
         </section>
 
-        {email && (
-          <section className="pt-1">
-            <DeleteAccount email={email} />
-          </section>
-        )}
-
-        {/* ── Which build this phone is holding ────────────────────────
-
-            Carli, 3 October 2026: *"Het jy enige iets gepush en gestoot? Ek
-            sien nie veranderings nie."* Six commits had gone to `main` that
-            morning and neither of us could tell whether her phone had them.
-
-            `whichbuild.ts` was written in September for exactly this and put
-            on `/oops` — a page somebody only reaches after a crash. So the
-            one thing that answers "is this the app with the fix in it" lived
-            behind a fault, and the question that needed it most is the one
-            asked when nothing has crashed at all.
-
-            It is here now, at the bottom of the screen everybody can find.
-            Seven characters and a date: short enough to read down a phone
-            line, long enough to name one commit. */}
-        <p
-          data-build
-          className="text-xs text-zinc-600 font-mono"
-        >
+        {/* Which build this phone is holding: seven characters and a date. */}
+        <p data-build className="font-mono text-xs text-zinc-600">
           {t('account.build', 'Version')}: {buildLine()}
         </p>
-
-        <p className="text-xs text-zinc-600 leading-relaxed">
+        <p className="text-xs leading-relaxed text-zinc-600">
           {t('account.legal', 'The')}{' '}
-          <a href="/terms" className="underline hover:text-zinc-400">
-            {t('account.terms', 'terms')}
-          </a>{' '}
+          <a href="/terms" className="underline hover:text-zinc-400">{t('account.terms', 'terms')}</a>{' '}
           {t('account.and', 'and the')}{' '}
-          <a href="/privacy" className="underline hover:text-zinc-400">
-            {t('account.privacy', 'privacy notice')}
-          </a>
+          <a href="/privacy" className="underline hover:text-zinc-400">{t('account.privacy', 'privacy notice')}</a>
           .
         </p>
       </div>

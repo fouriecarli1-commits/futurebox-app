@@ -26,6 +26,8 @@ export const PHOTO = {
   purple: '#C084FC',
   purpleWash: 'rgba(168,85,247,0.18)',
   black: '#000000',
+  ink: '#E2E8F0',
+  gold: '#FBBF24',
   glowEmerald: '0 0 30px rgba(15,157,110,0.25)',
   glowCyan: '0 0 25px rgba(6,182,212,0.25)',
   neonText: '0 0 10px #0F9D6E, 0 0 20px #0F9D6E, 0 0 40px #06B6D4',

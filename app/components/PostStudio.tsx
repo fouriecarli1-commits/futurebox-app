@@ -5124,6 +5124,16 @@ export default function PostStudio({
     draw(off, false);
     setSocial(off.toDataURL('image/jpeg', 0.85));
   };
+  /* When the tools step aside — a bench shut, or moving, cropping or tracing
+     started — the picture comes back into view. On a phone the open bench is
+     under the picture and the page was scrolled down to it; without this the
+     glass a drag is meant for was above the screen, and the drag landed on
+     nothing — `audit/postwalk.mjs` dragged the words and they did not move. */
+  const toolsAside = bench === null || movingWords || cropBox !== null || traced !== null;
+  useEffect(() => {
+    if (!toolsAside || atDesk) return;
+    canvas.current?.scrollIntoView({ block: 'nearest' });
+  }, [toolsAside, movingWords, cropBox !== null, traced !== null, atDesk]);
   /* Escape shuts the open bench, as the bar's own sheet did, so the way out
      of a bench is the same whichever layout drew it. */
   useEffect(() => {
@@ -5214,11 +5224,10 @@ export default function PostStudio({
           ) : t('post.title', 'Make a post')}
         </h2>
       </div>
-      {/* Sideways on purpose: Google's control strip scrolls across, which
-          is what keeps nine buttons on one 390-pixel line without any of
-          them running off the glass — `audit/wide.mjs` measured the row
-          that did. */}
-      <div data-postquick className="order-last flex w-full min-w-0 items-center gap-1.5 overflow-x-auto py-1">
+      {/* Google's control strip, wrapping rather than scrolling: a row
+          that scrolls sideways still puts its last buttons past the edge of
+          the screen, and `audit/wide.mjs` measured exactly that. */}
+      <div data-postquick className="order-last flex w-full min-w-0 flex-wrap items-center gap-1.5 py-1">
         <button
           type="button"
           onClick={() => setShowTemplatesModal(true)}
@@ -5508,7 +5517,7 @@ export default function PostStudio({
 
   /* ── The toolkit's tabs: the six benches ───────────────────────────── */
   const tabs = (
-    <div data-postbenches className={atDesk ? 'grid grid-cols-2 gap-1.5' : 'flex gap-1.5'}>
+    <div data-postbenches className={atDesk ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-1.5 min-[380px]:grid-cols-3'}>
       {ALL_BENCHES.map((spec) => (
         <button
           key={spec.id}
@@ -5864,28 +5873,66 @@ export default function PostStudio({
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             {header}
             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-3">
-              {/* The canvas stays at the top of the scroll — Carli, 7 October
-                  2026: the picture *"slid off the top the moment she opened
-                  anything"* — and everything under it scrolls beneath. */}
-              <div className="sticky top-0 z-10 px-3 pt-3" style={{ background: PHOTO.floor }}>
+              {/* The canvas first, and the panels under it, as Google's own
+                  page stacks them on a phone. It was `sticky` for an evening:
+                  the card then sat over whatever scrolled under it, and a tab
+                  brought into view landed under the card — `audit/postwalk.mjs`
+                  pressed it for thirty seconds and the card took every press.
+                  Nothing is drawn over the picture now; opening a bench adds
+                  tools under it and moves the picture nowhere, which is what
+                  her 7 October complaint about the sliding picture was. */}
+              <div className="px-3 pt-3">
                 {canvasCard}
               </div>
               <div className="flex flex-col gap-3 px-3">
-                {strips}
-                {/* `data-cutdock` here, because `audit/postwalk.mjs` and
-                    `audit/underbar.mjs` take the bar's top as the floor of the
-                    glass; under the canvas, it is. */}
-                {/* Sideways on purpose: six benches on one phone line, each a
-                    thumb wide, scrolling across like Google's strip above. */}
-                <div data-cutdock="" className="overflow-x-auto rounded-2xl p-2" style={panelStyle}>
-                  {tabs}
-                </div>
                 {benchPanel}
                 <div data-postinspector className="rounded-2xl p-3" style={panelStyle}>
                   {inspector}
                 </div>
               </div>
             </div>
+            {/* ── The tools along the bottom, as she asked ──────────────
+                Carli, 7 October 2026: *"Die editing tools moet ook onder in
+                'n bar wees."* And on 9 October, of the sheets those tools
+                opened: *"Die pop out bars onder belemmer die view."* Both
+                hold now: the six benches are a bar at the foot of the room,
+                where the app's own bar steps aside for it, and the bench a
+                tab opens is drawn in the page under the picture rather than
+                over it. `data-cutdock` because `audit/underbar.mjs` and
+                `audit/postwalk.mjs` read the bar's top as the floor of the
+                glass. */}
+            {/* The cut, crop and move bars, just above the tabs and outside
+                the scroll: pressing one of their buttons must not scroll the
+                picture away from the drag it is for. */}
+            <div data-poststrips className="flex max-h-[40dvh] flex-shrink-0 flex-col gap-2 overflow-y-auto px-3 empty:hidden">
+              {strips}
+            </div>
+            <nav
+              data-cutdock=""
+              data-postbar6
+              className="grid flex-shrink-0 grid-cols-6 gap-1 px-2 pb-2 pt-1.5"
+              style={{ background: PHOTO.floorGlass, borderTop: `1px solid ${PHOTO.edge}` }}
+            >
+              {ALL_BENCHES.map((spec) => (
+                <button
+                  key={spec.id}
+                  type="button"
+                  data-cutbench={spec.id}
+                  aria-pressed={bench === spec.id}
+                  title={t(spec.what[0], spec.what[1])}
+                  onClick={() => {
+                    openBench(spec.id);
+                    /* The bench opens under the picture; bring it into view. */
+                    window.setTimeout(() => document.querySelector('[data-postbenchpanel]')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+                  }}
+                  className={`flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-0.5 text-[10px] font-bold leading-tight ${bench === spec.id ? GEKIES : ''}`}
+                  style={bench === spec.id ? undefined : { borderColor: 'transparent', color: INK_DIM }}
+                >
+                  <span className="flex h-5 w-5 items-center justify-center">{spec.icon}</span>
+                  <span className="w-full truncate text-center">{t(spec.label[0], spec.label[1])}</span>
+                </button>
+              ))}
+            </nav>
           </div>
           {copilotPane}
         </>

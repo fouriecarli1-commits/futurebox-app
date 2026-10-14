@@ -250,24 +250,41 @@ export default function ArtMaker(): React.ReactElement {
           </div>
           <div>
             <p className={MIKRO}>{t('art.make.palette', 'Ground, when there is no picture yet')}</p>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              {[0, 1, 2].map((slot) => (
-                <div key={slot} className="flex items-center gap-1">
-                  {SWATCHES.map((colour) => (
-                    <button
-                      key={colour}
-                      type="button"
-                      aria-label={colour}
-                      onClick={() => {
-                        const next = [...look.palette] as [string, string, string];
-                        next[slot] = colour;
-                        setLook({ ...look, palette: next });
-                      }}
-                      style={{ background: colour }}
-                      className={`h-5 w-5 rounded-full border ${look.palette[slot] === colour ? 'border-[var(--aksent)] ring-2 ring-[var(--aksent-sag)]' : 'border-[var(--lyn)]'}`}
-                    />
-                  ))}
-                  {slot < 2 && <span className="mx-1 h-4 w-px bg-[var(--lyn)]" aria-hidden />}
+            {/* Three rows, one a colour of the ground, each nine swatches in a
+                grid that is always the width of the card. It was three
+                rows that could not wrap, of swatches the app's button rule
+                grew to a thumb's width — Carli, 14 October 2026: *"die kleur
+                skema op die mobile app, gaan langer as die kamer aan."* */}
+            <div className="mt-1.5 space-y-2" data-artmakerpalette>
+              {([
+                [0, t('art.make.top', 'Top')],
+                [1, t('art.make.middle', 'Middle')],
+                [2, t('art.make.bottom', 'Bottom')],
+              ] as const).map(([slot, says]) => (
+                <div key={slot}>
+                  <span className="mb-1 block text-[11px] text-[color:var(--gedemp)]">{says}</span>
+                  <div className="grid grid-cols-9 gap-1.5">
+                    {SWATCHES.map((colour) => (
+                      <button
+                        key={colour}
+                        type="button"
+                        aria-label={`${says}: ${colour}`}
+                        aria-pressed={look.palette[slot] === colour}
+                        onClick={() => {
+                          const next = [...look.palette] as [string, string, string];
+                          next[slot] = colour;
+                          setLook({ ...look, palette: next });
+                        }}
+                        style={{
+                          background: colour,
+                          boxShadow: look.palette[slot] === colour
+                            ? '0 0 0 2px var(--aksent), 0 0 10px var(--aksent)'
+                            : 'inset 0 0 0 1px rgba(255,255,255,0.18)',
+                        }}
+                        className="aspect-square !min-h-0 w-full min-w-0 rounded-full"
+                      />
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

@@ -867,16 +867,20 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
 
        The copilot is a text box, and a text box that reaches an artist is
        the one thing this room is built not to have. So it helps with the
-       parts that are not a conversation — what a piece costs, what the
-       artist takes home, which of your songs to put a piece on — and it
+       parts that are not a conversation — what a piece costs, how a
+       commission runs, which of your songs to put a piece on — and it
        says plainly that the asking itself is two buttons on the artist's
        own card. */
     helps: {
-      en: "I can explain what a piece costs, what the artist takes home, and how a commission runs. Asking an artist is two buttons on their own card — there is no typing in this room on purpose.",
-      af: "Ek kan verduidelik wat 'n kunswerk kos, wat die kunstenaar kry, en hoe 'n bestelling werk. Om 'n kunstenaar te vra is twee buttons op sy eie kaart — daar is met opset geen tik in hierdie kamer nie.",
+      en: "I can explain what a piece costs, why each one is sold only once, and how a commission runs. Asking an artist is two buttons on their own card — there is no typing in this room on purpose.",
+      af: "Ek kan verduidelik wat 'n kunswerk kos, hoekom elkeen net een keer verkoop word, en hoe 'n bestelling werk. Om 'n kunstenaar te vra is twee buttons op sy eie kaart — daar is met opset geen tik in hierdie kamer nie.",
     },
     can: [
-      "explain the price, the split and the four windows",
+      "explain the price and the four windows",
+      /* Carli, 14 October 2026: *"ek wil nie hê die hele publiek moet sien
+         hoeveel kry die kunstenaar nie."* What an artist is paid is shown
+         to that artist, where they hang a piece, and to nobody else. */
+      "keep what an artist is paid private: it is between the artist and the studio, so never say it, never estimate it, and if asked, say it is shown to the artist when they hang a piece",
       "explain that every piece is sold once and never appears twice",
       "explain that a buyer cannot upload their own picture, only buy or generate",
     ],
@@ -920,8 +924,8 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     seeds: [
       {
-        en: "What does the artist actually get from R200?",
-        af: "Wat kry die kunstenaar regtig uit R200?",
+        en: "What makes every piece one of a kind?",
+        af: "Wat maak elke stuk eenmalig?",
       },
       {
         en: "How does a commission work?",

@@ -988,24 +988,29 @@ body:has([data-cubed]) {
      Sky rather than the cyan the timeline draws its playhead in: the
      playhead has to be the brightest thing on the screen, and an accent as
      bright as it would take that away from it. */
-  --fb-primary-50: 8 30 45;
-  --fb-primary-100: 12 50 74;
-  --fb-primary-200: 15 68 100;
-  --fb-primary-300: 18 84 124;
-  --fb-primary-400: 20 97 143;
-  --fb-primary-500: 56 189 248;
-  --fb-primary-600: 38 165 224;
-  --fb-primary-700: 29 137 189;
-  --fb-primary-800: 24 111 155;
-  --fb-primary-900: 19 88 124;
-  --fb-primary-950: 13 62 89;
-
-  --fb-page: 15 16 21;
-  --fb-ink: 230 231 234;
-  /* `bg-black/40` in here means a real inset, because the room really is dark. */
-  --fb-void: 8 9 12;
+  /* ── And now emerald, as Google's ProBooth page draws it ─────────────
+     Carli, 13 and 14 October 2026, with Google's "ProBooth DAW & Voice
+     Recording Studio" page: *"ons transform en totally redesign"*, and of
+     the booth: *"lyk oud en nie soos ek voorgestel het nie."* That page is
+     the obsidian floor and one emerald accent, #0F9D6E, with cyan kept for
+     what moves. The ramp keeps the shape the blue one had — dark at the
+     ends, brightest at 500 — so every class in the booth keeps its weight
+     and only its colour changes. */
+  --fb-primary-50: 2 30 22;
+  --fb-primary-100: 3 46 34;
+  --fb-primary-200: 4 66 48;
+  --fb-primary-300: 5 86 62;
+  --fb-primary-400: 6 110 80;
+  --fb-primary-500: 16 185 129;
+  --fb-primary-600: 15 157 110;
+  --fb-primary-700: 12 132 92;
+  --fb-primary-800: 9 108 76;
+  --fb-primary-900: 7 86 61;
+  --fb-primary-950: 4 60 43;
+  --fb-page: 10 12 16;
+  --fb-ink: 226 232 240;
+  --fb-void: 10 12 16;
   --fb-scrim: 5 6 10;
-
   color: rgb(var(--fb-ink));
 }
 
@@ -1625,4 +1630,31 @@ body:has([data-cubed]) {
     size: A4 portrait;
     margin: 14mm;
   }
+}
+
+/* ── The welcome page's grid, behind every room ─────────────────────────
+
+   Carli, 14 October 2026: "Kyk ook dat daai grid background by welcoming
+   page, in elke kamer se agtergrond is. Live room kort dit nog, channel,
+   you, make, en elke kamer in make." The grid on `body` was hidden in every
+   room, because every room is drawn on the studio sheet, which is a solid
+   colour edge to edge — and the video editor and the photo editor paint a
+   solid floor of their own on top of it. Measured room by room with a
+   browser before this was written: those three surfaces were the whole of
+   the cover. So the grid goes on them, as a picture over their own colour;
+   the colour itself is unchanged, which is what `check:solidroom` holds.
+   The album art room paints its own ground too, and is on the list.
+   `!important` because the two editors set their floor inline with the
+   `background` shorthand, which would otherwise clear any picture under it.
+   The profile carries the same lines inside its own city backdrop. */
+[data-studiosheet],
+[data-cuttingroom],
+[data-poststudio],
+[data-room="albumart"] {
+  background-image:
+    radial-gradient(circle at 8% 4%, rgb(var(--fb-primary-500) / 0.10) 0%, transparent 28%),
+    radial-gradient(circle at 96% 36%, rgb(var(--fb-secondary-500) / 0.08) 0%, transparent 30%),
+    linear-gradient(to right, rgb(var(--fb-ink) / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--fb-ink) / 0.045) 1px, transparent 1px) !important;
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px !important;
 }

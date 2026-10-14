@@ -4034,6 +4034,10 @@ export default function FutureBoxHome() {
           setAtDoor(false);
           goToRoom('channels');
         }}
+        onGoToVoices={() => {
+          setAtDoor(false);
+          goToRoom('voice_studio');
+        }}
       />
 
       {/* Search, outside the studio.
@@ -4130,6 +4134,9 @@ export default function FutureBoxHome() {
            * that was correct. The state is the state; expose it rather than
            * make every probe infer it from furniture. */
           {...(atDoor ? { 'data-atdoor': '' } : {})}
+          /* The sheet every room is drawn on, named so the stylesheet can
+             give it the welcome page's grid — see `[data-studiosheet]`. */
+          data-studiosheet=""
           className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden"
         >
           {/* One column that scrolls, on a phone. Two panes that scroll
