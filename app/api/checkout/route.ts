@@ -24,7 +24,7 @@ import { kidsPlanCode, planCode } from '@/app/lib/server/paystack';
 import { kidsPackById } from '@/app/lib/kidspacks';
 import { mayTopUp, packById } from '@/app/lib/credits';
 import { ART_RAND } from '@/app/data/artmarket';
-import { langOf, roomToSell } from '@/app/lib/server/elevenroom';
+import { langOf } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -207,37 +207,13 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  /* ── Stop selling before you stop serving ─────────────────────────────
- 
-     The one brake that matters more than the rest. When the supplier's month
-     is nearly spent, taking somebody's money for a plan sells them a product
-     that will fail inside a fortnight. Refusing the sale costs a signup;
-     taking it costs the member.
- 
-     Only NEW paid signups. A member already on a plan may top up and may move
-     up: they are already inside the number the ceiling was reckoned against,
-     and cutting them off mid-month is the failure this exists to prevent, not
-     a defence against it. The free tier never reaches here at all, and is
-     deliberately left wide open — it generates nothing and costs nothing.
- 
-     Fails open when the allowance cannot be read, like every other use of
-     this. A supplier that will not answer must not close the till. */
-  if (want.kind === 'plan' && (!caller.tier || caller.tier === 'free')) {
-    const selling = await roomToSell();
-    if (!selling.go) {
-      return Response.json(
-        {
-          error: 'waiting_list',
-          message:
-            langOf(request) === 'af'
-              ? 'Ons het hierdie maand se plek vir nuwe planne vol. Dit is nie \u2019n fout nie \u2014 ons verkoop nie meer as wat ons kan maak nie. Jou gratis rekening werk soos altyd, en ons laat weet sodra daar weer plek is.'
-              : 'We are full for new plans this month. That is not an error \u2014 we do not sell more than we can make. Your free account works as always, and we will say when there is room again.',
-          waitingList: true,
-        },
-        { status: 503 },
-      );
-    }
-  }
+  /* ── Selling never stops ──────────────────────────────────────────────
+     Carli, 14 October 2026: "Ek wil nie gecap wees nie, ek wil groot gaan."
+     The till used to refuse a new plan with a waiting list once the
+     ElevenLabs month was 85% spent. It sells at every level now; what keeps
+     the work going is the budget behind it — usage-based billing on the
+     ElevenLabs account, and the owner's emails at 75, 90 and 98% from
+     `/api/watch` — not a closed door in front of the next member. */
 
   /* A monthly kids pack is a Paystack subscription, like a plan. Without
      its plan code it would go through as one payment under a "a month"

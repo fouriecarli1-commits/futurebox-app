@@ -75,7 +75,7 @@ import { bill } from './eleven';
  * threshold repeated in four routes is four thresholds.
  */
 export const ROOM = {
-  /** New paid signups stop here. Everything still WORKS at this point. */
+  /** A mark only: the till no longer stops here (14 October 2026). */
   selling: 85,
   /** Dubbing, music, anything measured in hundreds of credits a minute. */
   heavy: 92,
@@ -101,7 +101,7 @@ export type Weight = 'heavy' | 'medium' | 'light';
  * how many run at once, which on this app is small, and the alternative is a
  * shared read that costs a database round trip to save an HTTP one.
  */
-let held: { at: number; percent: number | null } | null = null;
+let held: { at: number; percent: number | null; canExceed: boolean } | null = null;
 const HOLD_MS = 60_000;
 
 /** Only for tests: forget what is cached. */
@@ -132,9 +132,11 @@ export async function spentPercent(): Promise<number | null> {
      anybody's song safer, and a timeout lands in the `catch` below as
      "could not read", which brakes nothing. */
   let percent: number | null = null;
+  let canExceed = false;
   try {
     const answer = await bill(AbortSignal.timeout(3_000));
     percent = answer.ok ? answer.bill.percent : null;
+    canExceed = answer.ok && answer.bill.canExceed === true;
   } catch {
     /* Aborted, or the network refused. Not zero, not a hundred: unknown. */
     percent = null;
@@ -142,7 +144,7 @@ export async function spentPercent(): Promise<number | null> {
   /* A failed read is cached too, and on purpose. Without it, a supplier that
      is down turns into one extra failing request per generation, at the
      moment the app can least afford them. */
-  held = { at: now, percent };
+  held = { at: now, percent, canExceed };
   return percent;
 }
 
@@ -159,13 +161,12 @@ export interface Room {
 export async function roomFor(weight: Weight): Promise<Room> {
   const percent = await spentPercent();
   const stopsAt = ROOM[weight];
+  /* Usage-based billing on (ElevenLabs says the account may go past its
+     plan): the month cannot run out, so nothing is braked. Carli, 14 October
+     2026: "Ek wil nie gecap wees nie." The ladder is for an account without
+     it, where 100% is every route failing at once. */
+  if (held?.canExceed) return { go: true, percent, stopsAt };
   return { go: percent === null || percent < stopsAt, percent, stopsAt };
-}
-
-/** May somebody start paying today? Free accounts never ask this. */
-export async function roomToSell(): Promise<Room> {
-  const percent = await spentPercent();
-  return { go: percent === null || percent < ROOM.selling, percent, stopsAt: ROOM.selling };
 }
 
 /**

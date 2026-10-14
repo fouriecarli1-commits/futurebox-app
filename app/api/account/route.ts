@@ -47,7 +47,43 @@ export const maxDuration = 60;
  * the files are still there. Adding a bucket anywhere in the app means adding
  * it here.
  */
-const BUCKETS = ['tracks', 'episodes', 'videos'] as const;
+/* Every bucket that holds a member's files under their own id. Carli, 14
+   October 2026, in the growth plan: deleting an account left avatars, cast
+   pictures, the kids shelf and every sub-folder (work files, filmed takes)
+   behind — rows gone by cascade, files orphaned, and under POPIA a person's
+   deletion has to be a deletion. `art` is keyed by the artist's id rather
+   than the account's and is handled beside these. */
+const BUCKETS = ['tracks', 'episodes', 'videos', 'avatars', 'cast', 'kidshelf'] as const;
+
+/**
+ * Every file under a folder, sub-folders included, a page at a time.
+ *
+ * Storage lists one level, a thousand at most. A folder comes back as an
+ * entry without an id, and is opened in turn; a full page asks for the next.
+ */
+async function filesUnder(
+  client: NonNullable<ReturnType<typeof admin>>,
+  bucket: string,
+  folder: string,
+): Promise<string[] | null> {
+  const found: string[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await client.storage.from(bucket).list(folder, { limit: 1000, offset });
+    if (error) return null;
+    const rows = (data ?? []) as Array<{ name: string; id: string | null }>;
+    for (const row of rows) {
+      const path = `${folder}/${row.name}`;
+      if (row.id === null) {
+        const inner = await filesUnder(client, bucket, path);
+        if (inner === null) return null;
+        found.push(...inner);
+      } else {
+        found.push(path);
+      }
+    }
+    if (rows.length < 1000) return found;
+  }
+}
 
 export async function DELETE(request: Request): Promise<Response> {
   if (!metered()) {
@@ -160,10 +196,17 @@ export async function DELETE(request: Request): Promise<Response> {
   }
 
   // ── 3. The files, in every bucket that can hold one ─────────────────
-  for (const bucket of BUCKETS) {
-    const { data: files, error: unread } = await client.storage
-      .from(bucket)
-      .list(caller.id, { limit: 1000 });
+  /* The artist's own folders in `art`, read before the account goes and
+     takes the artist rows with it. */
+  const { data: artists, error: artistsUnread } = await client.from('art_artists').select('id').eq('owner', caller.id);
+  if (artistsUnread) left.push('the album art pieces could not be listed, so their files are still there');
+  const folders: Array<[string, string]> = [
+    ...BUCKETS.map((bucket) => [bucket, caller.id] as [string, string]),
+    ...((artists ?? []) as Array<{ id: string }>).map((one) => ['art', one.id] as [string, string]),
+  ];
+  for (const [bucket, folder] of folders) {
+    const files = await filesUnder(client, bucket, folder);
+    const unread = files === null;
     /* Reported rather than refused, and the difference from step 2 is the
        point: by here files in earlier buckets are already gone, so stopping
        cannot put anything back. `left` is what this list is for — it is
@@ -174,10 +217,15 @@ export async function DELETE(request: Request): Promise<Response> {
       left.push(`the files in ${bucket} could not be listed, so they are still there`);
       continue;
     }
-    const paths = ((files ?? []) as Array<{ name: string }>).map((one) => `${caller.id}/${one.name}`);
+    const paths = files ?? [];
     if (!paths.length) continue;
-    const { error } = await client.storage.from(bucket).remove(paths);
-    if (error) left.push(`${paths.length} files in ${bucket}`);
+    /* A thousand at a time: one call with every file of a busy account is
+       one call too big. */
+    for (let at = 0; at < paths.length; at += 1000) {
+      const part = paths.slice(at, at + 1000);
+      const { error } = await client.storage.from(bucket).remove(part);
+      if (error) left.push(`${part.length} files in ${bucket}`);
+    }
   }
 
   // ── 4. The account, and everything cascading off it ─────────────────

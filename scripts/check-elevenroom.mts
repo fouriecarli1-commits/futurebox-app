@@ -37,7 +37,7 @@
  *    failure, not a defence against it.
  */
 import { readFileSync } from 'node:fs';
-import { ROOM, refusal, roomFor, roomToSell, forgetAllowance } from '../app/lib/server/elevenroom';
+import { ROOM, refusal, roomFor, forgetAllowance } from '../app/lib/server/elevenroom';
 
 const code = (source: string): string =>
   source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
@@ -72,16 +72,12 @@ const wasKey = process.env.ELEVENLABS_API_KEY;
 delete process.env.ELEVENLABS_API_KEY;
 forgetAllowance();
 const unread = await roomFor('heavy');
-const unreadSell = await roomToSell();
 if (wasKey !== undefined) process.env.ELEVENLABS_API_KEY = wasKey;
 forgetAllowance();
 
 ok('an allowance that cannot be read brakes nothing',
   unread.go && unread.percent === null,
   'a supplier having a bad minute would take the whole app down with it');
-ok('and does not close the till either',
-  unreadSell.go,
-  'a read that did not happen is not a reading of zero and not a reading of a hundred');
 
 /* The other road to the same outage. bill() has no timeout of its own and
    does not need one anywhere else — it is read on pages somebody chose to
@@ -129,15 +125,14 @@ for (const path of ['app/api/music/route.ts', 'app/api/dub/route.ts']) {
 // ── Selling: the free tier stays open, paying members stay served ────────
 
 const checkout = code(readFileSync('app/api/checkout/route.ts', 'utf8'));
-ok('the checkout refuses a NEW plan when the month is nearly spent',
-  /roomToSell\(\)/.test(checkout),
-  'selling a plan that will fail in a fortnight');
-ok("  and only to somebody who is not already on one",
-  /want\.kind === 'plan' && \(!caller\.tier \|\| caller\.tier === 'free'\)/.test(checkout),
-  'cutting off members who are already inside the number the ceiling was reckoned against');
-ok('  and a top-up from a paying member is never refused this way',
-  !/roomToSell[\s\S]{0,200}kind === 'credits'/.test(checkout),
-  'they are already counted; refusing them mid-month is the failure, not the defence');
+/* Carli, 14 October 2026: "Ek wil nie gecap wees nie, ek wil groot gaan."
+   The till sells at every level; the budget behind it grows instead. */
+ok('the checkout never turns a buyer away for the supplier month',
+  !/roomToSell|waiting_list/.test(checkout),
+  'she asked for no cap: a full month is a budget to raise, not a door to close');
+ok('  and usage-based billing on the account lifts the work brakes too',
+  /held\?\.canExceed/.test(code(readFileSync('app/lib/server/elevenroom.ts', 'utf8'))),
+  'with overage on, the month cannot run out, and braking at 92% only refuses work that would have been paid for');
 
 /* Nothing anywhere may brake the free tier. It generates nothing —
    TIER_CREDITS.free is 0 — so it costs the supplier nothing, and closing it
@@ -162,4 +157,4 @@ if (failures) {
   console.error(`\ncheck:elevenroom — ${failures} failure(s).\n`);
   process.exit(1);
 }
-console.log('\ncheck:elevenroom — selling stops before serving, heavy before light, before the charge, and an unreadable allowance brakes nothing.');
+console.log('\ncheck:elevenroom — selling never stops, heavy work is braked before light, before the charge, and an unreadable allowance brakes nothing.');
