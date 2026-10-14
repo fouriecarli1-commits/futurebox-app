@@ -155,7 +155,7 @@ function encodeQrMatrix(text: string): boolean[][] {
   return matrix;
 }
 
-/** Draw small gold crown badge in canvas (matching Canva Pro badge style). */
+/** Draw small gold crown badge in canvas (a small gold badge). */
 function drawCrownBadge(ctx: CanvasRenderingContext2D, x: number, y: number, size = 24): void {
   ctx.save();
   ctx.fillStyle = '#f59e0b';

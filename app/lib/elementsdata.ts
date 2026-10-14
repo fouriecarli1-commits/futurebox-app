@@ -1,5 +1,5 @@
 /**
- * Curated elements library for FutureBox Studio (Canva-style Elements Panel).
+ * Curated elements library for FutureBox Studio (the elements panel).
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *

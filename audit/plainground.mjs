@@ -105,6 +105,16 @@ try {
 
   /* ── The button itself ─────────────────────────────────────────────── */
 
+  /* Under Everything since 14 October 2026: on Simple there is one remover,
+     which takes a person first and a plain ground when it finds nobody
+     ("Die transparency en background remover werk alweer nie reg nie" —
+     she had pressed the plain one on a photograph of a person). The plain
+     one on its own is the extra choice. */
+  const simpleSwitch = page.locator('[data-postsimple]').first();
+  if ((await simpleSwitch.getAttribute('aria-pressed').catch(() => null)) === 'false') {
+    await simpleSwitch.click();
+    await page.waitForTimeout(600);
+  }
   await bench('pic');
   const tabs = await page.evaluate(() => {
     const out = [];

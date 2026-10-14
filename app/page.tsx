@@ -4278,7 +4278,7 @@ export default function FutureBoxHome() {
                   }}
                   data-roomai-mobile
                   aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
-                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-emerald-300 flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
+                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-950 text-emerald-200 flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
                 >
                   <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                   <span className="hidden xs:inline">{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
@@ -4458,7 +4458,7 @@ export default function FutureBoxHome() {
                       }}
                       data-roomai
                       aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
-                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all"
+                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-xs font-bold text-emerald-200 hover:bg-emerald-900 hover:border-emerald-500/50 transition-all"
                     >
                       <Sparkles className="w-4 h-4 text-emerald-400" />
                       <span>{t('room.aiCopilot', 'Kamer AI Assistent')}</span>

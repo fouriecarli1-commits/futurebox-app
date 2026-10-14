@@ -1218,6 +1218,9 @@ export default function MakeMusic({
           scroll past 10 cards to hear their newest creation or see player state.
           This docked card gives immediate playback & jump-to-channel controls. */}
       {tracks.length > 0 && (() => {
+        /* First is fine here: the list is newest first, and this card is
+           "the song playing, or else your newest" — falling back to the
+           newest is what it is for, not a wrong row. */
         const activeTrack = (playing ? tracks.find((t) => t.id === playing) : null) ?? tracks[0];
         const isPlayingThis = playing === activeTrack.id;
         return (

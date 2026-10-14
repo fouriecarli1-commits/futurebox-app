@@ -323,7 +323,7 @@ export async function studio(page) {
      working is a probe that hangs instead of failing. */
   for (let n = 0; n < 4; n += 1) {
     if (await atRail()) break;
-    const out = page.locator('[data-backout]:visible').first();
+    const out = page.locator('[data-backout]:visible, [data-roomback]:visible').first();
     if ((await out.count().catch(() => 0)) === 0) break;
     await out.scrollIntoViewIfNeeded().catch(() => {});
     await out.click({ timeout: 5000 }).catch(() => {});
@@ -496,7 +496,7 @@ export async function pressTab(page, label) {
      corner, which every room carries. */
   const bar = page.locator('nav[aria-label]').first();
   if (!(await bar.count()) || !(await bar.isVisible().catch(() => false))) {
-    const back = page.locator('[data-backout]:visible').first();
+    const back = page.locator('[data-backout]:visible, [data-roomback]:visible').first();
     if (await back.count()) {
       await back.click();
       await page.waitForTimeout(900);

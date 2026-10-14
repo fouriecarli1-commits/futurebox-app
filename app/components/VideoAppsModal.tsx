@@ -3,7 +3,7 @@
 /**
  * Video Apps & Video Effects browser modal.
  *
- * Implements Canva-style Video Apps & Effects suite:
+ * The video apps & effects suite:
  *   · Video Reverser
  *   · Video effects: Video Upscaler, Video Cartoonify, Video FX Studio,
  *     Progress Bar Maker, Before After Maker, Artivive, FrameFusion,
@@ -257,7 +257,7 @@ export default function VideoAppsModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="video-apps-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/80 backdrop-blur-md p-4 sm:p-6"
     >
       <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col rounded-3xl border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Top Header */}
@@ -298,7 +298,7 @@ export default function VideoAppsModal({
             />
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 flex-wrap no-scrollbar">
             {(
               [
                 { id: 'all', label: t('videoapps.tabAll', 'All') },

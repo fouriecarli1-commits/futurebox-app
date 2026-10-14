@@ -180,7 +180,10 @@ async function chooseAfrikaans(p) {
     await full.click();
     return;
   }
-  const compact = p.locator('button[title="Language"], button[title="Taal"]').first();
+  /* `:visible`, because the welcome page draws two — one in the desktop
+     nav and one for a phone — and the first in the page is the hidden one
+     at whichever width this is. */
+  const compact = p.locator('button[title="Language"]:visible, button[title="Taal"]:visible').first();
   await compact.waitFor({ state: 'visible', timeout: 40000 });
   await compact.click();
 }

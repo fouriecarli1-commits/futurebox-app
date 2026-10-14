@@ -209,7 +209,7 @@ export default function FutureInsightsHub({
       </div>
 
       {/* ── 2. Category Selector Chips ─────────────────────────────────── */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <div className="flex items-center gap-2 flex-wrap pb-2 scrollbar-none">
         {INSIGHT_CATEGORIES.map((cat) => {
           const isSelected = activeCategory === cat.id && viewFilter === 'all';
           return (

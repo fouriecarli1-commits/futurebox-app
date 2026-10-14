@@ -222,7 +222,7 @@ export default function AdScheduleModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="schedule-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/80 backdrop-blur-sm animate-fadeIn"
     >
       <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
         {/* Header */}

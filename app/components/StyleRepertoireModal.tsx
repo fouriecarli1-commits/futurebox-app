@@ -151,7 +151,7 @@ export default function StyleRepertoireModal({
           </div>
 
           {/* Category Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+          <div className="flex items-center gap-1.5 flex-wrap pb-1 scrollbar-thin">
             {allCategories.map((cat) => {
               const active = selectedCategory === cat;
               return (

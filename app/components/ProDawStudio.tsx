@@ -520,6 +520,7 @@ export default function ProDawStudio({
             </div>
 
             {/* Center Arranger Grid */}
+            {/* Sideways on purpose: a music timeline is as long as the song, and wrapping it would break time into rows. */}
             <div className="relative flex-1 flex flex-col overflow-x-auto bg-black">
               {/* Timeline Bar Numbers (1..16) */}
               <div className="flex h-9 border-b border-zinc-800 bg-zinc-950/70 text-[10px] text-zinc-500 font-mono">
@@ -674,6 +675,7 @@ export default function ProDawStudio({
               </div>
 
               {/* Interactive Piano Keys with Cyan Dots for Notes in Scale */}
+              {/* Sideways on purpose: a music timeline is as long as the song, and wrapping it would break time into rows. */}
               <div className="relative flex h-32 sm:h-36 w-full select-none overflow-x-auto justify-center bg-black/80 rounded-xl p-1 no-scrollbar">
                 {pianoKeys.map((key) => {
                   const inScale = isNoteInScale(key.noteIndex);
@@ -694,7 +696,7 @@ export default function ProDawStudio({
                           isPressed
                             ? 'bg-cyan-500 shadow-cyan-500/50'
                             : 'bg-zinc-850 hover:bg-zinc-800 shadow-md'
-                        } border-x border-b border-black flex flex-col justify-end items-center pb-2`}
+                        } border border-black flex flex-col justify-end items-center pb-2`}
                       >
                         {/* Cyan scale dot matching Screenshot 1 */}
                         {inScale && (
@@ -1310,7 +1312,7 @@ export default function ProDawStudio({
 
       {/* ── Audio Effects Dialog (Screenshots 1 & 2) ───────────────────────── */}
       {isAudioEffectsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/60 backdrop-blur-sm animate-in fade-in duration-150">
           <div
             className="relative flex flex-col w-full max-w-2xl max-h-[88vh] rounded-2xl border border-zinc-800 bg-zinc-900/95 shadow-2xl backdrop-blur-xl p-4 sm:p-5 overflow-hidden text-zinc-200"
             role="dialog"

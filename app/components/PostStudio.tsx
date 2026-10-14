@@ -46,7 +46,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Bookmark,
-  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, X,
+  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, X,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
@@ -5202,10 +5202,10 @@ export default function PostStudio({
         four Google's page drew — a cube, a ring, a grid, a frame — as real
         layers in `lib/postshapes.ts`: drawn, lit with the same glow the
         words use, put in one of five places at one of three sizes, and
-        exported with the picture. Not draggable yet; the five places are
-        the presses. */}
+        exported with the picture. Dragged on the photo to move, and by the
+        corner to resize (14 October 2026). */}
     <div className="space-y-3" data-postmarks>
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1" data-postmarkkinds>
+      <div className="flex flex-wrap gap-2 pb-1" data-postmarkkinds>
         {MARK_SPECS.map((spec) => (
           <button
             key={spec.id}
@@ -5251,7 +5251,7 @@ export default function PostStudio({
             {slider(t('post.markSizeSlide', 'Size'), mark.size, 0.04, 1.6, 0.01, (v) => changeMark(mark.id, { size: v }), 'size')}
             {isFilled(mark.kind) && slider(t('post.markStretch', 'Wide or tall'), mark.stretch ?? 1, 0.2, 5, 0.05, (v) => changeMark(mark.id, { stretch: v }), 'stretch')}
             {isFilled(mark.kind) && slider(t('post.markSeeThrough', 'See-through'), 1 - (mark.opacity ?? 1), 0, 0.9, 0.05, (v) => changeMark(mark.id, { opacity: 1 - v }), 'opacity')}
-            <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1" data-postmarkinks>
+            <div className="flex flex-wrap items-center gap-2 pb-1" data-postmarkinks>
               {NEON_INKS.map((ink) => (
                 <button
                   key={ink}
@@ -5275,7 +5275,7 @@ export default function PostStudio({
                 <span aria-hidden className="grid h-full w-full place-items-center text-xs">+</span>
               </label>
             </div>
-            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
+            <div className="flex flex-wrap gap-2 pb-1">
               {GLOWS.map((glow) => (
                 <button
                   key={glow.id}
@@ -5692,8 +5692,8 @@ export default function PostStudio({
           data-postcustomsize
           onClick={() => setShowSizeModal(true)}
           title={t('size.customOrStandard', 'Standard & Custom Sizes')}
-          className="block max-w-full truncate text-left font-mono text-[10px] leading-tight"
-          style={{ color: INK_DIM }}
+          className="block min-h-[44px] max-w-full truncate rounded-lg border px-2 text-left font-mono text-[10px] leading-tight"
+          style={{ color: INK_DIM, borderColor: PHOTO.edge }}
         >
           {/* The name only where there is room for it: on a phone the
               numbers and the arrow, so nothing runs under the buttons. */}
@@ -5729,7 +5729,7 @@ export default function PostStudio({
         className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
         style={{ background: PHOTO.social }}
       >
-        👁️
+        <Eye className="h-4 w-4" />
       </button>
       {copilot ? (
         <button
@@ -6137,6 +6137,10 @@ export default function PostStudio({
             data-cutdock=""
             data-cutbenchrow=""
             data-postfoot
+            data-sideways
+            /* Sideways on purpose: Carli, 14 October 2026 — the tools stay
+               small along the foot and scroll left and right, so the photo
+               keeps the whole screen above them. */
             className="flex flex-shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1"
             style={{ background: PHOTO.floorGlass, borderTop: `1px solid ${PHOTO.edge}` }}
           >

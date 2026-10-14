@@ -93,8 +93,8 @@ export default function FontCombinationsModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('combo.modalTitle', 'Teks-kombinasies en Effekte')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md"
+      aria-label={t('combo.modalTitle', 'Text combinations and effects')}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/80 backdrop-blur-md"
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-4xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}
@@ -105,7 +105,7 @@ export default function FontCombinationsModal({
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black tracking-tight text-zinc-100">
-                {t('combo.modalTitle', 'Teks-Kombinasies & Spesiale Effekte')}
+                {t('combo.modalTitle', 'Text combinations and effects')}
               </h2>
               <p className="text-xs text-zinc-400">
                 {t('combo.modalSub', 'Kies professionele font-kombinasies of 3D, knipmasker en handtekening-effekte.')}

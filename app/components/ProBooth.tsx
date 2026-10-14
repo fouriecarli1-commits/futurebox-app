@@ -4547,7 +4547,7 @@ export default function ProBooth({
             <span className="hidden text-sm font-extrabold text-white sm:inline">
               FUTURE<span className="text-emerald-500">BOX</span>
             </span>
-            <span className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-500">
+            <span className="rounded-lg border border-emerald-500/40 bg-emerald-950 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-300">
               {t('booth.title', 'ProBooth')} · {t('pro.lanesBadge', 'Lanes')}
             </span>
             <span className="hidden min-w-0 truncate text-xs text-zinc-400 md:inline">{title}</span>

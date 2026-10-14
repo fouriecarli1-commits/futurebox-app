@@ -223,7 +223,7 @@ check('the new name is saved against the row',
    `aria-pressed` button too, since 10 October 2026, and it comes first in
    the desk. Taken as "the member", it could be pressed and it did select —
    itself — and the start frame then held no picture at all (null). */
-const face = room.locator('button[aria-pressed]:not([data-canvasmodepick])').first();
+const face = room.locator('button[aria-pressed]:not([data-canvasmodepick]):not([data-makesoundkind])').first();
 check('the member can be pressed', (await face.count()) > 0);
 await face.click();
 await p.waitForTimeout(900);

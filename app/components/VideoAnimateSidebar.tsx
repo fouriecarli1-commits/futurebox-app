@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Canva-style Video & Element Animation sidebar.
+ * The video & element animation sidebar.
  *
- * Implements the Animate panel from Canva:
+ * What it offers:
  *   · Custom: 'Create an Animation' (drag elements around canvas)
  *   · General animation presets:
  *     Rise, Pan, Fade, Pop, Wipe, Blur, Succession, Breathe, Baseline,

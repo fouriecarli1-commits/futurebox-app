@@ -176,7 +176,7 @@ export default function StudioMagicSuiteModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/85 backdrop-blur-md"
     >
       <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700 bg-zinc-900 shadow-2xl text-zinc-100 overflow-hidden">
         {/* Header */}
@@ -209,7 +209,7 @@ export default function StudioMagicSuiteModal({
         </div>
 
         {/* Tab Filters */}
-        <div className="flex items-center gap-1.5 overflow-x-auto border-b border-zinc-800 px-5 py-2.5 bg-zinc-950/40">
+        <div className="flex items-center gap-1.5 flex-wrap border-b border-zinc-800 px-5 py-2.5 bg-zinc-950/40">
           {(
             [
               ['all', t('magic.tabAll', 'All Tools')],

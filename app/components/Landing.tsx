@@ -235,15 +235,15 @@ export default function Landing({
               </div>
 
               <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-                {t('landing.heroTitle', 'THE WHOLE STUDIO,')}
+                {t('landing.heroTitle', 'WORLD-CLASS AI CREATIVE PLATFORM')}
                 <br />
                 <span className="bg-gradient-to-r from-white via-cyan-200 to-emerald-400 bg-clip-text text-transparent">
-                  {t('landing.heroTitle2', 'IN ONE BLACK BOX.')}
+                  {t('landing.heroTitle2', 'AND FUTURE THINKING.')}
                 </span>
               </h1>
 
               <p className="max-w-2xl text-base leading-relaxed text-zinc-300 sm:text-lg">
-                {t('landing.heroDesc', 'Write it with the copilot, sing it yourself, clone your voice for the show, and put a video to it. Built on Google DeepMind, Vertex AI, Gemini and Veo.')}
+                {t('landing.heroDesc', 'Songs, videos, pictures and voices from the leading AI engines \u2014 Google Veo, Lyria and Gemini, ElevenLabs and Seedance \u2014 in one studio, with a copilot that knows every room.')}
               </p>
 
               <p className="text-sm text-zinc-500">
@@ -467,7 +467,7 @@ export default function Landing({
                 <div
                   key={pack.id}
                   data-landingkidspack={pack.id}
-                  className={`flex flex-col rounded-xl p-4 ${pack.pick ? 'border-2 border-amber-400 bg-amber-500/[0.08]' : 'border border-zinc-800 bg-zinc-900/40'}`}
+                  className={`flex flex-col rounded-xl bg-zinc-900 p-4 ${pack.pick ? 'border-2 border-amber-400' : 'border border-zinc-800'}`}
                 >
                   <span className="text-sm font-bold text-white">{lang === 'af' ? pack.name[1] : pack.name[0]}</span>
                   <span className="my-2">

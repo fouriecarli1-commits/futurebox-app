@@ -105,7 +105,7 @@ export default function BarcodeGeneratorModal({
       role="dialog"
       aria-modal="true"
       aria-label={t('barcode.title', 'QR-kode & Strepieskode Skepper')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md"
     >
       <div className="relative flex h-full max-h-[92dvh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}

@@ -41,8 +41,12 @@ const text = async (page) => (await page.locator('body').innerText()).replace(/\
   let said = await text(page);
   check('the document says it is Afrikaans on the Cubed page', (await page.evaluate(() => document.documentElement.lang)) === 'af');
   check('  and the opening line is hers, in Afrikaans', said.includes('Duik die toekoms in'), said.slice(0, 120));
-  /* The badge is set in capitals by CSS, and innerText reads what is drawn. */
-  check('  and the badge too', /op uitnodiging/i.test(said));
+  /* The badge is set in capitals by CSS, and innerText reads what is drawn.
+     It is drawn from `md` up only (the obsidian redesign keeps a phone's
+     header to the way back and the language), so its words are read off
+     the element rather than off what a phone shows. */
+  const badge = (await page.locator('header').first().textContent().catch(() => '')) ?? '';
+  check('  and the badge too', /op uitnodiging/i.test(badge), badge.slice(0, 120));
   check('  with no English fallback leaking through', !/By invitation|Dive into the future|classes to a masterclass/i.test(said));
 
   await page.goto(`${server.url}/guide`, { waitUntil: 'networkidle' });

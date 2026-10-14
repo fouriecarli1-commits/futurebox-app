@@ -67,6 +67,9 @@ const room = await studio(p);
 await toRoom(p, af ? 'Potgooi' : 'Podcast');
 await p.waitForTimeout(2000);
 
+/* The show's settings are on the Channel tab since the room grew tabs. */
+await room.locator('[data-podtab="channel"]').first().click().catch(() => undefined);
+await p.waitForTimeout(800);
 const box = room.locator('#show-language');
 check('the language field is a chooser, not a text box', (await box.count()) === 1, String(await box.count()));
 if (await box.count()) {

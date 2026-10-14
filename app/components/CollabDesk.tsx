@@ -51,8 +51,8 @@ export default function CollabDesk({
   const typed = handle.trim().replace(/^@/, '');
 
   const PILL = (on: boolean): string =>
-    `min-h-[40px] rounded-full px-4 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
-      on ? 'bg-emerald-500 text-onAccent font-extrabold' : 'text-zinc-400 hover:text-white'
+    `min-h-[44px] rounded-full border px-4 py-1.5 text-xs font-bold transition flex items-center gap-1.5 ${
+      on ? 'border-emerald-400 bg-emerald-500 text-onAccent font-extrabold' : 'border-zinc-700 text-zinc-400 hover:text-white'
     }`;
 
   return (

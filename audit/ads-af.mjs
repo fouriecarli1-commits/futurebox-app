@@ -62,7 +62,14 @@ p.on('response', (r) => {
 });
 
 await p.goto(HERE, { waitUntil: 'networkidle' });
-await p.locator('button').filter({ hasText: /^Afrikaans$/ }).first().click();
+/* The welcome page's language control is one EN/AF toggle since its
+   redesign; the full "English / Afrikaans" pair is on the other screens. */
+const fullAf = p.locator('button:visible').filter({ hasText: /^Afrikaans$/ }).first();
+if (await fullAf.count()) {
+  await fullAf.click();
+} else if ((await p.evaluate(() => document.documentElement.lang)) !== 'af') {
+  await p.locator('button[title="Language"]:visible, button[title="Taal"]:visible').first().click();
+}
 await p.waitForTimeout(900);
 
 // Sign in. Without Supabase the account stays on the device, which is what

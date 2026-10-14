@@ -10,7 +10,7 @@ Carli, 11 Oktober 2026:
 > *"Dan weet ek nie of google 'n template pack het waarvan 'n video of foto kan begin nie? Dit is wat meeste editing programme amazing maak is hulle templates. En foto's en video's moet 'n plek hê waar jy die standaard sizes kan kies, asook custom sizes. Met export moet mens die kwaliteit van export kies, en daardie verstellings moet alles krediete kos. Ek werk so standaard op 5 krediete."*
 
 Drie kernfunksies is versoek en volledig gebou:
-1. **Sjabloon-verkenner & Beginpakette (Templates Explorer & Starter Packs):** Canva- en Google-styl biblioteek vir foto- en videovervaardiging.
+1. **Sjabloon-verkenner & Beginpakette (Templates Explorer & Starter Packs):** Biblioteek vir foto- en videovervaardiging.
 2. **Standaard- en Pasgemaakte Doekgroottes (Standard & Custom Sizes):** Doekafmetingskieser met standaard sosiale- en videopresets en pasgemaakte px-afmetings met aspekverhouding-slot.
 3. **Export-kwaliteit met Standaard 5 Krediete:** Keuse tussen Konsep Web (720p), Standaard HD (1080p), en Ultra 4K / Drukwerk — almal teen die standaard 5 krediete.
 
@@ -20,7 +20,7 @@ Drie kernfunksies is versoek en volledig gebou:
 
 | Lêer | Beskrywing |
 |---|---|
-| [`app/components/StudioTemplatesModal.tsx`](app/components/StudioTemplatesModal.tsx) | Canva & Google-styl sjabloon-verkenner met soektog, 19 kategorie-knoppies, afdelings vir *„Onlangs bekyk”*, *„Geïnspireer deur jou ontwerpe”*, en *„Voorleggings & Aanbiedings”*. |
+| [`app/components/StudioTemplatesModal.tsx`](app/components/StudioTemplatesModal.tsx) | Sjabloon-verkenner met soektog, 19 kategorie-knoppies, afdelings vir *„Onlangs bekyk”*, *„Geïnspireer deur jou ontwerpe”*, en *„Voorleggings & Aanbiedings”*. |
 | [`app/lib/studiotemplates.ts`](app/lib/studiotemplates.ts) | 19 kategorieë (`TEMPLATE_CATEGORIES`) en 14 vektor-gebaseerde vooraflaaide sjablone (`STARTER_TEMPLATES`) oor pitch decks, 4K natuurvideo's, plakkate, sertifikate en QR promosies. |
 | [`app/components/CanvasSizeModal.tsx`](app/components/CanvasSizeModal.tsx) | Doekgroottekieser met 9 standaard sosiale/video-presets (Instagram Plasing/Storie, YouTube, Facebook, A4 Plakkaat, Pamflet, ens.) en pasgemaakte wydte/hoogte met aspekverhouding-slot en 0.5×–2× vermenigvuldigers. |
 | [`app/components/CanvasFloatingToolbar.tsx`](app/components/CanvasFloatingToolbar.tsx) | Swaaiende nutsbalk bokant die doek met vinnige toegang tot Sjablone, Doekgrootte, Towerstel (Magic Suite), en Staafkode. |

@@ -226,6 +226,11 @@ const room = p.locator('div.fixed.inset-0.z-50').first();
 /* The welcome is its own page over everything, not a panel inside the studio,
    so what it says is read off the body rather than out of the studio shell. */
 const door = p.locator('div.fixed.inset-0.z-\\[55\\]').first();
+/* The door draws a beat after the studio does, once the habit is read; the
+   words were read before it had, and the run reported a door that was on
+   the screenshot a moment later. Waited for, then read. */
+await p.getByText(af ? /Hallo, Carli!/ : /Hello, Carli!/).first()
+  .waitFor({ timeout: 15_000 }).catch(() => undefined);
 let words = await p.locator('body').innerText();
 
 // ── It is the first thing shown, addressed to them ───────────────────────
@@ -235,7 +240,8 @@ check('the studio opens on the door, not on a room',
 check('the surname is not read back at them', !/Carli Fourie!/.test(words));
 check('it welcomes them back rather than for the first time',
   af ? /welkom terug by FutureBox/i.test(words) : /welcome back to FutureBox/i.test(words));
-check('the mark is on it', (await door.locator('img[src="/icon-192.png"]').count()) === 1);
+/* The icon's file was renamed to icon-neon-192.png; either name is the mark. */
+check('the mark is on it', (await door.locator('img[src="/icon-neon-192.png"], img[src="/icon-192.png"]').count()) === 1);
 check('and it is its own page, not a panel inside the studio',
   (await door.count()) === 1 && (await door.locator('nav button').count()) === 0,
   `${await door.count()} door(s), ${await door.locator('nav button').count()} rail rows on it`);
@@ -488,9 +494,13 @@ await p.goto(`${server.url}/`, { waitUntil: 'domcontentloaded' });
 const pastIt = p.locator('button').filter({ hasText: af ? /^Nie nou nie/ : /^Not now/ }).first();
 await pastIt.waitFor({ timeout: 30_000 });
 await pastIt.click();
-const podcast = p.locator('button').filter({
-  hasText: af ? /^Begin ’n potgooi$|^Begin ’n podsending$/ : /^Start a podcast$/,
-}).first();
+/* The front page's "Start a podcast" went with the Spotlight redesign of
+   13 October 2026. The podcast door on the front page now is the insights
+   hub's "Open in Podcast Studio" on each article, which goes through the
+   same one `goToRoom`. */
+const podcast = p.locator(af
+  ? 'button[title="Maak oop in Potgooi-ateljee"]'
+  : 'button[title="Open in Podcast Studio"]').first();
 await podcast.waitFor({ timeout: 30_000 });
 await podcast.click();
 await p.waitForTimeout(2500);

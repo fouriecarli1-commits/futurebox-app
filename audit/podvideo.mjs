@@ -74,6 +74,9 @@ await p.waitForTimeout(1500);
    card and took the door off screen with it, which is how the first run of
    this probe came back "the podcast room has a door to a video — 0" with
    the door sitting right there. */
+/* An episode's door to a video is on the Episodes tab since the room grew tabs. */
+await room.locator('[data-podtab="episodes"]').first().click().catch(() => undefined);
+await p.waitForTimeout(800);
 const door = room.getByRole('button', { name: /Put it on a video/i });
 check('the podcast room has a door to a video', (await door.count()) > 0, String(await door.count()));
 

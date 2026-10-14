@@ -738,6 +738,7 @@ export default function MoisesProStudio({
           )}
 
           {/* 3. WAVEFORMS MULTI-TRACK VIEW */}
+          {/* Sideways on purpose: a music timeline is as long as the song, and wrapping it would break time into rows. */}
           {viewMode === 'waveforms' && (
             <div className="relative flex-1 overflow-x-auto p-4 flex flex-col no-scrollbar">
               {/* Top Time Ruler */}

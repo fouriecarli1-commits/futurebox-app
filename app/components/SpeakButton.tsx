@@ -81,7 +81,10 @@ export default function SpeakButton({ onHeard, className = '', disabled = false 
       disabled={disabled}
       data-speak
       data-speakon={on ? 'yes' : 'no'}
-      aria-pressed={on}
+      /* No aria-pressed: its label already says which press it is ("Say it
+         instead of typing" / "Stop listening"), and the rooms' own choice
+         buttons are the aria-pressed ones — the cast desk, the shapes, the
+         formats — so a microphone among them read as one more choice. */
       aria-label={on ? t('speak.stop', 'Stop listening') : t('speak.start', 'Say it instead of typing')}
       title={missed || (on ? t('speak.stop', 'Stop listening') : t('speak.start', 'Say it instead of typing'))}
       className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition disabled:opacity-40 ${

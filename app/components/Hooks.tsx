@@ -814,8 +814,8 @@ export default function Hooks({
                   setSeconds(option);
                   if (selected) void look(selected, option);
                 }}
-                className={`px-3 py-1.5 min-h-[36px] rounded-full transition ${
-                  seconds === option ? 'bg-emerald-500 text-onAccent font-extrabold' : 'text-zinc-400 hover:text-white'
+                className={`px-3 py-1.5 min-h-[44px] rounded-full border transition ${
+                  seconds === option ? 'border-emerald-400 bg-emerald-500 text-onAccent font-extrabold' : 'border-zinc-700 text-zinc-400 hover:text-white'
                 }`}
               >
                 {option === 15 ? t('hooks.short15', '15s Short') : t('hooks.reel30', '30s Reel')}

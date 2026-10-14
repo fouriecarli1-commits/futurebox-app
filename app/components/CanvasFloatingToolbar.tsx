@@ -176,7 +176,7 @@ export default function CanvasFloatingToolbar({
           </button>
         )}
 
-        {/* Elements Browser (Canva-style shapes, graphics, 3D, frames, mockups) */}
+        {/* Elements Browser (shapes, graphics, 3D, frames, mockups) */}
         {onOpenElements && (
           <button
             type="button"
@@ -200,7 +200,7 @@ export default function CanvasFloatingToolbar({
           <span className="hidden md:inline">{t('toolbar.animateShort', 'Animate')}</span>
         </button>
 
-        {/* Video Apps & Effects Suite (Canva-style) */}
+        {/* Video Apps & Effects Suite */}
         {onOpenVideoApps && (
           <button
             type="button"
@@ -213,7 +213,7 @@ export default function CanvasFloatingToolbar({
           </button>
         )}
 
-        {/* Animate Panel (Canva-style Animation presets & Add-on effects) */}
+        {/* Animate Panel (animation presets & add-on effects) */}
         {onOpenAnimateSidebar && (
           <button
             type="button"

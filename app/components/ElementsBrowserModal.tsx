@@ -206,7 +206,7 @@ export default function ElementsBrowserModal({
             {t('elem.seeAll', 'Sien alles')}
           </button>
         </div>
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin">
+        <div className="flex items-center gap-3 flex-wrap pb-1 scrollbar-thin">
           {items.map((el) => (
             <button
               key={el.id}
@@ -305,7 +305,7 @@ export default function ElementsBrowserModal({
       role="dialog"
       aria-modal="true"
       aria-label={t('elem.modalTitle', 'Elemente')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md"
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Top Header & Search Bar (Screenshot 1, 3, 4, 5) */}
@@ -580,7 +580,7 @@ export default function ElementsBrowserModal({
                     {t('elem.seeAll', 'Sien alles')}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin">
+                <div className="flex items-center gap-3 flex-wrap pb-1 scrollbar-thin">
                   {topRecentElements.map((el) => (
                     <button
                       key={el.id}

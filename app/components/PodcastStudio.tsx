@@ -640,10 +640,12 @@ export default function PodcastStudio({
       </div>
 
       {/* ── RESPONSIVE STUDIO SEGMENT TABS ──────────────────────────────── */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-1.5 flex-wrap pb-1 scrollbar-none">
         <button
           type="button"
           onClick={() => setActiveTab('broadcast')}
+          data-podtab="broadcast"
+          aria-current={activeTab === 'broadcast' ? 'page' : undefined}
           className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
             activeTab === 'broadcast'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
@@ -655,6 +657,8 @@ export default function PodcastStudio({
         <button
           type="button"
           onClick={() => setActiveTab('twohosts')}
+          data-podtab="twohosts"
+          aria-current={activeTab === 'twohosts' ? 'page' : undefined}
           className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
             activeTab === 'twohosts'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
@@ -666,6 +670,8 @@ export default function PodcastStudio({
         <button
           type="button"
           onClick={() => setActiveTab('voicelab')}
+          data-podtab="voicelab"
+          aria-current={activeTab === 'voicelab' ? 'page' : undefined}
           className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
             activeTab === 'voicelab'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
@@ -677,6 +683,8 @@ export default function PodcastStudio({
         <button
           type="button"
           onClick={() => setActiveTab('channel')}
+          data-podtab="channel"
+          aria-current={activeTab === 'channel' ? 'page' : undefined}
           className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
             activeTab === 'channel'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
@@ -688,6 +696,8 @@ export default function PodcastStudio({
         <button
           type="button"
           onClick={() => setActiveTab('episodes')}
+          data-podtab="episodes"
+          aria-current={activeTab === 'episodes' ? 'page' : undefined}
           className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
             activeTab === 'episodes'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
@@ -719,7 +729,7 @@ export default function PodcastStudio({
                   className="min-h-[48px] px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-black flex items-center gap-2 shadow-[0_0_20px_rgba(239,68,68,0.5)] active:scale-95 transition-all"
                 >
                   <Square className="w-4 h-4 fill-current" />
-                  {t('take.stop', 'Stop Opname')}
+                  {t('take.stop', 'Stop')}
                 </button>
               ) : (
                 <button

@@ -160,7 +160,9 @@ function RadarHUD({
               style={{ left: `${leftPct}%`, top: `${topPct}%` }}
               title={podcast.name}
               aria-label={podcast.name}
-              className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center transition-all ${
+              /* A thumb's worth of target round a small disc: the faint halo
+                 is the press area, so a pin on a phone is not a 20px aim. */
+              className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10 transition-all ${
                 isSelected ? 'scale-125' : 'hover:scale-110'
               }`}
             >

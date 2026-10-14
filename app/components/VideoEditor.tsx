@@ -3418,7 +3418,7 @@ async function smallerFrame(url: string): Promise<string> {
               data-editorshapechip={one.id}
               aria-pressed={one.on}
               onClick={() => setEdit((was) => ({ ...was, shape: one.id }))}
-              className={`min-h-[36px] rounded-lg px-2.5 text-xs font-bold ${one.on ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/60' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`min-h-[44px] rounded-lg border px-2.5 text-xs font-bold ${one.on ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
             >
               {one.says}
             </button>

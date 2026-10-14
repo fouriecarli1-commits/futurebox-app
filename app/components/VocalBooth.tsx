@@ -2219,7 +2219,7 @@ export default function VocalBooth({
               role="status"
             >
               {listening
-                ? t('booth.listening', 'Listening to the song to time the words\u2026')
+                ? t('booth.listeningTiming', 'Listening to the song to time the words\u2026')
                 : phase === 'counting'
                 ? t('booth.countingIn', 'Counting you in\u2026')
                 : paused
