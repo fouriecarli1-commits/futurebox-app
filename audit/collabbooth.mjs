@@ -181,6 +181,11 @@ try {
   await p.waitForTimeout(1400);
 
   const sing = room.locator('button').filter({ hasText: /Sing on it in my booth/ });
+  /* Waited for, not timed. The thread's songs arrive after it opens, and on
+     CI's slower machine 1.4 seconds was sometimes not enough: the run of
+     14 October 2026 counted "0 offered" for a button that a local run of the
+     same build found every time. Fifteen seconds is a ceiling, not a pause. */
+  await sing.first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
   check('the room offers to open their song in your booth',
     (await sing.count()) === 1, `${await sing.count()} offered`);
   check('and only on theirs — not on the one you sent',
