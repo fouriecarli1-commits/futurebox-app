@@ -35,6 +35,8 @@ import {
   Pause,
   Mic,
   Volume2,
+  Loader2,
+  Lightbulb,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { barClearance } from './TabBar';
@@ -61,6 +63,13 @@ const CATEGORY_ICONS: Record<string, React.ReactElement> = {
   headphones: <Headphones className="h-4 w-4" />,
 };
 
+interface GeminiAnalysisResult {
+  headline?: string;
+  takeaways?: string[];
+  creatorImpact?: string;
+  actionItem?: string;
+}
+
 export default function FutureInsightsHub({
   onOpenStudio,
   onOpenPodcast,
@@ -70,6 +79,42 @@ export default function FutureInsightsHub({
   const [activeCategory, setActiveCategory] = useState<InsightCategory>('all');
   const [readingArticle, setReadingArticle] = useState<InsightArticle | null>(null);
   const [isPlayingPodcast, setIsPlayingPodcast] = useState(false);
+
+  // Gemini deep dive state
+  const [geminiAnalysis, setGeminiAnalysis] = useState<GeminiAnalysisResult | null>(null);
+  const [geminiBusy, setGeminiBusy] = useState(false);
+  const [geminiError, setGeminiError] = useState('');
+
+  const fetchGeminiDeepDive = async (article: InsightArticle) => {
+    setGeminiBusy(true);
+    setGeminiError('');
+    setGeminiAnalysis(null);
+    try {
+      const res = await fetch('/api/insights/dive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleId: article.id,
+          title: lang === 'af' ? article.titleAf : article.titleEn,
+          category: article.category,
+          summary: lang === 'af' ? article.blurbAf : article.blurbEn,
+          language: lang,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setGeminiError(data?.message || 'Could not fetch deep dive.');
+        return;
+      }
+      if (data?.data) {
+        setGeminiAnalysis(data.data);
+      }
+    } catch {
+      setGeminiError('Network error connecting to Google Gemini.');
+    } finally {
+      setGeminiBusy(false);
+    }
+  };
 
   const displayedArticles = FUTURE_INSIGHTS.filter((item) => {
     if (viewFilter === 'podcasts' && item.category !== 'podcast' && !item.podcastRef) {
@@ -451,6 +496,104 @@ export default function FutureInsightsHub({
                   </li>
                 ))}
               </ul>
+            </div>
+
+            {/* Google Gemini Live Strategic Deep Dive */}
+            <div className="rounded-2xl border border-teal-500/30 bg-gradient-to-br from-teal-950/40 via-zinc-900 to-zinc-950 p-5 space-y-3.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-teal-500/20 text-teal-400">
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </span>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300">
+                      {lang === 'af' ? 'Google Gemini Strategiese Insig' : 'Google Gemini Strategic Deep Dive'}
+                    </h4>
+                    <p className="text-[11px] text-zinc-400">
+                      {lang === 'af'
+                        ? 'Lewendige KI-ontleding vir entrepreneurs en skeppers'
+                        : 'Live AI frontier analysis for entrepreneurs & builders'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => fetchGeminiDeepDive(readingArticle)}
+                  disabled={geminiBusy}
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-950/80 hover:bg-teal-900/80 disabled:opacity-50 px-3.5 py-1.5 text-xs font-bold text-teal-200 transition-colors shadow-sm"
+                >
+                  {geminiBusy ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>{lang === 'af' ? 'Gemini ontleed...' : 'Gemini is analyzing...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5 text-teal-300" />
+                      <span>
+                        {geminiAnalysis
+                          ? lang === 'af'
+                            ? 'Her-ontleed'
+                            : 'Refresh Analysis'
+                          : lang === 'af'
+                          ? 'Genereer Diep-insig'
+                          : 'Generate Deep Dive'}
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {geminiError && (
+                <p className="text-xs text-rose-400 font-medium">{geminiError}</p>
+              )}
+
+              {geminiAnalysis && (
+                <div className="space-y-3 pt-2 text-xs border-t border-teal-500/20 animate-in fade-in duration-200">
+                  {geminiAnalysis.headline && (
+                    <p className="text-sm font-bold text-teal-200 leading-snug">
+                      "{geminiAnalysis.headline}"
+                    </p>
+                  )}
+
+                  {geminiAnalysis.takeaways && geminiAnalysis.takeaways.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                        {lang === 'af' ? 'Belangrikste Punte:' : 'Key Points:'}
+                      </span>
+                      <ul className="space-y-1 text-zinc-300">
+                        {geminiAnalysis.takeaways.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-teal-400 font-bold">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {geminiAnalysis.creatorImpact && (
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3 space-y-1">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                        <TrendingUp className="h-3 w-3" />
+                        {lang === 'af' ? 'Impak op Skeppers & Bouers:' : 'Creator & Market Impact:'}
+                      </span>
+                      <p className="text-zinc-300 leading-relaxed">{geminiAnalysis.creatorImpact}</p>
+                    </div>
+                  )}
+
+                  {geminiAnalysis.actionItem && (
+                    <div className="rounded-xl border border-teal-500/30 bg-teal-950/30 p-3 space-y-1">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-teal-300 flex items-center gap-1.5">
+                        <Lightbulb className="h-3 w-3" />
+                        {lang === 'af' ? 'Handelingsplan Vandag:' : 'Actionable Opportunity:'}
+                      </span>
+                      <p className="text-teal-100 leading-relaxed">{geminiAnalysis.actionItem}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Full article body paragraphs */}

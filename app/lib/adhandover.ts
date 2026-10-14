@@ -186,8 +186,8 @@ const sentence = (text: string): string => {
  * feed is cropped to nothing, which is unusable.
  */
 export function shapeFor(going: readonly string[] = []): '9:16' | '16:9' | '1:1' {
-  const TALL = ['tiktok', 'instagram', 'youtube_shorts', 'shorts', 'reels', 'snapchat'];
-  const WIDE = ['web', 'youtube', 'vimeo', 'facebook'];
+  const TALL = ['tiktok', 'instagram', 'youtube_shorts', 'shorts', 'reels', 'snapchat', 'meta_ads'];
+  const WIDE = ['web', 'youtube', 'vimeo', 'facebook', 'google_ads'];
   if (going.some((one) => TALL.includes(one))) return '9:16';
   if (going.some((one) => WIDE.includes(one))) return '16:9';
   return '9:16';

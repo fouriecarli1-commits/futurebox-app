@@ -77,6 +77,22 @@ export function slug(value: string): string {
  * A hash survives, at the end, where it belongs. Anything that is not a URL
  * comes back untouched — a half-typed address is not a reason to throw.
  */
+/**
+ * Sensible default UTM medium for a destination or platform.
+ *
+ * Google Ads -> 'cpc'
+ * Meta Ads -> 'paid_social'
+ * Website -> 'referral'
+ * Social networks -> 'social'
+ */
+export function defaultMedium(platformId: string): string {
+  const id = platformId.toLowerCase();
+  if (id.includes('google') || id.includes('cpc') || id.includes('search')) return 'cpc';
+  if (id.includes('meta_ads') || id.includes('paid')) return 'paid_social';
+  if (id === 'web') return 'referral';
+  return 'social';
+}
+
 export function tagged(link: string, tags: Tags): string {
   const trimmed = link.trim();
   if (!trimmed) return '';
@@ -91,7 +107,7 @@ export function tagged(link: string, tags: Tags): string {
     else url.searchParams.delete(key);
   };
   put('utm_source', slug(tags.source));
-  put('utm_medium', slug(tags.medium));
+  put('utm_medium', slug(tags.medium || defaultMedium(tags.source)));
   put('utm_campaign', slug(tags.campaign));
   put('utm_content', tags.content ? slug(tags.content) : '');
   // `utm_term` is for paid search keywords and this is not that. Cleared
@@ -211,4 +227,30 @@ export function sorted(runs: readonly Run[], today = new Date()): Run[] {
     if (a.when && b.when) return a.when < b.when ? -1 : a.when > b.when ? 1 : 0;
     return a.createdAt < b.createdAt ? 1 : -1;
   });
+}
+
+/**
+ * Programmatically schedule a run for an advert with chosen platforms.
+ */
+export function scheduleRun(params: {
+  readonly campaign: string;
+  readonly headline: string;
+  readonly link: string;
+  readonly when: string;
+  readonly platforms?: readonly string[];
+}): Run {
+  const runs = loadRuns();
+  const defaultPlatforms = ['google_ads', 'meta_ads', 'tiktok', 'instagram', 'youtube', 'facebook', 'x'];
+  const platforms = params.platforms && params.platforms.length > 0 ? params.platforms : defaultPlatforms;
+  const newRun: Run = {
+    id: runId(),
+    campaign: params.campaign.slice(0, 60),
+    headline: params.headline,
+    link: params.link,
+    when: params.when,
+    createdAt: new Date().toISOString(),
+    steps: platforms.map((p) => ({ platform: p, done: false })),
+  };
+  saveRuns([newRun, ...runs].slice(0, MOST_RUNS));
+  return newRun;
 }
