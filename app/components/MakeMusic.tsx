@@ -1240,7 +1240,7 @@ export default function MakeMusic({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                    {isPlayingThis ? t('make.playing', 'Speel nou') : t('make.latestSong', 'Nuutste Liedjie')}
+                    {isPlayingThis ? t('make.playing', 'Playing now') : t('make.latestSong', 'Latest song')}
                   </span>
                   <span className="text-xs text-zinc-400 font-mono">
                     {Math.floor(activeTrack.seconds / 60)}:{String(activeTrack.seconds % 60).padStart(2, '0')}
@@ -1288,7 +1288,7 @@ export default function MakeMusic({
               }}
               className="flex-shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
             >
-              <span>{t('make.jumpToTracks', 'Kanaal')}</span>
+              <span>{t('make.jumpToTracks', 'Channel')}</span>
               <span className="text-zinc-400">({tracks.length})</span>
               <span>↓</span>
             </button>

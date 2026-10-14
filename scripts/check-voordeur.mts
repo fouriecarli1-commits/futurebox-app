@@ -30,6 +30,8 @@
  * stacked paragraphs centred in a 1,920-pixel window is a phone screen with
  * black either side — it is the literal thing she objected to. At a desk the
  * words go on the left and the thing to look at goes on the right.
+ * (Superseded on 13 October 2026, when she asked for one clean column with
+ * the video above the door — section 2 below holds that order instead.)
  *
  * **3. And the thing on the right cannot be allowed to be nothing.** This is
  * the assertion worth having. `WelcomeVideo` returns `null` when there is no
@@ -47,6 +49,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
+import { before } from './order.mts';
 import {
   SHIPPED_COVER, SHIPPED_RECORDING, coverFor, hasWelcomeVideo, sourceFor,
 } from '../app/lib/welcomevideo.ts';
@@ -63,37 +66,32 @@ const landing = withoutComments(readFileSync('app/components/Landing.tsx', 'utf8
 
 /* ── 1. One gutter ───────────────────────────────────────────────────── */
 
-/* A centred container is `max-w-…` next to `mx-auto`. A `max-w-` without it
-   is a measure on a paragraph — how wide a line of text is allowed to get —
-   and those are a different decision that should not be counted here. */
-const widths = new Set(
-  [...landing.matchAll(/max-w-([0-9a-z]+)\s+mx-auto|mx-auto\s+max-w-([0-9a-z]+)/g)]
-    .map((m) => m[1] ?? m[2]),
-);
-ok('the landing page has centred containers at all',
-  widths.size > 0,
-  'none found — the instrument looks for `max-w-… mx-auto`, and finding none'
-  + ' means it is measuring nothing rather than that the page has no gutter');
+/* Every section stands in the one gutter, `GUTTER`. The inner columns — the
+   hero's words, the door, the price heading — are reading measures inside it
+   and are a different decision, so they are not counted here; what is
+   counted is that no section draws its OWN outer box at another width. */
+const gutters = [...landing.matchAll(/max-w-([0-9a-z]+)\s+mx-auto\s+px-/g)].map((m) => m[1]);
+ok('the landing page has one gutter at all',
+  gutters.length === 1 && /const GUTTER = 'max-w-/.test(landing),
+  `${gutters.length} outer boxes found — the instrument looks for \`max-w-… mx-auto px-…\`, the`
+  + ' shape of `GUTTER`');
+const sections = [...landing.matchAll(/<(?:section|header|footer)\b[^>]*className=\{?[`'"]([^`'"]*)/g)].map((m) => m[1]);
+ok('  and every section of the page stands in it',
+  sections.length >= 4 && sections.every((one) => one.includes('${GUTTER}') || !/max-w-/.test(one)),
+  sections.filter((one) => !one.includes('${GUTTER}')).join(' | '));
 
-ok('  and all of them are the same width',
-  widths.size === 1,
-  `${widths.size} different widths (${[...widths].sort().join(', ')}) — the`
-  + ' header, the hero, the prices and the footer are four centred boxes, and'
-  + ' two widths among them means the logo at the top is inset from the cards'
-  + ' below it by the difference');
+/* ── 2. One column, in her order ─────────────────────────────────────────
 
-/* ── 2. A hero that is not a column of text at a desk ────────────────── */
-
-ok('the hero becomes two columns on a wide screen',
-  /lg:grid-cols-\[/.test(landing) || /lg:grid-cols-2/.test(landing),
-  'nothing in the hero changes shape past `lg`, so a monitor gets the phone'
-  + " layout: one narrow column of stacked paragraphs with the window's"
-  + ' width unused either side of it');
-
-ok('  and the six things it offers widen too',
-  /lg:grid-cols-3/.test(landing),
-  'the offer list stops at two columns, which inside a hero column is two'
-  + ' long lines of text and outside one is half a monitor of white space');
+   The two-column hero this file used to ask for went on 13 October 2026
+   (7c7efa7), at Carli's word: *"Maak eerder die landing page baie skoon. Die
+   video moet bo die log in wees. Net onder die login moet die kids room
+   bemark word, en dan daarna die pricing."* So the page is one column and
+   what is measured is her order — the video, the door, the kids room, the
+   prices — because that order is the design now. */
+ok('the welcome page runs in her order: the video, the door, the kids room, the prices',
+  before(landing, 'data-landingvideo', 'data-landingdoor')
+  && before(landing, 'data-landingdoor', 'data-landingkids')
+  && before(landing, 'data-landingkids', 'id="pricing"'));
 
 /* ── 3. The second column cannot be empty ────────────────────────────── */
 

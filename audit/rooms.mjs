@@ -88,7 +88,7 @@ export const ROOMS_AF = {
   'Your voice': 'Jou stem',
   'Sound trainer': 'Klankafrigter',
   'Video desk': 'Videolessenaar',
-  'Video Editor': 'Video Editor',
+  'Video Editor': 'Video-redigeerder',
   /* The door says "Foto Editor" in Afrikaans — `rail.photo`. Read off the
      door rather than translated, which is what `notcut` is for: it failed on
      this the first time, with the name it could not find. */

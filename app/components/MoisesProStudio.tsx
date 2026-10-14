@@ -122,7 +122,6 @@ export default function MoisesProStudio({
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [looping, setLooping] = useState(false);
-  const [masterVolume, setMasterVolume] = useState(85);
   const [isMasterMuted, setIsMasterMuted] = useState(false);
 
   // View state

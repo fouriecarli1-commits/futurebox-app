@@ -652,7 +652,7 @@ export default function PodcastStudio({
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
           }`}
         >
-          🎙️ {t('pod.tabBroadcast', 'Uitsending & Opname')}
+          🎙️ {t('pod.tabBroadcast', 'Record & broadcast')}
         </button>
         <button
           type="button"
@@ -665,7 +665,7 @@ export default function PodcastStudio({
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
           }`}
         >
-          👥 {t('pod.tabTwoHosts', 'Twee Aanbieders (Dialoog)')}
+          👥 {t('pod.tabTwoHosts', 'Two hosts (dialogue)')}
         </button>
         <button
           type="button"
@@ -678,7 +678,7 @@ export default function PodcastStudio({
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
           }`}
         >
-          🔊 {t('pod.tabVoiceLab', 'Stem Ateljee & Kloning')}
+          🔊 {t('pod.tabVoiceLab', 'Voice lab')}
         </button>
         <button
           type="button"
@@ -691,7 +691,7 @@ export default function PodcastStudio({
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
           }`}
         >
-          📻 {t('pod.tabChannel', 'Kanaal & RSS Voer')}
+          📻 {t('pod.tabChannel', 'Channel & RSS feed')}
         </button>
         <button
           type="button"
@@ -704,7 +704,7 @@ export default function PodcastStudio({
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
           }`}
         >
-          📂 {t('pod.tabEpisodes', 'Episodes & Vertalings')} ({episodes.length})
+          📂 {t('pod.tabEpisodes', 'Episodes & dubs')} ({episodes.length})
         </button>
       </div>
 
@@ -738,7 +738,7 @@ export default function PodcastStudio({
                   className="min-h-[48px] px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-black flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.4)] active:scale-95 transition-all"
                 >
                   <Mic className="w-4 h-4 text-zinc-950" />
-                  {t('pod.record', 'Begin Opname')}
+                  {t('pod.record', 'Record')}
                 </button>
               )}
               {draft && draft.how !== 'spoken' && (
@@ -976,10 +976,10 @@ export default function PodcastStudio({
 
       {/* ── TAB 5: PUBLISHED EPISODES & DUBBING ──────────────────────────── */}
       {activeTab === 'episodes' && (
-        <Card title={t('pod.episodesTitle', 'Gepubliseerde Episodes')}>
+        <Card title={t('pod.episodesTitle', 'Published episodes')}>
           {episodes.length === 0 ? (
             <p className="text-sm text-zinc-500 py-3 text-center">
-              Nog geen gepubliseerde episodes nie. Neem jou eerste episode op in die &quot;Uitsending & Opname&quot; oortjie!
+              {t('pod.noEpisodes', 'No published episodes yet. Record your first one on the Record & broadcast tab.')}
             </p>
           ) : (
             <div className="space-y-2.5 pt-1">

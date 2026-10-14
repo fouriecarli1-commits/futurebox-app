@@ -20,6 +20,7 @@
  *     Upbeat with real-time interactive audio previews.
  */
 
+import { barClearance } from './TabBar';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Search, Mic, X, ArrowLeft, Shapes, Flower2, Box, Smile,
@@ -32,6 +33,7 @@ import {
   ELEMENT_CATEGORIES, STUDIO_ELEMENTS, type ElementCategory,
   type StudioElementItem,
 } from '../lib/elementsdata';
+import { useBackLayer } from '../lib/backstack';
 
 export default function ElementsBrowserModal({
   onInsertElement,
@@ -41,6 +43,8 @@ export default function ElementsBrowserModal({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(true, onClose);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ElementCategory | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -203,7 +207,7 @@ export default function ElementsBrowserModal({
             onClick={() => setSearchQuery('')}
             className="text-[11px] font-semibold text-zinc-400 hover:text-zinc-200"
           >
-            {t('elem.seeAll', 'Sien alles')}
+            {t('elem.seeAll', 'See all')}
           </button>
         </div>
         <div className="flex items-center gap-3 flex-wrap pb-1 scrollbar-thin">
@@ -245,7 +249,7 @@ export default function ElementsBrowserModal({
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-zinc-200">{title}</span>
           <span className="text-[11px] font-semibold text-zinc-400">
-            {t('elem.seeAll', 'Sien alles')}
+            {t('elem.seeAll', 'See all')}
           </span>
         </div>
         <div className="space-y-2">
@@ -304,8 +308,8 @@ export default function ElementsBrowserModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('elem.modalTitle', 'Elemente')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md"
+      aria-label={t('elem.modalTitle', 'Elements')}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md" style={{ paddingBottom: barClearance(12) }}
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Top Header & Search Bar (Screenshot 1, 3, 4, 5) */}
@@ -327,13 +331,13 @@ export default function ElementsBrowserModal({
                     ELEMENT_CATEGORIES.find((c) => c.id === selectedCategory)?.nameKey ?? '',
                     ELEMENT_CATEGORIES.find((c) => c.id === selectedCategory)?.nameAf ?? 'Elemente',
                   )
-                  : t('elem.modalTitle', 'Elemente')}
+                  : t('elem.modalTitle', 'Elements')}
               </h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              aria-label={t('elem.close', 'Maak toe')}
+              aria-label={t('elem.close', 'Close')}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
             >
               <X className="h-4 w-4" />
@@ -349,7 +353,7 @@ export default function ElementsBrowserModal({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('elem.searchPlaceholder', 'Soek elemente...')}
+              placeholder={t('elem.searchPlaceholder', 'Search elements...')}
               className="w-full rounded-2xl border border-zinc-700/80 bg-zinc-900/90 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 shadow-inner focus:border-amber-400 focus:outline-none"
             />
             <div className="absolute right-3.5 flex items-center text-zinc-400 hover:text-zinc-200 cursor-pointer">
@@ -390,7 +394,7 @@ export default function ElementsBrowserModal({
               </div>
               {filteredElements.length === 0 && (
                 <div className="py-12 text-center text-xs text-zinc-500">
-                  {t('elem.noResults', 'Geen elemente gevind vir jou soektog nie.')}
+                  {t('elem.noResults', 'No elements found for your search.')}
                 </div>
               )}
             </div>
@@ -398,55 +402,55 @@ export default function ElementsBrowserModal({
             /* ── Shapes Subview (Screenshot 1) ── */
             <div className="space-y-6">
               {renderSubcategoryCarousel(
-                t('elem.recentlyUsed', 'Onlangs gebruik'),
+                t('elem.recentlyUsed', 'Recently used'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && (e.subcategory === 'basic' || e.subcategory === 'lines')).slice(0, 5),
               )}
               {renderSubcategoryCarousel(
-                t('elem.lines', 'Lyne'),
+                t('elem.lines', 'Lines'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'lines'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.basicShapes', 'Basiese vorme'),
+                t('elem.basicShapes', 'Basic shapes'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'basic'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.polygons', 'Veelhoeke'),
+                t('elem.polygons', 'Polygons'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'polygons'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.stars', 'Sterre'),
+                t('elem.stars', 'Stars'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'stars'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.arrows', 'Pyle'),
+                t('elem.arrows', 'Arrows'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'arrows'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.flowchart', 'Vloeidiagram-vorms'),
+                t('elem.flowchart', 'Flowchart shapes'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'flowchart'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.speechBubbles', 'Praatborrels'),
+                t('elem.speechBubbles', 'Speech bubbles'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'speech'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.clouds', 'Wolke'),
+                t('elem.clouds', 'Clouds'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'clouds'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.hearts', 'Harte'),
+                t('elem.hearts', 'Hearts'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'hearts'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.banners', 'Baniere'),
+                t('elem.banners', 'Banners'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'banners'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.teardrops', 'Waterdruppels'),
+                t('elem.teardrops', 'Teardrops'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'teardrops'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.cogs', 'Ratwiele & Enjins'),
+                t('elem.cogs', 'Cogs & engines'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'shapes' && e.subcategory === 'cogs'),
               )}
             </div>
@@ -454,23 +458,23 @@ export default function ElementsBrowserModal({
             /* ── Graphics Subview (Screenshot 4) ── */
             <div className="space-y-6">
               {renderSubcategoryCarousel(
-                t('elem.recentlyUsed', 'Onlangs gebruik'),
+                t('elem.recentlyUsed', 'Recently used'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'graphics' && e.subcategory === 'recent'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.magicRecommendations', 'Magiese aanbevelings'),
+                t('elem.magicRecommendations', 'Magic recommendations'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'graphics' && e.subcategory === 'magic'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.featured', 'Uitgesoek'),
+                t('elem.featured', 'Featured'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'graphics' && e.subcategory === 'featured'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.gradients', 'Gradiënte'),
+                t('elem.gradients', 'Gradients'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'graphics' && e.subcategory === 'gradient'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.socialMedia', 'Sosiale Media'),
+                t('elem.socialMedia', 'Social media'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'graphics' && e.subcategory === 'social'),
               )}
             </div>
@@ -478,23 +482,23 @@ export default function ElementsBrowserModal({
             /* ── Animations Subview (Screenshot 5) ── */
             <div className="space-y-6">
               {renderSubcategoryCarousel(
-                t('elem.magicRecommendations', 'Magiese aanbevelings'),
+                t('elem.magicRecommendations', 'Magic recommendations'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'animations' && e.subcategory === 'magic'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.arrowAnimations', 'Pyl-animasies'),
+                t('elem.arrowAnimations', 'Arrow animations'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'animations' && e.subcategory === 'arrows'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.wordAnimations', 'Woord-animasies'),
+                t('elem.wordAnimations', 'Word animations'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'animations' && e.subcategory === 'words'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.foodAnimations', 'Kos-animasies'),
+                t('elem.foodAnimations', 'Food animations'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'animations' && e.subcategory === 'food'),
               )}
               {renderSubcategoryCarousel(
-                t('elem.emojiAnimations', 'Emoji-animasies'),
+                t('elem.emojiAnimations', 'Emoji animations'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'animations' && e.subcategory === 'emojis'),
               )}
             </div>
@@ -504,7 +508,7 @@ export default function ElementsBrowserModal({
               {/* Voiceovers purple banner */}
               <div>
                 <span className="text-xs font-bold text-zinc-200 block pb-2">
-                  {t('elem.voiceovers', 'Stemopnames')}
+                  {t('elem.voiceovers', 'Voice-overs')}
                 </span>
                 <button
                   type="button"
@@ -516,25 +520,25 @@ export default function ElementsBrowserModal({
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-zinc-100 group-hover:text-purple-300 transition-colors">
-                      {t('elem.generateAiVoice', 'Genereer K.I.-stem')}
+                      {t('elem.generateAiVoice', 'Make an AI voice')}
                     </h4>
                     <p className="text-[11px] text-zinc-400">
-                      {t('elem.aiVoiceSub', 'Skep gesproke stemopname of klank vir jou plasing')}
+                      {t('elem.aiVoiceSub', 'Make a spoken voice-over or sound for your post')}
                     </p>
                   </div>
                 </button>
               </div>
 
               {renderAudioSection(
-                t('elem.recentlyUsed', 'Onlangs gebruik'),
+                t('elem.recentlyUsed', 'Recently used'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'audio' && e.subcategory === 'recent'),
               )}
               {renderAudioSection(
-                t('elem.magicRecommendations', 'Magiese aanbevelings'),
+                t('elem.magicRecommendations', 'Magic recommendations'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'audio' && e.subcategory === 'magic'),
               )}
               {renderAudioSection(
-                t('elem.upbeatTracks', 'Opgewek'),
+                t('elem.upbeatTracks', 'Upbeat'),
                 STUDIO_ELEMENTS.filter((e) => e.category === 'audio' && e.subcategory === 'upbeat'),
               )}
             </div>
@@ -574,10 +578,10 @@ export default function ElementsBrowserModal({
               <div>
                 <div className="flex items-center justify-between pb-2.5">
                   <span className="text-xs font-bold text-zinc-200">
-                    {t('elem.recentlyUsed', 'Onlangs gebruik')}
+                    {t('elem.recentlyUsed', 'Recently used')}
                   </span>
                   <span className="text-[11px] font-semibold text-zinc-400">
-                    {t('elem.seeAll', 'Sien alles')}
+                    {t('elem.seeAll', 'See all')}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap pb-1 scrollbar-thin">
@@ -605,7 +609,7 @@ export default function ElementsBrowserModal({
               {/* Browse Categories Grid */}
               <div>
                 <span className="text-xs font-bold text-zinc-200 block pb-3">
-                  {t('elem.browseCategories', 'Blaai deur kategorieë')}
+                  {t('elem.browseCategories', 'Browse categories')}
                 </span>
                 <div className="grid grid-cols-3 gap-3.5 sm:gap-4">
                   {ELEMENT_CATEGORIES.map((cat) => (

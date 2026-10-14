@@ -21,7 +21,8 @@
  *   - One-click start with any template for photo or video.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { drawTemplateFrame } from '../lib/templatevideo';
 import {
   Search, Mic, X, Sparkles, Layout, Monitor, Smartphone, Film,
   Image as ImageIcon, Check, ChevronRight, ArrowLeft, Video,
@@ -36,18 +37,72 @@ import {
   type StudioTemplateItem, type TemplateCategoryMeta,
 } from '../lib/studiotemplates';
 
+/** A template that moves — the ones that become a clip on the video clock. */
+const moves = (tpl: StudioTemplateItem): boolean =>
+  Boolean(tpl.isVideo) || tpl.category === 'landscape_video' || tpl.category === 'mobile_video';
+
+/**
+ * The simulator: a motion template playing on a loop before it is chosen.
+ *
+ * Carli, 14 October 2026: *"Die motion templates moet 'n simulator hê
+ * wanneer mens op dit kliek."* Drawn by `drawTemplateFrame`, the function
+ * that records the clip, so this is the clip.
+ */
+function MotionTemplatePreview({ tpl }: { readonly tpl: StudioTemplateItem }): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  const wide = tpl.width > tpl.height;
+  /* The recorder's own size, shrunk by CSS: the frame is drawn in fixed
+     pixels for a 1280-wide clip, and drawn at half that the label and the
+     headline landed on top of each other. */
+  const width = wide ? 1280 : 720;
+  const height = wide ? 720 : 1280;
+  useEffect(() => {
+    const ctx = canvas.current?.getContext('2d');
+    if (!ctx) return undefined;
+    const started = performance.now();
+    let frame = 0;
+    const go = (): void => {
+      /* Three seconds, as the clip is, and round again. */
+      const progress = (((performance.now() - started) / 1000) % 3) / 3;
+      drawTemplateFrame(ctx, tpl, width, height, progress);
+      frame = requestAnimationFrame(go);
+    };
+    frame = requestAnimationFrame(go);
+    return () => cancelAnimationFrame(frame);
+  }, [tpl, width, height]);
+  return (
+    <canvas
+      ref={canvas}
+      data-templatesimulator={tpl.id}
+      width={width}
+      height={height}
+      className={`mx-auto rounded-xl border border-zinc-700 ${wide ? 'w-full max-w-md' : 'h-[50dvh] w-auto'}`}
+    />
+  );
+}
+
 export default function StudioTemplatesModal({
   onSelectTemplate,
   onClose,
+  stillOnly = false,
 }: {
   readonly onSelectTemplate: (template: StudioTemplateItem) => void;
   readonly onClose: () => void;
+  /** The photo room: a moving template lands there as a still, and says so. */
+  readonly stillOnly?: boolean;
 }): React.ReactElement {
   const { t, lang } = useLang();
   /* A layer, so Back closes this and not the room under it. */
   useBackLayer(true, onClose);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState<StudioTemplateItem | null>(null);
+  /* A moving template plays first; anything else goes straight on. */
+  const choose = (tpl: StudioTemplateItem): void => {
+    if (moves(tpl)) { setPreviewing(tpl); return; }
+    onSelectTemplate(tpl);
+    onClose();
+  };
 
   const filteredTemplates = useMemo(() => {
     let list = STARTER_TEMPLATES;
@@ -235,10 +290,7 @@ export default function StudioTemplatesModal({
                   <button
                     key={tpl.id}
                     type="button"
-                    onClick={() => {
-                      onSelectTemplate(tpl);
-                      onClose();
-                    }}
+                    onClick={() => choose(tpl)}
                     className="flex flex-col rounded-2xl border border-zinc-800/80 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-lg"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
@@ -282,10 +334,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-1.5 flex items-center justify-center">
@@ -317,10 +366,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-1.5 flex items-center justify-center">
@@ -352,10 +398,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
@@ -389,10 +432,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
@@ -426,10 +466,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
@@ -463,10 +500,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
@@ -500,10 +534,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
@@ -537,10 +568,7 @@ export default function StudioTemplatesModal({
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => {
-                        onSelectTemplate(tpl);
-                        onClose();
-                      }}
+                      onClick={() => choose(tpl)}
                       className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden hover:border-amber-400/60 hover:bg-zinc-900 transition-all text-left group shadow-md"
                     >
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950 p-2 flex items-center justify-center">
@@ -567,6 +595,50 @@ export default function StudioTemplatesModal({
           )}
         </div>
       </div>
+      {previewing && (
+        <div
+          data-templatepreview
+          className="absolute inset-0 z-10 flex items-center justify-center bg-scrim/90 p-4 backdrop-blur-sm"
+          style={{ paddingBottom: barClearance(16) }}
+        >
+          <div className="w-full max-w-lg space-y-3 rounded-2xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-bold text-zinc-100">{lang === 'af' ? previewing.nameAf : previewing.nameEn}</h4>
+              <button
+                type="button"
+                onClick={() => setPreviewing(null)}
+                aria-label={t('stpl.previewBack', 'Back to the templates')}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <MotionTemplatePreview tpl={previewing} />
+            {stillOnly && (
+              <p className="text-xs text-zinc-300" data-templatestillnote>
+                {t('stpl.stillNote', 'A photo cannot move, so here it goes on as a still. To keep the motion, pick it in the Video Editor.')}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPreviewing(null)}
+                className="min-h-[44px] flex-1 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100"
+              >
+                {t('stpl.previewBack', 'Back to the templates')}
+              </button>
+              <button
+                type="button"
+                data-templateuse
+                onClick={() => { onSelectTemplate(previewing); setPreviewing(null); onClose(); }}
+                className="min-h-[44px] flex-1 rounded-xl border border-emerald-400 bg-emerald-500 px-3 text-sm font-bold text-onAccent"
+              >
+                {t('stpl.previewUse', 'Use this template')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

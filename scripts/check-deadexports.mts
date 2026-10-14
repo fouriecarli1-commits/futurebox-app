@@ -45,7 +45,28 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 };
 
 /** Kept on purpose, and why. Empty today; a reason goes in with any name. */
-const ALLOWED: Record<string, string> = {};
+/* Antigravity's console and DAW came back on 13 October 2026 (1653903) at
+   Carli's word, with the files beside them, and that commit says plainly
+   that the console's buttons do not yet call the work behind them. These are
+   what they will call. Deleting them now would undo what she asked for; they
+   leave this list as the screens are wired. */
+const ANTIGRAVITY = 'restored with Antigravity\u2019s console on 13 October 2026; its buttons are not wired yet (1653903)';
+const ALLOWED: Record<string, string> = {
+  'app/lib/arrangement.ts:SECTION_COLOURS': ANTIGRAVITY,
+  'app/lib/arrangement.ts:lanesFor': ANTIGRAVITY,
+  'app/lib/arrangement.ts:arrangementFor': ANTIGRAVITY,
+  'app/lib/arrangement.ts:totalBars': ANTIGRAVITY,
+  'app/lib/arrangement.ts:secondsToBar': ANTIGRAVITY,
+  'app/lib/arrangement.ts:formatBarPosition': ANTIGRAVITY,
+  'app/lib/arrangement.ts:EDIT_SUGGESTIONS': ANTIGRAVITY,
+  'app/lib/arrangement.ts:buildEditPrompt': ANTIGRAVITY,
+  'app/lib/avatartemplates.ts:avatarById': ANTIGRAVITY,
+  'app/lib/elementsdata.ts:elementOf': ANTIGRAVITY,
+  'app/lib/eratemplates.ts:eraById': ANTIGRAVITY,
+  'app/lib/fontcombinations.ts:comboOf': ANTIGRAVITY,
+  'app/lib/futureinsights.ts:getInsightById': ANTIGRAVITY,
+  'app/lib/watermark.ts:markBlob': ANTIGRAVITY,
+};
 
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const entry of readdirSync(dir)) {
@@ -63,6 +84,9 @@ const sources = new Map<string, string>();
 for (const file of files) {
   const text = readFileSync(file, 'utf8');
   sources.set(file, text);
+  /* Not this file: naming an export in ALLOWED is not using it, and counting
+     it made every allowance read as "in use now" and so as stale. */
+  if (file.endsWith('check-deadexports.mts')) continue;
   for (const word of text.match(/[A-Za-z_][A-Za-z0-9_]*/g) ?? []) {
     counts.set(word, (counts.get(word) ?? 0) + 1);
   }

@@ -72,6 +72,9 @@ import { boxPath, boxById, type BoxShape } from './videopaint';
 import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 import { paintedFor, type EdgeId } from './wordsedge';
+import { drawFrame, motionAt, revealed } from './videoextras';
+import { drawMark as drawShape, type Mark } from './postshapes';
+import { glowOf, haloPasses } from './postglow';
 
 export interface Scene {
   /** The clip itself, as it came back from the engine. */
@@ -286,6 +289,10 @@ export interface Caption {
    * because the way it used to render was the bug.
    */
   readonly edge?: EdgeId;
+  /** How the words come in — `motionAt` in `lib/videoextras.ts`. */
+  readonly motion?: string;
+  /** A glow round the letters, by the photo room's glow names. */
+  readonly glow?: string;
 }
 
 /**
@@ -477,6 +484,10 @@ export interface Cut {
    * below was written for.
    */
   readonly markUnder?: boolean;
+  /** A frame round the picture, and shapes on it — `lib/videoextras.ts`. */
+  readonly frame?: string;
+  readonly frameInk?: string;
+  readonly shapes?: readonly Mark[];
   /** Called as each scene starts, so a screen can say where it is. */
   readonly onScene?: (index: number, total: number) => void;
 }
@@ -730,6 +741,10 @@ export function drawCaption(
     readonly ink?: string;
     readonly back?: string;
     readonly box?: BoxShape;
+    readonly glow?: string;
+    readonly motion?: string;
+    /** Seconds since the words came up, for the motion. */
+    readonly age?: number;
   },
 ): void {
   const words = text.trim();
@@ -804,6 +819,33 @@ export function drawCaption(
      holding. Applied after the band has been measured and before anything is
      painted, so the words and the box behind them turn together — turning
      them separately is two elements at two angles. */
+  /* ── How the words come in ────────────────────────────────────────────
+
+     `motionAt` is the same function the room's preview runs, so a slide on
+     the screen is a slide in the file. Moved and scaled about the middle of
+     the band, with the band, before anything is painted. No age means no
+     clock to read — a still frame, drawn at rest. */
+  const moving = motionAt(set?.motion, set?.age ?? Number.POSITIVE_INFINITY);
+  if (moving.alpha < 1) context.globalAlpha *= Math.max(0, moving.alpha);
+  if (moving.dx || moving.dy) context.translate(moving.dx * height, moving.dy * height);
+  if (moving.scale !== 1) {
+    const centre = { x: middle, y: boxTop + boxHeight / 2 };
+    context.translate(centre.x, centre.y);
+    context.scale(moving.scale, moving.scale);
+    context.translate(-centre.x, -centre.y);
+  }
+  /* The typewriter: the band is measured for all of the words, so it does
+     not grow as they arrive, and the letters are let out into it. */
+  if (moving.reveal < 1) {
+    let left = Array.from(lines.join('')).length * moving.reveal;
+    lines = lines.map((one) => {
+      const length = Array.from(one).length;
+      const shown = revealed(one, Math.max(0, Math.min(1, left / Math.max(1, length))));
+      left -= length;
+      return shown;
+    });
+  }
+
   if (set?.turn) {
     const spin = { x: middle, y: boxTop + boxHeight / 2 };
     context.translate(spin.x, spin.y);
@@ -878,6 +920,23 @@ export function drawCaption(
      caption at 32px on a phone and one at 96px on a 4K export get the same
      WEIGHT of edge rather than the same number of pixels. */
   const edge = paintedFor(set?.edge, size);
+
+  /* ── A glow, from the photo room's text styles ────────────────────────
+     The same passes `lib/postglow.ts` paints a poster's neon with, outermost
+     first, then cleared so the edge and the fill below are drawn sharp. */
+  const halo = set?.glow ? haloPasses(glowOf(set.glow), size * 0.9) : [];
+  if (halo.length) {
+    context.fillStyle = set?.ink ?? '#ffffff';
+    for (const pass of halo) {
+      context.shadowColor = pass.colour;
+      context.shadowBlur = pass.blur;
+      lines.forEach((one, index) => {
+        context.fillText(one, middle, firstBaseline + step * index);
+      });
+    }
+    context.shadowColor = 'rgba(0,0,0,0)';
+    context.shadowBlur = 0;
+  }
 
   /* The shadow goes on the context and is cleared afterwards, because it
      would otherwise fall under the logo and anything else painted next. */
@@ -1429,6 +1488,12 @@ export async function stitch(cut: Cut): Promise<Made> {
               turn: up.turn,
               solid: up.solid,
               round: up.round,
+              edge: up.edge,
+              glow: up.glow,
+              motion: up.motion,
+              /* From the moment the words came up, which may be before this
+                 shot did: `from` is negative for words carried in. */
+              age: shown - (up.from ?? 0),
             });
           };
           const badge = (): void => {
@@ -1458,7 +1523,12 @@ export async function stitch(cut: Cut): Promise<Made> {
              `check:logomark` asserts this dispatch and not the order the two
              closures are WRITTEN in. It used to assert the latter, which
              stayed green with the branches swapped. */
+          /* Her shapes go under the words, as they do on a poster; the
+             frame goes over everything of ours, because it is the edge of
+             the picture. */
+          for (const one of cut.shapes ?? []) drawShape(context, one, cut.width, cut.height);
           if (cut.markUnder) { badge(); words(); } else { words(); badge(); }
+          drawFrame(context, cut.frame, cut.width, cut.height, cut.frameInk);
 
           /* ── The join, over the picture and its furniture ───────────────
 

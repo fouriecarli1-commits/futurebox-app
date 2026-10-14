@@ -88,6 +88,8 @@ import { loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
 import { useAtDesk } from '../lib/atdesk';
 import Pictures from './Pictures';
 import BrandKit from './BrandKit';
+import SpeakButton from './SpeakButton';
+import { withSaid } from '../lib/speak';
 import { type BrandKit as Kit } from '../lib/brandkit';
 import { assetDataUrl } from '../lib/assets';
 import DeskSheet from './BoothCard';
@@ -154,6 +156,9 @@ import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
 import { EDGES, EDGE_DEFAULT } from '../lib/wordsedge';
+import { drawFrame, motionAt, revealed, wordsStyleOf, MOTION_IN } from '../lib/videoextras';
+import { drawMark as drawShape, markBox, newMark } from '../lib/postshapes';
+import { glowOf, haloPasses } from '../lib/postglow';
 import { soundOf,
   ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE, SIDE_MAX, SIDE_MIN,
   aspectOf, shapeOf,
@@ -268,11 +273,11 @@ const CORNER_AT: Record<Corner, { readonly x: number; readonly y: number }> = {
 
 /** Preset atmospheric styles for Google Gemini Omni Flash video transformations. */
 const OMNI_PRESETS = [
-  { id: 'golden', label: 'Goue Uur / Golden Hour', prompt: 'Cinematic golden hour sunlight, warm amber rim lighting, glowing atmosphere, cinematic depth' },
+  { id: 'golden', label: 'Golden hour', prompt: 'Cinematic golden hour sunlight, warm amber rim lighting, glowing atmosphere, cinematic depth' },
   { id: 'cyberpunk', label: 'Cyberpunk Neon', prompt: 'Futuristic cyberpunk neon reflections, teal and magenta ambient lighting, rainy city night glow' },
-  { id: 'vintage', label: '35mm Filmkorrel', prompt: 'Vintage 35mm film aesthetic, subtle grain, retro cinematic color grading, warm nostalgic tones' },
-  { id: 'noir', label: 'Dramatiese Noir', prompt: 'High-contrast dramatic noir lighting, deep shadows, cinematic monochrome edge lighting' },
-  { id: 'dream', label: 'Dromerige Mistiek', prompt: 'Dreamy soft mist, ethereal bloom, pastel morning atmosphere, gentle motion glow' },
+  { id: 'vintage', label: '35mm film grain', prompt: 'Vintage 35mm film aesthetic, subtle grain, retro cinematic color grading, warm nostalgic tones' },
+  { id: 'noir', label: 'Dramatic noir', prompt: 'High-contrast dramatic noir lighting, deep shadows, cinematic monochrome edge lighting' },
+  { id: 'dream', label: 'Dreamy mist', prompt: 'Dreamy soft mist, ethereal bloom, pastel morning atmosphere, gentle motion glow' },
 ] as const;
 
 /**
@@ -545,6 +550,26 @@ function Swatches({
     </div>
   );
 }
+
+/** What the AI can do to a frame already on the bench, as a start to type from. */
+const SHOT_CHANGES: readonly (readonly [string, string])[] = [
+  ['night', 'make it night'],
+  ['rain', 'add rain'],
+  ['sky', 'change the sky to a sunset'],
+  ['remove', 'take the person out of the background'],
+  ['style', 'make it look like a painting'],
+  ['colour', 'change the colours to neon'],
+  ['move', 'the camera moves slowly closer'],
+];
+/** And what a new shot can be asked for. */
+const SHOT_STARTS: readonly (readonly [string, string])[] = [
+  ['wide', 'a wide shot of a city at night'],
+  ['close', 'a close-up of hands on a guitar'],
+  ['drone', 'a drone shot over the sea'],
+  ['slow', 'in slow motion'],
+  ['light', 'golden-hour light'],
+  ['moves', 'the camera moves slowly closer'],
+];
 
 export default function VideoEditor({
   plan,
@@ -1212,6 +1237,8 @@ export default function VideoEditor({
   const [markUnder, setMarkUnder] = useState(false);
   const [showStudioTemplatesModal, setShowStudioTemplatesModal] = useState(false);
   const [showCanvasSizeModal, setShowCanvasSizeModal] = useState(false);
+  const [sizeOpen, setSizeOpen] = useState(false);
+  const [sizeDraft, setSizeDraft] = useState({ width: '', height: '' });
 
   /* ── The shape the film is actually coming out in ───────────────────────
  
@@ -1308,6 +1335,43 @@ export default function VideoEditor({
   const [running, setRunning] = useState(false);
   const strip = useRef<HTMLDivElement | null>(null);
 
+  /* ── Moving words, on the preview ─────────────────────────────────────
+
+     `motionAt` from `lib/videoextras.ts`, the function the film is rendered
+     with, read at the playhead's distance from the moment the words came up.
+     The playhead only moves four times a second while playing, so between
+     ticks the clock runs on from the last one — a slide at four frames a
+     second would preview as a stutter the film does not have. And when a
+     motion is put on, it plays once straight away, so pressing it shows it. */
+  const atMark = useRef({ at: 0, when: 0 });
+  useEffect(() => { atMark.current = { at, when: performance.now() }; }, [at]);
+  const [replayAt, setReplayAt] = useState<number | null>(null);
+  const [clockNow, setClockNow] = useState(0);
+  const wordsMoving = Boolean(wordsNow.said?.wordsMotion && wordsNow.said.wordsMotion !== 'none');
+  useEffect(() => {
+    if (!wordsMoving || !(running || replayAt !== null)) return undefined;
+    let frameId = 0;
+    const go = (): void => { setClockNow(performance.now()); frameId = requestAnimationFrame(go); };
+    frameId = requestAnimationFrame(go);
+    return () => cancelAnimationFrame(frameId);
+  }, [wordsMoving, running, replayAt]);
+  useEffect(() => {
+    if (replayAt === null) return undefined;
+    const stop = setTimeout(() => setReplayAt(null), (MOTION_IN * 2.5 + 0.8) * 1000);
+    return () => clearTimeout(stop);
+  }, [replayAt]);
+  const wordsMove = (() => {
+    const said = wordsNow.said;
+    if (!said || !wordsMoving || wordsNow.ghost) return motionAt(undefined, 0);
+    if (replayAt !== null) return motionAt(said.wordsMotion, Math.max(0, clockNow - replayAt) / 1000);
+    /* Paused, the words are shown at rest: she is placing and colouring
+       them, and the first frame of an entrance is usually nothing at all. */
+    if (!running) return motionAt(undefined, 0);
+    const came = startsAt(edit, said.id) + wordsSpan(said, lengthOfPiece(said), wordsReach(edit, said.id)).from;
+    const now = atMark.current.at + Math.max(0, clockNow - atMark.current.when) / 1000;
+    return motionAt(said.wordsMotion, now - came);
+  })();
+
   /* Where in the picked piece's OWN material the viewer should land, once it
      has something to land on.
 
@@ -1342,6 +1406,38 @@ export default function VideoEditor({
   /* The picture's own height, so the words over it are the same share of it
      that `drawCaption` will make them of the frame. */
   const frame = useRef<HTMLDivElement | null>(null);
+
+  /* ── The picture's size, measured, and zoom multiplies it ───────────────
+
+     Carli, 14 October 2026: "Die dimensies van zoom op video editor is nie
+     reg nie. dit laat nie toe om gradually te zoom nie, plus moet die editing
+     screen vir al op die rekenaar reeds groot wees en voller."
+
+     At 1x the frame was sized by the screen's height (38dvh) and above 1x by
+     a share of the room's WIDTH, so 1.1x was not a tenth bigger — it jumped
+     to the whole width at once, in another shape on a tall film. Now one
+     base size is worked out from the space there is and zoom multiplies it,
+     so every tenth on the slider is a tenth. The base is bigger at a desk
+     (62% of the screen's height, not 38%), where there is room for it. */
+  /* Held in state, not a ref: the box only exists once there is a clip, and
+     an effect that ran on the first render — before it existed — measured
+     nothing, so the zoom had no base to multiply and the picture never grew
+     (`check:editor`: "312px became 312px"). */
+  const [zoomBox, setZoomBox] = useState<HTMLDivElement | null>(null);
+  const [boxWide, setBoxWide] = useState(0);
+  const [screenTall, setScreenTall] = useState(0);
+  useEffect(() => {
+    const box = zoomBox;
+    const measure = (): void => {
+      setScreenTall(window.innerHeight);
+      if (box) setBoxWide(box.clientWidth);
+    };
+    measure();
+    const watch = typeof ResizeObserver !== 'undefined' && box ? new ResizeObserver(measure) : null;
+    if (watch && box) watch.observe(box);
+    window.addEventListener('resize', measure);
+    return () => { watch?.disconnect(); window.removeEventListener('resize', measure); };
+  }, [zoomBox]);
   const [frameHeight, setFrameHeight] = useState(0);
   useEffect(() => {
     const box = frame.current;
@@ -1464,6 +1560,42 @@ export default function VideoEditor({
     reader.onerror = () => setProblem(t('edit.coverNoFrame', 'That frame could not be read.'));
     reader.readAsDataURL(shot);
   }, [piece, shape, t]);
+
+  /* ── The keyboard, as every editor has it ───────────────────────────────
+
+     Carli, 14 October 2026: "Die keyboard shortcuts vir sekere goed moet ook
+     kan werk, as ek 'n text wil delete, dan moet ek die delete knoppie kan
+     druk, of ctrl c en ctrl v." Delete takes the picked shot out, Ctrl+C and
+     Ctrl+V copy it, Ctrl+X cuts it, Ctrl+D doubles it, S splits at the
+     playhead, Space plays, Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y) step back and
+     forward. Never while somebody is typing in a box: there the keys are
+     the box's. */
+  const copiedShot = useRef<string | null>(null);
+  useEffect(() => {
+    const press = (event: KeyboardEvent): void => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.closest('input, textarea, select, [contenteditable="true"]'))) return;
+      const mod = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+      if (mod && key === 'z') { event.preventDefault(); if (event.shiftKey) stepForward(); else stepBack(); return; }
+      if (mod && key === 'y') { event.preventDefault(); stepForward(); return; }
+      if (key === ' ' && !mod) { event.preventDefault(); setRunning((was) => !was); return; }
+      if (!piece) return;
+      if (key === 'delete' || key === 'backspace') { event.preventDefault(); commit((was) => drop(was, piece.id)); return; }
+      if (mod && key === 'c') { copiedShot.current = piece.id; return; }
+      if (mod && key === 'x') { event.preventDefault(); copiedShot.current = null; commit((was) => drop(was, piece.id)); return; }
+      if (mod && key === 'v' && copiedShot.current) {
+        event.preventDefault();
+        const id = copiedShot.current;
+        commit((was) => (was.pieces.some((one) => one.id === id) ? duplicate(was, id) : was));
+        return;
+      }
+      if (mod && key === 'd') { event.preventDefault(); commit((was) => duplicate(was, piece.id)); return; }
+      if ((key === 's' && !mod) || (mod && key === 'b')) { event.preventDefault(); commit((was) => splitHere(was, at)); }
+    };
+    window.addEventListener('keydown', press);
+    return () => window.removeEventListener('keydown', press);
+  }, [piece, at, commit, stepBack, stepForward]);
 
   /* ── The two red lines, and where they stick ──────────────────────────
 
@@ -2255,8 +2387,13 @@ async function smallerFrame(url: string): Promise<string> {
     });
     setShotPic(dataUrl);
     setDrawInto('start');
+    setShotReady(null);
     if (presetWords) setShotWords(presetWords);
-    setBench('folder');
+    /* The wand sheet, not the folder bench: over a film with clips the shot
+       panel is drawn only there, so this opened a bench with no shot panel
+       on it and the press looked like it did nothing. */
+    setWandOpen(true);
+    requestAnimationFrame(() => wandRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }, [piece, shape]);
 
   /**
@@ -3033,16 +3170,48 @@ async function smallerFrame(url: string): Promise<string> {
       <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: INK_DIM }}>
         {t('edit.shotTitle', 'Make a shot')}
       </div>
-      <textarea
-        data-editorshotwords
-        value={shotWords}
-        onChange={(event) => setShotWords(event.target.value)}
-        rows={2}
-        maxLength={500}
-        placeholder={t('edit.shotHint', 'A konsertina on a stoep at sunset. The curtain moves in the wind.')}
-        className="w-full rounded-lg border border-zinc-800 bg-black/30 p-2.5 text-[13px] leading-relaxed outline-none focus:border-emerald-500/60"
-        style={{ color: INK }}
-      />
+      {/* Said as a box to type in (Carli, 14 October 2026: "Hierdie is nogal
+          deceiving. Die tik blok moet iewers sê type here. En die suggestions
+          vir ai capabilities moet ook daar binne genoem word.") The example
+          read as words already written; now the label says to type, the
+          placeholder starts with it, and what the AI can do is a row of
+          suggestions under the box that write themselves in. */}
+      <label htmlFor="editor-shot-words" className="block text-[12px] font-semibold" style={{ color: INK }}>
+        {shotPic
+          ? t('edit.shotTypeChange', 'Type here what the AI must change in this frame')
+          : t('edit.shotType', 'Type here what the shot must show')}
+      </label>
+      <span className="relative block">
+        <textarea
+          id="editor-shot-words"
+          data-editorshotwords
+          value={shotWords}
+          onChange={(event) => setShotWords(event.target.value)}
+          rows={2}
+          maxLength={500}
+          placeholder={shotPic
+            ? t('edit.shotHintChange', 'Type here… e.g. make it night, add rain, turn the car red')
+            : t('edit.shotHintType', 'Type here… e.g. a konsertina on a stoep at sunset, the curtain moving in the wind')}
+          className="w-full rounded-lg border border-emerald-500/40 bg-black/30 p-2.5 pr-11 text-[13px] leading-relaxed outline-none focus:border-emerald-500/80"
+          style={{ color: INK }}
+        />
+        <SpeakButton onHeard={(said) => setShotWords((was) => withSaid(was, said).slice(0, 500))} className="absolute bottom-2 right-2" />
+      </span>
+      <div className="flex flex-wrap gap-1.5" data-editorshotideas>
+        <span className="w-full text-[11px]" style={{ color: INK_DIM }}>{t('edit.shotIdeas', 'The AI can:')}</span>
+        {(shotPic ? SHOT_CHANGES : SHOT_STARTS).map(([key, says]) => (
+          <button
+            key={key}
+            type="button"
+            data-editorshotidea={key}
+            onClick={() => setShotWords((was) => withSaid(was, t(`edit.idea.${key}`, says)).slice(0, 500))}
+            className="min-h-[44px] rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 text-[12px] font-semibold"
+            style={{ color: INK }}
+          >
+            + {t(`edit.idea.${key}`, says)}
+          </button>
+        ))}
+      </div>
       {/* ── Who is in the shot ──────────────────────────────────
 
           The cast desk has had people and products in it since
@@ -3406,8 +3575,8 @@ async function smallerFrame(url: string): Promise<string> {
           on the rail and on the screen's own header, so the logo went; the
           shape is two small chips; Ask and the button that finishes the film
           stay, because those two are real. */}
-      <div data-editortop className="flex flex-shrink-0 items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
-        <div className="flex flex-shrink-0 items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/90 p-0.5" role="group" aria-label={t('edit.shapeWhich', 'Which way up the film is')}>
+      <div data-editortop className="flex flex-shrink-0 flex-wrap items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
+        <div data-editorshapes className="flex flex-shrink-0 items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/90 p-0.5" role="group" aria-label={t('edit.shapeWhich', 'Which way up the film is')}>
           {([
             { id: 'tall' as const, says: '9:16', on: shape.height > shape.width },
             { id: 'wide' as const, says: '16:9', on: shape.width > shape.height },
@@ -3423,18 +3592,76 @@ async function smallerFrame(url: string): Promise<string> {
               {one.says}
             </button>
           ))}
+          {/* Typed sizes, up here where the shape is chosen (Carli, 14
+              October 2026: "Hier bo moet ook custom sizes wees wat mense
+              self in tik"). The same `custom` shape and `size` the film
+              bench has always set; `shapeOf` holds the sides in range. */}
+          <button
+            type="button"
+            data-editorshapechip="custom"
+            aria-pressed={edit.shape === 'custom'}
+            aria-expanded={sizeOpen}
+            onClick={() => {
+              setSizeDraft({ width: String(shape.width), height: String(shape.height) });
+              setSizeOpen((was) => !was);
+            }}
+            className={`min-h-[44px] rounded-lg border px-2.5 text-xs font-bold ${edit.shape === 'custom' ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
+          >
+            {edit.shape === 'custom' ? `${shape.width}×${shape.height}` : t('edit.sizeCustom', 'Custom')}
+          </button>
         </div>
+        {sizeOpen && (
+          <form
+            data-editorsizeform
+            className="flex flex-shrink-0 items-center gap-1.5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const width = Number(sizeDraft.width);
+              const height = Number(sizeDraft.height);
+              if (!Number.isFinite(width) || !Number.isFinite(height) || width < 16 || height < 16) return;
+              commit((was) => ({ ...was, shape: 'custom', size: { width: Math.round(width), height: Math.round(height) } }));
+              setSizeOpen(false);
+            }}
+          >
+            <input
+              type="number"
+              inputMode="numeric"
+              min={16}
+              value={sizeDraft.width}
+              onChange={(event) => setSizeDraft((was) => ({ ...was, width: event.target.value }))}
+              aria-label={t('edit.sizeWidth', 'Width in pixels')}
+              data-editorsizewidth
+              className="h-11 w-20 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100"
+            />
+            <span className="text-xs text-zinc-500">×</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={16}
+              value={sizeDraft.height}
+              onChange={(event) => setSizeDraft((was) => ({ ...was, height: event.target.value }))}
+              aria-label={t('edit.sizeHeight', 'Height in pixels')}
+              data-editorsizeheight
+              className="h-11 w-20 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100"
+            />
+            <button type="submit" data-editorsizego className="min-h-[44px] rounded-lg border border-emerald-400 bg-emerald-500 px-3 text-xs font-bold text-onAccent">
+              {t('edit.sizeUse', 'Use')}
+            </button>
+          </form>
+        )}
         <span className="flex-1" />
 
-        {/* Right: Copilot + Glowing CTA */}
-        <div className="flex items-center gap-2">
+        {/* Right: Copilot + Glowing CTA. `ml-auto` so that on a phone, where
+            the shape chips take the first row, these two wrap to a row of
+            their own and still end on the room's right gutter. */}
+        <div className="ml-auto flex items-center gap-2">
           {copilot ? (
             <button
               type="button"
               data-editorask
               aria-pressed={asking2}
               onClick={() => setAsking2(true)}
-              className="min-h-[42px] rounded-xl border px-3 py-2 text-xs font-semibold inline-flex items-center gap-1.5 active:translate-y-px"
+              className="min-h-[44px] rounded-xl border px-3 py-2 text-xs font-semibold inline-flex items-center gap-1.5 active:translate-y-px"
               style={{
                 background: 'rgba(52,211,153,0.14)',
                 borderColor: 'rgba(16,185,129,0.45)',
@@ -3460,7 +3687,7 @@ async function smallerFrame(url: string): Promise<string> {
               setAsking(true);
               void loadWallet().then(setWallet);
             }}
-            className="min-h-[42px] rounded-xl bg-emerald-400 hover:bg-emerald-300 px-4 py-2 text-xs font-bold text-zinc-950 disabled:opacity-40 inline-flex items-center gap-2 shadow-[0_0_20px_rgba(52,211,153,0.55)] transition-all active:scale-95"
+            className="min-h-[44px] rounded-xl bg-emerald-400 hover:bg-emerald-300 px-4 py-2 text-xs font-bold text-zinc-950 disabled:opacity-40 inline-flex items-center gap-2 shadow-[0_0_20px_rgba(52,211,153,0.55)] transition-all active:scale-95"
           >
             {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-zinc-950" />}
             {t('edit.make', 'Genereer Video')}
@@ -3542,7 +3769,7 @@ async function smallerFrame(url: string): Promise<string> {
                 type="button"
                 data-editorzoomout
                 disabled={zoom <= 1}
-                onClick={() => setZoom((was) => Math.max(1, Math.ceil(was) - 1))}
+                onClick={() => setZoom((was) => Math.max(1, Math.round((was - 0.25) * 4) / 4))}
                 className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
               >
                 &minus;
@@ -3566,7 +3793,7 @@ async function smallerFrame(url: string): Promise<string> {
                 type="button"
                 data-editorzoomin
                 disabled={zoom >= 4}
-                onClick={() => setZoom((was) => Math.min(4, Math.floor(was) + 1))}
+                onClick={() => setZoom((was) => Math.min(4, Math.round((was + 0.25) * 4) / 4))}
                 className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
               >
                 +
@@ -3578,6 +3805,7 @@ async function smallerFrame(url: string): Promise<string> {
                 scroll; above it, panning IS the feature, and native scrolling
                 is the only panning that behaves like the phone it is on. */}
             <div
+              ref={setZoomBox}
               data-editorzoombox
               className={zoom > 1 ? 'overflow-auto rounded-xl' : ''}
             >
@@ -3609,9 +3837,20 @@ async function smallerFrame(url: string): Promise<string> {
                    Height-led rather than width-led, so a wide film and a tall
                    one land inside the same band instead of one of them deciding
                    how tall the room is. */
-                ...(zoom > 1
-                  ? { width: `${zoom * 100}%` }
-                  : { maxHeight: '38dvh', width: 'auto', margin: '0 auto' }),
+                ...(boxWide > 0 && screenTall > 0
+                  ? (() => {
+                    const tallShare = onEdge ? 0.62 : 0.38;
+                    const baseTall = Math.min(screenTall * tallShare, boxWide * (shape.height / shape.width));
+                    const baseWide = baseTall * (shape.width / shape.height);
+                    return {
+                      width: `${Math.round(baseWide * zoom)}px`,
+                      height: `${Math.round(baseTall * zoom)}px`,
+                      /* Centred while it fits, from the left once it is
+                         bigger than the room, so the scroll starts at 0. */
+                      margin: baseWide * zoom <= boxWide ? '0 auto' : '0',
+                    };
+                  })()
+                  : { maxHeight: onEdge ? '62dvh' : '38dvh', width: 'auto', margin: '0 auto' }),
               }}
               className="relative origin-top-left overflow-hidden rounded-xl border border-zinc-800 bg-black"
             >
@@ -3643,6 +3882,41 @@ async function smallerFrame(url: string): Promise<string> {
               {bedUrl && (
                 <audio ref={bed} data-editorbedsound src={bedUrl} preload="auto" className="hidden" />
               )}
+              {/* ── Her shapes and the frame, drawn by the film's own functions ── */}
+              {((edit.shapes?.length ?? 0) > 0 || (edit.frame && edit.frame !== 'none')) && (
+                <FilmFurniture
+                  shapes={edit.shapes ?? []}
+                  frame={edit.frame}
+                  frameInk={edit.frameInk}
+                  ratio={shape.width / shape.height}
+                />
+              )}
+              {(edit.shapes ?? []).map((one) => {
+                const box = markBox(one, 1000, 1000 * (shape.height / shape.width));
+                return (
+                  <div
+                    key={one.id}
+                    data-editorshapedrag={one.kind}
+                    aria-label={t('edit.shapeMove', 'Drag to move this shape')}
+                    onPointerDown={(event) => {
+                      holding();
+                      dragOnFrame(event, (spot) => setEdit((was) => ({
+                        ...was,
+                        shapes: (was.shapes ?? []).map((mine) => (mine.id === one.id ? { ...mine, x: spot.x, y: spot.y } : mine)),
+                      })), held);
+                    }}
+                    className="absolute cursor-move touch-none rounded-md outline-dashed outline-1 outline-white/30"
+                    style={{
+                      left: `${one.x * 100}%`,
+                      top: `${one.y * 100}%`,
+                      width: `${(box.w / 1000) * 100}%`,
+                      height: `${(box.h / (1000 * (shape.height / shape.width))) * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 1,
+                    }}
+                  />
+                );
+              })}
               {wordsNow.said && (
                 <div
                   data-editorwordsdrag
@@ -3668,10 +3942,10 @@ async function smallerFrame(url: string): Promise<string> {
                        Tailwind translate away — the words would have hung off to
                        the right of where they land in the film, which is the
                        quiet kind of wrong this preview exists to prevent. */
-                    transform: `translate(-50%, -50%) rotate(${wordsNow.said.wordsTurn ?? 0}deg)`,
+                    transform: `translate(-50%, -50%) translate(${wordsMove.dx * frameHeight}px, ${wordsMove.dy * frameHeight}px) rotate(${wordsNow.said.wordsTurn ?? 0}deg) scale(${wordsMove.scale})`,
                     /* Ghosted, not solid, when the playhead is past the
                        caption's own stretch — see `wordsNow`. */
-                    opacity: wordsNow.ghost ? 0.3 : (wordsNow.said.wordsSolid ?? 1),
+                    opacity: wordsNow.ghost ? 0.3 : (wordsNow.said.wordsSolid ?? 1) * wordsMove.alpha,
                     outline: wordsNow.ghost ? `1px dashed ${LIT}` : undefined,
                     outlineOffset: wordsNow.ghost ? 3 : undefined,
                     /* ── The shape, from the one place that knows it ────
@@ -3724,12 +3998,19 @@ async function smallerFrame(url: string): Promise<string> {
                             : {}),
                       };
                     })(),
-                    color: paintFor(wordsNow.said.wordsInk ?? 'white')?.hex ?? INK_DEFAULT,
+                    color: (wordsNow.said.wordsInk ?? '').startsWith('#')
+                      ? wordsNow.said.wordsInk
+                      : paintFor(wordsNow.said.wordsInk ?? 'white')?.hex ?? INK_DEFAULT,
+                    /* The glow from a text style, by the passes the film paints. */
+                    textShadow: wordsNow.said.wordsGlow && wordsNow.said.wordsGlow !== 'none'
+                      ? haloPasses(glowOf(wordsNow.said.wordsGlow), Math.max(9, (wordsNow.said.wordsSize ?? 0.048) * frameHeight) * 0.9)
+                        .map((one) => `0 0 ${Math.round(one.blur)}px ${one.colour}`).join(', ')
+                      : undefined,
                     zIndex: 2,
                   }}
                   className="absolute cursor-move touch-none select-none px-2 py-1 text-center leading-tight outline-dashed outline-1 outline-emerald-400/50"
                 >
-                  {wordsNow.said.words}
+                  {revealed(wordsNow.said.words ?? '', wordsMove.reveal)}
                   {/* The corner. Sits half outside the band so the whole of it is
                       grabbable without covering a letter, and `touch-none` so a
                       phone does not scroll the page instead. */}
@@ -4203,6 +4484,12 @@ async function smallerFrame(url: string): Promise<string> {
                           const box = event.currentTarget.getBoundingClientRect();
                           const x = event.clientX || box.left + box.width / 2;
                           setClipMenu((was) => (was?.id === one.id ? null : { id: one.id, x, y: box.top }));
+                        }}
+                        /* Right-click, at a desk: the same menu, where the mouse is. */
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          setPicked(one.id); setLane('film');
+                          setClipMenu({ id: one.id, x: event.clientX, y: event.clientY });
                         }}
                         className="absolute top-1 bottom-1 overflow-hidden rounded-lg px-2 py-1 text-left"
                         style={{
@@ -5087,7 +5374,7 @@ async function smallerFrame(url: string): Promise<string> {
           role="menu"
           className="fixed z-[200] flex items-center gap-1 rounded-2xl border p-1"
           style={{
-            left: Math.max(8, Math.min(clipMenu.x - 120, (typeof window !== 'undefined' ? window.innerWidth : 400) - 248)),
+            left: Math.max(8, Math.min(clipMenu.x - 120, (typeof window !== 'undefined' ? window.innerWidth : 400) - 430)),
             top: Math.max(8, clipMenu.y - 58),
             borderColor: 'rgba(52,211,153,0.6)',
             background: 'rgba(2,6,4,0.94)',
@@ -5127,6 +5414,29 @@ async function smallerFrame(url: string): Promise<string> {
           >
             <Wand2 className="h-4 w-4" />
             {t('edit.clipWand', 'AI wand')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            data-editorclipcopy
+            onClick={() => { const id = clipMenu.id; commit((was) => duplicate(was, id)); setClipMenu(null); }}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold"
+            style={{ color: INK }}
+            title="Ctrl+D"
+          >
+            <Copy className="h-4 w-4" />
+            {t('edit.clipCopy', 'Copy')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            data-editorclipdrop
+            onClick={() => { const id = clipMenu.id; commit((was) => drop(was, id)); setClipMenu(null); }}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold text-rose-300"
+            title="Delete"
+          >
+            <Trash2 className="h-4 w-4" />
+            {t('edit.clipDrop', 'Delete')}
           </button>
         </div>,
         document.body,
@@ -5922,13 +6232,13 @@ async function smallerFrame(url: string): Promise<string> {
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
               <span className="text-sm font-semibold text-emerald-200">
-                {t('veo.title', 'Animeer hierdie raamwerk met Google Veo / Animate with Google Veo')}
+                {t('veo.title', 'Animate this frame with Google Veo')}
               </span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
               {t(
                 'veo.desc',
-                'Neem die huidige raamwerk uit jou video en animeer dit met Google Veo 3.1 naatloos in die Maak \'n Shot-ateljee.',
+                'Takes the frame you are on, lets the AI change it from your words, and makes it move with Google Veo. The price is on the button that makes it.',
               )}
             </p>
 
@@ -5941,9 +6251,9 @@ async function smallerFrame(url: string): Promise<string> {
                   onClick={() => {
                     void animateFrameWithVeo(pre.prompt);
                   }}
-                  className="rounded-lg border border-zinc-700 bg-zinc-900/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                  className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                 >
-                  {pre.label}
+                  {t(`veo.preset.${pre.id}`, pre.label)}
                 </button>
               ))}
             </div>
@@ -5952,10 +6262,10 @@ async function smallerFrame(url: string): Promise<string> {
               type="button"
               disabled={!piece}
               onClick={() => void animateFrameWithVeo()}
-              className="mt-2 min-h-[40px] w-full px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/20 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50 inline-flex items-center justify-center gap-2 transition-colors"
+              className="mt-2 min-h-[44px] w-full px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/20 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50 inline-flex items-center justify-center gap-2 transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {t('veo.action', 'Gryp raamwerk & Animeer met Veo / Grab frame & Animate')}
+              {t('veo.action', 'Take this frame and animate it')}
             </button>
           </div>
 
@@ -6086,7 +6396,7 @@ async function smallerFrame(url: string): Promise<string> {
               type="text"
               value={piece.words ?? ''}
               data-editorwords
-              placeholder={t('edit.wordsAsk', 'Up for as long as this piece is')}
+              placeholder={t('edit.wordsAsk', 'Type the words here — then drag their ends on the words lane to set how long they stay up')}
               onChange={(e) => tweak({ words: e.target.value })}
               className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 placeholder:text-zinc-600"
             />
@@ -6992,6 +7302,31 @@ async function smallerFrame(url: string): Promise<string> {
             <VideoTemplatesPicker
               piecesCount={edit.pieces.length}
               currentShape={edit.shape}
+              wordsMotion={piece?.wordsMotion}
+              onTextStyle={(style) => {
+                if (!piece) return;
+                tweak({
+                  ...wordsStyleOf(style.title),
+                  words: (piece.words ?? '').trim() ? piece.words : t(style.title.says[0], style.title.says[1]),
+                });
+              }}
+              onMotion={(id) => {
+                if (!piece) return;
+                tweak({
+                  wordsMotion: id,
+                  ...((piece.words ?? '').trim() ? {} : { words: t('edit.motionSample', 'Your words here') }),
+                });
+                setReplayAt(performance.now());
+              }}
+              frame={edit.frame}
+              frameInk={edit.frameInk}
+              onFrame={(id, ink) => commit((was) => ({ ...was, frame: id, frameInk: ink }))}
+              shapesCount={edit.shapes?.length ?? 0}
+              onShape={(kind, ink) => commit((was) => ({
+                ...was,
+                shapes: [...(was.shapes ?? []), { ...newMark(kind, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`), ink }],
+              }))}
+              onClearShapes={() => commit((was) => ({ ...was, shapes: [] }))}
               onSelectStart={(one) => commit((was) => ({
                 ...was,
                 shape: one.shape,
@@ -7621,5 +7956,44 @@ async function smallerFrame(url: string): Promise<string> {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Her shapes and the film's frame, over the preview.
+ *
+ * Drawn by `drawMark` from the photo room's `lib/postshapes.ts` and by
+ * `drawFrame` from `lib/videoextras.ts` — the two functions `stitch.ts`
+ * calls on every frame of the film — on a canvas the shape of the film, so
+ * what is over the picture here is what is over it in the file.
+ */
+function FilmFurniture({
+  shapes, frame, frameInk, ratio,
+}: {
+  readonly shapes: readonly import('../lib/postshapes').Mark[];
+  readonly frame?: string;
+  readonly frameInk?: string;
+  readonly ratio: number;
+}): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  const wide = 720;
+  const tall = Math.round(wide / ratio);
+  useEffect(() => {
+    const ctx = canvas.current?.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, wide, tall);
+    for (const one of shapes) drawShape(ctx, one, wide, tall);
+    drawFrame(ctx, frame, wide, tall, frameInk);
+  }, [shapes, frame, frameInk, tall]);
+  return (
+    <canvas
+      ref={canvas}
+      data-editorfurniture
+      width={wide}
+      height={tall}
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      style={{ zIndex: 1 }}
+    />
   );
 }

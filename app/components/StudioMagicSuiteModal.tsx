@@ -19,12 +19,14 @@
  *   · Style Match (Styl & Tydperke): Era Templates, Duotone, Pop, Mono, Etching.
  */
 
+import { barClearance } from './TabBar';
 import React, { useState } from 'react';
 import {
   Sparkles, Wand2, SlidersHorizontal, Scissors, Eraser, Focus, UserCheck,
   Video, ImagePlus, Expand, Layers, Hand, ScanText, Palette, X, ChevronRight, Check,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 
 export type MagicToolId =
   | 'adjust'
@@ -59,6 +61,8 @@ export default function StudioMagicSuiteModal({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(true, onClose);
   const [activeTab, setActiveTab] = useState<'all' | 'enhance' | 'reimagine' | 'select' | 'style'>('all');
 
   const ENHANCE_TOOLS: readonly MagicToolItem[] = [
@@ -176,7 +180,7 @@ export default function StudioMagicSuiteModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/85 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/85 backdrop-blur-md" style={{ paddingBottom: barClearance(12) }}
     >
       <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700 bg-zinc-900 shadow-2xl text-zinc-100 overflow-hidden">
         {/* Header */}
@@ -188,7 +192,7 @@ export default function StudioMagicSuiteModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-black text-zinc-100">
-                  {t('magic.suiteTitle', 'FutureBox Tower-Suite')}
+                  {t('magic.suiteTitle', 'FutureBox Magic Suite')}
                 </h3>
                 <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-300">
                   Google AI Ready
@@ -213,10 +217,10 @@ export default function StudioMagicSuiteModal({
           {(
             [
               ['all', t('magic.tabAll', 'All Tools')],
-              ['enhance', t('magic.tabEnhance', 'Verbeter (Enhance)')],
-              ['reimagine', t('magic.tabReimagine', 'Herbedink (Reimagine)')],
-              ['select', t('magic.tabSelect', 'Slim Lae (Select)')],
-              ['style', t('magic.tabStyle', 'Styl & Tydperke (Style)')],
+              ['enhance', t('magic.tabEnhance', 'Enhance')],
+              ['reimagine', t('magic.tabReimagine', 'Reimagine')],
+              ['select', t('magic.tabSelect', 'Smart layers')],
+              ['style', t('magic.tabStyle', 'Style & eras')],
             ] as const
           ).map(([key, label]) => (
             <button
@@ -240,7 +244,7 @@ export default function StudioMagicSuiteModal({
           {(activeTab === 'all' || activeTab === 'enhance') && (
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3 flex items-center gap-2">
-                <span>🪄 {t('magic.sectionEnhance', 'Verbeter (Enhance)')}</span>
+                <span>🪄 {t('magic.sectionEnhance', 'Enhance')}</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {ENHANCE_TOOLS.map((tool) => (
@@ -279,7 +283,7 @@ export default function StudioMagicSuiteModal({
           {(activeTab === 'all' || activeTab === 'reimagine') && (
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-3 flex items-center gap-2">
-                <span>✨ {t('magic.sectionReimagine', 'Herbedink (Reimagine — Google AI)')}</span>
+                <span>✨ {t('magic.sectionReimagine', 'Reimagine (Google AI)')}</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {REIMAGINE_TOOLS.map((tool) => (
@@ -318,7 +322,7 @@ export default function StudioMagicSuiteModal({
           {(activeTab === 'all' || activeTab === 'select') && (
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-2">
-                <span>🎯 {t('magic.sectionSelect', 'Slim Lae & Gryp (Select Elements)')}</span>
+                <span>🎯 {t('magic.sectionSelect', 'Smart layers & grab')}</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {SELECT_TOOLS.map((tool) => (
@@ -357,7 +361,7 @@ export default function StudioMagicSuiteModal({
           {(activeTab === 'all' || activeTab === 'style') && (
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-fuchsia-400 mb-3 flex items-center gap-2">
-                <span>🎨 {t('magic.sectionStyle', 'Styl & Tydperke (Style Match)')}</span>
+                <span>🎨 {t('magic.sectionStyle', 'Style & eras')}</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {STYLE_TOOLS.map((tool) => (

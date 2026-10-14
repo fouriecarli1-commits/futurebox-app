@@ -43,10 +43,11 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   Bookmark,
-  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, X,
+  Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, X,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
@@ -110,6 +111,7 @@ import {
 import { SHAPES as RATIOS, SHAPE_DEFAULT, type ShapeId } from '../lib/pictureshapes';
 import { usePlain, useSetPlain } from '../lib/plainmode';
 import { TEMPLATES, type Template } from '../lib/posttemplates';
+import { templateStill } from '../lib/templatevideo';
 import {
   BIGGER, SHARPEN, bigger, nextQuarter, sharpened, sizeOf, tooBig, turned,
   type Sharpness, type Times,
@@ -505,6 +507,12 @@ export default function PostStudio({
   const [grabLang, setGrabLang] = useState<Readable>('eng');
   const [picking, setPicking] = useState(false);
   const [found, setFound] = useState<readonly Pick[] | null>(null);
+  const [liveSound, setLiveSound] = useState(false);
+  /* The line of words last touched on the photo — what Delete, Ctrl+C and
+     the right-click menu act on, the way `markOn` is for a shape. */
+  const [wordOn, setWordOn] = useState<string | null>(null);
+  const copiedThing = useRef<{ kind: 'words'; item: Words } | { kind: 'mark'; item: Mark } | null>(null);
+  const [rightMenu, setRightMenu] = useState<{ x: number; y: number } | null>(null);
   /* The magic touch: where she tapped, how big a part, and what it becomes. */
   const [magicSpot, setMagicSpot] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const [magicSize, setMagicSize] = useState(0.14);
@@ -1468,6 +1476,67 @@ export default function PostStudio({
    * phone gives it, so neither of those is the number to divide by — the box
    * on screen is. Then frame units into the placed picture, then into shares.
    */
+  /* ── Delete, copy, paste, undo: the keyboard and the right-click ────────
+
+     Carli, 14 October 2026: "in al die editor plekke moet daar 'n right
+     click wees wat funksies vinniger kry … as ek 'n text wil delete, dan
+     moet ek die delete knoppie kan druk, of ctrl c en ctrl v." */
+  const dropChosen = (): boolean => {
+    if (markOn) { const id = markOn; setMarks((was) => was.filter((one) => one.id !== id)); setMarkOn(null); return true; }
+    if (wordOn) { const id = wordOn; setWords((was) => was.filter((one) => one.id !== id)); setWordOn(null); return true; }
+    return false;
+  };
+  const copyChosen = (): boolean => {
+    const mark = markOn ? marks.find((one) => one.id === markOn) : undefined;
+    if (mark) { copiedThing.current = { kind: 'mark', item: mark }; return true; }
+    const line = wordOn ? words.find((one) => one.id === wordOn) : undefined;
+    if (line) { copiedThing.current = { kind: 'words', item: line }; return true; }
+    return false;
+  };
+  const pasteCopied = (): boolean => {
+    const held = copiedThing.current;
+    if (!held) return false;
+    const id = freshId();
+    if (held.kind === 'mark') {
+      const item = { ...held.item, id, x: Math.min(0.95, held.item.x + 0.04), y: Math.min(0.95, held.item.y + 0.04) };
+      setMarks((was) => [...was, item]);
+      setMarkOn(id);
+    } else {
+      /* A step down and across, so the copy is not hidden under the one it
+         was copied from. */
+      const from = held.item.at ?? atOf(held.item.spot);
+      setWords((was) => [...was, { ...held.item, id, at: { x: Math.min(0.95, from.x + 0.04), y: Math.min(0.95, from.y + 0.04) } }]);
+      setWordOn(id);
+    }
+    return true;
+  };
+  useEffect(() => {
+    const press = (event: KeyboardEvent): void => {
+      const target = event.target as HTMLElement | null;
+      if (target && target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      const mod = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+      if (mod && key === 'z') { event.preventDefault(); if (event.shiftKey) stepOn(); else stepBack(); return; }
+      if (mod && key === 'y') { event.preventDefault(); stepOn(); return; }
+      if (key === 'delete' || key === 'backspace') { if (dropChosen()) event.preventDefault(); return; }
+      if (mod && key === 'c') { copyChosen(); return; }
+      if (mod && key === 'x') { if (copyChosen()) { event.preventDefault(); dropChosen(); } return; }
+      if (mod && key === 'v') { if (pasteCopied()) event.preventDefault(); return; }
+      if (mod && key === 'd') { if (copyChosen()) { event.preventDefault(); pasteCopied(); } }
+    };
+    window.addEventListener('keydown', press);
+    return () => window.removeEventListener('keydown', press);
+  });
+  useEffect(() => {
+    if (!rightMenu) return undefined;
+    const shut = (event: PointerEvent): void => {
+      if ((event.target as Element | null)?.closest('[data-postrightmenu]')) return;
+      setRightMenu(null);
+    };
+    document.addEventListener('pointerdown', shut);
+    return () => document.removeEventListener('pointerdown', shut);
+  }, [rightMenu]);
+
   const shareAt = (
     event: React.PointerEvent<HTMLCanvasElement>,
   ): { readonly x: number; readonly y: number } | null => {
@@ -1531,6 +1600,8 @@ export default function PostStudio({
           if (!was) continue;
           if (Math.abs(put.x - was.x) > was.w / 2 || Math.abs(put.y - was.y) > was.h / 2) continue;
           carrying.current = { id: one.id, dx: put.x - was.x, dy: put.y - was.y };
+          setWordOn(one.id);
+          setMarkOn(null);
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
         }
@@ -1552,6 +1623,7 @@ export default function PostStudio({
           const inside = Math.abs(px - box.cx) <= box.w / 2 && Math.abs(py - box.cy) <= box.h / 2;
           if (!corner && !inside) continue;
           setMarkOn(mark.id);
+          setWordOn(null);
           if (bench !== 'shapes') setBench('shapes');
           markHeld.current = { id: mark.id, dx: put.x - mark.x, dy: put.y - mark.y, resize: corner && mark.id === markOn };
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -2223,14 +2295,18 @@ export default function PostStudio({
       }
     }
 
-    if (tpl.previewSvg) {
+    /* A moving template lands as the frame its motion comes to rest on —
+       drawn by `drawTemplateFrame`, the function the preview played — so
+       the still is the thing she just watched, not a different drawing. */
+    const still = templateStill(tpl) ?? tpl.previewSvg;
+    if (still) {
       const img = new Image();
       img.onload = () => {
         setWhole(img);
         setPicture(img);
         setCrop(MIDDLE);
       };
-      img.src = tpl.previewSvg;
+      img.src = still;
     }
 
     const headlineText = lang === 'af' ? tpl.nameAf : tpl.nameEn;
@@ -3749,10 +3825,23 @@ export default function PostStudio({
               data-postliveout
               autoPlay
               loop
-              muted
+              muted={!liveSound}
               playsInline
               className="w-full rounded-xl border border-zinc-800"
             />
+            {/* Its sound, on a press. The engine makes sound with the motion
+                (Veo 3.1 does), and the clip was always muted here, so it
+                looked as if the photo editor brought no sound in (Carli,
+                14 October 2026). Starts silent because a phone will not
+                autoplay sound; one press and it is heard. */}
+            <button
+              type="button"
+              data-postlivesound
+              onClick={() => setLiveSound((was) => !was)}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-200"
+            >
+              {liveSound ? t('post.liveSoundOff', 'Sound off') : t('post.liveSoundOn', 'Sound on')}
+            </button>
             {/* The row that already exists, in the room where the thing
                 was finished. It copies the caption, hands the file to the
                 phone's own share sheet and opens the platform's composer —
@@ -5767,6 +5856,10 @@ export default function PostStudio({
         data-postcanvas
         data-postmovable={movable ? 'yes' : 'no'}
         onPointerDown={grab}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          setRightMenu({ x: event.clientX, y: event.clientY });
+        }}
         onPointerMove={drag}
         onPointerUp={letGo}
         onPointerCancel={letGo}
@@ -5784,6 +5877,45 @@ export default function PostStudio({
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
+      {/* The right-click menu. Carli, 14 October 2026: "in al die editor
+          plekke moet daar 'n right click wees wat funksies vinniger kry soos
+          cut". A right press chooses what is under it first (the same grab a
+          left press does), so the menu acts on that. Drawn on the page so the
+          photo's frame cannot clip it. */}
+      {rightMenu && typeof document !== 'undefined' && createPortal(
+        <div
+          role="menu"
+          data-postrightmenu
+          className="fixed z-[80] flex w-48 flex-col gap-1 rounded-2xl border border-zinc-700 bg-zinc-950/95 p-1.5 shadow-2xl backdrop-blur"
+          style={{
+            left: Math.max(8, Math.min(rightMenu.x, (typeof window === 'undefined' ? 400 : window.innerWidth) - 200)),
+            top: Math.max(8, Math.min(rightMenu.y, (typeof window === 'undefined' ? 400 : window.innerHeight) - 260)),
+          }}
+        >
+          {([
+            { id: 'cut', icon: Scissors, label: t('post.menuCut', 'Cut'), keys: 'Ctrl+X', can: Boolean(markOn || wordOn), run: () => { if (copyChosen()) dropChosen(); } },
+            { id: 'copy', icon: Copy, label: t('post.menuCopy', 'Copy'), keys: 'Ctrl+C', can: Boolean(markOn || wordOn), run: () => { copyChosen(); } },
+            { id: 'paste', icon: ClipboardPaste, label: t('post.menuPaste', 'Paste'), keys: 'Ctrl+V', can: Boolean(copiedThing.current), run: () => { pasteCopied(); } },
+            { id: 'delete', icon: Trash2, label: t('post.menuDelete', 'Delete'), keys: 'Del', can: Boolean(markOn || wordOn), run: () => { dropChosen(); } },
+            { id: 'undo', icon: Undo2, label: t('post.menuUndo', 'Undo'), keys: 'Ctrl+Z', can: true, run: () => { stepBack(); } },
+          ] as const).map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              role="menuitem"
+              disabled={!one.can}
+              data-postrightmenuitem={one.id}
+              onClick={() => { one.run(); setRightMenu(null); }}
+              className="flex min-h-[44px] items-center gap-2.5 rounded-xl border border-transparent px-3 text-left text-sm text-zinc-100 hover:border-emerald-500/40 hover:bg-emerald-500/10 disabled:opacity-40"
+            >
+              <one.icon className="h-4 w-4 text-emerald-300" />
+              <span className="flex-1">{one.label}</span>
+              <span className="text-[11px] text-zinc-400">{one.keys}</span>
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
       {/* Gone the moment a tool is open. Carli, 14 October 2026, with the
           templates open over it: "Die oomblik wanneer mens op templates
           kliek dan moet daai hele bar verdwyn anders is dit in die pad." */}
@@ -6177,6 +6309,7 @@ export default function PostStudio({
         <StudioTemplatesModal
           onClose={() => setShowTemplatesModal(false)}
           onSelectTemplate={handleSelectStudioTemplate}
+          stillOnly
         />
       )}
       {showSizeModal && (

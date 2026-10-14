@@ -12,6 +12,7 @@ import { Check, Music, Pause, Play, Search, Volume2, X } from 'lucide-react';
 import { GENRE_CATEGORIES, GENRE_SAMPLES, type GenreSample } from '../data/genres';
 import { sketch, supported, type Sketch } from '../lib/preview';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 
 interface StyleRepertoireModalProps {
   readonly currentStyle: string;
@@ -25,6 +26,8 @@ export default function StyleRepertoireModal({
   onSelectStyle,
 }: StyleRepertoireModalProps): React.ReactElement {
   const { t, lang } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(true, onClose);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [playingName, setPlayingName] = useState<string | null>(null);

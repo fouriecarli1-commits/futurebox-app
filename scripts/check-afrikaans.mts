@@ -79,6 +79,8 @@ const halfDone = starts
  */
 const SAME_IN_BOTH = new Set([
   /* Borrowed whole, because that is what people actually say. */
+  /* Sonar is the Afrikaans word for sonar too. */
+  'Sonar',
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',

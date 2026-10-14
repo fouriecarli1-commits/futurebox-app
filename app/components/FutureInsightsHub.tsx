@@ -48,6 +48,7 @@ import {
   type InsightArticle,
   getInsightsByCategory,
 } from '../lib/futureinsights';
+import { useBackLayer } from '../lib/backstack';
 
 interface FutureInsightsHubProps {
   onOpenStudio?: () => void;
@@ -79,6 +80,8 @@ export default function FutureInsightsHub({
   const [viewFilter, setViewFilter] = useState<'all' | 'podcasts' | 'articles'>('all');
   const [activeCategory, setActiveCategory] = useState<InsightCategory>('all');
   const [readingArticle, setReadingArticle] = useState<InsightArticle | null>(null);
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(readingArticle !== null, () => setReadingArticle(null));
   const [isPlayingPodcast, setIsPlayingPodcast] = useState(false);
 
   // Gemini deep dive state
@@ -139,7 +142,7 @@ export default function FutureInsightsHub({
           <div className="flex flex-wrap items-center gap-2 pb-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-950/50 px-3 py-1 text-xs font-black text-emerald-300">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              {t('insight.adFreeBadge', '100% Ad-Free • Advertensievry')}
+              {t('insight.adFreeBadge', 'No ads, ever')}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-950/40 px-3 py-1 text-xs font-bold text-teal-300">
               <Star className="h-3.5 w-3.5 text-teal-400 fill-teal-400/30" />
@@ -377,7 +380,7 @@ export default function FutureInsightsHub({
                   {readingArticle.sourceName}
                 </span>
                 <span className="rounded-full border border-emerald-500/20 bg-emerald-950/30 px-3 py-1 text-xs font-bold text-emerald-400">
-                  {t('insight.noAdsGuaranteed', '100% Ad-Free')}
+                  {t('insight.noAdsGuaranteed', 'No ads')}
                 </span>
               </div>
               <button

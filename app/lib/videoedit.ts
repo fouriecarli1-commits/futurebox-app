@@ -53,6 +53,9 @@ import type { CoverFrom } from './videocover';
 import type { Came } from './filmrights';
 import type { EdgeId } from './wordsedge';
 import type { Patch } from './videoblur';
+import type { FrameId, MotionId } from './videoextras';
+import type { GlowId } from './postglow';
+import type { Mark } from './postshapes';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -168,6 +171,14 @@ export interface Piece {
    * on a title card.
    */
   readonly wordsEdge?: EdgeId;
+  /**
+   * How the words come in — `lib/videoextras.ts`. Absent is still.
+   *
+   * Carli, 14 October 2026: *"Ons kort ... motion templates."*
+   */
+  readonly wordsMotion?: MotionId;
+  /** A neon glow round the letters, from the photo room's text styles. */
+  readonly wordsGlow?: GlowId;
   /**
    * How fast this piece plays, as a multiple. One is as filmed.
    *
@@ -530,6 +541,19 @@ export interface Edit {
   /** Seconds of black fading up at the start, and down at the end. */
   readonly fadeIn?: number;
   readonly fadeOut?: number;
+  /**
+   * A frame round the whole film, and shapes over it — `lib/videoextras.ts`
+   * and the photo room's own `lib/postshapes.ts`, drawn by the same
+   * functions on the preview and in the file.
+   *
+   * Carli, 14 October 2026: *"Ons kort shapes, frames, en motion templates."*
+   * Film-wide rather than per shot: a frame that came and went with the cuts
+   * would read as a fault, and a shape she wants on one shot only is one she
+   * can take off the next.
+   */
+  readonly frame?: FrameId;
+  readonly frameInk?: string;
+  readonly shapes?: readonly Mark[];
 }
 
 /**
@@ -843,7 +867,9 @@ export function cutFrom(edit: Edit): Cut {
         ...(one.wordsAt ? { at: one.wordsAt } : {}),
         ...(one.wordsTurn ? { turn: one.wordsTurn } : {}),
         ...(one.wordsSolid !== undefined ? { solid: one.wordsSolid } : {}),
-        ...(one.wordsInk ? { ink: paintFor(one.wordsInk)?.hex ?? INK_DEFAULT } : {}),
+        /* A paint's name from the palette, or a colour itself — the photo
+           room's text styles carry their own hex, which no palette entry is. */
+        ...(one.wordsInk ? { ink: one.wordsInk.startsWith('#') ? one.wordsInk : paintFor(one.wordsInk)?.hex ?? INK_DEFAULT } : {}),
         ...(one.wordsBack ? { back: paintFor(one.wordsBack)?.hex ?? BACK_DEFAULT } : {}),
         ...(one.wordsBox ? { box: one.wordsBox } : {}),
         /* Carried even when absent is the default, because the DEFAULT
@@ -851,6 +877,8 @@ export function cutFrom(edit: Edit): Cut {
            and leaving the key off would leave that to `stitch.ts` to guess
            twice. */
         ...(one.wordsEdge ? { edge: one.wordsEdge } : {}),
+        ...(one.wordsMotion && one.wordsMotion !== 'none' ? { motion: one.wordsMotion } : {}),
+        ...(one.wordsGlow && one.wordsGlow !== 'none' ? { glow: one.wordsGlow } : {}),
         /* The shape decides the corner radius, so a square really is square —
            but only when she has not set one by hand. A number she dragged is
            hers, and a shape button overruling it would undo a gesture. */
@@ -914,6 +942,8 @@ export function cutFrom(edit: Edit): Cut {
     bits: bitsFor(frame.width, frame.height, fps),
     ...(edit.underFrom ? { audioFrom: edit.underFrom } : {}),
     ...(edit.underSkips?.length ? { audioSkips: edit.underSkips } : {}),
+    ...(edit.frame && edit.frame !== 'none' ? { frame: edit.frame, frameInk: edit.frameInk ?? '#ffffff' } : {}),
+    ...(edit.shapes?.length ? { shapes: edit.shapes } : {}),
   };
 }
 

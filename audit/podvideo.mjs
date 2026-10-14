@@ -31,7 +31,7 @@
  * which is the mistake `cast.mjs` exists to stop making twice.
  */
 import { serve, shot } from './where.mjs';
-import { enter, studio, toRoom } from './enter.mjs';
+import { enter, studio, toRoom, unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3131';
 const problems = [];
@@ -77,6 +77,9 @@ await p.waitForTimeout(1500);
 /* An episode's door to a video is on the Episodes tab since the room grew tabs. */
 await room.locator('[data-podtab="episodes"]').first().click().catch(() => undefined);
 await p.waitForTimeout(800);
+/* A tab mounts its own cards, and every card starts shut — `toRoom`
+   unfolded the tab the room opened on, not this one. */
+await unfold(p);
 const door = room.getByRole('button', { name: /Put it on a video/i });
 check('the podcast room has a door to a video', (await door.count()) > 0, String(await door.count()));
 

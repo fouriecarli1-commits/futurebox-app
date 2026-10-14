@@ -348,7 +348,7 @@ export default function StoryRoom(): React.ReactElement {
               </button>
             )}
           </div>
-          <p className="text-[11px] text-zinc-500">{t('story.helperFree', 'The helper is free. Credits are only used for the pictures and the reading.')}</p>
+          <p className="text-[11px] text-zinc-500">{t('story.helperFree', 'The helper uses no credits. Credits are only used for the pictures and the reading.')}</p>
           {helperSays && <p className="text-xs text-zinc-300" data-storyhelpersays>{helperSays}</p>}
         </div>
       )}

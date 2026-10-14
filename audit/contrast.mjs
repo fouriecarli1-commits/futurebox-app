@@ -284,11 +284,26 @@ async function measure(target) {
       if (box.width === 0 || box.height === 0) continue;
       const style = getComputedStyle(el);
       if (style.visibility === 'hidden' || Number(style.opacity) < 0.5) continue;
-      const fg = parse(style.color);
-      if (fg.length < 3) continue;
-      const bg = opaque(el, fg);
-      const a = lum(fg), b = lum(bg);
-      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      /* Text painted WITH a gradient — `bg-clip-text text-transparent` —
+         has a transparent colour and its ink in its own background-image.
+         Read as ordinary text it was measured as nothing on its own
+         gradient (ProBooth's heading, 1.83:1). Its stops are the ink, and
+         each is measured against what is behind the element; the worst wins. */
+      const clipped = (style.backgroundClip === 'text' || style.webkitBackgroundClip === 'text')
+        ? stops(style.backgroundImage) : [];
+      const contrastOf = (ink) => {
+        const back = opaque(clipped.length ? el.parentElement : el, ink);
+        const a = lum(ink), b = lum(back);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      };
+      let ratio;
+      if (clipped.length) {
+        ratio = Math.min(...clipped.map(contrastOf));
+      } else {
+        const fg = parse(style.color);
+        if (fg.length < 3) continue;
+        ratio = contrastOf(fg);
+      }
       const size = parseFloat(style.fontSize);
       const bold = Number(style.fontWeight) >= 700;
       const need = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5;

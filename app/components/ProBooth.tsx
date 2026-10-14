@@ -2313,6 +2313,36 @@ export default function ProBooth({
     setRegionOpen(false);
   }, [carveHere, commit, context]);
 
+  /* The keyboard. Carli, 14 October 2026: "Die keyboard shortcuts vir sekere
+     goed moet ook kan werk". The same keys the video editor answers: Ctrl+Z
+     and Ctrl+Y (or Ctrl+Shift+Z) step back and forward, Space plays and
+     stops, S cuts the open lane at the playhead, and Delete takes out the
+     stretch marked on it. Never while somebody is typing in a box. Held in a
+     ref so the listener is added once and always calls today's functions. */
+  const keyed = useRef({ stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region });
+  keyed.current = { stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region };
+  useEffect(() => {
+    const press = (event: KeyboardEvent): void => {
+      const target = event.target as HTMLElement | null;
+      if (target && target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      const now = keyed.current;
+      const mod = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+      if (mod && key === 'z') { event.preventDefault(); if (event.shiftKey) now.stepForward(); else now.stepBack(); return; }
+      if (mod && key === 'y') { event.preventDefault(); now.stepForward(); return; }
+      if (mod) return;
+      if (key === ' ' && !(target && target.closest('button'))) {
+        event.preventDefault();
+        if (now.playing) now.stopPlaying(); else now.play(now.at);
+        return;
+      }
+      if (key === 's') { now.cutHere(); return; }
+      if ((key === 'delete' || key === 'backspace') && now.region) { event.preventDefault(); now.regionCut(); }
+    };
+    window.addEventListener('keydown', press);
+    return () => window.removeEventListener('keydown', press);
+  }, []);
+
   /* ── Track controls ──────────────────────────────────────
 
      The clock — tempo, time signature, key, click, count-in, grid — and the
@@ -4547,7 +4577,7 @@ export default function ProBooth({
             <span className="hidden text-sm font-extrabold text-white sm:inline">
               FUTURE<span className="text-emerald-500">BOX</span>
             </span>
-            <span className="rounded-lg border border-emerald-500/40 bg-emerald-950 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-300">
+            <span className="rounded-lg border border-emerald-400 bg-emerald-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-onAccent">
               {t('booth.title', 'ProBooth')} · {t('pro.lanesBadge', 'Lanes')}
             </span>
             <span className="hidden min-w-0 truncate text-xs text-zinc-400 md:inline">{title}</span>

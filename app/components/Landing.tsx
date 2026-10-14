@@ -366,7 +366,7 @@ export default function Landing({
                 id="welcome-region"
                 value={regionGuessed ? '' : region.code}
                 onChange={(event) => chooseRegion(event.target.value)}
-                className="min-h-[36px] rounded-full border border-emerald-500/40 bg-black px-3.5 text-xs font-bold text-white focus:border-emerald-500 focus:outline-none"
+                className="min-h-[44px] rounded-full border border-emerald-500/40 bg-black px-3.5 text-xs font-bold text-white focus:border-emerald-500 focus:outline-none"
               >
                 <option value="">
                   {t('pay.regionAuto', 'My device’s country')}

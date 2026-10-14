@@ -31,16 +31,106 @@
  * button whose job is to send a member elsewhere is not a feature.
  */
 
-import React, { useState } from 'react';
-import { Clapperboard, Film, Smartphone, Square, Tv } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Clapperboard, Film, Frame, Play, Shapes, Smartphone, Sparkles, Square, Tv, Type, X } from 'lucide-react';
 import { STARTS, type FilmStart } from '../lib/filmstart';
 import { useLang } from '../lib/i18n';
 import { EDGE, INK, INK_DIM, LIT, PANEL, RAISED } from '../lib/cutlook';
+import { TITLE_STYLES, type TitleStyle } from '../lib/posttitles';
+import { glowOf, haloPasses } from '../lib/postglow';
+import { MARK_SPECS, NEON_INKS, type MarkKind } from '../lib/postshapes';
+import { fontFor } from '../lib/videofonts';
+import {
+  FRAMES, FRAME_INKS, WORD_MOTIONS, drawFrame, motionAt, revealed, wordsStyleOf,
+  type FrameId, type MotionId,
+} from '../lib/videoextras';
 
 interface VideoTemplatesPickerProps {
   onSelectStart: (start: FilmStart) => void;
   piecesCount: number;
   currentShape?: string;
+  /* The four kinds of template beside the recipes — Carli, 14 October 2026:
+     "Dan moet ons seker maak dat die cool text templates in die photo editor
+     ook hierdie kant kom. Ons kort shapes, frames, en motion templates." */
+  readonly wordsMotion?: string;
+  readonly onTextStyle: (style: TitleStyle) => void;
+  readonly onMotion: (id: MotionId) => void;
+  readonly frame?: string;
+  readonly frameInk?: string;
+  readonly onFrame: (id: FrameId, ink: string) => void;
+  readonly shapesCount: number;
+  readonly onShape: (kind: MarkKind, ink: string) => void;
+  readonly onClearShapes: () => void;
+}
+
+type Tab = 'film' | 'text' | 'motion' | 'shapes' | 'frames';
+
+/** A glow as CSS, from the same passes the film paints it with. */
+const glowCss = (glow: string, px: number): string | undefined => {
+  const passes = haloPasses(glowOf(glow), px);
+  return passes.length ? passes.map((one) => `0 0 ${Math.round(one.blur)}px ${one.colour}`).join(', ') : undefined;
+};
+
+/**
+ * The simulator: sample words running a motion on a loop.
+ *
+ * Carli, 14 October 2026: *"Die motion templates moet 'n simulator hê
+ * wanneer mens op dit kliek."* Driven by `motionAt`, the function the film
+ * is rendered with, so what plays here is what the film does.
+ */
+function MotionSimulator({ motion, words }: { readonly motion: string; readonly words: string }): React.ReactElement {
+  const [age, setAge] = useState(0);
+  const started = useRef(0);
+  useEffect(() => {
+    started.current = performance.now();
+    let frame = 0;
+    const tick = (): void => {
+      /* Two and a half seconds round: the entrance, a moment at rest, again. */
+      setAge(((performance.now() - started.current) / 1000) % 2.5);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [motion]);
+  const now = motionAt(motion, age);
+  const tall = 150;
+  return (
+    <div
+      data-editormotionsim={motion}
+      className="relative flex h-[150px] items-center justify-center overflow-hidden rounded-xl border"
+      style={{ borderColor: EDGE, background: 'linear-gradient(135deg, #0b1020, #000 60%, #052e2b)' }}
+    >
+      <span
+        className="px-3 text-center text-2xl font-black"
+        style={{
+          color: '#ffffff',
+          opacity: now.alpha,
+          transform: `translate(${now.dx * tall}px, ${now.dy * tall}px) scale(${now.scale})`,
+          textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+        }}
+      >
+        {revealed(words, now.reveal) || '\u00a0'}
+      </span>
+    </div>
+  );
+}
+
+/** A frame drawn small, by the same function that draws it on the film. */
+function FrameTile({ id, ink }: { readonly id: string; readonly ink: string }): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const node = canvas.current;
+    const ctx = node?.getContext('2d');
+    if (!node || !ctx) return;
+    ctx.clearRect(0, 0, node.width, node.height);
+    const sky = ctx.createLinearGradient(0, 0, node.width, node.height);
+    sky.addColorStop(0, '#1e3a5f');
+    sky.addColorStop(1, '#0f172a');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, node.width, node.height);
+    drawFrame(ctx, id, node.width, node.height, ink);
+  }, [id, ink]);
+  return <canvas ref={canvas} width={96} height={128} className="h-16 w-12 rounded" aria-hidden="true" />;
 }
 
 const SHAPE_ICONS: Record<string, React.ReactElement> = {
@@ -62,9 +152,30 @@ export default function VideoTemplatesPicker({
   onSelectStart,
   piecesCount,
   currentShape,
+  wordsMotion,
+  onTextStyle,
+  onMotion,
+  frame,
+  frameInk,
+  onFrame,
+  shapesCount,
+  onShape,
+  onClearShapes,
 }: VideoTemplatesPickerProps): React.ReactElement {
   const { t } = useLang();
   const [selectedStartId, setSelectedStartId] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('film');
+  const [trying, setTrying] = useState<MotionId>((wordsMotion as MotionId | undefined) ?? 'pop');
+  const [shapeInk, setShapeInk] = useState<string>(NEON_INKS[1]);
+  const [ink, setInk] = useState<string>(frameInk ?? FRAME_INKS[0]);
+  const TABS: readonly { id: Tab; icon: React.ReactElement; label: string }[] = [
+    { id: 'film', icon: <Film className="h-3.5 w-3.5" />, label: t('edit.tplFilm', 'Whole film') },
+    { id: 'text', icon: <Type className="h-3.5 w-3.5" />, label: t('edit.tplText', 'Text styles') },
+    { id: 'motion', icon: <Sparkles className="h-3.5 w-3.5" />, label: t('edit.tplMotion', 'Motion') },
+    { id: 'shapes', icon: <Shapes className="h-3.5 w-3.5" />, label: t('edit.tplShapes', 'Shapes') },
+    { id: 'frames', icon: <Frame className="h-3.5 w-3.5" />, label: t('edit.tplFrames', 'Frames') },
+  ];
+  const noClip = piecesCount === 0;
 
   const handleApplyStart = (start: FilmStart) => {
     setSelectedStartId(start.id);
@@ -85,17 +196,44 @@ export default function VideoTemplatesPicker({
         </div>
         <div>
           <h3 className="text-sm font-black tracking-tight" style={{ color: INK }}>
-            {t('edit.start', 'Start from something')}
+            {t('edit.tplTitle', 'Templates')}
           </h3>
           <p className="text-[11px]" style={{ color: INK_DIM }}>
-            {t(
-              'edit.startWhy',
-              'Each one sets the shape, one look across every shot, transitions, a title and sign-off.',
-            )}
+            {t('edit.tplWhy', 'Ready-made looks for your film. Press one to put it on — then change anything.')}
           </p>
         </div>
       </div>
 
+      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5" role="tablist" aria-label={t('edit.tplTitle', 'Templates')}>
+        {TABS.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === one.id}
+            data-editortpltab={one.id}
+            onClick={() => setTab(one.id)}
+            className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-bold"
+            style={{
+              background: tab === one.id ? 'rgba(52,211,153,0.16)' : RAISED,
+              borderColor: tab === one.id ? LIT : EDGE,
+              color: INK,
+            }}
+          >
+            {one.icon}
+            {one.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'film' && (
+      <>
+      <p className="text-[11px]" style={{ color: INK_DIM }}>
+        {t(
+          'edit.startWhy',
+          'Each one sets the shape, one look across every shot, transitions, a title and sign-off.',
+        )}
+      </p>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {STARTS.map((start) => {
           const isSelected = selectedStartId === start.id;
@@ -167,6 +305,183 @@ export default function VideoTemplatesPicker({
             'Bring a clip in first. A starting point dresses your own film — one look across every shot, how they come in after one another, a title and a sign-off — it cannot film it for you.',
           )}
         </p>
+      )}
+      </>
+      )}
+
+      {noClip && tab !== 'film' && (
+        <p className="text-[11px] italic" style={{ color: INK_DIM }} data-editortplneedsclip>
+          {t('edit.tplNeedsClip', 'Bring a clip in first — these go on top of your own film.')}
+        </p>
+      )}
+
+      {/* ── Text styles: the photo room's titles, on the film ─────────── */}
+      {tab === 'text' && (
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+          {TITLE_STYLES.map((style) => {
+            const look = wordsStyleOf(style.title);
+            return (
+              <button
+                key={style.id}
+                type="button"
+                data-editortextstyle={style.id}
+                data-tidycard=""
+                disabled={noClip}
+                onClick={() => onTextStyle(style)}
+                className="flex min-h-[88px] flex-col items-center justify-center gap-1 rounded-xl border p-3 text-center disabled:opacity-40"
+                style={{ borderColor: EDGE, background: `linear-gradient(135deg, ${style.tile[0]}33, #000 60%, ${style.tile[1]}33)` }}
+              >
+                <span
+                  className="text-base leading-tight"
+                  style={{
+                    fontFamily: fontFor(look.wordsFont).stack,
+                    fontWeight: fontFor(look.wordsFont).weight,
+                    color: look.wordsInk,
+                    textShadow: glowCss(look.wordsGlow, 14),
+                  }}
+                >
+                  {t(style.title.says[0], style.title.says[1])}
+                </span>
+                <span className="text-[10px] font-semibold" style={{ color: INK_DIM }}>{t(style.name[0], style.name[1])}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Motion, with its simulator ─────────────────────────────────── */}
+      {tab === 'motion' && (
+        <div className="space-y-2.5">
+          <MotionSimulator motion={trying} words={t('edit.motionSample', 'Your words here')} />
+          <p className="text-[11px]" style={{ color: INK_DIM }} data-editormotionwhat>
+            {(() => {
+              const one = WORD_MOTIONS.find((m) => m.id === trying);
+              return one ? `${t(one.name[0], one.name[1])} — ${t(one.what[0], one.what[1])}` : '';
+            })()}
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {WORD_MOTIONS.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                data-editormotion={one.id}
+                aria-pressed={trying === one.id}
+                onClick={() => setTrying(one.id)}
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-bold"
+                style={{
+                  background: trying === one.id ? 'rgba(52,211,153,0.16)' : RAISED,
+                  borderColor: wordsMotion === one.id ? LIT : trying === one.id ? 'rgba(52,211,153,0.5)' : EDGE,
+                  color: INK,
+                }}
+              >
+                <Play className="h-3 w-3" />
+                {t(one.name[0], one.name[1])}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            data-editormotionuse
+            disabled={noClip}
+            onClick={() => onMotion(trying)}
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border px-3 text-sm font-black disabled:opacity-40"
+            style={{ background: LIT, borderColor: LIT, color: '#04130d' }}
+          >
+            {t('edit.motionUse', 'Put this motion on the words')}
+          </button>
+        </div>
+      )}
+
+      {/* ── Shapes, from the photo room ─────────────────────────────────── */}
+      {tab === 'shapes' && (
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t('edit.shapeInk', 'Shape colour')}>
+            {NEON_INKS.slice(0, 8).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-editorshapeink={one}
+                aria-pressed={shapeInk === one}
+                aria-label={one}
+                onClick={() => setShapeInk(one)}
+                className="h-11 w-11 rounded-full border-2"
+                style={{ background: one, borderColor: shapeInk === one ? '#ffffff' : 'rgba(255,255,255,0.25)' }}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {MARK_SPECS.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                data-editoraddshape={one.id}
+                disabled={noClip}
+                onClick={() => onShape(one.id, shapeInk)}
+                className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl border p-2 text-[11px] font-semibold disabled:opacity-40"
+                style={{ borderColor: EDGE, background: RAISED, color: INK }}
+              >
+                <span className="text-xl" aria-hidden="true">{one.icon}</span>
+                {t(one.name[0], one.name[1])}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px]" style={{ color: INK_DIM }}>
+            {t('edit.shapesHow', 'A shape lands in the middle of the picture. Drag it there to move it; it stays for the whole film.')}
+          </p>
+          {shapesCount > 0 && (
+            <button
+              type="button"
+              data-editorclearshapes
+              onClick={onClearShapes}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3 text-xs font-bold"
+              style={{ borderColor: EDGE, background: RAISED, color: INK }}
+            >
+              <X className="h-3.5 w-3.5" />
+              {t('edit.shapesClear', 'Take the shapes off')} ({shapesCount})
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── Frames round the picture ─────────────────────────────────────── */}
+      {tab === 'frames' && (
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t('edit.frameInk', 'Frame colour')}>
+            {FRAME_INKS.map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-editorframeink={one}
+                aria-pressed={ink === one}
+                aria-label={one}
+                onClick={() => { setInk(one); if (frame && frame !== 'none') onFrame(frame as FrameId, one); }}
+                className="h-11 w-11 rounded-full border-2"
+                style={{ background: one, borderColor: ink === one ? LIT : 'rgba(255,255,255,0.25)' }}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {FRAMES.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                data-editorframe={one.id}
+                aria-pressed={(frame ?? 'none') === one.id}
+                disabled={noClip}
+                onClick={() => onFrame(one.id, ink)}
+                className="flex min-h-[44px] flex-col items-center justify-center gap-1.5 rounded-xl border p-2 text-[11px] font-semibold disabled:opacity-40"
+                style={{
+                  borderColor: (frame ?? 'none') === one.id ? LIT : EDGE,
+                  background: (frame ?? 'none') === one.id ? 'rgba(52,211,153,0.12)' : RAISED,
+                  color: INK,
+                }}
+              >
+                <FrameTile id={one.id} ink={ink} />
+                {t(one.name[0], one.name[1])}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

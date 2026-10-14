@@ -24,7 +24,7 @@
  * Needs the stub build — see `audit/README.md`.
  */
 import { serve, shot } from './where.mjs';
-import { enter, studio, toRoom } from './enter.mjs';
+import { enter, studio, toRoom, unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3103';
 const af = process.argv[3] === 'af';
@@ -70,6 +70,9 @@ await p.waitForTimeout(2000);
 /* The show's settings are on the Channel tab since the room grew tabs. */
 await room.locator('[data-podtab="channel"]').first().click().catch(() => undefined);
 await p.waitForTimeout(800);
+/* A tab mounts its own cards, and every card starts shut — `toRoom`
+   unfolded the tab the room opened on, not this one. */
+await unfold(p);
 const box = room.locator('#show-language');
 check('the language field is a chooser, not a text box', (await box.count()) === 1, String(await box.count()));
 if (await box.count()) {

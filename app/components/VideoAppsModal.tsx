@@ -12,6 +12,7 @@
  *     Video Speeder.
  */
 
+import { barClearance } from './TabBar';
 import React, { useState, useMemo } from 'react';
 import {
   X, Search, Sparkles, Wand2, RotateCcw, Clapperboard, SlidersHorizontal,
@@ -19,6 +20,7 @@ import {
   Eye, Check, Crown, Flame, Zap, Camera, ShieldCheck,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 
 export interface VideoAppItem {
   readonly id: string;
@@ -40,9 +42,10 @@ export default function VideoAppsModal({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(true, onClose);
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'effects' | 'tools' | 'ai' | 'audio'>('all');
-  const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
   const APPS: readonly VideoAppItem[] = useMemo(
     () => [
@@ -247,7 +250,6 @@ export default function VideoAppsModal({
   }, [APPS, activeTab, query, t]);
 
   const handleApply = (appId: string): void => {
-    setSelectedApp(appId);
     onSelectApp(appId);
     onClose();
   };
@@ -257,7 +259,7 @@ export default function VideoAppsModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="video-apps-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/80 backdrop-blur-md p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/80 backdrop-blur-md p-4 sm:p-6" style={{ paddingBottom: barClearance(12) }}
     >
       <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col rounded-3xl border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Top Header */}

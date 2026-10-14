@@ -73,7 +73,7 @@ figures below replaced a set that had gone wrong in four places at once — one
 of which said "44 checks, of which 82 are browser probes", which cannot be
 true of anything.
 
-- **423 checks** wired into CI, of which **142 are browser probes** that drive
+- **430 checks** wired into CI, of which **142 are browser probes** that drive
   the real app rather than reading the code. All pass. (Was 44 and 82.)
 
   *This figure went from 264 to 265 while it was being written down, because
@@ -96,9 +96,9 @@ true of anything.
   character cost ElevenLabs returns. Named here rather than counted as none,
   because "no console.log" was true in September and stopped being true
   without anybody deciding it had.
-- **66 eslint suppressions**, every one in a category with a reason:
-  36 × `no-img-element` for blob and data URLs a Next `<Image>` cannot take,
-  15 × `jsx-a11y/media-has-caption` for generated audio and video,
+- **75 eslint suppressions**, every one in a category with a reason:
+  45 × `no-img-element` for blob and data URLs a Next `<Image>` cannot take,
+  18 × `jsx-a11y/media-has-caption` for generated audio and video,
   10 × `exhaustive-deps` where a re-run would fire a generation,
   1 × `no-await-in-loop` where three decodes at once is the memory spike the
   code exists to avoid, 1 × a useless fragment. (Was 20; the app grew.)

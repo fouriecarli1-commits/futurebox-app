@@ -1,5 +1,6 @@
 'use client';
 
+import { barClearance } from './TabBar';
 import React, { useState } from 'react';
 import {
   X, CalendarClock, Copy, Check, ExternalLink, Download,
@@ -8,6 +9,7 @@ import {
 import { useLang } from '../lib/i18n';
 import { slug, tagged, scheduleRun, defaultMedium } from '../lib/adrun';
 import { instantOf, schedule, today } from '../lib/queue';
+import { useBackLayer } from '../lib/backstack';
 
 export interface AdPayload {
   readonly headline: string;
@@ -76,6 +78,8 @@ export default function AdScheduleModal({
   readonly onScheduled?: () => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(true, onClose);
   const [activeTab, setActiveTab] = useState<'google' | 'meta' | 'schedule'>('google');
   const [link, setLink] = useState(initialLink || 'https://');
   const [scheduledDate, setScheduledDate] = useState(today());
@@ -222,7 +226,7 @@ export default function AdScheduleModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="schedule-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/80 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/80 backdrop-blur-sm animate-fadeIn" style={{ paddingBottom: barClearance(12) }}
     >
       <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
         {/* Header */}

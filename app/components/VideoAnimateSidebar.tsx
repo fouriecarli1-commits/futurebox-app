@@ -53,7 +53,6 @@ export default function VideoAnimateSidebar({
   onClose,
 }: AnimateSidebarProps): React.ReactElement {
   const { t } = useLang();
-  const [hovered, setHovered] = useState<string | null>(null);
 
   const GENERAL_PRESETS: readonly {
     readonly id: AnimationPresetId;
@@ -344,8 +343,6 @@ export default function VideoAnimateSidebar({
                   key={preset.id}
                   type="button"
                   onClick={() => onSelectPreset(preset.id)}
-                  onMouseEnter={() => setHovered(preset.id)}
-                  onMouseLeave={() => setHovered(null)}
                   className={`group relative flex flex-col items-center justify-center rounded-xl border p-2.5 transition-all text-center ${
                     isSelected
                       ? 'border-purple-500 bg-purple-950/40 text-purple-200 shadow-md shadow-purple-500/10'

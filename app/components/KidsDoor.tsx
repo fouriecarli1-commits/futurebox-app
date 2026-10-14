@@ -352,7 +352,9 @@ export default function KidsDoor({
             data-kidsminutes="none"
             aria-pressed={wantMinutes === null}
             onClick={() => setWantMinutes(null)}
-            className={`fb-kids-bouncy min-h-[52px] rounded-2xl border-2 px-5 text-base font-black transition-all ${
+            /* text-xl, not text-lg: 20px bold is large text, and at 18px the
+               chosen colours measured 4:1 against the 4.5 small text needs. */
+            className={`fb-kids-bouncy min-h-[52px] rounded-2xl border-2 px-5 text-xl font-black transition-all ${
               wantMinutes === null
                 ? 'border-emerald-300 bg-emerald-500 text-onAccent'
                 : 'border-cyan-400/60 bg-surface-100/80 text-surface-950 hover:border-cyan-300'
@@ -454,7 +456,7 @@ export default function KidsDoor({
               }`}
               style={{ boxShadow: pack.pick ? DOOR_GOLD_RING : DOOR_GLASS_RING }}
             >
-              <span className="fb-kids-bubble block text-lg leading-none text-emerald-300" style={{ textShadow: DOOR_TEXT_GLOW.pink }}>
+              <span className="fb-kids-bubble block text-lg leading-none text-surface-950">
                 {lang === 'af' ? pack.name[1] : pack.name[0]}
               </span>
               <span className="block text-base font-black text-surface-950">

@@ -22,6 +22,7 @@
  *      120 bpm, 4/4, C, Master volume, Mix & Master, Share, and view switchers.
  */
 
+import { barClearance } from './TabBar';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Play, Pause, Square, Repeat, Volume2, VolumeX, Undo2, Redo2,
@@ -30,6 +31,7 @@ import {
   Compass, Radio, Users, Cloud, Disc, AudioWaveform, SlidersHorizontal,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 
 export interface DawTrack {
   id: string;
@@ -69,6 +71,8 @@ export default function ProDawStudio({
   readonly onClose?: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(Boolean(onClose), () => onClose?.());
 
   // DAW Playback State
   const [isPlaying, setIsPlaying] = useState(false);
@@ -815,7 +819,7 @@ export default function ProDawStudio({
                   <button
                     key={inst.id}
                     type="button"
-                    onClick={() => setStemCategory(inst.id as any)}
+                    onClick={() => setStemCategory(inst.id as typeof stemCategory)}
                     className={`flex items-center gap-2 rounded-lg border p-2 text-xs font-semibold transition-all ${
                       isSel
                         ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300'
@@ -1312,7 +1316,7 @@ export default function ProDawStudio({
 
       {/* ── Audio Effects Dialog (Screenshots 1 & 2) ───────────────────────── */}
       {isAudioEffectsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/60 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/60 backdrop-blur-sm animate-in fade-in duration-150" style={{ paddingBottom: barClearance(12) }}>
           <div
             className="relative flex flex-col w-full max-w-2xl max-h-[88vh] rounded-2xl border border-zinc-800 bg-zinc-900/95 shadow-2xl backdrop-blur-xl p-4 sm:p-5 overflow-hidden text-zinc-200"
             role="dialog"

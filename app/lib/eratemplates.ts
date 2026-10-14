@@ -100,7 +100,7 @@ export const ERA_TEMPLATES: readonly EraTemplate[] = [
     era: '2030',
     name: ['era.afroTitle', 'Afrofuturism 2030'],
     what: ['era.afroWhat', 'Radiant solar gold, geometric pattern accents, and majestic African high-fashion futurism.'],
-    badge: ['era.afroBadge', 'Afrofuturisme'],
+    badge: ['era.afroBadge', 'Afrofuturism'],
     size: 'story',
     look: { warmth: 0.28, contrast: 1.2, colour: 1.25, bright: 0.94 },
     aiPrompt: [

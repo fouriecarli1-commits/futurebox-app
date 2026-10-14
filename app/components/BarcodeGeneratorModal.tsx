@@ -23,6 +23,7 @@
  *   · One-click "Insert onto Canvas" or direct download.
  */
 
+import { barClearance } from './TabBar';
 import React, { useMemo, useState } from 'react';
 import {
   QrCode, Barcode, Check, Copy, Download, Plus, X, Sparkles, Crown,
@@ -35,6 +36,7 @@ import {
   type QrTemplateId,
   type QrTemplateMeta,
 } from '../lib/barcode';
+import { useBackLayer } from '../lib/backstack';
 
 export default function BarcodeGeneratorModal({
   onInsert,
@@ -44,6 +46,8 @@ export default function BarcodeGeneratorModal({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(true, onClose);
   const [type, setType] = useState<BarcodeType>('qr');
   const [template, setTemplate] = useState<QrTemplateId>('plain');
   const [data, setData] = useState('https://futurebox.app');
@@ -104,8 +108,8 @@ export default function BarcodeGeneratorModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('barcode.title', 'QR-kode & Strepieskode Skepper')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md"
+      aria-label={t('barcode.title', 'QR Code & Barcode Maker')}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-scrim/80 backdrop-blur-md" style={{ paddingBottom: barClearance(12) }}
     >
       <div className="relative flex h-full max-h-[92dvh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}
@@ -116,17 +120,17 @@ export default function BarcodeGeneratorModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black text-zinc-100">
-                {t('barcode.title', 'QR-kode & Strepieskode Skepper')}
+                {t('barcode.title', 'QR Code & Barcode Maker')}
               </h3>
               <p className="text-xs text-zinc-400">
-                {t('barcode.sub', 'Skep stylvolle QR-kodes met rame en templates vir jou ontwerp.')}
+                {t('barcode.sub', 'Make stylish QR codes with frames and templates for your design.')}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label={t('barcode.close', 'Maak toe')}
+            aria-label={t('barcode.close', 'Close')}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
           >
             <X className="h-4 w-4" />
@@ -138,7 +142,7 @@ export default function BarcodeGeneratorModal({
           {/* Type selector */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-              {t('barcode.typeLabel', 'Tipe Kode')}
+              {t('barcode.typeLabel', 'Code type')}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -151,7 +155,7 @@ export default function BarcodeGeneratorModal({
                 }`}
               >
                 <QrCode className="h-4 w-4" />
-                {t('barcode.qrOption', 'QR-Kode (Skakels, Rame & Templates)')}
+                {t('barcode.qrOption', 'QR code (links, frames & templates)')}
               </button>
               <button
                 type="button"
@@ -163,7 +167,7 @@ export default function BarcodeGeneratorModal({
                 }`}
               >
                 <Barcode className="h-4 w-4" />
-                {t('barcode.code128Option', 'Strepieskode (Kode 128 / Goedere)')}
+                {t('barcode.code128Option', 'Barcode (Code 128 / goods)')}
               </button>
             </div>
           </div>
@@ -171,7 +175,7 @@ export default function BarcodeGeneratorModal({
           {/* Data input */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-              {t('barcode.dataLabel', 'Skakel of Inhoud')}
+              {t('barcode.dataLabel', 'Link or content')}
             </label>
             <input
               type="text"
@@ -208,7 +212,7 @@ export default function BarcodeGeneratorModal({
                 onClick={() => setData('https://futurebox.app/tickets')}
                 className="rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-zinc-400 hover:text-zinc-200"
               >
-                🎟️ {t('barcode.ticketsPreset', 'Kaartjies')}
+                🎟️ {t('barcode.ticketsPreset', 'Tickets')}
               </button>
             </div>
           </div>
@@ -218,10 +222,10 @@ export default function BarcodeGeneratorModal({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300">
-                  {t('barcode.templatesLabel', 'Kies ’n QR-Raam / Template')}
+                  {t('barcode.templatesLabel', 'Choose a QR frame / template')}
                 </label>
                 <span className="text-[11px] font-semibold text-emerald-400">
-                  {QR_TEMPLATES.length} {t('barcode.templatesAvailable', 'rame beskikbaar')}
+                  {QR_TEMPLATES.length} {t('barcode.templatesAvailable', 'frames available')}
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto p-1 rounded-2xl border border-zinc-800/80 bg-zinc-900/40">
@@ -271,7 +275,7 @@ export default function BarcodeGeneratorModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                {t('barcode.fgColor', 'Voorgrondkleur')}
+                {t('barcode.fgColor', 'Foreground colour')}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -285,7 +289,7 @@ export default function BarcodeGeneratorModal({
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                {t('barcode.bgColor', 'Agtergrond')}
+                {t('barcode.bgColor', 'Background')}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -303,7 +307,7 @@ export default function BarcodeGeneratorModal({
                       : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
-                  {t('barcode.clear', 'Deursigtig')}
+                  {t('barcode.clear', 'See-through')}
                 </button>
               </div>
             </div>
@@ -319,7 +323,7 @@ export default function BarcodeGeneratorModal({
                 className="max-h-[220px] max-w-full rounded-xl object-contain shadow-xl"
               />
             ) : (
-              <p className="text-xs text-zinc-500">{t('barcode.empty', 'Voer skakel of data in om te genereer.')}</p>
+              <p className="text-xs text-zinc-500">{t('barcode.empty', 'Type a link or data to make a code.')}</p>
             )}
           </div>
         </div>
@@ -333,7 +337,7 @@ export default function BarcodeGeneratorModal({
               className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800"
             >
               {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-              {copied ? t('barcode.copied', 'Gekopieer!') : t('barcode.copy', 'Kopieer')}
+              {copied ? t('barcode.copied', 'Copied!') : t('barcode.copy', 'Copy')}
             </button>
             <a
               href={previewUrl}
@@ -341,7 +345,7 @@ export default function BarcodeGeneratorModal({
               className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800"
             >
               <Download className="h-4 w-4" />
-              {t('barcode.download', 'Stoor PNG')}
+              {t('barcode.download', 'Save PNG')}
             </a>
           </div>
 
@@ -351,7 +355,7 @@ export default function BarcodeGeneratorModal({
             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-black text-black hover:bg-emerald-400 shadow-lg active:scale-95 transition-all"
           >
             <Plus className="h-4 w-4 stroke-[3]" />
-            {t('barcode.insert', 'Plaas op Doek')}
+            {t('barcode.insert', 'Put on the canvas')}
           </button>
         </div>
       </div>

@@ -373,7 +373,10 @@ export default function Booth({
         </span>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-2xl font-black leading-tight tracking-tight bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_16px_rgba(34,211,238,0.6)]">
+            {/* Cyan and sky, not teal and emerald: the theme repaints those two
+                families, and on the dark preset they came out as dark greens on
+                black — the heading measured 1.76:1 (`check:contrast`). */}
+            <h4 className="text-2xl font-black leading-tight tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_16px_rgba(34,211,238,0.6)]">
               {t('booth.title')}
             </h4>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)] uppercase">

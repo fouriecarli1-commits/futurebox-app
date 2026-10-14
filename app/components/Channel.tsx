@@ -722,7 +722,7 @@ export default function Channel({
         {/* ── Column two: the hub and the vault ───────────────────── */}
         <main className="space-y-4 min-w-0" data-chanvault>
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-violet-950/70 via-zinc-900 to-emerald-950/60 p-5">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute right-0 -top-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
             <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <h2 className="text-2xl font-black text-white tracking-tight truncate">

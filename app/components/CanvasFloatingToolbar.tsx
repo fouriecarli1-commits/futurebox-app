@@ -168,11 +168,11 @@ export default function CanvasFloatingToolbar({
           <button
             type="button"
             onClick={onOpenFontCombos}
-            title={t('combo.toolbarButton', 'Font-Kombinasies & Teks-Effekte')}
+            title={t('combo.toolbarButton', 'Font Combinations & Text Effects')}
             className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-amber-300 hover:bg-zinc-850 hover:text-amber-200 transition-all active:scale-95 border border-amber-400/30 bg-amber-400/10"
           >
             <Sparkles className="h-4 w-4 text-amber-400" />
-            <span className="hidden md:inline">{t('combo.toolbarButtonShort', 'Font-Kombinasies')}</span>
+            <span className="hidden md:inline">{t('combo.toolbarButtonShort', 'Font Combinations')}</span>
           </button>
         )}
 
@@ -181,11 +181,11 @@ export default function CanvasFloatingToolbar({
           <button
             type="button"
             onClick={onOpenElements}
-            title={t('elem.toolbarButton', 'Elemente & Vorme')}
+            title={t('elem.toolbarButton', 'Elements & Shapes')}
             className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-teal-300 hover:bg-zinc-850 hover:text-teal-200 transition-all active:scale-95 border border-teal-400/30 bg-teal-400/10"
           >
             <Shapes className="h-4 w-4 text-teal-400" />
-            <span className="hidden md:inline">{t('elem.toolbarButtonShort', 'Elemente')}</span>
+            <span className="hidden md:inline">{t('elem.toolbarButtonShort', 'Elements')}</span>
           </button>
         )}
 

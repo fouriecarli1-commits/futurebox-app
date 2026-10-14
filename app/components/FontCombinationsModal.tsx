@@ -11,6 +11,7 @@
  * soos TypeExtrude, TypeCutOut, TypeLettering, TypeGradient, Signature."*
  */
 
+import { barClearance } from './TabBar';
 import React, { useState } from 'react';
 import {
   Sparkles, Type, Wand2, X, Check, Layers, Sliders, Palette,
@@ -21,6 +22,7 @@ import {
   FONT_COMBINATIONS, type ComboCategory, type FontComboPreset,
 } from '../lib/fontcombinations';
 import { faceOf } from '../lib/postfaces';
+import { useBackLayer } from '../lib/backstack';
 
 export type TextEffectType =
   | 'extrude'
@@ -58,6 +60,8 @@ export default function FontCombinationsModal({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
+  /* Back closes it, as every overlay that covers the app does (`check:backlayers`). */
+  useBackLayer(true, onClose);
   const [activeTab, setActiveTab] = useState<'combos' | 'effects'>('combos');
   const [category, setCategory] = useState<ComboCategory>('all');
   const [selectedEffect, setSelectedEffect] = useState<TextEffectType>('extrude');
@@ -94,7 +98,7 @@ export default function FontCombinationsModal({
       role="dialog"
       aria-modal="true"
       aria-label={t('combo.modalTitle', 'Text combinations and effects')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/80 backdrop-blur-md" style={{ paddingBottom: barClearance(12) }}
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-4xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}
@@ -108,14 +112,14 @@ export default function FontCombinationsModal({
                 {t('combo.modalTitle', 'Text combinations and effects')}
               </h2>
               <p className="text-xs text-zinc-400">
-                {t('combo.modalSub', 'Kies professionele font-kombinasies of 3D, knipmasker en handtekening-effekte.')}
+                {t('combo.modalSub', 'Choose professional font combinations, or 3D, cut-out and signature effects.')}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label={t('combo.close', 'Maak toe')}
+            aria-label={t('combo.close', 'Close')}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
           >
             <X className="h-4 w-4" />
@@ -134,7 +138,7 @@ export default function FontCombinationsModal({
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" />
-            {t('combo.tabCombos', 'Font-Kombinasies (Templates)')}
+            {t('combo.tabCombos', 'Font combinations (templates)')}
           </button>
           <button
             type="button"
@@ -146,7 +150,7 @@ export default function FontCombinationsModal({
             }`}
           >
             <Wand2 className="h-3.5 w-3.5" />
-            {t('combo.tabEffects', 'Teks-Effekte (Extrude, CutOut, Gradient)')}
+            {t('combo.tabEffects', 'Text effects (extrude, cut-out, gradient)')}
           </button>
         </div>
 
@@ -245,7 +249,7 @@ export default function FontCombinationsModal({
                         className="inline-flex min-h-[38px] w-full items-center justify-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 text-xs font-bold text-amber-200 hover:bg-amber-400 hover:text-black transition-colors"
                       >
                         <Sparkles className="h-3.5 w-3.5" />
-                        {t('combo.addToCanvas', 'Voeg by doek')}
+                        {t('combo.addToCanvas', 'Add to the canvas')}
                       </button>
                     </div>
                   );
@@ -258,7 +262,7 @@ export default function FontCombinationsModal({
               {/* Left Selector: Effects List */}
               <div className="md:col-span-5 space-y-2">
                 <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400">
-                  {t('combo.effectApps', 'Tipografiese Effekte (Toepassings)')}
+                  {t('combo.effectApps', 'Typographic effects')}
                 </span>
 
                 {([
@@ -370,7 +374,7 @@ export default function FontCombinationsModal({
               <div className="md:col-span-7 flex flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
                 <div>
                   <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400">
-                    {t('combo.effectCustomize', 'Effek-Verstellings')}
+                    {t('combo.effectCustomize', 'Effect settings')}
                   </span>
 
                   {/* Visual Preview Box */}
@@ -395,7 +399,7 @@ export default function FontCombinationsModal({
                         </div>
                         <div className="mt-3 flex items-center gap-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold text-orange-300">
                           <Crown className="h-3 w-3 text-amber-400" />
-                          {t('combo.studioLayers', '3D Lae-Palet')}
+                          {t('combo.studioLayers', '3D layer palette')}
                         </div>
                       </div>
                     )}
@@ -482,7 +486,7 @@ export default function FontCombinationsModal({
                           CUTOUT MASK
                         </span>
                         <div className="text-[11px] text-amber-300/80 mt-1">
-                          {t('combo.cutoutHint', 'Die agtergrondfoto wys deur die letters.')}
+                          {t('combo.cutoutHint', 'The background photo shows through the letters.')}
                         </div>
                       </div>
                     )}
@@ -528,7 +532,7 @@ export default function FontCombinationsModal({
                         </div>
                         <label className="block text-xs text-zinc-300">
                           <span className="flex justify-between font-semibold">
-                            {t('combo.extrudeDepth', '3D Diepte')}
+                            {t('combo.extrudeDepth', '3D depth')}
                             <span className="text-amber-400 font-mono">{extrudeDepth}px</span>
                           </span>
                           <input
@@ -547,7 +551,7 @@ export default function FontCombinationsModal({
                       <>
                         <label className="block text-xs text-zinc-300">
                           <span className="flex justify-between font-semibold">
-                            {t('combo.craftCurvature', 'Kromming')}
+                            {t('combo.craftCurvature', 'Curve')}
                             <span className="text-amber-400 font-mono">{craftCurve}°</span>
                           </span>
                           <input
@@ -561,7 +565,7 @@ export default function FontCombinationsModal({
                         </label>
                         <div>
                           <span className="block text-xs font-semibold text-zinc-300 pb-1.5">
-                            {t('combo.craftStyle', 'Vervorm-Styl')}
+                            {t('combo.craftStyle', 'Warp style')}
                           </span>
                           <div className="grid grid-cols-4 gap-2">
                             {(['arch', 'wave', 'bulge', 'pinch'] as const).map((st) => (
@@ -586,7 +590,7 @@ export default function FontCombinationsModal({
                     {selectedEffect === 'motiontext' && (
                       <div>
                         <span className="block text-xs font-semibold text-zinc-300 pb-1.5">
-                          {t('combo.motionPreset', 'Animasie-Styl')}
+                          {t('combo.motionPreset', 'Motion style')}
                         </span>
                         <div className="grid grid-cols-3 gap-2">
                           {(['pop', 'typewriter', 'slide', 'wave', 'bounce'] as const).map((m) => (
@@ -611,7 +615,7 @@ export default function FontCombinationsModal({
                       <>
                         <label className="block text-xs text-zinc-300">
                           <span className="flex justify-between font-semibold">
-                            {t('combo.extrudeDepth', '3D Diepte')}
+                            {t('combo.extrudeDepth', '3D depth')}
                             <span className="text-amber-400 font-mono">{extrudeDepth}px</span>
                           </span>
                           <input
@@ -624,7 +628,7 @@ export default function FontCombinationsModal({
                           />
                         </label>
                         <label className="flex items-center justify-between text-xs text-zinc-300">
-                          <span className="font-semibold">{t('combo.shadowColor', 'Skaduwee-Kleur')}</span>
+                          <span className="font-semibold">{t('combo.shadowColor', 'Shadow colour')}</span>
                           <input
                             type="color"
                             value={extrudeColor}
@@ -639,7 +643,7 @@ export default function FontCombinationsModal({
                       <>
                         <label className="block text-xs text-zinc-300">
                           <span className="flex justify-between font-semibold">
-                            {t('combo.strokeWidth', 'Randdikte')}
+                            {t('combo.strokeWidth', 'Outline width')}
                             <span className="text-amber-400 font-mono">{strokeWidth}px</span>
                           </span>
                           <input
@@ -652,7 +656,7 @@ export default function FontCombinationsModal({
                           />
                         </label>
                         <label className="flex items-center justify-between text-xs text-zinc-300">
-                          <span className="font-semibold">{t('combo.strokeColor', 'Randkleur')}</span>
+                          <span className="font-semibold">{t('combo.strokeColor', 'Outline colour')}</span>
                           <input
                             type="color"
                             value={strokeColor}
@@ -666,7 +670,7 @@ export default function FontCombinationsModal({
                     {selectedEffect === 'gradient' && (
                       <div className="grid grid-cols-2 gap-3">
                         <label className="flex items-center justify-between text-xs text-zinc-300 border border-zinc-800 rounded-xl p-2.5 bg-zinc-950">
-                          <span className="font-semibold">{t('combo.gradStart', 'Begin-Kleur')}</span>
+                          <span className="font-semibold">{t('combo.gradStart', 'Start colour')}</span>
                           <input
                             type="color"
                             value={gradientFrom}
@@ -675,7 +679,7 @@ export default function FontCombinationsModal({
                           />
                         </label>
                         <label className="flex items-center justify-between text-xs text-zinc-300 border border-zinc-800 rounded-xl p-2.5 bg-zinc-950">
-                          <span className="font-semibold">{t('combo.gradEnd', 'Eind-Kleur')}</span>
+                          <span className="font-semibold">{t('combo.gradEnd', 'End colour')}</span>
                           <input
                             type="color"
                             value={gradientTo}
@@ -688,7 +692,7 @@ export default function FontCombinationsModal({
 
                     {selectedEffect === 'signature' && (
                       <label className="block text-xs text-zinc-300">
-                        <span className="font-semibold">{t('combo.signName', 'Kunstenaar / Skepper se Naam')}</span>
+                        <span className="font-semibold">{t('combo.signName', 'Artist / maker\'s name')}</span>
                         <input
                           type="text"
                           value={signatureName}
@@ -729,7 +733,7 @@ export default function FontCombinationsModal({
                   className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 text-sm font-bold text-black hover:bg-amber-300 transition-colors shadow-lg"
                 >
                   <Check className="h-4 w-4" />
-                  {t('combo.applyEffectToText', 'Pas Effek Toe op Teks')}
+                  {t('combo.applyEffectToText', 'Apply the effect to the text')}
                 </button>
               </div>
             </div>

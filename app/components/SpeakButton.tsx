@@ -91,8 +91,11 @@ export default function SpeakButton({ onHeard, className = '', disabled = false 
         on
           ? 'animate-pulse border-rose-400 bg-rose-500/20 text-rose-300'
           : missed
-            ? 'border-amber-500/60 bg-zinc-900/70 text-amber-300'
-            : 'border-zinc-700 bg-zinc-900/70 text-zinc-300 hover:text-white'
+            ? 'border-amber-500/60 bg-surface-100 text-surface-900'
+            /* The theme's own surface pair, so the microphone reads on its
+               disc in the light theme as well as the dark (check:playbutton
+               measured the grey one at 1.23:1 on the light preset). */
+            : 'border-emerald-500/50 bg-surface-100 text-surface-900 hover:border-emerald-400'
       } ${className}`}
     >
       {missed ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}

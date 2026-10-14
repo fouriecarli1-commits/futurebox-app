@@ -2902,6 +2902,7 @@ try {
       return {
         back: at('[data-backout]'),
         ask: at('[data-editorask]'),
+        bar: at('[data-editorshapes]'),
         make: at('[data-editormake]'),
         hint: at('[data-editorempty]'),
         first: at('[data-cutbench="folder"]'),
@@ -2918,7 +2919,9 @@ try {
        `px-3`, so the first bench started at 8 and the last ended at 382
        against 12 and 378 for everything above them. Four pixels is not visible
        as four pixels; it is visible as a bar that does not line up. */
-    const lefts = ['back', 'ask', 'hint', 'first']
+    /* The bar's FIRST thing, which since the obsidian top bar (e8cd9dd) is
+       the film's shape chips; Ask sits at its right end beside Make. */
+    const lefts = ['back', 'bar', 'hint', 'first']
       .map((k) => [k, edges[k]?.left]).filter((one) => one[1] != null);
     const rights = ['make', 'hint', 'last']
       .map((k) => [k, edges[k]?.right]).filter((one) => one[1] != null);

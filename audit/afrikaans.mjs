@@ -119,6 +119,7 @@ const FINE = [
   /^\d+:\d+ [A-Za-z]/,                       // a shape and a length: "9:16 Reels, 15–30s"
   /^@?[a-z0-9_.-]+$/i,                        // a handle or an id
   /^[a-z][a-z ]{2,20}$/,                      // a lowercase topic tag: "ai music", "vibe coding"
+  /^#[a-z0-9-]+$/i,                           // a hashtag: "#synth" is typed the same in any language
   /^[a-z0-9.-]+\.(app|com|io|dev|studio|za)(\/|$)/i, // an address
   /^(FutureBox|TikTok|YouTube|Instagram|Spotify|Apple Music|X|Facebook|WhatsApp|Suno AI|Collab Radar)$/i,
   /^(Remix|Podcast|AI|Pro|Free|Studio|Maker|Label|Live|Hooks|Copilot|Collab)$/i,

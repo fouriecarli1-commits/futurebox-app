@@ -204,6 +204,15 @@ const under = [...new Set(rooms)].sort();
  * and `check:handover` make.
  */
 const KNOWN: readonly string[] = [
+  /* The editors' full-screen pickers, washed in bg-scrim on 14 October 2026
+     — which is what made the scan see them — and given the strip then. */
+  'app/components/AdScheduleModal.tsx',
+  'app/components/BarcodeGeneratorModal.tsx',
+  'app/components/ElementsBrowserModal.tsx',
+  'app/components/FontCombinationsModal.tsx',
+  'app/components/ProDawStudio.tsx',
+  'app/components/StudioMagicSuiteModal.tsx',
+  'app/components/VideoAppsModal.tsx',
   'app/components/Account.tsx',
   /* Antigravity's two pickers, merged 12 October 2026: the canvas size and
      the template explorer, both full-screen over the post studio and the

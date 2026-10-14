@@ -4156,7 +4156,13 @@ export default function FutureBoxHome() {
           <div
             ref={roomColumn}
             className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-y-auto md:overflow-hidden"
-            style={{ paddingBottom: barClearance(12) }}
+            /* The bar's strip only while the bar is there. A room that owns
+               the screen (the video editor, the photo editor) has taken the
+               bar away, and the strip left behind cut the bottom 80 pixels
+               off every panel and the timeline's lanes at a desk — Carli,
+               14 October 2026: "Omdat elke balk onder afsny kan ek
+               byvoorbeeld nie woorde op sit nie." */
+            style={{ paddingBottom: roomOwnsScreen ? 12 : barClearance(12) }}
           >
             
             {/* Top Back Bar */}
@@ -4278,9 +4284,9 @@ export default function FutureBoxHome() {
                   }}
                   data-roomai-mobile
                   aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
-                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-950 text-emerald-200 flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
+                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500 text-onAccent flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
                 >
-                  <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <Sparkles className="w-4 h-4 flex-shrink-0" />
                   <span className="hidden xs:inline">{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
                 </button>
               </div>
@@ -4458,9 +4464,9 @@ export default function FutureBoxHome() {
                       }}
                       data-roomai
                       aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
-                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-xs font-bold text-emerald-200 hover:bg-emerald-900 hover:border-emerald-500/50 transition-all"
+                      className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500 border border-emerald-400 text-xs font-bold text-onAccent hover:brightness-110 hover:border-emerald-500/50 transition-all"
                     >
-                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <Sparkles className="w-4 h-4" />
                       <span>{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
                     </button>
                   </div>

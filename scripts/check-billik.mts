@@ -8,6 +8,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
+import { before } from './order.mts';
 import { PODCAST_CAPS } from '../app/lib/plans.ts';
 
 let bad = 0;
@@ -40,7 +41,7 @@ ok('  and takes failed trainings back out of the count',
 ok('  and a ledger it cannot read refuses rather than lets through',
   /trained\.error \|\| givenBack\.error/.test(clone));
 ok('  and it asks before it charges',
-  clone.indexOf('trainsPerMonth') < clone.indexOf('charge(request'));
+  before(clone, 'trainsPerMonth', 'charge(request'));
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);
 process.exit(bad === 0 ? 0 : 1);
