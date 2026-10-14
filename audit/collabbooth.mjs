@@ -186,6 +186,16 @@ try {
      14 October 2026 counted "0 offered" for a button that a local run of the
      same build found every time. Fifteen seconds is a ceiling, not a pause. */
   await sing.first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+  /* When it is missing, say what IS there. CI found nothing twice on
+     14 October 2026 where a local run of the same build finds it every time,
+     and its screenshots live where this session cannot reach — so the log
+     has to carry the evidence. */
+  if (!(await sing.count())) {
+    const overlays = await p.locator('div.fixed.inset-0.z-50').count();
+    const seen = ((await room.innerText().catch(() => '')) || '').replace(/\s+/g, ' ').slice(0, 600);
+    console.log(`      evidence: ${overlays} overlay(s); the first says: ${seen}`);
+    console.log(`      evidence: collab view ${await p.locator('[data-collabview]').count()}, lobby ${await p.locator('[data-collablobby]').count()}, url ${p.url()}`);
+  }
   check('the room offers to open their song in your booth',
     (await sing.count()) === 1, `${await sing.count()} offered`);
   check('and only on theirs — not on the one you sent',
