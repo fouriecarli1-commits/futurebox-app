@@ -1404,6 +1404,11 @@ jobs:
       - name: The plan cards say only what is true
         run: npm run check:kaartwaar
 
+      # Fair use: the terms' numbers are the code's, and voice training is
+      # counted per 30 days, not only voices kept.
+      - name: Fair use is written down and enforced, voice training most of all
+        run: npm run check:billik
+
       # A shot the copilot writes has to be deep enough to make a video
       # from: the instruction's own worked example clears the desk's floor,
       # the shot list is separated by blank lines rather than newlines, and

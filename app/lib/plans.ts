@@ -603,6 +603,16 @@ export function sponsorshipPrice(rung: Sponsorship, region: Region, lang: 'en' |
 export interface PodcastCaps {
   /** How many cloned voices this tier may keep. Zero means none. */
   readonly voices: number;
+  /**
+   * How many voices may be TRAINED in any 30 days, whatever is kept.
+   *
+   * Carli, 14 October 2026: *"ek dink daar moet 'n sterk limit wees op ai
+   * voice training."* `voices` alone was a cap on keeping, not on training:
+   * delete one, train another, delete it, train again — each is a call to
+   * the voice service and a recording of somebody's voice made and thrown
+   * away. Counted off the credit ledger (`api/voice/clone`), refunds out.
+   */
+  readonly trainsPerMonth: number;
   /** Characters in one script. A cap here is a cap on the bill. */
   readonly speakChars: number;
   readonly speakPerDay: number;
@@ -646,10 +656,10 @@ export const VOICE_CAPS: Record<Tier, number> = {
 };
 
 export const PODCAST_CAPS: Record<Tier, PodcastCaps> = {
-  free: { voices: 0, speakChars: 400, speakPerDay: 3, clean: false, publish: false },
-  maker: { voices: 1, speakChars: 3_000, speakPerDay: 20, clean: true, publish: true },
-  studio: { voices: 3, speakChars: 6_000, speakPerDay: 60, clean: true, publish: true },
-  label: { voices: 10, speakChars: 12_000, speakPerDay: 200, clean: true, publish: true },
+  free: { voices: 0, trainsPerMonth: 0, speakChars: 400, speakPerDay: 3, clean: false, publish: false },
+  maker: { voices: 1, trainsPerMonth: 1, speakChars: 3_000, speakPerDay: 20, clean: true, publish: true },
+  studio: { voices: 3, trainsPerMonth: 2, speakChars: 6_000, speakPerDay: 60, clean: true, publish: true },
+  label: { voices: 10, trainsPerMonth: 4, speakChars: 12_000, speakPerDay: 200, clean: true, publish: true },
 };
 
 /**

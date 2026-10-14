@@ -37,6 +37,9 @@ export const maxDuration = 300;
 const MIN_BYTES = 40_000;
 
 
+/** The ledger ref every voice training and its refund carry, so they can be counted. */
+const TRAINING_REF = 'voice-training';
+
 export async function POST(request: Request): Promise<Response> {
   /* A retry loop is stopped here, before anything is charged or asked for.
      `GENERATION` explains what these numbers are chosen against: not a
@@ -100,6 +103,33 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  /* ── And how many have been TRAINED lately, kept or not ─────────────────
+     Carli, 14 October 2026: a strong limit on AI voice training. Every
+     training is a 'clone' spend on the ledger with the ref below, and a
+     failed one is a refund with the same ref, so the count is the trainings
+     that happened. Not read is not "none": a ledger that cannot be asked
+     refuses the training rather than letting it through. */
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const [trained, givenBack] = await Promise.all([
+    client.from('credit_entries').select('id', { count: 'exact', head: true })
+      .eq('owner', caller.id).eq('reason', 'clone').lt('amount', 0).gte('created_at', since),
+    client.from('credit_entries').select('id', { count: 'exact', head: true })
+      .eq('owner', caller.id).eq('reason', 'refund').eq('ref', TRAINING_REF).gte('created_at', since),
+  ]);
+  if (trained.error || givenBack.error) {
+    return Response.json({ message: 'Your recent voice trainings could not be read. Try again in a moment.' }, { status: 503 });
+  }
+  const lately = Math.max(0, (trained.count ?? 0) - (givenBack.count ?? 0));
+  if (lately >= caps.trainsPerMonth) {
+    return Response.json(
+      {
+        message: `Your plan trains ${caps.trainsPerMonth} ${caps.trainsPerMonth === 1 ? 'voice' : 'voices'} in any 30 days, and that has been used. Your voices keep working; a new one can be trained once the oldest training is 30 days old.`,
+        limit: caps.trainsPerMonth,
+      },
+      { status: 429 },
+    );
+  }
+
   /* The workspace's own room, which is a different wall from the one above.
 
      The check above is this member's plan: how many voices they may keep, and
@@ -142,7 +172,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // Prefixed with the account, so the owner is visible from the ElevenLabs
   // dashboard too and a support question does not need this database.
-  const paid = await charge(request, CREDITS.clone, 'clone');
+  const paid = await charge(request, CREDITS.clone, 'clone', TRAINING_REF);
   if (!paid.ok) return paid.response;
 
   const made = await cloneVoice(`${name} · ${caller.id.slice(0, 8)}`, sample, CREDITS.clone);

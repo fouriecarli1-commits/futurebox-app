@@ -277,6 +277,23 @@ export default function Terms(): React.ReactElement {
           </ul>
         </Section>
 
+        {/* Carli, 14 October 2026: "Onthou om 'n fair usage op te stel, en ek
+            dink daar moet 'n sterk limit wees op ai voice training." Every
+            number here is enforced in code, not only written down: the voice
+            limits in PODCAST_CAPS (lib/plans.ts) and api/voice/clone, the
+            brakes in lib/server/brake.ts. check:billik holds the two in step. */}
+        <Section title="Fair use">
+          <p>Credits are the main limit: what a plan includes, and what you buy, is what you can make. On top of that a few things are limited so that one account cannot take the studio away from everybody else, or turn it into something it was not built for.</p>
+          <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
+            <li><strong className="text-white">Training a voice is strictly limited.</strong> Maker trains 1 voice in any 30 days, Studio 2 and Label 4, however many are deleted in between — on top of how many voices a plan may keep (1, 3 and 10). A voice may only ever be trained on your own voice, which you confirm each time. A training that fails is not counted.</li>
+            <li><strong className="text-white">Reading aloud has a daily number</strong> on every plan (Maker 20 readings a day, Studio 60, Label 200), and each script has a length limit.</li>
+            <li><strong className="text-white">Generating is braked per minute and per hour.</strong> A person making things never meets it; a script sending requests in a loop does, and is turned away until it stops.</li>
+            <li><strong className="text-white">One account is one person,</strong> or one business on Label. Sharing a login between people, reselling access or credits, or making things for other people as a service through one account is not fair use.</li>
+            <li><strong className="text-white">No automated use.</strong> Bots, scrapers and scripts that drive the app instead of a person are not allowed.</li>
+            <li>An account that keeps meeting these limits on purpose, or works around them with several accounts, may be paused under &ldquo;Suspending an account&rdquo; below. Where it is fair to, you are told why first.</li>
+          </ul>
+        </Section>
+
         <Section title="Paying, and stopping">
           <p>Plans are monthly and renew until you cancel. Payments are taken by Paystack; no card details pass through FutureBox.</p>
           <p><strong className="text-white">Cancel any time, from inside the app.</strong> A month you have already paid for runs to its end — it is not refunded and it is not cut short. Nothing more is charged after that.</p>
