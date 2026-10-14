@@ -198,7 +198,19 @@ async function stubKids(page, onPost) {
   const steps = page.locator('[data-kidsstep]');
   const disabled = await steps.evaluateAll((all) => all.length > 0 && all.every((one) => one.disabled));
   check('  and every allowance button is switched off', disabled);
-  check('  with a way to go and sign in', (await signin.locator('a[href="/"]').count()) === 1);
+  /* Signed in HERE (Carli, 14 October 2026: "ek kry nie daar in gelog nie").
+     It used to send her back to the welcome page, which is where she had
+     come from — a circle with no sign-in on it. */
+  check('  and signs in right here, without going anywhere',
+    (await signin.locator('[data-kidssigninemail]').count()) === 1
+    && (await signin.locator('[data-kidssigninpassword]').count()) === 1
+    && (await signin.locator('[data-kidssigningo]').count()) === 1);
+  await signin.locator('[data-kidssigninemail]').fill('ouer@example.com').catch(() => undefined);
+  await signin.locator('[data-kidssigninpassword]').fill('verkeerd').catch(() => undefined);
+  await signin.locator('[data-kidssigningo]').click().catch(() => undefined);
+  await page.locator('[data-kidssigninproblem]').waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+  check('  and a sign-in that cannot work says why, rather than doing nothing',
+    (await page.locator('[data-kidssigninproblem]').count()) === 1);
   const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
   check('  and the page fits a phone sideways', fits);
   await page.screenshot({ path: shot('kids-door-signedout.png'), fullPage: false });

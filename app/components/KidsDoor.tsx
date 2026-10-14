@@ -51,6 +51,7 @@ import {
   DOOR_CHOSEN_RING, DOOR_GLASS_RING, DOOR_GOLD_RING, DOOR_TEXT_GLOW,
 } from '../lib/kidsdoorlook';
 import StoryShelf from './StoryShelf';
+import KidsSignIn from './KidsSignIn';
 import SongShelf from './SongShelf';
 
 /** What one of each thing is called in a sentence about how many. */
@@ -267,14 +268,9 @@ export default function KidsDoor({
           style={{ boxShadow: DOOR_GOLD_RING }}
         >
           <p className="text-sm leading-relaxed text-surface-900">
-            {t('kids.signedOut', 'Sign in first — the allowance belongs to your account. Go back to the studio, sign in, and come back here.')}
+            {t('kids.signedOutHere', 'Sign in here first — the kids room and its credits belong to your account.')}
           </p>
-          <a
-            href="/"
-            className="fb-kids-bouncy inline-flex min-h-[48px] items-center gap-2 rounded-2xl border-2 border-amber-300 bg-amber-400 px-5 text-sm font-black text-onAccent"
-          >
-            {t('kids.signIn', 'Go and sign in')}
-          </a>
+          <KidsSignIn onIn={() => { void kidsNow().then(setState); }} />
         </div>
       )}
 
