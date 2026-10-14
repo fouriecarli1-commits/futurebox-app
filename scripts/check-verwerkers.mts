@@ -86,6 +86,17 @@ const SENDS: Record<string, Processor> = {
   },
   'api.music.ai': { name: 'Music.ai', gets: 'their audio, to read chords and key out of it', basis: null },
   'api.paystack.co': { name: 'Paystack', gets: 'their e-mail, so a receipt reaches them', basis: 'South African, so no transfer' },
+  /* Google Play, in the Android app only. What goes is the purchase token the
+     phone was handed by Play — nothing of the member's that Google does not
+     already hold as the seller of record. `www.googleapis.com` is only the
+     name of the permission asked for, never called. */
+  'androidpublisher.googleapis.com': {
+    name: 'Google Play',
+    gets: 'the purchase token from a payment made through Google Play',
+    basis: 'Google is the seller of record for a purchase made through Play, under the terms the member accepted to pay there',
+  },
+  'oauth2.googleapis.com': { name: 'Google Play', gets: null, basis: 'signs the app in to ask about a purchase; nothing of the member\u2019s goes there' },
+  'www.googleapis.com': { name: 'Google Play', gets: null, basis: 'the name of a permission in the sign-in request, not an address that is called' },
   'api.resend.com': { name: 'Resend', gets: 'their e-mail address and the letter itself', basis: null },
   /* The second place a recording of a member's voice goes, and the reason
      this field exists. No agreement on file as of 24 September 2026. */
@@ -350,6 +361,9 @@ const KEPT: Record<string, string> = {
   purchases: 'purchases',
   memberships: 'credits',
   subscriptions: 'Paystack',
+  /* Which account a Google Play purchase belongs to: the purchase token,
+     the product and when its month ends. Named on the page beside Paystack. */
+  play_purchases: 'Google Play',
   mail_log: 'Resend',
   entries: 'competition',
   winners: 'competition',

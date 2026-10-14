@@ -53,6 +53,7 @@ import {
 import StoryShelf from './StoryShelf';
 import KidsSignIn from './KidsSignIn';
 import SongShelf from './SongShelf';
+import { inPlayApp } from '../lib/playbilling';
 
 /** What one of each thing is called in a sentence about how many. */
 const MANY: Record<KidThing, readonly [string, string, string]> = {
@@ -200,6 +201,9 @@ export default function KidsDoor({
      monthly pack can be stopped any time from here; the membership's own
      "stop" on the account screen does not reach it. */
   const [monthly, setMonthly] = useState<{ pack: string; nextPaymentAt: string | null }[]>([]);
+  /* Read after mounting: the server's page cannot know it is inside the app. */
+  const [playApp, setPlayApp] = useState(false);
+  useEffect(() => { setPlayApp(inPlayApp()); }, []);
   useEffect(() => { void kidsMonthly().then(setMonthly); }, []);
   const stopMonthly = async (): Promise<void> => {
     setBusy(true);
@@ -468,8 +472,21 @@ export default function KidsDoor({
           ))}
         </div>
         <p className="text-xs leading-relaxed text-surface-700">
-          {t('kids.packsHow', 'Kids credits are spent only in the kids room, before any allowance below. Card or EFT at Paystack; a monthly pack renews until you cancel it.')}
+          {playApp
+            /* In the Play Store app Google Play takes the payment, and a
+               monthly pack bought there is stopped on Play's own page. */
+            ? t('kids.packsHowPlay', 'Kids credits are spent only in the kids room, before any allowance below. Paid through Google Play; a monthly pack renews until you stop it in Google Play.')
+            : t('kids.packsHow', 'Kids credits are spent only in the kids room, before any allowance below. Card or EFT at Paystack; a monthly pack renews until you cancel it.')}
         </p>
+        {playApp && (
+          <a
+            href="https://play.google.com/store/account/subscriptions"
+            data-kidsplaymanage
+            className="inline-flex min-h-[44px] items-center rounded-2xl border-2 border-cyan-400/60 bg-surface-100/80 px-4 text-sm font-bold text-surface-950"
+          >
+            {t('kids.playManage', 'Monthly packs in Google Play')}
+          </a>
+        )}
         {monthly.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 border-cyan-400/50 bg-surface-100/80 px-4 py-3" data-kidsmonthly>
             <p className="min-w-0 text-sm font-bold text-surface-950">

@@ -213,6 +213,23 @@ things follow, and the second one needs doing by hand:
 
 ## When you want the rooms that are still dark
 
+### 8b. Google Play Billing — only once the Android app is on Play
+
+Inside the Android app from the Play Store, plans, credits and kids packs are
+paid through Google Play; the website keeps Paystack. `docs/PLAY-STORE.md`
+(**Paying in the Android app**) has every click. Three variables:
+
+* `GOOGLE_PLAY_SERVICE_ACCOUNT` — the service account's JSON key, pasted as
+  it downloads. Invited in the Play Console with *View financial data* and
+  *Manage orders*.
+* `ANDROID_PACKAGE` — already set for asset links; the same app id.
+* `PLAY_NOTIFY_SECRET` — a long random string. The Pub/Sub push address is
+  `https://<your site>/api/play/notify?key=<this string>`.
+
+**Broken until then:** inside the Android app the buy buttons say paying
+through Google Play is not switched on. Nothing is charged and nothing is
+granted. The website is unaffected. Needs `supabase/playbilling.sql` run.
+
 ### 9. Music.ai
 
 `MUSIC_AI_API_KEY`, then `MUSIC_AI_WORKFLOW_READ`,

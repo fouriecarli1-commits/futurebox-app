@@ -18,6 +18,8 @@ import { accountFor, send } from '@/app/lib/server/email';
 import { cancelledLetter } from '@/app/lib/server/letters';
 import { cardChangeLink, stopRenewing } from '@/app/lib/server/paystack';
 import { TIER_SPECS, type Tier } from '@/app/lib/plans';
+import { packageName, playSubscriptionOf } from '@/app/lib/server/playbilling';
+import { playManageUrl, productBySku } from '@/app/lib/playproducts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,7 +45,28 @@ export async function GET(request: Request): Promise<Response> {
     .eq('owner', caller.id)
     .maybeSingle();
   const row = data as Row | null;
-  if (!row) return Response.json({ subscribed: false });
+  if (!row) {
+    /* ── Bought in the Play Store app ───────────────────────────────────
+       A plan paid through Google Play is stopped where it was started: Play
+       owns that arrangement, and only Play's own subscriptions page can end
+       it. So the account screen names it and links there, rather than
+       showing a "stop" button that could not reach it. */
+    const play = await playSubscriptionOf(caller.id);
+    const grants = play ? productBySku(play.sku)?.grants : null;
+    if (play && grants?.kind === 'plan') {
+      return Response.json({
+        subscribed: true,
+        via: 'play',
+        tier: grants.tier,
+        name: TIER_SPECS[grants.tier]?.name ?? grants.tier,
+        status: play.state === 'SUBSCRIPTION_STATE_CANCELED' ? 'non-renewing' : 'active',
+        nextPaymentAt: play.expires,
+        cancellable: false,
+        manageUrl: playManageUrl(play.sku, packageName()),
+      });
+    }
+    return Response.json({ subscribed: false });
+  }
 
   return Response.json({
     subscribed: true,

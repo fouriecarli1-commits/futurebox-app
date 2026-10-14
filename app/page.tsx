@@ -108,6 +108,7 @@ import * as cloud from './lib/cloud';
 import { accessToken } from './lib/cloud';
 import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipPrice, tierPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
+import { inPlayApp, playAvailable, resumePlayPurchases } from './lib/playbilling';
 
 interface Blueprint {
   tag: string;
@@ -372,11 +373,17 @@ export default function FutureBoxHome() {
   const [canCharge, setCanCharge] = useState<boolean | null>(null);
   useEffect(() => {
     if (!pricingModalOpen || canCharge !== null) return;
+    /* In the Play Store app the till is Google Play's, so that is the one asked. */
+    if (inPlayApp()) { void playAvailable().then(setCanCharge); return; }
     fetch('/api/checkout')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setCanCharge(Boolean(d?.available)))
       .catch(() => setCanCharge(false));
   }, [pricingModalOpen, canCharge]);
+  /* A Play purchase whose last step never reached us — signal lost, app
+     closed on Play's sheet, a cash payment that cleared later — is finished
+     here, once a session, in the Play app only. */
+  useEffect(() => { void resumePlayPurchases(); }, []);
   // Resolved after mount: guessing during render would bake one country's
   // prices into the static HTML that everybody is served.
   const [region, setRegion] = useState<Region>(REGIONS[0]);

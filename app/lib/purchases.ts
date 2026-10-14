@@ -8,6 +8,7 @@
 
 import { accessToken, configured } from './cloud';
 import type { Plan } from './entitlements';
+import { buyOnPlay, inPlayApp } from './playbilling';
 
 export type Level = 'none' | 'opened' | 'owned';
 
@@ -72,6 +73,10 @@ export async function startCheckout(
     | { kind: 'credits'; pack: string }
     | { kind: 'addon'; addon: string },
 ): Promise<string | null> {
+  /* Inside the Play Store app the same press pays through Google Play —
+     Play's rule for anything digital bought in an app from Play. Paystack is
+     never offered there; `lib/playbilling.ts` says why. */
+  if (inPlayApp()) return buyOnPlay(want);
   const token = await accessToken();
   if (!token) return 'Sign in before paying.';
   try {

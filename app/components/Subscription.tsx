@@ -49,6 +49,9 @@ interface State {
   readonly status?: string;
   readonly nextPaymentAt?: string | null;
   readonly cancellable?: boolean;
+  /** Bought in the Play Store app: managed and stopped on Play's own page. */
+  readonly via?: 'play';
+  readonly manageUrl?: string;
 }
 
 export default function Subscription(): React.ReactElement | null {
@@ -185,6 +188,24 @@ export default function Subscription(): React.ReactElement | null {
           </p>
         </div>
       </div>
+
+      {/* A plan bought in the Play Store app is Play's arrangement, and only
+          Play's page can change or stop it — so the button goes there. */}
+      {state.via === 'play' && state.manageUrl && (
+        <>
+          <a
+            href={state.manageUrl}
+            data-subplaymanage
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-200"
+          >
+            <CreditCard className="w-4 h-4" />
+            {t('sub.playManage', 'Change or stop it in Google Play')}
+          </a>
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t('sub.playWhere', 'You took this plan in the Android app, so Google Play holds the payment. Stopping it there ends it at the close of the month already paid.')}
+          </p>
+        </>
+      )}
 
       {done && (
         <p className="text-sm text-emerald-300 flex items-center gap-1.5">

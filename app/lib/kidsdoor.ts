@@ -11,6 +11,7 @@
  */
 
 import { accessToken } from './cloud';
+import { buyOnPlay, inPlayApp } from './playbilling';
 
 export interface KidsState {
   readonly open: boolean;
@@ -142,6 +143,11 @@ export async function endKids(): Promise<KidsState | KidsFail> {
  * webhook, never by this page saying the payment went through.
  */
 export async function buyKidsPack(pack: string): Promise<{ url: string } | KidsFail> {
+  /* In the Play Store app, through Google Play — see `lib/playbilling.ts`. */
+  if (inPlayApp()) {
+    const said = await buyOnPlay({ kind: 'kids', pack }, '/kids?paid=1');
+    return said ? { fail: said } : { url: '/kids?paid=1' };
+  }
   /* Without a token the server answers 401 and that is the signed-out
      signal, as for every other press here: the page does not decide. */
   const token = await accessToken();

@@ -113,6 +113,9 @@ export const ORDER = [
   /* The amp catalogue — one table, service_role alone, the capture in a
      text column. See the file's own header. */
   'amps',
+  /* Purchases made through Google Play in the Android app — who each Play
+     purchase token belongs to. Stands on `auth.users` alone. */
+  'playbilling',
 ] as const;
 
 /**
@@ -198,6 +201,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
   coverkeep:
     'Watter omslagprent bestel is, sodat een wat nooit gestoor is, gaan gehaal kan word. Die kopie na ons stoor is voorheen deur die blaaier self gedoen — so ’n toegemaakte oortjie het ’n prent wat die enjin gemaak en waarvoor betaal is, by die enjin laat lê op ’n skakel wat verval. Sonder hierdie tabel is daar niks wat weet die prent het ooit bestaan nie, en gee ’n omslag wat misluk het ook nie die krediete terug nie.',
   invites: 'Die uitnodigingsskakel in \u2019n saamwerk-e-pos.',
+  playbilling:
+    'Aankope deur Google Play in die Android-toep: wie elke aankoop besit, sodat een betaling nooit twee keer toegeken word nie en ’n hernuwing maande later sy eienaar vind.',
   listens:
     'Hoeveel kere \u2019n liedjie geluister is, per liedjie, vir die maker. Moet n\u00e1 charts.sql loop.',
   googlespend:

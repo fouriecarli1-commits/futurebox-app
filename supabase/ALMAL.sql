@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- FutureBox — die hele skema, al 49 lêers, in een plak.
+-- FutureBox — die hele skema, al 50 lêers, in een plak.
 -- ═══════════════════════════════════════════════════════════════════════════
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -162,6 +162,9 @@
 --                 ’n lisensie wat ons toelaat om dit aan te stuur. Lede soek
 --                 dit in die booth. Sonder dit sê die booth "die katalogus
 --                 is nog nie opgestel nie".
+--   playbilling.sql Aankope deur Google Play in die Android-toep: wie elke
+--                   aankoop besit, sodat een betaling nooit twee keer toegeken
+--                   word nie en ’n hernuwing maande later sy eienaar vind.
 --
 -- ── Niks hoef vooraf te bestaan nie ───────────────────────────────────────
 --
@@ -177,7 +180,7 @@
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
--- Dit word geskryf deur `npm run sql:bundle` uit die 49 lêers self.
+-- Dit word geskryf deur `npm run sql:bundle` uit die 50 lêers self.
 -- Verander hulle en loop die skrip weer; `npm run check:sqlbundle` keer dat
 -- die kopie stilweg van sy oorsprong af wegdryf.
 
@@ -5831,3 +5834,55 @@ create index if not exists amp_catalogue_created_idx
   on public.amp_catalogue (created_at desc);
 
 alter table public.amp_catalogue enable row level security;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/playbilling.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- Purchases made through Google Play, inside the Play Store app.
+--
+-- Carli, 14 October 2026: "Wanneer ek die app op die playstore gaan sit gaan
+-- ek paystack afhaal en werk met die playstore se paying system." The website
+-- keeps Paystack; inside the Android app, Play bills. See `app/lib/playproducts.ts`
+-- and `app/api/play/route.ts`.
+--
+-- One row per Play purchase token. The token is what the phone hands us and
+-- what Google is asked about; this row is what says WHOSE it is. The first
+-- account to present a token claims it, and a second account presenting the
+-- same token is refused — without this, one paid token sent from two accounts
+-- would be two grants for one payment.
+--
+-- A subscription keeps its token across renewals, so a renewal that Google
+-- announces months later (with nobody signed in) finds its owner here. An
+-- upgrade or a re-subscribe issues a new token that names the old one as
+-- `linked_token`, and the owner carries over through that.
+--
+-- Safe to run twice.
+
+create table if not exists public.play_purchases (
+  purchase_token  text primary key check (length(purchase_token) between 1 and 4096),
+  owner           uuid not null references auth.users (id) on delete cascade,
+  sku             text not null check (length(sku) between 1 and 100),
+  kind            text not null check (kind in ('subscription', 'consumable')),
+  -- The token this one replaced, when Play says so (an upgrade, a re-subscribe).
+  linked_token    text,
+  -- Google's own word for where it stands: 'SUBSCRIPTION_STATE_ACTIVE',
+  -- 'PURCHASED', 'CONSUMED' and so on. Kept for the account screen and for
+  -- anybody reading this table, not for deciding anything — every decision
+  -- asks Google again.
+  state           text not null default '',
+  -- When a subscription's paid period ends. Null for a consumable.
+  expires_at      timestamptz,
+  -- The last order this token was granted for, so a renewal is granted once.
+  last_order      text,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create index if not exists play_purchases_owner on public.play_purchases (owner);
+create index if not exists play_purchases_linked on public.play_purchases (linked_token);
+
+-- No policy at all: only the service key reads or writes this. The account
+-- screen asks `/api/subscription`, which reads it on the member's behalf.
+alter table public.play_purchases enable row level security;

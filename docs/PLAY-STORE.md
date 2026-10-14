@@ -55,6 +55,7 @@ The practical consequences, said plainly:
 | | Where |
 |---|---|
 | App manifest with id, scope, language, categories, orientation | `app/manifest.ts` |
+| Google Play Billing in the app, Paystack on the web | `app/lib/playbilling.ts`, `app/api/play/` |
 | Icons at 192 and 512, one of them maskable | `public/icon-neon-192.png`, `public/icon-neon-512.png`, `public/icon-neon-512-maskable.png` |
 | Asset links, read from the environment | `app/.well-known/assetlinks.json/route.ts` |
 | Public privacy page | `/privacy` |
@@ -184,6 +185,94 @@ Either one reads `https://futurebox.studio/manifest.webmanifest` and produces
 an `.aab` to upload. Tell me when you are at this step and I will walk through
 it with you — the only choices it asks for are the package name, the version
 and the colours, and all four are already decided above.
+
+---
+
+## Paying in the Android app — Google Play Billing **yours, with the code done**
+
+Carli, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
+ek paystack afhaal en werk met die playstore se paying system."*
+
+That is how it is built. **On the website nothing changes** — Paystack, as
+now. **Inside the Android app** the same buy buttons open Google Play's own
+payment sheet, and Paystack is never offered there. The app tells the two
+apart by how it was opened (a Play Store app opens the site with an
+`android-app://` referrer), per tab, so the site in ordinary Chrome on the
+same phone keeps Paystack.
+
+What happens on a purchase, in order:
+
+1. The app asks `/api/play` whether this member may buy this — the same
+   rules as the website (extra credits only on a plan) — *before* money moves.
+2. Play's sheet takes the payment.
+3. The app sends the purchase token to `/api/play`. The server asks **Google**
+   whether that token is paid — the phone's word is never the receipt —
+   claims it for this account, grants what *our* table says the product is,
+   and only then tells Google it was delivered. A purchase that is never
+   delivered is refunded by Play after three days, which is the right outcome
+   for one we failed to deliver.
+4. If the last step never arrived (signal lost, app closed on the sheet),
+   the app finishes it the next time it opens.
+5. Monthly renewals arrive from Google at `/api/play/notify`, are checked with
+   Google again, and extend the plan or add the month's kids credits.
+
+Album art is **not** sold inside the Android app: an auction price is not a
+product in Play's console, and Play does not allow sending a buyer elsewhere
+to pay. The app says so and links nowhere.
+
+### The products to create in the Play Console
+
+**Monetise → Products.** The id must be exactly as written; the price is
+yours to set (Play adds its fee on top of what you receive, so you may want
+these a little higher than the website's).
+
+| Product id | Kind | What it grants |
+|---|---|---|
+| `maker_monthly` | Subscription, monthly | Maker plan |
+| `studio_monthly` | Subscription, monthly | Studio plan |
+| `label_monthly` | Subscription, monthly | Label plan |
+| `credits_small` | In-app product (consumable) | Top-up: the small pack |
+| `credits_mid` | In-app product (consumable) | Top-up: the middle pack |
+| `credits_large` | In-app product (consumable) | Top-up: the large pack |
+| `kids_try` | In-app product (consumable) | Kids Try, 30 kids credits |
+| `kids_month` | Subscription, monthly | Kids Monthly, 65 kids credits a month |
+| `kids_plus` | Subscription, monthly | Kids Plus, 135 kids credits a month |
+
+The credits each one grants are read from `app/lib/credits.ts` and
+`app/lib/kidspacks.ts` on the server — the Console only sets the price.
+
+### The service account (lets the server ask Google about a purchase)
+
+1. Google Cloud Console → the project linked to your Play account → **IAM →
+   Service accounts → Create**. Any name. No roles needed there.
+2. On that account: **Keys → Add key → JSON**. A file downloads.
+3. Play Console → **Users and permissions → Invite new users** → the service
+   account's email → app permissions **View financial data** and **Manage
+   orders and subscriptions**.
+4. Vercel: `GOOGLE_PLAY_SERVICE_ACCOUNT` = the whole JSON file, pasted.
+
+### Renewal notices (real-time developer notifications)
+
+1. Google Cloud Console → **Pub/Sub → Create topic** (say `play-billing`).
+   Give `google-play-developer-notifications@system.gserviceaccount.com` the
+   **Pub/Sub Publisher** role on it.
+2. On the topic: **Create subscription → Push**, endpoint
+   `https://futurebox.studio/api/play/notify?key=<PLAY_NOTIFY_SECRET>`.
+3. Play Console → **Monetisation setup** → the topic's full name → **Send
+   test notification**. The route answers "test received".
+4. Vercel: `PLAY_NOTIFY_SECRET` = the same long random string.
+
+### The wrapper must allow it
+
+When building with Bubblewrap, `twa-manifest.json` needs Play Billing
+switched on — `"features": { "playBilling": { "enabled": true } }` — or the
+app's buy buttons will say Google Play billing could not be opened.
+
+### Testing before anybody pays
+
+Play Console → **Settings → License testing** → add your own Gmail. Purchases
+by a licence tester go through the real sheet and are never charged. Run
+`supabase/playbilling.sql` (or `ALMAL.sql`) first.
 
 ---
 

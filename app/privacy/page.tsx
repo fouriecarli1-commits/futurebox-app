@@ -94,7 +94,7 @@ export default function Privacy(): React.ReactElement {
         </Section>
 
         <Section title="What is never kept">
-          <p><strong className="text-white">Your card.</strong> Payments go to Paystack, on their page. No card number, expiry or CVV passes through this app or is stored by it. What comes back is a reference and a customer code.</p>
+          <p><strong className="text-white">Your card.</strong> Payments go to Paystack, on their page. No card number, expiry or CVV passes through this app or is stored by it. What comes back is a reference and a customer code. In the Android app from the Play Store, payments go through Google Play instead, on Google&rsquo;s own sheet; what comes back is a purchase token, which is kept with your account so the purchase is delivered once and a monthly plan can renew.</p>
           <p><strong className="text-white">Your address, as an address.</strong> The IP a request arrives from is hashed with a secret before anything is written down, and only the hash is stored. It is used for two things: noticing that a hundred free accounts came from one place, and noticing that a suspended account has come back from the same machine. The address itself is not recoverable from what is kept.</p>
         </Section>
 
@@ -106,6 +106,7 @@ export default function Privacy(): React.ReactElement {
             <li><strong className="text-white">ElevenLabs</strong> — music, voices and trained sounds. Lyrics, style words, recordings of your voice and songs you train on are sent there.</li>
             <li><strong className="text-white">Anthropic</strong> — the copilot and the writing help. What you type into those goes there.</li>
             <li><strong className="text-white">Paystack</strong> — payments. Your email, so a receipt reaches you.</li>
+            <li><strong className="text-white">Google Play</strong> — payments in the Android app. Google already knows you as the Play account paying; we ask Google about each purchase token to check it was paid, and keep the token with your account.</li>
             <li><strong className="text-white">Kits.AI</strong> — singing conversion. When you put a take through &ldquo;sing it in another voice&rdquo;, the recording of you singing is sent to them. It is a recording of your voice, and everything this page says below about what happens to one applies here too.</li>
             <li><strong className="text-white">Music.ai</strong> — reading a song. When you ask for the chords, the key, the tempo or where the sections are, the audio is sent to them to be listened to.</li>
             <li><strong className="text-white">Resend</strong> — email. Your address and the letter itself, whenever anything is sent to you: an invitation, a password reset, a receipt.</li>

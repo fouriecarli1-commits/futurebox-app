@@ -270,6 +270,12 @@ const ANONYMOUS: Record<string, string> = {
  
      Behind POST_SECRET since the day it was written, for the stronger reason
      that it spends on her account. */
+  /* Google Play's subscription notices arrive with nobody signed in — a
+     renewal at Google is the whole point of them. Behind PLAY_NOTIFY_SECRET,
+     and even then it never grants on the message's word: it asks Google
+     about the purchase and writes only to the account that bought it. */
+  'app/api/play/notify/route.ts':
+    'Google Play\u2019s subscription notices, with no member present; behind PLAY_NOTIFY_SECRET, and every grant is re-checked with Google and goes to the account on record for that purchase',
   'app/api/eleven/dictionary/route.ts':
     'writes which pronunciation dictionary is live — one row for the whole app, no member to scope it to; behind POST_SECRET',
 };

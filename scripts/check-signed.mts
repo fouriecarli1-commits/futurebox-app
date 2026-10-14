@@ -42,6 +42,8 @@ function ok(what: string, passed: boolean, detail = ''): void {
 
 /** Unsigned on purpose. The key is `file:route`, the value is why. */
 const ALLOWED: Record<string, string> = {
+  'app/lib/playbilling.ts:play':
+    'a capability probe — "is paying through Google Play switched on here", the same answer for everybody, asked when the prices open. Both POSTs to the same route, which start and finish a purchase, are signed',
   'app/components/MakeSound.tsx:music':
     'the same capability probe as engines.ts — which engine makes music, so the price on the button is the price charged. The POST that makes the music is signed',
   'app/lib/engines.ts:music':

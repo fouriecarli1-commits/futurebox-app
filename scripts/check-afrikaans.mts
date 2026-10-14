@@ -289,6 +289,8 @@ const ALLOWED = new Set([
   'ai', 'rss', 'url', 'bpm', 'mb', 'png', 'jpeg', 'webp', 'wav', 'webm', 'mp',
   /* Names. */
   'futurebox', 'youtube', 'spotify', 'tiktok', 'apple', 'music', 'soundcloud',
+  /* Half of "Google Play", the store's name. */
+  'play',
   /* Half of "Apple Podcasts", which is a product name and not a word. */
   'podcasts',
   /* "App Styl" — the button that changes how the app looks.

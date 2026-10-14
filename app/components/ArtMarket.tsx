@@ -96,6 +96,7 @@ import ArtMaker from './ArtMaker';
 import {
   ART_MAX_BYTES, ART_SIDE, ART_SIZE_SAID, ART_RAND, ARTIST_RAND, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '../data/artmarket';
+import { inPlayApp } from '../lib/playbilling';
 
 /* ────────────────────────────────────────────────────────────── the skin ── */
 
@@ -771,6 +772,13 @@ export default function ArtMarket(): React.ReactElement {
   const pay = useCallback(
     async (want: Record<string, unknown>): Promise<void> => {
       setProblem('');
+      /* Not sold inside the Play Store app: an auction price is not a product
+         in Play's console, and Play does not allow sending a buyer elsewhere
+         to pay. Said plainly, with no link out — see `lib/playproducts.ts`. */
+      if (inPlayApp()) {
+        setProblem(t('art.notInPlay', 'Album art is not sold in the Android app.'));
+        return;
+      }
       try {
         const token = await accessToken();
         const response = await fetch('/api/checkout', {
