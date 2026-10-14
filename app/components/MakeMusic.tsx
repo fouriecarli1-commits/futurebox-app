@@ -41,6 +41,7 @@ import LyricHelp from './LyricHelp';
 import Note from './Note';
 import Hint from './Hint';
 import SayItWrong from './SayItWrong';
+import { weightWords, weirdWords } from '../lib/songweight';
 import { STARTERS, LENGTH_CHOICES } from '../data/sound';
 import { CREDITS, songCost, type SongEngine } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
@@ -488,6 +489,9 @@ export default function MakeMusic({
   const [verseGuideMode, setVerseGuideMode] = useState(false);
   const [showRepertoire, setShowRepertoire] = useState(false);
   const [weirdness, setWeirdness] = useState(15);
+  /* Light to heavy, Carli 14 October 2026: "sliders by everything in make a
+     song. Light heavy, en weirdness level." 50 is neither, and adds nothing. */
+  const [weight, setWeight] = useState(50);
   /**
    * A sound of your own, trained in the channel on your own songs.
    *
@@ -543,8 +547,10 @@ export default function MakeMusic({
     if (seconds !== 60) said.push(`${seconds}s`);
     if (singItYourself) said.push(t('make.singSelf'));
     if (ownSound) said.push(t('make.useOwnSound', 'Make it in a sound of my own'));
+    if (weight !== 50) said.push(`${weight < 50 ? t('make.light', 'Light') : t('make.heavy', 'Heavy')} ${Math.abs(weight - 50) * 2}%`);
+    if (weirdness !== 15) said.push(`${t('make.weirdness', 'Weirdness')} ${weirdness}%`);
     return said;
-  }, [bpm, songKey, seconds, singItYourself, ownSound, t]);
+  }, [bpm, songKey, seconds, singItYourself, ownSound, weight, weirdness, t]);
   const [busy, setBusy] = useState(false);
 
   /**
@@ -766,11 +772,12 @@ export default function MakeMusic({
     singDirection(singWanted).forEach((word) => {
       if (parts.indexOf(word) === -1) parts.push(word);
     });
-    if (weirdness >= 75) {
-      parts.push('avant-garde textures', 'experimental production', 'unconventional rhythm');
-    } else if (weirdness >= 45) {
-      parts.push('creative harmonies', 'eclectic instrumentation');
-    }
+    /* Neither engine takes a number for these. ElevenLabs reads the style
+       list and Lyria reads the prompt, so a slider becomes the words a
+       producer would use for that much of it — and the further it is moved,
+       the stronger the words. */
+    weightWords(weight).forEach((word) => { if (parts.indexOf(word) === -1) parts.push(word); });
+    weirdWords(weirdness).forEach((word) => { if (parts.indexOf(word) === -1) parts.push(word); });
     /* The four generic production words that used to go on every request are
        gone. They said nothing about how a song should sound — "balanced mix",
        "dynamic performance" — and together with the server's own padding they
@@ -1246,6 +1253,16 @@ export default function MakeMusic({
             </div>
 
             <div className="flex flex-shrink-0 items-center gap-2">
+            {/* An Afrikaans word sung wrong is reported from the song she is
+                listening to, not only from the list further down (Carli,
+                14 October 2026). */}
+            <SayItWrong
+              surface="music_studio"
+              spoken
+              said={activeTrack.title}
+              alwaysShow
+              variant="button"
+            />
             {canSingMine && (
               <SingItMine
                 track={activeTrack}
@@ -1537,8 +1554,41 @@ export default function MakeMusic({
           </span>
           <p className="text-sm text-zinc-500 pt-1">{t('make.soundNote')}</p>
 
-          {/* 🎚️ Weirdness Slider */}
-          <div className="mt-4 p-3.5 rounded-xl border border-zinc-800 bg-zinc-950/50 space-y-2">
+          {/* 🎚️ Light to heavy, and weirdness */}
+          <div className="mt-4 p-3.5 rounded-xl border border-zinc-800 bg-zinc-950/50 space-y-2" data-makeweight>
+            <div className="flex items-center justify-between">
+              <label htmlFor="make-weight" className="text-xs sm:text-sm font-bold text-zinc-200 flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-emerald-400" />
+                <span>{t('make.lightHeavy', 'Light or heavy')}</span>
+              </label>
+              <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold border border-zinc-700 bg-zinc-900 text-zinc-300">
+                {weight <= 20
+                  ? t('make.weightVeryLight', 'Very light')
+                  : weight <= 40
+                    ? t('make.light', 'Light')
+                    : weight < 60
+                      ? t('make.weightMiddle', 'In between')
+                      : weight < 80
+                        ? t('make.heavy', 'Heavy')
+                        : t('make.weightVeryHeavy', 'Very heavy')}
+              </span>
+            </div>
+            <input
+              id="make-weight"
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={weight}
+              data-makeweightslide
+              onChange={(e) => setWeight(Number(e.target.value))}
+              className="w-full accent-emerald-500 h-11 touch-manipulation cursor-pointer"
+            />
+            <p className="text-[11px] text-zinc-500 leading-snug">
+              {t('make.lightHeavyWhy', 'Light is airy and soft; heavy is dense, loud and hard-hitting. The music engine reads it as words added to the style.')}
+            </p>
+          </div>
+          <div className="mt-3 p-3.5 rounded-xl border border-zinc-800 bg-zinc-950/50 space-y-2">
             <div className="flex items-center justify-between">
               <label htmlFor="make-weirdness" className="text-xs sm:text-sm font-bold text-zinc-200 flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-emerald-400" />

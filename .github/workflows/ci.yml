@@ -1395,6 +1395,11 @@ jobs:
       - name: The photo editor's magic touch and visible grabs
         run: npm run check:magieraak
 
+      # Make a song's light-heavy and weirdness sliders reach the engine as
+      # words; the podcast room speaks the app's language.
+      - name: Song sliders, the Afrikaans word button, and the podcast room's language
+        run: npm run check:ligswaar
+
       # A shot the copilot writes has to be deep enough to make a video
       # from: the instruction's own worked example clears the desk's floor,
       # the shot list is separated by blank lines rather than newlines, and

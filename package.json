@@ -323,6 +323,7 @@
     "check:praatin": "tsx scripts/check-praatin.mts",
     "check:knipwand": "tsx scripts/check-knipwand.mts",
     "check:magieraak": "tsx scripts/check-magieraak.mts",
+    "check:ligswaar": "tsx scripts/check-ligswaar.mts",
     "check:skootdiepte": "tsx scripts/check-skootdiepte.mts",
     "check:knipvenster": "tsx scripts/check-knipvenster.mts",
     "check:neurie": "tsx scripts/check-neurie.mts",

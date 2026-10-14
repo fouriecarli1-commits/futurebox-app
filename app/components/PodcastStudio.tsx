@@ -96,7 +96,7 @@ export default function PodcastStudio({
   onUpgrade: () => void;
   onToVideo?: (episodeTitle: string) => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [activeTab, setActiveTab] = useState<PodStudioTab>('broadcast');
   const [voices, setVoices] = useState<VoiceState>({ configured: false, mine: [], stock: [] });
@@ -118,9 +118,12 @@ export default function PodcastStudio({
   const [prompterSpeed, setPrompterSpeed] = useState(2);
   const [prompterPlaying, setPrompterPlaying] = useState(false);
   const [prompterFontSize, setPrompterFontSize] = useState(22);
-  const [prompterText, setPrompterText] = useState(
-    'Welkom by vandag se episode!\n\n1. Inleiding & Hoof Nuus van die week\n2. Onderhoud met ons spesiale gas oor toekomstige tegnologie\n3. Luisteraarsvrae & Terugvoer\n4. Afsluiting & Vooruitskouing',
-  );
+  /* In the app's language. It was Afrikaans for everybody, so the English
+     app opened a podcast room with an Afrikaans script in it (Carli, 14
+     October 2026: "In die engelse app is alles afrikaans daar binne"). */
+  const [prompterText, setPrompterText] = useState(() => (lang === 'af'
+    ? 'Welkom by vandag se episode!\n\n1. Inleiding & hoofnuus van die week\n2. Onderhoud met ons spesiale gas\n3. Luisteraarsvrae & terugvoer\n4. Afsluiting & vooruitskouing'
+    : 'Welcome to today\u2019s episode!\n\n1. Introduction & the week\u2019s main news\n2. Interview with our special guest\n3. Listener questions & feedback\n4. Wrap-up & what\u2019s next'));
   const prompterBoxRef = useRef<HTMLDivElement>(null);
 
   // Dual-Mic VU Meters & Gain
@@ -430,10 +433,10 @@ export default function PodcastStudio({
               }`}
             >
               <span className={`h-2 w-2 rounded-full ${recording ? 'bg-red-400' : 'bg-emerald-400'}`} />
-              {recording ? '● ON AIR' : 'STANDBY'}
+              {recording ? `● ${t('pod.onAir', 'ON AIR')}` : t('pod.standby', 'STANDBY')}
             </span>
             <div className="flex items-center gap-1.5 font-mono text-sm sm:text-base font-bold text-zinc-300 bg-zinc-950/80 px-2.5 py-1 rounded-lg border border-zinc-800">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest mr-1">Timecode</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-widest mr-1">{t('pod.timecode', 'Timecode')}</span>
               {formatTimecode(recordingSeconds)}
             </div>
           </div>
@@ -449,7 +452,7 @@ export default function PodcastStudio({
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Teleprompter</span>
+              <span>{t('pod.prompter', 'Teleprompter')}</span>
             </button>
           </div>
         </div>
@@ -461,20 +464,20 @@ export default function PodcastStudio({
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
                 <Mic className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Aanbieder 1 (Hoof-mikrofoon)</span>
+                <span>{t('pod.host1', 'Host 1 (main mic)')}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setMic1Muted(!mic1Muted)}
                 className={`p-1 rounded-lg text-xs font-semibold ${mic1Muted ? 'text-red-400 bg-red-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-                title="Mute"
+                title={t('pod.mute', 'Mute')}
               >
                 {mic1Muted ? <MicOff className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
               </button>
             </div>
             <VuMeter level={mic1Level} muted={mic1Muted} />
             <div className="flex items-center justify-between text-[11px] text-zinc-500">
-              <span>Gain: {mic1Gain}%</span>
+              <span>{t('pod.gain', 'Gain')}: {mic1Gain}%</span>
               <input
                 type="range"
                 min={0}
@@ -491,20 +494,20 @@ export default function PodcastStudio({
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
                 <Mic className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Aanbieder 2 (Mede-aanbieder)</span>
+                <span>{t('pod.host2', 'Host 2 (co-host)')}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setMic2Muted(!mic2Muted)}
                 className={`p-1 rounded-lg text-xs font-semibold ${mic2Muted ? 'text-red-400 bg-red-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-                title="Mute"
+                title={t('pod.mute', 'Mute')}
               >
                 {mic2Muted ? <MicOff className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
               </button>
             </div>
             <VuMeter level={mic2Level} muted={mic2Muted} />
             <div className="flex items-center justify-between text-[11px] text-zinc-500">
-              <span>Gain: {mic2Gain}%</span>
+              <span>{t('pod.gain', 'Gain')}: {mic2Gain}%</span>
               <input
                 type="range"
                 min={0}
@@ -521,41 +524,41 @@ export default function PodcastStudio({
         <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-zinc-800/60">
           <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mr-1 flex items-center gap-1">
             <Bell className="w-3 h-3 text-amber-400" />
-            Soundboard:
+            {t('pod.soundboard', 'Soundboard')}:
           </span>
           <button
             type="button"
             onClick={() => studioAudio.playStudioDemoTrack()}
             className="min-h-[36px] rounded-lg border border-purple-500/40 bg-purple-950/40 px-2.5 py-1 text-xs font-semibold text-purple-200 hover:bg-purple-900/40 transition-all"
           >
-            🎵 Intro Theme
+            🎵 {t('pod.intro', 'Intro theme')}
           </button>
           <button
             type="button"
             onClick={() => studioAudio.playAudioEffect('sparkle')}
             className="min-h-[36px] rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-900/40 transition-all"
           >
-            👏 Applous
+            👏 {t('pod.applause', 'Applause')}
           </button>
           <button
             type="button"
             onClick={() => studioAudio.playAudioEffect('magic')}
             className="min-h-[36px] rounded-lg border border-amber-500/40 bg-amber-950/40 px-2.5 py-1 text-xs font-semibold text-amber-200 hover:bg-amber-900/40 transition-all"
           >
-            ✨ Stinger
+            ✨ {t('pod.stinger', 'Stinger')}
           </button>
           <button
             type="button"
             onClick={() => studioAudio.playAudioEffect('radar')}
             className="min-h-[36px] rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-900/40 transition-all"
           >
-            📡 Sonar
+            📡 {t('pod.sonar', 'Sonar')}
           </button>
           <button
             type="button"
             onClick={() => studioAudio.stopStudioDemoTrack()}
             className="min-h-[36px] rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs font-semibold text-zinc-400 hover:text-white transition-all ml-auto"
-            title="Stop Sound"
+            title={t('pod.stopSound', 'Stop the sound')}
           >
             <Square className="w-3.5 h-3.5 fill-current" />
           </button>
@@ -567,7 +570,7 @@ export default function PodcastStudio({
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-2">
               <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5" />
-                Live Teleprompter
+                {t('pod.livePrompter', 'Live teleprompter')}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -578,7 +581,7 @@ export default function PodcastStudio({
                   }`}
                 >
                   {prompterPlaying ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                  {prompterPlaying ? 'Pause' : 'Scroll'}
+                  {prompterPlaying ? t('pod.pause', 'Pause') : t('pod.scroll', 'Scroll')}
                 </button>
                 <button
                   type="button"
@@ -586,12 +589,12 @@ export default function PodcastStudio({
                     if (prompterBoxRef.current) prompterBoxRef.current.scrollTop = 0;
                   }}
                   className="p-1.5 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white"
-                  title="Reset to top"
+                  title={t('pod.toTop', 'Back to the top')}
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
                 <div className="flex items-center gap-1 text-xs text-zinc-400">
-                  <span>Spoed:</span>
+                  <span>{t('pod.speed', 'Speed')}:</span>
                   <input
                     type="range"
                     min={1}
@@ -602,7 +605,7 @@ export default function PodcastStudio({
                   />
                 </div>
                 <div className="flex items-center gap-1 text-xs text-zinc-400">
-                  <span>Grootte:</span>
+                  <span>{t('pod.size', 'Size')}:</span>
                   <input
                     type="range"
                     min={16}
@@ -628,7 +631,7 @@ export default function PodcastStudio({
             <textarea
               value={prompterText}
               onChange={(e) => setPrompterText(e.target.value)}
-              placeholder="Tik of plak jou skrip hier..."
+              placeholder={t('pod.scriptHere', 'Type or paste your script here…')}
               rows={2}
               className="w-full bg-zinc-900/60 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500 resize-y"
             />
