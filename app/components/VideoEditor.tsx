@@ -150,7 +150,7 @@ import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
 import { EDGES, EDGE_DEFAULT } from '../lib/wordsedge';
-import {
+import { soundOf,
   ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE, SIDE_MAX, SIDE_MIN,
   aspectOf, shapeOf,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
@@ -1222,9 +1222,8 @@ export default function VideoEditor({
 
   /* How much the preview is magnified. One means no magnification at all,
      and at one the zoom box is not a scroller — see the note where it is
-     drawn. Whole numbers only: a continuous zoom on a phone is a gesture
-     nobody can land on a round number, and the point of this is placing
-     something precisely, not exploring. */
+     drawn. The buttons step in whole numbers; the slider beside them goes in
+     tenths, because she asked to zoom gradually (14 October 2026). */
   const [zoom, setZoom] = useState(1);
 
   /* How long the track under it runs. Read once when it is chosen, because
@@ -1559,7 +1558,7 @@ export default function VideoEditor({
        The same multiplication the renderer does, against the same flag — a
        preview that ducked on something else would be a mix balanced against
        a film that does not exist. */
-    const speaking = Boolean(piece?.sound) && on.shots;
+    const speaking = Boolean(piece) && soundOf(piece!) && on.shots;
     const duck = speaking && edit.duck !== undefined
       ? Math.max(0, Math.min(1, edit.duck))
       : 1;
@@ -1569,7 +1568,7 @@ export default function VideoEditor({
        range from the film is a preview that lies at the edges. */
     a.playbackRate = Math.max(0.5, Math.min(2, edit.underSpeed ?? 1));
     a.loop = Boolean(edit.underLoop);
-  }, [edit, piece?.sound, bedUrl]);
+  }, [edit, piece, bedUrl]);
 
   /* ── Kept on the film's clock ──────────────────────────────────────────
 
@@ -2848,6 +2847,13 @@ async function smallerFrame(url: string): Promise<string> {
       if (made_.current) URL.revokeObjectURL(made_.current);
       made_.current = URL.createObjectURL(result.blob);
       setMade({ url: made_.current, blob: result.blob, ext: result.ext, seconds: result.seconds });
+      /* Carli, 14 October 2026: "Ek het op video gese put it together to het
+         niks gesave nie" — and then, "Toemaar ek het dit gekry". It was made;
+         it was further down the room than she was looking. So the finished
+         film is brought into view the moment it exists. */
+      window.setTimeout(() => {
+        document.querySelector('[data-editormade]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 120);
 
       /* ── Into the room's own history ───────────────────────────────────
 
@@ -3153,21 +3159,36 @@ async function smallerFrame(url: string): Promise<string> {
                 in percentages inside the same box, so a logo placed at 2x is
                 still in the same place at 1x. */}
             <div className="flex items-center justify-end gap-2">
-              <span className="text-sm text-zinc-500" data-editorzoomnow>{`${zoom}×`}</span>
+              <span className="w-12 text-right text-sm tabular-nums text-zinc-500" data-editorzoomnow>{`${zoom.toFixed(1)}×`}</span>
               <button
                 type="button"
                 data-editorzoomout
                 disabled={zoom <= 1}
-                onClick={() => setZoom((was) => Math.max(1, was - 1))}
+                onClick={() => setZoom((was) => Math.max(1, Math.ceil(was) - 1))}
                 className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
               >
                 &minus;
               </button>
+              {/* Carli, 14 October 2026: "Die zoom in video editor moet dalk
+                  'n slider hê dat mens gradually kan zoom." A slider beside
+                  the two buttons: the buttons still land on whole numbers,
+                  and the slider goes anywhere between in tenths. */}
+              <input
+                type="range"
+                min={1}
+                max={4}
+                step={0.1}
+                value={zoom}
+                onChange={(event) => setZoom(Math.max(1, Math.min(4, Number(event.target.value))))}
+                aria-label={t('edit.zoomSlide', 'How close the picture is')}
+                data-editorzoomslide
+                className="h-11 min-w-0 flex-1 accent-emerald-500 sm:max-w-[220px]"
+              />
               <button
                 type="button"
                 data-editorzoomin
                 disabled={zoom >= 4}
-                onClick={() => setZoom((was) => Math.min(4, was + 1))}
+                onClick={() => setZoom((was) => Math.min(4, Math.floor(was) + 1))}
                 className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
               >
                 +
@@ -3225,7 +3246,7 @@ async function smallerFrame(url: string): Promise<string> {
                 /* `heard` as well as the shot's own switch: a muted shots
                    lane is muted here too, or she balances a mix against
                    something that is not the mix. */
-                muted={!piece.sound || !heard(edit).shots}
+                muted={!soundOf(piece) || !heard(edit).shots}
                 /* And the song under it, on the same clock. Hidden because it
                    is not a player — it is the bed, following the playhead so
                    the preview sounds like the film. See the effect beside
@@ -4486,7 +4507,7 @@ async function smallerFrame(url: string): Promise<string> {
                     {t('edit.shotSound', 'The shots')}
                     <Keys which="shots" />
                   </span>
-                  {edit.pieces.filter((one) => one.sound).map((one) => (
+                  {edit.pieces.filter((one) => soundOf(one)).map((one) => (
                     <button
                       type="button"
                       key={one.id}
@@ -4520,7 +4541,7 @@ async function smallerFrame(url: string): Promise<string> {
                       />
                     </button>
                   ))}
-                  {!edit.pieces.some((one) => one.sound) && (
+                  {!edit.pieces.some((one) => soundOf(one)) && (
                     <span className="absolute inset-y-0 right-2 flex items-center text-[11px]" style={{ color: INK_DIM }}>
                       {t('edit.noShotSound', 'No shot is speaking yet')}
                     </span>
@@ -5378,17 +5399,17 @@ async function smallerFrame(url: string): Promise<string> {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
-                aria-pressed={piece.sound === true}
+                aria-pressed={soundOf(piece)}
                 data-editorsound
-                onClick={() => tweak({ sound: !piece.sound })}
+                onClick={() => tweak({ sound: !soundOf(piece) })}
                 className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-2 ${
-                  piece.sound ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                  soundOf(piece) ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                 }`}
               >
-                {piece.sound ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                {piece.sound ? t('edit.soundOn', 'Its own sound is on') : t('edit.soundOff', 'Its own sound is off')}
+                {soundOf(piece) ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                {soundOf(piece) ? t('edit.soundOn', 'Its own sound is on') : t('edit.soundOff', 'Its own sound is off')}
               </button>
-              {piece.sound && (
+              {soundOf(piece) && (
                 <label className="inline-flex items-center gap-2">
                   <span className="text-sm text-zinc-400">{t('edit.loud', 'How loud')}</span>
                   <input
@@ -7240,7 +7261,7 @@ async function smallerFrame(url: string): Promise<string> {
           <Note>
             {t(
               'edit.realTime',
-              'It plays the film through once to record it, so it takes about as long as the film is. That is the trade for it costing nothing.',
+              'It plays the film through once to record it, so it takes about as long as the film is. The finished film appears below, ready to save.',
             )}
           </Note>
 

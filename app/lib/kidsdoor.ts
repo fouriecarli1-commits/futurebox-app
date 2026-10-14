@@ -164,6 +164,8 @@ export async function buyKidsPack(pack: string): Promise<{ url: string } | KidsF
 /** The monthly kids packs standing at Paystack for this account. */
 export async function kidsMonthly(): Promise<{ pack: string; nextPaymentAt: string | null }[]> {
   const token = await accessToken();
+  /* Nobody signed in has no pack to show; asking would only be a 401. */
+  if (!token) return [];
   try {
     const answer = await fetch('/api/kids/pack', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
     if (!answer.ok) return [];

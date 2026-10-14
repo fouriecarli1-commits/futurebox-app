@@ -1743,10 +1743,7 @@ export const STRINGS: Dict = {
     en: "Put it together",
     af: "Sit dit saam",
   },
-  "edit.realTime": {
-    en: "It plays the film through once to record it, so it takes about as long as the film is. That is the trade for it costing nothing.",
-    af: "Dit speel die film een keer deur om dit op te neem, so dit vat omtrent so lank as wat die film is. D\u00edt is die ruil daarvoor dat dit niks kos nie.",
-  },
+  "edit.realTime": { en: "It plays the film through once to record it, so it takes about as long as the film is. The finished film appears below, ready to save.", af: "Dit speel die film een keer deur om dit op te neem, so dit neem omtrent so lank as wat die film is. Die klaar film verskyn hieronder, gereed om te stoor." },
   "edit.save": {
     en: "Save it",
     af: "Stoor dit",
@@ -5697,6 +5694,7 @@ export const STRINGS: Dict = {
   "booth.toTime": { en: "to time the words", af: "om die woorde te tyd" },
   "kids.renews": { en: "renews", af: "hernu" },
   "kids.stopMonthly": { en: "Stop the monthly pack", af: "Stop die maandelikse pakkie" },
+  "edit.zoomSlide": { en: "How close the picture is", af: "Hoe naby die prent is" },
   "kids.steps": { en: "The steps are whole songs, so nothing is left over that buys nothing.", af: "Die stappe is heel liedjies, sodat niks oorbly wat niks koop nie." },
   "kids.stories": { en: "Stories", af: "Stories" },
   "kids.bannerAlt": { en: "The FutureBox kids room: a safe studio where a child can be creative", af: "Die FutureBox kinderkamer: \u2019n veilige ateljee waar \u2019n kind kreatief kan wees" },

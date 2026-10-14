@@ -234,7 +234,16 @@ export interface Piece {
    * already made changes.
    */
   readonly fill?: boolean;
-  /** Carry this piece's own sound. Off by default: most material is room tone. */
+  /**
+   * Carry this piece's own sound. ON unless switched off — read it through
+   * `soundOf`, never as `piece.sound`.
+   *
+   * It was off by default ("most material is room tone"), and Carli, 14
+   * October 2026: "Ek hoor nogsteeds nie klank in die video editor nie." A
+   * clip with somebody talking in it played silent until she found a switch
+   * on that one clip; a film is expected to sound like its clips. Only an
+   * explicit `false` silences a piece now.
+   */
   readonly sound?: boolean;
   /**
    * How loud this piece's own sound is, 0 to 2.
@@ -784,7 +793,7 @@ export function cutFrom(edit: Edit): Cut {
       /* A shot speaks only if the shots lane is being heard at all. Resolved
          here, where the edit becomes a cut, so the mute on the lane is the
          same mute in the film — see `heard`. */
-      ...(one.sound && heard(edit).shots ? { sound: true } : {}),
+      ...(soundOf(one) && heard(edit).shots ? { sound: true } : {}),
       /* The hard cut is the default everywhere, so it is not carried: a scene
          with no `join` and a scene with `join: 'cut'` render the same, and
          sending the second one would put a field on every scene of every film
@@ -891,13 +900,13 @@ export function cutFrom(edit: Edit): Cut {
     /* And only when a shot actually speaks: filtering silence is work for
        nothing, and a flag the renderer has to look past is a flag that will
        one day be looked past wrongly. */
-    ...(edit.denoise && on.shots && kept.some((one) => one.sound) ? { denoise: true } : {}),
+    ...(edit.denoise && on.shots && kept.some((one) => soundOf(one)) ? { denoise: true } : {}),
     /* Only when there is both a song to duck and a shot to duck it for. A
        number on a cut that cannot use it is a number the renderer has to
        decide to ignore, and a renderer making decisions about the edit is
        the thing `cutFrom` exists to prevent. */
     ...(edit.duck !== undefined && edit.under && on.music && on.shots
-      && kept.some((one) => one.sound)
+      && kept.some((one) => soundOf(one))
       ? { duck: Math.max(0, Math.min(1, edit.duck)) } : {}),
     width: frame.width,
     height: frame.height,
@@ -906,6 +915,11 @@ export function cutFrom(edit: Edit): Cut {
     ...(edit.underFrom ? { audioFrom: edit.underFrom } : {}),
     ...(edit.underSkips?.length ? { audioSkips: edit.underSkips } : {}),
   };
+}
+
+/** Whether a piece carries its own sound: on unless switched off. */
+export function soundOf(piece: { readonly sound?: boolean }): boolean {
+  return piece.sound !== false;
 }
 
 /**

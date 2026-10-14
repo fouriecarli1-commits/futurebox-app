@@ -167,7 +167,7 @@ ok('  and pressing one does not also scrub the lane under it',
   + ' happens to be');
 
 ok('the preview is silenced by the same answer the film is',
-  /a\.muted = !on\.music/.test(room) && /!piece\.sound \|\| !heard\(edit\)\.shots/.test(room),
+  /a\.muted = !on\.music/.test(room) && /!soundOf\(piece\) \|\| !heard\(edit\)\.shots/.test(room),
   'a lane muted in the room and loud in the film is the one mistake in this'
   + ' room that cannot be seen');
 
