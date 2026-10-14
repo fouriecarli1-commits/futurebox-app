@@ -58,3 +58,23 @@ app/songwindow/page.tsx
 app/staff/page.tsx
 app/videowords/page.tsx
 audit/*.pdf
+
+# The Android wrapper (android/README.md). Only twa-manifest.json and the
+# README are ours; everything Bubblewrap generates around them is rebuilt
+# from it, and the keystore is a secret that must never be committed.
+android/*.keystore
+android/*.jks
+android/*.aab
+android/*.apk
+android/*.idsig
+android/app/
+android/build/
+android/.gradle/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+android/gradle.properties
+android/build.gradle
+android/settings.gradle
+android/store_icon.png
+android/manifest-checksum.txt

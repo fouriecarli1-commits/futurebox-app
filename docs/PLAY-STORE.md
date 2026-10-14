@@ -56,6 +56,7 @@ The practical consequences, said plainly:
 |---|---|
 | App manifest with id, scope, language, categories, orientation | `app/manifest.ts` |
 | Google Play Billing in the app, Paystack on the web | `app/lib/playbilling.ts`, `app/api/play/` |
+| The Android wrapper's settings, ready for Bubblewrap | `android/twa-manifest.json`, `android/README.md` |
 | Icons at 192 and 512, one of them maskable | `public/icon-neon-192.png`, `public/icon-neon-512.png`, `public/icon-neon-512-maskable.png` |
 | Asset links, read from the environment | `app/.well-known/assetlinks.json/route.ts` |
 | Public privacy page | `/privacy` |
@@ -180,11 +181,16 @@ by a comma.
 
 ## Building the wrapper **yours, with my help**
 
-Use **Bubblewrap** (Google's own) or **PWABuilder** (a website, easier).
-Either one reads `https://futurebox.studio/manifest.webmanifest` and produces
-an `.aab` to upload. Tell me when you are at this step and I will walk through
-it with you — the only choices it asks for are the package name, the version
-and the colours, and all four are already decided above.
+Done in the repository: `android/twa-manifest.json` holds every answer
+Bubblewrap (Google's own tool) would ask for — the name, the colours, the
+icons, the address, and Google Play Billing switched on — and
+`android/README.md` is the three commands that turn it into the `.aab` you
+upload. `check:playstore` keeps it matching the site.
+
+Two choices are yours before the first build, because neither can change
+once the app is on Play: the **package name** (it says `studio.futurebox.app`)
+and where you keep the **upload keystore** the first build creates. Both are
+explained in `android/README.md`.
 
 ---
 
@@ -264,9 +270,10 @@ The credits each one grants are read from `app/lib/credits.ts` and
 
 ### The wrapper must allow it
 
-When building with Bubblewrap, `twa-manifest.json` needs Play Billing
-switched on — `"features": { "playBilling": { "enabled": true } }` — or the
-app's buy buttons will say Google Play billing could not be opened.
+`android/twa-manifest.json` already has Play Billing switched on
+(`"features": { "playBilling": { "enabled": true } }`), and `check:playstore`
+fails if it is ever turned off — without it the app's buy buttons say Google
+Play billing could not be opened.
 
 ### Testing before anybody pays
 

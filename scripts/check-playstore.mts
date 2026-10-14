@@ -100,6 +100,32 @@ ok('the written answers for the listing are in the repository',
   'the listing text, the data safety answers and the content rating are'
   + ' things a person fills in once, and a person needs them written down');
 
+/* ── The wrapper's own settings agree with the site's ──────────────────
+   `android/twa-manifest.json` is what Bubblewrap builds the Android app
+   from. It repeats the name, the colours and the icons, so it is held
+   against the web manifest and `lib/brand.ts` here: a wrapper with last
+   month's colour is a splash screen that flashes the wrong green. */
+const TWA = 'android/twa-manifest.json';
+ok('the Android wrapper\u2019s settings are in the repository', existsSync(TWA));
+if (existsSync(TWA)) {
+  const twa = JSON.parse(readFileSync(TWA, 'utf8')) as Record<string, unknown>;
+  const brand = readFileSync('app/lib/brand.ts', 'utf8');
+  const bar = (brand.match(/BAR_COLOUR = '(#[0-9a-fA-F]{6})'/) ?? [])[1];
+  const ground = (manifest.match(/background_color: '(#[0-9a-fA-F]{6})'/) ?? [])[1];
+  const name = (brand.match(/APP_NAME = '([^']+)'/) ?? [])[1];
+  const short = (brand.match(/APP_SHORT = '([^']+)'/) ?? [])[1];
+  ok('  same name and launcher name as the site', twa.name === name && twa.launcherName === short,
+    `${String(twa.name)} / ${String(twa.launcherName)} against ${name} / ${short}`);
+  ok('  same bar colour and ground', twa.themeColor === bar && twa.navigationColor === bar && twa.backgroundColor === ground,
+    `${String(twa.themeColor)}, ${String(twa.backgroundColor)} against ${bar}, ${ground}`);
+  ok('  the icons it asks for are the ones the site serves',
+    ['iconUrl', 'maskableIconUrl'].every((key) => existsSync(`public/${String(twa[key]).split('/').pop()}`)));
+  ok('  Google Play Billing is switched on in it, or the buy buttons cannot reach Play',
+    (twa.features as { playBilling?: { enabled?: boolean } } | undefined)?.playBilling?.enabled === true);
+  ok('  and the keystore it signs with is never committed',
+    /android\/\*\.keystore/.test(readFileSync('.gitignore', 'utf8')));
+}
+
 if (bad) {
   console.error(`\ncheck:playstore — ${bad} assertion(s) failed.\n`);
   process.exit(1);

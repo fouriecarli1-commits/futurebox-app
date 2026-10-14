@@ -1,0 +1,43 @@
+{
+  "packageId": "studio.futurebox.app",
+  "host": "futurebox.studio",
+  "name": "FutureBox Studio",
+  "launcherName": "FutureBox",
+  "display": "standalone",
+  "orientation": "default",
+  "themeColor": "#0f1412",
+  "themeColorDark": "#0f1412",
+  "navigationColor": "#0f1412",
+  "navigationColorDark": "#0f1412",
+  "navigationDividerColor": "#0f1412",
+  "navigationDividerColorDark": "#0f1412",
+  "backgroundColor": "#080c0a",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://futurebox.studio/icon-neon-512.png",
+  "maskableIconUrl": "https://futurebox.studio/icon-neon-512-maskable.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://futurebox.studio/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://futurebox.studio/",
+  "minSdkVersion": 21
+}
