@@ -18,7 +18,14 @@
 import type { GlowId } from './postglow';
 import { glowOf, haloPasses } from './postglow';
 
-export const MARK_KINDS = ['cube', 'ring', 'grid', 'frame'] as const;
+/* Carli, 14 October 2026: "Die shapes is meestal daar as 'n background vir
+   die text. Daai shapes moet soos 'n sirkel, box, triangle, rectangle,
+   painted box wees, en die shape moet ook gemanupileer word deur te kan
+   beweeg groter en kleiner gemaak word, transparent, kan die kleur kies."
+   The first five are filled, to sit behind words; the four after them are
+   the neon outlines that were here before. */
+export const FILLED_KINDS = ['circle', 'box', 'triangle', 'rect', 'paint'] as const;
+export const MARK_KINDS = [...FILLED_KINDS, 'cube', 'ring', 'grid', 'frame'] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
 export interface MarkSpec {
@@ -28,6 +35,11 @@ export interface MarkSpec {
 }
 
 export const MARK_SPECS: readonly MarkSpec[] = [
+  { id: 'circle', icon: '●', name: ['post.mark.circle', 'Circle'] },
+  { id: 'box', icon: '■', name: ['post.mark.box', 'Box'] },
+  { id: 'triangle', icon: '▲', name: ['post.mark.triangle', 'Triangle'] },
+  { id: 'rect', icon: '▬', name: ['post.mark.rect', 'Rectangle'] },
+  { id: 'paint', icon: '🖌️', name: ['post.mark.paint', 'Painted box'] },
   { id: 'cube', icon: '🧊', name: ['post.mark.cube', 'Isometric cube'] },
   { id: 'ring', icon: '⭕', name: ['post.mark.ring', 'Neon ring'] },
   { id: 'grid', icon: '🌐', name: ['post.mark.grid', 'Cyber grid'] },
@@ -44,6 +56,26 @@ export interface Mark {
   readonly size: number;
   readonly ink: string;
   readonly glow: GlowId;
+  /** How see-through, 0.1 to 1. Absent is solid. */
+  readonly opacity?: number;
+  /** Width over height, for the shapes that can be stretched. Absent is 1. */
+  readonly stretch?: number;
+}
+
+export const isFilled = (kind: MarkKind): boolean => (FILLED_KINDS as readonly string[]).includes(kind);
+
+/** The neon family a shape can wear, brightest first, and white and black. */
+export const NEON_INKS = ['#39ff14', '#00f0ff', '#ff2bd6', '#fff200', '#ff6b00', '#b026ff', '#34d399', '#f472b6', '#ffffff', '#000000'] as const;
+
+/**
+ * Where a mark sits and how big it is on the frame, in frame pixels — the
+ * box a thumb has to land in to pick it up.
+ */
+export function markBox(mark: Mark, width: number, height: number): { cx: number; cy: number; w: number; h: number } {
+  const short = Math.min(width, height);
+  const w = mark.size * short;
+  const stretch = isFilled(mark.kind) ? Math.max(0.2, Math.min(5, mark.stretch ?? 1)) : 1;
+  return { cx: mark.x * width, cy: mark.y * height, w: w * Math.sqrt(stretch), h: w / Math.sqrt(stretch) };
 }
 
 export const MARK_SIZES = [
@@ -55,18 +87,72 @@ export const MARK_SIZES = [
 /** The inks a mark can wear: the neon family, and white. */
 export const MARK_INKS = ['#34d399', '#22d3ee', '#f472b6', '#a78bfa', '#fde68a', '#ffffff'] as const;
 
-/** Where a mark can be put with one press. */
-export const MARK_SPOTS = [
-  { id: 'centre', x: 0.5, y: 0.5 },
-  { id: 'top', x: 0.5, y: 0.22 },
-  { id: 'bottom', x: 0.5, y: 0.78 },
-  { id: 'left', x: 0.24, y: 0.5 },
-  { id: 'right', x: 0.76, y: 0.5 },
-] as const;
 
 export const newMark = (kind: MarkKind, id: string): Mark => ({
-  id, kind, x: 0.5, y: 0.5, size: MARK_SIZES[1].share, ink: MARK_INKS[0], glow: 'neon',
+  id,
+  kind,
+  x: 0.5,
+  y: 0.5,
+  size: MARK_SIZES[1].share,
+  ink: isFilled(kind) ? NEON_INKS[1] : MARK_INKS[0],
+  glow: 'neon',
+  ...(isFilled(kind) ? { opacity: 0.8, stretch: kind === 'rect' || kind === 'paint' ? 2.4 : 1 } : {}),
 });
+
+/** A number from a mark's id, so a painted edge is the same on every draw. */
+function seeded(id: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i += 1) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+}
+
+/** The filled shapes, drawn round the origin at w by h. */
+function fillShape(ctx: CanvasRenderingContext2D, mark: Mark, w: number, h: number): void {
+  ctx.beginPath();
+  if (mark.kind === 'circle') {
+    ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (mark.kind === 'triangle') {
+    ctx.moveTo(0, -h / 2);
+    ctx.lineTo(w / 2, h / 2);
+    ctx.lineTo(-w / 2, h / 2);
+    ctx.closePath();
+    ctx.fill();
+  } else if (mark.kind === 'paint') {
+    /* A box laid down with a brush: a few overlapping strokes, each a little
+       off true, so the edges are ragged the way paint is. */
+    const rand = seeded(mark.id);
+    const strokes = 7;
+    const band = h / strokes;
+    for (let i = 0; i < strokes; i += 1) {
+      const y = -h / 2 + i * band;
+      const lean = (rand() - 0.5) * band * 0.6;
+      const left = -w / 2 + (rand() - 0.2) * w * 0.05;
+      const right = w / 2 - (rand() - 0.2) * w * 0.05;
+      ctx.beginPath();
+      ctx.moveTo(left, y + lean);
+      ctx.lineTo(right, y - lean);
+      ctx.lineTo(right - rand() * w * 0.02, y + band * 1.35);
+      ctx.lineTo(left + rand() * w * 0.02, y + band * 1.35 + lean);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else {
+    /* box and rect: a rectangle with a little rounding on the corners. */
+    const r = Math.min(w, h) * (mark.kind === 'box' ? 0.08 : 0.12);
+    ctx.moveTo(-w / 2 + r, -h / 2);
+    ctx.arcTo(w / 2, -h / 2, w / 2, h / 2, r);
+    ctx.arcTo(w / 2, h / 2, -w / 2, h / 2, r);
+    ctx.arcTo(-w / 2, h / 2, -w / 2, -h / 2, r);
+    ctx.arcTo(-w / 2, -h / 2, w / 2, -h / 2, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
 
 /** The outline of one mark, as a path on the context, centred on 0,0 at width `w`. */
 function trace(ctx: CanvasRenderingContext2D, kind: MarkKind, w: number): void {
@@ -132,6 +218,24 @@ function trace(ctx: CanvasRenderingContext2D, kind: MarkKind, w: number): void {
  * second time heavier, which is what makes them read as brackets.
  */
 export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: number, height: number): void {
+  if (isFilled(mark.kind)) {
+    const box = markBox(mark, width, height);
+    ctx.save();
+    ctx.translate(box.cx, box.cy);
+    ctx.globalAlpha = Math.max(0.1, Math.min(1, mark.opacity ?? 1));
+    ctx.fillStyle = mark.ink;
+    const glow = glowOf(mark.glow);
+    for (const pass of haloPasses(glow, Math.min(box.w, box.h) * 0.12)) {
+      ctx.shadowColor = pass.colour;
+      ctx.shadowBlur = pass.blur;
+      fillShape(ctx, mark, box.w, box.h);
+    }
+    ctx.shadowColor = 'rgba(0,0,0,0)';
+    ctx.shadowBlur = 0;
+    fillShape(ctx, mark, box.w, box.h);
+    ctx.restore();
+    return;
+  }
   const short = Math.min(width, height);
   const w = mark.size * short;
   const line = Math.max(2, w * 0.035);

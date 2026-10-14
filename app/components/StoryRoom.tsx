@@ -35,10 +35,12 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BookOpen, Download, Film, Loader2, Play, Sparkles } from 'lucide-react';
+import { BookOpen, Download, Film, Loader2, Play, Sparkles, Undo2, Wand2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
+import SpeakButton from './SpeakButton';
+import { withSaid } from '../lib/speak';
 import {
   STORY_MAX_PAGES, billFor, pagesFrom, runsFor, timelineOf, type Page,
 } from '../lib/storypages';
@@ -68,6 +70,15 @@ export default function StoryRoom(): React.ReactElement {
   const [film, setFilm] = useState('');
   const [at, setAt] = useState(0);
   const [onShelf, setOnShelf] = useState(false);
+  /* The story helper (Carli, 14 October 2026: "Story mode … moet ook 'n ai
+     hê"). `/api/story` carries why it writes into the box rather than past
+     it: the words stay hers to change before anything is paid for. */
+  const [helperOn, setHelperOn] = useState(false);
+  const [idea, setIdea] = useState('');
+  const [howMany, setHowMany] = useState(6);
+  const [helping, setHelping] = useState<'' | 'write' | 'better'>('');
+  const [helperSays, setHelperSays] = useState('');
+  const [mine, setMine] = useState<{ story: string; look: string } | null>(null);
 
   const pages = pagesFrom(story);
   const bill = billFor(pages);
@@ -92,6 +103,44 @@ export default function StoryRoom(): React.ReactElement {
       setVoiceId((was) => was || answer.stock?.[0]?.id || '');
     })();
   }, []);
+
+  useEffect(() => {
+    void fetch('/api/story').then((r) => r.json()).then((said: { available?: boolean }) => {
+      setHelperOn(Boolean(said?.available));
+    }).catch(() => setHelperOn(false));
+  }, []);
+
+  const help = useCallback(async (mode: 'write' | 'better'): Promise<void> => {
+    if (helping) return;
+    setHelping(mode);
+    setHelperSays('');
+    try {
+      const answer = await fetch('/api/story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, idea, story, look, pages: howMany, lang }),
+      });
+      const said = (await answer.json().catch(() => null)) as
+        { title?: string; pages?: string[]; look?: string; message?: string; error?: string; detail?: string } | null;
+      if (!answer.ok || !said?.pages?.length) {
+        setHelperSays(said?.message || (said?.error && said.error.length > 20 ? said.error : '')
+          || t('story.helperFailed', 'The story helper could not write that just now. Try again in a moment.'));
+        return;
+      }
+      /* What was there is kept for one step back, so trying the helper on a
+         story she wrote herself never costs her the story. */
+      setMine({ story, look });
+      setStory(said.pages.join('\n\n'));
+      if (!look.trim() && said.look) setLook(said.look);
+      setMade({});
+      setOnShelf(false);
+      setHelperSays(t('story.helperDone', 'Read it through and change anything — nothing is paid for until you make the book.'));
+    } catch {
+      setHelperSays(t('story.helperOffline', 'No connection to the story helper.'));
+    } finally {
+      setHelping('');
+    }
+  }, [helping, idea, story, look, howMany, lang, t]);
 
   const context = useCallback((): AudioContext | null => {
     const Ctx = window.AudioContext
@@ -235,34 +284,109 @@ export default function StoryRoom(): React.ReactElement {
         </p>
       </div>
 
+      {/* ── The story helper ───────────────────────────────────────────── */}
+      {helperOn && (
+        <div className="space-y-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3.5" data-storyhelper>
+          <h3 className="flex items-center gap-2 text-sm font-extrabold text-emerald-300">
+            <Wand2 className="h-4 w-4" />
+            {t('story.helper', 'Story helper')}
+          </h3>
+          <span className="relative block">
+            <input
+              type="text"
+              value={idea}
+              onChange={(event) => setIdea(event.target.value.slice(0, 2000))}
+              data-storyidea
+              placeholder={t('story.ideaHint', 'What it is about — a hedgehog scared of the dark, for a four-year-old…')}
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-3.5 pr-11 text-sm text-zinc-100 placeholder:text-zinc-600"
+            />
+            <SpeakButton onHeard={(said) => setIdea((was) => withSaid(was, said))} className="absolute right-1.5 top-1/2 -translate-y-1/2" />
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs text-zinc-400">
+              {t('story.howMany', 'Pages')}
+              <select
+                value={howMany}
+                onChange={(event) => setHowMany(Number(event.target.value))}
+                data-storyhowmany
+                className="rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-sm text-zinc-100"
+              >
+                {[4, 6, 8, 10, 12].filter((n) => n <= STORY_MAX_PAGES).map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={() => void help('write')}
+              disabled={Boolean(helping) || (!idea.trim() && !story.trim())}
+              data-storywrite
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-emerald-500 px-3.5 text-sm font-bold text-onAccent disabled:opacity-40"
+            >
+              {helping === 'write' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {story.trim() ? t('story.writeOn', 'Write the rest') : t('story.writeIt', 'Write it for me')}
+            </button>
+            {story.trim() && (
+              <button
+                type="button"
+                onClick={() => void help('better')}
+                disabled={Boolean(helping)}
+                data-storybetter
+                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-emerald-500/50 px-3.5 text-sm font-bold text-emerald-300 disabled:opacity-40"
+              >
+                {helping === 'better' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                {t('story.better', 'Make mine better')}
+              </button>
+            )}
+            {mine && !helping && (
+              <button
+                type="button"
+                onClick={() => { setStory(mine.story); setLook(mine.look); setMine(null); setMade({}); setHelperSays(''); }}
+                data-storymine
+                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-300"
+              >
+                <Undo2 className="h-4 w-4" />
+                {t('story.mineBack', 'Put mine back')}
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-zinc-500">{t('story.helperFree', 'The helper is free. Credits are only used for the pictures and the reading.')}</p>
+          {helperSays && <p className="text-xs text-zinc-300" data-storyhelpersays>{helperSays}</p>}
+        </div>
+      )}
+
       {/* ── The story ──────────────────────────────────────────────────── */}
       <div className="space-y-2">
         <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500" htmlFor="story-text">
           {t('story.yours', 'Your story')}
         </label>
-        <textarea
-          id="story-text"
-          value={story}
-          onChange={(event) => setStory(event.target.value)}
-          rows={8}
-          data-storytext
-          placeholder={t(
-            'story.hint',
-            'A blank line starts a new page. A long paragraph is split at the end of a sentence.',
-          )}
-          className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3.5 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600"
-        />
-        <input
-          type="text"
-          value={look}
-          onChange={(event) => setLook(event.target.value)}
-          data-storylook
-          placeholder={t(
-            'story.look',
-            'How the pictures should look — soft watercolour, bold cartoon, paper cut-out…',
-          )}
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600"
-        />
+        <span className="relative block">
+          <textarea
+            id="story-text"
+            value={story}
+            onChange={(event) => setStory(event.target.value)}
+            rows={8}
+            data-storytext
+            placeholder={t(
+              'story.hint',
+              'A blank line starts a new page. A long paragraph is split at the end of a sentence.',
+            )}
+            className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3.5 pr-12 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600"
+          />
+          <SpeakButton onHeard={(said) => setStory((was) => withSaid(was, said))} className="absolute bottom-2.5 right-2.5" />
+        </span>
+        <span className="relative block">
+          <input
+            type="text"
+            value={look}
+            onChange={(event) => setLook(event.target.value)}
+            data-storylook
+            placeholder={t(
+              'story.look',
+              'How the pictures should look — soft watercolour, bold cartoon, paper cut-out…',
+            )}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-3.5 pr-11 text-sm text-zinc-100 placeholder:text-zinc-600"
+          />
+          <SpeakButton onHeard={(said) => setLook((was) => withSaid(was, said))} className="absolute right-1.5 top-1/2 -translate-y-1/2" />
+        </span>
       </div>
 
       {/* ── The pages, and what they cost ──────────────────────────────── */}

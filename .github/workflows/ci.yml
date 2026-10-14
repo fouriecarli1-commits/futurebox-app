@@ -1381,6 +1381,20 @@ jobs:
       - name: Kids credits are the kids room's, and nobody else's
         run: npm run check:kinderkrediete
 
+      # Every box an AI reads has a microphone, and Story mode has its own AI.
+      - name: Every AI can be talked to, and Story mode has a helper
+        run: npm run check:praatin
+
+      # A clip tapped pops cut, back and the AI wand; Generate a sound makes
+      # effects and music too; Your mark opens the brand pack.
+      - name: The video editor's clip menu, sounds and brand pack
+        run: npm run check:knipwand
+
+      # The photo editor's magic touch sends only the tapped part and lays the
+      # answer back there; grabbed things wear their names and can be changed.
+      - name: The photo editor's magic touch and visible grabs
+        run: npm run check:magieraak
+
       # A shot the copilot writes has to be deep enough to make a video
       # from: the instruction's own worked example clears the desk's floor,
       # the shot list is separated by blank lines rather than newlines, and

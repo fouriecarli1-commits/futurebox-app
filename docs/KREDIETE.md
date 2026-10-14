@@ -37,6 +37,7 @@ daardie lid druk dieselfde knoppies.
 | a song laid under the film (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
 | bouncing a mix out (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
 | a background taken out, per five seconds | 4 | R5.96 | R1.80 | **R4.16** | 70% | 3.3× |
+| a sound effect, up to ten seconds | 3 | R4.47 | R0.74 | **R3.73** | 84% | 6.1× |
 | the smallest read anybody is charged (300 characters) | 2 | R2.98 | R0.55 | **R2.43** | 81% | 5.4× |
 | reading 150 characters (a rate, not a press) | 1 | R1.49 | R0.28 | **R1.21** | 81% | 5.4× |
 

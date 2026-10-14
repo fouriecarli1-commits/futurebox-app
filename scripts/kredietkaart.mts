@@ -114,6 +114,7 @@ const ABOUT: Readonly<Record<string, keyof typeof CREDITS>> = {
   'a voice change, per minute': 'voiceChange',
   'singing it, per minute (Kits)': 'sing',
   'dubbing, per minute': 'dub',
+  'a sound effect, up to ten seconds': 'sfx',
   /* Not a CREDITS key: `readCost()` computes a charge from a length, and
      these two rows are that rate and its floor. Mapping them onto `read`
      claimed the song-reading price was covered by a row about text. */

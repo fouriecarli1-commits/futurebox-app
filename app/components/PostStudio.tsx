@@ -46,13 +46,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Bookmark,
-  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, X,
+  Circle, Crop as CropIcon, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, X,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
 import { TITLE_STYLES } from '../lib/posttitles';
 import {
-  MARK_INKS, MARK_SIZES, MARK_SPECS, MARK_SPOTS, drawMark, newMark, type Mark,
+  MARK_SPECS, NEON_INKS, drawMark, isFilled, markBox, newMark, type Mark,
 } from '../lib/postshapes';
 import {
   fromFrame, maskFor as maskOfLine, middleOf, ontoFrame, pickAt, picksFrom,
@@ -123,6 +123,9 @@ import { MOST_COLOURS, repaint } from '../lib/repaint';
 import { liftWith, type Found } from '../lib/grabobject';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/magicedit';
+import SpeakButton from './SpeakButton';
 import { accessToken } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
 
@@ -371,21 +374,33 @@ const POST_SHAPES: BenchSpec = {
   label: ['post.benchShapes', 'Shapes'],
   what: ['post.benchShapesWhat', 'A cube, a ring, a grid or a frame, lit with the same glow as the words, in one of five places at one of three sizes.'],
 };
+/* Carli, 14 October 2026: *"Ek dink ook daar moet 'n magic mouse tool wees
+   wat op dele kliek en Ai kan dan die gedeelte verbeter (daar moet dan seker
+   opsies wees)."* `lib/magicedit.ts` carries how only the tapped part is
+   sent and laid back in. */
+const POST_MAGIC: BenchSpec = {
+  id: 'magic',
+  icon: <Wand2 className="h-5 w-5" />,
+  label: ['post.benchMagic', 'Magic touch'],
+  what: ['post.benchMagicWhat', 'Tap a part of the photo and the AI improves it, changes it into something else, or takes it away. Only that part changes.'],
+  paid: true,
+};
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_STARTS, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LOWER[2],
+  POST_STARTS, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
   pic: ['post.toolPic', 'Photo'],
   frame: ['post.toolFrame', 'Crop'],
   tone: ['post.toolTone', 'Adjust'],
+  magic: ['post.toolMagic', 'Magic'],
   read: ['post.toolRead', 'Grab'],
   text: ['post.toolText', 'Text'],
   shapes: ['post.toolShapes', 'Shapes'],
   save: ['post.toolSave', 'Export'],
 };
 /** A tool along the foot on a phone: an icon over a word, small. */
-const TOOL_FOOT = 'flex min-h-[48px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-0 text-[9px] font-bold leading-tight';
+const TOOL_FOOT = 'flex min-h-[48px] w-[58px] flex-shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-0 text-[9px] font-bold leading-tight';
 /** A tool down the rail at a desk. */
 const TOOL_RAIL = 'flex min-h-[56px] w-full flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-0.5 text-[10px] font-bold leading-tight';
 
@@ -490,6 +505,11 @@ export default function PostStudio({
   const [grabLang, setGrabLang] = useState<Readable>('eng');
   const [picking, setPicking] = useState(false);
   const [found, setFound] = useState<readonly Pick[] | null>(null);
+  /* The magic touch: where she tapped, how big a part, and what it becomes. */
+  const [magicSpot, setMagicSpot] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  const [magicSize, setMagicSize] = useState(0.14);
+  const [magicInto, setMagicInto] = useState('');
+  const [magicBusy, setMagicBusy] = useState('');
   const [picked, setPicked] = useState<Pick | null>(null);
   /* ── The things in the picture, beside the words in it ────────────────
  
@@ -722,11 +742,26 @@ export default function PostStudio({
     }
   };
   const [said, setSaid] = useState('');
+  /* Carli, 14 October 2026, over a photograph with two notes on it: "Al
+     daai woorde is te veel. Ek dink nie mense hoef dit te sien nie." What
+     the room says now goes again by itself, after long enough to read it. */
+  useEffect(() => {
+    if (!said) return undefined;
+    const gone = window.setTimeout(() => setSaid(''), Math.min(9000, 3000 + said.length * 35));
+    return () => window.clearTimeout(gone);
+  }, [said]);
+  const [clashOpen, setClashOpen] = useState(false);
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
   /* The shapes on the picture — `lib/postshapes.ts`. Drawn under the words
      and over the photograph, and exported with both. */
   const [marks, setMarks] = useState<Mark[]>([]);
+  /** The shape whose handles are showing, picked by a tap or by adding it. */
+  const [markOn, setMarkOn] = useState<string | null>(null);
+  /** A shape being carried or stretched by the thumb. */
+  const markHeld = useRef<{ id: string; dx: number; dy: number; resize: boolean } | null>(null);
+  const changeMark = (id: string, how: Partial<Mark>): void =>
+    setMarks((was) => was.map((m) => (m.id === id ? { ...m, ...how } : m)));
   /* ── Cutting the photograph down, which is not the same as framing it ───
  
      Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
@@ -1011,7 +1046,35 @@ export default function PostStudio({
           ctx.fillStyle = chosen ? 'rgba(52,211,153,0.28)' : 'rgba(52,211,153,0.10)';
           ctx.fillRect(box.left, box.top, box.width, box.height);
           ctx.strokeRect(box.left, box.top, box.width, box.height);
+          /* Its name on it (Carli, 14 October 2026: the grabs must be
+             visible), so a box is a thing she can choose by what it is. */
+          const name = one.text.length > 22 ? `${one.text.slice(0, 21)}\u2026` : one.text;
+          if (name) {
+            const tall = Math.max(11, Math.round(size.width / 42));
+            ctx.font = `700 ${tall}px system-ui, sans-serif`;
+            const wide = ctx.measureText(name).width + tall * 0.8;
+            const top = box.top - tall * 1.5 >= 0 ? box.top - tall * 1.5 : box.top;
+            ctx.fillStyle = chosen ? 'rgba(52,211,153,0.95)' : 'rgba(2,6,4,0.78)';
+            ctx.fillRect(box.left, top, wide, tall * 1.4);
+            ctx.fillStyle = chosen ? '#02130b' : '#a7f3d0';
+            ctx.fillText(name, box.left + tall * 0.4, top + tall * 1.05);
+          }
         }
+        ctx.restore();
+      }
+
+      /* The part the magic touch will send, as a neon ring. Guides only. */
+      if (guides && bench === 'magic' && magicSpot) {
+        const cx = at.left + magicSpot.x * at.width;
+        const cy = at.top + magicSpot.y * at.height;
+        const r = magicSize * Math.min(at.width, at.height);
+        ctx.save();
+        ctx.lineWidth = Math.max(2, size.width / 180);
+        ctx.setLineDash([ctx.lineWidth * 3, ctx.lineWidth * 2]);
+        ctx.strokeStyle = '#39ff14';
+        ctx.shadowColor = '#39ff14';
+        ctx.shadowBlur = 14;
+        ctx.strokeRect(cx - r, cy - r, r * 2, r * 2);
         ctx.restore();
       }
 
@@ -1037,6 +1100,28 @@ export default function PostStudio({
     /* The shapes, under the words: a ring behind a word is a halo, a
        word behind a ring is a mistake. */
     for (const mark of marks) drawMark(ctx, mark, size.width, size.height);
+    /* The picked shape, on the screen only: a bright dashed edge and the
+       corner a thumb pulls to make it bigger or smaller. */
+    if (guides && markOn) {
+      const mark = marks.find((one) => one.id === markOn);
+      if (mark) {
+        const box = markBox(mark, size.width, size.height);
+        const line = Math.max(2, size.width * 0.004);
+        ctx.save();
+        ctx.strokeStyle = '#39ff14';
+        ctx.lineWidth = line;
+        ctx.setLineDash([line * 4, line * 3]);
+        ctx.shadowColor = '#39ff14';
+        ctx.shadowBlur = line * 4;
+        ctx.strokeRect(box.cx - box.w / 2, box.cy - box.h / 2, box.w, box.h);
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#39ff14';
+        ctx.beginPath();
+        ctx.arc(box.cx + box.w / 2, box.cy + box.h / 2, Math.max(10, size.width * 0.022), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
 
     for (const one of words) {
       if (!one.text.trim()) continue;
@@ -1351,7 +1436,11 @@ export default function PostStudio({
        line — the arithmetic was fine — and the glass stayed empty, because
        nothing had repainted since the boxes arrived. */
   }, [facesIn, size, picture, words, back, crop, look, cropBox, traced,
-    picking, found, picked]);
+    picking, found, picked,
+    /* The shapes and the one picked: drawn by `draw`, so they repaint it.
+       A shape dragged with these missing moved in the state and stayed put
+       on the glass until something else happened to repaint. */
+    marks, markOn, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
 
@@ -1417,6 +1506,13 @@ export default function PostStudio({
       setPicked(pickAt(found, put.x, put.y));
       return;
     }
+    /* The magic touch is a mode too: while its bench is out, a tap marks the
+       part the AI will work on, and nothing else. */
+    if (bench === 'magic' && picture) {
+      const put = shareAt(event);
+      if (put && put.x >= 0 && put.x <= 1 && put.y >= 0 && put.y <= 1) setMagicSpot(put);
+      return;
+    }
     /* ── The words next, because a thumb on a word means the word ─────
  
         Carli, 8 October 2026: *"Die woord op die screen kan nog nie
@@ -1435,6 +1531,29 @@ export default function PostStudio({
           if (!was) continue;
           if (Math.abs(put.x - was.x) > was.w / 2 || Math.abs(put.y - was.y) > was.h / 2) continue;
           carrying.current = { id: one.id, dx: put.x - was.x, dy: put.y - was.y };
+          event.currentTarget.setPointerCapture(event.pointerId);
+          return;
+        }
+      }
+    }
+    /* A shape: picked up and carried, or pulled bigger by its corner.
+       Carli, 14 October 2026: "Objects wat in gesit word kan nie geskuif
+       word nie sien ek, die shapes bedoel ek." Words are tested first
+       because they sit on top of the shapes behind them. */
+    if (!cropBox && !traced && marks.length > 0) {
+      const put = frameAt(event);
+      if (put) {
+        const px = put.x * size.width;
+        const py = put.y * size.height;
+        const grab = Math.max(18, size.width * 0.04);
+        for (const mark of [...marks].reverse()) {
+          const box = markBox(mark, size.width, size.height);
+          const corner = Math.hypot(px - (box.cx + box.w / 2), py - (box.cy + box.h / 2)) <= grab;
+          const inside = Math.abs(px - box.cx) <= box.w / 2 && Math.abs(py - box.cy) <= box.h / 2;
+          if (!corner && !inside) continue;
+          setMarkOn(mark.id);
+          if (bench !== 'shapes') setBench('shapes');
+          markHeld.current = { id: mark.id, dx: put.x - mark.x, dy: put.y - mark.y, resize: corner && mark.id === markOn };
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
         }
@@ -1483,6 +1602,29 @@ export default function PostStudio({
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const shape = markHeld.current;
+    if (shape) {
+      const put = frameAt(event);
+      if (!put) return;
+      if (shape.resize) {
+        setMarks((was) => was.map((m) => {
+          if (m.id !== shape.id) return m;
+          const short = Math.min(size.width, size.height);
+          const halfW = Math.abs(put.x * size.width - m.x * size.width);
+          const halfH = Math.abs(put.y * size.height - m.y * size.height);
+          if (!isFilled(m.kind)) return { ...m, size: Math.max(0.06, Math.min(1.6, (Math.max(halfW, halfH) * 2) / short)) };
+          const w = Math.max(short * 0.04, halfW * 2);
+          const h = Math.max(short * 0.04, halfH * 2);
+          return { ...m, size: Math.max(0.04, Math.min(2, Math.sqrt(w * h) / short)), stretch: Math.max(0.2, Math.min(5, w / h)) };
+        }));
+        return;
+      }
+      changeMark(shape.id, {
+        x: Math.max(0, Math.min(1, put.x - shape.dx)),
+        y: Math.max(0, Math.min(1, put.y - shape.dy)),
+      });
+      return;
+    }
     const held = carrying.current;
     if (held) {
       const put = frameAt(event);
@@ -1541,6 +1683,7 @@ export default function PostStudio({
     tracingNow.current = false;
     cutFrom.current = null;
     carrying.current = null;
+    markHeld.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -2381,7 +2524,7 @@ export default function PostStudio({
    * background is from the edge of the frame and takes that away, which is
    * why it works on a drawing and the other remover does not.
    */
-  const takeFlatGround = (): void => {
+  const flatGround = (afterNobody: boolean): void => {
     if (!picture) return;
     const wide = picture.naturalWidth || picture.width;
     const tall = picture.naturalHeight || picture.height;
@@ -2396,6 +2539,13 @@ export default function PostStudio({
       { data: was.data, width: wide, height: tall },
       groundReach,
     );
+    /* Run after the person model found nobody, a cut that takes nearly
+       everything has found no subject either — a plain sheet, a sky. The
+       picture is left exactly as it was, and she is told why. */
+    if (afterNobody && (done.grounds.length === 0 || done.removed < 0.004 || done.removed > NEARLY_ALL)) {
+      setSaid(t('post.cutNothingToKeep', 'No person found, and no plain background round anything either \u2014 so nothing was taken out. Use Cut out a shape and draw round what you want to keep.'));
+      return;
+    }
     if (done.grounds.length === 0 || done.removed < 0.004) {
       setSaid(t(
         'post.groundNone',
@@ -2418,6 +2568,8 @@ export default function PostStudio({
         : t('post.cutDoneShort', 'Background removed. Save as PNG to keep it see-through.'));
     }, () => setSaid(t('post.groundFailed', 'That background could not be taken out.')));
   };
+
+  const takeFlatGround = (): void => flatGround(false);
 
   /**
    * Paint what is left after the background came off.
@@ -2705,6 +2857,128 @@ export default function PostStudio({
    * redraw fired by a `useEffect` on a text field would charge a credit for
    * every letter typed.
    */
+  /**
+   * The magic touch: one part of the photograph to the AI, laid back in.
+   *
+   * A tapped spot, or a thing the Grab bench found. Only that part (and a
+   * little round it, so it fits) is sent; what comes back is laid into the
+   * same place with a soft edge. Same route and price as asking for the
+   * whole picture to change.
+   */
+  const magicPart = async (how: 'better' | 'change' | 'fill', thing?: Pick): Promise<void> => {
+    if (!picture || magicBusy) return;
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    let rect: Rect;
+    let shape: 'circle' | 'box';
+    if (thing) {
+      rect = padded({
+        left: Math.round(thing.x * wide),
+        top: Math.round(thing.y * tall),
+        width: Math.max(1, Math.round(thing.w * wide)),
+        height: Math.max(1, Math.round(thing.h * tall)),
+      }, wide, tall, 0.25);
+      shape = 'box';
+    } else {
+      if (!magicSpot) { setSaid(t('post.magicTap', 'Tap the part of the photo first.')); return; }
+      rect = spotRect(magicSpot.x, magicSpot.y, magicSize, wide, tall);
+      shape = 'circle';
+    }
+    const into = magicInto.trim();
+    if (how === 'change' && !into) {
+      setSaid(t('post.magicSayWhat', 'Say what it should become first.'));
+      return;
+    }
+    const words = how === 'better'
+      ? MAGIC_ASKS.better
+      : how === 'fill'
+        ? MAGIC_ASKS.fill
+        : thing ? MAGIC_ASKS.replace(thing.text || 'thing', into) : MAGIC_ASKS.change(into);
+    const from = packLed(cropOf(picture, rect), []);
+    if (!from.length) {
+      setSaid(t('post.askTooBig', 'Those pictures are too big to send together. Take one out, or use a smaller one.'));
+      return;
+    }
+    setMagicBusy(how);
+    setSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/google/picture', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ words, from }),
+      });
+      if (!answer.ok) {
+        const why = (await answer.json().catch(() => ({}))) as { message?: string };
+        setSaid(why.message ?? `${t('post.askFailed', 'That could not be made.')} (${answer.status})`);
+        return;
+      }
+      const blob = await answer.blob();
+      const came = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(came);
+        const out = laidIn(picture, wide, tall, img, rect, shape);
+        before(t('post.stepMagic', 'a magic touch'));
+        asPicture(out, (made) => {
+          setWhole(picture);
+          setPicture(made);
+          setMagicSpot(null);
+          if (thing) { setFound(null); setPicked(null); setPicking(false); }
+          setSaid(t('post.magicDone', 'Done. Only that part changed \u2014 press Put it back if you liked it better before.'));
+        }, () => setSaid(t('post.askUnreadable', 'What came back could not be read as a picture.')));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(came);
+        setSaid(t('post.askUnreadable', 'What came back could not be read as a picture.'));
+      };
+      img.src = came;
+    } catch {
+      setSaid(t('post.askOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setMagicBusy('');
+    }
+  };
+
+  /** What the AI options say and do, for a spot or a found thing. */
+  const magicButtons = (thing?: Pick): React.ReactNode => (
+    <div className="space-y-2" data-postmagicasks>
+      <span className="relative block">
+        <input
+          type="text"
+          value={magicInto}
+          onChange={(event) => setMagicInto(event.target.value.slice(0, 300))}
+          data-postmagicinto
+          placeholder={thing
+            ? t('post.magicIntoThing', 'Change it into… a red sports car')
+            : t('post.magicInto', 'Change it into… a sunflower')}
+          className="w-full rounded-lg border border-zinc-700 bg-black/40 py-2 pl-3 pr-11 text-[13px] text-zinc-100 placeholder:text-zinc-500"
+        />
+        <SpeakButton onHeard={(said) => setMagicInto((was) => withSaid(was, said))} className="absolute right-1 top-1/2 -translate-y-1/2" />
+      </span>
+      <div className={RY3}>
+        <button type="button" data-postmagicbetter disabled={Boolean(magicBusy)} onClick={() => void magicPart('better', thing)} className={LEEG}>
+          {magicBusy === 'better' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {t('post.magicBetter', 'Make it better')}
+        </button>
+        <button type="button" data-postmagicchange disabled={Boolean(magicBusy) || !magicInto.trim()} onClick={() => void magicPart('change', thing)} className={LEEG}>
+          {magicBusy === 'change' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+          {t('post.magicChange', 'Change it')}
+        </button>
+        <button type="button" data-postmagicfill disabled={Boolean(magicBusy)} onClick={() => void magicPart('fill', thing)} className={LEEG}>
+          {magicBusy === 'fill' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eraser className="h-4 w-4" />}
+          {t('post.magicFill', 'Take it away')}
+        </button>
+      </div>
+      <p className="text-[11px]" style={{ color: INK_DIM }}>
+        {t('post.magicPrice', '{n} credits a press. Only this part is sent and only this part changes.').replace('{n}', String(CREDITS.repaint))}
+      </p>
+    </div>
+  );
+
   const askForPicture = async (): Promise<void> => {
     const words = askWords.trim();
     if (!words || redrawing) return;
@@ -2880,7 +3154,7 @@ export default function PostStudio({
            of a person, which takes only what matches the edge of the frame.
            So the person model goes first, and only when it finds nobody —
            a logo, a drawing, a product on a sheet — does the plain one run. */
-        if (cut.why === 'nobody') { takeFlatGround(); return; }
+        if (cut.why === 'nobody') { flatGround(true); return; }
         setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.'));
         return;
       }
@@ -3535,18 +3809,21 @@ export default function PostStudio({
           ? t('post.askTitle', 'Change it by saying what to change')
           : t('post.makeTitle', 'Make a picture by saying what you want')}
       </div>
-      <textarea
-        data-postaskwords
-        value={askWords}
-        onChange={(event) => setAskWords(event.target.value)}
-        rows={2}
-        maxLength={500}
-        placeholder={picture
-          ? t('post.askHint', 'Take the car out of the background. Make it evening. Write SALE on the window.')
-          : t('post.makeHint', 'A konsertina on a stoep at sunset, warm light, film grain.')}
-        className="w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px] leading-relaxed outline-none focus:border-emerald-500/60"
-        style={asRoom ? { color: INK } : undefined}
-      />
+      <span className="relative block">
+        <textarea
+          data-postaskwords
+          value={askWords}
+          onChange={(event) => setAskWords(event.target.value)}
+          rows={2}
+          maxLength={500}
+          placeholder={picture
+            ? t('post.askHint', 'Take the car out of the background. Make it evening. Write SALE on the window.')
+            : t('post.makeHint', 'A konsertina on a stoep at sunset, warm light, film grain.')}
+          className="w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px] leading-relaxed outline-none focus:border-emerald-500/60 pr-11"
+          style={asRoom ? { color: INK } : undefined}
+        />
+        <SpeakButton onHeard={(said) => setAskWords((was) => withSaid(was, said).slice(0, 500))} className="absolute bottom-2 right-2" />
+      </span>
       {/* ── Pictures to copy from ──────────────────────────────────────
 
           The capability that was sitting unused. The engine reads several
@@ -4893,6 +5170,31 @@ export default function PostStudio({
   );
 
   /* ── Shapes, as a tool of their own ────────────────────────────────── */
+  const magicBench = (
+    <div className="space-y-3" data-postmagic>
+      {!picture ? (
+        <p className="text-[13px]" style={{ color: INK_DIM }}>{t('post.magicNone', 'Bring a photo in first.')}</p>
+      ) : (
+        <>
+          <p className="text-[13px] font-semibold" style={{ color: magicSpot ? '#39ff14' : INK }} data-postmagicsays>
+            {magicSpot ? t('post.magicReady', 'That part is marked. Choose what the AI does.') : t('post.magicTap', 'Tap the part of the photo first.')}
+          </p>
+          <label className="block space-y-1">
+            <span className="text-[11px]" style={{ color: INK_DIM }}>{t('post.magicSize', 'How big a part')}</span>
+            <input
+              type="range" min={0.05} max={0.35} step={0.01}
+              value={magicSize}
+              data-postmagicsize
+              onChange={(event) => setMagicSize(Number(event.target.value))}
+              className="w-full accent-emerald-400"
+            />
+          </label>
+          {magicButtons()}
+        </>
+      )}
+    </div>
+  );
+
   const shapesBench = (
     <div className="space-y-3">
     {/* ── The shapes ───────────────────────────────────────────────────
@@ -4903,86 +5205,85 @@ export default function PostStudio({
         exported with the picture. Not draggable yet; the five places are
         the presses. */}
     <div className="space-y-3" data-postmarks>
-      <div className="flex items-center justify-between gap-2">
-        <p className={MIKRO}>{t('post.shapes', 'Shapes')}</p>
-        <span className="text-[11px] text-zinc-500">{t('post.shapesWhy', 'Lit, and in the exported file.')}</span>
-      </div>
-      <div className={RY}>
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1" data-postmarkkinds>
         {MARK_SPECS.map((spec) => (
           <button
             key={spec.id}
             type="button"
             data-postaddmark={spec.id}
-            onClick={() => setMarks((was) => [...was, newMark(spec.id, freshId())])}
-            className={`${LEEG} inline-flex items-center gap-1.5`}
+            onClick={() => {
+              const id = freshId();
+              setMarks((was) => [...was, newMark(spec.id, id)]);
+              setMarkOn(id);
+            }}
+            className={`${LEEG} inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap`}
           >
             <span aria-hidden>{spec.icon}</span>
             {t(spec.name[0], spec.name[1])}
           </button>
         ))}
       </div>
-      {marks.map((mark) => {
+      {(() => {
+        const mark = marks.find((one) => one.id === markOn) ?? marks[marks.length - 1];
+        if (!mark) {
+          return <p className="text-xs" style={{ color: INK_DIM }}>{t('post.shapesStart', 'Pick a shape. Then drag it on the photo, and pull its corner to size it.')}</p>;
+        }
         const spec = MARK_SPECS.find((one) => one.id === mark.kind) ?? MARK_SPECS[0];
+        const slider = (label: string, value: number, min: number, max: number, step: number, set: (v: number) => void, id: string) => (
+          <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider={id}>
+            <span className="w-24 flex-shrink-0">{label}</span>
+            <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => set(Number(e.target.value))} className="h-9 min-w-0 flex-1 accent-emerald-400" />
+          </label>
+        );
         return (
-          <div key={mark.id} data-postmark={mark.kind} className="space-y-2 rounded-xl border border-zinc-800 p-3">
+          <div key={mark.id} data-postmark={mark.kind} className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-zinc-100"><span aria-hidden>{spec.icon}</span> {t(spec.name[0], spec.name[1])}</span>
+              <span className="text-sm font-bold"><span aria-hidden>{spec.icon}</span> {t(spec.name[0], spec.name[1])}</span>
               <button
                 type="button"
-                onClick={() => setMarks((was) => was.filter((m) => m.id !== mark.id))}
+                onClick={() => { setMarks((was) => was.filter((m) => m.id !== mark.id)); setMarkOn(null); }}
                 aria-label={t('post.removeShape', 'Remove this shape')}
                 className={`${LEEG} w-auto px-3`}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
-            <div className={RY}>
-              {MARK_SPOTS.map((spot) => (
-                <button
-                  key={spot.id}
-                  type="button"
-                  data-postmarkspot={spot.id}
-                  aria-pressed={mark.x === spot.x && mark.y === spot.y}
-                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, x: spot.x, y: spot.y } : m)))}
-                  className={`${LEEG} ${mark.x === spot.x && mark.y === spot.y ? GEKIES : ''}`}
-                >
-                  {t(`post.markSpot.${spot.id}`, spot.id)}
-                </button>
-              ))}
-              {MARK_SIZES.map((one) => (
-                <button
-                  key={one.id}
-                  type="button"
-                  data-postmarksize={one.id}
-                  aria-pressed={mark.size === one.share}
-                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, size: one.share } : m)))}
-                  className={`${LEEG} ${mark.size === one.share ? GEKIES : ''}`}
-                >
-                  {t(`post.markSize.${one.id}`, one.id)}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {MARK_INKS.map((ink) => (
+            {slider(t('post.markSizeSlide', 'Size'), mark.size, 0.04, 1.6, 0.01, (v) => changeMark(mark.id, { size: v }), 'size')}
+            {isFilled(mark.kind) && slider(t('post.markStretch', 'Wide or tall'), mark.stretch ?? 1, 0.2, 5, 0.05, (v) => changeMark(mark.id, { stretch: v }), 'stretch')}
+            {isFilled(mark.kind) && slider(t('post.markSeeThrough', 'See-through'), 1 - (mark.opacity ?? 1), 0, 0.9, 0.05, (v) => changeMark(mark.id, { opacity: 1 - v }), 'opacity')}
+            <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1" data-postmarkinks>
+              {NEON_INKS.map((ink) => (
                 <button
                   key={ink}
                   type="button"
                   data-postmarkink={ink}
                   aria-pressed={mark.ink === ink}
                   aria-label={ink}
-                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, ink } : m)))}
-                  className={`h-9 w-9 rounded-full border-2 ${mark.ink === ink ? 'border-white' : 'border-zinc-700'}`}
-                  style={{ background: ink, boxShadow: mark.ink === ink ? `0 0 12px ${ink}` : undefined }}
+                  onClick={() => changeMark(mark.id, { ink })}
+                  className={`h-9 w-9 flex-shrink-0 rounded-full border-2 ${mark.ink === ink ? 'border-white' : 'border-zinc-700'}`}
+                  style={{ background: ink, boxShadow: mark.ink === ink ? `0 0 14px ${ink}` : `0 0 6px ${ink}` }}
                 />
               ))}
+              <label className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border-2 border-dashed border-zinc-500" title={t('post.markOwnColour', 'Any colour')}>
+                <input
+                  type="color"
+                  value={mark.ink.length === 7 ? mark.ink : '#ffffff'}
+                  onChange={(e) => changeMark(mark.id, { ink: e.target.value })}
+                  aria-label={t('post.markOwnColour', 'Any colour')}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                />
+                <span aria-hidden className="grid h-full w-full place-items-center text-xs">+</span>
+              </label>
+            </div>
+            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
               {GLOWS.map((glow) => (
                 <button
                   key={glow.id}
                   type="button"
                   data-postmarkglow={glow.id}
                   aria-pressed={mark.glow === glow.id}
-                  onClick={() => setMarks((was) => was.map((m) => (m.id === mark.id ? { ...m, glow: glow.id } : m)))}
-                  className={`${LEEG} w-auto px-3 ${mark.glow === glow.id ? GEKIES : ''}`}
+                  onClick={() => changeMark(mark.id, { glow: glow.id })}
+                  className={`${LEEG} w-auto flex-shrink-0 px-3 ${mark.glow === glow.id ? GEKIES : ''}`}
                   style={glow.halo.length ? { textShadow: `0 0 6px ${glow.halo[2]}, 0 0 14px ${glow.halo[1]}` } : undefined}
                 >
                   {t(glow.name[0], glow.name[1])}
@@ -4991,7 +5292,7 @@ export default function PostStudio({
             </div>
           </div>
         );
-      })}
+      })()}
     </div>
     </div>
   );
@@ -5257,6 +5558,7 @@ export default function PostStudio({
   const benchFor: Record<string, React.ReactNode> = {
     starts: startsBench,
     shapes: shapesBench,
+    magic: magicBench,
     pic: picBench,
     frame: frameBench,
     tone: toneBench,
@@ -5366,7 +5668,6 @@ export default function PostStudio({
           type="button"
           onClick={onClose}
           data-roomback
-          data-backout
           aria-label={t('room.backToAll', 'Alle Kamers')}
           className="flex h-9 w-9 items-center justify-center rounded-lg"
           style={{ ...chipStyle, color: PHOTO.accent }}
@@ -5479,7 +5780,7 @@ export default function PostStudio({
           /* Only while there is something to pan, crop, trace or move: a
              permanent `touch-action: none` is a dead zone in a page that
              scrolls, which reads as the app being frozen. */
-          touchAction: movable || cropBox || traced || words.length > 0 ? 'none' : 'auto',
+          touchAction: movable || cropBox || traced || words.length > 0 || marks.length > 0 ? 'none' : 'auto',
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
@@ -5520,10 +5821,18 @@ export default function PostStudio({
       {/* What the room just said, over the foot of the photograph. */}
       {(said || covered) && (
         <div className="pointer-events-none absolute inset-x-2 bottom-2 flex flex-col items-center gap-1">
+          {/* A small sign, not a paragraph: the shaded bands on the photo
+              already show where; a tap says why. */}
           {covered && (
-            <p data-postclash className="pointer-events-auto rounded-xl border border-amber-500/40 bg-black/70 px-3 py-1.5 text-[12px] leading-snug text-amber-300 backdrop-blur">
-              {t('post.covered', 'Some of your words are where the app prints its own caption and buttons. They are moved clear in the saved file; the shaded bands show where.')}
-            </p>
+            <button
+              type="button"
+              data-postclash
+              onClick={() => setClashOpen((was) => !was)}
+              aria-label={t('post.covered', 'Some of your words are where the app prints its own caption and buttons. They are moved clear in the saved file; the shaded bands show where.')}
+              className="pointer-events-auto rounded-full border border-amber-400/70 bg-black/60 px-2.5 py-1 text-[12px] font-bold leading-snug text-amber-300"
+            >
+              {clashOpen ? t('post.coveredShort', 'Words under the app’s buttons — moved clear when saved') : '⚠'}
+            </button>
           )}
           {said && <p data-postsaid className="pointer-events-auto rounded-xl bg-black/70 px-3 py-1.5 text-[12px] leading-snug text-emerald-300 backdrop-blur">{said}</p>}
         </div>
@@ -5558,6 +5867,7 @@ export default function PostStudio({
               </button>
             </div>
           )}
+          {picked && things.current.has(picked.id) && magicButtons(picked)}
           {picked && !things.current.has(picked.id) && (
             <div className={RY3}>
               <button type="button" data-postlinegrab onClick={() => grabLine(picked)} className={LEEG}>
@@ -5613,7 +5923,9 @@ export default function PostStudio({
         what={t(here.what[0], here.what[1])}
         paid={here.paid}
         paidSays={t('dock.paidSays', 'Some of this costs credits.')}
-        paidLine={t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
+        /* Not on the magic touch: it is an AI press with its price under its
+           own buttons, and this sentence would say it was free. */
+        paidLine={here.id === 'magic' ? undefined : t('post.paidHere', 'Every tool in this room is included in your plan. Taking the picture out is the one press that spends, and it says the price before it does.')}
         closeSays={t('cut.shut', 'Close this bench')}
         look={CUT_LOOK}
         single
@@ -5793,21 +6105,39 @@ export default function PostStudio({
           {/* The controls pop out at the top, above the photograph and
               outside it, on glass she can see the photograph through the
               edges of. */}
-          {(stripsUp || toolSheet || copilotSheet) && (
-            <div
-              data-postpop
-              className="flex max-h-[44dvh] min-h-0 flex-shrink-0 flex-col overflow-y-auto"
-              style={{ background: PHOTO.popGlass, backdropFilter: 'blur(14px)', borderBottom: `1px solid ${PHOTO.edge}` }}
-            >
-              {stripsUp ? strips : copilotSheet ?? toolSheet}
-            </div>
-          )}
-          {photo}
+          {/* ── The photograph never shrinks ─────────────────────────────
+              Carli, 14 October 2026: "Die prent moet nooit kleiner gemaak
+              word wanneer funksie bars oopgemaak word nie ... alles moet
+              klein en heel onder bly, die opsies kan eerder links en regs
+              scroll, en as jy op een van daardie funksies kliek, dan pop
+              dit uit bo op die foto sonder 'n background en very bright
+              neon en highlighted dat mens dit bo op die prent kan sien."
+              So the photograph has all the room between the header and
+              the tools, always; a tool's controls float over the top of it
+              with no panel behind them, drawn in bright neon with a dark
+              edge on every letter so they read over any picture
+              (`[data-neon]` in globals.css). */}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            {photo}
+            {(stripsUp || toolSheet || copilotSheet) && (
+              <div
+                data-postpop
+                /* The magic touch is aimed by tapping the photo under these
+                   controls, so the empty parts of the overlay let a tap
+                   through to it; only its buttons and fields catch one. */
+                data-passthrough={bench === 'magic' ? 'yes' : undefined}
+                data-neon
+                className="absolute inset-x-0 top-0 z-20 flex max-h-[58%] min-h-0 flex-col overflow-y-auto"
+              >
+                {stripsUp ? strips : copilotSheet ?? toolSheet}
+              </div>
+            )}
+          </div>
           <nav
             data-cutdock=""
             data-cutbenchrow=""
             data-postfoot
-            className="grid flex-shrink-0 grid-cols-8 gap-0.5 px-1 pb-1.5 pt-1"
+            className="flex flex-shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1"
             style={{ background: PHOTO.floorGlass, borderTop: `1px solid ${PHOTO.edge}` }}
           >
             {ALL_BENCHES.map((spec) => toolButton(spec, false))}

@@ -61,6 +61,8 @@ import {
 } from '../lib/storyboard';
 import { useCopilotOps } from '../lib/copilotactions';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import Card from './Card';
 import { useOpenCard } from '../lib/opencard';
 import Note from './Note';
@@ -718,16 +720,19 @@ export default function Storyboard({
               <label className="sr-only" htmlFor={`shot-${shot.id}`}>
                 {t('board.shotWords', 'What is in this shot')}
               </label>
-              <textarea
-                id={`shot-${shot.id}`}
-                value={shot.prompt}
-                onChange={(event) =>
-                  setBoard((was) => changed(was, shot.id, { prompt: event.target.value }))
-                }
-                rows={2}
-                placeholder={t('board.hint', 'What is in the shot, what it does, what the camera does.')}
-                className="w-full resize-y rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed"
-              />
+              <span className="relative block">
+                <textarea
+                  id={`shot-${shot.id}`}
+                  value={shot.prompt}
+                  onChange={(event) =>
+                    setBoard((was) => changed(was, shot.id, { prompt: event.target.value }))
+                  }
+                  rows={2}
+                  placeholder={t('board.hint', 'What is in the shot, what it does, what the camera does.')}
+                  className="w-full resize-y rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed pr-11"
+                />
+                <SpeakButton onHeard={(said) => setBoard((was) => changed(was, shot.id, { prompt: withSaid(shot.prompt, said) }))} className="absolute bottom-2 right-2" />
+              </span>
 
               {/* The words on screen, and only when the film is captioned.
                   One line, pre-filled from the quoted line, so the usual case

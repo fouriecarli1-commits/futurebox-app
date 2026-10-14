@@ -27,9 +27,15 @@ import { useLang } from '../lib/i18n';
 
 export default function BrandKit({
   onChange,
+  compact = false,
 }: {
   /** Handed up so the room can send it with the brief. */
   onChange: (kit: Kit) => void;
+  /**
+   * One line on its header, where it sits among a room's other controls (the
+   * video editor's Your mark) and must stand the same height as they do.
+   */
+  compact?: boolean;
 }): React.ReactElement {
   const { t } = useLang();
   const [kit, setKit] = useState<Kit>(EMPTY);
@@ -82,7 +88,7 @@ export default function BrandKit({
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="w-full flex items-center gap-2.5 px-4 py-3 text-left"
+        className={`w-full flex items-center gap-2.5 px-4 text-left ${compact ? 'min-h-[44px] py-1.5' : 'py-3'}`}
       >
         {open ? (
           <ChevronDown className="w-4 h-4 text-zinc-500 flex-shrink-0" />
@@ -94,7 +100,7 @@ export default function BrandKit({
           <span className="block text-sm font-semibold text-zinc-200">
             {t('kit.title', 'Your brand pack')}
           </span>
-          <span className="block text-xs text-zinc-500 truncate">
+          <span className={compact ? 'sr-only' : 'block text-xs text-zinc-500 truncate'}>
             {hasBrandKit(kit)
               ? [kit.name, kit.voice].filter(Boolean).join(' — ')
               : t('kit.empty', 'Set it once and every advert after this uses it.')}

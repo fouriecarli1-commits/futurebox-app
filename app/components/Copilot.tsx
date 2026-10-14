@@ -23,6 +23,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Send, Loader2, Check, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import { type SurfaceId, seedsFor, helpsWith } from '../lib/surfaces';
 import { errandHelps, errandSeeds, type Errand } from '../lib/errands';
 import { useCopilotBusContext, useCopilotOps } from '../lib/copilotactions';
@@ -435,6 +437,9 @@ export default function Copilot({
           disabled={offline}
           className="flex-1 min-w-0 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 disabled:opacity-60"
         />
+        {/* Said instead of typed (Carli, 14 October 2026). The words land in
+            the box, not straight in the copilot, so she can read them first. */}
+        <SpeakButton onHeard={(said) => setDraft((was) => withSaid(was, said))} disabled={offline} className="self-center" />
         <button
           type="submit"
           disabled={busy || offline || !draft.trim()}

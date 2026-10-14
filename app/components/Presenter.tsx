@@ -47,6 +47,8 @@ import { accessToken } from '../lib/cloud';
 import { loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
 import { presenterCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import type { VoiceState } from './VoiceLab';
 import Cost from './Cost';
 import Card from './Card';
@@ -538,14 +540,17 @@ export default function Presenter({
             <label htmlFor="presenter-script" className="block text-sm text-zinc-400">
               {t('pres.script', 'What they say')}
             </label>
-            <textarea
-              id="presenter-script"
-              value={script}
-              onChange={(event) => setScript(event.target.value)}
-              rows={3}
-              placeholder={t('pres.scriptHint', 'Hallo, ek is Sarel, en vandag wys ek jou iets nuuts.')}
-              className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed"
-            />
+            <span className="relative block">
+              <textarea
+                id="presenter-script"
+                value={script}
+                onChange={(event) => setScript(event.target.value)}
+                rows={3}
+                placeholder={t('pres.scriptHint', 'Hallo, ek is Sarel, en vandag wys ek jou iets nuuts.')}
+                className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed pr-11"
+              />
+              <SpeakButton onHeard={(said) => setScript((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
+            </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

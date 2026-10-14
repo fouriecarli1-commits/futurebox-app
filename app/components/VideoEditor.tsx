@@ -68,8 +68,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
-  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2,
+  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2, Wand2, X,
 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import CanvasSizeModal from './CanvasSizeModal';
 import StudioTemplatesModal from './StudioTemplatesModal';
 import { type StudioTemplateItem } from '../lib/studiotemplates';
@@ -86,6 +87,9 @@ import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
 import { loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
 import { useAtDesk } from '../lib/atdesk';
 import Pictures from './Pictures';
+import BrandKit from './BrandKit';
+import { type BrandKit as Kit } from '../lib/brandkit';
+import { assetDataUrl } from '../lib/assets';
 import DeskSheet from './BoothCard';
 import KeepVideo from './KeepVideo';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
@@ -1420,6 +1424,38 @@ export default function VideoEditor({
     commit((was) => ({ ...was, cover: shot, coverFrom: 'shot' }));
   }, [piece, shape, commit, t]);
 
+  /**
+   * The AI wand on a clip: the frame she is looking at goes onto the shot
+   * bench, where the AI changes it from her words and can make it move.
+   *
+   * Nothing is charged by the press itself. Drawing the changed frame and
+   * making it move are the shot bench's own two prices, shown on its own
+   * buttons, exactly as on an empty film.
+   */
+  const wandFrame = useCallback(async () => {
+    const node = viewer.current;
+    if (!node || !piece) return;
+    const shot = await frameFrom(node, shape.width, shape.height, piece.fill ?? false);
+    if (!shot) {
+      setProblem(t('edit.coverNoFrame', 'That frame could not be read.'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setShotPic(String(reader.result));
+      setDrawInto('start');
+      setShotReady(null);
+      setShotSaid(t(
+        'edit.wandSay',
+        'This frame is on the bench. Say what the AI must change, press Draw, then Make it move to put the new shot on the clock.',
+      ));
+      setWandOpen(true);
+      requestAnimationFrame(() => wandRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    };
+    reader.onerror = () => setProblem(t('edit.coverNoFrame', 'That frame could not be read.'));
+    reader.readAsDataURL(shot);
+  }, [piece, shape, t]);
+
   /* ── The two red lines, and where they stick ──────────────────────────
 
      Carli, 4 October 2026: *"Hier is die magneet funksie baie belangrik."*
@@ -1786,6 +1822,37 @@ export default function VideoEditor({
   const shotSince = useRef<number>(0);
   const [shotReady, setShotReady] = useState<string | null>(null);
   const [shotSaid, setShotSaid] = useState('');
+
+  /* ── A clip, tapped ─────────────────────────────────────────────────────
+
+     Carli, 14 October 2026: when a clip is tapped, options pop up — cut,
+     undo, and an AI wand to change the frame. The menu sits over the strip
+     where she tapped, drawn on the page itself (a portal) because the strip
+     scrolls sideways and would clip anything hanging off it. */
+  /* The brand pack, at Your mark (Carli, 14 October 2026: "Open your brand
+     pack"). The same pack the adverts desk keeps, opened here, and its logo
+     put on the film in one press. */
+  const [kit, setKit] = useState<Kit | null>(null);
+  const [clipMenu, setClipMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [wandOpen, setWandOpen] = useState(false);
+  const wandRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!clipMenu) return undefined;
+    const shut = (): void => setClipMenu(null);
+    const away = (event: PointerEvent): void => {
+      const target = event.target as Element | null;
+      if (target?.closest('[data-editorclipmenu], [data-editorblock]')) return;
+      setClipMenu(null);
+    };
+    window.addEventListener('resize', shut);
+    window.addEventListener('scroll', shut, true);
+    document.addEventListener('pointerdown', away);
+    return () => {
+      window.removeEventListener('resize', shut);
+      window.removeEventListener('scroll', shut, true);
+      document.removeEventListener('pointerdown', away);
+    };
+  }, [clipMenu]);
   const [shotSeconds, setShotSeconds] = useState<4 | 6 | 8>(4);
   const [shotGrade, setShotGrade] = useState<VideoGrade>('standard');
 
@@ -2926,6 +2993,290 @@ async function smallerFrame(url: string): Promise<string> {
     );
   }
 
+
+  /* ── Make a shot, as one piece of JSX ───────────────────────────────────
+
+     Drawn on the empty room's opening, and — since 14 October 2026 — in the
+     wand sheet over a film that already has clips, so the frame she tapped
+     can be changed by the AI and made to move. One panel in two places
+     rather than two copies of it, so a price or a rule cannot drift. */
+  const shotPanel = (
+    <div data-editorshot className="rounded-xl border p-3 space-y-2"
+      style={{ borderColor: 'rgba(16,185,129,0.28)', background: 'rgba(16,185,129,0.05)' }}>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: INK_DIM }}>
+        {t('edit.shotTitle', 'Make a shot')}
+      </div>
+      <textarea
+        data-editorshotwords
+        value={shotWords}
+        onChange={(event) => setShotWords(event.target.value)}
+        rows={2}
+        maxLength={500}
+        placeholder={t('edit.shotHint', 'A konsertina on a stoep at sunset. The curtain moves in the wind.')}
+        className="w-full rounded-lg border border-zinc-800 bg-black/30 p-2.5 text-[13px] leading-relaxed outline-none focus:border-emerald-500/60"
+        style={{ color: INK }}
+      />
+      {/* ── Who is in the shot ──────────────────────────────────
+
+          The cast desk has had people and products in it since
+          September, each with a reference picture, and nothing
+          but the presenter panel ever read it. So a film made
+          here had a different person in every shot.
+
+          Ticking somebody sends their picture up with the words,
+          and the face in shot four is the face in shot one. Up to
+          `roomForRefs` of them — the request body is what sets
+          that, not a preference. */}
+      {cast.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="text-[11px]" style={{ color: INK_DIM }}>
+            {t('edit.castSame', 'Keep the same people in it')}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {cast.map((one) => {
+              const on = castOn.includes(one.path);
+              return (
+                <button
+                  key={one.path}
+                  type="button"
+                  data-editorshotcast={one.path}
+                  aria-pressed={on}
+                  disabled={!on && castOn.length >= castRoom}
+                  onClick={() => toggleCast(one.path)}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[12px] disabled:opacity-40 ${
+                    on ? 'border-emerald-500/70 bg-emerald-500/15' : 'border-zinc-700'
+                  }`}
+                  style={{ color: INK }}
+                >
+                  {castPics[one.path] && (
+                    /* eslint-disable-next-line @next/next/no-img-element -- a
+                       data URL out of her own storage; there is no
+                       path for the image component to optimise. */
+                    <img
+                      src={castPics[one.path]}
+                      alt=""
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  )}
+                  {one.name}
+                </button>
+              );
+            })}
+          </div>
+          <div className="text-[11px]" style={{ color: INK_DIM }}>
+            {castOn.length >= castRoom
+              ? t('edit.castFull', 'That is as many as can go up with one frame.')
+              : t('edit.castHint', 'Their picture goes up with the words, so the face stays the same.')}
+          </div>
+        </div>
+      )}
+      {/* ── Which of the two frames the Draw button fills ──────
+
+          Google's Veo takes an opening frame AND a closing one,
+          and this room only ever sent the opening. Two frames is
+          what turns a clip from a guess into a move: the engine
+          has to arrive somewhere she chose rather than deciding
+          where the shot ends — and it is the only way two clips
+          join without a visible cut.
+
+          One box and one button for both, with a switch, because
+          two boxes and two buttons is the same room twice and
+          nobody finds the second one. */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {([
+          ['start', t('edit.frameOpening', 'Opening frame'), shotPic],
+          ['end', t('edit.frameClosing', 'Closing frame'), shotEnd],
+        ] as const).map(([which, label, held]) => (
+          <button
+            key={which}
+            type="button"
+            data-editorshotinto={which}
+            aria-pressed={drawInto === which}
+            onClick={() => setDrawInto(which)}
+            className={`rounded-lg border px-2 py-1 text-[12px] ${
+              drawInto === which ? 'border-emerald-500/70 bg-emerald-500/15' : 'border-zinc-700'
+            }`}
+            style={{ color: INK }}
+          >
+            {label}
+            {held ? ' ·' : ''}
+          </button>
+        ))}
+        {shotEnd && (
+          <button
+            type="button"
+            data-editorshotendoff
+            onClick={() => {
+              setShotEnd(null);
+              setDrawInto('start');
+              setShotReady(null);
+            }}
+            className="rounded-lg border border-zinc-700 px-2 py-1 text-[12px]"
+            style={{ color: INK_DIM }}
+          >
+            {t('edit.frameClosingOff', 'No closing frame')}
+          </button>
+        )}
+      </div>
+      <div className="text-[11px]" style={{ color: INK_DIM }}>
+        {shotEnd
+          ? t('edit.frameBoth', 'The clip moves from the opening frame to the closing one. End a clip on the frame the next one opens with, and the cut disappears.')
+          : t('edit.frameOne', 'A closing frame is optional. Give one and the engine has to arrive there instead of deciding where the shot ends.')}
+      </div>
+      {shotEnd && (
+        /* eslint-disable-next-line @next/next/no-img-element -- a
+           data URL drawn a moment ago, held in this component's
+           state; there is no path for the image component to
+           optimise and no URL to optimise it from. */
+        <img
+          src={shotEnd}
+          alt={t('edit.shotEndFrame', 'The frame the clip ends on')}
+          data-editorshotendframe
+          className={`w-full rounded-lg border ${
+            drawInto === 'end' ? 'border-emerald-500/60' : 'border-zinc-800'
+          }`}
+        />
+      )}
+      {shotPic && (
+        /* A plain `<img>`, with the lint rule turned off for this
+           one line and the reason here rather than nowhere.
+
+           `next/image` exists to optimise and size images it can
+           fetch. This one is a data URL that was drawn four
+           seconds ago, lives only in this component's state, and
+           is thrown away the moment she presses "Change the
+           frame" — there is nothing to optimise and no URL to
+           optimise it from. The alternative that passes the rule
+           is a `background-image` on a div, which would cost the
+           alt text, and a picture somebody paid five credits for
+           ought to be describable to a screen reader. */
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={shotPic}
+          alt={t('edit.shotFrame', 'The frame that was drawn')}
+          data-editorshotframe
+          className={`w-full rounded-lg border ${
+            drawInto === 'start' ? 'border-emerald-500/60' : 'border-zinc-800'
+          }`}
+        />
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          data-editorshotdraw
+          disabled={Boolean(shotBusy) || !shotWords.trim()}
+          onClick={() => { void drawFrame(); }}
+          className={`${SMALL} disabled:opacity-40`}
+        >
+          {shotBusy === 'draw'
+            ? t('edit.shotDrawing', 'Drawing…')
+            : `${shotPic ? t('edit.shotAgain', 'Change the frame') : t('edit.shotDraw', 'Draw the frame')} · ${creditsSaid(CREDITS.repaint, t)}`}
+        </button>
+        {shotPic && (
+          <button
+            type="button"
+            data-editorshotdrop
+            onClick={() => { setShotPic(null); setShotReady(null); setShotSaid(''); }}
+            className={SMALL}
+          >
+            {t('edit.shotStart', 'Start over')}
+          </button>
+        )}
+      </div>
+      {shotPic && (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            {([4, 6, 8] as const).map((many) => (
+              <button
+                key={many}
+                type="button"
+                data-editorshotseconds={many}
+                aria-pressed={shotSeconds === many}
+                onClick={() => setShotSeconds(many)}
+                className={`${SMALL} ${shotSeconds === many ? 'border-emerald-400 text-emerald-200' : ''}`}
+              >
+                {t('edit.shotSeconds', '{n} sec').replace('{n}', String(many))}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {(['standard', 'better', 'premium'] as const).map((rung) => (
+              <button
+                key={rung}
+                type="button"
+                data-editorshotgrade={rung}
+                aria-pressed={shotGrade === rung}
+                onClick={() => setShotGrade(rung)}
+                className={`${SMALL} ${shotGrade === rung ? 'border-emerald-400 text-emerald-200' : ''}`}
+              >
+                {rung === 'standard'
+                  ? t('edit.gradeStandard', 'Good')
+                  : rung === 'better' ? t('edit.gradeBetter', 'Better') : t('edit.gradePremium', 'Best')}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            data-editorshotmove
+            disabled={Boolean(shotBusy) || Boolean(shotJob) || !shotWords.trim()}
+            onClick={() => { void makeItMove(); }}
+            className={`${SMALL} disabled:opacity-40`}
+          >
+            {shotJob
+              ? t('edit.shotMakingShort', 'Making it…')
+              : `${t('edit.shotMove', 'Make it move')} · ${creditsSaid(videoCost(shotGrade, shotSeconds), t)}`}
+          </button>
+        </>
+      )}
+      {shotReady && (
+        <>
+          <video
+            src={shotReady}
+            data-editorshotclip
+            controls
+            playsInline
+            className="w-full rounded-lg border border-zinc-800"
+          />
+          {/* The press that puts it on the clock. Never an effect —
+              see the note on the poll above. */}
+          <button
+            type="button"
+            data-editorshotkeep
+            onClick={() => {
+              const url = shotReady;
+              void (async () => {
+                try {
+                  const got = await fetch(url);
+                  const blob = await got.blob();
+                  const file = new File([blob], 'made-shot.mp4', { type: blob.type || 'video/mp4' });
+                  await bringIn([file], 'made');
+                  setShotReady(null);
+                  setShotSaid(t('edit.shotOnClock', 'On the clock. Draw another frame to make the next one.'));
+                } catch {
+                  setShotSaid(t('edit.shotNoKeep', 'That clip could not be put on the clock. It is still in your videos.'));
+                }
+              })();
+            }}
+            className={SMALL}
+          >
+            {t('edit.shotKeep', 'Put it on the clock')}
+          </button>
+        </>
+      )}
+      {shotSaid && (
+        <p data-editorshotsaid className="text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
+          {shotSaid}
+        </p>
+      )}
+      <p className="text-[11px] leading-relaxed" style={{ color: INK_DIM }}>
+        {t(
+          'edit.shotWhat',
+          'This is the only thing in this room that costs credits. Draw a frame until it looks right — five credits a try — then pay once to make it move. Nothing of your own footage is sent anywhere: what leaves is your words and the frame this app just drew from them.',
+        )}
+      </p>
+    </div>
+  );
+
   return (
     /* ── One room, in the shape she drew ──────────────────────────────────
 
@@ -3609,280 +3960,7 @@ async function smallerFrame(url: string): Promise<string> {
                   every near-miss is charged. A frame is five credits and a
                   clip is fifteen and up — so the look is settled as many
                   times as it takes, and the motion is paid for once. */}
-              <div data-editorshot className="rounded-xl border p-3 space-y-2"
-                style={{ borderColor: 'rgba(16,185,129,0.28)', background: 'rgba(16,185,129,0.05)' }}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: INK_DIM }}>
-                  {t('edit.shotTitle', 'Make a shot')}
-                </div>
-                <textarea
-                  data-editorshotwords
-                  value={shotWords}
-                  onChange={(event) => setShotWords(event.target.value)}
-                  rows={2}
-                  maxLength={500}
-                  placeholder={t('edit.shotHint', 'A konsertina on a stoep at sunset. The curtain moves in the wind.')}
-                  className="w-full rounded-lg border border-zinc-800 bg-black/30 p-2.5 text-[13px] leading-relaxed outline-none focus:border-emerald-500/60"
-                  style={{ color: INK }}
-                />
-                {/* ── Who is in the shot ──────────────────────────────────
-
-                    The cast desk has had people and products in it since
-                    September, each with a reference picture, and nothing
-                    but the presenter panel ever read it. So a film made
-                    here had a different person in every shot.
-
-                    Ticking somebody sends their picture up with the words,
-                    and the face in shot four is the face in shot one. Up to
-                    `roomForRefs` of them — the request body is what sets
-                    that, not a preference. */}
-                {cast.length > 0 && (
-                  <div className="space-y-1.5">
-                    <div className="text-[11px]" style={{ color: INK_DIM }}>
-                      {t('edit.castSame', 'Keep the same people in it')}
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {cast.map((one) => {
-                        const on = castOn.includes(one.path);
-                        return (
-                          <button
-                            key={one.path}
-                            type="button"
-                            data-editorshotcast={one.path}
-                            aria-pressed={on}
-                            disabled={!on && castOn.length >= castRoom}
-                            onClick={() => toggleCast(one.path)}
-                            className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[12px] disabled:opacity-40 ${
-                              on ? 'border-emerald-500/70 bg-emerald-500/15' : 'border-zinc-700'
-                            }`}
-                            style={{ color: INK }}
-                          >
-                            {castPics[one.path] && (
-                              /* eslint-disable-next-line @next/next/no-img-element -- a
-                                 data URL out of her own storage; there is no
-                                 path for the image component to optimise. */
-                              <img
-                                src={castPics[one.path]}
-                                alt=""
-                                className="h-6 w-6 rounded-full object-cover"
-                              />
-                            )}
-                            {one.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="text-[11px]" style={{ color: INK_DIM }}>
-                      {castOn.length >= castRoom
-                        ? t('edit.castFull', 'That is as many as can go up with one frame.')
-                        : t('edit.castHint', 'Their picture goes up with the words, so the face stays the same.')}
-                    </div>
-                  </div>
-                )}
-                {/* ── Which of the two frames the Draw button fills ──────
-
-                    Google's Veo takes an opening frame AND a closing one,
-                    and this room only ever sent the opening. Two frames is
-                    what turns a clip from a guess into a move: the engine
-                    has to arrive somewhere she chose rather than deciding
-                    where the shot ends — and it is the only way two clips
-                    join without a visible cut.
-
-                    One box and one button for both, with a switch, because
-                    two boxes and two buttons is the same room twice and
-                    nobody finds the second one. */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {([
-                    ['start', t('edit.frameOpening', 'Opening frame'), shotPic],
-                    ['end', t('edit.frameClosing', 'Closing frame'), shotEnd],
-                  ] as const).map(([which, label, held]) => (
-                    <button
-                      key={which}
-                      type="button"
-                      data-editorshotinto={which}
-                      aria-pressed={drawInto === which}
-                      onClick={() => setDrawInto(which)}
-                      className={`rounded-lg border px-2 py-1 text-[12px] ${
-                        drawInto === which ? 'border-emerald-500/70 bg-emerald-500/15' : 'border-zinc-700'
-                      }`}
-                      style={{ color: INK }}
-                    >
-                      {label}
-                      {held ? ' ·' : ''}
-                    </button>
-                  ))}
-                  {shotEnd && (
-                    <button
-                      type="button"
-                      data-editorshotendoff
-                      onClick={() => {
-                        setShotEnd(null);
-                        setDrawInto('start');
-                        setShotReady(null);
-                      }}
-                      className="rounded-lg border border-zinc-700 px-2 py-1 text-[12px]"
-                      style={{ color: INK_DIM }}
-                    >
-                      {t('edit.frameClosingOff', 'No closing frame')}
-                    </button>
-                  )}
-                </div>
-                <div className="text-[11px]" style={{ color: INK_DIM }}>
-                  {shotEnd
-                    ? t('edit.frameBoth', 'The clip moves from the opening frame to the closing one. End a clip on the frame the next one opens with, and the cut disappears.')
-                    : t('edit.frameOne', 'A closing frame is optional. Give one and the engine has to arrive there instead of deciding where the shot ends.')}
-                </div>
-                {shotEnd && (
-                  /* eslint-disable-next-line @next/next/no-img-element -- a
-                     data URL drawn a moment ago, held in this component's
-                     state; there is no path for the image component to
-                     optimise and no URL to optimise it from. */
-                  <img
-                    src={shotEnd}
-                    alt={t('edit.shotEndFrame', 'The frame the clip ends on')}
-                    data-editorshotendframe
-                    className={`w-full rounded-lg border ${
-                      drawInto === 'end' ? 'border-emerald-500/60' : 'border-zinc-800'
-                    }`}
-                  />
-                )}
-                {shotPic && (
-                  /* A plain `<img>`, with the lint rule turned off for this
-                     one line and the reason here rather than nowhere.
-
-                     `next/image` exists to optimise and size images it can
-                     fetch. This one is a data URL that was drawn four
-                     seconds ago, lives only in this component's state, and
-                     is thrown away the moment she presses "Change the
-                     frame" — there is nothing to optimise and no URL to
-                     optimise it from. The alternative that passes the rule
-                     is a `background-image` on a div, which would cost the
-                     alt text, and a picture somebody paid five credits for
-                     ought to be describable to a screen reader. */
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={shotPic}
-                    alt={t('edit.shotFrame', 'The frame that was drawn')}
-                    data-editorshotframe
-                    className={`w-full rounded-lg border ${
-                      drawInto === 'start' ? 'border-emerald-500/60' : 'border-zinc-800'
-                    }`}
-                  />
-                )}
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    data-editorshotdraw
-                    disabled={Boolean(shotBusy) || !shotWords.trim()}
-                    onClick={() => { void drawFrame(); }}
-                    className={`${SMALL} disabled:opacity-40`}
-                  >
-                    {shotBusy === 'draw'
-                      ? t('edit.shotDrawing', 'Drawing…')
-                      : `${shotPic ? t('edit.shotAgain', 'Change the frame') : t('edit.shotDraw', 'Draw the frame')} · ${creditsSaid(CREDITS.repaint, t)}`}
-                  </button>
-                  {shotPic && (
-                    <button
-                      type="button"
-                      data-editorshotdrop
-                      onClick={() => { setShotPic(null); setShotReady(null); setShotSaid(''); }}
-                      className={SMALL}
-                    >
-                      {t('edit.shotStart', 'Start over')}
-                    </button>
-                  )}
-                </div>
-                {shotPic && (
-                  <>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {([4, 6, 8] as const).map((many) => (
-                        <button
-                          key={many}
-                          type="button"
-                          data-editorshotseconds={many}
-                          aria-pressed={shotSeconds === many}
-                          onClick={() => setShotSeconds(many)}
-                          className={`${SMALL} ${shotSeconds === many ? 'border-emerald-400 text-emerald-200' : ''}`}
-                        >
-                          {t('edit.shotSeconds', '{n} sec').replace('{n}', String(many))}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {(['standard', 'better', 'premium'] as const).map((rung) => (
-                        <button
-                          key={rung}
-                          type="button"
-                          data-editorshotgrade={rung}
-                          aria-pressed={shotGrade === rung}
-                          onClick={() => setShotGrade(rung)}
-                          className={`${SMALL} ${shotGrade === rung ? 'border-emerald-400 text-emerald-200' : ''}`}
-                        >
-                          {rung === 'standard'
-                            ? t('edit.gradeStandard', 'Good')
-                            : rung === 'better' ? t('edit.gradeBetter', 'Better') : t('edit.gradePremium', 'Best')}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      data-editorshotmove
-                      disabled={Boolean(shotBusy) || Boolean(shotJob) || !shotWords.trim()}
-                      onClick={() => { void makeItMove(); }}
-                      className={`${SMALL} disabled:opacity-40`}
-                    >
-                      {shotJob
-                        ? t('edit.shotMakingShort', 'Making it…')
-                        : `${t('edit.shotMove', 'Make it move')} · ${creditsSaid(videoCost(shotGrade, shotSeconds), t)}`}
-                    </button>
-                  </>
-                )}
-                {shotReady && (
-                  <>
-                    <video
-                      src={shotReady}
-                      data-editorshotclip
-                      controls
-                      playsInline
-                      className="w-full rounded-lg border border-zinc-800"
-                    />
-                    {/* The press that puts it on the clock. Never an effect —
-                        see the note on the poll above. */}
-                    <button
-                      type="button"
-                      data-editorshotkeep
-                      onClick={() => {
-                        const url = shotReady;
-                        void (async () => {
-                          try {
-                            const got = await fetch(url);
-                            const blob = await got.blob();
-                            const file = new File([blob], 'made-shot.mp4', { type: blob.type || 'video/mp4' });
-                            await bringIn([file], 'made');
-                            setShotReady(null);
-                            setShotSaid(t('edit.shotOnClock', 'On the clock. Draw another frame to make the next one.'));
-                          } catch {
-                            setShotSaid(t('edit.shotNoKeep', 'That clip could not be put on the clock. It is still in your videos.'));
-                          }
-                        })();
-                      }}
-                      className={SMALL}
-                    >
-                      {t('edit.shotKeep', 'Put it on the clock')}
-                    </button>
-                  </>
-                )}
-                {shotSaid && (
-                  <p data-editorshotsaid className="text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
-                    {shotSaid}
-                  </p>
-                )}
-                <p className="text-[11px] leading-relaxed" style={{ color: INK_DIM }}>
-                  {t(
-                    'edit.shotWhat',
-                    'This is the only thing in this room that costs credits. Draw a frame until it looks right — five credits a try — then pay once to make it move. Nothing of your own footage is sent anywhere: what leaves is your words and the frame this app just drew from them.',
-                  )}
-                </p>
-              </div>
+              {shotPanel}
             </div>
 
             <p className="text-sm leading-relaxed" style={{ color: INK_DIM }} data-editorempty>
@@ -4093,7 +4171,12 @@ async function smallerFrame(url: string): Promise<string> {
                         type="button"
                         aria-pressed={on}
                         data-editorblock
-                        onClick={() => { setPicked(one.id); setLane('film'); }}
+                        onClick={(event) => {
+                          setPicked(one.id); setLane('film');
+                          const box = event.currentTarget.getBoundingClientRect();
+                          const x = event.clientX || box.left + box.width / 2;
+                          setClipMenu((was) => (was?.id === one.id ? null : { id: one.id, x, y: box.top }));
+                        }}
                         className="absolute top-1 bottom-1 overflow-hidden rounded-lg px-2 py-1 text-left"
                         style={{
                           left: from * perSecond,
@@ -4947,6 +5030,80 @@ async function smallerFrame(url: string): Promise<string> {
       )}
 
       </div>
+
+      {/* ── The wand sheet: the tapped frame on the shot bench ──────────── */}
+      {wandOpen && edit.pieces.length > 0 && (
+        <div ref={wandRef} data-editorwand className="mx-auto w-full max-w-3xl space-y-2 px-1 pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 text-sm font-bold" style={{ color: INK }}>
+              <Wand2 className="h-4 w-4" style={{ color: LIT }} />
+              {t('edit.wandTitle', 'Change this frame with AI')}
+            </span>
+            <button
+              type="button"
+              data-editorwandshut
+              onClick={() => setWandOpen(false)}
+              aria-label={t('edit.wandShut', 'Put the wand away')}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700"
+              style={{ color: INK }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {shotPanel}
+        </div>
+      )}
+
+      {clipMenu && typeof document !== 'undefined' && createPortal(
+        <div
+          data-editorclipmenu
+          role="menu"
+          className="fixed z-[200] flex items-center gap-1 rounded-2xl border p-1"
+          style={{
+            left: Math.max(8, Math.min(clipMenu.x - 120, (typeof window !== 'undefined' ? window.innerWidth : 400) - 248)),
+            top: Math.max(8, clipMenu.y - 58),
+            borderColor: 'rgba(52,211,153,0.6)',
+            background: 'rgba(2,6,4,0.94)',
+            boxShadow: '0 0 18px rgba(52,211,153,0.35)',
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            data-editorclipcut
+            onClick={() => { commit((was) => splitHere(was, at)); setClipMenu(null); }}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold"
+            style={{ color: INK }}
+          >
+            <Scissors className="h-4 w-4" />
+            {t('edit.clipCut', 'Cut here')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            data-editorclipundo
+            disabled={past.length === 0}
+            onClick={() => { stepBack(); setClipMenu(null); }}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold disabled:opacity-40"
+            style={{ color: INK }}
+          >
+            <Undo2 className="h-4 w-4" />
+            {t('edit.undoShort', 'Back')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            data-editorclipwand
+            onClick={() => { setClipMenu(null); void wandFrame(); }}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold"
+            style={{ color: LIT }}
+          >
+            <Wand2 className="h-4 w-4" />
+            {t('edit.clipWand', 'AI wand')}
+          </button>
+        </div>,
+        document.body,
+      )}
 
       {/* ── The bar, and what comes out from behind it ──────────────────── */}
       <CutDock
@@ -6498,6 +6655,32 @@ async function smallerFrame(url: string): Promise<string> {
               <ImageIcon className="w-3.5 h-3.5" />
               {t('edit.mark', 'Your mark in the corner')}
             </span>
+            <div data-editorbrandpack>
+              <BrandKit onChange={setKit} compact />
+            </div>
+            {kit?.logoAssetId && (
+              <button
+                type="button"
+                data-editormarkbrand
+                onClick={() => {
+                  const id = kit.logoAssetId;
+                  if (!id) return;
+                  void assetDataUrl(id).catch(() => null).then(async (url) => {
+                    const img = url ? await loadMark(url) : null;
+                    if (!img) {
+                      setProblem(t('edit.markBad', 'That picture could not be read.'));
+                      return;
+                    }
+                    setMark(img);
+                    setMarkName(kit.name || t('edit.markBrand', 'Your brand logo'));
+                  });
+                }}
+                className="min-h-[44px] rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-3.5 py-2.5 text-sm font-semibold text-emerald-200 inline-flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                {t('edit.markBrandGo', 'Put my brand logo on')}
+              </button>
+            )}
             <label
               data-editormark
               className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"

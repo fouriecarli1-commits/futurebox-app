@@ -647,6 +647,18 @@ export const CREDITS = {
   read: 8,
   /** Splitting a song into named parts rather than two. Per minute. */
   parts: 8,
+  /**
+   * A sound effect from words, up to ten seconds: a door slamming, rain on a
+   * roof, a stadium crowd. Carli, 14 October 2026: "Generate a sound" must
+   * make sound effects and music too, not only speech.
+   *
+   * ElevenLabs bill a sound effect by its length — about forty of their
+   * credits a second — so ten seconds is some four hundred, which is what
+   * `readCost` asks about three credits for in speech. One flat price for
+   * any length up to ten, because a price that moves with a slider nobody
+   * reads is a price nobody agreed to.
+   */
+  sfx: 3,
 
   /* ─────────────────────────────── the rooms that used to be a second till ─
    *

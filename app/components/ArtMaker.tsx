@@ -23,6 +23,8 @@ import { accessToken } from '../lib/cloud';
 import { CREDITS, creditsSaid } from '../lib/credits';
 import { FACES, type FaceId } from '../lib/postfaces';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 
 const SIDE = 3000;
 
@@ -190,14 +192,17 @@ export default function ArtMaker(): React.ReactElement {
         <div className={`${KAART} space-y-4 p-4`}>
           <label className="block">
             <span className={MIKRO}>{t('art.make.prompt', 'What to draw')}</span>
-            <textarea
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              rows={3}
-              data-artmakerprompt
-              placeholder={t('art.make.promptHint', 'A chrome landscape under a violet sky, neon rain, a lone figure')}
-              className={`${VELD} resize-none`}
-            />
+            <span className="relative block">
+              <textarea
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                rows={3}
+                data-artmakerprompt
+                placeholder={t('art.make.promptHint', 'A chrome landscape under a violet sky, neon rain, a lone figure')}
+                className={`${VELD} resize-none pr-11`}
+              />
+              <SpeakButton onHeard={(said) => setPrompt((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
+            </span>
           </label>
           <div>
             <p className={MIKRO}>{t('art.make.style', 'Style')}</p>

@@ -88,12 +88,14 @@ export type Capability =
   /** A moving shot from a prompt. */
   | 'filmshot'
   /** How a word she cares about is said. */
-  | 'pronounce';
+  | 'pronounce'
+  /** A sound effect from words: a door, rain, a crowd. */
+  | 'sfx';
 
 export const CAPABILITIES: readonly Capability[] = [
   'speak', 'dialogue', 'voiceswap', 'clone', 'voicelist', 'transcribe',
   'align', 'music', 'stems', 'cleanup', 'dub', 'usage', 'finetune',
-  'coverart', 'filmshot', 'pronounce',
+  'coverart', 'filmshot', 'pronounce', 'sfx',
 ];
 
 /** How a supplier wants to be told who is calling. */
@@ -165,7 +167,7 @@ export const SUPPLIERS: readonly Supplier[] = [
     serves: [
       'speak', 'dialogue', 'voiceswap', 'clone', 'voicelist', 'transcribe',
       'align', 'music', 'stems', 'cleanup', 'dub', 'usage', 'finetune',
-      'coverart', 'filmshot', 'pronounce',
+      'coverart', 'filmshot', 'pronounce', 'sfx',
     ],
   },
 ];

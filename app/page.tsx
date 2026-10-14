@@ -772,6 +772,9 @@ export default function FutureBoxHome() {
      make a song"); Everything keeps it above, for the reason just given.
      The room reports its mode through `onMode`. */
   const [makeAdvanced, setMakeAdvanced] = useState(true);
+  /* The video desk the same way: on Simple its copilot is drawn inside the
+     room, right above "Make it" (Carli, 14 October 2026). */
+  const [canvasAdvanced, setCanvasAdvanced] = useState(true);
   const copilotFirst = studioTab === 'make' && makeAdvanced;
 
   /* Every room, and how to draw it. Read by the rail on a desktop and by the
@@ -1955,6 +1958,7 @@ export default function FutureBoxHome() {
      the column above, as before. */
   const copilotInside = studioTab === 'voice_studio' || studioTab === 'videoedit'
     || (studioTab === 'make' && !makeAdvanced)
+    || (studioTab === 'canvas' && !canvasAdvanced)
     || studioTab === 'photo';
 
   /* ── The rooms that ARE the screen ──────────────────────────────────────
@@ -4494,6 +4498,8 @@ export default function FutureBoxHome() {
                   onUpgrade={() => setPricingModalOpen(true)}
                   onGoTo={goToRoom}
                   songId={videoSong}
+                  onMode={setCanvasAdvanced}
+                  copilot={!canvasAdvanced ? copilotPane : null}
                 />
                 {/* ── The editor, under the desk it belongs to ──────────────
  

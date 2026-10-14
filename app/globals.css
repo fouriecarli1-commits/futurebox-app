@@ -1666,3 +1666,28 @@ body:has([data-cubed]) {
    on record until the stop; the words and the dock are what is left. */
 [data-booth][data-live] .fb-livehide { display: none !important; }
 html[data-singing] [data-tabbar] { display: none !important; }
+
+/* ── The photo editor's tool controls, floating over the photograph ─────
+   Carli, 14 October 2026: "sonder 'n background en very bright neon en
+   highlighted dat mens dit bo op die prent kan sien". No panel behind
+   them: every control is drawn in neon with a glow, and every letter gets
+   a dark edge so it reads over a white sky and a black shirt alike. */
+[data-postpop][data-neon] { background: transparent !important; padding: 6px 8px; }
+[data-postpop][data-neon] * { text-shadow: 0 0 2px #000, 0 0 4px #000, 0 1px 2px #000; }
+[data-postpop][data-neon] :is(div, section, aside, header, fieldset) { background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
+[data-postpop][data-neon] :is(p, span, label, h3, h4) { color: #eafff4 !important; }
+[data-postpop][data-neon] :is(button, select, textarea, input[type="text"], input[type="number"]) {
+  background: rgba(0, 0, 0, 0.32) !important;
+  border: 1.5px solid #39ff14 !important;
+  color: #eafff4 !important;
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.55), inset 0 0 6px rgba(57, 255, 20, 0.18) !important;
+}
+[data-postpop][data-neon] :is(button[aria-pressed="true"], button[data-picked="true"]) {
+  background: rgba(57, 255, 20, 0.28) !important;
+  border-color: #b9ff9e !important;
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.9) !important;
+}
+[data-postpop][data-neon] input[type="range"] { accent-color: #39ff14; filter: drop-shadow(0 0 4px rgba(57, 255, 20, 0.8)); }
+/* The magic touch: a tap on the photo between the controls reaches the photo. */
+[data-postpop][data-passthrough="yes"] { pointer-events: none; }
+[data-postpop][data-passthrough="yes"] :is(button, input, select, textarea, label, a) { pointer-events: auto; }

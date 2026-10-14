@@ -429,7 +429,9 @@ export async function studioDoor(page) {
     const card = page.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
     const back = (await card.count()) && (await card.isVisible().catch(() => false))
       ? card
-      : page.locator('[data-backout]:visible').first();
+      /* Or a room's own arrow, where the room draws its own bar and the
+         studio's is not drawn over it (the photo editor, 14 October 2026). */
+      : page.locator('[data-backout]:visible, [data-roomback]:visible').first();
     if (await back.count()) {
       await back.click().catch(() => undefined);
       await page.waitForTimeout(900);
@@ -619,8 +621,9 @@ export async function toRoom(page, name, { folded = false } = {}) {
       ? card
       /* Every room has this one, and it steps back exactly one layer — which
          inside a room is the room list. It is the way out a person uses when
-         the card is not drawn. */
-      : page.locator('[data-backout]:visible').first();
+         the card is not drawn. The photo editor draws its own bar and its
+         own arrow (14 October 2026), so that arrow counts too. */
+      : page.locator('[data-backout]:visible, [data-roomback]:visible').first();
     if (await back.count()) {
       await back.click();
       /* The door fades in. Reading it the instant the press lands finds an

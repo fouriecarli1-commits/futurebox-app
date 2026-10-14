@@ -35,7 +35,7 @@ import NowPlaying from './NowPlaying';
 import Sleeve from './Sleeve';
 import PostToLive from './PostToLive';
 import VocalBooth from './VocalBooth';
-import SingItMine from './SingItMine';
+import SingItMine, { singingState } from './SingItMine';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import Note from './Note';
@@ -45,6 +45,8 @@ import { STARTERS, LENGTH_CHOICES } from '../data/sound';
 import { CREDITS, songCost, type SongEngine } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
 import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
@@ -828,6 +830,23 @@ export default function MakeMusic({
     };
   }, []);
 
+  /* ── In my own voice ────────────────────────────────────────────────
+     Carli, 14 October 2026: "Ek sien ook nie in make a song, use my own
+     voice (wat kits se trained voice is nie)." It was there, as "Sing it in
+     my voice" on each song in the list further down — out of sight on
+     Simple. So it is a choice on the form too: ticked, the panel that sings
+     the new song in a trained voice opens by itself the moment the song is
+     made, and it sits on the newest song at the top as well. Shown only
+     when the singing engine is switched on for this app. */
+  const [canSingMine, setCanSingMine] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void singingState().then((said) => { if (alive) setCanSingMine(Boolean(said.configured)); });
+    return () => { alive = false; };
+  }, []);
+  const [mineAfter, setMineAfter] = useState(false);
+  const [justMade, setJustMade] = useState<string | null>(null);
+
   const make = useCallback(
     async (remixOf?: Track) => {
       const gate = check('publish.release', userPlan);
@@ -953,6 +972,7 @@ export default function MakeMusic({
         const next = [track, ...tracks];
         setTracks(next);
         saveTracks(next);
+        setJustMade(track.id);
         /* Remembered against the account, not just this browser.
 
            The genre is the one thing about a song that says something about
@@ -1225,6 +1245,22 @@ export default function MakeMusic({
               </div>
             </div>
 
+            <div className="flex flex-shrink-0 items-center gap-2">
+            {canSingMine && (
+              <SingItMine
+                track={activeTrack}
+                autoOpen={mineAfter && justMade === activeTrack.id}
+                onMade={(made, audio) => {
+                  const next = [made, ...tracks];
+                  setTracks(next);
+                  saveTracks(next);
+                  setJustMade(null);
+                  setStatus(t('mine.kept', 'It is in your channel, in your voice.'));
+                  onMade(made);
+                  void cloud.pushTrack(made, audio);
+                }}
+              />
+            )}
             <button
               type="button"
               onClick={() => {
@@ -1236,6 +1272,7 @@ export default function MakeMusic({
               <span className="text-zinc-400">({tracks.length})</span>
               <span>↓</span>
             </button>
+            </div>
           </div>
         );
       })()}
@@ -1385,13 +1422,16 @@ export default function MakeMusic({
               style={canvas.style}
             />
           ) : (
-            <textarea
-              value={lyrics}
-              onChange={(e) => setLyrics(e.target.value)}
-              placeholder={t('make.wordsPlaceholder')}
-              rows={4}
-              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 sm:py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y sm:rows-6"
-            />
+            <span className="relative block">
+              <textarea
+                value={lyrics}
+                onChange={(e) => setLyrics(e.target.value)}
+                placeholder={t('make.wordsPlaceholder')}
+                rows={4}
+                className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 sm:py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y sm:rows-6 pr-11"
+              />
+              <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, lyrics: withSaid(was.lyrics, said) }))} className="absolute bottom-2 right-2" />
+            </span>
           )}
           <p className="text-sm text-zinc-500 pt-1">
             {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
@@ -1485,13 +1525,16 @@ export default function MakeMusic({
             </button>
           </div>
 
-          <textarea
-            value={canvas.style}
-            onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
-            placeholder={t('make.soundPlaceholder')}
-            rows={3}
-            className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y"
-          />
+          <span className="relative block">
+            <textarea
+              value={canvas.style}
+              onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
+              placeholder={t('make.soundPlaceholder')}
+              rows={3}
+              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y pr-11"
+            />
+            <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, style: withSaid(was.style, said) }))} className="absolute bottom-2 right-2" />
+          </span>
           <p className="text-sm text-zinc-500 pt-1">{t('make.soundNote')}</p>
 
           {/* 🎚️ Weirdness Slider */}
@@ -1943,6 +1986,16 @@ export default function MakeMusic({
           </>
         )}
 
+        {/* On Simple the copilot comes first and the button under it.
+            Carli, 14 October 2026: "Hierdie make my song in simple mode
+            moet onder die copilot wees." Ask, read what it wrote, then
+            press — in the order a person does it. */}
+        {!advanced && copilot && (
+          <div data-makecopilot className="rounded-2xl border border-zinc-800 bg-zinc-950/60">
+            {copilot}
+          </div>
+        )}
+
         {/* What is about to be made, when it is not what the button says.
 
             With no words in the box the engine is asked for a plain prompt and
@@ -1980,6 +2033,22 @@ export default function MakeMusic({
  
             Above the button rather than below it: a choice that changes what
             that button costs has to be readable before it is pressed. */}
+        {canSingMine && (
+          <label className="flex items-start gap-2.5 text-sm text-zinc-300" data-makemine>
+            <input
+              type="checkbox"
+              checked={mineAfter}
+              onChange={(event) => setMineAfter(event.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-emerald-500"
+            />
+            <span>
+              {t('make.mineToo', 'Then sing it in my own voice')}
+              <span className="block text-xs leading-snug text-zinc-500">
+                {t('make.mineTooWhy', 'Your trained singing voice takes over the vocals once the song is made. Priced before it starts.')}
+              </span>
+            </span>
+          </label>
+        )}
         <label className="flex items-start gap-2.5 text-sm text-zinc-300" data-covertoo>
           <input
             type="checkbox"
@@ -2029,11 +2098,6 @@ export default function MakeMusic({
         {busy && <Progress stage={stage} elapsed={elapsed} asked={seconds} t={t} />}
 
         {/* On Simple, the copilot right here under the button. */}
-        {!advanced && copilot && (
-          <div data-makecopilot className="rounded-2xl border border-zinc-800 bg-zinc-950/60">
-            {copilot}
-          </div>
-        )}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* What is left, and only where there is a number that is true.

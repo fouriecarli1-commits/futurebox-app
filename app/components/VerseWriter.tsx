@@ -10,6 +10,8 @@
 import React, { useEffect, useState } from 'react';
 import { AlignLeft, Check, ChevronDown, ChevronUp, FileText, Lightbulb, Sparkles, Wand2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 
 export interface SongSection {
   readonly id: string;
@@ -270,17 +272,20 @@ export default function VerseWriter({
                   </div>
 
                   {/* Input area */}
-                  <textarea
-                    rows={4}
-                    value={sec.text}
-                    onChange={(e) => updateSectionText(sec.id, e.target.value)}
-                    placeholder={
-                      isAf
-                        ? `Skryf ${sec.tag} hier... (bv. 2 tot 4 reëls)`
-                        : `Write ${sec.tagEn} here... (e.g. 2 to 4 lines)`
-                    }
-                    className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y font-sans"
-                  />
+                  <span className="relative block">
+                    <textarea
+                      rows={4}
+                      value={sec.text}
+                      onChange={(e) => updateSectionText(sec.id, e.target.value)}
+                      placeholder={
+                        isAf
+                          ? `Skryf ${sec.tag} hier... (bv. 2 tot 4 reëls)`
+                          : `Write ${sec.tagEn} here... (e.g. 2 to 4 lines)`
+                      }
+                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y font-sans pr-11"
+                    />
+                    <SpeakButton onHeard={(said) => updateSectionText(sec.id, withSaid(sec.text, said))} className="absolute bottom-2 right-2" />
+                  </span>
 
                   {/* Quick actions for this section */}
                   <div className="flex items-center justify-between gap-2 pt-1">

@@ -181,6 +181,7 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   dub: ['dub'],
   read: ['reading anything in it'],
   parts: ['part'],
+  sfx: ['sound effect'],
   marketPlan: ['campaign'],
   adLines: ['advert'],
   cutout: ['background out'],

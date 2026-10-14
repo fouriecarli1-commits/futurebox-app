@@ -593,7 +593,7 @@ export default function Account({
             <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
               <span className="block text-sm font-bold leading-tight">{t('account.story', 'Story mode')}</span>
-              <span className="block text-xs leading-snug text-zinc-500">{t('account.storyNote', 'A story written and drawn a page at a time, read aloud, and kept on the shelf.')}</span>
+              <span className="block text-xs leading-snug text-zinc-500">{t('account.storyNote', 'A story you write or say — or the story helper writes with you — drawn a page at a time, read aloud, and kept on the shelf.')}</span>
             </span>
           </a>
         </section>

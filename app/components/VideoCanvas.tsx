@@ -56,6 +56,8 @@ import Subtitles, { NO_SUBTITLES, translated, type SubtitleChoice } from './Subt
 import Card from './Card';
 import { useOpenCard } from '../lib/opencard';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import { useCopilotOps, useCopilotBusContext } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import ShareRow from './ShareRow';
@@ -201,8 +203,14 @@ export default function VideoCanvas({
   onUpgrade,
   onGoTo,
   songId,
+  onMode,
+  copilot,
 }: {
   onUpgrade?: () => void;
+  /** Tells the page which of Simple and Everything is showing. */
+  onMode?: (advanced: boolean) => void;
+  /** The copilot pane, handed in on Simple to sit right above the button. */
+  copilot?: React.ReactNode;
   /** Move to another room. Used by the cheaper route out of a spoken line. */
   onGoTo?: (surface: SurfaceId) => void;
   /**
@@ -234,6 +242,7 @@ export default function VideoCanvas({
    * features once by taking things away.
    */
   const [advanced, setAdvanced] = useState(true);
+  useEffect(() => { onMode?.(advanced); }, [advanced, onMode]);
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(MODE_KEY);
@@ -919,12 +928,15 @@ export default function VideoCanvas({
           finished, and the thing it was made for is missing. */}
       {!advanced && (
         <div data-canvassimple className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
-          <p className="text-sm leading-relaxed text-zinc-300">
-            {t(
-              'canvas.simpleSay',
-              'Open the copilot and tell it what you want \u2014 "film my shop front at sunrise", in any language. It writes the shot, the quality, the shape and the length. Then press the button.',
-            )}
-          </p>
+          {/* The "open the copilot" paragraph went on 14 October 2026 —
+              "By video desk dink ek nie ons hoef te sê open copilot nie" —
+              because on Simple the copilot is right under this, above the
+              button. */}
+          {!prompt.trim() && (
+            <p className="text-sm text-zinc-400" data-canvassimpleempty>
+              {t('canvas.simpleEmpty', 'Nothing written yet. Tell the copilot what to film, and it lands here.')}
+            </p>
+          )}
 
           {prompt.trim() && (
             <dl data-canvassimpleread className="space-y-1.5 text-sm">
@@ -1193,17 +1205,20 @@ export default function VideoCanvas({
           {t('canvas.shot', 'The shot')}
         </label>
 
-        <textarea
-          id="canvas-prompt"
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          rows={6}
-          placeholder={t(
-            'canvas.hint',
-            'What is in the shot, what it is doing, what the camera does, what the light does, how it feels.',
-          )}
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
-        />
+        <span className="relative block">
+          <textarea
+            id="canvas-prompt"
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            rows={6}
+            placeholder={t(
+              'canvas.hint',
+              'What is in the shot, what it is doing, what the camera does, what the light does, how it feels.',
+            )}
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y pr-11"
+          />
+          <SpeakButton onHeard={(said) => setPrompt((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
+        </span>
 
         {/* A picture to start from.
 
@@ -1619,6 +1634,13 @@ export default function VideoCanvas({
           screen, so "say a bit more" has nowhere else to be said — and that
           refusal is the desk's answer when the copilot has not written
           enough yet. */}
+      {/* On Simple the copilot sits right above the button (Carli, 14 October
+          2026: "in simple skuif die copilot net bo the make it button"). */}
+      {!advanced && copilot && (
+        <div data-canvascopilot className="rounded-2xl border border-zinc-800 bg-zinc-950/60">
+          {copilot}
+        </div>
+      )}
       <div className="space-y-2.5">
         <button
           type="button"

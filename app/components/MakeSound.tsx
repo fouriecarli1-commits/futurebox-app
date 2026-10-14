@@ -50,8 +50,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2, Play, Square, Volume2, Download } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob, safeFilename } from '../lib/library';
-import { readCost } from '../lib/credits';
+import { CREDITS, readCost, songCost, type SongEngine } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import type { VoiceState } from './VoiceLab';
 import VoicePicker from './VoicePicker';
 import Card from './Card';
@@ -74,6 +76,19 @@ export const MOST_CHARACTERS = 6000;
 /** Nothing shorter than this is a read; it is a typo. */
 export const FEWEST_CHARACTERS = 2;
 
+/**
+ * What kind of sound. Carli, 14 October 2026: "Generate a sound" must make
+ * sound effects and music too, not only speech. Three engines, three prices,
+ * one box: what she types is the line to read, the sound to make, or the
+ * music to play, and the button says which price applies before the press.
+ */
+export type SoundKind = 'voice' | 'effect' | 'music';
+const KINDS: readonly SoundKind[] = ['voice', 'effect', 'music'];
+/** Effect lengths offered; `0` leaves the length to the engine. */
+const EFFECT_SECONDS = [0, 3, 5, 10] as const;
+/** Music lengths offered, under a clip rather than a whole song. */
+const MUSIC_SECONDS = [15, 30, 60] as const;
+
 export default function MakeSound({
   onAudio,
   onUpgrade,
@@ -92,6 +107,19 @@ export default function MakeSound({
   const [made, setMade] = useState<{ blob: Blob; url: string } | null>(null);
   const [playing, setPlaying] = useState(false);
   const player = useRef<HTMLAudioElement | null>(null);
+  const [kind, setKind] = useState<SoundKind>('voice');
+  const [effectSeconds, setEffectSeconds] = useState<number>(0);
+  const [musicSeconds, setMusicSeconds] = useState<number>(30);
+  const [engine, setEngine] = useState<SongEngine>('eleven');
+
+  /* Which engine makes music here, so the price on the button is the price
+     charged. Until it answers, the dearer one is shown — never the lower. */
+  useEffect(() => {
+    void fetch('/api/music')
+      .then((answer) => (answer.ok ? answer.json() : null))
+      .then((said: { engine?: string } | null) => { if (said?.engine === 'google') setEngine('google'); })
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     void accessToken().then((token) =>
@@ -107,7 +135,11 @@ export default function MakeSound({
   useEffect(() => () => { if (made) URL.revokeObjectURL(made.url); }, [made]);
 
   const length = words.trim().length;
-  const costs = readCost(length);
+  const costs = kind === 'effect'
+    ? CREDITS.sfx
+    : kind === 'music'
+      ? songCost(musicSeconds, engine)
+      : readCost(length);
 
   const make = useCallback(async (): Promise<void> => {
     const script = words.trim();
@@ -116,12 +148,33 @@ export default function MakeSound({
     setProblem('');
     try {
       const token = await accessToken();
-      const answer = await fetch('/api/voice/speak', {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+      const answer = kind === 'effect'
+        ? await fetch('/api/voice/effect', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ text: script, ...(effectSeconds ? { seconds: effectSeconds } : {}) }),
+        })
+        : kind === 'music'
+          /* The same instrumental request the Pro Booth's parts use, so
+             the music route's price, guard and refund are the ones that
+             apply — not a second money path. */
+          ? await fetch('/api/music', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              style: script,
+              sections: [{ name: 'Music', lines: [], seconds: musicSeconds }],
+              instrumental: true,
+              seconds: musicSeconds,
+            }),
+          })
+          : await fetch('/api/voice/speak', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers,
         /* The app's own language, so the route can pick the model
            ElevenLabs' own list says covers it. A caller that does not say
            gets the model chosen for English, which is how an Afrikaans line
@@ -151,7 +204,7 @@ export default function MakeSound({
     } finally {
       setBusy(false);
     }
-  }, [words, busy, voiceId, lang, t, onUpgrade, onAudio, made]);
+  }, [words, busy, voiceId, lang, t, onUpgrade, onAudio, made, kind, effectSeconds, musicSeconds]);
 
   const listen = (): void => {
     if (!made) return;
@@ -182,14 +235,33 @@ export default function MakeSound({
       <Note className="text-sm leading-relaxed text-zinc-400">
         {t(
           'makesound.what',
-          'Type what should be said, pick a voice, and it comes back as audio you can lay under the film. The same thing reads a podcast script — it is one engine and one price per character, so a short advert line costs a little and an episode costs more.',
+          'A voice reading your words \u2014 a line or a whole podcast script \u2014 a sound effect, or music. It comes back as audio you can lay under the film, and the price is on the button before you press.',
         )}
       </Note>
 
       {/* Not switched on, said plainly rather than by a button that fails.
           `configured` is the server's own answer about whether a key reached
           this app, and it is the one thing this panel cannot work around. */}
-      {voices !== null && !voices.configured ? (
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('makesound.kind', 'What kind of sound')}>
+        {KINDS.map((one) => (
+          <button
+            key={one}
+            type="button"
+            data-makesoundkind={one}
+            aria-pressed={kind === one}
+            onClick={() => { setKind(one); setProblem(''); }}
+            className={`min-h-[40px] rounded-xl border px-3.5 text-sm font-bold ${
+              kind === one ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200' : 'border-zinc-700 text-zinc-300'
+            }`}
+          >
+            {one === 'voice'
+              ? t('makesound.kindVoice', 'A voice')
+              : one === 'effect' ? t('makesound.kindEffect', 'A sound effect') : t('makesound.kindMusic', 'Music')}
+          </button>
+        ))}
+      </div>
+
+      {kind !== 'music' && voices !== null && !voices.configured ? (
         <p data-makesoundoff className="text-sm leading-relaxed text-amber-300">
           {t(
             'makesound.off',
@@ -198,6 +270,7 @@ export default function MakeSound({
         </p>
       ) : (
         <>
+          {kind === 'voice' && (
           <div>
             <span className="text-sm text-zinc-400">{t('makesound.voice', 'Whose voice')}</span>
             <div className="mt-1.5">
@@ -209,20 +282,54 @@ export default function MakeSound({
               />
             </div>
           </div>
+          )}
+
+          {kind !== 'voice' && (
+            <div className="flex flex-wrap items-center gap-1.5" data-makesoundlength>
+              <span className="text-sm text-zinc-400">{t('makesound.length', 'How long')}</span>
+              {(kind === 'effect' ? EFFECT_SECONDS : MUSIC_SECONDS).map((many) => {
+                const on = (kind === 'effect' ? effectSeconds : musicSeconds) === many;
+                return (
+                  <button
+                    key={many}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => (kind === 'effect' ? setEffectSeconds(many) : setMusicSeconds(many))}
+                    className={`min-h-[36px] rounded-lg border px-2.5 text-xs font-semibold ${
+                      on ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-400'
+                    }`}
+                  >
+                    {many === 0 ? t('makesound.lengthAuto', 'As long as it needs') : `${many}s`}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <div>
             <label htmlFor="make-sound-words" className="text-sm text-zinc-400">
-              {t('makesound.words', 'What it should say')}
+              {kind === 'effect'
+                ? t('makesound.wordsEffect', 'What the sound is')
+                : kind === 'music'
+                  ? t('makesound.wordsMusic', 'What the music is like')
+                  : t('makesound.words', 'What it should say')}
             </label>
-            <textarea
-              id="make-sound-words"
-              data-makesoundwords
-              value={words}
-              onChange={(event) => setWords(event.target.value.slice(0, MOST_CHARACTERS))}
-              rows={5}
-              placeholder={t('makesound.wordsHint', 'A line for the clip, or a whole script to be read.')}
-              className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-3 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
-            />
+            <span className="relative block">
+              <textarea
+                id="make-sound-words"
+                data-makesoundwords
+                value={words}
+                onChange={(event) => setWords(event.target.value.slice(0, MOST_CHARACTERS))}
+                rows={5}
+                placeholder={kind === 'effect'
+                  ? t('makesound.effectHint', 'Rain on a tin roof, then thunder far away.')
+                  : kind === 'music'
+                    ? t('makesound.musicHint', 'Warm acoustic guitar, slow and hopeful, no singing.')
+                    : t('makesound.wordsHint', 'A line for the clip, or a whole script to be read.')}
+                className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-3 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none pr-11"
+              />
+              <SpeakButton onHeard={(said) => setWords((was) => withSaid(was, said).slice(0, MOST_CHARACTERS))} className="absolute bottom-2 right-2" />
+            </span>
             {/* How much is left, and only once it matters. A counter on an
                 empty box is a limit somebody has to think about before they
                 have typed anything. */}
@@ -243,7 +350,7 @@ export default function MakeSound({
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
             {busy
-              ? t('makesound.making', 'Reading it')
+              ? (kind === 'voice' ? t('makesound.making', 'Reading it') : t('makesound.makingSound', 'Making it'))
               : `${t('makesound.go', 'Generate a sound')} — ${costs} ${t('video.credits', 'credits')}`}
           </button>
           {!busy && <Cost waitMinutes={1} className="w-full justify-center" />}
@@ -294,7 +401,7 @@ export default function MakeSound({
               Under the made sound rather than above the box, because the
               moment somebody has a word to report is the moment after they
               have pressed Listen. */}
-          {made && <SayItWrong surface="makesound" spoken said={words.trim().slice(0, 200)} />}
+          {made && kind === 'voice' && <SayItWrong surface="makesound" spoken said={words.trim().slice(0, 200)} />}
         </>
       )}
     </Card>

@@ -42,6 +42,8 @@ function ok(what: string, passed: boolean, detail = ''): void {
 
 /** Unsigned on purpose. The key is `file:route`, the value is why. */
 const ALLOWED: Record<string, string> = {
+  'app/components/MakeSound.tsx:music':
+    'the same capability probe as engines.ts — which engine makes music, so the price on the button is the price charged. The POST that makes the music is signed',
   'app/lib/engines.ts:music':
     'a capability probe — "is the music engine switched on", which is true or false for everybody and is answered before anybody has signed in',
   'app/lib/collab.ts:collab/invite':

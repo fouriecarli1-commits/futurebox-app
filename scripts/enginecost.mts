@@ -121,6 +121,10 @@ export const priced: {
      what Carli's rule governs: `readCost` is `Math.max(2, ...)`, so two
      credits buys up to 300 characters and nothing smaller can be billed. */
   { what: 'the smallest read anybody is charged (300 characters)', credits: readCost(300), cost: 300 * CHAR },
+  /* A sound effect, 14 October 2026. ElevenLabs bill sound generation at
+     about forty of their credits a second — the same credits a read spends a
+     character of — so the longest effect sold, ten seconds, is four hundred. */
+  { what: 'a sound effect, up to ten seconds', credits: CREDITS.sfx, cost: 400 * CHAR },
   /* Not the line above. That one is a voice reading text aloud; this one is
      Music.ai reading a song for its chords, key and tempo. Two different
      suppliers and two different bills under one English word, which is

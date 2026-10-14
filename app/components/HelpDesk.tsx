@@ -39,6 +39,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { LifeBuoy, Loader2, Send, Check, Mail, AlertTriangle } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import Note from './Note';
 
 interface Turn {
@@ -205,23 +207,26 @@ export default function HelpDesk(): React.ReactElement {
           <label className="sr-only" htmlFor="help-question">
             {t('help.questionLabel', 'Your question')}
           </label>
-          <textarea
-            id="help-question"
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            onKeyDown={(event) => {
-              // Enter sends, shift-enter makes a line. A support box people
-              // type one sentence into should not need a mouse.
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                void ask();
-              }
-            }}
-            rows={2}
-            disabled={available === false}
-            placeholder={t('help.placeholder', 'What does a music video cost? How do I cancel?')}
-            className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none disabled:opacity-50"
-          />
+          <span className="relative block">
+            <textarea
+              id="help-question"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              onKeyDown={(event) => {
+                // Enter sends, shift-enter makes a line. A support box people
+                // type one sentence into should not need a mouse.
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  void ask();
+                }
+              }}
+              rows={2}
+              disabled={available === false}
+              placeholder={t('help.placeholder', 'What does a music video cost? How do I cancel?')}
+              className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none disabled:opacity-50 pr-11"
+            />
+            <SpeakButton onHeard={(said) => setQuestion((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
+          </span>
           <button
             type="button"
             onClick={() => void ask()}

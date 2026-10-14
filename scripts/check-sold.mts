@@ -89,6 +89,9 @@ for (const { what, says } of MUST_BE_ON_EVERY_CARD) {
 
 /** Priced things that are deliberately not on the cards, and why. */
 const NAMED_ELSEWHERE: Record<string, string> = {
+  /* 14 October 2026: a sound effect under a film. A press inside Generate a
+     sound, priced on its own button like the read beside it. */
+  sfx: 'a press inside Generate a sound, priced on the button it sits on',
   /* 14 October 2026: an ElevenLabs song's minutes after the first. The cards
      count whole songs; the minute is what `songCost` adds, and the song
      screen shows the total before anybody presses. */

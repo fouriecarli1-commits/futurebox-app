@@ -65,7 +65,7 @@ interface Singing {
 
 /** One request for the whole page, whatever it is asked by. */
 let asked: Promise<Singing> | null = null;
-function singingState(): Promise<Singing> {
+export function singingState(): Promise<Singing> {
   if (!asked) {
     asked = accessToken()
       .then((token) =>
@@ -84,10 +84,13 @@ const REMEMBERED = 'futurebox.singingModel';
 export default function SingItMine({
   track,
   onMade,
+  autoOpen = false,
 }: {
   readonly track: Track;
   /** Hands back the new song so the room it lives in can keep it. */
   readonly onMade: (made: Track, audio: Blob) => void;
+  /** Open the panel by itself: the song was made with "in my own voice" ticked. */
+  readonly autoOpen?: boolean;
 }): React.ReactElement | null {
   const { t } = useLang();
   const [state, setState] = useState<Singing | null>(null);
@@ -98,6 +101,10 @@ export default function SingItMine({
   /* The desk, and it starts different from the booth's on purpose: this room
      sends a finished mix rather than a take off a phone. See `SONG_SETTINGS`. */
   const [desk, setDesk] = useState<VoiceSettings>(SONG_SETTINGS);
+
+  useEffect(() => {
+    if (autoOpen && state?.configured) setOpen(true);
+  }, [autoOpen, state?.configured]);
 
   useEffect(() => {
     let alive = true;

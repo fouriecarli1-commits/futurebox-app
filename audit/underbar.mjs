@@ -192,7 +192,8 @@ try {
         inside === false,
         'this is the whole point of a room that claims the screen');
 
-      await page.locator('[data-backout]:visible').first().click();
+      /* The photo editor draws its own bar and its own arrow out. */
+      await page.locator('[data-backout]:visible, [data-roomback]:visible').first().click();
       await page.waitForTimeout(900);
       const after = await page.evaluate(() => ({
         bar: !!document.querySelector('nav.fixed.bottom-0'),

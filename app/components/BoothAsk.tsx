@@ -35,6 +35,8 @@ import React, { useState } from 'react';
 import { Loader2, Wand2 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import { sayMove, type LaneNow, type Move } from '../lib/mixplan';
 
 const INK = '#eef2ff';
@@ -148,15 +150,18 @@ export default function BoothAsk({
         </div>
       </div>
 
-      <textarea
-        value={question}
-        onChange={(event) => setQuestion(event.target.value)}
-        rows={3}
-        placeholder={t('ask.placeholder', 'The voice is buried under the drums and the guitar is all on one side.')}
-        aria-label={t('ask.label', 'What do you want changed about the mix?')}
-        className="w-full rounded-xl p-3 text-sm focus:border-emerald-500 focus:outline-none"
-        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: INK }}
-      />
+      <span className="relative block">
+        <textarea
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          rows={3}
+          placeholder={t('ask.placeholder', 'The voice is buried under the drums and the guitar is all on one side.')}
+          aria-label={t('ask.label', 'What do you want changed about the mix?')}
+          className="w-full rounded-xl p-3 text-sm focus:border-emerald-500 focus:outline-none pr-11"
+          style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: INK }}
+        />
+        <SpeakButton onHeard={(said) => setQuestion((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
+      </span>
 
       <button
         type="button"

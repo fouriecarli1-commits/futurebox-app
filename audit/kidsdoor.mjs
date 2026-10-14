@@ -57,6 +57,8 @@ async function stubKids(page, onPost) {
     }
     return route.fulfill({ json: state });
   });
+  /* The monthly kids pack lives on Paystack; the walk has none standing. */
+  await page.route('**/api/kids/pack', (route) => route.fulfill({ json: { monthly: [] } }));
 }
 
 /* ── 1 + 2. Signed in: find it, and go through it ────────────────────── */

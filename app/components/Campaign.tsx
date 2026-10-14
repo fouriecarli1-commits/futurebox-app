@@ -38,6 +38,8 @@ import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, Al
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import { withSaid } from '../lib/speak';
+import SpeakButton from './SpeakButton';
 import { refusalText } from '../lib/apierror';
 import { matchByTitle, useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -885,13 +887,17 @@ export default function Campaign({
           <label className="text-sm text-zinc-400" htmlFor="ads-what">
             {t('ads.whatLabel', 'What are you advertising?')}
           </label>
-          <input
-            id="ads-what"
-            value={what}
-            onChange={(event) => setWhat(event.target.value)}
-            placeholder={t('ads.whatHint', 'A bakery in Bellville. Sourdough, open six days.')}
-            className={field}
-          />
+          <span className="relative block">
+            <input
+              id="ads-what"
+              style={{ paddingRight: 44 }}
+              value={what}
+              onChange={(event) => setWhat(event.target.value)}
+              placeholder={t('ads.whatHint', 'A bakery in Bellville. Sourdough, open six days.')}
+              className={field}
+            />
+            <SpeakButton onHeard={(said) => setWhat((was) => withSaid(was, said))} className="absolute right-1.5 top-1/2 -translate-y-1/2" />
+          </span>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-3">
