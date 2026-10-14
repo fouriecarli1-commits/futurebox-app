@@ -302,6 +302,11 @@ const KEPT: Record<string, string> = {
      handed their phone to a child, which the page has to mention for the
      same reason as the rest: the row outlives the request that made it. */
   kids_mode: 'allowance you set for a child',
+  /* An account id, a number of credits, and the payment references and
+     customer code that put them there. Money paid, about nobody but the
+     payer. */
+  kids_wallet: 'kids credits you bought',
+  kids_wallet_entries: 'kids credits you bought',
   /* The one row on this list that holds a CHILD's own material: the stories
      a grown-up made for them and the songs the child made. It moved onto
      the account on 9 October — before that it was on the device and this

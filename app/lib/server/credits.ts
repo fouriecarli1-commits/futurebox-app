@@ -21,7 +21,7 @@
 import { admin, callerFrom, callerIsOwner, metered, type Caller } from './account';
 import { wrote } from './wrote';
 import { budgetFor, capFor, monthKey, TIER_CREDITS } from '@/app/lib/credits';
-import { kidsRelease, kidsSpend } from './kidsmode';
+import { kidsRelease, kidsSpend, kidsWalletReturn, kidsWalletTake } from './kidsmode';
 
 /**
  * What is left, or null when the question could not be asked.
@@ -86,10 +86,17 @@ export async function refund(owner: string, amount: number, ref?: string): Promi
      was charged and then failed upstream is refunded to the account here;
      without this line the credits come back and the allowance does not, so a
      child pays for the engine's bad afternoon. */
-  await kidsRelease(owner, amount);
+  /* Kids credits first: what the kids balance paid goes back to the kids
+     balance, never into the account, where a kids pack's cheap credit
+     would be spendable in the grown-up studio. Only the rest comes back
+     here. See `kids_wallet_return` in `supabase/kinderkrediete.sql`. */
+  const toKids = await kidsWalletReturn(owner, amount);
+  const rest = amount - toKids;
+  if (rest <= 0) return;
+  await kidsRelease(owner, rest);
   wrote(await client.from('credit_entries').insert({
     owner,
-    amount,
+    amount: rest,
     reason: 'refund',
     ref: ref ?? null,
   }), 'the credit entry');
@@ -244,7 +251,22 @@ export async function charge(
      the lock they share.
  
      An account not in kids mode gets `true` and never touches the table. */
-  if (!(await kidsSpend(caller.id, amount))) {
+  /* ── Kids credits, before anything of the account's ────────────────
+ 
+     Carli, 14 October 2026: the kids room has its own credits, bought with
+     a kids pack. While the room is open they pay first, and only what they
+     do not cover goes on to the allowance and the account. A charge the
+     kids balance covers whole touches neither. `kids_wallet_take` takes
+     nothing when the room is shut, so these credits pay for nothing else. */
+  const fromKids = await kidsWalletTake(caller.id, amount);
+  const rest = amount - fromKids;
+  if (rest <= 0) {
+    const owner = caller.id;
+    return { ok: true, owner, refund: () => refund(owner, amount, ref) };
+  }
+
+  if (!(await kidsSpend(caller.id, rest))) {
+    await kidsWalletReturn(caller.id, fromKids);
     return {
       ok: false,
       response: Response.json(
@@ -258,8 +280,9 @@ export async function charge(
     };
   }
 
-  if (!(await spend(caller.id, amount, reason, ref))) {
-    await kidsRelease(caller.id, amount);
+  if (!(await spend(caller.id, rest, reason, ref))) {
+    await kidsRelease(caller.id, rest);
+    await kidsWalletReturn(caller.id, fromKids);
     return {
       ok: false,
       response: Response.json(

@@ -44,8 +44,9 @@ import {
   ALLOWANCE_STEPS, KID_PRICES, MINUTE_STEPS, asClock, howMany, type KidThing,
 } from '../lib/kidsallowance';
 import {
-  endKids, endSitting, failed, giveAllowance, kidsNow, sitAgain, type KidsFail, type KidsState,
+  buyKidsPack, endKids, endSitting, failed, giveAllowance, kidsNow, sitAgain, type KidsFail, type KidsState,
 } from '../lib/kidsdoor';
+import { KIDS_PACKS } from '../lib/kidspacks';
 import {
   DOOR_CHOSEN_RING, DOOR_GLASS_RING, DOOR_GOLD_RING, DOOR_TEXT_GLOW,
 } from '../lib/kidsdoorlook';
@@ -133,6 +134,20 @@ export default function KidsDoor({
     });
   }, []);
 
+  /* Back from Paystack with a kids pack. The credits are written by the
+     webhook, which can land a few seconds after the browser does, so the
+     page says so and asks again rather than showing the old number as if
+     the payment had not happened. */
+  const [paid, setPaid] = useState(false);
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('paid')) return;
+    setPaid(true);
+    const again = [4000, 12000].map((wait) => window.setTimeout(() => {
+      void kidsNow().then(setState);
+    }, wait));
+    return () => again.forEach((one) => window.clearTimeout(one));
+  }, []);
+
   const give = async (allowance: number): Promise<void> => {
     setBusy(true);
     setFail('');
@@ -168,6 +183,17 @@ export default function KidsDoor({
     if (failed(next)) { setFail(say(next)); return; }
     setState(next);
   };
+
+  /** A kids pack, to Paystack and back to this page. */
+  const buy = async (pack: string): Promise<void> => {
+    setBusy(true);
+    setFail('');
+    const went = await buyKidsPack(pack);
+    if ('url' in went) { window.location.assign(went.url); return; }
+    setBusy(false);
+    setFail(say(went));
+  };
+  const bought = state?.bought ?? 0;
 
   const songPrice = KID_PRICES.find((one) => one.id === 'song')?.credits ?? 0;
   const chosenStep = state?.open ? state.allowance : null;
@@ -387,6 +413,65 @@ export default function KidsDoor({
         </div>
       ) : null}
 
+      {/* ── Kids credits, the room's own ─────────────────────────────────
+          Carli, 14 October 2026: the kids room has its own credits and its
+          own price. Bought here, spent only in the kids room, and spent
+          before the allowance below. `lib/kidspacks.ts` has the three. */}
+      <div className={`${GLASS} space-y-3 p-4 sm:p-5`} data-kidspacks style={{ boxShadow: DOOR_GLASS_RING }}>
+        <h3 className={HEAD} style={{ textShadow: DOOR_TEXT_GLOW.mint }}>
+          <span aria-hidden>🎟️</span>
+          {t('kids.packsTitle', 'Kids credits')}
+        </h3>
+        {paid && (
+          <p data-kidspaid role="status" className="rounded-2xl border-2 border-emerald-400/70 bg-emerald-500/15 px-4 py-3 text-sm font-bold text-surface-950">
+            {t('kids.paid', 'Thank you — the payment went through. The kids credits arrive in a moment.')}
+          </p>
+        )}
+        <p className="text-sm leading-relaxed text-surface-900">
+          {t('kids.packsHave', 'Kids credits on this account:')}{' '}
+          <span data-kidsbought className="fb-kids-bubble text-2xl text-amber-300" style={{ textShadow: DOOR_TEXT_GLOW.gold }}>{bought}</span>
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {KIDS_PACKS.map((pack) => (
+            <button
+              key={pack.id}
+              type="button"
+              disabled={busy || state?.signedIn === false}
+              onClick={() => void buy(pack.id)}
+              data-kidsbuy={pack.id}
+              className={`fb-kids-bouncy flex min-h-[96px] flex-col items-start justify-between gap-1 rounded-3xl border-2 px-4 py-3 text-left transition-all disabled:opacity-50 ${
+                pack.pick ? 'border-amber-300 bg-surface-100/90' : 'border-emerald-400/70 bg-surface-100/80 hover:border-emerald-300'
+              }`}
+              style={{ boxShadow: pack.pick ? DOOR_GOLD_RING : DOOR_GLASS_RING }}
+            >
+              <span className="fb-kids-bubble block text-lg leading-none text-emerald-300" style={{ textShadow: DOOR_TEXT_GLOW.pink }}>
+                {lang === 'af' ? pack.name[1] : pack.name[0]}
+              </span>
+              <span className="block text-base font-black text-surface-950">
+                R{pack.rand} {pack.monthly ? t('kids.packMonth', 'a month') : t('kids.packOnce', 'once')}
+                {' · '}{pack.credits} {t('kids.credits', 'credits')}
+              </span>
+              <span className="block text-xs font-bold text-surface-800">{lang === 'af' ? pack.buys[1] : pack.buys[0]}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs leading-relaxed text-surface-700">
+          {t('kids.packsHow', 'Kids credits are spent only in the kids room, before any allowance below. Card or EFT at Paystack; a monthly pack renews until you cancel it.')}
+        </p>
+        {bought > 0 && !state?.open && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void give(0)}
+            data-kidsopenbought
+            className="fb-kids-bouncy flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border-2 border-amber-300 bg-surface-100/90 px-5 text-base font-black text-surface-950 disabled:opacity-50"
+            style={{ boxShadow: DOOR_GOLD_RING }}
+          >
+            🔓 {t('kids.openBought', 'Hand it over with kids credits only')}
+          </button>
+        )}
+      </div>
+
       {/* ── The choice, which is the hand-over ───────────────────────────
           In songs rather than in credits, because that is the unit a parent
           can price. The press is the hand-over: it sets the allowance, starts
@@ -491,7 +576,10 @@ export default function KidsDoor({
             <p className="text-base text-surface-900">
               {t('kids.leftOf', 'Left:')}{' '}
               <span className="fb-kids-bubble text-2xl text-amber-300" style={{ textShadow: DOOR_TEXT_GLOW.gold }}>{state.left}</span>{' '}
-              {t('kids.of', 'of')} {state.allowance} {t('kids.credits', 'credits')}
+              {t('kids.credits', 'credits')}
+              {' — '}{state.bought ?? 0} {t('kids.leftBought', 'kids credits, and')}{' '}
+              {Math.max(0, (state.allowance ?? 0) - (state.spent ?? 0))} {t('kids.of', 'of')} {state.allowance}{' '}
+              {t('kids.leftAllowance', 'allowance')}
             </p>
             <button
               type="button"

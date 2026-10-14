@@ -20,7 +20,8 @@
 
 import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
-import { planCode } from '@/app/lib/server/paystack';
+import { kidsPlanCode, planCode } from '@/app/lib/server/paystack';
+import { kidsPackById } from '@/app/lib/kidspacks';
 import { mayTopUp, packById } from '@/app/lib/credits';
 import { ART_RAND } from '@/app/data/artmarket';
 import { langOf, roomToSell } from '@/app/lib/server/elevenroom';
@@ -38,6 +39,8 @@ type PayBy = 'card' | 'eft';
 type Want =
   | { kind: 'plan'; tier: Tier }
   | { kind: 'credits'; pack: string }
+  /* A kids pack (`lib/kidspacks.ts`): credits for the kids room only. */
+  | { kind: 'kids'; pack: string }
   /* A piece of album art off the wall. The request names WHICH piece; what
      it costs is read out of the row, like everything else here. */
   | { kind: 'art'; work: string; by?: PayBy }
@@ -53,6 +56,12 @@ type Want =
  * it may be charged — for the amount they won it at.
  */
 async function priceOf(want: Want, who: string): Promise<{ cents: number; label: string } | null> {
+  if (want.kind === 'kids') {
+    const pack = kidsPackById(want.pack);
+    if (!pack) return null;
+    return { cents: pack.rand * 100, label: `${pack.name[0]}, ${pack.credits} kids credits` };
+  }
+
   if (want.kind === 'credits') {
     // The pack's price comes from the same table the panel showed, never from
     // the request. A page that can name its own price eventually will.
@@ -230,6 +239,22 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
+  /* A monthly kids pack is a Paystack subscription, like a plan. Without
+     its plan code it would go through as one payment under a "a month"
+     label, so it is refused with what is missing instead. No plan is
+     needed to buy a kids pack: the kids room is for anybody's child. */
+  if (want.kind === 'kids' && kidsPackById(want.pack)?.monthly && !kidsPlanCode(want.pack)) {
+    return Response.json(
+      {
+        error: 'not_switched_on',
+        message: langOf(request) === 'af'
+          ? 'Die maandelikse kinderpakkie is nog nie aangeskakel nie. Kids Probeer werk solank.'
+          : 'The monthly kids pack is not switched on yet. Kids Try works in the meantime.',
+      },
+      { status: 503 },
+    );
+  }
+
   const price = await priceOf(want, caller.id);
   if (!price) {
     return Response.json({ error: 'unknown_item', message: 'Nothing is sold at that name.' }, { status: 400 });
@@ -286,8 +311,12 @@ export async function POST(request: Request): Promise<Response> {
         email: caller.email,
         amount: price.cents,
         currency: 'ZAR',
-        callback_url: `${origin}/?paid=1${back ? `&room=${back}` : ''}`
+        /* A kids pack comes back to the kids page, where it was bought. */
+        callback_url: want.kind === 'kids' ? `${origin}/kids?paid=1` : `${origin}/?paid=1${back ? `&room=${back}` : ''}`
           + `${back && piece ? `&piece=${encodeURIComponent(piece)}` : ''}`,
+        ...(want.kind === 'kids' && kidsPlanCode(want.pack)
+          ? { plan: kidsPlanCode(want.pack) }
+          : {}),
         // A plan turns this checkout into a subscription: Paystack charges it
         // now and again every month until it is cancelled. Sent only when the
         // account actually has a plan set up for that tier — without one the
@@ -311,7 +340,7 @@ export async function POST(request: Request): Promise<Response> {
           tier: want.kind === 'plan' ? want.tier : null,
           // The pack's name, not its size: the webhook looks the credits up
           // for itself, so a tampered checkout cannot buy a thousand for R99.
-          pack: want.kind === 'credits' ? want.pack : null,
+          pack: want.kind === 'credits' || want.kind === 'kids' ? want.pack : null,
           /* Which piece, and for whom. The webhook marks it sold; nothing
              in this app marks a piece sold on the strength of a browser
              saying the payment went through. */

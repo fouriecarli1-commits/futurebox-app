@@ -63,6 +63,27 @@ export function planCode(tier: Tier): string {
  * simply runs out, which `grant_addon` handles the same way. A missing
  * environment variable should cost a renewal, not the sale.
  */
+/**
+ * The two monthly kids packs, each a Paystack plan at its price in
+ * `lib/kidspacks.ts`. Empty until she makes the plan and sets the code.
+ */
+export function kidsPlanCode(pack: string): string {
+  const codes: Record<string, string> = {
+    'kids-month': process.env.PAYSTACK_PLAN_KIDS_MONTH ?? '',
+    'kids-plus': process.env.PAYSTACK_PLAN_KIDS_PLUS ?? '',
+  };
+  return codes[pack] ?? '';
+}
+
+/** Which kids pack a renewal is for, from its plan code. */
+export function kidsPackOfPlan(code: string): string | null {
+  if (!code) return null;
+  for (const pack of ['kids-month', 'kids-plus']) {
+    if (kidsPlanCode(pack) === code) return pack;
+  }
+  return null;
+}
+
 export function addonPlanCode(addon: string): string {
   const codes: Record<string, string> = {
     marketing: process.env.PAYSTACK_PLAN_MARKETING ?? '',

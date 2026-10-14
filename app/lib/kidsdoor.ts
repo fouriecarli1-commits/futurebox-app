@@ -17,6 +17,8 @@ export interface KidsState {
   readonly allowance?: number;
   readonly spent?: number;
   readonly left?: number;
+  /** Kids credits bought with a kids pack, already counted in `left`. */
+  readonly bought?: number;
   /** How long one sitting may last. Null or absent is a budget with no clock. */
   readonly minutes?: number | null;
   /**
@@ -132,4 +134,29 @@ export async function endSitting(): Promise<KidsState | KidsFail> {
 /** Shut the room. The child's spending cap goes with it. */
 export async function endKids(): Promise<KidsState | KidsFail> {
   return ask('DELETE');
+}
+
+/**
+ * A kids pack (`lib/kidspacks.ts`), bought at Paystack. Returns where to
+ * send the browser, or why not in a sentence. The credits arrive by the
+ * webhook, never by this page saying the payment went through.
+ */
+export async function buyKidsPack(pack: string): Promise<{ url: string } | KidsFail> {
+  /* Without a token the server answers 401 and that is the signed-out
+     signal, as for every other press here: the page does not decide. */
+  const token = await accessToken();
+  let answer: Response;
+  try {
+    answer = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'kids', pack }),
+    });
+  } catch {
+    return { fail: 'network' };
+  }
+  const said = (await answer.json().catch(() => null)) as { url?: string; message?: string } | null;
+  if (answer.status === 401) return { fail: 'signedOut' };
+  if (!answer.ok || !said?.url) return { fail: said?.message || `The server answered ${answer.status}.` };
+  return { url: said.url };
 }

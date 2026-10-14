@@ -93,6 +93,26 @@ async function stubKids(page, onPost) {
   await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
   check('the address still lands on the kids page', /\/kids$/.test(page.url()), page.url());
 
+  /* The kids room's own prices (14 October 2026): three packs to buy on
+     the parents page, and a press that goes to the till for the one that
+     was pressed. The till is stubbed to send the browser straight back, as
+     Paystack does, and the page must then say the payment went through
+     rather than show the old balance as if nothing had happened. */
+  await page.locator('[data-kidspacks]').waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+  check('the parents page sells the three kids packs', (await page.locator('[data-kidsbuy]').count()) === 3);
+  let tillAsked = null;
+  await page.route('**/api/checkout', async (route) => {
+    tillAsked = route.request().postDataJSON();
+    return route.fulfill({ json: { url: `${server.url}/kids?paid=1` } });
+  });
+  await page.locator('[data-kidsbuy="kids-try"]').click();
+  await page.waitForURL(/paid=1/, { timeout: 15000 }).catch(() => undefined);
+  check('  and a press asks the till for that pack', tillAsked?.kind === 'kids' && tillAsked?.pack === 'kids-try', JSON.stringify(tillAsked));
+  await page.locator('[data-kidspaid]').waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+  check('  and coming back says the payment went through', await page.locator('[data-kidspaid]').isVisible().catch(() => false));
+  await page.unroute('**/api/checkout');
+  await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
+
   const door = page.locator('[data-kidsdoor]');
   await door.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
   check("the grown-up's page is the first thing there", await door.isVisible().catch(() => false));
@@ -159,6 +179,11 @@ async function stubKids(page, onPost) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
   await page.goto(server.url, { waitUntil: 'networkidle' });
+  /* The pricing section prices the kids room on its own. */
+  check('the welcome page prices the kids room apart, three packs',
+    (await page.locator('[data-landingkidsprices] [data-landingkidspack]').count()) === 3);
+  check('  and says nothing about families or how many children',
+    !/famil|three children|drie kinders/i.test((await page.locator('[data-landingkidsprices]').textContent().catch(() => '')) ?? ''));
   const banner = page.locator('[data-authkids]');
   check('the welcome page has the one door into the kids room', (await banner.count()) === 1);
   await banner.scrollIntoViewIfNeeded().catch(() => undefined);

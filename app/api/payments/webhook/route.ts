@@ -19,7 +19,9 @@ import { wrote } from '../../../lib/server/wrote';
 import { recordPurchase } from '@/app/lib/server/account';
 import { createClient } from '@supabase/supabase-js';
 import type { Tier } from '@/app/lib/plans';
-import { addonOfPlan, arrangementOf, payerOf } from '@/app/lib/server/paystack';
+import { addonOfPlan, arrangementOf, kidsPackOfPlan, payerOf } from '@/app/lib/server/paystack';
+import { kidsPackById } from '@/app/lib/kidspacks';
+import { kidsOwnerOfCustomer, kidsWalletAdd } from '@/app/lib/server/kidsmode';
 import { packById } from '@/app/lib/credits';
 import { topUp } from '@/app/lib/server/credits';
 import { accountFor, send } from '@/app/lib/server/email';
@@ -83,7 +85,7 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'plan' | 'credits' | 'art' | 'commission';
+      kind?: 'plan' | 'credits' | 'kids' | 'art' | 'commission';
       trackId?: string | null;
       tier?: Tier | null;
       pack?: string | null;
@@ -267,6 +269,20 @@ export async function POST(request: Request): Promise<Response> {
       return new Response('withdrawn', { status: 200 });
     }
 
+    /* A monthly kids pack renewing. Before the membership branch for the
+       same reason as the add-on above: a renewal carries none of our
+       metadata, and read as "a plan renewed" it would write a tier from
+       the arrangement on the strength of a payment for the kids room.
+       The credits are counted from `lib/kidspacks.ts`, never the charge. */
+    const renewedKids = kidsPackById(kidsPackOfPlan(planOfCharge(event.data.plan)));
+    if (renewedKids) {
+      const kidsOwner = await kidsOwnerOfCustomer(payer.customerCode);
+      if (!kidsOwner) return new Response('no owner', { status: 200 });
+      await kidsWalletAdd(kidsOwner, renewedKids.credits, reference, payer.customerCode);
+      await receipt(kidsOwner, `${renewedKids.name[0]}, ${renewedKids.credits} kids credits`, cents, reference, true);
+      return new Response('kids renewed', { status: 200 });
+    }
+
     const known = await ownerOfCustomer(payer.customerCode);
     if (!known) return new Response('no owner', { status: 200 });
 
@@ -380,6 +396,19 @@ export async function POST(request: Request): Promise<Response> {
       return new Response('not open', { status: 200 });
     }
     await receipt(owner, 'Commissioned album art', cents, reference, false);
+    return new Response('ok', { status: 200 });
+  }
+
+  /* A kids pack: onto the kids balance, which only the kids room spends.
+     The customer is kept with it so next month's renewal of a monthly pack
+     finds the account. `kids_wallet_add` refuses a reference it has seen. */
+  if (meta.kind === 'kids' && meta.pack) {
+    const pack = kidsPackById(meta.pack);
+    if (pack) {
+      const payer = pack.monthly && reference ? await payerOf(reference) : null;
+      await kidsWalletAdd(owner, pack.credits, reference, payer?.customerCode ?? null);
+      await receipt(owner, `${pack.name[0]}, ${pack.credits} kids credits`, cents, reference, false);
+    }
     return new Response('ok', { status: 200 });
   }
 

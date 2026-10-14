@@ -54,6 +54,7 @@ import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANS_TS = join(HERE, '..', 'app', 'lib', 'plans.ts');
+const KIDS_TS = join(HERE, '..', 'app', 'lib', 'kidspacks.ts');
 
 const TIERS = [
   { tier: 'maker', env: 'PAYSTACK_PLAN_MAKER', name: 'FutureBox Maker' },
@@ -73,6 +74,28 @@ const TIERS = [
    answers without granting anything, so it cannot be misread as a membership
    renewal. See `lib/addons.ts` and the renewal branch in the webhook. */
 const ADDONS = [];
+
+/* ── The two monthly kids packs, 14 October 2026 ───────────────────────
+   Carli: "In die pricing page moet die kids room ook 'n aparte prys hê."
+   Kids Try is a single payment and needs no plan; these two renew every
+   month, so each is a Paystack plan at the price `app/lib/kidspacks.ts`
+   states — read from there, like the tiers from plans.ts, so the plan can
+   never bill a number the page did not quote. */
+const KIDS = [
+  { id: 'kids-month', env: 'PAYSTACK_PLAN_KIDS_MONTH', name: 'FutureBox Kids Monthly' },
+  { id: 'kids-plus', env: 'PAYSTACK_PLAN_KIDS_PLUS', name: 'FutureBox Kids Plus' },
+];
+
+/** The monthly rand price of one kids pack, as KIDS_PACKS states it. */
+function kidsRandFor(source, id) {
+  const block = new RegExp(`id:\\s*'${id}',([\\s\\S]*?)\\n  \\},`).exec(source);
+  if (!block) throw new Error(`Could not find the ${id} pack in app/lib/kidspacks.ts.`);
+  const amount = /\brand:\s*([0-9_]+)/.exec(block[1]);
+  if (!amount) throw new Error(`Could not find ${id}'s price in app/lib/kidspacks.ts.`);
+  const rand = Number(amount[1].replace(/_/g, ''));
+  if (!Number.isFinite(rand) || rand <= 0) throw new Error(`${id}'s price read as ${amount[1]}.`);
+  return rand;
+}
 
 /** The monthly rand price for one tier, as TIER_SPECS states it. */
 function randFor(source, tier) {
@@ -104,8 +127,10 @@ if (!secret && !dryRun) {
 }
 
 const source = await readFile(PLANS_TS, 'utf8');
+const kidsSource = await readFile(KIDS_TS, 'utf8');
 const wanted = [
   ...TIERS.map((one) => ({ ...one, rand: randFor(source, one.tier) })),
+  ...KIDS.map((one) => ({ ...one, rand: kidsRandFor(kidsSource, one.id) })),
 ];
 
 if (dryRun) {

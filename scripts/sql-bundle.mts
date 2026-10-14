@@ -99,6 +99,8 @@ export const ORDER = [
      that refuses once the sitting is over. A file that alters a table has
      exactly one correct position and this is it. */
   'skermtyd',
+  /* After `kinders`: taking a kids credit asks whether `kids_mode` has a row. */
+  'kinderkrediete',
   /* After `kinders`, and depending on nothing but `auth.users` and the
      storage schema. The kids' shelf: one table and one private bucket. */
   'kinderplank',
@@ -243,6 +245,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Die kind se toelaag: een ry per rekening wat sê ’n kind gebruik dit en hoeveel krediete hy mag spandeer. Die ry sé teenwoordigheid IS kindermodus. Die twee funksies trek dit af en gee dit terug, met dieselfde slot wat `spend_credits` gebruik — sonder dit is die perk ’n voorstel wanneer twee knoppies saam gedruk word. Sonder hierdie lêer is die toelaag net ’n getal in die blaaier, en ’n herlaai maak dit niks.',
   skermtyd:
     'Skermtyd op dieselfde ry as die toelaag: hoe lank een sitting mag duur en wanneer hierdie sitting begin het. Die grootmens se druk is die enigste ding wat die horlosie skuif — die kind se kamer mag lees hoeveel oor is en nie stel nie. Dit is die hele sekuriteitsmodel van die horlosie: ’n sitting wat in die blaaier gehou word, is ’n sitting wat ’n herlaai weer begin, en die een persoon wat seker gaan herlaai is die kind wie se tyd pas opgeraak het. `kids_spend` weier ook sodra die tyd om is, want ’n bladsy wat toemaak is die hoflike helfte: ’n bladsy kan herlaai word, in ’n tweede oortjie oopgemaak word, of net oop gelaat word terwyl die horlosie uitloop. Sonder hierdie lêer is “skop die kind uit” ’n skerm en nie ’n perk nie.',
+  kinderkrediete:
+    'Kinderkrediete: ’n aparte saldo vir die kinderkamer, gekoop met die kinderpakkies op die verwelkomingsblad en nêrens anders spandeerbaar nie. Apart en nie by die rekening gevoeg nie, want ’n kinderpakkie is goedkoper per krediet as ’n aanvulling en het geen plan nodig nie — krediete in die rekening sou die goedkoopste pad in die grootmens-ateljee wees. `kids_wallet_take` neem net iets terwyl die kinderkamer oop is. Sonder hierdie lêer word ’n betaalde pakkie nêrens bygetel nie.',
   kinderplank:
     'Die kinderplank op die rekening eerder as op een foon: een tabel vir stories én liedjies, en ’n PRIVATE emmer vir die prente, voorlesings en liedjies. Nie publiek soos `avatars` nie — niks hierop word aan vreemdelinge gewys nie, en ’n publieke emmer beteken enigiemand wat die pad ken kan die lêer haal. Sonder hierdie lêer bly ’n storie op die toestel waar dit gemaak is, en ’n storie wat op die skootrekenaar gemaak is, is nie op die foon se plank nie.',
   uitspraak:

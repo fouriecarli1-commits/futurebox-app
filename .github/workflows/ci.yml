@@ -1378,6 +1378,9 @@ jobs:
       - name: The child's room has two presses in it and no way out
         run: npm run check:kinderkamer
 
+      - name: Kids credits are the kids room's, and nobody else's
+        run: npm run check:kinderkrediete
+
       # A shot the copilot writes has to be deep enough to make a video
       # from: the instruction's own worked example clears the desk's floor,
       # the shot list is separated by blank lines rather than newlines, and

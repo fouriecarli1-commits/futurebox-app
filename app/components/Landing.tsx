@@ -45,6 +45,7 @@ import {
   type Region,
 } from '../lib/pricing';
 import { TIER_SPECS, TIERS, tierPrice } from '../lib/plans';
+import { KIDS_PACKS } from '../lib/kidspacks';
 import { useLang } from '../lib/i18n';
 import LanguagePicker from './LanguagePicker';
 import ThemeSwitch from './ThemeSwitch';
@@ -444,6 +445,47 @@ export default function Landing({
                 </div>
               );
             })}
+          </div>
+
+          {/* ── The kids room, priced on its own ──────────────────────────
+              Carli, 14 October 2026: "In die pricing page moet die kids room
+              ook 'n aparte prys hê." Its own credits, for the kids room only,
+              and no plan needed to buy them — `lib/kidspacks.ts` is the one
+              table the till, the webhook and this card all read. The press
+              goes to the kids page, where a grown-up signs in and buys. */}
+          <div className="mt-10 rounded-2xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-500/[0.08] to-black p-6 backdrop-blur-md" data-landingkidsprices>
+            <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                {t('landing.kidsPricesTag', 'Kids Dream Studio')}
+              </span>
+              <span className="text-xs text-zinc-400">
+                {t('landing.kidsPricesNote', 'Its own credits, spent only in the kids room. No plan needed.')}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {KIDS_PACKS.map((pack) => (
+                <div
+                  key={pack.id}
+                  data-landingkidspack={pack.id}
+                  className={`flex flex-col rounded-xl p-4 ${pack.pick ? 'border-2 border-amber-400 bg-amber-500/[0.08]' : 'border border-zinc-800 bg-zinc-900/40'}`}
+                >
+                  <span className="text-sm font-bold text-white">{lang === 'af' ? pack.name[1] : pack.name[0]}</span>
+                  <span className="my-2">
+                    <span className="text-2xl font-black text-white tabular-nums">R{pack.rand}</span>
+                    <span className="text-xs text-zinc-400"> {pack.monthly ? `/ ${t('welcome.month', 'month')}` : t('landing.kidsOnce', 'once')}</span>
+                  </span>
+                  <span className="text-xs font-bold text-amber-200">{pack.credits} {t('landing.kidsCredits', 'kids credits')}</span>
+                  <span className="mt-1 text-xs leading-snug text-zinc-400">{lang === 'af' ? pack.buys[1] : pack.buys[0]}</span>
+                </div>
+              ))}
+            </div>
+            <a
+              href="/kids"
+              data-landingkidsbuy
+              className="mt-5 inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 text-xs font-bold uppercase tracking-wider text-onAccent transition-transform hover:scale-[1.01] md:w-auto md:px-8"
+            >
+              {t('landing.kidsBuy', 'Get kids credits')}
+            </a>
           </div>
 
           <p className="mx-auto pt-8 max-w-2xl text-center text-xs leading-relaxed text-zinc-500">

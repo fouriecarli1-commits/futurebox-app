@@ -46,6 +46,11 @@ export interface KidsRoom {
    * its own allowance.
    */
   readonly secondsLeft: number | null;
+  /**
+   * Kids credits bought with a kids pack (`lib/kidspacks.ts`), spent before
+   * the allowance and only in the kids room. Included in `left`.
+   */
+  readonly bought: number;
 }
 
 /**
@@ -81,10 +86,12 @@ export async function kidsRoom(owner: string): Promise<KidsRoom | null> {
   const { data: left } = await client.rpc('kids_time_left', { p_owner: owner });
   const secondsLeft = left === null || left === undefined ? null : Number(left);
 
+  const bought = await kidsWallet(owner);
   return {
     allowance,
     spent,
-    left: Math.max(0, allowance - spent),
+    bought,
+    left: Math.max(0, allowance - spent) + bought,
     minutes,
     secondsLeft: Number.isFinite(secondsLeft as number) ? secondsLeft : null,
   };
@@ -209,4 +216,71 @@ export async function kidsRelease(owner: string, amount: number): Promise<void> 
   const client = admin();
   if (!client || amount <= 0) return;
   await client.rpc('kids_release', { p_owner: owner, p_amount: amount });
+}
+
+/* ─────────────────────────────────────────────── kids credits, bought ─ */
+
+/**
+ * The kids balance: credits bought with a kids pack, for the kids room only.
+ * `supabase/kinderkrediete.sql` holds the table and the three functions;
+ * nothing here moves a number itself. Zero when the file has not been run.
+ */
+export async function kidsWallet(owner: string): Promise<number> {
+  const client = admin();
+  if (!client) return 0;
+  const { data, error } = await client
+    .from('kids_wallet')
+    .select('credits')
+    .eq('owner', owner)
+    .maybeSingle();
+  if (error || !data) return 0;
+  return Math.max(0, Number((data as { credits: number }).credits) || 0);
+}
+
+/** A kids pack paid for. Once per Paystack reference, however often it arrives. */
+export async function kidsWalletAdd(
+  owner: string,
+  credits: number,
+  reference: string,
+  customerCode: string | null = null,
+): Promise<boolean> {
+  const client = admin();
+  if (!client) return false;
+  const { error } = await client.rpc('kids_wallet_add', {
+    p_owner: owner,
+    p_amount: credits,
+    p_ref: reference,
+    p_customer: customerCode,
+  });
+  return !error;
+}
+
+/** How much of a charge the kids balance covers. Nothing when the room is shut. */
+export async function kidsWalletTake(owner: string, amount: number): Promise<number> {
+  const client = admin();
+  if (!client || amount <= 0) return 0;
+  const { data, error } = await client.rpc('kids_wallet_take', { p_owner: owner, p_amount: amount });
+  if (error) return 0;
+  return Math.max(0, Math.min(amount, Number(data) || 0));
+}
+
+/** A refund, back to the kids balance as far as it paid. Returns how much went back. */
+export async function kidsWalletReturn(owner: string, amount: number): Promise<number> {
+  const client = admin();
+  if (!client || amount <= 0) return 0;
+  const { data, error } = await client.rpc('kids_wallet_return', { p_owner: owner, p_amount: amount });
+  if (error) return 0;
+  return Math.max(0, Math.min(amount, Number(data) || 0));
+}
+
+/** Whose kids balance a Paystack customer tops up, for a monthly pack's renewal. */
+export async function kidsOwnerOfCustomer(customerCode: string): Promise<string | null> {
+  const client = admin();
+  if (!client || !customerCode) return null;
+  const { data } = await client
+    .from('kids_wallet')
+    .select('owner')
+    .eq('customer_code', customerCode)
+    .maybeSingle();
+  return (data as { owner?: string } | null)?.owner ?? null;
 }

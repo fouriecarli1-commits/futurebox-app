@@ -319,6 +319,7 @@
     "check:voordeur": "tsx scripts/check-voordeur.mts",
     "check:toelaag": "tsx scripts/check-toelaag.mts",
     "check:kinderkamer": "tsx scripts/check-kinderkamer.mts",
+    "check:kinderkrediete": "tsx scripts/check-kinderkrediete.mts",
     "check:skootdiepte": "tsx scripts/check-skootdiepte.mts",
     "check:knipvenster": "tsx scripts/check-knipvenster.mts",
     "check:neurie": "tsx scripts/check-neurie.mts",

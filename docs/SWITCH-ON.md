@@ -187,6 +187,14 @@ charge. Create them once with `node scripts/paystack-plans.mjs`. Written out
 in full rather than as `_STUDIO` and `_LABEL`, so that searching this page for
 the name Vercel shows you actually finds it.
 
+The two monthly kids packs have plan codes of their own:
+`PAYSTACK_PLAN_KIDS_MONTH` (Kids Monthly, R119) and `PAYSTACK_PLAN_KIDS_PLUS`
+(Kids Plus, R229). The same script creates them, at the prices in
+`app/lib/kidspacks.ts`. **Broken until then:** Kids Try (R59, once) can be
+bought; the two monthly packs are refused at the till with a sentence saying
+they are not switched on, rather than charged once under a "a month" label.
+Kids credits also need `supabase/kinderkrediete.sql` run.
+
 **`PAYSTACK_PLAN_MARKETING` is the fourth, and it is no longer created.** The
 R199 marketing add-on stopped being a separate product on 24 September 2026 —
 the desk is in every paid plan and what is made in it costs credits. Two

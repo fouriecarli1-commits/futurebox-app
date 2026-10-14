@@ -39,7 +39,7 @@
  */
 
 import { callerFrom } from '@/app/lib/server/account';
-import { kidsRoom, openKids, shutKids, sitAgain, standUp } from '@/app/lib/server/kidsmode';
+import { kidsRoom, kidsWallet, openKids, shutKids, sitAgain, standUp } from '@/app/lib/server/kidsmode';
 import {
   ALLOWANCE_MAX, MINUTES_LEAST, MINUTES_MOST, sane, saneMinutes,
 } from '@/app/lib/kidsallowance';
@@ -59,7 +59,9 @@ export async function GET(request: Request): Promise<Response> {
   /* `open: false` rather than a 404. "Is kids mode on" is a question with an
      answer, and the answer is no — a missing resource would make the page
      handle an error for a state that is normal. */
-  return Response.json(room ? { open: true, ...room } : { open: false });
+  /* Shut or open, the kids credits bought are said: a parent who has just
+     paid for a pack and not yet opened the room must see them arrive. */
+  return Response.json(room ? { open: true, ...room } : { open: false, bought: await kidsWallet(caller.id) });
 }
 
 export async function POST(request: Request): Promise<Response> {

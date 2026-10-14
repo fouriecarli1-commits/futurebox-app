@@ -7,7 +7,7 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 57 tabelle, 34 kolomme wat later
+-- Dit kyk na 59 tabelle, 34 kolomme wat later
 -- bygekom het, 7 stoor-emmers en 58 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
@@ -165,6 +165,8 @@ with verwag (l_eer, soort, naam) as (
     ('googlespend.sql', 'tabel', 'public.google_spend'),
     ('kinderplank.sql', 'tabel', 'public.kid_shelf'),
     ('kinders.sql', 'tabel', 'public.kids_mode'),
+    ('kinderkrediete.sql', 'tabel', 'public.kids_wallet'),
+    ('kinderkrediete.sql', 'tabel', 'public.kids_wallet_entries'),
     ('kits.sql', 'tabel', 'public.kits_minutes'),
     ('liveflags.sql', 'tabel', 'public.live_flags'),
     ('hearts.sql', 'tabel', 'public.live_hearts'),
