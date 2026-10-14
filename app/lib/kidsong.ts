@@ -169,6 +169,8 @@ export async function makeKidSong(
         prompt: [what?.words, own].filter(Boolean).join('. '),
         style: how.words,
         seconds: KID_SECONDS,
+        /* The kids room's own price, the same whichever engine sings it. */
+        kids: true,
         /* Explicit, and the point of this file. A child wrote no words and
            still wants somebody to sing. */
         instrumental: false,
@@ -211,6 +213,8 @@ export async function startKidVideo(
         aspect: '16:9',
         seconds: 10,
         grade: 'standard',
+        /* The kids room's own price for a ten-second plain video. */
+        kids: true,
         speak: false,
       }),
     });

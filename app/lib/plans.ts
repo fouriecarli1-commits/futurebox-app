@@ -181,10 +181,10 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        undersells is a card somebody compares against a rival and puts
        down. */
     songs: 12,
-    videos: 3,
+    videos: 2,
     who: 'A song or two a week, kept and posted.',
     includes: [
-      '100 credits a month — 12 full songs, or 3 music videos',
+      '100 credits a month — 12 full songs, or 2 music videos',
       'The video engine, which the free tier does not have at all',
       'Your own voice, cloned, for reading and for the show',
       'The copilot, uncapped',
@@ -239,10 +239,10 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     name: 'Studio',
     rand: 349,
     songs: 26,
-    videos: 7,
+    videos: 5,
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
-      '210 credits a month — 26 full songs, or 7 music videos',
+      '210 credits a month — 26 full songs, or 5 music videos',
       'Train a sound of your own on your own songs',
       'Everything in Maker, and three cloned voices',
       'Ask FutureBox to boost a collab',
@@ -276,7 +276,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     name: 'Label',
     rand: 899,
     songs: 61,
-    videos: 16,
+    videos: 13,
     // "Five seats on one account" was on this card and was never built —
     // nothing in the codebase adds a second person to an account. It came off
     // rather than getting a rushed implementation: an overclaim on a paid tier
@@ -284,7 +284,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     // cannot afford to be caught doing is describing something it does not do.
     who: 'Running a catalogue, and releasing every week.',
     includes: [
-      '490 credits a month — 61 full songs, or 16 music videos',
+      '490 credits a month — 61 full songs, or 13 music videos',
       'Everything in Studio, and ten cloned voices',
       'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',

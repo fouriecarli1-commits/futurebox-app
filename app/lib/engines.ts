@@ -162,16 +162,32 @@ const NO_VIDEO_ENGINE = 'No video engine is connected — videos are made in you
  * the first paint — so screens render the sketch path and upgrade to the real
  * engine when the answer arrives.
  */
+import type { SongEngine } from './credits';
+
 let audioReady: boolean | null = null;
 let audioProbe: Promise<boolean> | null = null;
+
+/**
+ * Which engine a song with English words goes to, as the music route says.
+ *
+ * ElevenLabs until the route has answered, because it is the dearer of the
+ * two and a price shown early should never be the lower one. Read off the
+ * same request `probeAudio` makes, so asking costs nothing extra.
+ */
+let songEngineIs: SongEngine = 'eleven';
+export async function songEngine(): Promise<SongEngine> {
+  await probeAudio();
+  return songEngineIs;
+}
 
 export async function probeAudio(): Promise<boolean> {
   if (audioReady !== null) return audioReady;
   if (!audioProbe) {
     audioProbe = fetch('/api/music')
       .then((response) => (response.ok ? response.json() : { available: false }))
-      .then((data: { available?: boolean }) => {
+      .then((data: { available?: boolean; engine?: string }) => {
         audioReady = Boolean(data.available);
+        songEngineIs = data.engine === 'google' ? 'google' : 'eleven';
         return audioReady;
       })
       .catch(() => {

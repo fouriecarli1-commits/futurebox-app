@@ -26,6 +26,8 @@ export const PHOTO = {
   purple: '#C084FC',
   purpleWash: 'rgba(168,85,247,0.18)',
   black: '#000000',
+  /** The glass a tool's controls pop out on, above the photograph: see-through, so the room stays in view. */
+  popGlass: 'rgba(26,32,44,0.62)',
   ink: '#E2E8F0',
   gold: '#FBBF24',
   glowEmerald: '0 0 30px rgba(15,157,110,0.25)',

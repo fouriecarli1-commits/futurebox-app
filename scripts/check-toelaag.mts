@@ -59,22 +59,27 @@ const priceOf = (id: string): number => KID_PRICES.find((one) => one.id === id)?
    an afternoon: `/api/cover` needs a saved `trackId`, the kids room does not
    save to her library, so the room cannot make the picture and the price list
    must not include one. The correction is recorded in `kidsallowance.ts`. */
-ok('a song on the parent page costs what a song costs',
-  priceOf('song') === CREDITS.song,
-  `the page says ${priceOf('song')} and the table says ${CREDITS.song}`
+/* Carli, 14 October 2026: "maak al die kids songs 8 credits. Bring video af
+   na 'n 36% margin." The kids room has its own two prices, and the routes
+   charge them only for a request that says it is the kids room's. */
+const musicRoute = readFileSync('app/api/music/route.ts', 'utf8');
+const videoRoute = readFileSync('app/api/video/route.ts', 'utf8');
+ok('a song on the parent page costs what a kids song costs',
+  priceOf('song') === CREDITS.kidSong && /CREDITS\.kidSong/.test(musicRoute),
+  `the page says ${priceOf('song')} and the table says ${CREDITS.kidSong}`
   + ' — a parent shown the wrong number sets the wrong allowance');
 
 ok('  and does not quietly include a picture the room cannot make',
-  priceOf('song') !== CREDITS.song + CREDITS.cover,
+  priceOf('song') !== CREDITS.kidSong + CREDITS.cover,
   'the song row is priced with a cover in it, and `/api/cover` needs the song'
   + ' saved to the library first — which this room does not do, so the parent'
   + ' is paying attention to a promise');
 
-ok('  and a video costs what a video costs',
-  priceOf('video') === videoCost('standard', VIDEO_SECONDS),
-  `the page says ${priceOf('video')} and \`videoCost\` says`
-  + ` ${videoCost('standard', VIDEO_SECONDS)} for ${VIDEO_SECONDS} seconds at`
-  + ' the plain grade');
+ok('  and a video costs what a kids video costs',
+  priceOf('video') === CREDITS.kidVideo && /CREDITS\.kidVideo/.test(videoRoute)
+    && videoCost('standard', VIDEO_SECONDS) >= CREDITS.kidVideo,
+  `the page says ${priceOf('video')} and the table says ${CREDITS.kidVideo}`
+  + ' — and the kids price must not be dearer than the plain grade');
 
 ok('  and a story costs what its pages cost',
   priceOf('story') === (readCost(STORY_PAGE_CHARS) + CREDITS.repaint) * STORY_PAGES,

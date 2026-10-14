@@ -15,28 +15,28 @@ daardie lid druk dieselfde knoppies.
 | Wat dit doen | Krediete | Ons vra | Enjin kos ons | **Wins** | Wins % | Hoeveel keer |
 |---|---:|---:|---:|---:|---:|---:|
 | dubbing, per minute | 110 | R163.90 | R40.48 | **R123.42** | 75% | 4.0× |
-| a marketing plan | 75 | R111.75 | R4.84 | **R106.91** | 96% | 23.1× |
 | eight advert lines | 40 | R59.60 | R3.24 | **R56.36** | 95% | 18.4× |
 | a mark on the film (in the browser) | 15 | R22.35 | niks | **R22.35** | 100% | — geen enjin |
+| a marketing plan | 15 | R22.35 | R4.84 | **R17.51** | 78% | 4.6× |
 | putting a film together, per half minute (in the browser) | 10 | R14.90 | niks | **R14.90** | 100% | — geen enjin |
+| reading a song, per minute (Music.ai) | 8 | R11.92 | R1.12 | **R10.80** | 91% | 10.6× |
+| singing it, per minute (Kits) | 8 | R11.92 | R1.60 | **R10.32** | 87% | 7.4× |
+| splitting stems, per minute | 8 | R11.92 | R2.21 | **R9.71** | 81% | 5.4× |
+| cleaning a take, per minute | 8 | R11.92 | R2.21 | **R9.71** | 81% | 5.4× |
+| a voice change, per minute | 8 | R11.92 | R2.21 | **R9.71** | 81% | 5.4× |
 | a look over the film (in the browser) | 6 | R8.94 | niks | **R8.94** | 100% | — geen enjin |
 | a style word | 6 | R8.94 | R0.31 | **R8.63** | 97% | 28.7× |
-| reading a song, per minute (Music.ai) | 6 | R8.94 | R1.12 | **R7.82** | 87% | 8.0× |
+| a still picture changed by saying what to change | 6 | R8.94 | R0.96 | **R7.98** | 89% | 9.3× |
+| a one-minute half song | 7 | R10.43 | R2.76 | **R7.67** | 74% | 3.8× |
 | taking a post off the device (in the browser) | 5 | R7.45 | niks | **R7.45** | 100% | — geen enjin |
-| singing it, per minute (Kits) | 6 | R8.94 | R1.60 | **R7.34** | 82% | 5.6× |
-| splitting stems, per minute | 6 | R8.94 | R2.21 | **R6.73** | 75% | 4.0× |
-| cleaning a take, per minute | 6 | R8.94 | R2.21 | **R6.73** | 75% | 4.0× |
-| a voice change, per minute | 6 | R8.94 | R2.21 | **R6.73** | 75% | 4.0× |
-| a still picture changed by saying what to change | 5 | R7.45 | R0.96 | **R6.49** | 87% | 7.8× |
 | a two-minute song | 8 | R11.92 | R5.52 | **R6.40** | 54% | 2.2× |
+| transcribing, per minute | 4 | R5.96 | R0.07 | **R5.89** | 99% | 88.3× |
 | an item taken out, per five seconds | 5 | R7.45 | R1.80 | **R5.65** | 76% | 4.1× |
 | words set on the picture (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
 | a join between two shots (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
 | a song laid under the film (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
 | bouncing a mix out (in the browser) | 3 | R4.47 | niks | **R4.47** | 100% | — geen enjin |
-| transcribing, per minute | 3 | R4.47 | R0.07 | **R4.40** | 98% | 66.3× |
 | a background taken out, per five seconds | 4 | R5.96 | R1.80 | **R4.16** | 70% | 3.3× |
-| a one-minute half song | 4 | R5.96 | R2.76 | **R3.20** | 54% | 2.2× |
 | the smallest read anybody is charged (300 characters) | 2 | R2.98 | R0.55 | **R2.43** | 81% | 5.4× |
 | reading 150 characters (a rate, not a press) | 1 | R1.49 | R0.28 | **R1.21** | 81% | 5.4× |
 
@@ -46,7 +46,10 @@ daardie lid druk dieselfde knoppies.
 
 | Sleutel in die kode | Krediete | Ons vra | Enjin kos ons | Wins |
 |---|---:|---:|---|---|
-| `video` | 15 | R22.35 | nog nie gelees nie | nog nie bekend nie |
+| `songMinute` | 8 | R11.92 | nog nie gelees nie | nog nie bekend nie |
+| `kidSong` | 8 | R11.92 | nog nie gelees nie | nog nie bekend nie |
+| `kidVideo` | 9 | R13.41 | nog nie gelees nie | nog nie bekend nie |
+| `video` | 18 | R26.82 | nog nie gelees nie | nog nie bekend nie |
 | `cover` | 15 | R22.35 | nog nie gelees nie | nog nie bekend nie |
 | `browserVideo` | 0 | — (niks) | nog nie gelees nie | nog nie bekend nie |
 | `clone` | 20 | R29.80 | nog nie gelees nie | nog nie bekend nie |

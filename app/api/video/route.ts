@@ -61,6 +61,8 @@ export const maxDuration = 120;
 const LINK_SECONDS = 3600;
 
 interface Body {
+  /** The kids room's ten-second plain video, at its own price. */
+  kids?: boolean;
   prompt?: string;
   aspect?: string;
   seconds?: number;
@@ -518,7 +520,11 @@ export async function POST(request: Request): Promise<Response> {
   // lengths an engine declares are offered, so `nearestLength` below is a
   // no-op in practice — and if it ever is not, the charge stays the one that
   // was on the button rather than one nobody was shown.
-  const price = videoCost(grade, wanted);
+  /* The kids room's own price, for exactly what the kids room asks for and
+     nothing else: ten seconds at the plain grade. Anything else claiming to
+     be the kids room pays the desk's price. */
+  const kidsOwn = body.kids === true && grade === 'standard' && wanted === 10;
+  const price = kidsOwn ? CREDITS.kidVideo : videoCost(grade, wanted);
   const paid = await charge(request, price, 'video');
   if (!paid.ok) return paid.response;
 

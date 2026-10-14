@@ -137,6 +137,9 @@ ok('the scan found the doors at all', doors.length > 15, `${doors.length} found`
  * room in would be the app answering a question nobody asked.
  */
 const PLAIN: Readonly<Record<string, string>> = {
+  /* The profile's door to Your voice: the voices are read there from the
+     account, so there is nothing to carry. */
+  'voice_studio|onGoToVoices': 'from the profile to the room the voices live in; that room reads them from the account itself',
   'make|kind': 'the copilot’s own generate: it is the ACT, and its fields travelled in the same reply',
   '*|kind': 'the copilot’s own go: its surface_ops carry separately, aimed by planActions',
   'live|tab': 'the tab bar. Somebody pressing Live is choosing a room, not asking for anything in it',
@@ -333,6 +336,10 @@ ok(`the scan found the doors inside the rooms too \u2014 ${inRooms.length}`, inR
  * to a room makes somebody say, once, in writing, which kind it is.
  */
 const PLAIN_IN_ROOMS: Readonly<Record<string, string>> = {
+  /* The profile's "Manage in Your voice", 14 October 2026: the voices live in
+     that room and are read there from the account, so there is nothing for the
+     profile to hand over. */
+  'Account.tsx|onGoToVoices': 'from the profile to the room the voices live in; that room reads them from the account itself',
   'Account.tsx|onGoToChannel':
     'a hint on the account screen \u2014 where your finished songs live. Nothing is being set up',
   'Booth.tsx|onGoToMake':

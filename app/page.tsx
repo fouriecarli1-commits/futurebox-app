@@ -15,7 +15,7 @@ import {
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors,
-  Image as ImageIcon, Baby} from 'lucide-react';
+  Image as ImageIcon} from 'lucide-react';
 import {
   TRACK_FLAVOURS,
 } from './data/studio';
@@ -4391,32 +4391,10 @@ export default function FutureBoxHome() {
                     );
                   };
 
-                  /* The kids room, on the rail as well as on the door.
-
-                     An `<a>` to a page of its own, not a room in this list:
-                     the child's screen must not carry this rail beside it
-                     (`check:kidsafe`), but the grown-up looking for the room
-                     must find it — "Ek sien nerens die kids room nie". */
-                  const kids = (
-                    <a
-                      key="kids"
-                      href="/kids"
-                      data-railkids
-                      title={t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Six doors in there: music, videos and stories, drawing, games, editing and quizzes.')}
-                      className={`min-h-[44px] flex-shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
-                        theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
-                      } border-amber-500/30 bg-amber-500/[0.08] text-zinc-300 hover:border-amber-400/60 hover:bg-amber-500/[0.14] hover:text-white`}
-                    >
-                      <Baby className="w-[18px] h-[18px] flex-shrink-0 text-amber-300" />
-                      <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
-                        <span className="block text-sm font-semibold leading-tight">
-                          {t('rail.kids', 'Kids room')}
-                        </span>
-                      </span>
-                    </a>
-                  );
-
-                  if (theme.layout !== 'rail') return [home, ...SURFACE_IDS.map(row), kids];
+                  /* No kids room on the rail: it is reached only from the
+                     welcome page, with its own credits (Carli, 14 October
+                     2026). */
+                  if (theme.layout !== 'rail') return [home, ...SURFACE_IDS.map(row)];
 
                   return (
                     <>
@@ -4434,8 +4412,6 @@ export default function FutureBoxHome() {
                         <div className="hidden md:block h-px bg-zinc-800 mx-3.5 my-4" />
                       )}
                       {standaloneSurfaces().map(row)}
-                      <div className="hidden md:block h-px bg-zinc-800 mx-3.5 my-4" />
-                      {kids}
                     </>
                   );
                 })()}

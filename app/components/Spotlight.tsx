@@ -38,7 +38,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowRight, Baby, BookOpen, ChevronLeft, ChevronRight, Compass, Film, Mic, Music, Paintbrush,
+  ArrowRight, BookOpen, ChevronLeft, ChevronRight, Compass, Film, Mic, Music, Paintbrush,
   Pause, Play, Radio, Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -147,7 +147,6 @@ export default function Spotlight({
     { icon: <Film className="h-5 w-5" />, name: t('spot.editorName', 'VideoEditor NLE'), sub: t('spot.editorSub', 'Multi-track timeline, captions, Veo scenes'), tone: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/40', go: () => onGo('make') },
     { icon: <Mic className="h-5 w-5" />, name: t('spot.boothName', 'ProBooth DAW'), sub: t('spot.boothSub', 'Record, clone, separate stems'), tone: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/40', go: () => onGo('voice_studio') },
     { icon: <Music className="h-5 w-5" />, name: t('spot.makeName', 'Make a Song'), sub: t('spot.makeSub', 'Afrikaans or English, every genre'), tone: 'text-amber-400 bg-amber-500/15 border-amber-500/40', go: () => onGo('make') },
-    { icon: <Baby className="h-5 w-5" />, name: t('spot.kidsName', 'Kids Dream Studio'), sub: t('spot.kidsSub', 'An allowance a grown-up sets'), tone: 'text-violet-400 bg-violet-500/15 border-violet-500/40', go: () => undefined, href: '/kids' },
   ];
 
   const roomCard = (room: typeof rooms[number]): React.ReactNode => {

@@ -122,6 +122,11 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   song: ['song'],
   /* A format of the thing above, not a room of its own. */
   halfSong: null,
+  /* The minutes of an ElevenLabs song after the first: part of the song's price, not a thing of its own. */
+  songMinute: null,
+  /* The kids room's own prices, said on the grown-up's page beside the allowance. */
+  kidSong: null,
+  kidVideo: null,
   video: ['video'],
   cover: ['cover'],
   filmOut: ['film'],

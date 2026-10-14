@@ -91,6 +91,19 @@ export interface Lane {
    */
   readonly link?: string;
   /**
+   * How long the lane fades up from silence, and down to it, in seconds.
+   *
+   * Carli, 14 October 2026, of the ProBooth: *"die lyne of drie hoekies wat
+   * die natuurlike oorgange wys."* Every desk she has used draws a small
+   * triangle in the top corner of a clip that drags inward to fade it. Two
+   * numbers on the lane, measured on what plays (the cut piece, repeats and
+   * all), applied by `wireLane`/`startLane` — so the live playback and the
+   * file the mix-down writes fade identically. Absent is no fade, which is
+   * every lane made before this existed.
+   */
+  readonly fadeIn?: number;
+  readonly fadeOut?: number;
+  /**
    * The notes this lane was BUILT from, when it was built from notes.
    *
    * Only the hum-an-instrument path has these: somebody hums, `notesIn` finds
@@ -507,6 +520,46 @@ export function carveLane(lane: Lane, from: number, to: number): Carved | null {
  * @param playFrom where on the session's clock playback begins.
  * @param when     the context time that moment corresponds to.
  */
+/** The fade stage of a wired lane, found again when the lane is started. */
+const FADES = new WeakMap<AudioBufferSourceNode, GainNode>();
+
+/** A lane's fades, kept inside what it plays and never longer than half of it each. */
+export function fadesOf(lane: Lane): { readonly fadeIn: number; readonly fadeOut: number } {
+  const length = lengthOf(lane);
+  const half = Math.max(0, length / 2);
+  return {
+    fadeIn: Math.max(0, Math.min(half, lane.fadeIn ?? 0)),
+    fadeOut: Math.max(0, Math.min(half, lane.fadeOut ?? 0)),
+  };
+}
+
+/**
+ * Draws a lane's fade on its fade stage, against the context's clock.
+ *
+ * `into` is how far into the lane playback starts (negative: not started
+ * yet), `startAt` the context time the lane's first sound plays, `length`
+ * what it plays in all. The envelope is linear in level, which is what the
+ * corner triangle on the clip draws.
+ */
+function scheduleFade(fade: GainNode, lane: Lane, into: number, startAt: number, length: number): void {
+  const { fadeIn, fadeOut } = fadesOf(lane);
+  const begin = Math.max(0, into);
+  const level = (c: number): number => Math.max(0, Math.min(
+    1,
+    fadeIn > 0 ? c / fadeIn : 1,
+    fadeOut > 0 ? (length - c) / fadeOut : 1,
+  ));
+  const at = (c: number): number => startAt + (c - begin);
+  fade.gain.cancelScheduledValues(0);
+  fade.gain.setValueAtTime(level(begin), startAt);
+  if (begin < fadeIn) fade.gain.linearRampToValueAtTime(1, at(fadeIn));
+  const downFrom = length - fadeOut;
+  if (fadeOut > 0) {
+    if (begin < downFrom) fade.gain.setValueAtTime(1, at(downFrom));
+    fade.gain.linearRampToValueAtTime(0, at(length));
+  }
+}
+
 export function startLane(
   source: AudioBufferSourceNode,
   lane: Lane,
@@ -523,6 +576,8 @@ export function startLane(
   // started yet and is scheduled ahead.
   const into = playFrom - lane.at;
   if (into >= length) return; // Already finished before this moment.
+  const fade = FADES.get(source);
+  if (fade) scheduleFade(fade, lane, into, into >= 0 ? when : when - into, length);
 
   if (times === 1) {
     if (into >= 0) source.start(when, window.from + into, length - into);
@@ -628,15 +683,26 @@ export function wireLane(
      sound to notice it by. */
   for (const source of rack?.running ?? []) source.start(0);
 
+  /* The fades, first in the chain, so everything after them — the amp, the
+     tone, the effects' tails — hears the lane come up and go away the way
+     the clip's corner triangles draw it. */
+  const { fadeIn, fadeOut } = fadesOf(lane);
+  let entry: AudioNode = head;
+  if (fadeIn > 0 || fadeOut > 0) {
+    const fade = ctx.createGain();
+    fade.connect(head);
+    FADES.set(source, fade);
+    entry = fade;
+  }
   if (place) {
     place.pan.value = Math.max(-1, Math.min(1, lane.pan ?? 0));
-    source.connect(head);
+    source.connect(entry);
     level.connect(place).connect(to);
   } else {
     /* Safari long ago, and some embedded browsers. Losing the pan is the right
        failure: the alternative is a hand-rolled panner that sounds different
        from the one everybody else hears. */
-    source.connect(head);
+    source.connect(entry);
     level.connect(to);
   }
   return source;

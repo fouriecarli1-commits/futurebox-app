@@ -49,6 +49,7 @@ import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
 import TakeStrip from './TakeStrip';
 import SungWords from './SungWords';
+import SayItWrong from './SayItWrong';
 import Hint from './Hint';
 import Staff from './Staff';
 import Cost from './Cost';
@@ -1223,7 +1224,7 @@ export default function VocalBooth({
               {track.key ? <span className="text-zinc-200"> · {track.key}</span> : null}
             </span>
           )}
-          <span className="hidden h-4 w-px bg-white/10 sm:inline-block" aria-hidden />
+          <span className="hidden h-4 w-px bg-zinc-700 sm:inline-block" aria-hidden />
           <span
             className={`h-2.5 w-2.5 rounded-full ${
               phase === 'recording' ? 'animate-pulse bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]'
@@ -1775,6 +1776,15 @@ export default function VocalBooth({
               <span className="pl-0.5 text-zinc-500">{t('play.free', 'no credits')}</span>
             </button>
           )}
+        </div>
+        {/* ── A word that came out wrong ─────────────────────────────────
+            Carli, 14 October 2026: *"Remember to add a button for Afrikaans
+            words feedback."* The same form Make a song and every reading room
+            carry: the word, how it sounded, how it should sound — kept for the
+            owner's list that fixes how the voices say Afrikaans. In the booth
+            because this is where she hears a sung word closest. */}
+        <div className="flex justify-end" data-boothsayitwrong>
+          <SayItWrong surface="booth" spoken said={track.title} alwaysShow variant="button" />
         </div>
 
         {/* ── The sheet ───────────────────────────────────────────────────

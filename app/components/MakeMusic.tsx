@@ -28,7 +28,7 @@ import { accessToken } from '../lib/cloud';
 import { saveSong } from '../lib/songfile';
 import { durationOf, readAudio } from '../lib/trackaudio';
 import { keepMix, takeId } from '../lib/takekeep';
-import { Refused, engines, splitSections, type Stage } from '../lib/engines';
+import { Refused, engines, songEngine, splitSections, type Stage } from '../lib/engines';
 import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
 import NowPlaying from './NowPlaying';
@@ -42,7 +42,7 @@ import Note from './Note';
 import Hint from './Hint';
 import SayItWrong from './SayItWrong';
 import { STARTERS, LENGTH_CHOICES } from '../data/sound';
-import { CREDITS, songCost } from '../lib/credits';
+import { CREDITS, songCost, type SongEngine } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import * as cloud from '../lib/cloud';
@@ -156,6 +156,13 @@ export default function MakeMusic({
   const { t, lang } = useLang();
   const title = canvas.title;
   const lyrics = canvas.lyrics;
+  /* Which engine will sing it, so the price on the button is the price that
+     is charged: Afrikaans words always go to ElevenLabs, everything else to
+     whichever engine the route says is on. ElevenLabs until it answers, the
+     dearer of the two. */
+  const [engineOn, setEngineOn] = useState<SongEngine>('eleven');
+  useEffect(() => { void songEngine().then(setEngineOn); }, []);
+  const singer: SongEngine = looksAfrikaans(lyrics ?? '') ? 'eleven' : engineOn;
   /* Whether anybody is going to sing on this.
  
      `splitSections` is what the engine call uses, so asking it here is asking
@@ -1674,7 +1681,7 @@ export default function MakeMusic({
           aside={
             <span className="truncate text-xs text-zinc-500">
               {[
-                `${seconds}s · ${songCost(seconds)} ${t('video.credits', 'credits')}`,
+                `${seconds}s · ${songCost(seconds, singer)} ${t('video.credits', 'credits')}`,
                 ...changedFromDefault,
               ].join(' · ')}
             </span>
@@ -1717,7 +1724,7 @@ export default function MakeMusic({
                     {t(`len.${choice.seconds}.n`, choice.note)}
                   </span>
                   <span className="block text-xs text-zinc-500 pt-0.5">
-                    {songCost(choice.seconds)} {t('video.credits', 'credits')}
+                    {songCost(choice.seconds, singer)} {t('video.credits', 'credits')}
                   </span>
                 </button>
               ))}
@@ -2014,7 +2021,7 @@ export default function MakeMusic({
               now, and a tick that quietly adds two credits is the surprise
               this app does not do. */}
           <span className="text-sm font-bold opacity-80">
-            · {songCost(seconds) + (wantCover ? CREDITS.cover : 0)}{' '}
+            · {songCost(seconds, singer) + (wantCover ? CREDITS.cover : 0)}{' '}
             {t('video.credits', 'credits')}
           </span>
         </button>

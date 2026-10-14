@@ -204,20 +204,26 @@ ok('  and every route without one says why',
 
 /* ── The two that were lost, named ─────────────────────────────────────── */
 
-ok('the kids room is reached from the grown-up\'s screen',
-  withoutComments(readFileSync('app/components/Account.tsx', 'utf8')).includes('href="/kids"'),
-  'an allowance is a grown-up\'s decision and so is handing over the phone,'
-  + ' so the account screen is where the door belongs');
+/* Carli, 14 October 2026: "Die kids room met sy aparte credits moet net van
+   die welcoming page af geaccess kan word. Dit moenie binne die app geaccess
+   kan word nie." The kids room has exactly one door, on the welcome page. */
+ok('the kids room is reached from the welcome page',
+  withoutComments(readFileSync('app/components/KidsBanner.tsx', 'utf8')).includes('href="/kids"')
+    && /<KidsBanner/.test(withoutComments(readFileSync('app/components/Landing.tsx', 'utf8'))),
+  'the signed-out welcome page is the one place she wants its door');
 
-ok('  and story mode with it',
+ok('  and from nowhere inside the app',
+  ['app/page.tsx', 'app/components/Account.tsx', 'app/components/Greeting.tsx',
+    'app/components/Spotlight.tsx', 'app/components/SiteFooter.tsx', 'app/components/Guide.tsx']
+    .every((file) => !/href=\{?['"`]\/kids['"`]|(push|replace|assign)\(['"`]\/kids['"`]/.test(withoutComments(readFileSync(file, 'utf8')))),
+  'a door to /kids inside the app is the one thing she asked to be gone');
+
+ok('story mode is reached from the grown-up\'s screen',
   withoutComments(readFileSync('app/components/Account.tsx', 'utf8')).includes('href="/story"'),
   'the other room nothing led to');
 
-ok('  and both are in the footer, which is on every route',
-  (() => {
-    const foot = withoutComments(readFileSync('app/components/SiteFooter.tsx', 'utf8'));
-    return foot.includes('href="/kids"') && foot.includes('href="/story"');
-  })(),
+ok('  and in the footer, which is on every route',
+  withoutComments(readFileSync('app/components/SiteFooter.tsx', 'utf8')).includes('href="/story"'),
   'a grown-up who has not opened their account sheet still needs a way in,'
   + ' and so does somebody who was sent the app rather than told about it');
 

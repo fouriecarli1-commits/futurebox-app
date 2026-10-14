@@ -89,6 +89,12 @@ for (const { what, says } of MUST_BE_ON_EVERY_CARD) {
 
 /** Priced things that are deliberately not on the cards, and why. */
 const NAMED_ELSEWHERE: Record<string, string> = {
+  /* 14 October 2026: an ElevenLabs song's minutes after the first. The cards
+     count whole songs; the minute is what `songCost` adds, and the song
+     screen shows the total before anybody presses. */
+  songMinute: 'priced into the whole song the screen shows before it is made',
+  kidSong: 'on the parents page of the kids room, which has its own door on the welcome page',
+  kidVideo: 'on the parents page of the kids room, which has its own door on the welcome page',
   /* Nano Banana in the photo editor, 9 October 2026. Exempt for the same
      reason `postOut` is and not for a special one: the cards name ROOMS and
      what they cost to run, and a line for every press inside one would be

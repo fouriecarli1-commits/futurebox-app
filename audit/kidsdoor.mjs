@@ -8,8 +8,8 @@
  *
  * Three findings, three measurements:
  *
- *   1. A signed-in person has a door to `/kids` on the rail and on the
- *      greeting, and pressing it lands there.
+ *   1. Inside the app there is no door to `/kids` (14 October 2026: only
+ *      the welcome page opens it); the address still lands there.
  *   2. Giving an allowance takes the door away and shows the child's room.
  *      The API is stubbed, so this measures the page and not her database.
  *   3. Every way the press can fail ends in a sentence: the server refusing
@@ -79,30 +79,19 @@ async function stubKids(page, onPost) {
      press — see enter.mjs. */
   await studio(page);
 
-  check('the rail has a door to the kids room', (await page.locator('[data-railkids]:visible').count()) === 1);
-
-  /* The greeting is the page over the rail — open already on the way in,
-     and behind "Home" in the rail after it has been closed. The door on it
-     is the one she could not find. */
-  const homeDoor = page.locator('[data-kidsdoorhome]');
-  if (!(await homeDoor.isVisible().catch(() => false))) {
-    await page.locator('div.fixed.inset-0.z-50 nav button:visible', { hasText: /^(Home|Tuis)$/ }).first()
-      .click({ timeout: 10000 }).catch(() => undefined);
-    await page.waitForTimeout(600);
-  }
-  check('and the greeting shows it as a highlight, above the rooms', await homeDoor.isVisible().catch(() => false));
-  const above = await page.evaluate(() => {
-    const door = document.querySelector('[data-kidsdoorhome]');
-    const rooms = document.querySelector('[data-roomhint]');
-    if (!door || !rooms) return null;
-    return door.getBoundingClientRect().top < rooms.getBoundingClientRect().top;
-  });
-  check('  above the first room, not under them', above === true, String(above));
+  /* Carli, 14 October 2026: "Die kids room met sy aparte credits moet net
+     van die welcoming page af geaccess kan word. Dit moenie binne die app
+     geaccess kan word nie." So inside the app there is no door at all —
+     not on the rail, not on the greeting, not in the profile — and the one
+     way in is the banner on the signed-out welcome page, which section 3b
+     measures. A grown-up who is signed in still gets through by the address. */
+  check('the rail has no door to the kids room', (await page.locator('[data-railkids]').count()) === 0);
+  check('  nor the greeting', (await page.locator('[data-kidsdoorhome]').count()) === 0);
+  check('  nor anything else in the app that links there', (await page.locator('a[href="/kids"]').count()) === 0);
   await page.screenshot({ path: shot('kids-door-home.png'), fullPage: false });
 
-  await homeDoor.click();
-  await page.waitForURL(/\/kids$/, { timeout: 15000 }).catch(() => undefined);
-  check('pressing it lands on the kids page', /\/kids$/.test(page.url()), page.url());
+  await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
+  check('the address still lands on the kids page', /\/kids$/.test(page.url()), page.url());
 
   const door = page.locator('[data-kidsdoor]');
   await door.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
@@ -169,7 +158,13 @@ async function stubKids(page, onPost) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
-  await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
+  await page.goto(server.url, { waitUntil: 'networkidle' });
+  const banner = page.locator('[data-authkids]');
+  check('the welcome page has the one door into the kids room', (await banner.count()) === 1);
+  await banner.scrollIntoViewIfNeeded().catch(() => undefined);
+  await banner.click({ timeout: 10000 }).catch(() => undefined);
+  await page.waitForURL(/\/kids$/, { timeout: 15000 }).catch(() => undefined);
+  check('  and pressing it lands on the kids page', /\/kids$/.test(page.url()), page.url());
   const signin = page.locator('[data-kidssignin]');
   await signin.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
   check('signed out, the door says to sign in first', await signin.isVisible().catch(() => false));

@@ -5,7 +5,7 @@
 > verander die prys in daardie lêers en loop die skrip weer, anders sê die
 > pryskaart en hierdie som twee verskillende dinge.
 
-Geskryf 2026-10-11. Kling is uit die som uit.
+Geskryf 2026-10-14. Kling is uit die som uit.
 
 ## Waarop dit rus
 
@@ -382,20 +382,20 @@ die aksie is byna gratis om te bedien.
 | Aksie | Verskaffer | Ons hef | Dit kos ons | Rand per krediet |
 |---|---|---|---|---|
 | 'n Vol liedjie (2 min) | ElevenLabs | 8 kr | R5,52 | **R0,6900** |
-| 'n Half liedjie (1 min) | ElevenLabs | 4 kr | R2,76 | **R0,6900** |
 | Agtergrond uit, per 5 sek | fal.ai | 4 kr | R1,80 | **R0,4500** |
-| Stemme skei, per minuut | ElevenLabs | 6 kr | R2,21 | **R0,3680** |
-| 'n Opname skoonmaak, per minuut | ElevenLabs | 6 kr | R2,21 | **R0,3680** |
-| 'n Stem verander, per minuut | ElevenLabs | 6 kr | R2,21 | **R0,3680** |
+| 'n Half liedjie (1 min) | ElevenLabs | 7 kr | R2,76 | **R0,3943** |
 | Dub, per minuut | ElevenLabs | 110 kr | R40,48 | **R0,3680** |
 | Item uit, per 5 sek *(skatting)* | fal.ai | 5 kr | R1,80 | **R0,3600** |
+| 'n Bemarkingsplan | Anthropic | 15 kr | R4,96 | **R0,3307** |
+| Stemme skei, per minuut | ElevenLabs | 8 kr | R2,21 | **R0,2760** |
+| 'n Opname skoonmaak, per minuut | ElevenLabs | 8 kr | R2,21 | **R0,2760** |
+| 'n Stem verander, per minuut | ElevenLabs | 8 kr | R2,21 | **R0,2760** |
 | Voorlees, per 150 karakters | ElevenLabs | 1 kr | R0,28 | **R0,2760** |
-| Sing dit, per minuut | Kits.AI | 6 kr | R1,60 | **R0,2667** |
+| Sing dit, per minuut | Kits.AI | 8 kr | R1,60 | **R0,2000** |
 | Agt advertensielyne | Anthropic | 40 kr | R3,29 | **R0,0822** |
-| 'n Bemarkingsplan | Anthropic | 75 kr | R4,96 | **R0,0661** |
-| Oorskryf, per minuut | ElevenLabs | 3 kr | R0,07 | **R0,0225** |
+| Oorskryf, per minuut | ElevenLabs | 4 kr | R0,07 | **R0,0169** |
 | 'n Omslag *(skatting)* | beeldmodel | 15 kr | R0,15 | **R0,0100** |
-| Video, 10 sek, standaard *(skatting)* | ElevenLabs | 30 kr | R0,12 | **R0,0040** |
+| Video, 10 sek, standaard *(skatting)* | ElevenLabs | 36 kr | R0,12 | **R0,0034** |
 | 'n Stem kloon *(skatting)* | ElevenLabs | 20 kr | R0,00 | **R0,0000** |
 | 'n Klank oplei *(skatting)* | ElevenLabs | 300 kr | R0,00 | **R0,0000** |
 
@@ -441,9 +441,9 @@ is net hoe duur een minuut dubbing werklik is. Wie dub, koop reg; wie dub
 teen 15 krediete verkoop het, het R21,88 per minuut uit haar eie sak betaal,
 wat presies is wat op 8 September gebeur het.
 
-**Video lees andersom.** 30 krediete vir 'n tien-sekonde-snit
-teen 'n geskatte R0,12 — **R0,0040** per krediet,
-170 keer goedkoper as musiek.
+**Video lees andersom.** 36 krediete vir 'n tien-sekonde-snit
+teen 'n geskatte R0,12 — **R0,0034** per krediet,
+205 keer goedkoper as musiek.
 
 Dit is óf die winsgewendste ding wat hierdie toep verkoop, óf die
 kosteskatting is verkeerd. `app/lib/server/video/eleven.ts` dra self twee

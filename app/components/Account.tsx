@@ -30,7 +30,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, Baby, BookOpen, Paintbrush, Mic, User, CheckCircle2,
+  X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, BookOpen, Paintbrush, Mic, User, CheckCircle2,
 } from 'lucide-react';
 import { loadTracks } from '../lib/library';
 import { loadMakes } from '../lib/makes';
@@ -203,7 +203,11 @@ export default function Account({
     >
       {/* ── The bar across the top, as her picture has it ───────────── */}
       <header
-        className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 backdrop-blur-md lg:px-8"
+        /* `pr-[72px]`: the app's search button is fixed in the top-right
+           corner over every screen, and the close button sat under it where
+           no press could reach it — `audit/backbutton.mjs` pressed for thirty
+           seconds and hit the search. */
+        className="sticky top-0 z-10 flex items-center gap-3 py-3 pl-4 pr-[72px] backdrop-blur-md lg:pl-8"
         style={{ background: 'rgba(3,8,7,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
       >
         <span className="flex items-center gap-2 text-lg font-bold text-white">
@@ -585,13 +589,6 @@ export default function Account({
           {/* The two rooms off the rail, reachable from the grown-up's screen:
               an allowance is a grown-up's decision and so is handing over the
               phone. `check:bereikbaar` holds every page to having a way in. */}
-          <a href="/kids" data-accountkids className={linkRow} style={chip}>
-            <Baby className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
-            <span className="min-w-0">
-              <span className="block text-sm font-bold leading-tight">{t('account.kids', 'The kids room')}</span>
-              <span className="block text-xs leading-snug text-zinc-500">{t('account.kidsNote', 'Set an allowance and a clock, then hand the phone over. Six doors in there, and the allowance holds wherever they go.')}</span>
-            </span>
-          </a>
           <a href="/story" data-accountstory className={linkRow} style={chip}>
             <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">

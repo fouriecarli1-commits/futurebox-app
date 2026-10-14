@@ -83,13 +83,13 @@ export const KID_PRICES: readonly Priced[] = [
  
        Said plainly rather than quietly reduced, because the earlier number
        was shown to her. */
-    credits: CREDITS.song,
+    credits: CREDITS.kidSong,
     ready: true,
     says: ['kids.priceSong', 'A song, about a minute long'],
   },
   {
     id: 'video',
-    credits: videoCost('standard', VIDEO_SECONDS),
+    credits: CREDITS.kidVideo,
     ready: true,
     says: ['kids.priceVideo', 'A ten-second video for a song'],
   },

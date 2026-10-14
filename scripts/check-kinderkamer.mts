@@ -44,7 +44,7 @@
 
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
-import { videoCost } from '../app/lib/credits.ts';
+import { CREDITS } from '../app/lib/credits.ts';
 import { KID_PRICES, VIDEO_SECONDS } from '../app/lib/kidsallowance.ts';
 import { KID_SOUNDS, KID_TOPICS } from '../app/lib/kidsong.ts';
 
@@ -147,10 +147,17 @@ ok('  and at the grade it priced',
   + " the plain one, which costs a quarter of premium — so a parent's whole"
   + ' allowance goes on one video');
 
+/* The kids room's own price (Carli, 14 October 2026), which `/api/video`
+   charges only for a ten-second plain-grade request marked `kids: true`. */
+const videoRoute = readFileSync('app/api/video/route.ts', 'utf8');
 ok('  so the two agree on what a video costs',
-  framework === videoCost('standard', videoSeconds || 0),
-  `the page says ${framework} and the room's own request works out to`
-  + ` ${videoCost('standard', videoSeconds || 0)}`);
+  framework === CREDITS.kidVideo
+    && /kids:\s*true,[\s\S]{0,200}seconds:\s*\d+,\s*grade|seconds:\s*\d+,\s*grade[\s\S]{0,200}kids:\s*true/.test(songs)
+    && /body\.kids === true && grade === 'standard' && wanted === 10/.test(videoRoute)
+    && videoSeconds === 10,
+  `the page says ${framework}, the table's kids video is ${CREDITS.kidVideo},`
+  + ' and the room must send `kids: true` with a ten-second plain request for'
+  + ' the route to charge it');
 
 /* ── 5. What is left is re-asked, not guessed ───────────────────────── */
 

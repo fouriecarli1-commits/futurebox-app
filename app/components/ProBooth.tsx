@@ -66,8 +66,6 @@ import { EDGE, INK_DIM, LIT, PANEL } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
-import MoisesProStudio from './MoisesProStudio';
-import ProDawStudio from './ProDawStudio';
 import BoothAsk from './BoothAsk';
 import { applyMove, type LaneNow, type Move } from '../lib/mixplan';
 import { canMove, move } from '../lib/laneorder';
@@ -85,7 +83,8 @@ import {
   BAR_CHOICES, INSTRUMENTS, bodyFor, instrumentBy, secondsFor,
   type Bars, type Family,
 } from '../lib/parts';
-import { songCost } from '../lib/credits';
+import { songCost, type SongEngine } from '../lib/credits';
+import { songEngine } from '../lib/engines';
 import { makeHistory } from '../lib/undo';
 import { notesIn, snapTo } from '../lib/humnotes';
 import { downloadBlob, safeFilename } from '../lib/library';
@@ -109,11 +108,8 @@ export default function ProBooth({
   backing,
   onKeep,
   onClose,
-  initialMode = 'studio',
 }: {
   title: string;
-  /** Antigravity's two screens over the lanes: the studio console and the DAW. Carli, 13 October 2026: its work, as it is. */
-  initialMode?: 'studio' | 'daw' | 'timeline';
   /** The song, as the first lane. Everything else is placed against it. */
   backing: AudioBuffer | null;
   onKeep: (mixed: Blob) => void | Promise<void>;
@@ -126,8 +122,11 @@ export default function ProBooth({
   useBackLayer(true, onClose);
 
   const [lanes, setLanes] = useState<Lane[]>([]);
-  const [proVoice, setProVoice] = useState<'My Gekloonde Stem' | 'Studio Tenoor' | 'Studio Sopraan' | 'Studio Bariton'>('My Gekloonde Stem');
-  const [voiceMenuOpen, setVoiceMenuOpen] = useState(false);
+  /* A generated part has no words, so it goes to whichever engine the music
+     route says is on — and the two are priced differently. */
+  const [partEngine, setPartEngine] = useState<SongEngine>('eleven');
+  useEffect(() => { void songEngine().then(setPartEngine); }, []);
+
   /**
    * Taking it back.
    *
@@ -254,12 +253,12 @@ export default function ProBooth({
      app nie."* `lib/atdesk.ts` carries why these are two questions. */
   const atDesk = useAtDesk();
   const onEdge = sideways || atDesk;
-  /* Antigravity's screens, mounted as its branch e97f2f7 mounted them (left
-     out of 1d28749, put back on 13 October 2026 by Carli's decision). */
-  const isProbe = typeof window !== 'undefined' && window.location.pathname.includes('proboothprobe');
-  const [studioMode, setStudioMode] = useState<'studio' | 'daw' | 'timeline'>(
-    isProbe ? 'timeline' : initialMode
-  );
+  /* Antigravity's studio console and DAW screens were mounted in front of
+     the lanes from 13 October; on 14 October Carli: *"die hele probooth
+     moet oorgedoen word … Dit werk nie."* They were mock screens — their
+     stems hard-coded, their playback a timer — and a member saw them first
+     while the probes, by a special case on the probe's address, saw the
+     real room. The lanes are the room now, for everybody. */
   const metronomeRef = useRef<Metronome | null>(null);
 
   /* ── Singing a lane in somebody else's voice ────────────────────────────
@@ -3005,10 +3004,6 @@ export default function ProBooth({
             <div className="flex items-start justify-between gap-3 p-4 pb-2">
               <div className="min-w-0">
                 <p className="text-base font-bold text-white">{t('part.title', 'Generate a part')}</p>
-                <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="truncate">{t('part.lyriaEngine', 'Google Lyria AI Music Engine · 48 kHz Neural Audio')}</span>
-                </div>
               </div>
               <button
                 type="button"
@@ -3100,7 +3095,7 @@ export default function ProBooth({
               </span>
             </p>
 
-            <Cost credits={songCost(secondsFor(partBars, sane(meter).bpm, sane(meter).beats))} />
+            <Cost credits={songCost(secondsFor(partBars, sane(meter).bpm, sane(meter).beats), partEngine)} />
 
             <button
               type="button"
@@ -3554,6 +3549,72 @@ export default function ProBooth({
 
   const stemDesk = (
     <>
+      {/* ── Every lane, as its own file; and a lane made better by AI ──────
+          Carli, 14 October 2026: *"Stems moet ook apart gedownload kan word.
+          Stems moet ook deur ai integration verbeter kan word."* Each lane
+          could already be taken away one at a time from its own card, and
+          cleaned one at a time from there too. Both are here now for every
+          lane at once, where the stems are: one press writes each lane as
+          its own WAV, and each lane has its AI clean beside its name, with
+          the price on it. */}
+      {lanes.length > 0 && (
+        <Card
+          icon={<Layers className="h-4 w-4" />}
+          title={t('pro.stemsAway', 'Every lane, as its own file')}
+          what={t(
+            'pro.stemsAwayWhat',
+            'Each lane is written as a WAV of its own, named after the lane, cut where you cut it. Clean a lane with AI first if the room or the reverb is in the way.',
+          )}
+        >
+          <button
+            type="button"
+            data-prosaveall
+            disabled={busy}
+            onClick={() => {
+              void (async () => {
+                for (const lane of lanes) {
+                  await saveLane(lane, 'wav');
+                  await new Promise((done) => setTimeout(done, 400));
+                }
+              })();
+            }}
+            className="inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-4 text-sm font-bold text-emerald-300 disabled:opacity-50"
+          >
+            <Layers className="h-4 w-4" />
+            {t('pro.saveAll', 'Download every lane')} ({lanes.length})
+          </button>
+          <ul className="mt-2 space-y-1.5">
+            {lanes.map((lane) => (
+              <li key={lane.id} className="space-y-1">
+                <span className="block truncate text-xs text-zinc-300">{lane.name}</span>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <button
+                    type="button"
+                    data-proimprove={lane.id}
+                    disabled={busy}
+                    onClick={() => void deRoom(lane)}
+                    className="inline-flex h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 px-3 text-xs font-bold text-emerald-300 disabled:opacity-50"
+                  >
+                    <Wand2 className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span className="truncate">
+                      {t('pro.improveAi', 'Clean with AI')} · {perMinute(lane.audio.duration, CREDITS.clean)} {t('video.credits', 'credits')}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    data-prosaveone={lane.id}
+                    onClick={() => void saveLane(lane, 'wav')}
+                    aria-label={`${t('pro.saveOne', 'Download')} ${lane.name}`}
+                    className="inline-flex h-[44px] items-center rounded-xl border border-zinc-700 px-3 text-xs font-bold text-zinc-200"
+                  >
+                    WAV
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <Card
         icon={<Music2 className="h-4 w-4" />}
         title={t('part.title', 'Generate a part')}
@@ -3634,6 +3695,23 @@ export default function ProBooth({
               hummed", one word a line. A row each, name and sentence on
               separate lines, uses the width the card actually has. */}
           <div className="space-y-1.5">
+            {/* ── Or a voice ─────────────────────────────────────────────
+                Carli, 14 October 2026: *"Die sing/humm vir stem parts moet
+                ook daar wees."* An instrument plays the notes of a hum on
+                the device; a VOICE has to sing them, and that is the voice
+                changer every lane already has — the hum is sung back in a
+                cloned or studio voice, on its own lane, for the price the
+                panel shows. One press opens it on the hummed lane. */}
+            <button
+              type="button"
+              data-humtovoice
+              disabled={!humLane || busy}
+              onClick={() => { if (humLane) setChanging(humLane); }}
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-4 text-sm font-bold text-emerald-300 disabled:opacity-50"
+            >
+              <Mic2 className="h-4 w-4" />
+              {t('hum.toVoice', 'Sing my hum as a voice part')}
+            </button>
             <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
               {t('hum.step2', '2 · Pick the sound')}
             </p>
@@ -4170,44 +4248,6 @@ export default function ProBooth({
   );
 
 
-  if (studioMode === 'daw') {
-    return (
-      <div
-        data-booth
-        data-cutroom
-        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
-          onEdge ? 'flex-row' : 'flex-col'
-        }`}
-      >
-        <ProDawStudio
-          projectTitle={title || 'Azure Horizon'}
-          onBackToStemStudio={() => setStudioMode('studio')}
-          onBackToTimeline={() => setStudioMode('timeline')}
-          onClose={onClose}
-        />
-      </div>
-    );
-  }
-
-  if (studioMode === 'studio') {
-    return (
-      <div
-        data-booth
-        data-cutroom
-        className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
-          onEdge ? 'flex-row' : 'flex-col'
-        }`}
-      >
-        <MoisesProStudio
-          songTitle={title}
-          onBackToTimeline={() => setStudioMode('timeline')}
-          onOpenDaw={() => setStudioMode('daw')}
-          onClose={onClose}
-        />
-      </div>
-    );
-  }
-
   return (
     /* One page on a phone, four pinned strips on a desk.
 
@@ -4282,46 +4322,19 @@ export default function ProBooth({
             onClick={onClose}
             className="flex min-h-[40px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
             <span>{t('booth.back', 'Back')}</span>
           </button>
-          {/* Studio Console & DAW Toggle */}
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setStudioMode('studio')}
-              className="flex min-h-[38px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 py-1 text-xs font-bold text-zinc-400 hover:border-cyan-400 hover:text-cyan-300 transition-all"
-              title={t('moises.toggleStudio', 'Studio Console')}
-            >
-              <Sliders className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{t('moises.toggleStudio', 'Studio Console')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStudioMode('daw')}
-              className="flex min-h-[38px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 py-1 text-xs font-bold text-zinc-400 hover:border-teal-400 hover:text-teal-300 transition-all"
-              title={t('daw.toggleDaw', 'DAW Werkstasie')}
-            >
-              <Music2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Werkstasie')}</span>
-            </button>
-          </div>
-
-          {/* Cyan F Icon & FutureBox ProBooth title */}
-          <div className="flex items-center gap-2 pl-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-400 text-black font-black text-xs shadow-[0_0_12px_rgba(34,211,238,0.8)] flex-shrink-0">
-              F
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-white text-sm tracking-tight truncate">FutureBox</span>
-                <span className="text-zinc-400 text-xs font-semibold hidden md:inline truncate">ProBooth & Stem Ateljee</span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[9px] font-extrabold tracking-widest text-cyan-300 uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  STUDIO DAW
-                </span>
-              </div>
-            </div>
+          {/* The same bar as the recorder's, from Google's ProBooth page: the
+              mark, the room's badge and the song. */}
+          <div className="flex min-w-0 items-center gap-2 pl-1">
+            <span className="hidden text-sm font-extrabold text-white sm:inline">
+              FUTURE<span className="text-emerald-500">BOX</span>
+            </span>
+            <span className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-500">
+              {t('booth.title', 'ProBooth')} · {t('pro.lanesBadge', 'Lanes')}
+            </span>
+            <span className="hidden min-w-0 truncate text-xs text-zinc-400 md:inline">{title}</span>
           </div>
 
           {/* Undo / Redo */}
@@ -4333,7 +4346,7 @@ export default function ProBooth({
               disabled={undoWhat === null}
               aria-label={undoWhat === null ? t('undo.nothing', 'Niks om te herstel nie') : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
               title={undoWhat === null ? t('undo.nothing', 'Niks om te herstel nie') : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
-              className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:border-cyan-500 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:border-cyan-500 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
             >
               <Undo2 className="h-3.5 w-3.5" />
             </button>
@@ -4344,64 +4357,10 @@ export default function ProBooth({
               disabled={redoWhat === null}
               aria-label={redoWhat === null ? t('undo.nothingAgain', 'Niks om oor te doen nie') : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
               title={redoWhat === null ? t('undo.nothingAgain', 'Niks om oor te doen nie') : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
-              className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:border-cyan-500 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-200 hover:border-cyan-500 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
             >
               <Redo2 className="h-3.5 w-3.5" />
             </button>
-          </div>
-        </div>
-
-        {/* Center section: Voice Selector + Mic Level + Pitch Tracker */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Voice selector dropdown */}
-          <div className="relative">
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-              <span className="font-semibold text-zinc-400">Voice:</span>
-              <button
-                type="button"
-                onClick={() => setVoiceMenuOpen((v) => !v)}
-                className="inline-flex min-h-[36px] items-center gap-2 rounded-xl border border-cyan-500/40 bg-zinc-900/90 px-3 py-1.5 text-xs font-bold text-white hover:border-cyan-400 transition-all shadow-[0_0_12px_rgba(6,182,212,0.15)]"
-              >
-                <span className="text-cyan-300 truncate max-w-[140px]">{proVoice}</span>
-                <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
-              </button>
-            </div>
-            {voiceMenuOpen && (
-              <div className="absolute top-full left-0 mt-1.5 w-48 rounded-xl border border-cyan-500/30 bg-zinc-900/95 p-1 shadow-2xl backdrop-blur-md z-50">
-                {(['My Gekloonde Stem', 'Studio Tenoor', 'Studio Sopraan', 'Studio Bariton'] as const).map((vName) => (
-                  <button
-                    key={vName}
-                    type="button"
-                    onClick={() => {
-                      setProVoice(vName);
-                      setVoiceMenuOpen(false);
-                      setDeskOpen('voice');
-                    }}
-                    className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
-                      proVoice === vName ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
-                    }`}
-                  >
-                    {vName}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Animated live mic meter pill */}
-          <div className="hidden sm:flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 py-1.5 shadow-inner">
-            <Mic2 className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
-            <div className="flex items-end gap-0.5 h-3.5 px-1">
-              <span className="w-1 bg-cyan-400 rounded-full h-2 animate-[pulse_1s_ease-in-out_infinite]" />
-              <span className="w-1 bg-cyan-300 rounded-full h-3.5 animate-[pulse_1.4s_ease-in-out_infinite]" />
-              <span className="w-1 bg-emerald-400 rounded-full h-2.5 animate-[pulse_1.2s_ease-in-out_infinite]" />
-            </div>
-          </div>
-
-          {/* Live pitch indicator badge */}
-          <div className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-3 py-1.5 text-xs font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.9)] animate-ping" />
-            <span>Toonhoogte: <strong className="text-white">C#</strong> • In Toon</span>
           </div>
         </div>
 
@@ -4411,7 +4370,7 @@ export default function ProBooth({
             type="button"
             onClick={() => setDeskOpen((was) => (was === 'mix' ? null : 'mix'))}
             title={t('pro.deskTone', 'Mixer & Levels')}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
           >
             <Sliders className="h-3.5 w-3.5" />
           </button>
@@ -4419,7 +4378,7 @@ export default function ProBooth({
             type="button"
             onClick={() => setDeskOpen((was) => (was === 'tracks' ? null : 'tracks'))}
             title={t('pro.deskMeter', 'Tempo & Tracks')}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
           >
             <Gauge className="h-3.5 w-3.5" />
           </button>
@@ -4427,7 +4386,7 @@ export default function ProBooth({
             type="button"
             onClick={() => setDeskOpen((was) => (was === 'effects' ? null : 'effects'))}
             title={t('pro.deskLayout', 'Effects & Tone')}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:border-cyan-400 hover:text-white transition-all"
           >
             <Settings className="h-3.5 w-3.5" />
           </button>
@@ -4492,62 +4451,6 @@ export default function ProBooth({
           are dragged, cut and dragged again with a thumb, and the playhead
           has a head big enough to catch. */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left vertical DAW rack toolbar from Photo 2 */}
-        <div className="flex flex-col items-center justify-between border-r border-cyan-500/20 bg-zinc-950/95 py-2 px-1 w-11 flex-shrink-0 z-20 shadow-md hidden sm:flex">
-          <div className="flex flex-col items-center gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={() => setDeskOpen((was) => (was ? null : 'tracks'))}
-              title="Menu"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-white transition-colors"
-            >
-              <Menu className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeskOpen((was) => (was === 'voice' ? null : 'voice'))}
-              title="Voice & Mic"
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.5)] transition-all"
-            >
-              <Waves className="h-4 w-4 text-cyan-300" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeskOpen((was) => (was === 'tracks' ? null : 'tracks'))}
-              title="Takes"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-cyan-300 transition-colors"
-            >
-              <Clock className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeskOpen((was) => (was === 'stems' ? null : 'stems'))}
-              title="Stems"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-cyan-300 transition-colors"
-            >
-              <Music2 className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeskOpen((was) => (was === 'effects' ? null : 'effects'))}
-              title="Tone & Effects"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-cyan-300 transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="pb-1">
-            <button
-              type="button"
-              onClick={onClose}
-              title={t('booth.back', 'Back')}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
         {/* The timeline container */}
         <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
           <BoothTimeline
@@ -4576,7 +4479,7 @@ export default function ProBooth({
                 <button
                   type="button"
                   onClick={() => setDeskOpen('stems')}
-                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 text-xs font-semibold text-emerald-300 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 text-xs font-semibold text-emerald-300 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all"
                 >
                   <Layers className="h-3.5 w-3.5 text-emerald-400" />
                   <span>{t('pro.splitStemsAction', 'Split Stems (Vocals, Drums, Bass, Instruments)')}</span>
@@ -4584,7 +4487,7 @@ export default function ProBooth({
                 <button
                   type="button"
                   onClick={() => setDeskOpen('voice')}
-                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
                 >
                   <Mic2 className="h-3.5 w-3.5 text-sky-400" />
                   <span>{t('pro.addVocalTrack', 'Add Vocal / Harmony Track')}</span>
@@ -4592,7 +4495,7 @@ export default function ProBooth({
                 <button
                   type="button"
                   onClick={() => setDeskOpen('tracks')}
-                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all"
                 >
                   <Music2 className="h-3.5 w-3.5 text-purple-400" />
                   <span>{t('pro.addInstrumentTrack', 'Add Instrument / Neural Part')}</span>

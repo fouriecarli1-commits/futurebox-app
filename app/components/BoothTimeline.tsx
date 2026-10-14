@@ -57,7 +57,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
+import { fadesOf, lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
 import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
@@ -309,6 +309,8 @@ export default function BoothTimeline({
         with: readonly { readonly id: string; readonly at: number; readonly plays: number }[];
       }
     | { what: 'cut'; id: string; edge: 'from' | 'to' }
+    /* A fade, dragged in from a corner of the clip. */
+    | { what: 'fade'; id: string; edge: 'in' | 'out' }
     | { what: 'region'; anchor: number }
     | { what: 'regionEdge'; edge: 'from' | 'to' }
     | null
@@ -481,6 +483,18 @@ export default function BoothTimeline({
       const where = pointAt(event.clientX);
       const other = now.edge === 'from' ? region.to : region.from;
       onRegion({ from: Math.min(other, where), to: Math.max(other, where) });
+      return;
+    }
+    /* A fade: how far the finger is in from that end of the clip, as
+       seconds, kept to half of what the lane plays. */
+    if (now.what === 'fade') {
+      const lane = lanes.find((one) => one.id === now.id);
+      if (!lane) return;
+      const plays = lengthOf(lane);
+      const where = secondsAt(event.clientX);
+      const into = now.edge === 'in' ? where - lane.at : lane.at + plays - where;
+      const seconds = Math.round(Math.max(0, Math.min(plays / 2, into)) * 100) / 100;
+      onChange(lane.id, now.edge === 'in' ? { fadeIn: seconds } : { fadeOut: seconds });
       return;
     }
     if (now.what === 'move') {
@@ -1301,7 +1315,7 @@ export default function BoothTimeline({
                     className="absolute left-0 right-11 top-0 h-11 px-1.5 pt-1 text-left"
                   >
                     <span className="block w-full truncate text-[11px] font-extrabold leading-tight tracking-wide" style={{ color: on ? '#38bdf8' : INK }}>
-                      {index === 0 && !lane.name.includes('Hoofsang') ? `Track 1 Hoofsang (${lane.name})` : index === 1 && !lane.name.includes('Agtergrondsang') ? `Track 2 Agtergrondsang (${lane.name})` : index === 2 && !lane.name.includes('Harmonie') ? `Track 3 Harmonie (${lane.name})` : index === 3 && !lane.name.includes('Begeleiding') ? `Track 4 Begeleiding (${lane.name})` : `Track ${index + 1} ${lane.name}`}
+                      {lane.name}
                     </span>
                   </button>
 
@@ -1622,9 +1636,9 @@ export default function BoothTimeline({
                       onSlide(moving.map((one) => ({ id: one.id, at: one.at + shift })));
                     }}
                   >
-                    <span className="pointer-events-none absolute left-2 top-1.5 z-10 flex items-center gap-1 rounded bg-cyan-950/80 px-2 py-0.5 text-[9px] font-black tracking-widest text-cyan-300 border border-cyan-400/40 shadow-[0_0_8px_rgba(6,182,212,0.3)] uppercase select-none">
+                    <span className="pointer-events-none absolute left-2 top-1.5 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 overflow-hidden rounded bg-cyan-950/80 px-2 py-0.5 text-[9px] font-black tracking-widest text-cyan-300 border border-cyan-400/40 shadow-[0_0_8px_rgba(6,182,212,0.3)] uppercase select-none">
                       <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                      <span>{index === 0 ? 'Lead Vocal' : index === 1 ? 'Backing Vocals' : index === 2 ? 'Harmony' : index === 3 ? 'Backing Track' : lane.name}</span>
+                      <span className="truncate">{lane.name}</span>
                     </span>
                     <Wave lane={lane} />
                     {/* ── Where it goes round ────────────────────────
@@ -1772,6 +1786,65 @@ export default function BoothTimeline({
                         rather than being switched off below some threshold
                         — the handles simply get narrower with the thing
                         they belong to. */}
+                    {/* ── The fades: a triangle in each top corner ──────────
+                        Carli, 14 October 2026: *"die lyne of drie hoekies wat
+                        die natuurlike oorgange wys."* The shaded wedge is the
+                        fade as it sounds — level rising from nothing at the
+                        start, falling to nothing at the end — and the small
+                        triangle at its inner tip is what a thumb drags. At
+                        the clip's very corner when there is no fade, so it
+                        can be found; pulled inward to make one. */}
+                    {(() => {
+                      const { fadeIn, fadeOut } = fadesOf(lane);
+                      const inShare = plays > 0 ? (fadeIn / plays) * 100 : 0;
+                      const outShare = plays > 0 ? (fadeOut / plays) * 100 : 0;
+                      return (
+                        <>
+                          <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+                            {fadeIn > 0 && <polygon points={`0,0 ${inShare},0 0,100`} fill="rgba(5,6,10,0.55)" />}
+                            {fadeOut > 0 && <polygon points={`100,0 ${100 - outShare},0 100,100`} fill="rgba(5,6,10,0.55)" />}
+                            {fadeIn > 0 && <line x1="0" y1="100" x2={inShare} y2="0" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />}
+                            {fadeOut > 0 && <line x1="100" y1="100" x2={100 - outShare} y2="0" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />}
+                          </svg>
+                          {(['in', 'out'] as const).map((edge) => (
+                            <span
+                              key={`fade-${edge}`}
+                              role="slider"
+                              data-lanefade={edge}
+                              aria-label={edge === 'in' ? t('pro.fadeIn', 'Fade in') : t('pro.fadeOut', 'Fade out')}
+                              aria-valuemin={0}
+                              aria-valuemax={Math.round((plays / 2) * 10) / 10}
+                              aria-valuenow={Math.round((edge === 'in' ? fadeIn : fadeOut) * 10) / 10}
+                              tabIndex={0}
+                              title={edge === 'in' ? t('pro.fadeIn', 'Fade in') : t('pro.fadeOut', 'Fade out')}
+                              className="absolute top-0 z-20 flex h-5 w-5 cursor-ew-resize touch-none items-start justify-center"
+                              style={edge === 'in'
+                                ? { left: `calc(${inShare}% - ${fadeIn > 0 ? 10 : 0}px)` }
+                                : { right: `calc(${outShare}% - ${fadeOut > 0 ? 10 : 0}px)` }}
+                              onPointerDown={(event) => {
+                                event.stopPropagation();
+                                grab(event);
+                                held.current = { what: 'fade', id: lane.id, edge };
+                                setShowing(lane.id);
+                              }}
+                              onKeyDown={(event) => {
+                                const now = edge === 'in' ? fadeIn : fadeOut;
+                                const step = event.key === 'ArrowRight' ? (edge === 'in' ? 0.25 : -0.25)
+                                  : event.key === 'ArrowLeft' ? (edge === 'in' ? -0.25 : 0.25) : 0;
+                                if (!step) return;
+                                event.preventDefault();
+                                const next = Math.max(0, Math.min(plays / 2, now + step));
+                                onChange(lane.id, edge === 'in' ? { fadeIn: next } : { fadeOut: next });
+                              }}
+                            >
+                              <svg viewBox="0 0 10 10" className="h-3 w-3" aria-hidden>
+                                <polygon points={edge === 'in' ? '0,0 10,0 0,10' : '0,0 10,0 10,10'} fill="#ffffff" stroke="rgba(0,0,0,0.6)" strokeWidth="1" />
+                              </svg>
+                            </span>
+                          ))}
+                        </>
+                      );
+                    })()}
                     {(['from', 'to'] as const).map((edge) => (
                       <span
                         key={edge}

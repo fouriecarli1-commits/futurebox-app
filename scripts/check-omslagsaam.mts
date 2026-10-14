@@ -100,7 +100,7 @@ ok('the tick is on by default, which is what "standard" means',
   'the box starts empty, so a cover is still a thing to go and find');
 
 ok('  and the button says what the press costs, both halves',
-  /songCost\(seconds\) \+ \(wantCover \? CREDITS\.cover : 0\)/.test(room),
+  /songCost\(seconds(?:, singer)?\) \+ \(wantCover \? CREDITS\.cover : 0\)/.test(room),
   'the tick adds credits and the button does not say so — a quiet two'
   + ' credits is exactly the surprise this app does not do');
 

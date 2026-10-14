@@ -1055,9 +1055,17 @@ export default function ArtMarket(): React.ReactElement {
                             <button
                               type="button"
                               className={`${VUL} mt-3`}
-                              onClick={() => void pay({ kind: 'commission', offer: thread.offer?.id })}
+                              onClick={() => void pay({ kind: 'commission', offer: thread.offer?.id, by: 'card' })}
                             >
-                              {t('art.pay')} R{thread.offer.rand}
+                              {t('art.pay')} R{thread.offer.rand} · {t('art.byCard')}
+                            </button>
+                            <button
+                              type="button"
+                              data-commissioneft
+                              className={`${LEEG} mt-2 w-full`}
+                              onClick={() => void pay({ kind: 'commission', offer: thread.offer?.id, by: 'eft' })}
+                            >
+                              {t('art.byEft')} · R{thread.offer.rand}
                             </button>
                             {/* Carli: *"Op album art moet die kunstenaar 'n aanbod
                                 kan afkeer, asook die koper. Daardie knoppies is
@@ -1200,7 +1208,7 @@ export default function ArtMarket(): React.ReactElement {
           piece={sheet}
           artist={market?.artists.find((one) => one.id === sheet.artist) ?? null}
           onClose={() => setSheet(null)}
-          onBuy={() => void pay({ kind: 'art', work: sheet.id })}
+          onBuy={(by) => void pay({ kind: 'art', work: sheet.id, by })}
           onBuyCredits={() => {
             void doIt({ what: 'buy', work: sheet.id }).then((ok) => {
               if (!ok) return;
@@ -1326,7 +1334,8 @@ function WorkSheet({
   readonly piece: WallPiece;
   readonly artist: Artist | null;
   readonly onClose: () => void;
-  readonly onBuy: () => void;
+  /** Card or EFT: Paystack takes both, and shows only the one asked for. */
+  readonly onBuy: (by: 'card' | 'eft') => void;
   /** The same piece, paid in credits worth the same R280. */
   readonly onBuyCredits: () => void;
   /** Take the once-off pass that makes somebody a bidder. */
@@ -1421,8 +1430,16 @@ function WorkSheet({
               the piece is here and it costs R280 — and a sold piece is
               not on the wall at all, so there is nothing to say about
               one. */}
-          <button type="button" onClick={onBuy} className={VUL}>
-            {t('art.buyIt')} · R{ART_RAND}
+          {/* ── Card, EFT, or credits ──────────────────────────────────
+              Carli, 14 October 2026: *"give a choice, to pay the art via
+              eft, or with credits."* Card and EFT both go through Paystack,
+              which shows only the way chosen here; credits never leave the
+              app. */}
+          <button type="button" onClick={() => onBuy('card')} data-buycard className={VUL}>
+            {t('art.buyIt')} · R{ART_RAND} · {t('art.byCard')}
+          </button>
+          <button type="button" onClick={() => onBuy('eft')} data-buyeft className={`${LEEG} mt-2 w-full`}>
+            {t('art.byEft')} · R{ART_RAND}
           </button>
           {/* ── Or the same R280 in credits ────────────────────────────
               Carli, 13 October 2026: *"die keuse gee R280 cash, of ons

@@ -159,6 +159,10 @@ export const CREDITS = {
      Credits are whole numbers at R1.49 (the cheapest plan's rate), so a rand
      figure cannot always be hit exactly. Each is the nearest credit, and the
      rand it really lands on is written beside it. */
+  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+     wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
+  /* A song from Google Lyria 3 Pro: one flat price, "High, I choose 8". Lyria
+     charges per song, not per minute, so this is not multiplied by length. */
   song: 8,
   /**
    * The free format: one minute, watermarked. Half a song, and the whole point
@@ -166,7 +170,21 @@ export const CREDITS = {
    */
   /* Four, because a song is this a minute and she put a two-minute song at
      R11.50. R5.96 against R2.76 of ElevenLabs, which keeps R3.20. */
-  halfSong: 4,
+  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+     wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
+  /* A one-minute ElevenLabs song, "7". Each minute after the first is
+     `songMinute`, so a two-minute ElevenLabs song is her "Medium 15". */
+  halfSong: 7,
+  /** Each ElevenLabs minute after the first. 7 + 8 = 15 for two minutes. */
+  songMinute: 8,
+  /* The kids room, Carli, 14 October 2026: "maak al die kids songs 8
+     credits" — one price whichever engine sings it, for the one-minute song
+     the kids room asks for. */
+  kidSong: 8,
+  /* "Bring video af na 'n 36% margin": ten seconds of Veo Lite cost about
+     R8; nine credits (R13.41) is the nearest whole price at or above 36%,
+     and lands at 40%. Only the kids room's ten-second plain video. */
+  kidVideo: 9,
   /**
    * **Five seconds** from the video engine, at the base grade. A unit, not a
    * clip — see `videoCost`.
@@ -193,7 +211,11 @@ export const CREDITS = {
    * dearest one it may pick is the only way the number on the button is safe
    * whichever answers.
    */
-  video: 15,
+  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+     wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
+  /* Five seconds of Veo Lite, "18". The better and premium grades are
+     their own numbers now (`VIDEO_GRADES`), "30" and "60". */
+  video: 18,
   /**
    * A cover for a song.
    *
@@ -499,7 +521,10 @@ export const CREDITS = {
      margin while everything else in the app sat between 73% and 98%. They
      are the thinnest lines and the most-pressed buttons, which is the worst
      pair of facts to have together. */
-  stems: 6,
+  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+     wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
+  /* "Split stems – 8", the row that also carried the clean and the voice change. */
+  stems: 8,
   /** Hearing what was actually sung, per minute. Their speech-to-text. */
   /* Carli, 11 October 2026: *"Transcribing per minute = R4.50"*. Three
      credits is R4.47, three cents under her figure and the nearest whole
@@ -509,14 +534,17 @@ export const CREDITS = {
      is the point she made about multiples: it was already forty-four times
      and keeping R2.91, which is less actual money than almost anything else
      in the app. A ratio is not a wage. */
-  transcribe: 3,
+  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+     wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
+  /* "Read the words, gemini listener - 4". Per minute. */
+  transcribe: 4,
   /** Taking the room out of a recording, per minute. Their voice isolator. */
   /* Six, with stems and the voice change — her one decision covers all
      three, and they share one supplier and one per-minute rate. */
-  clean: 6,
+  clean: 8,
   /** A recording said again in another voice, per minute. */
   /* Six, with stems and cleaning. Same decision, same supplier. */
-  voiceChange: 6,
+  voiceChange: 8,
   /**
    * A recording *sung* again in another voice, per minute. Kits.AI.
    *
@@ -539,7 +567,9 @@ export const CREDITS = {
      So six, with them. R8.94 against R1.60 of Kits, which keeps R7.34 — the
      fattest margin of the four, because Kits is the cheapest supplier of
      them. */
-  sing: 6,
+  /* Raised with the voice change, 14 October 2026: the singing engine is the
+     better one and must never be the cheaper (`check:sing`). */
+  sing: 8,
   /** Making a voice from a minute of somebody reading. Estimated. */
   clone: 20,
   /** Training a sound of your own. Estimated, and deliberately high. */
@@ -612,7 +642,9 @@ export const CREDITS = {
    * the first number to check against a real invoice. Deliberately not lower
    * than `stems`: it is a heavier job than splitting a voice off.
    */
-  read: 6,
+  /* Raised with the stems, 14 October 2026: the read is the heavier job and
+     must never cost less than a split (`check:kredietkoste`). */
+  read: 8,
   /** Splitting a song into named parts rather than two. Per minute. */
   parts: 8,
 
@@ -746,7 +778,10 @@ export const CREDITS = {
    * It was 10 first — the price of one song, which said a month of marketing
    * for a business is worth the same as one song — then 40.
    */
-  marketPlan: 75,
+  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+     wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
+  /* She chose 15 after hearing it stood at 75, not the 40 the chart showed. */
+  marketPlan: 15,
   /**
    * Eight advert lines written against a brief. Per roll.
    *
@@ -903,7 +938,10 @@ export const CREDITS = {
    * Priced from a published page rather than an invoice, like `cutout`, and
    * `check:kredietkoste` holds it against that page.
    */
-  repaint: 5,
+  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+     wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
+  /* "Picture google – 6". */
+  repaint: 6,
   /**
    * Finding the things in a photograph so one can be lifted out.
    *
@@ -991,12 +1029,21 @@ export type VideoGrade = 'standard' | 'better' | 'premium';
  * is the only property that matters here. A price that moves when you change
  * the length and a charge that does not is worse than a flat price.
  */
+/**
+ * Five seconds of each grade of video. Carli, 14 October 2026: Veo Lite
+ * "18", the better grade "30", Veo Quality "60" — set one by one off the
+ * margin chart rather than as multiples of the first, which is why this is a
+ * table and no longer `video` times two and four.
+ */
+export const VIDEO_GRADES: Readonly<Record<VideoGrade, number>> = {
+  standard: CREDITS.video,
+  better: 30,
+  premium: 60,
+};
+
 export function videoCost(grade: VideoGrade, seconds: number): number {
   const units = Math.max(1, Math.ceil(Math.max(0, seconds) / 5));
-  const base = CREDITS.video * units;
-  if (grade === 'premium') return base * 4;
-  if (grade === 'better') return base * 2;
-  return base;
+  return VIDEO_GRADES[grade] * units;
 }
 
 /**
@@ -1018,8 +1065,25 @@ export function presenterCost(seconds: number): number {
   return videoCost('better', seconds);
 }
 
-export function songCost(seconds: number): number {
-  return Math.max(CREDITS.halfSong, Math.ceil(Math.max(0, seconds) / 60) * CREDITS.halfSong);
+/** Which engine sings a song: ElevenLabs, or Google Lyria. */
+export type SongEngine = 'eleven' | 'google';
+
+/**
+ * What a song costs, by the engine that will sing it.
+ *
+ * Carli, 14 October 2026: ElevenLabs "Medium 15" for a two-minute song and a
+ * half song at "7"; Google "High, I choose 8". ElevenLabs bills by the minute,
+ * so its songs are priced by the minute — the first at `halfSong`, each after
+ * it at `songMinute`. Lyria bills one price per song up to about three
+ * minutes, so a Google song is `song` whatever its length.
+ *
+ * ElevenLabs is the default because it is the dearer of the two: a screen that
+ * does not yet know the engine shows the higher price, never the lower.
+ */
+export function songCost(seconds: number, engine: SongEngine = 'eleven'): number {
+  if (engine === 'google') return CREDITS.song;
+  const minutes = Math.max(1, Math.ceil(Math.max(0, seconds) / 60));
+  return CREDITS.halfSong + (minutes - 1) * CREDITS.songMinute;
 }
 
 /**

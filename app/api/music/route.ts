@@ -33,7 +33,7 @@ import { CHOSEN, COSTS, configured as googleOn } from '@/app/lib/server/google';
 import { enough as enoughGoogle, note as noteGoogle } from '@/app/lib/server/googlespend';
 import { makeSong, saidHeader } from '@/app/lib/server/lyria';
 import { cannot, promptFor } from '@/app/lib/server/lyriaprompt';
-import { songCost } from '@/app/lib/credits';
+import { songCost , CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
@@ -278,6 +278,10 @@ export async function POST(request: Request): Promise<Response> {
 
      A song with no words at all — an instrumental — has nothing to read,
      so it follows the switch. */
+  /* The kids room's song, one price whichever engine sings it — Carli, 14
+     October 2026: "maak al die kids songs 8 credits". Only for what the kids
+     room asks for: a song of a minute or less. */
+  const kidsSong = (body as { kids?: unknown }).kids === true && length <= 60;
   const sung = (body.sections ?? [])
     .flatMap((one) => one.lines ?? [])
     .join('\n');
@@ -304,7 +308,8 @@ export async function POST(request: Request): Promise<Response> {
         { status: 429 },
       );
     }
-    const bill = await charge(request, songCost(length), 'song');
+    /* Lyria is one price per song, whatever its length — `songCost` says so. */
+    const bill = await charge(request, kidsSong ? CREDITS.kidSong : songCost(length, 'google'), 'song');
     if (!bill.ok) return bill.response;
 
     const asked = promptFor(body);
@@ -333,7 +338,7 @@ export async function POST(request: Request): Promise<Response> {
   // Paid for before a byte is asked for, and given back below if the engine
   // then refuses. Charging afterwards would hand free work to whoever is
   // quickest, because two requests can both pass a check that is not a write.
-  const paid = await charge(request, songCost(length), 'song');
+  const paid = await charge(request, kidsSong ? CREDITS.kidSong : songCost(length), 'song');
   if (!paid.ok) return paid.response;
 
   /* ── Out of the one door, which this call never went through ──────
@@ -454,5 +459,10 @@ export async function POST(request: Request): Promise<Response> {
 
 /** Whether a key is set, so the studio can offer the real thing or not. */
 export async function GET(): Promise<Response> {
-  return Response.json({ available: ready('music') });
+  /* And which engine a song with English words goes to, so a screen can say
+     the price it will really be charged: ElevenLabs and Google are priced
+     differently since 14 October 2026. Afrikaans words always go to
+     ElevenLabs, which the screen works out from the words itself. */
+  const google = (process.env.MUSIC_ENGINE ?? '').trim().toLowerCase() === 'google' && googleOn();
+  return Response.json({ available: ready('music'), engine: google ? 'google' : 'eleven' });
 }

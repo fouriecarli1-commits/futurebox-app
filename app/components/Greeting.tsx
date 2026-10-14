@@ -39,7 +39,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Sparkles, Sliders, Mic, Video, Clapperboard, Smartphone, ListMusic,
   Handshake, Radio, Mic2, AudioWaveform, Megaphone, Palette, ArrowRight, Scissors,
-  Image as ImageIcon, Baby,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { habitOf, suggest, partOfDay, type Habit } from '../lib/habits';
@@ -380,40 +380,10 @@ export default function Greeting({
       </div>
 
 
-      {/* ── The kids room, where it cannot be missed ───────────────────── */}
-      <a
-        href="/kids"
-        data-kidsdoorhome
-        className="group relative overflow-hidden flex min-h-[44px] flex-col items-stretch rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-950/20 to-zinc-950 p-0 transition-all hover:border-emerald-400/70"
-      >
-        {/* Her picture, 13 October 2026, one per language. */}
-        <img
-          src={lang === 'af' ? '/kids/banner-af.jpg' : '/kids/banner-en.jpg'}
-          alt=""
-          aria-hidden="true"
-          className="block aspect-[2000/520] w-full object-cover"
-          loading="lazy"
-        />
-        <span className="flex items-center gap-4 p-4">
-        <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl border border-emerald-500/50 bg-emerald-500/20 shadow-[0_0_15px_rgba(52,211,153,0.3)] transition-transform group-hover:scale-105">
-          <Baby className="h-6 w-6 text-emerald-300" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
-            <span className="block text-base font-black leading-tight text-white">
-              {t('hello.kids', 'The kids room')}
-            </span>
-            <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
-              {t('hello.kidsSafe', 'Safe studio')}
-            </span>
-          </span>
-          <span className="block pt-0.5 text-xs leading-snug text-zinc-300">
-            {t('hello.kidsHint', 'Set an allowance and a clock, then hand the phone over. Six doors in there: music, videos and stories, drawing, games, editing and quizzes.')}
-          </span>
-        </span>
-        <ArrowRight className="h-5 w-5 flex-shrink-0 text-emerald-300 transition-transform group-hover:translate-x-1.5" />
-        </span>
-      </a>
+      {/* The kids room has no door here. Carli, 14 October 2026: "Die kids
+          room met sy aparte credits moet net van die welcoming page af
+          geaccess kan word. Dit moenie binne die app geaccess kan word nie."
+          Its one door is the banner on the signed-out welcome page. */}
 
       {/* ── Or straight to a room ────────────────────────────────────────── */}
       <div className="space-y-4">

@@ -175,7 +175,7 @@ export default function Guide(): React.ReactElement {
             that had it. */}
         <div className="space-y-2 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-5" data-guidekids>
           <h3 className="text-lg font-bold text-white">
-            <Link href="/kids" className="hover:text-amber-200">{t('hello.kids', 'The kids room')}</Link>
+            {t('hello.kids', 'The kids room')}
           </h3>
           <p className="text-sm leading-relaxed text-zinc-400">
             {t(

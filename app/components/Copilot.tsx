@@ -135,6 +135,12 @@ export default function Copilot({
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    /* Only when there is a conversation to follow. Clearing it when the room
+       changes is also a change to `turns`, and scrolling to the end of an
+       empty conversation pulled the whole page down to the copilot every
+       time a room opened — `audit/roomtop.mjs` measured rooms opening
+       1,405 pixels down. */
+    if (turns.length === 0 && !busy) return;
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [turns, busy]);
 

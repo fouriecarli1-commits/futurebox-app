@@ -32,14 +32,17 @@ export const maxDuration = 30;
 const PAYSTACK = 'https://api.paystack.co/transaction/initialize';
 
 /** What can be bought, and what it costs. Decided here, in rand. */
+/** How a piece of art is paid for at the till, when the buyer chose. */
+type PayBy = 'card' | 'eft';
+
 type Want =
   | { kind: 'plan'; tier: Tier }
   | { kind: 'credits'; pack: string }
   /* A piece of album art off the wall. The request names WHICH piece; what
      it costs is read out of the row, like everything else here. */
-  | { kind: 'art'; work: string }
+  | { kind: 'art'; work: string; by?: PayBy }
   /* A commissioned one-off, at the price its artist named. */
-  | { kind: 'commission'; offer: string }
+  | { kind: 'commission'; offer: string; by?: PayBy }
   /* The once-off R50 that makes somebody a bidder. */
 
 /**
@@ -292,6 +295,13 @@ export async function POST(request: Request): Promise<Response> {
         // app did before subscriptions existed.
         ...(want.kind === 'plan' && planCode(want.tier)
           ? { plan: planCode(want.tier) }
+          : {}),
+        /* Card or EFT, when the buyer chose one. Carli, 14 October 2026:
+           album art paid "via eft, or with credits". Paystack then shows only
+           that way to pay; with nothing chosen it shows every way the account
+           has switched on, which is what every other checkout here does. */
+        ...((want.kind === 'art' || want.kind === 'commission') && (want.by === 'eft' || want.by === 'card')
+          ? { channels: [want.by] }
           : {}),
         // Read back verbatim by the webhook. This is what ties a payment to a
         // person and a track; without it a successful charge has nowhere to go.
