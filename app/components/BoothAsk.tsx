@@ -114,15 +114,24 @@ export default function BoothAsk({
       {/* Quick AI Suggestions Chips */}
       <div className="space-y-1.5 pt-1">
         <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400/80">
-          {t('ask.quickTips', 'Quick suggestions')}
+          {t('ask.proTips', 'Ask it like an engineer')}
         </p>
         <div className="flex flex-wrap gap-1.5">
+          {/* Carli, 14 October 2026: "Copilot in daardie booth moet dan ook
+              goeie suggestions hê vir professionals om te vra." Each one is
+              something this desk can actually do — a fader, a pan, or an
+              effect on a lane switched on or off — said the way an engineer
+              would ask for it. Nothing here asks it to listen, because it
+              cannot. */}
           {([
-            ['ask.chipVoice', 'Lift the voice above drums and bass'],
-            ['ask.chipMuddiness', 'Clean up muddy low-end frequencies'],
-            ['ask.chipSpace', 'Create an expansive stereo atmosphere'],
-            ['ask.chipWarmth', 'Add warm tape saturation and analog glue'],
-            ['ask.chipPunch', 'Make drums punchier with tighter dynamics'],
+            ['ask.proVocal', 'Sit the lead vocal two dB over the band and glue it with a compressor'],
+            ['ask.proKick', 'Make room for the kick: bass down a touch, compressed, and EQ on it'],
+            ['ask.proWide', 'Kick, bass and lead vocal in the centre; guitars and keys panned wide'],
+            ['ask.proDepth', 'Push the backing vocals back with reverb and a short delay'],
+            ['ask.proGlue', 'Gentle saturation on the drums and the bass for analog glue'],
+            ['ask.proPeaks', 'A limiter on the loudest lanes so nothing clips before I export'],
+            ['ask.proMud', 'Clear the low-mid mud: EQ the pads and the guitars, pull them back'],
+            ['ask.proStream', 'Balance it for streaming: nothing louder than the vocal, peaks under control'],
           ] as const).map(([k, fallback]) => {
             const promptText = t(k, fallback);
             return (

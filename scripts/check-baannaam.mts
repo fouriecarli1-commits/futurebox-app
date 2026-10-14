@@ -185,7 +185,7 @@ ok('a lane can be taken away as sound or as notes',
   + ' wav"');
 
 ok('  and the WAV is the same piece the mixdown uses',
-  /encodeWav\(piece, 'stereo'\)/.test(room) && /pieceOf\(lane, ctx\)/.test(room),
+  /encodeWav\(piece, 'stereo'(, depth)?\)/.test(room) && /pieceOf\(lane, ctx\)/.test(room),
   'a file built from anything but `pieceOf` is a file that can disagree with'
   + ' the song about what this lane is');
 

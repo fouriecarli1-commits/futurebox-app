@@ -245,10 +245,13 @@ export const FLAT_MASTER: Master = { gain: 1, ceilingDb: -1, matchLoudness: fals
  * @returns the node lanes connect INTO. Its far end is already connected to
  *   the context's destination.
  */
-export function wireMaster(ctx: BaseAudioContext, master: Master, level: number): AudioNode {
+export function wireMaster(ctx: BaseAudioContext, master: Master, level: number, tap?: AudioNode): AudioNode {
   const fader = ctx.createGain();
   fader.gain.value = level;
   fader.connect(ctx.destination);
+  /* What the live picture listens to: the very sound going out, after the
+     fader. Only playback passes one; the render has nobody to show it to. */
+  if (tap) fader.connect(tap);
 
   let head: AudioNode = fader;
 
@@ -859,6 +862,82 @@ export function fadedCopy(
     for (let i = 0; i < from.length; i += 1) {
       const part = i / last;
       into[i] = from[i] * (way === 'in' ? part : 1 - part);
+    }
+  }
+  return out;
+}
+
+/**
+ * A copy of a piece whose loudness glides from its start to its end.
+ *
+ * Carli, 14 October 2026: *"Daai drag lines om sekere gedeeltes te verbeter,
+ * of om oorgange uit te smooth."* A transition that jumps — a verse that
+ * comes in louder than the chorus left off, a join between two takes —
+ * marked, and smoothed: the level at the front of the mark and the level at
+ * the end of it are measured, and everything between is brought onto a
+ * straight line from one to the other. The ends are left where they were,
+ * so nothing either side of the mark moves and there is no new click.
+ *
+ * Measured in 50 ms windows and the correction itself smoothed, so it rides
+ * the level the way a hand on a fader would rather than pumping on every
+ * drum hit. Never more than four times up or down: a gap of silence inside
+ * the mark is a gap, not something to be turned up into hiss.
+ */
+export function smoothedCopy(buffer: AudioBuffer, ctx: BaseAudioContext): AudioBuffer {
+  const rate = buffer.sampleRate;
+  const frames = buffer.length;
+  const out = ctx.createBuffer(buffer.numberOfChannels, frames, rate);
+  const hop = Math.max(1, Math.round(rate * 0.05));
+  const windows = Math.max(1, Math.ceil(frames / hop));
+
+  /* The level in each window, all channels together. */
+  const level = new Float32Array(windows);
+  for (let w = 0; w < windows; w += 1) {
+    let sum = 0;
+    let count = 0;
+    for (let c = 0; c < buffer.numberOfChannels; c += 1) {
+      const data = buffer.getChannelData(c);
+      for (let i = w * hop; i < Math.min(frames, (w + 1) * hop); i += 1) { sum += data[i] * data[i]; count += 1; }
+    }
+    level[w] = Math.sqrt(sum / Math.max(1, count));
+  }
+  const edge = Math.max(1, Math.min(5, Math.floor(windows / 4)));
+  const mean = (from: number, to: number): number => {
+    let sum = 0;
+    for (let w = from; w < to; w += 1) sum += level[w];
+    return sum / Math.max(1, to - from);
+  };
+  const start = mean(0, edge);
+  const end = mean(windows - edge, windows);
+
+  /* The gain each window wants, then a running average over a quarter of a
+     second so it moves like a hand and not like a gate. */
+  const want = new Float32Array(windows);
+  for (let w = 0; w < windows; w += 1) {
+    const target = start + (end - start) * (windows > 1 ? w / (windows - 1) : 0);
+    want[w] = level[w] > 1e-4 ? Math.min(4, Math.max(0.25, target / level[w])) : 1;
+  }
+  const reach = 2;
+  const gain = new Float32Array(windows);
+  for (let w = 0; w < windows; w += 1) {
+    let sum = 0;
+    let count = 0;
+    for (let k = Math.max(0, w - reach); k <= Math.min(windows - 1, w + reach); k += 1) { sum += want[k]; count += 1; }
+    gain[w] = sum / count;
+  }
+  /* The very ends are pinned to where they were, so the joins stay seamless. */
+  gain[0] = 1;
+  gain[windows - 1] = 1;
+
+  for (let c = 0; c < buffer.numberOfChannels; c += 1) {
+    const from = buffer.getChannelData(c);
+    const into = out.getChannelData(c);
+    for (let i = 0; i < frames; i += 1) {
+      const place = i / hop;
+      const w = Math.min(windows - 1, Math.floor(place));
+      const next = Math.min(windows - 1, w + 1);
+      const g = gain[w] + (gain[next] - gain[w]) * (place - w);
+      into[i] = from[i] * g;
     }
   }
   return out;

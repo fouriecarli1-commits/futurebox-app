@@ -19,9 +19,9 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
-  FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, lengthOf, mixSession, monoOf, pieceOf,
+  FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, smoothedCopy, lengthOf, mixSession, monoOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
@@ -44,7 +44,9 @@ import type { VoiceState } from './VoiceLab';
 import { CREDITS, perMinute } from '../lib/credits';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepsession';
-import { encodeWav } from '../lib/wav';
+import { encodeWav, type Depth } from '../lib/wav';
+import { zipOf } from '../lib/zip';
+import BoothScope from './BoothScope';
 import { transitionsIn } from '../lib/transitions';
 import { midiBlob, midiFor, type Source } from '../lib/midi';
 import { LAYOUTS, layoutById, type Layout } from '../lib/channels';
@@ -102,6 +104,13 @@ function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
+
+/** The three qualities a stem or a mix can be written in. See `Depth` in lib/wav.ts. */
+const DEPTHS: readonly { readonly id: Depth; readonly label: readonly [string, string]; readonly note: readonly [string, string] }[] = [
+  { id: 16, label: ['pro.depth16', '16-bit'], note: ['pro.depth16Note', 'CD quality. The smallest file, and it plays anywhere.'] },
+  { id: 24, label: ['pro.depth24', '24-bit'], note: ['pro.depth24Note', 'Studio quality, for handing to somebody who will mix it again. Half as big again.'] },
+  { id: 32, label: ['pro.depth32', '32-bit float'], note: ['pro.depth32Note', 'Nothing rounded and nothing clipped: a peak over full is kept to be turned down later. Twice the size of 16-bit.'] },
+];
 
 export default function ProBooth({
   title,
@@ -365,6 +374,8 @@ export default function ProBooth({
   const trim = reading && !stale ? reading.trim : 1;
 
   const ctxRef = useRef<AudioContext | null>(null);
+  /** The live picture's ear on the master, made with the context. */
+  const scopeRef = useRef<AnalyserNode | null>(null);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
   const startedRef = useRef({ at: 0, from: 0 });
   const streamRef = useRef<MediaStream | null>(null);
@@ -568,7 +579,12 @@ export default function ProBooth({
          it. The click is deliberately not on this bus: a metronome that got
          quieter when the master came down would be a metronome you stop being
          able to hear exactly when you need it. */
-      const bus = wireMaster(ctx, master, master.gain * trim);
+      if (!scopeRef.current || scopeRef.current.context !== ctx) {
+        scopeRef.current = ctx.createAnalyser();
+        scopeRef.current.fftSize = 2048;
+        scopeRef.current.smoothingTimeConstant = 0.78;
+      }
+      const bus = wireMaster(ctx, master, master.gain * trim, scopeRef.current);
 
       audible(lanes).forEach((lane) => {
         const source = wireLane(ctx, lane, bus);
@@ -907,6 +923,73 @@ export default function ProBooth({
    * with no notes in it is a file somebody opens in a week and cannot tell
    * from a broken export.
    */
+  /* ── The quality a file is written in ─────────────────────────────
+     Carli, 14 October 2026, from the ProBooth design she sent: the stems
+     and the mix come out at the quality she picks. Remembered on this
+     device, because somebody who works in 24-bit works in 24-bit every
+     time; the storage can be missing, so 16 stands when it is. */
+  const [depth, setDepthState] = useState<Depth>(16);
+  useEffect(() => {
+    try {
+      const kept = Number(window.localStorage.getItem('fb.booth.depth'));
+      if (kept === 24 || kept === 32) setDepthState(kept);
+    } catch { /* private window: 16 it is */ }
+  }, []);
+  const setDepth = (next: Depth): void => {
+    setDepthState(next);
+    try { window.localStorage.setItem('fb.booth.depth', String(next)); } catch { /* kept for this visit only */ }
+  };
+  const depthPicker = (
+    <div className="space-y-1.5" data-exportquality>
+      <p className="text-xs font-semibold" style={{ color: INK_DIM }}>
+        {t('pro.depthTitle', 'Quality of the file')}
+      </p>
+      <div className="grid grid-cols-3 gap-2">
+        {DEPTHS.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            data-exportdepth={one.id}
+            aria-pressed={depth === one.id}
+            onClick={() => setDepth(one.id)}
+            className={`h-[44px] min-w-0 truncate rounded-xl border px-2 text-xs font-bold ${
+              depth === one.id
+                ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
+                : 'border-zinc-700 bg-zinc-900 text-zinc-200'
+            }`}
+          >
+            {t(one.label[0], one.label[1])}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs leading-snug" style={{ color: INK_DIM }}>
+        {(() => {
+          const chosen = DEPTHS.find((one) => one.id === depth) ?? DEPTHS[0];
+          return t(chosen.note[0], chosen.note[1]);
+        })()}
+      </p>
+    </div>
+  );
+
+  /** Every lane in one .zip, at the chosen quality — one download, not one per lane. */
+  const saveAll = async (): Promise<void> => {
+    const ctx = context();
+    if (!ctx) {
+      setProblem(t('pro.noAudio', 'This browser would not start its audio.'));
+      return;
+    }
+    const taken = new Set<string>();
+    const entries = lanes.map((lane) => {
+      const named = lane.name.trim() || t('pro.laneOne', 'Lane');
+      let file = safeFilename(named, 'wav');
+      for (let n = 2; taken.has(file); n += 1) file = safeFilename(`${named} ${n}`, 'wav');
+      taken.add(file);
+      return { name: file, data: encodeWav(pieceOf(lane, ctx), 'stereo', depth) };
+    });
+    const zip = await zipOf(entries);
+    downloadBlob(zip, safeFilename(`${title || t('pro.untitled', 'song')} stems ${depth}-bit`, 'zip'));
+  };
+
   const saveLane = async (lane: Lane, what: 'wav' | 'midi'): Promise<void> => {
     const ctx = context();
     if (!ctx) {
@@ -916,7 +999,7 @@ export default function ProBooth({
     const piece = pieceOf(lane, ctx);
     const named = lane.name.trim() || t('pro.laneOne', 'Lane');
     if (what === 'wav') {
-      downloadBlob(encodeWav(piece, 'stereo'), safeFilename(named, 'wav'));
+      downloadBlob(encodeWav(piece, 'stereo', depth), safeFilename(named, 'wav'));
       return;
     }
     const source: Source = lane.notes?.length ? 'exact' : 'heard';
@@ -1805,7 +1888,7 @@ export default function ProBooth({
         return false;
       }
       if (!(await payFor(mixed.duration))) return false;
-      const blob = encodeWav(mixed, layout);
+      const blob = encodeWav(mixed, layout, depth);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -1819,7 +1902,7 @@ export default function ProBooth({
          phone's downloads folder telling you nothing about the one thing
          you downloaded them to tell apart. Stereo keeps its plain name so
          nothing about the existing file changes. */
-      link.download = `${safe || 'song'}${layout === 'stereo' ? '' : ` (${layout})`}.wav`;
+      link.download = `${safe || 'song'}${layout === 'stereo' ? '' : ` (${layout})`}${depth === 16 ? '' : ` (${depth}-bit)`}.wav`;
       link.click();
       URL.revokeObjectURL(url);
       return true;
@@ -2175,18 +2258,60 @@ export default function ProBooth({
    * them already take a lane and send `pieceOf` it; there is nothing to
    * change in either.
    */
+  /* Up to three at once (Carli, 14 October 2026: "die ai magic vir
+     humming wat weer stems create"): one hum, played back as a stem per
+     instrument, each on a lane of its own. A fourth press replaces the
+     oldest, so the list never needs emptying first. */
+  const [humVoices, setHumVoices] = useState<VoiceId[]>(['bass']);
+  const pickHumVoice = (id: VoiceId): void => setHumVoices((was) => (
+    was.includes(id)
+      ? (was.length > 1 ? was.filter((one) => one !== id) : was)
+      : [...was, id].slice(-3)
+  ));
+
+  const [humming, setHumming] = useState(false);
+  /* `humIt` is made further down, with the hum card it belongs to; the
+     marked piece reaches it through this, filled in once it exists. */
+  const humRef = useRef<((piece?: { audio: AudioBuffer; at: number }) => Promise<void>) | null>(null);
+
   const regionSend = useCallback(
-    (what: 'voice' | 'parts') => {
+    (what: 'voice' | 'parts' | 'clean' | 'change' | 'hum') => {
+      const ctx = context();
       const got = carveHere();
-      if (!got) return;
+      if (!got || !ctx) return;
       const { before, inside, after } = got.carved;
       commit(t('undo.mark', 'die merk van die stuk'), got.lane.id, [before, inside, after]);
       setPicked(inside.id);
       setRegionOpen(false);
-      void (what === 'voice' ? split(inside) : intoParts(inside));
+      if (what === 'voice') void split(inside);
+      else if (what === 'parts') void intoParts(inside);
+      else if (what === 'clean') void deRoom(inside);
+      else if (what === 'change') setChanging(inside);
+      else void humRef.current?.({ audio: playsOf(inside, ctx), at: inside.at });
     },
-    [carveHere, commit, intoParts, split],
+    [carveHere, commit, context, deRoom, intoParts, split],
   );
+
+  /**
+   * The transition across the mark, smoothed: the level glides from the
+   * front of the mark to its end instead of jumping. Free, and written into
+   * the sound like a fade, so the export has it too. `smoothedCopy` in
+   * lib/session.ts does the measuring.
+   */
+  const regionSmooth = useCallback(() => {
+    const ctx = context();
+    if (!ctx) return;
+    const got = carveHere();
+    if (!got) return;
+    const { before, inside, after } = got.carved;
+    commit(t('undo.smooth', 'die gladde oorgang'), got.lane.id, [
+      before,
+      { ...inside, audio: smoothedCopy(playsOf(inside, ctx), ctx), amped: undefined, from: undefined, to: undefined, repeat: 1 },
+      after,
+    ]);
+    setPicked(inside.id);
+    setRegionOpen(false);
+  }, [carveHere, commit, context]);
 
   /* ── Track controls ──────────────────────────────────────
 
@@ -2668,6 +2793,7 @@ export default function ProBooth({
             return t(chosen.note[0], chosen.note[1]);
           })()}
         </p>
+        {depthPicker}
       </div>
 
       {/* `again`: a second copy in the phone's downloads folder is nothing
@@ -3155,6 +3281,93 @@ export default function ProBooth({
             </div>
 
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4 pt-2">
+              {/* ── AI magic, on the marked piece alone ──────────────────
+                  Carli, 14 October 2026: "Pobooth moet ook die klanke kan
+                  skoon maak, verbeter of verander via AI. Daai drag lines om
+                  sekere gedeeltes te verbeter, of om oorgange uit te smooth."
+                  Each one cuts the mark onto a piece of its own first, so
+                  what changes is what she drew and what is billed is its
+                  length. */}
+              <p className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-emerald-300">
+                <Sparkles className="h-3.5 w-3.5" />
+                {t('pro.magicTitle', 'AI magic on this piece')}
+              </p>
+              {([
+                {
+                  id: 'smooth',
+                  icon: <Waves className="h-4 w-4" />,
+                  title: t('pro.magicSmooth', 'Smooth the transition'),
+                  says: t('pro.magicSmoothWhat', 'The loudness glides from the front of the mark to its end instead of jumping. Free, and written into the sound.'),
+                  price: t('pro.free', 'Free'),
+                  run: regionSmooth,
+                },
+                {
+                  id: 'clean',
+                  icon: <Wand2 className="h-4 w-4" />,
+                  title: t('pro.magicClean', 'Clean it with AI'),
+                  says: t('pro.magicCleanWhat', 'The room, the hum and the noise taken off, so the voice or the instrument is all that is left.'),
+                  price: `${perMinute(Math.max(1, region.to - region.from), CREDITS.clean)} ${t('video.credits', 'credits')}`,
+                  run: () => regionSend('clean'),
+                },
+                {
+                  id: 'change',
+                  icon: <Mic2 className="h-4 w-4" />,
+                  title: t('pro.magicChange', 'Sing it in another voice'),
+                  says: t('pro.magicChangeWhat', 'Pick a voice — your own clone or a studio one — and this piece comes back sung by it, on a lane of its own.'),
+                  price: `${perMinute(Math.max(1, region.to - region.from), CREDITS.voiceChange)}+ ${t('video.credits', 'credits')}`,
+                  run: () => regionSend('change'),
+                },
+                {
+                  id: 'hum',
+                  icon: <Music2 className="h-4 w-4" />,
+                  title: t('pro.magicHum', 'Play it as instruments'),
+                  says: `${t('pro.magicHumWhat', 'The tune in this piece, played by')} ${humVoices.map((id) => { const v = voiceById(id); return v ? t(v.says[0], v.says[1]) : id; }).join(', ')} — ${t('pro.magicHumEach', 'a stem each.')}`,
+                  price: t('pro.free', 'Free'),
+                  run: () => regionSend('hum'),
+                },
+              ] as const).map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  data-regionmagic={one.id}
+                  onClick={one.run}
+                  disabled={busy || humming}
+                  className="flex w-full items-start gap-3 rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-3 text-left disabled:opacity-50"
+                >
+                  <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
+                    {one.icon}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="block text-sm font-bold leading-tight text-white">{one.title}</span>
+                      <span className="flex-shrink-0 text-[11px] font-bold text-emerald-300">{one.price}</span>
+                    </span>
+                    <span className="block pt-0.5 text-xs leading-snug text-zinc-400">{one.says}</span>
+                  </span>
+                </button>
+              ))}
+              <div className="grid grid-cols-3 gap-1.5" data-regionhumvoices>
+                {(['keys', 'strings', 'sax', 'guitar', 'lead', 'choir'] as const).map((id) => {
+                  const v = voiceById(id);
+                  if (!v) return null;
+                  const on = humVoices.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => pickHumVoice(id)}
+                      className={`h-[44px] min-w-0 truncate rounded-lg border px-2 text-xs font-bold ${on ? 'border-sky-400/70 bg-sky-500/10 text-sky-200' : 'border-zinc-700 bg-zinc-900 text-zinc-300'}`}
+                    >
+                      {t(v.says[0], v.says[1])}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="pt-2 text-xs font-bold uppercase tracking-wide text-zinc-600">
+                {t('pro.magicEdit', 'Or edit it')}
+              </p>
               {([
                 {
                   id: 'cut',
@@ -3460,9 +3673,7 @@ export default function ProBooth({
      `lib/humnotes.ts` finds the notes and `lib/huminstrument.ts` plays them;
      `check:neurie` drives both on a hum it synthesises itself. Nothing here
      does any of that work, which is why there is so little of it. */
-  const [humVoice, setHumVoice] = useState<VoiceId>('bass');
   const [humSnap, setHumSnap] = useState(true);
-  const [humming, setHumming] = useState(false);
 
   /* ── Which lane gets played ────────────────────────────────────────────
  
@@ -3483,15 +3694,24 @@ export default function ProBooth({
     ?? [...lanes].reverse().find((one) => !one.backing)
     ?? null;
 
-  const humIt = useCallback(async (): Promise<void> => {
-    const lane = humLane;
-    const voice = voiceById(humVoice);
-    if (!lane || !voice || humming) return;
+  /**
+   * The hum, played as instruments — one lane per instrument picked.
+   *
+   * `piece` is a marked piece from the timeline's AI magic: its own sound,
+   * already cut, and the clock time it starts at. Without one it is the
+   * lane in the hum card, whole, as it always was.
+   */
+  const humIt = useCallback(async (piece?: { audio: AudioBuffer; at: number }): Promise<void> => {
+    const lane = piece ? null : humLane;
+    const source = piece?.audio ?? lane?.audio ?? null;
+    const at = piece?.at ?? lane?.at ?? 0;
+    const voices = humVoices.map((id) => voiceById(id)).filter((one): one is NonNullable<typeof one> => Boolean(one));
+    if (!source || !voices.length || humming) return;
     setHumming(true);
     setProblem(null);
     try {
-      const samples = lane.audio.getChannelData(0);
-      const heard = notesIn(samples, lane.audio.sampleRate);
+      const samples = source.getChannelData(0);
+      const heard = notesIn(samples, source.sampleRate);
       if (!heard.length) {
         setProblem(t(
           'hum.nothing',
@@ -3504,34 +3724,32 @@ export default function ProBooth({
          something usable rather than something faithful. The switch is there
          because a swung or rubato part is the case where it is wrong. */
       const notes = humSnap ? snapTo(heard, meter.bpm) : heard;
-      const played = renderHum(
-        notes,
-        voice,
-        lane.audio.duration,
-        lane.audio.sampleRate,
-      );
-
       const ctx = context();
       if (!ctx) {
         setProblem(t('pro.noAudio', 'This browser would not start its audio.'));
         return;
       }
-      const buffer = ctx.createBuffer(1, played.length, lane.audio.sampleRate);
+      const made: Lane[] = voices.map((voice, n) => {
+      const played = renderHum(
+        notes,
+        voice,
+        source.duration,
+        source.sampleRate,
+      );
+      const buffer = ctx.createBuffer(1, played.length, source.sampleRate);
       /* `set` on the channel rather than `copyToChannel`: one fewer copy,
          and `copyToChannel` wants a `Float32Array<ArrayBuffer>` where a
          plain `Float32Array` is `ArrayBufferLike`, which is a type error
          about shared memory in a function that has never seen any. */
       buffer.getChannelData(0).set(played);
 
-      setLanes((was) => [
-        ...was,
-        {
-          id: `hum-${Date.now()}-${voice.id}`,
+      return {
+          id: `hum-${Date.now()}-${n}-${voice.id}`,
           name: `${t(voice.says[0], voice.says[1])} · ${t('hum.from', 'hummed')}`,
           audio: buffer,
           /* On top of the lane it came from, so it plays with the hum rather
              than after it. Somebody who wanted it elsewhere drags it. */
-          at: lane.at,
+          at,
           gain: 1,
           muted: false,
           soloed: false,
@@ -3539,13 +3757,15 @@ export default function ProBooth({
              fact rather than a reading: re-transcribing our own synthesised
              audio to recover notes we already had is lossy and absurd. */
           notes,
-        },
-      ]);
+        };
+      });
+      setLanes((was) => [...was, ...made]);
       setStale(true);
     } finally {
       setHumming(false);
     }
-  }, [humLane, humVoice, humSnap, humming, meter.bpm, context, t]);
+  }, [humLane, humVoices, humSnap, humming, meter.bpm, context, t]);
+  humRef.current = humIt;
 
   const stemDesk = (
     <>
@@ -3570,19 +3790,13 @@ export default function ProBooth({
             type="button"
             data-prosaveall
             disabled={busy}
-            onClick={() => {
-              void (async () => {
-                for (const lane of lanes) {
-                  await saveLane(lane, 'wav');
-                  await new Promise((done) => setTimeout(done, 400));
-                }
-              })();
-            }}
+            onClick={() => { void saveAll(); }}
             className="inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-4 text-sm font-bold text-emerald-300 disabled:opacity-50"
           >
             <Layers className="h-4 w-4" />
-            {t('pro.saveAll', 'Download every lane')} ({lanes.length})
+            {t('pro.saveAllZip', 'Every lane in one .zip')} ({lanes.length})
           </button>
+          <div className="mt-2">{depthPicker}</div>
           <ul className="mt-2 space-y-1.5">
             {lanes.map((lane) => (
               <li key={lane.id} className="space-y-1">
@@ -3737,18 +3951,18 @@ export default function ProBooth({
                     <button
                       key={one.id}
                       type="button"
-                      onClick={() => setHumVoice(one.id)}
-                      aria-pressed={humVoice === one.id}
+                      onClick={() => pickHumVoice(one.id)}
+                      aria-pressed={humVoices.includes(one.id)}
                       data-humvoice={one.id}
                       data-tidycard
                       className={`block min-h-[44px] w-full rounded-xl border px-3 py-2 text-left ${
-                        humVoice === one.id
+                        humVoices.includes(one.id)
                           ? 'border-sky-400/70 bg-sky-500/10'
                           : 'border-zinc-700 bg-zinc-900'
                       }`}
                     >
                       <span className={`block text-sm font-bold ${
-                        humVoice === one.id ? 'text-sky-200' : 'text-zinc-200'
+                        humVoices.includes(one.id) ? 'text-sky-200' : 'text-zinc-200'
                       }`}
                       >
                         {t(one.says[0], one.says[1])}
@@ -3797,7 +4011,9 @@ export default function ProBooth({
               <Mic2 className="h-4 w-4 flex-shrink-0" />
               {humming
                 ? t('hum.working', 'Listening to it\u2026')
-                : t('hum.go', 'Play it as the instrument')}
+                : humVoices.length > 1
+                  ? `${t('hum.goMany', 'Play it as')} ${humVoices.length} ${t('hum.stems', 'stems')}`
+                  : t('hum.go', 'Play it as the instrument')}
             </button>
           </div>
         </div>
@@ -4453,6 +4669,9 @@ export default function ProBooth({
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* The timeline container */}
         <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
+          {/* The sound, live. Not on a phone held sideways: there the
+              timeline needs every pixel of a short screen. */}
+          {!sideways && <BoothScope ear={scopeRef} playing={playing} />}
           <BoothTimeline
             onMarks={findMarks}
             lanes={lanes}
@@ -4599,10 +4818,10 @@ export default function ProBooth({
             type="button"
             data-regiontools=""
             onClick={() => setRegionOpen(true)}
-            className="min-h-[44px] rounded-xl px-4 py-2 text-sm font-bold"
-            style={{ background: 'rgba(56,189,248,0.22)', color: '#7dd3fc' }}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-black text-onAccent shadow-[0_0_18px_rgba(16,185,129,0.35)]"
           >
-            {t('pro.regionOpen', 'What to do here')}
+            <Sparkles className="h-4 w-4" />
+            {t('pro.regionMagic', 'AI magic')}
           </button>
           <button
             type="button"
@@ -5253,6 +5472,25 @@ function LaneRow({
         right to be annoyed. */}
     {open && (
       <div className="border-t border-zinc-800 px-3 py-2.5 space-y-2">
+        {/* ── The rig, at a glance ───────────────────────────────────────
+            Carli, 14 October 2026, from the TONE3000 page in her ProBooth
+            design: the capture, the cabinet and the pedals as three cards.
+            These are the three things this lane really runs through — the
+            amp capture from the shelf or the catalogue below, the speaker,
+            and the drive of the tone stack — said plainly, with what each
+            is set to now. Every control is still the one further down. */}
+        <div className="grid grid-cols-3 gap-1.5" data-amprig>
+          {([
+            [t('pro.rigAmp', 'Amp capture'), lane.amped?.name ?? t('pro.rigNone', 'None yet'), 'text-amber-300'],
+            [t('pro.rigCab', 'Cabinet'), tone.cabinet ? t('pro.rigCabOn', 'Guitar speaker') : t('pro.rigCabOff', 'Straight'), 'text-teal-300'],
+            [t('pro.rigDrive', 'Drive'), `${Math.round(tone.drive * 100)}%`, 'text-emerald-300'],
+          ] as const).map(([what, now, ink]) => (
+            <div key={what} className="min-w-0 rounded-lg border border-amber-500/20 bg-zinc-900/80 p-2">
+              <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{what}</span>
+              <span className={`block truncate text-xs font-bold ${ink}`}>{now}</span>
+            </div>
+          ))}
+        </div>
         {/* ── Taking things off, before shaping what is left ─────────────
 
             Carli: "by die booth moet daar oor die algemeen ook reverb, echo en
