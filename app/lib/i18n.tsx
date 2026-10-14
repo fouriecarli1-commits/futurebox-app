@@ -2688,6 +2688,8 @@ export const STRINGS: Dict = {
   "shape.styleAge": { en: "The looks are reviewed by a person, not read off a trends page.", af: "Die style is menslik nagegaan, nie van ’n neigingsblad af gelees nie." },
   "shape.oldest": { en: "The oldest entry is", af: "Die oudste inskrywing is" },
   "shape.daysOld": { en: "days old.", af: "dae oud." },
+  "dest.format.google_ads": { en: "Responsive Search (15 headlines \u226430c, 4 descriptions \u226490c) & YouTube video (16:9 / 9:16)", af: "Responsiewe soek (15 opskrifte \u226430k, 4 beskrywings \u226490k) & YouTube-video (16:9 / 9:16)" },
+  "dest.format.meta_ads": { en: "Reels/Stories (9:16) & Feed (1:1 / 4:5), 125-char primary text, 40-char headline", af: "Reels/Stories (9:16) & Feed (1:1 / 4:5), 125 karakters hoofteks, 40 karakters opskrif" },
   "dest.format.web": { en: "16:9 or square, muted autoplay, no hashtags", af: "16:9 of vierkantig, gedempte outospeel, geen hutsmerke" },
   "plan.slow": { en: "This one thinks for a while — up to a minute or two. It is a document, not a sentence.", af: "Hierdie een dink ’n ruk — tot ’n minuut of twee. Dit is ’n dokument, nie ’n sin nie." },
   "plan.needWhat": { en: "Say what you are selling in the brief above first.", af: "Sê eers in die opdrag hierbo wat jy verkoop." },

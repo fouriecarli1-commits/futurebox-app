@@ -38,6 +38,7 @@ import {
   Loader2,
   Lightbulb,
 } from 'lucide-react';
+import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import { barClearance } from './TabBar';
 import {
@@ -90,9 +91,10 @@ export default function FutureInsightsHub({
     setGeminiError('');
     setGeminiAnalysis(null);
     try {
+      const signed = await accessToken();
       const res = await fetch('/api/insights/dive', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(signed ? { Authorization: `Bearer ${signed}` } : {}) },
         body: JSON.stringify({
           articleId: article.id,
           title: lang === 'af' ? article.titleAf : article.titleEn,

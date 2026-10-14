@@ -119,6 +119,15 @@ const SENDS: Record<string, Processor> = {
      The prompt is the member's own words. It is not special information
      under POPIA — it is not a voice or a face — but it is theirs, and a
      picture they attach as a start frame may well be of a person. */
+  /* The Gemini API, the same Google seen through an API key rather than a
+     Cloud project (Antigravity, 14 October 2026: the insights deep-dive and
+     the podcast script writer). What goes is the topic or article the
+     member asked about — words, never a voice or a face. */
+  'generativelanguage.googleapis.com': {
+    name: 'Google',
+    gets: 'the topic or article they asked the podcast script writer or the insights deep-dive about',
+    basis: 'Gemini API terms, on her own key — see docs/SWITCH-ON.md',
+  },
   'aiplatform.googleapis.com': {
     name: 'Google',
     gets: 'what they typed to make a song, a video or a picture, and any'

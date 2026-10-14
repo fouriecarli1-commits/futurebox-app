@@ -350,6 +350,14 @@ saam. Die toep tel elke minuut wat dit teruggee en weier voordat die dak breek
 — 'n weiering met 'n rede is goedkoper as 'n mislukking waarvoor iemand reeds
 betaal het. Verander die getal net as die plan verander.
 
+## Google: the Gemini API (podcast scripts and insight deep-dives)
+
+`GEMINI_API_KEY` is an API key from Google AI Studio. The podcast room's AI
+script writer and the insights hub's deep-dive use it; without it both say
+they are not switched on. `GOOGLE_API_KEY` is read as the same key under the
+name Google's own examples use — set one, not both. Server only, never
+`NEXT_PUBLIC_`.
+
 ## Google: Lyria and Veo
 
 Three variables, all on the server, none of them ever `NEXT_PUBLIC_`.

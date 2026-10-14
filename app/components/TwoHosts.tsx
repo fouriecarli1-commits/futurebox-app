@@ -81,9 +81,10 @@ export default function TwoHosts({
     setAiBusy(true);
     setAiError('');
     try {
+      const signed = await accessToken();
       const res = await fetch('/api/podcast/script', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(signed ? { Authorization: `Bearer ${signed}` } : {}) },
         body: JSON.stringify({
           topic: aiTopic.trim(),
           language: lang,

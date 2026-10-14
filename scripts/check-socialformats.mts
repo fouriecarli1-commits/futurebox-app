@@ -91,7 +91,7 @@ ok('  and is not the English copied across where there were words to translate',
  * screen, which is the shape of fault this file exists for.
  */
 const destKeys = new Set(
-  [...i18n.matchAll(/"dest\.format\.([a-z0-9]+)":/g)].map((one) => one[1]),
+  [...i18n.matchAll(/"dest\.format\.([a-z0-9_]+)":/g)].map((one) => one[1]),
 );
 
 const destMissing = DESTINATIONS.filter((one) => !destKeys.has(one.id));
