@@ -6257,6 +6257,7 @@ export const STRINGS: Dict = {
      photograph goes up as the opening AND the closing frame so it loops.
      `lib/livingphoto.ts` carries the twelve motions. */
   "post.liveTitle": { en: "Give it a little motion", af: "Gee dit \u2019n bietjie beweging" },
+  "post.liveOff": { en: "Bringing a photo to life needs a video engine that starts from a picture, and none is switched on for this app yet. Nothing was charged.", af: "Om \u2019n foto lewendig te maak het \u2019n video-enjin nodig wat by \u2019n prent begin, en geen is nog vir hierdie app aangeskakel nie. Niks is gehef nie." },
   "post.liveGo": { en: "Bring it to life", af: "Maak dit lewendig" },
   "post.liveBusy": { en: "Making it\u2026", af: "Maak dit\u2026" },
   "post.liveMaking": { en: "Making it. A minute or two \u2014 you can carry on in here while it runs.", af: "Maak dit. \u2019n Minuut of twee \u2014 jy kan hier aangaan terwyl dit loop." },

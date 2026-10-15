@@ -190,7 +190,7 @@ export async function GET(request: Request): Promise<Response> {
     // that exist rather than ones it will later refuse.
     const can: Record<
     string,
-    { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean }
+    { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean; endFrame: boolean }
   > = {};
     for (const one of PROVIDERS) {
       if (!one.configured()) continue;
@@ -201,12 +201,14 @@ export async function GET(request: Request): Promise<Response> {
             aspects: Array.from(new Set([...found.aspects, ...one.can.aspects])),
             speaks: found.speaks || one.can.speaks,
             startFrame: found.startFrame || one.can.startFrame,
+            endFrame: found.endFrame || one.can.endFrame,
           }
         : {
             seconds: [...one.can.seconds],
             aspects: [...one.can.aspects],
             speaks: one.can.speaks,
             startFrame: one.can.startFrame,
+            endFrame: one.can.endFrame,
           };
     }
 
@@ -505,6 +507,11 @@ export async function POST(request: Request): Promise<Response> {
         ? 'Nothing on this grade starts from a picture yet. Take the attachment off, or move up a grade — a picture is only ever sent to an engine that reads it.'
       : endImage && !inGrade.some((one) => one.can.endFrame)
         ? 'Nothing on this grade ends on a picture yet. Take the end frame off, or move up a grade — a frame is only ever sent to an engine that reads it.'
+      /* Said by name. A shape no engine on the grade makes used to fall
+         through to "this month's allowance is used up" — which is how a
+         square photo given a little motion read on 15 October 2026. */
+      : !inGrade.some((one) => one.can.aspects.includes(aspect))
+        ? `Nothing on this grade makes a ${aspect} video. Choose a wide or a tall shape.`
       : speak && !inGrade.some((one) => one.can.speaks)
         ? 'Nothing on this grade can speak a line aloud. Take the quotation marks out and record the voice separately — it sounds better and costs a fraction.'
         : !inGrade.some((one) => one.can.seconds.indexOf(wanted) !== -1)

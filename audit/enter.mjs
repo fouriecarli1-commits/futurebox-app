@@ -6,6 +6,13 @@ import { agreeAndSubmit, launchOptions } from './where.mjs';
 const OFFSITE = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_REFUSED/;
 /** A fetch cancelled because the component unmounted is the design, not a fault. */
 const ABORTED = /ERR_ABORTED/;
+/**
+ * MediaPipe's engine announcing itself. Its wasm writes its INFO lines to
+ * stderr, which the browser files as console errors; this one says it chose
+ * the CPU and is the sign the background remover started, not that it broke
+ * (15 October 2026, when the remover moved to the person-parts model).
+ */
+const ENGINE_SAYS = /^INFO: Created TensorFlow Lite XNNPACK delegate for CPU\.?$/;
 
 /**
  * @param at  where the app is. Defaults to :3000 because twenty-six older
@@ -49,7 +56,7 @@ export async function enter({
   const note = (s) => { if (!problems.includes(s)) problems.push(s); };
   page.on('console', (m) => {
     const text = m.text();
-    if (m.type() !== 'error' || OFFSITE.test(text)) return;
+    if (m.type() !== 'error' || OFFSITE.test(text) || ENGINE_SAYS.test(text.trim())) return;
     /* ── The one console error worth dropping ─────────────────────────
        "Failed to load resource: the server responded with a status of 404 ()"
        is Chromium's own line and it carries NO URL, so `OFFSITE` — which

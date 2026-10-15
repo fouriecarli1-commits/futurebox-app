@@ -221,16 +221,18 @@ try {
     const out = {};
     for (const name of names) {
       try {
-        const answer = await fetch(`/segment/${name}`, { method: 'HEAD' });
+        const answer = await fetch(name, { method: 'HEAD' });
         out[name] = answer.status;
       } catch (e) {
         out[name] = `blocked: ${String(e).slice(0, 30)}`;
       }
     }
     return out;
-  }, ['selfie_segmentation.js', 'selfie_segmentation.binarypb', 'selfie_segmentation.tflite',
-      'selfie_segmentation_solution_simd_wasm_bin.js',
-      'selfie_segmentation_solution_simd_wasm_bin.wasm']);
+    /* The person-parts model and its engine (15 October 2026): the model in
+       /segment, the engine copied into /vision at build time. */
+  }, ['/segment/selfie_multiclass_256x256.tflite',
+      '/vision/vision_wasm_internal.js', '/vision/vision_wasm_internal.wasm',
+      '/vision/vision_wasm_nosimd_internal.js', '/vision/vision_wasm_nosimd_internal.wasm']);
   const missing = Object.entries(served).filter(([, status]) => status !== 200);
   check('every file the model asks for is served by this app', missing.length === 0,
     `${missing.map(([n, s]) => `${n} ${s}`).join(', ')} — a missing one aborts the`

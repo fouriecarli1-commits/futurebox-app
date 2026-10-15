@@ -126,7 +126,7 @@ for (const one of MOTIONS) {
 const room = withoutComments(readFileSync('app/components/PostStudio.tsx', 'utf8'));
 
 ok('the photograph goes up as the opening frame AND the closing one',
-  /image: frame,/.test(room) && /endImage: frame,/.test(room),
+  /image: frame,/.test(room) && /liveCan\.end \? \{ endImage: frame \}/.test(room),
   'sent as a start frame alone the clip drifts away and stops, which still'
   + ' produces something — so this fails by looking slightly worse rather'
   + ' than by failing, and nobody reports it');
@@ -144,9 +144,21 @@ ok('  and it asks for the shortest clip there is',
   + ' photograph, which is the one way the whole thing fails');
 
 ok('  and in the shape of the post it came from',
-  /size\.height > size\.width \? '9:16'/.test(room),
+  /size\.height !== size\.width\s*\?\s*size\.height > size\.width/.test(room) && /tall \? '9:16' : '16:9'/.test(room),
   'a story-shaped post that comes back wide is a post she has to crop, which'
   + ' is the thing this room exists to stop');
+
+/* ── 15 October 2026: "Give it a little motion werk ook nie" ──────────────
+   A square post asked for a square video, which no Veo makes, and the
+   server answered that the month was used up; and only Google's own Veo
+   reads a picture at all. So: never square, a grade that starts from a
+   picture, and a plain sentence before the press when there is none. */
+ok('  never square — a square post takes the photograph\u2019s own shape',
+  !/aspect: [^\n]*'1:1'/.test(room) && /picture\.naturalHeight \|\| picture\.height/.test(room));
+ok('  sent to a grade that starts from a picture, found by asking first',
+  /probeVideoEngine\(\)/.test(room) && /can\.startFrame/.test(room) && /grade: liveCan\.grade/.test(room));
+ok('  and where none does, the bench says so before anything is pressed',
+  /data-postliveoff/.test(room) && /liveCan === 'none'/.test(room));
 
 ok('  and it is silent, because a photograph has no sound',
   /speak: false,/.test(room),

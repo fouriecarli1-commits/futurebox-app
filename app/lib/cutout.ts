@@ -41,6 +41,23 @@
 
 /** Where the self-hosted model lives. */
 const HERE = '/segment';
+/**
+ * The person-parts model, 15 October 2026.
+ *
+ * Carli: *"Ek kan sien die BG remover werk ook nogsteeds nie."* It was the old
+ * MediaPipe selfie model — made for a webcam call, a face close up against a
+ * wall — and on her studio photograph it kept the microphone and left dark
+ * patches round the shoulders. `selfie_multiclass_256x256` is trained on
+ * photographs and answers per part (hair, face, body, clothes, everything
+ * else); run side by side on that same photograph it cut her cleanly, hair
+ * and all, with the microphone gone. Everything that is not "background" is
+ * kept.
+ */
+const MODEL = `${HERE}/selfie_multiclass_256x256.tflite`;
+/** The engine's own wasm, copied out of the package at build time. */
+const VISION = '/vision';
+/** The longest side the picture is read at: the model reads 256, so more is waste. */
+const READ_AT = 512;
 
 /**
  * How much of the frame has to be a person before this is worth doing.
@@ -351,37 +368,41 @@ export function feathered(
 }
 
 /** The loader, kept between presses so the second one is instant. */
-let engine: unknown = null;
-let loading: Promise<unknown> | null = null;
+type Mask = { readonly width: number; readonly height: number; getAsFloat32Array(): Float32Array };
+type Segmenter = {
+  segment(image: CanvasImageSource): { readonly confidenceMasks?: readonly Mask[]; close?: () => void };
+};
+let engine: Segmenter | null = null;
+let loading: Promise<Segmenter | null> | null = null;
 
 /**
- * The library, fetched as a script from this app rather than imported.
+ * The engine, from this app only.
  *
- * It is a Closure-compiled bundle that ends `Aa("SelfieSegmentation", nd)` —
- * it attaches a global and exports nothing. `await import()` of it therefore
- * hands back a module object with no `SelfieSegmentation` on it, the `new`
- * throws, and the screen says "the background could not be taken out" for a
- * reason that has nothing to do with the picture. That is how this first
- * failed, and the message was honest and useless.
- *
- * A `<script src="/segment/...">` is what the file actually is. It is
- * same-origin, so `script-src 'self'` allows it; it keeps six megabytes out
- * of the bundler entirely; and it is fetched from the same place as the wasm
- * and the model, so there is one directory to get right rather than two
- * mechanisms to keep in step.
+ * The package is imported (it is a real module, unlike the old selfie bundle,
+ * which attached a global and exported nothing), and every file it fetches —
+ * its wasm and the model — comes from this app: `/vision` is copied out of
+ * the package at build time by `scripts/nam-copy.mjs`, and the model is in
+ * `public/segment`. The app's connect-src is 'self'; a CDN would be refused.
  */
-function library(): Promise<unknown> {
+function library(): Promise<Segmenter | null> {
   if (typeof window === 'undefined') return Promise.resolve(null);
-  const had = (window as unknown as Record<string, unknown>).SelfieSegmentation;
-  if (had) return Promise.resolve(had);
+  if (engine) return Promise.resolve(engine);
   if (loading) return loading;
-  loading = new Promise((done, fail) => {
-    const tag = document.createElement('script');
-    tag.src = `${HERE}/selfie_segmentation.js`;
-    tag.async = true;
-    tag.onload = () => done((window as unknown as Record<string, unknown>).SelfieSegmentation ?? null);
-    tag.onerror = () => fail(new Error('segment script'));
-    document.head.appendChild(tag);
+  loading = (async () => {
+    const vision = await import('@mediapipe/tasks-vision');
+    const files = await vision.FilesetResolver.forVisionTasks(VISION);
+    const made = await vision.ImageSegmenter.createFromOptions(files, {
+      baseOptions: { modelAssetPath: MODEL, delegate: 'CPU' },
+      runningMode: 'IMAGE',
+      outputCategoryMask: false,
+      outputConfidenceMasks: true,
+    });
+    engine = made as unknown as Segmenter;
+    return engine;
+  })().catch(() => {
+    /* Let the next press try again rather than remembering a failure. */
+    loading = null;
+    return null;
   });
   return loading;
 }
@@ -390,8 +411,8 @@ function library(): Promise<unknown> {
  * Cut the background out of a picture.
  *
  * @param onStep called with 0..1 while the model loads. The first press
- *   fetches six megabytes, and a screen with nothing moving on it reads as
- *   broken rather than busy.
+ *   fetches the model and its engine, and a screen with nothing moving on it
+ *   reads as broken rather than busy.
  */
 export async function cutOut(
   picture: HTMLImageElement | HTMLCanvasElement,
@@ -400,40 +421,15 @@ export async function cutOut(
 ): Promise<Cut> {
   try {
     onStep?.(0.05);
-    const Maker = (await library()) as (new (opts: {
-      locateFile: (file: string) => string;
-    }) => unknown) | null;
-    if (!Maker) return { ok: false, why: 'failed' };
-
-    type Runner = {
-      setOptions: (o: { modelSelection: number; selfieMode: boolean }) => void;
-      onResults: (fn: (r: { segmentationMask: CanvasImageSource }) => void) => void;
-      send: (i: { image: CanvasImageSource }) => Promise<void>;
-      initialize?: () => Promise<void>;
-    };
-
-    if (!engine) {
-      /* Every file, from here. The default is a CDN and this app's
-         connect-src is 'self'. */
-      const made = new Maker({ locateFile: (file: string) => `${HERE}/${file}` }) as Runner;
-      /* Model 0, the general one, and the number matters more than it looks.
- 
-         Model 1 is the LANDSCAPE model and asks the server for
-         `selfie_segmentation_landscape.tflite`, which was not among the files
-         copied here — so the wasm aborted deep inside itself, the callback
-         never fired, and the screen said "the background could not be taken
-         out of that picture", which is honest and useless: it is not the
-         picture, it is a 404 on a file nobody had listed.
- 
-         Model 0 is also the better of the two for a still. It reads at
-         256x256 against the landscape model's 144x256, and quality matters
-         more than speed for one photograph somebody is going to post. */
-      made.setOptions({ modelSelection: 0, selfieMode: false });
-      await made.initialize?.();
-      engine = made;
-    }
+    /* A ceiling on the wait: a model that never arrives must not leave the
+       button spinning for ever, which is the shape of failure this whole
+       file is written against. */
+    const runner = await Promise.race([
+      library(),
+      new Promise<null>((done) => { window.setTimeout(() => done(null), 60_000); }),
+    ]);
+    if (!runner) return { ok: false, why: 'failed' };
     onStep?.(0.5);
-    const runner = engine as Runner;
 
     const width = 'naturalWidth' in picture
       ? (picture.naturalWidth || picture.width)
@@ -442,47 +438,56 @@ export async function cutOut(
       ? (picture.naturalHeight || picture.height)
       : picture.height;
 
-    const mask = await new Promise<CanvasImageSource | null>((done) => {
-      /* A ceiling on the wait. `onResults` is a callback with no error path,
-         so a model that loads and then never answers would leave the button
-         spinning for ever — which is the shape of failure this whole file is
-         written against. */
-      const giveUp = window.setTimeout(() => done(null), 30_000);
-      runner.onResults((r) => {
-        window.clearTimeout(giveUp);
-        done(r.segmentationMask ?? null);
-      });
-      void runner.send({ image: picture });
-    });
-    if (!mask) return { ok: false, why: 'failed' };
+    /* Read small: the model sees 256 pixels across whatever it is given, and
+       a mask the size of a camera photograph is two million pixels to loop
+       over for nothing. The feather below blows it back up to the picture. */
+    const scale = Math.min(1, READ_AT / Math.max(1, width, height));
+    const input = document.createElement('canvas');
+    input.width = Math.max(1, Math.round(width * scale));
+    input.height = Math.max(1, Math.round(height * scale));
+    input.getContext('2d')?.drawImage(picture, 0, 0, input.width, input.height);
+
+    const answer = runner.segment(input);
+    const background = answer.confidenceMasks?.[0];
+    if (!background) { answer.close?.(); return { ok: false, why: 'failed' }; }
+
+    /* Everything that is not background, as alpha — what `decided`,
+       `feathered` and `maskOnto` read — and as grey as well, because
+       `shareKept` reads the colour: one number in all four channels. */
+    const wide = background.width;
+    const tall = background.height;
+    const sure = background.getAsFloat32Array();
+    const keep = document.createElement('canvas');
+    keep.width = Math.max(1, wide);
+    keep.height = Math.max(1, tall);
+    const paint = keep.getContext('2d');
+    if (!paint) { answer.close?.(); return { ok: false, why: 'failed' }; }
+    const out = paint.createImageData(keep.width, keep.height);
+    for (let i = 0; i < sure.length; i += 1) {
+      const at = i * 4;
+      const person = Math.round(Math.max(0, Math.min(1, 1 - sure[i])) * 255);
+      out.data[at] = person;
+      out.data[at + 1] = person;
+      out.data[at + 2] = person;
+      out.data[at + 3] = person;
+    }
+    paint.putImageData(out, 0, 0);
+    answer.close?.();
     onStep?.(0.9);
 
-    /* Read the mask at a small size. The share of the frame that is a person
-       is the same answer at 128 pixels across as at four thousand, and
-       reading two million pixels to get one number is time somebody waits
-       for. */
+    /* The share of the frame that is a person, read small. */
     const small = document.createElement('canvas');
     small.width = 128;
     small.height = Math.max(1, Math.round(128 * (height / Math.max(1, width))));
     const look = small.getContext('2d', { willReadFrequently: true });
     if (!look) return { ok: false, why: 'failed' };
-    look.drawImage(mask, 0, 0, small.width, small.height);
+    look.drawImage(keep, 0, 0, small.width, small.height);
     const kept = shareKept(look.getImageData(0, 0, small.width, small.height).data);
     if (kept < ENOUGH) return { ok: false, why: 'nobody' };
 
-    /* The model's answer, copied at its own size — a few hundred pixels
-       square, so this costs nothing and makes changing the edge instant
-       instead of a second of waiting and six megabytes of engine. */
-    const keep = document.createElement('canvas');
-    const maskWide = (mask as { width?: number }).width ?? 0;
-    const maskTall = (mask as { height?: number }).height ?? 0;
-    keep.width = Math.max(1, maskWide);
-    keep.height = Math.max(1, maskTall);
-    keep.getContext('2d')?.drawImage(mask, 0, 0);
-
     return {
       ok: true,
-      canvas: maskOnto(picture, mask, width, height, softness),
+      canvas: maskOnto(picture, keep, width, height, softness),
       kept,
       mask: keep,
     };

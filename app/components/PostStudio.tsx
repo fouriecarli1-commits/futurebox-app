@@ -51,6 +51,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
+import { probeVideoEngine } from '../lib/videograde';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
 import { TITLE_STYLES } from '../lib/posttitles';
 import {
@@ -659,6 +660,32 @@ export default function PostStudio({
   const liveSince = useRef<number>(0);
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
   const [liveBusy, setLiveBusy] = useState(false);
+  /* ── Which engine can bring a photo to life, asked before the press ────
+     Carli, 15 October 2026: *"Give it a little motion werk ook nie."* Two
+     faults, both silent until pressed. The photo goes up as the opening and
+     the closing frame, and only Google's own Veo reads either — the
+     ElevenLabs engines take no picture at all. And a square post asked for a
+     square video, which no Veo makes, so the server found no engine and
+     answered that the month's allowance was used up. So the room asks which
+     grade starts from a picture, uses a shape that grade makes, and sends
+     the closing frame only where it is read. `none` says so on the bench. */
+  const [liveCan, setLiveCan] = useState<
+    { grade: string; aspects: readonly string[]; end: boolean } | 'none' | null
+  >(null);
+  useEffect(() => {
+    let alive = true;
+    void probeVideoEngine().then((found) => {
+      if (!alive) return;
+      const order = ['standard', 'better', 'premium'];
+      const grade = order.find((one) => {
+        const can = found.can?.[one];
+        return can && can.startFrame && can.seconds.includes(LIVE_SECONDS);
+      });
+      const can = grade ? found.can?.[grade] : undefined;
+      setLiveCan(grade && can ? { grade, aspects: can.aspects, end: Boolean(can.endFrame) } : 'none');
+    });
+    return () => { alive = false; };
+  }, []);
   const [liveSaid, setLiveSaid] = useState('');
 
   /* The same five-second poll the cutting room uses, and for the same
@@ -720,6 +747,10 @@ export default function PostStudio({
    */
   const bringToLife = async (): Promise<void> => {
     if (!picture || liveBusy || liveJob) return;
+    if (!liveCan || liveCan === 'none') {
+      setLiveSaid(t('post.liveOff', 'Bringing a photo to life needs a video engine that starts from a picture, and none is switched on for this app yet. Nothing was charged.'));
+      return;
+    }
     setLiveBusy(true);
     setLiveSaid('');
     try {
@@ -742,14 +773,23 @@ export default function PostStudio({
         },
         body: JSON.stringify({
           prompt: motionWords(motion),
-          /* The post's own shape, so a story-shaped post comes back
-             story-shaped rather than needing a crop. */
-          aspect: size.height > size.width ? '9:16' : size.width > size.height ? '16:9' : '1:1',
+          grade: liveCan.grade,
+          /* The post's own shape where it is wide or tall, so a story comes
+             back story-shaped; a square post takes the photograph's own
+             shape, because Veo makes wide and tall and no square. */
+          aspect: ((): string => {
+            const tall = size.height !== size.width
+              ? size.height > size.width
+              : (picture.naturalHeight || picture.height) > (picture.naturalWidth || picture.width);
+            const want = tall ? '9:16' : '16:9';
+            return liveCan.aspects.includes(want) ? want : (liveCan.aspects[0] ?? want);
+          })(),
           seconds: LIVE_SECONDS,
           speak: false,
           image: frame,
-          /* The same photograph again. This is what makes it loop. */
-          endImage: frame,
+          /* The same photograph again, where the engine reads a closing
+             frame. This is what makes it loop. */
+          ...(liveCan.end ? { endImage: frame } : {}),
         }),
       });
       const said = (await answer.json().catch(() => ({}))) as { id?: string; message?: string };
@@ -3929,11 +3969,16 @@ export default function PostStudio({
             MOTIONS.find((one) => one.id === motion)?.what[1] ?? 'Any photograph',
           )}
         </span>
+        {liveCan === 'none' && (
+          <p data-postliveoff className="text-[12px] leading-relaxed text-amber-300">
+            {t('post.liveOff', 'Bringing a photo to life needs a video engine that starts from a picture, and none is switched on for this app yet. Nothing was charged.')}
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             data-postlivego
-            disabled={liveBusy || Boolean(liveJob)}
+            disabled={liveBusy || Boolean(liveJob) || liveCan === 'none'}
             onClick={() => { void bringToLife(); }}
             className={`${LEEG} disabled:opacity-40`}
           >
