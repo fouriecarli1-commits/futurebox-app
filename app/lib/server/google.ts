@@ -261,12 +261,15 @@ export const MODELS: readonly Candidate[] = [
   /* ── Its successors, because it is being switched off ──────────────
      Google lists Gemini 2.5 Flash for discontinuation no earlier than 16
      October 2026 — its release notes say the 16th, its lifecycle page the
-     20th — and a retired model answers 404. Four rooms call it. Three later
-     Flash names are carried so the probe asks and `flashCall` below can walk
-     on to whichever answers; none is confirmed on her console yet. */
-  { id: 'gemini-3.5-flash', what: 'image', verb: 'generateContent', note: 'Listed Stable (19 May 2026) on Firebase AI Logic\u2019s model list. Unconfirmed on her Vertex console. Second in FLASH_ORDER.' },
-  { id: 'gemini-3-flash', what: 'image', verb: 'generateContent', note: 'The plain GA spelling of Gemini 3 Flash. A guess at the name; the probe answers. Third in FLASH_ORDER.' },
-  { id: 'gemini-3-flash-preview', what: 'image', verb: 'generateContent', note: 'Gemini 3 Flash as Google\u2019s own Vertex model page lists it. Last in FLASH_ORDER.' },
+     20th — and a retired model answers 404. Four rooms call it. Carli sent
+     her Model Garden listing on 15 October 2026 and these are the Flash
+     tiles on it, every one Serverless; `flashCall` below walks on to them,
+     newest first, when 2.5 is gone. */
+  { id: 'gemini-3.8-flash', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'On her Model Garden listing, 15 October 2026. Second in FLASH_ORDER, after 2.5.' },
+  { id: 'gemini-3.7-flash', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'On her Model Garden listing, 15 October 2026.' },
+  { id: 'gemini-3.6-flash', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'On her Model Garden listing, 15 October 2026.' },
+  { id: 'gemini-3.5-flash', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'On her Model Garden listing, 15 October 2026; also listed Stable (19 May 2026) on Firebase AI Logic.' },
+  { id: 'gemini-3-flash-preview', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'Gemini 3 Flash Preview, on her Model Garden listing, 15 October 2026. Last in FLASH_ORDER.' },
   { id: 'gemini-omni-flash-preview', what: 'video', verb: 'predict', hosting: 'self-deployed', on: 'interactions', note: 'Gemini Omni Flash. Off HER OWN documentation page, 10 October 2026. On the INTERACTIONS api, not predict \u2014 see interactionsAddress(). Text-to-video, image-to-video, reference-to-video and VIDEO EDITING. Priced per token and the rate is unread, so nothing is charged through it yet.' },
 ] as const;
 
@@ -720,12 +723,19 @@ export async function catalogue(): Promise<Catalogue> {
 /**
  * The Flash models, in the order they are tried.
  *
- * `gemini-2.5-flash` first, because it is the one with evidence: it answers
- * today on her console. The rest are its successors, tried only when the one
- * before them answers 404 — the answer a retired model gives — so nothing is
- * asked twice while the first still works, and a 404 is not billed.
+ * `gemini-2.5-flash` first while it lasts: it is the one every prompt here
+ * was written and checked against, and the one that draws a thing's outline
+ * for Grab. After it, the Flash tiles on her own Model Garden listing (15
+ * October 2026), newest first. A later one is asked only when the one before
+ * it answers 404 — the answer a retired model gives — and a 404 is not
+ * billed, so nothing is paid for twice.
  */
-export const FLASH_ORDER: readonly string[] = ['gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3-flash', 'gemini-3-flash-preview'];
+export const FLASH_ORDER: readonly string[] = [
+  'gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview',
+];
+
+/** Models that have answered 404 since this server started, so they are not asked again. */
+const flashGone = new Set<string>();
 
 /**
  * One Flash call that survives the model it names being switched off.
@@ -733,17 +743,21 @@ export const FLASH_ORDER: readonly string[] = ['gemini-2.5-flash', 'gemini-3.5-f
  * `send` makes the request for a model; this walks `FLASH_ORDER` (the model
  * asked for first) and stops at the first answer that is not 404. Any other
  * answer — a refusal, a 429, a 500 — is returned as it is: those are about
- * the request or the moment, and another model would not fix them.
+ * the request or the moment, and another model would not fix them. A model
+ * that answered 404 is skipped for the rest of the server's life, so the day
+ * after 2.5 goes nobody waits on its 404 before every answer.
  */
 export async function flashCall(
   send: (model: string) => Promise<Response>,
   first: string = FLASH_ORDER[0],
 ): Promise<{ response: Response; model: string }> {
-  const order = [first, ...FLASH_ORDER.filter((one) => one !== first)];
+  const every = [first, ...FLASH_ORDER.filter((one) => one !== first)];
+  const order = every.filter((one) => !flashGone.has(one));
   let last: { response: Response; model: string } | null = null;
-  for (const model of order) {
+  for (const model of order.length ? order : every) {
     const response = await send(model);
     if (response.status !== 404) return { response, model };
+    flashGone.add(model);
     last = { response, model };
   }
   return last as { response: Response; model: string };
