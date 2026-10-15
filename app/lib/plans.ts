@@ -243,9 +243,9 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
       '205 credits a month — 25 full songs, or 5 music videos',
-      /* 300 credits against 205 a month (the plans review, 14 October 2026):
-         said on the card, so nobody finds the wall after paying. */
-      'Train a sound of your own on your own songs — 300 credits, so it takes a top-up or two months\u2019 credits',
+      /* 180 credits against 205 a month (Carli, 15 October 2026): said on
+         the card, so the price is known before paying. */
+      'Train a sound of your own on your own songs — 180 credits',
       'Everything in Maker, and three cloned voices',
       /* Kept, and made true on 14 October 2026: the request used to stay
          on the phone; it now reaches FutureBox's inbox (CollabRadar). */
@@ -672,7 +672,7 @@ export const PODCAST_CAPS: Record<Tier, PodcastCaps> = {
  */
 export const SOUND_CAPS: Record<Tier, number> = {
   free: 0,
-  // Not on Maker. Training costs 300 credits and Maker's whole month is 120,
+  // Not on Maker. Training costs 180 credits and Maker's whole month is 83,
   // so "one trained sound" on that card was a thing the plan could not pay
   // for — a promise redeemable only by buying a pack. Better to say plainly
   // that it starts at Studio.

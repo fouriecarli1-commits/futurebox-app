@@ -54,7 +54,7 @@ daardie lid druk dieselfde knoppies.
 | `cover` | 15 | R22.51 | nog nie gelees nie | nog nie bekend nie |
 | `browserVideo` | 0 | — (niks) | nog nie gelees nie | nog nie bekend nie |
 | `clone` | 20 | R30.02 | nog nie gelees nie | nog nie bekend nie |
-| `finetune` | 300 | R450.25 | nog nie gelees nie | nog nie bekend nie |
+| `finetune` | 180 | R270.15 | nog nie gelees nie | nog nie bekend nie |
 | `parts` | 8 | R12.01 | nog nie gelees nie | nog nie bekend nie |
 | `grab` | 15 | R22.51 | nog nie gelees nie | nog nie bekend nie |
 

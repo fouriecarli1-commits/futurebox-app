@@ -572,8 +572,11 @@ export const CREDITS = {
   sing: 8,
   /** Making a voice from a minute of somebody reading. Estimated. */
   clone: 20,
-  /** Training a sound of your own. Estimated, and deliberately high. */
-  finetune: 300,
+  /** Training a sound of your own — ElevenLabs' music fine-tune, on her songs. */
+  /* 180, Carli, 15 October 2026 (was 300). ElevenLabs lists about $1.50 a
+     training, R27.60 with VAT; 180 at Studio's R1.70 is R306, so it keeps
+     its margin and fits inside one Studio month of 205. */
+  finetune: 180,
   /**
    * A minute of an episode dubbed into another language.
    *

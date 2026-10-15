@@ -392,12 +392,12 @@ die aksie is byna gratis om te bedien.
 | 'n Stem verander, per minuut | ElevenLabs | 8 kr | R2,21 | **R0,2760** |
 | Voorlees, per 150 karakters | ElevenLabs | 1 kr | R0,28 | **R0,2760** |
 | Sing dit, per minuut | Kits.AI | 8 kr | R1,60 | **R0,2000** |
+| 'n Klank oplei *(skatting)* | ElevenLabs | 180 kr | R27,60 | **R0,1533** |
 | Agt advertensielyne | Anthropic | 40 kr | R3,29 | **R0,0822** |
 | Oorskryf, per minuut | ElevenLabs | 4 kr | R0,07 | **R0,0169** |
 | 'n Omslag *(skatting)* | beeldmodel | 15 kr | R0,15 | **R0,0100** |
 | Video, 10 sek, standaard *(skatting)* | ElevenLabs | 36 kr | R0,12 | **R0,0034** |
 | 'n Stem kloon *(skatting)* | ElevenLabs | 20 kr | R0,00 | **R0,0000** |
-| 'n Klank oplei *(skatting)* | ElevenLabs | 300 kr | R0,00 | **R0,0000** |
 
 *Bronne, reël vir reël:*
 
@@ -417,7 +417,7 @@ die aksie is byna gratis om te bedien.
 - **Item uit, per 5 sek** — teen dieselfde koers gestel
 - **'n Omslag** — 'n breukdeel van 'n sent
 - **'n Stem kloon** — in die plan ingesluit, geen los koers
-- **'n Klank oplei** — in die plan ingesluit, geen los koers
+- **'n Klank oplei** — $1,50 per opleiding op hul pryslys, met BTW
 
 ### Die aanname wat die kapasiteit dra, nagegaan
 

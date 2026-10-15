@@ -5503,7 +5503,7 @@ export const STRINGS: Dict = {
   "plan.maker.inc.4": { en: "Post to your own channels", af: "Plaas op jou eie kanale" },
   "plan.maker.inc.5": { en: "Every workshop", af: "Elke werkswinkel" },
   "plan.studio.inc.0": { en: "205 credits a month — 25 full songs, or 5 music videos", af: "205 krediete ’n maand — 25 volle liedjies, of 5 musiekvideo’s" },
-  "plan.studio.inc.1": { en: "Train a sound of your own on your own songs \u2014 300 credits, so it takes a top-up or two months\u2019 credits", af: "Leer \u2019n eie klank af op jou eie liedjies \u2014 300 krediete, so dit vra \u2019n aanvulling of twee maande se krediete" },
+  "plan.studio.inc.1": { en: "Train a sound of your own on your own songs \u2014 180 credits", af: "Leer \u2019n eie klank af op jou eie liedjies \u2014 180 krediete" },
   "plan.studio.inc.2": { en: "Everything in Maker, and three cloned voices", af: "Alles in Maker, en drie gekloonde stemme" },
   "plan.studio.inc.3": { en: "Ask FutureBox to boost a collab", af: "Vra FutureBox om ’n collab te help stoot" },
   "plan.free.inc.5": { en: "Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.", af: "Albumkuns deur regte kunstenaars — R280 ’n stuk, of R500 om een te laat maak. Op elke plan, per stuk betaal." },

@@ -914,8 +914,8 @@ const ACTIONS: Action[] = [
     supplier: 'beeldmodel', from: "'n breukdeel van 'n sent", guess: true },
   { what: "'n Stem kloon", credits: CREDITS.clone, cost: 0,
     supplier: 'ElevenLabs', from: 'in die plan ingesluit, geen los koers', guess: true },
-  { what: "'n Klank oplei", credits: CREDITS.finetune, cost: 0,
-    supplier: 'ElevenLabs', from: 'in die plan ingesluit, geen los koers', guess: true },
+  { what: "'n Klank oplei", credits: CREDITS.finetune, cost: 1.5 * 18.4,
+    supplier: 'ElevenLabs', from: '$1,50 per opleiding op hul pryslys, met BTW', guess: true },
 ];
 
 /** Wat een FutureBox-krediet in hierdie aksie ons kos. */
