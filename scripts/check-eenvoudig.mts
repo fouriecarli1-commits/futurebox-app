@@ -1,35 +1,23 @@
 /**
- * Simple is the copilot and a button. Everything is the whole desk.
+ * Make a song is one box around the copilot, with everything in it.
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Bo in make a song moet daar 'n simple button
- * wees, en 'n everything, die simple moet net 'n copilot wees, en die
- * copilot moet alles skryf en die styl, stemkeuse, en lengte van liedjie.
- * Daarna moet daar net staan make song. Met everything bladsy sluit dit
- * alles in wat nou daar is."*
+ * Carli, 15 October 2026, beside a screenshot of ElevenLabs' music box:
+ * *"Ek dink ons moet in make a song, die simple en everything wegvat en net
+ * so box rondom copilot bou wat alles in het, selfs 'n button wat uit pop om
+ * die weirdness te verstel. Daar kan dan ook bo in daai raam wees 'n easy en
+ * extensive, waar easy dan vinnig woorde prompt, en extensive die liedjie
+ * meer intensioneel vers vir vers prompt, en guide rondom waaroor 'n sekere
+ * gedeelte in 'n liedjie gaan. Daar kan 'n plus wees wat uit pop en keuses
+ * gee … en by daardie plus kan daar ook 'n opsie wees om 'n liedjie op te
+ * laai om vanaf dit te begin. Dan onder daardie boks kom die woorde uit, en
+ * onder die woorde moet die finale clear wees 'make the song'."*
  *
- * There WAS a Simple, and it was not this. It hid the advanced controls and
- * still asked for three things — a name, the words, and what it should sound
- * like. Three things more than somebody who came here to say "write me a
- * song about my dog" wants to fill in. And it sat four cards down, inside
- * the card it controlled, so a person met the whole desk before they met the
- * choice about how much of it to see.
- *
- * ── The three ways this goes wrong, and two are silent ───────────────────
- *
- * **Simple turns something off.** It must hide controls, never reset them. A
- * length, a key, a trained sound set in Everything still goes to the engine
- * — and the room has to SAY so, because a setting that applies while its
- * control is out of sight is worse than a crowded screen. This app has
- * already hidden four working features once by taking things away.
- *
- * **Simple shows nothing of what the copilot wrote.** A canvas somebody
- * cannot see is a canvas they cannot correct, and they find out what the
- * copilot decided by paying for a song.
- *
- * **The button is not the only other thing.** "Daarna moet daar net staan
- * make song." One more control in Simple and it is not Simple.
+ * This replaces the check that held Simple and Everything (10 October), and
+ * keeps its one lasting rule: a setting must never be in force out of sight.
+ * The old room kept it with a sentence under the switch; the box keeps it by
+ * having every button along its foot say what it is set to.
  */
 
 import { readFileSync } from 'node:fs';
@@ -42,92 +30,77 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 };
 
 const room = withoutComments(readFileSync('app/components/MakeMusic.tsx', 'utf8'));
+const picker = withoutComments(readFileSync('app/components/StartPicker.tsx', 'utf8'));
+const page = withoutComments(readFileSync('app/page.tsx', 'utf8'));
+const at = (needle: string): number => room.indexOf(needle);
 
-/* ── 1. The choice is at the top ───────────────────────────────────────── */
+/* ── 1. Simple and Everything are gone ─────────────────────────────────── */
 
-ok('the room opens with the choice between the two',
-  /data-makemode\b/.test(room),
-  'it used to be inside the card it controlled, four cards down');
+ok('there is no Simple or Everything any more',
+  !/data-makemode\b/.test(room) && !/make\.modeSimple/.test(room) && !/\badvanced\b/.test(room),
+  '"die simple en everything wegvat"');
 
-ok('  and it really is above the desk',
-  (() => {
-    const mode = room.indexOf('data-makemode');
-    const first = room.indexOf('htmlFor="song-name"');
-    return mode > 0 && first > 0 && mode < first;
-  })(),
-  'a choice about how much of the desk to show, met after the desk, is a'
-  + ' choice nobody makes');
+/* ── 2. One box, around the copilot ────────────────────────────────────── */
 
-ok('  and both are named rather than hidden in a dropdown',
-  /make\.modeSimple/.test(room) && /make\.modeAll/.test(room),
-  'two things, both worth naming');
+ok('the room has one song box',
+  (room.match(/data-makebox\b/g) ?? []).length === 1);
+ok('  and the copilot is drawn inside it, always',
+  at('data-makecopilot') > at('data-makebox') && /\{copilot \?\?/.test(room)
+  && /copilot=\{copilotPane\}/.test(page) && /\|\| studioTab === 'make'/.test(page),
+  'the page must hand the copilot in every time, not only on one mode');
 
-/* ── 2. Simple is the copilot and the button ───────────────────────────── */
+/* ── 3. Easy and Extensive along the top ───────────────────────────────── */
 
-ok('Simple draws its own panel instead of the desk',
-  /data-makesimple\b/.test(room) && /\{!advanced && \(/.test(room),
-  'the whole point is that the fields are not there');
-
-ok('  and the desk is behind the other one',
-  /\{advanced && \(\s*<>/.test(room),
-  'Everything includes everything that is there now, which means the desk'
-  + ' and the controls that used to be behind a second switch inside it');
-
-ok('  and Simple shows what the copilot has written',
-  /data-makesimpleread/.test(room),
-  'a canvas somebody cannot see is a canvas they cannot correct, and they'
-  + ' find out what the copilot decided by paying for a song');
-
-ok('  and shows it only once there is something to show',
-  /\{\(title\.trim\(\) \|\| lyrics\.trim\(\) \|\| canvas\.style\.trim\(\)\) && \(/.test(room),
-  'an empty frame under a sentence asking somebody to talk to the copilot'
-  + ' reads as the copilot having failed');
-
-/* ── 3. Nothing is switched off ────────────────────────────────────────── */
-
-ok('Simple hides the controls and does not reset them',
-  !/setSeconds\(\d+\);?\s*$/m.test(room.slice(room.indexOf('data-makesimple'), room.indexOf('data-makesimple') + 2000))
-  && /changedFromDefault/.test(room),
-  'a length, a key or a trained sound set in Everything still goes to the'
-  + ' engine. Resetting them on a mode change is the room silently undoing'
-  + ' her work');
-
-ok('  and says so when anything is away from its default',
-  /data-makeinforce/.test(room) && /make\.inForce/.test(room),
-  'a setting that applies while its control is out of sight is worse than a'
-  + ' crowded screen, and this app has hidden four working features once'
-  + ' already by taking things away');
-
-ok('  and that line is only drawn when there IS something',
-  /\{!advanced && changedFromDefault\.length > 0 && \(/.test(room),
-  '"Still set from Everything:" with nothing after it is a sentence that'
-  + ' worries somebody about nothing');
-
-/* ── 4. The one button ─────────────────────────────────────────────────── */
-
-ok('the make button is outside the switch, so Simple has one',
-  (() => {
-    /* Read the branch by its indentation rather than by the nearest `</>`:
-       the desk holds a second `{advanced && (` inside it, so "the last
-       fragment close before the button" is satisfied by a button sitting
-       deep inside the branch. Found that by moving the button there and
-       watching this pass. */
-    const lines = room.split('\n');
-    const opens = lines.findIndex((line) => line === '        {advanced && (');
-    if (opens < 0) return false;
-    const shuts = lines.findIndex((line, at) => at > opens && line === '        )}');
-    const button = lines.findIndex((line) => line.includes('onClick={() => make()}'));
-    return shuts > opens && button > shuts;
-  })(),
-  '"Daarna moet daar net staan make song" — a button inside the Everything'
-  + ' branch leaves Simple with no way to make anything');
-
+ok('Easy and Extensive are at the top of the box',
+  at('data-makeway') > at('data-makebox') && at('data-makeway') < at('data-makecopilot')
+  && /make\.easy/.test(room) && /make\.extensive/.test(room));
+ok('  Extensive is the verse-by-verse writer, which says what each part is for',
+  /way === 'easy' \?[\s\S]{0,600}<VerseWriter/.test(room));
 ok('  and the choice is remembered between visits',
-  /window\.localStorage\.setItem\(MODE_KEY/.test(room),
-  'somebody who has gone looking for the controls once should not have to'
-  + ' go looking again');
+  /window\.localStorage\.setItem\(WAY_KEY/.test(room));
+
+/* ── 4. Every control is a small button that pops out ──────────────────── */
+
+for (const [tool, what] of [
+  ['length', 'how long'],
+  ['feel', 'the weirdness and light-to-heavy sliders'],
+  ['voice', 'which language it is sung in'],
+  ['sound', 'a sound of your own'],
+  ['more', 'tempo and key'],
+] as const) {
+  ok(`the box has a button for ${what}`, new RegExp(`\\['${tool}', `).test(room));
+}
+ok('  the weirdness is one of them', /pop === 'feel'[\s\S]{0,3000}id="make-weirdness"/.test(room),
+  '"selfs \'n button wat uit pop om die weirdness te verstel"');
+ok('  and each button says what it is set to, so nothing is in force out of sight',
+  /weight !== 50 \|\| weirdness !== 15 \?/.test(room) && /bpm !== 112 \|\| songKey !== 'A Minor' \?/.test(room)
+  && /useOwnSound\s*\?/.test(room),
+  'a setting that applies while its control is out of sight is worse than a crowded screen');
+ok('  and the price is on the box before anything is pressed', /data-makecost/.test(room));
+
+/* ── 5. The plus ───────────────────────────────────────────────────────── */
+
+ok('a plus in the box pops out somewhere to start', /data-makeplus/.test(room) && /<StartPicker/.test(room));
+ok('  a list you can search, with a row of chips like theirs',
+  /data-pickersearch/.test(picker) && /MOODS\.map/.test(picker) && /GENRE_CATEGORIES/.test(picker));
+ok('  feelings to start from and sounds to add',
+  /SONG_STARTS/.test(picker) && /GENRE_SAMPLES/.test(picker));
+ok('  and a way to start from a song of your own',
+  /data-pickerbring/.test(picker) && /upload=\{[\s\S]{0,200}<StyleFrom/.test(room),
+  '"\'n opsie om \'n liedjie op te laai om vanaf dit te begin"');
+
+/* ── 6. Under the box the words, under the words the button ────────────── */
+
+ok('the words come out under the box',
+  at('data-makewords') > at('data-maketools') && at('placeholder={t(\'make.wordsPlaceholder\')}') > at('data-makewords'));
+ok('  and the one button is under the words',
+  at('onClick={() => make()}') > at('data-makewords'),
+  '"onder die woorde moet die finale clear wees make the song"');
+
+const dictionary = readFileSync('app/lib/i18n.tsx', 'utf8');
+ok('  and it says "Make the song"', /"make\.go": \{ en: "Make the song"/.test(dictionary));
 
 console.log(bad === 0
-  ? '\n  Simple is the copilot and a button; Everything is the whole desk.'
+  ? '\n  Make a song is one box around the copilot, the words under it, and the button under those.'
   : `\n  ${bad} not right.`);
 process.exit(bad === 0 ? 0 : 1);

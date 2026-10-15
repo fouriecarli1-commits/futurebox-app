@@ -56,6 +56,9 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 const LOOSE: Record<string, string> = {
   'VideoPanel.tsx': 'no folded cards in this panel at all',
   'LiveChannel.tsx': 'the message box is below the last card, always open',
+  /* Since 15 October 2026 the song room has one box and the words and the
+     sound sit open under it: "dan onder daardie boks kom die woorde uit". */
+  'MakeMusic.tsx': 'no folded cards: the name, the words and the sound are always open under the song box',
 };
 
 const dir = 'app/components';
@@ -103,6 +106,13 @@ ok(
   'the live room’s message box really is below every card',
   lastBefore(live, '</Card>', 'value={draft}'),
   'it has moved inside a fold, so a copilot draft can land out of sight',
+);
+
+const song = readFileSync(`${dir}/MakeMusic.tsx`, 'utf8');
+ok(
+  'the song room really has no folded card in it',
+  !song.includes('<Card'),
+  'it has one now, so the copilot\u2019s words can land out of sight',
 );
 
 /* ── And the room that started it ──────────────────────────────────────── */

@@ -225,8 +225,8 @@ export const PIECES: readonly Piece[] = [
     body: [
       [
         'blog.simple.one',
-        'Make a song and the video desk each open with one choice at the top: Simple or Everything. It is worth knowing exactly what the difference is, because it is not what most apps mean by a simple mode.',
-        'Maak ’n liedjie en die videowerkblad maak elkeen met een keuse boaan oop: Eenvoudig of Alles. Dit is werd om te weet wat die verskil presies is, want dit is nie wat die meeste toeps met ’n eenvoudige modus bedoel nie.',
+        'The video desk opens with one choice at the top: Simple or Everything. (Make a song had the same choice until 15 October 2026; it is one song box around the copilot now, with Easy and Extensive along its top.) It is worth knowing exactly what the difference is, because it is not what most apps mean by a simple mode.',
+        'Die videowerkblad maak met een keuse boaan oop: Eenvoudig of Alles. (Maak ’n liedjie het dieselfde keuse gehad tot 15 Oktober 2026; dit is nou een liedjieboks om die copilot, met Maklik en Uitgebreid bo-aan.) Dit is werd om te weet wat die verskil presies is, want dit is nie wat die meeste toeps met ’n eenvoudige modus bedoel nie.',
       ],
       [
         'blog.simple.two',

@@ -704,8 +704,11 @@ export async function unfold(page) {
      holds for the wand as well, which is the other icon-only button on a
      card header. Matching on the label's wording would not survive the
      second language. */
+  /* Not the song box's own buttons (15 October 2026): each pops a control
+     out over the box rather than unfolding the room, and opening them all in
+     turn leaves the last one lying over whatever the probe presses next. */
   const shutNow = () =>
-    where.locator('button[aria-expanded="false"]:visible').filter({ hasText: /\S/ });
+    where.locator('button[aria-expanded="false"]:visible:not([data-maketool]):not([data-pickerbring])').filter({ hasText: /\S/ });
 
   /* Press the first one that is still shut; if pressing it changed nothing,
      step past it and try the next.

@@ -232,7 +232,6 @@ const OPENABLE: Record<string, string> = {
   'VideoCanvas.tsx': 'a shot handed over from the advert desk or the copilot',
   'VoiceLab.tsx': 'a script handed over from the advert desk',
   'PodcastStudio.tsx': 'an episode\u2019s title and notes handed over from the advert desk',
-  'MakeMusic.tsx': 'words and a sound handed over from the advert desk',
   'Campaign.tsx': 'a brief filled in by the copilot from another room',
   'CollabRoom.tsx': 'a message the copilot drafted',
   'Hooks.tsx': 'a clip length the copilot set',

@@ -774,15 +774,12 @@ export default function FutureBoxHome() {
      and type second — everywhere else the working surface is the point
      and a chat panel above it is 352 px between you and the thing you
      came for. */
-  /* Simple puts the copilot under the song form (Carli, 13 October 2026:
-     "As 'n mens op simple click dan moet copilot onder toe spring onder
-     make a song"); Everything keeps it above, for the reason just given.
-     The room reports its mode through `onMode`. */
-  const [makeAdvanced, setMakeAdvanced] = useState(true);
+  /* Since 15 October 2026 the song room holds the copilot itself, inside
+     its song box (Carli: "net so box rondom copilot bou wat alles in het"),
+     so it is never lifted above the room any more. */
   /* The video desk the same way: on Simple its copilot is drawn inside the
      room, right above "Make it" (Carli, 14 October 2026). */
   const [canvasAdvanced, setCanvasAdvanced] = useState(true);
-  const copilotFirst = studioTab === 'make' && makeAdvanced;
 
   /* Every room, and how to draw it. Read by the rail on a desktop and by the
      phone's room menu, so a room cannot be named one thing in one and another
@@ -1960,11 +1957,10 @@ export default function FutureBoxHome() {
      not scroll, so a column under it is a screenful nobody reaches — and,
      worse, it makes the page scroll again and the room's own bar can be
      scrolled off the bottom. `audit/underbar.mjs` found exactly that. */
-  /* And the song room on Simple: the copilot is drawn under the song
-     button, inside the room (Carli, 13 October 2026). On Everything it is
-     the column above, as before. */
+  /* And the song room: the copilot is the middle of its song box
+     (Carli, 15 October 2026). */
   const copilotInside = studioTab === 'voice_studio' || studioTab === 'videoedit'
-    || (studioTab === 'make' && !makeAdvanced)
+    || studioTab === 'make'
     || (studioTab === 'canvas' && !canvasAdvanced)
     || studioTab === 'photo';
 
@@ -4303,7 +4299,7 @@ export default function FutureBoxHome() {
                   exist on a phone, which is the only place the sliding was
                   ever felt. On a wide screen it is a rail, not a page. */}
               <nav
-                className={`${copilotFirst ? 'order-1 md:order-none' : ''} flex-shrink-0 hidden md:flex gap-1 overflow-x-auto md:overflow-visible ${
+                className={`flex-shrink-0 hidden md:flex gap-1 overflow-x-auto md:overflow-visible ${
                   theme.layout === 'top'
                     ? 'flex-row flex-wrap'
                     : theme.layout === 'focus'
@@ -4441,7 +4437,7 @@ export default function FutureBoxHome() {
 
               <div
                 ref={workPane}
-                className={`${copilotFirst ? 'order-3 md:order-none' : ''} flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1`}
+                className="flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1"
               >
                 {!bareRoom && !atDoor && (
                   <div className="hidden md:flex items-center justify-between gap-3 p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800">
@@ -4774,8 +4770,7 @@ export default function FutureBoxHome() {
             {/* MAKE: the button people came for */}
             {studioTab === 'make' && (
               <MakeMusic
-                onMode={setMakeAdvanced}
-                copilot={!makeAdvanced ? copilotPane : null}
+                copilot={copilotPane}
                 userPlan={userPlan}
                 onUpgrade={() => setPricingModalOpen(true)}
                 incoming={handoff}
@@ -5109,7 +5104,7 @@ export default function FutureBoxHome() {
                    reach the thing they type into. */
                 <aside
                   data-copilotaside=""
-                  className={`${copilotFirst ? 'order-2 md:order-none pb-0 md:pb-[var(--bar-clear)]' : 'pb-[var(--bar-clear)]'} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
+                  className={`pb-[var(--bar-clear)] flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
                   /* Reserved through a variable rather than straight onto
                      `paddingBottom`, because the answer is different at the
                      two widths and an inline style cannot hold a media query.

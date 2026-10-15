@@ -77,6 +77,11 @@ const NEEDS = {
      exactly the same words: *"Die editing tools moet ook onder in 'n bar
      wees."* It was nine cards down one scroll until that morning. */
   'Photo Editor': 'benches rather than cards, by design — the dock holds one panel at a time',
+  /* And Make a song, 15 October 2026, the same kind of reason: one song box
+     around the copilot with the words open under it — *"net so box rondom
+     copilot bou wat alles in het … Dan onder daardie boks kom die woorde
+     uit"*. Nothing in it folds, on purpose. */
+  'Make a song': 'one song box rather than cards, by design — every setting pops out of the box and the words are always open',
 };
 
 

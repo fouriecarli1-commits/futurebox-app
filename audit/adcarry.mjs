@@ -383,11 +383,13 @@ try {
   await songCards.nth(2).click();
   await p.waitForTimeout(2200);
 
-  const wordsFold = p.locator(`${overlay} button[aria-expanded]`)
-    .filter({ hasText: /The words|Die woorde/ }).first();
-  check('the song’s words card opens by itself too',
-    (await wordsFold.count()) > 0 && (await wordsFold.getAttribute('aria-expanded')) === 'true',
-    'words written into a shut card are words nobody can see');
+  /* Nothing folds in the song room since 15 October 2026 — the words lie
+     open under the song box — so what is held is that they are on the
+     screen, not that a card opened. */
+  const wordsOpen = p.locator(`${overlay} [data-makewords] textarea[placeholder*="Verse 1"], ${overlay} [data-makewords] textarea[placeholder*="Vers 1"]`).first();
+  check('the song’s words are on the screen too',
+    (await wordsOpen.count()) > 0 && (await wordsOpen.isVisible().catch(() => false)),
+    'words written where nobody can see them are words nobody can see');
 
   await unfold(p);
   await p.screenshot({ path: shot('adcarry-make.png') });

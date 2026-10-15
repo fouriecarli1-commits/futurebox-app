@@ -193,11 +193,11 @@ try {
   console.log('textareas on the desk:', JSON.stringify(await room.locator('textarea').evaluateAll((all) =>
     all.map((el) => (el.getAttribute('placeholder') ?? '').slice(0, 40)))));
   await room.locator('textarea[placeholder*="Verse 1"]').fill(WORDS);
-  await room.locator('input:visible').first().fill('Die eerste een');
+  await room.locator('#song-name').fill('Die eerste een');
   await p.waitForTimeout(400);
-  /* `\b`, not `$`: the button carries its price now — "Make my song · 8
+  /* `\b`, not `$`: the button carries its price now — "Make the song · 8
      credits" — so an anchor on the end of the words stopped matching. */
-  await room.locator('button').filter({ hasText: /^Make my song\b/ }).first().click();
+  await room.locator('button').filter({ hasText: /^Make the song\b/ }).first().click();
 
   /* The song has to arrive on the screen it was made on, and be a song rather
      than a name on it — the title is in the box that was typed into, so

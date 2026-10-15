@@ -201,122 +201,50 @@ try {
     }
   }
   await p.waitForTimeout(1600);
-  /* Every panel starts folded now, and these probes reach their room
-     without `toRoom`, which is where the unfolding lives. See enter.mjs. */
-  /* The words and the sound are behind Everything since 10 October 2026:
-     Simple is the copilot and one button, with no cards to fold. */
-  await everything(p);
-  await unfold(p);
   const room = p.locator('div.fixed.inset-0.z-50').first();
-
-  /* Everything, since 10 October 2026. This section was written for a
-     Simple that still had the words and sound cards in it; Carli then asked
-     for Simple to be "net 'n copilot" — the copilot, one button, and a
-     four-line read-only summary of what the song will be. The cards, the
-     lengths and the words box are all behind Everything now, so that is
-     where the card shape is asserted. Simple is looked at on its own terms
-     below. */
-  await room.locator('button').filter({ hasText: /^Everything$/ }).first().click();
-  await p.waitForTimeout(700);
-  /* Again, after the mode: choosing Simple re-renders the room and the
-     cards it draws are new ones, folded like every other. Unfolding only
-     on the way in would have opened the panels that were there before the
-     choice and none of the ones the choice made. */
-  await unfold(p);
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 
-  /* ── The card shape ─────────────────────────────────────────────────
- 
-     `docs/PACKAGING.md` §2, read off the screenshots: a heading you can fold,
-     one box, and the options as small buttons underneath. Asserted on the two
-     cards that carry the room — the words and the sound — because a shape
-     that is only in a document is a shape that never arrives. */
-  const cards = room.locator('section > div > button[aria-expanded]');
-  check('the words and the sound are cards that fold',
-    (await cards.count()) >= 2, `${await cards.count()} foldable headings`);
-  /* The words box by its own placeholder, not "the first textarea in the
-     room". Folding the card removes it, and `.first()` then resolves to the
-     style box instead — so the check for "it is gone" found a different box,
-     still visible, and failed while the feature worked. */
-  const wordsBox = room.locator('textarea[placeholder*="Verse 1"]');
-  /* The words card by what is INSIDE it, not by being first in the room.
- 
-     It was `cards.first()`, which was the words card until every panel
-     started folded and the room's order stopped meaning what it did. A
-     probe that folds "the first heading" and then asserts about the words
-     box is two different cards in one sentence — the same
-     matched-the-position fault this repo keeps finding in its own tests. */
-  const wordsCard = room
-    .locator('section')
-    .filter({ has: p.locator('textarea[placeholder*="Verse 1"]') })
-    .locator('button[aria-expanded]')
-    .first();
+  /* ── The song box ───────────────────────────────────────────────────
 
-  check('and the box inside one is open to start with', (await wordsBox.count()) === 1);
-  await wordsCard.click();
-  await p.waitForTimeout(500);
-  check('pressing the heading folds it away', (await wordsBox.count()) === 0);
-  /* Said on the heading rather than in a sentence under it.
- 
-     A shut card used to print "Folded away — press the heading to open it."
-     underneath. That was right while a folded card was the exception; it is
-     every card in every room now, and the Adverts desk was printing that one
-     sentence five times on a screen. What carries the state is
-     `aria-expanded`, which is what a screen reader was reading anyway. */
-  check('and the heading says it is shut, for anything that cannot see a chevron',
-    (await room.locator('button[aria-expanded]')
-      .filter({ hasText: /^The words|^Die woorde/ }).first()
-      .getAttribute('aria-expanded')) === 'false');
-  /* Folded, the card no longer contains the box, so the locator above no
-     longer finds it. Pressed by its own NAME — not by being the first shut
-     thing in the room, which is a mark beside a heading somewhere further
-     up and the same match-by-position fault one line later. */
-  await room.locator('button[aria-expanded]')
-    .filter({ hasText: /^The words|^Die woorde/ }).first().click();
-  await p.waitForTimeout(500);
-  check('and pressing it again brings the box back', (await wordsBox.count()) === 1);
+     Since 15 October 2026 the room is one box around the copilot, with the
+     words open under it and the button under those (Carli: "Dan onder
+     daardie boks kom die woorde uit, en onder die woorde moet die finale
+     clear wees 'make the song'"). Nothing folds, so there is no card shape
+     to assert here any more — `check:simple` walks the box itself. */
+  const wordsBox = room.locator('[data-makewords] textarea[placeholder*="Verse 1"]');
+  check('the words lie open under the song box, never folded',
+    (await room.locator('[data-makebox]').count()) === 1 && (await wordsBox.count()) === 1);
 
   /* Not "the words How long are on the page" — the buttons themselves, because
      a label over nothing pressable is the same bug in a different shape. */
-  const lengths = room.locator('button').filter({ hasText: /credits$/ });
+  await room.locator('[data-maketool="length"]').click();
+  await p.waitForTimeout(400);
+  const lengths = room.locator('[data-makelength]');
   check('and offers real lengths to press', (await lengths.count()) >= 3,
     `${await lengths.count()} choices`);
   check('with what each one costs on it', /\d+ credits/.test(await says()));
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(300);
 
   /* ── Nobody singing, said out loud ─────────────────────────────────── */
   check('an empty words box says the song will come back unsung',
     (await says()).includes('nobody singing'));
 
-  await room.locator('textarea').first().fill(WORDS);
+  await wordsBox.fill(WORDS);
   await p.waitForTimeout(700);
   check('and the warning goes once there are words',
     !(await says()).includes('nobody singing'));
   await p.screenshot({ path: shot('makesong-simple.png') });
 
   /* ── What actually leaves the app ──────────────────────────────────── */
-  /* `:visible`, because the two "learn it from a file" buttons each carry a
-     hidden file input and both sit above the title field. Reaching for the
-     first input in the room found one of those and waited a minute for
-     something invisible to become fillable. */
-  await room.locator('input:visible').first().fill('Karoo');
-  /* Simple, on its own terms, once there is something to summarise — the
-     summary draws only when a title, words or a sound has been set, and
-     before that there is honestly nothing to show. So it is looked at here,
-     after the words and the title: a read-only summary that names the length,
-     because it is the one control behind the switch that changes what the
-     song costs — Simple must not hide the price while charging it. Then back
-     to Everything, where the rest of this probe's controls live. */
-  await room.locator('button').filter({ hasText: /^Simple$/ }).first().click();
-  await p.waitForTimeout(700);
-  const summary = room.locator('[data-makesimpleread]');
-  check('Simple shows what the song will be, read-only', (await summary.count()) === 1);
-  check('and names how long it will be', /How long\?/.test((await summary.innerText().catch(() => '')) ?? ''));
-  await room.locator('button').filter({ hasText: /^Everything$/ }).first().click();
-  await p.waitForTimeout(700);
-  await unfold(p);
-  /* `\b`, not `$`: the button carries its price now — "Make my song · 8
-     credits" — so an anchor on the end of the words stopped matching. */
-  await room.locator('button').filter({ hasText: /^Make my song\b/ }).first().click();
+  await room.locator('#song-name').fill('Karoo');
+  /* The price is on the box before anything is pressed — the one number
+     that changes what the song costs, never hidden while it is charged. */
+  check('the box says what the song will cost',
+    /\d+ credits/.test((await room.locator('[data-makecost]').innerText().catch(() => '')) ?? ''));
+  /* `\b`, not `$`: the button carries its price — "Make the song · 8
+     credits" — so an anchor on the end of the words would not match. */
+  await room.locator('button').filter({ hasText: /^Make the song\b/ }).first().click();
   for (let waited = 0; waited < 40 && !sent; waited += 1) await p.waitForTimeout(500);
 
   check('pressing Make sends a request to the music route', Boolean(sent));
@@ -374,6 +302,21 @@ try {
      room somebody had already been given. It was written first and did
      exactly that — three checks passed for the wrong reason, and one failed
      because the style it was counting was no longer ours. */
+  /* Behind the box's plus since 15 October 2026, under "Upload a song or a
+     photo to start from" — Carli: "by daardie plus kan daar ook 'n opsie wees
+     om 'n liedjie op te laai om vanaf dit te begin". */
+  const openBring = async () => {
+    if ((await room.locator('[data-makepicker]').count()) === 0) {
+      await room.locator('[data-makeplus]').click();
+      await p.waitForTimeout(400);
+    }
+    const bring = room.locator('[data-makepicker] [data-pickerbring]').first();
+    if ((await bring.getAttribute('aria-expanded')) !== 'true') {
+      await bring.click();
+      await p.waitForTimeout(400);
+    }
+  };
+  await openBring();
   check('and offers to take the style off a song or a photo',
     (await says()).includes('From a song') && (await says()).includes('From a photo'));
   check('saying it reads the light rather than the subject, and that nothing is uploaded',
@@ -432,10 +375,10 @@ try {
      by default. */
   await unfold(p);
   check('what comes back fills the room in — the title',
-    (await room.locator('input:visible').first().inputValue()) === 'Ouma se kombuis');
+    (await room.locator('#song-name').inputValue()) === 'Ouma se kombuis');
   check('the words',
     (await room.locator('textarea[placeholder*="Verse 1"]').inputValue()).includes('ketel op die stoof'));
-  check('and the style', (await room.locator('textarea').nth(1).inputValue()).includes('concertina'));
+  check('and the style', (await room.locator('textarea[placeholder*="afro house"]').inputValue()).includes('concertina'));
   check('and it says what it saw, so the words can be judged before spending',
     (await says()).includes('warm light'));
 
@@ -480,7 +423,7 @@ try {
     (fromSaid?.idea ?? '').length > 60, `${(fromSaid?.idea ?? '').length} characters`);
   await p.waitForTimeout(900);
   check('and the song fills the room in',
-    (await room.locator('input:visible').first().inputValue()) === 'Die brug om sewe');
+    (await room.locator('#song-name').inputValue()) === 'Die brug om sewe');
   check('and it says what it understood, before a generation is spent',
     (await says()).includes('an hour late'),
     (await says()).includes('It saw') ? 'the line is there with other words' : 'no “it saw” line at all');
@@ -520,14 +463,14 @@ try {
      whatever was there" half passed because there was nothing there — the
      same way the link bar's version of this assertion passed for the wrong
      reason before it was fixed. */
-  await room.locator('textarea').nth(1).fill('amapiano, log drum');
+  await room.locator('textarea[placeholder*="afro house"]').fill('amapiano, log drum');
   await p.waitForTimeout(300);
-  const wandStyleBefore = await room.locator('textarea').nth(1).inputValue();
+  const wandStyleBefore = await room.locator('textarea[placeholder*="afro house"]').inputValue();
   await styleWand.first().click();
   for (let waited = 0; waited < 30 && !waved; waited += 1) await p.waitForTimeout(300);
   check('and it asks for a style rather than for words', waved?.mode === 'style');
   await p.waitForTimeout(700);
-  const wandStyleAfter = await room.locator('textarea').nth(1).inputValue();
+  const wandStyleAfter = await room.locator('textarea[placeholder*="afro house"]').inputValue();
   check('the style lands beside the two words that were typed by hand',
     wandStyleBefore === 'amapiano, log drum'
       && wandStyleAfter.includes('upright bass')
@@ -557,48 +500,30 @@ try {
   check('and so is the paragraph explaining that it could not listen',
     !(await says()).includes('does not listen to it'),
     ((await says()).match(/does not listen[^.]*/) ?? ['gone'])[0]);
+  await openBring();
   check('the two that measure a real file are still offered',
     (await says()).includes('From a song') && (await says()).includes('From a photo'),
     (await says()).slice(0, 90));
 
-  /* ── Behind one heading now ─────────────────────────────────────────
+  /* ── Behind the plus now ────────────────────────────────────────────
 
-     Carli, 19 September 2026: *"alles behalwe die woorde en die klank agter
-     'n gevoude kaart... die vyftig beginpunte en foto-kaarte net daar is vir
-     wie dit soek."*
-
-     Opened by NAME here rather than left to `unfold`, and the difference is
-     the assertion above it: this probe has to know the card was shut when
-     the room opened, which a helper that opens everything cannot tell it. */
-  const startCard = room.locator('button[aria-expanded]')
-    .filter({ hasText: /^Somewhere to start|^.n Plek om te begin/ }).first();
-  check('the starting points are behind one heading', (await startCard.count()) === 1);
-  if ((await startCard.getAttribute('aria-expanded')) === 'true') await startCard.click();
+     Carli, 19 September 2026: *"die vyftig beginpunte en foto-kaarte net
+     daar is vir wie dit soek"* — and on 15 October 2026 the place they are
+     kept became the plus on the song box, as one list with feelings to
+     narrow it ("so selfde netjiese lys … vir keuses van gevoel"). */
+  await p.keyboard.press('Escape');
   await p.waitForTimeout(300);
-  check('  and the room does not show them until it is pressed',
-    (await startCard.getAttribute('aria-expanded')) === 'false'
-    && (await room.locator('button').filter({ hasText: /^Give me a song to start from$/ }).count()) === 0,
+  check('the starting points are not lying on the page',
+    (await room.locator('[data-starts]').count()) === 0,
     'the person who knows what they want should not scroll past fifty suggestions to reach the box');
-  await startCard.click();
+  await room.locator('[data-makeplus]').click();
   await p.waitForTimeout(400);
-
-  /* Pressed only if it is still shut.
-
-     `SongStarts` opens itself at the matching shelf once a feeling or a
-     photograph has named one, and this walk read a photograph several
-     hundred lines ago — so by the time it gets here the fifty are already
-     showing and there is no button left to press. Asserting the button
-     exists would fail on a room that is doing exactly what it should.
-
-     What matters is that the fifty are reachable from here, so that is
-     what is asserted, either way round. */
-  const startsButton = room.locator('button').filter({ hasText: /^Give me a song to start from$/ });
-  if ((await startsButton.count()) === 1) await startsButton.first().click();
-  await p.waitForTimeout(600);
-  check('the fifty starting points are inside it',
+  await room.locator('[data-makepicker] [data-pickershelves] button').first().click();
+  await p.waitForTimeout(300);
+  check('the fifty starting points are behind the plus',
     (await room.locator('[data-starts]').count()) >= 1);
   check('and says they are not AI', (await says()).includes('not by a model'));
-  const pick = room.locator('button').filter({ hasText: /BPM$/ });
+  const pick = room.locator('[data-start]');
   check('with real starting points on it', (await pick.count()) >= 4, `${await pick.count()} shown`);
   /* The one it actually pressed, so the assertion can compare rather than
      shrug. "The title is not empty" passed while pressing a starting point
@@ -606,12 +531,12 @@ try {
   const pressed = ((await pick.first().innerText()) ?? '').split('\n')[0].trim();
   await pick.first().click();
   await p.waitForTimeout(600);
-  const title = await room.locator('input:visible').first().inputValue();
-  const words = await room.locator('textarea').first().inputValue();
+  const title = await room.locator('#song-name').inputValue();
+  const words = await room.locator('[data-makewords] textarea[placeholder*="Verse 1"]').inputValue();
   check('pressing one fills the room in — its title, not just its words',
     title === pressed && words.includes('[Verse]'),
     `pressed "${pressed}", box says "${title}"`);
-  const styleBox = await room.locator('textarea').nth(1).inputValue();
+  const styleBox = await room.locator('textarea[placeholder*="afro house"]').inputValue();
   check('including a style the engine can work with',
     styleBox.split(',').length >= 3, styleBox.slice(0, 60));
 

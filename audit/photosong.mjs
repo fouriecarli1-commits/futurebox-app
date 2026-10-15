@@ -121,6 +121,12 @@ async function run(browser, hasModel) {
   await everything(p);
   await unfold(p);
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
+  /* Since 15 October 2026 the photo is behind the song box's plus, under
+     "Upload a song or a photo to start from". */
+  await room.locator('[data-makeplus]').click();
+  await p.waitForTimeout(400);
+  await room.locator('[data-makepicker] [data-pickerbring]').first().click();
+  await p.waitForTimeout(400);
 
   /* The picture, through the file input the camera button opens. Waited for
      rather than assumed: `setInputFiles` auto-waits, but everything read
@@ -148,10 +154,9 @@ async function run(browser, hasModel) {
   await write.first().click();
   await p.waitForTimeout(1500);
 
-  const title = await room.locator('input:visible').first().inputValue();
-  const boxes = room.locator('textarea');
-  const words = await boxes.first().inputValue();
-  const style = await boxes.nth(1).inputValue();
+  const title = await room.locator('#song-name').inputValue();
+  const words = await room.locator('[data-makewords] textarea[placeholder*="Verse 1"]').inputValue();
+  const style = await room.locator('textarea[placeholder*="afro house"]').inputValue();
   check('pressing it puts the title in the room', title === WROTE.title, `"${title}"`);
   check('and the words, with their part markers',
     words.includes('[Verse]') && words.includes('orange wall'), JSON.stringify(words.slice(0, 44)));

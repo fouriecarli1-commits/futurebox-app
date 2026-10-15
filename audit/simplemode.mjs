@@ -27,7 +27,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor, unfold } from './enter.mjs';
+import { dismissDoor } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3086';
@@ -88,177 +88,125 @@ try {
   await p.waitForTimeout(1600);
 
   const room = p.locator('div.fixed.inset-0.z-50').first();
-
-  /* ── The switch lives inside a card now ──────────────────────────────
-
-     Carli, 19 September 2026: *"Die hele room is baie besig... alles behalwe
-     die woorde en die klank agter 'n gevoude kaart."*
-
-     Simple / Everything is a setting about how much of the desk to show, so
-     it went onto the desk — inside "How it is made", with the length and the
-     rest of the Everything controls. At the top of the room it was the first
-     thing a person met before the room had asked them anything.
-
-     Opened once, by name, and then left open: everything this probe measures
-     is inside it. Left to a helper that opens every fold in the room, a
-     probe cannot say afterwards which card it was looking at. */
-  /* The pill is at the TOP of the room, outside every card — Carli, 10
-     October 2026: *"Bo in make a song moet daar 'n simple button wees, en 'n
-     everything."* This probe was written while it sat inside "How it is
-     made", four cards down, and asserted exactly that; the room moved and
-     the assertion stayed, so it reported her own instruction as a fault.
-     What is held now is what she asked for: the choice is met before the
-     desk is, and it is not inside any fold. */
-  const pill = room.locator('[data-makemode]').first();
-  check('the choice is at the top of the room, outside every card',
-    (await pill.count()) === 1
-      && (await pill.evaluate((el) => !el.closest('[aria-expanded]'))),
-    'the Simple/Everything pill is inside a card again');
-
-  const mode = async (which) => {
-    await pill.locator('button').filter({ hasText: new RegExp(`^${which}$`) }).first().click();
-    await p.waitForTimeout(800);
-    /* The words this probe reads live inside cards, and every card starts
-       folded. The pill itself is not a fold. */
-    await unfold(p);
-  };
-  /** How tall the settings card is, which is the only thing the switch changes.
-
-      It used to measure `div.rounded-2xl.border.border-zinc-800` — the one
-      bordered panel the whole form sat in. That panel is gone: the cards are
-      the only boxes now, so `.first()` would quietly have measured the words
-      card, which the switch does not touch, and reported a difference of
-      nothing forever. A ruler that survives the thing it measures being
-      removed is not a ruler. */
-  /* The whole room's scroll height, which is what "Simple is shorter"
-     means to a thumb. The ruler before this was the section round "How it is
-     made" — and that card is behind Everything now, so in Simple the ruler
-     was not on the screen at all. */
-  /* The overlay itself is `overflow-hidden` and exactly the viewport tall,
-     so its scrollHeight is the viewport (844 against 844, measured). The
-     content's height is on the shell inside it — the first full-size child —
-     whose scrollHeight reports the content whether or not it scrolls. */
-  const formHeight = async () =>
-    room.locator('.w-full.h-full').first().evaluate((el) => Math.round(el.scrollHeight));
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 
-  check('the room offers both', /Simple/.test(await says()) && /Everything/.test(await says()));
+  /* ── One box, around the copilot ─────────────────────────────────────
 
-  /* Something to summarise. Simple's four lines draw only once a title, words
-     or a sound has been set — on an empty room there is nothing to say and
-     it says nothing, which is right. The title field is the first visible
-     input in Everything, the same one `makesong` fills. */
-  await mode('Everything');
-  await room.locator('input:visible').first().fill('Karoo');
-  /* And a sound: the summary drops a row whose value is empty, so "Sound"
-     is only named once there is a sound to name. The words row always has a
-     value ("0 lines"), which is why that one was there without being set. */
-  await room.locator('textarea[placeholder*="afro house"]').first().fill('afro house, log drum, warm pads');
+     Carli, 15 October 2026: *"die simple en everything wegvat en net so box
+     rondom copilot bou wat alles in het, selfs 'n button wat uit pop om die
+     weirdness te verstel. … Dan onder daardie boks kom die woorde uit, en
+     onder die woorde moet die finale clear wees 'make the song'."* This probe
+     walked Simple and Everything; it walks the box now. */
+  check('Simple and Everything are gone', (await room.locator('[data-makemode]').count()) === 0
+    && (await room.locator('button').filter({ hasText: /^(Simple|Everything)$/ }).count()) === 0);
+  const box = room.locator('[data-makebox]');
+  check('there is one song box', (await box.count()) === 1);
+  check('  with the copilot inside it', (await box.locator('[data-copilot="make"], [data-makecopilot] input, [data-makecopilot] textarea').count()) > 0);
+  check('  and Easy and Extensive along its top',
+    (await box.locator('[data-makewaypick="easy"]').count()) === 1
+    && (await box.locator('[data-makewaypick="extensive"]').count()) === 1);
+  await p.screenshot({ path: shot('songbox.png') });
+
+  /* ── Where the words and the button are ──────────────────────────────── */
+  const top = async (sel) => room.locator(sel).first().evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  const button = room.locator('button').filter({ hasText: /Make the song/ }).first();
+  check('the button says "Make the song"', (await button.count()) === 1);
+  const boxTop = await top('[data-makebox]');
+  const wordsTop = await top('[data-makewords]');
+  const buttonTop = await button.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  check('the words come out under the box', wordsTop > boxTop, `${boxTop} then ${wordsTop}`);
+  check('  and the button is under the words', buttonTop > wordsTop, `${wordsTop} then ${buttonTop}`);
+
+  /* ── The weirdness pops out of a button on the box ───────────────────── */
+  check('the weirdness is not lying open on the page', (await room.locator('#make-weirdness').count()) === 0);
+  await box.locator('[data-maketool="feel"]').click();
+  await p.waitForTimeout(400);
+  check('  pressing Feel pops it out', await room.locator('#make-weirdness').isVisible().catch(() => false));
+  await room.locator('#make-weirdness').evaluate((el) => {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+    setter?.call(el, '60');
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   await p.waitForTimeout(300);
+  /* Shut by pressing somewhere else, as a menu is. */
+  await room.locator('[data-makewords] label').first().click();
+  await p.waitForTimeout(400);
+  check('  it goes away again when somewhere else is pressed', (await room.locator('#make-weirdness').count()) === 0);
+  check('  and the button says what it is set to, so nothing applies out of sight',
+    /60%/.test((await box.locator('[data-maketool="feel"]').innerText()) ?? ''));
 
-  await mode('Simple');
-  const simpleTall = await formHeight();
-  const simpleWords = await says();
-  await p.screenshot({ path: shot('simple-mode.png') });
-
-  /* The things a song needs. Named by their own labels rather than counted, so
-     a field renamed out of existence fails rather than passes.
- 
-     "How long?" joined them after Carli went looking for it and it was not
-     there. It is the one control behind the switch that changes what the song
-     costs, so Simple was hiding the price while charging it. */
-  /* Simple is a read-only summary since 10 October 2026 — "net 'n copilot" —
-     and the summary's rows are labelled by the room's own keys: make.name,
-     make.words, make.style ("Sound"), make.length. The sound row is "Sound",
-     not the question Everything asks. */
-  for (const want of ['What is it called?', 'The words', 'Sound', 'How long?']) {
-    check(`Simple still asks: ${want.toLowerCase()}`, simpleWords.includes(want), '');
-  }
-  check('and it still has the button that makes it', simpleWords.includes('Make my song'));
-
-  /* What it puts away. */
-  /* 'The voice' left this list on 10 September 2026 along with the control.
-     Six bars that named a singer and could not deliver one — the words went
-     into the style list last and were dropped from every chunk after the
-     intro. The ask lives in the copilot now. Left here it would have failed
-     the "one press away" assertion below, which is the assertion doing the
-     work: this list is what Everything must still have. */
-  const HIDDEN = ['I will sing it myself', 'Speed', 'Mood'];
-  const stillThere = HIDDEN.filter((one) => simpleWords.includes(one));
-  check('and it puts the rest away', stillThere.length === 0, stillThere.join(', ') || 'all of it');
-
-  await mode('Everything');
-  const allTall = await formHeight();
-  const allWords = await says();
-  await p.screenshot({ path: shot('everything-mode.png') });
-
-  const missing = HIDDEN.filter((one) => !allWords.includes(one));
-  check('every one of them is one press away', missing.length === 0, missing.join(', ') || 'all back');
-
-  /* ── What "simpler" is measured by ───────────────────────────────────
- 
-     This was `simpleTall < allTall * 0.7` — a pixel ratio standing in for
-     "fewer decisions", which is the thing the switch is actually for.
- 
-     On 10 September 2026 the voice picker came out of Everything (six bars
-     that named a singer the engine could not be told about) and the ratio
-     went from passing to 2142px against 2445px — 88%. Nothing about Simple
-     had changed. The proxy moved because the OTHER side of the comparison
-     got shorter, which is a proxy reporting on itself.
- 
-     So it is measured directly now: Everything must offer strictly more
-     controls to touch, and Simple must still be the shorter of the two. The
-     height is kept as a floor rather than a ratio — it catches Simple quietly
-     growing into Everything, which is the regression that matters, without
-     failing every time Everything loses something that should not have been
-     there.
- 
-     The gap is worth Carli's attention rather than a threshold: Simple now
-     puts away three controls out of a long screen, and the switch earns less
-     than it did. That is a design call, not a number to tune. */
-  const controls = async () =>
-    room.locator('input, select, textarea, [role="slider"]').count();
-  await mode('Simple');
-  const simpleControls = await controls();
-  await mode('Everything');
-  const allControls = await controls();
-
-  check('Everything genuinely offers more to touch', allControls > simpleControls,
-    `${simpleControls} controls against ${allControls}`);
-  check('and Simple is still the shorter of the two', simpleTall < allTall,
-    `${simpleTall}px against ${allTall}px`);
-
-  /* ── Hidden is not switched off ─────────────────────────────────────
- 
-     A setting made here and then put away by Simple still goes to the engine,
-     so Simple has to say so. This is the assertion the whole design rests on. */
-  const speed = room.locator('#make-bpm');
-  await speed.evaluate((el) => {
+  /* ── Hidden is not switched off ─────────────────────────────────────── */
+  await box.locator('[data-maketool="more"]').click();
+  await p.waitForTimeout(400);
+  await room.locator('#make-bpm').evaluate((el) => {
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
     setter?.call(el, '140');
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
   });
-  await p.waitForTimeout(600);
-  const setTo = await room.innerText();
-  check('the speed moved', /140/.test(setTo.replace(/\s+/g, ' ')), '');
+  await p.waitForTimeout(300);
+  await box.locator('[data-maketool="more"]').click();
+  await p.waitForTimeout(300);
+  check('the tempo, set and put away, is still named on its button',
+    /140/.test((await box.locator('[data-maketool="more"]').innerText()) ?? ''));
+  await box.locator('[data-maketool="more"]').click();
+  await p.waitForTimeout(300);
+  check('  and the value itself is untouched', (await room.locator('#make-bpm').inputValue()) === '140');
+  await box.locator('[data-maketool="more"]').click();
 
-  await mode('Simple');
-  const nowSays = await says();
-  check('Simple names what is still set from Everything',
-    /Still set from Everything/.test(nowSays) && /140/.test(nowSays),
-    (nowSays.match(/Still set from Everything:[^·]*·?[^A-Z]{0,40}/) ?? ['(not said)'])[0]);
+  /* ── The length, with its price ──────────────────────────────────────── */
+  await box.locator('[data-maketool="length"]').click();
+  await p.waitForTimeout(300);
+  const lengths = room.locator('[data-makelength]');
+  check('the length button offers real lengths, each with its price',
+    (await lengths.count()) >= 3 && /\d+ credits/.test((await lengths.first().innerText()) ?? ''));
+  await lengths.nth(1).click();
+  await p.waitForTimeout(300);
+  check('  and picking one puts it away and prices the box',
+    (await room.locator('[data-makelength]').count()) === 0
+    && /\d+ credits/.test((await box.locator('[data-makecost]').innerText()) ?? ''));
 
-  await mode('Everything');
-  await p.waitForTimeout(600);
-  const back = await room.locator('#make-bpm').inputValue();
-  check('and the value itself came back untouched', back === '140', back);
+  /* ── The plus ───────────────────────────────────────────────────────── */
+  await box.locator('[data-makeplus]').click();
+  await p.waitForTimeout(400);
+  const picker = room.locator('[data-makepicker]');
+  check('the plus pops out a list to start from', (await picker.count()) === 1);
+  check('  with a search box and feelings to pick from',
+    (await picker.locator('[data-pickersearch]').count()) === 1 && (await picker.locator('[data-shelf]').count()) >= 8);
+  await picker.locator('[data-shelf="road"]').click();
+  await p.waitForTimeout(300);
+  const rows = picker.locator('[data-start]');
+  check('  a feeling narrows it to songs to start from', (await rows.count()) >= 2
+    && (await picker.locator('[data-sound]').count()) === 0);
+  const firstTitle = ((await rows.first().innerText()) ?? '').split('\n')[0].trim();
+  await rows.first().click();
+  await p.waitForTimeout(500);
+  check('  and pressing one fills the name, the words and the sound in',
+    (await room.locator('#song-name').inputValue()) === firstTitle
+    && (await room.locator('[data-makewords] textarea').first().inputValue()).length > 10
+    && (await room.locator('textarea[placeholder*="afro house"]').inputValue()).length > 5,
+    firstTitle);
+  check('  then gets out of the way', (await room.locator('[data-makepicker]').count()) === 0);
 
-  /* ── The choice is remembered ───────────────────────────────────────── */
-  await p.evaluate(() => window.localStorage.getItem('futurebox.make.mode.v1'));
-  const remembered = await p.evaluate(() => window.localStorage.getItem('futurebox.make.mode.v1'));
-  check('the mode is written down, so nobody hunts for the controls twice',
-    remembered === 'advanced', String(remembered));
+  await box.locator('[data-makeplus]').click();
+  await p.waitForTimeout(400);
+  await room.locator('[data-makepicker] [data-pickerbring]').first().click();
+  await p.waitForTimeout(400);
+  check('the plus also starts from a song of your own',
+    (await room.locator('[data-makepicker] input[type="file"]').count()) >= 1);
+  await p.screenshot({ path: shot('songbox-plus.png') });
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(300);
+
+  /* ── Extensive is verse by verse ─────────────────────────────────────── */
+  await box.locator('[data-makewaypick="extensive"]').click();
+  await p.waitForTimeout(500);
+  check('Extensive writes it verse by verse, saying what each part is for',
+    (await box.locator('[data-makeverses]').count()) === 1 && /Verse 1/.test(await says()));
+  const remembered = await p.evaluate(() => window.localStorage.getItem('futurebox.make.way.v1'));
+  check('  and the choice is written down for next time', remembered === 'extensive', String(remembered));
+  await box.locator('[data-makewaypick="easy"]').click();
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }
@@ -268,4 +216,4 @@ if (problems.length) {
   console.error(`\n${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
   process.exit(1);
 }
-console.log('\nSimple is shorter, everything is one press away, and nothing applies in silence.');
+console.log('\nOne song box around the copilot; every setting pops out of it and says what it is set to.');
