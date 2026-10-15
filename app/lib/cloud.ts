@@ -706,6 +706,35 @@ export async function settleAgreed(): Promise<void> {
   if (error) console.error('terms acceptance not recorded', error.message);
 }
 
+/** The pages outside the studio that sign in themselves and want her back. */
+const BACK_PLACES = ['/kids'] as const;
+const BACK_KEY = 'fb-back-after-signin';
+
+/**
+ * Where to send somebody who signed in from outside the studio, once.
+ *
+ * Read and wiped on the front door's first load after a sign-in. Ten minutes
+ * at most, so a sign-in abandoned at Google does not, an hour later, bounce
+ * her off the front page into a room she did not ask for. Only ever one of
+ * `BACK_PLACES`, so nothing written into this tab can send her off the site.
+ */
+export function backAfterSignIn(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(BACK_KEY);
+    if (!raw) return null;
+    window.sessionStorage.removeItem(BACK_KEY);
+    const said = JSON.parse(raw) as { to?: unknown; at?: unknown };
+    if (typeof said.to !== 'string' || typeof said.at !== 'number') return null;
+    if (Date.now() - said.at > 10 * 60 * 1000) return null;
+    const to = said.to;
+    if (!to.startsWith('/') || to.startsWith('//')) return null;
+    return BACK_PLACES.some((one) => to === one || to.startsWith(`${one}?`) || to.startsWith(`${one}/`)) ? to : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Was this page load the return leg of a sign-in?
  *
@@ -847,6 +876,24 @@ export async function signInWith(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  /* ── From a page that is not the studio: back by way of the front door ──
+     Carli, 15 October 2026: *"Nogsteeds as ek binne die kids room sign in
+     dan vat dit my na die normale futurebox toe."* The kids page asked
+     Google to come back to /kids, and an address that is not on the
+     Supabase project's list of allowed returns is silently swapped for the
+     site's own address — the studio. So the page she was on is written down
+     in this tab, the sign-in comes back to the front door (which is on that
+     list), and the front door sends her on (`backAfterSignIn`). */
+  const away = typeof window !== 'undefined' && BACK_PLACES.some((one) => window.location.pathname.startsWith(one));
+  if (away) {
+    try {
+      window.sessionStorage.setItem(BACK_KEY, JSON.stringify({
+        to: `${window.location.pathname}${window.location.search}`, at: Date.now(),
+      }));
+    } catch {
+      /* No storage: she lands on the studio, as before, and the kids page is one link away. */
+    }
+  }
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
@@ -863,7 +910,7 @@ export async function signInWith(
       redirectTo:
         typeof window === 'undefined'
           ? undefined
-          : `${window.location.origin}${window.location.pathname}?${ARRIVED}=1${
+          : `${window.location.origin}${away ? '/' : window.location.pathname}?${ARRIVED}=1${
               lang ? `&${CHOSE_LANG}=${encodeURIComponent(lang)}` : ''
             }`,
     },

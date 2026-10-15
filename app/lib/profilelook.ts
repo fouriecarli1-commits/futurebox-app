@@ -69,10 +69,18 @@ export const PROFILE_GLASS = {
   boxShadow: '0 0 40px rgba(16,185,129,0.12)',
 } as const;
 
-/** A card inside the glass. */
+/**
+ * A card inside the glass.
+ *
+ * Carli, 15 October 2026: *"Daai blokke by You moet beter lyk en meer
+ * rounded."* A faint top-lit gradient, a hairline of light along the top edge
+ * and a soft shadow under it, so a card sits ON the glass instead of being a
+ * flat dark patch cut out of it. The corners are `rounded-2xl` where it is used.
+ */
 export const PROFILE_CARD = {
-  background: 'rgba(20,28,32,0.85)',
-  border: '1px solid rgba(255,255,255,0.10)',
+  background: 'linear-gradient(160deg, rgba(30,42,46,0.92) 0%, rgba(16,23,27,0.92) 100%)',
+  border: '1px solid rgba(255,255,255,0.09)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.28)',
 } as const;
 
 /** A decorative wave for a voice card, shaped by the voice's name. */

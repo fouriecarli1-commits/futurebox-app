@@ -81,6 +81,11 @@ export default function Landing({
 }) {
   const { t, lang } = useLang();
   const [region, setRegion] = useState<Region>(REGIONS[0]);
+  /* The kids pack chosen on the welcome page, carried to the kids page so the
+     next stop is the payment (Carli, 15 October 2026). */
+  const [kidsPick, setKidsPick] = useState<string>(
+    (KIDS_PACKS.find((one) => one.pick) ?? KIDS_PACKS[0]).id,
+  );
   /** Whether this is still only a guess, which decides whether it says so. */
   const [regionGuessed, setRegionGuessed] = useState(true);
 
@@ -463,28 +468,54 @@ export default function Landing({
               </span>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {/* Pressable, one chosen at a time. Carli, 15 October 2026:
+                  *"Hierdie buttons en prys keuse wil ook nie geclick word
+                  nie. Maak ook seker dit vat jou na die payment system toe."*
+                  They were three cards that looked like buttons and did
+                  nothing, under one link that went to the kids page. */}
               {KIDS_PACKS.map((pack) => (
-                <div
+                <button
                   key={pack.id}
+                  type="button"
                   data-landingkidspack={pack.id}
-                  className={`flex flex-col rounded-xl bg-zinc-900 p-4 ${pack.pick ? 'border-2 border-amber-400' : 'border border-zinc-800'}`}
+                  aria-pressed={kidsPick === pack.id}
+                  onClick={() => setKidsPick(pack.id)}
+                  className={`flex flex-col rounded-2xl p-4 text-left transition-all ${
+                    kidsPick === pack.id
+                      ? 'border-2 border-amber-400 bg-amber-500/[0.10] shadow-[0_0_24px_rgba(251,191,36,0.25)]'
+                      : 'border border-zinc-800 bg-zinc-900 hover:border-zinc-600'
+                  }`}
                 >
-                  <span className="text-sm font-bold text-white">{lang === 'af' ? pack.name[1] : pack.name[0]}</span>
+                  <span className="flex w-full items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-white">{lang === 'af' ? pack.name[1] : pack.name[0]}</span>
+                    <span
+                      aria-hidden
+                      className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                        kidsPick === pack.id ? 'border-amber-400 bg-amber-400' : 'border-zinc-600'
+                      }`}
+                    >
+                      {kidsPick === pack.id && <Check className="h-3 w-3 text-onAccent" />}
+                    </span>
+                  </span>
                   <span className="my-2">
                     <span className="text-2xl font-black text-white tabular-nums">R{pack.rand}</span>
                     <span className="text-xs text-zinc-400"> {pack.monthly ? `/ ${t('welcome.month', 'month')}` : t('landing.kidsOnce', 'once')}</span>
                   </span>
                   <span className="text-xs font-bold text-amber-200">{pack.credits} {t('landing.kidsCredits', 'kids credits')}</span>
                   <span className="mt-1 text-xs leading-snug text-zinc-400">{lang === 'af' ? pack.buys[1] : pack.buys[0]}</span>
-                </div>
+                </button>
               ))}
             </div>
+            {/* To the kids page carrying the pack: signed in, it goes straight
+                on to the payment; signed out, it asks for the sign-in there
+                and then goes on to the payment. */}
             <a
-              href="/kids"
+              href={`/kids?buy=${encodeURIComponent(kidsPick)}`}
               data-landingkidsbuy
-              className="mt-5 inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 text-xs font-bold uppercase tracking-wider text-onAccent transition-transform hover:scale-[1.01] md:w-auto md:px-8"
+              className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-gradient-to-r from-amber-400 to-emerald-400 text-xs font-bold uppercase tracking-wider text-onAccent transition-transform hover:scale-[1.01] md:w-auto md:px-8"
             >
               {t('landing.kidsBuy', 'Get kids credits')}
+              {' \u00b7 R'}{(KIDS_PACKS.find((one) => one.id === kidsPick) ?? KIDS_PACKS[0]).rand}
             </a>
           </div>
 

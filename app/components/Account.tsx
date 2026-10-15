@@ -260,7 +260,7 @@ export default function Account({
               </div>
             </div>
             {/* ── What is left in the wallet ─────────────────────────────── */}
-            <section className="flex flex-shrink-0 flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center lg:w-[480px]" style={PROFILE_CARD} data-accountwallet>
+            <section className="flex flex-shrink-0 flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center lg:w-[480px]" style={PROFILE_CARD} data-accountwallet>
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-sm text-zinc-300">
                   <CreditCard className="h-4 w-4" style={{ color: PHOTO.accent }} />
@@ -318,8 +318,16 @@ export default function Account({
             all four stand side by side. Google's "API & integration keys"
             column is "Connections" here — a key never goes on a screen — and
             its gigabytes of cloud are what this browser really stores. */}
-        <div className="rounded-2xl p-4 sm:p-5" style={PROFILE_GLASS}>
-          <div className="mb-4 grid grid-cols-2 gap-x-4 sm:grid-cols-4" role="tablist">
+        <div className="rounded-3xl p-4 sm:p-5" style={PROFILE_GLASS}>
+          {/* Rounded, as she asked on 15 October 2026 — "Daai blokke by You
+              moet beter lyk en meer rounded." They were four square blocks
+              with a line under the chosen one; now one soft tray of pills,
+              the chosen one lit. */}
+          <div
+            className="mb-4 grid grid-cols-2 gap-1.5 rounded-3xl p-1.5 sm:grid-cols-4"
+            style={{ background: 'rgba(0,0,0,0.32)', border: '1px solid rgba(255,255,255,0.08)' }}
+            role="tablist"
+          >
             {([
               { id: 'made' as const, says: t('account.vault', 'My productions') },
               { id: 'voices' as const, says: t('account.voicesModule', 'Cloned voice models') },
@@ -333,10 +341,14 @@ export default function Account({
                 data-accounttab={tab.id}
                 aria-selected={column === tab.id}
                 onClick={() => setColumn(tab.id)}
-                className="min-h-[44px] border-b-2 pb-2 text-left text-xs font-semibold uppercase tracking-wider sm:text-sm"
+                className="flex min-h-[52px] items-center justify-center rounded-2xl px-3 py-2 text-center text-[11px] font-bold uppercase leading-tight tracking-wide transition-colors sm:text-xs"
                 style={column === tab.id
-                  ? { borderColor: PHOTO.accent, color: PHOTO.accent }
-                  : { borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(226,232,240,0.7)' }}
+                  ? {
+                    background: PHOTO.accentWash,
+                    color: PHOTO.accent,
+                    boxShadow: `inset 0 0 0 1px ${PHOTO.accent}, 0 0 18px rgba(16,185,129,0.22)`,
+                  }
+                  : { background: 'transparent', color: 'rgba(226,232,240,0.72)' }}
               >
                 {tab.says}
               </button>
@@ -345,17 +357,17 @@ export default function Account({
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:divide-x lg:divide-white/10">
             {/* My productions */}
             <section className={`space-y-3 lg:block lg:pr-4 ${column === 'made' ? 'block' : 'hidden'}`} data-accountvault>
-              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+              <div className="rounded-2xl p-4" style={PROFILE_CARD}>
                 <p className="text-sm text-zinc-300">{t('account.songs', 'Songs')}</p>
                 <p className="text-xl font-bold text-white">{made.songs} {t('account.tracks', 'tracks')}</p>
                 {made.lastSong && <p className="truncate text-xs text-zinc-400">{t('account.recent', 'Recent')}: {made.lastSong}</p>}
               </div>
-              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+              <div className="rounded-2xl p-4" style={PROFILE_CARD}>
                 <p className="text-sm text-zinc-300">{t('account.videos', 'Videos and clips')}</p>
                 <p className="text-xl font-bold text-white">{made.videos} {t('account.clips', 'clips')}</p>
                 {made.lastVideo && <p className="truncate text-xs text-zinc-400">{t('account.recent', 'Recent')}: {made.lastVideo}</p>}
               </div>
-              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+              <div className="rounded-2xl p-4" style={PROFILE_CARD}>
                 <p className="text-sm text-zinc-300">{t('account.voiceModels', 'Voice models')}</p>
                 <p className="text-xl font-bold text-white">{voices ? voices.mine.length : '–'} {t('account.models', 'models')}</p>
                 {voices && voices.mine[0] && <p className="truncate text-xs text-zinc-400">{t('account.latest', 'Latest')}: {voices.mine[0].name}</p>}
@@ -364,7 +376,7 @@ export default function Account({
               <button
                 type="button"
                 onClick={() => { onClose(); onGoToChannel(); }}
-                className="min-h-[44px] w-full rounded-xl text-xs font-bold text-zinc-200 hover:text-white"
+                className="min-h-[48px] w-full rounded-full text-xs font-bold text-zinc-200 hover:text-white"
                 style={PROFILE_CARD}
               >
                 {t('account.viewVault', 'View the vault →')}
@@ -376,7 +388,7 @@ export default function Account({
               {voices === null ? (
                 <p className="flex items-center gap-2 text-xs text-zinc-400"><Loader2 className="h-3.5 w-3.5 animate-spin" />{t('account.voicesAsking', 'Asking for your voices…')}</p>
               ) : voices.mine.length === 0 ? (
-                <div className="rounded-xl p-3" style={PROFILE_CARD}>
+                <div className="rounded-2xl p-4" style={PROFILE_CARD}>
                   <p className="text-sm font-semibold text-white">{t('account.voicesNone', 'No cloned voices yet')}</p>
                   <p className="mt-1 text-xs text-zinc-400">
                     {voices.room > 0
@@ -386,7 +398,7 @@ export default function Account({
                 </div>
               ) : (
                 voices.mine.map((one) => (
-                  <div key={one.id} className="rounded-xl p-3" style={PROFILE_CARD}>
+                  <div key={one.id} className="rounded-2xl p-4" style={PROFILE_CARD}>
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-base font-bold text-white">{one.name}</p>
                       <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: PHOTO.accent }} />
@@ -402,7 +414,7 @@ export default function Account({
                 <button
                   type="button"
                   onClick={() => { onClose(); onGoToVoices(); }}
-                  className="min-h-[44px] w-full rounded-xl text-xs font-semibold"
+                  className="min-h-[48px] w-full rounded-full text-xs font-semibold"
                   style={{ border: `1px solid ${PHOTO.accent}`, color: PHOTO.accent, background: PHOTO.accentWash }}
                 >
                   <Mic className="mr-1 inline h-3.5 w-3.5" />
@@ -421,7 +433,7 @@ export default function Account({
 
             {/* Storage on this device */}
             <section className={`space-y-3 lg:block lg:pl-4 ${column === 'store' ? 'block' : 'hidden'}`} data-accountstorage>
-              <div className="rounded-xl p-3" style={PROFILE_CARD}>
+              <div className="rounded-2xl p-4" style={PROFILE_CARD}>
                 {store ? (
                   <>
                     <div className="flex items-baseline justify-between gap-2">
@@ -440,7 +452,7 @@ export default function Account({
               <button
                 type="button"
                 onClick={() => { onClose(); onGoToChannel(); }}
-                className="min-h-[44px] w-full rounded-xl text-xs font-semibold"
+                className="min-h-[48px] w-full rounded-full text-xs font-semibold"
                 style={{ border: `1px solid ${PHOTO.accent}`, color: PHOTO.accent, background: PHOTO.accentWash }}
               >
                 {t('account.channel', 'Your channel and your picture')}
@@ -481,7 +493,7 @@ export default function Account({
               drops its tail is worse than a short one. */}
           <div className="grid grid-cols-1 gap-4 text-xs leading-relaxed text-zinc-300 md:grid-cols-2 lg:grid-cols-3">
             {columns.map((column) => (
-              <div key={column.says} className="rounded-xl p-3.5" style={well}>
+              <div key={column.says} className="rounded-2xl p-4" style={well}>
                 <strong className="mb-1 block" style={{ color: PHOTO.accent }}>{column.icon} {column.says}</strong>
                 <ul className="space-y-1 text-[11px] text-zinc-400">
                   {column.rows.map((row) => (

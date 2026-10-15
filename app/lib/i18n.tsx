@@ -3210,6 +3210,7 @@ export const STRINGS: Dict = {
   "make.goingNote": { en: "Making it. A real song takes thirty to sixty seconds \u2014 longer for a long one.", af: "Besig. ’n Regte liedjie vat dertig tot sestig sekondes \u2014 langer vir ’n lang een." },
   "make.go": { en: "Make the song", af: "Maak die liedjie" },
   /* The song box, Carli 15 October 2026. */
+  "kids.thenPay": { en: "Then it goes straight on to paying for {pack}.", af: "Dan gaan dit reguit aan om vir {pack} te betaal." },
   "post.alignLeft": { en: "Left", af: "Links" },
   "post.alignCenter": { en: "Centre", af: "Middel" },
   "post.alignRight": { en: "Right", af: "Regs" },

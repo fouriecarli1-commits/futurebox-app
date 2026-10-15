@@ -112,6 +112,14 @@ async function stubKids(page, onPost) {
   check('  and a press asks the till for that pack', tillAsked?.kind === 'kids' && tillAsked?.pack === 'kids-try', JSON.stringify(tillAsked));
   await page.locator('[data-kidspaid]').waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
   check('  and coming back says the payment went through', await page.locator('[data-kidspaid]').isVisible().catch(() => false));
+  /* A pack chosen on the welcome page arrives as `?buy=` and goes straight
+     on to the till once somebody is signed in (Carli, 15 October 2026:
+     "Maak ook seker dit vat jou na die payment system toe"). */
+  tillAsked = null;
+  await page.goto(`${server.url}/kids?buy=kids-month`, { waitUntil: 'networkidle' });
+  await page.waitForURL(/paid=1/, { timeout: 15000 }).catch(() => undefined);
+  check('a pack chosen on the welcome page goes straight on to the till for it',
+    tillAsked?.kind === 'kids' && tillAsked?.pack === 'kids-month', JSON.stringify(tillAsked));
   await page.unroute('**/api/checkout');
   await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
 
@@ -184,6 +192,13 @@ async function stubKids(page, onPost) {
   /* The pricing section prices the kids room on its own. */
   check('the welcome page prices the kids room apart, three packs',
     (await page.locator('[data-landingkidsprices] [data-landingkidspack]').count()) === 3);
+  /* The three packs are presses now, one chosen at a time, and the button
+     carries the chosen one to the kids page. */
+  await page.locator('[data-landingkidspack="kids-plus"]').click().catch(() => undefined);
+  check('  a pack can be chosen there',
+    (await page.locator('[data-landingkidspack="kids-plus"]').getAttribute('aria-pressed').catch(() => null)) === 'true');
+  check('  and the button carries it to the kids page',
+    (await page.locator('[data-landingkidsbuy]').getAttribute('href').catch(() => '')) === '/kids?buy=kids-plus');
   check('  and says nothing about families or how many children',
     !/famil|three children|drie kinders/i.test((await page.locator('[data-landingkidsprices]').textContent().catch(() => '')) ?? ''));
   const banner = page.locator('[data-authkids]');

@@ -570,6 +570,15 @@ export default function FutureBoxHome() {
        to Google and came back is a page load, and a page load looks exactly
        like coming back to a tab. */
     const cameBack = cloud.justArrived();
+    /* Signed in from the kids page with Google and brought back here: on to
+       the page she was on (`backAfterSignIn` says why it comes this way). */
+    if (cameBack) {
+      const back = cloud.backAfterSignIn();
+      if (back) {
+        window.location.replace(back);
+        return;
+      }
+    }
     /* ── A return from the till is not an arrival at the door ──────────
      *
      * Carli, 22 September 2026, for the third time: *"Na betaling gooi hy

@@ -37,7 +37,7 @@
  * the limit is applied in `charge()` and nowhere near this file.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Check, Clock, Loader2, Lock, Sparkles, Unlock } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import {
@@ -197,6 +197,34 @@ export default function KidsDoor({
   };
   const bought = state?.bought ?? 0;
 
+  /* ── A pack chosen on the welcome page goes on to the payment ──────────
+     Carli, 15 October 2026: *"Maak ook seker dit vat jou na die payment
+     system toe. Huidiglik vat dit my dadelik deur na die ander page toe."*
+     The welcome page's button arrives here as `?buy=kids-month`. Signed in,
+     the payment opens straight away; signed out, the sign-in step below says
+     so, and the payment opens the moment she is in. Taken off the address
+     first, so coming back from the till does not open it a second time. */
+  const [wanted, setWanted] = useState<string | null>(null);
+  /* The press itself, held so the effect below always calls this render's. */
+  const buyNow = useRef(buy);
+  buyNow.current = buy;
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const asked = url.searchParams.get('buy');
+    if (!asked || !KIDS_PACKS.some((one) => one.id === asked)) return;
+    setWanted(asked);
+  }, []);
+  useEffect(() => {
+    if (!wanted || !state || state.signedIn === false || state.problem || busy) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('buy');
+    window.history.replaceState(null, '', url.toString());
+    const pack = wanted;
+    setWanted(null);
+    void buyNow.current(pack);
+  }, [wanted, state, busy]);
+  const wantedPack = wanted ? KIDS_PACKS.find((one) => one.id === wanted) ?? null : null;
+
   /* The monthly pack, and the one press that stops it. The terms promise a
      monthly pack can be stopped any time from here; the membership's own
      "stop" on the account screen does not reach it. */
@@ -287,6 +315,12 @@ export default function KidsDoor({
           <p className="text-sm leading-relaxed text-surface-900">
             {t('kids.signedOutHere', 'Sign in here first — the kids room and its credits belong to your account.')}
           </p>
+          {wantedPack && (
+            <p data-kidswantedpack className="text-sm font-bold leading-relaxed text-surface-950">
+              {t('kids.thenPay', 'Then it goes straight on to paying for {pack}.')
+                .replace('{pack}', `${lang === 'af' ? wantedPack.name[1] : wantedPack.name[0]} \u00b7 R${wantedPack.rand}`)}
+            </p>
+          )}
           <KidsSignIn onIn={() => { void kidsNow().then(setState); }} />
         </div>
       )}
