@@ -47,10 +47,18 @@ const check = (label, ok, detail = '') => {
 const SEARCHES = () => {
   const out = [];
   for (const el of document.querySelectorAll('button')) {
-    const said = `${el.innerText || ''} ${el.getAttribute('aria-label') || ''}`.toLowerCase();
+    const named = [el.innerText || '', el.getAttribute('aria-label') || '']
+      .map((one) => one.trim().toLowerCase());
     /* By the icon as well as by the word, because the phone-width one has no
-       word on it — which is exactly how two of them hid as one. */
-    if (!/search|soek/.test(said) && !el.querySelector('svg.lucide-search')) continue;
+       word on it — which is exactly how two of them hid as one.
+
+       By a name that STARTS with the word, not one that contains it: the
+       studio home's music quiz picks a question at random, and on 15 October
+       2026 one of its answers had "research" in it — a 324×63 answer box was
+       counted as a second search and the run failed on the luck of the
+       draw. A control that opens the search is named "Search …" / "Soek …". */
+    const opensSearch = named.some((one) => /^(search|soek)\b/.test(one));
+    if (!opensSearch && !el.querySelector('svg.lucide-search')) continue;
     const r = el.getBoundingClientRect();
     if (r.width < 2 || r.height < 2) continue;
     out.push({ x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) });
