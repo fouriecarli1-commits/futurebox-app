@@ -123,6 +123,21 @@ export default function CollabRoom({
   const [ready, setReady] = useState<boolean | null>(null);
   const [why, setWhy] = useState<string | null>(null);
 
+  /* A room being opened opens the card it lives in. "Enter the room" from
+     the lobby used to land on "Working together" folded shut — every card
+     starts shut — so the conversation somebody had just pressed to enter
+     was behind one more press. CI's walk found it on 15 October 2026: on a
+     slow machine nothing had unfolded the card yet, and the room read as
+     empty. Arriving somewhere opens it, as `lib/arrival.ts` says. */
+  const arrive = working.arrived;
+  /* `loaded` as well: until the threads are read this component draws a
+     "Looking…" line instead, so the card does not exist yet — and a card
+     that mounts with the signal already raised takes it as where it started
+     and stays shut (`Card` skips its first value on purpose). */
+  useEffect(() => {
+    if (open && loaded) arrive();
+  }, [open, loaded, arrive]);
+
   const bottom = useRef<HTMLDivElement | null>(null);
 
   const refresh = useCallback(() => {
