@@ -231,6 +231,7 @@ export const MODELS: readonly Candidate[] = [
   { id: 'gemini-3-pro-image-preview', what: 'image', verb: 'generateContent', note: 'Nano Banana Pro as Google’s own Vertex page lists it. Possibly withdrawn with the other -preview ids.' },
   { id: 'gemini-2.5-flash-image', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'The original Nano Banana. Answered 400 to an empty body on 8 October, which on this verb means the name resolved.' },
   { id: 'gemini-3.1-flash-image', what: 'image', verb: 'generateContent', note: 'Named as the replacement for the above. Id unverified anywhere official.' },
+  { id: 'gemini-3.1-flash-lite-image', what: 'image', verb: 'generateContent', note: 'The lighter 3.1 image model; what cover.ts draws album covers with. Last in IMAGE_ORDER, 15 October 2026.' },
   /* ── The one that can CHANGE a video ──────────────────────────────
  
      Carli pasted her own documentation page on 10 October 2026: the

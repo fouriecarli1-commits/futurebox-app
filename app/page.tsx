@@ -104,6 +104,7 @@ import type { Pack } from './lib/credits';
 import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, THEME_EVENT, type Theme } from './lib/theme';
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
+import { sendChildBack } from './lib/kidslock';
 import * as cloud from './lib/cloud';
 import { accessToken } from './lib/cloud';
 import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipPrice, tierPrice } from './lib/plans';
@@ -561,6 +562,11 @@ export default function FutureBoxHome() {
     && new URL(window.location.href).searchParams.get('paid') === '1',
   );
 
+  /* A child in the kids room who reached the studio — by the back button,
+     or by closing the app and opening it again — goes straight back
+     (`lib/kidslock.ts`). Only the grown-up's page lets go of the room. */
+  useEffect(() => { sendChildBack(); }, []);
+
   // With an account behind the app, a refresh should not sign you out and a
   // sign-out in another tab should not leave this one looking signed in.
   useEffect(() => {
@@ -609,6 +615,17 @@ export default function FutureBoxHome() {
     void cloud.settleAgreed();
     cloud.currentAccount().then((account) => {
       if (!live) return;
+      /* And again once the account is known, whether or not the address
+         carried the arrival mark: Google, or Supabase falling back to the
+         site's own address, can drop the mark, and then she landed here
+         signed in with the kids room still waiting for her. */
+      if (account) {
+        const back = cloud.backAfterSignIn();
+        if (back) {
+          window.location.replace(back);
+          return;
+        }
+      }
       if (account) {
         setUser({ ...account, followers: 1 });
         sayHello();

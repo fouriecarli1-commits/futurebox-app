@@ -229,7 +229,19 @@ export { MOST_PICTURES };
  * Carli: *"Ok sal jy die models dan reg maak?"* This is what fixing them
  * looks like when the evidence is good but not certain.
  */
-export const IMAGE_ORDER: readonly string[] = [CHOSEN.image, 'gemini-2.5-flash-image'];
+/* ── And after them, the 3.1 image models ───────────────────────────────
+   Carli, 15 October 2026, under a child's drawing that never came back:
+   *"Hierdie werk nie. Prente word nie lewendig."* Both names above can be
+   missing now: 2.1 is Self-deployed on her listing, so it has no address
+   until it is deployed, and `gemini-2.5-flash-image` was listed for shutdown
+   on 2 October 2026 (one Google page says March 2027 for Vertex; the two
+   disagree). Three trackers name `gemini-3.1-flash-image` as its stable
+   successor, with `gemini-3.1-flash-lite-image` beside it — the second is
+   already what `cover.ts` draws album covers with. Tried only when every
+   name before them answers "not here", so nothing is paid for twice. */
+export const IMAGE_ORDER: readonly string[] = [
+  CHOSEN.image, 'gemini-2.5-flash-image', 'gemini-3.1-flash-image', 'gemini-3.1-flash-lite-image',
+];
 
 /**
  * The one that answered last, so the fallback is paid for once.

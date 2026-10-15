@@ -31,7 +31,7 @@
  * page that needs a key typed on a phone is a page nobody opens.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import KidsRoom from '../components/KidsRoom';
@@ -39,8 +39,12 @@ import { useLang } from '../lib/i18n';
 
 export default function KidsPage(): React.ReactElement {
   const { t } = useLang();
+  /* The way back to the studio is the grown-up's, so it shows only on the
+     grown-up's page — never over the child's room (`lib/kidslock.ts`). */
+  const [grownUp, setGrownUp] = useState(true);
   return (
     <main className="min-h-screen bg-transparent text-ink">
+      {grownUp && (
       <div className="mx-auto w-full max-w-3xl px-5 pt-8">
         <Link
           href="/"
@@ -50,7 +54,8 @@ export default function KidsPage(): React.ReactElement {
           {t('kids.back', 'Back to the studio')}
         </Link>
       </div>
-      <KidsRoom />
+      )}
+      <KidsRoom onGrownUp={setGrownUp} />
     </main>
   );
 }

@@ -218,6 +218,17 @@ ok('  and from nowhere inside the app',
     .every((file) => !/href=\{?['"`]\/kids['"`]|(push|replace|assign)\(['"`]\/kids['"`]/.test(withoutComments(readFileSync(file, 'utf8')))),
   'a door to /kids inside the app is the one thing she asked to be gone');
 
+/* Carli, 15 October 2026: no grown-up button in the kids room, "want kinders
+   gaan dit self stel". So a child who reaches the studio — by Back, or by
+   closing and opening the app — is sent back to the room. That is not a door:
+   nothing is pressed or shown, and it fires only while the device remembers a
+   child in the room. Held here so it cannot grow into one. */
+ok('  the one way back is for a child already in the kids room, and nothing else',
+  /export function sendChildBack\(\): boolean \{\s*if \(typeof window === 'undefined' \|\| !childIsIn\(\)\) return false;/
+    .test(withoutComments(readFileSync('app/lib/kidslock.ts', 'utf8')))
+  && /useEffect\(\(\) => \{ sendChildBack\(\); \}, \[\]\);/.test(withoutComments(readFileSync('app/page.tsx', 'utf8'))),
+  'the front door sends to /kids only when a child is already in the room; anything wider is a door');
+
 ok('story mode is reached from the grown-up\'s screen',
   withoutComments(readFileSync('app/components/Account.tsx', 'utf8')).includes('href="/story"'),
   'the other room nothing led to');

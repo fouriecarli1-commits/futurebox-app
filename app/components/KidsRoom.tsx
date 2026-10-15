@@ -101,7 +101,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Bell, BookOpen, Cake, Cat, CloudRain, Disc, Dog, Film, Guitar, Heart, Laugh,
   Loader2, Mic, Moon, Music, Palette, Radio, Rocket, ShieldCheck,
-  Settings, Smile, Sparkles, Square, Sun, Volume2, Waves, X,
+  Smile, Sparkles, Square, Sun, Volume2, Waves, X,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
@@ -130,6 +130,9 @@ import KidsPiano from './KidsPiano';
 import KidsEditor from './KidsEditor';
 import KidsLoops from './KidsLoops';
 import KidsPads from './KidsPads';
+import { CodeChooser, CodePad, GrownUpHold } from './KidsLock';
+import { childIn, forgetCode } from '../lib/kidslock';
+import { justSignedInForKids } from '../lib/cloud';
 import { ALIVE_WORDS, KID_STYLES, KID_SUBJECTS, makeKidPicture, packDrawing, pictureWords } from '../lib/kidsalive';
 import { keepPiece } from '../lib/kidsgallery';
 import { BADGES, levelOf, towardNext, type Counts } from '../lib/kidslevel';
@@ -224,6 +227,13 @@ const DOORS: readonly Door[] = [
     ['kids.doorMusic1', 'Press the bubbles, or type or say your own idea'],
     ['kids.doorMusic2', 'Four loops to tap, a real song, a beat machine'],
   ] },
+  /* Its own door. Carli, 15 October 2026: *"Ek sien ook nie die story mode
+     waar kinders kinder stories ontwikkel nie."* It was the second tab
+     inside the video door, which nobody looking for stories opens. */
+  { id: 'story', icon: '📖', says: ['kids.doorStory', 'Story Maker!'], lines: [
+    ['kids.doorStory1', 'Pick a hero, a magic place, a surprise and an ending'],
+    ['kids.doorStory2', 'A storybook with pictures, read to you page by page'],
+  ] },
   { id: 'video', icon: '🎬', says: ['kids.doorVideo', 'Music Videos & Stories!'], lines: [
     ['kids.doorVideo1', 'A video of your song, on your own stage'],
     ['kids.doorVideo2', 'Build a story page by page, with pictures'],
@@ -255,7 +265,7 @@ const FOOT: readonly { readonly id: Tab; readonly icon: string; readonly says: r
 ];
 
 /** Which door an inner screen belongs to, for the title above it. */
-const DOOR_OF: Partial<Record<Tab, Tab>> = { story: 'video' };
+const DOOR_OF: Partial<Record<Tab, Tab>> = {};
 
 const STARS_KEY = 'futurebox.kids.stars.v1';
 
@@ -329,11 +339,18 @@ function Bubble({
   );
 }
 
-export default function KidsRoom(): React.ReactElement {
+export default function KidsRoom({
+  onGrownUp,
+}: {
+  /** Told whether the grown-up's page is showing, so the page around the room shows its way out only then. */
+  readonly onGrownUp?: (showing: boolean) => void;
+} = {}): React.ReactElement {
   const { lang, t } = useLang();
   const [state, setState] = useState<KidsState | null>(null);
   /* The grown-up's page, reached on purpose rather than by going back. */
   const [atDoor, setAtDoor] = useState(false);
+  /* The code pad, opened by holding the FUTUREBOX name (`KidsLock.tsx`). */
+  const [askCode, setAskCode] = useState(false);
 
   /* Which line the mascot is on. A number and not a sentence, so the room
      can change language without the mascot changing its mind. */
@@ -444,6 +461,27 @@ export default function KidsRoom(): React.ReactElement {
   const held = useRef<string>('');
 
   useEffect(() => { void kidsNow().then(setState); }, []);
+
+  /* Just signed in from here: the grown-up's page first, whatever the
+     allowance says — only a grown-up signs in. Carli, 15 October 2026: "dan
+     het dit sommer die grown up gedeelte geskip." A fresh sign-in is also how
+     a forgotten code is replaced, so it is forgotten here. */
+  useEffect(() => {
+    if (justSignedInForKids()) {
+      forgetCode();
+      setAtDoor(true);
+    }
+  }, []);
+
+  /* While the child's room is on the screen the device remembers it, and the
+     studio's front door sends anybody who reaches it back here
+     (`lib/kidslock.ts`). The grown-up's page lets go. */
+  const grownUpShowing = state !== null && (!state.open || atDoor);
+  useEffect(() => {
+    if (state === null) return;
+    childIn(!grownUpShowing);
+    onGrownUp?.(grownUpShowing);
+  }, [state, grownUpShowing, onGrownUp]);
 
   useEffect(() => {
     if (tab !== 'badges') return undefined;
@@ -576,21 +614,16 @@ export default function KidsRoom(): React.ReactElement {
     beatEngine.stop();
     return (
       <div className="mx-auto w-full max-w-md space-y-6 p-6 text-center" data-kidstimeup>
-        <p className="text-5xl" aria-hidden>⏰</p>
+        <GrownUpHold onHeld={() => setAskCode(true)} className="text-5xl">
+          <span aria-hidden>⏰</span>
+        </GrownUpHold>
         <h2 className="text-2xl font-extrabold tracking-tight text-surface-950">
           {t('kids.timeUp', 'Time is up')}
         </h2>
         <p className="text-base leading-relaxed text-surface-700">
           {t('kids.timeUpSay', 'That is all for now. Go and fetch a grown-up if you want some more.')}
         </p>
-        <button
-          type="button"
-          data-kidsgrownup
-          onClick={() => setAtDoor(true)}
-          className="min-h-[44px] text-sm text-surface-600 underline underline-offset-4 hover:text-surface-900"
-        >
-          {t('kids.imTheGrownUp', 'I am the grown-up')}
-        </button>
+        {askCode && <CodePad onPass={() => { setAskCode(false); setAtDoor(true); }} onClose={() => setAskCode(false)} />}
       </div>
     );
   }
@@ -602,6 +635,7 @@ export default function KidsRoom(): React.ReactElement {
     beatEngine.stop();
     return (
       <div className="space-y-4">
+        {state.signedIn !== false && <CodeChooser />}
         <KidsDoor onIn={(next) => { setState(next); setAtDoor(false); }} />
         {state.open && (
           <div className="mx-auto w-full max-w-3xl px-5 pb-8">
@@ -825,24 +859,20 @@ export default function KidsRoom(): React.ReactElement {
             </div>
           </div>
           <div className="min-w-0 text-center" aria-label={t('kids.dreamTitle', 'FutureBox Kids Dream Studio')}>
-            <h1 data-kidsdreamtitle className="text-xl font-black tracking-wider text-surface-950 sm:text-2xl">
-              FUTURE<span className="text-cyan-300">BOX</span>
-            </h1>
+            {/* Held for three seconds, the grown-up's way back in. There is no
+                button for it: Carli, 15 October 2026, "daar moet nie 'n grown
+                up button binne die studio wees nie want kinders gaan dit self
+                stel." */}
+            <GrownUpHold onHeld={() => setAskCode(true)}>
+              <h1 data-kidsdreamtitle className="text-xl font-black tracking-wider text-surface-950 sm:text-2xl">
+                FUTURE<span className="text-cyan-300">BOX</span>
+              </h1>
+            </GrownUpHold>
             <p className="fb-kids-bubble text-sm">
               <span className="text-amber-300">{t('kids.dreamKids', 'KIDS DREAM')}</span>{' '}
               <span className="text-cyan-300">{t('kids.dreamStudio', 'STUDIO')}</span>
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setAtDoor(true)}
-            data-kidsgrownup
-            aria-label={t('kids.grownUp', 'Grown-up')}
-            title={t('kids.grownUp', 'Grown-up')}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2 border-cyan-400/50 bg-surface-100/90 text-cyan-300"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
         </div>
       </header>
 
@@ -889,15 +919,8 @@ export default function KidsRoom(): React.ReactElement {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => setAtDoor(true)}
-          data-kidsgrownup
-          className="min-h-[44px] flex-shrink-0 rounded-xl border border-surface-300 bg-surface-100/90 px-3.5 text-xs font-bold text-surface-800 transition-colors hover:border-surface-400 hover:text-surface-900"
-        >
-          {t('kids.grownUp', 'Grown-up')}
-        </button>
       </div>
+      {askCode && <CodePad onPass={() => { setAskCode(false); setAtDoor(true); }} onClose={() => setAskCode(false)} />}
 
       {/* ── Pip ──────────────────────────────────────────────────────────── */}
       {pip && (
@@ -983,7 +1006,7 @@ export default function KidsRoom(): React.ReactElement {
         <>
           {/* Google's "Create Music Studio", 13 October 2026: four loop
               cards for the little ones first, the big kids' deck under. */}
-          <KidsLoops onSpark={spark} />
+          <KidsLoops onSpark={spark} onToBeat={() => setMusic('beat')} />
           <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400 bg-cyan-400/15 px-3.5 py-1.5 text-sm font-black text-cyan-300">
             🎙️ {t('kids.bigKidsDeck', 'Make a real song (type or say your idea, big kids!)')}
           </p>

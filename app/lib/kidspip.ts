@@ -80,3 +80,43 @@ export function sayAloud(words: string, lang: 'en' | 'af'): boolean {
     return false;
   }
 }
+
+/**
+ * Read words aloud and say when it has finished, for "Read to me".
+ *
+ * Carli, 15 October 2026, under the storybook: *"Read to me werk nie."* The
+ * button played six seconds of made-up chimes and read nothing. This reads
+ * the page in the phone's own voice — free, nothing sent — and tells the
+ * caller when the page is done, so the book can turn to the next one.
+ *
+ * Afrikaans voices are missing on many phones; a Dutch voice reads
+ * Afrikaans far better than an English one does, so it is the second choice.
+ */
+export function readAloud(words: string, lang: 'en' | 'af', onEnd: () => void): boolean {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return false;
+  try {
+    const speech = window.speechSynthesis;
+    speech.cancel();
+    const said = new SpeechSynthesisUtterance(words);
+    const voices = speech.getVoices();
+    const wanted = lang === 'af' ? ['af', 'nl'] : ['en-ZA', 'en-GB', 'en'];
+    const voice = wanted
+      .map((tag) => voices.find((one) => one.lang.toLowerCase().startsWith(tag.toLowerCase())))
+      .find(Boolean);
+    if (voice) said.voice = voice;
+    said.lang = voice?.lang ?? (lang === 'af' ? 'af-ZA' : 'en-ZA');
+    said.rate = 0.9;
+    said.pitch = 1.1;
+    said.onend = () => onEnd();
+    said.onerror = () => onEnd();
+    speech.speak(said);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Stop whatever is being read. */
+export function stopReading(): void {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}

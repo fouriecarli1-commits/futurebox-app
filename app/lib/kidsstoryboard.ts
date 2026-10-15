@@ -368,6 +368,7 @@ export async function buildStoryboardStory({
   endingId,
   visualStyleId,
   lang,
+  say,
 }: {
   readonly heroId: string;
   readonly settingId: string;
@@ -375,7 +376,19 @@ export async function buildStoryboardStory({
   readonly endingId: string;
   readonly visualStyleId: string;
   readonly lang: 'af' | 'en';
+  /**
+   * Turns a choice's `[key, English]` into words in the language chosen.
+   * The pages read `title[0]` as English and `title[1]` as Afrikaans, and a
+   * title is `[key, English]` — so English stories printed
+   * "kids.heroDinoTitle" (Carli's screenshot, 15 October 2026) and Afrikaans
+   * ones printed English. Both pages now take the name from here.
+   */
+  readonly say: (pair: readonly [string, string]) => string;
 }): Promise<KeptStory> {
+  const name = (choice: { readonly title: readonly [string, string] }): readonly [string, string] => {
+    const words = say(choice.title);
+    return [words, words];
+  };
   const hero = STORY_SECTIONS[0].choices.find((c) => c.id === heroId) ?? STORY_SECTIONS[0].choices[0];
   const setting = STORY_SECTIONS[1].choices.find((c) => c.id === settingId) ?? STORY_SECTIONS[1].choices[0];
   const twist = STORY_SECTIONS[2].choices.find((c) => c.id === twistId) ?? STORY_SECTIONS[2].choices[0];
@@ -383,26 +396,26 @@ export async function buildStoryboardStory({
   const visual = VISUAL_STYLES.find((v) => v.id === visualStyleId) ?? VISUAL_STYLES[0];
 
   const title = lang === 'af'
-    ? `${hero.title[1]} en die Avontuur by ${setting.title[1]}`
-    : `${hero.title[0]} and the Adventure at ${setting.title[0]}`;
+    ? `${name(hero)[1]} en die Avontuur by ${name(setting)[1]}`
+    : `${name(hero)[0]} and the Adventure at ${name(setting)[0]}`;
 
   /* The 4 story pages */
   const pageTexts: readonly [string, string][] = [
     [
-      `Once upon a time, ${hero.title[0]} was getting ready for a brand new day! With a joyful bounce, our brave hero stepped out into the world, excited to discover something wonderful.`,
-      `Eendag lank gelede het ${hero.title[1]} reggemaak vir 'n splinternuwe dag! Met 'n vrolike sprong het ons heldjie die wye w\u00eareld ingestap, gereed om iets wonderliks te ontdek.`,
+      `Once upon a time, ${name(hero)[0]} was getting ready for a brand new day! With a joyful bounce, our brave hero stepped out into the world, excited to discover something wonderful.`,
+      `Eendag lank gelede het ${name(hero)[1]} reggemaak vir 'n splinternuwe dag! Met 'n vrolike sprong het ons heldjie die wye w\u00eareld ingestap, gereed om iets wonderliks te ontdek.`,
     ],
     [
-      `The journey led all the way to ${setting.title[0]}! Everywhere you looked, magical sparkles filled the air, and gentle breeze sang a cheerful song through the clouds.`,
-      `Die avontuur het al die pad na ${setting.title[1]} gelei! Oral waar jy kyk het magiese glinsters geskitter, en 'n sagte briesie het 'n vrolike liedjie gesing.`,
+      `The journey led all the way to ${name(setting)[0]}! Everywhere you looked, magical sparkles filled the air, and gentle breeze sang a cheerful song through the clouds.`,
+      `Die avontuur het al die pad na ${name(setting)[1]} gelei! Oral waar jy kyk het magiese glinsters geskitter, en 'n sagte briesie het 'n vrolike liedjie gesing.`,
     ],
     [
-      `Suddenly, right in the middle of the path, what a surprise: ${twist.title[0]}! "Look at that!" cheered ${hero.title[0]}. It was the most magical discovery in the whole kingdom.`,
-      `Skielik, reg in die middel van die pad, was daar 'n reuse verrassing: ${twist.title[1]}! "Kyk net daar!" het ${hero.title[1]} uitgeroep. Dit was die wonderlikste geheim in die hele land.`,
+      `Suddenly, right in the middle of the path, what a surprise: ${name(twist)[0]}! "Look at that!" cheered ${name(hero)[0]}. It was the most magical discovery in the whole kingdom.`,
+      `Skielik, reg in die middel van die pad, was daar 'n reuse verrassing: ${name(twist)[1]}! "Kyk net daar!" het ${name(hero)[1]} uitgeroep. Dit was die wonderlikste geheim in die hele land.`,
     ],
     [
-      `Everyone gathered together for ${ending.title[0]}! They laughed, danced, and knew that true friendship and brave curiosity are the greatest magic of all. The End!`,
-      `Almal het vrolik bymekaargekom vir ${ending.title[1]}! Hulle het gelag, gedans en geweet dat ware vriendskap en dapperheid die heel grootste magie is. Fluit-fluit, die storie is uit!`,
+      `Everyone gathered together for ${name(ending)[0]}! They laughed, danced, and knew that true friendship and brave curiosity are the greatest magic of all. The End!`,
+      `Almal het vrolik bymekaargekom vir ${name(ending)[1]}! Hulle het gelag, gedans en geweet dat ware vriendskap en dapperheid die heel grootste magie is. Fluit-fluit, die storie is uit!`,
     ],
   ];
 
@@ -412,7 +425,7 @@ export async function buildStoryboardStory({
   for (let i = 0; i < pageTexts.length; i++) {
     const textPair = pageTexts[i];
     const pageText = lang === 'af' ? textPair[1] : textPair[0];
-    const pageShortTitle = `${hero.emoji} ${hero.title[lang === 'af' ? 1 : 0]} · ${i + 1}/4`;
+    const pageShortTitle = `${hero.emoji} ${name(hero)[0]} · ${i + 1}/4`;
     const svgCode = createSceneSvg(hero.emoji, setting.emoji, twist.emoji, visual.id, i, pageShortTitle);
     const picBlob = new Blob([svgCode], { type: 'image/svg+xml' });
 

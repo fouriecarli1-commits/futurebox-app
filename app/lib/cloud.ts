@@ -710,6 +710,28 @@ export async function settleAgreed(): Promise<void> {
 const BACK_PLACES = ['/kids'] as const;
 const BACK_KEY = 'fb-back-after-signin';
 
+const KIDS_SIGNED_IN_KEY = 'fb-kids-signed-in';
+
+/**
+ * Whether the person in front of the kids room has just signed in, once.
+ *
+ * Carli, 15 October 2026: *"dan het dit sommer die grown up gedeelte
+ * geskip."* An account with an allowance already running opened straight
+ * into the child's room — after a sign-in, which only the grown-up does. So
+ * the room asks this when it opens and shows the grown-up's page first if it
+ * is true. Read and wiped; ten minutes at most, like the return address.
+ */
+export function justSignedInForKids(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const at = Number(window.localStorage.getItem(KIDS_SIGNED_IN_KEY) ?? 0);
+    window.localStorage.removeItem(KIDS_SIGNED_IN_KEY);
+    return at > 0 && Date.now() - at < 10 * 60 * 1000;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Where to send somebody who signed in from outside the studio, once.
  *
@@ -721,8 +743,15 @@ const BACK_KEY = 'fb-back-after-signin';
 export function backAfterSignIn(): string | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.sessionStorage.getItem(BACK_KEY);
+    /* Kept in localStorage, not sessionStorage. Carli, 15 October 2026,
+       after the first fix: *"Dit log in by my normale page, dan druk ek twee
+       keer back dan wys dit eers die kids studio."* A session store belongs to
+       one tab, and the round trip through Google does not always come back to
+       the tab it left from — in the Play Store app it comes back through the
+       app's own window. The device's store is there whichever window it is. */
+    const raw = window.localStorage.getItem(BACK_KEY) ?? window.sessionStorage.getItem(BACK_KEY);
     if (!raw) return null;
+    window.localStorage.removeItem(BACK_KEY);
     window.sessionStorage.removeItem(BACK_KEY);
     const said = JSON.parse(raw) as { to?: unknown; at?: unknown };
     if (typeof said.to !== 'string' || typeof said.at !== 'number') return null;
@@ -887,9 +916,10 @@ export async function signInWith(
   const away = typeof window !== 'undefined' && BACK_PLACES.some((one) => window.location.pathname.startsWith(one));
   if (away) {
     try {
-      window.sessionStorage.setItem(BACK_KEY, JSON.stringify({
+      window.localStorage.setItem(BACK_KEY, JSON.stringify({
         to: `${window.location.pathname}${window.location.search}`, at: Date.now(),
       }));
+      if (window.location.pathname.startsWith('/kids')) window.localStorage.setItem(KIDS_SIGNED_IN_KEY, String(Date.now()));
     } catch {
       /* No storage: she lands on the studio, as before, and the kids page is one link away. */
     }

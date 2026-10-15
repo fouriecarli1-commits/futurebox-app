@@ -74,10 +74,19 @@ ok('nothing in the room goes anywhere else',
   + ' undoes that without breaking a build or looking wrong in a screenshot');
 
 ok('  and the only way out is the grown-up\'s own page',
-  /data-kidsgrownup/.test(room) && /setAtDoor\(true\)/.test(room),
+  /<GrownUpHold onHeld=\{\(\) => setAskCode\(true\)\}/.test(room)
+  && /<CodePad onPass=\{\(\) => \{ setAskCode\(false\); setAtDoor\(true\); \}\}/.test(room),
   'there is no deliberate way back to the grown-up, so ending kids mode means'
   + ' closing the app — and a parent who cannot find the way out turns the'
   + ' whole thing off instead');
+
+/* Carli, 15 October 2026: *"Plus moet daar nie 'n grown up button binne die
+   studio wees nie want kinders gaan dit self stel."* The way out is a hold
+   on the name and a code the grown-up chose — never a button that goes
+   straight to the grown-up's page. */
+ok('  and no button in the child\'s room goes straight to the grown-up\'s page',
+  !/onClick=\{\(\) => setAtDoor\(true\)\}/.test(room) && !/kids\.grownUp'/.test(room),
+  'a child presses every button, and the grown-up\'s page is where the allowance and the clock are set');
 
 /* ── 2. One line is typed, and only for the song ────────────────────────
 

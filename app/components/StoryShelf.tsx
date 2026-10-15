@@ -54,6 +54,14 @@ export default function StoryShelf({
   readonly grownUp?: boolean;
 }): React.ReactElement {
   const { t } = useLang();
+  /* Stories kept before 15 October 2026 carry the Story Maker's fault in
+     their own words: "kids.heroDinoTitle" where a name should be (Carli's
+     screenshot, and "snaakse woorde … soos kids.dinostory"). They are saved
+     as they were made, so the shelf puts the names back as it shows them. */
+  const named = (words: string): string => words.replace(/\bkids\.[A-Za-z0-9]+/g, (key) => {
+    const said = t(key, '');
+    return said && said !== key ? said : '';
+  }).replace(/\s{2,}/g, ' ');
   const [shelf, setShelf] = useState<KeptStory[] | null>(null);
   const [open, setOpen] = useState<KeptStory | null>(null);
   const [page, setPage] = useState(0);
@@ -144,7 +152,7 @@ export default function StoryShelf({
           alt=""
           className="w-full rounded-2xl border border-zinc-800 bg-black object-cover"
         />
-        <p className="text-base leading-relaxed text-zinc-200">{here.text}</p>
+        <p className="text-base leading-relaxed text-zinc-200">{named(here.text)}</p>
 
         <div className="flex items-center gap-2">
           <button
@@ -222,7 +230,7 @@ export default function StoryShelf({
                 className="h-12 w-12 flex-shrink-0 rounded-xl object-cover"
               />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-zinc-100">{story.title}</span>
+                <span className="block truncate text-sm font-bold text-zinc-100">{named(story.title)}</span>
                 <span className="block text-xs text-zinc-500">
                   {story.pages.length} {story.pages.length === 1
                     ? t('shelf.page', 'page')

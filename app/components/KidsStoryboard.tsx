@@ -14,7 +14,7 @@
  * gaan hulle engaged hou."*
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, ArrowRight, BookOpen, Check, Dices, Heart, Loader2,
   Palette, Play, RotateCcw, Sparkles, Volume2, X,
@@ -28,6 +28,7 @@ import {
   type VisualStyle,
 } from '../lib/kidsstoryboard';
 import { keepStory, type KeptStory } from '../lib/storykeep';
+import { readAloud, stopReading } from '../lib/kidspip';
 
 export default function KidsStoryboard({
   onDone,
@@ -53,6 +54,7 @@ export default function KidsStoryboard({
   const [readerPage, setReaderPage] = useState(0);
   const [kept, setKept] = useState(false);
   const [playingAudio, setPlayingAudio] = useState(false);
+  const [noVoice, setNoVoice] = useState(false);
 
   /* Quick mystery spin across all sections */
   const spinAll = (): void => {
@@ -94,6 +96,7 @@ export default function KidsStoryboard({
         endingId: ending,
         visualStyleId: visual,
         lang: lang === 'af' ? 'af' : 'en',
+        say: (pair) => t(pair[0], pair[1]),
       });
       setStory(made);
       setActiveStep(5);
@@ -112,22 +115,43 @@ export default function KidsStoryboard({
     onStoryKept?.();
   };
 
-  /* Play simulated audio chimes for current page */
-  const playPageSound = (): void => {
-    if (!story || playingAudio) return;
-    setPlayingAudio(true);
-    const audioUrl = URL.createObjectURL(story.pages[readerPage].audio);
-    const sound = new Audio(audioUrl);
-    sound.onended = () => {
-      setPlayingAudio(false);
-      URL.revokeObjectURL(audioUrl);
-    };
-    sound.onerror = () => {
-      setPlayingAudio(false);
-      URL.revokeObjectURL(audioUrl);
-    };
-    void sound.play();
+  /* ── Read to me: the page aloud, then the next, to the end ──────────
+     Carli, 15 October 2026: "Read to me werk nie." It played six seconds of
+     chimes. Now the phone reads the page in its own voice and turns to the
+     next page when it is done, so one press reads the whole book; another
+     press stops it. Free: nothing leaves the phone. */
+  const reading = useRef(false);
+  const readFrom = (at: number): void => {
+    if (!story || !reading.current) return;
+    setReaderPage(at);
+    const started = readAloud(story.pages[at].text, lang === 'af' ? 'af' : 'en', () => {
+      if (!reading.current) return;
+      if (at + 1 < story.pages.length) readFrom(at + 1);
+      else { reading.current = false; setPlayingAudio(false); }
+    });
+    if (!started) { reading.current = false; setPlayingAudio(false); setNoVoice(true); }
   };
+  const playPageSound = (): void => {
+    if (!story) return;
+    if (playingAudio) { reading.current = false; stopReading(); setPlayingAudio(false); return; }
+    reading.current = true;
+    setPlayingAudio(true);
+    readFrom(readerPage);
+  };
+  const turnTo = (at: number): void => {
+    reading.current = false;
+    stopReading();
+    setPlayingAudio(false);
+    setReaderPage(at);
+  };
+  useEffect(() => () => { reading.current = false; stopReading(); }, []);
+  /* One address per page picture, made once and let go of, instead of a new
+     one on every draw. */
+  const pictureUrl = useMemo(() => {
+    const picture = story?.pages[readerPage]?.picture;
+    return picture ? URL.createObjectURL(picture) : '';
+  }, [story, readerPage]);
+  useEffect(() => () => { if (pictureUrl) URL.revokeObjectURL(pictureUrl); }, [pictureUrl]);
 
   return (
     <div
@@ -332,6 +356,7 @@ export default function KidsStoryboard({
                 </button>
                 <button
                   type="button"
+                  data-kidsstorynext
                   onClick={() => setActiveStep((s) => s + 1)}
                   className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-primary-500 px-5 text-xs font-black text-white shadow-md hover:bg-primary-600 transition-colors"
                 >
@@ -402,6 +427,7 @@ export default function KidsStoryboard({
                 </button>
                 <button
                   type="button"
+                  data-kidsstorybuild
                   onClick={() => void generateStory()}
                   disabled={building}
                   className="inline-flex min-h-[52px] items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 px-6 text-sm font-black text-white shadow-xl hover:opacity-95 transition-transform active:scale-95 disabled:opacity-50"
@@ -428,35 +454,37 @@ export default function KidsStoryboard({
       {activeStep === 5 && story && (
         <div className="space-y-5 pt-4" data-kidsreader>
           {/* Story Title & Action header */}
-          <div className="flex items-center justify-between gap-3 bg-surface-100/90 rounded-2xl p-3 border border-surface-200">
+          <div className="space-y-2 bg-surface-100/90 rounded-2xl p-3 border border-surface-200">
             <div className="min-w-0">
               <span className="text-[11px] font-black uppercase tracking-wider text-surface-600">
                 {t('kids.pageCount', 'Page {current} of {total}')
                   .replace('{current}', String(readerPage + 1))
                   .replace('{total}', String(story.pages.length))}
               </span>
-              <h3 className="truncate text-base font-black text-surface-950">
+              <h3 className="text-base font-black leading-snug text-surface-950">
                 {story.title}
               </h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
+                data-kidsreadtome
+                aria-pressed={playingAudio}
                 onClick={playPageSound}
-                className={`flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-black transition-colors ${
+                className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-black transition-colors ${
                   playingAudio
                     ? 'border-purple-400 bg-purple-500 text-white animate-pulse'
                     : 'border-surface-300 bg-surface-50 text-surface-800'
                 }`}
               >
                 <Volume2 className="h-4 w-4" />
-                <span>{playingAudio ? t('kids.playing', 'Playing…') : t('kids.readToMe', 'Read to me')}</span>
+                <span>{playingAudio ? t('kids.readStop', 'Stop reading') : t('kids.readToMe', 'Read to me')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => void handleKeep()}
                 disabled={kept}
-                className={`flex h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-black transition-colors ${
+                className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-black transition-colors ${
                   kept
                     ? 'bg-rose-500 text-white shadow-sm'
                     : 'border border-surface-300 bg-surface-50 text-surface-800'
@@ -472,9 +500,9 @@ export default function KidsStoryboard({
           <div className="rounded-3xl border-4 border-surface-200 bg-surface-50 p-4 sm:p-6 shadow-xl">
             {/* Illustration */}
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-inner bg-surface-100 flex items-center justify-center">
-              {story.pages[readerPage]?.picture && (
+              {pictureUrl && (
                 <img
-                  src={URL.createObjectURL(story.pages[readerPage].picture)}
+                  src={pictureUrl}
                   alt={story.title}
                   className="w-full h-full object-cover rounded-2xl"
                 />
@@ -482,20 +510,28 @@ export default function KidsStoryboard({
             </div>
 
             {/* Page Prose */}
-            <div className="mt-5 rounded-2xl bg-amber-50/70 p-4 sm:p-5 border-2 border-amber-200/80">
-              <p className="text-base sm:text-lg font-bold leading-relaxed text-surface-950">
+            {/* On the room's own paper, not amber-50: on the dark kids theme
+                the text colour is light, and light on pale cream was the
+                unreadable page in Carli's screenshot. */}
+            <div className="mt-5 rounded-2xl bg-surface-100 p-4 sm:p-5 border-2 border-amber-300/80">
+              <p data-kidspagetext className="text-base sm:text-lg font-bold leading-relaxed text-surface-950">
                 {story.pages[readerPage]?.text}
               </p>
             </div>
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between gap-3">
+          {noVoice && (
+            <p className="rounded-2xl border-2 border-surface-200 bg-surface-100 px-4 py-3 text-sm font-semibold text-surface-900">
+              {t('kids.noVoice', 'This phone has no reading voice switched on. A grown-up can turn on text-to-speech in the phone\u2019s settings.')}
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setReaderPage((p) => Math.max(0, p - 1))}
+              onClick={() => turnTo(Math.max(0, readerPage - 1))}
               disabled={readerPage === 0}
-              className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border-2 border-surface-300 bg-surface-50 px-4 text-xs font-black text-surface-800 disabled:opacity-30"
+              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border-2 border-surface-300 bg-surface-50 px-3 text-sm font-black text-surface-800 disabled:opacity-30"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>{t('kids.prevPage', 'Previous Page')}</span>
@@ -503,24 +539,25 @@ export default function KidsStoryboard({
 
             <button
               type="button"
-              onClick={() => {
-                setActiveStep(0);
-                setStory(null);
-              }}
-              className="inline-flex min-h-[48px] items-center gap-1.5 rounded-2xl border-2 border-surface-200 bg-surface-100/90 px-3.5 text-xs font-black text-surface-700 hover:bg-surface-200"
+              onClick={() => turnTo(Math.min(story.pages.length - 1, readerPage + 1))}
+              disabled={readerPage === story.pages.length - 1}
+              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-primary-500 px-3 text-sm font-black text-white shadow-md hover:bg-primary-600 disabled:opacity-30"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>{t('kids.makeAnother', 'Make Another Story')}</span>
+              <span>{t('kids.nextPage', 'Next Page')}</span>
+              <ArrowRight className="h-4 w-4" />
             </button>
 
             <button
               type="button"
-              onClick={() => setReaderPage((p) => Math.min(story.pages.length - 1, p + 1))}
-              disabled={readerPage === story.pages.length - 1}
-              className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-primary-500 px-5 text-xs font-black text-white shadow-md hover:bg-primary-600 disabled:opacity-30"
+              onClick={() => {
+                turnTo(0);
+                setActiveStep(0);
+                setStory(null);
+              }}
+              className="col-span-2 inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-2xl border-2 border-surface-200 bg-surface-100/90 px-3.5 text-sm font-black text-surface-700 hover:bg-surface-200"
             >
-              <span>{t('kids.nextPage', 'Next Page')}</span>
-              <ArrowRight className="h-4 w-4" />
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>{t('kids.makeAnother', 'Make Another Story')}</span>
             </button>
           </div>
         </div>
