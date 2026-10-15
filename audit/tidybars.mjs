@@ -281,7 +281,7 @@ try {
           /* Which column it is in, where a bench lays its sections out side
              by side (the photo editor on a phone, 15 October 2026): two
              buttons at the same height in two columns are not one row. */
-          const column = el.closest('[data-postunder] [data-desk] > div:last-child > div > div > *');
+          const column = el.closest('[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child > div > div > *');
           out.push({
             col: column ? Math.round(column.getBoundingClientRect().left) : 0,
             h: Math.round(box.height),

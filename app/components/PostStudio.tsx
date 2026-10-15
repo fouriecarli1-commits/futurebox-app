@@ -6239,7 +6239,13 @@ export default function PostStudio({
 
   /* ── A tool's controls ────────────────────────────────────────────── */
   const toolSheet = here ? (
-    <div data-postbenchpanel className="flex min-h-0 flex-col">
+    <div
+      data-postbenchpanel
+      /* Sideways on purpose on a phone: under the photo its sections are
+         columns that scroll left and right (globals.css, 15 October 2026). */
+      data-sideways={upright ? '' : undefined}
+      className="flex min-h-0 flex-col"
+    >
       <DeskSheet
         icon={here.icon}
         title={t(here.label[0], here.label[1])}

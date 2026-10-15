@@ -1698,16 +1698,18 @@ html[data-singing] [data-tabbar] { display: none !important; }
    the tool is a column of its own that scrolls down by itself, so one tool's
    whole set is a swipe away rather than a long scroll over the picture.
    `[data-desk] > div:last-child` is DeskSheet's body; its one child is the
-   bench's root, whose children are the bench's sections. */
-[data-postunder] [data-desk] > div:last-child {
+   bench's root, whose children are the bench's sections. Tools only: the
+   copilot's sheet is one conversation and its message box must stay a
+   row across the phone (check:wide found it 579 pixels off the screen). */
+[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child {
   overflow-x: auto;
   overflow-y: hidden;
 }
-[data-postunder] [data-desk] > div:last-child > div,
-[data-postunder] [data-desk] > div:last-child > div > div {
+[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child > div,
+[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child > div > div {
   height: 100%;
 }
-[data-postunder] [data-desk] > div:last-child > div > div {
+[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child > div > div {
   display: flex;
   flex-direction: row;
   /* Not stretched: a column as tall as the panel stretches the grid of
@@ -1715,7 +1717,7 @@ html[data-singing] [data-tabbar] { display: none !important; }
   align-items: flex-start;
   gap: 0.75rem;
 }
-[data-postunder] [data-desk] > div:last-child > div > div > * {
+[data-postunder] [data-postbenchpanel] [data-desk] > div:last-child > div > div > * {
   flex: 0 0 min(19rem, 82vw);
   max-height: 100%;
   overflow-y: auto;
