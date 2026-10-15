@@ -410,6 +410,11 @@ export default function CollabRoom({
                 key={one.id}
                 type="button"
                 onClick={() => setOpen(open === one.id ? null : one.id)}
+                /* A toggle — pressing an open room's name shuts it — so it
+                   says which state it is in, for a screen reader and for
+                   anything that must not press it shut by accident. */
+                aria-pressed={open === one.id}
+                data-roomchip={one.id}
                 className={`min-h-[44px] px-3 py-1.5 rounded-xl text-sm border transition-all ${
                   open === one.id
                     ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'

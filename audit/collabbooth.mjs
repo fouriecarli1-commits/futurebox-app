@@ -176,9 +176,21 @@ try {
      is hand-rolled rather than `toRoom`, so nothing opened them for it. */
   await unfold(p);
   const room = p.locator('div.fixed.inset-0.z-50').first();
-  await room.locator('button').filter({ hasText: THEM }).first().click().catch(() => undefined);
+  /* Through the lobby's own "Enter the room", and then the room's name only
+     if the thread is not already open. The name inside the room is a
+     TOGGLE: CI's runs of 14 October 2026 pressed "the first button with
+     their name on it", which was sometimes that toggle on a thread the
+     entrance had just opened — shutting it, and leaving a room with no
+     songs in it and "0 offered" (the evidence line below showed the room
+     view open and the lobby gone). */
+  await p.locator('[data-enterroom]').filter({ hasText: THEM }).first().click({ timeout: 15000 }).catch(() => undefined);
   await unfold(p);
   await p.waitForTimeout(1400);
+  const chip = p.locator('[data-roomchip]').filter({ hasText: THEM }).first();
+  if ((await chip.count()) && (await chip.getAttribute('aria-pressed')) !== 'true') {
+    await chip.click().catch(() => undefined);
+    await p.waitForTimeout(800);
+  }
 
   const sing = room.locator('button').filter({ hasText: /Sing on it in my booth/ });
   /* Waited for, not timed. The thread's songs arrive after it opens, and on
