@@ -97,7 +97,8 @@ export const ARTIST_RAND = 200;
  * plans pay that same price."*
  *
  * So the rate is the one that makes the piece cost the MOST credits: the
- * cheapest rand a credit is sold for on any paid plan (Maker, at R1.49).
+ * cheapest rand a credit is sold for on any paid plan (Label, at R1.50 since
+ * 15 October 2026; Maker at R1.49 before).
  * R280 at that rate, rounded up to a whole credit, and every plan pays that
  * same number. Nobody can buy a piece for less than it cost the studio
  * through credits that came in cheap, and nobody on a dearer plan is asked

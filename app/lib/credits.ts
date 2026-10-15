@@ -156,7 +156,7 @@ export const CREDITS = {
      in rand beside each press — `docs/KREDIETE.md` — and then set four
      prices off it in the same minute. Her words are on each one below.
  
-     Credits are whole numbers at R1.49 (the cheapest plan's rate), so a rand
+     Credits are whole numbers at R1.49 (the cheapest plan's rate until 15 October 2026; Label's R1.50 since), so a rand
      figure cannot always be hit exactly. Each is the nearest credit, and the
      rand it really lands on is written beside it. */
   /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
@@ -1297,12 +1297,22 @@ export const TIER_CREDITS: Record<Tier, number> = {
      Said plainly rather than buried: this is a real cost, she asked for it with
      her eyes open, and it buys a Maker five finished adverts a month instead of
      two. */
-  maker: 100,
-  /* 220 → 190 with the price, 10 September 2026. See TIER_SPECS.studio
-     in plans.ts for the arithmetic; the short version is that R349 holds the
-     same margin at 190 and buys a whole number of songs. */
-  studio: 210,
-  label: 490,
+  /* ── Set by the rand a credit, 15 October 2026 ────────────────────────
+
+     Carli: *"Label must be R1.50 per credit, studio R1.70, maker R1.80
+     (don't change the amounts on screen, just adjust the amount of credits
+     accordingly)."* The prices stay R149, R349 and R899; the credits are
+     the price over her rate, to the nearest whole credit:
+
+       Maker    R149 / R1.80 =  82.8  →  83   (was 100, R1.49 a credit)
+       Studio   R349 / R1.70 = 205.3  → 205   (was 210, R1.66)
+       Label    R899 / R1.50 = 599.3  → 599   (was 490, R1.83)
+
+     Which turns the old order the right way up: the bigger plan is now the
+     cheaper credit, where before Label paid the most for each one. */
+  maker: 83,
+  studio: 205,
+  label: 599,
 };
 
 /**

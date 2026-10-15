@@ -180,11 +180,11 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        direction that costs nothing and still has to be fixed: a card that
        undersells is a card somebody compares against a rival and puts
        down. */
-    songs: 12,
+    songs: 10,
     videos: 2,
     who: 'A song or two a week, kept and posted.',
     includes: [
-      '100 credits a month — 12 full songs, or 2 music videos',
+      '83 credits a month — 10 full songs, or 2 music videos',
       'The video engine, which the free tier does not have at all',
       'Your own voice, cloned, for reading and for the show',
       'The copilot, uncapped',
@@ -238,12 +238,12 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        reason never to move up, and `check:topups` measures it. */
     name: 'Studio',
     rand: 349,
-    songs: 26,
+    songs: 25,
     videos: 5,
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
-      '210 credits a month — 26 full songs, or 5 music videos',
-      /* 300 credits against 210 a month (the plans review, 14 October 2026):
+      '205 credits a month — 25 full songs, or 5 music videos',
+      /* 300 credits against 205 a month (the plans review, 14 October 2026):
          said on the card, so nobody finds the wall after paying. */
       'Train a sound of your own on your own songs — 300 credits, so it takes a top-up or two months\u2019 credits',
       'Everything in Maker, and three cloned voices',
@@ -273,15 +273,15 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 8 credits a minute, changing a voice 8.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
-      'Dubbing into another language, in the same voice — 110 credits a minute out of your 210.',
+      'Dubbing into another language, in the same voice — 110 credits a minute out of your 205.',
     ],
   },
   label: {
     id: 'label',
     name: 'Label',
     rand: 899,
-    songs: 61,
-    videos: 13,
+    songs: 74,
+    videos: 16,
     // "Five seats on one account" was on this card and was never built —
     // nothing in the codebase adds a second person to an account. It came off
     // rather than getting a rushed implementation: an overclaim on a paid tier
@@ -289,7 +289,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     // cannot afford to be caught doing is describing something it does not do.
     who: 'Running a catalogue, and releasing every week.',
     includes: [
-      '490 credits a month — 61 full songs, or 13 music videos',
+      '599 credits a month — 74 full songs, or 16 music videos',
       'Everything in Studio, and ten cloned voices',
       /* "No daily ceiling anywhere" was not true — readings still have a
          daily number on every plan — and the workshop vote was never built.
@@ -316,7 +316,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 3 credits a minute. Splitting stems is 8 credits a minute, changing a voice 8.',
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3 — however many shots it is on. A twenty-second advert using all five is 40; a dressed three-minute film is 90. Taking a background out is 4 credits per five seconds, an item out 5.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
-      'Dubbing into another language, in the same voice — 110 credits a minute out of your 490.',
+      'Dubbing into another language, in the same voice — 110 credits a minute out of your 599.',
     ],
   },
 };

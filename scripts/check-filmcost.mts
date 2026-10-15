@@ -91,11 +91,18 @@ ok('a three-minute music video using all five is 90',
    twenty-five over, which is the room the 4 October price change was for: at
    five a function it was 85 against 90 and a Maker who made one film had four
    credits left for the whole month. */
-ok('a Maker can afford at least one fully dressed three-minute film',
-  dressedBill.total <= TIER_CREDITS.maker,
-  `${dressedBill.total} credits against Maker's ${TIER_CREDITS.maker}`
-  + ' — a card that sells three music videos on a plan that cannot finish one'
-  + ' is a card that lies');
+/* ── Moved with her prices, 15 October 2026 ────────────────────────────
+   Carli set Maker at R1.80 a credit — 83 credits for R149 — and a dressed
+   three-minute film (90) no longer fits in one Maker month; it takes a
+   seven-credit top-up, and she was told so in as many words. What a Maker
+   CAN still finish inside the month is a dressed minute and a half (60),
+   and that is what is held here, so the next change to Maker's credits
+   cannot quietly take that away too. The card's own line says what each
+   film costs; it does not say a Maker month covers the three-minute one. */
+ok('a Maker can afford at least one fully dressed minute-and-a-half film',
+  longerBill.total <= TIER_CREDITS.maker,
+  `${longerBill.total} credits against Maker's ${TIER_CREDITS.maker}`
+  + ' — a plan sold for making films has to finish one');
 
 ok('  and a Studio member can afford at least two',
   dressedBill.total * 2 <= TIER_CREDITS.studio,
