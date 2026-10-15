@@ -1626,8 +1626,11 @@ export default function MakeMusic({
               aria-label={t('pick.title', 'Somewhere to start')}
               aria-expanded={pop === 'plus'}
               onClick={() => setPop((was) => (was === 'plus' ? null : 'plus'))}
-              className={`flex h-10 w-10 items-center justify-center rounded-full border ${
-                pop === 'plus' ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300' : 'border-zinc-700 text-zinc-200 hover:border-zinc-500'
+              /* A solid disc, like every round button here: an outlined
+                 plus in pale ink vanished into the box on the light theme
+                 (check:playbutton measured 1.01:1). */
+              className={`flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-onAccent hover:bg-emerald-400 ${
+                pop === 'plus' ? 'ring-2 ring-emerald-300 ring-offset-2 ring-offset-zinc-900' : ''
               }`}
             >
               <Plus className="h-5 w-5" />
