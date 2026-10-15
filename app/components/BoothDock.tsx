@@ -48,7 +48,7 @@
 
 import React, { useEffect } from 'react';
 import {
-  Bot, Layers, Mic2, Pause, Play, SkipBack, SkipForward, Sliders, Waves, Wand2,
+  Bot, Layers, Mic2, Pause, Play, SkipBack, SkipForward, Sliders, Square, Waves, Wand2,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useSideways } from '../lib/sideways';
@@ -63,6 +63,8 @@ const EDGE = 'rgba(255,255,255,0.08)';
 const INK = '#eef2ff';
 const INK_DIM = 'rgba(238,242,255,0.5)';
 const LIT = '#38bdf8';
+/** The middle button while a take is running: the red of every record light. */
+const REC = '#f87171';
 
 /**
  * What each desk is, and whether anything behind it spends credits.
@@ -221,6 +223,7 @@ export default function BoothDock({
   open,
   onOpen,
   playing,
+  recording = false,
   onPlay,
   onSkip,
   place,
@@ -229,6 +232,19 @@ export default function BoothDock({
   readonly open: Desk;
   readonly onOpen: (which: Desk) => void;
   readonly playing: boolean;
+  /**
+   * A take is being recorded. The big button becomes "Stop recording" and
+   * the two skips stand down.
+   *
+   * Found on 15 October 2026, when Carli asked for every function in the
+   * booth to be looked at: the dock's play and skip buttons drove the song
+   * while the recorder kept running, so a thumb on "forward five seconds"
+   * mid-take moved the music under the singer and the take landed five
+   * seconds away from what she sang against. While the recorder runs, the
+   * song may not move; the only thing the middle button may do is end the
+   * take, which is what anybody pressing it then means.
+   */
+  readonly recording?: boolean;
   readonly onPlay: () => void;
   /** Seconds to move by. Negative is back. */
   readonly onSkip: (by: number) => void;
@@ -368,8 +384,9 @@ export default function BoothDock({
           <button
             type="button"
             onClick={() => onSkip(-5)}
+            disabled={recording}
             aria-label={t('dock.back', 'Back five seconds')}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full disabled:opacity-30"
             style={{ color: INK }}
           >
             <SkipBack className="h-5 w-5" fill="currentColor" />
@@ -377,11 +394,13 @@ export default function BoothDock({
           <button
             type="button"
             onClick={onPlay}
-            aria-label={playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
+            aria-label={recording ? t('pro.stopRecording', 'Stop recording') : playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
             className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
-            style={{ background: INK, color: '#05060a' }}
+            style={{ background: recording ? REC : INK, color: '#05060a' }}
           >
-            {playing ? (
+            {recording ? (
+              <Square className="h-5 w-5" fill="currentColor" />
+            ) : playing ? (
               <Pause className="h-5 w-5" fill="currentColor" />
             ) : (
               <Play className="h-5 w-5 translate-x-0.5" fill="currentColor" />
@@ -390,8 +409,9 @@ export default function BoothDock({
           <button
             type="button"
             onClick={() => onSkip(5)}
+            disabled={recording}
             aria-label={t('dock.forward', 'Forward five seconds')}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full disabled:opacity-30"
             style={{ color: INK }}
           >
             <SkipForward className="h-5 w-5" fill="currentColor" />
@@ -445,8 +465,9 @@ export default function BoothDock({
         <button
           type="button"
           onClick={() => onSkip(-5)}
+          disabled={recording}
           aria-label={t('dock.back', 'Back five seconds')}
-          className="flex h-11 w-11 items-center justify-center rounded-full"
+          className="flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-30"
           style={{ color: INK }}
         >
           <SkipBack className="h-5 w-5" fill="currentColor" />
@@ -454,11 +475,13 @@ export default function BoothDock({
         <button
           type="button"
           onClick={onPlay}
-          aria-label={playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
+          aria-label={recording ? t('pro.stopRecording', 'Stop recording') : playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
           className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full"
-          style={{ background: INK, color: '#05060a' }}
+          style={{ background: recording ? REC : INK, color: '#05060a' }}
         >
-          {playing ? (
+          {recording ? (
+            <Square className="h-6 w-6" fill="currentColor" />
+          ) : playing ? (
             <Pause className="h-6 w-6" fill="currentColor" />
           ) : (
             <Play className="h-6 w-6 translate-x-0.5" fill="currentColor" />
@@ -467,8 +490,9 @@ export default function BoothDock({
         <button
           type="button"
           onClick={() => onSkip(5)}
+          disabled={recording}
           aria-label={t('dock.forward', 'Forward five seconds')}
-          className="flex h-11 w-11 items-center justify-center rounded-full"
+          className="flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-30"
           style={{ color: INK }}
         >
           <SkipForward className="h-5 w-5" fill="currentColor" />

@@ -29,7 +29,26 @@ export interface VideoGrades {
    */
   readonly can?: Record<
     string,
-    { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean; endFrame?: boolean }
+    {
+      seconds: number[];
+      aspects: string[];
+      speaks: boolean;
+      startFrame: boolean;
+      endFrame?: boolean;
+      /**
+       * What each engine behind this rung makes, one entry per engine and no
+       * names on them.
+       *
+       * The fields above are the UNION of the rung, which is right for "is
+       * this length on the row at all" and wrong for "can this one clip be
+       * made". On 15 October 2026 Better spoke (from one engine) and started
+       * from a picture (from another), so the desk offered a spoken clip off
+       * a start frame that no single engine makes — and the refusal at the
+       * end of it said the month's allowance was used up. `clashOf` below
+       * reads these so the desk can say so before anything is pressed.
+       */
+      ways?: VideoWay[];
+    }
   >;
   /** True where some available engine can speak a quoted line aloud. */
   readonly sound: boolean;
@@ -45,6 +64,56 @@ export interface VideoGrades {
 
 /** Kept as the old name so screens that only wanted a yes or no still read. */
 export type VideoEngine = VideoGrades;
+
+/** One engine's whole answer, without its name. See `can[grade].ways`. */
+export interface VideoWay {
+  readonly seconds: readonly number[];
+  readonly aspects: readonly string[];
+  readonly speaks: boolean;
+  readonly startFrame: boolean;
+}
+
+/**
+ * The two things asked of one clip that no single engine on the rung does
+ * together, or null when one engine can do the lot.
+ *
+ * Named as a PAIR because the pair is what she can act on: "take the picture
+ * off or switch the voice off" is a choice, "that cannot be made" is a wall.
+ * Null too when the server sent no `ways` — an older answer is not evidence
+ * of a clash, and a desk that refused on a guess would be the same fault
+ * the other way round.
+ */
+export type VideoClash =
+  | 'frame+voice'
+  | 'frame+shape'
+  | 'frame+length'
+  | 'voice+shape'
+  | 'voice+length'
+  | 'shape+length'
+  | 'together';
+
+export function clashOf(
+  ways: readonly VideoWay[] | undefined,
+  ask: { readonly aspect: string; readonly seconds: number; readonly speak: boolean; readonly frame: boolean },
+): VideoClash | null {
+  if (!ways?.length) return null;
+  const makes = (want: { aspect?: string; seconds?: number; speak?: boolean; frame?: boolean }): boolean =>
+    ways.some((one) =>
+      (!want.frame || one.startFrame)
+      && (!want.speak || one.speaks)
+      && (want.aspect === undefined || one.aspects.includes(want.aspect))
+      && (want.seconds === undefined || one.seconds.includes(want.seconds)),
+    );
+  if (makes(ask)) return null;
+  const { aspect, seconds, speak, frame } = ask;
+  if (frame && speak && !makes({ frame, speak })) return 'frame+voice';
+  if (frame && !makes({ frame, aspect })) return 'frame+shape';
+  if (frame && !makes({ frame, seconds })) return 'frame+length';
+  if (speak && !makes({ speak, aspect })) return 'voice+shape';
+  if (speak && !makes({ speak, seconds })) return 'voice+length';
+  if (!makes({ aspect, seconds })) return 'shape+length';
+  return 'together';
+}
 
 const NO_ENGINE: VideoGrades = {
   available: false,

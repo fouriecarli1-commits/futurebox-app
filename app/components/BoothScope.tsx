@@ -116,12 +116,34 @@ export default function BoothScope({
       pen.strokeStyle = WAVE;
       pen.lineWidth = Math.max(1, (window.devicePixelRatio || 1));
       pen.beginPath();
-      const step = Math.max(1, Math.floor(wave.length / w));
-      for (let i = 0, x = 0; i < wave.length; i += step, x += 1) {
-        const v = wave[i];
-        if (Math.abs(v) > peak) peak = Math.abs(v);
-        const y = h / 2 - v * (h / 2 - 2);
-        if (i === 0) pen.moveTo(x, y); else pen.lineTo(x, y);
+      /* Every sample, spread across the width, rather than one sample per
+         pixel. That was a 2048-sample window drawn one sample a column, so on
+         a phone the line ran off the right of the canvas and on a wide desk
+         it stopped a third of the way across — and the peak light only heard
+         the samples that happened to be drawn, so a click between two of
+         them never turned it red. Found on 15 October 2026, going through
+         every function in the booth. Each column now draws the lowest and
+         highest sample in its share of the window, which is what a scope
+         does, and the peak is read from all of them. */
+      for (let i = 0; i < wave.length; i += 1) {
+        const v = Math.abs(wave[i]);
+        if (v > peak) peak = v;
+      }
+      const columns = Math.max(1, Math.min(w, wave.length));
+      const across = w / columns;
+      const yOf = (v: number): number => h / 2 - v * (h / 2 - 2);
+      for (let c = 0; c < columns; c += 1) {
+        const i0 = Math.floor((c * wave.length) / columns);
+        const i1 = Math.max(i0 + 1, Math.floor(((c + 1) * wave.length) / columns));
+        let low = wave[i0];
+        let high = wave[i0];
+        for (let i = i0 + 1; i < i1; i += 1) {
+          if (wave[i] < low) low = wave[i];
+          if (wave[i] > high) high = wave[i];
+        }
+        const x = c * across;
+        if (c === 0) pen.moveTo(x, yOf(low)); else pen.lineTo(x, yOf(low));
+        if (high !== low) pen.lineTo(x, yOf(high));
       }
       pen.stroke();
 

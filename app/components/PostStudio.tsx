@@ -103,7 +103,7 @@ import {
 } from '../lib/lasso';
 import { makeBack } from '../lib/postback';
 import ShareRow from './ShareRow';
-import { REFERENCE_SIDE, packLed, packOne, roomForRefs } from '../lib/packpicture';
+import { LADDER, REFERENCE_SIDE, packLed, packOne, roomForRefs } from '../lib/packpicture';
 import { BUDGET } from '../lib/picturelimit';
 import {
   LIVE_SECONDS, MOTIONS, MOTION_DEFAULT, motionWords,
@@ -209,6 +209,13 @@ const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-
  */
 const PREVIEW_LONGEST = 540;
 
+/**
+ * The longest edge a picture is sent at to have the things in it found.
+ * Plenty for an engine to see a guitar or a face, and small enough that a
+ * JPEG of it fits the route's body on the first rung of the ladder.
+ */
+const THINGS_SIDE = 1600;
+
 /** The least height a tool's controls get under the photo on a phone. */
 const UNDER_LEAST = 200;
 
@@ -284,6 +291,63 @@ interface Words {
 type TextAlign = 'left' | 'center' | 'right';
 /** How far the ring's corners can pull a line, smaller and bigger. */
 const WORDS_SIZE = { min: 0.3, max: 3 } as const;
+
+/**
+ * One step of the room's history, in the order it happened.
+ *
+ * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
+ * werk."* Undo only knew pictures, so a line of words or a shape thrown away
+ * by a stray Delete was gone for good while Put back sat there lit for some
+ * earlier crop. Words and shapes are a few hundred bytes, so a step of theirs
+ * is simply a copy of both lists; the picture itself stays in `postback.ts`,
+ * which is where its weight is counted. `pic` says whether the picture
+ * history holds this step's photograph too.
+ */
+interface Step {
+  readonly pic: boolean;
+  readonly what: string;
+  readonly words?: readonly Words[];
+  readonly marks?: readonly Mark[];
+}
+/** Steps beyond this many are forgotten, oldest first. */
+const KEEP_STEPS = 40;
+
+/**
+ * How hard a JPG or WebP is squeezed, against the format's own quality.
+ *
+ * ── Why this replaced "Draft (720p)" and "Ultra (4K)" ────────────────────
+ *
+ * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
+ * werk."* The old row promised a resolution it never set — the draft came
+ * out at full size, the "4K" was twice the post (2160 across on a square),
+ * and choosing it quietly overrode How big. A label that is not what the file
+ * is, is a lie at the till. The size is How big's job, so this row only does
+ * what it can honestly do: squeeze harder or less. A PNG is lossless and the
+ * row says so instead of offering a choice that changes nothing.
+ */
+const SQUEEZE = { small: 0.8, standard: 1, best: 1.06 } as const;
+type Squeeze = keyof typeof SQUEEZE;
+
+/**
+ * The biggest canvas the browsers this app is used on will really draw.
+ * Past either number the canvas comes back empty without an error — iOS
+ * Safari stops at 16.7 million pixels, every browser at 16384 a side.
+ */
+const CANVAS_MOST = { side: 16384, pixels: 16_777_216 } as const;
+
+/**
+ * The first free row for a new line of words, so lines added one after
+ * another land under each other instead of in one pile on the same spot.
+ */
+function freeRow(was: readonly Words[], from: number): At {
+  const used = was.map((one) => (one.at ?? atOf(one.spot)).y);
+  for (let step = 0; step < 8; step += 1) {
+    /* Down a row at a time, and round to the top again past the foot. */
+    const y = 0.12 + ((from - 0.12 + step * 0.12) % 0.78 + 0.78) % 0.78;
+    if (!used.some((one) => Math.abs(one - y) < 0.08)) return { x: 0.5, y };
+  }
+  return { x: 0.5, y: from };
+}
 
 /**
  * One post, one id, for as long as it is open.
@@ -444,6 +508,97 @@ const TOOL_RAIL = 'flex min-h-[56px] w-full flex-col items-center justify-center
 
 const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
+/* ── A template's own lettering, taken out of its picture ─────────────────
+
+   Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
+   werk."* The older starter templates draw their headline and subtitle into
+   the picture as SVG <text>, and the room then put the same headline on top
+   as editable words — so every one of them came in with the title twice, the
+   painted one underneath that no tool could change. Those two lines are cut
+   out of the SVG before it becomes the picture; any other lettering in it (a
+   date, a venue) stays, because nothing re-adds it. What was cut tells the
+   new words how to look: its colour, its kind of face, its height. */
+
+/** Letters and digits only, in capitals, so "NEON • CLUB" and "Neon club" match. */
+const lettersOf = (text: string): string => text
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, '\'')
+  .toUpperCase()
+  .replace(/[^\p{L}\p{N}]+/gu, ' ')
+  .trim();
+
+/** What one cut-out <text> looked like. */
+interface CutLettering {
+  readonly ink?: string;
+  readonly family?: string;
+  /** Its baseline, as a share of the picture's height. */
+  readonly y?: number;
+}
+
+/**
+ * The SVG data URL with the <text> that says any of `says` removed, and how
+ * the first one cut for each looked. Anything that is not an SVG data URL —
+ * a moving template's still, a picture — comes back as it went in.
+ */
+function withoutLettering(
+  url: string,
+  says: readonly (readonly (string | undefined)[])[],
+  tall: number,
+): { readonly url: string; readonly cut: readonly (CutLettering | null)[] } {
+  const none = { url, cut: says.map(() => null) };
+  const comma = url.indexOf(',');
+  if (!url.startsWith('data:image/svg+xml') || comma < 0) return none;
+  const head = url.slice(0, comma);
+  let svg: string;
+  try {
+    svg = /;base64$/i.test(head)
+      ? new TextDecoder().decode(Uint8Array.from(atob(url.slice(comma + 1)), (c) => c.charCodeAt(0)))
+      : decodeURIComponent(url.slice(comma + 1));
+  } catch {
+    return none;
+  }
+  /* Each group is one line that goes back on as words, in every wording
+     the picture might have been drawn with. */
+  const wanted = says.map((group) => group.map((one) => (one ? lettersOf(one) : '')).filter(Boolean));
+  const cut: (CutLettering | null)[] = says.map(() => null);
+  const kept = svg.replace(/<text\b([^>]*)>([\s\S]*?)<\/text>/g, (whole: string, attrs: string, inner: string) => {
+    const said = lettersOf(inner);
+    if (!said) return whole;
+    /* The whole line, or a run of its words — "NEON" and "CLUB" drawn as two
+       <text> for a headline that says NEON CLUB NIGHT. */
+    const which = wanted.findIndex((group) => group.some((one) => one === said
+      || (said.length >= 3 && ` ${one} `.includes(` ${said} `))));
+    if (which < 0) return whole;
+    if (!cut[which]) {
+      const y = Number(/\by="([\d.]+)"/.exec(attrs)?.[1]);
+      const px = Number(/\bfont-size="([\d.]+)"/.exec(attrs)?.[1]);
+      cut[which] = {
+        ink: /\bfill="(#[0-9a-fA-F]{3,8})"/.exec(attrs)?.[1],
+        family: /\bfont-family="([^"]*)"/.exec(attrs)?.[1],
+        /* The baseline less about a third of the type, which is near the
+           middle of the letters — where a line of words is placed from. */
+        y: Number.isFinite(y) && tall > 0
+          ? Math.min(0.92, Math.max(0.06, (y - (Number.isFinite(px) ? px * 0.35 : 0)) / tall))
+          : undefined,
+      };
+    }
+    return '';
+  });
+  return { url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(kept)}`, cut };
+}
+
+/** The nearest face this room has to an SVG `font-family`. */
+const faceFromFamily = (family: string | undefined, otherwise: FaceId): FaceId => {
+  const said = (family ?? '').toLowerCase();
+  if (!said) return otherwise;
+  if (/impact|anton|bebas|oswald/.test(said)) return 'poster';
+  if (/mono/.test(said)) return 'type';
+  if (/cursive|script/.test(said)) return 'script';
+  if (/serif/.test(said) && !/sans/.test(said)) return 'book';
+  return 'plain';
+};
+
 export default function PostStudio({
   onClose, onIntoFilm, asRoom = false, copilot, atDoor = false,
 }: {
@@ -597,7 +752,12 @@ export default function PostStudio({
   const [paintShade, setPaintShade] = useState(true);
   /* The model's answer and the picture it was asked about, kept so the edge
      can be changed without six megabytes and a second of waiting. */
-  const lastMask = useRef<{ readonly mask: HTMLCanvasElement; readonly of: HTMLImageElement } | null>(null);
+  const lastMask = useRef<{
+    readonly mask: HTMLCanvasElement;
+    readonly of: HTMLImageElement;
+    /** The cut-out this mask made, while it is the one on the glass. */
+    readonly made?: HTMLImageElement;
+  } | null>(null);
   const [edge, setEdge] = useState<EdgeId>('normal');
   /* Painting over the thing to take out.
  
@@ -742,6 +902,13 @@ export default function PostStudio({
           setLiveJob(null);
           liveSince.current = 0;
           setLiveSaid(t('post.liveDone', 'Ready. It loops, so it plays over and over.'));
+        } else if (said.state === 'done') {
+          /* Finished with no clip to show. Asking again for eight minutes
+             would not make one appear, so it stops and says so. */
+          setLiveJob(null);
+          liveSince.current = 0;
+          setLiveSaid(said.message
+            ?? t('post.liveNoClip', 'The engine finished but sent no clip back. Try it once more in a little while.'));
         } else if (said.state === 'failed') {
           setLiveJob(null);
           liveSince.current = 0;
@@ -875,7 +1042,7 @@ export default function PostStudio({
   const [scale, setScale] = useState<Scale>(1);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [showSizeModal, setShowSizeModal] = useState(false);
-  const [exportQuality, setExportQuality] = useState<'draft' | 'standard' | 'ultra'>('standard');
+  const [squeeze, setSqueeze] = useState<Squeeze>('standard');
   const grip = useRef<Grip>(null);
 
   /* ── Drawing round a thing, which is the third way to cut one out ──────
@@ -911,33 +1078,107 @@ export default function PostStudio({
   const history = useRef(makeBack<HTMLImageElement>());
   const [told, setTold] = useState(0);
 
-  /** Remember the picture as it is, then let the caller replace it. */
-  const before = (what: string): void => {
-    history.current.remember(what, picture);
+  /* The order of every step, pictures and words alike — see `Step`. */
+  const steps = useRef<{ back: Step[]; forward: Step[] }>({ back: [], forward: [] });
+  const pushStep = (step: Step): void => {
+    const all = steps.current;
+    all.back.push(step);
+    while (all.back.length > KEEP_STEPS) all.back.shift();
+    /* A new change abandons the way forward, the way every editor does. */
+    all.forward = [];
     setTold((n) => n + 1);
+  };
+
+  /**
+   * Remember the picture as it is, then let the caller replace it. `andWords`
+   * when the same press also replaces the words and shapes — a template —
+   * so one Put back takes the whole press back.
+   */
+  const before = (what: string, andWords = false): void => {
+    history.current.remember(what, picture);
+    pushStep(andWords ? { pic: true, what, words, marks } : { pic: true, what });
+  };
+
+  /** Remember the words and shapes as they are, before one is thrown away. */
+  const beforeLayers = (what: string): void => {
+    pushStep({ pic: false, what, words, marks });
+  };
+
+  /** What Put back would undo, or null when there is nothing. */
+  const undoSays = (): string | null => {
+    const back = steps.current.back;
+    for (let at = back.length - 1; at >= 0; at -= 1) {
+      const one = back[at];
+      if (!one.pic) return one.what;
+      /* A picture step the picture history has already let go of (its
+         ceiling is bytes) is skipped, exactly as `stepBack` skips it. */
+      if (history.current.undoable() !== null) return one.what;
+    }
+    return null;
+  };
+  const redoSays = (): string | null => {
+    const forward = steps.current.forward;
+    for (let at = forward.length - 1; at >= 0; at -= 1) {
+      const one = forward[at];
+      if (!one.pic || history.current.redoable() !== null) return one.what;
+    }
+    return null;
+  };
+
+  /** Put the words and shapes of a step back on, and let go of the rings. */
+  const layersFrom = (step: Step): void => {
+    if (!step.words || !step.marks) return;
+    setWords([...step.words]);
+    setMarks([...step.marks]);
+    setWordOn(null);
+    setMarkOn(null);
   };
 
   const stepBack = (): void => {
-    const shot = history.current.undo(picture);
-    if (!shot) return;
-    setPicture(shot.picture);
-    /* The mask belongs to a picture that is no longer on the glass, and
-       changing the cut edge after stepping back would put the old cut on
-       the new picture. */
-    lastMask.current = null;
-    setTraced(null);
-    setCropBox(null);
-    setTold((n) => n + 1);
-    setSaid(t('post.undone', 'Put back.'));
+    const all = steps.current;
+    while (all.back.length) {
+      const step = all.back.pop()!;
+      let shot: ReturnType<typeof history.current.undo> = null;
+      if (step.pic) {
+        shot = history.current.undo(picture);
+        if (!shot) continue;
+      }
+      all.forward.push(step.words ? { ...step, words, marks } : step);
+      layersFrom(step);
+      if (shot) {
+        setPicture(shot.picture);
+        /* The mask belongs to a picture that is no longer on the glass, and
+           changing the cut edge after stepping back would put the old cut on
+           the new picture. */
+        lastMask.current = null;
+        setTraced(null);
+        setCropBox(null);
+      }
+      setTold((n) => n + 1);
+      setSaid(t('post.undone', 'Put back.'));
+      return;
+    }
   };
 
   const stepOn = (): void => {
-    const shot = history.current.redo(picture);
-    if (!shot) return;
-    setPicture(shot.picture);
-    lastMask.current = null;
-    setTold((n) => n + 1);
-    setSaid('');
+    const all = steps.current;
+    while (all.forward.length) {
+      const step = all.forward.pop()!;
+      let shot: ReturnType<typeof history.current.redo> = null;
+      if (step.pic) {
+        shot = history.current.redo(picture);
+        if (!shot) continue;
+      }
+      all.back.push(step.words ? { ...step, words, marks } : step);
+      layersFrom(step);
+      if (shot) {
+        setPicture(shot.picture);
+        lastMask.current = null;
+      }
+      setTold((n) => n + 1);
+      setSaid('');
+      return;
+    }
   };
 
   const [traced, setTraced] = useState<Traced | null>(null);
@@ -1114,7 +1355,19 @@ export default function PostStudio({
          converts a thumb against `WHOLE_VIEW`, so the box that is drawn and
          the box that is tapped come out of the same placement by
          construction rather than by two call sites agreeing. */
-      const at = place(picture, size, cropBox || traced || picking ? WHOLE_VIEW : crop);
+      /* ── And the whole photograph while the magic touch is aimed ─────
+
+         Carli, 15 October 2026: *"Kyk mooi of elke funksie ... werk."* A
+         tap is turned into a spot by `shareAt`, which reads it against the
+         whole photograph — and the glass was showing her crop, so the ring
+         and the part the AI changed landed away from her finger, and a tap
+         near a cropped-off edge did nothing. Drawn whole, the tap, the ring
+         and `spotRect` are one placement.
+
+         Only on the glass (`guides`). The file always goes out in her own
+         framing, whatever tool happens to be open when she presses Save. */
+      const allOfIt = guides && Boolean(cropBox || traced || picking || bench === 'magic');
+      const at = place(picture, size, allOfIt ? WHOLE_VIEW : crop);
       /* The look goes on the PICTURE and comes off again before anything is
          written. Words under a blur are not a style, they are a mistake, and
          a filter left set would put every one of them through it. */
@@ -1252,9 +1505,34 @@ export default function PostStudio({
       /* Where the block goes: wherever she put it, or where the spot says
          if she has not moved it. Centred on the point, because that is
          what dragging a thing to a place means. */
-      const put = blockAt(
+      const laid = blockAt(
         one.at ?? atOf(one.spot), fit.lines.length, fit.px, lineGap, size,
       );
+      const put = { x: laid.x, y: laid.y };
+      /* ── Moved clear of the platform's furniture, in the file ────────
+
+          The ⚠ on the glass says words under the app's caption and buttons
+          are moved clear in the saved file, and `moveInside` above only
+          ever kept the BOX inside — the block itself was drawn wherever she
+          had dragged it. So the file now does what the sign says: the block,
+          measured as it is drawn, is shifted the shortest way into the safe
+          band. On the glass it stays where she put it, with the bands
+          showing why it will move. */
+      if (!guides && size.furniture) {
+        const safe = boxOf(ALL);
+        const halfW = fit.lines.reduce(
+          (most, line) => Math.max(most, measure(line, fit.px)), 0,
+        ) / 2;
+        const tall = fit.lines.length * fit.px * lineGap;
+        const [left, right] = [safe.left * size.width, (safe.left + safe.width) * size.width];
+        const [top, foot] = [safe.top * size.height, (safe.top + safe.height) * size.height];
+        if (halfW * 2 <= right - left) {
+          put.x = Math.min(Math.max(put.x, left + halfW), right - halfW);
+        }
+        if (tall <= foot - top) {
+          put.y = Math.min(Math.max(put.y, top), foot - tall);
+        }
+      }
 
       /** One line, with the letters spaced by hand.
  
@@ -1339,8 +1617,12 @@ export default function PostStudio({
           `fitText`, and none of them is state anybody else holds.
  
           A ref and not state: a render writes it and a gesture reads it,
-          and putting it in state would make every draw cause another. */
-      laidOut.current.set(one.id, {
+          and putting it in state would make every draw cause another.
+
+          Only from the glass: the file, the shelf and the feed preview are
+          drawn too, and in the file a line may have been moved clear of the
+          furniture — the thumb has to find it where the GLASS shows it. */
+      if (guides) laidOut.current.set(one.id, {
         x: put.x / size.width,
         y: (put.y + (fit.lines.length * fit.px * lineGap) / 2) / size.height,
         w: Math.min(1, (fit.lines.reduce(
@@ -1637,9 +1919,20 @@ export default function PostStudio({
      Carli, 14 October 2026: "in al die editor plekke moet daar 'n right
      click wees wat funksies vinniger kry … as ek 'n text wil delete, dan
      moet ek die delete knoppie kan druk, of ctrl c en ctrl v." */
+  /* A shape or a line thrown away is a step, so Put back brings it back. */
+  const dropMark = (id: string): void => {
+    beforeLayers(t('post.stepDropShape', 'taking a shape away'));
+    setMarks((was) => was.filter((one) => one.id !== id));
+    setMarkOn(null);
+  };
+  const dropWords = (id: string): void => {
+    beforeLayers(t('post.stepDropWords', 'taking words away'));
+    setWords((was) => was.filter((one) => one.id !== id));
+    setWordOn(null);
+  };
   const dropChosen = (): boolean => {
-    if (markOn) { const id = markOn; setMarks((was) => was.filter((one) => one.id !== id)); setMarkOn(null); return true; }
-    if (wordOn) { const id = wordOn; setWords((was) => was.filter((one) => one.id !== id)); setWordOn(null); return true; }
+    if (markOn) { dropMark(markOn); return true; }
+    if (wordOn) { dropWords(wordOn); return true; }
     return false;
   };
   const copyChosen = (): boolean => {
@@ -1672,11 +1965,17 @@ export default function PostStudio({
       if (target && target.closest('input, textarea, select, [contenteditable="true"]')) return;
       const mod = event.ctrlKey || event.metaKey;
       const key = event.key.toLowerCase();
+      /* Throwing a line or a shape away only when nothing else has the keys —
+         the page itself or the photograph. With a button or a chip focused
+         (the last thing pressed), Backspace belongs to that and not to the
+         picked line, which used to vanish under it. */
+      const onGlass = !target || target === document.body
+        || target === document.documentElement || target.tagName === 'CANVAS';
       if (mod && key === 'z') { event.preventDefault(); if (event.shiftKey) stepOn(); else stepBack(); return; }
       if (mod && key === 'y') { event.preventDefault(); stepOn(); return; }
-      if (key === 'delete' || key === 'backspace') { if (dropChosen()) event.preventDefault(); return; }
+      if (key === 'delete' || key === 'backspace') { if (onGlass && dropChosen()) event.preventDefault(); return; }
       if (mod && key === 'c') { copyChosen(); return; }
-      if (mod && key === 'x') { if (copyChosen()) { event.preventDefault(); dropChosen(); } return; }
+      if (mod && key === 'x') { if (onGlass && copyChosen()) { event.preventDefault(); dropChosen(); } return; }
       if (mod && key === 'v') { if (pasteCopied()) event.preventDefault(); return; }
       if (mod && key === 'd') { if (copyChosen()) { event.preventDefault(); pasteCopied(); } }
     };
@@ -2001,6 +2300,13 @@ export default function PostStudio({
       setCrop(MIDDLE);
       setLook(PLAIN);
       setWhole(null);
+      /* Everything that was about the last photograph: its cut-out mask,
+         the boxes found in it and the spot marked on it. */
+      lastMask.current = null;
+      setFound(null);
+      setPicking(false);
+      setPicked(null);
+      setMagicSpot(null);
       URL.revokeObjectURL(img.src);
     };
     img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
@@ -2119,6 +2425,21 @@ export default function PostStudio({
    * straight into a film costs the one credit it would have cost to save.
    */
   const paidPicture = async (): Promise<Blob | null> => {
+    /* ── Drawable, before anybody is charged ───────────────────────────
+       A custom size goes to 8000 a side and How big doubles it, and a
+       canvas past what the browser will draw comes back EMPTY, with no
+       error — after the credits were taken. So the size is asked first,
+       and refused in a sentence while it costs nothing. */
+    const outWide = Math.ceil(size.width * scale);
+    const outTall = Math.ceil(size.height * scale);
+    if (outWide > CANVAS_MOST.side || outTall > CANVAS_MOST.side
+      || outWide * outTall > CANVAS_MOST.pixels) {
+      setSaid(t(
+        'post.tooBigOut',
+        'At {w}×{h} that is too big for a phone to draw as one picture. Choose 1× under How big, or a smaller canvas size. Nothing was charged.',
+      ).replace('{w}', String(outWide)).replace('{h}', String(outTall)));
+      return null;
+    }
     const token = await accessToken();
     const answer = await fetch('/api/post/export', {
       method: 'POST',
@@ -2136,12 +2457,12 @@ export default function PostStudio({
     await faceReady();
     const sheet = document.createElement('canvas');
     const how = formatOf(kind);
-    const exportScale: Scale = exportQuality === 'ultra' ? 2 : (scale === 2 ? 2 : 1);
-    const qualityFactor = exportQuality === 'draft' ? 0.72 : exportQuality === 'ultra' ? 0.98 : 0.92;
-    const baseQuality = typeof how.quality === 'number' ? how.quality : 0.92;
-    const effectiveQuality = Math.min(1, Math.max(0.1, baseQuality * (qualityFactor / 0.92)));
-    draw(sheet, false, exportScale);
-    if (false as boolean) draw(sheet, false, scale);
+    /* How hard a JPG or WebP is squeezed; a PNG has nothing to squeeze, and
+       `toBlob` is not handed a number that would do nothing. */
+    const quality = typeof how.quality === 'number'
+      ? Math.min(1, how.quality * SQUEEZE[squeeze])
+      : undefined;
+    draw(sheet, false, scale);
     if (!how.clear && !back) {
       const onto = document.createElement('canvas');
       onto.width = sheet.width;
@@ -2156,7 +2477,7 @@ export default function PostStudio({
         sheet.getContext('2d')?.drawImage(onto, 0, 0);
       }
     }
-    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, how.type, effectiveQuality));
+    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, how.type, quality));
     if (!blob) setSaid(t('post.noExport', 'That could not be exported.'));
     return blob;
   };
@@ -2178,10 +2499,12 @@ export default function PostStudio({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const effectiveScale: Scale = exportQuality === 'ultra' ? 2 : (scale === 2 ? 2 : 1);
-      a.download = nameFor(size.id, kind, effectiveScale);
+      a.download = nameFor(size.id, kind, scale);
       a.click();
-      URL.revokeObjectURL(url);
+      /* Let go a little later, not on the same tick: some browsers start
+         the download after `click` returns, and a URL revoked under them is
+         a paid picture that never arrives. */
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
       setSaid(t('post.saved', 'Saved to your device.'));
     } catch {
       setSaid(t('post.noExport', 'That could not be exported.'));
@@ -2458,6 +2781,8 @@ export default function PostStudio({
    * take it away, and somebody who has not can bring one in afterwards.
    */
   const startFrom = (one: Template): void => {
+    /* It replaces the words, so the words it replaces can come back. */
+    beforeLayers(t('post.stepTemplate', 'putting a template on'));
     const shape = POST_SIZES.find((size) => size.id === one.size);
     if (shape) setSize(shape);
     if (one.look) setLook((was) => ({ ...was, ...one.look }));
@@ -2484,39 +2809,41 @@ export default function PostStudio({
         furniture: tpl.width === 1080 && tpl.height === 1920,
         what: { en: tpl.nameEn, af: tpl.nameAf },
       };
-    setSize(shape);
-
-    if (tpl.bgGradient?.includes('#')) {
-      const match = tpl.bgGradient.match(/#[a-fA-F0-9]{6}/);
-      if (match) {
-        setBack(match[0]);
-        setLastColour(match[0]);
-      }
-    }
+    const headlineText = tpl.sampleHeadline || (lang === 'af' ? tpl.nameAf : tpl.nameEn);
+    const subText = tpl.sampleSubtext || (lang === 'af' ? tpl.subAf : tpl.subEn);
 
     /* A moving template lands as the frame its motion comes to rest on —
        drawn by `drawTemplateFrame`, the function the preview played — so
-       the still is the thing she just watched, not a different drawing. */
-    const still = templateStill(tpl) ?? tpl.previewSvg;
-    if (still) {
-      const img = new Image();
-      img.onload = () => {
-        setWhole(img);
-        setPicture(img);
-        setCrop(MIDDLE);
-      };
-      img.src = still;
-    }
+       the still is the thing she just watched, not a different drawing.
+       Asked for with no headline in it (a space draws nothing), because the
+       headline goes on top as words she can change; written into the still
+       as well it would be there twice. */
+    const moving = templateStill({ ...tpl, sampleHeadline: ' ' });
+    /* A still template's own <text> lines that say the headline or the line
+       under it are cut out of its SVG — see `withoutLettering`. Every
+       language's wording is looked for, since the picture is drawn in one. */
+    const stripped = moving
+      ? null
+      : withoutLettering(tpl.previewSvg, [
+        [tpl.sampleHeadline, tpl.nameEn, tpl.nameAf],
+        subText ? [tpl.sampleSubtext, tpl.subEn, tpl.subAf] : [],
+      ], tpl.height);
+    const still = moving ?? stripped?.url ?? tpl.previewSvg;
+    const [headCut, subCut] = stripped?.cut ?? [null, null];
+    const headGlow = GLOWS.find((one) => one.id === tpl.headGlow)?.id;
 
-    const headlineText = lang === 'af' ? tpl.nameAf : tpl.nameEn;
-    const subText = tpl.sampleSubtext || (lang === 'af' ? tpl.subAf : tpl.subEn);
     const newWords: Words[] = [
       {
         id: freshId(),
-        text: tpl.sampleHeadline || headlineText,
-        face: 'poster',
+        text: headlineText,
+        /* The template's own dressing where it carries one (the music
+           templates of 15 October 2026), else what the cut-out lettering
+           looked like, else the room's poster face in white. */
+        face: FACES.find((one) => one.id === tpl.headFace)?.id ?? faceFromFamily(headCut?.family, 'poster'),
         spot: 'top',
-        ink: '#ffffff',
+        ...(headCut?.y !== undefined ? { at: { x: 0.5, y: headCut.y } } : {}),
+        ink: tpl.headInk ?? headCut?.ink ?? '#ffffff',
+        ...(headGlow ? { glow: headGlow } : {}),
         behind: 'none',
       },
     ];
@@ -2524,16 +2851,47 @@ export default function PostStudio({
       newWords.push({
         id: freshId(),
         text: subText,
-        face: 'plain',
+        face: FACES.find((one) => one.id === tpl.subFace)?.id ?? faceFromFamily(subCut?.family, 'plain'),
         spot: 'bottom',
-        ink: '#93c5fd',
+        ...(subCut?.y !== undefined ? { at: { x: 0.5, y: subCut.y } } : {}),
+        ink: tpl.subInk ?? subCut?.ink ?? '#93c5fd',
         behind: 'none',
       });
     }
-    setWords(newWords);
+
     setShowTemplatesModal(false);
-    setBench('text');
-    setSaid(t('stpl.applied', 'Template applied. You can edit any element, text or canvas size.'));
+    const img = new Image();
+    img.onload = () => {
+      /* A step like any other, and one step for the whole press: Put back
+         returns the photograph AND the words that were here before. */
+      before(t('post.stepTemplate', 'putting a template on'), true);
+      setSize(shape);
+      if (tpl.bgGradient?.includes('#')) {
+        const match = tpl.bgGradient.match(/#[a-fA-F0-9]{6}/);
+        if (match) {
+          setBack(match[0]);
+          setLastColour(match[0]);
+        }
+      }
+      /* Not `whole`. That is what "Put it back" restores after a cut, and a
+         template is not a cut of anything: pointing it at the template made
+         the button put the template back on top of itself. The photograph
+         that was here is in the history, one Put back away. */
+      setWhole(null);
+      setPicture(img);
+      setCrop(MIDDLE);
+      lastMask.current = null;
+      setFound(null);
+      setPicking(false);
+      setPicked(null);
+      setMagicSpot(null);
+      setWords(newWords);
+      setWordOn(null);
+      setBench('text');
+      setSaid(t('stpl.applied', 'Template applied. You can edit any element, text or canvas size.'));
+    };
+    img.onerror = () => setSaid(t('stpl.failed', 'That template could not be opened. Nothing was changed \u2014 try another one.'));
+    img.src = still;
   };
 
   const handleApplyCanvasSize = (w: number, h: number, label: string): void => {
@@ -2603,12 +2961,22 @@ export default function PostStudio({
   const cutAgain = (how: EdgeId): void => {
     setEdge(how);
     const had = lastMask.current;
-    if (!had) return;
+    /* Only while the picture on the glass is the cut-out this mask made
+       (`made`), so the press is the same cut with another edge. After anything
+       else (a new photograph, a template, a crop, a magic touch) the mask is
+       somebody else's, and re-applying it put an OLD cut-out back over the
+       new picture. Then the edge is only remembered for the next cut — and
+       for the blur behind, which reads it too. */
+    if (!had || !had.made || picture !== had.made) return;
     const wide = had.of.naturalWidth || had.of.width;
     const tall = had.of.naturalHeight || had.of.height;
+    before(t('post.stepEdge', 'changing the cut edge'));
     asPicture(
       maskOnto(had.of, had.mask, wide, tall, edgeOf(how)),
-      (one) => setPicture(one),
+      (one) => {
+        lastMask.current = { ...had, made: one };
+        setPicture(one);
+      },
       () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')),
     );
   };
@@ -2654,7 +3022,11 @@ export default function PostStudio({
     ctx.drawImage(paint, 0, 0, to.width, to.height);
   };
 
-  useEffect(() => { if (rubbing) drawRub(); });
+  /* Drawn when painting starts, when the picture changes under it and when
+     the bench comes back with the canvas on it — and not on every render of
+     the room: each draw walks every pixel of the photograph, and a slider
+     moved anywhere else was paying for it. A stroke draws its own (`rubAt`). */
+  useEffect(() => { if (rubbing) drawRub(); }, [rubbing, picture, bench]);
 
   const rubAt = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     if (!picture) return;
@@ -2736,13 +3108,16 @@ export default function PostStudio({
          they were. Stacked rather than placed, because a made-up position is
          worse than an obvious default she can drag. */
       : (grabbed ?? '').split('\n').map((line) => line.trim()).filter(Boolean)
-        .map((line, n) => ({
+        .reduce<Words[]>((all, line, n) => [...all, {
           id: freshId(),
           text: line,
           face: FACES[0].id,
-          spot: (n === 0 ? 'bottom' : 'top') as SpotId,
+          spot: 'top' as SpotId,
           ink: '#ffffff',
-        }));
+          /* One under the other, each clear of the lines already on the
+             picture and of the ones just put down before it. */
+          at: freeRow([...words, ...all], n === 0 ? atOf('top').y : (all[all.length - 1].at?.y ?? 0.17) + 0.12),
+        }], []);
     if (!made.length) return;
     setWords((was) => [...was, ...made]);
     setGrabbed(null);
@@ -2906,10 +3281,43 @@ export default function PostStudio({
        name in front of the dot — so naming `sheet.toDataURL` to let this
        request body through would have excused the paid road out with it.
        The shelf's canvas is named `shelved` for the same reason. */
+    /* ── Shrunk to fit the route, the way the magic touch is ───────────
+       The route takes four megabytes and a full-size PNG of a phone
+       photograph is several times that, so every large picture came back
+       "too large to send" — after the press, with nothing found. It goes
+       up as a JPEG no longer than `THINGS_SIDE` and inside `BUDGET`, the
+       quality walked down until it fits; the engine finds a guitar as well
+       at 1600 across as at 4000. The boxes come back in the SENT size and
+       are scaled up to this picture below, so lifting a thing out still
+       cuts the full-size photograph. White under it, because a JPEG has no
+       see-through and a cut-out on black reads as a black shape. */
     const looked = document.createElement('canvas');
-    looked.width = wide;
-    looked.height = tall;
-    looked.getContext('2d')?.drawImage(picture, 0, 0);
+    const shrink = Math.min(1, THINGS_SIDE / Math.max(wide, tall));
+    looked.width = Math.max(1, Math.round(wide * shrink));
+    looked.height = Math.max(1, Math.round(tall * shrink));
+    const lctx = looked.getContext('2d');
+    if (lctx) {
+      lctx.fillStyle = '#ffffff';
+      lctx.fillRect(0, 0, looked.width, looked.height);
+      lctx.drawImage(picture, 0, 0, looked.width, looked.height);
+    }
+    let sent = '';
+    for (const quality of LADDER) {
+      /* Not a road out: this string is the request body, sent to our own
+         route and never handed to the person. `check:postpaid` counts
+         every `toDataURL` in this file because each one COULD be a way to
+         take a picture off the device without paying, and this one is
+         named in its allowlist for that reason. */
+      const url = looked.toDataURL('image/jpeg', quality);
+      sent = url.slice(url.indexOf(',') + 1);
+      if (sent.length <= BUDGET) break;
+    }
+    if (!sent || sent.length > BUDGET) {
+      setSaid(t('post.thingsTooBig', 'That picture is too big to send. Crop it or bring in a smaller one. Nothing was charged.'));
+      return;
+    }
+    const upX = wide / looked.width;
+    const upY = tall / looked.height;
     setLooking(true);
     setSaid('');
     try {
@@ -2925,15 +3333,11 @@ export default function PostStudio({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          /* Not a road out: this string is the request body, sent to our
-             own route and never handed to the person. `check:postpaid`
-             counts every `toDataURL` in this file because each one COULD
-             be a way to take a picture off the device without paying, and
-             this one is named in its allowlist for that reason. */
-          picture: looked.toDataURL('image/png').split(',')[1] ?? '',
-          mime: 'image/png',
-          wide,
-          tall,
+          picture: sent,
+          mime: 'image/jpeg',
+          /* The size of what was SENT: every box comes back in its terms. */
+          wide: looked.width,
+          tall: looked.height,
         }),
       });
       const body = (await answer.json().catch(() => ({}))) as {
@@ -2950,8 +3354,19 @@ export default function PostStudio({
       }
       /* Shares, because that is the space `pickAt` and the highlights work
          in — and a box handed over in pixels would land in the corner. */
-      const picks: Pick[] = rows.map((one) => {
+      const picks: Pick[] = rows.map((sentRow) => {
         const id = freshId();
+        /* Into this picture's own pixels, whole numbers and inside it —
+           `liftWith` walks the box over the full-size photograph. */
+        const one: Found = {
+          ...sentRow,
+          box: {
+            left: Math.max(0, Math.min(wide, Math.round(sentRow.box.left * upX))),
+            top: Math.max(0, Math.min(tall, Math.round(sentRow.box.top * upY))),
+            right: Math.max(0, Math.min(wide, Math.round(sentRow.box.right * upX))),
+            bottom: Math.max(0, Math.min(tall, Math.round(sentRow.box.bottom * upY))),
+          },
+        };
         things.current.set(id, one);
         return {
           id,
@@ -3035,7 +3450,7 @@ export default function PostStudio({
         setPicked(null);
         setFound(null);
         nothingBehind();
-        setSaid(t('post.thingDone', 'Lifted out, on nothing. Paint it, move it, or save it as a PNG — press Put it back for the photograph.'));
+        setSaid(t('post.thingLifted', 'Lifted out on its own, on nothing \u2014 it is the whole picture now. Paint it with Its colour, or save it as a PNG. Press Put it back for the photograph.'));
       }, () => setSaid(t('post.thingFailed', 'That one could not be lifted out.')));
     };
     maskImg.onerror = () => setSaid(t('post.thingFailed', 'That one could not be lifted out.'));
@@ -3436,6 +3851,7 @@ export default function PostStudio({
       lastMask.current = { mask: cut.mask, of: picture };
       before(t('post.stepCut', 'taking the background out'));
       asPicture(cut.canvas, (one) => {
+        lastMask.current = { mask: cut.mask, of: picture, made: one };
         setWhole(picture);
         setPicture(one);
         nothingBehind();
@@ -3964,7 +4380,7 @@ export default function PostStudio({
         Only drawn when there is a photograph, because that is the whole
         input. And it is a paid press, so the price is on the button. */}
     {picture && (
-      <div data-postlive className={`${RY} flex-col items-stretch gap-2`}>
+      <div data-postlive className="flex flex-col gap-2">
         <div className={MIKRO}>{t('post.liveTitle', 'Give it a little motion')}</div>
         <div className="flex flex-wrap gap-1.5">
           {MOTIONS.map((one) => (
@@ -4004,13 +4420,23 @@ export default function PostStudio({
               ? t('post.liveBusy', 'Making it…')
               : `${t('post.liveGo', 'Bring it to life')} · ${creditsSaid(CREDITS.video * LIVE_SECONDS / 5, t)}`}
           </button>
+          {/* In a tab of its own. The clip lives on another origin, where a
+              browser ignores `download` and simply goes there — and as a
+              plain link that was out of the room, with the post she was
+              making gone with it. In a new tab the clip opens to be saved
+              and the post stays exactly where it was. Not fetched and handed
+              over as a file from here: this room has one way to put a file
+              on a phone, the paid one (`check:onlyonpress`). */}
           {liveUrl && (
             <a
               href={liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               download="futurebox-live.mp4"
               data-postlivesave
               className={LEEG}
             >
+              <Download className="h-4 w-4" />
               {t('post.liveSave', 'Save the video')}
             </a>
           )}
@@ -4096,7 +4522,9 @@ export default function PostStudio({
         It is the ONE thing in this room that is not free and does not happen
         on the device, so the button carries its price and the sentence under
         it says so. */}
-    <div data-postask className={`${RY} flex-col items-stretch gap-2`}>
+    {/* `data-postmake`, not `data-postask`: that name is the copilot's
+        button in the bar, which the app's own "ask" shortcut finds by it. */}
+    <div data-postmake className="flex flex-col gap-2">
       <div className={MIKRO}>
         {picture
           ? t('post.askTitle', 'Change it by saying what to change')
@@ -4515,10 +4943,6 @@ export default function PostStudio({
     {picture && (
       <div
         data-postrub
-        data-span={(() => { const m = smear.current; if (!m || !picture) return 'none';
-          const w = picture.naturalWidth || picture.width; let a=1e9,b=-1,n=0;
-          for (let i=0;i<m.length;i++) if (m[i]) { n++; const x=i%w; if(x<a)a=x; if(x>b)b=x; }
-          return JSON.stringify({ w, n, a, b, smeared }); })()}
         className="space-y-2 rounded-xl border p-3"
         style={asRoom
           ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
@@ -5094,7 +5518,16 @@ export default function PostStudio({
               <button
                 type="button"
                 data-postgrabcopy
-                onClick={() => { void navigator.clipboard?.writeText(grabbed).catch(() => {}); }}
+                onClick={() => {
+                  /* Said either way: a copy press with no answer looks like a
+                     press that did nothing, and a refused clipboard (an older
+                     browser, a page without permission) is exactly that. */
+                  const failed = (): void => setSaid(t('post.copyFailed', 'That could not be copied. Hold your finger on the words above and copy them from there.'));
+                  if (!navigator.clipboard) { failed(); return; }
+                  navigator.clipboard.writeText(grabbed)
+                    .then(() => setSaid(t('post.copied', 'Copied.')))
+                    .catch(failed);
+                }}
                 className={LEEG}
               >
                 {t('post.grabCopy', 'Copy it')}
@@ -5147,17 +5580,20 @@ export default function PostStudio({
               key={one.id}
               type="button"
               data-posttitlestyle={one.id}
-              onClick={() => setWords((was) => [
-                ...was,
-                {
+              onClick={() => setWords((was) => {
+                /* A second title style goes under the first, not on it. */
+                const title: Words = {
                   id: freshId(), text: t(one.title.says[0], one.title.says[1]), face: one.title.face,
                   spot: 'middle', ink: one.title.ink, glow: one.title.glow, letterGap: one.title.letterGap,
-                },
-                {
+                  ...(was.length ? { at: freeRow(was, atOf('middle').y) } : {}),
+                };
+                const under: Words = {
                   id: freshId(), text: t(one.under.says[0], one.under.says[1]), face: one.under.face,
                   spot: 'bottom', ink: one.under.ink, glow: one.under.glow, letterGap: one.under.letterGap,
-                },
-              ])}
+                  ...(was.length ? { at: freeRow([...was, title], (title.at ?? atOf('middle')).y + 0.12) } : {}),
+                };
+                return [...was, title, under];
+              })}
               title={t(one.name[0], one.name[1])}
               aria-label={`${t(one.title.says[0], one.title.says[1])} \u2014 ${t(one.name[0], one.name[1])}`}
               className={`${LEEG} border-white/15`}
@@ -5189,6 +5625,8 @@ export default function PostStudio({
               onClick={() => setWords((was) => [...was, {
                 id: freshId(), text: t(one.says[0], one.says[1]), face: one.face,
                 spot: was.length === 0 ? 'middle' : 'top', ink: one.ink, glow: one.glow, letterGap: one.letterGap,
+                /* Under the last line rather than on top of it (`freeRow`). */
+                at: freeRow(was, atOf(was.length === 0 ? 'middle' : 'top').y),
               }])}
               className={`${LEEG} !bg-black border-white/15`}
               style={{
@@ -5239,6 +5677,9 @@ export default function PostStudio({
           data-addwords
           onClick={() => setWords((was) => [...was, {
             id: freshId(), text: '', face: FACES[0].id, spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
+            /* A second, third and fourth line each get a row of their own,
+               instead of all landing on the top spot in one pile. */
+            at: freeRow(was, atOf(was.length === 0 ? 'bottom' : 'top').y),
           }])}
           className={`${LEEG} inline-flex items-center gap-1.5`}
         >
@@ -5288,6 +5729,7 @@ export default function PostStudio({
                    different shapes for one choice. */
                 style={{ fontFamily: face.css, fontWeight: face.weight }}
                 data-postface={face.id}
+                aria-pressed={one.face === face.id}
                 className={`${LEEG} ${one.face === face.id ? GEKIES : ''}`}
               >
                 {t(`post.face.${face.id}`, face.name)}
@@ -5359,7 +5801,7 @@ export default function PostStudio({
             />
             <button
               type="button"
-              onClick={() => setWords((was) => was.filter((w) => w.id !== one.id))}
+              onClick={() => dropWords(one.id)}
               aria-label={t('post.removeWords', 'Remove these words')}
               className={LEEG}
             >
@@ -5597,7 +6039,7 @@ export default function PostStudio({
               <span className="text-sm font-bold"><span aria-hidden>{spec.icon}</span> {t(spec.name[0], spec.name[1])}</span>
               <button
                 type="button"
-                onClick={() => { setMarks((was) => was.filter((m) => m.id !== mark.id)); setMarkOn(null); }}
+                onClick={() => dropMark(mark.id)}
                 aria-label={t('post.removeShape', 'Remove this shape')}
                 className={`${LEEG} w-auto px-3`}
               >
@@ -5756,42 +6198,48 @@ export default function PostStudio({
       </p>
     </div>
 
-    {/* ── Export quality tier (Draft 720p, Standard 1080p, Ultra 4K) costing standard 5 credits ─ */}
-    <div className="space-y-2">
+    {/* ── How hard the file is squeezed — `SQUEEZE` says why this is all
+        the row does now. The price is the same whichever is chosen. */}
+    <div className="space-y-2" data-postsqueeze>
       <div className="flex items-center justify-between">
         <p className={MIKRO}>{t('post.exportQuality', 'Export quality')}</p>
         <span className="text-[11px] font-bold text-emerald-400">
           {creditsSaid(CREDITS.postOut, t)}
         </span>
       </div>
-      <div className={RY3}>
-        <button
-          type="button"
-          onClick={() => setExportQuality('draft')}
-          className={`${LEEG} ${exportQuality === 'draft' ? GEKIES : ''}`}
-        >
-          {t('post.qualityDraft', 'Draft (720p)')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setExportQuality('standard')}
-          className={`${LEEG} ${exportQuality === 'standard' ? GEKIES : ''}`}
-        >
-          {t('post.qualityStandard', 'Standard (1080p)')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setExportQuality('ultra')}
-          className={`${LEEG} ${exportQuality === 'ultra' ? GEKIES : ''}`}
-        >
-          {t('post.qualityUltra', 'Ultra (4K)')}
-        </button>
-      </div>
-      <p className="text-[12px] leading-relaxed text-zinc-500">
-        {exportQuality === 'draft' && t('post.qualityDraftNote', 'Fast rendering and compact file size. Costs 5 credits.')}
-        {exportQuality === 'standard' && t('post.qualityStandardNote', 'Full HD fidelity for feeds and presentations. Costs 5 credits.')}
-        {exportQuality === 'ultra' && t('post.qualityUltraNote', 'Ultra-crisp 4K resolution at 2× canvas density. Costs 5 credits.')}
-      </p>
+      {formatOf(kind).quality === undefined ? (
+        <p className="text-[12px] leading-relaxed text-zinc-500">
+          {t('post.squeezePng', 'A PNG keeps every pixel, so there is no quality to choose. How big above is what changes the file.')}
+        </p>
+      ) : (
+        <>
+          <div className={RY3}>
+            {(['small', 'standard', 'best'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-postsqueezepick={one}
+                aria-pressed={squeeze === one}
+                onClick={() => setSqueeze(one)}
+                className={`${LEEG} ${squeeze === one ? GEKIES : ''}`}
+              >
+                {one === 'small'
+                  ? t('post.squeezeSmall', 'Smaller file')
+                  : one === 'standard'
+                    ? t('post.squeezeStandard', 'Standard')
+                    : t('post.squeezeBest', 'Best quality')}
+              </button>
+            ))}
+          </div>
+          <p className="text-[12px] leading-relaxed text-zinc-500">
+            {squeeze === 'small'
+              ? t('post.squeezeSmallNote', 'Squeezed harder: a much smaller file that loads fast, a little soft in fine detail. Same size in pixels.')
+              : squeeze === 'standard'
+                ? t('post.squeezeStandardNote', 'The balance the platforms expect: sharp, at a sensible file size.')
+                : t('post.squeezeBestNote', 'Hardly squeezed at all: the sharpest file, and a bigger one. Same size in pixels.')}
+          </p>
+        </>
+      )}
     </div>
 
     <div className="space-y-2">
@@ -5857,12 +6305,42 @@ export default function PostStudio({
           /* A new post is a new photograph, so the steps that were about the
              old one are not steps she could sensibly take back. */
           history.current.clear();
+          steps.current = { back: [], forward: [] };
           setTold((n) => n + 1);
           setPost(freshId());
           setWords([]);
+          setWordOn(null);
           setPicture(null);
           setTraced(null);
           setCropBox(null);
+          /* And everything else that belonged to the last post, so "new"
+             means new: the shapes, the look, the framing, the colour behind
+             it, the original kept for Put it back, the pictures to copy
+             from, what Grab found, the magic spot, the cut-out mask, and the
+             moving clip with its wait. */
+          setMarks([]);
+          setMarkOn(null);
+          setLook(PLAIN);
+          setCrop(MIDDLE);
+          setBack('#111113');
+          setLastColour('#111113');
+          setWhole(null);
+          for (const one of refs) URL.revokeObjectURL(one.url);
+          setRefs([]);
+          setFound(null);
+          setPicking(false);
+          setPicked(null);
+          things.current.clear();
+          setGrabbed(null);
+          setMagicSpot(null);
+          lastMask.current = null;
+          smear.current = null;
+          setSmeared(0);
+          setRubbing(false);
+          setLiveJob(null);
+          liveSince.current = 0;
+          setLiveUrl(null);
+          setLiveSaid('');
           setSaid('');
         }}
         className={LEEG}
@@ -5874,8 +6352,8 @@ export default function PostStudio({
   );
 
   /* The feed preview: the canvas drawn at its own size, as a picture. */
-  /* Open or shut. The preview is the picture already on the screen, copied
-     into a canvas in the card — never a file: a full-size image in an <img>
+  /* Open or shut. The preview is the post drawn again at preview size, into
+     a canvas in the card — never a file: a full-size image in an <img>
      is a picture somebody can long-press and save, which is a way out that
      skips the one paid press (`check:postpaid`). */
   /* Carli, 15 October 2026: "Die pers ogie moet vir jou opsies gee van tipe
@@ -5903,9 +6381,14 @@ export default function PostStudio({
     /* A frame later, so a shape just applied has been drawn on the canvas
        before it is copied. */
     const id = window.requestAnimationFrame(() => {
-      const from = canvas.current;
+      /* Drawn afresh without the guides, at the preview's own size — not
+         copied off the glass, which carries the safe-zone bands, the rings,
+         the crop box and the checkerboard. A feed preview with those in it
+         is a preview of something nobody will post. */
+      const from = document.createElement('canvas');
+      draw(from, false, Math.min(1, PREVIEW_LONGEST / Math.max(size.width, size.height)));
       const to = socialCanvas.current;
-      if (!from || !to || from.width === 0 || from.height === 0) return;
+      if (!to || from.width === 0 || from.height === 0) return;
       const shape = feedNow.kind;
       const scale = Math.min(1, PREVIEW_LONGEST / Math.max(shape.width, shape.height));
       to.width = Math.round(shape.width * scale);
@@ -6019,13 +6502,13 @@ export default function PostStudio({
       <button
         type="button"
         data-postundo
-        disabled={history.current.undoable() === null}
+        disabled={undoSays() === null}
         onClick={stepBack}
-        title={history.current.undoable()
-          ? `${t('post.undo', 'Put back')} — ${history.current.undoable()}`
+        title={undoSays()
+          ? `${t('post.undo', 'Put back')} — ${undoSays()}`
           : t('post.undoNone', 'Nothing to put back yet')}
-        aria-label={history.current.undoable()
-          ? `${t('post.undo', 'Put back')} — ${history.current.undoable()}`
+        aria-label={undoSays()
+          ? `${t('post.undo', 'Put back')} — ${undoSays()}`
           : t('post.undoNone', 'Nothing to put back yet')}
         className="flex h-9 w-9 items-center justify-center rounded-lg disabled:opacity-35"
         style={chipStyle}
@@ -6035,13 +6518,13 @@ export default function PostStudio({
       <button
         type="button"
         data-postredo
-        disabled={history.current.redoable() === null}
+        disabled={redoSays() === null}
         onClick={stepOn}
-        title={history.current.redoable()
-          ? `${t('post.redo', 'Do it again')} — ${history.current.redoable()}`
+        title={redoSays()
+          ? `${t('post.redo', 'Do it again')} — ${redoSays()}`
           : t('post.redoNone', 'Nothing to do again')}
-        aria-label={history.current.redoable()
-          ? `${t('post.redo', 'Do it again')} — ${history.current.redoable()}`
+        aria-label={redoSays()
+          ? `${t('post.redo', 'Do it again')} — ${redoSays()}`
           : t('post.redoNone', 'Nothing to do again')}
         className="flex h-9 w-9 items-center justify-center rounded-lg disabled:opacity-35"
         style={chipStyle}
@@ -6203,7 +6686,7 @@ export default function PostStudio({
             { id: 'copy', icon: Copy, label: t('post.menuCopy', 'Copy'), keys: 'Ctrl+C', can: Boolean(markOn || wordOn), run: () => { copyChosen(); } },
             { id: 'paste', icon: ClipboardPaste, label: t('post.menuPaste', 'Paste'), keys: 'Ctrl+V', can: Boolean(copiedThing.current), run: () => { pasteCopied(); } },
             { id: 'delete', icon: Trash2, label: t('post.menuDelete', 'Delete'), keys: 'Del', can: Boolean(markOn || wordOn), run: () => { dropChosen(); } },
-            { id: 'undo', icon: Undo2, label: t('post.menuUndo', 'Undo'), keys: 'Ctrl+Z', can: true, run: () => { stepBack(); } },
+            { id: 'undo', icon: Undo2, label: t('post.menuUndo', 'Undo'), keys: 'Ctrl+Z', can: undoSays() !== null, run: () => { stepBack(); } },
           ] as const).map((one) => (
             <button
               key={one.id}

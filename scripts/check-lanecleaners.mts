@@ -76,7 +76,10 @@ ok('and nothing was quietly inserted before it',
 /* ── 5. The half a filter cannot do says what it costs ─────────────────── */
 const booth = readFileSync('app/components/ProBooth.tsx', 'utf8');
 ok('the lane offers to take the room off', /onClick=\{onDeRoom\}/.test(booth));
-ok('and its price is beside it', /<Cost rate=\{CREDITS\.clean\} seconds=\{lane\.audio\.duration\} \/>/.test(booth));
+/* The length of the piece that is sent, not of the whole recording: the
+   route bills `pieceOf`, so a price read off `lane.audio.duration` said a
+   trimmed lane's cut-off minutes too (15 October 2026). */
+ok('and its price is beside it', /<Cost rate=\{CREDITS\.clean\} seconds=\{pieceSeconds\(lane\)\} \/>/.test(booth));
 /* The same rule every paid lane action follows: a trimmed lane is not billed
    for the part that was cut off it. */
 ok('it is billed for the piece that plays, not the whole recording',

@@ -372,6 +372,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "set the look the whole video shares",
       "pick a template",
       "set the length and shape",
+      "switch the engine's own voice on or off for a quoted line",
     ],
     ops: {
       /* Two things this had to say and did not.
@@ -431,9 +432,23 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "That is how the desk knows there is a line at all \u2014 unquoted, it is drawn at " +
         "rather than said, and the subtitle comes out empty. " +
         `This is the length and the shape to write in: \u201c${SHOT_EXAMPLE}\u201d`,
-      set_aspect: "the value is exactly one of 16:9, 9:16 or 1:1",
+      /* ── What the grade makes, not what the app knows ─────────────
+
+         These said "one of 16:9, 9:16 or 1:1" and "one the desk offers",
+         and the desk accepted any of the three shapes on any grade. Square
+         is refused by every engine on the dearer grades, so the copilot
+         could set a shape the next press would be turned away for. The
+         desk now checks against the grade and prints what it kept when it
+         could not take the value — this says the same thing up front, so
+         the model asks for something that will stick. */
+      set_aspect:
+        "the value is exactly one of 16:9, 9:16 or 1:1. Square (1:1) is only made on some qualities " +
+        "\u2014 if the quality you set cannot make it, the desk keeps the shape it had and says so " +
+        "under the button. Prefer 9:16 for TikTok, Reels and Shorts and 16:9 for YouTube",
       set_seconds:
-        "the value is a whole number of seconds, and one the desk offers",
+        "the value is a whole number of seconds, one the CURRENT quality makes. If it is not, the desk " +
+        "moves it to the nearest length that quality makes and says so under the button \u2014 so set the " +
+        "quality first, then the length",
       /* ── The grade, because Simple means the copilot decides it ─────
 
          On Simple the quality row is not on the screen, so whatever this
@@ -441,13 +456,29 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
          one setting that decides whether a quoted line is spoken at all —
          Standard is silent — so a copilot that writes a line and leaves the
          grade alone has written something that cannot be said. */
+      /* ── And the voice, which a grade never switched on ─────────────
+
+         This told the model to pick Better "because standard cannot speak".
+         It picked Better, and the clip came back silent at twice the price:
+         a grade has never switched the voice on, and the switch was a tick
+         box only Everything shows. `set_speak` is that switch, and it picks
+         the quality that can speak by itself — so the grade line no longer
+         claims a grade means a voice. Found 15 October 2026, the day Carli
+         asked for every function on the desk to be looked at. */
       set_grade:
         "the value is exactly one of standard, better or premium. Standard is " +
-        "silent and is the right answer for a shot with nobody speaking; use " +
-        "better when anything is in quotation marks, because standard cannot " +
-        "speak and the line would come back drawn at rather than said. Premium " +
+        "the right answer for most shots. Choosing a quality NEVER makes a quoted " +
+        "line spoken by itself \u2014 use set_speak for that, which moves the desk " +
+        "to a quality that can speak. Premium " +
         "is thirteen times standard and is for a shot somebody has said is " +
         "worth it — do not pick it to be helpful",
+      set_speak:
+        "the value is on or off. On has the video engine itself say the line in " +
+        "quotation marks, in English only, and moves the desk to the cheapest " +
+        "quality that can speak (it costs more). Off is the default: the clip is " +
+        "silent and the quoted line is the subtitle, or is read in their own voice " +
+        "\u2014 which is the only way to get Afrikaans. Only set it on when they " +
+        "want the engine to speak an English line out loud",
       /* ── A blank line between shots, not a newline ───────────────────
  
          This said "one shot per line", which contradicted `set_prompt`

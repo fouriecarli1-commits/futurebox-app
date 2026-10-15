@@ -168,6 +168,16 @@ function BenchButton({
   );
 }
 
+/**
+ * The benches that work on the picked shot, and open empty without one.
+ *
+ * "This shot" was dimmed with nothing on the clock and Looks and Words were
+ * not, so on an empty room those two opened to a blank panel — a press that
+ * looked like it did nothing. All three are about one shot, so all three
+ * wait for one.
+ */
+const NEEDS_A_SHOT: ReadonlySet<Bench> = new Set<Bench>(['clip', 'looks', 'words']);
+
 /** Either side of the transport: the shot you picked, and the whole film. */
 const UPPER: readonly BenchSpec[] = [
   {
@@ -461,7 +471,7 @@ export default function CutDock({
                 onOpen={onOpen}
                 t={t}
                 tall
-                dim={spec.id === 'clip' && noClip}
+                dim={noClip && NEEDS_A_SHOT.has(spec.id)}
                 waiting={spec.id === waiting}
               />
             ))}
@@ -532,13 +542,13 @@ export default function CutDock({
               centred around a gap where the play button is not. */}
           {hasTransport ? (
             <>
-              <BenchButton spec={upper[0]} open={open} onOpen={onOpen} t={t} dim={noClip} waiting={upper[0].id === waiting} />
+              <BenchButton spec={upper[0]} open={open} onOpen={onOpen} t={t} dim={noClip && NEEDS_A_SHOT.has(upper[0].id)} waiting={upper[0].id === waiting} />
               {transport}
               {upper[1] ? <BenchButton spec={upper[1]} open={open} onOpen={onOpen} t={t} waiting={upper[1].id === waiting} /> : null}
             </>
           ) : (
             upper.map((spec) => (
-              <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} waiting={spec.id === waiting} />
+              <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} dim={noClip && NEEDS_A_SHOT.has(spec.id)} waiting={spec.id === waiting} />
             ))
           )}
         </div>
@@ -550,7 +560,7 @@ export default function CutDock({
           style={{ background: PANEL }}
         >
           {lower.map((spec) => (
-            <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} waiting={spec.id === waiting} />
+            <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} dim={noClip && NEEDS_A_SHOT.has(spec.id)} waiting={spec.id === waiting} />
           ))}
         </div>
       </div>

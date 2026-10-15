@@ -43,6 +43,19 @@ const INK = '#eef2ff';
 const INK_DIM = 'rgba(238,242,255,0.5)';
 const LIT = '#38bdf8';
 
+/**
+ * A model id, as a person would say it: `gemini-2.5-flash` is "Google
+ * Gemini 2.5 Flash", anything from Anthropic is "Claude". Names, so not
+ * translated. An id this does not recognise is shown as it came.
+ */
+function engineName(id: string): string {
+  if (/^gemini/i.test(id)) {
+    return `Google ${id.split('-').map((one) => one.charAt(0).toUpperCase() + one.slice(1)).join(' ')}`;
+  }
+  if (/^claude/i.test(id)) return 'Claude';
+  return id;
+}
+
 export default function BoothAsk({
   lanes,
   reading,
@@ -61,11 +74,14 @@ export default function BoothAsk({
   const [dropped, setDropped] = useState<Set<string>>(new Set());
   const [problem, setProblem] = useState('');
   const [done, setDone] = useState(false);
+  /** The model that answered the last question, as the route named it. */
+  const [engine, setEngine] = useState('');
 
   const ask = async (): Promise<void> => {
     setAsking(true);
     setProblem('');
     setReply('');
+    setEngine('');
     setMoves([]);
     setDropped(new Set());
     setDone(false);
@@ -80,7 +96,7 @@ export default function BoothAsk({
         body: JSON.stringify({ question, lanes, reading }),
       });
       const said = (await response.json().catch(() => null)) as
-        | { reply?: string; moves?: Move[]; message?: string }
+        | { reply?: string; moves?: Move[]; message?: string; engine?: string }
         | null;
       if (!response.ok) {
         setProblem(said?.message ?? t('ask.failed', 'That did not go through.'));
@@ -88,6 +104,7 @@ export default function BoothAsk({
       }
       setReply(said?.reply ?? '');
       setMoves(said?.moves ?? []);
+      setEngine(typeof said?.engine === 'string' ? said.engine : '');
     } catch {
       setProblem(t('ask.offline', 'Could not reach the app’s server.'));
     } finally {
@@ -99,10 +116,22 @@ export default function BoothAsk({
 
   return (
     <div className="space-y-3 px-4 pb-4">
-      {/* Google Gemini Flash mixing intelligence badge */}
+      {/* ── Who answered, and only once somebody has ────────────────
+
+          This said "Google Gemini 2.5 Flash" whatever happened. The route
+          tries Gemini first and falls back to Claude, and walks on to a
+          later Flash once 2.5 is switched off, so the badge was a claim
+          about a model that often had not been asked. Found on 15 October
+          2026 going through every function in the booth. Now the route says
+          which one answered, and before any answer the badge names the job
+          rather than a supplier. */}
       <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300">
         <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span className="truncate">{t('dock.aiGoogle', 'Google Gemini 2.5 Flash Mixing Intelligence')}</span>
+        <span className="truncate">
+          {engine
+            ? `${t('ask.answeredBy', 'Answered by')} ${engineName(engine)}`
+            : t('ask.badge', 'Mixing copilot')}
+        </span>
       </div>
 
       {/* What it can see, before it is asked anything. */}
@@ -141,7 +170,7 @@ export default function BoothAsk({
                 key={k}
                 type="button"
                 onClick={() => setQuestion(promptText)}
-                className="rounded-lg border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-emerald-500/40 hover:bg-emerald-950/30 hover:text-emerald-200 active:scale-[0.98]"
+                className="min-h-[44px] rounded-lg border border-white/10 bg-zinc-900/70 px-2 py-1 text-left text-[11px] text-zinc-300 transition-all hover:border-emerald-500/40 hover:bg-emerald-950/30 hover:text-emerald-200 active:scale-[0.98]"
               >
                 {promptText}
               </button>

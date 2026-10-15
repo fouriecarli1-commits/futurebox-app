@@ -642,6 +642,30 @@ function Unit({
 }
 
 /**
+ * The one context the EQ drawing asks, made the first time it is needed.
+ *
+ * This was a live `AudioContext` made on every mount of the rack, and the
+ * rack mounts every time a lane is picked or the desk is opened. Browsers
+ * limit how many live contexts a page may hold, and each one holds the
+ * audio hardware awake, so flicking through lanes could leave the room's
+ * own context unable to start. Found on 15 October 2026 (Carli: *"Kyk mooi of elke funksie in …
+ * probooth … werk."*). An `OfflineAudioContext` answers
+ * `getFrequencyResponse` just the same, never touches the hardware, and one
+ * of them serves every rack on the page.
+ */
+let asker: BaseAudioContext | null = null;
+function askingContext(): BaseAudioContext | null {
+  if (asker) return asker;
+  if (typeof OfflineAudioContext === 'undefined') return null;
+  try {
+    asker = new OfflineAudioContext(1, 1, 44_100);
+  } catch {
+    return null;
+  }
+  return asker;
+}
+
+/**
  * AI Studio Presets for One-Click Sound Sculpting.
  */
 interface AiPreset {
@@ -744,23 +768,26 @@ const AI_PRESETS: readonly AiPreset[] = [
 export default function BoothFx({
   fx,
   onChange,
+  onWhole,
 }: {
   readonly fx: Fx;
   readonly onChange: (next: Fx) => void;
+  /**
+   * Told before a press that replaces the whole rack — a preset, or Reset.
+   *
+   * A dial is put back by the dial, which is why the room does not put each
+   * nudge on its undo stack. A preset or a reset is not: it throws away
+   * every setting at once, and there is no control that puts eleven of them
+   * back. So the room remembers first, named by what is about to happen.
+   */
+  readonly onWhole?: (what: 'preset' | 'reset') => void;
 }): React.ReactElement {
   const { t } = useLang();
 
-  /* A context purely to ask the biquads what they do. One is enough and it
-     is never started, so nothing plays out of it — `responseOf` reads the
-     filters' maths, which does not need a running graph. */
-  const asking = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    const Ctor =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    return Ctor ? new Ctor() : null;
-  }, []);
-  useEffect(() => () => void asking?.close().catch(() => undefined), [asking]);
+  /* A context purely to ask the biquads what they do — `responseOf` reads
+     the filters' maths, which does not need a running graph. One for the
+     whole page, and offline: see `askingContext` above. */
+  const asking = askingContext();
 
   const set = <K extends keyof Fx>(key: K, value: Fx[K]): void => {
     const next = { ...fx };
@@ -805,7 +832,7 @@ export default function BoothFx({
           </div>
           <button
             type="button"
-            onClick={() => onChange({})}
+            onClick={() => { onWhole?.('reset'); onChange({}); }}
             className="flex h-[44px] items-center gap-1.5 rounded-lg border border-zinc-700/60 bg-zinc-900/80 px-2.5 text-[11px] font-bold text-zinc-300 transition-all hover:bg-zinc-800"
             title={t('fx.preset.reset', 'Reset Rack')}
           >
@@ -820,7 +847,7 @@ export default function BoothFx({
             <button
               key={preset.id}
               type="button"
-              onClick={() => onChange({ ...preset.fx })}
+              onClick={() => { onWhole?.('preset'); onChange({ ...preset.fx }); }}
               className="flex h-[44px] min-w-0 flex-col items-start justify-center overflow-hidden rounded-xl border border-white/10 bg-zinc-900/60 px-2 py-1 text-left transition-all hover:border-emerald-500/50 hover:bg-emerald-950/30 active:scale-[0.98]"
             >
               <span className="flex items-center gap-1.5 text-xs font-black text-zinc-100">

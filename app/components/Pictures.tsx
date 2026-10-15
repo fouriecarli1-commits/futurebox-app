@@ -57,9 +57,19 @@ export default function Pictures({
   from,
   disabled = false,
   pickOnly = false,
+  chosenId,
 }: {
   value: string | null;
-  onChange: (dataUrl: string | null) => void;
+  /**
+   * The picture, and which kept picture it is.
+   *
+   * The id is for a caller that keeps a REFERENCE rather than the bytes —
+   * the video desk's logo, which the brand kit stores by asset id. It used
+   * to guess the id as "the newest picture on the device", which was the
+   * wrong picture whenever she chose an older one. Null where the picture
+   * could not be kept on this device, so there is nothing to point at.
+   */
+  onChange: (dataUrl: string | null, assetId?: string | null) => void;
   from?: string;
   disabled?: boolean;
   /**
@@ -78,6 +88,15 @@ export default function Pictures({
    * because Carli said so on 4 October: *"Kyk mooi alles allign nie."*
    */
   pickOnly?: boolean;
+  /**
+   * Which kept picture is in use, where the caller knows it by id.
+   *
+   * `value` alone can only clear the tick, because a data URL does not say
+   * which tile it came from. The video desk's logo is known by id, and
+   * without this the strip showed nothing chosen beside a tick saying a
+   * logo was on.
+   */
+  chosenId?: string | null;
 }): React.ReactElement {
   const { t } = useLang();
   const input = useRef<HTMLInputElement | null>(null);
@@ -92,6 +111,9 @@ export default function Pictures({
   useEffect(() => {
     if (!value) setChosen(null);
   }, [value]);
+  useEffect(() => {
+    if (chosenId !== undefined) setChosen(chosenId);
+  }, [chosenId]);
 
   /**
    * A picture off the device, through the same guard the cast uses.
@@ -173,14 +195,16 @@ export default function Pictures({
            to IndexedDB and can reject on a full device; the picture is still
            perfectly usable in this room, so the failure is said rather than
            thrown and the shot keeps the frame either way. */
+        let kept: string | null = null;
         try {
           await rememberAsset(asset, made.preview);
           setAssets(loadAssets());
           setChosen(asset.id);
+          kept = asset.id;
         } catch {
           setProblem(t('pics.noRoom', 'That picture is in the shot, but there was no room to keep it on this device.'));
         }
-        onChange(made.preview);
+        onChange(made.preview, kept);
       })();
     },
     [from, onChange, t],
@@ -200,7 +224,7 @@ export default function Pictures({
       return;
     }
     setChosen(asset.id);
-    onChange(full);
+    onChange(full, asset.id);
   };
 
   const kept = assets.filter((one) => one.favourite).length;

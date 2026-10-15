@@ -142,7 +142,7 @@ import { accessToken } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
 import { broughtIn, cameFromChannel, madeHere, mustOwn, type Came } from '../lib/filmrights';
 import { broughtFrom, fileIt, loadBrought, posterOf, readBrought, starBrought, type Brought } from '../lib/brought';
-import { myVideos, type MyVideo } from '../lib/filmed';
+import { myVideosSaid, type MyVideo } from '../lib/filmed';
 import { linesFrom, type Timed } from '../lib/timedtext';
 import { lyricCount, lyricPieces } from '../lib/lyriccut';
 import { asTimed, lyricCount as songLineCount, lyricFilm } from '../lib/lyricfilm';
@@ -156,9 +156,10 @@ import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
 import { EDGES, EDGE_DEFAULT } from '../lib/wordsedge';
-import { drawFrame, motionAt, revealed, wordsStyleOf, MOTION_IN } from '../lib/videoextras';
+import { drawFrame, fontOfFace, motionAt, revealed, wordsStyleOf, MOTION_IN } from '../lib/videoextras';
+import { allWordsReady, wordsReady } from '../lib/videofaces';
 import { drawMark as drawShape, markBox, newMark } from '../lib/postshapes';
-import { glowOf, haloPasses } from '../lib/postglow';
+import { GLOWS, glowOf, haloPasses } from '../lib/postglow';
 import { soundOf,
   ASPECTS, NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE, SIDE_MAX, SIDE_MIN,
   aspectOf, shapeOf,
@@ -172,7 +173,7 @@ import {
   JOINS, JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
 } from '../lib/videojoins';
 import { studioAudio } from '../lib/demoaudio';
-import { createTemplateVideoBlob } from '../lib/templatevideo';
+import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
 
 
 /**
@@ -1131,12 +1132,30 @@ export default function VideoEditor({
      into the corner of every frame since September and `logomark.ts` loads
      it. Nothing new is being built here — it is being reached.
  
-     Kept as a loaded `HTMLImageElement` rather than on the `Edit`, because
-     `cutFrom` is pure and synchronous and loading an image is neither. The
-     edit stays a description of the film; this is the one piece of it that
-     has to be decoded before it can be drawn. */
-  const [mark, setMark] = useState<HTMLImageElement | null>(null);
-  const [markName, setMarkName] = useState('');
+     The picture and every setting of it are on the `Edit` since 15 October
+     2026 — Carli: *"Kyk mooi of elke funksie in ... video editor ... werk."*
+     They were room state, so her logo was gone every time she came back to
+     the project and a drag of it could not be taken back. What stays here is
+     the DECODED image, because `cutFrom` is pure and synchronous and loading
+     an image is neither: the edit holds the picture, this holds it ready to
+     draw. */
+  const [mark, setMarkImage] = useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    const picture = edit.markPicture;
+    if (!picture) { setMarkImage(null); return undefined; }
+    let live = true;
+    void loadMark(picture).then((img) => { if (live) setMarkImage(img); });
+    return () => { live = false; };
+  }, [edit.markPicture]);
+  const markName = edit.markName ?? '';
+  /** A logo on, or off — one step on the history either way. */
+  const setMark = useCallback((picture: string | null, name = '') => {
+    commit((was) => (picture
+      ? { ...was, markPicture: picture, markName: name }
+      /* The size, the turn and the fade stay where she put them. A second
+         logo almost always wants the same treatment. */
+      : { ...was, markPicture: undefined, markName: undefined }));
+  }, [commit]);
 
   /* ── The post from the desk above ─────────────────────────────────────
  
@@ -1157,13 +1176,13 @@ export default function VideoEditor({
     tookPost.current = postCover;
     commit((was) => ({ ...was, cover: postCover, coverFrom: 'brought' }));
   }, [postCover, commit]);
-  const [corner, setCorner] = useState<Corner>('bottomRight');
+  const corner: Corner = edit.markCorner ?? 'bottomRight';
   /* Where it has been dragged to, or null for "wherever the corner says".
      Null is the default and is not the same as the centre: a mark that has
      never been moved should obey the corner buttons, and a `{x: .5, y: .5}`
      default would silently ignore them. */
-  const [markAt, setMarkAt] = useState<Spot | null>(null);
-  const [markShare, setMarkShare] = useState(MARK_SHARE);
+  const markAt: Spot | null = edit.markAt ?? null;
+  const markShare = edit.markShare ?? MARK_SHARE;
   /* Turned, how solid, and whether it goes under the words.
  
      All three live here rather than on the `Edit` for the same reason the
@@ -1181,6 +1200,12 @@ export default function VideoEditor({
      to. `check:filmcost` holds both ends against it. */
   /** Which bench is out. `null` is all of them shut — see `CutDock.tsx`. */
   const [bench, setBench] = useState<Bench>(null);
+  /* The words bench shows every face on its own button, so they are fetched
+     when it opens rather than when the film is made — by then the ones she
+     chose are already here and the render does not wait on the network. */
+  useEffect(() => {
+    if (bench === 'words') void allWordsReady();
+  }, [bench]);
 
   /* ── What is already in her channel ──────────────────────────────────────
 
@@ -1193,6 +1218,10 @@ export default function VideoEditor({
      everybody including signed-out, and a request that comes back 401 before
      anybody asked for it is a wasted round trip on a phone. */
   const [channel, setChannel] = useState<MyVideo[] | null>(null);
+  /* Whether that answer was the channel at all. An empty list used to stand
+     for "nothing there", "not signed in" and "could not reach it", and all
+     three said "Nothing in your channel yet" — see `myVideosSaid`. */
+  const [channelHow, setChannelHow] = useState<'ok' | 'out' | 'broke'>('ok');
   /**
    * The sung lines found in a brought-in film, by the piece they came in on.
    *
@@ -1220,7 +1249,22 @@ export default function VideoEditor({
    * Beside the edit rather than in it, for the same reason as `lyrics`: a
    * reading of a file is not a decision somebody made.
    */
-  const [sung, setSung] = useState<{ readonly lines: readonly Timed[]; readonly how: Timing } | null>(null);
+  const [sungFor, setSung] = useState<{
+    readonly lines: readonly Timed[];
+    readonly how: Timing;
+    /** The track these are the words OF. */
+    readonly under: Blob;
+  } | null>(null);
+  /* Only while that track is still the one under the film.
+
+     The offer was cleared by hand on two of the ways a track can change and
+     not on the rest — a sound made here, a song off the shelf, New project,
+     Back — so the words of the last song went on being offered over the next
+     one, and taking the offer cut the film to a song that was no longer under
+     it. Keyed to the Blob itself, every way the track changes takes the offer
+     with it, including the ones nobody has written yet; and Back onto the
+     song brings the offer back, because it is that song again. */
+  const sung = sungFor && sungFor.under === edit.under ? sungFor : null;
   /** Which video's file is being pulled down, so its own card can say so. */
   const [pulling, setPulling] = useState<string | null>(null);
   /** Her own songs on this device, for putting one under the film. */
@@ -1232,9 +1276,9 @@ export default function VideoEditor({
   const [asking, setAsking] = useState(false);
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
 
-  const [markTurn, setMarkTurn] = useState(0);
-  const [markSolid, setMarkSolid] = useState(MARK_OPACITY);
-  const [markUnder, setMarkUnder] = useState(false);
+  const markTurn = edit.markTurn ?? 0;
+  const markSolid = edit.markSolid ?? MARK_OPACITY;
+  const markUnder = Boolean(edit.markUnder);
   const [showStudioTemplatesModal, setShowStudioTemplatesModal] = useState(false);
   const [showCanvasSizeModal, setShowCanvasSizeModal] = useState(false);
   const [sizeOpen, setSizeOpen] = useState(false);
@@ -1259,6 +1303,22 @@ export default function VideoEditor({
      against `markBox`'s and they agreed exactly. They were both right about the
      fraction and the preview was wrong about the frame. */
   const shape = shapeOf(edit);
+
+  /* ── The shape a made shot is asked for ───────────────────────────────
+
+     Both the frame and the clip were asked for at 16:9 whatever the film
+     was, so a shot made for a tall film came back wide and sat letterboxed
+     in the middle of a phone screen. The engine that animates a start frame
+     makes two shapes, wide and tall, so the film's own aspect is asked for
+     and a square or a 4:5 film asks for the nearer of the two — tall, by
+     ratio, for both. The clip is then fitted to the real frame like every
+     other clip. */
+  const clipAspect: '9:16' | '16:9' = (() => {
+    const named = aspectOf(edit);
+    if (named !== '1:1') return named;
+    const ratio = shape.width / shape.height;
+    return Math.abs(ratio - 16 / 9) < Math.abs(ratio - 9 / 16) ? '16:9' : '9:16';
+  })();
 
   /* How much the preview is magnified. One means no magnification at all,
      and at one the zoom box is not a scroller — see the note where it is
@@ -1974,7 +2034,11 @@ export default function VideoEditor({
      pack"). The same pack the adverts desk keeps, opened here, and its logo
      put on the film in one press. */
   const [kit, setKit] = useState<Kit | null>(null);
-  const [clipMenu, setClipMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  /* `second` is where on the FILM the tap landed, inside that clip. "Cut
+     here" cuts there and in that clip: it used to cut at the playhead,
+     which is wherever the film last stopped and may be in another shot
+     altogether. */
+  const [clipMenu, setClipMenu] = useState<{ id: string; x: number; y: number; second: number } | null>(null);
   const [wandOpen, setWandOpen] = useState(false);
   const wandRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -2151,7 +2215,7 @@ export default function VideoEditor({
              cast picture is being looked at, not resized — left to itself
              the engine takes the first reference's shape, which is how a
              wide frame came back square. */
-          ...(onBench ? {} : { aspect: '16:9' }),
+          ...(onBench ? {} : { aspect: clipAspect }),
         }),
       });
       if (!answer.ok) {
@@ -2245,7 +2309,7 @@ async function smallerFrame(url: string): Promise<string> {
         },
         body: JSON.stringify({
           prompt: words,
-          aspect: '16:9',
+          aspect: clipAspect,
           seconds: shotSeconds,
           grade: shotGrade,
           /* Silent on purpose, and it is not a saving to be sorry about: the
@@ -2287,7 +2351,12 @@ async function smallerFrame(url: string): Promise<string> {
     setProblem('');
     setBusy('bring');
     try {
-      let next = edit;
+      /* The new pieces, not a copy of the film. Reading the measured files
+         takes seconds, and a film copied before those awaits and committed
+         after them threw away anything done in between — a trim, a word, a
+         second batch brought in from the shelf. So the pieces are collected
+         here and added to the film as it is when they land. */
+      const arrived: Piece[] = [];
       for (const file of Array.from(files)) {
         if (file.size > CLIP_MAX_BYTES) {
           setProblem(t(
@@ -2350,7 +2419,7 @@ async function smallerFrame(url: string): Promise<string> {
           }
         }
 
-        next = add(next, {
+        arrived.push({
           id,
           clip: file,
           came,
@@ -2367,24 +2436,37 @@ async function smallerFrame(url: string): Promise<string> {
           holds: length,
         });
       }
-      commit(() => next);
+      if (arrived.length) commit((was) => arrived.reduce(add, was));
     } finally {
       setBusy(null);
     }
-  }, [edit, commit, t]);
+  }, [commit, t]);
 
   /* ── Google Veo Video AI Frame Animation ─────────────────────────── */
   const animateFrameWithVeo = useCallback(async (presetWords?: string) => {
     const node = viewer.current;
-    if (!node || !piece) return;
+    /* Said rather than returned from in silence: the press looked like it did
+       nothing, which is the one answer a button must never give. */
+    if (!node || !piece) {
+      setProblem(t('edit.veoNoShot', 'Pick a shot on the clock first, then stand on the frame you want to animate.'));
+      return;
+    }
     const shot = await frameFrom(node, shape.width, shape.height, piece.fill ?? false);
-    if (!shot) return;
-    const dataUrl = await new Promise<string>((resolve, reject) => {
+    if (!shot) {
+      setProblem(t('edit.coverNoFrame', 'That frame could not be read.'));
+      return;
+    }
+    const dataUrl = await new Promise<string | null>((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
+      reader.onloadend = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+      reader.onerror = () => resolve(null);
       reader.readAsDataURL(shot);
     });
+    if (!dataUrl) {
+      setProblem(t('edit.coverNoFrame', 'That frame could not be read.'));
+      return;
+    }
+    setProblem('');
     setShotPic(dataUrl);
     setDrawInto('start');
     setShotReady(null);
@@ -2394,7 +2476,7 @@ async function smallerFrame(url: string): Promise<string> {
        on it and the press looked like it did nothing. */
     setWandOpen(true);
     requestAnimationFrame(() => wandRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-  }, [piece, shape]);
+  }, [piece, shape, t]);
 
   /**
    * Ask the server what is in her channel.
@@ -2408,8 +2490,9 @@ async function smallerFrame(url: string): Promise<string> {
     setProblem('');
     setBusy('channel');
     try {
-      const mine = await myVideos();
-      setChannel(mine.filter((one) => !!one.url));
+      const said = await myVideosSaid();
+      setChannelHow(said.how);
+      setChannel(said.videos.filter((one) => !!one.url));
     } finally {
       setBusy(null);
     }
@@ -2607,6 +2690,18 @@ async function smallerFrame(url: string): Promise<string> {
     setEdit(how);
   }, [commit]);
 
+  /**
+   * A change to how the mark sits: one step, or part of the gesture held.
+   *
+   * The mark's settings are on the edit now (see `markPicture`), so its
+   * sliders and its drag go through the same one-press-of-Back mechanism as
+   * the words' rather than each being a step per pixel.
+   */
+  const markSet = useCallback((how: Partial<Pick<Edit,
+    'markCorner' | 'markAt' | 'markShare' | 'markTurn' | 'markSolid' | 'markUnder'>>) => {
+    slideFilm((was) => ({ ...was, ...how }));
+  }, [slideFilm]);
+
   /* Scrubbing the bed. Horizontal, and it moves the SONG under a fixed
      window rather than moving the window: dragging left shows a later part,
      the same direction a tape moves when it is pulled. One history step for
@@ -2718,9 +2813,9 @@ async function smallerFrame(url: string): Promise<string> {
   const dragOnFrame = useCallback((
     event: React.PointerEvent<HTMLElement>,
     put: (spot: { x: number; y: number }) => void,
-    /* Called once, when the drag ends. The words pass `held` through it so one
-       drag is one press of Back; the mark passes nothing, because where the
-       mark sits is not on the `Edit` and was never on the history. */
+    /* Called once, when the drag ends. The words and the mark pass `held`
+       through it so one drag is one press of Back — the mark has been on the
+       `Edit` since 15 October 2026, so it is on the history too. */
     ended?: () => void,
   ) => {
     event.preventDefault();
@@ -2998,6 +3093,11 @@ async function smallerFrame(url: string): Promise<string> {
     setProblem('');
     setBusy('make');
     try {
+      /* Every face the words are set in, downloaded before the first frame.
+         A canvas does not wait for a font — it draws the fallback and says
+         nothing — so without this the opening seconds of a film could come
+         out in a different face from the rest. See `videofaces.ts`. */
+      await wordsReady(edit.pieces.filter((one) => (one.words ?? '').trim()).map((one) => one.wordsFont));
       const result = await stitch({
         ...cutFrom(edit), mark, markCorner: corner, markAt, markShare,
         markTurn, markSolid, markUnder,
@@ -3467,7 +3567,7 @@ async function smallerFrame(url: string): Promise<string> {
       <p className="text-[11px] leading-relaxed" style={{ color: INK_DIM }}>
         {t(
           'edit.shotWhat',
-          'This is the only thing in this room that costs credits. Draw a frame until it looks right — five credits a try — then pay once to make it move. Nothing of your own footage is sent anywhere: what leaves is your words and the frame this app just drew from them.',
+          'Drawing a frame costs five credits a try; making it move is paid once, and the price is on that button. What is sent is your words and the frame on this bench — so when the wand took that frame out of your film, that one frame goes too. Nothing else of your footage is sent from here.',
         )}
       </p>
     </div>
@@ -3586,7 +3686,10 @@ async function smallerFrame(url: string): Promise<string> {
               type="button"
               data-editorshapechip={one.id}
               aria-pressed={one.on}
-              onClick={() => setEdit((was) => ({ ...was, shape: one.id }))}
+              /* Through `commit`, so Back takes a shape change back like any
+                 other. It was `setEdit`, which changed the film and left no
+                 step behind it. */
+              onClick={() => commit((was) => (was.shape === one.id ? was : { ...was, shape: one.id }))}
               className={`min-h-[44px] rounded-lg border px-2.5 text-xs font-bold ${one.on ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
             >
               {one.says}
@@ -3690,7 +3793,7 @@ async function smallerFrame(url: string): Promise<string> {
             className="min-h-[44px] rounded-xl bg-emerald-400 hover:bg-emerald-300 px-4 py-2 text-xs font-bold text-zinc-950 disabled:opacity-40 inline-flex items-center gap-2 shadow-[0_0_20px_rgba(52,211,153,0.55)] transition-all active:scale-95"
           >
             {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-zinc-950" />}
-            {t('edit.make', 'Genereer Video')}
+            {t('edit.make', 'Put it together')}
             {bill.total > 0 && (
               <span data-editorprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[10px]">
                 {bill.total} {t('edit.credits', 'credits')}
@@ -4109,7 +4212,10 @@ async function smallerFrame(url: string): Promise<string> {
                    place, the size and the turn; the picture fills it. */
                 <div
                   data-editormarkdrag
-                  onPointerDown={(event) => dragOnFrame(event, setMarkAt)}
+                  onPointerDown={(event) => {
+                    holding();
+                    dragOnFrame(event, (spot) => markSet({ markAt: spot }), held);
+                  }}
                   style={{
                     width: `${markShare * 100}%`,
                     left: `${(markAt ? markAt.x : CORNER_AT[corner].x) * 100}%`,
@@ -4129,9 +4235,13 @@ async function smallerFrame(url: string): Promise<string> {
                   <img src={mark.src} alt="" draggable={false} className="block w-full" />
                   <span
                     data-editormarkgrip
-                    onPointerDown={(event) => grip(
-                      event, markShare, setMarkShare, MARK_SMALLEST, MARK_LARGEST,
-                    )}
+                    onPointerDown={(event) => {
+                      holding();
+                      grip(
+                        event, markShare, (size) => markSet({ markShare: size }),
+                        MARK_SMALLEST, MARK_LARGEST, held,
+                      );
+                    }}
                     className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-emerald-400 bg-zinc-950"
                   />
                 </div>
@@ -4162,7 +4272,7 @@ async function smallerFrame(url: string): Promise<string> {
           <Note>
             {t(
               'edit.what',
-              'Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device — no credits, no queue, no waiting.',
+              'Bring your own clips in, cut them on the clock, and take the film out. The cutting happens on your own device — no queue, no waiting, and no credits until you put the film together, which shows its price before it spends.',
             )}
           </Note>
         )}
@@ -4482,14 +4592,18 @@ async function smallerFrame(url: string): Promise<string> {
                         onClick={(event) => {
                           setPicked(one.id); setLane('film');
                           const box = event.currentTarget.getBoundingClientRect();
+                          /* A key press has no pointer, so it lands in the middle. */
                           const x = event.clientX || box.left + box.width / 2;
-                          setClipMenu((was) => (was?.id === one.id ? null : { id: one.id, x, y: box.top }));
+                          const second = from + Math.max(0, Math.min(lengthOfPiece(one), (x - box.left) / perSecond));
+                          setClipMenu((was) => (was?.id === one.id ? null : { id: one.id, x, y: box.top, second }));
                         }}
                         /* Right-click, at a desk: the same menu, where the mouse is. */
                         onContextMenu={(event) => {
                           event.preventDefault();
                           setPicked(one.id); setLane('film');
-                          setClipMenu({ id: one.id, x: event.clientX, y: event.clientY });
+                          const box = event.currentTarget.getBoundingClientRect();
+                          const second = from + Math.max(0, Math.min(lengthOfPiece(one), (event.clientX - box.left) / perSecond));
+                          setClipMenu({ id: one.id, x: event.clientX, y: event.clientY, second });
                         }}
                         className="absolute top-1 bottom-1 overflow-hidden rounded-lg px-2 py-1 text-left"
                         style={{
@@ -5343,12 +5457,23 @@ async function smallerFrame(url: string): Promise<string> {
         </div>
       )}
 
-      </div>
+      {/* ── The wand sheet: the tapped frame on the shot bench ────────────
 
-      {/* ── The wand sheet: the tapped frame on the shot bench ──────────── */}
+          Inside the room's own column and capped, like the copilot's sheet
+          above it. It was a child of the OUTER box with no height of its
+          own, so on a phone the shot panel — a frame, a prompt, four rows of
+          buttons — grew until it had squeezed the picture and the bar off
+          the screen, and the only way back was a close button that had
+          scrolled away with them. Now it takes at most a little over half
+          the screen and scrolls inside itself; the picture and the bar stay. */}
       {wandOpen && edit.pieces.length > 0 && (
-        <div ref={wandRef} data-editorwand className="mx-auto w-full max-w-3xl space-y-2 px-1 pb-3">
-          <div className="flex items-center justify-between gap-2">
+        <div
+          ref={wandRef}
+          data-editorwand
+          className="mx-auto flex min-h-0 max-h-[60dvh] w-full max-w-3xl flex-shrink-0 flex-col gap-2 border-t px-3 pb-3 pt-2"
+          style={{ borderColor: 'rgba(16,185,129,0.3)', background: PANEL }}
+        >
+          <div className="flex flex-shrink-0 items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 text-sm font-bold" style={{ color: INK }}>
               <Wand2 className="h-4 w-4" style={{ color: LIT }} />
               {t('edit.wandTitle', 'Change this frame with AI')}
@@ -5358,24 +5483,36 @@ async function smallerFrame(url: string): Promise<string> {
               data-editorwandshut
               onClick={() => setWandOpen(false)}
               aria-label={t('edit.wandShut', 'Put the wand away')}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-700"
               style={{ color: INK }}
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-          {shotPanel}
+          <div className="min-h-0 flex-1 overflow-y-auto">{shotPanel}</div>
         </div>
       )}
+
+      </div>
+
 
       {clipMenu && typeof document !== 'undefined' && createPortal(
         <div
           data-editorclipmenu
           role="menu"
-          className="fixed z-[200] flex items-center gap-1 rounded-2xl border p-1"
+          /* Wrapped and capped at the screen less a gutter each side. Five
+             buttons in one row are about 420 pixels and a phone is 390, so
+             the last of them — Delete — was off the edge of the glass. On a
+             phone they now fold onto a second row, and the menu stands on
+             the block it belongs to rather than at a fixed 58 pixels above
+             it, which a second row would have covered the block with. */
+          className="fixed z-[200] flex flex-wrap items-center gap-1 rounded-2xl border p-1"
           style={{
             left: Math.max(8, Math.min(clipMenu.x - 120, (typeof window !== 'undefined' ? window.innerWidth : 400) - 430)),
-            top: Math.max(8, clipMenu.y - 58),
+            maxWidth: 'calc(100vw - 16px)',
+            ...(clipMenu.y > 130
+              ? { top: clipMenu.y - 6, transform: 'translateY(-100%)' }
+              : { top: clipMenu.y + 52 }),
             borderColor: 'rgba(52,211,153,0.6)',
             background: 'rgba(2,6,4,0.94)',
             boxShadow: '0 0 18px rgba(52,211,153,0.35)',
@@ -5385,7 +5522,19 @@ async function smallerFrame(url: string): Promise<string> {
             type="button"
             role="menuitem"
             data-editorclipcut
-            onClick={() => { commit((was) => splitHere(was, at)); setClipMenu(null); }}
+            onClick={() => {
+              const { id, second } = clipMenu;
+              /* Too near either end leaves the film as it was, and a press that
+                 changes nothing has to say so. */
+              if (split(edit, id, second) === edit) {
+                setProblem(t('edit.clipCutEdge', 'That is too close to the end of the shot to cut. Tap a little further in.'));
+              } else {
+                setProblem('');
+                commit((was) => split(was, id, second));
+                setAt(second);
+              }
+              setClipMenu(null);
+            }}
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold"
             style={{ color: INK }}
           >
@@ -5462,7 +5611,7 @@ async function smallerFrame(url: string): Promise<string> {
           <Note>
             {t(
               'edit.what',
-              'Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device — no credits, no queue, no waiting.',
+              'Bring your own clips in, cut them on the clock, and take the film out. The cutting happens on your own device — no queue, no waiting, and no credits until you put the film together, which shows its price before it spends.',
             )}
           </Note>
 
@@ -5500,8 +5649,6 @@ async function smallerFrame(url: string): Promise<string> {
                 if (!starting) { setStarting(true); return; }
                 setStarting(false);
                 commit(() => NOTHING);
-                setMark(null);
-                setMarkName('');
                 setMade(null);
                 setPicked('');
                 setAt(0);
@@ -5551,7 +5698,23 @@ async function smallerFrame(url: string): Promise<string> {
               </button>
             </div>
 
-            {channel !== null && channel.length === 0 && (
+            {channel !== null && channel.length === 0 && channelHow === 'out' && (
+              <p className="text-sm text-zinc-400" data-editorchannelout>
+                {t(
+                  'edit.channelOut',
+                  'Sign in to see your channel. Clips from this device can come in without signing in.',
+                )}
+              </p>
+            )}
+            {channel !== null && channel.length === 0 && channelHow === 'broke' && (
+              <p role="alert" className="text-sm text-rose-400" data-editorchannelbroke>
+                {t(
+                  'edit.channelBroke',
+                  'Your channel could not be reached just now. Check the connection and press Again.',
+                )}
+              </p>
+            )}
+            {channel !== null && channel.length === 0 && channelHow === 'ok' && (
               <p className="text-sm text-zinc-400" data-editorchannelnone>
                 {t(
                   'edit.channelNone',
@@ -5976,6 +6139,21 @@ async function smallerFrame(url: string): Promise<string> {
           </div>
         )}
 
+        {/* ── Looks and Words with no shot to work on ──────────────────
+
+            Both benches are about the picked shot and drew nothing at all
+            without one, so the press looked broken. The bar dims them on an
+            empty clock now; this is for the moment a shot goes away while
+            one of them is open. */}
+        {(bench === 'looks' || bench === 'words') && !piece && (
+          <Note>
+            {t(
+              'edit.needsShot',
+              'This works on the shot you have picked. Tap a shot on the clock — or bring a clip in first if the clock is empty.',
+            )}
+          </Note>
+        )}
+
         {bench === 'looks' && piece && (
           <div className="space-y-4">
           {/* The looks. Seven, free, and applied in the browser — the same
@@ -6003,7 +6181,7 @@ async function smallerFrame(url: string): Promise<string> {
                       on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                     }`}
                   >
-                    {filterName(one.id, 'en')}
+                    {filterName(one.id, lang)}
                   </button>
                 );
               })}
@@ -6227,18 +6405,22 @@ async function smallerFrame(url: string): Promise<string> {
             )}
           </div>
 
-          {/* ── Google Veo 3.1 AI Frame Animation ────────────────────────── */}
+          {/* ── Animate this frame ───────────────────────────────────────────
+              Named for what it does and not for an engine: `/api/video`
+              picks the engine by grade, and a panel promising Google Veo
+              over a clip another engine made would be a small lie told on
+              every press (15 October 2026). */}
           <div className="space-y-2 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3.5" data-editorgeminiveo>
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
               <span className="text-sm font-semibold text-emerald-200">
-                {t('veo.title', 'Animate this frame with Google Veo')}
+                {t('veo.title', 'Animate this frame with AI')}
               </span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
               {t(
                 'veo.desc',
-                'Takes the frame you are on, lets the AI change it from your words, and makes it move with Google Veo. The price is on the button that makes it.',
+                'Takes the frame you are on, lets the AI change it from your words, and makes it move with one of the studio\'s video engines. That one frame and your words are sent; the price is on the button that makes it.',
               )}
             </p>
 
@@ -6526,12 +6708,56 @@ async function smallerFrame(url: string): Promise<string> {
                         aria-pressed={on}
                         data-editorfont={one.id}
                         onClick={() => tweak({ wordsFont: one.id })}
-                        style={{ fontFamily: one.stack, fontWeight: one.weight }}
+                        /* Through `fontFor`, which knows the real family of the
+                           photo room's faces; `one.stack` is only the fallback. */
+                        style={{ fontFamily: fontFor(one.id).stack, fontWeight: fontFor(one.id).weight }}
                         className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm ${
                           on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                         }`}
                       >
                         {lang === 'af' ? one.af : one.en}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── A glow round the letters ──────────────────────────────
+
+                  The photo room's text styles have put a glow on words here
+                  since 14 October (`wordsStyleOf`), and the film drew it — but
+                  there was no control for it, so a glow that came with a
+                  style could not be changed or taken off again short of Back.
+                  Every glow the photo room has, and None first. */}
+              <div className="space-y-1.5" data-editorwordsglows>
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.wordsGlow', 'A glow round the letters')}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {GLOWS.map((one) => {
+                    const on = (piece.wordsGlow ?? 'none') === one.id;
+                    return (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={on}
+                        data-editorwordsglow={one.id}
+                        onClick={() => tweak({ wordsGlow: one.id === 'none' ? undefined : one.id })}
+                        className="min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold inline-flex items-center gap-2"
+                        style={on ? {
+                          borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
+                        } : {
+                          borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
+                        }}
+                      >
+                        {one.halo.length > 0 && (
+                          <span
+                            aria-hidden
+                            className="h-3 w-3 flex-shrink-0 rounded-full"
+                            style={{ background: one.halo[2], boxShadow: `0 0 6px 2px ${one.halo[1]}` }}
+                          />
+                        )}
+                        {t(one.name[0], one.name[1])}
                       </button>
                     );
                   })}
@@ -6738,7 +6964,7 @@ async function smallerFrame(url: string): Promise<string> {
                             setSung(null);
                             void timeFor(one, blob)
                               .then((found) => setSung(
-                                found.lines.length ? { lines: asTimed(found.lines), how: found.how } : null,
+                                found.lines.length ? { lines: asTimed(found.lines), how: found.how, under: blob } : null,
                               ))
                               .catch(() => undefined);
                           })
@@ -7050,8 +7276,7 @@ async function smallerFrame(url: string): Promise<string> {
                       setProblem(t('edit.markBad', 'That picture could not be read.'));
                       return;
                     }
-                    setMark(img);
-                    setMarkName(kit.name || t('edit.markBrand', 'Your brand logo'));
+                    setMark(url, kit.name || t('edit.markBrand', 'Your brand logo'));
                   });
                 }}
                 className="min-h-[44px] rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-3.5 py-2.5 text-sm font-semibold text-emerald-200 inline-flex items-center gap-2"
@@ -7095,8 +7320,7 @@ async function smallerFrame(url: string): Promise<string> {
                         setProblem(t('edit.markBad', 'That picture could not be read.'));
                         return;
                       }
-                      setMark(img);
-                      setMarkName(file.name.replace(/\.[^.]+$/, ''));
+                      setMark(made.preview, file.name.replace(/\.[^.]+$/, ''));
                     });
                   });
                 }}
@@ -7132,8 +7356,7 @@ async function smallerFrame(url: string): Promise<string> {
                       setProblem(t('edit.markBad', 'That picture could not be read.'));
                       return;
                     }
-                    setMark(img);
-                    setMarkName(t('edit.markFromShelf', 'From your pictures'));
+                    setMark(url, t('edit.markFromShelf', 'From your pictures'));
                   });
                 }}
               />
@@ -7158,7 +7381,7 @@ async function smallerFrame(url: string): Promise<string> {
               <button
                 type="button"
                 data-editormarkoff
-                onClick={() => { setMark(null); setMarkName(''); }}
+                onClick={() => setMark(null)}
                 className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-300 inline-flex items-center gap-2 hover:border-rose-500 hover:text-rose-300"
               >
                 <Trash2 className="w-4 h-4" />
@@ -7179,7 +7402,8 @@ async function smallerFrame(url: string): Promise<string> {
                   step={0.01}
                   value={markShare}
                   data-editormarksize
-                  onChange={(e) => setMarkShare(Number(e.target.value))}
+                  {...gesture}
+                  onChange={(e) => markSet({ markShare: Number(e.target.value) })}
                   className={`${SLIDE} accent-emerald-500`}
                 />
               </label>
@@ -7197,7 +7421,8 @@ async function smallerFrame(url: string): Promise<string> {
                   type="range" min={-180} max={180} step={1}
                   value={markTurn}
                   data-editormarkturn
-                  onChange={(e) => setMarkTurn(Number(e.target.value))}
+                  {...gesture}
+                  onChange={(e) => markSet({ markTurn: Number(e.target.value) })}
                   className={`${SLIDE} accent-emerald-500`}
                 />
                 <span className="block text-sm text-zinc-500" data-editormarkturnnow>
@@ -7213,7 +7438,8 @@ async function smallerFrame(url: string): Promise<string> {
                   type="range" min={0.1} max={1} step={0.05}
                   value={markSolid}
                   data-editormarksolid
-                  onChange={(e) => setMarkSolid(Number(e.target.value))}
+                  {...gesture}
+                  onChange={(e) => markSet({ markSolid: Number(e.target.value) })}
                   className={`${SLIDE} accent-emerald-500`}
                 />
               </label>
@@ -7227,7 +7453,7 @@ async function smallerFrame(url: string): Promise<string> {
                 type="button"
                 aria-pressed={markUnder}
                 data-editormarkunder
-                onClick={() => setMarkUnder((was) => !was)}
+                onClick={() => markSet({ markUnder: !markUnder })}
                 className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-2 ${
                   markUnder ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                 }`}
@@ -7241,14 +7467,14 @@ async function smallerFrame(url: string): Promise<string> {
               <Placing
                 which="mark"
                 at={markAt ?? CORNER_AT[corner]}
-                put={setMarkAt}
+                put={(spot) => markSet({ markAt: spot })}
               />
 
               {markAt && (
                 <button
                   type="button"
                   data-editormarkreset
-                  onClick={() => setMarkAt(null)}
+                  onClick={() => markSet({ markAt: null })}
                   className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300"
                 >
                   {t('edit.markCorner', 'Put it back in a corner')}
@@ -7262,7 +7488,7 @@ async function smallerFrame(url: string): Promise<string> {
                     type="button"
                     aria-pressed={corner === one}
                     data-editorcorner={one}
-                    onClick={() => { setCorner(one); setMarkAt(null); }}
+                    onClick={() => markSet({ markCorner: one, markAt: null })}
                     className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
                       corner === one ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                     }`}
@@ -7356,11 +7582,18 @@ async function smallerFrame(url: string): Promise<string> {
             {/* ── The shape, which changes what you are looking at ────── */}
             <div className="space-y-1.5">
               <span className="text-sm text-zinc-400">{t('edit.shape', 'Shape')}</span>
-              {/* Three across rather than a flex, so "Tall", "Wide" and
-                  "Square" are one width instead of 53, 63 and 77 — see
-                  `lib/benchbar.ts`. */}
-              <div className={ROW3}>
-                {([...Object.keys(SHAPES), 'custom'] as string[]).map((one) => {
+              {/* Two across rather than a flex, so the four are one width
+                  instead of 53, 63 and 77 — see `lib/benchbar.ts`.
+
+                  The named shapes only, each with its own name. This row was
+                  `Object.keys(SHAPES)` plus `custom`, and anything that was not
+                  tall or wide fell through to "Square" — so the 4:5 feed post
+                  and the custom size were two more buttons both called Square,
+                  and pressing the second set `custom` with no size, which
+                  `shapeOf` reads as tall. A typed size is set where it can be
+                  typed: the Custom chip above the picture, or All sizes. */}
+              <div className={ROW2}>
+                {(Object.keys(SHAPES) as (keyof typeof SHAPES)[]).map((one) => {
                   const on = (edit.shape ?? 'tall') === one;
                   return (
                     <button
@@ -7398,11 +7631,21 @@ async function smallerFrame(url: string): Promise<string> {
                         boxShadow: RAISE,
                       }}
                     >
-                      {one === 'tall' ? t('edit.tall', 'Tall') : one === 'wide' ? t('edit.wide', 'Wide') : t('edit.square', 'Square')}
+                      {one === 'tall' ? t('edit.tall', 'Tall')
+                        : one === 'wide' ? t('edit.wide', 'Wide')
+                        : one === 'post' ? t('edit.shapePost', 'Feed post 4:5')
+                        : t('edit.square', 'Square')}
                     </button>
                   );
                 })}
               </div>
+              {edit.shape === 'custom' && (
+                <p className="text-sm text-zinc-400" data-editorshapecustomnow>
+                  {t('edit.sizeCustomNow', 'Your own size: {w} × {h}')
+                    .replace('{w}', String(shape.width))
+                    .replace('{h}', String(shape.height))}
+                </p>
+              )}
               {/* ── Which way up, counted off the clips ─────────────────
 
                   `docs/FUNCTION_INVENTORY.md`, second in the order of work:
@@ -7862,13 +8105,13 @@ async function smallerFrame(url: string): Promise<string> {
             <p className="text-sm text-zinc-400 leading-relaxed">
               {t(
                 'edit.engineWhat',
-                'Taking a background out, taking an item out of a shot, and generating a piece you do not have. These three cannot happen on your device — they need an engine, and they cost credits.',
+                'Taking a background out and taking an item out of a shot cannot happen on your device — they need an engine, and they cost credits.',
               )}
             </p>
             <p className="text-sm text-zinc-400 leading-relaxed">
               {t(
                 'edit.engineWhen',
-                'They are priced and on the plan cards, and they are not switched on yet. Sending video of a person to another company needs an answer about what that company may do with it first, and that answer is being got rather than assumed.',
+                'Those two are priced and on the plan cards, and are not switched on yet: sending video of a person to another company needs an answer about what that company may do with it first. Making a shot you do not have is switched on — it is the AI wand, on a shot\'s menu and under Looks.',
               )}
             </p>
           </div>
@@ -7878,6 +8121,10 @@ async function smallerFrame(url: string): Promise<string> {
 
       {showStudioTemplatesModal && (
         <StudioTemplatesModal
+          /* Only the templates that move. From here this offered every
+             template in the app, and a business card or a menu picked in
+             the cutting room became a clip of a business card. */
+          videoOnly
           onClose={() => setShowStudioTemplatesModal(false)}
           onSelectTemplate={async (tpl: StudioTemplateItem) => {
             studioAudio.playAudioEffect('success');
@@ -7892,7 +8139,10 @@ async function smallerFrame(url: string): Promise<string> {
               : tpl.id === 'tpl_workout_reel'
               ? (lang === 'af' ? 'Dinamiese hoë-energie fiksheidsoefening met vinnige kamerabeweging en lewendige beligting' : 'High-energy athletic workout with rapid cinematic camera pans and intense neon gym lighting')
               : (lang === 'af' ? 'Reisavontuur deur Kaapstad se strate en kuse, lewendige kleure, 4K' : 'Travel exploration through scenic Cape Town coastal roads and vibrant culture, 4K cinematic');
-            setShotWords(prompt);
+            /* A suggestion for the AI box, never over what she has typed in it.
+               This used to replace the box outright, so a prompt she had spent
+               five minutes on was gone the moment she tried a template. */
+            setShotWords((was) => (was.trim() ? was : prompt));
 
             const shape = tpl.width > tpl.height ? 'wide' : tpl.height > tpl.width ? 'tall' : 'square';
             const headline = tpl.sampleHeadline || (lang === 'af' ? tpl.nameAf : tpl.nameEn);
@@ -7900,6 +8150,14 @@ async function smallerFrame(url: string): Promise<string> {
             try {
               const videoBlob = await createTemplateVideoBlob(tpl, 4);
               const pieceId = makeId('videoedit');
+              /* Dressed from the template's own words where it has them —
+                 the face, the glow and the ink it was drawn with, which this
+                 room can now draw (see `videofonts.ts`). It used to set
+                 `wordsFont: 'poster'`, which was not one of this room's
+                 faces and quietly fell back to plain, and `look: 'clean'`,
+                 which is not a look at all but was still counted on the bill
+                 as one. No look now: the template is already the picture. */
+              const glow = GLOWS.find((one) => one.id !== 'none' && one.id === tpl.headGlow);
               const starterPiece: Piece = {
                 id: pieceId,
                 clip: videoBlob,
@@ -7910,12 +8168,13 @@ async function smallerFrame(url: string): Promise<string> {
                 holds: 4,
                 shot: { width: tpl.width, height: tpl.height },
                 words: headline,
-                wordsFont: 'poster',
-                wordsInk: '#ffffff',
-                wordsBox: 'round',
+                wordsFont: tpl.headFace ? fontOfFace(tpl.headFace) : 'heavy',
+                wordsInk: tpl.headInk ?? '#ffffff',
+                /* A glow is its own edge, as `wordsStyleOf` has it. */
+                ...(glow ? { wordsGlow: glow.id, wordsEdge: 'none' as const } : {}),
+                wordsBox: glow ? 'none' : 'round',
                 wordsAt: { x: 0.5, y: 0.5 },
                 wordsSize: 0.055,
-                look: 'clean',
                 sound: false,
               };
 
@@ -7929,7 +8188,12 @@ async function smallerFrame(url: string): Promise<string> {
               });
               setPicked(pieceId);
               setBench('words');
-            } catch {
+            } catch (why) {
+              /* Said, not swallowed. The film's shape and name still change,
+                 because she chose them; the clip is what could not be made. */
+              setProblem(why instanceof TemplateVideoUnsupported
+                ? t('edit.templateNoRecord', 'This browser cannot record the template as a clip. Chrome or Edge can. The shape and the name are set; bring a clip in to go with them.')
+                : t('edit.templateFailed', 'That template could not be made into a clip just now. The shape and the name are set; try the template again, or bring a clip in.'));
               commit((was) => ({
                 ...was,
                 title: was.title || (lang === 'af' ? tpl.nameAf : tpl.nameEn),
@@ -7942,15 +8206,26 @@ async function smallerFrame(url: string): Promise<string> {
       )}
 
       {showCanvasSizeModal && (
+        /* The size she picks is the size the film comes out at. This folded
+           every pick down to wide, tall or square — a 1200×628 banner became
+           1920×1080, a 4:5 post became 1080×1920 — and opened at a guess of
+           the current size rather than the size itself. A named shape is
+           kept as its name (so the recommendation and the engines still
+           recognise it), and anything else is `custom` with its own pixels,
+           which `shapeOf` clamps. */
         <CanvasSizeModal
-          currentWidth={edit.shape === 'wide' ? 1920 : edit.shape === 'square' ? 1080 : 1080}
-          currentHeight={edit.shape === 'wide' ? 1080 : edit.shape === 'square' ? 1080 : 1920}
+          currentWidth={shape.width}
+          currentHeight={shape.height}
           onClose={() => setShowCanvasSizeModal(false)}
           onApplySize={(w: number, h: number) => {
-            commit((was) => ({
-              ...was,
-              shape: w > h ? 'wide' : h > w ? 'tall' : 'square',
-            }));
+            const width = Math.round(w);
+            const height = Math.round(h);
+            if (!(width > 0 && height > 0)) return;
+            const named = (Object.keys(SHAPES) as (keyof typeof SHAPES)[])
+              .find((one) => SHAPES[one].width === width && SHAPES[one].height === height);
+            commit((was) => (named
+              ? { ...was, shape: named }
+              : { ...was, shape: 'custom', size: { width, height } }));
             setShowCanvasSizeModal(false);
           }}
         />

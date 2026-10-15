@@ -5,13 +5,29 @@ import { videoSupported } from './video';
 import { motionAt } from './videoextras';
 
 /**
+ * Why this throws rather than handing back an empty Blob, as it used to.
+ *
+ * An empty Blob is not a clip, but it looked like one all the way down: the
+ * cutting room put it on the clock as a four-second shot, the strip drew a
+ * block, and the picture stayed black with nothing anywhere saying why. A
+ * browser that cannot record is a sentence she needs to read, so the caller
+ * gets an error to turn into one.
+ */
+export class TemplateVideoUnsupported extends Error {
+  constructor() {
+    super('This browser cannot record a template clip.');
+    this.name = 'TemplateVideoUnsupported';
+  }
+}
+
+/**
  * Creates an animated video clip from a template specification.
  * Renders a futuristic dynamic motion frame sequence via HTML5 Canvas captureStream
  * and encodes it with MediaRecorder into a genuine playable WebM/MP4 video Blob.
  */
 export async function createTemplateVideoBlob(tpl: StudioTemplateItem, durationSeconds = 3): Promise<Blob> {
-  if (typeof window === 'undefined' || !videoSupported()) {
-    return new Blob([], { type: 'video/webm' });
+  if (typeof window === 'undefined' || !videoSupported() || typeof MediaRecorder === 'undefined') {
+    throw new TemplateVideoUnsupported();
   }
 
   const isWide = tpl.width > tpl.height;
@@ -22,8 +38,8 @@ export async function createTemplateVideoBlob(tpl: StudioTemplateItem, durationS
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return new Blob([], { type: 'video/webm' });
+  if (!ctx || typeof canvas.captureStream !== 'function') {
+    throw new TemplateVideoUnsupported();
   }
 
   const stream = canvas.captureStream(25);
@@ -39,8 +55,10 @@ export async function createTemplateVideoBlob(tpl: StudioTemplateItem, durationS
     if (e.data.size > 0) chunks.push(e.data);
   };
 
-  const stopped = new Promise<Blob>((resolve) => {
+  const stopped = new Promise<Blob>((resolve, reject) => {
     recorder.onstop = () => {
+      /* Nothing recorded is the same fault as no recorder, arrived later. */
+      if (!chunks.length) { reject(new TemplateVideoUnsupported()); return; }
       resolve(new Blob(chunks, { type: mimeType }));
     };
   });
@@ -48,7 +66,7 @@ export async function createTemplateVideoBlob(tpl: StudioTemplateItem, durationS
   recorder.start();
 
   const started = performance.now();
-  return new Promise<Blob>((resolve) => {
+  return new Promise<Blob>((resolve, reject) => {
     const renderFrame = () => {
       const now = performance.now();
       const progress = Math.min(1, (now - started) / (durationSeconds * 1000));
@@ -63,7 +81,7 @@ export async function createTemplateVideoBlob(tpl: StudioTemplateItem, durationS
         } catch {
           // If already stopped
         }
-        stopped.then(resolve);
+        stopped.then(resolve, reject);
       }
     };
 

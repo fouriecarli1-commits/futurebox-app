@@ -124,6 +124,10 @@ export const STANDARD_SIZES: readonly StandardSizePreset[] = [
   },
 ];
 
+/** The smallest and largest side a canvas may be given here. */
+const SIDE_LEAST = 100;
+const SIDE_MOST = 8000;
+
 export default function CanvasSizeModal({
   currentWidth,
   currentHeight,
@@ -140,41 +144,75 @@ export default function CanvasSizeModal({
   useBackLayer(true, onClose);
   const [width, setWidth] = useState<number>(currentWidth || 1080);
   const [height, setHeight] = useState<number>(currentHeight || 1080);
+  /* What is in the two boxes while somebody types, kept apart from the size.
+     Clamped on every keystroke, typing "1920" went 1 → 100 → 190 → 1920 and
+     the locked side jumped about under each digit, and clearing a box to
+     type afresh put 1080 straight back in it. The number is only taken —
+     and held between 100 and 8000 — when the box is left or Apply is
+     pressed. */
+  const [wideText, setWideText] = useState<string>(String(currentWidth || 1080));
+  const [tallText, setTallText] = useState<string>(String(currentHeight || 1080));
   const [lockRatio, setLockRatio] = useState<boolean>(true);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  /* The shape the lock holds: the size this was opened at, then whatever
+     preset is picked or whatever the size was when the lock went on —
+     never the shape the canvas happened to have when the dialog opened. */
+  const [ratio, setRatio] = useState<number>((currentWidth || 1080) / (currentHeight || 1080));
 
-  const initialRatio = (currentWidth || 1080) / (currentHeight || 1080);
+  const clampSide = (val: number): number =>
+    Math.max(SIDE_LEAST, Math.min(SIDE_MOST, Math.round(Number.isFinite(val) ? val : 1080)));
 
-  const handleWidthChange = (val: number) => {
-    const w = Math.max(100, Math.min(8000, val));
+  /** Both sides at once, the boxes showing what was kept. */
+  const setBoth = (w: number, h: number): void => {
     setWidth(w);
-    setSelectedPresetId(null);
-    if (lockRatio) {
-      setHeight(Math.round(w / initialRatio));
-    }
+    setHeight(h);
+    setWideText(String(w));
+    setTallText(String(h));
   };
 
-  const handleHeightChange = (val: number) => {
-    const h = Math.max(100, Math.min(8000, val));
-    setHeight(h);
-    setSelectedPresetId(null);
-    if (lockRatio) {
-      setWidth(Math.round(h * initialRatio));
-    }
+  /** A side taken from its box, with the other following when locked. */
+  const takeWidth = (raw: string): { w: number; h: number } => {
+    const w = clampSide(parseInt(raw, 10));
+    const h = lockRatio ? clampSide(w / ratio) : height;
+    setBoth(w, h);
+    if (w !== width || h !== height) setSelectedPresetId(null);
+    return { w, h };
+  };
+  const takeHeight = (raw: string): { w: number; h: number } => {
+    const h = clampSide(parseInt(raw, 10));
+    const w = lockRatio ? clampSide(h * ratio) : width;
+    setBoth(w, h);
+    if (w !== width || h !== height) setSelectedPresetId(null);
+    return { w, h };
   };
 
   const handleSelectPreset = (preset: StandardSizePreset) => {
     setSelectedPresetId(preset.id);
-    setWidth(preset.width);
-    setHeight(preset.height);
+    setBoth(preset.width, preset.height);
+    setRatio(preset.width / preset.height);
+  };
+
+  /* ×0.5 to ×4, scaled about the shape and stopped at the limits as a
+     whole, so 4× on a 2400-wide picture is 8000 wide with the height
+     following — not 8000 by whatever the height became on its own. */
+  const scaleBy = (mult: number): void => {
+    const most = Math.min(mult, SIDE_MOST / Math.max(width, height));
+    const by = Math.max(most, SIDE_LEAST / Math.min(width, height));
+    setBoth(clampSide(width * by), clampSide(height * by));
+    setSelectedPresetId(null);
   };
 
   const handleApply = () => {
+    /* Whatever is still in the boxes, taken as if they had been left. */
+    let w = width;
+    let h = height;
+    if (wideText !== String(width)) ({ w, h } = takeWidth(wideText));
+    else if (tallText !== String(height)) ({ w, h } = takeHeight(tallText));
     const activePreset = STANDARD_SIZES.find((s) => s.id === selectedPresetId);
-    const label = activePreset
+    const label = activePreset && activePreset.width === w && activePreset.height === h
       ? (lang === 'af' ? activePreset.nameAf : activePreset.nameEn)
-      : `${width}×${height}px`;
-    onApplySize(width, height, label);
+      : `${w}×${h}px`;
+    onApplySize(w, h, label);
     onClose();
   };
 
@@ -208,7 +246,7 @@ export default function CanvasSizeModal({
             type="button"
             onClick={onClose}
             aria-label={t('size.close', 'Close canvas size picker')}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -224,8 +262,13 @@ export default function CanvasSizeModal({
               </span>
               <button
                 type="button"
-                onClick={() => setLockRatio(!lockRatio)}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                onClick={() => {
+                  /* Locking holds the shape it is NOW. */
+                  if (!lockRatio) setRatio(width / height);
+                  setLockRatio(!lockRatio);
+                }}
+                aria-pressed={lockRatio}
+                className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
                   lockRatio
                     ? 'border border-amber-500/40 bg-amber-500/20 text-amber-300'
                     : 'border border-zinc-800 bg-zinc-900 text-zinc-400'
@@ -245,8 +288,10 @@ export default function CanvasSizeModal({
                   type="number"
                   min="100"
                   max="8000"
-                  value={width}
-                  onChange={(e) => handleWidthChange(parseInt(e.target.value, 10) || 1080)}
+                  inputMode="numeric"
+                  value={wideText}
+                  onChange={(e) => setWideText(e.target.value)}
+                  onBlur={(e) => { takeWidth(e.target.value); }}
                   className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-none"
                 />
               </div>
@@ -258,15 +303,17 @@ export default function CanvasSizeModal({
                   type="number"
                   min="100"
                   max="8000"
-                  value={height}
-                  onChange={(e) => handleHeightChange(parseInt(e.target.value, 10) || 1080)}
+                  inputMode="numeric"
+                  value={tallText}
+                  onChange={(e) => setTallText(e.target.value)}
+                  onBlur={(e) => { takeHeight(e.target.value); }}
                   className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Quick scale multiplier buttons */}
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="text-[11px] text-zinc-500 font-semibold">{t('size.scalePreset', 'Quick Scale')}</span>
               {[
                 { label: '0.5×', mult: 0.5 },
@@ -277,11 +324,8 @@ export default function CanvasSizeModal({
                 <button
                   key={p.label}
                   type="button"
-                  onClick={() => {
-                    setWidth((w) => Math.round(w * p.mult));
-                    setHeight((h) => Math.round(h * p.mult));
-                  }}
-                  className="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-bold text-zinc-300 hover:text-white hover:bg-zinc-800"
+                  onClick={() => scaleBy(p.mult)}
+                  className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-bold text-zinc-300 hover:text-white hover:bg-zinc-800"
                 >
                   {p.label}
                 </button>

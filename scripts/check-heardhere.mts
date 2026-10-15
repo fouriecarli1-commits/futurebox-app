@@ -102,8 +102,12 @@ ok('  at the loudness she set for it',
 
 /* ── A logo can come off again ─────────────────────────────────────────── */
 
+/* The logo has been on the edit since 15 October 2026, so "off" is the
+   picture cleared from the edit — one step, which Back can undo — rather
+   than two pieces of room state reset by hand. */
 ok('a logo can be taken off',
-  /data-editormarkoff/.test(room) && /setMark\(null\); setMarkName\(''\)/.test(room),
+  /data-editormarkoff[\s\S]{0,200}onClick=\{\(\) => setMark\(null\)\}/.test(room)
+    && /markPicture: undefined/.test(room),
   'Carli: "daar is nie ’n knoppie om ’n logo uit te haal en te delete'
   + ' nie" — a one-way door, and reloading the page stopped clearing it on the'
   + ' day the room started remembering the project');

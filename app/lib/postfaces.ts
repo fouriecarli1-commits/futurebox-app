@@ -142,6 +142,88 @@ export interface Face {
   readonly weight: number;
 }
 
+/* ── Eight more shapes, 15 October 2026 ─────────────────────────────────
+
+   Carli: *"Die gedagte is ook om al hoe meer uit te brei oor tyd, meer text
+   possibilities, meer templates."* The rule from 9 October still holds —
+   each is a SHAPE none of the seven could make, with a post somebody makes
+   in it: a script for a wedding or a love song, spray paint for the street
+   and hip-hop, comic for a sale or a kids' party, classic capitals for a
+   gospel night or a gala, retro for funk and the eighties, pixel for a
+   game night, block letters for a sign, and a fashion-magazine face.
+   All OFL, all from `app/fonts/` (README there), all `preload: false`. */
+export const SCRIPT = localFont({
+  src: [
+    { path: '../fonts/pacifico-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/pacifico-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
+export const SPRAY = localFont({
+  src: [
+    { path: '../fonts/rubikspray-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/rubikspray-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
+export const COMIC = localFont({
+  src: [
+    { path: '../fonts/bangers-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/bangers-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
+export const CLASSIC = localFont({
+  src: [
+    { path: '../fonts/cinzel-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/cinzel-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
+export const RETRO = localFont({
+  src: [
+    { path: '../fonts/righteous-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/righteous-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
+export const PIXEL = localFont({
+  src: [
+    { path: '../fonts/pressstart-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/pressstart-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
+export const BLOCK = localFont({
+  src: [
+    { path: '../fonts/bungee-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/bungee-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
+export const FASHION = localFont({
+  src: [
+    { path: '../fonts/abril-latin.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/abril-latin-ext.woff2', weight: '400', style: 'normal' },
+  ],
+  display: 'swap',
+  preload: false,
+});
+
 /* `as const satisfies` and not `: readonly Face[]`.
  
    Annotating the array widens every `id` to `string`, so `FaceId` becomes
@@ -156,6 +238,14 @@ export const FACES = [
   { id: 'type', name: 'Typewriter', css: `${TYPE.style.fontFamily}, ui-monospace, monospace`, weight: 700 },
   { id: 'round', name: 'Rounded', css: `${ROUND.style.fontFamily}, system-ui, sans-serif`, weight: 800 },
   { id: 'future', name: 'Future', css: `${FUTURE.style.fontFamily}, 'Orbitron', system-ui, sans-serif`, weight: 800 },
+  { id: 'script', name: 'Script', css: `${SCRIPT.style.fontFamily}, cursive`, weight: 400 },
+  { id: 'spray', name: 'Spray paint', css: `${SPRAY.style.fontFamily}, Impact, system-ui, sans-serif`, weight: 400 },
+  { id: 'comic', name: 'Comic', css: `${COMIC.style.fontFamily}, Impact, system-ui, sans-serif`, weight: 400 },
+  { id: 'classic', name: 'Classic', css: `${CLASSIC.style.fontFamily}, Georgia, serif`, weight: 400 },
+  { id: 'retro', name: 'Retro', css: `${RETRO.style.fontFamily}, system-ui, sans-serif`, weight: 400 },
+  { id: 'pixel', name: 'Pixel', css: `${PIXEL.style.fontFamily}, ui-monospace, monospace`, weight: 400 },
+  { id: 'block', name: 'Block', css: `${BLOCK.style.fontFamily}, Impact, system-ui, sans-serif`, weight: 400 },
+  { id: 'fashion', name: 'Fashion', css: `${FASHION.style.fontFamily}, Georgia, serif`, weight: 400 },
 ] as const satisfies readonly Face[];
 
 export type FaceId = (typeof FACES)[number]['id'];

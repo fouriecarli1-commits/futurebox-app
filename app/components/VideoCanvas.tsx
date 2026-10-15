@@ -33,7 +33,8 @@ import { Video as VideoIcon, Image as ImageIcon, Loader2, Download, Languages, Q
 import {
   SCENES, spokenLines, looksUnquoted, LENGTHS, GENRES, type Scene, type Genre,
 } from '../lib/videoscenes';
-import { engines, probeVideoEngine, type EngineAspect, type VideoEngine } from '../lib/engines';
+import { engines, probeVideoEngine, resumeVideos, type EngineAspect, type VideoEngine } from '../lib/engines';
+import { clashOf, type VideoClash } from '../lib/videograde';
 import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import KeepVideo from './KeepVideo';
@@ -62,7 +63,7 @@ import { useCopilotOps, useCopilotBusContext } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import ShareRow from './ShareRow';
 import { loadBrandKit, saveBrandKit } from '../lib/brandkit';
-import { assetDataUrl, loadAssets } from '../lib/assets';
+import { assetDataUrl } from '../lib/assets';
 import Pictures from './Pictures';
 import MakeSound from './MakeSound';
 import { loadMark } from '../lib/logomark';
@@ -84,11 +85,30 @@ interface Made {
   readonly spoken: boolean;
   /** What was asked for, which is what the dub is priced on. */
   readonly seconds: number;
+  /**
+   * What the file really is. A clip that went through the stitcher is
+   * whatever this browser's recorder writes, which on most of them is webm —
+   * and a webm saved as `.mp4` is a file a phone refuses to open.
+   */
+  readonly ext: 'mp4' | 'webm';
+  /**
+   * The clip's own name, in the language it was made in. Read off the scene
+   * at the moment it was made, not off whichever tile is lit now — two clips
+   * made from two tiles were both kept and shared under the second one's.
+   */
+  readonly title: string;
+  /** What the pass that lays the song in dropped, if it dropped anything. */
+  readonly lost: Laid['lost'];
 }
 
 const GRADES: { id: VideoGrade; label: string; note: string }[] = [
-  { id: 'standard', label: 'Standard', note: 'Most shots. Silent.' },
-  { id: 'better', label: 'Better', note: 'Sharper, and it can speak.' },
+  /* Whether a rung can speak is NOT written here any more. "Sharper, and it
+     can speak" was true of Better only while the engine that speaks was
+     switched on, and Premium never said anything at all — so the row
+     promised a voice the server might not have. The line under each button
+     reads `can[grade].speaks` instead. */
+  { id: 'standard', label: 'Standard', note: 'Most shots.' },
+  { id: 'better', label: 'Better', note: 'Sharper.' },
   { id: 'premium', label: 'Premium', note: 'The best picture there is.' },
 ];
 
@@ -138,7 +158,24 @@ const MODE_KEY = 'futurebox.canvas.mode.v1';
  * Anything that goes wrong gives back the clip it was handed. A silent video
  * somebody can still download beats an error over a generation they have
  * already paid for.
+ *
+ * ── But it says so ───────────────────────────────────────────────────────
+ *
+ * It used to give the clip back and say nothing. On a browser that cannot
+ * record a canvas, or when the pass failed, the song, the words, the logo and
+ * the made sound were all dropped in silence — and the clip looked finished,
+ * so the first anybody knew was a post with no music under it. `lost` says
+ * which way it went, and the desk prints it beside the clip. `ext` is what
+ * the file really is: the recorder writes webm on most browsers, and a webm
+ * named `.mp4` is a file a phone refuses to open.
  */
+type Laid = {
+  readonly blob: Blob;
+  readonly ext: 'mp4' | 'webm';
+  /** Null when everything asked for is in the file. */
+  readonly lost: null | 'unsupported' | 'failed' | 'song';
+};
+
 async function withSong(
   clip: Blob,
   cut: SongCut | null,
@@ -168,9 +205,11 @@ async function withSong(
      dropped one of the two would be worse than a desk that says only one goes
      under a clip here — which the panel does say. */
   voice?: Blob | null,
-): Promise<Blob> {
+): Promise<Laid> {
   const wanted = (caption ?? '').trim();
-  if ((!cut && !wanted && !mark && !voice) || !canStitch()) return clip;
+  const asis: Laid = { blob: clip, ext: 'mp4', lost: null };
+  if (!cut && !wanted && !mark && !voice) return asis;
+  if (!canStitch()) return { ...asis, lost: 'unsupported' };
   try {
     /* The made sound wins. It is the thing somebody pressed a button for
        thirty seconds ago, and the song under a clip is a bed that was set
@@ -178,7 +217,7 @@ async function withSong(
     const audio = voice ?? (cut ? await readAudio(cut.songId) : null);
     // A song that has gone missing must not take the subtitles or the logo
     // with it.
-    if (cut && !audio && !wanted && !mark) return clip;
+    if (cut && !audio && !wanted && !mark) return { ...asis, lost: 'song' };
     const size = aspect === '9:16'
       ? { width: 720, height: 1280 }
       : aspect === '1:1'
@@ -193,9 +232,10 @@ async function withSong(
       background: 'blur',
       ...(mark ? { mark } : {}),
     });
-    return made.ok ? made.blob : clip;
+    if (!made.ok) return { ...asis, lost: 'failed' };
+    return { blob: made.blob, ext: made.ext, lost: cut && !audio ? 'song' : null };
   } catch {
-    return clip;
+    return { ...asis, lost: 'failed' };
   }
 }
 
@@ -302,15 +342,25 @@ export default function VideoCanvas({
      it has just been handed. */
   const alive = useRef(true);
   useEffect(() => () => { alive.current = false; }, []);
+  /* Which picture IS the logo, so the strip under it can show it chosen.
+     The strip was handed `value={null}` and so never knew — every visit it
+     looked as though no logo was set, beside a tick saying one was. */
+  const [logo, setLogo] = useState<{ id: string; url: string } | null>(null);
   const readMark = useCallback(async () => {
     const id = loadBrandKit().logoAssetId;
     if (!id) {
-      if (alive.current) setMark(null);
+      if (alive.current) {
+        setMark(null);
+        setLogo(null);
+      }
       return;
     }
     const url = await assetDataUrl(id).catch(() => null);
     const image = url ? await loadMark(url) : null;
-    if (alive.current) setMark(image);
+    if (alive.current) {
+      setMark(image);
+      setLogo(url ? { id, url } : null);
+    }
   }, []);
   useEffect(() => { void readMark(); }, [readMark]);
   /**
@@ -405,6 +455,35 @@ export default function VideoCanvas({
     }
   }, [advanced, bus, shotCard]);
 
+  /* ── What the copilot asked for and did not get, said on the desk ─────
+
+     The bus has no way back to the model: a handler returns nothing. So a
+     value the desk could not take used to vanish — "make it square" on a
+     grade with no square left the shape where it was and the reply saying
+     it was done. Now the desk says what it kept instead, in the one place
+     she is already reading. */
+  const [copilotNote, setCopilotNote] = useState('');
+  const gradeName = useCallback(
+    (one: VideoGrade) => t(`canvas.grade.${one}`, GRADES.find((g) => g.id === one)?.label ?? one) as string,
+    [t],
+  );
+  /* The grade as the copilot last set it, ahead of the render that shows it.
+     One reply sends `set_grade` and then `set_aspect` in the same breath, and
+     the shape has to be checked against the NEW grade's shapes — state would
+     still be holding the old one. */
+  const gradeNow = useRef<VideoGrade>('standard');
+  /** The cheapest connected grade whose engines can say a line, if any. */
+  const speakingGrade = useCallback(
+    (from: VideoGrade): VideoGrade | null => {
+      const can = engine?.can;
+      if (can?.[from]?.speaks) return from;
+      return (['standard', 'better', 'premium'] as VideoGrade[]).find(
+        (one) => engine?.grades.includes(one) && can?.[one]?.speaks,
+      ) ?? null;
+    },
+    [engine],
+  );
+
   useCopilotOps('canvas', {
     ...(advanced ? {} : {
       write_scenes: holdThenOpen('write_scenes'),
@@ -414,26 +493,95 @@ export default function VideoCanvas({
       setPrompt(value);
       landed();
     },
+    /* Checked against the grade it will be made on, not against the three
+       shapes this app knows. The square is a real shape on Standard and is
+       refused by every engine on Better — accepting it here put the desk on
+       a shape the next press would be turned away for. */
     set_aspect: (value) => {
       const wanted = value.trim();
       if (wanted !== '16:9' && wanted !== '9:16' && wanted !== '1:1') return;
+      const offered = engine?.can?.[gradeNow.current]?.aspects;
+      if (offered && !offered.includes(wanted)) {
+        setCopilotNote(
+          `${t('canvas.copilotLength', 'The copilot asked for')} ${t(
+            `canvas.shape.${wanted}`,
+            SHAPES.find((one) => one.id === wanted)?.label ?? wanted,
+          )}; ${gradeName(gradeNow.current)} ${t(
+            'canvas.copilotShapeNo',
+            'does not make that shape, so the shape was left as it was.',
+          )}`,
+        );
+        landed();
+        return;
+      }
+      setCopilotNote('');
       setAspect(wanted);
       landed();
     },
+    /* The same, for the length: the grade's own lengths rather than every
+       length any engine makes. A length the grade does not make is moved to
+       the nearest one it does — and the desk says which, because the price
+       on the button moves with it. */
     set_seconds: (value) => {
       const wanted = Number.parseInt(value.trim(), 10);
       if (!LENGTHS.some((one) => one.seconds === wanted)) return;
+      const offered = engine?.can?.[gradeNow.current]?.seconds;
+      if (offered?.length && !offered.includes(wanted)) {
+        const nearest = offered.reduce((best, one) =>
+          Math.abs(one - wanted) < Math.abs(best - wanted) ? one : best,
+        );
+        setCopilotNote(
+          `${t('canvas.copilotLength', 'The copilot asked for')} ${wanted}s; ${gradeName(gradeNow.current)} ${t(
+            'canvas.copilotLengthNo',
+            'does not make that length, so it was set to the nearest one it does:',
+          )} ${nearest}s.`,
+        );
+        setSeconds(nearest);
+        landed();
+        return;
+      }
+      setCopilotNote('');
       setSeconds(wanted);
+      landed();
+    },
+    /* ── Whether the engine says the line ────────────────────────────
+
+       There was no op for it. The copilot was told to pick Better for a
+       quoted line "because standard cannot speak", picked it, and the clip
+       came back silent at twice the price: choosing a grade has never
+       switched the voice on, and the switch was a tick box only Everything
+       shows. On moves the desk to the cheapest grade that can actually
+       speak (or leaves it where it is if that one can), off is the default
+       and the right answer for Afrikaans. */
+    set_speak: (value) => {
+      const on = /^(on|yes|true|1)$/i.test(value.trim());
+      if (!on) {
+        setSpeak(false);
+        landed();
+        return;
+      }
+      const there = speakingGrade(gradeNow.current);
+      if (!there) {
+        setCopilotNote(
+          t('canvas.copilotNoVoice', 'The copilot asked for the line to be spoken, but no connected engine can speak, so the clip stays silent. Put the words on screen, or read the line in your own voice.'),
+        );
+        return;
+      }
+      if (there !== gradeNow.current) {
+        gradeNow.current = there;
+        setGrade(there);
+      }
+      setCopilotNote('');
+      setSpeak(true);
       landed();
     },
     /* ── The quality, which the copilot could not reach ────────────────
 
        Simple is "the copilot writes everything", and on this desk the
-       equivalent of a song's style is the grade: it decides the engine, the
-       price and whether a quoted line can be spoken at all. Without this the
-       copilot could write a shot with a line in quotation marks, set the
-       shape and the length, and leave the desk on Standard — which is
-       silent — so the one thing it had been asked for came back missing.
+       equivalent of a song's style is the grade: it decides the engine and
+       the price. Whether a quoted line is SPOKEN is `set_speak` above — a
+       grade on its own never switched the voice on, which is how "pick
+       Better for a quoted line" came back silent at twice the price.
 
        Refused rather than clamped when the engine does not offer the rung:
        setting a grade that is not there would disable the lengths row and
@@ -442,6 +590,7 @@ export default function VideoCanvas({
       const wanted = value.trim().toLowerCase();
       if (!GRADES.some((one) => one.id === wanted)) return;
       if (engine && !engine.grades.includes(wanted as VideoGrade)) return;
+      gradeNow.current = wanted as VideoGrade;
       setGrade(wanted as VideoGrade);
       landed();
     },
@@ -467,6 +616,9 @@ export default function VideoCanvas({
    */
   const [voice, setVoice] = useState<{ blob: Blob; name: string } | null>(null);
   const [grade, setGrade] = useState<VideoGrade>('standard');
+  useEffect(() => {
+    gradeNow.current = grade;
+  }, [grade]);
   /**
    * A picture to start the clip from. Held here rather than uploaded: it goes
    * with the request and is never stored, so leaving the room loses it, which
@@ -530,8 +682,75 @@ export default function VideoCanvas({
     };
   }, []);
 
-  // Object URLs are the one thing the browser will not tidy up on its own.
-  useEffect(() => () => made.forEach((one) => URL.revokeObjectURL(one.url)), [made]);
+  /* Object URLs are the one thing the browser will not tidy up on its own.
+
+     On leaving, and only then. This was an effect keyed on `made`, whose
+     cleanup runs every time the list changes — so making a second clip
+     revoked the first one's address, and the clip above the new one went
+     black with its controls still drawn. Nothing is ever taken out of the
+     list, so leaving is the only time an address stops being needed. */
+  const madeNow = useRef<Made[]>([]);
+  useEffect(() => {
+    madeNow.current = made;
+  }, [made]);
+  useEffect(() => () => madeNow.current.forEach((one) => URL.revokeObjectURL(one.url)), []);
+
+  /* ── A clip started on an earlier visit ───────────────────────────────
+
+     The job is written down on this device when it starts (`lib/engines.ts`,
+     `PENDING_KEY`). Opening the desk asks about each one: that ask is what
+     collects a finished clip, and what gives the credits back for a failed
+     one — the server does both only when somebody asks. It comes in as the
+     engine made it: the song, the words and the logo were for the press that
+     was left, and are not guessed at now. */
+  const [resumed, setResumed] = useState('');
+  /* The words read through a ref, so the effect below runs once: a change of
+     language is not a reason to ask about the same jobs twice. */
+  const tNow = useRef(t);
+  useEffect(() => {
+    tNow.current = t;
+  }, [t]);
+  useEffect(() => {
+    const t = tNow.current;
+    resumeVideos(
+      ['canvas', 'storyboard'],
+      (job, result) => {
+        const title = job.title || t('canvas.clip', 'Clip');
+        /* Filed whether or not the desk is still open — filing is the point. */
+        void rememberMake(
+          {
+            id: makeId('canvas'),
+            surface: 'canvas',
+            kind: 'video',
+            title,
+            note: job.prompt,
+            createdAt: new Date().toISOString(),
+            seconds: job.seconds,
+            ext: 'mp4',
+            credits: videoCost(job.grade, job.seconds),
+            /* A storyboard shot is a favourite, as the board files its own:
+               a film's shot must not be evicted for a later loose clip. */
+            ...(job.surface === 'storyboard' ? { favourite: true } : {}),
+          },
+          result.blob,
+        ).then(() => setKept((n) => n + 1));
+        if (!alive.current) return;
+        const url = URL.createObjectURL(result.blob);
+        setMade((held) => [
+          { blob: result.blob, url, prompt: job.prompt, aspect: job.aspect, spoken: job.spoken, seconds: job.seconds, ext: 'mp4', title, lost: null },
+          ...held,
+        ]);
+        setResumed(t('canvas.resumed', 'A clip you started before you left has come in. It is below, as the engine made it.'));
+      },
+      (job, message) => {
+        if (alive.current) {
+          setResumed(
+            `${t('canvas.resumedFailed', 'A clip you started before you left did not come back:')} ${job.title} \u2014 ${message}`,
+          );
+        }
+      },
+    );
+  }, []);
 
   /**
    * What this grade can make, from the server rather than from a guess here.
@@ -640,8 +859,84 @@ export default function VideoCanvas({
    *
    * Derived rather than corrected in an effect, so there is no moment where
    * what is charged and what is sent disagree.
+   *
+   * And only on a grade that can speak. The switch left on while the grade
+   * moved to Premium — which has no engine that speaks — sent `speak: true`
+   * to a rung where it was a guaranteed refusal, and every read-back on the
+   * desk went on saying the line "will be spoken".
    */
-  const willSpeak = speak && spoken.length > 0;
+  const willSpeak = speak && spoken.length > 0 && Boolean(able?.speaks);
+
+  /* ── Why a quoted line will NOT be heard, when it will not ───────────
+
+     "Will be spoken:" was printed whenever the prompt had quotation marks
+     in it — with the voice off, on a grade that cannot speak, on a desk
+     with no speaking engine at all. Three ways to be told a line would be
+     said and then get a silent clip. Now the read-back says spoken only
+     when the request really asks for it, and otherwise says why not. */
+  const silentWhy = !engine?.sound
+    ? t('canvas.silentNoEngine', 'No connected engine can speak, so this line stays silent. It can still go on screen as words.')
+    : speak && !able?.speaks
+      ? `${gradeName(grade)} ${t('canvas.silentGrade', 'cannot say a line, so this one stays silent. It can still go on screen as words.')}`
+      : t('canvas.silentOff', 'The voice is off, so this line stays silent. It can still go on screen as words, or be read in your own voice.');
+
+  /* ── Two asks that no single engine makes together ───────────────── */
+  const clash: VideoClash | null = useMemo(
+    () => clashOf(able?.ways, { aspect, seconds, speak: willSpeak, frame: Boolean(frame) }),
+    [able, aspect, seconds, willSpeak, frame],
+  );
+  const clashSays = (which: VideoClash): string => {
+    switch (which) {
+      case 'frame+voice':
+        return t('canvas.clashFrameVoice', 'No engine on this quality can both start from a picture and speak a line. Take the picture off, or switch the voice off.');
+      case 'frame+shape':
+        return t('canvas.clashFrameShape', 'No engine on this quality can start from a picture in this shape. Take the picture off, or choose another shape.');
+      case 'frame+length':
+        return t('canvas.clashFrameLength', 'No engine on this quality can start from a picture at this length. Take the picture off, or choose another length.');
+      case 'voice+shape':
+        return t('canvas.clashVoiceShape', 'No engine on this quality can speak a line in this shape. Switch the voice off, or choose another shape.');
+      case 'voice+length':
+        return t('canvas.clashVoiceLength', 'No engine on this quality can speak a line at this length. Switch the voice off, or choose another length.');
+      case 'shape+length':
+        return t('canvas.clashShapeLength', 'No engine on this quality makes this shape at this length. Choose another shape or another length.');
+      default:
+        return t('canvas.clashTogether', 'No single engine on this quality makes all of this together. Take the picture off or switch the voice off, or try another quality.');
+    }
+  };
+
+  /* ── A start frame the grade cannot read is taken off, and said ──────
+
+     The picture card only draws on a grade that reads a picture, so moving
+     to one that does not hid the card — and the picture, still held here,
+     still went with the request. The route then refused the clip, or worse
+     on the day a grade had one engine that reads it and one that does not.
+     Taken off with a sentence, rather than kept out of sight. */
+  const [frameDropped, setFrameDropped] = useState(false);
+  useEffect(() => {
+    /* Only once the grade is one that is really switched on: while the probe
+       has answered but the desk is still moving off a grade with nothing
+       behind it, `able` is undefined, and a picture attached before the
+       answer was dropped in the same moment the grade landed somewhere that
+       reads it (found in review, 15 October 2026). */
+    if (!answered || !frame || !able || able.startFrame) return;
+    setFrame(null);
+    setFrameDropped(true);
+  }, [answered, frame, able]);
+  const chooseFrame = useCallback((next: string | null) => {
+    setFrame(next);
+    setFrameDropped(false);
+  }, []);
+
+  /** Where ticking the voice would take the clip, if this grade is silent. */
+  const speakHere = speakingGrade(grade);
+
+  /* Why the button will not make anything, said under it. A grey button
+     with no reason is a desk that looks broken. */
+  const blocked = answered && ready && lengths.length === 0
+    ? t('canvas.noLengths', 'This grade is not answering with any lengths right now. Try another one.')
+    : clash
+      ? clashSays(clash)
+      : '';
   const unquoted = useMemo(() => looksUnquoted(prompt), [prompt]);
   /* The words that would go on screen: whatever was typed, or the line the
      prompt already has in quotation marks. The same rule as the storyboard's
@@ -698,11 +993,20 @@ export default function VideoCanvas({
       setError(t('canvas.tooShort', 'Say a bit more — what is in the shot, and what the camera does.'));
       return;
     }
+    if (blocked) {
+      setError(blocked);
+      return;
+    }
+    /* Named once, at the press, in the language it was made in — so the
+       clip, its download, its keep and its share all carry the scene it was
+       made from rather than whichever tile is lit later. */
+    const title = scene ? (t(`canvas.scene.${scene.id}`, scene.label) as string) : (t('canvas.clip', 'Clip') as string);
     setBusy(true);
     setError(null);
     try {
       const result = await engines.generateVideo({
-        title: scene?.label ?? 'Video',
+        title,
+        surface: 'canvas',
         treatment: said,
         aspect,
         seconds,
@@ -733,9 +1037,13 @@ export default function VideoCanvas({
           );
         }
       }
-      const clip = await withSong(result.blob, songCut, aspect, seconds, words, brandIt ? mark : null, voice?.blob ?? null);
+      const laid = await withSong(result.blob, songCut, aspect, seconds, words, brandIt ? mark : null, voice?.blob ?? null);
+      const clip = laid.blob;
       const url = URL.createObjectURL(clip);
-      setMade((held) => [{ blob: clip, url, prompt: said, aspect, spoken: willSpeak, seconds }, ...held]);
+      setMade((held) => [
+        { blob: clip, url, prompt: said, aspect, spoken: willSpeak, seconds, ext: laid.ext, title, lost: laid.lost },
+        ...held,
+      ]);
       signal('video', { category: scene?.id ?? 'canvas' });
 
       /* Kept, rather than living only in this tab.
@@ -748,11 +1056,11 @@ export default function VideoCanvas({
           id: makeId('canvas'),
           surface: 'canvas',
           kind: 'video',
-          title: scene ? t(`canvas.scene.${scene.id}`, scene.label) : t('canvas.clip', 'Clip'),
+          title,
           note: said,
           createdAt: new Date().toISOString(),
           seconds,
-          ext: 'mp4',
+          ext: laid.ext,
           credits: videoCost(grade, seconds),
         },
         clip,
@@ -881,9 +1189,15 @@ export default function VideoCanvas({
                 ) : (
                   <VolumeX className="w-4 h-4 text-amber-400 flex-shrink-0" />
                 )}
+                {/* Which grades, by name, read off the server. "On the higher
+                    grades" was wrong twice over: Premium is the highest and
+                    has never had an engine that speaks. */}
                 <span>
                   {engine.sound
-                    ? t('canvas.soundOn', 'Quoted lines can be spoken aloud on the higher grades.')
+                    ? `${t('canvas.soundOnly', 'A quoted line can be spoken aloud only on')} ${(['standard', 'better', 'premium'] as VideoGrade[])
+                        .filter((one) => engine.grades.includes(one) && engine.can?.[one]?.speaks)
+                        .map(gradeName)
+                        .join(', ')}${t('canvas.soundOnlyEnd', ', and only when the voice is switched on.')}`
                     : t('canvas.soundOff', 'No connected engine can speak, so quoted lines will come back silent.')}
                 </span>
               </p>
@@ -951,6 +1265,17 @@ export default function VideoCanvas({
                   t(`canvas.shape.${aspect}`, SHAPES.find((one) => one.id === aspect)?.label ?? aspect) as string,
                 ],
                 [t('canvas.length', 'Length'), `${seconds}s`],
+                /* The voice, which Simple had no way to see. A quoted line
+                   on a desk with the voice off is a silent clip, and that is
+                   a decision worth having on the screen before the press. */
+                [
+                  t('canvas.voice', 'Voice'),
+                  spoken.length === 0
+                    ? ''
+                    : willSpeak
+                      ? (t('canvas.voiceSays', 'The engine says the line') as string)
+                      : (t('canvas.voiceSilent', 'Silent') as string),
+                ],
               ].filter(([, value]) => value).map(([label, value]) => (
                 <div key={String(label)} className="flex gap-2">
                   <dt className="shrink-0 text-zinc-500">{label}</dt>
@@ -960,13 +1285,17 @@ export default function VideoCanvas({
             </dl>
           )}
 
-          {/* The one silent fault, carried into Simple. */}
+          {/* The one silent fault, carried into Simple — and "will be
+              spoken" only when it really will be. */}
           {spoken.length > 0 && (
             <div data-canvassimplesaid className="space-y-1">
-              <p className="text-xs text-emerald-400">{t('canvas.willSay', 'Will be spoken:')}</p>
+              <p className={`text-xs ${willSpeak ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                {willSpeak ? t('canvas.willSay', 'Will be spoken:') : t('canvas.notSaid', 'Not spoken:')}
+              </p>
               {spoken.map((line, index) => (
                 <p key={index} className="text-xs italic text-zinc-300">&ldquo;{line}&rdquo;</p>
               ))}
+              {!willSpeak && <p className="text-xs leading-snug text-zinc-500">{silentWhy}</p>}
             </div>
           )}
           {unquoted && (
@@ -995,7 +1324,10 @@ export default function VideoCanvas({
         options={SCENES.map((one) => ({
           id: one.id,
           label: t(`canvas.scene.${one.id}`, one.label) as string,
-          note: t(`canvas.sceneNote.${one.id}`, one.note) as string,
+          /* `canvas.note.*`, the rows the tiles below already read. This
+             asked for `canvas.sceneNote.*`, which no row has ever answered,
+             so the suggestion read in English on an Afrikaans desk. */
+          note: t(`canvas.note.${one.id}`, one.note) as string,
         }))}
         onPick={(id) => {
           const chosen = SCENES.find((one) => one.id === id);
@@ -1229,7 +1561,7 @@ export default function VideoCanvas({
             somebody who never attaches one is not made to step past it. */}
         <StartFrame
           value={frame}
-          onChange={setFrame}
+          onChange={chooseFrame}
           supported={Boolean(able?.startFrame)}
           unsupportedNote={
             frameGrade
@@ -1266,20 +1598,21 @@ export default function VideoCanvas({
             <span>
               {t(
                 'canvas.quotes',
-                'Anything in quotation marks is spoken aloud, in the language you write it in. Everything else is what the camera sees.',
+                'Anything in quotation marks is the line: said aloud when the voice is switched on, and the words on screen when it is not. Everything else is what the camera sees.',
               )}
             </span>
           </p>
           {spoken.length > 0 && (
-            <div className="pl-5.5 space-y-1">
-              <p className="text-xs text-emerald-400">
-                {t('canvas.willSay', 'Will be spoken:')}
+            <div className="pl-6 space-y-1">
+              <p className={`text-xs ${willSpeak ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                {willSpeak ? t('canvas.willSay', 'Will be spoken:') : t('canvas.notSaid', 'Not spoken:')}
               </p>
               {spoken.map((line, index) => (
                 <p key={index} className="text-xs text-zinc-300 italic">
                   &ldquo;{line}&rdquo;
                 </p>
               ))}
+              {!willSpeak && <p className="text-xs leading-snug text-zinc-500">{silentWhy}</p>}
             </div>
           )}
           {unquoted && (
@@ -1319,7 +1652,7 @@ export default function VideoCanvas({
                   /* Kept for a mouse, where a tooltip is a real thing. It is
                      no longer the only way to find out — see the line under
                      the note. */
-                  title={!there ? t('canvas.gradeGone', 'The engine you have picked does not offer this one.') : undefined}
+                  title={!there ? t('canvas.gradeGone', 'Nothing behind this quality is switched on for this app yet.') : undefined}
                   onClick={() => setGrade(one.id)}
                   className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl text-sm border transition-all disabled:opacity-40 ${
                     active
@@ -1329,7 +1662,11 @@ export default function VideoCanvas({
                 >
                   <span className="block font-semibold">{t(`canvas.grade.${one.id}`, one.label)}</span>
                   <span className="block text-xs text-zinc-500 leading-snug">
-                    {t(`canvas.gradeNote.${one.id}`, one.note)}
+                    {t(`canvas.gradeNote.${one.id}`, one.note)}{' '}
+                    {there &&
+                      (engine?.can?.[one.id]?.speaks
+                        ? t('canvas.gradeSpeaks', 'Can say a quoted line.')
+                        : t('canvas.gradeSilent', 'Silent.'))}
                   </span>
                   {/* A price, or the reason there is no price.
 
@@ -1453,14 +1790,26 @@ export default function VideoCanvas({
               </span>
             </p>
           )}
+          {/* `Pictures` keeps the bytes; the kit keeps a reference, so the
+              file is stored once.
+
+              It saved `loadAssets()[0]` — the newest picture on the device —
+              whichever one was pressed. Choosing last week's logo from the
+              strip saved this morning's photo of a car; pressing the logo to
+              take it OFF saved the newest picture as the logo instead. The
+              strip now says which picture it was, and null means none. */}
           <Pictures
-            value={null}
-            onChange={() => {
-              /* `Pictures` keeps the bytes; the kit keeps a reference, so
-                 the file is stored once. The same two lines the brand-kit
-                 card uses, for the same reason. */
-              const newest = loadAssets()[0];
-              if (newest) saveBrandKit({ ...loadBrandKit(), logoAssetId: newest.id });
+            value={logo?.url ?? null}
+            chosenId={logo?.id ?? null}
+            onChange={(url, id) => {
+              if (!url) {
+                saveBrandKit({ ...loadBrandKit(), logoAssetId: undefined });
+              } else if (id) {
+                saveBrandKit({ ...loadBrandKit(), logoAssetId: id });
+              }
+              // A picture that could not be kept on this device has no id to
+              // point the kit at; `Pictures` already says why, and the logo
+              // stays what it was.
               void readMark();
             }}
             from="videodesk"
@@ -1468,16 +1817,22 @@ export default function VideoCanvas({
         </div>
 
         {/* The engine speaking is a deliberate, dearer choice — see `speak`. */}
+        {/* Gated on a grade that can actually speak, not on "some engine
+            somewhere can". Ticked on Premium it used to stay on Premium —
+            where nothing speaks — and the press was a guaranteed refusal.
+            Now it moves to the cheapest grade that speaks, and says so
+            before it is ticked. */}
         {spoken.length > 0 && (
           <label className="flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 cursor-pointer">
             <input
               id="canvas-speak"
               type="checkbox"
-              checked={speak}
-              disabled={!engine?.sound}
+              checked={speak && Boolean(able?.speaks)}
+              disabled={!speakHere}
               onChange={(event) => {
-                setSpeak(event.target.checked);
-                if (event.target.checked && grade === 'standard') setGrade('better');
+                const on = event.target.checked;
+                setSpeak(on);
+                if (on && speakHere && speakHere !== grade) setGrade(speakHere);
               }}
               className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
             />
@@ -1486,12 +1841,18 @@ export default function VideoCanvas({
                 {t('canvas.letItSpeak', 'Let the engine say the line')}
               </span>
               <span className="block text-xs text-zinc-500 leading-snug">
-                {engine?.sound
+                {speakHere
                   ? t(
                       'canvas.letItSpeakNote',
                       'Costs more, and only in English. Leave this off and record the line in your own voice under Script my voice — it is cheaper, it is the same voice every time, and it is the only way to get Afrikaans.',
                     )
                   : t('canvas.cannotSpeak', 'No connected engine can speak a line. Record it under Script my voice instead.')}
+                {speakHere && speakHere !== grade && (
+                  <span className="block pt-1 text-amber-400/90">
+                    {gradeName(grade)} {t('canvas.speakMoves', 'cannot say a line. Ticking this moves the clip to')}{' '}
+                    {gradeName(speakHere)} ({videoCost(speakHere, seconds)} {t('video.credits', 'credits')}).
+                  </span>
+                )}
               </span>
             </span>
           </label>
@@ -1509,7 +1870,7 @@ export default function VideoCanvas({
 
             Only while the box is actually ticked. Somebody who has already
             decided to record it themselves does not need to be congratulated. */}
-        {speak && spoken.length > 0 && (
+        {willSpeak && (
           <CheaperPath
             now={videoCost(grade, seconds)}
             instead={videoCost('standard', seconds) + readCost(spoken.join(' ').length)}
@@ -1642,10 +2003,51 @@ export default function VideoCanvas({
         </div>
       )}
       <div className="space-y-2.5">
+        {/* What the copilot asked for and could not have, said where the
+            button is — the only place on Simple that is always on screen. */}
+        {copilotNote && (
+          <p data-canvascopilotnote className="text-xs leading-snug text-amber-300">{copilotNote}</p>
+        )}
+        {frameDropped && (
+          <p data-canvasframedropped className="text-xs leading-snug text-amber-300">
+            {t('canvas.frameDropped', 'The start picture was taken off: this quality cannot start from a picture, and it would have been ignored.')}
+          </p>
+        )}
+        {/* Two asks no single engine makes together, named before the press
+            with the way out of each beside it. On Simple the controls are
+            out of sight, so the way out is a button here rather than a
+            direction to a card that is not on the screen. */}
+        {blocked && (
+          <div data-canvasblocked className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3">
+            <p className="text-sm leading-snug text-amber-300">{blocked}</p>
+            {clash && (
+              <div className="flex flex-wrap gap-2">
+                {clash.includes('frame') && (
+                  <button
+                    type="button"
+                    onClick={() => chooseFrame(null)}
+                    className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-sm font-semibold text-zinc-200 hover:border-zinc-600 hover:text-white"
+                  >
+                    {t('frame.takeOff', 'Take the picture off')}
+                  </button>
+                )}
+                {clash.includes('voice') && (
+                  <button
+                    type="button"
+                    onClick={() => setSpeak(false)}
+                    className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-sm font-semibold text-zinc-200 hover:border-zinc-600 hover:text-white"
+                  >
+                    {t('canvas.voiceOffNow', 'Switch the voice off')}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <button
           type="button"
           onClick={make}
-          disabled={busy || ready === false}
+          disabled={busy || ready === false || Boolean(blocked)}
           className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
@@ -1663,12 +2065,13 @@ export default function VideoCanvas({
           <p className="text-sm text-zinc-400 text-center">
             {t(
               'canvas.waiting',
-              'Two to four minutes. There is no progress bar because the engine does not report one — it says nothing, and then it says here is your video.',
+              'Two to four minutes. There is no progress bar because the engine does not report one — it says nothing, and then it says here is your video. If you leave, it is collected when you come back to this desk.',
             )}
           </p>
         )}
 
         {error && <p className="text-sm text-rose-400 leading-relaxed">{error}</p>}
+        {resumed && <p data-canvasresumed className="text-sm text-zinc-300 leading-relaxed">{resumed}</p>}
       </div>
 
       {/* ── A film out of many shots ──────────────────────────────────────
@@ -1699,7 +2102,7 @@ export default function VideoCanvas({
         /* Read off `can[grade]` here rather than asked again down there: one
            answer to "can this rung speak", in the place that already has it.
            A second lookup would be a second answer the day they disagree. */
-        canSpeak={Boolean(able?.speaks)}
+        canSpeak={Boolean(able?.speaks) && clashOf(able?.ways, { aspect, seconds, speak: true, frame: Boolean(frame) }) === null}
         onUpgrade={onUpgrade}
       />
       )}
@@ -1745,7 +2148,7 @@ export default function VideoCanvas({
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => downloadBlob(one.blob, safeFilename(one.prompt.slice(0, 40), 'mp4'))}
+                    onClick={() => downloadBlob(one.blob, safeFilename(one.prompt.slice(0, 40), one.ext))}
                     className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
                   >
                     <Download className="w-4 h-4" />
@@ -1769,12 +2172,34 @@ export default function VideoCanvas({
                       decision to get it. */}
                   <KeepVideo
                     blob={one.blob}
-                    title={scene?.label ?? one.prompt.slice(0, 60) ?? 'Video'}
+                    title={one.title}
                     seconds={one.seconds}
                     aspect={one.aspect}
                   />
-                  <ShareRow title={scene?.label ?? 'Video'} what={one.prompt} />
+                  {/* The clip itself, not only its words. This handed the
+                      share sheet a caption and nothing else, so "share" on a
+                      video posted a sentence about a video. */}
+                  <ShareRow
+                    title={one.title}
+                    what={one.prompt}
+                    file={async () =>
+                      new File([one.blob], safeFilename(one.prompt.slice(0, 40), one.ext), {
+                        type: one.blob.type || (one.ext === 'webm' ? 'video/webm' : 'video/mp4'),
+                      })
+                    }
+                  />
                 </div>
+                {/* What the pass that lays things into the clip had to leave
+                    out, said beside the clip it happened to. */}
+                {one.lost && (
+                  <p className="text-xs leading-snug text-amber-300">
+                    {one.lost === 'song'
+                      ? t('canvas.lostSong', 'The song could not be read off this device, so it is not under this clip. The words and the logo are in.')
+                      : one.lost === 'unsupported'
+                        ? t('canvas.lostUnsupported', 'This browser cannot lay a song, words, a logo or a sound into a clip, so this is the clip as the engine made it. The video editor can add them.')
+                        : t('canvas.lostFailed', 'Laying the song, words, logo or sound into this clip did not work, so this is the clip as the engine made it. The video editor can add them.')}
+                  </p>
+                )}
 
                 {/* ── The language button ──────────────────────────────
 

@@ -1178,12 +1178,22 @@ export default function VocalBooth({
      to know what somebody pays. See `lib/useplan.ts`. */
   const proAllowed = check('booth.pro', plan).allowed;
 
-  if (proOpen) {
+  /* `proAllowed` here as well as on the button. The TONE3000 return above
+     opens this from the address, and that door skipped the plan gate the
+     button keeps — a member without a plan who arrived on `?t3k` was in
+     the lanes room anyway. Gated at the render rather than in that effect,
+     because the plan is read after mount and the effect runs before it.
+     Found on 15 October 2026. */
+  if (proOpen && proAllowed) {
     return (
       <ProBooth
         title={track.title}
+        songId={track.id}
         backing={backing}
-        onKeep={(mixed) => onKeep(mixed, guideBuffer !== null && doubleLevel > 0, take ? encodeWav(take) : mixed)}
+        /* The lanes room says its own credits and its own take — see
+           `onKeep` on ProBooth. This used to fill them from THIS room's
+           AI double and last take, which are not in a lanes mix. */
+        onKeep={onKeep}
         onClose={() => setProOpen(false)}
       />
     );

@@ -39,6 +39,13 @@ export const GLOWS = [
   { id: 'gold', name: ['post.glow.gold', 'Gold'], halo: ['#ea580c', '#f59e0b', '#fde68a'] },
   { id: 'ice', name: ['post.glow.ice', 'Ice'], halo: ['#1d4ed8', '#38bdf8', '#e0f2fe'] },
   { id: 'fire', name: ['post.glow.fire', 'Fire'], halo: ['#dc2626', '#f97316', '#fde047'] },
+  /* Five more, 15 October 2026, with the eight new faces: "meer text
+     possibilities". Each a colour family none of the seven covers. */
+  { id: 'pink', name: ['post.glow.pink', 'Hot pink'], halo: ['#be185d', '#ec4899', '#fbcfe8'] },
+  { id: 'toxic', name: ['post.glow.toxic', 'Toxic'], halo: ['#3f6212', '#84cc16', '#ecfccb'] },
+  { id: 'sunset', name: ['post.glow.sunset', 'Sunset'], halo: ['#7c3aed', '#f43f5e', '#fdba74'] },
+  { id: 'ultra', name: ['post.glow.ultra', 'Ultraviolet'], halo: ['#4c1d95', '#8b5cf6', '#ddd6fe'] },
+  { id: 'chrome', name: ['post.glow.chrome', 'Chrome'], halo: ['#334155', '#94a3b8', '#f8fafc'] },
 ] as const satisfies readonly Glow[];
 
 export type GlowId = (typeof GLOWS)[number]['id'];
@@ -81,4 +88,12 @@ export const NEON_WORDS: readonly NeonWord[] = [
   { id: 'future', says: ['post.neon.future', 'FUTURE PRO'], face: 'future', glow: 'neon', ink: '#ecfdf5', letterGap: 0.2 },
   { id: 'gold', says: ['post.neon.gold', 'GOLDEN HOUR'], face: 'book', glow: 'gold', ink: '#fde68a', letterGap: 0.16 },
   { id: 'glitch', says: ['post.neon.glitch', 'STATIC WAVE'], face: 'future', glow: 'ice', ink: '#e0f2fe', letterGap: 0.26 },
+  { id: 'love', says: ['post.neon.love', 'Love Song'], face: 'script', glow: 'pink', ink: '#fdf2f8', letterGap: 0.02 },
+  { id: 'hype', says: ['post.neon.hype', 'HYPE'], face: 'spray', glow: 'fire', ink: '#fef08a', letterGap: 0.08 },
+  { id: 'boom', says: ['post.neon.boom', 'BOOM!'], face: 'comic', glow: 'sunset', ink: '#fff7ed', letterGap: 0.06 },
+  { id: 'play', says: ['post.neon.play', 'PRESS PLAY'], face: 'pixel', glow: 'toxic', ink: '#ecfccb', letterGap: 0.1 },
+  { id: 'glory', says: ['post.neon.glory', 'GLORY'], face: 'classic', glow: 'gold', ink: '#fef3c7', letterGap: 0.3 },
+  { id: 'open', says: ['post.neon.open', 'OPEN LATE'], face: 'block', glow: 'pink', ink: '#fdf2f8', letterGap: 0.06 },
+  { id: 'disco', says: ['post.neon.disco', 'Disco Fever'], face: 'retro', glow: 'ultra', ink: '#f5f3ff', letterGap: 0.08 },
+  { id: 'chrome', says: ['post.neon.chrome', 'CHROME HEART'], face: 'fashion', glow: 'chrome', ink: '#ffffff', letterGap: 0.12 },
 ];

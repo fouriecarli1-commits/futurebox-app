@@ -137,15 +137,33 @@ export interface MyVideo {
  * decode and draw, and a title is not one.
  */
 export async function myVideos(): Promise<MyVideo[]> {
+  return (await myVideosSaid()).videos;
+}
+
+/**
+ * The same listing, and whether it is really the listing.
+ *
+ * `myVideos` answers an empty list for three different things — nothing in
+ * the channel, not signed in, and a request that never got there — and the
+ * cutting room drew all three as "Nothing in your channel yet". Somebody
+ * signed out was told her channel was empty; somebody on a dropped
+ * connection was told the same. `out` and `broke` are those two, so the room
+ * can say the true sentence.
+ */
+export async function myVideosSaid(): Promise<{
+  readonly how: 'ok' | 'out' | 'broke';
+  readonly videos: MyVideo[];
+}> {
   const token = await accessToken();
   try {
     const response = await fetch('/api/video/kept', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!response.ok) return [];
+    if (response.status === 401 || response.status === 403) return { how: 'out', videos: [] };
+    if (!response.ok) return { how: 'broke', videos: [] };
     const said = (await response.json()) as { videos?: MyVideo[] };
-    return Array.isArray(said.videos) ? said.videos : [];
+    return { how: 'ok', videos: Array.isArray(said.videos) ? said.videos : [] };
   } catch {
-    return [];
+    return { how: 'broke', videos: [] };
   }
 }

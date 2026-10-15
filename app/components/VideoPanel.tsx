@@ -30,7 +30,7 @@
 import React, { useEffect, useState } from 'react';
 import { Video as VideoIcon, X, Loader2, Download, Quote, AlertTriangle } from 'lucide-react';
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
-import { engines, probeVideoEngine, type VideoGrades } from '../lib/engines';
+import { engines, probeVideoEngine, resumeVideos, type VideoGrades } from '../lib/engines';
 import { spokenLines, looksUnquoted, MUSIC_LOOKS, LENGTHS } from '../lib/videoscenes';
 import { CREDITS, videoCost } from '../lib/credits';
 import Cost from './Cost';
@@ -175,10 +175,20 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
      of them. The desk has read the engine's own list since it was built — this
      is the same read, so the two screens cannot disagree about what exists. */
   const [caps, setCaps] = useState<VideoGrades | null>(null);
+  /* The cheapest grade that is actually connected, rather than Standard by
+     name. This sent `standard` and read `can.standard` whatever the probe
+     said — and on a deployment where the cheap engine is held behind its
+     flag, Standard has nothing behind it: the lengths fell back to a guess
+     and every press was refused for a grade that was not there. The desk
+     next door has landed on a grade that exists since it was built. */
+  const engineGrade = React.useMemo(
+    () => (['standard', 'better', 'premium'] as const).find((one) => caps?.grades.includes(one)) ?? 'standard',
+    [caps],
+  );
   const engineLengths = React.useMemo(() => {
-    const able = caps?.can?.standard?.seconds;
+    const able = caps?.can?.[engineGrade]?.seconds;
     return LENGTHS.filter((one) => (able ?? [5, 10]).indexOf(one.seconds) !== -1);
-  }, [caps]);
+  }, [caps, engineGrade]);
   // A length the engine dropped support for should not stay selected and
   // silently become something else at the far end.
   useEffect(() => {
@@ -197,6 +207,53 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
       setCaps(state);
       setEngineReady(state.available);
     });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  /* ── A clip from the engine started on an earlier visit ──────────────
+
+     The note under the button has always said "it keeps going if you leave
+     this page", which was true of the engine and not of this panel: nothing
+     ever asked about the job again, and the server only files a finished
+     clip, or refunds a failed one, when it is asked. Now the job is written
+     down on this device when it starts, and opening this panel asks. It is
+     filed in the history below, under the song it was made for. */
+  const [resumed, setResumed] = useState('');
+  const tNow = React.useRef(t);
+  useEffect(() => {
+    tNow.current = t;
+  }, [t]);
+  useEffect(() => {
+    let alive = true;
+    resumeVideos(
+      'make',
+      (job, result) => {
+        void rememberMake(
+          {
+            id: makeId('make'),
+            surface: 'make',
+            kind: 'video',
+            title: job.title,
+            note: job.prompt,
+            createdAt: new Date().toISOString(),
+            seconds: job.seconds,
+            ext: 'mp4',
+            credits: videoCost(job.grade, job.seconds),
+          },
+          result.blob,
+        ).then(() => setKept((n) => n + 1));
+        if (alive) {
+          setResumed(`${tNow.current('video.resumed', 'A video you started before you left has come in. It is in the list below:')} ${job.title}`);
+        }
+      },
+      (job, message) => {
+        if (alive) {
+          setResumed(`${tNow.current('video.resumedFailed', 'A video you started before you left did not come back:')} ${job.title} \u2014 ${message}`);
+        }
+      },
+    );
     return () => {
       alive = false;
     };
@@ -240,11 +297,16 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
     setError(null);
     setMade(null);
     try {
+      /* The song's title names the job on this device and nothing more —
+         `engines.ts` sends the treatment alone, because a title at the front
+         of a prompt is the first thing a video model draws. */
       const result = await engines.generateVideo({
         title: track.title,
+        surface: 'make',
         treatment: said,
         aspect,
         seconds: engineSeconds,
+        grade: engineGrade,
       });
       setMade({ blob: result.blob, ext: 'mp4' });
       // Kept, so a video paid for is not lost to a reload. See `lib/makes.ts`.
@@ -258,7 +320,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
           createdAt: new Date().toISOString(),
           seconds: engineSeconds,
           ext: 'mp4',
-          credits: videoCost('standard', engineSeconds),
+          credits: videoCost(engineGrade, engineSeconds),
         },
         result.blob,
       ).then(() => setKept((n) => n + 1));
@@ -385,7 +447,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
             >
               {option === 'browser'
                 ? t('video.here', 'Drawn here — no credits')
-                : `${t('video.byEngine', 'The engine')} — ${videoCost('standard', engineSeconds)} ${t('video.credits', 'credits')}`}
+                : `${t('video.byEngine', 'The engine')} — ${videoCost(engineGrade, engineSeconds)} ${t('video.credits', 'credits')}`}
             </button>
           ))}
         </div>
@@ -400,7 +462,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
           {/* Video is the slowest thing here and the one people give up on
               first. The figure and the wait stand together, above the button,
               in the same shape as everywhere else that spends. */}
-          <Cost credits={videoCost('standard', engineSeconds)} waitMinutes={4} />
+          <Cost credits={videoCost(engineGrade, engineSeconds)} waitMinutes={4} />
         </div>
       )}
 
@@ -471,14 +533,24 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                   <Quote className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span>{t('canvas.quotes')}</span>
                 </p>
+                {/* "Will be spoken" was printed here, and this panel has
+                    never asked the engine to speak — there is no voice switch
+                    and nothing sends one. So the line was promised and the
+                    clip came back silent. It is read back as what it is. */}
                 {spokenLines(treatment).length > 0 && (
                   <div className="space-y-1 pl-5">
-                    <p className="text-xs text-emerald-400">{t('canvas.willSay')}</p>
+                    <p className="text-xs text-zinc-400">{t('canvas.notSaid', 'Not spoken:')}</p>
                     {spokenLines(treatment).map((line, index) => (
                       <p key={index} className="text-xs text-zinc-300 italic">
                         &ldquo;{line}&rdquo;
                       </p>
                     ))}
+                    <p className="text-xs leading-snug text-zinc-500">
+                      {t(
+                        'video.notSaidWhy',
+                        'The engine is not asked to say anything here, so this clip comes back silent and the song is what is heard. A line to be said belongs on the video desk.',
+                      )}
+                    </p>
                   </div>
                 )}
                 {looksUnquoted(treatment) && (
@@ -576,7 +648,10 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               cannot. So a song brought in from a file can carry its words too,
               and the line under the button says which of the three it used
               rather than letting all three look alike. */}
-          {hasWords && (
+          {/* Not in engine mode. The engine's clip is footage with no words
+              in it, and nothing on that path reads this switch or the second
+              language — a tick that does nothing is worse than no tick. */}
+          {hasWords && mode !== 'engine' && (
             <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
               <input
                 type="checkbox"
@@ -665,7 +740,11 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
             className="w-full py-3 rounded-xl bg-emerald-500 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
-            {busy ? t('video.making') : t('video.go')}
+            {busy
+              ? t('video.making')
+              : mode === 'engine'
+                ? `${t('video.go')} — ${videoCost(engineGrade, engineSeconds)} ${t('video.credits', 'credits')}`
+                : t('video.go')}
           </button>
 
           {/* A bar for the browser, which knows exactly how far it has got,
@@ -681,12 +760,13 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
             <p className="text-sm text-zinc-400">
               {t(
                 'video.engineWaiting',
-                'The engine is working. This usually takes two to four minutes, and it keeps going if you leave this page.',
+                'The engine is working. This usually takes two to four minutes. If you leave, it is collected the next time you open this panel.',
               )}
             </p>
           )}
 
           {error && <p className="text-sm text-rose-400">{error}</p>}
+          {resumed && <p className="text-sm text-zinc-300">{resumed}</p>}
 
           {url && made && (
             <div className="space-y-3">
@@ -705,12 +785,17 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                   <Download className="w-3.5 h-3.5" />
                   {t('video.save')}
                 </button>
+                {/* The price on the second press too. "Again" with no number
+                    reads as a redo of something already paid for, and on the
+                    engine it is a whole new clip at the whole price. */}
                 <button
                   type="button"
                   onClick={mode === 'engine' ? makeWithEngine : make}
                   className="min-h-[44px] px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300"
                 >
-                  {t('video.again')}
+                  {mode === 'engine'
+                    ? `${t('video.again')} — ${videoCost(engineGrade, engineSeconds)} ${t('video.credits', 'credits')}`
+                    : t('video.again')}
                 </button>
               </div>
             </div>

@@ -68,7 +68,9 @@ ok('the client never invents parts that did not arrive',
 
 /* ── 4. The cheap supplier is asked first ──────────────────────────────── */
 const kitsAt = booth.indexOf('await separateParts(');
-const musicAiAt = booth.indexOf("await readSong(encodeWav(monoOf(lane.audio, ctx)), lane.audio.duration, 'stems')");
+/* The piece that plays, as Kits is sent — the whole recording was billed
+   for what had been cut off it (15 October 2026). */
+const musicAiAt = booth.indexOf("await readSong(encodeWav(monoOf(piece, ctx)), piece.duration, 'stems')");
 ok('the booth asks Kits before Music.ai', kitsAt > 0 && musicAiAt > 0 && kitsAt < musicAiAt,
   `Kits at ${kitsAt}, Music.ai at ${musicAiAt}`);
 /* One button, not two. She asked for the room to be simple, and two nearly

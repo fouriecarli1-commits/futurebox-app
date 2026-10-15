@@ -26,8 +26,9 @@
  * lyrics per section, vocals, and a commercial licence on paid plans.
  */
 
-import { accessToken } from './cloud';
+import { accessToken, currentAccount } from './cloud';
 import { videoIsReady } from './videograde';
+import { stillWorthWaiting } from './jobwait';
 import { shapeSong } from './songshape';
 import { rowsFrom, sungWordsIn } from './sungwords';
 
@@ -109,6 +110,10 @@ export interface AudioRequest {
 export type EngineAspect = '16:9' | '9:16' | '1:1';
 
 export interface VideoRequest {
+  /**
+   * What the job is called on this device — never sent to the engine, which
+   * gets `treatment` alone. See the body of `generateVideo`.
+   */
   readonly title: string;
   readonly treatment: string;
   readonly aspect: EngineAspect;
@@ -130,6 +135,11 @@ export interface VideoRequest {
    * same product in two clips that are meant to cut together.
    */
   readonly image?: string;
+  /**
+   * Which room asked, so the room that started a job is the one that
+   * collects it if she leaves before it lands. See `resumeVideos`.
+   */
+  readonly surface?: string;
 }
 
 export interface EngineResult {
@@ -380,13 +390,16 @@ export const engines: Engines = {
   },
 
   /**
-   * A video from Kling, which is a wait rather than a call.
+   * A video, which is a wait rather than a call.
    *
    * The server starts a job and answers with an id; this asks how it is going
    * until it is done, then downloads our own copy of the file. Every message
    * shown along the way is something that was actually observed — there is no
    * percentage, because the engine does not report one and inventing a bar
    * that creeps to ninety and waits there would be a lie about what is known.
+   *
+   * The asking is `collectVideo` below, and the id is written down on this
+   * device before the first ask — see `PENDING_KEY` for why.
    */
   generateVideo: async (request) => {
     const token = await accessToken();
@@ -398,7 +411,16 @@ export const engines: Engines = {
         ...(token ? { authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
-        prompt: `${request.title}. ${request.treatment}`.trim(),
+        /* The treatment and nothing else.
+
+           This was `${request.title}. ${request.treatment}` — so the scene's
+           label ("Marketing. "), a song's title or the storyboard's "Shot. "
+           went to the engine as the first words of the shot, and a video model
+           reads the first words of a prompt as the most important thing in
+           it. A song called "Rooi Rose" asked for roses. The title is still
+           taken: it names the job on this device (`rememberPending`), which is
+           what it was for. */
+        prompt: request.treatment.trim(),
         aspect: request.aspect,
         /* The length as it was asked for.
 
@@ -428,37 +450,219 @@ export const engines: Engines = {
       throw new Error(opened.message ?? NO_VIDEO_ENGINE);
     }
 
-    // Ten seconds between asks, for up to eight minutes. Kling's own ceiling
-    // for a clip this length is under five; the rest is room for a queue.
-    const deadline = Date.now() + 8 * 60_000;
-    while (Date.now() < deadline) {
-      await new Promise((wake) => setTimeout(wake, 10_000));
+    const owner = (await currentAccount().catch(() => null))?.id;
+    const job: PendingVideo = {
+      ...(owner ? { owner } : {}),
+      id: opened.id,
+      surface: request.surface ?? 'canvas',
+      title: request.title,
+      prompt: request.treatment.trim(),
+      aspect: request.aspect,
+      seconds: request.seconds,
+      grade: request.grade ?? 'standard',
+      spoken: request.speak === true,
+      startedAt: Date.now(),
+    };
+    rememberPending(job);
+    return collectVideo(job, false);
+  },
+};
 
-      const asked = await fetch(`/api/video?id=${encodeURIComponent(opened.id)}`, {
-        headers: token ? { authorization: `Bearer ${token}` } : undefined,
-      });
-      const progress = (await asked.json().catch(() => ({}))) as {
-        state?: string;
-        url?: string;
-        message?: string;
-      };
+/* ── A job that outlives the page that started it ──────────────────────────
+
+   Carli, 15 October 2026: *"Kyk mooi of elke funksie in video desk ... werk."*
+
+   The poll had no try around it. One dropped connection on a phone in the
+   eight minutes a clip takes threw out of the loop, the id went with it, and
+   the job was lost to the browser — while the server only marks a row done,
+   or refunds a failed one, when somebody ASKS it about that row (`GET
+   /api/video?id=`). Nothing else ever asks. So a blip mid-wait meant a clip
+   paid for and never collected, and a failed one never refunded, and the
+   desk said "it keeps going if you leave" about a job nobody would ever
+   look at again.
+
+   Now: the id is written to this device the moment the server hands it back
+   and crossed off only when the server has said done or failed. A blip is
+   waited out with a longer gap rather than thrown. And a room that mounts
+   asks about whatever it left behind (`resumeVideos`), which is the ask that
+   collects the clip — or brings the credits back. */
+
+/** Where the jobs still out are written down. Per device, like `makes`. */
+const PENDING_KEY = 'futurebox.video.pending.v1';
+
+/** A job old enough that it is not coming, and asking again is only noise. */
+const PENDING_OLDEST = 7 * 24 * 60 * 60_000;
+
+export interface PendingVideo {
+  readonly id: string;
+  /** Which room started it, so the right room collects it. */
+  readonly surface: string;
+  readonly title: string;
+  readonly prompt: string;
+  readonly aspect: EngineAspect;
+  readonly seconds: number;
+  readonly grade: 'standard' | 'better' | 'premium';
+  readonly spoken: boolean;
+  readonly startedAt: number;
+  /**
+   * The account that started it. The list is per device, and on a shared
+   * phone a second person asking about the first one's job gets a 404 — which
+   * used to wipe it, so it was never collected or refunded (found in review,
+   * 15 October 2026). Absent on jobs written before this was added.
+   */
+  readonly owner?: string;
+}
+
+function readPending(): PendingVideo[] {
+  try {
+    const raw = window.localStorage.getItem(PENDING_KEY);
+    const list = raw ? (JSON.parse(raw) as PendingVideo[]) : [];
+    return Array.isArray(list) ? list.filter((one) => one && typeof one.id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePending(list: readonly PendingVideo[]): void {
+  try {
+    window.localStorage.setItem(PENDING_KEY, JSON.stringify(list));
+  } catch {
+    // Storage off or full. The wait in this tab still works; only coming
+    // back for it later does not, which is how it was before this existed.
+  }
+}
+
+function rememberPending(job: PendingVideo): void {
+  writePending([job, ...readPending().filter((one) => one.id !== job.id)]);
+}
+
+function forgetPending(id: string): void {
+  writePending(readPending().filter((one) => one.id !== id));
+}
+
+/**
+ * Ids being asked about in this tab right now.
+ *
+ * A room that mounts again while the press that started a job is still
+ * waiting must not start a second wait on the same id — two waits collect
+ * the clip twice and file it twice.
+ */
+const asking = new Set<string>();
+
+/** What `GET /api/video?id=` answers. */
+type JobAnswer = { state?: string; url?: string | null; message?: string };
+
+/** The quickest gap between asks: the provider's own guidance for video. */
+const ASK_EVERY = 10_000;
+/** The slowest, once a run of asks has failed in a row. */
+const ASK_SLOWEST = 60_000;
+
+/**
+ * Wait for one job, and come back with the clip or a sentence.
+ *
+ * Every failure to ASK — no network, a 5xx, a sign-in that has lapsed and
+ * is being renewed — doubles the gap and asks again, inside the same
+ * eight-minute ceiling every other room uses (`lib/jobwait.ts`). Only the
+ * server saying failed, or saying it has never heard of the id, ends the
+ * wait early. `askNow` skips the first gap, for a job that was started
+ * long enough ago that it may well be waiting already.
+ */
+async function collectVideo(job: PendingVideo, askNow: boolean): Promise<EngineResult> {
+  asking.add(job.id);
+  try {
+    const since = Date.now();
+    let wait = ASK_EVERY;
+    let first = true;
+    while (stillWorthWaiting(since, Date.now())) {
+      if (!(first && askNow)) await new Promise((wake) => setTimeout(wake, wait));
+      first = false;
+
+      let progress: JobAnswer | null = null;
+      let gone = false;
+      try {
+        const token = await accessToken();
+        const asked = await fetch(`/api/video?id=${encodeURIComponent(job.id)}`, {
+          headers: token ? { authorization: `Bearer ${token}` } : undefined,
+        });
+        if (asked.status === 404) gone = true;
+        else if (asked.ok) progress = (await asked.json().catch(() => null)) as JobAnswer | null;
+      } catch {
+        // Not reached. Said nothing about the job, so it is asked about again.
+      }
+
+      if (gone) {
+        forgetPending(job.id);
+        throw new Error('That video could not be found on your account any more.');
+      }
+      if (!progress) {
+        wait = Math.min(wait * 2, ASK_SLOWEST);
+        continue;
+      }
+      wait = ASK_EVERY;
 
       if (progress.state === 'failed') {
+        forgetPending(job.id);
+        // The route has already given the credits back by the time it says
+        // failed — it refunds on the same ask that marks the row.
         throw new Error(progress.message ?? 'The video engine could not make that one.');
       }
       if (progress.state === 'done' && progress.url) {
-        const file = await fetch(progress.url);
-        if (!file.ok) throw new Error('The video was made but could not be downloaded.');
-        return { blob: await file.blob(), model: 'Kling AI' };
+        const file = await fetch(progress.url).catch(() => null);
+        if (!file?.ok) {
+          // Made and kept on our side; only this copy did not arrive. The
+          // id stays written down, so the next visit asks for a fresh link.
+          throw new Error(
+            'The video was made but could not be downloaded just now. It is kept, and it comes in the next time you open this room.',
+          );
+        }
+        const blob = await file.blob();
+        forgetPending(job.id);
+        return { blob, model: 'Video engine' };
       }
     }
 
-    // The job is not lost — it is in `videos` with the credits still spent on
-    // it, and asking again later will find it. Said plainly rather than
-    // reported as a failure, which would be untrue and would suggest a refund
-    // that is not coming.
+    // The job is not lost — the id is still written down on this device, and
+    // the room that started it asks again whenever it is opened. Said plainly
+    // rather than reported as a failure, which would be untrue and would
+    // suggest a refund that is not (yet) coming.
     throw new Error(
-      'The engine is still working on that one after eight minutes. It has not been lost — it will be in your videos when it lands.',
+      'The engine is still working on that one after eight minutes. It has not been lost — it comes in the next time you open this room, or the credits come back if it failed.',
     );
-  },
-};
+  } finally {
+    asking.delete(job.id);
+  }
+}
+
+/**
+ * Ask about every job a room left behind, and hand each one back as it lands.
+ *
+ * Called when a room mounts. A job this tab is already waiting on is left to
+ * the wait that started it. `landed` is called whether or not the room is
+ * still on screen — it is where the clip gets filed, and filing must not
+ * depend on her still looking.
+ */
+export function resumeVideos(
+  surface: string | readonly string[],
+  landed: (job: PendingVideo, result: EngineResult) => void,
+  failed: (job: PendingVideo, message: string) => void,
+): void {
+  if (typeof window === 'undefined') return;
+  const surfaces = typeof surface === 'string' ? [surface] : surface;
+  void (async () => {
+    /* Only this account's jobs: another person's on the same phone are left
+       for them, not asked about and wiped by the 404 their owner check gives. */
+    const me = (await currentAccount().catch(() => null))?.id;
+    const now = Date.now();
+    const all = readPending();
+    const fresh = all.filter((one) => now - one.startedAt < PENDING_OLDEST);
+    if (fresh.length !== all.length) writePending(fresh);
+    for (const job of fresh) {
+      if (!surfaces.includes(job.surface) || asking.has(job.id)) continue;
+      if (job.owner && job.owner !== me) continue;
+      void collectVideo(job, true).then(
+        (result) => landed(job, result),
+        (problem: unknown) => failed(job, problem instanceof Error ? problem.message : String(problem)),
+      );
+    }
+  })();
+}

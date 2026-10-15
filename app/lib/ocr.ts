@@ -142,9 +142,14 @@ export async function readWords(
   onStep?: (part: number) => void,
 ): Promise<Read> {
   if (!canRead()) return { ok: false, why: 'unsupported' };
+  /* Held outside the `try` so a failed read lets it go as well: a worker
+     left running after `recognize` throws keeps its language data and its
+     WebAssembly heap for as long as the tab lives, and the next press makes
+     another one beside it. */
+  let worker: { terminate: () => Promise<unknown> } | null = null;
   try {
     const { createWorker } = await import('tesseract.js');
-    const worker = await createWorker(lang, 1, {
+    const made = await createWorker(lang, 1, {
       workerPath: `${HERE}/worker.min.js`,
       corePath: `${HERE}/tesseract-core-simd-lstm.js`,
       langPath: HERE,
@@ -165,8 +170,10 @@ export async function readWords(
        version, and without it `data.blocks` comes back null and every box
        below is silently absent — which reads, on the screen, as a
        photograph with no writing in it. */
-    const { data } = await worker.recognize(from, {}, { text: true, blocks: true });
-    await worker.terminate();
+    worker = made;
+    const { data } = await made.recognize(from, {}, { text: true, blocks: true });
+    worker = null;
+    await made.terminate();
     const lines: Found[] = [];
     for (const block of data.blocks ?? []) {
       for (const para of block.paragraphs ?? []) {
@@ -192,6 +199,7 @@ export async function readWords(
       lines,
     };
   } catch {
+    if (worker) await worker.terminate().catch(() => undefined);
     return { ok: false, why: 'failed' };
   }
 }

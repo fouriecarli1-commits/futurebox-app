@@ -89,10 +89,11 @@ const FREE: { readonly says: string; readonly why: string }[] = [
   { says: 'was.some((lane) => lane.backing)', why: 'seeding the song as the first lane on mount, which makes the session rather than changing one' },
   { says: 'setLanes((was) => [', why: 'a lane ADDED — recorded, uploaded, generated or brought in. Nothing is lost, and the remove button beside it is the way back' },
   { says: 'const change = (id: string, how: Partial<Lane>)', why: 'a name, a level, a pan, a mute, a solo, a start time, the tone stack, the rack or the amp: every one of them a number or a switch the same control puts back, which is the room\'s whole doctrine. Putting each nudge of a fader on the stack would fill the history with twenty of them and push the fade off the end' },
+  /* Locking lanes, moving a lane up or down, and the copilot's moves were
+     here until 15 October 2026. None of them is put back by the control that
+     made it — a merged lock, a group moved past a lane, eight faders at once
+     — so they remember now, and this list no longer excuses them. */
   { says: 'const slide = (moves:', why: 'a drag, which fires once per frame. Twenty entries for one gesture, and the edge goes back by dragging it' },
-  { says: 'const interlock = (id: string, other: string)', why: 'locking two lanes together is one string on a lane, taken off by the button that put it on' },
-  { says: 'const shuffleLane = (id: string, way: -1 | 1)', why: 'moving a lane up or down changes no sound, and the other arrow moves it back' },
-  { says: 'moves.find((one) => one.laneId === lane.id)', why: 'the mixer applying its faders: levels and pans, the same free family as change()' },
 ];
 
 

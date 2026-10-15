@@ -105,6 +105,55 @@ function clock(seconds: number): string {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
 
+/**
+ * A fingerprint of one recording, the same for the same sound.
+ *
+ * For the bounce's charge reference (see `signature`): two lanes with the
+ * same id can hold different sound, and only the samples know. Taken from
+ * the sound itself and not from the buffer object, because reopening the
+ * booth decodes every saved lane into a NEW buffer — a tag counted per object
+ * gave the same unchanged mix a new reference after a reload, and the second
+ * "Save to my phone" was charged again (found in review, 15 October 2026).
+ * Every 997th sample of every channel, plus the length, rate and channel
+ * count: cheap on a three-minute take, and a changed sound changes it.
+ * Cached weakly, so a recording thrown away is not kept alive by it.
+ */
+const SOUNDS = new WeakMap<AudioBuffer, string>();
+function soundTag(buffer: AudioBuffer): string {
+  const known = SOUNDS.get(buffer);
+  if (known !== undefined) return known;
+  let hash = 2166136261;
+  const mix = (n: number): void => {
+    hash ^= n;
+    hash = Math.imul(hash, 16777619) >>> 0;
+  };
+  mix(buffer.length);
+  mix(buffer.sampleRate);
+  mix(buffer.numberOfChannels);
+  for (let c = 0; c < buffer.numberOfChannels; c += 1) {
+    const data = buffer.getChannelData(c);
+    for (let i = 0; i < data.length; i += 997) mix(Math.round(data[i] * 32767) & 0xffff);
+  }
+  const tag = hash.toString(36);
+  SOUNDS.set(buffer, tag);
+  return tag;
+}
+
+/**
+ * How long the piece of a lane that a paid action sends actually is.
+ *
+ * `pieceOf` sends the cut window once — not the whole recording, and not the
+ * repeats — and that is what the route bills. The prices on the buttons read
+ * `lane.audio.duration`, the whole take, so a lane trimmed to its chorus said
+ * three minutes' worth of credits and was charged for thirty seconds. Found
+ * on 15 October 2026. One function, so the label and the bill are the same
+ * arithmetic.
+ */
+function pieceSeconds(lane: Lane): number {
+  const window = windowOf(lane);
+  return Math.max(0, window.to - window.from);
+}
+
 /** The three qualities a stem or a mix can be written in. See `Depth` in lib/wav.ts. */
 const DEPTHS: readonly { readonly id: Depth; readonly label: readonly [string, string]; readonly note: readonly [string, string] }[] = [
   { id: 16, label: ['pro.depth16', '16-bit'], note: ['pro.depth16Note', 'CD quality. The smallest file, and it plays anywhere.'] },
@@ -114,21 +163,45 @@ const DEPTHS: readonly { readonly id: Depth; readonly label: readonly [string, s
 
 export default function ProBooth({
   title,
+  songId,
   backing,
   onKeep,
   onClose,
 }: {
   title: string;
+  /**
+   * The song's own id, which is what the saved session is filed under.
+   *
+   * Optional because the probe page has no library song to give; without
+   * it the title stands in, as it always did. See `lib/keepsession.ts` for
+   * the song whose takes were written over before this was passed.
+   */
+  songId?: string;
   /** The song, as the first lane. Everything else is placed against it. */
   backing: AudioBuffer | null;
-  onKeep: (mixed: Blob) => void | Promise<void>;
+  /**
+   * The finished mix, and the two things `keepMix` files beside it.
+   *
+   * This room says them itself rather than the room that opened it. It was
+   * `onKeep(mixed)`, and The Booth filled the other two from ITS state: a
+   * Booth whose AI double was turned up credited "AI voice, kept under
+   * yours" on a lanes mix that never had it, and filed The Booth's last take
+   * as this song's take — a recording that is not in the mix at all. Found
+   * on 15 October 2026 going through every function in the booth.
+   */
+  onKeep: (mixed: Blob, doubled: boolean, take: Blob) => void | Promise<void>;
   onClose: () => void;
 }): React.ReactElement {
   const { lang, t } = useLang();
+  /** Which song the saved session belongs to. See `lib/keepsession.ts`. */
+  const song = useMemo(() => ({ id: songId, title }), [songId, title]);
 
   /* The booth itself. It is a full-screen overlay above the room, and until
-     now it was not a layer at all — so Back closed the room underneath it. */
-  useBackLayer(true, onClose);
+     now it was not a layer at all — so Back closed the room underneath it.
+     It closes through `leave`, which ends a running take and writes it down
+     first; see there. The ref is because `leave` is made further down. */
+  const leaveRef = useRef<() => void>(onClose);
+  useBackLayer(true, () => leaveRef.current());
 
   const [lanes, setLanes] = useState<Lane[]>([]);
   /* A generated part has no words, so it goes to whichever engine the music
@@ -370,7 +443,30 @@ export default function ProBooth({
      exists, and a number that is quietly out of date is worse than no number. */
   const [master, setMaster] = useState<Master>(FLAT_MASTER);
   const [reading, setReading] = useState<Reading | null>(null);
-  const [stale, setStale] = useState(false);
+  const [staleSaid, setStale] = useState(false);
+  /**
+   * The lanes the reading was taken of.
+   *
+   * `setStale(true)` was called by hand at the places somebody remembered
+   * to, and five places that change the lanes did not: a take recorded, a
+   * file brought in, a lane thrown out, the copilot's moves, and "Start
+   * fresh". After any of those the old loudness trim went on being applied
+   * — to what she heard and to the file she exported — for a mix that no
+   * longer existed. Found on 15 October 2026 (Carli: *"Kyk mooi of elke
+   * funksie in … probooth … werk."*).
+   *
+   * So the reading remembers the lanes it was taken of, and any lane that
+   * is not one of those makes it stale, whoever changed it. Lane by lane
+   * rather than the array, so moving a lane up the stack — which changes no
+   * sound, the mix is a sum — does not throw the measurement away.
+   */
+  const [readOf, setReadOf] = useState<readonly Lane[]>([]);
+  const moved = useMemo(
+    () => reading !== null
+      && (readOf.length !== lanes.length || lanes.some((one) => !readOf.includes(one))),
+    [lanes, readOf, reading],
+  );
+  const stale = staleSaid || moved;
   const trim = reading && !stale ? reading.trim : 1;
 
   const ctxRef = useRef<AudioContext | null>(null);
@@ -450,7 +546,7 @@ export default function ProBooth({
   useEffect(() => {
     let gone = false;
     void (async () => {
-      const kept = await keptSession(title);
+      const kept = await keptSession(song);
       if (gone) return;
       if (!kept || !kept.lanes.length) {
         setRestoring(false);
@@ -485,6 +581,10 @@ export default function ProBooth({
           ...(lane.link === undefined ? {} : { link: lane.link }),
           ...(lane.pan === undefined ? {} : { pan: lane.pan }),
           ...(lane.tone ? { tone: lane.tone } : {}),
+          /* Written down since 15 October 2026 — see `KeptLane`. */
+          ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
+          ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
+          ...(lane.notes?.length ? { notes: lane.notes } : {}),
           ...(amped && lane.ampedName ? { amped: { name: lane.ampedName, audio: amped } } : {}),
         });
       }
@@ -506,7 +606,7 @@ export default function ProBooth({
     return () => {
       gone = true;
     };
-    /* Once, on the room opening. `context` is stable and `title` identifies
+    /* Once, on the room opening. `context` is stable and `song` identifies
        the session; re-running this on anything else would restore over work. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -518,11 +618,21 @@ export default function ProBooth({
    * re-encodes every lane to WAV. Two seconds after the last change is soon
    * enough to survive a back gesture and slow enough not to be in the way.
    */
-  useEffect(() => {
-    if (restoring) return undefined;
-    if (!lanes.length) return undefined;
-    const timer = window.setTimeout(() => {
-      void keepSession(title, meter, master, lanes).then((done) => {
+  /* Whether a change is waiting for the two seconds to pass. `leave` reads
+     it: the timer below is cleared when the room unmounts, so a change made
+     in the last two seconds before Back was a change that was never written
+     down. */
+  const unsaved = useRef(false);
+  /* Counts changes, so a save that finishes only clears `unsaved` when no
+     change landed while it was writing — re-encoding every lane takes a
+     second on a phone, and a change in that second was otherwise marked as
+     saved and lost on Back (found in review, 15 October 2026). */
+  const changes = useRef(0);
+  const writeDown = useCallback(
+    (now: readonly Lane[]): Promise<void> => {
+      const at = changes.current;
+      return keepSession(song, meter, master, now).then((done) => {
+        if (changes.current === at) unsaved.current = false;
         if (done.ok) {
           setSavedAt(Date.now());
           setSaveFailed(null);
@@ -530,9 +640,19 @@ export default function ProBooth({
           setSaveFailed(done.why);
         }
       });
+    },
+    [master, meter, song],
+  );
+  useEffect(() => {
+    if (restoring) return undefined;
+    if (!lanes.length) return undefined;
+    unsaved.current = true;
+    changes.current += 1;
+    const timer = window.setTimeout(() => {
+      void writeDown(lanes);
     }, 2000);
     return () => window.clearTimeout(timer);
-  }, [lanes, master, meter, restoring, title]);
+  }, [lanes, restoring, writeDown]);
 
   const context = useCallback((): AudioContext | null => {
     const Ctx =
@@ -635,6 +755,13 @@ export default function ProBooth({
    */
   const seek = useCallback(
     (seconds: number) => {
+      /* Not while a take is running. The song is what she is singing
+         against, and moving it under her moves where the take is filed:
+         `stopRecording` places the take from where recording STARTED, so
+         every second the playhead was dragged is a second the take lands
+         away from the music it was sung to. The timeline, the dock's skips
+         and the arrow keys all come through here. */
+      if (recording) return;
       const where = Math.max(0, Math.min(total, seconds));
       setAt(where);
       if (playing) {
@@ -643,7 +770,7 @@ export default function ProBooth({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [total, playing, hush, play],
+    [total, playing, recording, hush, play],
   );
 
   // The clock, while anything is running.
@@ -679,6 +806,21 @@ export default function ProBooth({
   // ── recording into a lane of its own ──────────────────────────────────────
   const record = useCallback(async () => {
     setProblem(null);
+    /* ── A browser that cannot record, said as a sentence ─────────────
+
+       `new MediaRecorder` on a browser without one (an older Safari, some
+       in-app browsers that wrap a web view) threw a ReferenceError out of
+       this handler, so the button did nothing at all and the microphone
+       light came on for nothing. Asked first, before the microphone is
+       opened. Found on 15 October 2026 going through every function in the
+       booth. */
+    if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setProblem(t(
+        'pro.noRecorder',
+        'This browser cannot record. Open the app in Chrome, Safari or Firefox to record a lane — everything else in this room still works here.',
+      ));
+      return;
+    }
     try {
       if (!streamRef.current) {
         streamRef.current = await navigator.mediaDevices.getUserMedia({
@@ -692,7 +834,16 @@ export default function ProBooth({
       return;
     }
     chunksRef.current = [];
-    const recorder = new MediaRecorder(streamRef.current);
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(streamRef.current);
+    } catch {
+      setProblem(t(
+        'pro.noRecorder',
+        'This browser cannot record. Open the app in Chrome, Safari or Firefox to record a lane — everything else in this room still works here.',
+      ));
+      return;
+    }
     recorder.ondataavailable = (event) => {
       if (event.data.size) chunksRef.current.push(event.data);
     };
@@ -713,11 +864,13 @@ export default function ProBooth({
     setRecording(true);
   }, [at, countBars, meter, play, t]);
 
-  const stopRecording = useCallback(async () => {
+  /* Returns the lane it made, so a way out of the room can write the take
+     down before the room is gone — see `leave`. */
+  const stopRecording = useCallback(async (): Promise<Lane | null> => {
     const recorder = recorderRef.current;
     setRecording(false);
     stopPlaying();
-    if (!recorder || recorder.state !== 'recording') return;
+    if (!recorder || recorder.state !== 'recording') return null;
 
     const gather = (): Blob => new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
     const finished = new Promise<Blob>((resolve) => {
@@ -738,31 +891,71 @@ export default function ProBooth({
       const piece = raw.size > 0 ? await decodeAt(raw, rate) : null;
       if (!piece) {
         setProblem(t('pro.unreadable', 'That recording could not be read back.'));
-        return;
+        return null;
       }
+      /* Named from the lanes as they are now, outside the setter, so the
+         lane handed back is the same object that lands in the session. */
+      const lane: Lane = {
+        id: `lane-${Date.now()}`,
+        name: `${t('pro.take', 'Take')} ${lanesNow.current.filter((one) => !one.backing).length + 1}`,
+        audio: piece,
+        /* Where it was sung, less the round trip the browser measured, less
+           the count-in that is sitting on the front of the file. Not
+           clamped to zero: a take counted in from the top of the session
+           genuinely begins before it, and clamping would push the whole
+           performance late by the length of the count. */
+        at: recordFromRef.current - leadRef.current - knownLatency(),
+        gain: 1,
+        muted: false,
+        soloed: false,
+      };
       setLanes((was) => [
         ...was,
-        {
-          id: `lane-${Date.now()}`,
-          name: `${t('pro.take', 'Take')} ${was.filter((lane) => !lane.backing).length + 1}`,
-          audio: piece,
-          /* Where it was sung, less the round trip the browser measured, less
-             the count-in that is sitting on the front of the file. Not
-             clamped to zero: a take counted in from the top of the session
-             genuinely begins before it, and clamping would push the whole
-             performance late by the length of the count. */
-          at: recordFromRef.current - leadRef.current - knownLatency(),
-          gain: 1,
-          muted: false,
-          soloed: false,
-        },
+        lane,
       ]);
+      return lane;
     } catch {
       setProblem(t('pro.unreadable', 'That recording could not be read back.'));
+      return null;
     } finally {
       setBusy(false);
     }
   }, [rate, stopPlaying, t]);
+
+  /**
+   * Out of the room — and never with a take still running.
+   *
+   * Found on 15 October 2026, when Carli asked for every function in the
+   * booth to be looked at (*"Kyk mooi of elke funksie in … probooth …
+   * werk."*). The header's Back and the phone's back gesture both closed the
+   * room while the recorder ran. The room unmounted, the recorder with it,
+   * and the take she was in the middle of singing was nowhere: not a lane,
+   * not on the device. The "Sing with the words" door already hid itself
+   * mid-take for exactly this reason; these two did not.
+   *
+   * So leaving ends the take first, as if Stop had been pressed, and writes
+   * the session down there and then rather than in two seconds — which is
+   * after the room is gone. The same for any change still waiting on that
+   * timer: Back inside two seconds of moving a fader used to lose the move.
+   */
+  const leaving = useRef(false);
+  const leave = useCallback(async (): Promise<void> => {
+    if (leaving.current) return;
+    leaving.current = true;
+    try {
+      let now: readonly Lane[] = lanesNow.current;
+      if (recorderRef.current?.state === 'recording') {
+        const lane = await stopRecording();
+        if (lane) now = [...now.filter((one) => one.id !== lane.id), lane];
+        unsaved.current = true;
+      }
+      if (unsaved.current && !restoring && now.length) await writeDown(now);
+    } finally {
+      leaving.current = false;
+      onClose();
+    }
+  }, [onClose, restoring, stopRecording, writeDown]);
+  leaveRef.current = () => { void leave(); };
 
   // ── bringing audio in from outside ────────────────────────────────────────
   /* What to generate, and how much of it. `docs/MUSIEKDENKE.md`'s rule holds
@@ -801,7 +994,15 @@ export default function ProBooth({
         ),
       });
       if (!response.ok) {
-        setProblem(t('part.failed', 'That part could not be generated. Nothing was charged.'));
+        /* The route's own sentence, like every other paid call in this room.
+           `/api/music` says whether it is a sign-in, an empty balance, a
+           plan or words it would not set — four answers with four different
+           things to do — and this printed one sentence for all of them.
+           Found on 15 October 2026 going through every function in the
+           booth. The status is added only when there are no words. */
+        const said = (await response.json().catch(() => ({}))) as { message?: string };
+        setProblem(said.message
+          ?? `${t('part.failed', 'That part could not be generated. Nothing was charged.')} (${response.status})`);
         return;
       }
       const audio = await readInto(await response.blob(), rate);
@@ -1094,6 +1295,11 @@ export default function ProBooth({
    */
   const interlock = (id: string, other: string): void => {
     if (id === other) return;
+    /* On the undo stack since 15 October 2026. Joining two locks merges both
+       groups, and letting one lane out can dissolve a group of two — neither
+       is put back by pressing the same button again, which is what the old
+       reason for leaving this off the stack assumed. */
+    remember(t('undo.lock', 'locking the lanes'));
     setLanes((was) => {
       const mine = was.find((one) => one.id === id);
       const yours = was.find((one) => one.id === other);
@@ -1163,6 +1369,13 @@ export default function ProBooth({
    * session to disk for nothing.
    */
   const shuffleLane = (id: string, way: -1 | 1): void => {
+    /* Undoable like everything else that rearranges the session: a locked
+       group moved past another lane is not always put back by the other
+       arrow, because the group moves as one and the lane it passed does
+       not. Remembered only when there is somewhere to go, so a press at the
+       top of the stack does not leave an undo step that does nothing. */
+    if (!canMove(lanesNow.current, id, way === -1 ? 'up' : 'down')) return;
+    remember(t('undo.order', 'moving the lane'));
     setLanes((was) => {
       const next = move(was, id, way === -1 ? 'up' : 'down');
       return next === was ? was : [...next];
@@ -1174,6 +1387,7 @@ export default function ProBooth({
     try {
       const got = await readSession(lanes, rate, master);
       setReading(got);
+      setReadOf(lanes);
       setStale(false);
     } finally {
       setBusy(false);
@@ -1351,7 +1565,12 @@ export default function ProBooth({
       try {
         const ctx = context();
         if (!ctx) return;
-        const got = await readSong(encodeWav(monoOf(lane.audio, ctx)), lane.audio.duration);
+        /* The piece that plays, like every other paid lane action. This sent
+           the whole recording — billed for what was cut off, and read through
+           without its amp — while the price on the button was about to say
+           the cut length. Found on 15 October 2026. */
+        const piece = pieceOf(lane, ctx);
+        const got = await readSong(encodeWav(monoOf(piece, ctx)), piece.duration);
         if (!got.ok) {
           setProblem(got.message);
           return;
@@ -1361,7 +1580,9 @@ export default function ProBooth({
           [lane.id]: {
             tempo: tempoIn(got.data),
             key: keyIn(got.data),
-            spans: spansIn(got.data),
+            /* On the session's clock, which is what the timeline draws them
+               against: the piece's first second plays at `lane.at`. */
+            spans: spansIn(got.data).map((one) => ({ ...one, at: one.at + lane.at })),
             /* The names only, and a word for the shape of each — never the
                values. A link from a supplier can carry a signature on it. */
             saw: Object.entries(got.data as Record<string, unknown>).map(([name, value]) =>
@@ -1507,6 +1728,18 @@ export default function ProBooth({
            lane they came from. */
         const piece = pieceOf(lane, ctx);
         const viaKits = await separateParts(encodeWav(monoOf(piece, ctx)), piece.duration);
+        /* ── Paid once ──────────────────────────────────────────────────
+
+           Kits answering is Kits charging. When what came back would not
+           decode, this used to fall through to Music.ai and charge a second
+           time for the same lane — two bills, and still possibly nothing.
+           The second supplier is for when the first one did NOT charge: it
+           refused, it is not set up, or it failed and refunded. Found on 15
+           October 2026 going through every function in the booth. */
+        if ('message' in viaKits && viaKits.charged) {
+          setProblem(viaKits.message);
+          return;
+        }
         if (!('message' in viaKits)) {
           const kitsLanes: Lane[] = [];
           for (const part of viaKits.parts) {
@@ -1534,6 +1767,10 @@ export default function ProBooth({
             ]);
             return;
           }
+          /* Paid for, and nothing in it would play. Said, and stopped —
+             see "Paid once" above. */
+          setProblem(t('pro.partsUnreadable', 'The parts came back in a form the browser could not read.'));
+          return;
         }
         /* Out of allowance is the member's own limit and not a reason to try
            the other supplier — the second one would refuse in the same words
@@ -1543,7 +1780,9 @@ export default function ProBooth({
           return;
         }
 
-        const got = await readSong(encodeWav(monoOf(lane.audio, ctx)), lane.audio.duration, 'stems');
+        /* The same piece Kits was sent, for the same reason: billed for what
+           plays, and parts that line up with the lane they came from. */
+        const got = await readSong(encodeWav(monoOf(piece, ctx)), piece.duration, 'stems');
         if (!got.ok) {
           setProblem(got.message);
           return;
@@ -1636,10 +1875,11 @@ export default function ProBooth({
      real length — and the render is the slow part. The longest lane is what
      `mixSession` renders to, so it is the same number. */
   const bounceCost = useMemo(() => {
-    const longest = lanes.reduce(
-      (far, one) => Math.max(far, (one.at ?? 0) + ((one.to ?? one.audio.duration) - (one.from ?? 0))),
-      0,
-    );
+    /* `span` of what is heard, which is exactly what `mixSession` renders
+       to. The sum this replaced ignored repeats, so a part looped past the
+       end of the song made the mix — and the bill — longer than the price
+       on the button said. */
+    const longest = span(audible(lanes));
     return longest > 0 ? perMinute(longest, CREDITS.mixOut) : 0;
   }, [lanes]);
 
@@ -1648,9 +1888,25 @@ export default function ProBooth({
        over fields the render ignores would charge twice for one mix because
        a name was edited; one that misses a field the render DOES read would
        charge once for two different mixes, which is the worse direction. */
+    /* ── Every field, and the recording itself ──────────────────────
+
+       This listed seven fields and `mixSession` reads fifteen. The pan, the
+       rack, the tone, the cleaners, the amp, the repeats and the two fades
+       were all in the file and none of them in the reference, so a mix with
+       a reverb added, or panned, or faded out, carried the same reference as
+       the one already paid for and went out uncharged. Found on 15 October
+       2026 going through every function in the booth.
+
+       And the audio by identity, not by its lane's id: "Take the room off"
+       and a baked fade put new samples on the SAME lane id, and a different
+       sound under the same name is a different mix. */
     const parts = lanes.map((one) => [
       one.id, one.gain, one.at, one.muted ? 1 : 0, one.soloed ? 1 : 0,
       one.from ?? '', one.to ?? '',
+      one.pan ?? 0, one.repeat ?? 1, one.fadeIn ?? 0, one.fadeOut ?? 0,
+      JSON.stringify(one.fx ?? null), JSON.stringify(one.tone ?? null), JSON.stringify(one.clean ?? null),
+      one.amped ? `${one.amped.name}#${soundTag(one.amped.audio)}` : '',
+      soundTag(one.audio),
     ].join(':'));
     const shape = [
       layout, rate, Math.round(length * 100),
@@ -1720,7 +1976,13 @@ export default function ProBooth({
         return false;
       }
       if (!(await payFor(mixed.duration))) return false;
-      await onKeep(encodeWav(mixed, layout));
+      const file = encodeWav(mixed, layout);
+      /* Not doubled: "AI voice, kept under yours" is The Booth's guide
+         voice, which this room never plays. And the take filed beside the
+         mix is the mix — a session of lanes has no one take, and handing
+         The Booth's last recording in its place filed a recording that is
+         not in this song. See `onKeep` above. */
+      await onKeep(file, false, file);
       return true;
     } catch {
       setProblem(t('pro.mixFailed', 'The mix could not be made.'));
@@ -1728,7 +1990,7 @@ export default function ProBooth({
     } finally {
       setBusy(false);
     }
-  }, [lanes, layout, master, onKeep, rate, t, trim]);
+  }, [lanes, layout, master, onKeep, payFor, rate, t, trim]);
 
   const heard = useMemo(() => audible(lanes), [lanes]);
 
@@ -1870,6 +2132,7 @@ export default function ProBooth({
     else if (how === 'af') setT3kSaid(t('pro.t3kNone', 'No amp was chosen.'));
     else if (how === 'no') setT3kSaid(t('pro.t3kNo', 'TONE3000 could not be reached just now.'));
   }, [takeTone, t]);
+
   /* Returns whether the file was written, because the button says so now:
      save it → rendering it… → saved. The render is the slow part — a whole
      mix, offline — so a press with no answer is a press somebody makes
@@ -1912,7 +2175,12 @@ export default function ProBooth({
     } finally {
       setSaving(false);
     }
-  }, [lanes, layout, master, rate, t, title, trim]);
+    /* `depth` and `payFor` were missing, so "Save to my phone" went on
+       writing whichever bit depth was chosen when the callback was last
+       made — 16-bit, for anybody who picked 24 or 32 after opening the room
+       — and charged against a signature of the mix as it was then. Found on
+       15 October 2026. */
+  }, [depth, lanes, layout, master, payFor, rate, t, title, trim]);
 
   /* ── The desks ────────────────────────────────────────────────────
 
@@ -2020,14 +2288,18 @@ export default function ProBooth({
     }
     setProblem(null);
     setStale(true);
+    /* The fade in stays with the front half and the fade out with the back.
+       Both halves used to carry both, so a lane that faded in and out became
+       two that each did — a dip to silence at the cut that nobody drew.
+       `fadedApart` in lib/session.ts holds the same rule for a region. */
+    const left: Lane = { ...lane, id: `${lane.id}-a`, name: lane.name, fadeOut: undefined };
+    const right: Lane = { ...lane, id: `${lane.id}-b`, name: lane.name, fadeIn: undefined };
+
     /* Two lanes where there was one, and there is no button that joins them
        back up — so this is not one of the free ones however cheap it looks.
        Both halves still point at the same recording, which is why the cut
        costs nothing; it is the SESSION that cannot be put back by hand. */
     remember(t('undo.split', 'die sny in twee'));
-
-    const left: Lane = { ...lane, id: `${lane.id}-a`, name: lane.name };
-    const right: Lane = { ...lane, id: `${lane.id}-b`, name: lane.name };
     if (times > 1) {
       const seam = Math.max(1, Math.min(times - 1, Math.round(into / once)));
       setLanes((was) =>
@@ -2104,6 +2376,13 @@ export default function ProBooth({
   /* The phone's back button closes the tools rather than leaving the room —
      the same rule every other overlay in here follows. */
   useBackLayer(regionOpen, () => setRegionOpen(false));
+  /* The desks and the "Generate a part" sheet, which take the whole screen
+     and were not layers at all: Back from inside one left the booth. Found
+     on 15 October 2026 going through every function in the room. The desk
+     is registered when it opens, so it sits above the booth's own layer;
+     the part sheet opens from a desk and so sits above that. */
+  useBackLayer(deskOpen !== null, () => setDeskOpen(null));
+  useBackLayer(partOpen, () => setPartOpen(false));
 
   /**
    * The marked piece, carved out of the open lane, without committing it.
@@ -2216,6 +2495,12 @@ export default function ProBooth({
           from: undefined,
           to: undefined,
           repeat: 1,
+          /* And the corner fade going the same way is replaced by the one
+             just written into the samples — keeping both faded the piece
+             twice, down to nothing well before the mark said. The other
+             corner is left: a fade up at the front of a lane is not undone
+             by fading its end down. */
+          ...(way === 'in' ? { fadeIn: undefined } : { fadeOut: undefined }),
         },
         after,
       ]);
@@ -2319,8 +2604,8 @@ export default function ProBooth({
      stops, S cuts the open lane at the playhead, and Delete takes out the
      stretch marked on it. Never while somebody is typing in a box. Held in a
      ref so the listener is added once and always calls today's functions. */
-  const keyed = useRef({ stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region });
-  keyed.current = { stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region };
+  const keyed = useRef({ stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region, recording, stopRecording });
+  keyed.current = { stepBack, stepForward, cutHere, regionCut, play, stopPlaying, playing, at, region, recording, stopRecording };
   useEffect(() => {
     const press = (event: KeyboardEvent): void => {
       const target = event.target as HTMLElement | null;
@@ -2333,7 +2618,11 @@ export default function ProBooth({
       if (mod) return;
       if (key === ' ' && !(target && target.closest('button'))) {
         event.preventDefault();
-        if (now.playing) now.stopPlaying(); else now.play(now.at);
+        /* Mid-take, Space ends the take. It used to stop the song and leave
+           the recorder running against silence — the same two-buttons-one-
+           word trap the transport strip's "Stop recording" was renamed for. */
+        if (now.recording) void now.stopRecording();
+        else if (now.playing) now.stopPlaying(); else now.play(now.at);
         return;
       }
       if (key === 's') { now.cutHere(); return; }
@@ -3244,7 +3533,9 @@ export default function ProBooth({
               {' · '}
               {t('part.at', 'at')}{' '}
               <span className="tabular-nums">
-                {sane(meter).bpm} BPM · {sane(meter).beats}/4
+                {/* The real time signature. It said "/4" whatever the
+                    unit was, so a session in 6/8 read back as 6/4. */}
+                {sane(meter).bpm} BPM · {sane(meter).beats}/{sane(meter).unit}
               </span>
               <span className="block pt-1 text-xs text-zinc-500 tabular-nums">
                 {clock(secondsFor(partBars, sane(meter).bpm, sane(meter).beats))}
@@ -3602,7 +3893,7 @@ export default function ProBooth({
             )}
             <Cost
               credits={perMinute(
-                changing.audio.duration,
+                pieceSeconds(changing),
                 engine === 'singing' && canSing ? CREDITS.sing : CREDITS.voiceChange,
               )}
             />
@@ -3733,7 +4024,13 @@ export default function ProBooth({
    */
   const humIt = useCallback(async (piece?: { audio: AudioBuffer; at: number }): Promise<void> => {
     const lane = piece ? null : humLane;
-    const source = piece?.audio ?? lane?.audio ?? null;
+    /* What the lane PLAYS — its cut, its repeats, its amp — not the whole
+       recording under it. A hum trimmed to its good bar was played back
+       whole, starting at the lane's start, so the instrument came in with
+       the false start she had cut off and ran past the end of the clip.
+       Found on 15 October 2026. */
+    const ctxNow = lane ? context() : null;
+    const source = piece?.audio ?? (lane && ctxNow ? playsOf(lane, ctxNow) : lane?.audio) ?? null;
     const at = piece?.at ?? lane?.at ?? 0;
     const voices = humVoices.map((id) => voiceById(id)).filter((one): one is NonNullable<typeof one> => Boolean(one));
     if (!source || !voices.length || humming) return;
@@ -3841,7 +4138,7 @@ export default function ProBooth({
                   >
                     <Wand2 className="h-3.5 w-3.5 flex-shrink-0" />
                     <span className="line-clamp-2 text-center leading-tight">
-                      {t('pro.improveAi', 'Clean with AI')} · {perMinute(lane.audio.duration, CREDITS.clean)} {t('video.credits', 'credits')}
+                      {t('pro.improveAi', 'Clean with AI')} · {perMinute(pieceSeconds(lane), CREDITS.clean)} {t('video.credits', 'credits')}
                     </span>
                   </button>
                   <button
@@ -4113,6 +4410,12 @@ export default function ProBooth({
           : undefined
       }
       onApply={(moves: readonly Move[]) => {
+        /* Remembered first. Eight faders and a rack moved by one press are
+           not put back by dragging one of them, and the panel promises
+           "every one of these is a fader you can drag back" — Undo is what
+           makes that true for all of them at once. Found missing on 15
+           October 2026. */
+        remember(t('undo.copilot', 'the copilot’s changes'));
         /* One `setLanes`, not one per move: a loop of state updates would
            make the room re-render between faders and the session's
            two-second save would write a half-applied mix if anything threw
@@ -4464,6 +4767,11 @@ export default function ProBooth({
           <BoothFx
             fx={fxLane.fx ?? NO_FX}
             onChange={(next: Fx) => change(fxLane.id, { fx: next })}
+            onWhole={(what) => remember(
+              what === 'reset'
+                ? t('undo.rackReset', 'resetting the rack')
+                : t('undo.preset', 'the preset'),
+            )}
           />
         </Card>
       ) : (
@@ -4565,8 +4873,9 @@ export default function ProBooth({
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
-            onClick={onClose}
-            className="flex min-h-[40px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+            /* Through `leave`: a running take is stopped and kept first. */
+            onClick={() => void leave()}
+            className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{t('booth.back', 'Back')}</span>
@@ -4671,7 +4980,7 @@ export default function ProBooth({
             <button
               type="button"
               onClick={() => {
-                void forgetSession();
+                void forgetSession(song);
                 remember(t('undo.all', 'die skoonvee van al die bane'));
                 setLanes((was) => was.filter((lane) => lane.backing));
                 setCameBack(false);
@@ -4737,18 +5046,35 @@ export default function ProBooth({
                   <Layers className="h-3.5 w-3.5 text-emerald-400" />
                   <span>{t('pro.splitStemsAction', 'Split Stems (Vocals, Drums, Bass, Instruments)')}</span>
                 </button>
+                {/* ── Each one does what it says ─────────────────────────
+
+                    Found on 15 October 2026 going through every function in
+                    the booth: "Add Vocal / Harmony Track" opened the Voice
+                    desk, which sings an EXISTING lane in another voice and
+                    adds nothing, and "Add Instrument / Neural Part" opened
+                    Tempo & Tracks, which has no generator on it at all. Two
+                    buttons whose words and whose deeds disagreed.
+
+                    The vocal one records a new lane, against the click and
+                    count-in already set — the dock's middle button and this
+                    one both stop it. The instrument one opens the part sheet
+                    itself, which says its price before anything is spent. */}
                 <button
                   type="button"
-                  onClick={() => setDeskOpen('voice')}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all"
+                  data-quickrecord=""
+                  onClick={() => void (recording ? stopRecording() : record())}
+                  disabled={busy || making}
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-950/30 px-3 text-xs font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-900/40 transition-all disabled:opacity-50"
                 >
-                  <Mic2 className="h-3.5 w-3.5 text-sky-400" />
-                  <span>{t('pro.addVocalTrack', 'Add Vocal / Harmony Track')}</span>
+                  {recording ? <Square className="h-3.5 w-3.5 fill-current text-red-400" /> : <Mic2 className="h-3.5 w-3.5 text-sky-400" />}
+                  <span>{recording ? t('pro.stopRecording', 'Stop recording') : t('pro.addVocalTrack', 'Add Vocal / Harmony Track')}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDeskOpen('tracks')}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all"
+                  data-quickpart=""
+                  onClick={() => setPartOpen(true)}
+                  disabled={busy || recording || making}
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/30 px-3 text-xs font-semibold text-purple-300 hover:border-purple-400 hover:bg-purple-900/40 transition-all disabled:opacity-50"
                 >
                   <Music2 className="h-3.5 w-3.5 text-purple-400" />
                   <span>{t('pro.addInstrumentTrack', 'Add Instrument / Neural Part')}</span>
@@ -4875,7 +5201,10 @@ export default function ProBooth({
         open={deskOpen}
         onOpen={setDeskOpen}
         playing={playing}
-        onPlay={() => (playing ? stopPlaying() : play(at))}
+        recording={recording}
+        /* Mid-take the middle button ends the take; see `recording` on
+           BoothDock. The skips stand down there and `seek` refuses too. */
+        onPlay={() => (recording ? void stopRecording() : playing ? stopPlaying() : play(at))}
         onSkip={(by) => seek(at + by)}
         place={displayOf(at, sane(meter))}
       >
@@ -4940,6 +5269,17 @@ function LaneRow({
   const [open, setOpen] = useState(false);
   /** Whether the take-it-away menu is down. */
   const [saving, setSaving] = useState(false);
+  /**
+   * How far the menu sits from its button's left edge, in pixels.
+   *
+   * It was `absolute right-0 w-72`: 288 pixels growing leftwards from the
+   * button's right edge. The button wraps to wherever the row puts it, and
+   * on a 390-pixel phone it often lands near the left — so the menu ran off
+   * the left of the screen with its first words cut. Found on 15 October
+   * 2026. Worked out from where the button actually is when it is pressed,
+   * and kept 12 pixels inside both edges of the screen.
+   */
+  const [saveLeft, setSaveLeft] = useState(0);
   /**
    * Whether this lane's MIDI would be a fact or a reading.
    *
@@ -5289,7 +5629,7 @@ function LaneRow({
           type="button"
           onClick={onSplit}
           disabled={busy}
-          title={`${t('pro.split', 'Split the voice off')} — ${perMinute(lane.audio.duration, CREDITS.stems)} ${t('video.credits', 'credits')}`}
+          title={`${t('pro.split', 'Split the voice off')} — ${perMinute(pieceSeconds(lane), CREDITS.stems)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.split', 'Split the voice off')}
           className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
@@ -5299,7 +5639,7 @@ function LaneRow({
           type="button"
           onClick={onParts}
           disabled={busy || reading}
-          title={`${t('pro.parts', 'Split into named parts')} — ${perMinute(lane.audio.duration, CREDITS.parts)} ${t('video.credits', 'credits')}`}
+          title={`${t('pro.parts', 'Split into named parts')} — ${perMinute(pieceSeconds(lane), CREDITS.parts)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.parts', 'Split into named parts')}
           className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
@@ -5309,7 +5649,7 @@ function LaneRow({
           type="button"
           onClick={onRead}
           disabled={busy || reading}
-          title={`${t('pro.read', 'Read the chords, key and tempo')} — ${perMinute(lane.audio.duration, CREDITS.read)} ${t('video.credits', 'credits')}`}
+          title={`${t('pro.read', 'Read the chords, key and tempo')} — ${perMinute(pieceSeconds(lane), CREDITS.read)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.read', 'Read the chords, key and tempo')}
           className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
@@ -5343,7 +5683,16 @@ function LaneRow({
           <button
             type="button"
             data-lanesave
-            onClick={() => setSaving((was) => !was)}
+            onClick={(event) => {
+              const box = event.currentTarget.getBoundingClientRect();
+              const screen = window.innerWidth;
+              const wide = Math.min(288, screen - 24);
+              /* Right edges lined up where that fits, as it was; otherwise
+                 slid until both edges are on the screen. */
+              const wanted = box.width - wide;
+              setSaveLeft(Math.max(12 - box.left, Math.min(wanted, screen - 12 - wide - box.left)));
+              setSaving((was) => !was);
+            }}
             aria-expanded={saving}
             title={t('pro.save', 'Take this lane away')}
             className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-lg border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-emerald-500/50 hover:text-emerald-400"
@@ -5354,7 +5703,8 @@ function LaneRow({
           {saving && (
             <div
               data-lanesavemenu
-              className="absolute right-0 z-20 mt-1 w-72 space-y-1 rounded-xl border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
+              className="absolute z-20 mt-1 w-72 max-w-[calc(100vw-24px)] space-y-1 rounded-xl border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
+              style={{ left: saveLeft }}
             >
               <button
                 type="button"
@@ -5579,7 +5929,7 @@ function LaneRow({
           >
             {t('pro.deRoom', 'Take the room off')}
           </button>
-          <Cost rate={CREDITS.clean} seconds={lane.audio.duration} />
+          <Cost rate={CREDITS.clean} seconds={pieceSeconds(lane)} />
         </div>
 
         {/* Each control takes a whole line on a phone. Wrapping alone is not

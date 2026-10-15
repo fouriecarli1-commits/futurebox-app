@@ -32,20 +32,27 @@
  * of keeping the recording rather than a lossy copy of it, and a member who
  * has just sung three takes would rather have them.
  *
- * ── One session, and why ─────────────────────────────────────────────────
+ * ── One session a song, and only a few songs ─────────────────────────────
  *
- * The store holds the current session and no history. A list of past sessions
- * is a feature with a screen, a delete, and a quota conversation attached; what
- * she asked for is that the work is still there when she comes back. Keeping
- * one and saying so is honest. Keeping ten silently until the disk fills is
- * not.
+ * The store held ONE session, under one key, and that was the fault found on
+ * 15 October 2026 when Carli asked for every function in the booth to be
+ * looked at properly (*"Kyk mooi of elke funksie in … probooth … werk."*).
+ * Opening the booth on song B found nothing for B — right — and then, two
+ * seconds later, wrote B's lanes over the only slot there was. Song A's takes
+ * were gone, by a room that had promised on screen that leaving would not
+ * lose them.
  *
- * ── Whose session it is ──────────────────────────────────────────────────
+ * So each song has its own entry, keyed by the song's id where the room is
+ * given one and by its title where it is not (the probe page, and anything
+ * made before songs carried ids into the booth). The old single entry is
+ * still read once, for the song it belongs to, so a session saved before this
+ * change comes back rather than being stranded.
  *
- * Keyed by the song's title, because that is the only handle the room is given.
- * Opening the booth on a *different* song must never restore the last one over
- * it, so a mismatch is treated as no saved session at all rather than as
- * something to offer. When songs get ids, this is where it changes.
+ * A list of past sessions is still not a feature here — no screen, no delete,
+ * no quota conversation. What is kept is the work on the last `KEEP` songs,
+ * newest first, and the oldest goes when a newer one is written. Keeping a
+ * few and saying so is honest; keeping every song ever opened, silently,
+ * until the disk fills is not.
  *
  * ── Nothing here may break the room ──────────────────────────────────────
  *
@@ -55,6 +62,7 @@
  */
 
 import type { Master } from './session';
+import type { HumNote } from './humnotes';
 import type { Meter } from './tempo';
 import type { Clean, Tone } from './tone';
 import type { Fx } from './fx';
@@ -62,8 +70,22 @@ import { encodeWav } from './wav';
 
 const DB = 'futurebox.probooth';
 const STORE = 'sessions';
-const ONLY = 'current';
+/** Where the one session lived before each song had its own. Read, never written. */
+const LEGACY = 'current';
 const VERSION = 1;
+/** How many songs' sessions are kept on the device at once. */
+export const KEEP = 4;
+
+/** Which song a session belongs to: its id where there is one, else its title. */
+export interface SongKey {
+  readonly id?: string;
+  readonly title: string;
+}
+
+/** The store key for one song. Prefixed so an id and a title can never collide. */
+export function keyOf(song: SongKey): string {
+  return song.id ? `song:${song.id}` : `title:${song.title}`;
+}
 
 /** A lane as it is written down: everything but the audio, plus the audio. */
 export interface KeptLane {
@@ -97,6 +119,15 @@ export interface KeptLane {
   readonly link?: string;
   readonly pan?: number;
   readonly tone?: Tone;
+  /* The corner fades and the notes a hummed lane was built from. Both were
+     on the lane and neither was written down (found 15 October 2026), so a
+     lane faded in came back starting at full level, and a hummed bass came
+     back with "download MIDI" re-transcribing its own synthesis instead of
+     handing back the notes it was made from. Plain numbers, so they go
+     into IndexedDB as they are. */
+  readonly fadeIn?: number;
+  readonly fadeOut?: number;
+  readonly notes?: readonly HumNote[];
   /* The amp is kept as the rendered audio, the same way the lane keeps it.
      Re-running the capture would need the .nam file, which is on whichever
      machine loaded it — so the choice is keeping the bytes or silently
@@ -107,6 +138,8 @@ export interface KeptLane {
 
 export interface KeptSession {
   readonly title: string;
+  /** The song's id, where the room was given one. Absent on older entries. */
+  readonly songId?: string;
   readonly savedAt: number;
   readonly meter: Meter;
   readonly master: Master;
@@ -153,7 +186,7 @@ function open(): Promise<IDBDatabase | null> {
  * cannot forget to and store something that will not decode.
  */
 export async function keepSession(
-  title: string,
+  song: SongKey,
   meter: Meter,
   master: Master,
   lanes: readonly {
@@ -173,6 +206,9 @@ export async function keepSession(
     link?: string;
     pan?: number;
     tone?: Tone;
+    fadeIn?: number;
+    fadeOut?: number;
+    notes?: readonly HumNote[];
     amped?: { name: string; audio: AudioBuffer };
   }[],
 ): Promise<Kept> {
@@ -182,7 +218,8 @@ export async function keepSession(
   let session: KeptSession;
   try {
     session = {
-      title,
+      title: song.title,
+      ...(song.id ? { songId: song.id } : {}),
       savedAt: Date.now(),
       meter,
       master,
@@ -207,6 +244,9 @@ export async function keepSession(
         ...(lane.link === undefined ? {} : { link: lane.link }),
         ...(lane.pan === undefined ? {} : { pan: lane.pan }),
         ...(lane.tone ? { tone: lane.tone } : {}),
+        ...(lane.fadeIn ? { fadeIn: lane.fadeIn } : {}),
+        ...(lane.fadeOut ? { fadeOut: lane.fadeOut } : {}),
+        ...(lane.notes?.length ? { notes: lane.notes.map((one) => ({ ...one })) } : {}),
         ...(lane.amped
           ? { ampedName: lane.amped.name, ampedWav: encodeWav(lane.amped.audio) }
           : {}),
@@ -243,43 +283,86 @@ export async function keepSession(
       db.close();
       resolve({ ok: false, why: name === 'QuotaExceededError' ? 'full' : 'failed' });
     };
-    deal.objectStore(STORE).put(session, ONLY);
+    const store = deal.objectStore(STORE);
+    const mine = keyOf(song);
+    store.put(session, mine);
+    /* The oldest songs beyond `KEEP` go, in the same transaction, so a full
+       disk is never the way this store finds out it has too many. A cursor
+       hands back each record's Blobs as handles rather than bytes, so
+       walking it to read `savedAt` is cheap. The legacy entry counts like
+       any other: it is somebody's song too. */
+    const seen: { key: IDBValidKey; savedAt: number }[] = [];
+    const walk = store.openCursor();
+    walk.onsuccess = () => {
+      const here = walk.result;
+      if (here) {
+        const value = here.value as KeptSession | undefined;
+        /* The old single entry, once this song has been written under its
+           own key, is a second copy of the same work — dropped, so it can
+           never be read back over newer takes. */
+        if (here.key === LEGACY && legacyIsMine(value ?? null, song)) store.delete(LEGACY);
+        else if (here.key !== mine) {
+          seen.push({ key: here.key, savedAt: typeof value?.savedAt === 'number' ? value.savedAt : 0 });
+        }
+        here.continue();
+        return;
+      }
+      seen.sort((a, b) => b.savedAt - a.savedAt);
+      for (const old of seen.slice(KEEP - 1)) store.delete(old.key);
+    };
   });
 }
 
-/** What was written down, or null. Does not decode — see `soundOf`. */
-export async function keptSession(title: string): Promise<KeptSession | null> {
-  const db = await open();
-  if (!db) return null;
+/** One record by its key, or null. */
+function readOne(db: IDBDatabase, key: string): Promise<KeptSession | null> {
   return new Promise<KeptSession | null>((resolve) => {
     let deal: IDBTransaction;
     try {
       deal = db.transaction(STORE, 'readonly');
     } catch {
-      db.close();
       resolve(null);
       return;
     }
-    const asked = deal.objectStore(STORE).get(ONLY);
-    asked.onsuccess = () => {
-      const got = asked.result as KeptSession | undefined;
-      db.close();
-      /* A session for another song is not this room's to restore. Treated as
-         nothing rather than offered, because "carry on where you left off" on
-         somebody else's song is worse than starting clean. */
-      resolve(got && got.title === title ? got : null);
-    };
-    asked.onerror = () => {
-      db.close();
-      resolve(null);
-    };
+    const asked = deal.objectStore(STORE).get(key);
+    asked.onsuccess = () => resolve((asked.result as KeptSession | undefined) ?? null);
+    asked.onerror = () => resolve(null);
   });
 }
 
-/** Throw it away. Called once the session has been mixed down and kept. */
-export async function forgetSession(): Promise<void> {
+/**
+ * Whether the old single entry is this song's.
+ *
+ * By title, which is all it ever carried — and by id too when it happens to
+ * carry one, so two songs that share a title cannot inherit each other's.
+ */
+function legacyIsMine(got: KeptSession | null, song: SongKey): boolean {
+  if (!got || got.title !== song.title) return false;
+  return !(got.songId && song.id && got.songId !== song.id);
+}
+
+/** What was written down for this song, or null. Does not decode — see `soundOf`. */
+export async function keptSession(song: SongKey): Promise<KeptSession | null> {
+  const db = await open();
+  if (!db) return null;
+  try {
+    const got = await readOne(db, keyOf(song));
+    if (got) return got;
+    /* Saved before each song had its own entry. A session for another song
+       is not this room's to restore — treated as nothing rather than
+       offered, because "carry on where you left off" on somebody else's
+       song is worse than starting clean. */
+    const old = await readOne(db, LEGACY);
+    return legacyIsMine(old, song) ? old : null;
+  } finally {
+    db.close();
+  }
+}
+
+/** Throw this song's away. Called from "Start fresh". */
+export async function forgetSession(song: SongKey): Promise<void> {
   const db = await open();
   if (!db) return;
+  const legacyToo = legacyIsMine(await readOne(db, LEGACY), song);
   await new Promise<void>((resolve) => {
     let deal: IDBTransaction;
     try {
@@ -297,7 +380,11 @@ export async function forgetSession(): Promise<void> {
       db.close();
       resolve();
     };
-    deal.objectStore(STORE).delete(ONLY);
+    const store = deal.objectStore(STORE);
+    store.delete(keyOf(song));
+    /* And the old single entry when it is this song's, or "Start fresh"
+       would be undone by the next visit reading it back. */
+    if (legacyToo) store.delete(LEGACY);
   });
 }
 

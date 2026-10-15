@@ -33,6 +33,17 @@ export interface StudioTemplateItem {
   readonly sampleHeadline?: string;
   readonly sampleSubtext?: string;
   readonly isVideo?: boolean;
+  /**
+   * How the words are dressed when the template goes on, as ids from
+   * `postfaces.ts` and `postglow.ts`. The music templates (15 October 2026)
+   * carry no <text> in their picture at all — the words are the editable
+   * lines on top, in these faces — so nothing is written twice.
+   */
+  readonly headFace?: string;
+  readonly headGlow?: string;
+  readonly headInk?: string;
+  readonly subFace?: string;
+  readonly subInk?: string;
 }
 
 const encodeSvg = (svg: string): string =>
@@ -48,6 +59,9 @@ export interface TemplateCategoryMeta {
 }
 
 export const TEMPLATE_CATEGORIES: readonly TemplateCategoryMeta[] = [
+  /* First, because this is a music studio. Carli, 15 October 2026: "meer
+     templates". */
+  { id: 'music', nameKey: 'tplcat.music', nameEn: 'Music & Artists', nameAf: 'Musiek & Kunstenaars', iconType: 'music', colorBg: 'from-fuchsia-500/20 to-amber-500/30' },
   { id: 'neon', nameKey: 'tplcat.neon', nameEn: 'Neon & Cyber Glow', nameAf: 'Neon & Kuber-gloed', iconType: 'sparkles', colorBg: 'from-cyan-500/20 to-fuchsia-500/30' },
   { id: 'presentation', nameKey: 'tplcat.presentation', nameEn: 'Presentation', nameAf: 'Aanbieding', iconType: 'monitor', colorBg: 'from-amber-500/20 to-orange-500/30' },
   { id: 'poster', nameKey: 'tplcat.poster', nameEn: 'Poster', nameAf: 'Plakkaat', iconType: 'image', colorBg: 'from-purple-500/20 to-indigo-500/30' },
@@ -71,6 +85,393 @@ export const TEMPLATE_CATEGORIES: readonly TemplateCategoryMeta[] = [
 ];
 
 export const STARTER_TEMPLATES: readonly StudioTemplateItem[] = [
+  // ── Music & artists, 15 October 2026 ──
+  // Carli: "meer templates". The posts a music studio's members make most:
+  // a single, an album night, tour dates, a gig, a worship night, an
+  // amapiano party, a mixtape, a podcast, a lyric card, new-music Friday, a
+  // video thumbnail and a love song. Pictures only — the words go on as
+  // editable lines in the faces named, so nothing is written twice.
+  {
+    id: 'tpl_music_single',
+    nameKey: 'tpl.musicSingle',
+    nameEn: 'New Single Cover',
+    nameAf: 'Nuwe Enkelsnit-omslag',
+    subKey: 'tpl.musicSingleSub',
+    subEn: 'Out now on every app',
+    subAf: 'Nou uit op elke app',
+    category: 'music',
+    width: 1080,
+    height: 1080,
+    ratioLabel: '1:1',
+    sampleHeadline: 'NEW SINGLE',
+    sampleSubtext: 'OUT NOW',
+    headFace: 'fashion',
+    headGlow: 'none',
+    headInk: '#ffffff',
+    subFace: 'plain',
+    subInk: '#fda4af',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+  <defs><radialGradient id="g" cx="50%" cy="45%" r="70%"><stop offset="0%" stop-color="#be123c"/><stop offset="100%" stop-color="#1c0510"/></radialGradient></defs>
+  <rect width="1080" height="1080" fill="url(#g)"/>
+  <circle cx="540" cy="560" r="300" fill="#0a0a0a"/>
+  <circle cx="540" cy="560" r="260" fill="none" stroke="#262626" stroke-width="4"/>
+  <circle cx="540" cy="560" r="220" fill="none" stroke="#262626" stroke-width="4"/>
+  <circle cx="540" cy="560" r="180" fill="none" stroke="#262626" stroke-width="4"/>
+  <circle cx="540" cy="560" r="90" fill="#fb7185"/>
+  <circle cx="540" cy="560" r="12" fill="#0a0a0a"/>
+  <path d="M 300 380 A 300 300 0 0 1 560 260" stroke="#ffffff" stroke-opacity="0.18" stroke-width="18" fill="none"/>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_album',
+    nameKey: 'tpl.musicAlbum',
+    nameEn: 'Album Launch',
+    nameAf: 'Album-bekendstelling',
+    subKey: 'tpl.musicAlbumSub',
+    subEn: 'The full album, one night only',
+    subAf: 'Die hele album, net een aand',
+    category: 'music',
+    width: 1080,
+    height: 1350,
+    ratioLabel: '4:5',
+    sampleHeadline: 'THE ALBUM',
+    sampleSubtext: 'LAUNCH NIGHT · FRIDAY',
+    headFace: 'classic',
+    headGlow: 'gold',
+    headInk: '#fef3c7',
+    subFace: 'plain',
+    subInk: '#fde68a',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350">
+  <defs><linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a" stop-opacity="0.75"/><stop offset="100%" stop-color="#fde68a" stop-opacity="0"/></linearGradient></defs>
+  <rect width="1080" height="1350" fill="#0c0a09"/>
+  <polygon points="540,0 180,1350 900,1350" fill="url(#beam)"/>
+  <ellipse cx="540" cy="1180" rx="380" ry="60" fill="#fde68a" fill-opacity="0.25"/>
+  <rect x="510" y="760" width="60" height="420" rx="8" fill="#1c1917"/>
+  <circle cx="540" cy="740" r="46" fill="#1c1917"/>
+  <rect y="1250" width="1080" height="100" fill="#000000"/>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_tour',
+    nameKey: 'tpl.musicTour',
+    nameEn: 'Tour Dates',
+    nameAf: 'Toerdatums',
+    subKey: 'tpl.musicTourSub',
+    subEn: 'Cape Town · Durban · Pretoria',
+    subAf: 'Kaapstad · Durban · Pretoria',
+    category: 'music',
+    width: 1080,
+    height: 1920,
+    ratioLabel: '9:16',
+    sampleHeadline: 'ON TOUR',
+    sampleSubtext: 'CAPE TOWN · DURBAN · PRETORIA',
+    headFace: 'block',
+    headGlow: 'pink',
+    headInk: '#fdf2f8',
+    subFace: 'round',
+    subInk: '#fbcfe8',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e1b4b"/><stop offset="60%" stop-color="#9d174d"/><stop offset="100%" stop-color="#f97316"/></linearGradient></defs>
+  <rect width="1080" height="1920" fill="url(#sky)"/>
+  <circle cx="540" cy="1180" r="260" fill="#fdba74" fill-opacity="0.85"/>
+  <polygon points="0,1420 120,1300 180,1340 260,1220 340,1330 420,1260 520,1360 600,1240 700,1350 800,1270 900,1360 1000,1290 1080,1340 1080,1920 0,1920" fill="#0f0a1e"/>
+  <polygon points="420,1920 520,1430 560,1430 660,1920" fill="#1f1530"/>
+  <rect x="534" y="1480" width="12" height="70" fill="#fde68a"/><rect x="532" y="1620" width="16" height="90" fill="#fde68a"/><rect x="528" y="1790" width="24" height="110" fill="#fde68a"/>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_gig',
+    nameKey: 'tpl.musicGig',
+    nameEn: 'Live Tonight Gig Poster',
+    nameAf: 'Vanaand Lewend Plakkaat',
+    subKey: 'tpl.musicGigSub',
+    subEn: 'Doors open 8pm',
+    subAf: 'Deure oop 20:00',
+    category: 'music',
+    width: 1080,
+    height: 1350,
+    ratioLabel: '4:5',
+    sampleHeadline: 'LIVE TONIGHT',
+    sampleSubtext: 'DOORS OPEN 8PM',
+    headFace: 'block',
+    headGlow: 'synth',
+    headInk: '#ffffff',
+    subFace: 'round',
+    subInk: '#c4b5fd',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350">
+  <rect width="1080" height="1350" fill="#0b0618"/>
+  <polygon points="200,0 260,0 640,900 560,900" fill="#a855f7" fill-opacity="0.35"/>
+  <polygon points="880,0 820,0 440,900 520,900" fill="#ec4899" fill-opacity="0.35"/>
+  <polygon points="540,0 500,0 520,900 560,900" fill="#22d3ee" fill-opacity="0.3"/>
+  <circle cx="540" cy="880" r="140" fill="#a855f7" fill-opacity="0.25"/>
+  <g fill="#000000">
+    <circle cx="90" cy="1150" r="60"/><circle cx="230" cy="1130" r="64"/><circle cx="380" cy="1160" r="58"/><circle cx="530" cy="1135" r="66"/><circle cx="680" cy="1160" r="60"/><circle cx="830" cy="1130" r="64"/><circle cx="980" cy="1150" r="60"/>
+    <rect y="1170" width="1080" height="180"/>
+    <rect x="300" y="980" width="26" height="160" rx="12" transform="rotate(-20 313 1060)"/><rect x="760" y="990" width="26" height="150" rx="12" transform="rotate(18 773 1065)"/>
+  </g>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_gospel',
+    nameKey: 'tpl.musicGospel',
+    nameEn: 'Gospel Worship Night',
+    nameAf: 'Evangelie Lofaand',
+    subKey: 'tpl.musicGospelSub',
+    subEn: 'An evening of praise',
+    subAf: '\u2019n Aand van lof',
+    category: 'music',
+    width: 1080,
+    height: 1350,
+    ratioLabel: '4:5',
+    sampleHeadline: 'WORSHIP NIGHT',
+    sampleSubtext: 'SUNDAY · 6PM',
+    headFace: 'classic',
+    headGlow: 'gold',
+    headInk: '#fffbeb',
+    subFace: 'book',
+    subInk: '#fde68a',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350">
+  <defs><radialGradient id="glow" cx="50%" cy="0%" r="90%"><stop offset="0%" stop-color="#fef3c7"/><stop offset="45%" stop-color="#b45309"/><stop offset="100%" stop-color="#1c1003"/></radialGradient></defs>
+  <rect width="1080" height="1350" fill="url(#glow)"/>
+  <g fill="#fef3c7" fill-opacity="0.12">
+    <polygon points="540,0 380,1350 460,1350"/><polygon points="540,0 620,1350 700,1350"/><polygon points="540,0 160,1350 260,1350"/><polygon points="540,0 820,1350 920,1350"/>
+  </g>
+  <g fill="#1c1003"><rect x="0" y="1220" width="1080" height="130"/><circle cx="300" cy="1180" r="50"/><rect x="292" y="1080" width="16" height="70" transform="rotate(-25 300 1115)"/><circle cx="780" cy="1185" r="48"/><rect x="772" y="1085" width="16" height="70" transform="rotate(25 780 1120)"/></g>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_piano',
+    nameKey: 'tpl.musicPiano',
+    nameEn: 'Amapiano Party',
+    nameAf: 'Amapiano-partytjie',
+    subKey: 'tpl.musicPianoSub',
+    subEn: 'Saturday · log drums till late',
+    subAf: 'Saterdag · log drums tot laat',
+    category: 'music',
+    width: 1080,
+    height: 1080,
+    ratioLabel: '1:1',
+    sampleHeadline: 'PIANO NIGHTS',
+    sampleSubtext: 'SATURDAY · 9PM',
+    headFace: 'retro',
+    headGlow: 'sunset',
+    headInk: '#fdf4ff',
+    subFace: 'round',
+    subInk: '#fbcfe8',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4c1d95"/><stop offset="100%" stop-color="#be185d"/></linearGradient></defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <circle cx="540" cy="560" r="330" fill="none" stroke="#f9a8d4" stroke-opacity="0.35" stroke-width="22"/>
+  <circle cx="540" cy="560" r="250" fill="none" stroke="#c4b5fd" stroke-opacity="0.45" stroke-width="22"/>
+  <circle cx="540" cy="560" r="170" fill="none" stroke="#fdba74" stroke-opacity="0.6" stroke-width="22"/>
+  <g transform="translate(240 820)">
+    <rect width="600" height="150" rx="10" fill="#fdf4ff"/>
+    <g fill="#1e1b4b"><rect x="55" width="36" height="92"/><rect x="130" width="36" height="92"/><rect x="255" width="36" height="92"/><rect x="330" width="36" height="92"/><rect x="405" width="36" height="92"/><rect x="530" width="36" height="92"/></g>
+  </g>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_mixtape',
+    nameKey: 'tpl.musicMixtape',
+    nameEn: 'Hip-Hop Mixtape',
+    nameAf: 'Hip-hop Mixtape',
+    subKey: 'tpl.musicMixtapeSub',
+    subEn: 'Stream it everywhere',
+    subAf: 'Stroom dit oral',
+    category: 'music',
+    width: 1080,
+    height: 1080,
+    ratioLabel: '1:1',
+    sampleHeadline: 'THE MIXTAPE',
+    sampleSubtext: 'OUT NOW',
+    headFace: 'spray',
+    headGlow: 'fire',
+    headInk: '#fef08a',
+    subFace: 'type',
+    subInk: '#fdba74',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+  <rect width="1080" height="1080" fill="#171717"/>
+  <g fill="#f97316" fill-opacity="0.18"><circle cx="160" cy="180" r="140"/><circle cx="930" cy="900" r="180"/><circle cx="880" cy="160" r="70"/></g>
+  <g stroke="#262626" stroke-width="6"><line x1="0" y1="300" x2="1080" y2="300"/><line x1="0" y1="780" x2="1080" y2="780"/></g>
+  <g transform="translate(240 380)">
+    <rect width="600" height="380" rx="28" fill="#fde047"/>
+    <rect x="60" y="60" width="480" height="150" rx="12" fill="#171717"/>
+    <circle cx="190" cy="135" r="48" fill="#fde047"/><circle cx="410" cy="135" r="48" fill="#fde047"/>
+    <circle cx="190" cy="135" r="16" fill="#171717"/><circle cx="410" cy="135" r="16" fill="#171717"/>
+    <polygon points="110,380 160,280 440,280 490,380" fill="#ca8a04"/>
+  </g>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_podcast',
+    nameKey: 'tpl.musicPodcast',
+    nameEn: 'Podcast Episode Card',
+    nameAf: 'Podsending Episode-kaart',
+    subKey: 'tpl.musicPodcastSub',
+    subEn: 'New episode out now',
+    subAf: 'Nuwe episode nou uit',
+    category: 'music',
+    width: 1080,
+    height: 1080,
+    ratioLabel: '1:1',
+    sampleHeadline: 'NEW EPISODE',
+    sampleSubtext: 'LISTEN ON EVERY APP',
+    headFace: 'round',
+    headGlow: 'ice',
+    headInk: '#e0f2fe',
+    subFace: 'plain',
+    subInk: '#bae6fd',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#082f49"/><stop offset="100%" stop-color="#0c4a6e"/></linearGradient></defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <g transform="translate(540 520)">
+    <rect x="-80" y="-200" width="160" height="280" rx="80" fill="#e0f2fe"/>
+    <g stroke="#0c4a6e" stroke-width="8"><line x1="-60" y1="-120" x2="60" y2="-120"/><line x1="-60" y1="-80" x2="60" y2="-80"/><line x1="-60" y1="-40" x2="60" y2="-40"/></g>
+    <path d="M -130 0 A 130 130 0 0 0 130 0" fill="none" stroke="#7dd3fc" stroke-width="16"/>
+    <rect x="-8" y="130" width="16" height="90" fill="#7dd3fc"/><rect x="-80" y="210" width="160" height="16" rx="8" fill="#7dd3fc"/>
+  </g>
+  <g fill="#38bdf8" fill-opacity="0.55">
+    <rect x="80" y="500" width="20" height="60" rx="10"/><rect x="120" y="470" width="20" height="120" rx="10"/><rect x="160" y="440" width="20" height="180" rx="10"/><rect x="200" y="480" width="20" height="100" rx="10"/>
+    <rect x="860" y="480" width="20" height="100" rx="10"/><rect x="900" y="440" width="20" height="180" rx="10"/><rect x="940" y="470" width="20" height="120" rx="10"/><rect x="980" y="500" width="20" height="60" rx="10"/>
+  </g>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_lyric',
+    nameKey: 'tpl.musicLyric',
+    nameEn: 'Lyric Quote Card',
+    nameAf: 'Liriek-aanhalingkaart',
+    subKey: 'tpl.musicLyricSub',
+    subEn: 'A line from the song',
+    subAf: '\u2019n Reël uit die lied',
+    category: 'music',
+    width: 1080,
+    height: 1350,
+    ratioLabel: '4:5',
+    sampleHeadline: '“Sing it like you mean it”',
+    sampleSubtext: '— FROM THE NEW SINGLE',
+    headFace: 'script',
+    headGlow: 'none',
+    headInk: '#fff7ed',
+    subFace: 'plain',
+    subInk: '#fdba74',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c2d12"/><stop offset="100%" stop-color="#1c1917"/></linearGradient></defs>
+  <rect width="1080" height="1350" fill="url(#bg)"/>
+  <path d="M 140 300 q 0 -120 120 -140 l 10 40 q -60 20 -60 80 l 60 0 l 0 120 l -130 0 z" fill="#fdba74" fill-opacity="0.35"/>
+  <path d="M 340 300 q 0 -120 120 -140 l 10 40 q -60 20 -60 80 l 60 0 l 0 120 l -130 0 z" fill="#fdba74" fill-opacity="0.35"/>
+  <g stroke="#fdba74" stroke-opacity="0.25" stroke-width="4" fill="none">
+    <path d="M 0 1100 Q 270 1000 540 1100 T 1080 1100"/><path d="M 0 1150 Q 270 1050 540 1150 T 1080 1150"/><path d="M 0 1200 Q 270 1100 540 1200 T 1080 1200"/>
+  </g>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_friday',
+    nameKey: 'tpl.musicFriday',
+    nameEn: 'New Music Friday Story',
+    nameAf: 'Nuwe Musiek Vrydag-storie',
+    subKey: 'tpl.musicFridaySub',
+    subEn: 'Swipe up to listen',
+    subAf: 'Swiep op om te luister',
+    category: 'music',
+    width: 1080,
+    height: 1920,
+    ratioLabel: '9:16',
+    sampleHeadline: 'NEW MUSIC',
+    sampleSubtext: 'FRIDAY · SWIPE UP',
+    headFace: 'future',
+    headGlow: 'neon',
+    headInk: '#ecfdf5',
+    subFace: 'round',
+    subInk: '#6ee7b7',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#03130d"/>
+  <g fill="#10b981">
+    <rect x="100" y="860" width="40" height="200" rx="20" fill-opacity="0.5"/><rect x="170" y="780" width="40" height="360" rx="20" fill-opacity="0.65"/><rect x="240" y="700" width="40" height="520" rx="20" fill-opacity="0.8"/><rect x="310" y="820" width="40" height="280" rx="20" fill-opacity="0.65"/><rect x="380" y="640" width="40" height="640" rx="20"/><rect x="450" y="760" width="40" height="400" rx="20" fill-opacity="0.8"/><rect x="520" y="600" width="40" height="720" rx="20"/><rect x="590" y="760" width="40" height="400" rx="20" fill-opacity="0.8"/><rect x="660" y="640" width="40" height="640" rx="20"/><rect x="730" y="820" width="40" height="280" rx="20" fill-opacity="0.65"/><rect x="800" y="700" width="40" height="520" rx="20" fill-opacity="0.8"/><rect x="870" y="780" width="40" height="360" rx="20" fill-opacity="0.65"/><rect x="940" y="860" width="40" height="200" rx="20" fill-opacity="0.5"/>
+  </g>
+  <polygon points="540,1560 500,1620 580,1620" fill="#6ee7b7"/>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_thumb',
+    nameKey: 'tpl.musicThumb',
+    nameEn: 'YouTube Music Video Thumbnail',
+    nameAf: 'YouTube Musiekvideo-duimnael',
+    subKey: 'tpl.musicThumbSub',
+    subEn: 'Official music video',
+    subAf: 'Amptelike musiekvideo',
+    category: 'music',
+    width: 1280,
+    height: 720,
+    ratioLabel: '16:9',
+    sampleHeadline: 'OFFICIAL VIDEO',
+    sampleSubtext: 'OUT NOW',
+    headFace: 'comic',
+    headGlow: 'fire',
+    headInk: '#fefce8',
+    subFace: 'block',
+    subInk: '#fde047',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#111827"/>
+  <polygon points="0,0 760,0 520,720 0,720" fill="#dc2626"/>
+  <polygon points="760,0 800,0 560,720 520,720" fill="#fde047"/>
+  <circle cx="980" cy="360" r="170" fill="#fde047"/>
+  <polygon points="940,280 940,440 1070,360" fill="#111827"/>
+  <g fill="#ffffff" fill-opacity="0.1"><circle cx="160" cy="600" r="90"/><circle cx="420" cy="120" r="60"/></g>
+</svg>
+    `),
+  },
+  {
+    id: 'tpl_music_love',
+    nameKey: 'tpl.musicLove',
+    nameEn: 'Love Song Release',
+    nameAf: 'Liefdeslied-vrystelling',
+    subKey: 'tpl.musicLoveSub',
+    subEn: 'A song for someone',
+    subAf: '\u2019n Lied vir iemand',
+    category: 'music',
+    width: 1080,
+    height: 1350,
+    ratioLabel: '4:5',
+    sampleHeadline: 'Love Song',
+    sampleSubtext: 'OUT ON VALENTINE’S DAY',
+    headFace: 'script',
+    headGlow: 'pink',
+    headInk: '#fff1f2',
+    subFace: 'classic',
+    subInk: '#fbcfe8',
+    previewSvg: encodeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#500724"/><stop offset="100%" stop-color="#be185d"/></linearGradient></defs>
+  <rect width="1080" height="1350" fill="url(#bg)"/>
+  <path d="M540 980 C 140 700 260 420 540 600 C 820 420 940 700 540 980 Z" fill="#fbcfe8" fill-opacity="0.85"/>
+  <g fill="#fbcfe8" fill-opacity="0.35">
+    <path d="M180 300 c -40 -30 -20 -70 10 -50 c 30 -20 50 20 10 50 l -10 8 z"/><path d="M880 260 c -50 -38 -25 -88 12 -62 c 37 -26 62 24 12 62 l -12 10 z"/><path d="M900 1150 c -40 -30 -20 -70 10 -50 c 30 -20 50 20 10 50 l -10 8 z"/>
+  </g>
+</svg>
+    `),
+  },
   // ── 0. Neon & Cyber Studio Templates ──
   {
     id: 'tpl_neon_synthwave',

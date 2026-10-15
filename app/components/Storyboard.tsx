@@ -91,6 +91,9 @@ function clock(seconds: number): string {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
 
+/** The tag the board's waiting video jobs carry (`engines.ts`, `resumeVideos`). */
+const BOARD_JOBS = 'storyboard';
+
 export default function Storyboard({
   aspect,
   grade,
@@ -345,6 +348,11 @@ export default function Storyboard({
            shot said and whatever grade was paid for. */
         const willSpeak = Boolean(board.speaks && canSpeak && spokenLines(shot.prompt).length);
         const result = await engines.generateVideo({
+          /* Its own tag on the waiting job, so a shot that comes in after she
+             left is filed as a board shot — kept as a favourite — not as a
+             loose clip. A tag on the job, not a history of its own: the shot
+             is still filed in the desk's history (`check:history`). */
+          surface: BOARD_JOBS,
           title: t('board.shot', 'Shot'),
           treatment: askFor(shot, board.look),
           aspect,

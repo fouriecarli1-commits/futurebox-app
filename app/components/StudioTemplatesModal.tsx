@@ -27,7 +27,7 @@ import {
   Search, Mic, X, Sparkles, Layout, Monitor, Smartphone, Film,
   Image as ImageIcon, Check, ChevronRight, ArrowLeft, Video,
   FileText, Globe, Table, Share2, CreditCard, Mail, BookOpen, Coffee,
-  Grid, Circle, Square,
+  Grid, Circle, Square, Music,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
@@ -85,11 +85,22 @@ export default function StudioTemplatesModal({
   onSelectTemplate,
   onClose,
   stillOnly = false,
+  videoOnly = false,
 }: {
   readonly onSelectTemplate: (template: StudioTemplateItem) => void;
   readonly onClose: () => void;
   /** The photo room: a moving template lands there as a still, and says so. */
   readonly stillOnly?: boolean;
+  /**
+   * The video editor: only the templates that move.
+   *
+   * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... video editor
+   * ... werk."* Opened from the cutting room this showed every template in
+   * the app — pitch decks, business cards, menus — and picking one of those
+   * put a four-second clip of a business card on her film. The editor's own
+   * starting points are on its film bench beside this button.
+   */
+  readonly videoOnly?: boolean;
 }): React.ReactElement {
   const { t, lang } = useLang();
   /* A layer, so Back closes this and not the room under it. */
@@ -104,8 +115,20 @@ export default function StudioTemplatesModal({
     onClose();
   };
 
+  /* Everything this window may offer: all of them, or only the moving ones. */
+  const pool = useMemo(
+    () => (videoOnly ? STARTER_TEMPLATES.filter(moves) : STARTER_TEMPLATES),
+    [videoOnly],
+  );
+  const categories = useMemo(
+    () => (videoOnly
+      ? TEMPLATE_CATEGORIES.filter((cat) => pool.some((tpl) => tpl.category === cat.id))
+      : TEMPLATE_CATEGORIES),
+    [videoOnly, pool],
+  );
+
   const filteredTemplates = useMemo(() => {
-    let list = STARTER_TEMPLATES;
+    let list = pool;
     if (selectedCategory) {
       list = list.filter((tpl) => tpl.category === selectedCategory);
     }
@@ -121,7 +144,7 @@ export default function StudioTemplatesModal({
       );
     }
     return list;
-  }, [selectedCategory, searchQuery]);
+  }, [pool, selectedCategory, searchQuery]);
 
   const recentTemplates = useMemo(() => [
     STARTER_TEMPLATES.find((t) => t.id === 'tpl_pitch_deck')!,
@@ -140,6 +163,8 @@ export default function StudioTemplatesModal({
   const renderCategoryIcon = (iconType: string) => {
     const cls = 'h-4 w-4 flex-shrink-0 text-zinc-200';
     switch (iconType) {
+      case 'music':
+        return <Music className={cls} />;
       case 'monitor':
         return <Monitor className={cls} />;
       case 'smartphone':
@@ -214,7 +239,9 @@ export default function StudioTemplatesModal({
                     : t('stpl.modalTitle', 'Templates Explorer & Starter Packs')}
                 </h2>
                 <p className="text-xs text-zinc-400">
-                  {t('stpl.modalSub', 'Start straight away from a professional video or photo template.')}
+                  {videoOnly
+                    ? t('stpl.videoOnlySub', 'Templates that move. The one you pick becomes a clip on your clock, with its words on top to change.')
+                    : t('stpl.modalSub', 'Start straight away from a professional video or photo template.')}
                 </p>
               </div>
             </div>
@@ -266,7 +293,7 @@ export default function StudioTemplatesModal({
               <Layout className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate">{t('stpl.allCategories', 'All Categories')}</span>
             </button>
-            {TEMPLATE_CATEGORIES.map((cat: TemplateCategoryMeta) => {
+            {categories.map((cat: TemplateCategoryMeta) => {
               const isSelected = selectedCategory === cat.id;
               return (
                 <button
@@ -290,7 +317,7 @@ export default function StudioTemplatesModal({
         {/* Scrollable Templates Body */}
         <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-6">
           {/* If actively searching or category picked: show matching templates grid */}
-          {(searchQuery.trim() || selectedCategory) ? (
+          {(videoOnly || searchQuery.trim() || selectedCategory) ? (
             <div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {filteredTemplates.map((tpl) => (

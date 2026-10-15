@@ -115,6 +115,12 @@ const SAME_IN_BOTH = new Set([
      language that has it, this one included. WebP is a file format's name.
      Translating either would make it harder to recognise, not easier. */
   'Kwaito', 'WebP',
+  /* The genre row on the video desk's Music video tile, given rows on 15
+     October 2026 when it was found asking for keys nobody had written. The
+     same argument as Kwaito: these are the names of the music, and the
+     comment on the English-word list below already says genres stay in
+     both languages. Hip-hop is the one that is spelt differently. */
+  'Amapiano', 'Gqom', 'Sokkie', 'Gospel', 'Afrobeats', 'Rock', 'House', 'R&B', 'Country',
   /* Instruments whose names are the same word in Afrikaans. A banjo is a
      banjo and a harp is a harp; renaming one to dodge a check is renaming an
      instrument. */

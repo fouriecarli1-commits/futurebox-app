@@ -252,16 +252,37 @@ export function drawFrame(
 
 /* ── The photo room's text styles, for words on a film ─────────────────── */
 
-/** The photo room's faces, as the five the film can draw. */
+/**
+ * The photo room's faces, as the film's face ids.
+ *
+ * This used to fold fifteen faces down to the five system stacks the film
+ * could draw, so a Script line came over as Georgia and Future as Arial
+ * Black. Since 15 October 2026 the film draws every one of them — see
+ * `videofonts.ts` — so each maps to itself, except the two whose ids this
+ * room was already using for a different face (`plain` and `round`).
+ */
 const FACE_TO_FONT: Readonly<Record<string, string>> = {
-  plain: 'plain',
-  poster: 'heavy',
-  future: 'heavy',
-  book: 'serif',
-  hand: 'serif',
-  type: 'mono',
-  round: 'round',
+  plain: 'sans',
+  round: 'soft',
+  poster: 'poster',
+  book: 'book',
+  hand: 'hand',
+  type: 'type',
+  future: 'future',
+  script: 'script',
+  spray: 'spray',
+  comic: 'comic',
+  classic: 'classic',
+  retro: 'retro',
+  pixel: 'pixel',
+  block: 'block',
+  fashion: 'fashion',
 };
+
+/** A photo-room face id as the film's own, or plain for anything unknown. */
+export function fontOfFace(face: string | undefined): string {
+  return (face && FACE_TO_FONT[face]) || 'plain';
+}
 
 export interface WordsStyle {
   readonly wordsFont: string;
@@ -275,7 +296,7 @@ export interface WordsStyle {
 export function wordsStyleOf(line: TitleLine): WordsStyle {
   const glowing = line.glow !== 'none';
   return {
-    wordsFont: FACE_TO_FONT[line.face] ?? 'plain',
+    wordsFont: fontOfFace(line.face),
     wordsInk: line.ink,
     wordsGlow: line.glow,
     /* A glow is its own edge; a plain style keeps the outline that makes

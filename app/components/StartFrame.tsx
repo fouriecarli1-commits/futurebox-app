@@ -94,6 +94,20 @@ export default function StartFrame({
         </p>
         <p className="text-xs text-zinc-500 leading-relaxed">{why}</p>
         <p className="text-xs text-amber-400/90 leading-relaxed">{unsupportedNote}</p>
+        {/* A picture still held while the grade cannot read it is a picture
+            sent with the request and out of sight. The desk takes it off as
+            the grade changes; this is the way off by hand for any room that
+            does not, so a held picture is never one nobody can remove. */}
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            disabled={disabled}
+            className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white disabled:opacity-50"
+          >
+            {t('frame.takeOff', 'Take the picture off')}
+          </button>
+        )}
         {onSwitch && (
           <button
             type="button"

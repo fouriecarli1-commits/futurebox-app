@@ -153,7 +153,7 @@ export async function POST(request: Request): Promise<Response> {
     try {
       const key = process.env.GOOGLE_VERTEX_KEY || '';
       /* Walks on to a later Flash once 2.5 is switched off (`flashCall`). */
-      const { response: googleRes } = await flashCall((model) => fetch(addressOf(model, 'generateContent'), {
+      const { response: googleRes, model: flashModel } = await flashCall((model) => fetch(addressOf(model, 'generateContent'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -197,7 +197,9 @@ export async function POST(request: Request): Promise<Response> {
               })),
               lanes,
             );
-            return Response.json({ reply: parsed.data.reply, moves });
+            /* Which model answered, so the panel can name it rather than
+               always printing the first one on the list. See `BoothAsk`. */
+            return Response.json({ reply: parsed.data.reply, moves, engine: flashModel });
           }
         }
       }
@@ -239,7 +241,7 @@ export async function POST(request: Request): Promise<Response> {
         })),
         lanes,
       );
-      return Response.json({ reply: parsed.reply, moves });
+      return Response.json({ reply: parsed.reply, moves, engine: 'claude-opus-5' });
     } catch (error) {
       return aiFault(error, 'The copilot could not be reached.');
     }

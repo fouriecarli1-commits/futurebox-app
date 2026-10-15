@@ -37,6 +37,12 @@ export interface Failed {
   readonly message: string;
   /** Set when the answer was "not you, not today" rather than a breakage. */
   readonly outOfAllowance?: boolean;
+  /**
+   * Set when the route answered 2xx — which means it charged and kept the
+   * charge — and what it sent back could not be used. A caller with a second
+   * supplier must not try it: that would be a second bill for the same job.
+   */
+  readonly charged?: boolean;
 }
 
 /**
@@ -193,7 +199,7 @@ export async function separateParts(
   try {
     form_ = await response.formData();
   } catch {
-    return { message: 'The split came back in a form the browser could not read.' };
+    return { message: 'The split came back in a form the browser could not read.', charged: true };
   }
 
   /* Every `parts` entry, named by its filename — which is the instrument the
@@ -205,7 +211,7 @@ export async function separateParts(
     parts.push({ instrument: one.name.replace(/\.[^.]+$/, ''), audio: one });
   }
   if (parts.length < 2) {
-    return { message: 'The split came back with fewer parts than a split has.' };
+    return { message: 'The split came back with fewer parts than a split has.', charged: true };
   }
   return { parts };
 }

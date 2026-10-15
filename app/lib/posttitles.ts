@@ -63,4 +63,59 @@ export const TITLE_STYLES: readonly TitleStyle[] = [
     title: { says: ['post.title.inkTop', 'Silence'], face: 'hand', ink: '#f5f5f4', glow: 'ice', letterGap: 0.04 },
     under: { says: ['post.title.inkUnder', 'a quiet record'], face: 'book', ink: '#a8a29e', glow: 'none', letterGap: 0.2 },
   },
+  /* ── Ten more, 15 October 2026 ───────────────────────────────────────
+     Carli: *"meer text possibilities, meer templates."* The posts people in
+     her studio actually make — a gospel night, a wedding, a street release,
+     an amapiano party, a sale, a game night, a fashion drop, a gig, a podcast
+     episode and a birthday — each in the new faces and glows. */
+  {
+    id: 'gospel', name: ['post.title.gospel', 'Gospel night'], tile: ['#78350F', '#FDE68A'],
+    title: { says: ['post.title.gospelTop', 'AMAZING GRACE'], face: 'classic', ink: '#fef3c7', glow: 'gold', letterGap: 0.18 },
+    under: { says: ['post.title.gospelUnder', 'live worship night'], face: 'book', ink: '#fde68a', glow: 'none', letterGap: 0.12 },
+  },
+  {
+    id: 'wedding', name: ['post.title.wedding', 'Wedding'], tile: ['#FCE7F3', '#F5F5F4'],
+    title: { says: ['post.title.weddingTop', 'Forever & Always'], face: 'script', ink: '#fff1f2', glow: 'pink', letterGap: 0.02 },
+    under: { says: ['post.title.weddingUnder', 'save the date'], face: 'classic', ink: '#fbcfe8', glow: 'none', letterGap: 0.22 },
+  },
+  {
+    id: 'street', name: ['post.title.street', 'Street'], tile: ['#111827', '#F97316'],
+    title: { says: ['post.title.streetTop', 'STREET KINGS'], face: 'spray', ink: '#fef08a', glow: 'fire', letterGap: 0.06 },
+    under: { says: ['post.title.streetUnder', 'mixtape out now'], face: 'type', ink: '#fdba74', glow: 'none', letterGap: 0.2 },
+  },
+  {
+    id: 'piano', name: ['post.title.piano', 'Amapiano nights'], tile: ['#4C1D95', '#F43F5E'],
+    title: { says: ['post.title.pianoTop', 'PIANO NIGHTS'], face: 'retro', ink: '#fdf4ff', glow: 'sunset', letterGap: 0.1 },
+    under: { says: ['post.title.pianoUnder', 'saturday · 9pm'], face: 'round', ink: '#fbcfe8', glow: 'none', letterGap: 0.16 },
+  },
+  {
+    id: 'sale', name: ['post.title.sale', 'Big sale'], tile: ['#DC2626', '#FDE047'],
+    title: { says: ['post.title.saleTop', '50% OFF'], face: 'comic', ink: '#fefce8', glow: 'fire', letterGap: 0.06 },
+    under: { says: ['post.title.saleUnder', 'this weekend only'], face: 'block', ink: '#fde047', glow: 'none', letterGap: 0.08 },
+  },
+  {
+    id: 'game', name: ['post.title.game', 'Game night'], tile: ['#14532D', '#84CC16'],
+    title: { says: ['post.title.gameTop', 'GAME ON'], face: 'pixel', ink: '#ecfccb', glow: 'toxic', letterGap: 0.08 },
+    under: { says: ['post.title.gameUnder', 'level up this friday'], face: 'type', ink: '#bef264', glow: 'none', letterGap: 0.14 },
+  },
+  {
+    id: 'fashion', name: ['post.title.fashion', 'Fashion edit'], tile: ['#0A0A0A', '#E5E5E5'],
+    title: { says: ['post.title.fashionTop', 'The Edit'], face: 'fashion', ink: '#ffffff', glow: 'none', letterGap: 0.02 },
+    under: { says: ['post.title.fashionUnder', 'autumn collection'], face: 'plain', ink: '#d4d4d4', glow: 'none', letterGap: 0.3 },
+  },
+  {
+    id: 'gig', name: ['post.title.gig', 'Live tonight'], tile: ['#831843', '#EC4899'],
+    title: { says: ['post.title.gigTop', 'LIVE TONIGHT'], face: 'block', ink: '#fdf2f8', glow: 'pink', letterGap: 0.04 },
+    under: { says: ['post.title.gigUnder', 'doors open 8pm'], face: 'round', ink: '#fbcfe8', glow: 'none', letterGap: 0.14 },
+  },
+  {
+    id: 'podcast', name: ['post.title.podcast', 'New episode'], tile: ['#0C4A6E', '#38BDF8'],
+    title: { says: ['post.title.podcastTop', 'New Episode'], face: 'round', ink: '#e0f2fe', glow: 'ice', letterGap: 0.02 },
+    under: { says: ['post.title.podcastUnder', 'out now on every app'], face: 'plain', ink: '#bae6fd', glow: 'none', letterGap: 0.12 },
+  },
+  {
+    id: 'party', name: ['post.title.party', 'Party'], tile: ['#7C3AED', '#FDBA74'],
+    title: { says: ['post.title.partyTop', 'Happy Birthday!'], face: 'comic', ink: '#fff7ed', glow: 'sunset', letterGap: 0.04 },
+    under: { says: ['post.title.partyUnder', 'make a wish'], face: 'hand', ink: '#fde68a', glow: 'none', letterGap: 0.06 },
+  },
 ];

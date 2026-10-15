@@ -464,14 +464,14 @@ export function carveLane(lane: Lane, from: number, to: number): Carved | null {
   if (times > 1) {
     const first = Math.max(0, Math.min(times - 1, Math.round(a / once)));
     const last = Math.max(first + 1, Math.min(times, Math.round(b / once)));
-    return {
+    return fadedApart({
       before: first > 0 ? { ...lane, id: named(1), repeat: first } : null,
       inside: { ...lane, id: named(2), at: lane.at + first * once, repeat: last - first },
       after:
         last < times
           ? { ...lane, id: named(3), at: lane.at + last * once, repeat: times - last }
           : null,
-    };
+    });
   }
 
   /* A sliver at either end belongs to the region rather than to a lane of
@@ -479,7 +479,7 @@ export function carveLane(lane: Lane, from: number, to: number): Carved | null {
      leaving it behind would put a gap where the eye sees none. */
   const start = a > SHORTEST ? a : 0;
   const end = once - b > SHORTEST ? b : once;
-  return {
+  return fadedApart({
     before:
       start > 0
         ? { ...lane, id: named(1), from: window.from, to: window.from + start, repeat: 1 }
@@ -503,6 +503,35 @@ export function carveLane(lane: Lane, from: number, to: number): Carved | null {
             repeat: 1,
           }
         : null,
+  });
+}
+
+/**
+ * A lane's fades, handed out to the pieces it was cut into.
+ *
+ * Found on 15 October 2026, when Carli asked for every function in the booth
+ * to be looked at properly: every piece of a carved lane was a copy of the
+ * lane, fades and all, so a lane that faded in and out became three lanes
+ * that each faded in and out — a dip in the level at both cuts that nobody
+ * drew. The fade in belongs to the front of the sound and the fade out to
+ * its end, so only the first piece keeps one and only the last the other.
+ * `cutHere` in the booth follows the same rule for its two halves.
+ */
+export function fadedApart(carved: Carved): Carved {
+  const pieces = [carved.before, carved.inside, carved.after].filter(
+    (one): one is Lane => one !== null,
+  );
+  const first = pieces[0];
+  const last = pieces[pieces.length - 1];
+  const keep = (one: Lane): Lane => ({
+    ...one,
+    fadeIn: one === first ? one.fadeIn : undefined,
+    fadeOut: one === last ? one.fadeOut : undefined,
+  });
+  return {
+    before: carved.before && keep(carved.before),
+    inside: keep(carved.inside),
+    after: carved.after && keep(carved.after),
   };
 }
 

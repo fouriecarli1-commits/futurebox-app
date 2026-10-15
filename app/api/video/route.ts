@@ -47,6 +47,7 @@ import {
   PROVIDERS,
   purseOf,
   scheme,
+  suits,
   type Aspect,
   type Grade,
   type Provider,
@@ -188,13 +189,30 @@ export async function GET(request: Request): Promise<Response> {
 
     // What each grade can actually make, so the desk offers lengths and shapes
     // that exist rather than ones it will later refuse.
+    /* `ways` beside the union, 15 October 2026 ("Kyk mooi of elke funksie
+       in video desk ... werk").
+
+       The union alone told the desk that Better speaks AND starts from a
+       picture, because one engine on the rung does each — and no engine does
+       both. The desk offered the pair, the queue below came back empty, and
+       the refusal fell through to "this month's allowance is used up". Each
+       engine's own answer goes too, without its name (a member buys a grade,
+       not an engine), so the desk can tell a combination nobody makes from
+       one that is merely busy. */
+    type Way = { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean };
     const can: Record<
     string,
-    { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean; endFrame: boolean }
+    { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean; endFrame: boolean; ways: Way[] }
   > = {};
     for (const one of PROVIDERS) {
       if (!one.configured()) continue;
       const found = can[one.grade];
+      const way: Way = {
+        seconds: [...one.can.seconds],
+        aspects: [...one.can.aspects],
+        speaks: one.can.speaks,
+        startFrame: one.can.startFrame,
+      };
       can[one.grade] = found
         ? {
             seconds: Array.from(new Set([...found.seconds, ...one.can.seconds])).sort((a, b) => a - b),
@@ -202,6 +220,7 @@ export async function GET(request: Request): Promise<Response> {
             speaks: found.speaks || one.can.speaks,
             startFrame: found.startFrame || one.can.startFrame,
             endFrame: found.endFrame || one.can.endFrame,
+            ways: [...found.ways, way],
           }
         : {
             seconds: [...one.can.seconds],
@@ -209,6 +228,7 @@ export async function GET(request: Request): Promise<Response> {
             speaks: one.can.speaks,
             startFrame: one.can.startFrame,
             endFrame: one.can.endFrame,
+            ways: [way],
           };
     }
 
@@ -335,6 +355,37 @@ export async function GET(request: Request): Promise<Response> {
     .eq('status', 'running'), 'the video');
 
   return Response.json({ state: 'done', url: await link(client, path) });
+}
+
+/**
+ * Which two asks no single engine on the rung makes together, in words.
+ *
+ * Every line names the pair and both ways out of it, because either one is a
+ * real answer and only she knows which she would rather lose. Empty where no
+ * pair explains it, which the caller reads as "something else" — never as
+ * the allowance, which is only blamed when an engine could have made it.
+ */
+function pairOf(
+  inGrade: readonly Provider[],
+  asking: { aspect: Aspect; speak: boolean; image?: unknown; endImage?: unknown },
+): string {
+  const frame = Boolean(asking.image);
+  const ending = Boolean(asking.endImage);
+  const { aspect, speak } = asking;
+  const some = (test: (one: Provider) => boolean): boolean => inGrade.some(test);
+  if (frame && speak && !some((one) => one.can.startFrame && one.can.speaks)) {
+    return 'No engine on this grade can both start from a picture and speak a line. Take the picture off, or switch the voice off — nothing has been charged.';
+  }
+  if (ending && speak && !some((one) => one.can.endFrame && one.can.speaks)) {
+    return 'No engine on this grade can both end on a picture and speak a line. Take the end frame off, or switch the voice off — nothing has been charged.';
+  }
+  if (frame && !some((one) => one.can.startFrame && one.can.aspects.includes(aspect))) {
+    return `No engine on this grade can both start from a picture and make a ${aspect} video. Take the picture off, or choose a wide or a tall shape — nothing has been charged.`;
+  }
+  if (speak && !some((one) => one.can.speaks && one.can.aspects.includes(aspect))) {
+    return `No engine on this grade can both speak a line and make a ${aspect} video. Switch the voice off, or choose a wide or a tall shape — nothing has been charged.`;
+  }
+  return 'No single engine on this grade makes that combination. Take the picture off or switch the voice off, or try another quality — nothing has been charged.';
 }
 
 async function link(client: ReturnType<typeof admin>, path: string): Promise<string | null> {
@@ -491,16 +542,21 @@ export async function POST(request: Request): Promise<Response> {
     purses.set(name, (purses.get(name) ?? 0) + (spent.get(one.id) ?? 0));
   }
 
-  const queue = candidates(
-    grade,
-    { prompt, aspect, seconds: wanted, speak, image, endImage },
-    (one) => purses.get(purseOf(one)) ?? 0,
-  );
+  const asking = { prompt, aspect, seconds: wanted, speak, image, endImage };
+  const queue = candidates(grade, asking, (one) => purses.get(purseOf(one)) ?? 0);
 
   if (queue.length === 0) {
     // Said precisely, because the three reasons need three different actions:
     // buy more, wait for the first, or ask for something the engines can do.
     const inGrade = PROVIDERS.filter((one) => one.grade === grade && one.configured());
+    /* The allowance is only the reason when some engine on the rung COULD
+       make this one. Before 15 October 2026 every request that got past the
+       single-feature lines below was told the month was used up — including
+       a spoken line off a start frame on Better, where one engine speaks,
+       another reads the picture, and neither does both. That is not a bill
+       to wait out; it is a choice to make, and `pairOf` names it. */
+    const fits = inGrade.some((one) => suits(one, asking));
+    const pair = fits ? '' : pairOf(inGrade, asking);
     const message = !inGrade.length
       ? 'That grade of video is not switched on for this app yet.'
       : image && !inGrade.some((one) => one.can.startFrame)
@@ -516,7 +572,9 @@ export async function POST(request: Request): Promise<Response> {
         ? 'Nothing on this grade can speak a line aloud. Take the quotation marks out and record the voice separately — it sounds better and costs a fraction.'
         : !inGrade.some((one) => one.can.seconds.indexOf(wanted) !== -1)
           ? `Nothing on this grade makes ${wanted} seconds. Pick one of the lengths the desk offers, or a different quality.`
-          : `This grade's allowance for this month is used up. Nothing has been charged, and browser-drawn videos still work.`;
+          : pair
+            ? pair
+            : `This grade's allowance for this month is used up. Nothing has been charged, and browser-drawn videos still work.`;
     return Response.json({ error: 'engine_full', message }, { status: 503 });
   }
 

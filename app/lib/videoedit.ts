@@ -56,6 +56,7 @@ import type { Patch } from './videoblur';
 import type { FrameId, MotionId } from './videoextras';
 import type { GlowId } from './postglow';
 import type { Mark } from './postshapes';
+import type { Corner } from './logomark';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -554,6 +555,35 @@ export interface Edit {
   readonly frame?: FrameId;
   readonly frameInk?: string;
   readonly shapes?: readonly Mark[];
+  /**
+   * Her own mark on the film: the logo, and how it sits.
+   *
+   * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... video editor
+   * ... werk."* These lived in the room's state and nowhere else, so the one
+   * thing on the film she sets once and expects to stay — her logo — was
+   * gone every time she came back, and a turn or a drag of it could not be
+   * taken back with Back. On the edit they are kept by `filmkeep.ts` and
+   * stepped by the history like everything else.
+   *
+   * The picture as a data URL rather than a Blob: it is what every way in
+   * hands over (the file is fitted to 1024 first, the shelf and the brand
+   * pack give data URLs), it needs no change to how a film is kept, and
+   * `loadMark` takes it as it is. The room decodes it into an image; the
+   * edit stays a description.
+   *
+   * Not part of `cutFrom`. The renderer has always taken the mark beside the
+   * cut rather than inside it, as a decoded image, and that has not changed.
+   * Absent is no logo, the bottom-right corner, `MARK_SHARE`, upright,
+   * `MARK_OPACITY` and over the words — what an edit made before had.
+   */
+  readonly markPicture?: string;
+  readonly markName?: string;
+  readonly markCorner?: Corner;
+  readonly markAt?: { readonly x: number; readonly y: number } | null;
+  readonly markShare?: number;
+  readonly markTurn?: number;
+  readonly markSolid?: number;
+  readonly markUnder?: boolean;
 }
 
 /**
