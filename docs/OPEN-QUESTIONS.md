@@ -63,7 +63,7 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 
 ### Twee ontwerpbesluite wat op jou wag
 
-1. **Die Eenvoudig/Alles-skakelaar** sit nou net drie kontroles weg. Meer daaragter, of heeltemal weg? My raad is los dit vir eers.
+1. ~~**Die Eenvoudig/Alles-skakelaar**~~ — **besluit, 15 Oktober 2026**: in Maak 'n liedjie is dit weg, en die kamer is een boks om die copilot (Maklik/Uitgebreid bo, die plus en die knoppies onder). Die videolessenaar hou sy skakelaar. `3756c55`.
 2. **Is `-djie → kie` reg?** Jy het dit goedgekeur; dit wag nog op jou oor teen 'n regte voorlesing.
 
 ### Wat oop is en waarop dit vassit
@@ -585,6 +585,7 @@ wearing the probe's clothes.
 | One artist name, and nobody may be the official channel | 2026-09-05 | `39f7feb`, `6eff4b5` |
 | Back goes back; deleting the account left the working room | 2026-09-05 | `af225d7` |
 | Simple / Everything, so nothing has to be deleted | 2026-09-05 | `c1513c9` |
+| Make a song is one box around the copilot; Simple / Everything gone from it | 2026-10-15 | `3756c55` |
 | The play button nobody could see; rooms measured for width | 2026-09-05 | `58c1172` |
 | A song full screen, words moving with it | 2026-09-05 | `22afff6` |
 | A hook cut from a file you own, with its sound | 2026-09-05 | `602c32b` |

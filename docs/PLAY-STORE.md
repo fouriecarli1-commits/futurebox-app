@@ -405,16 +405,16 @@ user interaction.
       `/.well-known/assetlinks.json` shows them
 - [ ] The attorney has answered the Play Billing question
 - [ ] A business contact email, not a personal one
-- [~] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
-      3840 pixels on the long side. Seven real screens at 1080 x 1920 are
-      in `docs/play/shots/`, retaken on the evening of 12 October 2026 off
-      the built app on a signed-up test account: the welcome, the studio,
-      Make a song, the video desk, the advert desk, the kids room (green,
-      with the typing box and the templates) and the Cubed room. The photo
-      editor is left out until it can be shot with a picture in it.
-      **Retake them the day the look is final**, and take the making rooms
-      with something made in them rather than empty, which these are not
-      yet.
+- [x] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
+      3840 pixels on the long side. Eight real screens at 1080 x 1920 are in
+      `docs/play/shots/`. Six were retaken on 15 October 2026 in the default
+      Pro Studio look by `npm run play:shots` (`audit/storeshots.mjs`) off the
+      built app: the welcome, the studio, Make a song (the song box with its
+      plus open), the video desk, the photo editor with a photograph in it
+      (new), and the advert desk. The kids room and Cubed keep their own looks
+      and their 12 October shots. **Before submitting, run
+      `npm run build && npm run play:shots` once more**, so the shots are of
+      the app as it is that day.
 - [x] Feature graphic: 1024 x 500 — `docs/play/feature-graphic-1024x500.png`,
       drawn 12 October 2026 from the brand mark and `APP_LINE`. Redraw it the
       day either changes.

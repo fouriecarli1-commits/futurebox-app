@@ -31,7 +31,7 @@ const ABORTED = /ERR_ABORTED/;
  */
 export async function enter({
   width = 1280, height = 900, at = 'http://localhost:3000', args = [], touch = false,
-  lang = null, before = null,
+  lang = null, before = null, scale = 1, email = 'audit@futurebox.test',
 } = {}) {
   const browser = await chromium.launch(launchOptions(args.length ? { args } : {}));
   /* `touch` is not a detail on a phone-sized run.
@@ -42,7 +42,9 @@ export async function enter({
      it is handed, so a probe that only shrinks the window is measuring the app
      with those rules switched off. That is how the share sheet passed three
      rounds of measurement while Carli was holding a photograph of it failing. */
-  const page = await browser.newPage({ viewport: { width, height }, ...(touch ? { hasTouch: true } : {}) });
+  /* `scale` is the screen's pixel density: 3 makes a 360-wide phone a
+     1080-pixel picture, which is what the Play Store's screenshots want. */
+  const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale, ...(touch ? { hasTouch: true } : {}) });
   const problems = [];
   const note = (s) => { if (!problems.includes(s)) problems.push(s); };
   page.on('console', (m) => {
@@ -91,7 +93,7 @@ export async function enter({
   await cta.waitFor({ state: 'visible', timeout: 60000 });
   await cta.click();
   await page.waitForTimeout(600);
-  await page.locator('input[type="email"]').first().fill('audit@futurebox.test');
+  await page.locator('input[type="email"]').first().fill(email);
   const pw = page.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('audit-password-1234');
 

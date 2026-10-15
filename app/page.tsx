@@ -3972,7 +3972,10 @@ export default function FutureBoxHome() {
               <LanguageSwitched />
             </div>
             <Greeting
-              name={artistName || user?.name}
+              /* A chosen artist name is said as she wrote it. The fallback is
+                 cut from the sign-up email, which is nearly always lower case
+                 — "Hello, thandi!" — so that one gets a capital. */
+              name={artistName || (user?.name ? user.name.charAt(0).toUpperCase() + user.name.slice(1) : user?.name)}
               onGo={(id) => {
                 setUploadModalOpen(true);
                 goToRoom(id);

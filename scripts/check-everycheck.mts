@@ -275,7 +275,7 @@ const TOOLS = new Set([
   'buttons', 'copilotplace', 'deep', 'frame', 'home',
   'home2', 'homelength', 'land', 'landing', 'net', 'newui', 'newui2', 'one',
   'phone', 'phoneshots', 'price', 'probe', 'radarcards', 'rooms', 'shots',
-  'slogan', 'small', 'thin', 'touch', 'transcript', 'voices', 'walk',
+  'slogan', 'small', 'storeshots', 'thin', 'touch', 'transcript', 'voices', 'walk',
 ]);
 
 /**

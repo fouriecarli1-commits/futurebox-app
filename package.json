@@ -292,6 +292,7 @@
     "check:radarkeep": "node audit/radarkeep.mjs",
     "check:kidsafe": "tsx scripts/check-kidsafe.mts",
     "check:kidsdoor": "node audit/kidsdoor.mjs",
+    "play:shots": "node audit/storeshots.mjs",
     "check:playwalk": "node audit/playbilling.mjs",
     "check:widetablet": "node audit/wide.mjs 3092 1024",
     "check:taalbladsye": "node audit/taalbladsye.mjs",
