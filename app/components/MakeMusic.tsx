@@ -1136,9 +1136,16 @@ export default function MakeMusic({
         return (
           <div
             data-top-mini-player
-            className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-zinc-900/80 p-3 sm:p-4 backdrop-blur-sm"
+            className="space-y-3 rounded-2xl border border-emerald-500/30 bg-zinc-900/80 p-3 sm:p-4 backdrop-blur-sm"
           >
-            <div className="flex items-center gap-3 min-w-0">
+            {/* Two rows, not one. Carli, 15 October 2026, a phone screenshot:
+                with the song, "Verbeter Afrikaans", "Sing it in my voice" and
+                the channel button on one line, the buttons took the whole
+                width — the name vanished, the label lay over the play button
+                and the last button ran off the screen. The song and the way
+                to the channel on top; what can be done to it underneath,
+                wrapping when the screen is narrow. */}
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => void toggle(activeTrack)}
@@ -1147,9 +1154,9 @@ export default function MakeMusic({
               >
                 {isPlayingThis ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
               </button>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded whitespace-nowrap">
                     {isPlayingThis ? t('make.playing', 'Playing now') : t('make.latestSong', 'Latest song')}
                   </span>
                   <span className="text-xs text-zinc-400 font-mono">
@@ -1163,9 +1170,20 @@ export default function MakeMusic({
                   {activeTrack.genre} · {activeTrack.bpm} BPM
                 </p>
               </div>
+              <button
+              type="button"
+              onClick={() => {
+                document.getElementById('made-tracks-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex-shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+            >
+              <span>{t('make.jumpToTracks', 'Channel')}</span>
+              <span className="text-zinc-400">({tracks.length})</span>
+              <span>↓</span>
+            </button>
             </div>
 
-            <div className="flex flex-shrink-0 items-center gap-2">
+            <div data-top-mini-actions className="flex flex-wrap items-center gap-2">
             {/* An Afrikaans word sung wrong is reported from the song she is
                 listening to, not only from the list further down (Carli,
                 14 October 2026). */}
@@ -1191,17 +1209,6 @@ export default function MakeMusic({
                 }}
               />
             )}
-            <button
-              type="button"
-              onClick={() => {
-                document.getElementById('made-tracks-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="flex-shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
-            >
-              <span>{t('make.jumpToTracks', 'Channel')}</span>
-              <span className="text-zinc-400">({tracks.length})</span>
-              <span>↓</span>
-            </button>
             </div>
           </div>
         );
