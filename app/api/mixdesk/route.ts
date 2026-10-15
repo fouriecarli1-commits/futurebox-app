@@ -100,7 +100,7 @@ function laneList(raw: unknown): LaneNow[] {
   }).filter((lane) => lane.id);
 }
 
-import { addressOf, configured as googleConfigured } from '@/app/lib/server/google';
+import { addressOf, configured as googleConfigured, flashCall } from '@/app/lib/server/google';
 
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('mixdesk', request, LIMITS)) {
@@ -152,8 +152,8 @@ export async function POST(request: Request): Promise<Response> {
   if (hasGoogle) {
     try {
       const key = process.env.GOOGLE_VERTEX_KEY || '';
-      const endpoint = addressOf('gemini-2.5-flash', 'generateContent');
-      const googleRes = await fetch(endpoint, {
+      /* Walks on to a later Flash once 2.5 is switched off (`flashCall`). */
+      const { response: googleRes } = await flashCall((model) => fetch(addressOf(model, 'generateContent'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ export async function POST(request: Request): Promise<Response> {
             responseMimeType: 'application/json',
           },
         }),
-      });
+      }));
 
       if (googleRes.ok) {
         const data = (await googleRes.json().catch(() => null)) as {

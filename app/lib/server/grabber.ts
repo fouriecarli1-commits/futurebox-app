@@ -13,7 +13,7 @@
  * that says what came back rather than "that did not work".
  */
 
-import { addressOf } from './google';
+import { addressOf, flashCall } from './google';
 import { ASK, readFound, type Found } from '../grabobject';
 
 /**
@@ -60,14 +60,15 @@ export async function lookAt(
 ): Promise<Looked> {
   let answer: Response;
   try {
-    answer = await fetch(addressOf(model, 'generateContent'), {
+    /* Walks on to a later Flash if this one has been switched off. */
+    ({ response: answer } = await flashCall((one) => fetch(addressOf(one, 'generateContent'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': process.env.GOOGLE_VERTEX_KEY ?? '',
       },
       body: lookBody(picture),
-    });
+    }), model));
   } catch {
     return { ok: false, status: 502, message: 'The engine could not be reached.' };
   }

@@ -58,7 +58,7 @@
  * because one rule is of the wrong kind helps nobody.
  */
 
-import { addressOf } from './google';
+import { addressOf, flashCall } from './google';
 
 /**
  * The model asked to listen.
@@ -269,14 +269,15 @@ export async function hearWord(
 ): Promise<Listened> {
   let answer: Response;
   try {
-    answer = await fetch(addressOf(model, 'generateContent'), {
+    /* Walks on to a later Flash if this one has been switched off. */
+    ({ response: answer } = await flashCall((one) => fetch(addressOf(one, 'generateContent'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': process.env.GOOGLE_VERTEX_KEY ?? '',
       },
       body: listenBody(audio, word, language),
-    });
+    }), model));
   } catch {
     return { ok: false, status: 502, message: 'The listening engine could not be reached.' };
   }

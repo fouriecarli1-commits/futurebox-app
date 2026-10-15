@@ -258,6 +258,15 @@ export const MODELS: readonly Candidate[] = [
      not which senses the model has — it is called on `:generateContent`,
      the same surface the picture models are. */
   { id: 'gemini-2.5-flash', what: 'image', verb: 'generateContent', hosting: 'serverless', note: 'A Flash-class Gemini that reads audio as well as pictures. Used to turn one spoken word into IPA for a pronunciation dictionary \u2014 see lib/server/hearword.ts. Serverless on her Model Garden listing, 10 October 2026.' },
+  /* ── Its successors, because it is being switched off ──────────────
+     Google lists Gemini 2.5 Flash for discontinuation no earlier than 16
+     October 2026 — its release notes say the 16th, its lifecycle page the
+     20th — and a retired model answers 404. Four rooms call it. Three later
+     Flash names are carried so the probe asks and `flashCall` below can walk
+     on to whichever answers; none is confirmed on her console yet. */
+  { id: 'gemini-3.5-flash', what: 'image', verb: 'generateContent', note: 'Listed Stable (19 May 2026) on Firebase AI Logic\u2019s model list. Unconfirmed on her Vertex console. Second in FLASH_ORDER.' },
+  { id: 'gemini-3-flash', what: 'image', verb: 'generateContent', note: 'The plain GA spelling of Gemini 3 Flash. A guess at the name; the probe answers. Third in FLASH_ORDER.' },
+  { id: 'gemini-3-flash-preview', what: 'image', verb: 'generateContent', note: 'Gemini 3 Flash as Google\u2019s own Vertex model page lists it. Last in FLASH_ORDER.' },
   { id: 'gemini-omni-flash-preview', what: 'video', verb: 'predict', hosting: 'self-deployed', on: 'interactions', note: 'Gemini Omni Flash. Off HER OWN documentation page, 10 October 2026. On the INTERACTIONS api, not predict \u2014 see interactionsAddress(). Text-to-video, image-to-video, reference-to-video and VIDEO EDITING. Priced per token and the rate is unread, so nothing is charged through it yet.' },
 ] as const;
 
@@ -706,4 +715,36 @@ export async function catalogue(): Promise<Catalogue> {
       ? 'The list came back empty, which is not the same as the engines being absent — check the key is allowed to list models.'
       : `${all.length} models on this project; ${ours.length} of them are ours.`,
   };
+}
+
+/**
+ * The Flash models, in the order they are tried.
+ *
+ * `gemini-2.5-flash` first, because it is the one with evidence: it answers
+ * today on her console. The rest are its successors, tried only when the one
+ * before them answers 404 — the answer a retired model gives — so nothing is
+ * asked twice while the first still works, and a 404 is not billed.
+ */
+export const FLASH_ORDER: readonly string[] = ['gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3-flash', 'gemini-3-flash-preview'];
+
+/**
+ * One Flash call that survives the model it names being switched off.
+ *
+ * `send` makes the request for a model; this walks `FLASH_ORDER` (the model
+ * asked for first) and stops at the first answer that is not 404. Any other
+ * answer — a refusal, a 429, a 500 — is returned as it is: those are about
+ * the request or the moment, and another model would not fix them.
+ */
+export async function flashCall(
+  send: (model: string) => Promise<Response>,
+  first: string = FLASH_ORDER[0],
+): Promise<{ response: Response; model: string }> {
+  const order = [first, ...FLASH_ORDER.filter((one) => one !== first)];
+  let last: { response: Response; model: string } | null = null;
+  for (const model of order) {
+    const response = await send(model);
+    if (response.status !== 404) return { response, model };
+    last = { response, model };
+  }
+  return last as { response: Response; model: string };
 }

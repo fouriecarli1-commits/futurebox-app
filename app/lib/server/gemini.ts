@@ -19,7 +19,7 @@
  * Never leaks keys to the client. Uses native fetch and zero external runtime SDKs.
  */
 
-import { addressOf, project as googleProject } from './google';
+import { addressOf, flashCall, project as googleProject } from './google';
 
 export const GEMINI_FLASH_MODEL = 'gemini-2.5-flash';
 
@@ -88,7 +88,6 @@ export async function askGemini(options: GeminiGenerateOptions): Promise<GeminiR
   }
 
   const model = options.model || GEMINI_FLASH_MODEL;
-  const endpoint = geminiEndpoint(model, 'generateContent');
 
   const contentParts: GeminiContentPart[] = [];
   if (options.parts && options.parts.length > 0) {
@@ -119,14 +118,15 @@ export async function askGemini(options: GeminiGenerateOptions): Promise<GeminiR
   }
 
   try {
-    const res = await fetch(endpoint, {
+    /* Walks on to a later Flash once 2.5 is switched off (`flashCall`). */
+    const { response: res } = await flashCall((one) => fetch(geminiEndpoint(one, 'generateContent'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': key,
       },
       body: JSON.stringify(bodyPayload),
-    });
+    }), model);
 
     const raw = await res.text().catch(() => '');
     if (!res.ok) {

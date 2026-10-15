@@ -132,6 +132,7 @@ import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/
 import SpeakButton from './SpeakButton';
 import { accessToken } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
+import { FEED_PLATFORMS, cutOff, nearestKind, type FeedKind, type FeedPlatform } from '../lib/feedshapes';
 
 const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500';
 
@@ -210,6 +211,23 @@ const PREVIEW_LONGEST = 540;
 
 /** The least height a tool's controls get under the photo on a phone. */
 const UNDER_LEAST = 200;
+
+/** The least height a bar that acts on the photograph gets on a phone. */
+const STRIP_LEAST = 170;
+
+/**
+ * A post's shape in two small numbers, for the size button on a phone.
+ *
+ * "1080×1350 ▾" needed more room than a 360-pixel bar had left, and the bar
+ * squeezed it to nothing; "4:5 ▾" fits beside every other button.
+ */
+function shapeOf(width: number, height: number): string {
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+  const d = gcd(width, height);
+  const across = width / d;
+  const down = height / d;
+  return across <= 32 && down <= 32 ? `${across}:${down}` : `${width}×${height}`;
+}
 
 /** Where a block of words sits, as three choices rather than a drag. */
 /* The spots and the box both live in `lib/posttext.ts` now, beside
@@ -5860,19 +5878,47 @@ export default function PostStudio({
      into a canvas in the card — never a file: a full-size image in an <img>
      is a picture somebody can long-press and save, which is a way out that
      skips the one paid press (`check:postpaid`). */
+  /* Carli, 15 October 2026: "Die pers ogie moet vir jou opsies gee van tipe
+     posts. Elke platform se size lyk anders." So it opens on the kind of post
+     nearest the post's own shape, and every other kind is a press away,
+     drawn in its own shape with the picture filling it the way that place
+     fills it (`app/lib/feedshapes.ts`). */
   const [social, setSocial] = useState<true | null>(null);
+  const [feedKindId, setFeedKindId] = useState<string | null>(null);
   const socialCanvas = useRef<HTMLCanvasElement | null>(null);
   useBackLayer(social !== null, () => setSocial(null));
-  const showSocial = (): void => setSocial(true);
+  const showSocial = (): void => {
+    setFeedKindId(nearestKind(size.width, size.height).kind.id);
+    setSocial(true);
+  };
+  const feedNow = ((): { platform: FeedPlatform; kind: FeedKind } => {
+    for (const platform of FEED_PLATFORMS) {
+      const kind = platform.kinds.find((one) => one.id === feedKindId);
+      if (kind) return { platform, kind };
+    }
+    return nearestKind(size.width, size.height);
+  })();
   useEffect(() => {
-    if (!social) return;
-    const from = canvas.current;
-    const to = socialCanvas.current;
-    if (!from || !to) return;
-    to.width = from.width;
-    to.height = from.height;
-    to.getContext('2d')?.drawImage(from, 0, 0);
-  }, [social]);
+    if (!social) return undefined;
+    /* A frame later, so a shape just applied has been drawn on the canvas
+       before it is copied. */
+    const id = window.requestAnimationFrame(() => {
+      const from = canvas.current;
+      const to = socialCanvas.current;
+      if (!from || !to || from.width === 0 || from.height === 0) return;
+      const shape = feedNow.kind;
+      const scale = Math.min(1, PREVIEW_LONGEST / Math.max(shape.width, shape.height));
+      to.width = Math.round(shape.width * scale);
+      to.height = Math.round(shape.height * scale);
+      /* The picture fills the shape: what falls outside it is cut off,
+         which is what the place does and what the line under it says. */
+      const fill = Math.max(to.width / from.width, to.height / from.height);
+      const sw = to.width / fill;
+      const sh = to.height / fill;
+      to.getContext('2d')?.drawImage(from, (from.width - sw) / 2, (from.height - sh) / 2, sw, sh, 0, 0, to.width, to.height);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [social, feedNow.kind, size.width, size.height]);
   /* When the tools step aside — a bench shut, or moving, cropping or tracing
      started — the picture comes back into view. On a phone the open bench is
      under the picture and the page was scrolled down to it; without this the
@@ -5947,6 +5993,7 @@ export default function PostStudio({
      columns that scroll sideways. Only where there is almost no space (a
      story is as tall as the screen) does it lie over the foot of the photo. */
   const panelUp = upright && (stripsUp || here !== null || Boolean(copilot && asking));
+  const saveFull = upright && bench === 'save' && !stripsUp && !(copilot && asking);
 
   /* The space the photograph has, measured, so the canvas fills it. */
   const stage = useRef<HTMLDivElement | null>(null);
@@ -6008,7 +6055,7 @@ export default function PostStudio({
   const header = (
     <header
       data-postbar
-      className="flex flex-shrink-0 items-center gap-1.5 px-2 py-1.5"
+      className={`flex flex-shrink-0 items-center px-2 py-1.5 ${upright ? 'gap-1' : 'gap-1.5'}`}
       style={{ background: PHOTO.floorGlass, borderBottom: `1px solid ${PHOTO.edge}` }}
     >
       {asRoom ? (
@@ -6027,7 +6074,7 @@ export default function PostStudio({
           <X className="h-4 w-4" />
         </button>
       )}
-      <div className="min-w-0 flex-1 overflow-hidden">
+      <div className={upright ? 'flex-shrink-0' : 'min-w-0 flex-1 overflow-hidden'}>
         {/* The name of the room refuses to shrink to nothing: on a 1512-wide
             screen a heading with no width of its own was squeezed to 52
             pixels and read "noto / ditor". */}
@@ -6045,7 +6092,7 @@ export default function PostStudio({
         >
           {/* The name only where there is room for it: on a phone the
               numbers and the arrow, so nothing runs under the buttons. */}
-          {upright ? `${size.width}×${size.height} ▾` : `${size.width}×${size.height} · ${size.name} ▾`}
+          {upright ? `${shapeOf(size.width, size.height)} ▾` : `${size.width}×${size.height} · ${size.name} ▾`}
         </button>
       </div>
       {onEdge && (
@@ -6054,7 +6101,7 @@ export default function PostStudio({
         </span>
       )}
       <span className="flex-1" />
-      {undoRedo}
+      {upright ? null : undoRedo}
       <button
         type="button"
         data-postsimple
@@ -6209,9 +6256,13 @@ export default function PostStudio({
           </div>
         </div>
       )}
-      {/* What the room just said, over the foot of the photograph. */}
+      {/* What the room just said, over the foot of the photograph — or, on a
+          phone with a tool open, over the top of it: the tool covers the
+          foot, and Grab's answers ("Tap one to lift it out", or why the
+          engine said no) were printed behind it. Carli, 15 October 2026:
+          "Die grab funksie werk ook nie." */}
       {(said || covered) && (
-        <div className="pointer-events-none absolute inset-x-2 bottom-2 flex flex-col items-center gap-1">
+        <div className={`pointer-events-none absolute inset-x-2 z-30 flex flex-col items-center gap-1 ${panelUp ? 'top-14' : 'bottom-2'}`}>
           {/* A small sign, not a paragraph: the shaded bands on the photo
               already show where; a tap says why. */}
           {covered && (
@@ -6418,18 +6469,25 @@ export default function PostStudio({
     </div>
   );
 
-  /* ── The feed preview: the real canvas in a post card ─────────────── */
+  /* ── The feed preview: the real canvas, in the shape each place shows ── */
+  const feedCut = cutOff(size, feedNow.kind);
+  const feedSays = feedCut.sides === 'none'
+    ? t('post.socialFits', 'Your post fits this shape exactly.')
+    : (feedCut.sides === 'topBottom'
+      ? t('post.socialCutTopBottom', '{n}% of your post is cut off the top and bottom here.')
+      : t('post.socialCutSides', '{n}% of your post is cut off the sides here.')).replace('{n}', String(Math.max(1, Math.round(feedCut.share * 100))));
+  const feedLook = feedNow.kind.look;
   const socialModal = social ? (
     <div
       data-postsocialmodal
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-3 backdrop-blur-md"
       style={{ background: PHOTO.scrim }}
       onClick={() => setSocial(null)}
     >
       <div
-        className="relative w-full max-w-md rounded-2xl p-5"
+        className="relative flex max-h-[94dvh] w-full max-w-md flex-col overflow-y-auto rounded-2xl p-4"
         style={{ background: PHOTO.surface, border: `1px solid ${PHOTO.purple}`, boxShadow: PHOTO.glowEmerald }}
         onClick={(event) => event.stopPropagation()}
       >
@@ -6443,26 +6501,114 @@ export default function PostStudio({
         >
           <X className="h-4 w-4" />
         </button>
-        <h3 className="text-lg font-bold text-white">{t('post.socialTitle', 'How it looks in a feed')}</h3>
-        <p className="mb-4 font-mono text-xs" style={{ color: PHOTO.purple }}>{t('post.socialWhat', 'Your picture, in a post card, at the size the feed shows it.')}</p>
-        <div className="mb-4 overflow-hidden rounded-xl p-3" style={{ background: PHOTO.black, border: `1px solid ${PHOTO.edge}` }}>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="h-7 w-7 rounded-full" style={{ background: PHOTO.accent }} aria-hidden />
-            <div>
-              <div className="text-xs font-bold text-white">{t('post.socialYou', 'Your page')}</div>
-              <div className="text-[9px]" style={{ color: INK_DIM }}>{t('post.socialNow', 'Just now')}</div>
-            </div>
-          </div>
-          <canvas
-            ref={socialCanvas}
-            data-postsocialpicture
-            className="my-2 block w-full rounded-lg"
-            style={{ aspectRatio: `${size.width} / ${size.height}`, border: `1px solid ${PHOTO.edge}` }}
-          />
-          <div className="flex items-center gap-4 pt-2 text-base" style={{ color: INK_DIM }} aria-hidden>
-            <span>♡</span><span>💬</span><span>↗</span>
-          </div>
+        <h3 className="pr-12 text-lg font-bold text-white">{t('post.socialTitle', 'How it looks where it goes')}</h3>
+        <p className="mb-3 pr-12 font-mono text-xs" style={{ color: PHOTO.purple }}>{t('post.socialWhat', 'Pick a place and a kind of post. Each one is a different shape.')}</p>
+        {/* Sideways on purpose: eight places in one row of chips, swiped. */}
+        <div data-sideways data-postsocialplaces className="-mx-1 mb-2 flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-1">
+          {FEED_PLATFORMS.map((platform) => (
+            <button
+              key={platform.id}
+              type="button"
+              data-postsocialplace={platform.id}
+              aria-pressed={platform.id === feedNow.platform.id}
+              onClick={() => setFeedKindId(platform.kinds[0].id)}
+              className="min-h-[44px] flex-shrink-0 rounded-xl px-3 text-xs font-bold"
+              style={platform.id === feedNow.platform.id
+                ? { background: PHOTO.purple, color: PHOTO.floor }
+                : { ...chipStyle, color: INK }}
+            >
+              {platform.name}
+            </button>
+          ))}
         </div>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {feedNow.platform.kinds.map((kind) => (
+            <button
+              key={kind.id}
+              type="button"
+              data-postsocialkind={kind.id}
+              aria-pressed={kind.id === feedNow.kind.id}
+              onClick={() => setFeedKindId(kind.id)}
+              className="min-h-[44px] rounded-xl border px-3 text-left text-xs font-bold"
+              style={kind.id === feedNow.kind.id
+                ? { borderColor: PHOTO.accent, color: PHOTO.accent, background: PHOTO.chip }
+                : { borderColor: PHOTO.edge, color: INK_DIM, background: 'transparent' }}
+            >
+              {lang === 'af' ? kind.af : kind.en}
+              <span className="block font-mono text-[10px] font-normal">{kind.width}×{kind.height}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mb-3 overflow-hidden rounded-xl p-3" style={{ background: PHOTO.black, border: `1px solid ${PHOTO.edge}` }}>
+          {feedLook === 'feed' ? (
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-7 w-7 rounded-full" style={{ background: PHOTO.accent }} aria-hidden />
+              <div>
+                <div className="text-xs font-bold text-white">{t('post.socialYou', 'Your page')}</div>
+                <div className="text-[9px]" style={{ color: INK_DIM }}>{t('post.socialNow', 'Just now')}</div>
+              </div>
+            </div>
+          ) : null}
+          <div
+            data-postsocialframe={feedLook}
+            className="relative mx-auto overflow-hidden rounded-lg"
+            style={{
+              /* As wide as the card, but never so tall a story pushes the
+                 rest of the card off a phone. */
+              width: `min(100%, calc(50dvh * ${feedNow.kind.width} / ${feedNow.kind.height}))`,
+              aspectRatio: `${feedNow.kind.width} / ${feedNow.kind.height}`,
+              border: `1px solid ${PHOTO.edge}`,
+            }}
+          >
+            <canvas ref={socialCanvas} data-postsocialpicture className="block h-full w-full" />
+            {feedLook === 'full' ? (
+              /* What the app prints over a full screen: a bar at the top,
+                 a name and caption at the foot, buttons up the right. */
+              <div aria-hidden className="pointer-events-none absolute inset-0 text-white">
+                <div className="absolute inset-x-2 top-2 h-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.6)' }} />
+                <div className="absolute bottom-3 left-3 right-12 space-y-1">
+                  <div className="text-[11px] font-bold" style={{ textShadow: '0 1px 2px #000' }}>@{t('post.socialYou', 'Your page')}</div>
+                  <div className="h-1.5 w-3/4 rounded-full" style={{ background: 'rgba(255,255,255,0.5)' }} />
+                  <div className="h-1.5 w-1/2 rounded-full" style={{ background: 'rgba(255,255,255,0.4)' }} />
+                </div>
+                <div className="absolute bottom-10 right-2 flex flex-col items-center gap-3 text-base" style={{ textShadow: '0 1px 2px #000' }}>
+                  <span>♡</span><span>💬</span><span>↗</span>
+                </div>
+              </div>
+            ) : null}
+            {feedLook === 'thumb' ? (
+              <span aria-hidden className="absolute bottom-1.5 right-1.5 rounded bg-black/80 px-1 font-mono text-[10px] text-white">3:42</span>
+            ) : null}
+          </div>
+          {feedLook === 'feed' ? (
+            <div className="flex items-center gap-4 pt-2 text-base" style={{ color: INK_DIM }} aria-hidden>
+              <span>♡</span><span>💬</span><span>↗</span>
+            </div>
+          ) : null}
+          {feedLook === 'thumb' ? (
+            <div className="flex items-start gap-2 pt-2" aria-hidden>
+              <span className="h-7 w-7 flex-shrink-0 rounded-full" style={{ background: PHOTO.accent }} />
+              <div className="flex-1 space-y-1 pt-1">
+                <div className="h-2 w-5/6 rounded-full" style={{ background: INK_DIM }} />
+                <div className="h-1.5 w-1/2 rounded-full" style={{ background: PHOTO.edge }} />
+              </div>
+            </div>
+          ) : null}
+        </div>
+        <p data-postsocialfit={feedCut.sides} className="mb-3 text-xs" style={{ color: feedCut.sides === 'none' ? PHOTO.accent : INK }}>
+          {feedSays}
+        </p>
+        {feedCut.sides !== 'none' ? (
+          <button
+            type="button"
+            data-postsocialuse
+            onClick={() => handleApplyCanvasSize(feedNow.kind.width, feedNow.kind.height, `${feedNow.platform.name} ${lang === 'af' ? feedNow.kind.af : feedNow.kind.en}`)}
+            className="mb-2 min-h-[44px] w-full rounded-xl border text-xs font-bold"
+            style={{ borderColor: PHOTO.purple, color: PHOTO.purple, background: 'transparent' }}
+          >
+            {t('post.socialUse', 'Make my post this shape')} · {feedNow.kind.width}×{feedNow.kind.height}
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => setSocial(null)}
@@ -6516,17 +6662,49 @@ export default function PostStudio({
               (`[data-neon]` in globals.css). */}
           <div className="relative flex min-h-0 flex-1 flex-col">
             {photo}
-            {panelUp && (stripsUp || toolSheet || copilotSheet) && (
+            {/* Undo and redo ride on the photograph's corner on a phone: in
+                the bar they pushed "Take it out" off the right edge of a
+                360-pixel screen (Carli, 15 October 2026: "Daai take it out
+                button daar regs bo is afgesny"). */}
+            {undoRedo ? <div data-postundorow className="absolute left-2 top-2 z-10 flex gap-1">{undoRedo}</div> : null}
+            {saveFull && toolSheet ? (
+              /* Carli, 15 October 2026: "Take it out se pop out kan oor die
+                 hele skerm gaan." So it does: the whole space between the
+                 bar and the tools, on a solid floor, scrolling down. The bar
+                 and the tools stay, so the green button shuts it again and
+                 any other tool is one press away. */
+              <div
+                data-postsavefull
+                className="absolute inset-0 z-20 flex min-h-0 flex-col overflow-y-auto"
+                style={{ background: PHOTO.floor }}
+              >
+                {toolSheet}
+              </div>
+            ) : panelUp && (stripsUp || toolSheet || copilotSheet) && (
               <div
                 data-postpop
                 data-postunder
                 /* The magic touch is aimed by tapping the photo, so the empty
                    parts of the panel let a tap through to it where the two
                    overlap; only its buttons and fields catch one. */
-                data-passthrough={bench === 'magic' ? 'yes' : undefined}
+                data-passthrough={bench === 'magic' || stripsUp ? 'yes' : undefined}
                 data-neon
                 className="absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col"
-                style={{ height: fitted ? Math.max(UNDER_LEAST, fitted.room - fitted.h - 20) : UNDER_LEAST }}
+                /* Up to the middle of the photograph. Carli, 15 October
+                   2026: "Die scrolling bar onder moet 'n bietjie groter.
+                   Beweeg die hele ding op tot in die middel van die
+                   prent." The photo sits at the top (pt-2, 8 pixels), so
+                   its middle is 8 + half its height down the stage. */
+                /* Not while a bar acts ON the photograph — picking a line or a
+                   thing out of it, cropping, tracing, moving words: then the
+                   whole photograph is what the thumb is for, and the bar keeps
+                   to the space under it. Grab's boxes in the lower half could
+                   not be tapped through a panel lying over them. */
+                style={{
+                  height: !fitted ? UNDER_LEAST
+                    : stripsUp ? Math.max(STRIP_LEAST, fitted.room - fitted.h - 20)
+                      : Math.max(UNDER_LEAST, Math.round(fitted.room - 8 - fitted.h / 2)),
+                }}
               >
                 {stripsUp
                   ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
