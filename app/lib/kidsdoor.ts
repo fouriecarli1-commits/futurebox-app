@@ -37,6 +37,13 @@ export interface KidsState {
    * with no account behind it goes nowhere — see `KidsFail` below.
    */
   readonly signedIn?: boolean;
+  /**
+   * Why the room could not be read, when it was not because nobody is
+   * signed in. It used to be swallowed into a plain "shut", so a server
+   * fault drew the parents' page with nothing on it to say why it would not
+   * open.
+   */
+  readonly problem?: string;
 }
 
 /**
@@ -105,7 +112,8 @@ async function ask(
 export async function kidsNow(): Promise<KidsState> {
   const now = await ask('GET');
   if (!failed(now)) return now;
-  return now.fail === 'signedOut' ? { ...shut, signedIn: false } : shut;
+  if (now.fail === 'signedOut') return { ...shut, signedIn: false };
+  return { ...shut, problem: now.fail === 'network' ? 'network' : now.fail };
 }
 
 /**

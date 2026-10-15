@@ -208,6 +208,26 @@ const server = withoutComments(readFileSync('app/lib/server/workfile.ts', 'utf8'
 ok('  and nothing fetches a URL that arrived on the form',
   !/fetch\(/.test(server), 'lib/server/workfile.ts');
 
+/* ── A Response is answered once ───────────────────────────────────────
+   Carli, 15 October 2026: the kids studio would not open after signing in.
+   `/api/kids` built its 401 once, at module level, and returned the same
+   object to every signed-out request; a body can be read once, so the
+   second one became a 500 and the page never learnt to ask her to sign in.
+   No route may keep a Response in a module-level constant. */
+function everyRoute(dir = 'app/api', found: string[] = []): string[] {
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) everyRoute(path, found);
+    else if (/\.tsx?$/.test(name)) found.push(path);
+  }
+  return found;
+}
+const shared = everyRoute().filter((path) =>
+  /^(?:export\s+)?const\s+\w+\s*(?::[^=]+)?=\s*(?:Response\.json\(|new Response\(|NextResponse\.json\()/m
+    .test(withoutComments(readFileSync(path, 'utf8'))));
+ok('no route hands the same Response to two requests', shared.length === 0,
+  `${shared.join(', ')} — build it in a function; a body is read once, and the second caller gets a 500`);
+
 if (bad) {
   console.error(`\ncheck:bodylimit — ${bad} assertion(s) failed.\n`);
   process.exit(1);

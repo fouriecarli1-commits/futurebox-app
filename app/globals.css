@@ -1691,3 +1691,33 @@ html[data-singing] [data-tabbar] { display: none !important; }
 /* The magic touch: a tap on the photo between the controls reaches the photo. */
 [data-postpop][data-passthrough="yes"] { pointer-events: none; }
 [data-postpop][data-passthrough="yes"] :is(button, input, select, textarea, label, a) { pointer-events: auto; }
+
+/* ── Photo editor, phone: a tool's controls under the photograph ────────────
+   Carli, 15 October 2026: the functions in the black space under the photo,
+   "in 'n side scroll". The panel's body scrolls sideways and each section of
+   the tool is a column of its own that scrolls down by itself, so one tool's
+   whole set is a swipe away rather than a long scroll over the picture.
+   `[data-desk] > div:last-child` is DeskSheet's body; its one child is the
+   bench's root, whose children are the bench's sections. */
+[data-postunder] [data-desk] > div:last-child {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+[data-postunder] [data-desk] > div:last-child > div,
+[data-postunder] [data-desk] > div:last-child > div > div {
+  height: 100%;
+}
+[data-postunder] [data-desk] > div:last-child > div > div {
+  display: flex;
+  flex-direction: row;
+  /* Not stretched: a column as tall as the panel stretches the grid of
+     buttons inside it, and a 44-pixel button became 117 (check:tidybars). */
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+[data-postunder] [data-desk] > div:last-child > div > div > * {
+  flex: 0 0 min(19rem, 82vw);
+  max-height: 100%;
+  overflow-y: auto;
+  margin: 0 !important;
+}

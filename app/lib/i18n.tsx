@@ -3210,6 +3210,10 @@ export const STRINGS: Dict = {
   "make.goingNote": { en: "Making it. A real song takes thirty to sixty seconds \u2014 longer for a long one.", af: "Besig. ’n Regte liedjie vat dertig tot sestig sekondes \u2014 langer vir ’n lang een." },
   "make.go": { en: "Make the song", af: "Maak die liedjie" },
   /* The song box, Carli 15 October 2026. */
+  "post.alignLeft": { en: "Left", af: "Links" },
+  "post.alignCenter": { en: "Centre", af: "Middel" },
+  "post.alignRight": { en: "Right", af: "Regs" },
+  "post.wordsSize": { en: "Size", af: "Grootte" },
   "make.easy": { en: "Easy", af: "Maklik" },
   "make.extensive": { en: "Extensive", af: "Uitgebreid" },
   "make.wayWhy": { en: "Easy: tell the copilot what you want in a few words and it writes the song. Extensive: write it verse by verse, with what each part of a song is for. The buttons along the bottom of the box set the length, the feel and the voice.", af: "Maklik: s\u00ea vir die copilot in \u2019n paar woorde wat jy wil h\u00ea en hy skryf die liedjie. Uitgebreid: skryf dit vers vir vers, met waarvoor elke deel van \u2019n liedjie is. Die knoppies onder in die boks stel die lengte, die gevoel en die stem." },

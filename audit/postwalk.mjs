@@ -857,6 +857,12 @@ try {
      Read as the average of the canvas, which moves when any pixel does. */
   await bench('text');
   if ((await page.locator('[data-postbehindwords="bar"]').count()) > 0) {
+    /* The line picked first, so its ring is on the glass in both readings.
+       Since 15 October 2026 pressing a line's card picks it and draws a
+       bright ring round it (on screen only); picked in the same press as the
+       bar, the ring's green outweighed the bar's dark in the average. */
+    await page.locator('[data-postwordcard]').first().dispatchEvent('pointerdown');
+    await page.waitForTimeout(400);
     const plainText = await mean();
     await page.locator('[data-postbehindwords="bar"]').first().click();
     await page.waitForTimeout(600);

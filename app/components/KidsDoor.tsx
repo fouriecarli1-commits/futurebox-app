@@ -260,6 +260,19 @@ export default function KidsDoor({
         </div>
       </div>
 
+      {/* ── The room could not be read ───────────────────────────────────
+          Said, rather than drawing the parents' page as though nothing were
+          wrong — Carli could not tell why it would not open. */}
+      {state?.problem && (
+        <p
+          data-kidsproblem
+          role="alert"
+          className="rounded-2xl border-2 border-amber-300/70 bg-surface-50/85 p-4 text-sm leading-relaxed text-surface-900"
+        >
+          {say({ fail: state.problem })}
+        </p>
+      )}
+
       {/* ── Nobody signed in ─────────────────────────────────────────────
           The sign-in screen links here, so a grown-up can arrive with no
           account behind them. Then the allowance buttons are a lie: every

@@ -47,14 +47,21 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const mustSignIn = Response.json(
+/* A function, not a constant. Carli, 15 October 2026: *"Die kids studio
+   wil nie oop maak wanneer ek in log nie."* This was one Response built when
+   the module loaded and handed back to every signed-out request. A body can
+   be read once: on a warm server the second signed-out ask was answered with
+   a 500 ("Body has already been read") instead of 401, so the page never
+   learnt it was signed out, drew no sign-in step, and left the parent at
+   buttons that could not work. `check:bodylimit` holds every route to it. */
+const mustSignIn = (): Response => Response.json(
   { message: 'Sign in first — an allowance belongs to an account.', signedIn: false },
   { status: 401 },
 );
 
 export async function GET(request: Request): Promise<Response> {
   const caller = await callerFrom(request);
-  if (!caller) return mustSignIn;
+  if (!caller) return mustSignIn();
   const room = await kidsRoom(caller.id);
   /* `open: false` rather than a 404. "Is kids mode on" is a question with an
      answer, and the answer is no — a missing resource would make the page
@@ -66,7 +73,7 @@ export async function GET(request: Request): Promise<Response> {
 
 export async function POST(request: Request): Promise<Response> {
   const caller = await callerFrom(request);
-  if (!caller) return mustSignIn;
+  if (!caller) return mustSignIn();
 
   const body = (await request.json().catch(() => null)) as {
     allowance?: unknown;
@@ -134,7 +141,7 @@ export async function POST(request: Request): Promise<Response> {
  */
 export async function PUT(request: Request): Promise<Response> {
   const caller = await callerFrom(request);
-  if (!caller) return mustSignIn;
+  if (!caller) return mustSignIn();
 
   const body = (await request.json().catch(() => null)) as { sit?: unknown } | null;
   const sitting = body?.sit !== false;
@@ -149,7 +156,7 @@ export async function PUT(request: Request): Promise<Response> {
 
 export async function DELETE(request: Request): Promise<Response> {
   const caller = await callerFrom(request);
-  if (!caller) return mustSignIn;
+  if (!caller) return mustSignIn();
   if (!(await shutKids(caller.id))) {
     return Response.json({ message: 'That could not be saved. Try again.' }, { status: 503 });
   }

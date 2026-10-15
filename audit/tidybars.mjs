@@ -278,7 +278,12 @@ try {
           /* Inside something already counted: part of it, not a second one. */
           if (controls.some((other) => other !== el && other.contains(el))) continue;
           const box = el.getBoundingClientRect();
+          /* Which column it is in, where a bench lays its sections out side
+             by side (the photo editor on a phone, 15 October 2026): two
+             buttons at the same height in two columns are not one row. */
+          const column = el.closest('[data-postunder] [data-desk] > div:last-child > div > div > *');
           out.push({
+            col: column ? Math.round(column.getBoundingClientRect().left) : 0,
             h: Math.round(box.height),
             w: Math.round(box.width),
             top: Math.round(box.top),
@@ -340,7 +345,7 @@ try {
       /* Grouped by the top edge: controls that share a row. */
       const rows = new Map();
       for (const one of seen.filter((one) => !one.glyph)) {
-        const key = Math.round(one.top / 4) * 4;
+        const key = `${one.col}:${Math.round(one.top / 4) * 4}`;
         rows.set(key, [...(rows.get(key) ?? []), one]);
       }
       const ragged = [...rows.values()]

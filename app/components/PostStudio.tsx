@@ -48,6 +48,7 @@ import {
   ArrowLeft,
   Bookmark,
   Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, X,
+  AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
@@ -206,6 +207,9 @@ const VELD = 'mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-
  */
 const PREVIEW_LONGEST = 540;
 
+/** The least height a tool's controls get under the photo on a phone. */
+const UNDER_LEAST = 200;
+
 /** Where a block of words sits, as three choices rather than a drag. */
 /* The spots and the box both live in `lib/posttext.ts` now, beside
    `clashes`, because a box drawn here and a rule about it there is two
@@ -247,7 +251,20 @@ interface Words {
    * is drawn so that it exports.
    */
   readonly glow?: GlowId;
+  /**
+   * How big, against the size the room fits it at. Carli, 15 October 2026:
+   * *"When I touch the text box … a cropping ring so that we can adjust the
+   * size of the text on screen."* Pulled by the ring's corners; absent is 1.
+   */
+  readonly size?: number;
+  /** Which edge a paragraph's lines line up on. Absent is the middle. */
+  readonly align?: TextAlign;
 }
+
+/** Where a paragraph's lines line up: "center text or put it to the left, or right". */
+type TextAlign = 'left' | 'center' | 'right';
+/** How far the ring's corners can pull a line, smaller and bigger. */
+const WORDS_SIZE = { min: 0.3, max: 3 } as const;
 
 /**
  * One post, one id, for as long as it is open.
@@ -891,7 +908,14 @@ export default function PostStudio({
     readonly x: number; readonly y: number; readonly w: number; readonly h: number;
   }>());
   /** The line a thumb is currently carrying, and where it took hold. */
-  const carrying = useRef<{ readonly id: string; readonly dx: number; readonly dy: number } | null>(null);
+  const carrying = useRef<{
+    readonly id: string;
+    readonly dx: number;
+    readonly dy: number;
+    /** Set when a corner of the ring was taken: the block's middle in frame
+        pixels, how far from it the thumb started, and the size it started at. */
+    readonly pull?: { readonly cx: number; readonly cy: number; readonly from: number; readonly size: number };
+  } | null>(null);
   /* The copilot's sheet. `aria-pressed` rather than `aria-expanded` on the
      button that opens it — see the note on the cutting room's. */
   const [asking, setAsking] = useState(false);
@@ -1134,7 +1158,12 @@ export default function PostStudio({
     for (const one of words) {
       if (!one.text.trim()) continue;
       const chosen = faceOf(one.face);
-      const box = moveInside(boxOfSpot(one.spot, size), size);
+      /* The ring's corners scale the box the words are fitted into, and the
+         ceiling with it — a fifth of the height is the most a caption is,
+         and somebody pulling a corner out is asking for more than a caption. */
+      const scale = one.size ?? 1;
+      const base = moveInside(boxOfSpot(one.spot, size), size);
+      const box = { ...base, w: Math.min(1, base.w * scale), h: Math.min(1, base.h * scale) };
       /* ── Measured with the letter spacing in it ──────────────────────
  
           A gap applied at the drawing and not at the measuring gives text
@@ -1145,7 +1174,9 @@ export default function PostStudio({
       const measure = measureWithGap(
         measureWith(ctx, chosen.css, chosen.weight), letterGap,
       );
-      const fit = fitText(one.text, box, size, measure, { lineHeight: lineGap });
+      const fit = fitText(one.text, box, size, measure, {
+        lineHeight: lineGap, most: Math.round(size.height * 0.2 * scale),
+      });
       ctx.font = `${chosen.weight} ${fit.px}px ${chosen.css}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
@@ -1164,19 +1195,29 @@ export default function PostStudio({
           export and the preview could disagree on one and not the other.
           Drawn letter by letter, the arithmetic is ours and is the same
           everywhere. */
+      const gapPx = letterGap * fit.px;
+      const lineWide = (line: string): number =>
+        ctx.measureText(line).width + Math.max(0, line.length - 1) * gapPx;
+      /* One width for the whole block, so a left- or right-aligned paragraph
+         lines up on an edge of the block rather than each line on its own. */
+      const blockWide = fit.lines.reduce((most, line) => Math.max(most, lineWide(line)), 0);
+      const align = one.align ?? 'center';
       const writeLine = (line: string, atX: number, atY: number): void => {
-        if (letterGap === 0) {
-          ctx.fillText(line, atX, atY);
-          return;
-        }
-        const gap = letterGap * fit.px;
-        const wide = ctx.measureText(line).width + Math.max(0, line.length - 1) * gap;
-        let x = atX - wide / 2;
+        const wide = lineWide(line);
+        let x = align === 'left'
+          ? atX - blockWide / 2
+          : align === 'right'
+            ? atX + blockWide / 2 - wide
+            : atX - wide / 2;
         const was = ctx.textAlign;
         ctx.textAlign = 'left';
-        for (const letter of line) {
-          ctx.fillText(letter, x, atY);
-          x += ctx.measureText(letter).width + gap;
+        if (letterGap === 0) {
+          ctx.fillText(line, x, atY);
+        } else {
+          for (const letter of line) {
+            ctx.fillText(letter, x, atY);
+            x += ctx.measureText(letter).width + gapPx;
+          }
         }
         ctx.textAlign = was;
       };
@@ -1268,6 +1309,49 @@ export default function PostStudio({
         ctx.shadowBlur = Math.max(2, fit.px * 0.12);
         writeBlock();
         ctx.shadowBlur = 0;
+      }
+    }
+
+    /* ── The ring round the line she touched ──────────────────────────────
+       Carli, 15 October 2026: *"When I touch the text box on photo editor I
+       have to see that I am touching it by making a cropping ring so that we
+       can adjust the size of the text on screen."* The crop box's look — a
+       bright edge and a handle at each corner — on the screen only. A corner
+       is pulled to make the words bigger or smaller (`grab` below). */
+    if (guides && wordOn) {
+      const was = laidOut.current.get(wordOn);
+      if (was) {
+        const line = Math.max(2, size.width * 0.004);
+        const left = (was.x - was.w / 2) * size.width;
+        const top = (was.y - was.h / 2) * size.height;
+        const wide = was.w * size.width;
+        const tall = was.h * size.height;
+        const arm = Math.min(wide, tall, size.width * 0.06);
+        const knob = Math.max(9, size.width * 0.018);
+        ctx.save();
+        ctx.strokeStyle = '#39ff14';
+        ctx.shadowColor = '#39ff14';
+        ctx.shadowBlur = line * 4;
+        ctx.lineWidth = line;
+        ctx.setLineDash([line * 4, line * 3]);
+        ctx.strokeRect(left, top, wide, tall);
+        ctx.setLineDash([]);
+        ctx.lineWidth = line * 2.5;
+        for (const [cx, cy, dx, dy] of [
+          [left, top, 1, 1], [left + wide, top, -1, 1],
+          [left, top + tall, 1, -1], [left + wide, top + tall, -1, -1],
+        ] as const) {
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + dy * arm);
+          ctx.lineTo(cx, cy);
+          ctx.lineTo(cx + dx * arm, cy);
+          ctx.stroke();
+          ctx.fillStyle = '#39ff14';
+          ctx.beginPath();
+          ctx.arc(cx, cy, knob, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
       }
     }
 
@@ -1448,6 +1532,8 @@ export default function PostStudio({
     /* The shapes and the one picked: drawn by `draw`, so they repaint it.
        A shape dragged with these missing moved in the state and stayed put
        on the glass until something else happened to repaint. */
+    /* The ring round the touched line is drawn by `draw` as well. */
+    wordOn,
     marks, markOn, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
@@ -1595,6 +1681,31 @@ export default function PostStudio({
     if (!cropBox && !traced && words.length > 0) {
       const put = frameAt(event);
       if (put) {
+        /* A corner of the ring round the line already touched: pulled, it
+           makes the words bigger or smaller about their middle. Checked
+           first, because a corner sits on the edge of the block and the
+           block's own test below would take it as a move. */
+        const ringed = wordOn ? laidOut.current.get(wordOn) : undefined;
+        const line = wordOn ? words.find((one) => one.id === wordOn) : undefined;
+        if (ringed && line) {
+          const px = put.x * size.width;
+          const py = put.y * size.height;
+          const cx = ringed.x * size.width;
+          const cy = ringed.y * size.height;
+          const halfW = (ringed.w * size.width) / 2;
+          const halfH = (ringed.h * size.height) / 2;
+          const reach = Math.max(22, size.width * 0.05);
+          const corner = [[-1, -1], [1, -1], [-1, 1], [1, 1]].some(([sx, sy]) =>
+            Math.hypot(px - (cx + sx * halfW), py - (cy + sy * halfH)) <= reach);
+          if (corner) {
+            carrying.current = {
+              id: line.id, dx: 0, dy: 0,
+              pull: { cx, cy, from: Math.max(1, Math.hypot(px - cx, py - cy)), size: line.size ?? 1 },
+            };
+            event.currentTarget.setPointerCapture(event.pointerId);
+            return;
+          }
+        }
         for (const one of words) {
           const was = laidOut.current.get(one.id);
           if (!was) continue;
@@ -1602,6 +1713,9 @@ export default function PostStudio({
           carrying.current = { id: one.id, dx: put.x - was.x, dy: put.y - was.y };
           setWordOn(one.id);
           setMarkOn(null);
+          /* Its controls open under the picture — alignment, spacing, size —
+             the way touching a shape opens the shapes. */
+          if (!movingWords && bench !== 'text') setBench('text');
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
         }
@@ -1698,6 +1812,15 @@ export default function PostStudio({
       return;
     }
     const held = carrying.current;
+    if (held?.pull) {
+      const put = frameAt(event);
+      if (!put) return;
+      const { cx, cy, from, size: was } = held.pull;
+      const now = Math.hypot(put.x * size.width - cx, put.y * size.height - cy);
+      const next = Math.max(WORDS_SIZE.min, Math.min(WORDS_SIZE.max, was * (now / from)));
+      setWords((all) => all.map((one) => (one.id === held.id ? { ...one, size: Math.round(next * 100) / 100 } : one)));
+      return;
+    }
     if (held) {
       const put = frameAt(event);
       if (!put) return;
@@ -5006,7 +5129,9 @@ export default function PostStudio({
     </div>
 
     {/* ── The words ─────────────────────────────────────────────────── */}
-    <div className="space-y-3">
+    {/* First of the columns under the photo once a line is touched: its
+        controls are what she reached for. */}
+    <div className="space-y-3" data-postwordsdesk style={wordOn ? { order: -1 } : undefined}>
       {words.length > 0 && (
         <>
           <button
@@ -5047,8 +5172,17 @@ export default function PostStudio({
         </p>
       )}
 
-      {words.map((one) => (
-        <div key={one.id} className="space-y-2 rounded-xl border border-zinc-800 p-3">
+      {/* The line touched on the picture first, and marked: its controls are
+          what she reached for (Carli, 15 October 2026). Pressing a card picks
+          its line, so the ring shows which one these sliders move. */}
+      {[...words].sort((a, b) => (a.id === wordOn ? -1 : b.id === wordOn ? 1 : 0)).map((one) => (
+        <div
+          key={one.id}
+          data-postwordcard={one.id}
+          data-postwordon={one.id === wordOn ? 'yes' : undefined}
+          onPointerDown={() => { if (wordOn !== one.id) { setWordOn(one.id); setMarkOn(null); } }}
+          className={`space-y-2 rounded-xl border p-3 ${one.id === wordOn ? 'border-emerald-400' : 'border-zinc-800'}`}
+        >
           <label className="block">
             <span className={MIKRO}>{t('post.theWords', 'The words')}</span>
             <textarea
@@ -5163,50 +5297,97 @@ export default function PostStudio({
               neither costs anything, since both are drawn rather than
               written. The letter one is measured as well as drawn, so the
               type still fits the box it was fitted to. */}
-          {!plain && (
-            <div className={RY}>
-              <label className={`${KNOP} cursor-pointer flex-col !items-stretch !justify-center gap-1 py-1`}>
-                <span className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
-                  {t('post.lineGap', 'Line spacing')}
-                  <span data-postlinegapnow className="tabular-nums">
-                    {(one.lineGap ?? LINE_GAP.normal).toFixed(2)}
-                  </span>
+          {/* ── Where the lines line up, and how big ───────────────────
+              Carli, 15 October 2026: *"If I type a paragraph, it has to
+              have the functions of center text or put it to the left, or
+              right, or adjust the letter spacing, and line spacing."* Shown
+              in simple mode too, with the two spacings, because she asked
+              for them by name. The size is the same number the ring's
+              corners pull. */}
+          <div className="flex gap-1.5" data-postalign={one.id}>
+            {(['left', 'center', 'right'] as const).map((side) => {
+              const Icon = side === 'left' ? AlignLeft : side === 'right' ? AlignRight : AlignCenter;
+              const label = side === 'left'
+                ? t('post.alignLeft', 'Left')
+                : side === 'right' ? t('post.alignRight', 'Right') : t('post.alignCenter', 'Centre');
+              return (
+                <button
+                  key={side}
+                  type="button"
+                  data-postalignpick={side}
+                  aria-pressed={(one.align ?? 'center') === side}
+                  aria-label={label}
+                  title={label}
+                  onClick={() => setWords((was) => was.map((w) => (
+                    w.id === one.id ? { ...w, align: side } : w)))}
+                  className={`${LEEG} flex-1 justify-center ${(one.align ?? 'center') === side ? GEKIES : ''}`}
+                >
+                  <Icon className="h-4 w-4" />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={RY} data-postspacing={one.id}>
+            <label className={`${KNOP} cursor-pointer flex-col !items-stretch !justify-center gap-1 py-1`}>
+              <span className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                {t('post.wordsSize', 'Size')}
+                <span data-postwordssizenow className="tabular-nums">{Math.round((one.size ?? 1) * 100)}%</span>
+              </span>
+              <input
+                type="range"
+                data-postwordssize={one.id}
+                min={WORDS_SIZE.min}
+                max={WORDS_SIZE.max}
+                step={0.05}
+                value={one.size ?? 1}
+                onChange={(event) => setWords((was) => was.map((w) => (
+                  w.id === one.id ? { ...w, size: Number(event.target.value) } : w)))}
+                className="h-5 w-full cursor-pointer accent-emerald-500"
+                aria-label={t('post.wordsSize', 'Size')}
+              />
+            </label>
+            <label className={`${KNOP} cursor-pointer flex-col !items-stretch !justify-center gap-1 py-1`}>
+              <span className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                {t('post.lineGap', 'Line spacing')}
+                <span data-postlinegapnow className="tabular-nums">
+                  {(one.lineGap ?? LINE_GAP.normal).toFixed(2)}
                 </span>
-                <input
-                  type="range"
-                  data-postlinegap={one.id}
-                  min={LINE_GAP.min}
-                  max={LINE_GAP.max}
-                  step={LINE_GAP.step}
-                  value={one.lineGap ?? LINE_GAP.normal}
-                  onChange={(event) => setWords((was) => was.map((w) => (
-                    w.id === one.id ? { ...w, lineGap: Number(event.target.value) } : w)))}
-                  className="h-5 w-full cursor-pointer accent-emerald-500"
-                  aria-label={t('post.lineGap', 'Line spacing')}
-                />
-              </label>
-              <label className={`${KNOP} cursor-pointer flex-col !items-stretch !justify-center gap-1 py-1`}>
-                <span className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
-                  {t('post.letterGap', 'Letter spacing')}
-                  <span data-postlettergapnow className="tabular-nums">
-                    {(one.letterGap ?? LETTER_GAP.normal).toFixed(2)}
-                  </span>
+              </span>
+              <input
+                type="range"
+                data-postlinegap={one.id}
+                min={LINE_GAP.min}
+                max={LINE_GAP.max}
+                step={LINE_GAP.step}
+                value={one.lineGap ?? LINE_GAP.normal}
+                onChange={(event) => setWords((was) => was.map((w) => (
+                  w.id === one.id ? { ...w, lineGap: Number(event.target.value) } : w)))}
+                className="h-5 w-full cursor-pointer accent-emerald-500"
+                aria-label={t('post.lineGap', 'Line spacing')}
+              />
+            </label>
+            <label className={`${KNOP} cursor-pointer flex-col !items-stretch !justify-center gap-1 py-1`}>
+              <span className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                {t('post.letterGap', 'Letter spacing')}
+                <span data-postlettergapnow className="tabular-nums">
+                  {(one.letterGap ?? LETTER_GAP.normal).toFixed(2)}
                 </span>
-                <input
-                  type="range"
-                  data-postlettergap={one.id}
-                  min={LETTER_GAP.min}
-                  max={LETTER_GAP.max}
-                  step={LETTER_GAP.step}
-                  value={one.letterGap ?? LETTER_GAP.normal}
-                  onChange={(event) => setWords((was) => was.map((w) => (
-                    w.id === one.id ? { ...w, letterGap: Number(event.target.value) } : w)))}
-                  className="h-5 w-full cursor-pointer accent-emerald-500"
-                  aria-label={t('post.letterGap', 'Letter spacing')}
-                />
-              </label>
-            </div>
-          )}
+              </span>
+              <input
+                type="range"
+                data-postlettergap={one.id}
+                min={LETTER_GAP.min}
+                max={LETTER_GAP.max}
+                step={LETTER_GAP.step}
+                value={one.letterGap ?? LETTER_GAP.normal}
+                onChange={(event) => setWords((was) => was.map((w) => (
+                  w.id === one.id ? { ...w, letterGap: Number(event.target.value) } : w)))}
+                className="h-5 w-full cursor-pointer accent-emerald-500"
+                aria-label={t('post.letterGap', 'Letter spacing')}
+              />
+            </label>
+          </div>
         </div>
       ))}
     </div>
@@ -5688,10 +5869,20 @@ export default function PostStudio({
     if (bench !== next) setAsking(false);
   };
   const stripsUp = Boolean((picture && (cropBox || traced)) || picking || movingWords);
+  /* ── On a phone, a tool opens UNDER the photograph ─────────────────────
+     Carli, 15 October 2026, a red ring drawn round the empty black under a
+     square photo: *"Kan die funksies in plaas van dat dit oor die prent op
+     kom, eerder in daai swart gedeelte … op kom en in 'n side scroll in
+     gaan. Daar is genoeg plek as dit side scroll."* So the photograph moves
+     to the top of its space — still its full size, it never shrinks (14
+     October) — and the tool fills the space it leaves, its sections in
+     columns that scroll sideways. Only where there is almost no space (a
+     story is as tall as the screen) does it lie over the foot of the photo. */
+  const panelUp = upright && (stripsUp || here !== null || Boolean(copilot && asking));
 
   /* The space the photograph has, measured, so the canvas fills it. */
   const stage = useRef<HTMLDivElement | null>(null);
-  const [fitted, setFitted] = useState<{ w: number; h: number } | null>(null);
+  const [fitted, setFitted] = useState<{ w: number; h: number; room: number } | null>(null);
   useEffect(() => {
     const el = stage.current;
     if (!el || typeof ResizeObserver === 'undefined') return undefined;
@@ -5700,7 +5891,7 @@ export default function PostStudio({
       const ratio = size.width / size.height;
       const room = { w: Math.max(0, box.width - 16), h: Math.max(0, box.height - 16) };
       const w = Math.max(80, Math.floor(Math.min(room.w, room.h * ratio)));
-      setFitted({ w, h: Math.floor(w / ratio) });
+      setFitted({ w, h: Math.floor(w / ratio), room: box.height });
     };
     measure();
     const watch = new ResizeObserver(measure);
@@ -5850,7 +6041,7 @@ export default function PostStudio({
 
   /* ── The photograph, as big as the space allows ───────────────────── */
   const photo = (
-    <div ref={stage} data-poststage className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden">
+    <div ref={stage} data-poststage className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp ? 'items-start pt-2' : 'items-center'}`}>
       <canvas
         ref={canvas}
         data-postcanvas
@@ -6251,17 +6442,21 @@ export default function PostStudio({
               (`[data-neon]` in globals.css). */}
           <div className="relative flex min-h-0 flex-1 flex-col">
             {photo}
-            {(stripsUp || toolSheet || copilotSheet) && (
+            {panelUp && (stripsUp || toolSheet || copilotSheet) && (
               <div
                 data-postpop
-                /* The magic touch is aimed by tapping the photo under these
-                   controls, so the empty parts of the overlay let a tap
-                   through to it; only its buttons and fields catch one. */
+                data-postunder
+                /* The magic touch is aimed by tapping the photo, so the empty
+                   parts of the panel let a tap through to it where the two
+                   overlap; only its buttons and fields catch one. */
                 data-passthrough={bench === 'magic' ? 'yes' : undefined}
                 data-neon
-                className="absolute inset-x-0 top-0 z-20 flex max-h-[58%] min-h-0 flex-col overflow-y-auto"
+                className="absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col"
+                style={{ height: fitted ? Math.max(UNDER_LEAST, fitted.room - fitted.h - 20) : UNDER_LEAST }}
               >
-                {stripsUp ? strips : copilotSheet ?? toolSheet}
+                {stripsUp
+                  ? <div className="min-h-0 flex-1 overflow-y-auto">{strips}</div>
+                  : copilotSheet ?? toolSheet}
               </div>
             )}
           </div>
