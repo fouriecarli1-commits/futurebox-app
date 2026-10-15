@@ -898,6 +898,12 @@ export default function PostStudio({
      shape cut, and for the same reason: the bench covers the middle of the
      picture, so a word under it cannot be taken hold of. */
   const [movingWords, setMovingWords] = useState(false);
+  /* Shutting the tools lets go of the touched line too, so its ring goes
+     with the panel that was about it (15 October 2026). Not while moving
+     words: that mode shuts the panel on purpose so the lines can be held. */
+  useEffect(() => {
+    if (bench === null && !movingWords) setWordOn(null);
+  }, [bench, movingWords]);
 
   const [cutShape, setCutShape] = useState<CutShape>('pencil');
   const cutFrom = useRef<{ readonly x: number; readonly y: number } | null>(null);
@@ -1155,6 +1161,11 @@ export default function PostStudio({
       }
     }
 
+    /* A line emptied or taken away leaves no place behind: a stale entry
+       here is a ring round nothing that a thumb can still catch. */
+    for (const id of [...laidOut.current.keys()]) {
+      if (!words.some((one) => one.id === id && one.text.trim())) laidOut.current.delete(id);
+    }
     for (const one of words) {
       if (!one.text.trim()) continue;
       const chosen = faceOf(one.face);
@@ -1319,7 +1330,8 @@ export default function PostStudio({
        bright edge and a handle at each corner — on the screen only. A corner
        is pulled to make the words bigger or smaller (`grab` below). */
     if (guides && wordOn) {
-      const was = laidOut.current.get(wordOn);
+      const line = words.find((one) => one.id === wordOn);
+      const was = line && line.text.trim() ? laidOut.current.get(wordOn) : undefined;
       if (was) {
         const line = Math.max(2, size.width * 0.004);
         const left = (was.x - was.w / 2) * size.width;
@@ -1707,6 +1719,7 @@ export default function PostStudio({
           }
         }
         for (const one of words) {
+          if (!one.text.trim()) continue;
           const was = laidOut.current.get(one.id);
           if (!was) continue;
           if (Math.abs(put.x - was.x) > was.w / 2 || Math.abs(put.y - was.y) > was.h / 2) continue;
@@ -1719,6 +1732,11 @@ export default function PostStudio({
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
         }
+        /* Missed every line: the ring lets go. Carli, 15 October 2026 —
+           "Dit voel of daar nie 'n manier is om hierdie raam weg te kry
+           nie." Tapping the photo anywhere else is how a selection ends in
+           every editor she has used. */
+        if (wordOn) setWordOn(null);
       }
     }
     /* A shape: picked up and carried, or pulled bigger by its corner.
@@ -5445,7 +5463,12 @@ export default function PostStudio({
       {!picture ? (
         <p className="text-[13px]" style={{ color: INK_DIM }}>{t('post.magicNone', 'Bring a photo in first.')}</p>
       ) : (
-        <>
+        /* One column, not three. Under the photo on a phone each section of
+           a tool is a column of its own, and the instruction, the size and
+           the buttons were three — the buttons landed off the right edge of
+           the screen, and Carli read it as the magic touch not working
+           (15 October 2026). */
+        <div className="space-y-3">
           <p className="text-[13px] font-semibold" style={{ color: magicSpot ? '#39ff14' : INK }} data-postmagicsays>
             {magicSpot ? t('post.magicReady', 'That part is marked. Choose what the AI does.') : t('post.magicTap', 'Tap the part of the photo first.')}
           </p>
@@ -5460,7 +5483,7 @@ export default function PostStudio({
             />
           </label>
           {magicButtons()}
-        </>
+        </div>
       )}
     </div>
   );

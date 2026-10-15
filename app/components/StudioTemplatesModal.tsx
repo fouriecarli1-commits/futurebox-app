@@ -138,7 +138,7 @@ export default function StudioTemplatesModal({
   ].filter(Boolean), []);
 
   const renderCategoryIcon = (iconType: string) => {
-    const cls = 'h-4 w-4 text-zinc-200';
+    const cls = 'h-4 w-4 flex-shrink-0 text-zinc-200';
     switch (iconType) {
       case 'monitor':
         return <Monitor className={cls} />;
@@ -245,19 +245,26 @@ export default function StudioTemplatesModal({
             </div>
           </div>
 
-          {/* Horizontal Category Badges Bar (Screenshot 3) */}
-          <div className="flex flex-wrap items-center gap-2 pb-1">
+          {/* ── The categories: one row, every bar the same size ─────────
+              Carli, 15 October 2026: *"Dit lyk nogsteeds of hierdie
+              templates nie templates het nie … Elke bar moet ewe groot
+              wees, dit moet netjies wees."* Twenty-one buttons wrapping in
+              their own widths filled the whole pop-out on a phone and left
+              the templates no room under them — so it looked empty.
+              sideways on purpose: one row that scrolls, each the same
+              width and height, and the templates start right under it. */}
+          <div data-sideways data-templatecats className="-mx-1 flex snap-x flex-nowrap items-stretch gap-2 overflow-x-auto px-1 pb-1">
             <button
               type="button"
               onClick={() => setSelectedCategory(null)}
-              className={`flex flex-shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+              className={`flex min-h-[44px] w-36 flex-shrink-0 snap-start items-center justify-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-bold transition-all ${
                 selectedCategory === null
                   ? 'border border-amber-400 bg-amber-500/20 text-amber-200 shadow-sm'
                   : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
               }`}
             >
-              <Layout className="h-3.5 w-3.5" />
-              {t('stpl.allCategories', 'All Categories')}
+              <Layout className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">{t('stpl.allCategories', 'All Categories')}</span>
             </button>
             {TEMPLATE_CATEGORIES.map((cat: TemplateCategoryMeta) => {
               const isSelected = selectedCategory === cat.id;
@@ -266,14 +273,14 @@ export default function StudioTemplatesModal({
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`flex min-h-[44px] w-36 flex-shrink-0 snap-start items-center justify-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-bold transition-all ${
                     isSelected
                       ? 'border border-amber-400 bg-amber-500/20 text-amber-200 shadow-sm'
                       : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
                   }`}
                 >
                   {renderCategoryIcon(cat.iconType)}
-                  {lang === 'af' ? cat.nameAf : cat.nameEn}
+                  <span className="truncate">{lang === 'af' ? cat.nameAf : cat.nameEn}</span>
                 </button>
               );
             })}
@@ -285,7 +292,7 @@ export default function StudioTemplatesModal({
           {/* If actively searching or category picked: show matching templates grid */}
           {(searchQuery.trim() || selectedCategory) ? (
             <div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {filteredTemplates.map((tpl) => (
                   <button
                     key={tpl.id}
@@ -329,7 +336,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.recentlyViewed', 'Recently viewed')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {recentTemplates.map((tpl) => (
                     <button
                       key={tpl.id}
@@ -361,7 +368,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.inspired', 'Inspired by your designs')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {inspiredTemplates.map((tpl) => (
                     <button
                       key={tpl.id}
@@ -393,7 +400,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.pitchDecks', 'Pitch Decks & Presentations')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'presentation').map((tpl) => (
                     <button
                       key={tpl.id}
@@ -427,7 +434,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.postersFlyers', 'Posters & Flyers')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'poster' || t.category === 'flyer').map((tpl) => (
                     <button
                       key={tpl.id}
@@ -461,7 +468,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.brandingBusiness', 'Branding, Business Cards & Resumes')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'logo' || t.category === 'business_card' || t.category === 'resume').map((tpl) => (
                     <button
                       key={tpl.id}
@@ -495,7 +502,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.socialStories', 'Social Media Posts & Stories')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'ig_post' || t.category === 'ig_story' || t.category === 'facebook_post').map((tpl) => (
                     <button
                       key={tpl.id}
@@ -529,7 +536,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.videoCinematic', 'Cinematic Video Creations')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'landscape_video' || t.category === 'mobile_video').map((tpl) => (
                     <button
                       key={tpl.id}
@@ -563,7 +570,7 @@ export default function StudioTemplatesModal({
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block pb-2.5">
                   {t('stpl.publishingWeb', 'Web, Editorial, Menus & Sheets')}
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {STARTER_TEMPLATES.filter((t) => t.category === 'website' || t.category === 'menu' || t.category === 'sheet' || t.category === 'brochure' || t.category === 'doc' || t.category === 'email' || t.category === 'photo_collage' || t.category === 'invitation').map((tpl) => (
                     <button
                       key={tpl.id}
