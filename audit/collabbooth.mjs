@@ -92,6 +92,9 @@ try {
   await p.route(`http://localhost:${PORT}/their-song.wav`, async (route) =>
     route.fulfill({ status: 200, headers: { 'content-type': 'audio/wav' }, body: wav }));
 
+  /* Counted, for the evidence line below: whether the thread ever asked. */
+  let messagesAsked = 0;
+  p.on('request', (req) => { if (req.url().includes('/api/collab/messages')) messagesAsked += 1; });
   await p.route('**/api/collab/messages*', async (route) =>
     route.fulfill({
       status: 200,
@@ -207,6 +210,10 @@ try {
     const seen = ((await room.innerText().catch(() => '')) || '').replace(/\s+/g, ' ').slice(0, 600);
     console.log(`      evidence: ${overlays} overlay(s); the first says: ${seen}`);
     console.log(`      evidence: collab view ${await p.locator('[data-collabview]').count()}, lobby ${await p.locator('[data-collablobby]').count()}, url ${p.url()}`);
+    const views = await p.locator('[data-collabview]').evaluateAll((all) => all.map((one) => `${one.getAttribute('data-collabview')}: ${(one.textContent ?? '').replace(/\s+/g, ' ').slice(0, 400)}`));
+    console.log(`      evidence: views ${JSON.stringify(views)}`);
+    const chips = await p.locator('[data-roomchip], [data-enterroom]').evaluateAll((all) => all.map((one) => `${one.getAttribute('data-roomchip') ? 'chip' : 'enter'}:${one.getAttribute('aria-pressed')}:${(one.textContent ?? '').trim().slice(0, 30)}`));
+    console.log(`      evidence: buttons ${JSON.stringify(chips)}; messages asked ${messagesAsked} time(s)`);
   }
   check('the room offers to open their song in your booth',
     (await sing.count()) === 1, `${await sing.count()} offered`);
