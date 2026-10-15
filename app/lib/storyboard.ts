@@ -245,7 +245,17 @@ export function shotsFrom(text: string, seconds: number): Shot[] {
      because a numbered list of one-liners is still what somebody pasting
      from elsewhere will send — and because every board saved before today
      is in that shape. `check:skootdiepte` drives both. */
-  const blocks = text.includes('\n\n') ? text.split(/\n\s*\n/) : text.split('\n');
+  const marked = /^\s*(?:\d+[.)]|[-*\u2022])\s+/;
+  const blocks = (text.includes('\n\n') ? text.split(/\n\s*\n/) : text.split('\n'))
+    /* A paragraph whose every line starts with its own number or bullet is a
+       list, not a paragraph: "1. Wide over the Karoo\n2. Close on hands" is
+       two shots. It was glued into one whenever a blank line elsewhere put
+       the board into paragraph mode — the numbering then reached the engine
+       too (`scripts/check-storyboard.mts`, found 15 October 2026). */
+    .flatMap((block) => {
+      const lines = block.split('\n').filter((line) => line.trim().length > 0);
+      return lines.length > 1 && lines.every((line) => marked.test(line)) ? lines : [block];
+    });
   return blocks
     /* A leading number or bullet goes, and only a leading one: a paragraph
        may well say "a 50mm lens" or "2 a.m." inside it. */
