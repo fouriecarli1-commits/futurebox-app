@@ -6463,6 +6463,7 @@ export const STRINGS: Dict = {
   "post.designUpload": { en: "Upload templates from this device", af: "Laai templates van hierdie toestel op" },
   "post.designUploadWhy": { en: "Choose one or many pictures (PNG, JPG or WebP). Each becomes a template in the group chosen above, named after its file. Open one afterwards to add photo frames and words, then save it again. Only upload designs that are yours to share.", af: "Kies een of baie prente (PNG, JPG of WebP). Elkeen word ’n template in die groep hierbo gekies, genoem na sy lêer. Maak een daarna oop om fotorame en woorde by te sit, en stoor dit weer. Laai net ontwerpe op wat joune is om te deel." },
   "post.cellPlace": { en: "Move", af: "Skuif" },
+  "post.cellAddShort": { en: "Add", af: "Voeg by" },
   "post.stepFrame": { en: "moving a photo frame", af: "’n fotoraam skuif" },
   "post.stepAddFrame": { en: "adding a photo frame", af: "’n fotoraam bysit" },
   "post.frameHow": { en: "Drag the frame where the photo goes, and pull its corner to size it. Press Move again when it is right.", af: "Sleep die raam waar die foto moet kom, en trek sy hoek om die grootte te stel. Druk weer Skuif wanneer dit reg is." },

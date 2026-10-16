@@ -8264,11 +8264,11 @@ export default function PostStudio({
       {cellNow && !editingCell && bench === null && (
         <div data-postcellbar className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex justify-center">
           <div
-            className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-1 rounded-2xl px-1.5 py-1"
+            className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl px-1 py-1"
             style={{ background: PHOTO.popGlass, border: `1px solid ${PHOTO.accentDim}`, boxShadow: PHOTO.glowEmerald }}
           >
             {([
-              ['replace', <Replace key="r" className="h-5 w-5" />, cellNow.image ? t('post.cellReplace', 'Replace') : t('post.cellAdd', 'Add a photo'), () => askForCell(cellNow.id), false],
+              ['replace', <Replace key="r" className="h-5 w-5" />, cellNow.image ? t('post.cellReplace', 'Replace') : t('post.cellAddShort', 'Add'), () => askForCell(cellNow.id), false],
               ['edit', <Wand2 key="e" className="h-5 w-5" />, t('post.cellEditShort', 'Edit'), () => editCell(cellNow.id), !cellNow.image],
               ['closer', <ZoomIn key="z" className="h-5 w-5" />, t('post.cellZoom', 'Closer'), () => changeCell(cellNow.id, { crop: { ...cellNow.crop, zoom: Math.min(3, cellNow.crop.zoom + 0.25) } }), !cellNow.image],
               ['further', <ZoomOut key="o" className="h-5 w-5" />, t('post.cellFurther', 'Further'), () => changeCell(cellNow.id, { crop: { ...cellNow.crop, zoom: Math.max(1, cellNow.crop.zoom - 0.25) } }), !cellNow.image || cellNow.crop.zoom <= 1],
@@ -8288,7 +8288,7 @@ export default function PostStudio({
                 disabled={off}
                 aria-pressed={id === 'place' ? framing : undefined}
                 onClick={run}
-                className={`flex min-h-[48px] min-w-[44px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold disabled:opacity-35 ${id === 'place' && framing ? 'ring-2 ring-violet-400' : ''}`}
+                className={`flex min-h-[48px] min-w-[40px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[9px] font-bold disabled:opacity-35 ${id === 'place' && framing ? 'ring-2 ring-violet-400' : ''}`}
                 style={{ color: PHOTO.ink }}
               >
                 {icon}
