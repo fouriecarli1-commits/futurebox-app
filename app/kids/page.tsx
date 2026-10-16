@@ -73,7 +73,11 @@ export default function KidsPage(): React.ReactElement {
         </button>
       </div>
       )}
-      <KidsRoom onGrownUp={setGrownUp} />
+      <KidsRoom
+        onGrownUp={setGrownUp}
+        /* The home screen's own Sign out, once a grown-up has typed the code. */
+        onSignOut={() => { childIn(false); void signOut().finally(() => { window.location.href = '/'; }); }}
+      />
     </main>
   );
 }

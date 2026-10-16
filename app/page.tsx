@@ -2365,6 +2365,8 @@ export default function FutureBoxHome() {
     (tab: TabId) => {
       setSearchOpen(false);
       setAccountOpen(false);
+      /* A tab is somewhere else: All tools does not stay over it. */
+      setAllToolsOpen(false);
       if (tab === 'spotlight') {
         setUploadModalOpen(false);
         setAtDoor(false);

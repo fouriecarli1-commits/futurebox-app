@@ -6470,6 +6470,7 @@ export const STRINGS: Dict = {
   "tools.find": { en: "Find a tool", af: "Soek gereedskap" },
   "tools.none": { en: "No tool by that name.", af: "Geen gereedskap met daardie naam nie." },
   "tools.credits": { en: "uses credits", af: "gebruik krediete" },
+  "kids.signOutAsk": { en: "Sign out — a grown-up types the code", af: "Teken uit — ’n grootmens tik die kode in" },
   "post.stepFrame": { en: "moving a photo frame", af: "’n fotoraam skuif" },
   "post.stepAddFrame": { en: "adding a photo frame", af: "’n fotoraam bysit" },
   "post.frameHow": { en: "Drag the frame where the photo goes, and pull its corner to size it. Press Move again when it is right.", af: "Sleep die raam waar die foto moet kom, en trek sy hoek om die grootte te stel. Druk weer Skuif wanneer dit reg is." },

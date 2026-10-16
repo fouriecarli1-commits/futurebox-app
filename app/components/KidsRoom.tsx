@@ -131,7 +131,7 @@ import KidsEditor from './KidsEditor';
 import KidsLoops from './KidsLoops';
 import KidsPads from './KidsPads';
 import { CodeChooser, CodePad, GrownUpHold } from './KidsLock';
-import { childIn, forgetCode } from '../lib/kidslock';
+import { childIn, forgetCode, hasCode } from '../lib/kidslock';
 import { justSignedInForKids } from '../lib/cloud';
 import { ALIVE_WORDS, KID_STYLES, KID_SUBJECTS, makeKidPicture, packDrawing, pictureWords } from '../lib/kidsalive';
 import { keepPiece } from '../lib/kidsgallery';
@@ -341,9 +341,16 @@ function Bubble({
 
 export default function KidsRoom({
   onGrownUp,
+  onSignOut,
 }: {
   /** Told whether the grown-up's page is showing, so the page around the room shows its way out only then. */
   readonly onGrownUp?: (showing: boolean) => void;
+  /**
+   * Sign out, once a grown-up has typed the code. The page around the room
+   * does the leaving: nothing inside the room goes anywhere else
+   * (`check:kinderkamer`).
+   */
+  readonly onSignOut?: () => void;
 } = {}): React.ReactElement {
   const { lang, t } = useLang();
   const [state, setState] = useState<KidsState | null>(null);
@@ -351,6 +358,13 @@ export default function KidsRoom({
   const [atDoor, setAtDoor] = useState(false);
   /* The code pad, opened by holding the FUTUREBOX name (`KidsLock.tsx`). */
   const [askCode, setAskCode] = useState(false);
+  /** The code pad asked for by Sign out on the home screen. */
+  const [askOut, setAskOut] = useState(false);
+  /** Out of the room and out of the account — the page around the room does the leaving. */
+  const leaveRoom = (): void => {
+    childIn(false);
+    onSignOut?.();
+  };
 
   /* Which line the mascot is on. A number and not a sentence, so the room
      can change language without the mascot changing its mind. */
@@ -899,8 +913,23 @@ export default function KidsRoom({
               <span className="text-cyan-300">{t('kids.dreamStudio', 'STUDIO')}</span>
             </p>
           </div>
+          {/* ── Sign out, on the home screen itself ───────────────────────
+              Carli, 16 October 2026: *"Daar moet 'n sign out button wees op
+              die hoof home screen van die kids studio."* Plain to see, and
+              behind the same four numbers as the lock: a child who presses it
+              meets the code pad, a grown-up types the code and is signed out. */}
+          <button
+            type="button"
+            data-kidshomesignout
+            onClick={() => { if (hasCode()) setAskOut(true); else leaveRoom(); }}
+            aria-label={t('kids.signOutAsk', 'Sign out — a grown-up types the code')}
+            className="flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-surface-300 bg-surface-100/80 px-3 text-sm font-black text-surface-900"
+          >
+            <span aria-hidden>🚪</span> {t('kids.signOut', 'Sign out')}
+          </button>
         </div>
       </header>
+      {askOut && <CodePad onPass={() => { setAskOut(false); leaveRoom(); }} onClose={() => setAskOut(false)} />}
 
       {/* ── Inside a door: the way home, and which door this is ─────────── */}
       {tab !== 'home' && (

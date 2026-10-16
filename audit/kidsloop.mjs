@@ -102,6 +102,16 @@ try {
   check('  and the code takes the grown-up to their page', (await page.locator('[data-kidscodechooser]').count()) === 1);
   await page.getByRole('button', { name: /Back to the music|Terug na die musiek/i }).first().click();
   await page.waitForTimeout(600);
+  /* Carli, 16 October 2026: "Daar moet 'n sign out button wees op die
+     hoof home screen van die kids studio." Plain to see, behind the code. */
+  check('the kids home screen has its own Sign out', await page.locator('[data-kidshomesignout]').isVisible());
+  await page.locator('[data-kidshomesignout]').click();
+  await page.waitForTimeout(300);
+  check('  and it asks for the grown-up\u2019s code first', (await page.locator('[data-kidscodepad]').count()) === 1);
+  await typeCode('1111');
+  check('  so a wrong code signs nobody out', (await page.locator('[data-kidsroom]').count()) === 1 && /\/kids/.test(page.url()));
+  await page.mouse.click(4, 4);
+  await page.waitForTimeout(300);
 
   /* ── After a sign-in, the grown-up's page first ─────────────────────── */
   await page.evaluate(() => localStorage.setItem('fb-kids-signed-in', String(Date.now())));
@@ -224,6 +234,18 @@ try {
   });
   check('  and the picture it brings back is on the screen, not under the bar',
     shown !== null && shown.top >= 0 && shown.top < shown.barTop, JSON.stringify(shown));
+  /* Last, because it ends the visit: the right code signs out for real. */
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('[data-kidsroom]').waitFor({ timeout: 15000 });
+  if (await page.locator('[data-kidshome]').count()) { await page.locator('[data-kidshome]').first().click(); await page.waitForTimeout(400); }
+  await page.locator('[data-kidshomesignout]').click();
+  await page.waitForTimeout(300);
+  /* With a code on the device the pad asks for it; with none (an earlier
+     step forgot it) there is nothing to ask, and it signs out at once. */
+  if (await page.locator('[data-kidscodepad]').count()) await typeCode('2468');
+  await page.waitForURL((url) => !/\/kids/.test(String(url)), { timeout: 10000 }).catch(() => undefined);
+  check('Sign out leaves the kids room and the account', !/\/kids/.test(page.url())
+    && (await page.evaluate(() => localStorage.getItem('fb-kids-child-on'))) === null, page.url());
   check('and nothing throws', thrown.length === 0, thrown.slice(0, 2).join(' · '));
   await page.screenshot({ path: shot('kidsloop.png') });
 } catch (problem) {

@@ -293,7 +293,8 @@ try {
     const press = async (name) => { await pressTab(p, name); };
 
     await press(TABS.make);
-    const doorButtons = p.locator('div.fixed.inset-0.z-\\[55\\] button');
+    /* The rooms, not All tools — a page of its own, walked by check:alltools. */
+    const doorButtons = p.locator('div.fixed.inset-0.z-\\[55\\] button:not([data-opentools])');
     const rooms = await doorButtons.count();
     check(`${lang}: the front door has its rooms on it`, rooms > 10, `${rooms} buttons`);
     await read('the front door');
