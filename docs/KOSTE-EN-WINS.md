@@ -5,7 +5,7 @@
 > verander die prys in daardie lêers en loop die skrip weer, anders sê die
 > pryskaart en hierdie som twee verskillende dinge.
 
-Geskryf 2026-10-15. Kling is uit die som uit.
+Geskryf 2026-10-16. Kling is uit die som uit.
 
 ## Waarop dit rus
 

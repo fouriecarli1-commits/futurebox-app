@@ -141,7 +141,24 @@ export async function POST(request: Request): Promise<Response> {
     if (error) return Response.json(NOT_SET_UP, { status: 503 });
   }
 
-  /* Before the charge, not after. Dubbing is 162 credits a minute — the most
+  /* Studio and Label, as every plan card says: "Dubbing is 110 credits a
+     minute — more than this plan holds, so it starts at Studio." Only the
+     balance stood in the way before, and a Maker who banked credits or
+     bought a top-up could dub anyway (found 16 October 2026, checking the
+     cards against the code). */
+  if (caller && (caller.tier === 'free' || caller.tier === 'maker')) {
+    return Response.json(
+      {
+        message: langOf(request) === 'af'
+          ? 'Oorklank begin op Studio — dit is 110 krediete per minuut, meer as wat Maker hou.'
+          : 'Dubbing starts on Studio — it is 110 credits a minute, more than Maker holds.',
+        needsPlan: true,
+      },
+      { status: 402 },
+    );
+  }
+
+  /* Before the charge, not after. Dubbing is 110 credits a minute — the most
      expensive call in the app — so it is the first thing to stop. */
   const room = await roomFor('heavy');
   if (!room.go) {

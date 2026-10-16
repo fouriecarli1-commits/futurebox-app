@@ -98,6 +98,22 @@ export async function kidsRoom(owner: string): Promise<KidsRoom | null> {
 }
 
 /**
+ * Whether a request from the kids room is paid for by the kids room.
+ *
+ * A kids pack is sold without a plan (`api/checkout`): "the kids room is for
+ * anybody's child". But the video, picture and song routes asked "is this a
+ * paid plan?" before anything else, so a parent with a kids pack and no plan
+ * had a child pressing buttons that all said "starts on Maker" (found 16
+ * October 2026, checking the plan cards against the code). An open room with
+ * something left in it — allowance or bought kids credits — is what pays,
+ * so it is what lets the kids room's own requests through.
+ */
+export async function kidsCovers(owner: string): Promise<boolean> {
+  const room = await kidsRoom(owner);
+  return Boolean(room && room.left > 0 && room.secondsLeft !== 0);
+}
+
+/**
  * Open the room with an allowance, or change the allowance of an open one.
  *
  * `spent` is deliberately NOT reset when an allowance is raised. A parent

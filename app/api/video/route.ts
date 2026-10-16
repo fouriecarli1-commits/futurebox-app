@@ -37,6 +37,7 @@ import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS, videoCost } from '@/app/lib/credits';
 import { TIER_SPECS } from '@/app/lib/plans';
+import { kidsCovers } from '@/app/lib/server/kidsmode';
 import {
   candidates,
   checkPresenter,
@@ -431,7 +432,10 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  if (TIER_SPECS[caller.tier].rand === 0) {
+  /* The kids room's own video is paid for by the kids room, plan or none
+     (`kidsCovers`). Everything else still starts on Maker. */
+  const kidsPaid = body.kids === true && (await kidsCovers(caller.id));
+  if (TIER_SPECS[caller.tier].rand === 0 && !kidsPaid) {
     return Response.json(
       {
         message:
@@ -632,6 +636,22 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  /* ── Shorter than asked, and the difference back ─────────────────────
+     The charge is for the length on the button, and `nearestLength` may give
+     the engine a shorter one when that is all it makes. Kept at that, it was
+     ten seconds paid and eight delivered (found 16 October 2026, checking
+     every function in the video desk). So what the shorter clip costs is
+     what is kept, and the rest goes straight back. The kids room's price is a
+     flat one the parent was shown, and stays as it is. */
+  let kept = price;
+  if (!kidsOwn && seconds < wanted) {
+    const owed = price - videoCost(grade, seconds);
+    if (owed > 0 && paid.owner) {
+      await refund(paid.owner, owed, 'video:shorter');
+      kept = price - owed;
+    }
+  }
+
   const { data: row, error } = await client
     .from('videos')
     .insert({
@@ -640,7 +660,7 @@ export async function POST(request: Request): Promise<Response> {
       prompt: prompt.slice(0, 2500),
       aspect,
       seconds,
-      credits: price,
+      credits: kept,
       provider: engine.id,
       grade,
       // The estimate, until the engine tells us better. See supabase/video2.sql
@@ -657,8 +677,10 @@ export async function POST(request: Request): Promise<Response> {
   if (error || !row) {
     // An engine is making a video nobody has a row for. Give the credits back
     // rather than keep them for something that cannot now be collected, and
-    // say what happened instead of pretending it started.
-    await paid.refund();
+    // say what happened instead of pretending it started. Only what is
+    // still held: a shorter clip's difference has already gone back.
+    if (kept === price) await paid.refund();
+    else if (paid.owner) await refund(paid.owner, kept, 'video:unrecorded');
     return Response.json(
       { message: 'The video was started but could not be recorded, so it has been cancelled and refunded.' },
       { status: 500 },

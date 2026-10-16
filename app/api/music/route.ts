@@ -37,6 +37,7 @@ import { songCost , CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
+import { kidsCovers } from '@/app/lib/server/kidsmode';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -178,45 +179,53 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    // The request goes with it: the address it came from is one of the three
-    // things the free allowance is counted against.
-    const allowance = await allowanceFor(caller, request);
-    if (!allowance.allowed) {
-      return Response.json(
-        {
-          error: caller ? 'out_of_allowance' : 'signed_out',
-          message: allowance.reason,
-          usedToday: allowance.usedToday,
-          limit: allowance.limit,
-        },
-        { status: caller ? 402 : 401 },
-      );
+    /* A kids-room song is paid for by the kids room, plan or none
+       (`kidsCovers`): no free-tier daily preview count, and not cut down to
+       a preview — the parent bought whole one-minute songs. */
+    const kidsPaid = (body as { kids?: unknown }).kids === true && caller !== null && (await kidsCovers(caller.id));
+    if (kidsPaid) {
+      length = Math.min(body.seconds ?? 60, 60);
+    } else {
+      // The request goes with it: the address it came from is one of the three
+      // things the free allowance is counted against.
+      const allowance = await allowanceFor(caller, request);
+      if (!allowance.allowed) {
+        return Response.json(
+          {
+            error: caller ? 'out_of_allowance' : 'signed_out',
+            message: allowance.reason,
+            usedToday: allowance.usedToday,
+            limit: allowance.limit,
+          },
+          { status: caller ? 402 : 401 },
+        );
+      }
+      /* A free account gets the preview length whatever the request asked for,
+         and the length is the only thing the cost model rests on — so that is
+         the one field overwritten here rather than trusted.
+ 
+         It used to drop `sections` as well, and that was a serious fault rather
+         than a policy. Without sections `buildRequest` takes the plain-prompt
+         path, so the words somebody wrote were thrown away on the server and
+         what came back was music with nobody singing them. Nothing on the way
+         said so: the room showed the lyrics it had sent, the release carried
+         them, and the audio did not. Carli hit it on an Afrikaans song — "net
+         klank het uitgekom" — and it was every free song, in every language,
+         since the day the line was written.
+ 
+         Nothing about it was needed for the cost. `songCost` is a function of
+         length alone; a sung minute and an instrumental minute cost the same
+         upstream and are charged the same here.
+ 
+         `finetuneId` still goes, and that one is a real entitlement: a sound
+         trained on your own songs is part of what a plan buys. */
+      if (allowance.kind === 'preview') {
+        body = forPreview(body, allowance.seconds);
+      }
+      const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
+      if (caller) record = () => recordGeneration(caller, allowance.kind, seconds, undefined, request);
+      length = seconds;
     }
-    /* A free account gets the preview length whatever the request asked for,
-       and the length is the only thing the cost model rests on — so that is
-       the one field overwritten here rather than trusted.
- 
-       It used to drop `sections` as well, and that was a serious fault rather
-       than a policy. Without sections `buildRequest` takes the plain-prompt
-       path, so the words somebody wrote were thrown away on the server and
-       what came back was music with nobody singing them. Nothing on the way
-       said so: the room showed the lyrics it had sent, the release carried
-       them, and the audio did not. Carli hit it on an Afrikaans song — "net
-       klank het uitgekom" — and it was every free song, in every language,
-       since the day the line was written.
- 
-       Nothing about it was needed for the cost. `songCost` is a function of
-       length alone; a sung minute and an instrumental minute cost the same
-       upstream and are charged the same here.
- 
-       `finetuneId` still goes, and that one is a real entitlement: a sound
-       trained on your own songs is part of what a plan buys. */
-    if (allowance.kind === 'preview') {
-      body = forPreview(body, allowance.seconds);
-    }
-    const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
-    if (caller) record = () => recordGeneration(caller, allowance.kind, seconds, undefined, request);
-    length = seconds;
   }
 
   /* The brake, before the charge.

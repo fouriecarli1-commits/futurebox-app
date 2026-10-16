@@ -125,7 +125,9 @@ export async function makeKidPicture(
       signal: abort.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ words, aspect: '1:1', ...(from ? { from } : {}) }),
+      /* Marked as the kids room's, so the route lets it through on a kids
+         pack without a plan (`kidsCovers`). */
+      body: JSON.stringify({ words, aspect: '1:1', kids: true, ...(from ? { from } : {}) }),
     });
     if (!answer.ok) {
       const detail = (await answer.json().catch(() => ({}))) as { message?: string };

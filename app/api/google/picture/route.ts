@@ -45,6 +45,7 @@ import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
+import { kidsCovers } from '@/app/lib/server/kidsmode';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -97,7 +98,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'The picture engine is not switched on yet.' }, { status: 503 });
   }
 
-  let said: { words?: unknown; from?: unknown; aspect?: unknown };
+  let said: { words?: unknown; from?: unknown; aspect?: unknown; kids?: unknown };
   try {
     said = await request.json() as typeof said;
   } catch {
@@ -184,7 +185,10 @@ export async function POST(request: Request): Promise<Response> {
   const safe = await guard(request, words, 'picture', caller);
   if (!safe.ok) return safe.response;
 
-  if (metered() && !PODCAST_CAPS[caller?.tier ?? 'free'].publish) {
+  /* A drawing brought to life in the kids room is paid for by the kids
+     room, plan or none (`kidsCovers`). */
+  const kidsPaid = said.kids === true && caller !== null && (await kidsCovers(caller.id));
+  if (metered() && !PODCAST_CAPS[caller?.tier ?? 'free'].publish && !kidsPaid) {
     return Response.json(
       { message: 'Changing a picture this way needs a paid plan.', needsPlan: true },
       { status: 402 },
