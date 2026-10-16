@@ -66,7 +66,7 @@ function Head({ id, name, count, open, onFlip, mark }: {
       aria-expanded={open}
       {...{ [`data-${mark}`]: id }}
       onClick={onFlip}
-      className="flex min-h-[40px] w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-2 text-left text-sm font-bold text-zinc-200"
+      className="flex h-11 w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-2 text-left text-sm font-bold text-zinc-200"
     >
       <span>{name}</span>
       <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
@@ -119,7 +119,7 @@ export function GeneratorToolbox({ lang, t, onMake }: {
                 onClick={() => setPicked(one.id)}
                 onPointerEnter={() => setHover(one.id)}
                 onPointerLeave={() => setHover((was) => (was === one.id ? null : was))}
-                className={`flex min-h-[48px] w-full items-center gap-2.5 rounded-xl border px-1.5 py-1 text-left text-sm font-semibold ${picked === one.id ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-800 bg-zinc-900 text-zinc-200'}`}
+                className={`flex h-11 w-full items-center gap-2.5 rounded-xl border px-1.5 py-0.5 text-left text-sm font-semibold ${picked === one.id ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-800 bg-zinc-900 text-zinc-200'}`}
               >
                 <Moving
                   live={picked === one.id || hover === one.id}
@@ -145,7 +145,7 @@ export function GeneratorToolbox({ lang, t, onMake }: {
                   aria-pressed={inks[which] === ink}
                   aria-label={ink}
                   onClick={() => setInks((was) => ({ ...was, [which]: ink }))}
-                  className={`h-8 w-8 rounded-full border-2 ${inks[which] === ink ? 'border-emerald-400' : 'border-zinc-700'}`}
+                  className={`h-11 w-11 rounded-full border-2 ${inks[which] === ink ? 'border-emerald-400' : 'border-zinc-700'}`}
                   style={{ background: ink }}
                 />
               ))}
@@ -163,7 +163,7 @@ export function GeneratorToolbox({ lang, t, onMake }: {
             data-editorgenlong={one}
             aria-pressed={seconds === one}
             onClick={() => setSeconds(one)}
-            className={`min-h-[36px] rounded-full border px-3 text-xs font-bold ${seconds === one ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 text-zinc-300'}`}
+            className={`h-11 rounded-full border px-3 text-xs font-bold ${seconds === one ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 text-zinc-300'}`}
           >
             {one}s
           </button>
@@ -179,7 +179,7 @@ export function GeneratorToolbox({ lang, t, onMake }: {
           setMaking(true);
           void onMake(spec.id, inks, seconds, generatorLabel(spec, lang)).finally(() => setMaking(false));
         }}
-        className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-500/15 px-3 text-sm font-bold text-emerald-300 disabled:opacity-50"
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-500/15 px-3 text-sm font-bold text-emerald-300 disabled:opacity-50"
       >
         {making ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
         {making ? t('edit.genMaking', 'Making it…') : t('edit.genMake', 'Put it on the clock')}

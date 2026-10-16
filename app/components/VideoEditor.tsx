@@ -5715,7 +5715,7 @@ async function smallerFrame(url: string): Promise<string> {
               Made on this device and put on the clock as a piece like any
               other. `lib/videogenerators.ts`. */}
           <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorgenbench>
-            <summary className="min-h-[40px] cursor-pointer list-none px-1 py-2 text-sm font-bold text-zinc-200">
+            <summary className="flex h-11 cursor-pointer list-none items-center px-1 text-sm font-bold text-zinc-200">
               {t('edit.genTitle', 'Generators — backgrounds and colour')}
             </summary>
             <GeneratorToolbox lang={lang} t={t} onMake={makeGenerated} />
@@ -6165,7 +6165,7 @@ async function smallerFrame(url: string): Promise<string> {
                 audio transitions. `lib/audiofx.ts`. */}
             {soundOf(piece) && (
               <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorsfxbench>
-                <summary className="min-h-[40px] cursor-pointer list-none px-1 py-2 text-sm font-bold text-zinc-200">
+                <summary className="flex h-11 cursor-pointer list-none items-center px-1 text-sm font-bold text-zinc-200">
                   {t('edit.sfxTitle', 'Sound effects on this shot')}
                   {(piece.sfx?.length ?? 0) > 0 ? ` · ${piece.sfx?.length}` : ''}
                 </summary>
@@ -6189,7 +6189,7 @@ async function smallerFrame(url: string): Promise<string> {
                       data-editorsoundjoinpick={one.id}
                       aria-pressed={(piece.soundJoin ?? 'smooth') === one.id}
                       onClick={() => tweak({ soundJoin: one.id })}
-                      className={`min-h-[40px] rounded-xl border px-3 text-xs font-semibold ${(piece.soundJoin ?? 'smooth') === one.id ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 text-zinc-300'}`}
+                      className={`h-11 rounded-xl border px-3 text-xs font-semibold ${(piece.soundJoin ?? 'smooth') === one.id ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 text-zinc-300'}`}
                     >
                       {lang === 'af' ? one.af : one.en}
                     </button>
@@ -7206,7 +7206,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── Sound effects on the song ── */}
             <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorsongfxbench>
-              <summary className="min-h-[40px] cursor-pointer list-none px-1 py-2 text-sm font-bold text-zinc-200">
+              <summary className="flex h-11 cursor-pointer list-none items-center px-1 text-sm font-bold text-zinc-200">
                 {t('edit.songFxTitle', 'Sound effects on the song')}
                 {(edit.underFx?.length ?? 0) > 0 ? ` · ${edit.underFx?.length}` : ''}
               </summary>
