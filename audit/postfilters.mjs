@@ -117,6 +117,40 @@ try {
   const colour = await page.locator('[data-postlookslider="colour"] input[type=range], input[data-postlookslider="colour"]').first().inputValue().catch(() => null);
   check('Adjust shows what the filter did', colour !== null && Number(colour) > 1.05, String(colour));
 
+  /* ── Before and after ──
+     Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
+     wat oor die prent slide om te wys hoe dit gelyk het."* */
+  await page.locator('[data-postauto]').click();
+  await page.waitForTimeout(400);
+  check('Lift it brings up the before-and-after line', (await page.locator('[data-postcomparehandle]').count()) === 1);
+  await tool('filters');
+  await page.locator('[data-postfiltergroup="mono"]').click();
+  await page.locator('[data-postfilter="charcoal"]').click();
+  await page.waitForTimeout(300);
+  if (!(await page.locator('[data-postcomparehandle]').count())) await page.locator('[data-postcompare]').first().click();
+  await page.waitForTimeout(400);
+  const side = (x) => page.evaluate((share) => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(Math.round(el.width * share), Math.round(el.height * 0.4), 1, 1).data;
+    return { r: d[0], g: d[1], b: d[2] };
+  }, x);
+  const left = await side(0.25);
+  const right = await side(0.75);
+  check('  left of the line is her photo as it came, right of it the filter', !grey(left) && left.r > 150 && grey(right),
+    `${JSON.stringify(left)} | ${JSON.stringify(right)}`);
+  const handle = await page.locator('[data-postcomparehandle]').boundingBox();
+  const glass = await page.locator('[data-postcanvas]').boundingBox();
+  await page.mouse.move(handle.x + handle.width / 2, glass.y + glass.height * 0.4);
+  await page.mouse.down();
+  for (let n = 1; n <= 8; n += 1) await page.mouse.move(handle.x + handle.width / 2 + (glass.x + glass.width * 0.9 - handle.x - handle.width / 2) * (n / 8), glass.y + glass.height * 0.4);
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  const slid = await side(0.75);
+  check('  and sliding it across shows more of how it looked', !grey(slid) && slid.r > 150, JSON.stringify(slid));
+  await page.locator('[data-postfilter="none"]').click();
+  await page.waitForTimeout(300);
+  check('  and it goes when there is nothing to compare', (await page.locator('[data-postcomparehandle]').count()) === 0);
+
   await page.screenshot({ path: shot('postfilters.png') });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);

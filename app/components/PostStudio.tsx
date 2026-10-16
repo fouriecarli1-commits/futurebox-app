@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Circle, Columns2, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -73,6 +73,7 @@ import { CREDITS, creditsSaid } from '../lib/credits';
 import { ACCEPTS, fit } from '../lib/imagefile';
 import { useBackLayer } from '../lib/backstack';
 import RoomDock, { type Bench, type BenchSpec } from './CutDock';
+import CompareLine from './CompareLine';
 import { useSideways } from '../lib/sideways';
 import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
@@ -1114,6 +1115,8 @@ export default function PostStudio({
   const [backHidden, setBackHidden] = useState(false);
   const [allLook, setAllLook] = useState<Look>(PLAIN);
   const [toneAll, setToneAll] = useState(false);
+  /** Where the before-and-after line is, as a share across the post; null when it is not shown. */
+  const [compare, setCompare] = useState<number | null>(null);
   /* ── The photo grid — `lib/postcells.ts` ─────────────────────────────
      Carli, 16 October 2026: *"wanneer foto's in so grid is dan moet mens op
      een foto kan kliek en dit kan ge-edit word."* The frames and their
@@ -1154,6 +1157,12 @@ export default function PostStudio({
   useEffect(() => {
     if (filterOn && !touched(filterOn.all ? allLook : look)) setFilterOn(null);
   }, [filterOn, look, allLook]);
+  /* The before-and-after line belongs to the looks: it goes when there is
+     nothing to compare, or when another tool is opened. */
+  useEffect(() => {
+    if (compare === null) return;
+    if (!touched(lookNow) || (bench !== 'tone' && bench !== 'filters')) setCompare(null);
+  }, [compare, lookNow, bench]);
   /** A shape being carried or stretched by the thumb. */
   const markHeld = useRef<{ id: string; dx: number; dy: number; resize: boolean } | null>(null);
   const changeMark = (id: string, how: Partial<Mark>): void =>
@@ -1599,6 +1608,20 @@ export default function PostStudio({
         paintWashes(ctx, look, seen.x, seen.y, seen.w, seen.h);
         ctx.restore();
       }
+      /* ── Before and after ─────────────────────────────────────────
+         Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler
+         wees wat oor die prent slide om te wys hoe dit gelyk het."* Left
+         of the line, the photograph as it came; right of it, as it is
+         now. On the glass only — the file is always the whole of it. */
+      if (guides && compare !== null && !toneAll && touched(look)) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, size.width * compare, size.height);
+        ctx.clip();
+        ctx.globalAlpha = photoAlpha;
+        ctx.drawImage(picture, at.left, at.top, at.width, at.height);
+        ctx.restore();
+      }
     }
 
     /* ── The layers, back to front ─────────────────────────────────────
@@ -1919,6 +1942,15 @@ export default function PostStudio({
             ctx.drawImage(tint, 0, 0);
           }
         }
+        /* Before and after, for the look over everything: left of the
+           line, the whole post as it was before the look. Glass only. */
+        if (guides && compare !== null && toneAll) {
+          ctx.beginPath();
+          ctx.rect(0, 0, to.width * compare, to.height);
+          ctx.clip();
+          ctx.clearRect(0, 0, to.width, to.height);
+          ctx.drawImage(flat, 0, 0);
+        }
         ctx.restore();
       }
     }
@@ -2201,6 +2233,8 @@ export default function PostStudio({
     wordOn,
     /* The layer list's switches and the look over everything. */
     photoHidden, photoAlpha, backHidden, allLook,
+    /* The before-and-after line, and which look it compares. */
+    compare, toneAll,
     /* The photo grid. */
     cells, cellOn, editingCell,
     marks, markOn, bench, magicSpot, magicSize]);
@@ -5769,6 +5803,21 @@ export default function PostStudio({
     </div>
   );
 
+  /* Show the line, or take it away. Only when there is a look to compare. */
+  const compareButton = (
+    <button
+      type="button"
+      data-postcompare
+      aria-pressed={compare !== null}
+      disabled={!touched(lookNow)}
+      onClick={() => setCompare((was) => (was === null ? 0.5 : null))}
+      className={`${LEEG} ${compare !== null ? GEKIES : ''} disabled:opacity-40`}
+    >
+      <Columns2 className="h-3.5 w-3.5" />
+      {t('post.compare', 'Before | after')}
+    </button>
+  );
+
   const toneBench = (
     <div className="space-y-4">
     {/* ── How it reads ───────────────────────────────────────────────
@@ -5824,7 +5873,7 @@ export default function PostStudio({
             <button
               type="button"
               data-postauto
-              onClick={() => setLookNow(AUTO)}
+              onClick={() => { setLookNow(AUTO); setCompare(0.5); }}
               className={LEEG}
             >
               {t('post.auto', 'Lift it')}
@@ -5838,6 +5887,7 @@ export default function PostStudio({
             >
               {t('post.asShot', 'As it came')}
             </button>
+            {compareButton}
           </div>
         </div>
 
@@ -7255,6 +7305,7 @@ export default function PostStudio({
             />
           </label>
         )}
+        {compareButton}
         <div className={RY} data-postlooktarget={toneAll ? 'all' : 'photo'}>
           <button
             type="button"
@@ -7659,6 +7710,28 @@ export default function PostStudio({
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
+      {/* ── The before-and-after line, over the photograph ─────────────
+          Dragged sideways: left of it the photograph as it came, right of
+          it as it is now (drawn by `draw`). Placed from the canvas's own
+          box, so it sits on the picture wherever the picture sits. */}
+      {compare !== null && canvas.current && (
+        <CompareLine
+          mark="postcompare"
+          at={compare}
+          onAt={setCompare}
+          before={t('post.compareBefore', 'Before')}
+          after={t('post.compareAfter', 'After')}
+          how={t('post.compareHow', 'Drag to compare before and after')}
+          accent={PHOTO.accent}
+          ink={PHOTO.floor}
+          style={{
+            left: canvas.current.offsetLeft,
+            top: canvas.current.offsetTop,
+            width: canvas.current.offsetWidth,
+            height: canvas.current.offsetHeight,
+          }}
+        />
+      )}
       {/* The phone's picker for a frame of the grid — there only when the
           post has frames, so a plain post has one picker, the photo's own. */}
       {cells.length > 0 && (

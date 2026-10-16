@@ -67,7 +67,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
-  Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
+  Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Columns2, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
   RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw, ListMusic, LayoutTemplate, Maximize2, Wand2, X,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -128,7 +128,7 @@ import { gradeAdvice, shapeAdvice } from '../lib/recommend';
 import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
-import { DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
+import { AUTO_ADJUST, DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
 import {
   FONTS, PLAIN_FONT, fontFor, WORDS_LARGEST, WORDS_SMALLEST,
 } from '../lib/videofonts';
@@ -174,6 +174,7 @@ import {
 } from '../lib/videojoins';
 import { captionSettings } from '../lib/captionstyles';
 import JoinToolbox from './JoinToolbox';
+import CompareLine, { FrameAsShot } from './CompareLine';
 import { studioAudio } from '../lib/demoaudio';
 import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
 
@@ -1444,6 +1445,18 @@ export default function VideoEditor({
      effects below gets to a ready element first. */
   const wanted = useRef<number | null>(null);
   const viewer = useRef<HTMLVideoElement | null>(null);
+  /* ── Before and after, over the film ───────────────────────────────
+     Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
+     wat oor die prent slide om te wys hoe dit gelyk het."* Where the line
+     is, as a share across the player; null when it is not shown. */
+  const [compare, setCompare] = useState<number | null>(null);
+  const graded = Boolean(piece && (filterCss(piece.look) || adjusted(piece.adjust)));
+  /* It belongs to the looks: it goes when there is nothing to compare, or
+     when another tool is opened (it lies over the film, and a line over the
+     words would take the drag meant for them). */
+  useEffect(() => {
+    if (compare !== null && (!graded || bench !== 'looks')) setCompare(null);
+  }, [compare, graded, bench]);
 
   const total = runs(edit);
 
@@ -3984,6 +3997,21 @@ async function smallerFrame(url: string): Promise<string> {
                   piece.fill ? 'object-cover' : 'object-contain'
                 }`}
               />
+              {compare !== null && (
+                <>
+                  <FrameAsShot video={viewer} at={compare} fill={Boolean(piece.fill)} />
+                  <CompareLine
+                    mark="editorcompare"
+                    at={compare}
+                    onAt={setCompare}
+                    before={t('post.compareBefore', 'Before')}
+                    after={t('post.compareAfter', 'After')}
+                    how={t('post.compareHow', 'Drag to compare before and after')}
+                    accent="#10b981"
+                    ink="#02130b"
+                  />
+                </>
+              )}
               {bedUrl && (
                 <audio ref={bed} data-editorbedsound src={bedUrl} preload="auto" className="hidden" />
               )}
@@ -6197,6 +6225,29 @@ async function smallerFrame(url: string): Promise<string> {
               twice: the look is the choice, the dials are the correction, and
               judging either without the other is judging half a picture. */}
           <div className="space-y-2" data-editoradjust>
+            {/* One press for a flat phone shot, and the line that shows what it did. */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                data-editorauto
+                onClick={() => { tweak({ adjust: { ...NO_ADJUST, ...AUTO_ADJUST } }); setCompare(0.5); }}
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-emerald-600 bg-emerald-500/10 px-3 text-sm font-semibold text-emerald-300"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {t('adj.auto', 'Auto enhance')}
+              </button>
+              <button
+                type="button"
+                data-editorcompare
+                aria-pressed={compare !== null}
+                disabled={!graded}
+                onClick={() => setCompare((was) => (was === null ? 0.5 : null))}
+                className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-semibold disabled:opacity-40 ${compare !== null ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 text-zinc-300'}`}
+              >
+                <Columns2 className="h-3.5 w-3.5" />
+                {t('post.compare', 'Before | after')}
+              </button>
+            </div>
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-sm text-zinc-400">{t('adj.title', 'Adjust')}</span>
               {adjusted(piece.adjust) && (

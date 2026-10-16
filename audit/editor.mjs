@@ -441,6 +441,29 @@ try {
       /grayscale|saturate|contrast|brightness/.test(styled),
       `the viewer's filter is "${styled}"`);
 
+    /* ── Before and after, over the film ──
+       Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
+       wat oor die prent slide om te wys hoe dit gelyk het."* The left of the
+       line is the frame as shot — drawn, so it is read off pixels. */
+    await p.locator('[data-editorcompare]').click();
+    await p.waitForTimeout(700);
+    const shotSide = await p.locator('[data-editorbeforeframe]').evaluate((el) => {
+      const ctx = el.getContext('2d');
+      const d = ctx.getImageData(0, 0, Math.max(1, Math.floor(el.width / 2)), el.height).data;
+      let lit = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 0) lit += 1;
+      return { lit, clip: el.style.clipPath };
+    }).catch(() => null);
+    check('the look has a before-and-after line over the film',
+      Boolean(shotSide) && shotSide.lit > 0 && /inset\(0(px)? 50/.test(shotSide.clip),
+      JSON.stringify(shotSide));
+    await p.locator('[data-editorcompare]').click();
+    await p.locator('[data-editorauto]').click();
+    await p.waitForTimeout(400);
+    check('  and Auto enhance lifts the shot and shows the line by itself',
+      (await p.locator('[data-editorcomparehandle]').count()) === 1
+      && Number(await p.locator('[data-editordialnow="contrast"]').innerText()) > 1.05);
+
     /* ── It is a clock, and the clock is what you steer by ─────────
 
        Carli, 29 September 2026: *"dit moet seker ook op 'n tydlyn wees. Die

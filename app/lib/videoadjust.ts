@@ -119,6 +119,19 @@ export const NO_ADJUST: Readonly<Record<Dial['id'], number>> = {
 
 export type Adjust = Partial<Record<Dial['id'], number>>;
 
+/**
+ * One press of Auto enhance, for a shot off a phone.
+ *
+ * Carli, 16 October 2026, a one-tap enhance with a before-and-after line
+ * open on her phone. The same small lift as the photo editor's `AUTO`: a
+ * phone protects its highlights, so what it films is safe and a little flat.
+ * Small on purpose — a big automatic lift makes every film in a feed look
+ * like the same filter.
+ */
+export const AUTO_ADJUST: Readonly<Record<Dial['id'], number>> = {
+  bright: 1.04, contrast: 1.12, colour: 1.12, warm: 0, sharp: 0,
+};
+
 /** Whether anything has been moved off its resting place. */
 export function adjusted(dials?: Adjust): boolean {
   if (!dials) return false;
