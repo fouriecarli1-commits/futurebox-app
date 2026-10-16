@@ -878,6 +878,22 @@ export default function KidsRoom({
                 FUTURE<span className="text-cyan-300">BOX</span>
               </h1>
             </GrownUpHold>
+            {/* ── And a small lock, for a grown-up who cannot find the hold ──
+                Carli, 16 October 2026: *"Daar is nie 'n logout by die kids
+                studio nie. Ek sukkel om daar uit te kom."* The hold was the
+                only way out, and nothing said it was there. The lock opens the
+                same code pad, so a child who presses it meets four numbers
+                they do not know — and the room cannot be handed over without
+                a code any more (`KidsDoor`). */}
+            <button
+              type="button"
+              data-kidslock
+              onClick={() => setAskCode(true)}
+              aria-label={t('kids.lockDoor', 'For grown-ups: the way out')}
+              className="mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-surface-300 bg-surface-100/70 text-sm"
+            >
+              <span aria-hidden>🔒</span>
+            </button>
             <p className="fb-kids-bubble text-sm">
               <span className="text-amber-300">{t('kids.dreamKids', 'KIDS DREAM')}</span>{' '}
               <span className="text-cyan-300">{t('kids.dreamStudio', 'STUDIO')}</span>

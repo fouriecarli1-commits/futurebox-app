@@ -54,6 +54,7 @@ import StoryShelf from './StoryShelf';
 import KidsSignIn from './KidsSignIn';
 import SongShelf from './SongShelf';
 import { inPlayApp } from '../lib/playbilling';
+import { hasCode } from '../lib/kidslock';
 
 /** What one of each thing is called in a sentence about how many. */
 const MANY: Record<KidThing, readonly [string, string, string]> = {
@@ -152,6 +153,15 @@ export default function KidsDoor({
   }, []);
 
   const give = async (allowance: number): Promise<void> => {
+    /* No room without a code. The way out of the child's room is the code,
+       and with none chosen any four numbers open it — Carli, 16 October 2026,
+       found the room hard to leave, and the fix must not make it easy for a
+       child to leave too. */
+    if (!hasCode()) {
+      setFail(t('kids.codeFirst', 'Choose your grown-up code above first. It is how you get out of the kids room again.'));
+      document.querySelector('[data-kidscodechooser]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setBusy(true);
     setFail('');
     const next = await giveAllowance(allowance, wantMinutes);

@@ -33,9 +33,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import KidsRoom from '../components/KidsRoom';
 import { useLang } from '../lib/i18n';
+import { signOut } from '../lib/cloud';
+import { childIn } from '../lib/kidslock';
 
 export default function KidsPage(): React.ReactElement {
   const { t } = useLang();
@@ -45,7 +47,7 @@ export default function KidsPage(): React.ReactElement {
   return (
     <main className="min-h-screen bg-transparent text-ink">
       {grownUp && (
-      <div className="mx-auto w-full max-w-3xl px-5 pt-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap gap-2 px-5 pt-8">
         <Link
           href="/"
           className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-sm px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-sm transition-all"
@@ -53,6 +55,22 @@ export default function KidsPage(): React.ReactElement {
           <ArrowLeft className="h-4 w-4" />
           {t('kids.back', 'Back to the studio')}
         </Link>
+        {/* Carli, 16 October 2026: *"Daar is nie 'n logout by die kids studio
+            nie."* On the grown-up's page only, beside the way back — the
+            child's room has none, and the lock in its corner is how a
+            grown-up reaches this page. */}
+        <button
+          type="button"
+          data-kidssignout
+          onClick={() => {
+            childIn(false);
+            void signOut().finally(() => { window.location.href = '/'; });
+          }}
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-sm px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-sm transition-all"
+        >
+          <LogOut className="h-4 w-4" />
+          {t('kids.signOut', 'Sign out')}
+        </button>
       </div>
       )}
       <KidsRoom onGrownUp={setGrownUp} />

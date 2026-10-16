@@ -90,6 +90,16 @@ try {
     (await page.locator('[data-kidscodewrong]').count()) === 1 && (await page.locator('[data-kidscodechooser]').count()) === 0);
   await typeCode('2468');
   check('  and the right one does', (await page.locator('[data-kidscodechooser]').count()) === 1);
+  check('  and the grown-up\u2019s page has a way to sign out', (await page.locator('[data-kidssignout]').count()) === 1);
+  await page.getByRole('button', { name: /Back to the music|Terug na die musiek/i }).first().click();
+  await page.waitForTimeout(600);
+  /* Carli, 16 October 2026: "Ek sukkel om daar uit te kom." A small lock
+     opens the same code pad, for a grown-up who cannot find the hold. */
+  await page.locator('[data-kidslock]').click();
+  await page.waitForTimeout(300);
+  check('the lock in the corner opens the code pad', (await page.locator('[data-kidscodepad]').count()) === 1);
+  await typeCode('2468');
+  check('  and the code takes the grown-up to their page', (await page.locator('[data-kidscodechooser]').count()) === 1);
   await page.getByRole('button', { name: /Back to the music|Terug na die musiek/i }).first().click();
   await page.waitForTimeout(600);
 

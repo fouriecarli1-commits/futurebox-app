@@ -33,7 +33,10 @@ export function GrownUpHold({
     <div
       data-kidsgrownup
       className={`select-none ${className}`}
-      style={{ WebkitTouchCallout: 'none' }}
+      /* `touch-action: none`, so a phone does not take a long press for the
+         start of a scroll and cancel the hold half-way — the commonest reason
+         the three seconds never arrive on Android. */
+      style={{ WebkitTouchCallout: 'none', touchAction: 'none' }}
       onPointerDown={() => { stop(); timer.current = window.setTimeout(() => { timer.current = null; onHeld(); }, HOLD_MS); }}
       onPointerUp={stop}
       onPointerLeave={stop}

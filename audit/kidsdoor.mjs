@@ -32,6 +32,14 @@ import { chromium } from 'playwright';
 import { enter, studio } from './enter.mjs';
 import { launchOptions, serve, shot } from './where.mjs';
 
+/** The grown-up's code, chosen on the grown-up's page the way a person does. */
+const chooseCode = async (page) => {
+  await page.locator('#kids-code-new').fill('2468').catch(() => undefined);
+  await page.locator('#kids-code-again').fill('2468').catch(() => undefined);
+  await page.locator('[data-kidscodekeep]').click().catch(() => undefined);
+  await page.waitForTimeout(300);
+};
+
 const problems = [];
 const check = (label, ok, detail = '') => {
   console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${!ok && detail ? ` — ${detail}` : ''}`);
@@ -128,6 +136,14 @@ async function stubKids(page, onPost) {
   check("the grown-up's page is the first thing there", await door.isVisible().catch(() => false));
   check('  with no sign-in step, because somebody is signed in', (await page.locator('[data-kidssignin]').count()) === 0);
 
+  /* No room without a grown-up code: it is the way out again (Carli, 16
+     October 2026, "Ek sukkel om daar uit te kom"). */
+  await page.locator('[data-kidsstep]').first().click();
+  await page.waitForTimeout(500);
+  check('handing over with no code chosen asks for one first',
+    (await page.locator('[data-kidsroom]').count()) === 0
+    && /code|kode/i.test(await page.locator('[data-kidsfail]').innerText().catch(() => '')));
+  await chooseCode(page);
   await page.locator('[data-kidsstep]').first().click();
   const room = page.locator('[data-kidsroom]');
   await room.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
@@ -172,6 +188,7 @@ async function stubKids(page, onPost) {
   await stubKids(page, () => ({ status: 503, json: { message: why } }));
   await page.goto(`${server.url}/kids`, { waitUntil: 'networkidle' });
   await page.locator('[data-kidsdoor]').waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+  await chooseCode(page);
   await page.locator('[data-kidsstep]').first().click();
   const fail = page.locator('[data-kidsfail]');
   await fail.waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);
