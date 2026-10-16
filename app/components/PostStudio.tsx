@@ -47,7 +47,7 @@ import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   Bookmark,
-  Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, X,
+  Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, ChevronUp, ChevronDown, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -127,6 +127,7 @@ import { MOST_COLOURS, repaint } from '../lib/repaint';
 import { liftWith, type Found } from '../lib/grabobject';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
+import { canTouch, frontZ, movedOne, stackOf, type LayerOn } from '../lib/postlayers';
 import { withSaid } from '../lib/speak';
 import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
@@ -285,6 +286,12 @@ interface Words {
   readonly size?: number;
   /** Which edge a paragraph's lines line up on. Absent is the middle. */
   readonly align?: TextAlign;
+  /** Its place in the layer stack — `lib/postlayers.ts`. Absent is over every shape, as it always was. */
+  readonly z?: number;
+  /** Switched off in the layer list: not drawn, not saved, not taken hold of. */
+  readonly hidden?: boolean;
+  /** How see-through, 0.1 to 1, from the layer list. Absent is solid. */
+  readonly alpha?: number;
 }
 
 /** Where a paragraph's lines line up: "center text or put it to the left, or right". */
@@ -487,8 +494,16 @@ const POST_MAGIC: BenchSpec = {
   what: ['post.benchMagicWhat', 'Tap a part of the photo and the AI improves it, changes it into something else, or takes it away. Only that part changes.'],
   paid: true,
 };
+/* Carli, 16 October 2026: *"Die photo editor sal moet layers kry."* Beside
+   the shapes, because the layers are the words and shapes she has put on. */
+const POST_LAYERS: BenchSpec = {
+  id: 'layers',
+  icon: <Layers className="h-5 w-5" />,
+  label: ['post.benchLayers', 'Layers'],
+  what: ['post.benchLayersWhat', 'Every layer on the picture, front to back: choose the one you are editing, or All for everything together. Hide one, move it forward or back, or make it see-through.'],
+};
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_STARTS, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LOWER[2],
+  POST_STARTS, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
@@ -499,6 +514,7 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   read: ['post.toolRead', 'Grab'],
   text: ['post.toolText', 'Text'],
   shapes: ['post.toolShapes', 'Shapes'],
+  layers: ['post.toolLayers', 'Layers'],
   save: ['post.toolSave', 'Export'],
 };
 /** A tool along the foot on a phone: an icon over a word, small. */
@@ -1008,6 +1024,22 @@ export default function PostStudio({
   const [marks, setMarks] = useState<Mark[]>([]);
   /** The shape whose handles are showing, picked by a tap or by adding it. */
   const [markOn, setMarkOn] = useState<string | null>(null);
+  /* ── Layers — `lib/postlayers.ts` ─────────────────────────────────────
+     Carli, 16 October 2026: *"As mens op die layers click moet mens kan
+     kies op watter layer jy nou edit, en natuurlik 'n all layer wat alles
+     by mekaar het."* Which layer a thumb on the glass means; the photo's
+     and the background's switches and the photo's opacity, which have no
+     item of their own to live on; and the look over the whole picture,
+     which How it reads changes while `toneAll` is on. */
+  const [layerOn, setLayerOn] = useState<LayerOn>('all');
+  const [photoHidden, setPhotoHidden] = useState(false);
+  const [photoAlpha, setPhotoAlpha] = useState(1);
+  const [backHidden, setBackHidden] = useState(false);
+  const [allLook, setAllLook] = useState<Look>(PLAIN);
+  const [toneAll, setToneAll] = useState(false);
+  /* What How it reads is changing right now. */
+  const lookNow = toneAll ? allLook : look;
+  const setLookNow = toneAll ? setAllLook : setLook;
   /** A shape being carried or stretched by the thumb. */
   const markHeld = useRef<{ id: string; dx: number; dy: number; resize: boolean } | null>(null);
   const changeMark = (id: string, how: Partial<Mark>): void =>
@@ -1306,7 +1338,9 @@ export default function PostStudio({
     ctx.setTransform(to.width / size.width, 0, 0, to.height / size.height, 0, 0);
     /* Setting width or height clears the canvas to transparent, so "nothing
        behind it" is the absence of this fill rather than a colour. */
-    if (back) {
+    /* The background layer can be switched off in the layer list, which is
+       the same as nothing behind it — `lib/postlayers.ts`. */
+    if (back && !backHidden) {
       ctx.fillStyle = back;
       ctx.fillRect(0, 0, size.width, size.height);
     } else if (guides) {
@@ -1338,7 +1372,7 @@ export default function PostStudio({
       ctx.setTransform(had);
     }
 
-    if (picture) {
+    if (picture && !photoHidden) {
       /* Placed, not stretched, and placed by the one function that also
          reports how far it can move — so the screen cannot draw it in one
          spot and offer a drag that means another.
@@ -1372,7 +1406,10 @@ export default function PostStudio({
          written. Words under a blur are not a style, they are a mistake, and
          a filter left set would put every one of them through it. */
       ctx.filter = filterFor(look, to.width / size.width);
+      /* The photo layer's own opacity, from the layer list. */
+      ctx.globalAlpha = photoAlpha;
       ctx.drawImage(picture, at.left, at.top, at.width, at.height);
+      ctx.globalAlpha = 1;
       ctx.filter = 'none';
 
       /* ── A box round every line the reader found ─────────────────
@@ -1439,6 +1476,7 @@ export default function PostStudio({
           Math.min(at.width, size.width), Math.min(at.height, size.height),
         );
         ctx.clip();
+        ctx.globalAlpha = photoAlpha;
         ctx.globalCompositeOperation = wash.how;
         ctx.fillStyle = wash.ink;
         ctx.fillRect(0, 0, size.width, size.height);
@@ -1446,39 +1484,22 @@ export default function PostStudio({
       }
     }
 
-    /* The shapes, under the words: a ring behind a word is a halo, a
-       word behind a ring is a mistake. */
-    for (const mark of marks) drawMark(ctx, mark, size.width, size.height);
-    /* The picked shape, on the screen only: a bright dashed edge and the
-       corner a thumb pulls to make it bigger or smaller. */
-    if (guides && markOn) {
-      const mark = marks.find((one) => one.id === markOn);
-      if (mark) {
-        const box = markBox(mark, size.width, size.height);
-        const line = Math.max(2, size.width * 0.004);
-        ctx.save();
-        ctx.strokeStyle = '#39ff14';
-        ctx.lineWidth = line;
-        ctx.setLineDash([line * 4, line * 3]);
-        ctx.shadowColor = '#39ff14';
-        ctx.shadowBlur = line * 4;
-        ctx.strokeRect(box.cx - box.w / 2, box.cy - box.h / 2, box.w, box.h);
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#39ff14';
-        ctx.beginPath();
-        ctx.arc(box.cx + box.w / 2, box.cy + box.h / 2, Math.max(10, size.width * 0.022), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
+    /* ── The layers, back to front ─────────────────────────────────────
+       Carli, 16 October 2026: *"Die photo editor sal moet layers kry."*
+       Every shape and every line of words in one stack, in the order the
+       layer list shows — `lib/postlayers.ts`. Before there was an order,
+       every shape sat under every line of words; a layer that was never
+       moved keeps that place. A layer switched off is not drawn, here or
+       in the file. */
     /* A line emptied or taken away leaves no place behind: a stale entry
        here is a ring round nothing that a thumb can still catch. */
     for (const id of [...laidOut.current.keys()]) {
-      if (!words.some((one) => one.id === id && one.text.trim())) laidOut.current.delete(id);
+      if (!words.some((one) => one.id === id && one.text.trim() && !one.hidden)) laidOut.current.delete(id);
     }
-    for (const one of words) {
-      if (!one.text.trim()) continue;
+    /* Drawn onto whichever surface it is handed — the glass itself, or a
+       layer of its own when the layer list has made it see-through. */
+    const drawWords = (one: Words, ctx: CanvasRenderingContext2D): void => {
+      if (!one.text.trim()) return;
       const chosen = faceOf(one.face);
       /* The ring's corners scale the box the words are fitted into, and the
          ceiling with it — a fifth of the height is the most a caption is,
@@ -1660,6 +1681,100 @@ export default function PostStudio({
         ctx.shadowBlur = Math.max(2, fit.px * 0.12);
         writeBlock();
         ctx.shadowBlur = 0;
+      }
+    };
+
+    for (const layer of stackOf(marks, words)) {
+      if (layer.item.hidden) continue;
+      const paint = (onto: CanvasRenderingContext2D): void => {
+        if (layer.kind === 'mark') drawMark(onto, layer.item as Mark, size.width, size.height);
+        else drawWords(layer.item as Words, onto);
+      };
+      /* ── A see-through layer is faded ONCE, as a whole ─────────────
+         A shape is painted several times over for its glow and words
+         are written once per halo, so turning the canvas's alpha down
+         while drawing them stacks the passes back up to nearly solid —
+         twenty per cent came out at about eighty. Drawn whole on a sheet
+         of its own and laid down at the opacity chosen, it is exactly as
+         see-through as the slider says. */
+      const alpha = Math.max(0.1, Math.min(1, layer.item.alpha ?? 1));
+      const sheet = alpha < 0.999 ? document.createElement('canvas') : null;
+      const sctx = sheet?.getContext('2d') ?? null;
+      if (!sheet || !sctx) {
+        paint(ctx);
+        continue;
+      }
+      sheet.width = to.width;
+      sheet.height = to.height;
+      sctx.setTransform(ctx.getTransform());
+      paint(sctx);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(sheet, 0, 0);
+      ctx.restore();
+    }
+
+    /* ── How it reads, over everything, when the All layer is chosen ────
+       The photo's own look stays on the photo. This one is for the
+       finished picture — words and shapes as well — and goes on before the
+       rings, so the rings stay the bright green that says "this one". The
+       warm wash keeps to what is drawn: on a see-through post it must not
+       tint the nothing behind it. */
+    if (touched(allLook)) {
+      const flat = document.createElement('canvas');
+      flat.width = to.width;
+      flat.height = to.height;
+      const fctx = flat.getContext('2d');
+      if (fctx) {
+        fctx.drawImage(to, 0, 0);
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, to.width, to.height);
+        ctx.filter = filterFor(allLook, to.width / size.width);
+        ctx.drawImage(flat, 0, 0);
+        ctx.filter = 'none';
+        const wash = warmWash(allLook);
+        if (wash) {
+          const tint = document.createElement('canvas');
+          tint.width = to.width;
+          tint.height = to.height;
+          const tctx = tint.getContext('2d');
+          if (tctx) {
+            tctx.drawImage(to, 0, 0);
+            tctx.globalCompositeOperation = wash.how;
+            tctx.fillStyle = wash.ink;
+            tctx.fillRect(0, 0, to.width, to.height);
+            tctx.globalCompositeOperation = 'destination-in';
+            tctx.drawImage(to, 0, 0);
+            ctx.clearRect(0, 0, to.width, to.height);
+            ctx.drawImage(tint, 0, 0);
+          }
+        }
+        ctx.restore();
+      }
+    }
+
+    /* The picked shape, on the screen only: a bright dashed edge and the
+       corner a thumb pulls to make it bigger or smaller. */
+    if (guides && markOn) {
+      const mark = marks.find((one) => one.id === markOn);
+      if (mark) {
+        const box = markBox(mark, size.width, size.height);
+        const line = Math.max(2, size.width * 0.004);
+        ctx.save();
+        ctx.strokeStyle = '#39ff14';
+        ctx.lineWidth = line;
+        ctx.setLineDash([line * 4, line * 3]);
+        ctx.shadowColor = '#39ff14';
+        ctx.shadowBlur = line * 4;
+        ctx.strokeRect(box.cx - box.w / 2, box.cy - box.h / 2, box.w, box.h);
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#39ff14';
+        ctx.beginPath();
+        ctx.arc(box.cx + box.w / 2, box.cy + box.h / 2, Math.max(10, size.width * 0.022), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
     }
 
@@ -1886,6 +2001,8 @@ export default function PostStudio({
        on the glass until something else happened to repaint. */
     /* The ring round the touched line is drawn by `draw` as well. */
     wordOn,
+    /* The layer list's switches and the look over everything. */
+    photoHidden, photoAlpha, backHidden, allLook,
     marks, markOn, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
@@ -1947,14 +2064,14 @@ export default function PostStudio({
     if (!held) return false;
     const id = freshId();
     if (held.kind === 'mark') {
-      const item = { ...held.item, id, x: Math.min(0.95, held.item.x + 0.04), y: Math.min(0.95, held.item.y + 0.04) };
+      const item = { ...held.item, id, x: Math.min(0.95, held.item.x + 0.04), y: Math.min(0.95, held.item.y + 0.04), z: frontZ(marks, words) };
       setMarks((was) => [...was, item]);
       setMarkOn(id);
     } else {
       /* A step down and across, so the copy is not hidden under the one it
          was copied from. */
       const from = held.item.at ?? atOf(held.item.spot);
-      setWords((was) => [...was, { ...held.item, id, at: { x: Math.min(0.95, from.x + 0.04), y: Math.min(0.95, from.y + 0.04) } }]);
+      setWords((was) => [...was, { ...held.item, id, z: frontZ(marks, was), at: { x: Math.min(0.95, from.x + 0.04), y: Math.min(0.95, from.y + 0.04) } }]);
       setWordOn(id);
     }
     return true;
@@ -2047,7 +2164,12 @@ export default function PostStudio({
         Checked before panning and after cropping: a crop or a trace is a
         mode somebody turned on and is unambiguous, and a thumb that lands
         on a word while neither is on means the word. */
-    if (!cropBox && !traced && words.length > 0) {
+    /* ── The layers, front first ───────────────────────────────────────
+       Carli, 16 October 2026: one layer chosen in the layer list is the only
+       one a thumb takes hold of; with All, whichever is in FRONT at that
+       spot — the order the layer list shows, not words-before-shapes. A
+       layer switched off cannot be caught. `lib/postlayers.ts`. */
+    if (!cropBox && !traced && (words.length > 0 || marks.length > 0)) {
       const put = frameAt(event);
       if (put) {
         /* A corner of the ring round the line already touched: pulled, it
@@ -2056,7 +2178,7 @@ export default function PostStudio({
            block's own test below would take it as a move. */
         const ringed = wordOn ? laidOut.current.get(wordOn) : undefined;
         const line = wordOn ? words.find((one) => one.id === wordOn) : undefined;
-        if (ringed && line) {
+        if (ringed && line && canTouch(layerOn, line)) {
           const px = put.x * size.width;
           const py = put.y * size.height;
           const cx = ringed.x * size.width;
@@ -2075,17 +2197,38 @@ export default function PostStudio({
             return;
           }
         }
-        for (const one of words) {
-          if (!one.text.trim()) continue;
-          const was = laidOut.current.get(one.id);
-          if (!was) continue;
-          if (Math.abs(put.x - was.x) > was.w / 2 || Math.abs(put.y - was.y) > was.h / 2) continue;
-          carrying.current = { id: one.id, dx: put.x - was.x, dy: put.y - was.y };
-          setWordOn(one.id);
-          setMarkOn(null);
-          /* Its controls open under the picture — alignment, spacing, size —
-             the way touching a shape opens the shapes. */
-          if (!movingWords && bench !== 'text') setBench('text');
+        const px = put.x * size.width;
+        const py = put.y * size.height;
+        const reachMark = Math.max(18, size.width * 0.04);
+        for (const layer of [...stackOf(marks, words)].reverse()) {
+          if (!canTouch(layerOn, layer.item)) continue;
+          if (layer.kind === 'words') {
+            const one = layer.item as Words;
+            if (!one.text.trim()) continue;
+            const was = laidOut.current.get(one.id);
+            if (!was) continue;
+            if (Math.abs(put.x - was.x) > was.w / 2 || Math.abs(put.y - was.y) > was.h / 2) continue;
+            carrying.current = { id: one.id, dx: put.x - was.x, dy: put.y - was.y };
+            setWordOn(one.id);
+            setMarkOn(null);
+            /* Its controls open under the picture — alignment, spacing, size —
+               the way touching a shape opens the shapes. */
+            if (!movingWords && bench !== 'text' && bench !== 'layers') setBench('text');
+            event.currentTarget.setPointerCapture(event.pointerId);
+            return;
+          }
+          /* A shape: picked up and carried, or pulled bigger by its corner.
+             Carli, 14 October 2026: "Objects wat in gesit word kan nie
+             geskuif word nie sien ek, die shapes bedoel ek." */
+          const mark = layer.item as Mark;
+          const box = markBox(mark, size.width, size.height);
+          const corner = Math.hypot(px - (box.cx + box.w / 2), py - (box.cy + box.h / 2)) <= reachMark;
+          const inside = Math.abs(px - box.cx) <= box.w / 2 && Math.abs(py - box.cy) <= box.h / 2;
+          if (!corner && !inside) continue;
+          setMarkOn(mark.id);
+          setWordOn(null);
+          if (bench !== 'shapes' && bench !== 'layers') setBench('shapes');
+          markHeld.current = { id: mark.id, dx: put.x - mark.x, dy: put.y - mark.y, resize: corner && mark.id === markOn };
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
         }
@@ -2094,30 +2237,6 @@ export default function PostStudio({
            nie." Tapping the photo anywhere else is how a selection ends in
            every editor she has used. */
         if (wordOn) setWordOn(null);
-      }
-    }
-    /* A shape: picked up and carried, or pulled bigger by its corner.
-       Carli, 14 October 2026: "Objects wat in gesit word kan nie geskuif
-       word nie sien ek, die shapes bedoel ek." Words are tested first
-       because they sit on top of the shapes behind them. */
-    if (!cropBox && !traced && marks.length > 0) {
-      const put = frameAt(event);
-      if (put) {
-        const px = put.x * size.width;
-        const py = put.y * size.height;
-        const grab = Math.max(18, size.width * 0.04);
-        for (const mark of [...marks].reverse()) {
-          const box = markBox(mark, size.width, size.height);
-          const corner = Math.hypot(px - (box.cx + box.w / 2), py - (box.cy + box.h / 2)) <= grab;
-          const inside = Math.abs(px - box.cx) <= box.w / 2 && Math.abs(py - box.cy) <= box.h / 2;
-          if (!corner && !inside) continue;
-          setMarkOn(mark.id);
-          setWordOn(null);
-          if (bench !== 'shapes') setBench('shapes');
-          markHeld.current = { id: mark.id, dx: put.x - mark.x, dy: put.y - mark.y, resize: corner && mark.id === markOn };
-          event.currentTarget.setPointerCapture(event.pointerId);
-          return;
-        }
       }
     }
     if (traced) {
@@ -2157,7 +2276,10 @@ export default function PostStudio({
       event.currentTarget.setPointerCapture(event.pointerId);
       return;
     }
-    if (!movable) return;
+    /* The photograph is dragged only while it is a layer being edited: with
+       one shape or one line chosen, a thumb that misses it does nothing
+       rather than moving the picture underneath. */
+    if (!movable || photoHidden || (layerOn !== 'all' && layerOn !== 'photo')) return;
     lastAt.current = { x: event.clientX, y: event.clientY };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -2299,6 +2421,10 @@ export default function PostStudio({
       setPicture(img);
       setCrop(MIDDLE);
       setLook(PLAIN);
+      /* A new photograph is seen: a photo layer left switched off would
+         bring it in invisible. */
+      setPhotoHidden(false);
+      setPhotoAlpha(1);
       setWhole(null);
       /* Everything that was about the last photograph: its cut-out mask,
          the boxes found in it and the spot marked on it. */
@@ -3119,7 +3245,8 @@ export default function PostStudio({
           at: freeRow([...words, ...all], n === 0 ? atOf('top').y : (all[all.length - 1].at?.y ?? 0.17) + 0.12),
         }], []);
     if (!made.length) return;
-    setWords((was) => [...was, ...made]);
+    /* New layers go in front of everything already there. */
+    setWords((was) => [...was, ...made.map((one, n) => ({ ...one, z: frontZ(marks, was) + n }))]);
     setGrabbed(null);
     setPicking(false);
     setFound(null);
@@ -3138,6 +3265,7 @@ export default function PostStudio({
     const at = middleOf(one);
     setWords((was) => [...was, {
       id: freshId(),
+      z: frontZ(marks, was),
       text: one.text,
       face: FACES[0].id,
       spot: 'middle',
@@ -5289,13 +5417,37 @@ export default function PostStudio({
           ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
           : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}
       >
+        {/* Which layer this changes — the photo alone, or the whole
+            picture with its words and shapes. Chosen here or in Layers. */}
+        <div className={RY} data-postlooktarget={toneAll ? 'all' : 'photo'}>
+          <button
+            type="button"
+            data-postlookon="photo"
+            aria-pressed={!toneAll}
+            onClick={() => { setToneAll(false); setLayerOn('photo'); }}
+            className={`${LEEG} ${!toneAll ? GEKIES : ''}`}
+          >
+            <ImageIcon className="h-3.5 w-3.5" />
+            {t('post.lookOnPhoto', 'The photo')}
+          </button>
+          <button
+            type="button"
+            data-postlookon="all"
+            aria-pressed={toneAll}
+            onClick={() => { setToneAll(true); setLayerOn('all'); }}
+            className={`${LEEG} ${toneAll ? GEKIES : ''}`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            {t('post.lookOnAll', 'All layers')}
+          </button>
+        </div>
         <div className="space-y-2">
           <p className={MIKRO}>{t('post.look', 'How it reads')}</p>
           <div className={RY3}>
             <button
               type="button"
               data-postauto
-              onClick={() => setLook(AUTO)}
+              onClick={() => setLookNow(AUTO)}
               className={LEEG}
             >
               {t('post.auto', 'Lift it')}
@@ -5303,8 +5455,8 @@ export default function PostStudio({
             <button
               type="button"
               data-postplain
-              disabled={!touched(look)}
-              onClick={() => setLook(PLAIN)}
+              disabled={!touched(lookNow)}
+              onClick={() => setLookNow(PLAIN)}
               className={`${LEEG} disabled:opacity-40`}
             >
               {t('post.asShot', 'As it came')}
@@ -5366,8 +5518,8 @@ export default function PostStudio({
               min={RANGES[key].min}
               max={RANGES[key].max}
               step={RANGES[key].step}
-              value={look[key]}
-              onChange={(event) => setLook((was) => ({ ...was, [key]: Number(event.target.value) }))}
+              value={lookNow[key]}
+              onChange={(event) => setLookNow((was) => ({ ...was, [key]: Number(event.target.value) }))}
               className="w-full"
               aria-label={name}
             />
@@ -5623,7 +5775,7 @@ export default function PostStudio({
               type="button"
               data-postneonword={one.id}
               onClick={() => setWords((was) => [...was, {
-                id: freshId(), text: t(one.says[0], one.says[1]), face: one.face,
+                id: freshId(), z: frontZ(marks, was), text: t(one.says[0], one.says[1]), face: one.face,
                 spot: was.length === 0 ? 'middle' : 'top', ink: one.ink, glow: one.glow, letterGap: one.letterGap,
                 /* Under the last line rather than on top of it (`freeRow`). */
                 at: freeRow(was, atOf(was.length === 0 ? 'middle' : 'top').y),
@@ -5676,7 +5828,7 @@ export default function PostStudio({
           type="button"
           data-addwords
           onClick={() => setWords((was) => [...was, {
-            id: freshId(), text: '', face: FACES[0].id, spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
+            id: freshId(), z: frontZ(marks, was), text: '', face: FACES[0].id, spot: was.length === 0 ? 'bottom' : 'top', ink: '#ffffff',
             /* A second, third and fourth line each get a row of their own,
                instead of all landing on the top spot in one pile. */
             at: freeRow(was, atOf(was.length === 0 ? 'bottom' : 'top').y),
@@ -6011,7 +6163,7 @@ export default function PostStudio({
             data-postaddmark={spec.id}
             onClick={() => {
               const id = freshId();
-              setMarks((was) => [...was, newMark(spec.id, id)]);
+              setMarks((was) => [...was, { ...newMark(spec.id, id), z: frontZ(was, words) }]);
               setMarkOn(id);
             }}
             className={`${LEEG} inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap`}
@@ -6321,6 +6473,13 @@ export default function PostStudio({
           setMarks([]);
           setMarkOn(null);
           setLook(PLAIN);
+          /* And the layers start over: all of them, all showing. */
+          setAllLook(PLAIN);
+          setToneAll(false);
+          setLayerOn('all');
+          setPhotoHidden(false);
+          setPhotoAlpha(1);
+          setBackHidden(false);
           setCrop(MIDDLE);
           setBack('#111113');
           setLastColour('#111113');
@@ -6422,9 +6581,225 @@ export default function PostStudio({
     window.addEventListener('keydown', key, true);
     return () => window.removeEventListener('keydown', key, true);
   }, [bench]);
+  /* ── The layer list ────────────────────────────────────────────────────
+     Carli, 16 October 2026: *"Die photo editor sal moet layers kry. As mens
+     op die layers click moet mens kan kies op watter layer jy nou edit, en
+     natuurlik 'n all layer wat alles by mekaar het."* Front at the top, the
+     way every editor lists them; All above that. `lib/postlayers.ts` holds
+     the order and what "chosen" means to a thumb. */
+  const stackNow = stackOf(marks, words);
+  const chooseLayer = (on: LayerOn): void => {
+    setLayerOn(on);
+    const line = words.find((one) => one.id === on);
+    const mark = marks.find((one) => one.id === on);
+    setWordOn(line && line.text.trim() ? line.id : null);
+    setMarkOn(mark ? mark.id : null);
+    /* How it reads follows the layer: the photograph's own look for the
+       photo, the look over everything for All. */
+    if (on === 'all') setToneAll(true);
+    if (on === 'photo') setToneAll(false);
+  };
+  const hideLayer = (id: string, kind: 'mark' | 'words', hidden: boolean): void => {
+    beforeLayers(hidden
+      ? t('post.stepHideLayer', 'switching a layer off')
+      : t('post.stepShowLayer', 'switching a layer on'));
+    if (kind === 'mark') {
+      setMarks((was) => was.map((one) => (one.id === id ? { ...one, hidden } : one)));
+      if (hidden && markOn === id) setMarkOn(null);
+    } else {
+      setWords((was) => was.map((one) => (one.id === id ? { ...one, hidden } : one)));
+      if (hidden && wordOn === id) setWordOn(null);
+    }
+  };
+  const moveLayer = (id: string, by: 1 | -1): void => {
+    beforeLayers(by > 0
+      ? t('post.stepLayerUp', 'moving a layer forward')
+      : t('post.stepLayerDown', 'moving a layer back'));
+    const z = movedOne(marks, words, id, by);
+    setMarks((was) => was.map((one) => ({ ...one, z: z.get(one.id) ?? one.z })));
+    setWords((was) => was.map((one) => ({ ...one, z: z.get(one.id) ?? one.z })));
+  };
+  const layerNameOf = (kind: 'mark' | 'words', item: Mark | Words): string => {
+    if (kind === 'mark') {
+      const spec = MARK_SPECS.find((one) => one.id === (item as Mark).kind) ?? MARK_SPECS[0];
+      return `${spec.icon} ${t(spec.name[0], spec.name[1])}`;
+    }
+    const text = (item as Words).text.trim().replace(/\s+/g, ' ');
+    if (!text) return t('post.layerEmptyWords', 'Words (empty)');
+    return `“${text.length > 24 ? `${text.slice(0, 23)}…` : text}”`;
+  };
+  const layerRow = (
+    id: LayerOn,
+    name: string,
+    icon: React.ReactNode,
+    extra: React.ReactNode,
+  ): React.ReactElement => (
+    <div
+      key={id}
+      data-postlayer={id}
+      data-postlayeron={layerOn === id ? 'yes' : 'no'}
+      className={`flex items-center gap-1.5 rounded-xl border p-1 ${layerOn === id ? GEKIES : 'border-zinc-700 bg-zinc-950'}`}
+    >
+      <button
+        type="button"
+        data-postlayerpick={id}
+        aria-pressed={layerOn === id}
+        onClick={() => chooseLayer(id)}
+        className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-left text-xs font-bold text-zinc-200"
+      >
+        <span aria-hidden className="flex-shrink-0">{icon}</span>
+        <span className="truncate">{name}</span>
+      </button>
+      {extra}
+    </div>
+  );
+  const eyeButton = (hidden: boolean, flip: () => void, id: string): React.ReactElement => (
+    <button
+      type="button"
+      data-postlayereye={id}
+      aria-pressed={!hidden}
+      aria-label={hidden ? t('post.layerShow', 'Show this layer') : t('post.layerHide', 'Hide this layer')}
+      onClick={flip}
+      className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-lg text-zinc-300"
+    >
+      {hidden ? <EyeOff className="h-4 w-4 opacity-60" /> : <Eye className="h-4 w-4" />}
+    </button>
+  );
+  const chosenItem = stackNow.find((one) => one.id === layerOn);
+  const layersBench = (
+    <div className="space-y-3" data-postlayers>
+      <div className="space-y-1.5">
+        {layerRow('all', t('post.layerAll', 'All layers'), <Layers className="h-4 w-4" />, null)}
+        {[...stackNow].reverse().map((layer, at, list) => layerRow(
+          layer.id,
+          layerNameOf(layer.kind, layer.item),
+          layer.kind === 'mark' ? <Square className="h-4 w-4" /> : <Type className="h-4 w-4" />,
+          <>
+            <button
+              type="button"
+              data-postlayerup={layer.id}
+              disabled={at === 0}
+              aria-label={t('post.layerUp', 'Move forward')}
+              onClick={() => moveLayer(layer.id, 1)}
+              className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              data-postlayerdown={layer.id}
+              disabled={at === list.length - 1}
+              aria-label={t('post.layerDown', 'Move back')}
+              onClick={() => moveLayer(layer.id, -1)}
+              className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            {eyeButton(Boolean(layer.item.hidden), () => hideLayer(layer.id, layer.kind, !layer.item.hidden), layer.id)}
+          </>,
+        ))}
+        {picture && layerRow(
+          'photo',
+          t('post.layerPhoto', 'Photo'),
+          <ImageIcon className="h-4 w-4" />,
+          eyeButton(photoHidden, () => setPhotoHidden((was) => !was), 'photo'),
+        )}
+        {layerRow(
+          'back',
+          back ? t('post.layerBack', 'Background') : t('post.layerBackNone', 'Background (see-through)'),
+          <span className="block h-4 w-4 rounded border border-zinc-500" style={{ background: back ?? 'transparent' }} />,
+          back ? eyeButton(backHidden, () => setBackHidden((was) => !was), 'back') : null,
+        )}
+      </div>
+
+      {/* What the chosen layer can do, under the list. */}
+      <div className="space-y-2 rounded-xl border border-zinc-800 p-3" data-postlayertools={layerOn}>
+        <p className="text-xs leading-relaxed text-zinc-400">
+          {layerOn === 'all'
+            ? t('post.layerAllSays', 'Everything together: tap anything on the photo to move it, and Adjust changes the whole picture.')
+            : layerOn === 'photo'
+              ? t('post.layerPhotoSays', 'Only the photo: drag to move it, and Adjust changes the photo alone. Words and shapes stay put.')
+              : layerOn === 'back'
+                ? t('post.layerBackSays', 'The colour behind everything. Change it under Crop, or hide it to make the post see-through.')
+                : t('post.layerOneSays', 'Only this layer answers when you touch the photo, so nothing in front of it gets in the way.')}
+        </p>
+        {(chosenItem || layerOn === 'photo') && (
+          <label className="flex items-center gap-2 text-xs font-bold text-zinc-300" data-postlayeralpha>
+            <span className="w-24 flex-shrink-0">{t('post.layerOpacity', 'Opacity')}</span>
+            <input
+              type="range"
+              min={0.1}
+              max={1}
+              step={0.05}
+              value={layerOn === 'photo'
+                ? photoAlpha
+                : chosenItem?.item.alpha ?? 1}
+              onChange={(event) => {
+                const v = Number(event.target.value);
+                if (layerOn === 'photo') setPhotoAlpha(v);
+                else if (chosenItem?.kind === 'mark') changeMark(chosenItem.id, { alpha: v });
+                else if (chosenItem) setWords((was) => was.map((one) => (one.id === chosenItem.id ? { ...one, alpha: v } : one)));
+              }}
+              aria-label={t('post.layerOpacity', 'Opacity')}
+              className="h-9 min-w-0 flex-1 accent-emerald-400"
+            />
+          </label>
+        )}
+        <div className={RY}>
+          <button
+            type="button"
+            data-postlayeredit
+            onClick={() => setBench(
+              layerOn === 'all' || layerOn === 'photo'
+                ? 'tone'
+                : layerOn === 'back'
+                  ? 'frame'
+                  : chosenItem?.kind === 'mark' ? 'shapes' : 'text',
+            )}
+            className={LEEG}
+          >
+            {layerOn === 'all' || layerOn === 'photo'
+              ? t('post.layerEditLook', 'Adjust')
+              : t('post.layerEdit', 'Edit this layer')}
+          </button>
+          {chosenItem ? (
+            <button
+              type="button"
+              data-postlayerdrop
+              onClick={() => {
+                if (chosenItem.kind === 'mark') dropMark(chosenItem.id);
+                else dropWords(chosenItem.id);
+                setLayerOn('all');
+              }}
+              className={LEEG}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {t('post.layerDrop', 'Delete layer')}
+            </button>
+          ) : layerOn !== 'all' ? (
+            <button type="button" data-postlayerall onClick={() => chooseLayer('all')} className={LEEG}>
+              <Layers className="h-3.5 w-3.5" />
+              {t('post.layerBackToAll', 'All layers')}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+  /* A chosen layer that has gone — deleted, undone, a new post — lets go,
+     so the room is never stuck answering to something that is not there. */
+  useEffect(() => {
+    if (layerOn === 'all' || layerOn === 'photo' || layerOn === 'back') return;
+    if (!marks.some((one) => one.id === layerOn) && !words.some((one) => one.id === layerOn)) setLayerOn('all');
+  }, [marks, words, layerOn]);
+  useEffect(() => {
+    if (layerOn === 'photo' && !picture) setLayerOn('all');
+  }, [picture, layerOn]);
+
   const benchFor: Record<string, React.ReactNode> = {
     starts: startsBench,
     shapes: shapesBench,
+    layers: layersBench,
     magic: magicBench,
     pic: picBench,
     frame: frameBench,
@@ -6666,6 +7041,34 @@ export default function PostStudio({
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
+      {/* Which layer a thumb means, while it is not All — so a drag that
+          moves nothing is never a mystery. One press goes back to All.
+          Top right: Put back and Do again hold the top-left corner. And
+          not centred with a translate — a pressed button is given a
+          transform of its own, which replaced the centring mid-tap and
+          moved the chip from under the thumb, so the press never landed. */}
+      {layerOn !== 'all' && (
+        <button
+          type="button"
+          data-postlayerchip={layerOn}
+          onClick={() => { setLayerOn('all'); setToneAll(true); }}
+          className="absolute right-2 top-2 z-10 flex min-h-[32px] max-w-[55%] items-center gap-1.5 rounded-full px-3 text-[11px] font-bold"
+          style={{ background: PHOTO.popGlass, color: PHOTO.ink, border: `1px solid ${PHOTO.accentDim}` }}
+        >
+          <Layers className="h-3.5 w-3.5 flex-shrink-0" />
+          <span className="truncate">
+            {layerOn === 'photo'
+              ? t('post.layerPhoto', 'Photo')
+              : layerOn === 'back'
+                ? t('post.layerBack', 'Background')
+                : (() => {
+                  const one = stackNow.find((layer) => layer.id === layerOn);
+                  return one ? layerNameOf(one.kind, one.item) : '';
+                })()}
+          </span>
+          <X className="h-3.5 w-3.5 flex-shrink-0" aria-label={t('post.layerBackToAll', 'All layers')} />
+        </button>
+      )}
       {/* The right-click menu. Carli, 14 October 2026: "in al die editor
           plekke moet daar 'n right click wees wat funksies vinniger kry soos
           cut". A right press chooses what is under it first (the same grab a
@@ -6902,50 +7305,16 @@ export default function PostStudio({
     </button>
   );
 
-  /* ── The layers, when no tool is open at a desk ───────────────────── */
-  const layers: readonly { id: string; dot: string; name: string; note: string; bench: Exclude<Bench, null> }[] = [
-    {
-      id: 'picture',
-      dot: picture ? PHOTO.accent : PHOTO.edge,
-      name: picture ? t('post.layerPicture', 'Photograph') : t('post.layerNoPicture', 'No photograph yet'),
-      note: picture ? `${picture.naturalWidth || picture.width}×${picture.naturalHeight || picture.height}` : t('post.layerBring', 'Bring one in'),
-      bench: 'pic',
-    },
-    {
-      id: 'ground',
-      dot: back ?? PHOTO.edge,
-      name: back ? t('post.layerGround', 'Background colour') : t('post.layerNoGround', 'See-through background'),
-      note: back ?? '',
-      bench: 'pic',
-    },
-    ...words.map((one) => ({ id: one.id, dot: one.ink, name: `“${one.text}”`, note: t('post.layerWords', 'Words'), bench: 'text' as const })),
-    ...marks.map((mark) => ({ id: mark.id, dot: PHOTO.purple, name: t('post.layerMark', 'Shape'), note: String(mark.kind), bench: 'shapes' as const })),
-  ];
+  /* ── The layers, when no tool is open at a desk ─────────────────────
+     The same list as the Layers tool on a phone — one list, so choosing a
+     layer at a desk and on a phone is the same press. */
   const inspector = (
     <div className="space-y-3 p-3">
       <div className="flex items-center justify-between border-b pb-2 text-xs font-bold uppercase" style={{ borderColor: PHOTO.edge }}>
         <span>{t('post.inspector', 'Inspector')}</span>
         <span className="font-mono text-[10px] normal-case" style={{ color: PHOTO.accent }}>{t('post.layers', 'Layers')}</span>
       </div>
-      <ul data-postlayers className="space-y-1.5">
-        {layers.map((one) => (
-          <li key={one.id}>
-            <button
-              type="button"
-              data-postlayer={one.id}
-              onClick={() => openBench(one.bench)}
-              className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left text-xs"
-              style={chipStyle}
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: one.dot }} aria-hidden />
-                <span className="truncate font-bold text-white">{one.name}</span>
-              </span>
-              <span className="flex-shrink-0 font-mono text-[9px]" style={{ color: INK_DIM }}>{one.note}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {layersBench}
       <p className="text-[11px] leading-relaxed" style={{ color: INK_DIM }}>
         {t('post.toolkitHint', 'Pick a tool on the left and its controls open here, beside the picture rather than over it.')}
       </p>

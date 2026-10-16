@@ -67,6 +67,7 @@
     "check:wordsteady": "node audit/wordsteady.mjs 3319",
     "check:hintfits": "node audit/hintfits.mjs 3320",
     "check:postround": "node audit/postround.mjs 3321",
+    "check:postlayers": "node audit/postlayers.mjs 3327",
     "check:kidsloop": "node audit/kidsloop.mjs 3322",
     "check:pressed": "tsx scripts/check-pressed.mts",
     "check:whichbuild": "tsx scripts/check-whichbuild.mts",

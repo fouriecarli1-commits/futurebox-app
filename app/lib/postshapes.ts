@@ -60,6 +60,12 @@ export interface Mark {
   readonly opacity?: number;
   /** Width over height, for the shapes that can be stretched. Absent is 1. */
   readonly stretch?: number;
+  /** Its place in the layer stack — `lib/postlayers.ts`. Absent is where shapes always sat. */
+  readonly z?: number;
+  /** Switched off in the layer list: not drawn, not saved, not taken hold of. */
+  readonly hidden?: boolean;
+  /** The layer's own opacity, 0.1 to 1, from the layer list — the whole shape, glow and all. Absent is 1. */
+  readonly alpha?: number;
 }
 
 export const isFilled = (kind: MarkKind): boolean => (FILLED_KINDS as readonly string[]).includes(kind);

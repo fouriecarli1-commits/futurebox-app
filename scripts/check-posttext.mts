@@ -199,7 +199,7 @@ ok('  and every shape says what it is for, in both languages',
 const studio = withoutComments(readFileSync(join('app', 'components', 'PostStudio.tsx'), 'utf8'));
 
 ok('nothing behind it is the absence of a fill, not a dark colour',
-  /useState<string \| null>\(/.test(studio) && /if \(back\) \{/.test(studio),
+  /useState<string \| null>\(/.test(studio) && /if \(back( && !backHidden)?\) \{/.test(studio),
   'a colour named "transparent" fills opaque black on a canvas; the fill has'
   + ' to be skipped, which is what setting width or height already leaves');
 
