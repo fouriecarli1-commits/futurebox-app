@@ -6423,6 +6423,7 @@ export const STRINGS: Dict = {
   "post.filterNone": { en: "Original", af: "Oorspronklik" },
   "post.compare": { en: "Before | after", af: "Voor | ná" },
   "adj.auto": { en: "Auto enhance", af: "Outo-verbeter" },
+  "post.smartLight": { en: "Smart light", af: "Slim lig" },
   "post.compareBefore": { en: "Before", af: "Voor" },
   "post.compareAfter": { en: "After", af: "Ná" },
   "post.compareHow": { en: "Drag to compare before and after", af: "Sleep om voor en ná te vergelyk" },

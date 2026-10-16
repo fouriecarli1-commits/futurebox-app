@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Circle, Columns2, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Circle, Columns2, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -89,7 +89,7 @@ import {
   canMove, moveBy, place, showsThrough, zoomTo, type Crop,
 } from '../lib/postcrop';
 import {
-  AUTO, PLAIN, RANGES, filterFor, paintWashes, touched, towards, washesOf, type Look,
+  AUTO, PLAIN, RANGES, filterFor, lightnessOf, paintWashes, smartLight, touched, towards, washesOf, type Look,
 } from '../lib/postlook';
 import { canRead, readWords, tidy, wordsAtAll, type Readable } from '../lib/ocr';
 import {
@@ -5803,6 +5803,21 @@ export default function PostStudio({
     </div>
   );
 
+  /* ── Smart lighting: measured, not guessed ──────────────────────────
+     A small copy of the photograph is read for how dark it is, and the
+     look that lights it goes on — then the line, so she sees what it did. */
+  const lightUp = (): void => {
+    if (!picture) return;
+    const probe = document.createElement('canvas');
+    probe.width = 96;
+    probe.height = 96;
+    const pctx = probe.getContext('2d', { willReadFrequently: true });
+    if (!pctx) return;
+    pctx.drawImage(picture, 0, 0, 96, 96);
+    setLookNow(smartLight(lightnessOf(pctx.getImageData(0, 0, 96, 96).data)));
+    setCompare(0.5);
+  };
+
   /* Show the line, or take it away. Only when there is a look to compare. */
   const compareButton = (
     <button
@@ -5869,7 +5884,7 @@ export default function PostStudio({
         </div>
         <div className="space-y-2">
           <p className={MIKRO}>{t('post.look', 'How it reads')}</p>
-          <div className={RY3}>
+          <div className={RY}>
             <button
               type="button"
               data-postauto
@@ -5877,6 +5892,16 @@ export default function PostStudio({
               className={LEEG}
             >
               {t('post.auto', 'Lift it')}
+            </button>
+            <button
+              type="button"
+              data-postsmartlight
+              disabled={!picture}
+              onClick={lightUp}
+              className={`${LEEG} disabled:opacity-40`}
+            >
+              <Sun className="h-3.5 w-3.5" />
+              {t('post.smartLight', 'Smart light')}
             </button>
             <button
               type="button"

@@ -208,3 +208,54 @@ export function towards(look: Look, share: number): Look {
     ...(look.vignette ? { vignette: look.vignette * s } : {}),
   };
 }
+
+/* ── Smart lighting ───────────────────────────────────────────────────────
+   Carli, 16 October 2026, a "fix your dark photos with one tap" tool open on
+   her phone. Not a model: a dark photograph is a measurement. How bright it
+   is on average, and how far its darkest and brightest parts are from black
+   and white, say how much to lift and how much to stretch — so a photo that
+   is already bright is hardly touched, and a dim one is opened up. */
+
+/** How light a picture is: its mean, and the lightness its darkest and brightest twentieth reach (0..1). */
+export interface Lightness {
+  readonly mean: number;
+  readonly low: number;
+  readonly high: number;
+}
+
+/** Measure a picture's lightness from its pixels (RGBA, as `getImageData` gives them). */
+export function lightnessOf(pixels: Uint8ClampedArray): Lightness {
+  const counts = new Array<number>(256).fill(0);
+  let sum = 0;
+  let n = 0;
+  for (let i = 0; i + 3 < pixels.length; i += 4) {
+    if (pixels[i + 3] < 16) continue;
+    const y = Math.round(0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2]);
+    counts[y] += 1;
+    sum += y;
+    n += 1;
+  }
+  if (!n) return { mean: 0.5, low: 0, high: 1 };
+  const at = (share: number): number => {
+    let seen = 0;
+    for (let y = 0; y < 256; y += 1) {
+      seen += counts[y];
+      if (seen >= n * share) return y / 255;
+    }
+    return 1;
+  };
+  return { mean: sum / n / 255, low: at(0.05), high: at(0.95) };
+}
+
+/** The look that lights a picture measured as `light`. */
+export function smartLight(light: Lightness): Look {
+  const mean = held(light.mean, 0.02, 0.98);
+  /* Towards a middle grey of about 0.48, never darker, and never more than half again. */
+  const bright = held(0.48 / mean, 1, 1.5);
+  /* Stretch what is there to reach most of the way from black to white. */
+  const spread = Math.max(0.05, held(light.high, 0, 1) - held(light.low, 0, 1));
+  const contrast = held(0.85 / spread, 1, 1.3);
+  /* A lifted dark photo goes grey; a little colour back keeps it a photograph. */
+  const colour = held(1 + (bright - 1) * 0.3, 1, 1.15);
+  return { ...PLAIN, bright, contrast, colour };
+}

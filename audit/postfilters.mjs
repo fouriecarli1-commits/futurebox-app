@@ -151,6 +151,40 @@ try {
   await page.waitForTimeout(300);
   check('  and it goes when there is nothing to compare', (await page.locator('[data-postcomparehandle]').count()) === 0);
 
+  /* Smart light: a dim photo, measured and lit, with the line to show it. */
+  await tool('pic');
+  await page.evaluate(async () => {
+    const c = document.createElement('canvas');
+    c.width = 400; c.height = 400;
+    const x = c.getContext('2d');
+    x.fillStyle = '#2a3040';
+    x.fillRect(0, 0, 400, 400);
+    x.fillStyle = '#4a4038';
+    x.fillRect(100, 100, 200, 200);
+    const blob = await new Promise((done) => c.toBlob(done, 'image/png'));
+    const input = document.querySelector('[data-poststudio] input[type=file]');
+    const holder = new DataTransfer();
+    holder.items.add(new File([blob], 'dim.png', { type: 'image/png' }));
+    input.files = holder.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await page.waitForTimeout(1400);
+  await tool('tone');
+  const dim = await page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(Math.round(el.width * 0.75), Math.round(el.height * 0.4), 1, 1).data;
+    return { r: d[0], g: d[1], b: d[2] };
+  });
+  await page.locator('[data-postsmartlight]').click();
+  await page.waitForTimeout(500);
+  const lit = await page.evaluate(() => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(Math.round(el.width * 0.75), Math.round(el.height * 0.4), 1, 1).data;
+    return { r: d[0], g: d[1], b: d[2] };
+  });
+  check('Smart light lifts her dim photo', lit.r + lit.g + lit.b > dim.r + dim.g + dim.b + 30, `${JSON.stringify(dim)} → ${JSON.stringify(lit)}`);
+  check('  and brings up the before-and-after line', (await page.locator('[data-postcomparehandle]').count()) === 1);
+
   await page.screenshot({ path: shot('postfilters.png') });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);

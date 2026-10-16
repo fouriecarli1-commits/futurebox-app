@@ -27,7 +27,7 @@
  *   npm run check:postlook
  */
 import {
-  AUTO, PLAIN, RANGES, filterFor, towards, touched, warmWash, washesOf, type Look,
+  AUTO, PLAIN, RANGES, filterFor, lightnessOf, smartLight, towards, touched, warmWash, washesOf, type Look,
 } from '../app/lib/postlook';
 
 let bad = 0;
@@ -135,6 +135,20 @@ ok('  and no value can put NaN into them', madFilter === 0, `${madFilter} got th
 const half = towards({ ...PLAIN, colour: 0, sepia: 1, tint: [255, 0, 0, 0.4] }, 0.5);
 ok('half strength is half the filter', Math.abs(half.colour - 0.5) < 1e-9 && half.sepia === 0.5 && half.tint?.[3] === 0.2);
 ok('  and nought strength is the picture as it came', !touched(towards({ ...PLAIN, colour: 0, sepia: 1, vignette: 0.5 }, 0)));
+
+/* ── Smart lighting: measured, so a bright photo is left alone ─────────── */
+
+const flat = (y: number): Uint8ClampedArray => {
+  const px = new Uint8ClampedArray(4 * 100);
+  for (let i = 0; i < 100; i += 1) { px.set([y + (i % 10), y + (i % 10), y + (i % 10), 255], i * 4); }
+  return px;
+};
+const dark = smartLight(lightnessOf(flat(30)));
+const bright = smartLight(lightnessOf(flat(150)));
+ok('Smart light opens up a dark photo', dark.bright > 1.3 && dark.contrast > 1, JSON.stringify(dark));
+ok('  and hardly touches one that is already bright', bright.bright < 1.05, JSON.stringify(bright));
+ok('  and never darkens or goes past its own ceilings',
+  [dark, bright, smartLight(lightnessOf(new Uint8ClampedArray(0)))].every((one) => one.bright >= 1 && one.bright <= 1.5 && one.contrast <= 1.3));
 
 if (bad) {
   console.error(`\ncheck:postlook — ${bad} assertion(s) failed.\n`);
