@@ -67,7 +67,7 @@ const MANY: Record<KidThing, readonly [string, string, string]> = {
 const FACE: Record<KidThing, string> = { song: '🎵', video: '🎬', story: '📖', picture: '🖼️' };
 
 /**
- * The six doors the child will find inside, as the room names them.
+ * The doors the child will find inside, as the room names them.
  *
  * The same keys and the same words as `KidsRoom.tsx`'s DOORS, so the
  * grown-up reads on this page exactly what the child reads on the next —
@@ -75,7 +75,8 @@ const FACE: Record<KidThing, string> = { song: '🎵', video: '🎬', story: '�
  */
 const SIX: readonly { readonly icon: string; readonly says: readonly [string, string] }[] = [
   { icon: '🎵', says: ['kids.doorMusic', 'Create Music!'] },
-  { icon: '🎬', says: ['kids.doorVideo', 'Music Videos & Stories!'] },
+  { icon: '📖', says: ['kids.doorStory', 'Story Maker!'] },
+  { icon: '🎬', says: ['kids.doorVideo', 'Music Videos!'] },
   { icon: '🎨', says: ['kids.doorDraw', 'Magic Drawing Board!'] },
   { icon: '🎹', says: ['kids.doorGames', 'Studio Games & Beats!'] },
   { icon: '✂️', says: ['kids.doorEdit', 'Easy Editing!'] },

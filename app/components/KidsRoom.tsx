@@ -234,9 +234,9 @@ const DOORS: readonly Door[] = [
     ['kids.doorStory1', 'Pick a hero, a magic place, a surprise and an ending'],
     ['kids.doorStory2', 'A storybook with pictures, read to you page by page'],
   ] },
-  { id: 'video', icon: '🎬', says: ['kids.doorVideo', 'Music Videos & Stories!'], lines: [
+  { id: 'video', icon: '🎬', says: ['kids.doorVideo', 'Music Videos!'], lines: [
     ['kids.doorVideo1', 'A video of your song, on your own stage'],
-    ['kids.doorVideo2', 'Build a story page by page, with pictures'],
+    ['kids.doorVideo2', 'Dancers, scenes and lights to play with'],
   ] },
   { id: 'draw', icon: '🎨', says: ['kids.doorDraw', 'Magic Drawing Board!'], lines: [
     ['kids.doorDraw1', 'Draw with your finger, ten crayons'],
@@ -1270,19 +1270,9 @@ export default function KidsRoom({
         </>
       )}
 
-      {/* ── 4. Video Studio: the stage, and the real video on it ─────────── */}
-      {(tab === 'video' || tab === 'story') && (
-        <div className="flex flex-wrap gap-2" data-kidsvideomode>
-          <button type="button" aria-pressed={tab === 'video'} onClick={() => setTab('video')}
-            className={`fb-kids-bouncy flex min-h-[44px] items-center gap-2 rounded-2xl px-4 text-sm font-bold ${tab === 'video' ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200/80 text-surface-800'}`}>
-            <span aria-hidden>🎬</span> {t('kids.subVideo', 'Music video')}
-          </button>
-          <button type="button" aria-pressed={tab === 'story'} onClick={() => setTab('story')}
-            className={`fb-kids-bouncy flex min-h-[44px] items-center gap-2 rounded-2xl px-4 text-sm font-bold ${tab === 'story' ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200/80 text-surface-800'}`}>
-            <span aria-hidden>📖</span> {t('kids.tabStory', 'Story Maker')}
-          </button>
-        </div>
-      )}
+      {/* ── 4. Video Studio: the stage, and the real video on it ───────────
+          The Story Maker tab that sat here went on 16 October 2026, when it
+          had a door of its own: Carli, "story maker nou op 2 plekke is". */}
       {tab === 'video' && (
         <>
           <KidsStage caption={caption} onSpark={spark}>
