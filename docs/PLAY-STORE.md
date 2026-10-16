@@ -104,7 +104,43 @@ do, and looking is a two-minute search on Dun & Bradstreet's site.
 > confirm it in the Console when you open the account, because it decides
 > your timeline.
 
-### How to actually get it
+### Done — 15 October 2026
+
+Dun & Bradstreet created the number on 15 October 2026, "verified through
+outside sources", for **FUTUREBOXSTUDIO**, Pretoria. The number itself and
+the street address are in Carli's resolution email from D&B and are not
+copied here; this repository keeps no personal or business details.
+
+**Read the name and the address off that email, not off CIPC, from here on.**
+D&B registered the name as `FUTUREBOXSTUDIO` — without "(Pty) Ltd" — and
+Google compares what is typed in the Play Console with D&B's record, not with
+CIPC's. A mismatch is the ordinary reason an organisation account is held
+back.
+
+### Opening the developer account — now **yours**
+
+1. `play.google.com/console/signup`, signed in with the Google account that
+   should own the app for good (a company one, not a personal Gmail, if you
+   have it). Choose **An organisation or business**.
+2. **Organisation details**: the D-U-N-S number, then the name and address
+   exactly as the D&B email has them. If Google says it cannot find the
+   number or that the details do not match, a new number can take some days
+   to reach Google — wait two or three days and try again rather than
+   requesting another.
+3. **Contact details**: a website (`https://futurebox.studio`), a phone that
+   answers, and the contact email that will show on the store listing. If
+   the Console asks to verify the website, it does so through Google Search
+   Console with the same Google account.
+4. **Pay the once-off 25 USD** with a card, and do the identity check it asks
+   for (your ID, as the director).
+5. Google checks the organisation, which can take a few days. As soon as
+   the Console lets you, **Create app**: name *FutureBox Studio*, app (not
+   game), free to download (purchases inside it), and the two declarations.
+
+When it is through, the next step is the wrapper below, and then the asset
+links.
+
+### How it was got
 
 Carli, 11 October 2026: *"Help my met die DUNS ding?"*
 
@@ -399,8 +435,9 @@ user interaction.
 
 ## Before you press submit
 
-- [ ] A D-U-N-S number for FUTUREBOXSTUDIO (Pty) Ltd, and a Play developer
-      account opened as the **organisation**
+- [x] A D-U-N-S number for FUTUREBOXSTUDIO — created 15 October 2026
+- [ ] A Play developer account opened as the **organisation**, with the name
+      and address exactly as D&B has them
 - [ ] `ANDROID_PACKAGE` and `ANDROID_CERT_SHA256` set in Vercel, and
       `/.well-known/assetlinks.json` shows them
 - [ ] The attorney has answered the Play Billing question
