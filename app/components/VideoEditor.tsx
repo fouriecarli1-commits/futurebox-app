@@ -175,6 +175,8 @@ import {
 import { captionSettings } from '../lib/captionstyles';
 import JoinToolbox from './JoinToolbox';
 import CompareLine, { FrameAsShot } from './CompareLine';
+import { EffectToolbox, FxFrame, GeneratorToolbox } from './VideoToolboxes';
+import { recordGenerator, type GeneratorId, type GeneratorInks } from '../lib/videogenerators';
 import { studioAudio } from '../lib/demoaudio';
 import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
 
@@ -1457,6 +1459,35 @@ export default function VideoEditor({
   useEffect(() => {
     if (compare !== null && (!graded || bench !== 'looks')) setCompare(null);
   }, [compare, graded, bench]);
+
+  /* ── A generator, recorded and put on the clock ─────────────────────
+     At the film's own shape, no more than 1280 across, so it sits in the
+     film without bars. A browser that cannot record says so in words. */
+  const makeGenerated = async (id: GeneratorId, inks: GeneratorInks, seconds: number, name: string): Promise<void> => {
+    const ratio = shape.width / shape.height;
+    const width = ratio >= 1 ? 1280 : Math.round(1280 * ratio / 2) * 2;
+    const height = ratio >= 1 ? Math.round(1280 / ratio / 2) * 2 : 1280;
+    try {
+      const clip = await recordGenerator(id, inks, seconds, width, height);
+      const pieceId = makeId('videoedit');
+      commit((was) => add(was, {
+        id: pieceId,
+        clip,
+        name,
+        came: 'made',
+        from: 0,
+        to: seconds,
+        holds: seconds,
+        shot: { width, height },
+        sound: false,
+      }));
+      setPicked(pieceId);
+    } catch (why) {
+      setProblem(why instanceof TemplateVideoUnsupported
+        ? t('edit.genNoRecord', 'This browser cannot record a generated clip. Chrome or Edge can.')
+        : t('edit.genFailed', 'That background could not be made just now. Try it again.'));
+    }
+  };
 
   const total = runs(edit);
 
@@ -3997,6 +4028,17 @@ async function smallerFrame(url: string): Promise<string> {
                   piece.fill ? 'object-cover' : 'object-contain'
                 }`}
               />
+              {/* The shot's effects, drawn over the player by the renderer's own `paintFx`. */}
+              {piece && (piece.fx?.length ?? 0) > 0 && (
+                <FxFrame
+                  video={viewer}
+                  fx={piece.fx ?? []}
+                  grade={gradeCss(filterCss(piece.look), piece.adjust, previewScale)}
+                  fill={Boolean(piece.fill)}
+                  from={piece.from}
+                  speed={piece.speed ?? 1}
+                />
+              )}
               {compare !== null && (
                 <>
                   <FrameAsShot video={viewer} at={compare} fill={Boolean(piece.fill)} />
@@ -5661,6 +5703,18 @@ async function smallerFrame(url: string): Promise<string> {
             />
           </label>
 
+          {/* ── Generators: a shot made out of nothing ─────────────────
+              Carli, 16 October 2026, a desktop editor's Generators: colour,
+              gradients, test pictures — and moving backgrounds of ours.
+              Made on this device and put on the clock as a piece like any
+              other. `lib/videogenerators.ts`. */}
+          <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorgenbench>
+            <summary className="min-h-[40px] cursor-pointer list-none px-1 py-2 text-sm font-bold text-zinc-200">
+              {t('edit.genTitle', 'Generators — backgrounds and colour')}
+            </summary>
+            <GeneratorToolbox lang={lang} t={t} onMake={makeGenerated} />
+          </details>
+
           {/* ── And putting this one down ──────────────────────────────
 
               Beside the way in, because that is where somebody stands when
@@ -6295,6 +6349,20 @@ async function smallerFrame(url: string): Promise<string> {
                 </label>
               );
             })}
+          </div>
+
+          {/* ── Effects, under the look and the dials ───────────────────
+              Carli, 16 October 2026, a desktop editor's toolbox: shake,
+              glow, light leaks, grain, bars. On this shot only, as many as
+              she likes, each with its own strength. `lib/videofx.ts`. */}
+          <div className="space-y-2" data-editorfxbench>
+            <span className="text-sm text-zinc-400">{t('edit.fxTitle', 'Effects')}</span>
+            <EffectToolbox
+              value={piece.fx ?? []}
+              onChange={(next) => tweak({ fx: next })}
+              lang={lang}
+              t={t}
+            />
           </div>
 
           {/* ── A patch of it blurred out ─────────────────────────

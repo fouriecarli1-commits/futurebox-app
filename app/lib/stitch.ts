@@ -72,6 +72,7 @@ import { boxPath, boxById, type BoxShape } from './videopaint';
 import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 import { paintJoin } from './joinpaint';
+import { paintFx, type FxOn } from './videofx';
 import { paintedFor, type EdgeId } from './wordsedge';
 import { drawFrame, motionAt, revealed, scrambled } from './videoextras';
 import { drawMark as drawShape, type Mark } from './postshapes';
@@ -144,6 +145,8 @@ export interface Scene {
    * the same as drawing a patch of strength zero.
    */
   readonly blurs?: readonly Patch[];
+  /** Effects painted over the shot every frame, after the patches — `lib/videofx.ts`. */
+  readonly fx?: readonly FxOn[];
   /**
    * Fill the frame, cropping the overflow, instead of fitting the whole picture
    * in and putting something behind the bars.
@@ -1463,6 +1466,12 @@ export async function stitch(cut: Cut): Promise<Made> {
              ours, and softening our own text would be this control reaching
              past what it says it does. `check:blurpatch` holds the order. */
           drawPatches(context, video, cut.scenes[index].blurs, cut, box);
+          /* ── The shot's effects, over it and under everything of ours ──
+             The same `paintFx` the editor's preview runs, at the same time
+             into the shot, so the shake she watched is the shake she gets. */
+          if (cut.scenes[index].fx?.length) {
+            paintFx(context, cut.width, cut.height, (video.currentTime - view.from) / fast, cut.scenes[index].fx);
+          }
           /* Over the picture and over the bars alike, so a caption on a wide
              shot in a tall film sits in the black band rather than across a
              face. Painted every frame because the frame under it is. */

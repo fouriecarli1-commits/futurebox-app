@@ -42,6 +42,7 @@
  * arrive as a new `Piece.through`, and the cost goes on the button.
  */
 
+import { cleanFx, type FxOn } from './videofx';
 import { filterCss } from './videofilters';
 import type { Cut, Scene } from './stitch';
 import type { Join } from './videojoins';
@@ -107,6 +108,11 @@ export interface Piece {
    * as well.
    */
   readonly blurs?: readonly Patch[];
+  /**
+   * Effects painted over this shot every frame — a shake, a glow, grain,
+   * cinema bars. See `lib/videofx.ts`. Absent is none.
+   */
+  readonly fx?: readonly FxOn[];
   /** Words over this piece for as long as it is up. */
   readonly words?: string;
   /**
@@ -847,6 +853,7 @@ export function cutFrom(edit: Edit): Cut {
       /* Only when there are any. An empty array on every scene of every film
          is a field the renderer then loops over to do nothing. */
       ...(one.blurs?.length ? { blurs: one.blurs } : {}),
+      ...(one.fx?.length ? { fx: cleanFx(one.fx) } : {}),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),
       ...(one.fill ? { fill: true } : {}),
       /* A shot speaks only if the shots lane is being heard at all. Resolved
