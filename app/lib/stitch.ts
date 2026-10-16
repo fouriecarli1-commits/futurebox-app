@@ -73,7 +73,7 @@ import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 import { paintJoin } from './joinpaint';
 import { paintedFor, type EdgeId } from './wordsedge';
-import { drawFrame, motionAt, revealed } from './videoextras';
+import { drawFrame, motionAt, revealed, scrambled } from './videoextras';
 import { drawMark as drawShape, type Mark } from './postshapes';
 import { glowOf, haloPasses } from './postglow';
 
@@ -281,6 +281,8 @@ export interface Caption {
   readonly round?: number;
   readonly ink?: string;
   readonly back?: string;
+  /** How solid the box is, 0 to 1. Absent is the 62% captions have always had. */
+  readonly backSolid?: number;
   readonly box?: BoxShape;
   /**
    * What keeps the letters readable over the picture.
@@ -741,6 +743,7 @@ export function drawCaption(
     readonly round?: number;
     readonly ink?: string;
     readonly back?: string;
+    readonly backSolid?: number;
     readonly box?: BoxShape;
     readonly glow?: string;
     readonly motion?: string;
@@ -829,10 +832,11 @@ export function drawCaption(
   const moving = motionAt(set?.motion, set?.age ?? Number.POSITIVE_INFINITY);
   if (moving.alpha < 1) context.globalAlpha *= Math.max(0, moving.alpha);
   if (moving.dx || moving.dy) context.translate(moving.dx * height, moving.dy * height);
-  if (moving.scale !== 1) {
+  if (moving.scale !== 1 || moving.turn || moving.sx !== undefined || moving.sy !== undefined) {
     const centre = { x: middle, y: boxTop + boxHeight / 2 };
     context.translate(centre.x, centre.y);
-    context.scale(moving.scale, moving.scale);
+    if (moving.turn) context.rotate((moving.turn * Math.PI) / 180);
+    context.scale(moving.scale * (moving.sx ?? 1), moving.scale * (moving.sy ?? 1));
     context.translate(-centre.x, -centre.y);
   }
   /* The typewriter: the band is measured for all of the words, so it does
@@ -845,6 +849,10 @@ export function drawCaption(
       left -= length;
       return shown;
     });
+  }
+  /* Random write on: letters still scrambled, settling one by one. */
+  if (moving.scramble && moving.scramble > 0) {
+    lines = lines.map((one, at) => scrambled(one, moving.scramble ?? 0, (moving.seed ?? 0) + at * 101));
   }
 
   if (set?.turn) {
@@ -904,7 +912,7 @@ export function drawCaption(
          picture the way the black one did rather than becoming an opaque
          slab: the whole point of a caption box is that you can still see
          what is behind it. */
-      context.fillStyle = tint(set?.back ?? '#000000', 0.62);
+      context.fillStyle = tint(set?.back ?? '#000000', Math.max(0, Math.min(1, set?.backSolid ?? 0.62)));
       context.fill();
     }
   }
@@ -1485,6 +1493,7 @@ export async function stitch(cut: Cut): Promise<Made> {
               at: up.at,
               ink: up.ink,
               back: up.back,
+              backSolid: up.backSolid,
               box: up.box,
               turn: up.turn,
               solid: up.solid,

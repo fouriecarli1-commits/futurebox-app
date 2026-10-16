@@ -279,8 +279,10 @@ ok('the renderer paints the chosen colours rather than the old literals',
   /set\?\.ink \?\? '#ffffff'/.test(render) && /tint\(set\?\.back/.test(render),
   "the box was rgba(0, 0, 0, 0.62) and the text '#ffffff', both written in");
 
-ok('  and keeps the box see-through at the same 62%',
-  /tint\(set\?\.back \?\? '#000000', 0\.62\)/.test(render),
+/* Unless a subtitle look asks for a solid box — black on a white box is
+   only readable solid (Carli, 16 October 2026). Absent, it is 62%. */
+ok('  and keeps the box see-through at the same 62% unless a style asks for solid',
+  /tint\(set\?\.back \?\? '#000000', Math\.max\(0, Math\.min\(1, set\?\.backSolid \?\? 0\.62\)\)\)/.test(render),
   'a chosen colour that becomes an opaque slab has taken the picture away,'
   + ' which is the opposite of what a caption box is for');
 

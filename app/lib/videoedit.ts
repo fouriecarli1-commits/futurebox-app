@@ -161,6 +161,11 @@ export interface Piece {
   readonly wordsTo?: number;
   readonly wordsInk?: string;
   readonly wordsBack?: string;
+  /**
+   * How solid the box behind the words is, 0 to 1. Absent is the 62% every
+   * caption has had; a subtitle style — black on a white box — wants it solid.
+   */
+  readonly wordsBackSolid?: number;
   readonly wordsBox?: BoxShape;
   /**
    * What keeps the words readable over the picture: an outline, a shadow,
@@ -901,6 +906,7 @@ export function cutFrom(edit: Edit): Cut {
            room's text styles carry their own hex, which no palette entry is. */
         ...(one.wordsInk ? { ink: one.wordsInk.startsWith('#') ? one.wordsInk : paintFor(one.wordsInk)?.hex ?? INK_DEFAULT } : {}),
         ...(one.wordsBack ? { back: paintFor(one.wordsBack)?.hex ?? BACK_DEFAULT } : {}),
+        ...(one.wordsBackSolid !== undefined ? { backSolid: one.wordsBackSolid } : {}),
         ...(one.wordsBox ? { box: one.wordsBox } : {}),
         /* Carried even when absent is the default, because the DEFAULT
            changed: a shot with no stored edge renders with an outline now,

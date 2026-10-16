@@ -32,7 +32,9 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Clapperboard, Film, Frame, Play, Shapes, Smartphone, Sparkles, Square, Tv, Type, X } from 'lucide-react';
+import { Captions, Clapperboard, Film, Frame, Play, Shapes, Smartphone, Sparkles, Square, Tv, Type, X } from 'lucide-react';
+import { CAPTION_STYLES, type CaptionStyle } from '../lib/captionstyles';
+import { paintFor, previewFor, roundFor } from '../lib/videopaint';
 import { STARTS, type FilmStart } from '../lib/filmstart';
 import { useLang } from '../lib/i18n';
 import { EDGE, INK, INK_DIM, LIT, PANEL, RAISED } from '../lib/cutlook';
@@ -41,7 +43,7 @@ import { glowOf, haloPasses } from '../lib/postglow';
 import { MARK_SPECS, NEON_INKS, type MarkKind } from '../lib/postshapes';
 import { fontFor } from '../lib/videofonts';
 import {
-  FRAMES, FRAME_INKS, WORD_MOTIONS, drawFrame, motionAt, revealed, wordsStyleOf,
+  FRAMES, FRAME_INKS, WORD_MOTIONS, drawFrame, motionAt, motionCss, shownWords, wordsStyleOf,
   type FrameId, type MotionId,
 } from '../lib/videoextras';
 
@@ -54,6 +56,8 @@ interface VideoTemplatesPickerProps {
      ook hierdie kant kom. Ons kort shapes, frames, en motion templates." */
   readonly wordsMotion?: string;
   readonly onTextStyle: (style: TitleStyle) => void;
+  /** A subtitle look or a lower third — `lib/captionstyles.ts`. */
+  readonly onCaption: (style: CaptionStyle) => void;
   readonly onMotion: (id: MotionId) => void;
   readonly frame?: string;
   readonly frameInk?: string;
@@ -63,7 +67,7 @@ interface VideoTemplatesPickerProps {
   readonly onClearShapes: () => void;
 }
 
-type Tab = 'film' | 'text' | 'motion' | 'shapes' | 'frames';
+type Tab = 'film' | 'text' | 'captions' | 'motion' | 'shapes' | 'frames';
 
 /** A glow as CSS, from the same passes the film paints it with. */
 const glowCss = (glow: string, px: number): string | undefined => {
@@ -101,15 +105,16 @@ function MotionSimulator({ motion, words }: { readonly motion: string; readonly 
       style={{ borderColor: EDGE, background: 'linear-gradient(135deg, #0b1020, #000 60%, #052e2b)' }}
     >
       <span
+        data-editormotionsample
         className="px-3 text-center text-2xl font-black"
         style={{
           color: '#ffffff',
           opacity: now.alpha,
-          transform: `translate(${now.dx * tall}px, ${now.dy * tall}px) scale(${now.scale})`,
+          transform: motionCss(now, tall),
           textShadow: '0 2px 8px rgba(0,0,0,0.8)',
         }}
       >
-        {revealed(words, now.reveal) || '\u00a0'}
+        {shownWords(words, now) || '\u00a0'}
       </span>
     </div>
   );
@@ -154,6 +159,7 @@ export default function VideoTemplatesPicker({
   currentShape,
   wordsMotion,
   onTextStyle,
+  onCaption,
   onMotion,
   frame,
   frameInk,
@@ -171,6 +177,7 @@ export default function VideoTemplatesPicker({
   const TABS: readonly { id: Tab; icon: React.ReactElement; label: string }[] = [
     { id: 'film', icon: <Film className="h-3.5 w-3.5" />, label: t('edit.tplFilm', 'Whole film') },
     { id: 'text', icon: <Type className="h-3.5 w-3.5" />, label: t('edit.tplText', 'Text styles') },
+    { id: 'captions', icon: <Captions className="h-3.5 w-3.5" />, label: t('edit.tplCaptions', 'Subtitles') },
     { id: 'motion', icon: <Sparkles className="h-3.5 w-3.5" />, label: t('edit.tplMotion', 'Motion') },
     { id: 'shapes', icon: <Shapes className="h-3.5 w-3.5" />, label: t('edit.tplShapes', 'Shapes') },
     { id: 'frames', icon: <Frame className="h-3.5 w-3.5" />, label: t('edit.tplFrames', 'Frames') },
@@ -346,6 +353,70 @@ export default function VideoTemplatesPicker({
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Subtitles and lower thirds ────────────────────────────────────
+          Carli, 16 October 2026, screenshots of a title library: subtitle
+          looks and lower thirds, each a picture of what it does. Every one is
+          settings the Words bench already has, so all of it stays editable. */}
+      {tab === 'captions' && (
+        <div className="space-y-4" data-editorcaptions>
+          {(['subtitle', 'lower'] as const).map((group) => (
+            <section key={group} className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                {group === 'subtitle' ? t('edit.capSubtitles', 'Subtitles') : t('edit.capLower', 'Lower thirds')}
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {CAPTION_STYLES.filter((one) => one.group === group).map((style) => {
+                  const ink = paintFor(style.ink)?.hex ?? '#ffffff';
+                  const back = paintFor(style.back)?.hex ?? '#000000';
+                  const look = previewFor(style.box, roundFor(style.box), 11);
+                  const filled = style.box !== 'none' && style.box !== 'line' && style.box !== 'outline';
+                  const alpha = Math.round(style.backSolid * 255).toString(16).padStart(2, '0');
+                  return (
+                    <button
+                      key={style.id}
+                      type="button"
+                      data-editorcaption={style.id}
+                      data-tidycard=""
+                      disabled={noClip}
+                      onClick={() => onCaption(style)}
+                      className="flex min-h-[88px] flex-col items-stretch gap-1.5 rounded-xl border p-2 text-left disabled:opacity-40"
+                      style={{ borderColor: EDGE, background: RAISED }}
+                    >
+                      <span
+                        aria-hidden
+                        className="relative block h-12 w-full overflow-hidden rounded-lg"
+                        style={{ background: 'linear-gradient(135deg, #1f2937, #0b1020 55%, #3f2a14)' }}
+                      >
+                        <span
+                          className="absolute whitespace-nowrap px-1.5 py-0.5 text-[11px] font-bold leading-tight"
+                          style={{
+                            left: `${(style.at?.x ?? 0.5) * 100}%`,
+                            top: `${(style.at?.y ?? 0.86) * 100}%`,
+                            transform: 'translate(-50%, -60%)',
+                            color: ink,
+                            background: filled ? `${back}${alpha}` : 'transparent',
+                            borderRadius: look.borderRadius,
+                            clipPath: look.clipPath,
+                            borderBottom: style.box === 'line' ? `2px solid ${back}` : undefined,
+                            outline: style.box === 'outline' ? `1.5px solid ${back}` : undefined,
+                            textShadow: style.edge === 'shadow' || style.edge === 'both'
+                              ? `${style.edge === 'both' ? '2px 2px 0' : '0 2px 4px'} rgba(0,0,0,0.9)`
+                              : style.edge === 'outline' ? '0 0 2px #000, 0 0 2px #000' : undefined,
+                          }}
+                        >
+                          {group === 'subtitle' ? t('edit.capSample', 'Subtitle') : t('edit.capName', 'Name · Role')}
+                        </span>
+                      </span>
+                      <span className="text-[11px] font-semibold leading-tight" style={{ color: INK }}>{t(style.name[0], style.name[1])}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       )}
 

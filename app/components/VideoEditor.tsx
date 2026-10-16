@@ -156,7 +156,7 @@ import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
 import { EDGES, EDGE_DEFAULT } from '../lib/wordsedge';
-import { drawFrame, fontOfFace, motionAt, revealed, wordsStyleOf, MOTION_IN } from '../lib/videoextras';
+import { drawFrame, fontOfFace, motionAt, motionCss, shownWords, wordsStyleOf, MOTION_IN } from '../lib/videoextras';
 import { allWordsReady, wordsReady } from '../lib/videofaces';
 import { drawMark as drawShape, markBox, newMark } from '../lib/postshapes';
 import { GLOWS, glowOf, haloPasses } from '../lib/postglow';
@@ -172,6 +172,7 @@ import { soundOf,
 import {
   JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
 } from '../lib/videojoins';
+import { captionSettings } from '../lib/captionstyles';
 import JoinToolbox from './JoinToolbox';
 import { studioAudio } from '../lib/demoaudio';
 import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
@@ -4046,7 +4047,7 @@ async function smallerFrame(url: string): Promise<string> {
                        Tailwind translate away — the words would have hung off to
                        the right of where they land in the film, which is the
                        quiet kind of wrong this preview exists to prevent. */
-                    transform: `translate(-50%, -50%) translate(${wordsMove.dx * frameHeight}px, ${wordsMove.dy * frameHeight}px) rotate(${wordsNow.said.wordsTurn ?? 0}deg) scale(${wordsMove.scale})`,
+                    transform: `translate(-50%, -50%) ${motionCss(wordsMove, frameHeight, wordsNow.said.wordsTurn ?? 0)}`,
                     /* Ghosted, not solid, when the playhead is past the
                        caption's own stretch — see `wordsNow`. */
                     opacity: wordsNow.ghost ? 0.3 : (wordsNow.said.wordsSolid ?? 1) * wordsMove.alpha,
@@ -4075,7 +4076,7 @@ async function smallerFrame(url: string): Promise<string> {
                       );
                       const colour = tintOf(
                         paintFor(wordsNow.said.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT,
-                        0.62,
+                        wordsNow.said.wordsBackSolid ?? 0.62,
                       );
                       const solid = tintOf(
                         paintFor(wordsNow.said.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT,
@@ -4114,7 +4115,7 @@ async function smallerFrame(url: string): Promise<string> {
                   }}
                   className="absolute cursor-move touch-none select-none px-2 py-1 text-center leading-tight outline-dashed outline-1 outline-emerald-400/50"
                 >
-                  {revealed(wordsNow.said.words ?? '', wordsMove.reveal)}
+                  {shownWords(wordsNow.said.words ?? '', wordsMove)}
                   {/* The corner. Sits half outside the band so the whole of it is
                       grabbable without covering a letter, and `touch-none` so a
                       phone does not scroll the page instead. */}
@@ -7526,6 +7527,19 @@ async function smallerFrame(url: string): Promise<string> {
                   ...wordsStyleOf(style.title),
                   words: (piece.words ?? '').trim() ? piece.words : t(style.title.says[0], style.title.says[1]),
                 });
+              }}
+              onCaption={(style) => {
+                if (!piece) return;
+                tweak({
+                  ...captionSettings(style),
+                  /* The shape decides the corners again, rather than a number
+                     from the last style. */
+                  wordsRound: undefined,
+                  words: (piece.words ?? '').trim()
+                    ? piece.words
+                    : style.group === 'lower' ? t('edit.capName', 'Name · Role') : t('edit.capSample', 'Subtitle'),
+                });
+                if (style.motion) setReplayAt(performance.now());
               }}
               onMotion={(id) => {
                 if (!piece) return;
