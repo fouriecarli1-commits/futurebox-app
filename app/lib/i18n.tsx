@@ -1402,6 +1402,11 @@ export const STRINGS: Dict = {
      themselves live in `videojoins.ts` beside the arithmetic, so a join cannot
      be added without a name in both languages — `check:joins` holds that. */
   "edit.join": { en: "How it comes in", af: "Hoe dit inkom" },
+  "edit.joinSearch": { en: "Find a transition", af: "Soek ’n oorgang" },
+  "edit.joinFavs": { en: "Favourites", af: "Gunstelinge" },
+  "edit.joinStar": { en: "Keep as a favourite", af: "Hou as gunsteling" },
+  "edit.joinUnstar": { en: "Take out of favourites", af: "Haal uit gunstelinge" },
+  "edit.joinNone": { en: "No transition by that name.", af: "Geen oorgang met daardie naam nie." },
   "edit.joinFor": { en: "How long it takes", af: "Hoe lank dit neem" },
   /* Said out loud rather than hidden, because it is the one honest limit of
      rendering in a browser: one video decodes at a time, so the shot that is

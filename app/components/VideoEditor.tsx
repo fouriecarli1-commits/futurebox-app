@@ -170,8 +170,9 @@ import { soundOf,
   type Edit, type Piece,
 } from '../lib/videoedit';
 import {
-  JOINS, JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
+  JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
 } from '../lib/videojoins';
+import JoinToolbox from './JoinToolbox';
 import { studioAudio } from '../lib/demoaudio';
 import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
 
@@ -5973,25 +5974,15 @@ async function smallerFrame(url: string): Promise<string> {
                 <Shuffle className="w-3.5 h-3.5" />
                 {t('edit.join', 'How it comes in')}
               </span>
-              <div className="flex flex-wrap gap-2">
-                {JOINS.map((one) => {
-                  const on = (piece.join ?? 'cut') === one.id;
-                  return (
-                    <button
-                      key={one.id}
-                      type="button"
-                      aria-pressed={on}
-                      data-editorjoin={one.id}
-                      onClick={() => tweak({ join: one.id })}
-                      className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
-                        on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                      }`}
-                    >
-                      {joinName(one.id, lang)}
-                    </button>
-                  );
-                })}
-              </div>
+              {/* Carli, 16 October 2026, "Kyk ook hoe netjies dit verpak is": every transition
+                  in its group, each with a little picture of what it does
+                  — `JoinToolbox` and `lib/joinbook.ts`. */}
+              <JoinToolbox
+                value={piece.join ?? 'cut'}
+                onPick={(id) => tweak({ join: id })}
+                lang={lang}
+                t={t}
+              />
               {(piece.join ?? 'cut') !== 'cut' && (
                 <label className="block space-y-1.5">
                   <span className="block text-sm text-zinc-400">

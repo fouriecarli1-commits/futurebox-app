@@ -22,6 +22,7 @@ import {
   JOINS, JOIN_FOR, LONGEST_JOIN, NO_JOIN, joinFits, joinName, joiningAt, needsHeld,
   type Join,
 } from '../app/lib/videojoins';
+import { JOIN_GROUPS, bookJoin } from '../app/lib/joinbook';
 import { readFileSync } from 'node:fs';
 import { before, from } from './order.mts';
 
@@ -251,6 +252,43 @@ ok('  and paints the join OVER the words and the mark, not under them',
   && before(drawing, 'joining(', 'fade.up > 0'),
   'words at full brightness over a dissolving picture read as a fault, not a transition;'
   + ' and the film-wide fade has to be last of all');
+
+/* ── The transition book ───────────────────────────────────────────────
+
+   Carli, 16 October 2026, her screenshots of a toolbox. Every transition in the book is
+   read at the start, the middle and the end: it starts on the shot that is
+   leaving, it ends on the shot that is arriving, and no number in between is
+   one a canvas would choke on. */
+const book = JOINS.filter((one) => bookJoin(one.id));
+ok(`the book holds the groups from her screenshots (${book.length} transitions)`,
+  book.length >= 50 && JOIN_GROUPS.every((g) => JOINS.some((one) => one.group === g.id)),
+  'fewer than fifty, or a group with nothing in it');
+ok('  and no two transitions share a name or an id',
+  new Set(JOINS.map((one) => one.id)).size === JOINS.length
+  && new Set(JOINS.map((one) => one.en)).size === JOINS.length
+  && new Set(JOINS.map((one) => one.af)).size === JOINS.length);
+const finite = (v: unknown): boolean => (typeof v === 'number' ? Number.isFinite(v) : v && typeof v === 'object'
+  ? Object.values(v as Record<string, unknown>).every(finite) : true);
+const badNumbers = book.filter((one) => [0, 0.1, 0.25, 0.5, 0.75, 0.9, 0.999].some((p) => !finite(bookJoin(one.id)!.at(p))));
+ok('  and every one answers only real numbers, all the way through',
+  badNumbers.length === 0, badNumbers.map((one) => one.id).join(', '));
+const startsHeld = (id: string): boolean => {
+  const look = bookJoin(id)!.at(0);
+  const t = look.mask?.t ?? look.doors?.t ?? 0;
+  if (look.top === 'held') return t <= 0.001 && (look.held?.alpha ?? 1) > 0.9;
+  return (look.arrive?.alpha ?? 1) < 0.1 || Math.abs(look.arrive?.x ?? 0) >= 0.99
+    || Math.abs(look.arrive?.y ?? 0) >= 0.99 || (look.arrive?.scale ?? 1) < 0.05
+    || (look.slices !== undefined && look.slices <= 0.001) || Boolean(look.fx) || Math.abs(look.arrive?.turn ?? 0) > 0;
+};
+const notHeld = book.filter((one) => !startsHeld(one.id));
+ok('  and every one starts on the shot that is leaving', notHeld.length === 0, notHeld.map((one) => one.id).join(', '));
+const atEnd = joiningAt({ arrive: 'irisDiamond', arriveFor: 0.4, leave: 'cut', into: 0.4, runs: 4, first: false, last: false });
+ok('  and once its length is up it paints nothing, so the arriving shot is the picture',
+  atEnd.look === undefined && atEnd.held === undefined && atEnd.wash === undefined);
+const onFirst = joiningAt({ arrive: 'irisDiamond', arriveFor: 0.4, leave: 'cut', into: 0, runs: 4, first: true, last: false });
+ok('  and the first piece of a film has nothing to arrive from', onFirst.look === undefined);
+ok('  and the renderer and the list both paint through joinpaint',
+  /paintJoin\(/.test(stitch) && /paintJoin\(/.test(readFileSync('app/lib/joinpreview.ts', 'utf8')));
 
 if (bad) {
   console.error(`\ncheck:joins — ${bad} assertion(s) failed.\n`);

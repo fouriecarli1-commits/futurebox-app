@@ -38,19 +38,34 @@
  * is a fault that costs a credit to discover.
  */
 
-/** Which join, by name. */
-export const JOINS = [
-  { id: 'cut', en: 'Straight cut', af: 'Reguit sny' },
-  { id: 'dissolve', en: 'Dissolve', af: 'Oorvloei' },
-  { id: 'dip', en: 'Through black', af: 'Deur swart' },
-  { id: 'flash', en: 'Flash', af: 'Blits' },
-  { id: 'wipe', en: 'Wipe across', af: 'Vee oor' },
-  { id: 'slide', en: 'Slide away', af: 'Gly weg' },
+import { BOOK, bookJoin, type BookId, type JoinGroup, type JoinLook } from './joinbook';
+
+/** The first six, which every film made before 16 October 2026 uses. */
+const FIRST = [
+  { id: 'cut', group: 'dissolve', en: 'Straight cut', af: 'Reguit sny' },
+  { id: 'dissolve', group: 'dissolve', en: 'Dissolve', af: 'Oorvloei' },
+  { id: 'dip', group: 'dissolve', en: 'Through black', af: 'Deur swart' },
+  { id: 'flash', group: 'dissolve', en: 'Flash', af: 'Blits' },
+  { id: 'wipe', group: 'wipe', en: 'Wipe across', af: 'Vee oor' },
+  { id: 'slide', group: 'motion', en: 'Slide away', af: 'Gly weg' },
 ] as const satisfies readonly {
-  readonly id: string; readonly en: string; readonly af: string;
+  readonly id: string; readonly group: JoinGroup; readonly en: string; readonly af: string;
 }[];
 
-export type Join = typeof JOINS[number]['id'];
+export type Join = typeof FIRST[number]['id'] | BookId;
+
+/**
+ * Which join, by name — the first six and the transition book after them.
+ *
+ * Carli, 16 October 2026, with a desktop editor's toolbox open: the book in
+ * `joinbook.ts` adds the dissolves, irises, motion, shapes, wipes and effects
+ * from her screenshots. Every one of them works the same way as the first
+ * six — over the frame the last shot left — and is drawn by `joinpaint.ts`.
+ */
+export const JOINS: readonly { readonly id: Join; readonly group: JoinGroup; readonly en: string; readonly af: string }[] = [
+  ...FIRST,
+  ...BOOK.map(({ id, group, en, af }) => ({ id, group, en, af })),
+];
 
 /** No join at all, which is what every cut in this app was until today. */
 export const NO_JOIN: Join = 'cut';
@@ -75,7 +90,7 @@ export const JOIN_FOR = 0.4;
 
 /** Whether this join needs the outgoing frame held, or only a colour. */
 export function needsHeld(join: Join): boolean {
-  return join === 'dissolve' || join === 'wipe' || join === 'slide';
+  return join === 'dissolve' || join === 'wipe' || join === 'slide' || bookJoin(join) !== undefined;
 }
 
 /** Where the colour joins wash to. */
@@ -118,6 +133,8 @@ export interface Held {
 export interface Joining {
   readonly wash?: Wash;
   readonly held?: Held;
+  /** A transition from the book: the whole screen, `joinbook.ts` says how. */
+  readonly look?: JoinLook;
 }
 
 /**
@@ -176,7 +193,13 @@ export function joiningAt(when: {
      this file for why the outgoing half is a still: one decoder, real time,
      no render bill. */
   let held: Held | undefined;
-  if (!when.first && needsHeld(when.arrive)) {
+  let look: JoinLook | undefined;
+  const book = when.first ? undefined : bookJoin(when.arrive);
+  if (book) {
+    const len = joinFits(when.arriveFor, when.runs);
+    const through = len > 0 ? Math.min(1, into / len) : 1;
+    if (through < 1) look = book.at(through);
+  } else if (!when.first && needsHeld(when.arrive)) {
     const len = joinFits(when.arriveFor, when.runs);
     const through = len > 0 ? Math.min(1, into / len) : 1;
     if (through < 1) {
@@ -186,7 +209,7 @@ export function joiningAt(when: {
     }
   }
 
-  return { ...(wash ? { wash } : {}), ...(held ? { held } : {}) };
+  return { ...(wash ? { wash } : {}), ...(held ? { held } : {}), ...(look ? { look } : {}) };
 }
 
 /** The name of a join, in her language or in English. */

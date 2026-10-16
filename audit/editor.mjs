@@ -2197,6 +2197,41 @@ try {
       `"${said}" — the outgoing half of a dissolve here is a held frame, and a`
       + ' control that hid that would be a control that lies');
 
+    /* ── The transition toolbox ─────────────────────────────────────────
+       Carli, 16 October 2026, screenshots of a toolbox: "Kyk ook hoe
+       netjies dit verpak is." Every transition in a group that folds, with a
+       little picture drawn by the same code as the film. */
+    check('the transitions come in six groups',
+      (await p.locator('[data-jointoolhead]').count()) === 6,
+      `${await p.locator('[data-jointoolhead]').count()} group headings`);
+    await p.locator('[data-jointoolhead="iris"]').click();
+    await p.waitForTimeout(300);
+    check('  and a folded group opens with its transitions in it',
+      (await p.locator('[data-jointoolgroup="iris"] [data-editorjoin]').count()) >= 9);
+    await p.locator('[data-editorjoin="irisDiamond"]').click();
+    await p.waitForTimeout(700);
+    check('  and choosing one puts it on the strip',
+      (await p.locator('[data-editorjoinmark="irisDiamond"]').count()) === 1);
+    const thumb = await p.locator('[data-editorjoin="irisDiamond"] canvas').evaluate((el) => {
+      const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+      const seen = new Set();
+      for (let i = 0; i < d.length; i += 16) seen.add(`${d[i] >> 4}-${d[i + 1] >> 4}-${d[i + 2] >> 4}`);
+      return seen.size;
+    });
+    check('  and its little picture is really drawn', thumb > 6, `${thumb} colours in the picture`);
+    await p.locator('[data-jointoolsearch]').fill('heart');
+    await p.waitForTimeout(300);
+    check('  and the search finds one by name', (await p.locator('[data-jointoollist] [data-editorjoin]').count()) === 1);
+    await p.locator('[data-jointoolsearch]').fill('');
+    await p.waitForTimeout(300);
+    await p.locator('[data-editorjoinstar="irisDiamond"]').first().click();
+    await p.waitForTimeout(300);
+    check('  and a starred one is kept at the top as a favourite',
+      (await p.locator('[data-jointoolgroup="favourites"] [data-editorjoinfav="irisDiamond"]').count()) === 1);
+    await p.locator('[data-editorjoinstar="irisDiamond"]').first().click();
+    await p.locator('[data-editorjoin="dissolve"]').click();
+    await p.waitForTimeout(500);
+
     /* A copy, which carries everything that was decided about the piece. */
     const wasBlocks = await blocks.count();
     const wasLong = await filmLength();

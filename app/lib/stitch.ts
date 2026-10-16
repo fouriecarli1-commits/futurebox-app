@@ -71,6 +71,7 @@ import { fontFor } from './videofonts';
 import { boxPath, boxById, type BoxShape } from './videopaint';
 import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
+import { paintJoin } from './joinpaint';
 import { paintedFor, type EdgeId } from './wordsedge';
 import { drawFrame, motionAt, revealed } from './videoextras';
 import { drawMark as drawShape, type Mark } from './postshapes';
@@ -1557,28 +1558,9 @@ export async function stitch(cut: Cut): Promise<Made> {
               first: index === 0,
               last: index === cut.scenes.length - 1,
             });
-            if (now.held && heldFrame && heldReady) {
-              context.save();
-              context.globalAlpha = Math.max(0, Math.min(1, now.held.solid));
-              if (now.held.keepFrom > 0) {
-                /* A wipe. The outgoing frame is clipped to the part of the
-                   width it still owns, so the arriving shot is revealed from
-                   the left rather than faded into. */
-                const from = now.held.keepFrom * cut.width;
-                context.beginPath();
-                context.rect(from, 0, cut.width - from, cut.height);
-                context.clip();
-              }
-              context.drawImage(heldFrame, -now.held.slid * cut.width, 0);
-              context.restore();
-            }
-            if (now.wash) {
-              context.save();
-              context.globalAlpha = Math.max(0, Math.min(1, now.wash.solid));
-              context.fillStyle = now.wash.colour;
-              context.fillRect(0, 0, cut.width, cut.height);
-              context.restore();
-            }
+            /* Painted by `joinpaint.ts`, the same code that draws the little
+               moving pictures in the editor's transition list. */
+            paintJoin(context, cut.width, cut.height, now, heldFrame && heldReady ? heldFrame : null);
           };
           joining();
 
