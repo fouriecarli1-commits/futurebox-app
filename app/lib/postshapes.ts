@@ -225,10 +225,34 @@ function trace(ctx: CanvasRenderingContext2D, kind: MarkKind, w: number): void {
  */
 export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: number, height: number): void {
   if (isFilled(mark.kind)) {
+    /* ── See-through, faded once ──────────────────────────────────────
+       Carli, 16 October 2026, found while building the layers: the shape is
+       filled once per halo pass and once more on top, and turning the
+       canvas's alpha down for each fill stacks them back up — the slider at
+       ninety per cent see-through drew a shape that was nearly solid. So a
+       see-through shape is drawn whole on a sheet of its own and laid down
+       at its opacity, once. */
+    const seeThrough = Math.max(0.1, Math.min(1, mark.opacity ?? 1));
+    if (seeThrough < 0.999 && typeof document !== 'undefined') {
+      const sheet = document.createElement('canvas');
+      sheet.width = ctx.canvas.width;
+      sheet.height = ctx.canvas.height;
+      const sctx = sheet.getContext('2d');
+      if (sctx) {
+        sctx.setTransform(ctx.getTransform());
+        drawMark(sctx, { ...mark, opacity: 1 }, width, height);
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha *= seeThrough;
+        ctx.drawImage(sheet, 0, 0);
+        ctx.restore();
+        return;
+      }
+    }
     const box = markBox(mark, width, height);
     ctx.save();
     ctx.translate(box.cx, box.cy);
-    ctx.globalAlpha = Math.max(0.1, Math.min(1, mark.opacity ?? 1));
+    ctx.globalAlpha *= seeThrough;
     ctx.fillStyle = mark.ink;
     const glow = glowOf(mark.glow);
     for (const pass of haloPasses(glow, Math.min(box.w, box.h) * 0.12)) {

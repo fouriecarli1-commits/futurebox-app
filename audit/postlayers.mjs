@@ -177,6 +177,21 @@ try {
   const faint = await read();
   check('a layer’s opacity makes it see-through', faint.cyan < solid.cyan * 0.5,
     `cyan pixels ${solid.cyan} → ${faint.cyan}`);
+  /* The layer back to solid, then the shape's own See-through slider in
+     Shapes, which had the same fault: one fill per glow pass, each faded,
+     stacking back up to nearly solid. */
+  await page.locator('[data-postlayeralpha] input[type=range]').first().fill('1');
+  await page.waitForTimeout(300);
+  await shutTools();
+  await tool('shapes');
+  const ownSolid = await read();
+  await page.locator('[data-postmarkslider="opacity"] input[type=range]').first().fill('0.9');
+  await page.waitForTimeout(400);
+  const ownFaint = await read();
+  check('the shape\u2019s own See-through slider really makes it see-through', ownFaint.cyan < ownSolid.cyan * 0.5,
+    `cyan pixels ${ownSolid.cyan} → ${ownFaint.cyan}`);
+  await shutTools();
+  await tool('layers');
 
   /* ── How it reads: the photo alone, or all layers ─────────────────────── */
   await page.locator('[data-postlayerpick="all"]').click();
