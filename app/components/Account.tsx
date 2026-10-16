@@ -52,6 +52,7 @@ import {
   PROFILE_BACKDROP, PROFILE_BACKDROP_PLACE, PROFILE_BACKDROP_SIZE, PROFILE_CARD, PROFILE_GLASS, voiceWave,
 } from '../lib/profilelook';
 import { accessToken } from '../lib/cloud';
+import { loadSpace, sizeOf, type Space } from '../lib/space';
 
 export default function Account({
   open,
@@ -119,6 +120,19 @@ export default function Account({
    * device — songs, clips, projects — and that is a real number.
    */
   const [store, setStore] = useState<{ used: number; quota: number } | null>(null);
+  /**
+   * And what this member keeps in the cloud, against what the plan holds —
+   * Carli, 16 October 2026: 1 GB on Free, 10 on Maker, 50 on Studio, 200 on
+   * Label. Counted by the database (`supabase/berging.sql`), so it is the
+   * same number the limit itself is held to.
+   */
+  const [space, setSpace] = useState<Space | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    void loadSpace().then((got) => { if (live) setSpace(got); });
+    return () => { live = false; };
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     let live = true;
@@ -169,6 +183,7 @@ export default function Account({
   const spec = TIER_SPECS[plan];
   const price = tierPrice(plan, region);
   const pct = wallet.monthly > 0 ? Math.max(0, Math.min(100, Math.round((wallet.balance / wallet.monthly) * 100))) : 0;
+  const spaceShare = space?.ready && space.cap ? Math.min(100, Math.round(((space.used ?? 0) / space.cap) * 100)) : 0;
   const gig = (bytes: number): string => (bytes >= 1024 ** 3 ? `${(bytes / 1024 ** 3).toFixed(1)} GB` : `${Math.round(bytes / 1024 ** 2)} MB`);
   const panel: React.CSSProperties = PROFILE_GLASS;
   const well: React.CSSProperties = { background: PHOTO.surfaceLight, border: `1px solid ${PHOTO.edge}` };
@@ -332,7 +347,7 @@ export default function Account({
               { id: 'made' as const, says: t('account.vault', 'My productions') },
               { id: 'voices' as const, says: t('account.voicesModule', 'Cloned voice models') },
               { id: 'links' as const, says: t('account.connectionsModule', 'Connections') },
-              { id: 'store' as const, says: t('account.storageModule', 'Storage on this device') },
+              { id: 'store' as const, says: t('account.storageTab', 'Storage') },
             ]).map((tab) => (
               <button
                 key={tab.id}
@@ -431,9 +446,34 @@ export default function Account({
               <Connections />
             </section>
 
-            {/* Storage on this device */}
+            {/* Storage: the plan's cloud space first, then this device */}
             <section className={`space-y-3 lg:block lg:pl-4 ${column === 'store' ? 'block' : 'hidden'}`} data-accountstorage>
+              {space?.metered && space.signedIn && typeof space.cap === 'number' && (
+                <div className="rounded-2xl p-4" style={PROFILE_CARD} data-accountspace={!space.ready ? 'uncounted' : space.full ? 'full' : 'room'}>
+                  <p className="mb-1 text-xs font-bold text-zinc-300">{t('account.spaceTitle', 'Cloud space on your plan')}</p>
+                  {space.ready ? (
+                    <>
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="text-lg font-bold text-white">{sizeOf(space.used ?? 0)} <span className="text-xs font-normal text-zinc-400">{t('account.storageOf', 'of')} {sizeOf(space.cap)}</span></p>
+                        <span className="text-xs text-zinc-400">{spaceShare}% {t('account.storageUsed', 'used')}</span>
+                      </div>
+                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                        <div className="h-full rounded-full" style={{ width: `${Math.max(1, spaceShare)}%`, background: space.full ? PHOTO.gold : PHOTO.accent }} />
+                      </div>
+                      {space.full && (
+                        <p className="mt-2 text-sm font-semibold leading-snug text-amber-400" data-accountspacefull>
+                          {t('account.spaceFull', 'Full. Nothing new is kept in the cloud until you delete something you no longer keep, or move to a bigger plan.')}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-lg font-bold text-white">{sizeOf(space.cap)} <span className="text-xs font-normal text-zinc-400">{t('account.spaceOnPlan', 'on this plan')}</span></p>
+                  )}
+                  <p className="mt-1 text-[11px] text-zinc-500">{t('account.spaceNote', 'Songs, films, recordings and pictures you keep in your account.')}</p>
+                </div>
+              )}
               <div className="rounded-2xl p-4" style={PROFILE_CARD}>
+                <p className="mb-1 text-xs font-bold text-zinc-300">{t('account.storageModule', 'Storage on this device')}</p>
                 {store ? (
                   <>
                     <div className="flex items-baseline justify-between gap-2">

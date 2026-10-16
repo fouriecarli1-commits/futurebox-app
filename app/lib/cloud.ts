@@ -25,6 +25,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Track } from './library';
+import { refusedForSpace } from './space';
 
 const BUCKET = 'tracks';
 
@@ -1075,6 +1076,8 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
       upsert: true,
     });
   if (upload.error) {
+    /* A full cloud space says so on the screen; `lib/space.ts`. */
+    void refusedForSpace();
     return { saved: false, reason: 'upload', message: `Audio did not upload: ${upload.error.message}` };
   }
 

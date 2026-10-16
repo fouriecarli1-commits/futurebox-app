@@ -8,7 +8,7 @@
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
 -- Dit kyk na 60 tabelle, 34 kolomme wat later
--- bygekom het, 7 stoor-emmers en 58 beleide, en gee 'n ry
+-- bygekom het, 7 stoor-emmers en 59 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
 -- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
@@ -89,6 +89,7 @@ with verwag (l_eer, soort, naam) as (
     ('cast.sql', 'beleid', 'storage.objects: replace own cast picture'),
     ('podcast.sql', 'beleid', 'storage.objects: replace own episodes audio'),
     ('kinderplank.sql', 'beleid', 'storage.objects: replace own kidshelf'),
+    ('berging.sql', 'beleid', 'storage.objects: space left'),
     ('schema.sql', 'beleid', 'storage.objects: write own audio'),
     ('avatars.sql', 'beleid', 'storage.objects: write own avatar'),
     ('cast.sql', 'beleid', 'storage.objects: write own cast picture'),

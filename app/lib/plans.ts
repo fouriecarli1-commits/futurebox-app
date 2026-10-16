@@ -87,6 +87,13 @@ export interface TierSpec {
    * sketches, which cost nobody anything because they are drawn on the device.
    */
   readonly videos: number;
+  /**
+   * Cloud space for what a member keeps, in gigabytes. Carli, 16 October
+   * 2026: *"Please impliment the storage plan as you suggested."* The limit
+   * itself is in the database (`supabase/berging.sql`, `storage_cap`) so a
+   * browser cannot skip it; `check:berging` holds the two in step.
+   */
+  readonly spaceGb: number;
   /** The one line that says who it is for. */
   readonly who: string;
   readonly includes: readonly string[];
@@ -97,6 +104,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     id: 'free',
     name: 'Free',
     rand: 0,
+    spaceGb: 1,
     songs: 0,
     /* No video engine on the free tier, and no marked one either.
 
@@ -167,6 +175,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor is open on this plan too — crop, tone, words, shapes, templates and the background remover, all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits, and this plan holds none, so the picture waits for you.',
+      '1 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },
   maker: {
@@ -183,6 +192,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        direction that costs nothing and still has to be fixed: a card that
        undersells is a card somebody compares against a rival and puts
        down. */
+    spaceGb: 10,
     songs: 10,
     videos: 2,
     who: 'A song or two a week, kept and posted.',
@@ -218,6 +228,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; giving it a little motion is priced like a video.',
+      '10 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },
   studio: {
@@ -244,6 +255,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        reason never to move up, and `check:topups` measures it. */
     name: 'Studio',
     rand: 349,
+    spaceGb: 50,
     songs: 25,
     videos: 5,
     who: 'Releasing regularly, and pitching for collabs.',
@@ -283,12 +295,14 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; giving it a little motion is priced like a video.',
+      '50 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },
   label: {
     id: 'label',
     name: 'Label',
     rand: 899,
+    spaceGb: 200,
     songs: 74,
     videos: 16,
     // "Five seats on one account" was on this card and was never built —
@@ -329,6 +343,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; giving it a little motion is priced like a video.',
+      '200 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },
 };

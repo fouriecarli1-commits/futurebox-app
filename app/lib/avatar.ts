@@ -28,6 +28,7 @@
 
 import { accessToken, configured, currentAccount, getStorageClient } from './cloud';
 import { ACCEPTS as IMAGE_ACCEPTS, square } from './imagefile';
+import { refusedForSpace } from './space';
 
 const BUCKET = 'avatars';
 
@@ -75,7 +76,11 @@ export async function upload(blob: Blob, replacing: string | null): Promise<Save
     // held forever is the point rather than a risk.
     cacheControl: '31536000',
   });
-  if (put.error) return { ok: false, why: put.error.message };
+  if (put.error) {
+    /* A full cloud space says so on the screen; `lib/space.ts`. */
+    void refusedForSpace();
+    return { ok: false, why: put.error.message };
+  }
 
   /* The one it replaces goes now.
 

@@ -941,6 +941,10 @@ jobs:
         run: npm run check:sqlbundle
       - name: The "what is missing in my project" query is current, and cannot write
         run: npm run check:sqlmissing
+      # Carli's storage plan: the space each plan holds is said in SQL (the
+      # limit) and in TypeScript (the cards and the gauge). Two copies drift.
+      - name: The cloud space on each plan is the same in the database, on the cards and at every upload
+        run: npm run check:berging
 
       # And that it runs at all, which is a different question and the one
       # nothing here had ever asked. Matching the files is consistency;

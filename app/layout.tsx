@@ -8,6 +8,7 @@ import Watchdog from './components/Watchdog';
 import BlankGuard from './components/BlankGuard';
 import Blankscreen from './components/Blankscreen';
 import LaunchMark from './components/LaunchMark';
+import SpaceFull from './components/SpaceFull';
 import { startupImages } from './lib/splash';
 import { SITE_URL } from './lib/brand';
 
@@ -176,6 +177,9 @@ export default function RootLayout({
               animation and never covers a tap — see the component. */}
           <LaunchMark />
           {children}
+          {/* Says so when an upload was refused because the plan's cloud
+              space is full — see `lib/space.ts`. */}
+          <SpaceFull />
           <SiteFooter />
         </LanguageProvider>
       </body>

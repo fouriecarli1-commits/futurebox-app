@@ -89,6 +89,11 @@ await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'app
 let creditsAnswer = { metered: true, signedIn: true, ready: true, balance: 87, monthly: 120, cap: 400, packs: [] };
 await p.route('**/api/credits*', (r) =>
   r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(creditsAnswer) }));
+/* Cloud space: Carli's storage plan, 16 October 2026 — 10 GB on Maker. */
+const GB = 1073741824;
+let spaceAnswer = { metered: true, signedIn: true, ready: true, cap: 10 * GB, used: Math.round(2.5 * GB), full: false, tier: 'maker' };
+await p.route('**/api/space*', (r) =>
+  r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(spaceAnswer) }));
 await p.route('**/api/subscription*', (r) => r.fulfill({ status: 200, contentType: 'application/json',
   body: JSON.stringify({
     subscribed: true, tier: 'maker', name: 'Maker', status: 'active',
@@ -153,10 +158,50 @@ check('and so are the terms and the privacy notice',
   (await panel.locator('a[href="/terms"]').count()) === 1 &&
   (await panel.locator('a[href="/privacy"]').count()) === 1);
 
+/* How much of the plan's cloud space is used, from the number the database
+   counts — not the browser's own storage, which is the card under it. */
+const gauge = panel.locator('[data-accountspace]').first();
+check('the account shows the cloud space the plan holds', (await gauge.count()) === 1);
+const gaugeWords = (await gauge.count()) ? await gauge.innerText() : '';
+check('and how much of it is used', /2\.5 GB/.test(gaugeWords) && /10 GB/.test(gaugeWords) && /25%/.test(gaugeWords),
+  gaugeWords.replace(/\n/g, ' / '));
+
 // Escape closes it, like every other overlay here.
 await p.keyboard.press('Escape');
 await p.waitForTimeout(700);
 check('escape closes it', (await p.locator('[role="dialog"]').count()) === 0);
+
+/* Full: the gauge says so in words, and a refused upload says so wherever it
+   was — the notice in the layout — with a way to the plans. */
+spaceAnswer = { ...spaceAnswer, used: 10 * GB, full: true };
+await mine.click();
+await p.waitForTimeout(1200);
+const fullGauge = p.locator('[data-accountspace="full"]').first();
+check('a full space says it is full on the account', (await fullGauge.count()) === 1
+  && (af ? /Vol\./ : /Full\./).test(await fullGauge.innerText()));
+await p.keyboard.press('Escape');
+await p.waitForTimeout(600);
+await p.evaluate(async () => {
+  /* What every upload calls when storage refuses it: lib/space.ts. */
+  const said = await (await fetch('/api/space')).json();
+  window.dispatchEvent(new CustomEvent('fb-space-full', { detail: said }));
+});
+const notice = p.locator('[data-spacefull]');
+await notice.waitFor({ state: 'visible', timeout: 4000 }).catch(() => undefined);
+const noticeWords = (await notice.count()) ? await notice.innerText() : '';
+check('a refused upload is told the space is full, how much, and on which plan',
+  (af ? /wolkspasie is vol/ : /cloud space is full/).test(noticeWords) && /10 GB/.test(noticeWords) && /Maker/.test(noticeWords),
+  noticeWords.replace(/\n/g, ' / ') || 'no notice');
+const box = (await notice.count()) ? await notice.locator('div').first().boundingBox() : null;
+check('the notice sits on the screen', Boolean(box && box.y >= 0 && box.y + box.height <= 950), JSON.stringify(box));
+await p.locator('[data-spacefullplans]').click().catch(() => undefined);
+await p.waitForTimeout(900);
+check('and its plans button opens the plans', (await notice.count()) === 0
+  && (await p.locator('[data-pricingmodal]').count()) === 1);
+/* Its own close, the first button in it. */
+await p.locator('[data-pricingmodal] button').first().click().catch(() => undefined);
+await p.waitForTimeout(600);
+spaceAnswer = { ...spaceAnswer, used: Math.round(2.5 * GB), full: false };
 
 /* The three ways there is no number, which `wallet.ts` keeps apart and a
    screen must not collapse. A balance that failed to arrive showing as "0" is

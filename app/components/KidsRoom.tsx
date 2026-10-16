@@ -770,7 +770,7 @@ export default function KidsRoom({
       setSays(t('kids.shelfFull', 'Your shelf is full — it holds {n} songs. Ask a grown-up to take one off.')
         .replace('{n}', String(MOST_SONGS)));
     } else if (put === 'full') {
-      setSays(t('kids.deviceFull', 'There is no room left on this device.'));
+      setSays(t('kids.deviceFull', 'There is no room left to keep it. Ask a grown-up to make room.'));
     } else {
       setSays(t('kids.noKeep', 'This browser will not keep anything.'));
     }

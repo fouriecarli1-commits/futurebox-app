@@ -16,6 +16,7 @@
     "sql:missing": "tsx scripts/sql-missing.mts",
     "check:sqlbundle": "tsx scripts/check-sqlbundle.mts",
     "check:sqlmissing": "tsx scripts/check-sqlmissing.mts",
+    "check:berging": "tsx scripts/check-berging.mts",
     "check:sqlcolumns": "tsx scripts/check-sqlcolumns.mts",
     "check:jsxcomment": "tsx scripts/check-jsxcomment.mts",
     "check:livewhy": "tsx scripts/check-livewhy.mts",

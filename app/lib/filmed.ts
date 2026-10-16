@@ -28,6 +28,7 @@
  */
 
 import { currentAccount, getStorageClient, accessToken } from './cloud';
+import { refusedForSpace } from './space';
 
 const BUCKET = 'videos';
 
@@ -92,6 +93,8 @@ export async function keepFilmed(
     upsert: false,
   });
   if (put.error) {
+    /* A full cloud space says so on the screen; `lib/space.ts`. */
+    void refusedForSpace();
     return { ok: false, why: 'upload', message: put.error.message };
   }
 

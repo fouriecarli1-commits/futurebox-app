@@ -40,6 +40,7 @@
 
 import { configured, currentAccount, getStorageClient, accessToken } from './cloud';
 import { ACCEPTS as IMAGE_ACCEPTS, fit, square } from './imagefile';
+import { refusedForSpace } from './space';
 
 const BUCKET = 'cast';
 
@@ -236,6 +237,8 @@ export async function addToCast(file: File, name: string): Promise<Added> {
        same split the art market uses, and the same reason: a storage
        error names policies and ids that are nobody's business but ours. */
     console.error(`[cast] the picture did not reach the bucket. ${put.error.message}`);
+    /* A full cloud space says so on the screen; `lib/space.ts`. */
+    void refusedForSpace();
     return { ok: false, why: 'no_bucket' };
   }
 

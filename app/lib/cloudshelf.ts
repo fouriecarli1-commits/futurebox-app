@@ -47,6 +47,7 @@
 
 import { currentAccount, getClient } from './cloud';
 import type { Put, Shelf } from './ondevice';
+import { refusedForSpace } from './space';
 
 export const BUCKET = 'kidshelf';
 
@@ -124,6 +125,9 @@ export function cloudShelfOf<T extends { id: string; made: number; title: string
           /* Anything already up is left there. The row is never written, so
              the shelf never lists it, and a later keep of the same id
              overwrites the same paths rather than accumulating. */
+          /* The plan's cloud space being full is "full" too: the kids room
+             asks a grown-up to make room either way (`lib/space.ts`). */
+          if (await refusedForSpace()) return 'full';
           return /quota|exceeded|payload/i.test(error.message) ? 'full' : 'off';
         }
         where.set(file.name, path);

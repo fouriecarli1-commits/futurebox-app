@@ -107,6 +107,7 @@ import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import { sendChildBack } from './lib/kidslock';
 import * as cloud from './lib/cloud';
 import { accessToken } from './lib/cloud';
+import { SEE_PLANS_EVENT } from './lib/space';
 import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipPrice, tierPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
 import { inPlayApp, playAvailable, resumePlayPurchases } from './lib/playbilling';
@@ -361,6 +362,13 @@ export default function FutureBoxHome() {
   const [agreed, setAgreed] = useState(false);
   const [userPlan, setUserPlan] = useState<Plan>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
+  /* The "cloud space is full" card is mounted in the layout, outside this
+     page, so its plans button asks for the plans with an event. */
+  useEffect(() => {
+    const open = (): void => setPricingModalOpen(true);
+    window.addEventListener(SEE_PLANS_EVENT, open);
+    return () => window.removeEventListener(SEE_PLANS_EVENT, open);
+  }, []);
   /** Bumped when a request is sent, so the rooms above pick it up at once. */
   const [collabSignal, setCollabSignal] = useState(0);
   /**
@@ -3786,7 +3794,7 @@ export default function FutureBoxHome() {
 
       {/* Plans and one-off prices. Every figure comes from plans.ts, in rand. */}
       {pricingModalOpen && (
-        <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+        <div data-pricingmodal className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-start justify-between border-b border-zinc-800 pb-4">
               <div>
