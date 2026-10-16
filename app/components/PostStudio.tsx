@@ -132,8 +132,12 @@ import { useLang } from '../lib/i18n';
 import { canTouch, frontZ, movedOne, stackOf, type LayerOn } from '../lib/postlayers';
 import { GAPS, LAYOUTS, cellHas, cellsOf, frameOf, type Cell, type CellLook } from '../lib/postcells';
 import {
-  FILTER_GROUPS, POST_FILTERS, drawFilterTile, filterById, filterLabel, thumbOf, type FilterGroup,
+  FILTER_GROUPS, POST_FILTERS, drawFilterTile, drawSample, filterById, filterLabel, thumbOf, type FilterGroup,
 } from '../lib/postfilters';
+import {
+  DESIGNS, DESIGN_CATEGORIES, cleanDesign, designLabel, drawDesign,
+  type Design, type DesignCategory, type DesignMark,
+} from '../lib/postdesigns';
 import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
 import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/magicedit';
@@ -589,6 +593,38 @@ function ToolTile({ id, from, icon, size }: {
       {!drawn && <span className="[&>svg]:h-[18px] [&>svg]:w-[18px]">{icon}</span>}
     </span>
   );
+}
+
+/* ── A template's picture ─────────────────────────────────────────────
+   Drawn from the design itself, with our own drawn evening in each frame,
+   turned a different colour per frame so a collage reads as several photos. */
+const designPhoto = (ctx: CanvasRenderingContext2D, w: number, h: number, at: number): void => {
+  ctx.save();
+  if (at) ctx.filter = `hue-rotate(${(at * 67) % 360}deg)`;
+  drawSample(ctx, w, h);
+  ctx.restore();
+};
+const designMark = (ctx: CanvasRenderingContext2D, one: DesignMark, w: number, h: number): void => {
+  drawMark(ctx, {
+    ...newMark(one.kind, 'preview'),
+    x: one.x, y: one.y, size: one.size, ink: one.ink,
+    glow: (GLOWS.find((g) => g.id === one.glow)?.id ?? 'none'),
+    ...(one.opacity !== undefined ? { opacity: one.opacity } : {}),
+    ...(one.stretch !== undefined ? { stretch: one.stretch } : {}),
+  }, w, h);
+};
+function DesignTile({ design, lang }: { readonly design: Design; readonly lang: string }): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  const tall = design.size === 'story' ? 16 / 9 : design.size === 'portrait' ? 1.25 : 1;
+  useEffect(() => {
+    const el = canvas.current;
+    const ctx = el?.getContext('2d');
+    if (!el || !ctx) return;
+    drawDesign(ctx, design, el.width, el.height, lang, designPhoto, (id) => faceOf(id), designMark);
+    /* Again once the faces have loaded, so the words are in their own type. */
+    void faceReady().then(() => drawDesign(ctx, design, el.width, el.height, lang, designPhoto, (id) => faceOf(id), designMark)).catch(() => undefined);
+  }, [design, lang]);
+  return <canvas ref={canvas} width={180} height={Math.round(180 * tall)} aria-hidden className="w-full rounded-lg" style={{ aspectRatio: `1 / ${tall}` }} />;
 }
 
 /** One filter's picture: her photograph with it on. */
@@ -1139,6 +1175,13 @@ export default function PostStudio({
   const [thumb, setThumb] = useState<HTMLCanvasElement | null>(null);
   useEffect(() => { setThumb(thumbOf(picture)); }, [picture]);
   const [filterGroup, setFilterGroup] = useState<FilterGroup>('natural');
+  /* ── Photo templates: the starting set, and the ones she has saved ── */
+  const [designGroup, setDesignGroup] = useState<DesignCategory | 'all' | 'saved'>('all');
+  const [savedDesigns, setSavedDesigns] = useState<Design[]>([]);
+  const [designOwner, setDesignOwner] = useState(false);
+  const [designSaid, setDesignSaid] = useState('');
+  const [keeping, setKeeping] = useState<{ en: string; af: string; category: DesignCategory }>({ en: '', af: '', category: 'event' });
+  const [designBusy, setDesignBusy] = useState(false);
   /** The filter on, how strong, and whether it is on the photo or on all of it. */
   const [filterOn, setFilterOn] = useState<{ readonly id: string; readonly share: number; readonly all: boolean } | null>(null);
   const filterHere = filterOn && filterOn.all === toneAll ? filterOn : null;
@@ -3317,6 +3360,140 @@ export default function PostStudio({
    * spent two minutes cutting a person out of it does not want a template to
    * take it away, and somebody who has not can bring one in afterwards.
    */
+  /* ── A photo template put on the post ──────────────────────────────
+     Its shape, its colour, its frames, its words and its shapes — every one
+     still hers to change. A photograph already in the room goes into the
+     first frame rather than being thrown away, and the whole change is one
+     step back. */
+  const startDesign = (design: Design): void => {
+    before(t('post.stepDesign', 'putting a photo template on'), true);
+    const shape = POST_SIZES.find((one) => one.id === design.size);
+    if (shape) setSize(shape);
+    setBack(design.back);
+    if (design.back) setLastColour(design.back);
+    const carried = picture;
+    setCells(design.slots.map((slot, at) => ({
+      id: freshId(),
+      x: slot.x, y: slot.y, w: slot.w, h: slot.h,
+      ...(slot.turn ? { turn: slot.turn } : {}),
+      ...(slot.look ? { look: slot.look } : {}),
+      image: at === 0 ? carried : null,
+      crop: MIDDLE,
+      z: -500 + at,
+    })));
+    if (carried && design.slots.length) setPicture(null);
+    setWords(design.words.map((one) => ({
+      id: freshId(),
+      text: lang === 'af' ? one.af : one.en,
+      face: FACES.find((face) => face.id === one.face)?.id ?? 'plain',
+      spot: 'middle' as SpotId,
+      ink: one.ink,
+      at: { x: one.x, y: one.y },
+      ...(one.size !== undefined ? { size: one.size } : {}),
+      ...(one.glow ? { glow: one.glow as GlowId } : {}),
+      ...(one.behind ? { behind: one.behind as Backdrop } : {}),
+      ...(one.align ? { align: one.align } : {}),
+      ...(one.letterGap !== undefined ? { letterGap: one.letterGap } : {}),
+    })));
+    setMarks(design.marks.map((one) => ({
+      ...newMark(one.kind, freshId()),
+      x: one.x, y: one.y, size: one.size, ink: one.ink,
+      glow: (GLOWS.find((g) => g.id === one.glow)?.id ?? 'none'),
+      ...(one.opacity !== undefined ? { opacity: one.opacity } : {}),
+      ...(one.stretch !== undefined ? { stretch: one.stretch } : {}),
+    })));
+    setLook(PLAIN);
+    setAllLook(PLAIN);
+    setCellOn(null);
+    setWordOn(null);
+    setMarkOn(null);
+    setBench(null);
+    setSaid(t('post.designDone', 'There it is. Tap a frame to put your photo in it, and tap any words to change them.'));
+  };
+
+  /** The post as it is now, as a template: frames kept empty, never her photos. */
+  const designFromPost = (): unknown => ({
+    en: keeping.en.trim(),
+    af: keeping.af.trim() || keeping.en.trim(),
+    category: keeping.category,
+    size: size.id === 'story' || size.id === 'portrait' ? size.id : 'square',
+    back,
+    /* A post with a photo and no frames keeps the photo's place as one frame. */
+    slots: cells.length
+      ? cells.filter((one) => !one.hidden).map((one) => ({ x: one.x, y: one.y, w: one.w, h: one.h, turn: one.turn, look: one.look }))
+      : picture ? [{ x: 0, y: 0, w: 1, h: 1 }] : [],
+    words: words.filter((one) => !one.hidden && one.text.trim()).map((one) => {
+      const at = one.at ?? atOf(one.spot);
+      return {
+        en: one.text, af: one.text, face: one.face, x: at.x, y: at.y, size: one.size, ink: one.ink,
+        glow: one.glow, behind: one.behind, align: one.align, letterGap: one.letterGap,
+      };
+    }),
+    marks: marks.filter((one) => !one.hidden).map((one) => ({
+      kind: one.kind, x: one.x, y: one.y, size: one.size, ink: one.ink, glow: one.glow, opacity: one.opacity, stretch: one.stretch,
+    })),
+  });
+
+  const loadDesigns = async (): Promise<void> => {
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/designs', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const got = (await answer.json().catch(() => null)) as { designs?: unknown[]; owner?: boolean } | null;
+      setDesignOwner(Boolean(got?.owner));
+      setSavedDesigns((got?.designs ?? []).flatMap((raw) => {
+        const clean = cleanDesign(raw);
+        const id = (raw as { id?: unknown }).id;
+        return clean && typeof id === 'string' ? [{ ...clean, id, saved: true }] : [];
+      }));
+    } catch {
+      /* Offline or signed out: the starting set is still all here. */
+    }
+  };
+
+  /* The saved templates are read each time the Templates tool opens —
+     through a ref, so the effect runs on the tool opening and nothing else. */
+  const loadDesignsNow = useRef(loadDesigns);
+  loadDesignsNow.current = loadDesigns;
+  useEffect(() => {
+    if (bench === 'starts') void loadDesignsNow.current();
+  }, [bench]);
+
+  const keepDesign = async (): Promise<void> => {
+    setDesignSaid('');
+    if (!keeping.en.trim()) { setDesignSaid(t('post.designNeedsName', 'Give it a name first.')); return; }
+    const design = cleanDesign(designFromPost());
+    if (!design || (!design.slots.length && !design.words.length && !design.marks.length)) {
+      setDesignSaid(t('post.designEmpty', 'There is nothing on this post to keep as a template yet.'));
+      return;
+    }
+    setDesignBusy(true);
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/designs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(design),
+      });
+      const got = (await answer.json().catch(() => null)) as { message?: string } | null;
+      if (!answer.ok) { setDesignSaid(got?.message || t('post.designFail', 'That could not be saved just now.')); return; }
+      setDesignSaid(t('post.designKept', 'Saved. Every member sees it under From FutureBox.'));
+      setKeeping((was) => ({ ...was, en: '', af: '' }));
+      setDesignGroup('saved');
+      void loadDesigns();
+    } finally {
+      setDesignBusy(false);
+    }
+  };
+
+  const dropDesign = async (id: string): Promise<void> => {
+    const token = await accessToken();
+    const answer = await fetch(`/api/designs?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).catch(() => null);
+    if (answer?.ok) setSavedDesigns((was) => was.filter((one) => one.id !== id));
+  };
+
   const startFrom = (one: Template): void => {
     /* It replaces the words, so the words it replaces can come back. */
     beforeLayers(t('post.stepTemplate', 'putting a template on'));
@@ -6528,7 +6705,101 @@ export default function PostStudio({
      and gold packs — were the first thing on the words bench, behind a
      button called Words. They are a button now, with the starter pack of
      posters, flyers and covers one press further. */
+  const shownDesigns = designGroup === 'saved'
+    ? savedDesigns
+    : [...savedDesigns, ...DESIGNS].filter((one) => designGroup === 'all' || one.category === designGroup);
   const startsBench = (
+    <div className="space-y-3" data-poststarts>
+    {/* ── Photo templates ───────────────────────────────────────────────
+        Carli, 16 October 2026: *"Hoe hou ons sulke cool templates?"* Whole
+        designs with frames for her photos — `lib/postdesigns.ts` — and the
+        ones she saves for everybody, under From FutureBox. */}
+    <div className="space-y-2" data-postdesigns>
+      <p className={MIKRO}>{t('post.designs', 'Photo templates')}</p>
+      <div className="flex flex-wrap gap-1.5" role="tablist">
+        {([['all', t('post.designAll', 'All')], ...(savedDesigns.length ? [['saved', t('post.designSaved', 'From FutureBox')]] : []), ...DESIGN_CATEGORIES.map((one) => [one.id, designLabel(one, lang)])] as [string, string][]).map(([id, name]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            data-postdesigngroup={id}
+            aria-selected={designGroup === id}
+            onClick={() => setDesignGroup(id as DesignCategory | 'all' | 'saved')}
+            className={`h-11 rounded-full border px-3 text-xs font-bold ${designGroup === id ? GEKIES : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 items-start gap-2 sm:grid-cols-4">
+        {shownDesigns.map((one) => (
+          <div key={one.id} className="relative">
+            <button
+              type="button"
+              data-postdesign={one.id}
+              onClick={() => startDesign(one)}
+              className="flex w-full flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 p-1 text-[10px] font-bold text-zinc-300"
+            >
+              <DesignTile design={one} lang={lang} />
+              <span className="w-full truncate text-center">{designLabel(one, lang)}</span>
+            </button>
+            {designOwner && one.saved && (
+              <button
+                type="button"
+                data-postdesigndrop={one.id}
+                aria-label={t('post.designDrop', 'Take this template out')}
+                onClick={() => { void dropDesign(one.id); }}
+                className="absolute right-1 top-1 grid h-8 w-8 place-items-center rounded-full border border-zinc-600 bg-black/70 text-zinc-200"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* ── The owner's half: this post, kept as a template for everybody ── */}
+    {designOwner && (
+      <div className="space-y-2 rounded-xl border border-emerald-700/50 p-2" data-postdesignkeep>
+        <p className={MIKRO}>{t('post.designKeep', 'Save this post as a template')}</p>
+        <input
+          type="text"
+          value={keeping.en}
+          maxLength={60}
+          data-postdesignname="en"
+          onChange={(event) => setKeeping((was) => ({ ...was, en: event.target.value }))}
+          placeholder={t('post.designNameEn', 'Name in English')}
+          className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+        />
+        <input
+          type="text"
+          value={keeping.af}
+          maxLength={60}
+          data-postdesignname="af"
+          onChange={(event) => setKeeping((was) => ({ ...was, af: event.target.value }))}
+          placeholder={t('post.designNameAf', 'Name in Afrikaans')}
+          className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+        />
+        <select
+          value={keeping.category}
+          data-postdesigncategory
+          onChange={(event) => setKeeping((was) => ({ ...was, category: event.target.value as DesignCategory }))}
+          className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
+        >
+          {DESIGN_CATEGORIES.map((one) => <option key={one.id} value={one.id}>{designLabel(one, lang)}</option>)}
+        </select>
+        <button type="button" data-postdesignsave disabled={designBusy} onClick={() => { void keepDesign(); }} className={VUL}>
+          {designBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" />}
+          {t('post.designSave', 'Save as a template for everyone')}
+        </button>
+        <p className="text-[11px] leading-relaxed text-zinc-500">
+          {t('post.designKeepWhy', 'The frames are saved empty — your photos are never kept. Words, shapes, colours and the shape of the post are.')}
+        </p>
+        {designSaid && <p className="text-xs font-semibold text-emerald-300" data-postdesignsaid>{designSaid}</p>}
+      </div>
+    )}
+
     <div className="space-y-2">
       <p className={MIKRO}>{t('post.templates', 'Start from something')}</p>
       <div className={RY}>
@@ -6563,6 +6834,7 @@ export default function PostStudio({
         <LayoutTemplate className="h-4 w-4" />
         {t('stpl.openTemplates', 'Templates & Starter Packs')}
       </button>
+    </div>
     </div>
   );
 

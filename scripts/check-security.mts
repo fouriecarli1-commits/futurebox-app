@@ -239,6 +239,12 @@ const ANONYMOUS: Record<string, string> = {
      Scoping to a caller would make it a shelf, and the shelf exists. */
   'app/api/amps/route.ts':
     'the amp catalogue — a shared list; writes behind the owner door, reads for signed-in members',
+  /* The photo templates the owner saves — one set for everybody, the same
+     shape as the amp catalogue. Reads need a signed-in member; writes are
+     behind `opened()`, and every design is held to `cleanDesign` both on
+     the way in and on the way out. No photographs are ever stored. */
+  'app/api/designs/route.ts':
+    'the photo templates — a shared set; writes behind the owner door, reads for signed-in members',
   /* ElevenLabs telling us a dub has finished. There is no caller by
      construction — that is what a webhook is — so the rule below cannot be
      satisfied and the question becomes what stands in its place.

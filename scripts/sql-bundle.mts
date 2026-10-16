@@ -119,6 +119,9 @@ export const ORDER = [
   /* Cloud space per plan: three functions and one restrictive policy on
      `storage.objects`. Reads `public.memberships`, so after `schema`. */
   'berging',
+  /* The photo templates the owner saves — one table, service_role alone,
+     standing on `auth.users`. See the file's own header. */
+  'designs',
 ] as const;
 
 /**
@@ -245,6 +248,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Jou eie Kits.AI minute, los van die huis s\u2019n. Sonder dit trek elke aflaai aan dieselfde teller.',
   afrikaans:
     'Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat dit hoor. Sonder dit is die knoppie daar en die verslag gaan nooit \u00eerens heen nie.',
+  designs:
+    'Die fototemplates wat Carli in die fotoredigeerder stoor vir almal: die plasing se vorm, kleur, rame, woorde en vorms — nooit foto’s nie. Lede sien dit onder "Van FutureBox" in Templates. Sonder dit werk die sestien wat saam met die app kom steeds, maar "Stoor as template" sê die tabel is nog nie daar nie.',
   berging:
     'Wolkspasie per plan: 1 GB op Free, 10 GB op Maker, 50 GB op Studio, 200 GB op Label. Drie funksies wat tel hoeveel ’n lid in sy eie vouers hou en hoeveel sy plan toelaat, en een beleid op `storage.objects` wat ’n nuwe oplaai weier sodra die spasie vol is — in die databasis, want die meeste lêers gaan reguit uit die blaaier op en ’n perk in die app sou enige blaaier kon oorslaan. Sonder hierdie lêer is daar geen perk nie en wys die meter op die rekening niks.',
   amps:

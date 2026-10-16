@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- FutureBox — die hele skema, al 51 lêers, in een plak.
+-- FutureBox — die hele skema, al 52 lêers, in een plak.
 -- ═══════════════════════════════════════════════════════════════════════════
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -174,6 +174,12 @@
 --                 die app sou enige blaaier kon oorslaan. Sonder hierdie
 --                 lêer is daar geen perk nie en wys die meter op die
 --                 rekening niks.
+--   designs.sql   Die fototemplates wat Carli in die fotoredigeerder stoor
+--                 vir almal: die plasing se vorm, kleur, rame, woorde en
+--                 vorms — nooit foto’s nie. Lede sien dit onder "Van
+--                 FutureBox" in Templates. Sonder dit werk die sestien wat
+--                 saam met die app kom steeds, maar "Stoor as template" sê
+--                 die tabel is nog nie daar nie.
 --
 -- ── Niks hoef vooraf te bestaan nie ───────────────────────────────────────
 --
@@ -189,7 +195,7 @@
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
--- Dit word geskryf deur `npm run sql:bundle` uit die 51 lêers self.
+-- Dit word geskryf deur `npm run sql:bundle` uit die 52 lêers self.
 -- Verander hulle en loop die skrip weer; `npm run check:sqlbundle` keer dat
 -- die kopie stilweg van sy oorsprong af wegdryf.
 
@@ -6011,3 +6017,52 @@ exception
     raise warning 'The space functions were made, but the policy was refused: %. Add it by hand under Storage → Policies → storage.objects: a RESTRICTIVE insert policy for authenticated with check (bucket_id not in (''tracks'',''episodes'',''videos'',''avatars'',''cast'',''kidshelf'') or (bucket_id = ''tracks'' and (storage.foldername(name))[2] = ''work'') or public.storage_room(auth.uid())).', sqlerrm;
 end
 $$;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/designs.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ─────────────────────────────────────────────────────── die templates ──
+--
+-- Ontwerpe met plek vir foto's, wat die eienaar stoor vir almal.
+--
+-- ── Waarvandaan ──────────────────────────────────────────────────────────
+--
+-- Carli, 16 Oktober 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
+-- generate en oor tyd op bou?"* — en toe: *"gaan aan met die
+-- template-stelsel."*
+--
+-- Die app bring sestien saam (`app/lib/postdesigns.ts`). Hierdie tabel is
+-- die deel wat groei: sy maak 'n plasing wat sy mooi vind en druk "Stoor as
+-- template", en elke lid sien dit in die fotoredigeerder se Templates.
+--
+-- ── Geen foto's nie ──────────────────────────────────────────────────────
+--
+-- 'n Ontwerp is die plasing se dele as data — die vorm, die kleur, die
+-- rame, die woorde, die vorms — en nooit haar foto's nie. Die rame word
+-- leeg gestoor; elke lid sit sy eie foto's in. Die voorskou word geteken,
+-- nie gestoor nie. Dus is 'n ry 'n paar kilogrepe, en `design` se grootte
+-- word hieronder begrens.
+--
+-- ── Service role alleen ──────────────────────────────────────────────────
+--
+-- RLS aan, geen beleid — dieselfde as die versterkerkatalogus. Lees gaan
+-- deur `/api/designs` vir 'n aangemelde lid, skryf deur dieselfde roete
+-- agter die eienaarsdeur. Die blaaier praat nooit direk met die tabel nie.
+
+create table if not exists public.post_designs (
+  id          uuid primary key default gen_random_uuid(),
+  name_en     text not null check (name_en <> '' and length(name_en) <= 60),
+  name_af     text not null check (name_af <> '' and length(name_af) <= 60),
+  category    text not null check (category in ('event', 'release', 'sale', 'collage', 'celebrate', 'quote', 'brand')),
+  -- Die ontwerp self, soos `cleanDesign` dit teruggee.
+  design      jsonb not null check (pg_column_size(design) <= 32768),
+  added_by    uuid references auth.users (id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists post_designs_created_idx
+  on public.post_designs (created_at desc);
+
+alter table public.post_designs enable row level security;
