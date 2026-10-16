@@ -204,6 +204,9 @@ const under = [...new Set(rooms)].sort();
  * and `check:handover` make.
  */
 const KNOWN: readonly string[] = [
+  /* All tools, 16 October 2026: one page over everything, every tool in
+     groups, clear of the bar by `barClearance` like the front door. */
+  'app/components/AllTools.tsx',
   /* The editors' full-screen pickers, washed in bg-scrim on 14 October 2026
      — which is what made the scan see them — and given the strip then. */
   'app/components/AdScheduleModal.tsx',

@@ -39,7 +39,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Sparkles, Sliders, Mic, Video, Clapperboard, Smartphone, ListMusic,
   Handshake, Radio, Mic2, AudioWaveform, Megaphone, Palette, ArrowRight, Scissors,
-  Image as ImageIcon,
+  Image as ImageIcon, LayoutGrid,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { habitOf, suggest, partOfDay, type Habit } from '../lib/habits';
@@ -117,10 +117,13 @@ const RAIL_KEY: Record<SurfaceId, string> = {
 
 export default function Greeting({
   onGo,
+  onAllTools,
   onClose,
   name: fromAccount,
 }: {
   readonly onGo: (id: SurfaceId) => void;
+  /** Open every tool on one page — `AllTools.tsx`. */
+  readonly onAllTools?: () => void;
   readonly onClose?: () => void;
   /**
    * The name the account already knows, used when the channel has none.
@@ -390,6 +393,22 @@ export default function Greeting({
         <p className="text-sm font-bold text-zinc-300 tracking-wide">
           {t('hello.rooms', 'Or go straight to')}
         </p>
+        {/* Every tool on one page, for somebody who knows the tool and not the room. */}
+        {onAllTools && (
+          <button
+            type="button"
+            data-opentools
+            onClick={onAllTools}
+            className="flex min-h-[48px] w-full items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-3 text-left"
+          >
+            <LayoutGrid className="h-5 w-5 flex-shrink-0 text-emerald-400" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold text-emerald-300">{t('tools.title', 'All tools')}</span>
+              <span className="block text-xs text-emerald-400/70">{t('tools.sub', 'Filters, templates, transitions, effects — every tool, one tap away')}</span>
+            </span>
+            <ArrowRight className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+          </button>
+        )}
         {STAGES.map((stage) => (
           <div key={stage.id} className="space-y-3">
             <div className="flex items-center gap-3">

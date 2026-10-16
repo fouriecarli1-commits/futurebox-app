@@ -129,6 +129,7 @@ import { MOST_COLOURS, repaint } from '../lib/repaint';
 import { liftWith, type Found } from '../lib/grabobject';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
+import { OPEN_PANEL_EVENT, takePanel } from '../lib/alltools';
 import { canTouch, frontZ, movedOne, stackOf, type LayerOn } from '../lib/postlayers';
 import { GAPS, LAYOUTS, cellHas, cellsOf, frameOf, type Cell, type CellLook } from '../lib/postcells';
 import {
@@ -1147,6 +1148,17 @@ export default function PostStudio({
   const [clashOpen, setClashOpen] = useState(false);
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
+  /* Opened from All tools onto one of its panels — `lib/alltools.ts`. On
+     arriving, and at once when the room is already open. */
+  useEffect(() => {
+    const openAsked = (): void => {
+      const panel = takePanel('photo');
+      if (panel) setBench(panel as Bench);
+    };
+    openAsked();
+    window.addEventListener(OPEN_PANEL_EVENT, openAsked);
+    return () => window.removeEventListener(OPEN_PANEL_EVENT, openAsked);
+  }, []);
   /* The shapes on the picture — `lib/postshapes.ts`. Drawn under the words
      and over the photograph, and exported with both. */
   const [marks, setMarks] = useState<Mark[]>([]);

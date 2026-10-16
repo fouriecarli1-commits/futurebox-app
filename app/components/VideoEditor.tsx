@@ -127,6 +127,7 @@ import { makeBlob, makeId, rememberMake } from '../lib/makes';
 import { gradeAdvice, shapeAdvice } from '../lib/recommend';
 import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
+import { OPEN_PANEL_EVENT, takePanel } from '../lib/alltools';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
 import { AUTO_ADJUST, DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
 import {
@@ -1207,6 +1208,17 @@ export default function VideoEditor({
      to. `check:filmcost` holds both ends against it. */
   /** Which bench is out. `null` is all of them shut — see `CutDock.tsx`. */
   const [bench, setBench] = useState<Bench>(null);
+  /* Opened from All tools onto one of its panels — `lib/alltools.ts`. On
+     arriving, and at once when the room is already open. */
+  useEffect(() => {
+    const openAsked = (): void => {
+      const panel = takePanel('videoedit');
+      if (panel) setBench(panel as Bench);
+    };
+    openAsked();
+    window.addEventListener(OPEN_PANEL_EVENT, openAsked);
+    return () => window.removeEventListener(OPEN_PANEL_EVENT, openAsked);
+  }, []);
   /* The words bench shows every face on its own button, so they are fetched
      when it opens rather than when the film is made — by then the ones she
      chose are already here and the render does not wait on the network. */

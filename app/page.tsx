@@ -7,7 +7,7 @@ import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
 import { 
   Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform, Palette,
   Search as SearchIcon, Home,
-  Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
+  Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X, LayoutGrid,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
   BookOpen, Bookmark, GraduationCap, Mic, Disc3, ExternalLink, Globe,
@@ -77,6 +77,8 @@ import SoundTrainer from './components/SoundTrainer';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import { profileAddress } from './lib/brand';
 import Search from './components/Search';
+import AllTools from './components/AllTools';
+import { askPanel } from './lib/alltools';
 import {
   STAGES,
   SURFACES,
@@ -169,6 +171,8 @@ export default function FutureBoxHome() {
      than on an element so it works wherever the focus happens to be, and it
      stays out of the way of a text field's own use of the key. */
   const [searchOpen, setSearchOpen] = useState(false);
+  /* Every tool on one page — `components/AllTools.tsx`. */
+  const [allToolsOpen, setAllToolsOpen] = useState(false);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -4006,6 +4010,7 @@ export default function FutureBoxHome() {
               <LanguageSwitched />
             </div>
             <Greeting
+              onAllTools={() => setAllToolsOpen(true)}
               /* A chosen artist name is said as she wrote it. The fallback is
                  cut from the sign-up email, which is nearly always lower case
                  — "Hello, thandi!" — so that one gets a capital. */
@@ -4097,6 +4102,21 @@ export default function FutureBoxHome() {
 
           It takes no copilot bus of its own; the hand-off below reaches the
           bus directly, and the room it opens is inside the provider. */}
+      {/* ── All tools, on one page ─────────────────────────────────────
+          Carli, 16 October 2026, another app's All tools page. A tool is a
+          room and, where it is one panel of it, that panel: the room opens
+          the usual way and is asked to open the panel (`askPanel`). */}
+      <AllTools
+        open={allToolsOpen}
+        onClose={() => setAllToolsOpen(false)}
+        onGo={(tool) => {
+          setAllToolsOpen(false);
+          setUploadModalOpen(true);
+          goToRoom(tool.room);
+          if (tool.panel) askPanel(tool.room, tool.panel);
+        }}
+      />
+
       <Search
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
@@ -4312,6 +4332,16 @@ export default function FutureBoxHome() {
                     </span>
                   </span>
                   <ArrowLeft className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                </button>
+                {/* Straight to one tool, without going back to the rooms. */}
+                <button
+                  type="button"
+                  data-opentools
+                  onClick={() => setAllToolsOpen(true)}
+                  aria-label={t('tools.title', 'All tools')}
+                  className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+                >
+                  <LayoutGrid className="h-5 w-5" />
                 </button>
                 <button
                   type="button"
