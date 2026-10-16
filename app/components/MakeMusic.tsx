@@ -1136,7 +1136,7 @@ export default function MakeMusic({
         return (
           <div
             data-top-mini-player
-            className="space-y-3 rounded-2xl border border-emerald-500/30 bg-zinc-900/80 p-3 sm:p-4 backdrop-blur-sm"
+            className="space-y-3 rounded-2xl border border-emerald-500/30 bg-zinc-900/50 p-3 sm:p-4"
           >
             {/* Two rows, not one. Carli, 15 October 2026, a phone screenshot:
                 with the song, "Verbeter Afrikaans", "Sing it in my voice" and
@@ -1226,7 +1226,7 @@ export default function MakeMusic({
         <div
           ref={box}
           data-makebox
-          className="relative rounded-3xl border border-zinc-700/70 bg-zinc-900/80 shadow-[0_0_35px_rgba(16,185,129,0.06)]"
+          className="relative rounded-3xl border border-zinc-700/70 bg-zinc-900/45 shadow-[0_0_35px_rgba(16,185,129,0.06)]"
         >
           <div className="flex items-center justify-between gap-2 border-b border-zinc-800 p-2">
             <div role="tablist" data-makeway className="inline-flex rounded-2xl bg-zinc-950/70 p-1">
@@ -1684,7 +1684,7 @@ export default function MakeMusic({
             "Dan onder daardie boks kom die woorde uit." Open, never folded:
             what the copilot wrote is what the button sends, and a canvas
             somebody cannot see is a canvas they cannot correct. */}
-        <div ref={wordsCard.mine} data-makewords className="scroll-mt-4 space-y-3 rounded-3xl border border-zinc-800 bg-zinc-950/40 p-4">
+        <div ref={wordsCard.mine} data-makewords className="scroll-mt-4 space-y-3 rounded-3xl border border-zinc-800 bg-zinc-950/30 p-4">
           <div>
             <label htmlFor="song-name" className="text-sm font-semibold text-zinc-300">
               {t('make.name')}

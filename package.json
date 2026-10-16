@@ -75,6 +75,7 @@
     "check:postdesigns": "node audit/postdesigns.mjs 3341",
     "check:alltools": "node audit/alltools.mjs 3343",
     "check:kidsloop": "node audit/kidsloop.mjs 3322",
+    "check:magicbrush": "node audit/magicbrush.mjs 3345",
     "check:pressed": "tsx scripts/check-pressed.mts",
     "check:whichbuild": "tsx scripts/check-whichbuild.mts",
     "check:boothdock": "tsx scripts/check-boothdock.mts",

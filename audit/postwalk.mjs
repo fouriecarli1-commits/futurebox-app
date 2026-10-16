@@ -330,8 +330,8 @@ try {
     let seeThrough = 0;
     for (let i = 0; i < data.length; i += 4) {
       if (data[i + 3] < 250) seeThrough += 1;
-      /* The two checker greys, and only those: #3f3f46 and #27272a. */
-      if (data[i] === 0x3f || data[i] === 0x27) greys.add(data[i]);
+      /* The two checker greys, and only those: #e7e7ea and #c8c8ce. */
+      if ((data[i] === 0xe7 && data[i + 2] === 0xea) || (data[i] === 0xc8 && data[i + 2] === 0xce)) greys.add(data[i]);
     }
     return { greys: [...greys].sort(), seeThrough, total: data.length / 4 };
   });
@@ -388,14 +388,14 @@ try {
  
            Matching one channel reported the checkerboard baked into a file
            that was 94% transparent — the antialiased edge of white text over
-           nothing produces greys, and some of them happen to carry 0x3f or
-           0x27 in red. A false alarm about the thing this assertion exists to
+           nothing produces greys, and some of them happen to carry 0xc8 or
+           0xe7 in red. A false alarm about the thing this assertion exists to
            catch is worse than no assertion, because the next person turns it
-           off. A checker block is flat #3f3f46 or #27272a at full alpha and
+           off. A checker block is flat #e7e7ea or #c8c8ce at full alpha and
            nothing else in this picture is. */
         if (data[i + 3] !== 255) continue;
         const hex = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
-        if (hex === 0x3f3f46 || hex === 0x27272a) greys.add(hex.toString(16));
+        if (hex === 0xe7e7ea || hex === 0xc8c8ce) greys.add(hex.toString(16));
       }
       return { clear, greys: [...greys], total: data.length / 4, w: c.width, h: c.height };
     }, bytes.toString('base64'));

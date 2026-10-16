@@ -208,7 +208,7 @@ ok('nothing behind it is the absence of a fill, not a dark colour',
    be anywhere, the branch is where it has to be. */
 const board = upTo(from(studio, '} else if (guides) {'), '\n    }');
 ok('  and the checkerboard that proves it is drawn only as a guide',
-  board.includes('fillRect') && /#3f3f46|#27272a/.test(board),
+  board.includes('fillRect') && /CHECK_LIGHT|CHECK_DARK/.test(board),
   'it is outside the `guides` branch, so every transparent post exports with'
   + ' a grey checkerboard baked into it');
 

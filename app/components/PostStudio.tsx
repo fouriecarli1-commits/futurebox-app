@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Circle, Columns2, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, Circle, Columns2, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -141,7 +141,7 @@ import {
 } from '../lib/postdesigns';
 import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
-import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/magicedit';
+import { MAGIC_ASKS, brushRect, cropOf, laidIn, padded, type Brush, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
 import { accessToken, getStorageClient } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
@@ -228,6 +228,18 @@ const PREVIEW_LONGEST = 540;
  * JPEG of it fits the route's body on the first rung of the ladder.
  */
 const THINGS_SIDE = 1600;
+
+/**
+ * The checkerboard under a see-through post, on screen only.
+ *
+ * Light, the way every editor shows see-through. It was two dark greys, and
+ * on the dark room a transparent post looked like a black one — Carli, 16
+ * October 2026: *"Ek sien ook nog nerens transparent en dat dit werk nie."*
+ * Two greys that nothing else in a post is likely to be exactly, so the
+ * probe can tell the guide from the picture.
+ */
+const CHECK_LIGHT = '#e7e7ea';
+const CHECK_DARK = '#c8c8ce';
 
 /** The least height a tool's controls get under the photo on a phone. */
 const UNDER_LEAST = 200;
@@ -851,7 +863,10 @@ export default function PostStudio({
   const [rightMenu, setRightMenu] = useState<{ x: number; y: number } | null>(null);
   /* The magic touch: where she tapped, how big a part, and what it becomes. */
   const [magicSpot, setMagicSpot] = useState<{ readonly x: number; readonly y: number } | null>(null);
-  const [magicSize, setMagicSize] = useState(0.14);
+  const [magicSize, setMagicSize] = useState(0.06);
+  /* What her finger painted over, stroke by stroke, as shares of the photograph. */
+  const [magicStrokes, setMagicStrokes] = useState<Brush['strokes']>([]);
+  const brushing = useRef(false);
   const [magicInto, setMagicInto] = useState('');
   const [magicBusy, setMagicBusy] = useState('');
   const [picked, setPicked] = useState<Pick | null>(null);
@@ -1225,6 +1240,17 @@ export default function PostStudio({
     setLookNow(towards(one.look, share));
     setFilterOn({ id: one.id, share, all: toneAll });
   };
+  /* With no photograph there is only the whole picture to change — a
+     template, a grid, words on a colour — so Adjust and Filters change that
+     rather than a photo that is not there; when one comes in, the photo
+     again, as it always started. */
+  const hadPicture = useRef(true);
+  useEffect(() => {
+    const has = Boolean(picture);
+    if (has === hadPicture.current) return;
+    hadPicture.current = has;
+    setToneAll(!has);
+  }, [picture]);
   /* Put back as it came — by Adjust, a new photograph, an undo — and no
      filter is on any more, so none is shown as chosen. */
   useEffect(() => {
@@ -1563,7 +1589,7 @@ export default function PostStudio({
       const step = Math.max(6, Math.round(to.width / 12));
       for (let y = 0; y < to.height; y += step) {
         for (let x = 0; x < to.width; x += step) {
-          ctx.fillStyle = ((x / step) + (y / step)) % 2 === 0 ? '#3f3f46' : '#27272a';
+          ctx.fillStyle = ((x / step) + (y / step)) % 2 === 0 ? CHECK_LIGHT : CHECK_DARK;
           ctx.fillRect(x, y, step, step);
         }
       }
@@ -1647,18 +1673,35 @@ export default function PostStudio({
         ctx.restore();
       }
 
-      /* The part the magic touch will send, as a neon ring. Guides only. */
+      /* What the magic touch will send: the paint she laid on, see-through
+         neon so the photo shows under it, and a ring the size of the brush
+         where her finger last was. Guides only. */
       if (guides && bench === 'magic' && magicSpot) {
-        const cx = at.left + magicSpot.x * at.width;
-        const cy = at.top + magicSpot.y * at.height;
         const r = magicSize * Math.min(at.width, at.height);
         ctx.save();
-        ctx.lineWidth = Math.max(2, size.width / 180);
-        ctx.setLineDash([ctx.lineWidth * 3, ctx.lineWidth * 2]);
+        ctx.beginPath();
+        ctx.rect(at.left, at.top, at.width, at.height);
+        ctx.clip();
+        ctx.beginPath();
+        for (const stroke of magicStrokes) {
+          stroke.forEach((p, i) => {
+            const x = at.left + p.x * at.width;
+            const y = at.top + p.y * at.height;
+            if (i === 0) { ctx.moveTo(x, y); ctx.lineTo(x + 0.01, y); } else ctx.lineTo(x, y);
+          });
+        }
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = r * 2;
+        ctx.strokeStyle = 'rgba(57,255,20,0.38)';
+        ctx.stroke();
+        ctx.lineWidth = Math.max(2, size.width / 260);
         ctx.strokeStyle = '#39ff14';
         ctx.shadowColor = '#39ff14';
-        ctx.shadowBlur = 14;
-        ctx.strokeRect(cx - r, cy - r, r * 2, r * 2);
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(at.left + magicSpot.x * at.width, at.top + magicSpot.y * at.height, r, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
 
@@ -2319,7 +2362,7 @@ export default function PostStudio({
     compare, toneAll,
     /* The photo grid, and a frame being placed. */
     cells, cellOn, editingCell, framing,
-    marks, markOn, bench, magicSpot, magicSize]);
+    marks, markOn, magicStrokes, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
 
@@ -2470,11 +2513,16 @@ export default function PostStudio({
       setPicked(pickAt(found, put.x, put.y));
       return;
     }
-    /* The magic touch is a mode too: while its bench is out, a tap marks the
-       part the AI will work on, and nothing else. */
+    /* The magic touch is a mode too: while its bench is out, a finger
+       paints over the part the AI will work on, and does nothing else. */
     if (bench === 'magic' && picture) {
       const put = shareAt(event);
-      if (put && put.x >= 0 && put.x <= 1 && put.y >= 0 && put.y <= 1) setMagicSpot(put);
+      if (put && put.x >= 0 && put.x <= 1 && put.y >= 0 && put.y <= 1) {
+        brushing.current = true;
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setMagicStrokes((was) => [...was, [put]]);
+        setMagicSpot(put);
+      }
       return;
     }
     /* ── The words next, because a thumb on a word means the word ─────
@@ -2642,6 +2690,15 @@ export default function PostStudio({
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    /* The brush, while her finger is down on the magic touch. */
+    if (brushing.current) {
+      const put = shareAt(event);
+      if (!put) return;
+      const p = { x: Math.min(1, Math.max(0, put.x)), y: Math.min(1, Math.max(0, put.y)) };
+      setMagicStrokes((was) => (was.length ? [...was.slice(0, -1), [...was[was.length - 1], p]] : [[p]]));
+      setMagicSpot(p);
+      return;
+    }
     /* A grid photo being moved about inside its frame: the same `moveBy`
        as the main photograph, against the frame instead of the post. */
     const holding = cellHeld.current;
@@ -2756,6 +2813,7 @@ export default function PostStudio({
   };
 
   const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    brushing.current = false;
     cellHeld.current = null;
     lastAt.current = null;
     grip.current = null;
@@ -2820,6 +2878,7 @@ export default function PostStudio({
       setPicking(false);
       setPicked(null);
       setMagicSpot(null);
+      setMagicStrokes([]);
       URL.revokeObjectURL(img.src);
     };
     img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
@@ -3779,6 +3838,7 @@ export default function PostStudio({
       setPicking(false);
       setPicked(null);
       setMagicSpot(null);
+      setMagicStrokes([]);
       setWords(newWords);
       setWordOn(null);
       setBench('text');
@@ -4031,8 +4091,9 @@ export default function PostStudio({
 
   const grabLine = (one: Pick): void => {
     const at = middleOf(one);
+    const id = freshId();
     setWords((was) => [...was, {
-      id: freshId(),
+      id,
       z: frontZ(marks, was),
       text: one.text,
       face: FACES[0].id,
@@ -4047,6 +4108,11 @@ export default function PostStudio({
     setPicking(false);
     setFound(null);
     setPicked(null);
+    /* Chosen, so its ring shows. White words lifted exactly onto the same
+       words in the photograph look like nothing happened — Carli, 16
+       October 2026: *"huidiglik lyk dit of niks gegrab word nie"*. */
+    setWordOn(id);
+    setMarkOn(null);
     setBench('text');
     setSaid(t(
       'post.lineGrabbed',
@@ -4456,7 +4522,7 @@ export default function PostStudio({
     const wide = picture.naturalWidth || picture.width;
     const tall = picture.naturalHeight || picture.height;
     let rect: Rect;
-    let shape: 'circle' | 'box';
+    let shape: 'box' | Brush;
     if (thing) {
       rect = padded({
         left: Math.round(thing.x * wide),
@@ -4466,9 +4532,11 @@ export default function PostStudio({
       }, wide, tall, 0.25);
       shape = 'box';
     } else {
-      if (!magicSpot) { setSaid(t('post.magicTap', 'Tap the part of the photo first.')); return; }
-      rect = spotRect(magicSpot.x, magicSpot.y, magicSize, wide, tall);
-      shape = 'circle';
+      const brush: Brush = { strokes: magicStrokes, r: magicSize };
+      const reach = brushRect(brush, wide, tall);
+      if (!reach) { setSaid(t('post.magicPaintFirst', 'Paint over the part of the photo first.')); return; }
+      rect = padded(reach, wide, tall, 0.2);
+      shape = brush;
     }
     const into = magicInto.trim();
     if (how === 'change' && !into) {
@@ -4513,6 +4581,7 @@ export default function PostStudio({
           setWhole(picture);
           setPicture(made);
           setMagicSpot(null);
+          setMagicStrokes([]);
           if (thing) { setFound(null); setPicked(null); setPicking(false); }
           setSaid(t('post.magicDone', 'Done. Only that part changed \u2014 press Put it back if you liked it better before.'));
         }, () => setSaid(t('post.askUnreadable', 'What came back could not be read as a picture.')));
@@ -5256,8 +5325,8 @@ export default function PostStudio({
         className={back === null ? VUL.replace('w-full ', '') : LEEG}
       >
         {back === null
-          ? t('post.clearOn', 'Nothing behind it')
-          : t('post.clearOff', 'Take the background off')}
+          ? t('post.clearOn', 'Transparent \u2014 nothing behind it')
+          : t('post.clearOff', 'Make it transparent')}
       </button>
     </div>
 
@@ -6206,8 +6275,13 @@ export default function PostStudio({
         No "sharpen". A canvas filter has none, and raising contrast and
         calling it focus would be a control that lies about what it did:
         nothing recovers a photograph that was soft when it was taken.
-        `AUTO` is honest about being a lift. */}
-    {picture && (
+        `AUTO` is honest about being a lift.
+
+        Shown with no photograph too. Carli, 16 October 2026: *"Adjust se
+        funksies kom nie uit nie"* — on a template or a grid there is no one
+        photograph, the panel was empty, and the tool looked broken. Then it
+        changes the whole picture, which is all there is to change. */}
+    {(
       <div
         data-postlook
         className="space-y-3 rounded-xl border p-3"
@@ -6218,7 +6292,7 @@ export default function PostStudio({
         {/* Which layer this changes — the photo alone, or the whole
             picture with its words and shapes. Chosen here or in Layers. */}
         <div className={RY} data-postlooktarget={toneAll ? 'all' : 'photo'}>
-          <button
+          {picture && <button
             type="button"
             data-postlookon="photo"
             aria-pressed={!toneAll}
@@ -6227,7 +6301,7 @@ export default function PostStudio({
           >
             <ImageIcon className="h-3.5 w-3.5" />
             {t('post.lookOnPhoto', 'The photo')}
-          </button>
+          </button>}
           <button
             type="button"
             data-postlookon="all"
@@ -7058,19 +7132,46 @@ export default function PostStudio({
            the screen, and Carli read it as the magic touch not working
            (15 October 2026). */
         <div className="space-y-3">
-          <p className="text-[13px] font-semibold" style={{ color: magicSpot ? '#39ff14' : INK }} data-postmagicsays>
-            {magicSpot ? t('post.magicReady', 'That part is marked. Choose what the AI does.') : t('post.magicTap', 'Tap the part of the photo first.')}
+          <p className="text-[13px] font-semibold" style={{ color: magicStrokes.length ? '#39ff14' : INK }} data-postmagicsays>
+            {magicStrokes.length
+              ? t('post.magicReady', 'That part is painted. Paint more, or choose what the AI does.')
+              : t('post.magicPaint', 'Paint over the part of the photo to fix.')}
           </p>
           <label className="block space-y-1">
-            <span className="text-[11px]" style={{ color: INK_DIM }}>{t('post.magicSize', 'How big a part')}</span>
+            <span className="text-[11px]" style={{ color: INK_DIM }}>{t('post.magicSize', 'Brush size')}</span>
             <input
-              type="range" min={0.05} max={0.35} step={0.01}
+              type="range" min={0.015} max={0.2} step={0.005}
               value={magicSize}
               data-postmagicsize
               onChange={(event) => setMagicSize(Number(event.target.value))}
               className="w-full accent-emerald-400"
             />
           </label>
+          {magicStrokes.length > 0 && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                data-postmagicundo
+                onClick={() => {
+                  const left = magicStrokes.slice(0, -1);
+                  setMagicStrokes(left);
+                  const last = left[left.length - 1];
+                  setMagicSpot(last ? last[last.length - 1] : null);
+                }}
+                className={`${LEEG} flex-1`}
+              >
+                {t('post.magicUndo', 'Take back a stroke')}
+              </button>
+              <button
+                type="button"
+                data-postmagicclear
+                onClick={() => { setMagicStrokes([]); setMagicSpot(null); }}
+                className={`${LEEG} flex-1`}
+              >
+                {t('post.magicAgain', 'Start over')}
+              </button>
+            </div>
+          )}
           {magicButtons()}
         </div>
       )}
@@ -7424,6 +7525,7 @@ export default function PostStudio({
           things.current.clear();
           setGrabbed(null);
           setMagicSpot(null);
+          setMagicStrokes([]);
           lastMask.current = null;
           smear.current = null;
           setSmeared(0);
@@ -7812,7 +7914,7 @@ export default function PostStudio({
         )}
         {compareButton}
         <div className={RY} data-postlooktarget={toneAll ? 'all' : 'photo'}>
-          <button
+          {picture && <button
             type="button"
             data-postfilteron="photo"
             aria-pressed={!toneAll}
@@ -7821,7 +7923,7 @@ export default function PostStudio({
           >
             <ImageIcon className="h-3.5 w-3.5" />
             {t('post.lookOnPhoto', 'The photo')}
-          </button>
+          </button>}
           <button
             type="button"
             data-postfilteron="all"
@@ -8034,6 +8136,10 @@ export default function PostStudio({
     if (bench !== next) setAsking(false);
   };
   const stripsUp = Boolean((picture && (cropBox || traced)) || picking || movingWords);
+  /* The magic brush paints ON the photograph, so its panel keeps to the space
+     under it like the bars do — a panel up to the middle of the photo left
+     half of it out of the brush's reach. */
+  const brushUp = bench === 'magic' && picture !== null;
   /* ── On a phone, a tool opens UNDER the photograph ─────────────────────
      Carli, 15 October 2026, a red ring drawn round the empty black under a
      square photo: *"Kan die funksies in plaas van dat dit oor die prent op
@@ -8055,7 +8161,11 @@ export default function PostStudio({
     const measure = (): void => {
       const box = el.getBoundingClientRect();
       const ratio = size.width / size.height;
-      const room = { w: Math.max(0, box.width - 16), h: Math.max(0, box.height - 16) };
+      /* While a bar acts on the photograph on a phone, the photograph makes
+         room for it, so none of it is under the bar — a story is as tall as
+         the screen, and the bar lay over its foot. */
+      const keep = !upright ? 0 : stripsUp ? STRIP_LEAST + 4 : brushUp ? UNDER_LEAST + 4 : 0;
+      const room = { w: Math.max(0, box.width - 16), h: Math.max(0, box.height - 16 - keep) };
       const w = Math.max(80, Math.floor(Math.min(room.w, room.h * ratio)));
       setFitted({ w, h: Math.floor(w / ratio), room: box.height });
     };
@@ -8063,7 +8173,7 @@ export default function PostStudio({
     const watch = new ResizeObserver(measure);
     watch.observe(el);
     return () => watch.disconnect();
-  }, [size.width, size.height, upright]);
+  }, [size.width, size.height, upright, stripsUp, brushUp]);
 
   const undoRedo = (picture !== null || told > 0) ? (
     <>
@@ -8473,10 +8583,27 @@ export default function PostStudio({
       {cropStrip}
       {traceStrip}
       {picking && (
+        /* Small, so the photograph stays in sight above it. Carli, 16
+           October 2026: *"Mens kan nie die prent sien tydens die grab nie"*
+           and *"Daai funksies wat op gepop het wil ook nie weg gaan nie"* —
+           a tall bar over the foot of a story, and a Done that opened the
+           Grab panel again. One line of what was tapped with Done beside
+           it, then the buttons for it; Done closes everything. */
         <div data-postlinebar className="flex-shrink-0 space-y-2 px-3 py-2">
-          <p data-postlinesaid className="text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
-            {picked ? `“${picked.text}”` : t('post.tapALine', 'Tap a line of writing on the picture.')}
-          </p>
+          <div className="flex items-center gap-2">
+            <p data-postlinesaid className="min-w-0 flex-1 truncate text-[12px]" style={{ color: picked ? '#39ff14' : INK_DIM }}>
+              {picked ? `“${picked.text}”` : t('post.tapALine', 'Tap a line of writing on the picture.')}
+            </p>
+            <button
+              type="button"
+              data-postlinedone
+              onClick={() => { setPicking(false); setFound(null); setPicked(null); setBench(null); }}
+              className="inline-flex h-11 flex-shrink-0 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-black"
+            >
+              <Check className="h-4 w-4" />
+              {t('post.lineDone', 'Done')}
+            </button>
+          </div>
           {picked && things.current.has(picked.id) && (
             <div className={RY3}>
               <button type="button" data-postthinglift onClick={() => liftThing(picked)} className={LEEG}>
@@ -8488,7 +8615,7 @@ export default function PostStudio({
           {picked && !things.current.has(picked.id) && (
             <div className={RY3}>
               <button type="button" data-postlinegrab onClick={() => grabLine(picked)} className={LEEG}>
-                {t('post.lineGrab', 'Lift it onto the picture')}
+                {t('post.lineGrab', 'Make it text')}
               </button>
               <button type="button" data-postlinedrop onClick={() => dropLine(picked)} className={LEEG}>
                 {t('post.lineDrop', 'Take it out')}
@@ -8503,14 +8630,6 @@ export default function PostStudio({
               </button>
             </div>
           )}
-          <button
-            type="button"
-            data-postlinedone
-            onClick={() => { setPicking(false); setFound(null); setPicked(null); setBench('read'); }}
-            className={VUL}
-          >
-            {t('post.lineDone', 'Done with the words')}
-          </button>
         </div>
       )}
       {(picture !== null || words.length > 0) && movingWords ? (
@@ -8844,6 +8963,7 @@ export default function PostStudio({
                 style={{
                   height: !fitted ? UNDER_LEAST
                     : stripsUp ? Math.max(STRIP_LEAST, fitted.room - fitted.h - 20)
+                      : brushUp ? Math.max(UNDER_LEAST, fitted.room - fitted.h - 20)
                       : Math.max(UNDER_LEAST, Math.round(fitted.room - 8 - fitted.h / 2)),
                 }}
               >

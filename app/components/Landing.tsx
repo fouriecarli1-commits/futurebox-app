@@ -151,11 +151,15 @@ export default function Landing({
         <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-emerald-600/20 blur-[120px]" />
         <div className="absolute -right-40 top-1/3 h-[500px] w-[500px] rounded-full bg-cyan-600/15 blur-[150px]" />
         <div className="absolute bottom-10 left-1/4 h-80 w-80 rounded-full bg-emerald-900/20 blur-[100px]" />
+        {/* The same grid as every room, in the theme's ink. It was white at
+            three per cent inside a sixty per cent layer — under two per cent,
+            which no screen shows (Carli, 16 October 2026: the grid "is nie
+            agter die make studio en landing page nie"). */}
         <div
-          className="absolute inset-0 opacity-60"
+          className="absolute inset-0"
           style={{
             backgroundSize: '40px 40px',
-            backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(to right, rgb(var(--fb-ink) / 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgb(var(--fb-ink) / 0.05) 1px, transparent 1px)',
           }}
         />
       </div>

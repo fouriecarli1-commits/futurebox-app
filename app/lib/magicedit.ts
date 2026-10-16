@@ -51,14 +51,43 @@ export function padded(rect: Rect, wide: number, tall: number, share = 0.2): Rec
   return { left, top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
 }
 
-/** The square around a tapped spot, given as shares of the photograph. */
-export function spotRect(x: number, y: number, r: number, wide: number, tall: number): Rect {
-  const side = r * Math.min(wide, tall);
-  const left = Math.max(0, Math.round(x * wide - side));
-  const top = Math.max(0, Math.round(y * tall - side));
-  const right = Math.min(wide, Math.round(x * wide + side));
-  const bottom = Math.min(tall, Math.round(y * tall + side));
-  return { left, top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
+/**
+ * Paint over the part, rather than a box round it.
+ *
+ * Carli, 16 October 2026: *"Magic se crop box werk nie, moet dit in elkgeval
+ * nie 'n paint brush wees wat oor 'n gedeelte verf en dit word dan ai gemaster
+ * en gefix."* Each stroke is the points her finger went through, as shares of
+ * the photograph; `r` is the brush's half-width as a share of the shorter
+ * side. The box sent is the strokes' reach, and only what was painted is laid
+ * back.
+ */
+export interface Brush {
+  readonly strokes: readonly (readonly { readonly x: number; readonly y: number }[])[];
+  readonly r: number;
+}
+
+/** The box that holds every painted stroke, brush width and all, in the photograph's pixels. */
+export function brushRect(brush: Brush, wide: number, tall: number): Rect | null {
+  const side = brush.r * Math.min(wide, tall);
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+  for (const stroke of brush.strokes) {
+    for (const p of stroke) {
+      left = Math.min(left, p.x * wide - side);
+      top = Math.min(top, p.y * tall - side);
+      right = Math.max(right, p.x * wide + side);
+      bottom = Math.max(bottom, p.y * tall + side);
+    }
+  }
+  if (!Number.isFinite(left)) return null;
+  const l = Math.max(0, Math.floor(left));
+  const t = Math.max(0, Math.floor(top));
+  const r = Math.min(wide, Math.ceil(right));
+  const b = Math.min(tall, Math.ceil(bottom));
+  if (r - l < 1 || b - t < 1) return null;
+  return { left: l, top: t, width: r - l, height: b - t };
 }
 
 /** That part of the picture, on a canvas of its own. */
@@ -74,8 +103,9 @@ export function cropOf(picture: CanvasImageSource, rect: Rect): HTMLCanvasElemen
  * The photograph with `result` laid into `rect`, softly.
  *
  * `shape` decides the soft mask: a circle for a tapped spot, a box for a
- * found thing. The softness is a share of the shorter side, so a small spot
- * gets a small feather and a big one a big one.
+ * found thing, or the painted strokes themselves. The softness is a share of
+ * the shorter side, so a small spot gets a small feather and a big one a big
+ * one; a brush is feathered by its own width instead.
  */
 export function laidIn(
   picture: CanvasImageSource & { width: number; height: number },
@@ -83,7 +113,7 @@ export function laidIn(
   tall: number,
   result: CanvasImageSource,
   rect: Rect,
-  shape: 'circle' | 'box',
+  shape: 'circle' | 'box' | Brush,
   soft = 0.16,
 ): HTMLCanvasElement {
   const out = document.createElement('canvas');
@@ -110,7 +140,26 @@ export function laidIn(
   if (!m) return out;
   m.filter = `blur(${Math.round(feather / 2)}px)`;
   m.fillStyle = '#fff';
-  if (shape === 'circle') {
+  if (typeof shape === 'object') {
+    /* The strokes, where they lie in the piece, a little thinner than the
+       brush so the blur fades them to nothing at the brush's own edge. */
+    const side = shape.r * Math.min(wide, tall);
+    const edge = Math.max(2, Math.round(side * 0.5));
+    m.filter = `blur(${Math.round(edge / 2)}px)`;
+    m.strokeStyle = '#fff';
+    m.lineCap = 'round';
+    m.lineJoin = 'round';
+    m.lineWidth = Math.max(2, side * 2 - edge);
+    m.beginPath();
+    for (const stroke of shape.strokes) {
+      stroke.forEach((p, i) => {
+        const x = p.x * wide - rect.left;
+        const y = p.y * tall - rect.top;
+        if (i === 0) { m.moveTo(x, y); m.lineTo(x + 0.01, y); } else m.lineTo(x, y);
+      });
+    }
+    m.stroke();
+  } else if (shape === 'circle') {
     m.beginPath();
     m.ellipse(rect.width / 2, rect.height / 2, Math.max(1, rect.width / 2 - feather), Math.max(1, rect.height / 2 - feather), 0, 0, Math.PI * 2);
     m.fill();

@@ -135,8 +135,10 @@ try {
   check('  and tapping it picks that line', /MARKET|DAY/i.test(took), took || 'nothing picked');
   await page.locator('[data-postlinedone]').click();
   await page.waitForTimeout(400);
-  await page.locator('[data-cutbench="read"]').first().click();
-  await page.waitForTimeout(400);
+  /* Done closes everything — Carli, 16 October 2026: the panels that popped
+     up "wil ook nie weg gaan nie". */
+  check('  and Done puts every panel away, the photograph clear again',
+    (await page.locator('[data-postlinebar], [data-postbenchpanel]').count()) === 0);
 
   /* ── The purple eye: a place, a kind of post, its own shape ─────────── */
   await page.locator('[data-postsocial]').click();
