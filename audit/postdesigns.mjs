@@ -80,6 +80,33 @@ try {
   await page.waitForTimeout(1200);
   check('Photo dump makes four frames to fill', (await photoRows()) === 4);
   check('  on its own colour', near(await pixel(0.5, 0.995), [0xf5, 0xf1, 0xe6]), String(await pixel(0.5, 0.995)));
+  /* ── A frame of her own, placed by hand — for a template's artwork ── */
+  await tool('starts');
+  await page.locator('[data-postdesign="quoteCard"]').click();
+  await page.waitForTimeout(900);
+  const plain = await pixel(0.5, 0.5);
+  await tool('grid');
+  await page.locator('[data-postaddframe]').click();
+  await page.waitForTimeout(500);
+  check('Add a photo frame puts one on, picked, with Move on', (await page.locator('[data-postcellbarbutton="place"][aria-pressed="true"]').count()) === 1);
+  const framed = await pixel(0.5, 0.5);
+  check('  and it shows where it is', !near(framed, plain, 6), `${plain} → ${framed}`);
+  const glass = await page.locator('[data-postcanvas]').boundingBox();
+  const drag = async (fx, fy, tx, ty) => {
+    await page.mouse.move(glass.x + glass.width * fx, glass.y + glass.height * fy);
+    await page.mouse.down();
+    for (let n = 1; n <= 10; n += 1) {
+      await page.mouse.move(glass.x + glass.width * (fx + ((tx - fx) * n) / 10), glass.y + glass.height * (fy + ((ty - fy) * n) / 10));
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+  };
+  await drag(0.5, 0.5, 0.25, 0.3);
+  check('dragging it moves the frame', near(await pixel(0.6, 0.6), plain, 6) && !near(await pixel(0.25, 0.3), plain, 6),
+    `${await pixel(0.6, 0.6)} / ${await pixel(0.25, 0.3)}`);
+  await drag(0.45, 0.5, 0.85, 0.8);
+  check('  and its corner makes it bigger', !near(await pixel(0.75, 0.7), plain, 6), String(await pixel(0.75, 0.7)));
+
   await page.screenshot({ path: shot('postdesigns.png') });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);

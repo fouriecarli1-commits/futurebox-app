@@ -41,3 +41,30 @@ create index if not exists post_designs_created_idx
   on public.post_designs (created_at desc);
 
 alter table public.post_designs enable row level security;
+
+-- ───────────────────────────────────────── die prente van haar toestel af ──
+--
+-- Carli, 16 Oktober 2026: *"Ek wonder of ek templates ook van my device af
+-- kan oplaai?"* — *"Ek bedoel templates wat gestoor moet word."*
+--
+-- 'n Ontwerp wat sy elders gemaak het, kom in as 'n prent en word die
+-- template se agtergrond, met rame vir lede se foto's daarbo. Die prent lê
+-- in hierdie emmer. Publiek om te lees, want elke lid se fotoredigeerder
+-- teken dit; niemand skryf direk nie — die bediener gee net die eienaar 'n
+-- getekende oplaai, onder 'n naam wat dit self kies (`/api/designs`).
+-- Geen lid se foto's kom ooit hier nie.
+
+insert into storage.buckets (id, name, public)
+values ('designs', 'designs', true)
+on conflict (id) do update set public = true;
+
+do $$
+begin
+  execute 'drop policy if exists "read designs" on storage.objects';
+  execute $p$create policy "read designs" on storage.objects
+    for select using (bucket_id = 'designs')$p$;
+exception
+  when insufficient_privilege then
+    raise warning 'The designs bucket was made, but its read policy was refused: %. Add it by hand under Storage → designs → Policies: read for everyone, nothing else.', sqlerrm;
+end
+$$;

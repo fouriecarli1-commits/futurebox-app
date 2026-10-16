@@ -122,6 +122,15 @@ const INSIDE: Readonly<Record<string, string>> = {
   'looked.toDataURL': 'the picture on its way to the engine that says what is in'
     + ' it. It becomes a request body and nothing else — the answer is boxes and'
     + ' masks, and nothing a person could save',
+  /* ── A template's artwork, the owner's alone ──────────────────
+
+     16 October 2026: the owner can keep the picture on a post as a
+     template's background. The canvas is called `artwork`, and its blob goes
+     to the templates bucket through `/api/designs`, which opens the upload
+     only behind the owner door. A member never reaches this road. Their
+     only way out is still the paid export. */
+  'artwork.toBlob': 'the owner keeping a post\u2019s picture as a template\u2019s'
+    + ' background — uploaded behind the owner door, never a member\u2019s way out',
   /* ── One photo of a grid, edited on its own ───────────────────
 
      16 October 2026: a photo in a grid can be opened alone, toned and

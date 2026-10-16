@@ -135,14 +135,14 @@ import {
   FILTER_GROUPS, POST_FILTERS, drawFilterTile, drawSample, filterById, filterLabel, thumbOf, type FilterGroup,
 } from '../lib/postfilters';
 import {
-  DESIGNS, DESIGN_CATEGORIES, cleanDesign, designLabel, drawDesign,
+  ART_BUCKET, ART_MAX_BYTES, DESIGNS, DESIGN_CATEGORIES, artUrl, cleanDesign, designLabel, drawDesign, sizeForArt,
   type Design, type DesignCategory, type DesignMark,
 } from '../lib/postdesigns';
 import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
 import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
-import { accessToken } from '../lib/cloud';
+import { accessToken, getStorageClient } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
 import { FEED_PLATFORMS, cutOff, nearestKind, type FeedKind, type FeedPlatform } from '../lib/feedshapes';
 
@@ -619,10 +619,24 @@ function DesignTile({ design, lang }: { readonly design: Design; readonly lang: 
   useEffect(() => {
     const el = canvas.current;
     const ctx = el?.getContext('2d');
-    if (!el || !ctx) return;
-    drawDesign(ctx, design, el.width, el.height, lang, designPhoto, (id) => faceOf(id), designMark);
+    if (!el || !ctx) return undefined;
+    let art: HTMLImageElement | null = null;
+    let gone = false;
+    const paint = (): void => {
+      if (!gone) drawDesign(ctx, design, el.width, el.height, lang, designPhoto, (id) => faceOf(id), designMark, art);
+    };
+    paint();
     /* Again once the faces have loaded, so the words are in their own type. */
-    void faceReady().then(() => drawDesign(ctx, design, el.width, el.height, lang, designPhoto, (id) => faceOf(id), designMark)).catch(() => undefined);
+    void faceReady().then(paint).catch(() => undefined);
+    /* And once her uploaded artwork has arrived. */
+    const url = artUrl(design.art);
+    if (url) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => { art = img; paint(); };
+      img.src = url;
+    }
+    return () => { gone = true; };
   }, [design, lang]);
   return <canvas ref={canvas} width={180} height={Math.round(180 * tall)} aria-hidden className="w-full rounded-lg" style={{ aspectRatio: `1 / ${tall}` }} />;
 }
@@ -1161,7 +1175,7 @@ export default function PostStudio({
   const [cells, setCells] = useState<Cell[]>([]);
   const [cellOn, setCellOn] = useState<string | null>(null);
   const [gap, setGap] = useState<number>(GAPS[1]);
-  const cellHeld = useRef<{ id: string; x: number; y: number } | null>(null);
+  const cellHeld = useRef<{ id: string; x: number; y: number; mode?: 'move' | 'size' } | null>(null);
   /* One photo of the grid opened on its own, with every tool in the room
      on it — `editCell` and `finishCell` below. */
   const [editingCell, setEditingCell] = useState<string | null>(null);
@@ -1182,6 +1196,10 @@ export default function PostStudio({
   const [designSaid, setDesignSaid] = useState('');
   const [keeping, setKeeping] = useState<{ en: string; af: string; category: DesignCategory }>({ en: '', af: '', category: 'event' });
   const [designBusy, setDesignBusy] = useState(false);
+  /** Keep the photo on the post as the template's artwork, when saving one. */
+  const [keepArt, setKeepArt] = useState(true);
+  /** A picked frame is being moved and sized rather than its photo panned. */
+  const [framing, setFraming] = useState(false);
   /** The filter on, how strong, and whether it is on the photo or on all of it. */
   const [filterOn, setFilterOn] = useState<{ readonly id: string; readonly share: number; readonly all: boolean } | null>(null);
   const filterHere = filterOn && filterOn.all === toneAll ? filterOn : null;
@@ -2024,6 +2042,15 @@ export default function PostStudio({
           ctx.lineWidth = line * 0.8;
           ctx.stroke();
         }
+        /* Placing the frame: a bigger square at the corner that sizes it. */
+        if (framing) {
+          const grip = knob * 2.2;
+          ctx.fillStyle = '#a78bfa';
+          ctx.fillRect(f.w / 2 - grip / 2, f.h / 2 - grip / 2, grip, grip);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = line;
+          ctx.strokeRect(f.w / 2 - grip / 2, f.h / 2 - grip / 2, grip, grip);
+        }
         ctx.restore();
       }
     }
@@ -2278,8 +2305,8 @@ export default function PostStudio({
     photoHidden, photoAlpha, backHidden, allLook,
     /* The before-and-after line, and which look it compares. */
     compare, toneAll,
-    /* The photo grid. */
-    cells, cellOn, editingCell,
+    /* The photo grid, and a frame being placed. */
+    cells, cellOn, editingCell, framing,
     marks, markOn, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
@@ -2491,6 +2518,19 @@ export default function PostStudio({
                tools; once picked, a drag moves the photograph about inside
                its frame. An empty frame asks for a photograph. */
             const cell = layer.item as Cell;
+            /* A picked frame being placed: its bottom-right corner sizes it,
+               anywhere else inside moves it. One step back for the whole drag. */
+            if (framing && cellOn === cell.id) {
+              const f = frameOf(cell, size.width, size.height);
+              const reach = Math.max(28, size.width * 0.06);
+              const corner = Math.hypot(put.x * size.width - (f.x + f.w), put.y * size.height - (f.y + f.h)) <= reach;
+              if (corner || cellHas(cell, put.x, put.y, size.width, size.height)) {
+                beforeLayers(t('post.stepFrame', 'moving a photo frame'));
+                cellHeld.current = { id: cell.id, x: event.clientX, y: event.clientY, mode: corner ? 'size' : 'move' };
+                event.currentTarget.setPointerCapture(event.pointerId);
+                return;
+              }
+            }
             if (!cellHas(cell, put.x, put.y, size.width, size.height)) continue;
             setWordOn(null);
             setMarkOn(null);
@@ -2593,6 +2633,19 @@ export default function PostStudio({
     /* A grid photo being moved about inside its frame: the same `moveBy`
        as the main photograph, against the frame instead of the post. */
     const holding = cellHeld.current;
+    if (holding?.mode) {
+      const cell = cells.find((one) => one.id === holding.id);
+      const box = event.currentTarget.getBoundingClientRect();
+      if (!cell || box.width <= 0) return;
+      const byX = (event.clientX - holding.x) / box.width;
+      const byY = (event.clientY - holding.y) / box.height;
+      cellHeld.current = { ...holding, x: event.clientX, y: event.clientY };
+      const clamp = (n: number, low: number, high: number): number => Math.min(high, Math.max(low, n));
+      changeCell(cell.id, holding.mode === 'move'
+        ? { x: clamp(cell.x + byX, -cell.w * 0.5, 1 - cell.w * 0.5), y: clamp(cell.y + byY, -cell.h * 0.5, 1 - cell.h * 0.5) }
+        : { w: clamp(cell.w + byX, 0.08, 1.2), h: clamp(cell.h + byY, 0.08, 1.2) });
+      return;
+    }
     if (holding) {
       const cell = cells.find((one) => one.id === holding.id);
       const box = event.currentTarget.getBoundingClientRect();
@@ -3366,6 +3419,18 @@ export default function PostStudio({
      first frame rather than being thrown away, and the whole change is one
      step back. */
   const startDesign = (design: Design): void => {
+    const url = artUrl(design.art);
+    if (!url) { putDesign(design, null); return; }
+    /* Her uploaded artwork first, so the whole template lands at once and is
+       one step back. Asked for without credentials, so the post can still be
+       saved — a picture from another address otherwise locks the canvas. */
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => putDesign(design, img);
+    img.onerror = () => setSaid(t('post.designArtFail', 'That template\u2019s picture could not be fetched just now. Try it again in a moment.'));
+    img.src = url;
+  };
+  const putDesign = (design: Design, art: HTMLImageElement | null): void => {
     before(t('post.stepDesign', 'putting a photo template on'), true);
     const shape = POST_SIZES.find((one) => one.id === design.size);
     if (shape) setSize(shape);
@@ -3381,7 +3446,17 @@ export default function PostStudio({
       crop: MIDDLE,
       z: -500 + at,
     })));
-    if (carried && design.slots.length) setPicture(null);
+    if (art) {
+      /* The artwork is the post's own picture now, under the frames. */
+      setPicture(art);
+      setCrop(MIDDLE);
+      setWhole(null);
+      setPhotoHidden(false);
+      setPhotoAlpha(1);
+      lastMask.current = null;
+    } else if (carried && design.slots.length) {
+      setPicture(null);
+    }
     setWords(design.words.map((one) => ({
       id: freshId(),
       text: lang === 'af' ? one.af : one.en,
@@ -3405,6 +3480,7 @@ export default function PostStudio({
     setLook(PLAIN);
     setAllLook(PLAIN);
     setCellOn(null);
+    setFraming(false);
     setWordOn(null);
     setMarkOn(null);
     setBench(null);
@@ -3421,7 +3497,7 @@ export default function PostStudio({
     /* A post with a photo and no frames keeps the photo's place as one frame. */
     slots: cells.length
       ? cells.filter((one) => !one.hidden).map((one) => ({ x: one.x, y: one.y, w: one.w, h: one.h, turn: one.turn, look: one.look }))
-      : picture ? [{ x: 0, y: 0, w: 1, h: 1 }] : [],
+      : picture && !(keepArt && designOwner) ? [{ x: 0, y: 0, w: 1, h: 1 }] : [],
     words: words.filter((one) => !one.hidden && one.text.trim()).map((one) => {
       const at = one.at ?? atOf(one.spot);
       return {
@@ -3450,6 +3526,10 @@ export default function PostStudio({
     }
   };
 
+  /* Placing a frame ends when no frame is picked. */
+  useEffect(() => {
+    if (!cellOn && framing) setFraming(false);
+  }, [cellOn, framing]);
   /* The saved templates are read each time the Templates tool opens —
      through a ref, so the effect runs on the tool opening and nothing else. */
   const loadDesignsNow = useRef(loadDesigns);
@@ -3458,11 +3538,99 @@ export default function PostStudio({
     if (bench === 'starts') void loadDesignsNow.current();
   }, [bench]);
 
+  /* ── A picture into the templates bucket, by the server's signed upload ── */
+  const uploadArt = async (blob: Blob): Promise<string | null> => {
+    if (blob.size > ART_MAX_BYTES) return null;
+    const token = await accessToken();
+    const opened = await fetch('/api/designs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ for: 'art', type: blob.type }),
+    }).catch(() => null);
+    const said = (await opened?.json().catch(() => null)) as { path?: string; token?: string; message?: string } | null;
+    if (!opened?.ok || !said?.path || !said.token) {
+      setDesignSaid(said?.message || t('post.designArtNoUpload', 'The picture could not be uploaded just now.'));
+      return null;
+    }
+    const storage = getStorageClient();
+    if (!storage) return null;
+    const put = await storage.from(ART_BUCKET).uploadToSignedUrl(said.path, said.token, blob, { contentType: blob.type || 'image/webp' });
+    return put.error ? null : said.path;
+  };
+
+  /** The post's own picture as it shows — placed, with its look — as artwork. */
+  const artOfPicture = async (): Promise<Blob | null> => {
+    if (!picture) return null;
+    const k = Math.min(1, 1350 / Math.max(size.width, size.height));
+    const artwork = document.createElement('canvas');
+    artwork.width = Math.round(size.width * k);
+    artwork.height = Math.round(size.height * k);
+    const actx = artwork.getContext('2d');
+    if (!actx) return null;
+    actx.scale(k, k);
+    if (back) { actx.fillStyle = back; actx.fillRect(0, 0, size.width, size.height); }
+    const at = place(picture, size, crop);
+    actx.filter = filterFor(look, 1);
+    actx.drawImage(picture, at.left, at.top, at.width, at.height);
+    actx.filter = 'none';
+    paintWashes(actx, look, Math.max(0, at.left), Math.max(0, at.top), Math.min(at.width, size.width), Math.min(at.height, size.height));
+    return new Promise((done) => artwork.toBlob(done, 'image/webp', 0.9));
+  };
+
+  /* ── Templates from her device: each picture its own template ──
+     Carli, 16 October 2026: *"Ek wonder of ek templates ook van my device
+     af kan oplaai?"* Each picture is made the right size, uploaded, and
+     saved as a template of the group chosen above, named after its file.
+     She can open any of them afterwards, add frames and words, and save it
+     again. */
+  const uploadTemplates = async (files: FileList | null): Promise<void> => {
+    const list = Array.from(files ?? []).filter((one) => one.type.startsWith('image/'));
+    if (!list.length) return;
+    setDesignBusy(true);
+    let kept = 0;
+    try {
+      for (const [at, file] of list.entries()) {
+        setDesignSaid(t('post.designUploading', 'Uploading {n} of {m}\u2026').replace('{n}', String(at + 1)).replace('{m}', String(list.length)));
+        const made = await fit(file, 1350);
+        if (!made.ok) continue;
+        const path = await uploadArt(made.blob);
+        if (!path) continue;
+        const name = file.name.replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim().slice(0, 60) || t('post.designs', 'Photo templates');
+        const token = await accessToken();
+        const saved = await fetch('/api/designs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({
+            en: name, af: name, category: keeping.category, size: sizeForArt(made.width, made.height),
+            back: '#111113', art: path, slots: [], words: [], marks: [],
+          }),
+        }).catch(() => null);
+        if (saved?.ok) kept += 1;
+      }
+      setDesignSaid(kept === list.length
+        ? t('post.designUploaded', '{n} uploaded. Open one, add frames and words if you like, and save it again.').replace('{n}', String(kept))
+        : t('post.designUploadedSome', '{n} of {m} uploaded. The rest could not be read or sent.').replace('{n}', String(kept)).replace('{m}', String(list.length)));
+      setDesignGroup('saved');
+      void loadDesigns();
+    } finally {
+      setDesignBusy(false);
+    }
+  };
+
   const keepDesign = async (): Promise<void> => {
     setDesignSaid('');
     if (!keeping.en.trim()) { setDesignSaid(t('post.designNeedsName', 'Give it a name first.')); return; }
-    const design = cleanDesign(designFromPost());
-    if (!design || (!design.slots.length && !design.words.length && !design.marks.length)) {
+    let art: string | undefined;
+    if (picture && keepArt) {
+      setDesignBusy(true);
+      const blob = await artOfPicture();
+      const path = blob ? await uploadArt(blob) : null;
+      setDesignBusy(false);
+      if (!path) { setDesignSaid(t('post.designArtNoUpload', 'The picture could not be uploaded just now.')); return; }
+      art = path;
+    }
+    const design = cleanDesign({ ...(designFromPost() as object), ...(art ? { art } : {}) });
+    if (!design || (!design.art && !design.slots.length && !design.words.length && !design.marks.length)) {
       setDesignSaid(t('post.designEmpty', 'There is nothing on this post to keep as a template yet.'));
       return;
     }
@@ -6789,12 +6957,40 @@ export default function PostStudio({
         >
           {DESIGN_CATEGORIES.map((one) => <option key={one.id} value={one.id}>{designLabel(one, lang)}</option>)}
         </select>
+        {picture && (
+          <label className="flex min-h-[44px] items-center gap-2 text-xs font-semibold text-zinc-300">
+            <input
+              type="checkbox"
+              data-postdesignkeepart
+              checked={keepArt}
+              onChange={(event) => setKeepArt(event.target.checked)}
+              className="h-5 w-5 accent-emerald-500"
+            />
+            {t('post.designKeepArt', 'Keep the picture on this post as the template\u2019s background')}
+          </label>
+        )}
         <button type="button" data-postdesignsave disabled={designBusy} onClick={() => { void keepDesign(); }} className={VUL}>
           {designBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" />}
           {t('post.designSave', 'Save as a template for everyone')}
         </button>
         <p className="text-[11px] leading-relaxed text-zinc-500">
           {t('post.designKeepWhy', 'The frames are saved empty — your photos are never kept. Words, shapes, colours and the shape of the post are.')}
+        </p>
+        {/* ── Templates from her device ── */}
+        <label className={`${LEEG} cursor-pointer`} data-postdesignupload>
+          {designBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {t('post.designUpload', 'Upload templates from this device')}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            className="hidden"
+            disabled={designBusy}
+            onChange={(event) => { void uploadTemplates(event.target.files); event.target.value = ''; }}
+          />
+        </label>
+        <p className="text-[11px] leading-relaxed text-zinc-500">
+          {t('post.designUploadWhy', 'Choose one or many pictures (PNG, JPG or WebP). Each becomes a template in the group chosen above, named after its file. Open one afterwards to add photo frames and words, then save it again. Only upload designs that are yours to share.')}
         </p>
         {designSaid && <p className="text-xs font-semibold text-emerald-300" data-postdesignsaid>{designSaid}</p>}
       </div>
@@ -7677,6 +7873,25 @@ export default function PostStudio({
           ))}
         </div>
       </div>
+      {/* One frame of her own, anywhere: picked and ready to move and size —
+          for a photo slot on a template's artwork. */}
+      <button
+        type="button"
+        data-postaddframe
+        onClick={() => {
+          beforeLayers(t('post.stepAddFrame', 'adding a photo frame'));
+          const id = freshId();
+          setCells((was) => [...was, { id, x: 0.3, y: 0.3, w: 0.4, h: 0.4, image: null, crop: MIDDLE, z: -500 + was.length }]);
+          setCellOn(id);
+          setFraming(true);
+          setBench(null);
+          setSaid(t('post.frameHow', 'Drag the frame where the photo goes, and pull its corner to size it. Press Move again when it is right.'));
+        }}
+        className={LEEG}
+      >
+        <Plus className="h-3.5 w-3.5" />
+        {t('post.addFrame', 'Add a photo frame')}
+      </button>
       {cells.length > 0 && (
         <button
           type="button"
@@ -8061,6 +8276,9 @@ export default function PostStudio({
                 const order: CellLook[] = ['plain', 'round', 'polaroid'];
                 changeCell(cellNow.id, { look: order[(order.indexOf(cellNow.look ?? 'plain') + 1) % order.length] });
               }, false],
+              /* Move the frame itself, and size it by its corner — for placing
+                 frames on a template's artwork. */
+              ['place', <Move key="m" className="h-5 w-5" />, t('post.cellPlace', 'Move'), () => setFraming((was) => !was), false],
               ['drop', <Trash2 key="d" className="h-5 w-5" />, t('post.cellDropShort', 'Delete'), () => dropCell(cellNow.id), false],
             ] as const).map(([id, icon, label, run, off]) => (
               <button
@@ -8068,8 +8286,9 @@ export default function PostStudio({
                 type="button"
                 data-postcellbarbutton={id}
                 disabled={off}
+                aria-pressed={id === 'place' ? framing : undefined}
                 onClick={run}
-                className="flex min-h-[48px] min-w-[50px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold disabled:opacity-35"
+                className={`flex min-h-[48px] min-w-[44px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold disabled:opacity-35 ${id === 'place' && framing ? 'ring-2 ring-violet-400' : ''}`}
                 style={{ color: PHOTO.ink }}
               >
                 {icon}

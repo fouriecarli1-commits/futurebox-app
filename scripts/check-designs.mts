@@ -63,11 +63,22 @@ ok('  and one full of nonsense is cut down to what can be drawn',
   && cut!.slots.every((s) => s.x === 1 && s.y === 0) && cut!.words.length === 1 && cut!.words[0].glow === undefined
   && cut!.marks.length === 0, JSON.stringify(cut).slice(0, 300));
 
+ok('a template may carry artwork only under a name the upload gave it',
+  cleanDesign({ en: 'a', category: 'sale', size: 'square', art: '0b6f2c1e-1d2a-4c3b-9e8f-0a1b2c3d4e5f.webp' })?.art !== undefined
+  && cleanDesign({ en: 'a', category: 'sale', size: 'square', art: '../../avatars/x.webp' })?.art === undefined
+  && cleanDesign({ en: 'a', category: 'sale', size: 'square', art: 'https://evil.example/x.png' })?.art === undefined);
+
 const route = readFileSync('app/api/designs/route.ts', 'utf8');
+ok('the artwork upload is opened only behind the owner door, under a name the server chooses',
+  /const door = await opened\(request\);[\s\S]*?for === 'art'[\s\S]*?crypto\.randomUUID\(\)[\s\S]*?createSignedUploadUrl/.test(route));
+ok('  and taking a template out takes its artwork too', /storage\.from\(ART_BUCKET\)\.remove\(\[art\]\)/.test(route));
 ok('the server holds a saved template to the same check, going in and coming out',
   (route.match(/cleanDesign\(/g) ?? []).length >= 2 && /const door = await opened\(request\);[\s\S]*?from\('post_designs'\)\s*\.insert/.test(route));
 const sql = readFileSync('supabase/designs.sql', 'utf8');
 ok('  and the table takes no photographs and nothing over 32 kB', /pg_column_size\(design\) <= 32768/.test(sql) && /enable row level security/.test(sql));
+ok('  and the artwork bucket is read by everyone and written by nobody directly',
+  /values \('designs', 'designs', true\)/.test(sql) && /create policy "read designs" on storage\.objects\s+for select/.test(sql)
+  && !/designs[\s\S]{0,80}for (insert|update|delete)/.test(sql));
 
 if (bad) {
   console.error(`\ncheck:designs — ${bad} assertion(s) failed.\n`);

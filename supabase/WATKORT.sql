@@ -8,7 +8,7 @@
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
 -- Dit kyk na 61 tabelle, 34 kolomme wat later
--- bygekom het, 7 stoor-emmers en 59 beleide, en gee 'n ry
+-- bygekom het, 8 stoor-emmers en 60 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
 -- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
@@ -79,6 +79,7 @@ with verwag (l_eer, soort, naam) as (
     ('video.sql', 'beleid', 'storage.objects: delete own videos file'),
     ('livevideo.sql', 'beleid', 'storage.objects: put own filmed video'),
     ('avatars.sql', 'beleid', 'storage.objects: read avatars'),
+    ('designs.sql', 'beleid', 'storage.objects: read designs'),
     ('podcast.sql', 'beleid', 'storage.objects: read episodes audio'),
     ('schema.sql', 'beleid', 'storage.objects: read own audio'),
     ('cast.sql', 'beleid', 'storage.objects: read own cast picture'),
@@ -98,6 +99,7 @@ with verwag (l_eer, soort, naam) as (
     ('albumart.sql', 'emmer', 'art'),
     ('avatars.sql', 'emmer', 'avatars'),
     ('cast.sql', 'emmer', 'cast'),
+    ('designs.sql', 'emmer', 'designs'),
     ('podcast.sql', 'emmer', 'episodes'),
     ('kinderplank.sql', 'emmer', 'kidshelf'),
     ('schema.sql', 'emmer', 'tracks'),

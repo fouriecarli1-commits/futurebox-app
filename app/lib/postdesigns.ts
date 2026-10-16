@@ -87,6 +87,12 @@ export interface Design {
   readonly size: DesignSize;
   /** The colour behind everything; null is see-through. */
   readonly back: string | null;
+  /**
+   * Artwork behind the frames, uploaded by the owner from her device — a path
+   * in the public `designs` bucket (`artUrl` makes it a URL). Absent is none:
+   * every design in the starting set is drawn from its parts alone.
+   */
+  readonly art?: string;
   readonly slots: readonly DesignSlot[];
   readonly words: readonly DesignWords[];
   readonly marks: readonly DesignMark[];
@@ -260,6 +266,31 @@ export const DESIGNS: readonly Design[] = [
   },
 ];
 
+/* ── Artwork from her device ─────────────────────────────────────────────
+   Carli, 16 October 2026: *"Ek wonder of ek templates ook van my device af
+   kan oplaai?"* — *"Ek bedoel templates wat gestoor moet word."* A design
+   she made somewhere else comes in as a picture; it is kept in the public
+   `designs` bucket under a name the server gives it, and the design names
+   it by that path. */
+export const ART_PATH = /^[0-9a-f-]{36}\.(webp|jpg|png)$/;
+export const ART_BUCKET = 'designs';
+export const ART_MAX_BYTES = 3 * 1024 * 1024;
+
+/** Where a template's artwork can be looked at — the bucket is public, so this is a pure function. */
+export function artUrl(path: string | undefined): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  if (!base || !path || !ART_PATH.test(path)) return '';
+  return `${base}/storage/v1/object/public/${ART_BUCKET}/${path}`;
+}
+
+/** The post shape nearest a picture's own: tall for a story, a little tall for a post, else square. */
+export function sizeForArt(width: number, height: number): DesignSize {
+  const tall = height / Math.max(1, width);
+  if (tall >= 1.5) return 'story';
+  if (tall >= 1.12) return 'portrait';
+  return 'square';
+}
+
 /* ── A saved design, checked ─────────────────────────────────────────────
    The same function on both sides: the owner's room builds a design from
    her post and the server holds it to this before it goes into the table,
@@ -319,7 +350,9 @@ export function cleanDesign(raw: unknown): Omit<Design, 'id' | 'saved'> | null {
     return [{ kind, x, y, size: sz, ink: colour, ...(glow ? { glow } : {}), ...(opacity !== null && opacity < 1 ? { opacity } : {}), ...(stretch !== null && stretch !== 1 ? { stretch } : {}) }];
   });
   const back = d.back === null ? null : ink(d.back) ?? '#111113';
-  return { en, af, category, size, back, slots, words, marks };
+  /* Only a path this app's own upload hands out: a fresh id and an image type. */
+  const art = typeof d.art === 'string' && ART_PATH.test(d.art) ? d.art : undefined;
+  return { en, af, category, size, back, ...(art ? { art } : {}), slots, words, marks };
 }
 
 /* ── The preview ─────────────────────────────────────────────────────────── */
@@ -334,6 +367,8 @@ export function drawDesign(
   photo: (ctx: CanvasRenderingContext2D, w: number, h: number, at: number) => void,
   faceCss: (id: string) => { readonly css: string; readonly weight: number },
   mark: (ctx: CanvasRenderingContext2D, one: DesignMark, w: number, h: number) => void,
+  /** The design's uploaded artwork, once it has loaded. */
+  art?: HTMLImageElement | null,
 ): void {
   ctx.save();
   ctx.clearRect(0, 0, width, height);
@@ -349,6 +384,13 @@ export function drawDesign(
         ctx.fillRect(x, y, cell, cell);
       }
     }
+  }
+  if (art && art.naturalWidth) {
+    /* Filled from the middle, as the room places a photograph. */
+    const scale = Math.max(width / art.naturalWidth, height / art.naturalHeight);
+    const aw = art.naturalWidth * scale;
+    const ah = art.naturalHeight * scale;
+    ctx.drawImage(art, (width - aw) / 2, (height - ah) / 2, aw, ah);
   }
   design.slots.forEach((slot, at) => {
     const fx = slot.x * width;
