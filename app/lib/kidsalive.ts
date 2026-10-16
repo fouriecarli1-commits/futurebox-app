@@ -99,8 +99,13 @@ export async function packDrawing(drawing: Blob): Promise<{ data: string; mime: 
        base64,…"`, because this sent the whole data URL and the route hands
        the string straight to `inline_data`. `packpicture.ts` had always cut
        the prefix; this did not. */
-    const url = canvas.toDataURL('image/png');
-    return { data: url.slice(url.indexOf(',') + 1), mime: 'image/png' };
+    /* `packed`, not `url`. Carli, 16 October 2026: *"Bring it to life button
+       does nothing"* — this line was `const url` inside the same block as
+       `one.src = url` above, so that line read THIS name before it existed:
+       "Cannot access before initialization", thrown on every press, before
+       anything was sent and with nothing said. */
+    const packed = canvas.toDataURL('image/png');
+    return { data: packed.slice(packed.indexOf(',') + 1), mime: 'image/png' };
   } finally {
     URL.revokeObjectURL(url);
   }

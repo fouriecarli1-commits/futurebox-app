@@ -175,6 +175,45 @@ try {
   const said = await page.evaluate(() => window.__said);
   check('  Read to me reads the pages aloud, one after the other, to the end',
     said.length === 4 && said.every((one) => one.length > 20 && !/kids\./.test(one)), JSON.stringify(said).slice(0, 160));
+
+  /* ── Bring it to life ─────────────────────────────────────────────────
+     Carli, 16 October 2026: "Bring it to life button does nothing." It
+     threw before it sent anything — a name read before it was declared in
+     `packDrawing` — and what it would have said landed under the bottom bar.
+     The engine is a stand-in here; what is measured is that the press goes
+     out, as the kids room's, and that the answer is on the screen. */
+  const sent = [];
+  await page.route('**/api/google/picture', async (route) => {
+    sent.push(route.request().postDataJSON());
+    const dot = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    await route.fulfill({ status: 200, contentType: 'image/png', body: dot });
+  });
+  await page.locator('[data-kidshome]').first().click().catch(() => undefined);
+  await page.waitForTimeout(400);
+  await page.locator('[data-kidstab="draw"]').first().click();
+  await page.waitForTimeout(600);
+  const paper = page.locator('[data-kidspaper]');
+  await paper.scrollIntoViewIfNeeded();
+  const pb = await paper.boundingBox();
+  await page.mouse.move(pb.x + 50, pb.y + 50);
+  await page.mouse.down();
+  for (let step = 0; step < 15; step += 1) await page.mouse.move(pb.x + 50 + step * 8, pb.y + 50 + step * 6);
+  await page.mouse.up();
+  await page.waitForTimeout(800);
+  await page.locator('[data-kidsalive]').click();
+  await page.locator('[data-kidsaliveout], [data-kidsalivesays]').first().waitFor({ timeout: 15000 }).catch(() => undefined);
+  await page.waitForTimeout(900);
+  check('Bring it to life sends the drawing, as the kids room’s', sent.length === 1 && sent[0]?.kids === true && Boolean(sent[0]?.from?.data),
+    `${sent.length} sent`);
+  const shown = await page.evaluate(() => {
+    const el = document.querySelector('[data-kidsaliveout]');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const bar = document.querySelector('[data-kidstabs]')?.getBoundingClientRect();
+    return { top: r.top, bottom: r.bottom, barTop: bar ? bar.top : innerHeight, height: innerHeight };
+  });
+  check('  and the picture it brings back is on the screen, not under the bar',
+    shown !== null && shown.top >= 0 && shown.top < shown.barTop, JSON.stringify(shown));
   check('and nothing throws', thrown.length === 0, thrown.slice(0, 2).join(' · '));
   await page.screenshot({ path: shot('kidsloop.png') });
 } catch (problem) {

@@ -439,6 +439,14 @@ export default function KidsRoom({
   /* The last picture back from the engine, and what it said. */
   const [picture, setPicture] = useState('');
   const [picSays, setPicSays] = useState('');
+  /* What came back — the picture, or why not — brought into view. It is
+     drawn under the button, which on a phone sits on the bottom bar, so the
+     answer landed behind the bar and the press looked like nothing. */
+  useEffect(() => {
+    if (!picSays && !picture) return;
+    const shown = document.querySelector('[data-kidsaliveout], [data-kidsalivesays], [data-kidspicsays]');
+    shown?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [picSays, picture]);
   const heldPicture = useRef<string>('');
   useEffect(() => () => { if (heldPicture.current) URL.revokeObjectURL(heldPicture.current); }, []);
   const [says, setSays] = useState('');
@@ -688,7 +696,9 @@ export default function KidsRoom({
     confetti();
   };
   const alive = async (drawing: Blob): Promise<void> => {
-    const packed = await packDrawing(drawing);
+    /* Anything that throws on the way is said, not swallowed: a press that
+       does nothing at all is what a child reports as broken. */
+    const packed = await packDrawing(drawing).catch(() => null);
     if (!packed) { setPicSays(t('kids.picNotRead', 'That drawing could not be read. Try again.')); return; }
     await took(ALIVE_WORDS, packed, t('kids.aliveTitle', 'My drawing, alive'));
   };
