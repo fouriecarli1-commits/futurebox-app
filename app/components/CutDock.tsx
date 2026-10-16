@@ -59,7 +59,7 @@ export type Bench =
      are a closed set either way, and a type that has to be threaded through
      `DeskSheet` and every handler to say the same thing is a cost paid on
      every line for nothing. */
-  | 'pic' | 'frame' | 'tone' | 'read' | 'text' | 'save' | 'starts' | 'shapes' | 'magic' | 'layers'
+  | 'pic' | 'frame' | 'tone' | 'read' | 'text' | 'save' | 'starts' | 'shapes' | 'magic' | 'layers' | 'grid' | 'cell'
   | null;
 
 /* The room's own colours. Green rather than the booth's blue, and literal

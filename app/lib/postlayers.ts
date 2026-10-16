@@ -45,28 +45,34 @@ export interface Layered {
   readonly alpha?: number;
 }
 
-export interface Stacked<M, W> {
-  readonly kind: 'mark' | 'words';
+export interface Stacked<M, W, C = never> {
+  readonly kind: 'mark' | 'words' | 'cell';
   readonly id: string;
   readonly z: number;
-  readonly item: M | W;
+  readonly item: M | W | C;
 }
 
 /** Words sat over every shape before there was an order, so their place starts here. */
 export const WORDS_ABOVE = 1000;
 
+/** Photos in a grid sit under the shapes and the words unless moved (`postcells.ts`). */
+export const CELLS_BELOW = -500;
+
 /** Where a layer sits when it has never been moved. */
-export function zOf(item: Layered, kind: 'mark' | 'words', at: number): number {
+export function zOf(item: Layered, kind: 'mark' | 'words' | 'cell', at: number): number {
   if (typeof item.z === 'number' && Number.isFinite(item.z)) return item.z;
+  if (kind === 'cell') return CELLS_BELOW + at;
   return kind === 'mark' ? at : WORDS_ABOVE + at;
 }
 
 /** Every shape and line of words, back to front. Ties keep the order they were made in. */
-export function stackOf<M extends Layered, W extends Layered>(
+export function stackOf<M extends Layered, W extends Layered, C extends Layered = never>(
   marks: readonly M[],
   words: readonly W[],
-): Stacked<M, W>[] {
-  const all: Stacked<M, W>[] = [
+  cells: readonly C[] = [],
+): Stacked<M, W, C>[] {
+  const all: Stacked<M, W, C>[] = [
+    ...cells.map((item, at) => ({ kind: 'cell' as const, id: item.id, z: zOf(item, 'cell', at), item })),
     ...marks.map((item, at) => ({ kind: 'mark' as const, id: item.id, z: zOf(item, 'mark', at), item })),
     ...words.map((item, at) => ({ kind: 'words' as const, id: item.id, z: zOf(item, 'words', at), item })),
   ];
@@ -77,8 +83,8 @@ export function stackOf<M extends Layered, W extends Layered>(
 }
 
 /** The place for something new: in front of everything already there. */
-export function frontZ(marks: readonly Layered[], words: readonly Layered[]): number {
-  const stack = stackOf(marks, words);
+export function frontZ(marks: readonly Layered[], words: readonly Layered[], cells: readonly Layered[] = []): number {
+  const stack = stackOf(marks, words, cells);
   return stack.length ? stack[stack.length - 1].z + 1 : 0;
 }
 
@@ -93,8 +99,9 @@ export function movedOne(
   words: readonly Layered[],
   id: string,
   by: 1 | -1,
+  cells: readonly Layered[] = [],
 ): Map<string, number> {
-  const order = stackOf(marks, words).map((one) => one.id);
+  const order = stackOf(marks, words, cells).map((one) => one.id);
   const from = order.indexOf(id);
   const to = from + by;
   if (from >= 0 && to >= 0 && to < order.length) {

@@ -47,7 +47,7 @@ import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   Bookmark,
-  Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, ChevronUp, ChevronDown, X,
+  Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -128,6 +128,7 @@ import { liftWith, type Found } from '../lib/grabobject';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { canTouch, frontZ, movedOne, stackOf, type LayerOn } from '../lib/postlayers';
+import { GAPS, LAYOUTS, cellHas, cellsOf, frameOf, type Cell, type CellLook } from '../lib/postcells';
 import { withSaid } from '../lib/speak';
 import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
@@ -315,6 +316,8 @@ interface Step {
   readonly what: string;
   readonly words?: readonly Words[];
   readonly marks?: readonly Mark[];
+  /** The photo grid's frames and photographs — `lib/postcells.ts`. */
+  readonly cells?: readonly Cell[];
 }
 /** Steps beyond this many are forgotten, oldest first. */
 const KEEP_STEPS = 40;
@@ -502,8 +505,23 @@ const POST_LAYERS: BenchSpec = {
   label: ['post.benchLayers', 'Layers'],
   what: ['post.benchLayersWhat', 'Every layer on the picture, front to back: choose the one you are editing, or All for everything together. Hide one, move it forward or back, or make it see-through.'],
 };
+/* Carli, 16 October 2026: photos in a grid, each one tapped and edited on
+   its own — `lib/postcells.ts`. */
+const POST_GRID: BenchSpec = {
+  id: 'grid',
+  icon: <LayoutGrid className="h-5 w-5" />,
+  label: ['post.benchGrid', 'Photo grids'],
+  what: ['post.benchGridWhat', 'Two, three, four or nine photos on one post. Tap a frame to put a photo in it, then tap a photo to change just that one.'],
+};
+/** The tools of one photo in the grid — opened by tapping it, not on the bar. */
+const POST_CELL: BenchSpec = {
+  id: 'cell',
+  icon: <ImageIcon className="h-5 w-5" />,
+  label: ['post.benchCell', 'This photo'],
+  what: ['post.benchCellWhat', 'Replace it, move it about in its frame, zoom in, or open it on its own with every tool in the room.'],
+};
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_STARTS, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LAYERS, POST_LOWER[2],
+  POST_STARTS, POST_GRID, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
@@ -515,6 +533,8 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   text: ['post.toolText', 'Text'],
   shapes: ['post.toolShapes', 'Shapes'],
   layers: ['post.toolLayers', 'Layers'],
+  grid: ['post.toolGrid', 'Grids'],
+  cell: ['post.toolCell', 'Photo'],
   save: ['post.toolSave', 'Export'],
 };
 /** A tool along the foot on a phone: an icon over a word, small. */
@@ -1037,6 +1057,20 @@ export default function PostStudio({
   const [backHidden, setBackHidden] = useState(false);
   const [allLook, setAllLook] = useState<Look>(PLAIN);
   const [toneAll, setToneAll] = useState(false);
+  /* ── The photo grid — `lib/postcells.ts` ─────────────────────────────
+     Carli, 16 October 2026: *"wanneer foto's in so grid is dan moet mens op
+     een foto kan kliek en dit kan ge-edit word."* The frames and their
+     photographs, the one tapped, the gap between them, and a photo held by
+     the thumb while it is dragged about inside its frame. */
+  const [cells, setCells] = useState<Cell[]>([]);
+  const [cellOn, setCellOn] = useState<string | null>(null);
+  const [gap, setGap] = useState<number>(GAPS[1]);
+  const cellHeld = useRef<{ id: string; x: number; y: number } | null>(null);
+  /* One photo of the grid opened on its own, with every tool in the room
+     on it — `editCell` and `finishCell` below. */
+  const [editingCell, setEditingCell] = useState<string | null>(null);
+  const changeCell = (id: string, how: Partial<Cell>): void =>
+    setCells((was) => was.map((one) => (one.id === id ? { ...one, ...how } : one)));
   /* What How it reads is changing right now. */
   const lookNow = toneAll ? allLook : look;
   const setLookNow = toneAll ? setAllLook : setLook;
@@ -1128,12 +1162,12 @@ export default function PostStudio({
    */
   const before = (what: string, andWords = false): void => {
     history.current.remember(what, picture);
-    pushStep(andWords ? { pic: true, what, words, marks } : { pic: true, what });
+    pushStep(andWords ? { pic: true, what, words, marks, cells } : { pic: true, what });
   };
 
   /** Remember the words and shapes as they are, before one is thrown away. */
   const beforeLayers = (what: string): void => {
-    pushStep({ pic: false, what, words, marks });
+    pushStep({ pic: false, what, words, marks, cells });
   };
 
   /** What Put back would undo, or null when there is nothing. */
@@ -1162,8 +1196,10 @@ export default function PostStudio({
     if (!step.words || !step.marks) return;
     setWords([...step.words]);
     setMarks([...step.marks]);
+    setCells([...(step.cells ?? [])]);
     setWordOn(null);
     setMarkOn(null);
+    setCellOn(null);
   };
 
   const stepBack = (): void => {
@@ -1175,7 +1211,7 @@ export default function PostStudio({
         shot = history.current.undo(picture);
         if (!shot) continue;
       }
-      all.forward.push(step.words ? { ...step, words, marks } : step);
+      all.forward.push(step.words ? { ...step, words, marks, cells } : step);
       layersFrom(step);
       if (shot) {
         setPicture(shot.picture);
@@ -1201,7 +1237,7 @@ export default function PostStudio({
         shot = history.current.redo(picture);
         if (!shot) continue;
       }
-      all.back.push(step.words ? { ...step, words, marks } : step);
+      all.back.push(step.words ? { ...step, words, marks, cells } : step);
       layersFrom(step);
       if (shot) {
         setPicture(shot.picture);
@@ -1684,10 +1720,64 @@ export default function PostStudio({
       }
     };
 
-    for (const layer of stackOf(marks, words)) {
+    /* A photo in the grid: in its frame, placed by the same `place()` as the
+       main photograph, and clipped to the frame — rounded, or on a polaroid.
+       An empty frame says "add a photo" on the glass and is nothing in the
+       file. */
+    const drawCell = (cell: Cell, onto: CanvasRenderingContext2D): void => {
+      const f = frameOf(cell, size.width, size.height);
+      onto.save();
+      onto.translate(f.x + f.w / 2, f.y + f.h / 2);
+      if (cell.turn) onto.rotate((cell.turn * Math.PI) / 180);
+      let inner = { x: -f.w / 2, y: -f.h / 2, w: f.w, h: f.h };
+      if (cell.look === 'polaroid') {
+        const side = Math.min(f.w, f.h) * 0.05;
+        onto.save();
+        onto.shadowColor = 'rgba(0,0,0,0.35)';
+        onto.shadowBlur = side * 1.5;
+        onto.shadowOffsetY = side * 0.4;
+        onto.fillStyle = '#fbfaf6';
+        onto.fillRect(inner.x, inner.y, inner.w, inner.h);
+        onto.restore();
+        inner = { x: inner.x + side, y: inner.y + side, w: inner.w - side * 2, h: inner.h - side * 4.2 };
+      }
+      onto.beginPath();
+      if (cell.look === 'round' && typeof onto.roundRect === 'function') {
+        onto.roundRect(inner.x, inner.y, inner.w, inner.h, Math.min(inner.w, inner.h) * 0.06);
+      } else {
+        onto.rect(inner.x, inner.y, inner.w, inner.h);
+      }
+      onto.clip();
+      if (cell.image) {
+        const at = place(cell.image, { width: inner.w, height: inner.h }, cell.crop);
+        onto.drawImage(cell.image, inner.x + at.left, inner.y + at.top, at.width, at.height);
+      } else if (guides) {
+        onto.fillStyle = 'rgba(255,255,255,0.10)';
+        onto.fillRect(inner.x, inner.y, inner.w, inner.h);
+        const line = Math.max(2, size.width * 0.003);
+        onto.strokeStyle = 'rgba(255,255,255,0.55)';
+        onto.lineWidth = line;
+        onto.setLineDash([line * 4, line * 3]);
+        onto.strokeRect(inner.x + line, inner.y + line, inner.w - line * 2, inner.h - line * 2);
+        onto.setLineDash([]);
+        const plus = Math.min(inner.w, inner.h) * 0.16;
+        onto.lineWidth = Math.max(3, plus * 0.14);
+        onto.lineCap = 'round';
+        onto.beginPath();
+        onto.moveTo(inner.x + inner.w / 2 - plus / 2, inner.y + inner.h / 2);
+        onto.lineTo(inner.x + inner.w / 2 + plus / 2, inner.y + inner.h / 2);
+        onto.moveTo(inner.x + inner.w / 2, inner.y + inner.h / 2 - plus / 2);
+        onto.lineTo(inner.x + inner.w / 2, inner.y + inner.h / 2 + plus / 2);
+        onto.stroke();
+      }
+      onto.restore();
+    };
+
+    for (const layer of (editingCell ? [] : stackOf(marks, words, cells))) {
       if (layer.item.hidden) continue;
       const paint = (onto: CanvasRenderingContext2D): void => {
         if (layer.kind === 'mark') drawMark(onto, layer.item as Mark, size.width, size.height);
+        else if (layer.kind === 'cell') drawCell(layer.item as Cell, onto);
         else drawWords(layer.item as Words, onto);
       };
       /* ── A see-through layer is faded ONCE, as a whole ─────────────
@@ -1750,6 +1840,36 @@ export default function PostStudio({
             ctx.clearRect(0, 0, to.width, to.height);
             ctx.drawImage(tint, 0, 0);
           }
+        }
+        ctx.restore();
+      }
+    }
+
+    /* The tapped photo in the grid: a bright frame with handles, on the
+       screen only — the selection she pointed at in her screenshots. */
+    if (guides && cellOn && !editingCell) {
+      const cell = cells.find((one) => one.id === cellOn);
+      if (cell) {
+        const f = frameOf(cell, size.width, size.height);
+        const line = Math.max(2, size.width * 0.004);
+        const knob = Math.max(8, size.width * 0.016);
+        ctx.save();
+        ctx.translate(f.x + f.w / 2, f.y + f.h / 2);
+        if (cell.turn) ctx.rotate((cell.turn * Math.PI) / 180);
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth = line;
+        ctx.shadowColor = '#a78bfa';
+        ctx.shadowBlur = line * 3;
+        ctx.strokeRect(-f.w / 2, -f.h / 2, f.w, f.h);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ffffff';
+        for (const [cx, cy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+          ctx.beginPath();
+          ctx.arc((cx * f.w) / 2, (cy * f.h) / 2, knob, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#a78bfa';
+          ctx.lineWidth = line * 0.8;
+          ctx.stroke();
         }
         ctx.restore();
       }
@@ -2003,6 +2123,8 @@ export default function PostStudio({
     wordOn,
     /* The layer list's switches and the look over everything. */
     photoHidden, photoAlpha, backHidden, allLook,
+    /* The photo grid. */
+    cells, cellOn, editingCell,
     marks, markOn, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
@@ -2047,7 +2169,14 @@ export default function PostStudio({
     setWords((was) => was.filter((one) => one.id !== id));
     setWordOn(null);
   };
+  /* A frame of the grid taken away, photograph and all. */
+  const dropCell = (id: string): void => {
+    beforeLayers(t('post.stepDropCell', 'taking a photo frame away'));
+    setCells((was) => was.filter((one) => one.id !== id));
+    setCellOn(null);
+  };
   const dropChosen = (): boolean => {
+    if (cellOn) { dropCell(cellOn); return true; }
     if (markOn) { dropMark(markOn); return true; }
     if (wordOn) { dropWords(wordOn); return true; }
     return false;
@@ -2169,7 +2298,7 @@ export default function PostStudio({
        one a thumb takes hold of; with All, whichever is in FRONT at that
        spot — the order the layer list shows, not words-before-shapes. A
        layer switched off cannot be caught. `lib/postlayers.ts`. */
-    if (!cropBox && !traced && (words.length > 0 || marks.length > 0)) {
+    if (!cropBox && !traced && !editingCell && (words.length > 0 || marks.length > 0 || cells.length > 0)) {
       const put = frameAt(event);
       if (put) {
         /* A corner of the ring round the line already touched: pulled, it
@@ -2200,8 +2329,28 @@ export default function PostStudio({
         const px = put.x * size.width;
         const py = put.y * size.height;
         const reachMark = Math.max(18, size.width * 0.04);
-        for (const layer of [...stackOf(marks, words)].reverse()) {
+        for (const layer of [...stackOf(marks, words, cells)].reverse()) {
           if (!canTouch(layerOn, layer.item)) continue;
+          if (layer.kind === 'cell') {
+            /* A photo in the grid. The first tap picks it and opens its own
+               tools; once picked, a drag moves the photograph about inside
+               its frame. An empty frame asks for a photograph. */
+            const cell = layer.item as Cell;
+            if (!cellHas(cell, put.x, put.y, size.width, size.height)) continue;
+            setWordOn(null);
+            setMarkOn(null);
+            if (cellOn === cell.id && cell.image) {
+              cellHeld.current = { id: cell.id, x: event.clientX, y: event.clientY };
+              event.currentTarget.setPointerCapture(event.pointerId);
+              return;
+            }
+            setCellOn(cell.id);
+            /* Its tools come up as a small bar over the foot of the photo —
+               a panel would cover the very photo she just tapped. */
+            if (bench !== 'layers') setBench(null);
+            if (!cell.image) { fillingCell.current = cell.id; cellInput.current?.click(); }
+            return;
+          }
           if (layer.kind === 'words') {
             const one = layer.item as Words;
             if (!one.text.trim()) continue;
@@ -2232,6 +2381,7 @@ export default function PostStudio({
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
         }
+        if (cellOn) setCellOn(null);
         /* Missed every line: the ring lets go. Carli, 15 October 2026 —
            "Dit voel of daar nie 'n manier is om hierdie raam weg te kry
            nie." Tapping the photo anywhere else is how a selection ends in
@@ -2285,6 +2435,22 @@ export default function PostStudio({
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    /* A grid photo being moved about inside its frame: the same `moveBy`
+       as the main photograph, against the frame instead of the post. */
+    const holding = cellHeld.current;
+    if (holding) {
+      const cell = cells.find((one) => one.id === holding.id);
+      const box = event.currentTarget.getBoundingClientRect();
+      if (!cell?.image || box.width <= 0) return;
+      const per = size.width / box.width;
+      const byX = (event.clientX - holding.x) * per;
+      const byY = (event.clientY - holding.y) * per;
+      cellHeld.current = { ...holding, x: event.clientX, y: event.clientY };
+      const f = frameOf(cell, size.width, size.height);
+      const placed = place(cell.image, { width: f.w, height: f.h }, cell.crop);
+      changeCell(cell.id, { crop: moveBy(cell.crop, placed, byX, byY) });
+      return;
+    }
     const shape = markHeld.current;
     if (shape) {
       const put = frameAt(event);
@@ -2370,6 +2536,7 @@ export default function PostStudio({
   };
 
   const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    cellHeld.current = null;
     lastAt.current = null;
     grip.current = null;
     tracingNow.current = false;
@@ -2437,6 +2604,141 @@ export default function PostStudio({
     };
     img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
     img.src = made.preview;
+  };
+
+  /* ── The photo grid ───────────────────────────────────────────────────
+     `lib/postcells.ts` holds the frames; this is putting photographs in
+     them, choosing a layout, and opening one photo on its own. */
+  const cellInput = useRef<HTMLInputElement | null>(null);
+  const fillingCell = useRef<string | null>(null);
+  /** A photograph off the phone into the frame being filled. */
+  const fillCell = async (file: File | null): Promise<void> => {
+    const id = fillingCell.current;
+    fillingCell.current = null;
+    if (!file || !id) return;
+    const made = await fit(file, Math.max(size.width, size.height));
+    if (!made.ok) {
+      setSaid(made.why === 'too_many_pixels'
+        ? t('post.tooMany', 'That picture is too large to open on a phone. A photo straight off a camera often is.')
+        : t('post.badFile', 'That file could not be read as a picture.'));
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      beforeLayers(t('post.stepFillCell', 'putting a photo in the grid'));
+      changeCell(id, { image: img, crop: MIDDLE });
+      setCellOn(id);
+    };
+    img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
+    img.src = made.preview;
+  };
+  /** Ask for a photograph for this frame — the phone's own picker. */
+  const askForCell = (id: string): void => {
+    fillingCell.current = id;
+    cellInput.current?.click();
+  };
+  /** A layout, keeping the photographs already in the grid in order. */
+  const applyLayout = (id: string, nextGap = gap): void => {
+    const layout = LAYOUTS.find((one) => one.id === id);
+    if (!layout) return;
+    beforeLayers(t('post.stepLayout', 'choosing a photo grid'));
+    setCells((was) => cellsOf(layout, nextGap, size.width / size.height, freshId, was));
+    setCellOn(null);
+  };
+  /* The frames follow the layout's own shape when the gap changes. */
+  const layoutNow = useRef<string | null>(null);
+
+  /* ── One photo of the grid, on its own ────────────────────────────────
+     Carli's screenshots: tap a photo in the grid and its tools come up —
+     background off, adjust, the magic tools. Rather than teach every tool
+     in this room about frames, the photo is opened ALONE: the post steps
+     aside, the photo becomes the picture every tool already works on, and
+     Done puts the edited photo back in its frame. The post, its words, its
+     shapes and its own photograph are kept and come back exactly. */
+  const cellSession = useRef<{
+    readonly id: string;
+    readonly size: PostSize;
+    readonly picture: HTMLImageElement | null;
+    readonly crop: Crop;
+    readonly look: Look;
+    readonly whole: HTMLImageElement | null;
+    readonly history: ReturnType<typeof makeBack<HTMLImageElement>>;
+    readonly steps: { back: Step[]; forward: Step[] };
+  } | null>(null);
+  const editCell = (id: string): void => {
+    const cell = cells.find((one) => one.id === id);
+    if (!cell?.image) return;
+    const img = cell.image;
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    const scale = Math.min(1, 1350 / Math.max(w, h));
+    cellSession.current = {
+      id, size, picture, crop, look, whole,
+      history: history.current, steps: steps.current,
+    };
+    /* A history of its own, so Put back inside the photo cannot reach back
+       into the post's — and the post's comes back untouched. */
+    history.current = makeBack<HTMLImageElement>();
+    steps.current = { back: [], forward: [] };
+    setSize({ id: 'cell', name: 'Photo', width: Math.round(w * scale), height: Math.round(h * scale), furniture: false, what: { en: '', af: '' } });
+    setPicture(img);
+    setCrop(MIDDLE);
+    setLook(PLAIN);
+    setWhole(null);
+    lastMask.current = null;
+    setCellOn(null);
+    setEditingCell(id);
+    setBench('pic');
+  };
+  /** Done (`keep`) or Cancel: the photo back in its frame, the post back as it was. */
+  const finishCell = (keep: boolean): void => {
+    const was = cellSession.current;
+    if (!was) return;
+    const restore = (): void => {
+      history.current = was.history;
+      steps.current = was.steps;
+      setSize(was.size);
+      setPicture(was.picture);
+      setCrop(was.crop);
+      setLook(was.look);
+      setWhole(was.whole);
+      lastMask.current = null;
+      setEditingCell(null);
+      setCellOn(was.id);
+      /* Back to the photo's own small bar, not a panel over the grid. */
+      setBench(null);
+      cellSession.current = null;
+      setTold((n) => n + 1);
+    };
+    if (!keep || !picture) { restore(); return; }
+    /* The edited photograph, with its look baked in, at its own size. */
+    const baked = document.createElement('canvas');
+    baked.width = picture.naturalWidth || picture.width;
+    baked.height = picture.naturalHeight || picture.height;
+    const bctx = baked.getContext('2d');
+    if (!bctx) { restore(); return; }
+    bctx.filter = filterFor(look, 1);
+    bctx.drawImage(picture, 0, 0, baked.width, baked.height);
+    bctx.filter = 'none';
+    const wash = warmWash(look);
+    if (wash) {
+      bctx.globalCompositeOperation = wash.how;
+      bctx.fillStyle = wash.ink;
+      bctx.fillRect(0, 0, baked.width, baked.height);
+      bctx.globalCompositeOperation = 'destination-in';
+      bctx.drawImage(picture, 0, 0, baked.width, baked.height);
+      bctx.globalCompositeOperation = 'source-over';
+    }
+    const done = new Image();
+    done.onload = () => {
+      restore();
+      /* One step on the post's own history: the whole photo edit, undone in one. */
+      steps.current.back.push({ pic: false, what: t('post.stepEditCell', 'editing a photo in the grid'), words, marks, cells });
+      steps.current.forward = [];
+      changeCell(was.id, { image: done });
+    };
+    done.onerror = () => restore();
+    done.src = baked.toDataURL('image/png');
   };
 
   /**
@@ -6587,23 +6889,28 @@ export default function PostStudio({
      natuurlik 'n all layer wat alles by mekaar het."* Front at the top, the
      way every editor lists them; All above that. `lib/postlayers.ts` holds
      the order and what "chosen" means to a thumb. */
-  const stackNow = stackOf(marks, words);
+  const stackNow = stackOf(marks, words, cells);
   const chooseLayer = (on: LayerOn): void => {
     setLayerOn(on);
     const line = words.find((one) => one.id === on);
     const mark = marks.find((one) => one.id === on);
+    const cell = cells.find((one) => one.id === on);
     setWordOn(line && line.text.trim() ? line.id : null);
     setMarkOn(mark ? mark.id : null);
+    setCellOn(cell ? cell.id : null);
     /* How it reads follows the layer: the photograph's own look for the
        photo, the look over everything for All. */
     if (on === 'all') setToneAll(true);
     if (on === 'photo') setToneAll(false);
   };
-  const hideLayer = (id: string, kind: 'mark' | 'words', hidden: boolean): void => {
+  const hideLayer = (id: string, kind: 'mark' | 'words' | 'cell', hidden: boolean): void => {
     beforeLayers(hidden
       ? t('post.stepHideLayer', 'switching a layer off')
       : t('post.stepShowLayer', 'switching a layer on'));
-    if (kind === 'mark') {
+    if (kind === 'cell') {
+      changeCell(id, { hidden });
+      if (hidden && cellOn === id) setCellOn(null);
+    } else if (kind === 'mark') {
       setMarks((was) => was.map((one) => (one.id === id ? { ...one, hidden } : one)));
       if (hidden && markOn === id) setMarkOn(null);
     } else {
@@ -6615,11 +6922,16 @@ export default function PostStudio({
     beforeLayers(by > 0
       ? t('post.stepLayerUp', 'moving a layer forward')
       : t('post.stepLayerDown', 'moving a layer back'));
-    const z = movedOne(marks, words, id, by);
+    const z = movedOne(marks, words, id, by, cells);
     setMarks((was) => was.map((one) => ({ ...one, z: z.get(one.id) ?? one.z })));
     setWords((was) => was.map((one) => ({ ...one, z: z.get(one.id) ?? one.z })));
+    setCells((was) => was.map((one) => ({ ...one, z: z.get(one.id) ?? one.z })));
   };
-  const layerNameOf = (kind: 'mark' | 'words', item: Mark | Words): string => {
+  const layerNameOf = (kind: 'mark' | 'words' | 'cell', item: Mark | Words | Cell): string => {
+    if (kind === 'cell') {
+      const at = cells.findIndex((one) => one.id === item.id);
+      return `${t('post.layerCell', 'Photo')} ${at + 1}${(item as Cell).image ? '' : ` · ${t('post.layerCellEmpty', 'empty')}`}`;
+    }
     if (kind === 'mark') {
       const spec = MARK_SPECS.find((one) => one.id === (item as Mark).kind) ?? MARK_SPECS[0];
       return `${spec.icon} ${t(spec.name[0], spec.name[1])}`;
@@ -6673,7 +6985,7 @@ export default function PostStudio({
         {[...stackNow].reverse().map((layer, at, list) => layerRow(
           layer.id,
           layerNameOf(layer.kind, layer.item),
-          layer.kind === 'mark' ? <Square className="h-4 w-4" /> : <Type className="h-4 w-4" />,
+          layer.kind === 'mark' ? <Square className="h-4 w-4" /> : layer.kind === 'cell' ? <LayoutGrid className="h-4 w-4" /> : <Type className="h-4 w-4" />,
           <>
             <button
               type="button"
@@ -6738,6 +7050,7 @@ export default function PostStudio({
                 const v = Number(event.target.value);
                 if (layerOn === 'photo') setPhotoAlpha(v);
                 else if (chosenItem?.kind === 'mark') changeMark(chosenItem.id, { alpha: v });
+                else if (chosenItem?.kind === 'cell') changeCell(chosenItem.id, { alpha: v });
                 else if (chosenItem) setWords((was) => was.map((one) => (one.id === chosenItem.id ? { ...one, alpha: v } : one)));
               }}
               aria-label={t('post.layerOpacity', 'Opacity')}
@@ -6754,7 +7067,7 @@ export default function PostStudio({
                 ? 'tone'
                 : layerOn === 'back'
                   ? 'frame'
-                  : chosenItem?.kind === 'mark' ? 'shapes' : 'text',
+                  : chosenItem?.kind === 'mark' ? 'shapes' : chosenItem?.kind === 'cell' ? 'cell' : 'text',
             )}
             className={LEEG}
           >
@@ -6768,6 +7081,7 @@ export default function PostStudio({
               data-postlayerdrop
               onClick={() => {
                 if (chosenItem.kind === 'mark') dropMark(chosenItem.id);
+                else if (chosenItem.kind === 'cell') dropCell(chosenItem.id);
                 else dropWords(chosenItem.id);
                 setLayerOn('all');
               }}
@@ -6790,14 +7104,147 @@ export default function PostStudio({
      so the room is never stuck answering to something that is not there. */
   useEffect(() => {
     if (layerOn === 'all' || layerOn === 'photo' || layerOn === 'back') return;
-    if (!marks.some((one) => one.id === layerOn) && !words.some((one) => one.id === layerOn)) setLayerOn('all');
-  }, [marks, words, layerOn]);
+    if (!marks.some((one) => one.id === layerOn) && !words.some((one) => one.id === layerOn)
+      && !cells.some((one) => one.id === layerOn)) setLayerOn('all');
+  }, [marks, words, cells, layerOn]);
   useEffect(() => {
     if (layerOn === 'photo' && !picture) setLayerOn('all');
   }, [picture, layerOn]);
 
+  /* ── Photo grids ─────────────────────────────────────────────────────── */
+  const tile = 'flex flex-col items-center gap-1.5 rounded-2xl border p-2 text-[11px] font-bold';
+  const gridBench = (
+    <div className="space-y-3" data-postgrids>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        {LAYOUTS.map((layout) => (
+          <button
+            key={layout.id}
+            type="button"
+            data-postlayout={layout.id}
+            onClick={() => { layoutNow.current = layout.id; applyLayout(layout.id); }}
+            className={`${tile} ${layoutNow.current === layout.id && cells.length ? GEKIES : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+          >
+            {/* The layout drawn as itself: its frames, small. */}
+            <span aria-hidden className="relative block aspect-square w-full overflow-hidden rounded-lg bg-zinc-800">
+              {layout.frames.map((f, at) => (
+                <span
+                  key={at}
+                  className={`absolute block ${layout.look === 'polaroid' ? 'border-2 border-b-[6px] border-zinc-100 bg-violet-400/70' : layout.look === 'round' ? 'rounded-md bg-violet-400/70' : 'bg-violet-400/70'}`}
+                  style={{
+                    left: `${(f.x + 0.02) * 100}%`, top: `${(f.y + 0.02) * 100}%`,
+                    width: `${(f.w - 0.04) * 100}%`, height: `${(f.h - 0.04) * 100}%`,
+                    transform: f.turn ? `rotate(${f.turn}deg)` : undefined,
+                  }}
+                />
+              ))}
+            </span>
+            <span className="truncate">{t(layout.name[0], layout.name[1])}</span>
+          </button>
+        ))}
+      </div>
+      <div className="space-y-1.5">
+        <p className={MIKRO}>{t('post.gridGap', 'Space between')}</p>
+        <div className={RY4}>
+          {GAPS.map((one, at) => (
+            <button
+              key={one}
+              type="button"
+              data-postgap={at}
+              aria-pressed={gap === one}
+              onClick={() => { setGap(one); if (layoutNow.current && cells.length) applyLayout(layoutNow.current, one); }}
+              className={`${LEEG} ${gap === one ? GEKIES : ''}`}
+            >
+              {[t('post.gapNone', 'None'), t('post.gapSmall', 'Small'), t('post.gapMedium', 'Medium'), t('post.gapLarge', 'Large')][at]}
+            </button>
+          ))}
+        </div>
+      </div>
+      {cells.length > 0 && (
+        <button
+          type="button"
+          data-postgridclear
+          onClick={() => { beforeLayers(t('post.stepGridClear', 'taking the photo grid away')); setCells([]); setCellOn(null); layoutNow.current = null; }}
+          className={LEEG}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {t('post.gridClear', 'Take the grid away')}
+        </button>
+      )}
+      <p className="text-xs leading-relaxed text-zinc-400">
+        {t('post.gridHow', 'Tap an empty frame to put a photo in it. Tap a photo to pick it; drag it to move it about in its frame.')}
+      </p>
+    </div>
+  );
+
+  /* ── One photo in the grid: its own tools, as pictures ──────────────── */
+  const cellNow = cells.find((one) => one.id === cellOn) ?? null;
+  const cellTool = (id: string, icon: React.ReactNode, label: string, run: () => void, disabled = false): React.ReactElement => (
+    <button
+      key={id}
+      type="button"
+      data-postcelltool={id}
+      disabled={disabled}
+      onClick={run}
+      className="flex w-[76px] flex-shrink-0 flex-col items-center gap-1.5 text-[11px] font-bold text-zinc-200 disabled:opacity-40"
+    >
+      <span className="grid h-14 w-14 place-items-center rounded-full border border-violet-400/40 bg-gradient-to-br from-violet-500/30 via-zinc-900 to-cyan-500/20 text-violet-200 shadow-[0_0_16px_rgba(167,139,250,0.25)]">
+        {icon}
+      </span>
+      <span className="text-center leading-tight">{label}</span>
+    </button>
+  );
+  const cellBench = cellNow ? (
+    <div className="space-y-3" data-postcell={cellNow.id}>
+      {/* Sideways on purpose: the photo's tools in one row, swiped, as her
+          screenshots have them. */}
+      <div data-sideways className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1">
+        {cellTool('replace', <Replace className="h-6 w-6" />, cellNow.image ? t('post.cellReplace', 'Replace') : t('post.cellAdd', 'Add a photo'), () => askForCell(cellNow.id))}
+        {cellTool('edit', <Wand2 className="h-6 w-6" />, t('post.cellEdit', 'Edit this photo'), () => editCell(cellNow.id), !cellNow.image)}
+        {cellTool('clear', <ImageIcon className="h-6 w-6" />, t('post.cellClear', 'Empty the frame'), () => { beforeLayers(t('post.stepClearCell', 'taking a photo out of the grid')); changeCell(cellNow.id, { image: null, crop: MIDDLE }); }, !cellNow.image)}
+        {cellTool('drop', <Trash2 className="h-6 w-6" />, t('post.cellDrop', 'Delete the frame'), () => dropCell(cellNow.id))}
+      </div>
+      {cellNow.image && (
+        <label className="flex items-center gap-2 text-xs font-bold text-zinc-300" data-postcellzoom>
+          <ZoomIn className="h-4 w-4 flex-shrink-0" />
+          <span className="w-16 flex-shrink-0">{t('post.cellZoom', 'Closer')}</span>
+          <input
+            type="range"
+            min={1}
+            max={3}
+            step={0.05}
+            value={cellNow.crop.zoom}
+            onChange={(event) => changeCell(cellNow.id, { crop: { ...cellNow.crop, zoom: Number(event.target.value) } })}
+            aria-label={t('post.cellZoom', 'Closer')}
+            className="h-9 min-w-0 flex-1 accent-violet-400"
+          />
+        </label>
+      )}
+      <div className={RY3}>
+        {(['plain', 'round', 'polaroid'] as CellLook[]).map((one) => (
+          <button
+            key={one}
+            type="button"
+            data-postcelllook={one}
+            aria-pressed={(cellNow.look ?? 'plain') === one}
+            onClick={() => changeCell(cellNow.id, { look: one })}
+            className={`${LEEG} ${(cellNow.look ?? 'plain') === one ? GEKIES : ''}`}
+          >
+            {one === 'plain' ? t('post.cellPlain', 'Straight') : one === 'round' ? t('post.cellRound', 'Rounded') : t('post.cellPolaroid', 'Polaroid')}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs leading-relaxed text-zinc-400">
+        {t('post.cellHow', 'Drag the photo to move it about in its frame. Edit this photo opens it on its own with every tool — background off, magic touch, adjust — and Done puts it back.')}
+      </p>
+    </div>
+  ) : (
+    <p className="text-sm text-zinc-400" data-postcell="none">{t('post.cellNone', 'Tap a photo in the grid to change just that one.')}</p>
+  );
+
   const benchFor: Record<string, React.ReactNode> = {
     starts: startsBench,
+    grid: gridBench,
+    cell: cellBench,
     shapes: shapesBench,
     layers: layersBench,
     magic: magicBench,
@@ -6834,7 +7281,7 @@ export default function PostStudio({
      to the space it has, measured, so it is as big as the screen allows. */
   const upright = !onEdge;
   const ALL_BENCHES = POST_TOOLS;
-  const here = ALL_BENCHES.find((one) => one.id === bench) ?? null;
+  const here = [...ALL_BENCHES, POST_CELL].find((one) => one.id === bench) ?? null;
   const chipStyle: React.CSSProperties = { background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` };
   const openBench = (next: Exclude<Bench, null>): void => {
     setBench(bench === next ? null : next);
@@ -7037,17 +7484,85 @@ export default function PostStudio({
           /* Only while there is something to pan, crop, trace or move: a
              permanent `touch-action: none` is a dead zone in a page that
              scrolls, which reads as the app being frozen. */
-          touchAction: movable || cropBox || traced || words.length > 0 || marks.length > 0 ? 'none' : 'auto',
+          touchAction: movable || cropBox || traced || words.length > 0 || marks.length > 0 || cells.length > 0 ? 'none' : 'auto',
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
+      {/* The phone's picker for a frame of the grid — there only when the
+          post has frames, so a plain post has one picker, the photo's own. */}
+      {cells.length > 0 && (
+        <input
+          ref={cellInput}
+          type="file"
+          accept={ACCEPTS}
+          data-postcellinput
+          className="hidden"
+          onChange={(event) => { void fillCell(event.target.files?.[0] ?? null); event.target.value = ''; }}
+        />
+      )}
+      {/* ── The tapped photo's own bar ─────────────────────────────────
+          Her screenshots: tap a photo in the grid and a small row of its
+          tools comes up — not a panel over the photo. Placed with flex, not
+          centred by a translate (a pressed button is given a transform of
+          its own, which moved the layer chip from under the thumb). */}
+      {cellNow && !editingCell && bench === null && (
+        <div data-postcellbar className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex justify-center">
+          <div
+            className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-1 rounded-2xl px-1.5 py-1"
+            style={{ background: PHOTO.popGlass, border: `1px solid ${PHOTO.accentDim}`, boxShadow: PHOTO.glowEmerald }}
+          >
+            {([
+              ['replace', <Replace key="r" className="h-5 w-5" />, cellNow.image ? t('post.cellReplace', 'Replace') : t('post.cellAdd', 'Add a photo'), () => askForCell(cellNow.id), false],
+              ['edit', <Wand2 key="e" className="h-5 w-5" />, t('post.cellEditShort', 'Edit'), () => editCell(cellNow.id), !cellNow.image],
+              ['closer', <ZoomIn key="z" className="h-5 w-5" />, t('post.cellZoom', 'Closer'), () => changeCell(cellNow.id, { crop: { ...cellNow.crop, zoom: Math.min(3, cellNow.crop.zoom + 0.25) } }), !cellNow.image],
+              ['further', <ZoomOut key="o" className="h-5 w-5" />, t('post.cellFurther', 'Further'), () => changeCell(cellNow.id, { crop: { ...cellNow.crop, zoom: Math.max(1, cellNow.crop.zoom - 0.25) } }), !cellNow.image || cellNow.crop.zoom <= 1],
+              ['look', <Frame key="f" className="h-5 w-5" />, t('post.cellFrame', 'Frame'), () => {
+                const order: CellLook[] = ['plain', 'round', 'polaroid'];
+                changeCell(cellNow.id, { look: order[(order.indexOf(cellNow.look ?? 'plain') + 1) % order.length] });
+              }, false],
+              ['drop', <Trash2 key="d" className="h-5 w-5" />, t('post.cellDropShort', 'Delete'), () => dropCell(cellNow.id), false],
+            ] as const).map(([id, icon, label, run, off]) => (
+              <button
+                key={id}
+                type="button"
+                data-postcellbarbutton={id}
+                disabled={off}
+                onClick={run}
+                className="flex min-h-[48px] min-w-[50px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold disabled:opacity-35"
+                style={{ color: PHOTO.ink }}
+              >
+                {icon}
+                <span className="whitespace-nowrap">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* One photo of the grid open on its own: say so, and the two ways back. */}
+      {editingCell && (
+        <div
+          data-postcellsession
+          className="absolute inset-x-2 top-2 z-20 flex items-center justify-between gap-2 rounded-2xl px-3 py-2 text-xs font-bold"
+          style={{ background: PHOTO.popGlass, color: PHOTO.ink, border: `1px solid ${PHOTO.accentDim}` }}
+        >
+          <span className="truncate">{t('post.cellEditing', 'Editing one photo of your grid')}</span>
+          <span className="flex flex-shrink-0 gap-1.5">
+            <button type="button" data-postcellcancel onClick={() => finishCell(false)} className="min-h-[36px] rounded-xl border border-zinc-600 px-3">
+              {t('post.cellCancel', 'Cancel')}
+            </button>
+            <button type="button" data-postcelldone onClick={() => finishCell(true)} className="min-h-[36px] rounded-xl px-3 text-onAccent" style={{ background: PHOTO.accent }}>
+              {t('post.cellDone', 'Done')}
+            </button>
+          </span>
+        </div>
+      )}
       {/* Which layer a thumb means, while it is not All — so a drag that
           moves nothing is never a mystery. One press goes back to All.
           Top right: Put back and Do again hold the top-left corner. And
           not centred with a translate — a pressed button is given a
           transform of its own, which replaced the centring mid-tap and
           moved the chip from under the thumb, so the press never landed. */}
-      {layerOn !== 'all' && (
+      {layerOn !== 'all' && !editingCell && (
         <button
           type="button"
           data-postlayerchip={layerOn}
@@ -7111,7 +7626,9 @@ export default function PostStudio({
       {/* Gone the moment a tool is open. Carli, 14 October 2026, with the
           templates open over it: "Die oomblik wanneer mens op templates
           kliek dan moet daai hele bar verdwyn anders is dit in die pad." */}
-      {!picture && words.length === 0 && bench === null && (
+      {/* And gone when there is a photo grid: its empty frames are the start,
+          and this card over them would catch the tap meant for a frame. */}
+      {!picture && words.length === 0 && cells.length === 0 && bench === null && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center">
           <div
             className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-2xl p-5 shadow-2xl backdrop-blur-md"

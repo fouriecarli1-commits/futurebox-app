@@ -122,6 +122,17 @@ const INSIDE: Readonly<Record<string, string>> = {
   'looked.toDataURL': 'the picture on its way to the engine that says what is in'
     + ' it. It becomes a request body and nothing else — the answer is boxes and'
     + ' masks, and nothing a person could save',
+  /* ── One photo of a grid, edited on its own ───────────────────
+
+     16 October 2026: a photo in a grid can be opened alone, toned and
+     filtered, and put back in its frame. The look is baked into a canvas
+     called `baked`, which becomes that frame's <img> — the cell's picture
+     inside the post, the same as a photo picked from the phone. No anchor
+     or object URL is made from it; the post still leaves only through the
+     paid export. */
+  'baked.toDataURL': 'a grid photo edited on its own, put back into its frame as'
+    + ' an <img> — the cell\u2019s picture inside the post, nothing a person can'
+    + ' save; the post still leaves only through the paid export',
   /* ── The picture on its way to be redrawn ─────────────────────
  
      It was `sent.toDataURL` in this room on 9 October 2026, and on the 9th
