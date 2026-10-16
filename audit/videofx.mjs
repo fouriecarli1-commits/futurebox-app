@@ -52,9 +52,10 @@ try {
 
   /* ── Effects ── */
   await bench('looks');
-  check('the effects are grouped, each with a moving picture', (await page.locator('[data-editorfxhead]').count()) === 4
+  check('the effects are grouped, each with a moving picture', (await page.locator('[data-editoreffects] [data-editorfxhead]').count()) === 4
+    && (await page.locator('[data-editorvideofilters] [data-editorfxhead]').count()) === 3
     && (await page.locator('[data-editoreffect] canvas').count()) >= 3);
-  await page.locator('[data-editorfxhead="frame"]').click();
+  await page.locator('[data-editoreffects] [data-editorfxhead="frame"]').click();
   await page.locator('[data-editoreffect="letterbox"]').click();
   await page.waitForTimeout(900);
   check('an effect on puts its own picture over the film', (await page.locator('[data-editorfxframe]').count()) === 1);
@@ -68,8 +69,7 @@ try {
   check('  and stronger is deeper bars', Boolean(deeper) && deeper[0] + deeper[1] + deeper[2] < 20, String(deeper));
   await page.locator('[data-editoreffect="letterbox"]').click();
 
-  await page.locator('[data-editorfxhead="camera"]').click().catch(() => undefined);
-  if (!(await page.locator('[data-editoreffect="mirror"]').count())) await page.locator('[data-editorfxhead="camera"]').click();
+  if (!(await page.locator('[data-editoreffect="mirror"]').count())) await page.locator('[data-editoreffects] [data-editorfxhead="camera"]').click();
   await page.locator('[data-editoreffect="mirror"]').click();
   await page.waitForTimeout(800);
   const left = await at(0.04, 0.3);
@@ -79,6 +79,26 @@ try {
   await page.locator('[data-editoreffect="mirror"]').click();
   await page.waitForTimeout(500);
   check('  and with every effect off the picture is the film again', (await page.locator('[data-editorfxframe]').count()) === 0);
+
+  /* ── The filters shelf: Duotone turns the grey bar into our two inks ── */
+  await page.locator('[data-editorvideofilters] [data-editorfxhead="stylise"]').click();
+  await page.locator('[data-editoreffect="duotone"]').click();
+  await page.waitForTimeout(800);
+  const duo = await at(0.05, 0.4);
+  check('a filter restyles the picture: Duotone turns the grey bar pink', Boolean(duo) && duo[0] > duo[1] + 60, String(duo));
+  await page.locator('[data-editoreffect="duotone"]').click();
+
+  /* ── Sound effects on the shot ── */
+  await bench('clip');
+  if ((await page.locator('[data-editorsound]').getAttribute('aria-pressed')) !== 'true') await page.locator('[data-editorsound]').click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-editorsfxbench] summary').click();
+  check('a shot with its sound on has sound effects, grouped', (await page.locator('[data-editorsfxhead]').count()) === 4);
+  await page.locator('[data-editorsfxhead="space"]').click();
+  await page.locator('[data-editorsfxitem="echo"]').click();
+  await page.waitForTimeout(300);
+  check('  Echo turns on, with its own strength', (await page.locator('[data-editorsfxitem="echo"][aria-pressed="true"]').count()) === 1
+    && (await page.locator('[data-editorsfxamount="echo"]').count()) === 1);
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);
 } finally {

@@ -175,8 +175,10 @@ import {
 import { captionSettings } from '../lib/captionstyles';
 import JoinToolbox from './JoinToolbox';
 import CompareLine, { FrameAsShot } from './CompareLine';
-import { EffectToolbox, FxFrame, GeneratorToolbox } from './VideoToolboxes';
+import { AudioFxToolbox, EffectToolbox, FxFrame, GeneratorToolbox, useAudioFx } from './VideoToolboxes';
+import { SOUND_JOINS } from '../lib/audiofx';
 import { recordGenerator, type GeneratorId, type GeneratorInks } from '../lib/videogenerators';
+import { FX_EFFECT_GROUPS, FX_FILTER_GROUPS } from '../lib/videofx';
 import { studioAudio } from '../lib/demoaudio';
 import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
 
@@ -1814,6 +1816,10 @@ export default function VideoEditor({
      follow a playhead somebody is dragging about, and an element that can be
      seeked is the right shape for that. */
   const bed = useRef<HTMLAudioElement | null>(null);
+  /* The sound effects, heard live: the shot's through the player, the song's
+     through the bed — the same chain the export builds. */
+  useAudioFx(viewer, piece && soundOf(piece) ? piece.sfx : undefined);
+  useAudioFx(bed, edit.underFx);
   const [bedUrl, setBedUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!edit.under) { setBedUrl(null); return undefined; }
@@ -6154,6 +6160,43 @@ async function smallerFrame(url: string): Promise<string> {
                 </label>
               )}
             </div>
+            {/* ── Sound effects on this shot, and its sound at the transition ──
+                Carli, 16 October 2026, a desktop editor's audio effects and
+                audio transitions. `lib/audiofx.ts`. */}
+            {soundOf(piece) && (
+              <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorsfxbench>
+                <summary className="min-h-[40px] cursor-pointer list-none px-1 py-2 text-sm font-bold text-zinc-200">
+                  {t('edit.sfxTitle', 'Sound effects on this shot')}
+                  {(piece.sfx?.length ?? 0) > 0 ? ` · ${piece.sfx?.length}` : ''}
+                </summary>
+                <AudioFxToolbox
+                  mark="editorsfx"
+                  value={piece.sfx ?? []}
+                  onChange={(next) => tweak({ sfx: next })}
+                  lang={lang}
+                  t={t}
+                />
+              </details>
+            )}
+            {soundOf(piece) && piece.join && piece.join !== 'cut' && (
+              <div className="space-y-1.5" data-editorsoundjoin>
+                <span className="block text-sm text-zinc-400">{t('edit.soundJoin', 'Its sound through the transition')}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {SOUND_JOINS.map((one) => (
+                    <button
+                      key={one.id}
+                      type="button"
+                      data-editorsoundjoinpick={one.id}
+                      aria-pressed={(piece.soundJoin ?? 'smooth') === one.id}
+                      onClick={() => tweak({ soundJoin: one.id })}
+                      className={`min-h-[40px] rounded-xl border px-3 text-xs font-semibold ${(piece.soundJoin ?? 'smooth') === one.id ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 text-zinc-300'}`}
+                    >
+                      {lang === 'af' ? one.af : one.en}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Move, split, remove. */}
             <div className="flex gap-2 flex-wrap">
@@ -6362,6 +6405,19 @@ async function smallerFrame(url: string): Promise<string> {
               onChange={(next) => tweak({ fx: next })}
               lang={lang}
               t={t}
+              groups={FX_EFFECT_GROUPS}
+            />
+          </div>
+          {/* ── Filters: the second shelf, that restyle the picture itself ── */}
+          <div className="space-y-2" data-editorfilterbench>
+            <span className="text-sm text-zinc-400">{t('edit.filtersTitle', 'Filters')}</span>
+            <EffectToolbox
+              value={piece.fx ?? []}
+              onChange={(next) => tweak({ fx: next })}
+              lang={lang}
+              t={t}
+              groups={FX_FILTER_GROUPS}
+              mark="editorvideofilters"
             />
           </div>
 
@@ -7147,6 +7203,21 @@ async function smallerFrame(url: string): Promise<string> {
                 className="h-11 w-32 cursor-pointer accent-emerald-500"
               />
             </label>
+
+            {/* ── Sound effects on the song ── */}
+            <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorsongfxbench>
+              <summary className="min-h-[40px] cursor-pointer list-none px-1 py-2 text-sm font-bold text-zinc-200">
+                {t('edit.songFxTitle', 'Sound effects on the song')}
+                {(edit.underFx?.length ?? 0) > 0 ? ` · ${edit.underFx?.length}` : ''}
+              </summary>
+              <AudioFxToolbox
+                mark="editorsongfx"
+                value={edit.underFx ?? []}
+                onChange={(next) => commit((was) => ({ ...was, underFx: next }))}
+                lang={lang}
+                t={t}
+              />
+            </details>
 
             {/* ── The music steps back while a shot speaks ──────────────
 

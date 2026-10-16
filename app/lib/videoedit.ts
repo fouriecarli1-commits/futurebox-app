@@ -45,7 +45,8 @@
 import { cleanFx, type FxOn } from './videofx';
 import { filterCss } from './videofilters';
 import type { Cut, Scene } from './stitch';
-import type { Join } from './videojoins';
+import { joinFits, type Join } from './videojoins';
+import { cleanAudioFx, type AudioFxOn, type SoundJoin } from './audiofx';
 import { gradeCss, type Adjust } from './videoadjust';
 import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
 import { bitsFor, rateFor, sizeFor } from './videoquality';
@@ -113,6 +114,14 @@ export interface Piece {
    * cinema bars. See `lib/videofx.ts`. Absent is none.
    */
   readonly fx?: readonly FxOn[];
+  /** Sound effects on this shot's own sound — `lib/audiofx.ts`. Absent is none. */
+  readonly sfx?: readonly AudioFxOn[];
+  /**
+   * How this shot's sound comes in through its transition: a cross fade of
+   * one of three curves, or cut with the picture. Absent is the smooth one
+   * whenever there is a transition to fade through.
+   */
+  readonly soundJoin?: SoundJoin;
   /** Words over this piece for as long as it is up. */
   readonly words?: string;
   /**
@@ -533,6 +542,8 @@ export interface Edit {
    * many times as the film needs.
    */
   readonly underLoop?: boolean;
+  /** Sound effects on the song under the film — `lib/audiofx.ts`. */
+  readonly underFx?: readonly AudioFxOn[];
   /**
    * Take the rumble and the hiss off the shots' own sound.
    *
@@ -832,7 +843,7 @@ export function fadesFor(edit: Edit): { readonly in: number; readonly out: numbe
 export function cutFrom(edit: Edit): Cut {
   const kept = edit.pieces.filter((one) => lengthOfPiece(one) > 0);
   const scenes: Scene[] = kept
-    .map((one) => ({
+    .map((one, at) => ({
       clip: one.clip,
       name: one.name,
       from: one.from,
@@ -854,6 +865,8 @@ export function cutFrom(edit: Edit): Cut {
          is a field the renderer then loops over to do nothing. */
       ...(one.blurs?.length ? { blurs: one.blurs } : {}),
       ...(one.fx?.length ? { fx: cleanFx(one.fx) } : {}),
+      ...(one.sfx?.length ? { sfx: cleanAudioFx(one.sfx) } : {}),
+      ...soundEdges(kept, at),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),
       ...(one.fill ? { fill: true } : {}),
       /* A shot speaks only if the shots lane is being heard at all. Resolved
@@ -968,6 +981,7 @@ export function cutFrom(edit: Edit): Cut {
     ...(edit.under && on.music && edit.underSpeed !== undefined && edit.underSpeed !== 1
       ? { audioSpeed: Math.max(0.5, Math.min(2, edit.underSpeed)) } : {}),
     ...(edit.under && on.music && edit.underLoop ? { audioLoop: true } : {}),
+    ...(edit.under && on.music && edit.underFx?.length ? { audioFx: cleanAudioFx(edit.underFx) } : {}),
     /* And only when a shot actually speaks: filtering silence is work for
        nothing, and a flag the renderer has to look past is a flag that will
        one day be looked past wrongly. */
@@ -988,6 +1002,32 @@ export function cutFrom(edit: Edit): Cut {
     ...(edit.frame && edit.frame !== 'none' ? { frame: edit.frame, frameInk: edit.frameInk ?? '#ffffff' } : {}),
     ...(edit.shapes?.length ? { shapes: edit.shapes } : {}),
   };
+}
+
+/**
+ * How a shot's sound fades through the transitions at its two ends.
+ *
+ * In through its own transition, out through the next shot's — the same two
+ * joins the picture dissolves through, for the same lengths, so the sound
+ * and the picture change together. A transition that is a cut, or a sound
+ * join set to cut, fades nothing.
+ */
+export function soundEdges(pieces: readonly Piece[], at: number): {
+  soundIn?: { readonly how: SoundJoin; readonly seconds: number };
+  soundOut?: { readonly how: SoundJoin; readonly seconds: number };
+} {
+  const one = pieces[at];
+  const next = pieces[at + 1];
+  const edge = (owner: Piece | undefined, runs: number): { how: SoundJoin; seconds: number } | undefined => {
+    if (!owner?.join || owner.join === 'cut') return undefined;
+    const how = owner.soundJoin ?? 'smooth';
+    if (how === 'cut') return undefined;
+    const seconds = joinFits(owner.joinFor, runs);
+    return seconds > 0 ? { how, seconds } : undefined;
+  };
+  const soundIn = one ? edge(one, lengthOfPiece(one)) : undefined;
+  const soundOut = one ? edge(next, lengthOfPiece(one)) : undefined;
+  return { ...(soundIn ? { soundIn } : {}), ...(soundOut ? { soundOut } : {}) };
 }
 
 /** Whether a piece carries its own sound: on unless switched off. */

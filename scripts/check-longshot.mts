@@ -128,7 +128,8 @@ ok('  and the stitcher only unmutes the scenes that ask',
 ok('  through the same graph the song goes through, because a canvas carries pictures only',
   /const from = audioContext\.createMediaElementSource\(video\);/.test(cutter)
   && /const into = mixer \?\? destination;/.test(cutter)
-  && /high\.connect\(into\)/.test(cutter) && /from\.connect\(into\)/.test(cutter),
+  && /level\.connect\(into\)/.test(cutter)
+  && /chainAudioFx\(audioContext, high, level,/.test(cutter) && /chainAudioFx\(audioContext, from, level,/.test(cutter),
   'an unmuted element is still not on the recorded stream. Into `mixer` since'
   + ' 5 October, which is the one node the song also ends at — that is what'
   + ' lets the fold to mono be a single node rather than a rule each source'

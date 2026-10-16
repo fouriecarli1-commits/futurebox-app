@@ -23,15 +23,26 @@ export type FxId =
   | 'shake' | 'pulse' | 'mirror'
   | 'glow' | 'leak' | 'flash'
   | 'grain' | 'scanlines'
-  | 'vignette' | 'letterbox';
+  | 'vignette' | 'letterbox'
+  /* The filters — the second shelf of her screenshots, the kind that restyles the picture itself. */
+  | 'motionBlur' | 'zoomBlur' | 'tiltShift'
+  | 'pixelate' | 'halftone' | 'duotone' | 'chromatic' | 'kaleido'
+  | 'filmDamage' | 'lensFlare';
 
-export type FxGroup = 'camera' | 'light' | 'texture' | 'frame';
+export type FxGroup = 'camera' | 'light' | 'texture' | 'frame' | 'blur' | 'stylise' | 'film';
+
+/** The two shelves: effects laid over the shot, and filters that restyle it. */
+export const FX_EFFECT_GROUPS: readonly FxGroup[] = ['camera', 'light', 'texture', 'frame'];
+export const FX_FILTER_GROUPS: readonly FxGroup[] = ['blur', 'stylise', 'film'];
 
 export const FX_GROUPS: readonly { readonly id: FxGroup; readonly en: string; readonly af: string }[] = [
   { id: 'camera', en: 'Camera', af: 'Kamera' },
   { id: 'light', en: 'Light', af: 'Lig' },
   { id: 'texture', en: 'Texture', af: 'Tekstuur' },
   { id: 'frame', en: 'Frame', af: 'Raam' },
+  { id: 'blur', en: 'Blur', af: 'Vervaag' },
+  { id: 'stylise', en: 'Stylise', af: 'Stileer' },
+  { id: 'film', en: 'Old film', af: 'Ou film' },
 ];
 
 export interface FxSpec {
@@ -54,6 +65,16 @@ export const FX: readonly FxSpec[] = [
   { id: 'scanlines', group: 'texture', en: 'Scan lines', af: 'Skandeerlyne', rest: 0.5 },
   { id: 'vignette', group: 'frame', en: 'Vignette', af: 'Donker hoeke', rest: 0.6 },
   { id: 'letterbox', group: 'frame', en: 'Cinema bars', af: 'Rolprentstroke', rest: 0.5 },
+  { id: 'motionBlur', group: 'blur', en: 'Motion blur', af: 'Bewegingsvervaging', rest: 0.5 },
+  { id: 'zoomBlur', group: 'blur', en: 'Zoom blur', af: 'Zoemvervaging', rest: 0.5 },
+  { id: 'tiltShift', group: 'blur', en: 'Tilt-shift', af: 'Miniatuur', rest: 0.6 },
+  { id: 'pixelate', group: 'stylise', en: 'Pixelate', af: 'Blokkies', rest: 0.5 },
+  { id: 'halftone', group: 'stylise', en: 'Halftone dots', af: 'Kolletjiesdruk', rest: 0.6 },
+  { id: 'duotone', group: 'stylise', en: 'Duotone', af: 'Tweekleur', rest: 0.9 },
+  { id: 'chromatic', group: 'stylise', en: 'Colour split', af: 'Kleurskeuring', rest: 0.5 },
+  { id: 'kaleido', group: 'stylise', en: 'Kaleidoscope', af: 'Kaleidoskoop', rest: 1 },
+  { id: 'filmDamage', group: 'film', en: 'Film damage', af: 'Filmskade', rest: 0.6 },
+  { id: 'lensFlare', group: 'film', en: 'Lens flare', af: 'Lensgloed', rest: 0.6 },
 ];
 
 /** One effect on a shot, and how strong. */
@@ -177,6 +198,9 @@ export function paintFx(ctx: CanvasRenderingContext2D, w: number, h: number, t: 
     }
   }
 
+  /* ── The picture restyled: the filters ── */
+  paintFilters(ctx, w, h, time, on);
+
   /* ── Light added ── */
   const glow = on('glow');
   if (glow > 0) {
@@ -278,4 +302,239 @@ export function paintFx(ctx: CanvasRenderingContext2D, w: number, h: number, t: 
     ctx.fillRect(0, h - tall, w, tall);
   }
   ctx.restore();
+}
+
+/** A second scratch canvas, for passes that need the copy AND somewhere to build. */
+function work(name: string, w: number, h: number): CanvasRenderingContext2D | null {
+  const one = sheet(name, w, h);
+  const c = one?.getContext('2d', { willReadFrequently: name === 'cells' }) ?? null;
+  if (c) {
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = 'source-over';
+    c.filter = 'none';
+    c.clearRect(0, 0, w, h);
+  }
+  return c;
+}
+
+/**
+ * The filters, in a fixed order: blurs, then the restyles, then old film.
+ * Every pass reads the canvas as it stands and writes it back changed.
+ */
+function paintFilters(ctx: CanvasRenderingContext2D, w: number, h: number, time: number, on: (id: FxId) => number): void {
+  const motion = on('motionBlur');
+  if (motion > 0) {
+    const copy = copyOf(ctx, w, h);
+    if (copy) {
+      /* Copies laid along a line, as a fast pan smears. */
+      const reach = motion * w * 0.03;
+      ctx.save();
+      for (let i = 1; i <= 6; i += 1) {
+        ctx.globalAlpha = 0.22;
+        ctx.drawImage(copy, (i / 6) * reach - reach / 2, 0, w, h);
+      }
+      ctx.restore();
+    }
+  }
+  const zoom = on('zoomBlur');
+  if (zoom > 0) {
+    const copy = copyOf(ctx, w, h);
+    if (copy) {
+      ctx.save();
+      for (let i = 1; i <= 6; i += 1) {
+        const k = 1 + (i / 6) * zoom * 0.12;
+        ctx.globalAlpha = 0.2;
+        ctx.drawImage(copy, (w - w * k) / 2, (h - h * k) / 2, w * k, h * k);
+      }
+      ctx.restore();
+    }
+  }
+  const tilt = on('tiltShift');
+  if (tilt > 0) {
+    /* Top and bottom blurred, the middle sharp, and the colour a little
+       richer — what makes a real street read as a model of one. */
+    const sw = Math.max(1, Math.round(w / 4));
+    const sh = Math.max(1, Math.round(h / 4));
+    const soft = work('tiltSoft', sw, sh);
+    const band = work('tiltBand', w, h);
+    if (soft && band) {
+      soft.filter = `blur(${(1.5 + tilt * 3).toFixed(1)}px) saturate(1.25)`;
+      soft.drawImage(ctx.canvas, 0, 0, sw, sh);
+      band.drawImage(soft.canvas, 0, 0, w, h);
+      band.globalCompositeOperation = 'destination-out';
+      const keep = band.createLinearGradient(0, 0, 0, h);
+      keep.addColorStop(0, 'rgba(0,0,0,0)');
+      keep.addColorStop(0.35, 'rgba(0,0,0,1)');
+      keep.addColorStop(0.6, 'rgba(0,0,0,1)');
+      keep.addColorStop(1, 'rgba(0,0,0,0)');
+      band.fillStyle = keep;
+      band.fillRect(0, 0, w, h);
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, 0.4 + tilt);
+      ctx.drawImage(band.canvas, 0, 0);
+      ctx.restore();
+    }
+  }
+  const pixel = on('pixelate');
+  if (pixel > 0) {
+    const across = Math.max(8, Math.round(120 - pixel * 100));
+    const down = Math.max(4, Math.round((across * h) / w));
+    const small = work('pixels', across, down);
+    if (small) {
+      small.drawImage(ctx.canvas, 0, 0, across, down);
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(small.canvas, 0, 0, w, h);
+      ctx.restore();
+    }
+  }
+  const dots = on('halftone');
+  if (dots > 0) {
+    /* Read small, then a dot per cell as big as the cell is dark. */
+    const across = Math.max(16, Math.round(90 - dots * 50));
+    const down = Math.max(8, Math.round((across * h) / w));
+    const cells = work('cells', across, down);
+    if (cells) {
+      cells.drawImage(ctx.canvas, 0, 0, across, down);
+      const px = cells.getImageData(0, 0, across, down).data;
+      const cw = w / across;
+      const ch = h / down;
+      ctx.save();
+      ctx.fillStyle = '#f5f1e6';
+      ctx.fillRect(0, 0, w, h);
+      for (let y = 0; y < down; y += 1) {
+        for (let x = 0; x < across; x += 1) {
+          const i = (y * across + x) * 4;
+          const lum = (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255;
+          const r = (1 - lum) * Math.min(cw, ch) * 0.62;
+          if (r < 0.3) continue;
+          ctx.fillStyle = `rgb(${Math.round(px[i] * 0.55)},${Math.round(px[i + 1] * 0.55)},${Math.round(px[i + 2] * 0.55)})`;
+          ctx.beginPath();
+          ctx.arc((x + 0.5) * cw, (y + 0.5) * ch, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+  }
+  const duo = on('duotone');
+  if (duo > 0) {
+    const grey = work('duo', w, h);
+    if (grey) {
+      /* Two inks, ours: deep violet in the shadows, hot pink in the light. */
+      grey.filter = 'grayscale(1) contrast(1.15)';
+      grey.drawImage(ctx.canvas, 0, 0);
+      grey.filter = 'none';
+      grey.globalCompositeOperation = 'multiply';
+      grey.fillStyle = '#ff5fc8';
+      grey.fillRect(0, 0, w, h);
+      grey.globalCompositeOperation = 'lighten';
+      grey.fillStyle = '#2a0b5c';
+      grey.fillRect(0, 0, w, h);
+      ctx.save();
+      ctx.globalAlpha = duo;
+      ctx.drawImage(grey.canvas, 0, 0);
+      ctx.restore();
+    }
+  }
+  const split = on('chromatic');
+  if (split > 0) {
+    const red = work('red', w, h);
+    const cyan = work('cyan', w, h);
+    if (red && cyan) {
+      red.drawImage(ctx.canvas, 0, 0);
+      red.globalCompositeOperation = 'multiply';
+      red.fillStyle = '#ff0000';
+      red.fillRect(0, 0, w, h);
+      cyan.drawImage(ctx.canvas, 0, 0);
+      cyan.globalCompositeOperation = 'multiply';
+      cyan.fillStyle = '#00ffff';
+      cyan.fillRect(0, 0, w, h);
+      const d = split * w * 0.012 * (1 + 0.3 * Math.sin(time * 3));
+      ctx.save();
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(red.canvas, -d, 0);
+      ctx.drawImage(cyan.canvas, d, 0);
+      ctx.restore();
+    }
+  }
+  const kaleido = on('kaleido');
+  if (kaleido > 0) {
+    const copy = copyOf(ctx, w, h);
+    if (copy) {
+      /* The top-left quarter, turned over into all four. */
+      ctx.save();
+      ctx.globalAlpha = kaleido;
+      for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        ctx.setTransform(sx, 0, 0, sy, sx < 0 ? w : 0, sy < 0 ? h : 0);
+        ctx.drawImage(copy, 0, 0, w / 2, h / 2, 0, 0, w / 2, h / 2);
+      }
+      ctx.restore();
+    }
+  }
+  const damage = on('filmDamage');
+  if (damage > 0) {
+    const frameNo = Math.floor(time * 24);
+    const rnd = (n: number): number => { const x = Math.sin(n * 91.7 + frameNo * 13.3) * 43758.5453; return x - Math.floor(x); };
+    ctx.save();
+    /* A warm, faded print. */
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = damage * 0.35;
+    ctx.fillStyle = '#e8c98f';
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+    /* Scratches running down the frame, and dust. */
+    const lines = 1 + Math.floor(rnd(1) * 3 * damage);
+    for (let i = 0; i < lines; i += 1) {
+      ctx.globalAlpha = 0.25 + 0.5 * rnd(i + 2);
+      ctx.fillStyle = rnd(i + 5) > 0.5 ? '#f5f0e0' : '#1a1410';
+      ctx.fillRect(rnd(i + 9) * w, 0, Math.max(1, w / 900), h);
+    }
+    const specks = Math.floor(damage * 14);
+    for (let i = 0; i < specks; i += 1) {
+      ctx.globalAlpha = 0.5 * rnd(i + 30);
+      ctx.fillStyle = rnd(i + 40) > 0.6 ? '#f5f0e0' : '#140f0b';
+      ctx.beginPath();
+      ctx.arc(rnd(i + 50) * w, rnd(i + 60) * h, Math.max(1, (w / 600) * (1 + 3 * rnd(i + 70))), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    /* And the flicker of a lamp that is not quite steady. */
+    ctx.globalAlpha = damage * 0.12 * rnd(99);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
+  const flare = on('lensFlare');
+  if (flare > 0) {
+    /* A light drifting across the top, and its ghosts along the line through the middle. */
+    const lx = w * (0.15 + 0.7 * (0.5 + 0.5 * Math.sin(time * 0.4)));
+    const ly = h * 0.22;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    const sun = ctx.createRadialGradient(lx, ly, 0, lx, ly, Math.max(w, h) * 0.25);
+    sun.addColorStop(0, `rgba(255,250,230,${(0.9 * flare).toFixed(3)})`);
+    sun.addColorStop(0.2, `rgba(255,200,120,${(0.45 * flare).toFixed(3)})`);
+    sun.addColorStop(1, 'rgba(255,160,80,0)');
+    ctx.fillStyle = sun;
+    ctx.fillRect(0, 0, w, h);
+    const ghosts = [0.35, 0.6, 0.85, 1.2];
+    ghosts.forEach((k, i) => {
+      const gx = lx + (w / 2 - lx) * 2 * k;
+      const gy = ly + (h / 2 - ly) * 2 * k;
+      const r = Math.min(w, h) * (0.03 + 0.03 * (i % 2));
+      const ghost = ctx.createRadialGradient(gx, gy, 0, gx, gy, r);
+      const ink = i % 2 ? '120,200,255' : '255,120,220';
+      ghost.addColorStop(0, `rgba(${ink},${(0.35 * flare).toFixed(3)})`);
+      ghost.addColorStop(1, `rgba(${ink},0)`);
+      ctx.fillStyle = ghost;
+      ctx.beginPath();
+      ctx.arc(gx, gy, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
 }

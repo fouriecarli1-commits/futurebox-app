@@ -137,7 +137,10 @@ ok('  and the fold is one node everything passes through',
   && /out\.channelCountMode = 'explicit'/.test(render)
   && /songGain\.connect\(out\)/.test(render)
   && /const into = mixer \?\? destination;/.test(render)
-  && /from\.connect\(into\)/.test(render) && /high\.connect\(into\)/.test(render),
+  /* Since 16 October each shot's sound passes its own effects and its
+     level through the transitions on the way — and still ends at `into`. */
+  && /level\.connect\(into\)/.test(render)
+  && /chainAudioFx\(audioContext, high, level,/.test(render) && /chainAudioFx\(audioContext, from, level,/.test(render),
   'the song and the talking shots both end in one place, which is what lets'
   + ' mono be one node rather than a rule each of them has to remember —'
   + ' including the shot that went through the noise filters first');

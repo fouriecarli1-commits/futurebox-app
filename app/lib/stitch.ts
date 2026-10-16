@@ -73,6 +73,7 @@ import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 import { paintJoin } from './joinpaint';
 import { paintFx, type FxOn } from './videofx';
+import { chainAudioFx, fadeLevel, type AudioFxOn, type SoundJoin } from './audiofx';
 import { paintedFor, type EdgeId } from './wordsedge';
 import { drawFrame, motionAt, revealed, scrambled } from './videoextras';
 import { drawMark as drawShape, type Mark } from './postshapes';
@@ -147,6 +148,11 @@ export interface Scene {
   readonly blurs?: readonly Patch[];
   /** Effects painted over the shot every frame, after the patches — `lib/videofx.ts`. */
   readonly fx?: readonly FxOn[];
+  /** Sound effects on the shot's own sound — `lib/audiofx.ts`. */
+  readonly sfx?: readonly AudioFxOn[];
+  /** The sound fading in through the arriving transition, and out through the leaving one. */
+  readonly soundIn?: { readonly how: SoundJoin; readonly seconds: number };
+  readonly soundOut?: { readonly how: SoundJoin; readonly seconds: number };
   /**
    * Fill the frame, cropping the overflow, instead of fitting the whole picture
    * in and putting something behind the bars.
@@ -364,6 +370,8 @@ export interface Cut {
   readonly audioSpeed?: number;
   /** Play the song again when the film outlasts it. */
   readonly audioLoop?: boolean;
+  /** Sound effects on the song — the same chain a shot's sound goes through. */
+  readonly audioFx?: readonly AudioFxOn[];
   /**
    * Roll the rumble and the hiss off the scenes that speak.
    *
@@ -1143,7 +1151,8 @@ export async function stitch(cut: Cut): Promise<Made> {
              the thing that reads as a bug. */
           songGain = audioContext.createGain();
           songGain.gain.value = Math.max(0, Math.min(2, cut.audioLoud ?? 1));
-          song.connect(songGain);
+          /* Through the song's own sound effects, if it has any. */
+          chainAudioFx(audioContext, song, songGain, cut.audioFx);
           songGain.connect(out);
         }
       } catch {
@@ -1296,6 +1305,7 @@ export async function stitch(cut: Cut): Promise<Made> {
          takes the sound away from the speakers, which is what we want — the
          export is a recording, not a playback. */
       const talking = Boolean(cut.scenes[index].sound) && Boolean(audioContext && destination);
+      let sceneLevel: GainNode | null = null;
       /* ── The music steps back while the shot speaks ────────────────
 
          Carli, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
@@ -1334,6 +1344,11 @@ export async function stitch(cut: Cut): Promise<Made> {
         try {
           const from = audioContext.createMediaElementSource(video);
           const into = mixer ?? destination;
+          /* The shot's own level through its transitions, set every frame
+             in the draw loop below, after its sound effects. */
+          const level = audioContext.createGain();
+          sceneLevel = level;
+          level.connect(into);
           if (cut.denoise) {
             /* ── Reduce noise, named for what it is ────────────────────
 
@@ -1354,9 +1369,9 @@ export async function stitch(cut: Cut): Promise<Made> {
             high.frequency.value = NOISE_HIGH;
             from.connect(low);
             low.connect(high);
-            high.connect(into);
+            chainAudioFx(audioContext, high, level, cut.scenes[index].sfx);
           } else {
-            from.connect(into);
+            chainAudioFx(audioContext, from, level, cut.scenes[index].sfx);
           }
         } catch {
           // Already routed, or this browser will not have it. The shot plays
@@ -1466,6 +1481,18 @@ export async function stitch(cut: Cut): Promise<Made> {
              ours, and softening our own text would be this control reaching
              past what it says it does. `check:blurpatch` holds the order. */
           drawPatches(context, video, cut.scenes[index].blurs, cut, box);
+          /* ── The shot's sound through its transitions ──
+             Faded in through the arriving one and out through the leaving
+             one, on the curve she chose — `fadeLevel`. */
+          if (sceneLevel && audioContext && (cut.scenes[index].soundIn || cut.scenes[index].soundOut)) {
+            const into = (video.currentTime - view.from) / fast;
+            const runs = (window.to - window.from) / fast;
+            const arrive = cut.scenes[index].soundIn;
+            const leave = cut.scenes[index].soundOut;
+            const gain = (arrive ? fadeLevel(arrive.how, into / arrive.seconds) : 1)
+              * (leave ? fadeLevel(leave.how, (runs - into) / leave.seconds) : 1);
+            sceneLevel.gain.setTargetAtTime(gain, audioContext.currentTime, 0.015);
+          }
           /* ── The shot's effects, over it and under everything of ours ──
              The same `paintFx` the editor's preview runs, at the same time
              into the shot, so the shake she watched is the shake she gets. */
