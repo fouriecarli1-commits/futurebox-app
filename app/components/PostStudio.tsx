@@ -6403,7 +6403,7 @@ export default function PostStudio({
               step={RANGES[key].step}
               value={lookNow[key]}
               onChange={(event) => setLookNow((was) => ({ ...was, [key]: Number(event.target.value) }))}
-              className="w-full"
+              className="h-11 w-full"
               aria-label={name}
             />
           </label>
@@ -7144,7 +7144,7 @@ export default function PostStudio({
               value={magicSize}
               data-postmagicsize
               onChange={(event) => setMagicSize(Number(event.target.value))}
-              className="w-full accent-emerald-400"
+              className="h-11 w-full accent-emerald-400"
             />
           </label>
           {magicStrokes.length > 0 && (
@@ -7908,7 +7908,7 @@ export default function PostStudio({
               step={0.01}
               value={filterHere.share}
               onChange={(event) => putFilter(filterHere.id, Number(event.target.value))}
-              className="w-full accent-emerald-400"
+              className="h-11 w-full accent-emerald-400"
             />
           </label>
         )}
