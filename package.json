@@ -70,6 +70,7 @@
     "check:postlayers": "node audit/postlayers.mjs 3327",
     "check:edittitles": "node audit/edittitles.mjs 3331",
     "check:postgrid": "node audit/postgrid.mjs 3333",
+    "check:postfilters": "node audit/postfilters.mjs 3335",
     "check:kidsloop": "node audit/kidsloop.mjs 3322",
     "check:pressed": "tsx scripts/check-pressed.mts",
     "check:whichbuild": "tsx scripts/check-whichbuild.mts",

@@ -48,6 +48,21 @@ export interface Look {
   readonly warmth: number;
   /** 0..20, in frame units at the picture's drawn size. */
   readonly blur: number;
+  /* ── What a filter adds — none of these has a slider of its own ────
+     Carli, 16 October 2026: *"Ek soek ook ... sulke oulike filters."* A
+     filter is a look with a mood, and a mood needs a few things the five
+     sliders do not reach. Absent is none, so every look saved before these
+     existed reads exactly as it did. */
+  /** 0..1, towards old brown paper. */
+  readonly sepia?: number;
+  /** -180..180 degrees round the colour wheel. */
+  readonly hue?: number;
+  /** 0..1: the blacks lifted to grey, as an old print fades. */
+  readonly fade?: number;
+  /** A colour laid softly over everything: red, green, blue 0..255 and how strong, 0..1. */
+  readonly tint?: readonly [number, number, number, number];
+  /** 0..1: the corners darkened, as an old lens does. */
+  readonly vignette?: number;
 }
 
 export const PLAIN: Look = { bright: 1, contrast: 1, colour: 1, warmth: 0, blur: 0 };
@@ -80,7 +95,9 @@ const held = (n: number, low: number, high: number): number =>
 /** Whether anything has been changed from the picture as it came. */
 export const touched = (look: Look): boolean =>
   look.bright !== PLAIN.bright || look.contrast !== PLAIN.contrast
-  || look.colour !== PLAIN.colour || look.warmth !== PLAIN.warmth || look.blur !== PLAIN.blur;
+  || look.colour !== PLAIN.colour || look.warmth !== PLAIN.warmth || look.blur !== PLAIN.blur
+  || Boolean(look.sepia) || Boolean(look.hue) || Boolean(look.fade)
+  || Boolean(look.tint && look.tint[3] > 0) || Boolean(look.vignette);
 
 /**
  * The filter string for the picture.
@@ -97,6 +114,10 @@ export function filterFor(look: Look, scale = 1): string {
     `contrast(${held(look.contrast, RANGES.contrast.min, RANGES.contrast.max).toFixed(3)})`,
     `saturate(${held(look.colour, RANGES.colour.min, RANGES.colour.max).toFixed(3)})`,
   ];
+  const sepia = held(look.sepia ?? 0, 0, 1);
+  if (sepia > 0.001) parts.push(`sepia(${sepia.toFixed(3)})`);
+  const hue = held(look.hue ?? 0, -180, 180);
+  if (Math.abs(hue) > 0.5) parts.push(`hue-rotate(${hue.toFixed(1)}deg)`);
   const blur = held(look.blur, RANGES.blur.min, RANGES.blur.max);
   /* Scaled with the canvas. The preview is drawn at a fraction of the frame,
      and a blur in device pixels would be four times as strong on screen as in
@@ -117,5 +138,73 @@ export function warmWash(look: Look): { readonly ink: string; readonly how: Glob
       ? `rgba(255,170,60,${(warmth * 0.45).toFixed(3)})`
       : `rgba(60,150,255,${(-warmth * 0.45).toFixed(3)})`,
     how: 'soft-light',
+  };
+}
+
+/** One coat laid over the picture after the filtered draw. */
+export interface Wash {
+  readonly ink: string;
+  readonly how: GlobalCompositeOperation;
+  /** Darkest at the corners and clear in the middle, rather than flat. */
+  readonly round?: boolean;
+}
+
+/**
+ * Every coat a look lays over the picture, in the order they go on: warmth,
+ * then a filter's tint, then its fade, then its darkened corners.
+ */
+export function washesOf(look: Look): Wash[] {
+  const out: Wash[] = [];
+  const warm = warmWash(look);
+  if (warm) out.push(warm);
+  if (look.tint) {
+    const [r, g, b, a] = look.tint.map((n, at) => held(n, 0, at === 3 ? 1 : 255));
+    if (a > 0.005) out.push({ ink: `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a.toFixed(3)})`, how: 'soft-light' });
+  }
+  const fade = held(look.fade ?? 0, 0, 1);
+  /* Screen with a grey lifts the blacks most and leaves the whites alone,
+     which is what a faded print is: no true black left in it. */
+  if (fade > 0.005) out.push({ ink: `rgba(110,104,98,${(fade * 0.55).toFixed(3)})`, how: 'screen' });
+  const vignette = held(look.vignette ?? 0, 0, 1);
+  if (vignette > 0.005) out.push({ ink: `rgba(0,0,0,${(vignette * 0.75).toFixed(3)})`, how: 'multiply', round: true });
+  return out;
+}
+
+/** Lay a look's coats over a rectangle of a canvas already holding the picture. */
+export function paintWashes(ctx: CanvasRenderingContext2D, look: Look, x: number, y: number, w: number, h: number): void {
+  for (const wash of washesOf(look)) {
+    ctx.save();
+    ctx.globalCompositeOperation = wash.how;
+    if (wash.round) {
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      const far = Math.hypot(w, h) / 2;
+      const ring = ctx.createRadialGradient(cx, cy, far * 0.35, cx, cy, far);
+      ring.addColorStop(0, 'rgba(0,0,0,0)');
+      ring.addColorStop(1, wash.ink);
+      ctx.fillStyle = ring;
+    } else {
+      ctx.fillStyle = wash.ink;
+    }
+    ctx.fillRect(x, y, w, h);
+    ctx.restore();
+  }
+}
+
+/** Part of the way from the picture as it came to a look: 0 is none of it, 1 all of it. */
+export function towards(look: Look, share: number): Look {
+  const s = held(share, 0, 1);
+  const mix = (from: number, to: number): number => from + (to - from) * s;
+  return {
+    bright: mix(PLAIN.bright, look.bright),
+    contrast: mix(PLAIN.contrast, look.contrast),
+    colour: mix(PLAIN.colour, look.colour),
+    warmth: mix(PLAIN.warmth, look.warmth),
+    blur: mix(PLAIN.blur, look.blur),
+    ...(look.sepia ? { sepia: look.sepia * s } : {}),
+    ...(look.hue ? { hue: look.hue * s } : {}),
+    ...(look.fade ? { fade: look.fade * s } : {}),
+    ...(look.tint ? { tint: [look.tint[0], look.tint[1], look.tint[2], look.tint[3] * s] as const } : {}),
+    ...(look.vignette ? { vignette: look.vignette * s } : {}),
   };
 }

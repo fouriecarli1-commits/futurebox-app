@@ -45,6 +45,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  Aperture,
   ArrowLeft,
   Bookmark,
   Circle, Copy, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
@@ -87,7 +88,7 @@ import {
   canMove, moveBy, place, showsThrough, zoomTo, type Crop,
 } from '../lib/postcrop';
 import {
-  AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
+  AUTO, PLAIN, RANGES, filterFor, paintWashes, touched, towards, washesOf, type Look,
 } from '../lib/postlook';
 import { canRead, readWords, tidy, wordsAtAll, type Readable } from '../lib/ocr';
 import {
@@ -129,6 +130,10 @@ import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { canTouch, frontZ, movedOne, stackOf, type LayerOn } from '../lib/postlayers';
 import { GAPS, LAYOUTS, cellHas, cellsOf, frameOf, type Cell, type CellLook } from '../lib/postcells';
+import {
+  FILTER_GROUPS, POST_FILTERS, drawFilterTile, filterById, filterLabel, thumbOf, type FilterGroup,
+} from '../lib/postfilters';
+import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
 import { MAGIC_ASKS, cropOf, laidIn, padded, spotRect, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
@@ -513,6 +518,15 @@ const POST_GRID: BenchSpec = {
   label: ['post.benchGrid', 'Photo grids'],
   what: ['post.benchGridWhat', 'Two, three, four or nine photos on one post. Tap a frame to put a photo in it, then tap a photo to change just that one.'],
 };
+/* Carli, 16 October 2026: *"Ek soek ook ... sulke oulike filters."* Their
+   own tool rather than a row in Adjust: a filter is chosen by looking, and
+   looking needs the room the pictures take. `lib/postfilters.ts`. */
+const POST_FILTER_BENCH: BenchSpec = {
+  id: 'filters',
+  icon: <Aperture className="h-5 w-5" />,
+  label: ['post.benchFilters', 'Filters'],
+  what: ['post.benchFiltersWhat', 'A look for the whole photo in one tap, each one shown on your own picture. Choose how strong, then fine-tune it in Adjust.'],
+};
 /** The tools of one photo in the grid — opened by tapping it, not on the bar. */
 const POST_CELL: BenchSpec = {
   id: 'cell',
@@ -521,13 +535,14 @@ const POST_CELL: BenchSpec = {
   what: ['post.benchCellWhat', 'Replace it, move it about in its frame, zoom in, or open it on its own with every tool in the room.'],
 };
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_STARTS, POST_GRID, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LAYERS, POST_LOWER[2],
+  POST_STARTS, POST_GRID, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
   pic: ['post.toolPic', 'Photo'],
   frame: ['post.toolFrame', 'Crop'],
   tone: ['post.toolTone', 'Adjust'],
+  filters: ['post.toolFilters', 'Filters'],
   magic: ['post.toolMagic', 'Magic'],
   read: ['post.toolRead', 'Grab'],
   text: ['post.toolText', 'Text'],
@@ -538,9 +553,51 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   save: ['post.toolSave', 'Export'],
 };
 /** A tool along the foot on a phone: an icon over a word, small. */
-const TOOL_FOOT = 'flex min-h-[48px] w-[58px] flex-shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-0 text-[9px] font-bold leading-tight';
+const TOOL_FOOT = 'flex min-h-[56px] w-[58px] flex-shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-0 text-[9px] font-bold leading-tight';
 /** A tool down the rail at a desk. */
 const TOOL_RAIL = 'flex min-h-[56px] w-full flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-0.5 text-[10px] font-bold leading-tight';
+
+/* ── Tools and filters as pictures ────────────────────────────────────
+   Carli, 16 October 2026: *"onthou mense is visueel"*. Both are drawn
+   from one small square of her photograph (`thumbOf`), so a whole row of
+   them is a row of draws of a tiny canvas. */
+
+/** A tool's picture, or its icon until the picture is drawn. */
+function ToolTile({ id, from, icon, size }: {
+  readonly id: string;
+  readonly from: HTMLCanvasElement | null;
+  readonly icon: React.ReactNode;
+  readonly size: number;
+}): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    if (canvas.current && from) setDrawn(drawToolTile(canvas.current, id, from));
+  }, [id, from]);
+  return (
+    <span className="relative flex flex-shrink-0 items-center justify-center" style={{ width: size, height: size }}>
+      <canvas
+        ref={canvas}
+        width={size * 2}
+        height={size * 2}
+        aria-hidden
+        data-posttooltile={id}
+        className="absolute inset-0 h-full w-full rounded-[9px]"
+        style={{ opacity: drawn ? 1 : 0 }}
+      />
+      {!drawn && <span className="[&>svg]:h-[18px] [&>svg]:w-[18px]">{icon}</span>}
+    </span>
+  );
+}
+
+/** One filter's picture: her photograph with it on. */
+function FilterTile({ from, look }: { readonly from: HTMLCanvasElement | null; readonly look: Look }): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    if (canvas.current && from) drawFilterTile(canvas.current, from, look);
+  }, [from, look]);
+  return <canvas ref={canvas} width={144} height={144} aria-hidden className="aspect-square w-full rounded-xl" />;
+}
 
 const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
@@ -1074,6 +1131,29 @@ export default function PostStudio({
   /* What How it reads is changing right now. */
   const lookNow = toneAll ? allLook : look;
   const setLookNow = toneAll ? setAllLook : setLook;
+  /* A small square of the photograph — or of the drawn evening before there
+     is one — that the tool pictures and the filter pictures are drawn from. */
+  const [thumb, setThumb] = useState<HTMLCanvasElement | null>(null);
+  useEffect(() => { setThumb(thumbOf(picture)); }, [picture]);
+  const [filterGroup, setFilterGroup] = useState<FilterGroup>('natural');
+  /** The filter on, how strong, and whether it is on the photo or on all of it. */
+  const [filterOn, setFilterOn] = useState<{ readonly id: string; readonly share: number; readonly all: boolean } | null>(null);
+  const filterHere = filterOn && filterOn.all === toneAll ? filterOn : null;
+  const putFilter = (id: string | null, share = 1): void => {
+    const one = id ? filterById(id) : undefined;
+    if (!one) {
+      setLookNow(PLAIN);
+      setFilterOn(null);
+      return;
+    }
+    setLookNow(towards(one.look, share));
+    setFilterOn({ id: one.id, share, all: toneAll });
+  };
+  /* Put back as it came — by Adjust, a new photograph, an undo — and no
+     filter is on any more, so none is shown as chosen. */
+  useEffect(() => {
+    if (filterOn && !touched(filterOn.all ? allLook : look)) setFilterOn(null);
+  }, [filterOn, look, allLook]);
   /** A shape being carried or stretched by the thumb. */
   const markHeld = useRef<{ id: string; dx: number; dy: number; resize: boolean } | null>(null);
   const changeMark = (id: string, how: Partial<Mark>): void =>
@@ -1500,22 +1580,23 @@ export default function PostStudio({
         ctx.restore();
       }
 
-      const wash = warmWash(look);
-      if (wash) {
+      if (washesOf(look).length) {
         /* Clipped to the picture, not the frame. A warm wash over the
            background as well would tint the colour she chose behind it,
-           which is a control reaching past what it says it does. */
+           which is a control reaching past what it says it does. A
+           filter's tint, fade and darkened corners go on the same way. */
+        const seen = {
+          x: Math.max(0, at.left),
+          y: Math.max(0, at.top),
+          w: Math.min(at.left + at.width, size.width) - Math.max(0, at.left),
+          h: Math.min(at.top + at.height, size.height) - Math.max(0, at.top),
+        };
         ctx.save();
         ctx.beginPath();
-        ctx.rect(
-          Math.max(0, at.left), Math.max(0, at.top),
-          Math.min(at.width, size.width), Math.min(at.height, size.height),
-        );
+        ctx.rect(seen.x, seen.y, seen.w, seen.h);
         ctx.clip();
         ctx.globalAlpha = photoAlpha;
-        ctx.globalCompositeOperation = wash.how;
-        ctx.fillStyle = wash.ink;
-        ctx.fillRect(0, 0, size.width, size.height);
+        paintWashes(ctx, look, seen.x, seen.y, seen.w, seen.h);
         ctx.restore();
       }
     }
@@ -1824,17 +1905,14 @@ export default function PostStudio({
         ctx.filter = filterFor(allLook, to.width / size.width);
         ctx.drawImage(flat, 0, 0);
         ctx.filter = 'none';
-        const wash = warmWash(allLook);
-        if (wash) {
+        if (washesOf(allLook).length) {
           const tint = document.createElement('canvas');
           tint.width = to.width;
           tint.height = to.height;
           const tctx = tint.getContext('2d');
           if (tctx) {
             tctx.drawImage(to, 0, 0);
-            tctx.globalCompositeOperation = wash.how;
-            tctx.fillStyle = wash.ink;
-            tctx.fillRect(0, 0, to.width, to.height);
+            paintWashes(tctx, allLook, 0, 0, to.width, to.height);
             tctx.globalCompositeOperation = 'destination-in';
             tctx.drawImage(to, 0, 0);
             ctx.clearRect(0, 0, to.width, to.height);
@@ -2720,11 +2798,8 @@ export default function PostStudio({
     bctx.filter = filterFor(look, 1);
     bctx.drawImage(picture, 0, 0, baked.width, baked.height);
     bctx.filter = 'none';
-    const wash = warmWash(look);
-    if (wash) {
-      bctx.globalCompositeOperation = wash.how;
-      bctx.fillStyle = wash.ink;
-      bctx.fillRect(0, 0, baked.width, baked.height);
+    if (washesOf(look).length) {
+      paintWashes(bctx, look, 0, 0, baked.width, baked.height);
       bctx.globalCompositeOperation = 'destination-in';
       bctx.drawImage(picture, 0, 0, baked.width, baked.height);
       bctx.globalCompositeOperation = 'source-over';
@@ -7113,6 +7188,101 @@ export default function PostStudio({
 
   /* ── Photo grids ─────────────────────────────────────────────────────── */
   const tile = 'flex flex-col items-center gap-1.5 rounded-2xl border p-2 text-[11px] font-bold';
+
+  /* ── Filters: grouped, each one shown on her own photograph ─────────── */
+  const filterTile = 'flex flex-col items-center gap-1 rounded-xl border p-1 text-[10px] font-bold';
+  const filtersBench = (
+    <div className="space-y-3" data-postfilters>
+      {/* Two sections, which a phone lays side by side: the filters
+          first, because they are what the tool is for. */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-1.5" role="tablist">
+          {FILTER_GROUPS.map((group) => (
+            <button
+              key={group.id}
+              type="button"
+              role="tab"
+              data-postfiltergroup={group.id}
+              aria-selected={filterGroup === group.id}
+              onClick={() => setFilterGroup(group.id)}
+              className={`min-h-[36px] rounded-full border px-3 text-xs font-bold ${filterGroup === group.id ? GEKIES : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+            >
+              {filterLabel(group, lang)}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+          <button
+            type="button"
+            data-postfilter="none"
+            aria-pressed={!filterHere}
+            onClick={() => putFilter(null)}
+            className={`${filterTile} ${!filterHere ? GEKIES : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+          >
+            <FilterTile from={thumb} look={PLAIN} />
+            <span className="w-full truncate text-center">{t('post.filterNone', 'Original')}</span>
+          </button>
+          {POST_FILTERS.filter((one) => one.group === filterGroup).map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              data-postfilter={one.id}
+              aria-pressed={filterHere?.id === one.id}
+              onClick={() => putFilter(one.id, filterHere?.id === one.id ? filterHere.share : 1)}
+              className={`${filterTile} ${filterHere?.id === one.id ? GEKIES : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+            >
+              <FilterTile from={thumb} look={one.look} />
+              <span className="w-full truncate text-center">{filterLabel(one, lang)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-3">
+        {filterHere && (
+          <label className="block space-y-1" data-postfilterstrength>
+            <span className="flex justify-between text-xs font-bold text-zinc-300">
+              <span>{t('post.filterStrength', 'How strong')}</span>
+              <span className="font-mono">{Math.round(filterHere.share * 100)}%</span>
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={filterHere.share}
+              onChange={(event) => putFilter(filterHere.id, Number(event.target.value))}
+              className="w-full accent-emerald-400"
+            />
+          </label>
+        )}
+        <div className={RY} data-postlooktarget={toneAll ? 'all' : 'photo'}>
+          <button
+            type="button"
+            data-postfilteron="photo"
+            aria-pressed={!toneAll}
+            onClick={() => { setToneAll(false); setLayerOn('photo'); }}
+            className={`${LEEG} ${!toneAll ? GEKIES : ''}`}
+          >
+            <ImageIcon className="h-3.5 w-3.5" />
+            {t('post.lookOnPhoto', 'The photo')}
+          </button>
+          <button
+            type="button"
+            data-postfilteron="all"
+            aria-pressed={toneAll}
+            onClick={() => { setToneAll(true); setLayerOn('all'); }}
+            className={`${LEEG} ${toneAll ? GEKIES : ''}`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            {t('post.lookOnAll', 'All layers')}
+          </button>
+        </div>
+        <p className="text-[11px] leading-relaxed text-zinc-500">
+          {t('post.filterHint', 'Every filter is shown on your own photo. Fine-tune it afterwards in Adjust.')}
+        </p>
+      </div>
+    </div>
+  );
   const gridBench = (
     <div className="space-y-3" data-postgrids>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
@@ -7251,6 +7421,7 @@ export default function PostStudio({
     pic: picBench,
     frame: frameBench,
     tone: toneBench,
+    filters: filtersBench,
     read: readBench,
     text: textBench,
     save: saveBench,
@@ -7817,7 +7988,7 @@ export default function PostStudio({
       className={`${rail ? TOOL_RAIL : TOOL_FOOT} ${bench === spec.id ? GEKIES : ''}`}
       style={bench === spec.id ? undefined : { color: INK_DIM }}
     >
-      <span className="flex h-5 w-5 items-center justify-center [&>svg]:h-[18px] [&>svg]:w-[18px]">{spec.icon}</span>
+      <ToolTile id={spec.id} from={thumb} icon={spec.icon} size={rail ? 38 : 34} />
       <span className="w-full truncate text-center">{t(POST_SHORT[spec.id][0], POST_SHORT[spec.id][1])}</span>
     </button>
   );

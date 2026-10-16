@@ -27,7 +27,7 @@
  *   npm run check:postlook
  */
 import {
-  AUTO, PLAIN, RANGES, filterFor, touched, warmWash, type Look,
+  AUTO, PLAIN, RANGES, filterFor, towards, touched, warmWash, washesOf, type Look,
 } from '../app/lib/postlook';
 
 let bad = 0;
@@ -115,6 +115,26 @@ ok('  and it is laid over rather than folded into the filter',
   !/sepia|hue-rotate/.test(filterFor({ ...PLAIN, warmth: 1 })),
   'sepia drains colour on its way to warm and hue-rotate turns a blue sky'
   + ' green before it warms a face');
+
+/* ── What a filter adds (16 October 2026) ───────────────────────────────── */
+
+ok('a filter\u2019s brown and turn of the wheel reach the filter string',
+  /sepia\(/.test(filterFor({ ...PLAIN, sepia: 0.5 })) && /hue-rotate\(/.test(filterFor({ ...PLAIN, hue: 30 })));
+ok('  and its tint, fade and darkened corners are coats laid over it',
+  washesOf({ ...PLAIN, tint: [255, 0, 0, 0.3] }).length === 1
+  && washesOf({ ...PLAIN, fade: 0.3 }).length === 1
+  && washesOf({ ...PLAIN, vignette: 0.3 }).some((w) => w.round));
+ok('  and a look saved before them still reads as untouched', !touched({ ...PLAIN }) && washesOf(PLAIN).length === 0);
+let madFilter = 0;
+for (const value of MAD) {
+  const odd: Look = { ...PLAIN, sepia: value, hue: value, fade: value, vignette: value, tint: [value, value, value, value] };
+  if (/NaN|Infinity/.test(filterFor(odd))) madFilter += 1;
+  if (washesOf(odd).some((w) => /NaN|Infinity/.test(w.ink))) madFilter += 1;
+}
+ok('  and no value can put NaN into them', madFilter === 0, `${madFilter} got through`);
+const half = towards({ ...PLAIN, colour: 0, sepia: 1, tint: [255, 0, 0, 0.4] }, 0.5);
+ok('half strength is half the filter', Math.abs(half.colour - 0.5) < 1e-9 && half.sepia === 0.5 && half.tint?.[3] === 0.2);
+ok('  and nought strength is the picture as it came', !touched(towards({ ...PLAIN, colour: 0, sepia: 1, vignette: 0.5 }, 0)));
 
 if (bad) {
   console.error(`\ncheck:postlook — ${bad} assertion(s) failed.\n`);
