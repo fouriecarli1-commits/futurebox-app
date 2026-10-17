@@ -36,6 +36,8 @@ import { Captions, Clapperboard, Film, Frame, Play, Shapes, Smartphone, Sparkles
 import { CAPTION_STYLES, type CaptionStyle } from '../lib/captionstyles';
 import { paintFor, previewFor, roundFor } from '../lib/videopaint';
 import { STARTS, type FilmStart } from '../lib/filmstart';
+import { meerkatPhotoUrl } from '../lib/meerkatphoto';
+import { filterCss } from '../lib/videofilters';
 import { useLang } from '../lib/i18n';
 import { EDGE, INK, INK_DIM, LIT, PANEL, RAISED } from '../lib/cutlook';
 import { TITLE_STYLES, type TitleStyle } from '../lib/posttitles';
@@ -153,6 +155,38 @@ const SHAPE_LABELS: Record<string, string> = {
 
 const CHIP = { background: 'rgba(255,255,255,0.07)', color: INK_DIM } as const;
 
+/** A start as a little film frame: its shape, its look, its title. */
+function StartThumb({ start, title }: { readonly start: FilmStart; readonly title: string }) {
+  const [src, setSrc] = useState('');
+  useEffect(() => { setSrc(meerkatPhotoUrl('day')); }, []);
+  const shape = start.shape === 'wide' ? { w: 96, h: 54 } : start.shape === 'square' ? { w: 72, h: 72 } : { w: 54, h: 96 };
+  const ink = start.title ? paintFor(start.title.ink)?.hex ?? '#ffffff' : '#ffffff';
+  const back = start.title ? paintFor(start.title.back)?.hex ?? '#000000' : '#000000';
+  const look = start.title ? previewFor(start.title.box, roundFor(start.title.box), 8) : null;
+  const filled = start.title && start.title.box !== 'none' && start.title.box !== 'line' && start.title.box !== 'outline';
+  return (
+    <span aria-hidden data-editorstartthumb className="relative block shrink-0 self-center overflow-hidden rounded-md" style={{ width: shape.w, height: shape.h, background: '#111' }}>
+      {src ? <img src={src} alt="" className="h-full w-full object-cover" style={{ filter: filterCss(start.look) || undefined }} /> : null}
+      {title ? (
+        <span
+          className="absolute left-1/2 max-w-[92%] truncate px-1 text-[8px] font-black leading-tight"
+          style={{
+            top: `${(start.title?.at.y ?? 0.2) * 100}%`,
+            transform: 'translate(-50%, -50%)',
+            color: ink,
+            background: filled ? `${back}d9` : 'transparent',
+            borderRadius: look?.borderRadius,
+            clipPath: look?.clipPath,
+            textShadow: '0 0 2px #000',
+          }}
+        >
+          {title}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export default function VideoTemplatesPicker({
   onSelectStart,
   piecesCount,
@@ -263,7 +297,12 @@ export default function VideoTemplatesPicker({
                 color: INK,
               }}
             >
-              <div>
+              <div className="flex gap-2.5">
+                {/* The film as a picture: the meerkat photograph in the start's
+                    shape, under its look, with its title where it goes. Carli,
+                    17 October 2026: every template visual. */}
+                <StartThumb start={start} title={start.title ? t(start.title.says[0], start.title.says[1]) : ''} />
+                <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-1">
                   <span className="flex items-center gap-1.5 text-xs font-black" style={{ color: INK }}>
                     <Clapperboard className="h-3.5 w-3.5" style={{ color: LIT }} />
@@ -282,6 +321,7 @@ export default function VideoTemplatesPicker({
                 <p className="mt-1.5 text-[11px] leading-snug" style={{ color: INK_DIM }}>
                   {t(start.what[0], start.what[1])}
                 </p>
+                </div>
               </div>
 
               <div

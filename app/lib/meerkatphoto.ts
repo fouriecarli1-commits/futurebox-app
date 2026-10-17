@@ -210,3 +210,21 @@ export function meerkatPhotoUrl(mood: MeerkatMood = 'day', w = 192, h = 192): st
   made.set(key, url);
   return url;
 }
+
+/**
+ * The light and look each kind of film, genre and music-video idea is shown
+ * in, so a row of them reads as different pictures rather than one picture
+ * twelve times. Looks are `videofilters.ts` ids.
+ */
+export const PICTURED: Readonly<Record<string, { readonly mood: MeerkatMood; readonly look?: string }>> = {
+  /* The video desk's kinds. */
+  music: { mood: 'neon' }, marketing: { mood: 'studio', look: 'bright' }, podcast: { mood: 'studio', look: 'warm' },
+  social: { mood: 'day', look: 'punch' }, product: { mood: 'studio' }, atmosphere: { mood: 'mist' },
+  /* Its genres. */
+  amapiano: { mood: 'golden' }, gqom: { mood: 'neon', look: 'punch' }, sokkie: { mood: 'day', look: 'warm' },
+  gospel: { mood: 'golden', look: 'bright' }, hiphop: { mood: 'night' }, afrobeats: { mood: 'golden', look: 'punch' },
+  rock: { mood: 'noir' }, house: { mood: 'neon' }, rnb: { mood: 'night', look: 'warm' }, country: { mood: 'film' },
+  /* Its music-video ideas. */
+  performance: { mood: 'neon', look: 'punch' }, story: { mood: 'film' }, road: { mood: 'golden' },
+  room: { mood: 'studio', look: 'warm' }, abstract: { mood: 'mist', look: 'cool' },
+};

@@ -129,7 +129,8 @@ ok('  and clears the shadow after the words',
 
 const room = withoutComments(readFileSync('app/components/VideoEditor.tsx', 'utf8'));
 ok('  and the words bench offers it',
-  /data-editorwordsedge=/.test(room),
+  /* As an attribute, or handed to a picture tile as one. */
+  /data-editorwordsedge=|'data-editorwordsedge': one\.id/.test(room),
   'there is no control, so every film gets the default and nothing else');
 
 const edit = withoutComments(readFileSync('app/lib/videoedit.ts', 'utf8'));

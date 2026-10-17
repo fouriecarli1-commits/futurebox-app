@@ -115,7 +115,7 @@ import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../l
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import BestMoments from './BestMoments';
-import MeerkatTile from './MeerkatTile';
+import MeerkatTile, { MeerkatWordTile } from './MeerkatTile';
 import { reel } from '../lib/highlights';
 import FilmStrip from './FilmStrip';
 import {
@@ -6912,29 +6912,21 @@ async function smallerFrame(url: string): Promise<string> {
                   {t('edit.wordsBox', 'Behind the words')}
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {BOXES.map((one) => {
-                    const on = (piece.wordsBox ?? BOX_DEFAULT) === one.id;
-                    return (
-                      <button
-                        key={one.id}
-                        type="button"
-                        aria-pressed={on}
-                        data-editorwordsbox={one.id}
-                        /* `wordsRound: undefined` with it: the shape sets the
-                           corner radius, and a number left over from the last
-                           shape would make a square with rounded corners. */
-                        onClick={() => tweak({ wordsBox: one.id, wordsRound: undefined })}
-                        className="min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold"
-                        style={on ? {
-                          borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
-                        } : {
-                          borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
-                        }}
-                      >
-                        {t(one.name[0], one.name[1])}
-                      </button>
-                    );
-                  })}
+                  {/* Each a word on the meerkat photo, in that box. */}
+                  {BOXES.map((one) => (
+                    <MeerkatWordTile
+                      key={one.id}
+                      label={t(one.name[0], one.name[1])}
+                      on={(piece.wordsBox ?? BOX_DEFAULT) === one.id}
+                      /* `wordsRound: undefined` with it: the shape sets the
+                         corner radius, and a number left over from the last
+                         shape would make a square with rounded corners. */
+                      onPick={() => tweak({ wordsBox: one.id, wordsRound: undefined })}
+                      box={one.id}
+                      edge={piece.wordsEdge ?? EDGE_DEFAULT}
+                      data={{ 'data-editorwordsbox': one.id }}
+                    />
+                  ))}
                 </div>
               </div>
 
@@ -6955,26 +6947,17 @@ async function smallerFrame(url: string): Promise<string> {
                   {t('edit.wordsEdge', 'Edge on the letters')}
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {EDGES.map((one) => {
-                    const on = (piece.wordsEdge ?? EDGE_DEFAULT) === one.id;
-                    return (
-                      <button
-                        key={one.id}
-                        type="button"
-                        aria-pressed={on}
-                        data-editorwordsedge={one.id}
-                        onClick={() => tweak({ wordsEdge: one.id })}
-                        className="min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold"
-                        style={on ? {
-                          borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
-                        } : {
-                          borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
-                        }}
-                      >
-                        {lang === 'af' ? one.af : one.en}
-                      </button>
-                    );
-                  })}
+                  {/* Each a word on the meerkat photo, with that edge. */}
+                  {EDGES.map((one) => (
+                    <MeerkatWordTile
+                      key={one.id}
+                      label={lang === 'af' ? one.af : one.en}
+                      on={(piece.wordsEdge ?? EDGE_DEFAULT) === one.id}
+                      onPick={() => tweak({ wordsEdge: one.id })}
+                      edge={one.id}
+                      data={{ 'data-editorwordsedge': one.id }}
+                    />
+                  ))}
                 </div>
               </div>
 

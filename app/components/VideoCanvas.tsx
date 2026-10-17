@@ -67,6 +67,9 @@ import { assetDataUrl } from '../lib/assets';
 import Pictures from './Pictures';
 import MakeSound from './MakeSound';
 import { loadMark } from '../lib/logomark';
+import { filterCss } from '../lib/videofilters';
+import { MeerkatThumb } from './MeerkatTile';
+import { PICTURED } from '../lib/meerkatphoto';
 
 type Aspect = EngineAspect;
 
@@ -1350,6 +1353,7 @@ export default function VideoCanvas({
                   : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
               }`}
             >
+              <MeerkatThumb className="mb-2 h-16 w-full" mood={PICTURED[one.id]?.mood ?? 'day'} filter={filterCss(PICTURED[one.id]?.look)} />
               <span className={`block text-sm font-bold ${active ? 'text-emerald-300' : 'text-zinc-200'}`}>
                 {t(`canvas.scene.${one.id}`, one.label)}
               </span>
@@ -1395,7 +1399,7 @@ export default function VideoCanvas({
             </span>
           }
         >
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
             {GENRES.map((one) => {
               const active = genre?.id === one.id;
               return (
@@ -1410,6 +1414,7 @@ export default function VideoCanvas({
                       : 'border-zinc-800 bg-zinc-950 hover:border-zinc-600'
                   }`}
                 >
+                  <MeerkatThumb className="mb-2 h-14 w-full" mood={PICTURED[one.id]?.mood ?? 'day'} filter={filterCss(PICTURED[one.id]?.look)} />
                   <span
                     className={`block text-sm font-semibold ${active ? 'text-emerald-300' : 'text-zinc-200'}`}
                   >

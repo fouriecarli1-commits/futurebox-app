@@ -41,6 +41,7 @@
  * described.
  */
 
+import MeerkatTile from './MeerkatTile';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown, ArrowUp, Clapperboard, Check, Download, Film, Loader2, Music, Play, Plus, Scissors, Sparkles, Trash2, Type,
@@ -826,37 +827,20 @@ export default function Storyboard({
                   one that is wrong only sometimes. */}
               {shot.makeId && (
                 <div className="flex flex-wrap gap-1.5" data-grade={shot.id}>
-                  {FILTERS.map((one) => {
-                    const on = (shot.filter ?? NO_FILTER) === one.id;
-                    return (
-                      <button
-                        key={one.id}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => setBoard((was) => changed(was, shot.id, {
-                          filter: one.id === NO_FILTER ? undefined : one.id,
-                        }))}
-                        className={`min-h-[44px] rounded-xl border px-2.5 py-1 text-xs font-semibold transition-all ${
-                          on
-                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-200'
-                            : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                        }`}
-                      >
-                        <span
-                          aria-hidden
-                          className="mr-1.5 inline-block h-3 w-3 rounded-sm align-[-1px]"
-                          style={{
-                            /* A swatch of the app's own green put through the
-                               same filter, so the row reads as what each one
-                               DOES rather than as seven identical chips. */
-                            background: '#34d399',
-                            ...(one.css ? { filter: one.css } : {}),
-                          }}
-                        />
-                        {t(`filter.${one.id}`, one.en)}
-                      </button>
-                    );
-                  })}
+                  {/* As photos of the meerkat, each under its own filter —
+                      Carli, 17 October 2026: every look a picture. */}
+                  {FILTERS.map((one) => (
+                    <MeerkatTile
+                      key={one.id}
+                      label={t(`filter.${one.id}`, one.en)}
+                      on={(shot.filter ?? NO_FILTER) === one.id}
+                      onPick={() => setBoard((was) => changed(was, shot.id, {
+                        filter: one.id === NO_FILTER ? undefined : one.id,
+                      }))}
+                      filter={one.css}
+                      size={56}
+                    />
+                  ))}
                 </div>
               )}
 

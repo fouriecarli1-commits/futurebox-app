@@ -47,6 +47,9 @@ import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
 import { fetchCreator, nameOf } from '../lib/radar';
+import { filterCss } from '../lib/videofilters';
+import { MeerkatThumb } from './MeerkatTile';
+import { PICTURED } from '../lib/meerkatphoto';
 
 export default function VideoPanel({ track, onClose }: { track: Track; onClose: () => void }) {
   const { t, lang } = useLang();
@@ -485,7 +488,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                     onPick={applyLook}
                   />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {MUSIC_LOOKS.map((one) => (
                     <button
                       key={one.id}
@@ -498,6 +501,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                           : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'
                       }`}
                     >
+                      <MeerkatThumb className="mb-2 h-14 w-full" mood={PICTURED[one.id]?.mood ?? 'day'} filter={filterCss(PICTURED[one.id]?.look)} />
                       <span className="block text-sm font-semibold leading-tight">{one.label}</span>
                       <span className="block text-xs opacity-80 leading-tight pt-0.5">{one.note}</span>
                     </button>
