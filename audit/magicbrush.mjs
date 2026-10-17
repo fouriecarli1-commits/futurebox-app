@@ -169,6 +169,24 @@ try {
   check('  and nothing painted, the bench says the AI changes the whole photo',
     /whole photo|hele foto/i.test(await says.innerText()), await says.innerText());
 
+  /* ── Style match: drawn samples, in groups ── */
+  const tiles = async () => page.evaluate(() => [...document.querySelectorAll('[data-poststyle] canvas')].map((el) => {
+    const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+    let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += d[i] * 3 + d[i + 1] * 5 + d[i + 2] * 7;
+    return sum;
+  }));
+  const digital = await tiles();
+  check('Style match offers drawn samples', digital.length >= 5 && digital.every((one) => one > 0), JSON.stringify(digital.length));
+  check('  and every sample looks different', new Set(digital).size === digital.length);
+  await page.locator('[data-poststylegroup="physical"]').click();
+  await page.waitForTimeout(300);
+  const physical = await tiles();
+  check('  and another group shows other styles', physical.length >= 5 && physical[0] !== digital[0]);
+  await page.locator('[data-poststylegroup="digital"]').click();
+  await page.locator('[data-poststyle]').first().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: shot('magicstyles.png') });
+
   /* ── A press is seen ── */
   const glowed = await page.evaluate(() => new Promise((done) => {
     const el = document.querySelector('[data-postmagicbrush]');

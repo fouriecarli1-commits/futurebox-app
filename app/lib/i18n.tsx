@@ -2273,6 +2273,8 @@ export const STRINGS: Dict = {
   "post.thingMoved": { en: "It is on a layer of its own now \u2014 drag it where you want it. The original is still in the photo underneath; Magic can take it away.", af: "Dit is nou op sy eie laag \u2014 sleep dit waar jy dit wil h\u00ea. Die oorspronklike is nog onder in die foto; Towerraak kan dit weghaal." },
   "post.stepMoveThing": { en: "moving a thing", af: "\u2019n ding skuif" },
   "post.findWordsPhone": { en: "Or find words on my phone (less exact)", af: "Of vind woorde op my foon (minder presies)" },
+  "post.styleTitle": { en: "Style match", af: "Styl-pas" },
+  "post.stylePrice": { en: "{n} credits a style. On what you painted, or on the whole photo when nothing is painted.", af: "{n} krediete per styl. Op wat jy geverf het, of op die hele foto as niks geverf is nie." },
   "post.checkerOnlyHere": { en: "The squares only show you it is see-through. They are not in the picture you save.", af: "Die blokkies wys net dat dit deursigtig is. Hulle is nie in die prent wat jy stoor nie." },
   "post.clearOn": { en: "Transparent \u2014 nothing behind it", af: "Deursigtig \u2014 niks agter dit" },
   "post.face.plain": { en: "Plain", af: "Gewoon" },

@@ -141,6 +141,7 @@ import {
 } from '../lib/postdesigns';
 import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
+import { MAGIC_STYLES, STYLE_GROUPS, drawStyleTile, styleAsk, styleById, styleLabel, type StyleGroup } from '../lib/magicstyles';
 import { MAGIC_ASKS, brushRect, cropOf, laidIn, padded, type Brush, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
 import { accessToken, getStorageClient } from '../lib/cloud';
@@ -663,6 +664,15 @@ function FilterTile({ from, look }: { readonly from: HTMLCanvasElement | null; r
   return <canvas ref={canvas} width={144} height={144} aria-hidden className="aspect-square w-full rounded-xl" />;
 }
 
+/** A style's sample, drawn once — `lib/magicstyles.ts`. */
+function StyleTile({ id }: { readonly id: string }): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    if (canvas.current) drawStyleTile(canvas.current, id);
+  }, [id]);
+  return <canvas ref={canvas} width={144} height={144} aria-hidden className="aspect-square w-full rounded-xl" />;
+}
+
 const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
 /* ── A template's own lettering, taken out of its picture ─────────────────
@@ -874,6 +884,7 @@ export default function PostStudio({
      be moved as usual. Carli, 17 October 2026: *"Daar moet dan 'n brush
      button wees."* */
   const [brushOn, setBrushOn] = useState(true);
+  const [styleGroup, setStyleGroup] = useState<StyleGroup>('digital');
   /* The photograph as it was before a whole-photo change, for the
      before-and-after line — only while the photo is the one that change made. */
   const [compareFrom, setCompareFrom] = useState<{ readonly of: HTMLImageElement; readonly from: HTMLImageElement } | null>(null);
@@ -4620,7 +4631,7 @@ export default function PostStudio({
    * same place with a soft edge. Same route and price as asking for the
    * whole picture to change.
    */
-  const magicPart = async (how: 'better' | 'change' | 'fill', thing?: Pick): Promise<void> => {
+  const magicPart = async (how: 'better' | 'change' | 'fill' | 'style', thing?: Pick, styleId = ''): Promise<void> => {
     if (!picture || magicBusy) return;
     const wide = picture.naturalWidth || picture.width;
     const tall = picture.naturalHeight || picture.height;
@@ -4649,12 +4660,16 @@ export default function PostStudio({
       rect = padded(reach, wide, tall, 0.2);
       shape = brush;
     }
+    const style = how === 'style' ? styleById(styleId) : undefined;
+    if (how === 'style' && !style) return;
     const into = magicInto.trim();
     if (how === 'change' && !into) {
       setSaid(t('post.magicSayWhat', 'Say what it should become first.'));
       return;
     }
-    const words = whole
+    const words = style
+      ? styleAsk(style, whole)
+      : whole
       ? (how === 'better' ? MAGIC_ASKS.wholeBetter : MAGIC_ASKS.theme(into))
       : how === 'better'
         ? MAGIC_ASKS.better
@@ -4666,7 +4681,7 @@ export default function PostStudio({
       setSaid(t('post.askTooBig', 'Those pictures are too big to send together. Take one out, or use a smaller one.'));
       return;
     }
-    setMagicBusy(how);
+    setMagicBusy(style ? `style:${style.id}` : how);
     setSaid('');
     try {
       const token = await accessToken();
@@ -7358,6 +7373,54 @@ export default function PostStudio({
             </div>
           )}
           {magicButtons()}
+        </div>
+      )}
+      {/* ── Style match ──────────────────────────────────────────────
+          Carli, 17 October 2026: the styles another app shows as a row of
+          sample tiles under tabs — ours, drawn here (`lib/magicstyles.ts`).
+          A press restyles what is painted, or the whole photograph when
+          nothing is, with the before-and-after line after. */}
+      {picture && (
+        <div className="space-y-2" data-postmagicstyles>
+          <p className={MIKRO}>{t('post.styleTitle', 'Style match')}</p>
+          <div className="flex flex-wrap gap-1.5" role="tablist">
+            {STYLE_GROUPS.map((group) => (
+              <button
+                key={group.id}
+                type="button"
+                role="tab"
+                data-poststylegroup={group.id}
+                aria-selected={styleGroup === group.id}
+                onClick={() => setStyleGroup(group.id)}
+                className={`min-h-[36px] rounded-full border px-3 text-xs font-bold ${styleGroup === group.id ? GEKIES : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+              >
+                {styleLabel(group, lang)}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+            {MAGIC_STYLES.filter((one) => one.group === styleGroup).map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                data-poststyle={one.id}
+                disabled={Boolean(magicBusy)}
+                onClick={() => void magicPart('style', undefined, one.id)}
+                className="relative flex flex-col items-center gap-1 rounded-xl border border-zinc-700 bg-zinc-950 p-1 text-[10px] font-bold text-zinc-300 disabled:opacity-50"
+              >
+                <StyleTile id={one.id} />
+                {magicBusy === `style:${one.id}` && (
+                  <span className="absolute inset-1 grid place-items-center rounded-xl bg-black/50">
+                    <Loader2 className="h-5 w-5 animate-spin text-emerald-300" />
+                  </span>
+                )}
+                <span className="w-full truncate text-center">{styleLabel(one, lang)}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px]" style={{ color: INK_DIM }}>
+            {t('post.stylePrice', '{n} credits a style. On what you painted, or on the whole photo when nothing is painted.').replace('{n}', String(CREDITS.repaint))}
+          </p>
         </div>
       )}
     </div>
