@@ -216,6 +216,19 @@ export function drawToolTile(canvas: HTMLCanvasElement, id: string, from: HTMLCa
       ctx.fillText('Aa', s / 2, s / 2 + s * 0.02);
       break;
     }
+    case 'charts': {
+      /* Three rising columns over the photograph, in the chart palette's first three hues. */
+      base(ctx, from, s);
+      shade(ctx, s, 0.45);
+      ctx.save();
+      ['#3987e5', '#d95926', '#199e70'].forEach((c, k) => {
+        const h = s * (0.22 + k * 0.16);
+        ctx.fillStyle = c;
+        ctx.fillRect(s * (0.2 + k * 0.22), s * 0.8 - h, s * 0.16, h);
+      });
+      ctx.restore();
+      break;
+    }
     case 'shapes': {
       /* A glowing ring and a square over the photograph. */
       base(ctx, from, s);

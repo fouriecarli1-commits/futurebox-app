@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, Circle, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, ChartColumn, Circle, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -132,6 +132,7 @@ import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { OPEN_PANEL_EVENT, takePanel } from '../lib/alltools';
 import { askPdf } from '../lib/pdftools';
+import { CHART_KINDS, CHART_TEMPLATES, LOOKS, MOST_POINTS, MOST_SERIES, cleanChart, drawChart, parseTable, type ChartSpec } from '../lib/postcharts';
 import { canTouch, frontZ, movedOne, stackOf, type LayerOn } from '../lib/postlayers';
 import { GAPS, LAYOUTS, cellHas, cellsOf, frameOf, type Cell, type CellLook } from '../lib/postcells';
 import {
@@ -556,8 +557,16 @@ const POST_CELL: BenchSpec = {
   label: ['post.benchCell', 'This photo'],
   what: ['post.benchCellWhat', 'Replace it, move it about in its frame, zoom in, or open it on its own with every tool in the room.'],
 };
+/* Carli, 17 October 2026: *"In photo editor sal daar ook graph templates
+   moet wees, en verskillende verskeidenheid van graphs."* `lib/postcharts.ts`. */
+const POST_CHARTS: BenchSpec = {
+  id: 'charts',
+  icon: <ChartColumn className="h-5 w-5" />,
+  label: ['post.benchCharts', 'Charts'],
+  what: ['post.benchChartsWhat', 'A chart from a design: type or paste the numbers, or let AI set them from your words.'],
+};
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_STARTS, POST_GRID, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_LAYERS, POST_LOWER[2],
+  POST_STARTS, POST_GRID, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
@@ -569,6 +578,7 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   read: ['post.toolRead', 'Grab'],
   text: ['post.toolText', 'Text'],
   shapes: ['post.toolShapes', 'Shapes'],
+  charts: ['post.toolCharts', 'Charts'],
   layers: ['post.toolLayers', 'Layers'],
   grid: ['post.toolGrid', 'Grids'],
   cell: ['post.toolCell', 'Photo'],
@@ -630,6 +640,19 @@ const designMark = (ctx: CanvasRenderingContext2D, one: DesignMark, w: number, h
     ...(one.stretch !== undefined ? { stretch: one.stretch } : {}),
   }, w, h);
 };
+/** A chart design, drawn small from its own data. */
+function ChartTile({ spec, lang }: { readonly spec: ChartSpec; readonly lang: string }): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const el = canvas.current;
+    const ctx = el?.getContext('2d');
+    if (!el || !ctx) return;
+    ctx.clearRect(0, 0, el.width, el.height);
+    drawChart(ctx, spec, 0, 0, el.width, el.height, lang);
+  }, [spec, lang]);
+  return <canvas ref={canvas} width={240} height={180} aria-hidden className="h-full w-full rounded-lg" />;
+}
+
 function DesignTile({ design, lang }: { readonly design: Design; readonly lang: string }): React.ReactElement {
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const tall = design.size === 'story' ? 16 / 9 : design.size === 'portrait' ? 1.25 : 1;
@@ -2077,7 +2100,7 @@ export default function PostStudio({
       if (photoAt > 0 && at === photoAt) photoOnTop();
       if (layer.item.hidden) continue;
       const paint = (onto: CanvasRenderingContext2D): void => {
-        if (layer.kind === 'mark') drawMark(onto, layer.item as Mark, size.width, size.height);
+        if (layer.kind === 'mark') drawMark(onto, layer.item as Mark, size.width, size.height, lang);
         else if (layer.kind === 'cell') drawCell(layer.item as Cell, onto);
         else drawWords(layer.item as Words, onto);
       };
@@ -2745,7 +2768,7 @@ export default function PostStudio({
           if (!corner && !inside) continue;
           setMarkOn(mark.id);
           setWordOn(null);
-          if (bench !== 'shapes' && bench !== 'layers') setBench('shapes');
+          if (mark.kind === 'chart') { if (bench !== 'charts' && bench !== 'layers') setBench('charts'); } else if (bench !== 'shapes' && bench !== 'layers') setBench('shapes');
           markHeld.current = { id: mark.id, dx: put.x - mark.x, dy: put.y - mark.y, resize: corner && mark.id === markOn };
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
@@ -7961,7 +7984,8 @@ export default function PostStudio({
         ))}
       </div>
       {(() => {
-        const mark = marks.find((one) => one.id === markOn) ?? marks[marks.length - 1];
+        const shapesOnly = marks.filter((one) => one.kind !== 'chart');
+        const mark = shapesOnly.find((one) => one.id === markOn) ?? shapesOnly[shapesOnly.length - 1];
         if (!mark) {
           return <p className="text-xs" style={{ color: INK_DIM }}>{t('post.shapesStart', 'Pick a shape. Then drag it on the photo, and pull its corner to size it.')}</p>;
         }
@@ -8418,6 +8442,9 @@ export default function PostStudio({
       const at = cells.findIndex((one) => one.id === item.id);
       return `${t('post.layerCell', 'Photo')} ${at + 1}${(item as Cell).image ? '' : ` · ${t('post.layerCellEmpty', 'empty')}`}`;
     }
+    if (kind === 'mark' && (item as Mark).kind === 'chart') {
+      return `📊 ${(item as Mark).chart?.title || t('post.layerChart', 'Chart')}`;
+    }
     if (kind === 'mark') {
       const spec = MARK_SPECS.find((one) => one.id === (item as Mark).kind) ?? MARK_SPECS[0];
       return `${spec.icon} ${t(spec.name[0], spec.name[1])}`;
@@ -8587,7 +8614,7 @@ export default function PostStudio({
                 ? 'tone'
                 : layerOn === 'back'
                   ? 'frame'
-                  : chosenItem?.kind === 'mark' ? 'shapes' : chosenItem?.kind === 'cell' ? 'cell' : 'text',
+                  : chosenItem?.kind === 'mark' ? ((chosenItem.item as Mark).kind === 'chart' ? 'charts' : 'shapes') : chosenItem?.kind === 'cell' ? 'cell' : 'text',
             )}
             className={LEEG}
           >
@@ -8877,11 +8904,224 @@ export default function PostStudio({
     <p className="text-sm text-zinc-400" data-postcell="none">{t('post.cellNone', 'Tap a photo in the grid to change just that one.')}</p>
   );
 
+  /* ── Charts ─────────────────────────────────────────────────────────
+     Carli, 17 October 2026: *"graph templates … en verskillende
+     verskeidenheid van graphs. Wat cool sal wees as dit AI verstelbaar is
+     dat data ingevoer kan word en AI die data in die grafiek verstel."* A
+     chart is a mark (`postshapes.ts`) carrying its data (`postcharts.ts`):
+     moved and sized on the photo like a shape, changed here by hand, by a
+     pasted table, or by the AI from her own words. */
+  const [chartPaste, setChartPaste] = useState('');
+  const [chartWords, setChartWords] = useState('');
+  const [chartBusy, setChartBusy] = useState(false);
+  const chartOn = marks.find((one) => one.id === markOn && one.kind === 'chart')
+    ?? (bench === 'charts' ? [...marks].reverse().find((one) => one.kind === 'chart') : undefined)
+    ?? null;
+  const setChart = (id: string, next: ChartSpec): void => changeMark(id, { chart: next });
+  const addChart = (spec: ChartSpec, name: string): void => {
+    beforeLayers(t('post.stepAddChart', 'putting a chart in'));
+    const id = freshId();
+    const chart: ChartSpec = { ...spec, title: lang === 'af' ? name : spec.title };
+    setMarks((was) => [...was, { ...newMark('chart', id), ink: '#ffffff', glow: 'none', size: 0.78, stretch: 1.3, chart, z: frontZ(was, words) }]);
+    setMarkOn(id);
+    setWordOn(null);
+  };
+  const chartAi = async (mark: Mark): Promise<void> => {
+    if (!mark.chart || !chartWords.trim() || chartBusy) return;
+    setChartBusy(true);
+    setWorking('long');
+    setSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/post/chart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          /* Who is spending — the same token every paid press carries. */
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ chart: mark.chart, words: chartWords, lang }),
+      });
+      const body = (await answer.json().catch(() => ({}))) as { chart?: unknown; message?: string };
+      const next = answer.ok ? cleanChart(body.chart, mark.chart) : null;
+      if (!next) {
+        setSaid(body.message ?? t('post.chartAiNo', 'The AI could not turn that into chart data. Nothing was charged.'));
+        return;
+      }
+      beforeLayers(t('post.stepChartAi', 'letting AI set a chart'));
+      setChart(mark.id, next);
+      setChartWords('');
+      flash();
+    } catch {
+      setSaid(t('post.chartAiNo', 'The AI could not turn that into chart data. Nothing was charged.'));
+    } finally {
+      setChartBusy(false);
+      setWorking((was) => (was === 'long' ? null : was));
+    }
+  };
+  const chartField = 'h-11 min-w-0 rounded-lg border border-zinc-700 bg-black/30 px-2 text-sm';
+  const chartsBench = (
+    <div className="space-y-4" data-postcharts>
+      <div className="space-y-2">
+        <p className="text-xs font-bold" style={{ color: INK_DIM }}>{t('post.chartPick', 'Add a chart: pick a design')}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" data-postcharttemplates>
+          {CHART_TEMPLATES.map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              data-postcharttemplate={one.id}
+              onClick={() => addChart(one.spec, lang === 'af' ? one.af : one.en)}
+              className="flex flex-col gap-1 rounded-xl border border-zinc-700 bg-black/30 p-1.5 text-left"
+            >
+              <span className="block aspect-[4/3] w-full"><ChartTile spec={one.spec} lang={lang} /></span>
+              <span className="px-1 text-[11px] font-bold">{lang === 'af' ? one.af : one.en}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {chartOn?.chart && (() => {
+        const mark = chartOn;
+        const spec = chartOn.chart;
+        const edit = (next: Partial<ChartSpec>): void => setChart(mark.id, { ...spec, ...next });
+        const setCell = (row: number, col: number, raw: string): void => {
+          const v = Number(raw.replace(',', '.'));
+          edit({ series: spec.series.map((one, k) => (k === col ? { ...one, values: one.values.map((x, r) => (r === row ? (Number.isFinite(v) ? v : 0) : x)) } : one)) });
+        };
+        return (
+          <div className="space-y-3" data-postchart={spec.kind}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-bold">📊 {spec.title || t('post.layerChart', 'Chart')}</span>
+              <button type="button" onClick={() => dropMark(mark.id)} aria-label={t('post.removeChart', 'Remove this chart')} className={`${LEEG} w-auto px-3`}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* ── The AI, first: it is the quickest way to real numbers ── */}
+            <div className="space-y-2 rounded-xl border border-fuchsia-400/40 bg-fuchsia-500/5 p-2" data-postchartaibox>
+              <textarea
+                value={chartWords}
+                onChange={(e) => setChartWords(e.target.value.slice(0, 6000))}
+                rows={3}
+                data-postchartai
+                placeholder={t('post.chartAiHint', 'Type or paste your numbers, a report, or a change — "sales were 40, 52 and 61 in Jan to Mar", "add July at 90", "make it a pie".')}
+                className="w-full rounded-lg border border-zinc-700 bg-black/30 p-2 text-sm"
+              />
+              <button
+                type="button"
+                data-postchartaigo
+                disabled={!chartWords.trim() || chartBusy}
+                onClick={() => { void chartAi(mark); }}
+                className={`${LEEG} inline-flex w-full items-center justify-center gap-1.5 disabled:opacity-40`}
+              >
+                {chartBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {t('post.chartAiGo', 'Let AI set the data · {n} credits').replace('{n}', String(CREDITS.chart))}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5" data-postchartkinds>
+              {CHART_KINDS.map((one) => (
+                <button key={one.id} type="button" data-postchartkind={one.id} aria-pressed={spec.kind === one.id} onClick={() => edit({ kind: one.id })} className={`${LEEG} w-auto px-3 ${spec.kind === one.id ? 'ring-2 ring-emerald-400' : ''}`}>
+                  {lang === 'af' ? one.af : one.en}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5" data-postchartlooks>
+              {LOOKS.map((one) => (
+                <button key={one.id} type="button" data-postchartlook={one.id} aria-pressed={spec.look === one.id} onClick={() => edit({ look: one.id })} className={`${LEEG} inline-flex w-auto items-center gap-1.5 px-3 ${spec.look === one.id ? 'ring-2 ring-emerald-400' : ''}`}>
+                  <span aria-hidden className="h-4 w-4 rounded-full border border-zinc-500" style={{ background: one.surface }} />
+                  {lang === 'af' ? one.af : one.en}
+                </button>
+              ))}
+            </div>
+
+            <label className="block text-xs font-bold">{t('post.chartTitle', 'Title')}
+              <input value={spec.title} onChange={(e) => edit({ title: e.target.value.slice(0, 80) })} data-postcharttitle className={`${chartField} mt-1 w-full`} />
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block text-xs font-bold">{t('post.chartNote', 'Small line under it')}
+                <input value={spec.note ?? ''} onChange={(e) => edit({ note: e.target.value.slice(0, 120) })} className={`${chartField} mt-1 w-full`} />
+              </label>
+              <label className="block text-xs font-bold">{t('post.chartUnit', 'Unit (R, %, kg)')}
+                <input
+                  value={spec.unit ?? ''}
+                  onChange={(e) => { const unit = e.target.value.slice(0, 6); edit({ unit, unitAfter: /^[%a-z]/i.test(unit) && !/^[R$€£]/.test(unit) }); }}
+                  className={`${chartField} mt-1 w-full`}
+                />
+              </label>
+            </div>
+
+            {/* ── The numbers, by hand ── */}
+            <div className="overflow-hidden rounded-xl border border-zinc-700" data-postcharttable>
+              <div className="grid gap-px bg-zinc-700" style={{ gridTemplateColumns: `minmax(0,1.3fr) repeat(${spec.series.length}, minmax(0,1fr)) 44px` }}>
+                <span className="bg-zinc-900 px-2 py-1 text-[11px] font-bold text-zinc-400">{t('post.chartLabel', 'Label')}</span>
+                {spec.series.map((one, col) => (
+                  <input key={col} value={one.name} aria-label={t('post.chartSeries', 'Series name')} onChange={(e) => edit({ series: spec.series.map((x, k) => (k === col ? { ...x, name: e.target.value.slice(0, 40) } : x)) })} className="h-11 min-w-0 bg-zinc-900 px-2 text-[11px] font-bold" />
+                ))}
+                <span className="bg-zinc-900" />
+                {spec.labels.map((label, row) => (
+                  <React.Fragment key={row}>
+                    <input value={label} aria-label={t('post.chartLabel', 'Label')} onChange={(e) => edit({ labels: spec.labels.map((x, r) => (r === row ? e.target.value.slice(0, 40) : x)) })} className="h-11 min-w-0 bg-black/40 px-2 text-sm" data-postchartlabel={row} />
+                    {spec.series.map((one, col) => (
+                      <input key={col} inputMode="decimal" value={String(one.values[row] ?? 0)} aria-label={`${label} ${one.name}`} onChange={(e) => setCell(row, col, e.target.value)} className="h-11 min-w-0 bg-black/40 px-2 text-right text-sm tabular-nums" data-postchartcell={`${row}-${col}`} />
+                    ))}
+                    <button type="button" aria-label={t('post.chartDropRow', 'Take this row away')} disabled={spec.labels.length < 2} onClick={() => edit({ labels: spec.labels.filter((_, r) => r !== row), series: spec.series.map((one) => ({ ...one, values: one.values.filter((_, r) => r !== row) })) })} className="grid h-11 place-items-center bg-black/40 text-zinc-400 disabled:opacity-30"><X className="h-3.5 w-3.5" /></button>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" data-postchartaddrow disabled={spec.labels.length >= MOST_POINTS} onClick={() => edit({ labels: [...spec.labels, `${spec.labels.length + 1}`], series: spec.series.map((one) => ({ ...one, values: [...one.values, 0] })) })} className={LEEG}>
+                <Plus className="h-3.5 w-3.5" /> {t('post.chartAddRow', 'A row')}
+              </button>
+              <button type="button" data-postchartaddseries disabled={spec.series.length >= MOST_SERIES} onClick={() => edit({ series: [...spec.series, { name: `${t('post.chartSeries', 'Series name')} ${spec.series.length + 1}`, values: spec.labels.map(() => 0) }] })} className={LEEG}>
+                <Plus className="h-3.5 w-3.5" /> {t('post.chartAddSeries', 'A series')}
+              </button>
+            </div>
+            {spec.series.length > 1 && (
+              <button type="button" onClick={() => edit({ series: spec.series.slice(0, -1) })} className={LEEG}>{t('post.chartDropSeries', 'Take the last series away')}</button>
+            )}
+
+            {/* ── Or pasted from a spreadsheet ── */}
+            <details className="rounded-xl border border-zinc-700 p-2" data-postchartpastebox>
+              <summary className="min-h-[44px] cursor-pointer py-3 text-xs font-bold">{t('post.chartPaste', 'Paste a table')}</summary>
+              <textarea value={chartPaste} onChange={(e) => setChartPaste(e.target.value.slice(0, 20000))} rows={4} data-postchartpaste placeholder={'Jan\t42\nFeb\t51\nMar\t48'} className="w-full rounded-lg border border-zinc-700 bg-black/30 p-2 font-mono text-xs" />
+              <button
+                type="button"
+                data-postchartpastego
+                disabled={!chartPaste.trim()}
+                onClick={() => {
+                  const table = parseTable(chartPaste);
+                  if (!table) { setSaid(t('post.chartPasteNo', 'No numbers were found in that. Put a label and a number on each line.')); return; }
+                  beforeLayers(t('post.stepChartPaste', 'pasting a table into a chart'));
+                  edit(table);
+                  setChartPaste('');
+                }}
+                className={`${LEEG} mt-2 w-full disabled:opacity-40`}
+              >
+                {t('post.chartPasteGo', 'Use this table')}
+              </button>
+            </details>
+
+            <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider="size">
+              <span className="w-24 flex-shrink-0">{t('post.markSizeSlide', 'Size')}</span>
+              <input type="range" min={0.2} max={1.4} step={0.01} value={mark.size} onChange={(e) => changeMark(mark.id, { size: Number(e.target.value) })} className="h-11 min-w-0 flex-1 accent-emerald-400" />
+            </label>
+            <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider="stretch">
+              <span className="w-24 flex-shrink-0">{t('post.markStretch', 'Wide or tall')}</span>
+              <input type="range" min={0.5} max={2.6} step={0.05} value={mark.stretch ?? 1} onChange={(e) => changeMark(mark.id, { stretch: Number(e.target.value) })} className="h-11 min-w-0 flex-1 accent-emerald-400" />
+            </label>
+          </div>
+        );
+      })()}
+    </div>
+  );
+
   const benchFor: Record<string, React.ReactNode> = {
     starts: startsBench,
     grid: gridBench,
     cell: cellBench,
     shapes: shapesBench,
+    charts: chartsBench,
     layers: layersBench,
     magic: magicBench,
     pic: picBench,

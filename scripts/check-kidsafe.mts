@@ -239,16 +239,23 @@ ok('two rooms cannot spend a credit at all',
    is really about: the photo editor is not one of the rooms a child is
    left alone in, and the press says its price before it is pressed. The
    rule stays as it is — the FIFTH paid door reddens too. */
-ok('  and the photo editor spends on exactly the four things it is meant to',
+/* ── The fifth, decided out loud on 17 October 2026 ───────────────────
+   Carli: *"Wat cool sal wees as dit AI verstelbaar is dat data ingevoer kan
+   word en AI die data in die grafiek verstel."* A chart's numbers set by
+   the AI from her words: four credits, its price on its button. Nothing
+   about a child changes — the photo editor is still not a room a child is
+   left alone in — and a SIXTH paid door reddens this line again. */
+ok('  and the photo editor spends on exactly the five things it is meant to',
   JSON.stringify(spend.get('photo'))
     === JSON.stringify([
-      '/api/google/picture', '/api/picture/objects', '/api/post/export', '/api/video',
+      '/api/google/picture', '/api/picture/objects', '/api/post/chart', '/api/post/export', '/api/video',
     ]),
   `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
   + ' changing what is in it by saying what to change, finding the things in'
-  + ' it, and giving it a little motion. Every other tool in that room runs'
-  + ' on the device and takes no credits. A FIFTH paid door is a decision'
-  + ' somebody has to make out loud, which is what this line is for');
+  + ' it, setting a chart from words, and giving it a little motion. Every'
+  + ' other tool in that room runs on the device and takes no credits. A'
+  + ' SIXTH paid door is a decision somebody has to make out loud, which is'
+  + ' what this line is for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',
   FREE.includes('collab'),

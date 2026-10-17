@@ -1010,6 +1010,14 @@ export const CREDITS = {
      supplier's bill; she measured what it is worth to the person pressing
      it. */
   grab: 15,
+  /* ── A chart's data from words, 17 October 2026 ─────────────────────
+
+     Carli: *"Wat cool sal wees as dit AI verstelbaar is dat data ingevoer
+     kan word en AI die data in die grafiek verstel."* One short Flash call
+     that reads what she typed and answers a few hundred bytes of numbers —
+     the same shape of work as `transcribe`, and priced beside it. Hers to
+     change: put to her when it shipped. */
+  chart: 4,
 } as const;
 
 /**

@@ -57,6 +57,7 @@ daardie lid druk dieselfde knoppies.
 | `finetune` | 180 | R270.15 | nog nie gelees nie | nog nie bekend nie |
 | `parts` | 8 | R12.01 | nog nie gelees nie | nog nie bekend nie |
 | `grab` | 15 | R22.51 | nog nie gelees nie | nog nie bekend nie |
+| `chart` | 4 | R6.00 | nog nie gelees nie | nog nie bekend nie |
 
 ---
 

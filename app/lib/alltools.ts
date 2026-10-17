@@ -33,7 +33,7 @@ export type ToolIcon =
   | 'titles' | 'effects' | 'generators' | 'enhance' | 'audiofx' | 'photo' | 'templates' | 'grid'
   | 'filters' | 'adjust' | 'cutout' | 'text' | 'grab' | 'layers' | 'shapes' | 'studio' | 'booth'
   | 'podcast' | 'sound' | 'hooks' | 'live' | 'channel' | 'collab'
-  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit';
+  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit' | 'chart';
 
 export interface Tool {
   readonly id: string;
@@ -77,6 +77,7 @@ export const TOOLS: readonly Tool[] = [
   { id: 'cutout', group: 'photo', en: 'Remove background', af: 'Agtergrond uit', room: 'photo', panel: 'pic', icon: 'cutout' },
   { id: 'text', group: 'photo', en: 'Text', af: 'Teks', room: 'photo', panel: 'text', icon: 'text' },
   { id: 'grab', group: 'photo', en: 'Grab text and things', af: 'Gryp teks en dinge', room: 'photo', panel: 'read', icon: 'grab' },
+  { id: 'charts', group: 'photo', en: 'Charts and graphs', af: 'Grafieke', room: 'photo', panel: 'charts', icon: 'chart' },
   { id: 'shapes', group: 'photo', en: 'Shapes', af: 'Vorms', room: 'photo', panel: 'shapes', icon: 'shapes' },
   { id: 'layers', group: 'photo', en: 'Layers', af: 'Lae', room: 'photo', panel: 'layers', icon: 'layers' },
 

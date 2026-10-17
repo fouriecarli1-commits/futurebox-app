@@ -16,6 +16,7 @@
  */
 
 import type { GlowId } from './postglow';
+import { drawChart, type ChartSpec } from './postcharts';
 import { glowOf, haloPasses } from './postglow';
 
 /* Carli, 14 October 2026: "Die shapes is meestal daar as 'n background vir
@@ -25,7 +26,10 @@ import { glowOf, haloPasses } from './postglow';
    The first five are filled, to sit behind words; the four after them are
    the neon outlines that were here before. */
 export const FILLED_KINDS = ['circle', 'box', 'triangle', 'rect', 'paint'] as const;
-export const MARK_KINDS = [...FILLED_KINDS, 'cube', 'ring', 'grid', 'frame'] as const;
+/* A chart (`postcharts.ts`, 17 October 2026) is a mark too, so it moves,
+   sizes, stacks and exports with everything else; it is not on the shapes
+   list, it has a bench of its own. */
+export const MARK_KINDS = [...FILLED_KINDS, 'cube', 'ring', 'grid', 'frame', 'chart'] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
 export interface MarkSpec {
@@ -66,6 +70,8 @@ export interface Mark {
   readonly hidden?: boolean;
   /** The layer's own opacity, 0.1 to 1, from the layer list — the whole shape, glow and all. Absent is 1. */
   readonly alpha?: number;
+  /** A chart's data and look, for the kind 'chart'. */
+  readonly chart?: ChartSpec;
 }
 
 export const isFilled = (kind: MarkKind): boolean => (FILLED_KINDS as readonly string[]).includes(kind);
@@ -80,7 +86,7 @@ export const NEON_INKS = ['#39ff14', '#00f0ff', '#ff2bd6', '#fff200', '#ff6b00',
 export function markBox(mark: Mark, width: number, height: number): { cx: number; cy: number; w: number; h: number } {
   const short = Math.min(width, height);
   const w = mark.size * short;
-  const stretch = isFilled(mark.kind) ? Math.max(0.2, Math.min(5, mark.stretch ?? 1)) : 1;
+  const stretch = isFilled(mark.kind) || mark.kind === 'chart' ? Math.max(0.2, Math.min(5, mark.stretch ?? 1)) : 1;
   return { cx: mark.x * width, cy: mark.y * height, w: w * Math.sqrt(stretch), h: w / Math.sqrt(stretch) };
 }
 
@@ -223,7 +229,16 @@ function trace(ctx: CanvasRenderingContext2D, kind: MarkKind, w: number): void {
  * lit word beside it are the same light. The frame's corners are drawn a
  * second time heavier, which is what makes them read as brackets.
  */
-export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: number, height: number): void {
+export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: number, height: number, lang = 'en'): void {
+  if (mark.kind === 'chart') {
+    if (!mark.chart) return;
+    const box = markBox(mark, width, height);
+    ctx.save();
+    ctx.globalAlpha *= Math.max(0.1, Math.min(1, mark.opacity ?? 1));
+    drawChart(ctx, mark.chart, box.cx - box.w / 2, box.cy - box.h / 2, box.w, box.h, lang);
+    ctx.restore();
+    return;
+  }
   if (isFilled(mark.kind)) {
     /* ── See-through, faded once ──────────────────────────────────────
        Carli, 16 October 2026, found while building the layers: the shape is

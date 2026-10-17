@@ -110,6 +110,10 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   repaint: 'five credits to have a picture redrawn, inside the photo editor,'
     + ' whose other tools use no credits because they run on her own phone.'
     + ' The cards name the room; this is one press inside it',
+  /* 17 October 2026: the AI that sets a chart's numbers from her words. */
+  chart: 'four credits to let the AI set a chart\u2019s numbers from words, inside the'
+    + ' photo editor\u2019s Charts. The same case as `grab`: one press inside a'
+    + ' room the cards already name, priced on its own button',
   grab: 'two credits to ask the engine what is in a picture, inside the photo'
     + ' editor. The same case as `repaint` next door: the cards name rooms,'
     + ' and a line for every press inside one is a card nobody reads. The'

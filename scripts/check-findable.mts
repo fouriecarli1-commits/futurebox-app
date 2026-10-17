@@ -167,6 +167,9 @@ const FINDABLE: Record<string, readonly string[] | null> = {
      it, and a directory that uses a different word for the same press is a
      search that finds nothing. */
   grab: ['the things in it'],
+  /* The chart's AI, 17 October 2026: found under the words the room
+     directory uses for the Charts tool. */
+  chart: ['chart'],
   /* The same film, rendered in the browser instead of bought out. One
      capability, one place; a second entry would be a second door that does
      not exist. */

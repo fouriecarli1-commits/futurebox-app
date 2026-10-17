@@ -1767,6 +1767,12 @@ jobs:
       - name: The document room's PDF work reads back right in another reader
         run: npm run check:pdfwork
 
+      # The photo editor's charts: axes from nought, numbers read the way
+      # people write them, eight colours in a fixed order and Other for the
+      # rest, and the AI's answer cleaned like anything else from outside.
+      - name: Charts draw from honest numbers
+        run: npm run check:charts
+
       # The price list she sets prices off is generated from the code, and
       # this fails when the file on disk is not what the code says today. A
       # price list goes stale silently, because nothing in a build reads
@@ -2009,7 +2015,7 @@ jobs:
           - group: doors
             probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
-            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom
+            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts
           - group: rooms
             probes: check:forgotwalk check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:radarkeep check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops
           - group: whole
