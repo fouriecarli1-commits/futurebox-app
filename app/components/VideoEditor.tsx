@@ -81,6 +81,7 @@ import {
   MOST_PATCHES, PATCH_LARGEST, PATCH_SMALLEST, STRENGTHS, blurRadius, newPatch,
   type Patch, type StrengthId,
 } from '../lib/videoblur';
+import { EASES, MOVES, STILL, keyPose, moves, poseAt, poseCss, type Ease, type Key, type Motion, type MoveId } from '../lib/videomotion';
 import CutDock, { type Bench } from './CutDock';
 import { useSideways } from '../lib/sideways';
 import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
@@ -4046,6 +4047,8 @@ async function smallerFrame(url: string): Promise<string> {
                   piece.fill ? 'object-cover' : 'object-contain'
                 }`}
               />
+              {/* The picture moving, by the renderer's own `poseAt`. */}
+              {piece && <MotionDriver video={viewer} motion={piece.motion} from={piece.from} speed={piece.speed ?? 1} length={lengthOfPiece(piece)} />}
               {/* The shot's effects, drawn over the player by the renderer's own `paintFx`. */}
               {piece && (piece.fx?.length ?? 0) > 0 && (
                 <FxFrame
@@ -6283,6 +6286,117 @@ async function smallerFrame(url: string): Promise<string> {
           </Note>
         )}
 
+        {bench === 'motion' && piece && (() => {
+          /* ── The picture moving ─────────────────────────────────────
+             Carli, 17 October 2026, about another program's motion
+             effects: *"Die effects … kan ook cool wees."* A ready-made
+             movement, and keyframes of her own on top — both through
+             `poseAt`, which the renderer draws with too. */
+          const motion: Motion = piece.motion ?? {};
+          const length = lengthOfPiece(piece);
+          const here = Math.max(0, Math.min(1, (at - startsAt(edit, piece.id)) / Math.max(0.05, length)));
+          const keys = [...(motion.keys ?? [])].sort((a, b) => a.at - b.at);
+          const keyOn = keys.find((one) => Math.abs(one.at - here) < 0.02) ?? null;
+          const setMotion = (next: Motion): void => tweak({ motion: next });
+          const setKey = (key: Key, how: Partial<Key>, live = false): void => {
+            const next = { ...motion, keys: keys.map((one) => (one === key ? { ...one, ...how } : one)) };
+            if (live) slide({ motion: next }); else setMotion(next);
+          };
+          const groups = [
+            ['camera', t('edit.moveCamera', 'Camera')],
+            ['energy', t('edit.moveEnergy', 'Energy')],
+            ['enter', t('edit.moveEnter', 'Coming in and going out')],
+          ] as const;
+          const dial = (label: string, value: number, min: number, max: number, step: number, set: (v: number) => void, mark: string): React.ReactElement => (
+            <label className="flex items-center gap-2 text-xs text-zinc-300" data-editorkeydial={mark}>
+              <span className="w-24 shrink-0">{label}</span>
+              <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => set(Number(e.target.value))} className="h-11 min-w-0 flex-1 accent-emerald-400" />
+              <span className="w-12 text-right font-mono text-[11px] text-zinc-500">{step < 1 ? value.toFixed(2) : Math.round(value)}</span>
+            </label>
+          );
+          return (
+            <div className="space-y-4" data-editormotion>
+              {groups.map(([group, name]) => (
+                <div key={group} className="space-y-1.5">
+                  <span className="text-sm text-zinc-400">{name}</span>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {MOVES.filter((one) => one.group === group).map((one) => {
+                      const on = (motion.move ?? 'none') === one.id;
+                      return (
+                        <button
+                          key={one.id}
+                          type="button"
+                          data-editormove={one.id}
+                          aria-pressed={on}
+                          onClick={() => setMotion({ ...motion, move: one.id as MoveId })}
+                          className={`flex flex-col items-center gap-1 rounded-xl border p-1.5 text-[11px] font-bold ${on ? 'border-emerald-400 bg-emerald-500/10 text-emerald-200' : 'border-zinc-800 bg-zinc-900 text-zinc-300'}`}
+                        >
+                          <MovePreview move={one.id as MoveId} />
+                          {lang === 'af' ? one.af : one.en}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              {motion.move && motion.move !== 'none' && dial(t('edit.moveStrength', 'How strong'), motion.strength ?? 1, 0.25, 2, 0.05, (v) => slide({ motion: { ...motion, strength: v } }), 'strength')}
+
+              {/* ── Keyframes of her own ── */}
+              <div className="space-y-2 rounded-xl border border-zinc-800 p-3" data-editorkeys>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-zinc-200">{t('edit.keyframes', 'Keyframes')}</span>
+                  <span className="text-[11px] text-zinc-500">{t('edit.keyHere', 'At the playhead')}: {Math.round(here * 100)}%</span>
+                </div>
+                <p className="text-[11px] text-zinc-500">{t('edit.keyHow', 'Move the playhead, set the picture where it should be at that moment, and it moves smoothly from one keyframe to the next.')}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {keys.map((one, k) => (
+                    <button key={k} type="button" data-editorkeyframe={k} onClick={() => scrubTo(startsAt(edit, piece.id) + one.at * length)} aria-pressed={one === keyOn} className={`min-h-[44px] rounded-lg border px-2.5 text-[11px] font-bold ${one === keyOn ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-300'}`}>
+                      ◆ {Math.round(one.at * 100)}%
+                    </button>
+                  ))}
+                  {!keyOn && keys.length < 24 && (
+                    <button
+                      type="button"
+                      data-editorkeyadd
+                      onClick={() => {
+                        const pose = keys.length ? keyPose(keys, here) : STILL;
+                        setMotion({ ...motion, keys: [...keys, { ...pose, at: here, ease: 'inOut' as Ease }] });
+                      }}
+                      className="min-h-[44px] rounded-lg border border-dashed border-emerald-500/60 px-2.5 text-[11px] font-bold text-emerald-200"
+                    >
+                      + {t('edit.keyAdd', 'Keyframe here')}
+                    </button>
+                  )}
+                </div>
+                {keyOn && (
+                  <div className="space-y-1" data-editorkeyon>
+                    {dial(t('edit.keyAcross', 'Across'), keyOn.x, -1, 1, 0.01, (v) => setKey(keyOn, { x: v }, true), 'x')}
+                    {dial(t('edit.keyDown', 'Up and down'), keyOn.y, -1, 1, 0.01, (v) => setKey(keyOn, { y: v }, true), 'y')}
+                    {dial(t('edit.keySize', 'How big'), keyOn.scale, 0.2, 4, 0.01, (v) => setKey(keyOn, { scale: v }, true), 'scale')}
+                    {dial(t('edit.keyTurn', 'Turned'), keyOn.rotate, -360, 360, 1, (v) => setKey(keyOn, { rotate: v }, true), 'rotate')}
+                    {dial(t('edit.keySolid', 'How solid'), keyOn.opacity, 0, 1, 0.01, (v) => setKey(keyOn, { opacity: v }, true), 'opacity')}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {EASES.map((one) => (
+                        <button key={one.id} type="button" aria-pressed={keyOn.ease === one.id} onClick={() => setKey(keyOn, { ease: one.id })} className={`min-h-[44px] rounded-lg border px-2.5 text-[11px] font-bold ${keyOn.ease === one.id ? 'border-emerald-400 text-emerald-200' : 'border-zinc-700 text-zinc-300'}`}>
+                          {lang === 'af' ? one.af : one.en}
+                        </button>
+                      ))}
+                      <button type="button" data-editorkeydrop onClick={() => setMotion({ ...motion, keys: keys.filter((one) => one !== keyOn) })} className="min-h-[44px] rounded-lg border border-zinc-700 px-2.5 text-[11px] font-bold text-zinc-300">
+                        {t('edit.keyDrop', 'Take this keyframe away')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {moves(motion) && (
+                <button type="button" data-editormotionclear onClick={() => tweak({ motion: undefined })} className="min-h-[44px] w-full rounded-xl border border-zinc-700 text-xs font-bold text-zinc-300">
+                  {t('edit.motionClear', 'Keep the picture still')}
+                </button>
+              )}
+            </div>
+          );
+        })()}
+
         {bench === 'looks' && piece && (
           <div className="space-y-4">
           {/* The looks. Seven, free, and applied in the browser — the same
@@ -8477,5 +8591,62 @@ function FilmFurniture({
       className="pointer-events-none absolute inset-0 h-full w-full"
       style={{ zIndex: 1 }}
     />
+  );
+}
+
+/**
+ * The preview's picture moving: the player turned and scaled every frame by
+ * the same `poseAt` the renderer draws with, read off the player's own clock.
+ */
+function MotionDriver({ video, motion, from, speed, length }: {
+  readonly video: React.RefObject<HTMLVideoElement | null>;
+  readonly motion: Motion | undefined;
+  readonly from: number;
+  readonly speed: number;
+  readonly length: number;
+}): null {
+  useEffect(() => {
+    const el = video.current;
+    if (!el) return undefined;
+    if (!moves(motion)) {
+      el.style.transform = '';
+      el.style.opacity = '';
+      return undefined;
+    }
+    let frame = 0;
+    const tick = (): void => {
+      const pose = poseAt(motion, (el.currentTime - from) / Math.max(0.1, speed), length);
+      el.style.transform = poseCss(pose);
+      el.style.opacity = pose.opacity < 1 ? String(pose.opacity) : '';
+      frame = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => { cancelAnimationFrame(frame); el.style.transform = ''; el.style.opacity = ''; };
+  }, [video, motion, from, speed, length]);
+  return null;
+}
+
+/** A movement shown as a moving tile, looping every two and a half seconds. */
+function MovePreview({ move }: { readonly move: MoveId }): React.ReactElement {
+  const tile = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    const el = tile.current;
+    if (!el) return undefined;
+    let frame = 0;
+    const began = performance.now();
+    const tick = (now: number): void => {
+      const s = ((now - began) / 1000) % 2.5;
+      const pose = poseAt({ move }, s, 2.5);
+      el.style.transform = poseCss(pose);
+      el.style.opacity = String(pose.opacity);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [move]);
+  return (
+    <span aria-hidden className="relative block h-12 w-full overflow-hidden rounded-lg bg-black">
+      <span ref={tile} className="absolute inset-0 block" style={{ background: 'radial-gradient(circle at 35% 40%, #fde68a 0 14%, transparent 15%), linear-gradient(160deg, #0ea5e9, #10b981 55%, #065f46)' }} />
+    </span>
   );
 }

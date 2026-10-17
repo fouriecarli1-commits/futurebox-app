@@ -59,7 +59,7 @@ const ROOMS = [
     room: 'Video Editor',
     tab: 'data-cutbench',
     row: 'data-cutbenchrow',
-    benches: ['clip', 'film', 'folder', 'looks', 'words', 'sound', 'mark'],
+    benches: ['clip', 'film', 'folder', 'looks', 'motion', 'words', 'sound', 'mark'],
   },
   {
     room: 'ProBooth',

@@ -43,6 +43,7 @@
  */
 
 import { cleanFx, type FxOn } from './videofx';
+import { cleanMotion, type Motion } from './videomotion';
 import { filterCss } from './videofilters';
 import type { Cut, Scene } from './stitch';
 import { joinFits, type Join } from './videojoins';
@@ -114,6 +115,11 @@ export interface Piece {
    * cinema bars. See `lib/videofx.ts`. Absent is none.
    */
   readonly fx?: readonly FxOn[];
+  /**
+   * The picture itself moving — a push in, a pan, a shake, keyframes of her
+   * own. See `lib/videomotion.ts`. Absent is still.
+   */
+  readonly motion?: Motion;
   /** Sound effects on this shot's own sound — `lib/audiofx.ts`. Absent is none. */
   readonly sfx?: readonly AudioFxOn[];
   /**
@@ -865,6 +871,7 @@ export function cutFrom(edit: Edit): Cut {
          is a field the renderer then loops over to do nothing. */
       ...(one.blurs?.length ? { blurs: one.blurs } : {}),
       ...(one.fx?.length ? { fx: cleanFx(one.fx) } : {}),
+      ...(cleanMotion(one.motion) ? { motion: cleanMotion(one.motion) } : {}),
       ...(one.sfx?.length ? { sfx: cleanAudioFx(one.sfx) } : {}),
       ...soundEdges(kept, at),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),

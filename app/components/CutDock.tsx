@@ -42,7 +42,7 @@
 
 import React, { useEffect } from 'react';
 import {
-  Film, FolderOpen, Image as ImageIcon, Music, Pause, Play, Scissors,
+  Film, FolderOpen, Image as ImageIcon, Move, Music, Pause, Play, Scissors,
   SkipBack, SkipForward, Type, Wand2,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
@@ -54,7 +54,7 @@ import { CUT_LOOK, EDGE, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/c
 /** Which panel is out. `null` is all of them shut. */
 export type Bench =
   /* The cutting room's. */
-  | 'clip' | 'film' | 'folder' | 'looks' | 'words' | 'sound' | 'mark'
+  | 'clip' | 'film' | 'folder' | 'looks' | 'motion' | 'words' | 'sound' | 'mark'
   /* The photo editor's. One union rather than a generic parameter: the ids
      are a closed set either way, and a type that has to be threaded through
      `DeskSheet` and every handler to say the same thing is a cost paid on
@@ -176,7 +176,7 @@ function BenchButton({
  * looked like it did nothing. All three are about one shot, so all three
  * wait for one.
  */
-const NEEDS_A_SHOT: ReadonlySet<Bench> = new Set<Bench>(['clip', 'looks', 'words']);
+const NEEDS_A_SHOT: ReadonlySet<Bench> = new Set<Bench>(['clip', 'looks', 'motion', 'words']);
 
 /** Either side of the transport: the shot you picked, and the whole film. */
 const UPPER: readonly BenchSpec[] = [
@@ -217,6 +217,14 @@ const LOWER: readonly BenchSpec[] = [
     icon: <Wand2 className="h-5 w-5" />,
     label: ['cut.looks', 'Looks'],
     what: ['cut.looksWhat', 'Thirteen looks, applied in your own browser, on the shot you have picked.'],
+  },
+  /* Carli, 17 October 2026, about another program's motion effects: *"Die
+     effects … kan ook cool wees."* `lib/videomotion.ts`. */
+  {
+    id: 'motion',
+    icon: <Move className="h-5 w-5" />,
+    label: ['cut.motion', 'Motion'],
+    what: ['cut.motionWhat', 'The picture itself moving — a push in, a pan, a shake, a spin in — or keyframes of your own.'],
   },
   {
     id: 'words',

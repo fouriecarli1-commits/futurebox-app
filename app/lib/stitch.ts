@@ -73,6 +73,7 @@ import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 import { paintJoin } from './joinpaint';
 import { paintFx, type FxOn } from './videofx';
+import { applyPose, moves, poseAt, type Motion } from './videomotion';
 import { chainAudioFx, fadeLevel, type AudioFxOn, type SoundJoin } from './audiofx';
 import { paintedFor, type EdgeId } from './wordsedge';
 import { drawFrame, motionAt, revealed, scrambled } from './videoextras';
@@ -148,6 +149,8 @@ export interface Scene {
   readonly blurs?: readonly Patch[];
   /** Effects painted over the shot every frame, after the patches — `lib/videofx.ts`. */
   readonly fx?: readonly FxOn[];
+  /** The picture moving: the same `poseAt` the editor's preview runs. */
+  readonly motion?: Motion;
   /** Sound effects on the shot's own sound — `lib/audiofx.ts`. */
   readonly sfx?: readonly AudioFxOn[];
   /** The sound fading in through the arriving transition, and out through the leaving one. */
@@ -1466,10 +1469,18 @@ export async function stitch(cut: Cut): Promise<Made> {
              things on this canvas that are ours rather than hers, and the
              one thing a grade must not touch is the text somebody has to
              read. */
+          /* The picture moving, by the preview's own `poseAt` (`videomotion.ts`):
+             pushed, panned, turned or faded about the frame's middle, over
+             black where it leaves the frame; the words, the mark and the
+             effects stay still on top. */
+          const motion = cut.scenes[index].motion;
+          const pose = moves(motion) ? poseAt(motion, (video.currentTime - view.from) / fast, (window.to - window.from) / fast) : null;
           const grade = cut.scenes[index].grade ?? '';
           if (grade) context.filter = grade;
           if (wantsBlur && fills < 0.995) backdrop(context, scratch, video, cut.width, cut.height);
+          if (pose) { context.save(); applyPose(context, pose, cut.width, cut.height); }
           context.drawImage(video, box.x, box.y, box.w, box.h);
+          if (pose) context.restore();
           if (grade) context.filter = 'none';
           /* ── The patches, over the picture and under everything of ours ──
  
