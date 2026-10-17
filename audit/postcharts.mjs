@@ -108,6 +108,17 @@ try {
   const afterAi = await page.locator('[data-postchartlabel]').evaluateAll((all) => all.map((one) => one.value));
   check('  and its answer becomes the chart', afterAi.join() === 'Jan,Feb,Mar,Apr' && (await page.locator('[data-postcharttitle]').inputValue()) === 'From the AI', afterAi.join());
 
+  /* Carli, 17 October 2026: closing the panel hid the chart behind the
+     start card on a post with no photo. It stays in sight. */
+  await tool('charts');
+  await page.waitForTimeout(500);
+  const covered = await page.evaluate(() => {
+    const c = document.querySelector('[data-postcanvas]')?.getBoundingClientRect();
+    if (!c) return 'no canvas';
+    const hit = document.elementFromPoint(c.left + c.width / 2, c.top + c.height / 2);
+    return hit?.closest('[data-postcanvas]') || hit?.tagName === 'CANVAS' ? '' : (hit?.textContent ?? '').slice(0, 60);
+  });
+  check('with the panel closed, the chart is in sight and nothing sits over it', covered === '', covered);
   await tool('layers');
   check('the chart is a layer in the list', /📊/.test(await page.locator('[data-postlayers], [data-postlayerlist]').first().innerText().catch(() => '')));
 } catch (problem) {

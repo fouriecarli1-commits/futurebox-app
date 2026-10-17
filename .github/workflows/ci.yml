@@ -1773,6 +1773,13 @@ jobs:
       - name: Charts draw from honest numbers
         run: npm run check:charts
 
+      # A price typed into a sentence goes stale while the button beside it
+      # stays right: 17 October 2026 found Grab, the photo export and the
+      # video editor's frame all saying old prices. Every price in words is
+      # held to credits.ts here, in English and Afrikaans.
+      - name: Every price written into words is the price in the code
+        run: npm run check:pricewords
+
       # The price list she sets prices off is generated from the code, and
       # this fails when the file on disk is not what the code says today. A
       # price list goes stale silently, because nothing in a build reads

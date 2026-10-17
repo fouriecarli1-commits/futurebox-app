@@ -7,9 +7,9 @@
  * en dit moet dan rondgeskuif kan word en ge-edit word."* And, when told the
  * version that runs on the phone would be free: *"Niks is gratis."*
  *
- * So it is Google, and it is charged — `CREDITS.grab`, two, the same as
- * `transcribe`, because this draws nothing: it reads one picture and answers
- * a few hundred bytes about it.
+ * So it is Google, and it is charged — `CREDITS.grab`. It was two at first,
+ * the same as `transcribe`, because this draws nothing; she set it to fifteen
+ * on 11 October 2026, and `credits.ts` says why.
  *
  * ── One press, one charge, however much is in the picture ────────────────
  *

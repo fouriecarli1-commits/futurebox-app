@@ -114,7 +114,7 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   chart: 'four credits to let the AI set a chart\u2019s numbers from words, inside the'
     + ' photo editor\u2019s Charts. The same case as `grab`: one press inside a'
     + ' room the cards already name, priced on its own button',
-  grab: 'two credits to ask the engine what is in a picture, inside the photo'
+  grab: 'fifteen credits to ask the engine what is in a picture, inside the photo'
     + ' editor. The same case as `repaint` next door: the cards name rooms,'
     + ' and a line for every press inside one is a card nobody reads. The'
     + ' button itself says the price before it is pressed, which is where'

@@ -227,7 +227,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Dubbing is 110 credits a minute — more than this plan holds, so it starts at Studio.',
       /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
-      'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; giving it a little motion is priced like a video.',
+      'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; a chart set by AI from your words is 4; giving it a little motion is priced like a video.',
       '10 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },
@@ -294,7 +294,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Dubbing into another language, in the same voice — 110 credits a minute out of your 205.',
       /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
-      'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; giving it a little motion is priced like a video.',
+      'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; a chart set by AI from your words is 4; giving it a little motion is priced like a video.',
       '50 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },
@@ -342,7 +342,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Dubbing into another language, in the same voice — 110 credits a minute out of your 599.',
       /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
-      'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; giving it a little motion is priced like a video.',
+      'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; a chart set by AI from your words is 4; giving it a little motion is priced like a video.',
       '200 GB of cloud space for what you keep — songs, films, recordings and pictures.',
     ],
   },

@@ -594,7 +594,7 @@ export default function VideoEditor({
    *
    * It arrives already paid for — `/api/post/export` charges before the
    * canvas is drawn, once per post, so a post she already saved comes down
-   * here for nothing and one that did not costs the one credit it would
+   * here for nothing and one that did not costs the one charge it would
    * have cost to save. The editor exports for nothing on the device, so
    * without that charge this would have been a free road off the phone.
    */
@@ -3631,8 +3631,8 @@ async function smallerFrame(url: string): Promise<string> {
       <p className="text-[11px] leading-relaxed" style={{ color: INK_DIM }}>
         {t(
           'edit.shotWhat',
-          'Drawing a frame costs five credits a try; making it move is paid once, and the price is on that button. What is sent is your words and the frame on this bench — so when the wand took that frame out of your film, that one frame goes too. Nothing else of your footage is sent from here.',
-        )}
+          'Drawing a frame costs {n} credits a try; making it move is paid once, and the price is on that button. What is sent is your words and the frame on this bench — so when the wand took that frame out of your film, that one frame goes too. Nothing else of your footage is sent from here.',
+        ).replace('{n}', String(CREDITS.repaint))}
       </p>
     </div>
   );

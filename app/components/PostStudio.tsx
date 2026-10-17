@@ -391,7 +391,7 @@ function freeRow(was: readonly Words[], from: number): At {
  * One post, one id, for as long as it is open.
  *
  * `spend_credits` charges once per reference, so exporting the same post
- * twice is one credit. Changing the words is the same post; starting a new
+ * twice is one charge. Changing the words is the same post; starting a new
  * one is not.
  */
 /* ── The cutting room's colours ───────────────────────────────────────────
@@ -490,7 +490,7 @@ const POST_LOWER: readonly BenchSpec[] = [
     label: ['post.benchSave', 'Take it out'],
     what: [
       'post.benchSaveWhat',
-      'Save the picture to your device, or send it next door as a film\u2019s cover. The same one credit either way, and only once per post.',
+      'Save the picture to your device, or send it next door as a film\u2019s cover. The same price either way, on the button, and only once per post.',
     ],
     paid: true,
   },
@@ -3286,7 +3286,7 @@ export default function PostStudio({
    * `spend_credits` takes a charge once per reference and the reference is
    * the post's own id, so the honest case is also the kind one: a post she
    * already saved costs nothing to put into a film, and a post that goes
-   * straight into a film costs the one credit it would have cost to save.
+   * straight into a film costs the one charge it would have cost to save.
    */
   const paidPicture = async (): Promise<Blob | null> => {
     /* ── Drawable, before anybody is charged ───────────────────────────
@@ -4501,8 +4501,8 @@ export default function PostStudio({
   /**
    * Ask the engine what is in the picture.
    *
-   * Charged, two credits, once per press however much is in the picture —
-   * `CREDITS.grab` carries why. The boxes land in the same list the reader
+   * Charged `CREDITS.grab` (fifteen, her price), once per press however
+   * much is in the picture — `credits.ts` carries why. The boxes land in the same list the reader
    * fills, so they are drawn and tapped by the code that already existed.
    */
   const findThings = async (want: 'all' | 'subjects' = 'all'): Promise<Found[] | null> => {
@@ -7200,9 +7200,9 @@ export default function PostStudio({
  
               Charged, unlike the reader above it, and the button says so
               before it is pressed. The engine draws nothing — it reads the
-              picture and answers where things are — so it is two credits,
-              the same as a transcription, and one press finds everything
-              rather than charging per thing. */}
+              picture and answers where things are — and one press finds
+              everything rather than charging per thing. The price is
+              `CREDITS.grab`, read onto the button, never typed here. */}
           <button
             type="button"
             data-postthingsgo
@@ -9574,7 +9574,12 @@ export default function PostStudio({
           kliek dan moet daai hele bar verdwyn anders is dit in die pad." */}
       {/* And gone when there is a photo grid: its empty frames are the start,
           and this card over them would catch the tap meant for a frame. */}
-      {!picture && words.length === 0 && cells.length === 0 && bench === null && (
+      {/* And gone when anything is on the picture at all. Carli, 17 October
+          2026, a chart on an empty post: *"Die chart wil nie op die skerm
+          agter bly nie. Die oomblik as ek kruisie druk dan gaan die chart
+          ook weg."* It had not gone — this card sat over it, as it sat over
+          a lone shape, because it only asked about words and grids. */}
+      {!picture && words.length === 0 && marks.length === 0 && cells.length === 0 && bench === null && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center">
           <div
             className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-2xl p-5 shadow-2xl backdrop-blur-md"
