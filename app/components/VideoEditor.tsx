@@ -115,6 +115,7 @@ import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../l
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import BestMoments from './BestMoments';
+import MeerkatTile from './MeerkatTile';
 import { reel } from '../lib/highlights';
 import FilmStrip from './FilmStrip';
 import {
@@ -285,11 +286,11 @@ const CORNER_AT: Record<Corner, { readonly x: number; readonly y: number }> = {
 
 /** Preset atmospheric styles for Google Gemini Omni Flash video transformations. */
 const OMNI_PRESETS = [
-  { id: 'golden', label: 'Golden hour', prompt: 'Cinematic golden hour sunlight, warm amber rim lighting, glowing atmosphere, cinematic depth' },
-  { id: 'cyberpunk', label: 'Cyberpunk Neon', prompt: 'Futuristic cyberpunk neon reflections, teal and magenta ambient lighting, rainy city night glow' },
-  { id: 'vintage', label: '35mm film grain', prompt: 'Vintage 35mm film aesthetic, subtle grain, retro cinematic color grading, warm nostalgic tones' },
-  { id: 'noir', label: 'Dramatic noir', prompt: 'High-contrast dramatic noir lighting, deep shadows, cinematic monochrome edge lighting' },
-  { id: 'dream', label: 'Dreamy mist', prompt: 'Dreamy soft mist, ethereal bloom, pastel morning atmosphere, gentle motion glow' },
+  { id: 'golden', mood: 'golden', label: 'Golden hour', prompt: 'Cinematic golden hour sunlight, warm amber rim lighting, glowing atmosphere, cinematic depth' },
+  { id: 'cyberpunk', mood: 'neon', label: 'Cyberpunk Neon', prompt: 'Futuristic cyberpunk neon reflections, teal and magenta ambient lighting, rainy city night glow' },
+  { id: 'vintage', mood: 'film', label: '35mm film grain', prompt: 'Vintage 35mm film aesthetic, subtle grain, retro cinematic color grading, warm nostalgic tones' },
+  { id: 'noir', mood: 'noir', label: 'Dramatic noir', prompt: 'High-contrast dramatic noir lighting, deep shadows, cinematic monochrome edge lighting' },
+  { id: 'dream', mood: 'mist', label: 'Dreamy mist', prompt: 'Dreamy soft mist, ethereal bloom, pastel morning atmosphere, gentle motion glow' },
 ] as const;
 
 /**
@@ -6421,25 +6422,21 @@ async function smallerFrame(url: string): Promise<string> {
                 this desk that moved under a thumb. Three rows of buttons
                 that stay still beat one row that slides — and a look nobody
                 scrolled to is a look nobody knows is there. */}
-            <div className="flex flex-wrap gap-2 pb-1">
-              {FILTERS.map((one) => {
-                const on = (piece.look ?? 'none') === one.id;
-                return (
-                  <button
-                    key={one.id}
-                    type="button"
-                    aria-pressed={on}
-                    data-editorlook={one.id}
-                    onClick={() => tweak({ look: one.id })}
-                    style={{ filter: filterCss(one.id) || undefined }}
-                    className={`min-h-[44px] shrink-0 rounded-xl border px-3 py-2 text-sm font-semibold ${
-                      on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                    }`}
-                  >
-                    {filterName(one.id, lang)}
-                  </button>
-                );
-              })}
+            {/* As pictures: the meerkat photograph with each look laid on it
+                by the same `filterCss` the render uses. Carli, 17 October
+                2026: *"Hierdie looks in video editor moet alles foto's wees
+                vir 'n voorbeeld. Alles 'n meerkat."* */}
+            <div className="flex flex-wrap gap-1 pb-1">
+              {FILTERS.map((one) => (
+                <MeerkatTile
+                  key={one.id}
+                  label={filterName(one.id, lang)}
+                  on={(piece.look ?? 'none') === one.id}
+                  onPick={() => tweak({ look: one.id })}
+                  filter={filterCss(one.id)}
+                  data={{ 'data-editorlook': one.id }}
+                />
+              ))}
             </div>
           </div>
 
@@ -6730,18 +6727,16 @@ async function smallerFrame(url: string): Promise<string> {
             </p>
 
             {/* Presets */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
+            <div className="flex flex-wrap gap-1 pt-1">
               {OMNI_PRESETS.map((pre) => (
-                <button
+                <MeerkatTile
                   key={pre.id}
-                  type="button"
-                  onClick={() => {
-                    void animateFrameWithVeo(pre.prompt);
-                  }}
-                  className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 transition-colors"
-                >
-                  {t(`veo.preset.${pre.id}`, pre.label)}
-                </button>
+                  label={t(`veo.preset.${pre.id}`, pre.label)}
+                  on={false}
+                  onPick={() => { void animateFrameWithVeo(pre.prompt); }}
+                  mood={pre.mood}
+                  data={{ 'data-editoromni': pre.id }}
+                />
               ))}
             </div>
 

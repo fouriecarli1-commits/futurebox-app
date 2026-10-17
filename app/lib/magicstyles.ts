@@ -124,7 +124,7 @@ export function styleAsk(style: MagicStyle, whole: boolean): string {
 
 /* ── The meerkat on every tile ───────────────────────────────────────── */
 
-interface Part {
+export interface Part {
   readonly path: Path2D;
   readonly ink: string;
   /** Part of the outline (the fur), not a mark inside it. */
@@ -137,7 +137,7 @@ const MASK = '#4a3220';
 const DARK = '#22160c';
 
 /** The meerkat's upper body and face on an `s`-pixel square, back to front. */
-function meerkat(s: number): Part[] {
+export function meerkat(s: number): Part[] {
   const e = (x: number, y: number, rx: number, ry: number, turn = 0): Path2D => {
     const p = new Path2D();
     p.ellipse(s * x, s * y, s * rx, s * ry, turn, 0, Math.PI * 2);
