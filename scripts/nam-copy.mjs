@@ -7,7 +7,7 @@
  * never loads. Serving it from our own origin is the fix, and copying it here
  * rather than committing it keeps one copy of the bytes: the package's.
  */
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync } from 'node:fs';
 mkdirSync('public/nam', { recursive: true });
 copyFileSync('node_modules/@opendaw/nam-wasm/dist/nam.wasm', 'public/nam/nam.wasm');
 console.log('nam.wasm → public/nam/nam.wasm');
@@ -25,3 +25,18 @@ for (const name of ['vision_wasm_internal.js', 'vision_wasm_internal.wasm', 'vis
   copyFileSync(`node_modules/@mediapipe/tasks-vision/wasm/${name}`, `public/vision/${name}`);
 }
 console.log('tasks-vision wasm → public/vision/');
+
+/**
+ * The PDF reader's worker and the data it reads beside it, into public/pdf/.
+ *
+ * The document room (`app/lib/pdfview.ts`) draws pages with pdf.js, whose
+ * worker, fonts, character maps, colour profiles and image decoders are
+ * fetched by URL. Served from this origin because `default-src 'self'`
+ * refuses a worker or a fetch from anywhere else; copied rather than
+ * committed because the package already holds them.
+ */
+for (const dir of ['cmaps', 'standard_fonts', 'iccs', 'wasm']) {
+  cpSync(`node_modules/pdfjs-dist/${dir}`, `public/pdf/${dir}`, { recursive: true });
+}
+copyFileSync('node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs', 'public/pdf/pdf.worker.min.mjs');
+console.log('pdf.js worker and data → public/pdf/');

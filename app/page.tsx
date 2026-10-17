@@ -78,6 +78,8 @@ import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import { profileAddress } from './lib/brand';
 import Search from './components/Search';
 import AllTools from './components/AllTools';
+import dynamic from 'next/dynamic';
+import { OPEN_PDF_EVENT, askPdf, type PdfToolId } from './lib/pdftools';
 import { askPanel } from './lib/alltools';
 import {
   STAGES,
@@ -161,6 +163,9 @@ interface GenreSample {
  */
 const LOCAL_ACCOUNT = 'futurebox.account.v1';
 
+/* Loaded only when it is opened: it brings the PDF libraries with it. */
+const PdfRoom = dynamic(() => import('./components/PdfRoom'), { ssr: false });
+
 export default function FutureBoxHome() {
   const { t, lang } = useLang();
   // Rooms register what the copilot may do in them; the panel below dispatches
@@ -173,6 +178,15 @@ export default function FutureBoxHome() {
   const [searchOpen, setSearchOpen] = useState(false);
   /* Every tool on one page — `components/AllTools.tsx`. */
   const [allToolsOpen, setAllToolsOpen] = useState(false);
+  /* The document room, over wherever she is — `components/PdfRoom.tsx`.
+     Its tool, 'home' for its front page, or closed. Asked for by an event
+     (`askPdf`) so any screen can open it without holding this state. */
+  const [pdfOpen, setPdfOpen] = useState<PdfToolId | 'home' | null>(null);
+  useEffect(() => {
+    const onAsk = (event: Event) => setPdfOpen((event as CustomEvent<PdfToolId | null>).detail ?? 'home');
+    window.addEventListener(OPEN_PDF_EVENT, onAsk);
+    return () => window.removeEventListener(OPEN_PDF_EVENT, onAsk);
+  }, []);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -4113,11 +4127,17 @@ export default function FutureBoxHome() {
         onClose={() => setAllToolsOpen(false)}
         onGo={(tool) => {
           setAllToolsOpen(false);
+          if (tool.pdf) {
+            askPdf(tool.pdf === 'home' ? null : tool.pdf);
+            return;
+          }
+          if (!tool.room) return;
           setUploadModalOpen(true);
           goToRoom(tool.room);
           if (tool.panel) askPanel(tool.room, tool.panel);
         }}
       />
+      {pdfOpen && <PdfRoom start={pdfOpen === 'home' ? null : pdfOpen} onClose={() => setPdfOpen(null)} />}
 
       <Search
         open={searchOpen}

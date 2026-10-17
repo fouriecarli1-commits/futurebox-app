@@ -30,6 +30,7 @@ audit/*.log
 public/nam/
 # Copied out of @mediapipe/tasks-vision by scripts/nam-copy.mjs at build time.
 public/vision/
+public/pdf/
 
 # The pages a probe mounts while it runs.
 #

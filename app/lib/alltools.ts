@@ -14,13 +14,15 @@
  * (`takePanel`) — or at once, when it is already open, by the event.
  */
 import type { SurfaceId } from './surfaces';
+import type { PdfToolId } from './pdftools';
 
-export type ToolGroup = 'ai' | 'video' | 'photo' | 'music' | 'share';
+export type ToolGroup = 'ai' | 'video' | 'photo' | 'docs' | 'music' | 'share';
 
 export const TOOL_GROUPS: readonly { readonly id: ToolGroup; readonly en: string; readonly af: string }[] = [
   { id: 'ai', en: 'Make with AI', af: 'Maak met KI' },
   { id: 'video', en: 'Video editing', af: 'Videoredigering' },
   { id: 'photo', en: 'Photo editing', af: 'Fotoredigering' },
+  { id: 'docs', en: 'Documents and PDF', af: 'Dokumente en PDF' },
   { id: 'music', en: 'Music and sound', af: 'Musiek en klank' },
   { id: 'share', en: 'Shoot and share', af: 'Skiet en deel' },
 ];
@@ -30,16 +32,20 @@ export type ToolIcon =
   | 'song' | 'video' | 'image' | 'wand' | 'art' | 'ads' | 'voice' | 'scissors' | 'transitions'
   | 'titles' | 'effects' | 'generators' | 'enhance' | 'audiofx' | 'photo' | 'templates' | 'grid'
   | 'filters' | 'adjust' | 'cutout' | 'text' | 'grab' | 'layers' | 'shapes' | 'studio' | 'booth'
-  | 'podcast' | 'sound' | 'hooks' | 'live' | 'channel' | 'collab';
+  | 'podcast' | 'sound' | 'hooks' | 'live' | 'channel' | 'collab'
+  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit';
 
 export interface Tool {
   readonly id: string;
   readonly group: ToolGroup;
   readonly en: string;
   readonly af: string;
-  readonly room: SurfaceId;
+  /** The room it opens — or, for a document tool, none: those open the document room over wherever she is. */
+  readonly room?: SurfaceId;
   /** The panel inside the room it opens, where it is one. */
   readonly panel?: string;
+  /** The document room's tool it opens (`PdfRoom.tsx`); 'home' is its front page. */
+  readonly pdf?: PdfToolId | 'home';
   readonly icon: ToolIcon;
   /** Costs credits to use — said on its button, so nothing is a surprise. */
   readonly paid?: boolean;
@@ -73,6 +79,17 @@ export const TOOLS: readonly Tool[] = [
   { id: 'grab', group: 'photo', en: 'Grab text and things', af: 'Gryp teks en dinge', room: 'photo', panel: 'read', icon: 'grab' },
   { id: 'shapes', group: 'photo', en: 'Shapes', af: 'Vorms', room: 'photo', panel: 'shapes', icon: 'shapes' },
   { id: 'layers', group: 'photo', en: 'Layers', af: 'Lae', room: 'photo', panel: 'layers', icon: 'layers' },
+
+  { id: 'pdf', group: 'docs', en: 'PDF studio', af: 'PDF-ateljee', pdf: 'home', icon: 'pdf' },
+  { id: 'pdfedit', group: 'docs', en: 'Edit a PDF', af: 'Wysig ’n PDF', pdf: 'edit', icon: 'pdfedit' },
+  { id: 'pdfsign', group: 'docs', en: 'Fill and sign', af: 'Vul in en teken', pdf: 'sign', icon: 'sign' },
+  { id: 'pdfpages', group: 'docs', en: 'Organise pages', af: 'Rangskik bladsye', pdf: 'organise', icon: 'pages' },
+  { id: 'pdfcombine', group: 'docs', en: 'Combine files', af: 'Voeg lêers saam', pdf: 'combine', icon: 'combine' },
+  { id: 'pdfcomment', group: 'docs', en: 'Add comments', af: 'Lewer kommentaar', pdf: 'comment', icon: 'comment' },
+  { id: 'pdfredact', group: 'docs', en: 'Redact', af: 'Swart uit', pdf: 'redact', icon: 'redact' },
+  { id: 'pdfprotect', group: 'docs', en: 'Protect a PDF', af: 'Beskerm ’n PDF', pdf: 'protect', icon: 'lock' },
+  { id: 'pdfform', group: 'docs', en: 'Prepare a form', af: 'Berei ’n vorm voor', pdf: 'form', icon: 'form' },
+  { id: 'pdfconvert', group: 'docs', en: 'Convert a PDF', af: 'Skakel ’n PDF om', pdf: 'convert', icon: 'convert' },
 
   { id: 'studio', group: 'music', en: 'Studio', af: 'Studio', room: 'studio', icon: 'studio' },
   { id: 'booth', group: 'music', en: 'ProBooth', af: 'ProBooth', room: 'booth', icon: 'booth' },

@@ -28,7 +28,7 @@ try {
   await page.waitForTimeout(800);
   check('the front door has a way to every tool', (await page.locator('[data-opentools]:visible').count()) >= 1);
   await openTools();
-  check('All tools opens in groups', (await page.locator('[data-alltoolsgroup]').count()) === 5);
+  check('All tools opens in groups', (await page.locator('[data-alltoolsgroup]').count()) === 6);
   check('  with a round button per tool', (await page.locator('[data-alltool]').count()) >= 30);
   check('  and the ones that cost credits say so', (await page.locator('[data-alltool="song"]').innerText()).toLowerCase().includes('credit'));
   await page.locator('[data-alltoolssearch]').fill('filter');

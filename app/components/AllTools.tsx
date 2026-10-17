@@ -15,6 +15,7 @@ import {
   AudioLines, Blend, Boxes, Clapperboard, Crop, Eraser, Film, Grid2x2, Handshake, Image as ImageIcon,
   Layers, LayoutTemplate, Megaphone, Mic, Mic2, Music, Palette, Radio, ScanText, Scissors, Search,
   Shapes, SlidersHorizontal, Smartphone, Sparkles, SunMedium, Type, Wand2, Waves, X, ListMusic, Sliders,
+  Combine, FileOutput, FilePen, FileText, Files, MessageSquare, ShieldCheck, Signature, SquareCheck,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
@@ -27,13 +28,16 @@ const ICON: Record<ToolIcon, typeof Sparkles> = {
   audiofx: AudioLines, photo: ImageIcon, templates: LayoutTemplate, grid: Grid2x2, filters: Film, adjust: SlidersHorizontal,
   cutout: Eraser, text: Type, grab: ScanText, layers: Layers, shapes: Shapes, studio: Sliders, booth: Mic,
   podcast: Radio, sound: Waves, hooks: Smartphone, live: Radio, channel: ListMusic, collab: Handshake,
+  pdf: FileText, pages: Files, combine: Combine, sign: Signature, redact: Eraser, lock: ShieldCheck, form: SquareCheck,
+  convert: FileOutput, comment: MessageSquare, pdfedit: FilePen,
 };
 
-/** Each group's own light, so the page reads as five shelves rather than one wall. */
+/** Each group's own light, so the page reads as six shelves rather than one wall. */
 const GLOW: Record<ToolGroup, readonly [string, string]> = {
   ai: ['#a78bfa', '#ff3dc8'],
   video: ['#22d3ee', '#3b82f6'],
   photo: ['#34d399', '#a3e635'],
+  docs: ['#38bdf8', '#818cf8'],
   music: ['#f59e0b', '#ef4444'],
   share: ['#f472b6', '#a78bfa'],
 };

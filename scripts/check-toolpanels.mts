@@ -12,6 +12,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { TOOLS, TOOL_GROUPS } from '../app/lib/alltools';
+import { PDF_TOOLS } from '../app/lib/pdftools';
 import { STAGES, standaloneSurfaces, surfacesInStage } from '../app/lib/surfaces';
 
 let bad = 0;
@@ -27,8 +28,14 @@ const rooms = new Set([...STAGES.flatMap((stage) => surfacesInStage(stage.id)), 
 
 ok(`every tool is in a group (${TOOLS.length} tools)`, TOOLS.every((one) => TOOL_GROUPS.some((g) => g.id === one.group)));
 ok('  every id once', new Set(TOOLS.map((one) => one.id)).size === TOOLS.length);
-const noRoom = TOOLS.filter((one) => !rooms.has(one.room)).map((one) => `${one.id} → ${one.room}`);
-ok('every tool opens a room the studio has', noRoom.length === 0, noRoom.join(', '));
+const noRoom = TOOLS.filter((one) => (one.room ? !rooms.has(one.room) : !one.pdf)).map((one) => `${one.id} → ${one.room}`);
+ok('every tool opens a room the studio has, or the document room', noRoom.length === 0, noRoom.join(', '));
+/* A document tool opens the document room on one of its own tools — 17
+   October 2026 — and the page that holds the All tools sheet sends it there. */
+const pdfIds = new Set<string>(['home', ...PDF_TOOLS.map((one) => one.id)]);
+const badPdf = TOOLS.filter((one) => one.pdf && (!pdfIds.has(one.pdf) || one.room)).map((one) => one.id);
+ok('  every document tool names a tool the document room has, and no room besides', badPdf.length === 0, badPdf.join(', '));
+ok('  and a press on one opens the document room', /if \(tool\.pdf\) \{\s*askPdf\(/.test(readFileSync('app/page.tsx', 'utf8')));
 /* Rooms that open over a room instead of on its bar, and the line in that
    room which opens them when asked. The darkroom, 17 October 2026. */
 const OVER: Record<string, { readonly file: string; readonly opens: RegExp }> = {

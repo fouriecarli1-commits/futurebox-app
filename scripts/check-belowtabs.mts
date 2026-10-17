@@ -223,6 +223,8 @@ const KNOWN: readonly string[] = [
   'app/components/CanvasSizeModal.tsx',
   /* The darkroom, 17 October 2026: a developing room over the photo editor. */
   'app/components/Darkroom.tsx',
+  /* The document room, 17 October 2026: a PDF workbench over everything. */
+  'app/components/PdfRoom.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
