@@ -33,7 +33,7 @@ export type ToolIcon =
   | 'titles' | 'effects' | 'generators' | 'enhance' | 'audiofx' | 'photo' | 'templates' | 'grid'
   | 'filters' | 'adjust' | 'cutout' | 'text' | 'grab' | 'layers' | 'shapes' | 'studio' | 'booth'
   | 'podcast' | 'sound' | 'hooks' | 'live' | 'channel' | 'collab'
-  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit' | 'chart' | 'vector' | 'poster';
+  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit' | 'chart' | 'vector' | 'poster' | 'product';
 
 export interface Tool {
   readonly id: string;
@@ -57,6 +57,7 @@ export const TOOLS: readonly Tool[] = [
   { id: 'aiimage', group: 'ai', en: 'AI image', af: 'KI-prent', room: 'photo', panel: 'pic', icon: 'image', paid: true },
   { id: 'magic', group: 'ai', en: 'Magic touch', af: 'Towerraak', room: 'photo', panel: 'magic', icon: 'wand', paid: true },
   { id: 'poster', group: 'ai', en: 'AI poster', af: 'KI-plakkaat', room: 'photo', panel: 'poster', icon: 'poster', paid: true },
+  { id: 'product', group: 'ai', en: 'Product photos', af: 'Produkfoto’s', room: 'photo', panel: 'product', icon: 'product', paid: true },
   { id: 'albumart', group: 'ai', en: 'Album art', af: 'Albumkuns', room: 'albumart', icon: 'art', paid: true },
   { id: 'ads', group: 'ai', en: 'Adverts', af: 'Advertensies', room: 'campaign', icon: 'ads', paid: true },
   { id: 'voice', group: 'ai', en: 'Your voice', af: 'Jou stem', room: 'voice_studio', icon: 'voice', paid: true },

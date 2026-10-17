@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, ChartColumn, Circle, PenTool, Megaphone, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -81,6 +81,7 @@ import CanvasSizeModal from './CanvasSizeModal';
 import Darkroom from './Darkroom';
 import VectorStudio from './VectorStudio';
 import PosterMaker from './PosterMaker';
+import ProductShots from './ProductShots';
 import type { VectorDoc } from '../lib/vectordoc';
 import StudioTemplatesModal from './StudioTemplatesModal';
 import { type StudioTemplateItem } from '../lib/studiotemplates';
@@ -1233,6 +1234,8 @@ export default function PostStudio({
   const [vector, setVector] = useState<{ readonly editing: string | null } | null>(null);
   /* The poster maker, over the room — `PosterMaker.tsx`. */
   const [poster, setPoster] = useState(false);
+  /* Product photos, over the room — `ProductShots.tsx`. */
+  const [product, setProduct] = useState(false);
   /* Vector art draws once its picture has loaded; this draws the post again then. */
   const [artTick, setArtTick] = useState(0);
   useEffect(() => {
@@ -1249,6 +1252,7 @@ export default function PostStudio({
       if (panel === 'darkroom') setDarkroom(true);
       else if (panel === 'vector') setVector({ editing: null });
       else if (panel === 'poster') setPoster(true);
+      else if (panel === 'product') setProduct(true);
       else if (panel) setBench(panel as Bench);
     };
     openAsked();
@@ -3055,6 +3059,27 @@ export default function PostStudio({
     };
     img.onerror = () => setSaid(t('post.badFile', 'That file could not be read as a picture.'));
     img.src = made.preview;
+  };
+
+  /* A whole new picture made for the post — a poster, a product photo — at
+     a post size of its own. A step like bringing one in, so Undo takes it
+     back, and everything that was about the last photograph goes. */
+  const madeWhole = (img: HTMLImageElement, shape: string, step: string): void => {
+    before(step);
+    const fits = POST_SIZES.find((one) => one.id === shape);
+    if (fits) setSize(fits);
+    setPicture(img);
+    setCrop(MIDDLE);
+    setLook(PLAIN);
+    setPhotoHidden(false);
+    setPhotoAlpha(1);
+    setWhole(null);
+    lastMask.current = null;
+    setFound(null);
+    setPicking(false);
+    setPicked(null);
+    setMagicSpot(null);
+    setMagicStrokes([]);
   };
 
   /* ── The photo grid ───────────────────────────────────────────────────
@@ -5852,6 +5877,18 @@ export default function PostStudio({
       >
         <Megaphone className="h-3.5 w-3.5" />
         {t('post.posterRoom', 'Poster')}
+      </button>
+      {/* And product photos. Carli, 16 October 2026: *"Generate product
+          photos in seconds."* */}
+      <button
+        type="button"
+        data-postproduct
+        onClick={() => setProduct(true)}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        style={{ background: 'linear-gradient(120deg, #f59e0b, #f97316 55%, #e11d48)', boxShadow: '0 0 18px rgba(249,115,22,0.4)' }}
+      >
+        <ShoppingBag className="h-3.5 w-3.5" />
+        {t('post.productRoom', 'Product photos')}
       </button>
       {picture && (
         <button
@@ -10197,23 +10234,20 @@ export default function PostStudio({
           photo={picture}
           onClose={() => setPoster(false)}
           onMade={(img, shape) => {
-            before(t('post.stepPoster', 'making a poster'));
-            const fits = POST_SIZES.find((one) => one.id === shape);
-            if (fits) setSize(fits);
-            setPicture(img);
-            setCrop(MIDDLE);
-            setLook(PLAIN);
-            setPhotoHidden(false);
-            setPhotoAlpha(1);
-            setWhole(null);
-            lastMask.current = null;
-            setFound(null);
-            setPicking(false);
-            setPicked(null);
-            setMagicSpot(null);
-            setMagicStrokes([]);
+            madeWhole(img, shape, t('post.stepPoster', 'making a poster'));
             setPoster(false);
             setSaid(t('post.posterDone', 'Your poster is on the post. Change anything with the tools below, or press Undo to take it back.'));
+          }}
+        />
+      )}
+      {product && (
+        <ProductShots
+          photo={picture}
+          onClose={() => setProduct(false)}
+          onMade={(img, shape) => {
+            madeWhole(img, shape, t('post.stepProduct', 'making a product photo'));
+            setProduct(false);
+            setSaid(t('post.productDone', 'Your product photo is on the post. Press Undo to go back to the photo you had.'));
           }}
         />
       )}

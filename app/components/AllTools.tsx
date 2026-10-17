@@ -15,7 +15,7 @@ import {
   AudioLines, Blend, Boxes, Clapperboard, Crop, Eraser, Film, Grid2x2, Handshake, Image as ImageIcon,
   Layers, LayoutTemplate, Megaphone, Mic, Mic2, Music, Palette, Radio, ScanText, Scissors, Search,
   Shapes, SlidersHorizontal, Smartphone, Sparkles, SunMedium, Type, Wand2, Waves, X, ListMusic, Sliders,
-  ChartColumn, PenTool, Presentation, Combine, FileOutput, FilePen, FileText, Files, MessageSquare, ShieldCheck, Signature, SquareCheck,
+  ChartColumn, PenTool, Presentation, ShoppingBag, Combine, FileOutput, FilePen, FileText, Files, MessageSquare, ShieldCheck, Signature, SquareCheck,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
@@ -29,7 +29,7 @@ const ICON: Record<ToolIcon, typeof Sparkles> = {
   cutout: Eraser, text: Type, grab: ScanText, layers: Layers, shapes: Shapes, studio: Sliders, booth: Mic,
   podcast: Radio, sound: Waves, hooks: Smartphone, live: Radio, channel: ListMusic, collab: Handshake,
   pdf: FileText, pages: Files, combine: Combine, sign: Signature, redact: Eraser, lock: ShieldCheck, form: SquareCheck,
-  convert: FileOutput, comment: MessageSquare, pdfedit: FilePen, chart: ChartColumn, vector: PenTool, poster: Presentation,
+  convert: FileOutput, comment: MessageSquare, pdfedit: FilePen, chart: ChartColumn, vector: PenTool, poster: Presentation, product: ShoppingBag,
 };
 
 /** Each group's own light, so the page reads as six shelves rather than one wall. */

@@ -229,6 +229,8 @@ const KNOWN: readonly string[] = [
   'app/components/VectorStudio.tsx',
   /* The poster maker, 17 October 2026, over the photo editor. */
   'app/components/PosterMaker.tsx',
+  /* Product photos, 17 October 2026, over the photo editor. */
+  'app/components/ProductShots.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
