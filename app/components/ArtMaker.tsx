@@ -25,6 +25,8 @@ import { FACES, type FaceId } from '../lib/postfaces';
 import { useLang } from '../lib/i18n';
 import { withSaid } from '../lib/speak';
 import SpeakButton from './SpeakButton';
+import { MeerkatThumb } from './MeerkatTile';
+import type { MeerkatMood } from '../lib/meerkatphoto';
 
 const SIDE = 3000;
 
@@ -111,6 +113,12 @@ function paint(canvas: HTMLCanvasElement, side: number, look: Look, picture: HTM
     ctx.fillText('EXPLICIT CONTENT', x + w / 2, y + h * 0.86);
   }
 }
+
+/** The light each cover style's sample is shown in. */
+const COVER_MOOD: Readonly<Record<string, { readonly mood: MeerkatMood; readonly filter?: string }>> = {
+  cyber: { mood: 'neon' }, acid: { mood: 'day', filter: 'hue-rotate(70deg) saturate(2.2)' }, swiss: { mood: 'studio', filter: 'grayscale(0.6) contrast(1.3)' },
+  vinyl: { mood: 'film', filter: 'sepia(0.35)' }, real: { mood: 'golden' }, ink: { mood: 'noir', filter: 'contrast(1.4)' },
+};
 
 export default function ArtMaker(): React.ReactElement {
   const { t } = useLang();
@@ -217,9 +225,16 @@ export default function ArtMaker(): React.ReactElement {
                     setLook((was) => ({ ...was, palette: one.palette }));
                   }}
                   aria-pressed={style === one.id}
-                  className={`${LEEG} !justify-start truncate ${style === one.id ? '!border-[var(--aksent)] !text-[color:var(--aksent)]' : ''}`}
+                  className={`${LEEG} !h-auto !justify-start gap-2 p-1.5 ${style === one.id ? '!border-[var(--aksent)] !text-[color:var(--aksent)]' : ''}`}
                 >
-                  {t(one.word, one.fallback)}
+                  {/* A little cover in that style: the meerkat photo in the
+                      style's light, washed in its three colours. */}
+                  <span aria-hidden className="relative block h-12 w-12 shrink-0 overflow-hidden rounded-md">
+                    <MeerkatThumb className="absolute inset-0 h-full w-full !rounded-none" mood={COVER_MOOD[one.id]?.mood ?? 'day'} filter={COVER_MOOD[one.id]?.filter} />
+                    <span className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${one.palette[0]}66, transparent 50%, ${one.palette[1]}66)`, mixBlendMode: 'screen' }} />
+                    <span className="absolute bottom-1 left-1 h-1.5 w-5 rounded-full" style={{ background: one.palette[2] }} />
+                  </span>
+                  <span className="truncate">{t(one.word, one.fallback)}</span>
                 </button>
               ))}
             </div>

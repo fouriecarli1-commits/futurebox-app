@@ -5,9 +5,10 @@
  * and its name underneath. `lib/meerkatphoto.ts` draws the photograph; a
  * colour look is laid over it as the same CSS filter the render uses.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { meerkatPhotoUrl, type MeerkatMood } from '../lib/meerkatphoto';
 import { previewFor, roundFor, type BoxShape } from '../lib/videopaint';
+import { drawStyleTile } from '../lib/magicstyles';
 
 export default function MeerkatTile({ label, on, onPick, filter, mood = 'day', size = 68, data, picture }: {
   readonly label: string;
@@ -118,5 +119,22 @@ export function MeerkatThumb({ mood = 'day', filter, className = '', style }: {
     <span aria-hidden data-meerkatthumb className={`block overflow-hidden rounded-xl bg-zinc-900 ${className}`} style={style}>
       {src ? <img src={src} alt="" className="h-full w-full object-cover" style={{ filter: filter || undefined }} /> : null}
     </span>
+  );
+}
+
+/** An art style's meerkat, drawn in that style — `magicstyles.ts`'s own tiles. */
+export function StyleTile({ id, size = 56, className = '' }: { readonly id: string; readonly size?: number; readonly className?: string }) {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => { if (canvas.current) drawStyleTile(canvas.current, id); }, [id]);
+  return (
+    <canvas
+      ref={canvas}
+      aria-hidden
+      data-styletile={id}
+      width={size * 2}
+      height={size * 2}
+      className={`block rounded-lg ${className}`}
+      style={{ width: size, height: size }}
+    />
   );
 }

@@ -12,6 +12,12 @@ import { Loader2, Sparkles } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { KID_STYLES, KID_SUBJECTS } from '../lib/kidsalive';
 import { PAINTS, paintOf } from '../lib/kidslook';
+import { StyleTile } from './MeerkatTile';
+
+/** Which drawn meerkat shows each picture style. */
+const KID_STYLE_TILE: Readonly<Record<string, string>> = {
+  cartoon: 'cartoon', crayon: 'crayon', clay: 'clay', watercolour: 'watercolour', watercolor: 'watercolour', plush: 'plush', pixel: 'pixel',
+};
 
 export default function KidsPictureMaker({
   price,
@@ -90,8 +96,10 @@ export default function KidsPictureMaker({
               disabled={busy}
               data-kidspicstyle={one.id}
               onClick={() => setStyle(one.id)}
-              className={`min-h-[44px] rounded-2xl px-4 text-sm font-black disabled:opacity-40 ${on ? 'bg-amber-300 text-onAccent shadow-md' : 'bg-surface-200/80 text-surface-800'}`}
+              className={`flex min-h-[44px] flex-col items-center gap-1 rounded-2xl p-1.5 text-sm font-black disabled:opacity-40 ${on ? 'bg-amber-300 text-onAccent shadow-md' : 'bg-surface-200/80 text-surface-800'}`}
             >
+              {/* The meerkat drawn in that style, so a child chooses by looking. */}
+              <StyleTile id={KID_STYLE_TILE[one.id] ?? one.id} size={64} />
               {t(one.says[0], one.says[1])}
             </button>
           );

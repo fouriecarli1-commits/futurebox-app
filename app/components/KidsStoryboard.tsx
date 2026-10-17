@@ -29,6 +29,13 @@ import {
 } from '../lib/kidsstoryboard';
 import { keepStory, type KeptStory } from '../lib/storykeep';
 import { readAloud, stopReading } from '../lib/kidspip';
+import { StyleTile } from './MeerkatTile';
+
+/** Which drawn meerkat shows each storybook style. */
+const STORY_STYLE_TILE: Readonly<Record<string, string>> = {
+  '3d-toon': 'cartoon3d', watercolor: 'watercolour', 'neon-glow': 'neon', crayon: 'crayon',
+  'space-cat': 'iridescent', 'dino-key': 'soft3d', 'fairy-dragon': 'glitterpink', 'pup-cake': 'plush',
+};
 
 export default function KidsStoryboard({
   onDone,
@@ -394,7 +401,11 @@ export default function KidsStoryboard({
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-3xl">{vStyle.emoji}</span>
+                        {/* The meerkat in that style, the emoji small beside it. */}
+                        <span className="flex items-center gap-2">
+                          <StyleTile id={STORY_STYLE_TILE[vStyle.id] ?? 'cartoon'} size={64} />
+                          <span className="text-xl">{vStyle.emoji}</span>
+                        </span>
                         <span className="rounded-full bg-surface-200/90 px-2.5 py-0.5 text-[11px] font-black text-surface-800">
                           {t(vStyle.badge[0], vStyle.badge[1])}
                         </span>
