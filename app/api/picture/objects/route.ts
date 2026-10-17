@@ -69,7 +69,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  let body: { picture?: string; mime?: string; wide?: number; tall?: number };
+  let body: { picture?: string; mime?: string; wide?: number; tall?: number; want?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -121,7 +121,8 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, CREDITS.grab, 'grab');
   if (!paid.ok) return paid.response;
 
-  const looked = await lookAt({ data, mime }, wide, tall);
+  /* `subjects`: only the main things, for a clean cut-out of all of them. */
+  const looked = await lookAt({ data, mime }, wide, tall, LOOKER, body.want === 'subjects');
   if (!looked.ok) {
     await paid.refund();
     return Response.json({ message: looked.message }, { status: looked.status });

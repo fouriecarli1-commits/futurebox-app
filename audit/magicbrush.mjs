@@ -169,6 +169,47 @@ try {
   check('  and nothing painted, the bench says the AI changes the whole photo',
     /whole photo|hele foto/i.test(await says.innerText()), await says.innerText());
 
+  /* ── Select: Adjust changes only what was painted ── */
+  const at = (fy) => page.evaluate((y) => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(Math.round(el.width * 0.45), Math.round(el.height * y), 1, 1).data;
+    return d[0] + d[1] + d[2];
+  }, fy);
+  /* Clear of the undo buttons in the top corner, and above the red disc. */
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.22);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.22, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  await tool('tone');
+  await page.locator('[data-postselectpart="painted"]').click();
+  await page.waitForTimeout(300);
+
+  check('Adjust can be told to change only what was painted',
+    (await page.locator('[data-postselect="painted"]').count()) === 1);
+  const inBefore = await at(0.22);
+  const outBefore = await at(0.88);
+  /* Brightness right up — a flat grey has nothing for Lift it to lift. */
+  await page.evaluate(() => {
+    const el = document.querySelector('[data-postlookslider="bright"]');
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    set.call(el, el.max);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForTimeout(500);
+  const inAfter = await at(0.22);
+  const outAfter = await at(0.88);
+  check('  and brightening changes the painted part', Math.abs(inAfter - inBefore) > 12, `${inBefore} → ${inAfter}`);
+  check('  and leaves the rest of the photo as it was', Math.abs(outAfter - outBefore) <= 3, `${outBefore} → ${outAfter}`);
+  await page.locator('[data-postselectpart="all"]').click();
+  await page.waitForTimeout(300);
+  const outAll = await at(0.88);
+  check('  and back on the whole photo, the rest changes too', Math.abs(outAll - outBefore) > 12, `${outBefore} → ${outAll}`);
+  await page.locator('[data-postplain]').first().click().catch(() => undefined);
+  await tool('magic');
+  await page.locator('[data-postmagicclear]').click();
+  await page.waitForTimeout(200);
+
   /* ── Style match: drawn samples, in groups ── */
   const tiles = async () => page.evaluate(() => [...document.querySelectorAll('[data-poststyle] canvas')].map((el) => {
     const d = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;

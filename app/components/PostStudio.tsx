@@ -141,6 +141,7 @@ import {
 } from '../lib/postdesigns';
 import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
+import { lookThrough, maskFromBox, maskFromGrey, maskFromStrokes, shareSelected, type SelectWhat, type Selection } from '../lib/postselect';
 import { MAGIC_STYLES, STYLE_GROUPS, drawStyleTile, styleAsk, styleById, styleLabel, type StyleGroup } from '../lib/magicstyles';
 import { MAGIC_ASKS, brushRect, cropOf, laidIn, padded, type Brush, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
@@ -879,12 +880,18 @@ export default function PostStudio({
   const brushing = useRef(false);
   /* The fingers on the photograph, and a pinch while there are two. */
   const fingers = useRef(new Map<number, { x: number; y: number }>());
-  const pinch = useRef<{ dist: number; zoom: number } | null>(null);
+  const pinch = useRef<{ dist: number; scale: number; mid: { x: number; y: number }; x: number; y: number } | null>(null);
+  /* How close the glass is looked at — a magnifier, not the post's own crop,
+     so it works in every tool and changes nothing that is saved. */
+  const [view, setView] = useState<{ scale: number; x: number; y: number }>({ scale: 1, x: 0, y: 0 });
   /* The brush is a switch of its own: on, a finger paints; off, the photo can
      be moved as usual. Carli, 17 October 2026: *"Daar moet dan 'n brush
      button wees."* */
   const [brushOn, setBrushOn] = useState(true);
   const [styleGroup, setStyleGroup] = useState<StyleGroup>('digital');
+  /* The part of the photograph Adjust and Filters change — `lib/postselect.ts`. */
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [selecting, setSelecting] = useState(false);
   /* The photograph as it was before a whole-photo change, for the
      before-and-after line — only while the photo is the one that change made. */
   const [compareFrom, setCompareFrom] = useState<{ readonly of: HTMLImageElement; readonly from: HTMLImageElement } | null>(null);
@@ -1660,12 +1667,22 @@ export default function PostStudio({
       /* The look goes on the PICTURE and comes off again before anything is
          written. Words under a blur are not a style, they are a mistake, and
          a filter left set would put every one of them through it. */
-      ctx.filter = filterFor(look, to.width / size.width);
-      /* The photo layer's own opacity, from the layer list. */
-      ctx.globalAlpha = photoAlpha;
-      ctx.drawImage(picture, at.left, at.top, at.width, at.height);
-      ctx.globalAlpha = 1;
-      ctx.filter = 'none';
+      /* A part selected: the photograph as it came, and the look over only
+         that part — `lib/postselect.ts`. */
+      const chosenPart = selection && selection.of === picture && touched(look) ? selection : null;
+      if (chosenPart) {
+        ctx.globalAlpha = photoAlpha;
+        ctx.drawImage(picture, at.left, at.top, at.width, at.height);
+        ctx.drawImage(lookThrough(picture, at.width, at.height, look, to.width / size.width, chosenPart.mask), at.left, at.top, at.width, at.height);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.filter = filterFor(look, to.width / size.width);
+        /* The photo layer's own opacity, from the layer list. */
+        ctx.globalAlpha = photoAlpha;
+        ctx.drawImage(picture, at.left, at.top, at.width, at.height);
+        ctx.globalAlpha = 1;
+        ctx.filter = 'none';
+      }
 
       /* ── A box round every line the reader found ─────────────────
 
@@ -1736,7 +1753,7 @@ export default function PostStudio({
         ctx.restore();
       }
 
-      if (washesOf(look).length) {
+      if (washesOf(look).length && !chosenPart) {
         /* Clipped to the picture, not the frame. A warm wash over the
            background as well would tint the colour she chose behind it,
            which is a control reaching past what it says it does. A
@@ -2384,7 +2401,7 @@ export default function PostStudio({
        line — the arithmetic was fine — and the glass stayed empty, because
        nothing had repainted since the boxes arrived. */
   }, [facesIn, size, picture, words, back, crop, look, cropBox, traced,
-    picking, found, picked, compareFrom,
+    picking, found, picked, compareFrom, selection,
     /* The shapes and the one picked: drawn by `draw`, so they repaint it.
        A shape dragged with these missing moved in the state and stayed put
        on the glass until something else happened to repaint. */
@@ -2542,10 +2559,22 @@ export default function PostStudio({
        zoom, dan moet die foto zoom en nie die app se screen nie."* The
        second finger down turns whatever the first one started into a
        pinch, and the pinch is the photograph's own zoom. */
+    /* The first finger of a gesture starts it clean: a finger the phone
+       never reported lifting must not turn the next touch into a pinch. */
+    if (event.isPrimary) {
+      fingers.current.clear();
+      pinch.current = null;
+    }
     fingers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (fingers.current.size === 2 && picture) {
       const [a, b] = [...fingers.current.values()];
-      pinch.current = { dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), zoom: crop.zoom };
+      pinch.current = {
+        dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+        scale: view.scale,
+        mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+        x: view.x,
+        y: view.y,
+      };
       if (brushing.current) setMagicStrokes((was) => was.slice(0, -1));
       brushing.current = false;
       lastAt.current = null;
@@ -2748,9 +2777,13 @@ export default function PostStudio({
     if (pinch.current) {
       if (fingers.current.size >= 2) {
         const [a, b] = [...fingers.current.values()];
-        const by = Math.hypot(a.x - b.x, a.y - b.y) / pinch.current.dist;
-        const to = pinch.current.zoom * by;
-        setCrop((was) => zoomTo(was, to));
+        const was = pinch.current;
+        const scale = Math.min(5, Math.max(1, was.scale * (Math.hypot(a.x - b.x, a.y - b.y) / was.dist)));
+        /* The two fingers' middle moves the view with it, so the part
+           between them stays between them. */
+        setView(scale === 1
+          ? { scale: 1, x: 0, y: 0 }
+          : { scale, x: was.x + ((a.x + b.x) / 2 - was.mid.x), y: was.y + ((a.y + b.y) / 2 - was.mid.y) });
       }
       return;
     }
@@ -3063,14 +3096,20 @@ export default function PostStudio({
     baked.height = picture.naturalHeight || picture.height;
     const bctx = baked.getContext('2d');
     if (!bctx) { restore(); return; }
-    bctx.filter = filterFor(look, 1);
-    bctx.drawImage(picture, 0, 0, baked.width, baked.height);
-    bctx.filter = 'none';
-    if (washesOf(look).length) {
-      paintWashes(bctx, look, 0, 0, baked.width, baked.height);
-      bctx.globalCompositeOperation = 'destination-in';
+    if (selection && selection.of === picture && touched(look)) {
+      /* Only the part chosen in Adjust or Filters, as on the glass. */
       bctx.drawImage(picture, 0, 0, baked.width, baked.height);
-      bctx.globalCompositeOperation = 'source-over';
+      bctx.drawImage(lookThrough(picture, baked.width, baked.height, look, 1, selection.mask), 0, 0, baked.width, baked.height);
+    } else {
+      bctx.filter = filterFor(look, 1);
+      bctx.drawImage(picture, 0, 0, baked.width, baked.height);
+      bctx.filter = 'none';
+      if (washesOf(look).length) {
+        paintWashes(bctx, look, 0, 0, baked.width, baked.height);
+        bctx.globalCompositeOperation = 'destination-in';
+        bctx.drawImage(picture, 0, 0, baked.width, baked.height);
+        bctx.globalCompositeOperation = 'source-over';
+      }
     }
     const done = new Image();
     done.onload = () => {
@@ -4305,8 +4344,8 @@ export default function PostStudio({
    * `CREDITS.grab` carries why. The boxes land in the same list the reader
    * fills, so they are drawn and tapped by the code that already existed.
    */
-  const findThings = async (): Promise<void> => {
-    if (!picture || looking) return;
+  const findThings = async (want: 'all' | 'subjects' = 'all'): Promise<Found[] | null> => {
+    if (!picture || looking) return null;
     const wide = picture.naturalWidth || picture.width;
     const tall = picture.naturalHeight || picture.height;
     /* `looked` and not `sheet`, deliberately. The paid export's canvas is
@@ -4347,7 +4386,7 @@ export default function PostStudio({
     }
     if (!sent || sent.length > BUDGET) {
       setSaid(t('post.thingsTooBig', 'That picture is too big to send. Crop it or bring in a smaller one. Nothing was charged.'));
-      return;
+      return null;
     }
     const upX = wide / looked.width;
     const upY = tall / looked.height;
@@ -4371,6 +4410,7 @@ export default function PostStudio({
           /* The size of what was SENT: every box comes back in its terms. */
           wide: looked.width,
           tall: looked.height,
+          want,
         }),
       });
       const body = (await answer.json().catch(() => ({}))) as {
@@ -4378,12 +4418,25 @@ export default function PostStudio({
       };
       if (!answer.ok) {
         setSaid(body.message ?? t('post.thingsNo', 'The things in this picture could not be found.'));
-        return;
+        return null;
       }
       const rows = body.found ?? [];
       if (!rows.length) {
         setSaid(t('post.thingsNone', 'Nothing in this picture came back as a separate thing. A photograph of one subject on a plain ground usually does better with Take a plain background off.'));
-        return;
+        return null;
+      }
+      /* For a cut-out of the main subjects: their shapes, in this picture's
+         own pixels, handed back rather than offered to tap. */
+      if (want === 'subjects') {
+        return rows.map((sentRow) => ({
+          ...sentRow,
+          box: {
+            left: Math.max(0, Math.min(wide, Math.round(sentRow.box.left * upX))),
+            top: Math.max(0, Math.min(tall, Math.round(sentRow.box.top * upY))),
+            right: Math.max(0, Math.min(wide, Math.round(sentRow.box.right * upX))),
+            bottom: Math.max(0, Math.min(tall, Math.round(sentRow.box.bottom * upY))),
+          },
+        }));
       }
       /* Shares, because that is the space `pickAt` and the highlights work
          in — and a box handed over in pixels would land in the corner. */
@@ -4426,6 +4479,7 @@ export default function PostStudio({
     } finally {
       setLooking(false);
     }
+    return null;
   };
 
   /**
@@ -4498,39 +4552,79 @@ export default function PostStudio({
   };
 
   /**
-   * Move a found thing: cut out by its own shape and put on a layer of its
-   * own, exactly where it was, ready to drag. Carli, 17 October 2026: *"Mens
-   * moet dan op die objek click, en dan kan cut of skuif, of prompt waarin
-   * dit moet verander."* The original stays in the photograph underneath —
-   * Take it away fills that in, and says its price first.
+   * Grab it: the thing or the line itself — its own pixels — lifted out of
+   * the photograph onto a layer of its own, exactly where it was and ready to
+   * drag, and the place it came from filled in from what is around it.
+   *
+   * Carli, 17 October 2026: *"Die woord copy hy eerder as grab."* Make it text
+   * put new words on top and left the old ones in the photo, which reads as a
+   * copy. This is the grab: the same letters, the same look, moved. A thing is
+   * cut by its own shape; a line by its box. Where the hole is too big to fill
+   * from its edges, the photo keeps it and says so — Magic's Take it away can
+   * fill a big one, and says its price first.
    */
   const moveThing = (one: Pick): void => {
     if (!picture) return;
-    liftThing(one, (piece) => {
+    const from = picture;
+    const wide = from.naturalWidth || from.width;
+    const tall = from.naturalHeight || from.height;
+    const placed = (piece: HTMLCanvasElement, where: Pick = one): void => {
+      /* The hole, filled from its edges — the same eraser as Take it out. */
+      const rubbed = document.createElement('canvas');
+      rubbed.width = wide;
+      rubbed.height = tall;
+      const rctx = rubbed.getContext('2d', { willReadFrequently: true });
+      let filled = false;
+      if (rctx) {
+        rctx.drawImage(from, 0, 0);
+        const done = erase(rctx.getImageData(0, 0, wide, tall), maskOfLine(one, wide, tall));
+        if (done.ok) { rctx.putImageData(done.pixels, 0, 0); filled = true; }
+      }
       asPicture(piece, (img) => {
-        const at = place(picture, size, crop);
-        const box = ontoFrame(one, at);
-        const id = freshId();
-        beforeLayers(t('post.stepMoveThing', 'moving a thing'));
-        setCells((was) => [...was, {
-          id,
-          x: box.left / size.width,
-          y: box.top / size.height,
-          w: box.width / size.width,
-          h: box.height / size.height,
-          image: img,
-          crop: MIDDLE,
-          z: frontZ(marks, words, was),
-        }]);
-        setCellOn(id);
-        setFraming(true);
-        setPicking(false);
-        setPicked(null);
-        setFound(null);
-        setBench(null);
-        setSaid(t('post.thingMoved', 'It is on a layer of its own now \u2014 drag it where you want it. The original is still in the photo underneath; Magic can take it away.'));
+        const lay = (): void => {
+          const at = place(from, size, crop);
+          const box = ontoFrame(where, at);
+          const id = freshId();
+          setCells((was) => [...was, {
+            id,
+            x: box.left / size.width,
+            y: box.top / size.height,
+            w: box.width / size.width,
+            h: box.height / size.height,
+            image: img,
+            crop: MIDDLE,
+            z: frontZ(marks, words, was),
+          }]);
+          setCellOn(id);
+          setFraming(true);
+          setPicking(false);
+          setPicked(null);
+          setFound(null);
+          setBench(null);
+          setSaid(filled
+            ? t('post.thingGrabbed', 'Grabbed \u2014 it is on a layer of its own now, so drag it where you want it. Where it was has been filled in.')
+            : t('post.thingMoved', 'It is on a layer of its own now \u2014 drag it where you want it. The original is still in the photo underneath; Magic can take it away.'));
+        };
+        before(t('post.stepMoveThing', 'moving a thing'), true);
+        if (!filled) { lay(); return; }
+        asPicture(rubbed, (made) => {
+          setWhole(from);
+          setPicture(made);
+          lay();
+        }, () => lay());
       }, () => setSaid(t('post.thingFailed', 'That one could not be lifted out.')));
-    });
+    };
+    if (things.current.has(one.id)) {
+      liftThing(one, placed);
+      return;
+    }
+    /* A line of writing: its box, a little wider so no letter is cut. */
+    const left = Math.max(0, Math.floor((one.x - one.w * 0.03) * wide));
+    const top = Math.max(0, Math.floor((one.y - one.h * 0.12) * tall));
+    const right = Math.min(wide, Math.ceil((one.x + one.w * 1.03) * wide));
+    const bottom = Math.min(tall, Math.ceil((one.y + one.h * 1.12) * tall));
+    const piece = cropOf(from, { left, top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) });
+    placed(piece, { ...one, x: left / wide, y: top / tall, w: (right - left) / wide, h: (bottom - top) / tall });
   };
 
   /** Erase the line out of the photograph. */
@@ -4959,6 +5053,72 @@ export default function PostStudio({
       /* Nothing in the photograph could be cut: the colour behind it still
          goes, which is what the button promised at the least. */
       if (!(await cutBackground(Date.now() + 3000))) nothingBehind();
+    } finally {
+      setWorking(null);
+    }
+  };
+
+  /**
+   * Every main subject cut out cleanly — all of them, not only a person.
+   *
+   * Carli, 17 October 2026, a woman beside an owl, where the phone's person
+   * model kept the woman and lost the owl: *"Die twee hoof objekte op die
+   * prent moes netjies uitgehaal word."* The engine is asked for the main
+   * subjects and their shapes (one paid look, `CREDITS.grab`); the person
+   * model, which is free and finer at hair, adds its edge where it has one.
+   * Both are laid together into one mask, and the photograph keeps only that.
+   */
+  const cutSubjects = async (): Promise<void> => {
+    if (!picture || looking || working === 'long') return;
+    const from = picture;
+    const wide = from.naturalWidth || from.width;
+    const tall = from.naturalHeight || from.height;
+    const until = Date.now() + 3000;
+    setWorking('long');
+    try {
+      const [rows, person] = await Promise.all([
+        findThings('subjects'),
+        cutOut(from, undefined, edgeOf(edge)).catch(() => null),
+      ]);
+      const shapes = (rows ?? []).filter((one) => one.mask);
+      if (!shapes.length && !(person && person.ok)) return;
+      const union = document.createElement('canvas');
+      union.width = wide;
+      union.height = tall;
+      const uctx = union.getContext('2d');
+      if (!uctx) return;
+      for (const one of shapes) {
+        const img = await new Promise<HTMLImageElement | null>((done) => {
+          const shape = new Image();
+          shape.onload = () => done(shape);
+          shape.onerror = () => done(null);
+          shape.src = `data:image/png;base64,${one.mask}`;
+        });
+        if (img) uctx.drawImage(maskFromBox(img, one.box, wide, tall), 0, 0);
+      }
+      if (person && person.ok) uctx.drawImage(maskFromGrey(person.mask, wide, tall), 0, 0);
+      const cut = document.createElement('canvas');
+      cut.width = wide;
+      cut.height = tall;
+      const cctx = cut.getContext('2d');
+      if (!cctx) return;
+      cctx.drawImage(from, 0, 0, wide, tall);
+      cctx.globalCompositeOperation = 'destination-in';
+      cctx.drawImage(union, 0, 0);
+      cctx.globalCompositeOperation = 'source-over';
+      const left = until - Date.now();
+      if (left > 0) await new Promise((done) => { window.setTimeout(done, left); });
+      before(t('post.stepSubjects', 'cutting out the main subjects'));
+      await new Promise<void>((done) => {
+        asPicture(cut, (made) => {
+          setWhole(from);
+          setPicture(made);
+          nothingBehind();
+          setSaid(t('post.subjectsDone', 'Cut out: {n} main subjects kept, nothing behind them. Press Put it back if you liked it better before.')
+            .replace('{n}', String(Math.max(shapes.length, 1))));
+          done();
+        }, () => { setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')); done(); });
+      });
     } finally {
       setWorking(null);
     }
@@ -5510,6 +5670,18 @@ export default function PostStudio({
           ? t('post.clearOn', 'Transparent \u2014 nothing behind it')
           : t('post.clearOff', 'Make it transparent')}
       </button>
+      {picture && (
+        <button
+          type="button"
+          data-postsubjects
+          disabled={working === 'long' || looking}
+          onClick={() => void cutSubjects()}
+          className={`${LEEG} col-span-2 disabled:opacity-50`}
+        >
+          <Scissors className="h-3.5 w-3.5" />
+          {t('post.subjectsGo', 'Cut out every main thing \u00b7 {n} credits').replace('{n}', String(CREDITS.grab))}
+        </button>
+      )}
       {back === null && (
         <p data-postcheckernote className="col-span-2 text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
           {t('post.checkerOnlyHere', 'The squares only show you it is see-through. They are not in the picture you save.')}
@@ -6435,6 +6607,104 @@ export default function PostStudio({
   };
 
   /* Show the line, or take it away. Only when there is a look to compare. */
+  /**
+   * Choose the part Adjust and Filters change: all of it, the person, the
+   * background behind them, what was painted in Magic, or a thing Grab
+   * found. The person comes from the same on-phone model as Remove the
+   * background, asked once and kept for this photograph.
+   */
+  const selectPart = async (what: SelectWhat | null, thing?: Pick): Promise<void> => {
+    if (!what || !picture) { setSelection(null); return; }
+    const wide = picture.naturalWidth || picture.width;
+    const tall = picture.naturalHeight || picture.height;
+    const of = picture;
+    setToneAll(false);
+    setLayerOn('photo');
+    if (what === 'painted') {
+      if (!magicStrokes.length) {
+        setSaid(t('post.selectPaintFirst', 'Paint the part with the Magic brush first, then choose it here.'));
+        return;
+      }
+      setSelection({ of, mask: maskFromStrokes(magicStrokes, magicSize, wide, tall), what });
+      setSaid('');
+      return;
+    }
+    if (what === 'thing') {
+      const one = thing ? things.current.get(thing.id) : undefined;
+      if (!one?.mask) {
+        setSaid(t('post.thingNoMask', 'The engine found that one but did not send its shape, so it cannot be lifted out cleanly. Try Find objects and text again, or use Cut out a shape and draw round it.'));
+        return;
+      }
+      const shape = new Image();
+      shape.onload = () => {
+        setSelection({ of, mask: maskFromBox(shape, one.box, wide, tall), what });
+        setPicking(false);
+        setPicked(null);
+        setFound(null);
+        setBench('tone');
+        setSaid(t('post.selectThingDone', 'Only that thing changes now — move the sliders, or pick a filter.'));
+      };
+      shape.src = `data:image/png;base64,${one.mask}`;
+      return;
+    }
+    let grey = lastMask.current?.of === picture ? lastMask.current.mask : null;
+    if (!grey) {
+      setSelecting(true);
+      setWorking('long');
+      try {
+        const cut = await cutOut(picture, undefined, edgeOf(edge));
+        if (!cut.ok) {
+          setSaid(t('post.selectNobody', 'No person could be found in this photo to choose. Paint the part with the Magic brush instead.'));
+          return;
+        }
+        grey = cut.mask;
+        lastMask.current = { mask: cut.mask, of: picture };
+      } finally {
+        setSelecting(false);
+        setWorking(null);
+      }
+    }
+    const mask = maskFromGrey(grey, wide, tall, what === 'background');
+    if (shareSelected(mask) < 0.005) {
+      setSaid(t('post.selectNothing', 'Nothing of the photo is in that part, so nothing would change.'));
+      return;
+    }
+    setSelection({ of, mask, what });
+    setSaid('');
+  };
+  const chosenNow: SelectWhat | null = selection && selection.of === picture ? selection.what : null;
+  /* The row in Adjust and Filters that says what changes. */
+  const selectRow = picture ? (
+    <div className="space-y-1.5" data-postselect={chosenNow ?? 'all'}>
+      <p className={MIKRO}>{t('post.selectTitle', 'What it changes')}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {([
+          [null, t('post.selectAll', 'The whole photo')],
+          ['person', t('post.selectPerson', 'The person')],
+          ['background', t('post.selectBehind', 'The background')],
+          ['painted', t('post.selectPainted', 'What I painted')],
+        ] as const).map(([what, label]) => (
+          <button
+            key={what ?? 'all'}
+            type="button"
+            data-postselectpart={what ?? 'all'}
+            aria-pressed={chosenNow === what}
+            disabled={selecting}
+            onClick={() => void selectPart(what)}
+            className={`min-h-[44px] rounded-full border px-3 text-xs font-bold disabled:opacity-50 ${chosenNow === what ? GEKIES : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+          >
+            {label}
+          </button>
+        ))}
+        {chosenNow === 'thing' && (
+          <span className={`inline-flex min-h-[44px] items-center rounded-full border px-3 text-xs font-bold ${GEKIES}`}>
+            {t('post.selectThing', 'The thing from Grab')}
+          </span>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   const compareButton = (
     <button
       type="button"
@@ -6503,6 +6773,7 @@ export default function PostStudio({
             {t('post.lookOnAll', 'All layers')}
           </button>
         </div>
+        {selectRow}
         <div className="space-y-2">
           <p className={MIKRO}>{t('post.look', 'How it reads')}</p>
           <div className={RY}>
@@ -8183,6 +8454,7 @@ export default function PostStudio({
             {t('post.lookOnAll', 'All layers')}
           </button>
         </div>
+        {selectRow}
         <p className="text-[11px] leading-relaxed text-zinc-500">
           {t('post.filterHint', 'Every filter is shown on your own photo. Fine-tune it afterwards in Adjust.')}
         </p>
@@ -8563,6 +8835,16 @@ export default function PostStudio({
     </header>
   );
 
+  /* Every tool that takes a while — anything the AI does, reading the
+     words, cutting the background out — glows over the photograph until it
+     is done. Carli, 17 October 2026: *"Die hele foto moet so glow effect hê
+     wat oor die skerm pulse soos 'n neon ruler pulse wat oor die skerm
+     beweeg oor en oor totdat die funksie geapply is."* */
+  const glowing: 'long' | 'flash' | null = working === 'long' || reading !== null || looking
+    || Boolean(magicBusy) || redrawing || cutting !== null || liveBusy
+    ? 'long'
+    : working;
+
   /* ── The photograph, as big as the space allows ───────────────────── */
   const photo = (
     <div ref={stage} data-poststage className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp ? 'items-start pt-2' : 'items-center'}`}>
@@ -8580,6 +8862,8 @@ export default function PostStudio({
         onPointerCancel={letGo}
         className="rounded-md"
         style={{
+          transform: view.scale > 1 ? `translate(${view.x}px, ${view.y}px) scale(${view.scale})` : undefined,
+          transformOrigin: 'center',
           width: fitted ? fitted.w : '100%',
           height: fitted ? fitted.h : undefined,
           aspectRatio: `${size.width} / ${size.height}`,
@@ -8604,12 +8888,14 @@ export default function PostStudio({
           Dragged sideways: left of it the photograph as it came, right of
           it as it is now (drawn by `draw`). Placed from the canvas's own
           box, so it sits on the picture wherever the picture sits. */}
-      {working && canvas.current && (
+      {glowing && canvas.current && (
         <div
-          data-postworking={working}
+          data-postworking={glowing}
           aria-hidden
-          className={`pointer-events-none absolute z-10 ${working === 'long' ? 'fb-working' : 'fb-workflash'}`}
+          className={`pointer-events-none absolute z-10 ${glowing === 'long' ? 'fb-working' : 'fb-workflash'}`}
           style={{
+            transform: view.scale > 1 ? `translate(${view.x}px, ${view.y}px) scale(${view.scale})` : undefined,
+            transformOrigin: 'center',
             left: canvas.current.offsetLeft,
             top: canvas.current.offsetTop,
             width: canvas.current.offsetWidth,
@@ -8874,7 +9160,11 @@ export default function PostStudio({
               </button>
               <button type="button" data-postthingmove onClick={() => moveThing(picked)} className={LEEG}>
                 <Move className="h-3.5 w-3.5" />
-                {t('post.thingMove', 'Move it')}
+                {t('post.thingGrab', 'Grab it')}
+              </button>
+              <button type="button" data-postthingselect onClick={() => void selectPart('thing', picked)} className={`${LEEG} col-span-2`}>
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                {t('post.thingAdjust', 'Adjust just this')}
               </button>
             </div>
           )}
@@ -8890,10 +9180,10 @@ export default function PostStudio({
               <button
                 type="button"
                 data-postlinemove
-                onClick={() => { const one = picked; if (dropLine(one)) grabLine(one); }}
+                onClick={() => moveThing(picked)}
                 className={LEEG}
               >
-                {t('post.lineMove', 'Move it')}
+                {t('post.lineGrabIt', 'Grab it')}
               </button>
             </div>
           )}
@@ -9194,6 +9484,19 @@ export default function PostStudio({
                 360-pixel screen (Carli, 15 October 2026: "Daai take it out
                 button daar regs bo is afgesny"). */}
             {undoRedo ? <div data-postundorow className="absolute left-2 top-2 z-10 flex gap-1">{undoRedo}</div> : null}
+            {view.scale > 1 && (
+              <button
+                type="button"
+                data-postviewreset
+                onClick={() => setView({ scale: 1, x: 0, y: 0 })}
+                className="absolute bottom-2 left-2 z-10 flex h-11 items-center gap-1 rounded-lg px-3 text-xs font-bold"
+                style={{ background: PHOTO.chip, border: `1px solid ${PHOTO.edge}`, color: PHOTO.ink }}
+                aria-label={t('post.viewReset', 'See the whole photo again')}
+              >
+                <ZoomOut className="h-4 w-4" />
+                {`${view.scale.toFixed(1)}×`}
+              </button>
+            )}
             {saveFull && toolSheet ? (
               /* Carli, 15 October 2026: "Take it out se pop out kan oor die
                  hele skerm gaan." So it does: the whole space between the

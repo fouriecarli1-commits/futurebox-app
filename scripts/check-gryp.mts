@@ -134,6 +134,8 @@ ok('  and the other spelling of the key is read',
   ok('  and a row that does not say is an object',
     readFound(JSON.stringify([{ label: 'a cat', box_2d: [0, 0, 500, 500] }]), 100, 100)[0]?.kind === 'object');
 }
+ok('an answer cut off part of the way keeps every entry that arrived whole',
+  readFound('[{"label":"an owl","box_2d":[0,0,500,500]},{"label":"a wo', 100, 100).length === 1);
 ok('nothing is read out of prose', readFound('I cannot see any objects.', 100, 100).length === 0);
 ok('  or out of broken JSON', readFound('[{"label": "a cat",', 100, 100).length === 0);
 ok('  or out of an object that is not a list', readFound('{"label":"a cat"}', 100, 100).length === 0);

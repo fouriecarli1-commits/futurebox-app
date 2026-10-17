@@ -102,6 +102,23 @@ export const ASK = [
   'No prose, no code fence, no explanation.',
 ].join(' ');
 
+/**
+ * What to ask for when the whole point is a clean cut-out: only the main
+ * subjects, each with its shape. Carli, 17 October 2026, a portrait of a
+ * woman beside an owl, cut out by the phone's person model with the owl gone:
+ * *"Die twee hoof objekte op die prent moes netjies uitgehaal word."*
+ */
+export const SUBJECTS_ASK = [
+  'Find the main subjects in the foreground of this picture: every person, animal and main object that would be kept if the background were removed.',
+  'Answer with JSON only: an array of objects, each with',
+  '"kind" ("object"),',
+  '"label" (two or three words, plain English),',
+  '"box_2d" ([ymin, xmin, ymax, xmax], each 0-1000),',
+  'and "mask" (a base64 PNG, white where the subject is, covering all of it including hair, fur and anything it holds).',
+  'At most 6 entries, the largest first. Nothing from the background.',
+  'No prose, no code fence, no explanation.',
+].join(' ');
+
 /** A box out of the engine's grid and into this picture's pixels. */
 export function boxOf(
   grid: readonly number[],
@@ -137,11 +154,24 @@ export function readFound(said: string, wide: number, tall: number): Found[] {
   const from = text.indexOf('[');
   const upTo = text.lastIndexOf(']');
   if (from === -1 || upTo <= from) return [];
-  let rows: unknown;
+  let rows: unknown = null;
   try {
     rows = JSON.parse(text.slice(from, upTo + 1));
   } catch {
-    return [];
+    /* An answer cut off part of the way through — masks are long, and a
+       busy picture runs out of room. Every entry that arrived whole is
+       still good: close the list after the last complete one and read
+       those, rather than throwing away the whole answer for its tail. */
+    let end = text.lastIndexOf('}');
+    for (let tries = 0; end > from && tries < 6; tries += 1) {
+      try {
+        rows = JSON.parse(`${text.slice(from, end + 1)}]`);
+        break;
+      } catch {
+        end = text.lastIndexOf('}', end - 1);
+      }
+    }
+    if (!rows) return [];
   }
   if (!Array.isArray(rows)) return [];
 

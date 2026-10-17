@@ -14,7 +14,7 @@
  */
 
 import { addressOf, flashCall } from './google';
-import { ASK, readFound, type Found } from '../grabobject';
+import { ASK, SUBJECTS_ASK, readFound, type Found } from '../grabobject';
 
 /**
  * The model that looks.
@@ -27,7 +27,7 @@ import { ASK, readFound, type Found } from '../grabobject';
 export const LOOKER = 'gemini-2.5-flash';
 
 /** The request, as its own function so a check can read it without a key. */
-export function lookBody(picture: { data: string; mime: string }): string {
+export function lookBody(picture: { data: string; mime: string }, ask: string = ASK): string {
   return JSON.stringify({
     contents: [{
       role: 'user',
@@ -35,7 +35,7 @@ export function lookBody(picture: { data: string; mime: string }): string {
         /* The picture BEFORE the question. A model reads a turn in order,
            and `picture.ts` has the longer note about why that matters. */
         { inlineData: { mimeType: picture.mime, data: picture.data } },
-        { text: ASK },
+        { text: ask },
       ],
     }],
     generationConfig: {
@@ -43,6 +43,10 @@ export function lookBody(picture: { data: string; mime: string }): string {
          variety here is a model inventing where things are. */
       temperature: 0,
       responseMimeType: 'application/json',
+      /* Room for the masks, which are long, and no thinking before the
+         answer: this is looking, and every second is somebody waiting. */
+      maxOutputTokens: 32768,
+      thinkingConfig: { thinkingBudget: 0 },
     },
   });
 }
@@ -57,6 +61,7 @@ export async function lookAt(
   wide: number,
   tall: number,
   model: string = LOOKER,
+  subjects = false,
 ): Promise<Looked> {
   let answer: Response;
   try {
@@ -67,7 +72,7 @@ export async function lookAt(
         'Content-Type': 'application/json',
         'x-goog-api-key': process.env.GOOGLE_VERTEX_KEY ?? '',
       },
-      body: lookBody(picture),
+      body: lookBody(picture, subjects ? SUBJECTS_ASK : ASK),
     }), model));
   } catch {
     return { ok: false, status: 502, message: 'The engine could not be reached.' };
