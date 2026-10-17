@@ -114,6 +114,8 @@ import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
+import BestMoments from './BestMoments';
+import { reel } from '../lib/highlights';
 import FilmStrip from './FilmStrip';
 import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, previewFor, roundFor,
@@ -4682,6 +4684,7 @@ async function smallerFrame(url: string): Promise<string> {
                         type="button"
                         aria-pressed={on}
                         data-editorblock
+                        data-editorfrom={one.from}
                         onClick={(event) => {
                           setPicked(one.id); setLane('film');
                           const box = event.currentTarget.getBoundingClientRect();
@@ -6268,6 +6271,15 @@ async function smallerFrame(url: string): Promise<string> {
                 {t('edit.drop', 'Take it out')}
               </button>
             </div>
+            {/* The best moments of this shot, by its sound — `lib/highlights.ts`. */}
+            <BestMoments
+              piece={piece}
+              onReel={(moments) => {
+                commit((was) => reel(was, piece.id, moments));
+                /* The first moment picked, so the bench stays open on what was made. */
+                setPicked(`${piece.id}-m1`);
+              }}
+            />
           </div>
         )}
 
