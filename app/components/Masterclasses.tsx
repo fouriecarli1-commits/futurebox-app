@@ -23,6 +23,7 @@ import {
   PROVENANCE_LABELS, PROVENANCE_NOTES,
   type Track, type Provenance, type Masterclass,
 } from '../data/masterclasses';
+import { OUTCOME_AF } from '../data/masterclasses';
 import type { Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import { signal } from '../lib/signal';
@@ -50,7 +51,7 @@ function Card({
 }: {
   item: Masterclass; userPlan: Plan; onUpgrade: () => void; board: Board | null;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const locked = item.proOnly && userPlan === 'free';
   const unavailable = !item.url;
   const Icon = TRACK_ICONS[item.track];
@@ -84,7 +85,7 @@ function Card({
         </p>
         <p className="text-base text-zinc-400 leading-relaxed pt-2">
           <span className="text-zinc-500">{t('mc.youCan', 'What you will be able to do:')} </span>
-          {item.outcome}
+          {lang === 'af' ? OUTCOME_AF[item.id] ?? item.outcome : item.outcome}
         </p>
       </div>
 

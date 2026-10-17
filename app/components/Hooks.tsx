@@ -1247,7 +1247,7 @@ export default function Hooks({
                 <span className="block text-xs font-bold text-white">{name}</span>
                 <span className="block text-[9px] text-zinc-400 font-mono">{sub}</span>
               </span>
-              <span className="text-[10px] font-bold text-emerald-300 shrink-0">{length}s →</span>
+              <span className="text-[10px] font-bold text-emerald-300 shrink-0">{t('hooks.secondsArrow', '{n}s →').replace('{n}', String(length))}</span>
             </button>
           ))}
           </div>

@@ -63,6 +63,8 @@ export interface InsightArticle {
   readonly podcastRef?: {
     readonly show: string;
     readonly host: string;
+    /** The host line in Afrikaans, where it differs. */
+    readonly hostAf?: string;
     readonly topicEn: string;
     readonly topicAf: string;
     readonly duration: string;
@@ -265,6 +267,7 @@ export const FUTURE_INSIGHTS: readonly InsightArticle[] = [
     podcastRef: {
       show: 'Futurebox Toekomsgesprekke',
       host: 'FutureBox & guests',
+      hostAf: 'FutureBox Ateljee & Gaste',
       topicEn: 'Mastering Focus, Asymmetric Bets, and Unshakable Vision',
       topicAf: 'Fokus, Asimmetriese Geleenthede en Onwrikbare Visie',
       duration: '1h 14m',
@@ -307,6 +310,7 @@ export const FUTURE_INSIGHTS: readonly InsightArticle[] = [
     podcastRef: {
       show: 'Futurebox Toekomsgesprekke',
       host: 'FutureBox & guests',
+      hostAf: 'FutureBox Ateljee & Gaste',
       topicEn: 'Artificial General Intelligence, Algorithmic Harmonies & Human Meaning',
       topicAf: 'Algemene Kunsmatige Intelligensie, Algoritmiese Harmonieë & Menslike Betekenis',
       duration: '2h 28m',
@@ -349,6 +353,7 @@ export const FUTURE_INSIGHTS: readonly InsightArticle[] = [
     podcastRef: {
       show: 'Futurebox Toekomsgesprekke',
       host: 'FutureBox & guests',
+      hostAf: 'FutureBox Ateljee & Gaste',
       topicEn: 'Direct Subscriber Ownership, Tokenized Licensing & Studio Margins',
       topicAf: 'Direkte Intekenaar-eienaarskap, Gelisensieerde Inhoud & Ateljee-winsgrense',
       duration: '1h 42m',

@@ -410,3 +410,25 @@ export function youTubeId(url: string): string | null {
   const found = /[?&]v=([A-Za-z0-9_-]{6,})/.exec(url) ?? /youtu\.be\/([A-Za-z0-9_-]{6,})/.exec(url);
   return found ? found[1] : null;
 }
+
+/**
+ * What each class leaves you able to do, in Afrikaans. The Afrikaans screen
+ * showed these in English (check:afrikaansscreen, 17 October 2026).
+ */
+export const OUTCOME_AF: Readonly<Record<string, string>> = {
+  'mc-games-start': 'Ken die verskil tussen die dele van ’n speletjie wat hierdie gereedskap werklik vinniger maak, en die dele waar dit jou meer tyd kos as wat dit spaar.',
+  'mc-games-assets': 'Neem ’n gegenereerde sprite-vel van "lyk reg in die voorskou" tot iets wat oor veertig rame dieselfde bly, en weet watter regstellings die moeite werd is om met die hand te doen.',
+  'mc-games-npc': 'Koppel gegenereerde dialoog aan ’n toneel, meet die vertraging wat ’n speler werklik voel, en bereken die rekening voordat jy uitstuur eerder as daarna.',
+  'mc-games-ship': 'Sit ’n klaar speletjie voor mense met die gegenereerde dele op die winkelblad verklaar — ook wat die platforms nou vereis, en hoekom wegsteek die duur opsie is.',
+  'mc-karpathy-llm': 'Verduidelik aan iemand anders wat ’n token is, hoekom konteks ’n grens het, en wat fynafstemming werklik verander.',
+  'mc-karpathy-gpt': 'Lees ’n transformer-diagram en weet watter reël kode elke blokkie is.',
+  'mc-3b1b-nn': 'Sien in jou kop wat gradiënt-afdaling doen, in plaas daarvan om net die woorde te herhaal.',
+  'mc-music-prompt': 'Skryf ’n stylreël wat spesifiek genoeg is dat die derde poging bruikbaar is, nie die dertigste nie.',
+  'mc-music-structure': 'Lê ’n verwerking uit in dele wat ’n generator werklik bymekaar kan hou.',
+  'mc-video-continuity': 'Beplan ’n musiekvideo as een visuele behandeling eerder as ’n reeks mooi skote.',
+  'mc-stack-map': 'Kies die regte gereedskap vir ’n taak in minder as ’n minuut in plaas daarvan om vier te probeer.',
+  'mc-vibecode-weekend': 'Kry iets wat loop en eerlik is oor wat dit doen — klein en klaar, nie groot en stukkend nie.',
+  'mc-vibecode-review': 'Herken die drie soorte foute wat gegenereerde kode die meeste maak.',
+  'mc-one-person-company': 'Bereken jou eie koste per klaar minuut, en waar die model ophou help.',
+  'mc-research-reading': 'Vind die bewering, die steekproefgrootte en die beperkings — in daardie volgorde — sonder om voor te gee dat jy die wiskunde volg.',
+};

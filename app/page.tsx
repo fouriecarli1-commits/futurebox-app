@@ -93,7 +93,7 @@ import {
 import { forgetWhere, noteWhere, whereIWas } from './lib/whereiwas';
 
 import { videoFromHook, videoFromSong } from './lib/hookhandover';
-import { featuredClass, youTubeId } from './data/masterclasses';
+import { OUTCOME_AF, featuredClass, youTubeId } from './data/masterclasses';
 import { errandBelongs, type Errand } from './lib/errands';
 import Spotlight from './components/Spotlight';
 import Fold from './components/Fold';
@@ -3263,7 +3263,7 @@ export default function FutureBoxHome() {
                     already carries. The paragraph here was a second
                     description of the same lecture, written once and never
                     checked against it again. */}
-                <p className="text-sm text-zinc-400 leading-relaxed">{featured.outcome}</p>
+                <p className="text-sm text-zinc-400 leading-relaxed">{lang === 'af' ? OUTCOME_AF[featured.id] ?? featured.outcome : featured.outcome}</p>
 
                 {/* Where it came from, said on the front page rather than
                     only inside the classes room. Carli: the content has to

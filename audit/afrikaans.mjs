@@ -69,8 +69,14 @@ const PORT = process.argv[2] || '3082';
  * `check:socialformats` counts those two lists against each other now, so
  * that class cannot come back. This number came down because the fault it
  * was tolerating was fixed, which is the only reason it ever should.
+ *
+ * 18 → 10 on 17 October 2026. A CI run reached 16 of 18: the masterclasses'
+ * "what you will be able to do" lines were English only, the podcast host
+ * line picked the English one on the Afrikaans screen, "& drops" was its own
+ * Afrikaans, and "30s →" was hard-coded. All four fixed; what is left (7) is
+ * names — platforms, a product, a show — and a ratio.
  */
-const CEILING = Number(process.argv[3] ?? 18);
+const CEILING = Number(process.argv[3] ?? 10);
 /**
  * Afrikaans-only overflows allowed.
  *

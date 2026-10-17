@@ -293,7 +293,7 @@ export default function FutureInsightsHub({
                 {article.podcastRef && (
                   <div className="rounded-xl border border-teal-500/25 bg-teal-950/30 p-2.5 flex items-center justify-between gap-2 text-xs">
                     <span className="font-bold text-teal-200 truncate">
-                      {article.podcastRef.show} · {article.podcastRef.host}
+                      {article.podcastRef.show} · {lang === 'af' ? article.podcastRef.hostAf ?? article.podcastRef.host : article.podcastRef.host}
                     </span>
                     <span className="text-[11px] font-mono text-teal-400/90 flex-shrink-0">
                       {article.podcastRef.duration}
@@ -423,7 +423,7 @@ export default function FutureInsightsHub({
 
                 <div className="space-y-1">
                   <h4 className="text-base font-bold text-white">
-                    {readingArticle.podcastRef.show} — {readingArticle.podcastRef.host}
+                    {readingArticle.podcastRef.show} — {lang === 'af' ? readingArticle.podcastRef.hostAf ?? readingArticle.podcastRef.host : readingArticle.podcastRef.host}
                   </h4>
                   <p className="text-xs text-zinc-300">
                     {lang === 'af' ? readingArticle.podcastRef.topicAf : readingArticle.podcastRef.topicEn}
