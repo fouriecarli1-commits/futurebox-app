@@ -59,6 +59,8 @@ import { refusalText } from '../lib/apierror';
 import { MAX_BYTES, fit } from '../lib/imagefile';
 import { accessToken } from '../lib/cloud';
 import Note from './Note';
+import { MeerkatThumb } from './MeerkatTile';
+import type { MeerkatMood } from '../lib/meerkatphoto';
 
 /** The route's own ceiling. Said here too, so the refusal arrives before the upload. */
 /**
@@ -73,6 +75,21 @@ import Note from './Note';
 const LONGEST_SECONDS = 25;
 /** What a clip under a minute costs to read. Printed on the card. */
 const TALK_CREDITS = perMinute(LONGEST_SECONDS, CREDITS.transcribe);
+
+/** Each card's picture: a few named, the rest spread over the moods by their id. */
+const CARD_PICTURES: Readonly<Record<string, { readonly mood: MeerkatMood; readonly filter?: string }>> = {
+  'old-photo': { mood: 'film', filter: 'sepia(0.6)' }, 'vibe-colour': { mood: 'day', filter: 'saturate(1.8) hue-rotate(-25deg)' },
+  'view-here': { mood: 'golden' }, 'this-room': { mood: 'studio', filter: 'sepia(0.2)' }, 'your-plate': { mood: 'day', filter: 'sepia(0.2) saturate(1.3)' },
+};
+const SPREAD: readonly { readonly mood: MeerkatMood; readonly filter?: string }[] = [
+  { mood: 'day' }, { mood: 'golden' }, { mood: 'mist' }, { mood: 'night' }, { mood: 'film' }, { mood: 'neon' }, { mood: 'snow' }, { mood: 'day', filter: 'saturate(1.5)' },
+];
+function cardPicture(id: string): { readonly mood: MeerkatMood; readonly filter?: string } {
+  if (CARD_PICTURES[id]) return CARD_PICTURES[id];
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return SPREAD[h % SPREAD.length];
+}
 
 export default function PromptCards({
   onSong,
@@ -333,13 +350,20 @@ export default function PromptCards({
               asked.current = card;
               picker.current?.click();
             }}
-            className="flex min-h-[76px] w-[9.5rem] flex-shrink-0 snap-start flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 text-left hover:border-emerald-500/60 disabled:opacity-50"
+            className="flex min-h-[76px] w-[9.5rem] flex-shrink-0 snap-start flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 text-left hover:border-emerald-500/60 disabled:opacity-50"
           >
-            {busy === card.id ? (
-              <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
-            ) : (
-              <Camera className="h-4 w-4 text-emerald-400" />
-            )}
+            {/* The kind of photo it asks for, as a photo — the meerkat in a
+                light of its own per card. */}
+            <span className="relative mb-1 block h-16 w-full">
+              <MeerkatThumb className="h-full w-full" mood={cardPicture(card.id).mood} filter={cardPicture(card.id).filter} />
+              <span className="absolute bottom-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-black/60">
+                {busy === card.id ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />
+                ) : (
+                  <Camera className="h-3.5 w-3.5 text-emerald-400" />
+                )}
+              </span>
+            </span>
             <span className="pt-2 text-sm font-semibold leading-snug text-zinc-100">
               {lang === 'af' ? card.af : card.en}
             </span>

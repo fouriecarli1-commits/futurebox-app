@@ -34,6 +34,8 @@ import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { sketch, supported, SKETCH_SECONDS, type Sketch } from '../lib/preview';
 import Note from './Note';
+import { MeerkatThumb } from './MeerkatTile';
+import { SHELF_PICTURES } from '../lib/meerkatphoto';
 
 interface Idea {
   readonly label: string;
@@ -287,17 +289,21 @@ export default function StyleFinder({
                   key={sample.name}
                   className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-2.5 flex items-start gap-2.5"
                 >
+                  {/* The family's picture, behind its play button. */}
                   <button
                     type="button"
                     onClick={() => hear(sample)}
                     aria-label={sample.name}
-                    className="w-9 h-9 rounded-full bg-zinc-950 border border-zinc-700 text-emerald-400 flex items-center justify-center flex-shrink-0 hover:border-emerald-500"
+                    className="relative w-12 h-12 rounded-xl border border-zinc-700 text-emerald-300 flex items-center justify-center flex-shrink-0 overflow-hidden hover:border-emerald-500"
                   >
+                    <MeerkatThumb className="absolute inset-0 h-full w-full !rounded-none" mood={SHELF_PICTURES[sample.category]?.mood ?? 'day'} filter={SHELF_PICTURES[sample.category]?.filter} />
+                    <span className="relative grid h-7 w-7 place-items-center rounded-full bg-black/60">
                     {playing === sample.name ? (
                       <Pause className="w-4 h-4" />
                     ) : (
                       <Play className="w-4 h-4 translate-x-0.5" />
                     )}
+                    </span>
                   </button>
                   <div className="flex-1 min-w-0">
                     <span className="block text-sm font-semibold text-zinc-200">

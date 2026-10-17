@@ -27,6 +27,8 @@ import { SONG_STARTS, MOODS, type Mood, type SongStart } from '../data/songstart
 import { GENRE_CATEGORIES, GENRE_SAMPLES, type GenreSample } from '../data/genres';
 import { sketch, supported, type Sketch } from '../lib/preview';
 import { useLang } from '../lib/i18n';
+import { MeerkatThumb } from './MeerkatTile';
+import { SHELF_PICTURES } from '../lib/meerkatphoto';
 
 type Shelf = 'all' | Mood | string;
 
@@ -115,12 +117,16 @@ export default function StartPicker({
       {...data}
       aria-pressed={shelf === id}
       onClick={() => setShelf(id)}
-      className={`min-h-[36px] flex-shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold ${
+      className={`inline-flex min-h-[36px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border py-1 pl-1 pr-3 text-xs font-semibold ${
         shelf === id
           ? 'border-emerald-400 bg-emerald-500 text-onAccent'
           : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500'
       }`}
     >
+      {/* The meerkat in the feeling's light — every choice a picture. */}
+      {SHELF_PICTURES[id] ? (
+        <MeerkatThumb className="h-7 w-7 shrink-0 !rounded-full" mood={SHELF_PICTURES[id].mood} filter={SHELF_PICTURES[id].filter} />
+      ) : null}
       {label}
     </button>
   );

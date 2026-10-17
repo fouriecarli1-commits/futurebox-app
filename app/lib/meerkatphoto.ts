@@ -256,3 +256,22 @@ export function meerkatThrough(
   made.set(name, url);
   return url;
 }
+
+/** The light each feeling and each family of sound is pictured in. */
+export const SHELF_PICTURES: Readonly<Record<string, { readonly mood: MeerkatMood; readonly filter?: string }>> = {
+  love: { mood: 'golden', filter: 'hue-rotate(-20deg) saturate(1.3)' }, loss: { mood: 'noir' }, party: { mood: 'neon' },
+  home: { mood: 'day', filter: 'sepia(0.25)' }, road: { mood: 'golden' }, faith: { mood: 'mist' },
+  work: { mood: 'studio' }, young: { mood: 'day', filter: 'saturate(1.6)' },
+  'Amapiano & SA House': { mood: 'golden' }, 'Gqom & Kwaito': { mood: 'neon', filter: 'contrast(1.2)' },
+  'Traditional & World': { mood: 'day', filter: 'sepia(0.3)' }, 'Electronic & EDM': { mood: 'neon' },
+  'House & Garage': { mood: 'neon', filter: 'hue-rotate(40deg)' }, 'Drum & Bass': { mood: 'night', filter: 'contrast(1.3)' },
+  'Pop & Synthpop': { mood: 'day', filter: 'saturate(1.7) hue-rotate(-15deg)' }, 'Rock & Metal': { mood: 'noir' },
+  'Punk & Hardcore': { mood: 'noir', filter: 'contrast(1.6)' }, 'Hip-Hop & Trap': { mood: 'night' },
+  'R&B & Soul': { mood: 'night', filter: 'sepia(0.3) saturate(1.3)' }, 'Funk & Disco': { mood: 'neon', filter: 'hue-rotate(160deg)' },
+  'Reggae & Dub': { mood: 'day', filter: 'hue-rotate(30deg) saturate(1.4)' }, 'Jazz & Blues': { mood: 'night', filter: 'hue-rotate(-30deg)' },
+  'Gospel & Choral': { mood: 'golden', filter: 'brightness(1.15)' }, 'Country & Folk': { mood: 'film' },
+  'Cyberpunk & Darksynth': { mood: 'neon', filter: 'contrast(1.3)' }, 'Cinematic & Orchestral': { mood: 'film', filter: 'contrast(1.2)' },
+  'Classical & Piano': { mood: 'snow' }, 'Lo-Fi & Ambient': { mood: 'mist' }, 'Afrobeats & Latin': { mood: 'golden', filter: 'saturate(1.5)' },
+  'Children & Learning': { mood: 'day', filter: 'saturate(1.5) brightness(1.1)' },
+};
+
