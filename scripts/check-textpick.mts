@@ -82,6 +82,20 @@ ok('a picture of no size gives nothing rather than dividing by it',
     + ' nobody can aim at');
 }
 
+/* ── 2b. And what the reader invents out of hair and cloth ──────────── */
+{
+  const picks = picksFrom([
+    line('Groot vrae. Klein uil.', 100, 50, 400, 40, 88),
+    /* Carli's portrait, 17 October 2026: texture read as letters. */
+    line('LA / = Cgm RN /', 100, 150, 300, 30, 71),
+    line('db <a ; A A)', 100, 200, 300, 30, 64),
+    line('Fou', 100, 300, 200, 30, 31),
+  ], WIDE, TALL);
+  ok('lines the reader made up out of texture are not offered',
+    picks.length === 1 && picks[0].text.startsWith('Groot'),
+    JSON.stringify(picks.map((one) => one.text)));
+}
+
 /* ── 3. The tap ─────────────────────────────────────────────────────── */
 {
   const picks = picksFrom([

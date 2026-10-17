@@ -867,6 +867,9 @@ export default function PostStudio({
   /* What her finger painted over, stroke by stroke, as shares of the photograph. */
   const [magicStrokes, setMagicStrokes] = useState<Brush['strokes']>([]);
   const brushing = useRef(false);
+  /* The fingers on the photograph, and a pinch while there are two. */
+  const fingers = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ dist: number; zoom: number } | null>(null);
   /* The brush is a switch of its own: on, a finger paints; off, the photo can
      be moved as usual. Carli, 17 October 2026: *"Daar moet dan 'n brush
      button wees."* */
@@ -2523,6 +2526,26 @@ export default function PostStudio({
   };
 
   const grab = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    /* ── Two fingers: the photograph zooms, not the screen ────────────
+       Carli, 17 October 2026: *"Wanneer mens met twee vingers op die foto
+       zoom, dan moet die foto zoom en nie die app se screen nie."* The
+       second finger down turns whatever the first one started into a
+       pinch, and the pinch is the photograph's own zoom. */
+    fingers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (fingers.current.size === 2 && picture) {
+      const [a, b] = [...fingers.current.values()];
+      pinch.current = { dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), zoom: crop.zoom };
+      if (brushing.current) setMagicStrokes((was) => was.slice(0, -1));
+      brushing.current = false;
+      lastAt.current = null;
+      grip.current = null;
+      carrying.current = null;
+      markHeld.current = null;
+      cellHeld.current = null;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      return;
+    }
+    if (pinch.current) return;
     /* ── Picking a line out of the photograph, before anything else ────
 
         A mode she turned on, so a thumb means one thing while it is on and
@@ -2710,6 +2733,16 @@ export default function PostStudio({
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (fingers.current.has(event.pointerId)) fingers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pinch.current) {
+      if (fingers.current.size >= 2) {
+        const [a, b] = [...fingers.current.values()];
+        const by = Math.hypot(a.x - b.x, a.y - b.y) / pinch.current.dist;
+        const to = pinch.current.zoom * by;
+        setCrop((was) => zoomTo(was, to));
+      }
+      return;
+    }
     /* The brush, while her finger is down on the magic touch. */
     if (brushing.current) {
       /* Every point the finger went through, not only the ones a frame
@@ -2840,6 +2873,8 @@ export default function PostStudio({
   };
 
   const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    fingers.current.delete(event.pointerId);
+    if (fingers.current.size === 0) pinch.current = null;
     brushing.current = false;
     cellHeld.current = null;
     lastAt.current = null;
@@ -4354,7 +4389,9 @@ export default function PostStudio({
             bottom: Math.max(0, Math.min(tall, Math.round(sentRow.box.bottom * upY))),
           },
         };
-        things.current.set(id, one);
+        /* Writing is taken as words (Make it text, Take it out); only a thing
+           is cut by its shape. */
+        if (one.kind === 'object') things.current.set(id, one);
         return {
           id,
           text: one.label,
@@ -4365,9 +4402,13 @@ export default function PostStudio({
           h: (one.box.bottom - one.box.top) / tall,
         };
       });
-      setFound([...(found ?? []), ...picks]);
+      /* These instead of anything read on the phone before: the engine's
+         reading of the writing is the one worth tapping. */
+      setFound(picks);
+      setPicked(null);
       setPicking(true);
-      setSaid(t('post.thingsFound', 'Tap one to lift it out. {n} found.')
+      setBench(null);
+      setSaid(t('post.thingsFoundAll', 'Tap one: cut it out, move it, or say what it should become. {n} found.')
         .replace('{n}', String(picks.length)));
     } catch {
       setSaid(t('post.thingsNo', 'The things in this picture could not be found.'));
@@ -4383,14 +4424,14 @@ export default function PostStudio({
    * with the colours above, or saved as a PNG. `Put it back` restores the
    * photograph, exactly as it does after the background remover.
    */
-  const liftThing = (one: Pick): void => {
+  const liftThing = (one: Pick, onCut?: (piece: HTMLCanvasElement) => void): void => {
     const thing = things.current.get(one.id);
     if (!thing || !picture) return;
     if (!thing.mask) {
       /* A box with no mask is a box. Cutting a rectangle out and calling it
          the thing would look like the engine being bad at edges, so it is
          said instead. */
-      setSaid(t('post.thingNoMask', 'The engine found that one but did not send its shape, so it cannot be lifted out cleanly. Try Find the things again, or use Cut out a shape and draw round it.'));
+      setSaid(t('post.thingNoMask', 'The engine found that one but did not send its shape, so it cannot be lifted out cleanly. Try Find objects and text again, or use Cut out a shape and draw round it.'));
       return;
     }
     const wide = picture.naturalWidth || picture.width;
@@ -4429,6 +4470,7 @@ export default function PostStudio({
       const made = octx.createImageData(cut.width, cut.height);
       made.data.set(cut.data);
       octx.putImageData(made, 0, 0);
+      if (onCut) { onCut(out); return; }
       before(t('post.stepThing', 'lifting a thing out'));
       asPicture(out, (img) => {
         setWhole(picture);
@@ -4442,6 +4484,42 @@ export default function PostStudio({
     };
     maskImg.onerror = () => setSaid(t('post.thingFailed', 'That one could not be lifted out.'));
     maskImg.src = `data:image/png;base64,${thing.mask}`;
+  };
+
+  /**
+   * Move a found thing: cut out by its own shape and put on a layer of its
+   * own, exactly where it was, ready to drag. Carli, 17 October 2026: *"Mens
+   * moet dan op die objek click, en dan kan cut of skuif, of prompt waarin
+   * dit moet verander."* The original stays in the photograph underneath —
+   * Take it away fills that in, and says its price first.
+   */
+  const moveThing = (one: Pick): void => {
+    if (!picture) return;
+    liftThing(one, (piece) => {
+      asPicture(piece, (img) => {
+        const at = place(picture, size, crop);
+        const box = ontoFrame(one, at);
+        const id = freshId();
+        beforeLayers(t('post.stepMoveThing', 'moving a thing'));
+        setCells((was) => [...was, {
+          id,
+          x: box.left / size.width,
+          y: box.top / size.height,
+          w: box.width / size.width,
+          h: box.height / size.height,
+          image: img,
+          crop: MIDDLE,
+          z: frontZ(marks, words, was),
+        }]);
+        setCellOn(id);
+        setFraming(true);
+        setPicking(false);
+        setPicked(null);
+        setFound(null);
+        setBench(null);
+        setSaid(t('post.thingMoved', 'It is on a layer of its own now \u2014 drag it where you want it. The original is still in the photo underneath; Magic can take it away.'));
+      }, () => setSaid(t('post.thingFailed', 'That one could not be lifted out.')));
+    });
   };
 
   /** Erase the line out of the photograph. */
@@ -6574,6 +6652,25 @@ export default function PostStudio({
               </button>
             ))}
           </div>
+          {/* ── And the things in it, which is the other half of "Grab" ──
+ 
+              Charged, unlike the reader above it, and the button says so
+              before it is pressed. The engine draws nothing — it reads the
+              picture and answers where things are — so it is two credits,
+              the same as a transcription, and one press finds everything
+              rather than charging per thing. */}
+          <button
+            type="button"
+            data-postthingsgo
+            disabled={!picture || looking}
+            onClick={() => { void findThings(); }}
+            className={`${VUL} disabled:opacity-60`}
+          >
+            {looking
+              ? t('post.thingsLooking', 'Looking…')
+              : t('post.thingsGoAll', 'Find objects and text \u00b7 {n} credits')
+                .replace('{n}', String(CREDITS.grab))}
+          </button>
           {/* ── And the same reading, tappable ────────────────────
 
               Carli, 8 October 2026: *"dat die masjien self objekte en text
@@ -6596,28 +6693,9 @@ export default function PostStudio({
             <ScanText className="h-3.5 w-3.5" />
             {reading !== null
               ? `${Math.round(reading * 100)}%`
-              : t('post.findWords', 'Find the words, so I can tap one')}
+              : t('post.findWordsPhone', 'Or find words on my phone (less exact)')}
           </button>
 
-          {/* ── And the things in it, which is the other half of "Grab" ──
- 
-              Charged, unlike the reader above it, and the button says so
-              before it is pressed. The engine draws nothing — it reads the
-              picture and answers where things are — so it is two credits,
-              the same as a transcription, and one press finds everything
-              rather than charging per thing. */}
-          <button
-            type="button"
-            data-postthingsgo
-            disabled={!picture || looking}
-            onClick={() => { void findThings(); }}
-            className={`${LEEG} disabled:opacity-60`}
-          >
-            {looking
-              ? t('post.thingsLooking', 'Looking…')
-              : t('post.thingsGo', 'Find the things in it \u00b7 {n} credits')
-                .replace('{n}', String(CREDITS.grab))}
-          </button>
           <p
             className="text-[12px] leading-relaxed"
             style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}
@@ -8452,7 +8530,10 @@ export default function PostStudio({
              touch, so the brush left dabs (Carli, 17 October 2026: "Die
              brush werk nie met 'n vee nie"). */
           touchAction: movable || cropBox || traced || words.length > 0 || marks.length > 0 || cells.length > 0
-            || (bench === 'magic' && picture && brushOn) ? 'none' : 'auto',
+            || (bench === 'magic' && picture && brushOn)
+            /* And whenever there is a photograph, so two fingers zoom it
+               rather than the page. */
+            || picture !== null ? 'none' : 'auto',
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
@@ -8723,9 +8804,14 @@ export default function PostStudio({
             </button>
           </div>
           {picked && things.current.has(picked.id) && (
-            <div className={RY3}>
+            <div className={RY}>
               <button type="button" data-postthinglift onClick={() => liftThing(picked)} className={LEEG}>
-                {t('post.thingLift', 'Lift it out')}
+                <Scissors className="h-3.5 w-3.5" />
+                {t('post.thingCut', 'Cut it out')}
+              </button>
+              <button type="button" data-postthingmove onClick={() => moveThing(picked)} className={LEEG}>
+                <Move className="h-3.5 w-3.5" />
+                {t('post.thingMove', 'Move it')}
               </button>
             </div>
           )}

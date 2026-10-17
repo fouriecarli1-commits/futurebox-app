@@ -1380,37 +1380,24 @@ body:has([data-cubed]) {
    Carli, 17 October 2026: a press must "'n beweging of glow maak". `:active`
    above lasts only while the finger is down; `TapGlow.tsx` puts `fb-tap` on
    whatever was pressed and this plays out over the next half second — a ring
-   in the theme's own colour, a small bounce, then nothing. An animation, so
-   it sits over the button's own shadow without replacing it for good; the
-   bounce is the `scale` property, not `transform`, so a button placed with
-   a translate or a rotate keeps its place. */
+   in the theme's own colour, then nothing. An animation, so it sits over the
+   button's own shadow without replacing it for good. A glow and no bounce:
+   a bounce that shrank a wide label moved the tick box at its edge out from
+   under the finger before it lifted, and the tap was lost (the presenter's
+   consent box, CI, 17 October 2026). `:active` above already moves. */
 @keyframes fb-tap {
   0% {
     box-shadow: 0 0 0 0 rgb(var(--fb-primary-500) / 0.75), 0 0 0 0 rgb(var(--fb-primary-500) / 0);
-    scale: 0.95;
   }
   35% {
     box-shadow: 0 0 0 3px rgb(var(--fb-primary-500) / 0.6), 0 0 22px 6px rgb(var(--fb-primary-500) / 0.45);
-    scale: 1.02;
   }
   100% {
     box-shadow: 0 0 0 0 rgb(var(--fb-primary-500) / 0), 0 0 0 0 rgb(var(--fb-primary-500) / 0);
-    scale: 1;
   }
 }
 .fb-tap {
   animation: fb-tap 480ms ease-out;
-}
-/* Asked for less motion: the glow, without the bounce. */
-@keyframes fb-tap-still {
-  35% {
-    box-shadow: 0 0 0 3px rgb(var(--fb-primary-500) / 0.6), 0 0 22px 6px rgb(var(--fb-primary-500) / 0.45);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fb-tap {
-    animation-name: fb-tap-still;
-  }
 }
 
 /* ── The photograph while a tool works on it ───────────────────────────

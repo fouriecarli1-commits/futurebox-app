@@ -57,8 +57,10 @@ export interface Box {
 
 /** One thing the engine found. */
 export interface Found {
-  /** What it called the thing, in its own words. Shown, never trusted. */
+  /** What it called the thing, in its own words — or, for writing, the words exactly as printed. Shown, never trusted. */
   readonly label: string;
+  /** A thing to cut out, or a line of writing to take as text. */
+  readonly kind: 'object' | 'text';
   readonly box: Box;
   /** The mask as it arrived: a base64 PNG, or null when only a box came. */
   readonly mask: string | null;
@@ -70,11 +72,13 @@ export const GRID = 1000;
 /**
  * How many things are worth finding in one picture.
  *
- * Twelve. Past that the boxes overlap each other on a phone and tapping the
- * one you meant becomes luck, which is a worse experience than being told
- * there were too many.
+ * Twelve things was the ceiling while it found only things. Since 17 October
+ * 2026 it reads the writing too — Carli: *"Die text en die objekte moet
+ * highlight"*, and the phone's own reader was inventing words out of hair —
+ * so a poster's lines count as well, and twenty leaves room for both before
+ * the boxes overlap on a phone.
  */
-export const MOST_THINGS = 12;
+export const MOST_THINGS = 20;
 
 /** Below this a label is not a label, and the row is dropped. */
 export const SHORTEST_LABEL = 2;
@@ -87,11 +91,13 @@ export const SHORTEST_LABEL = 2;
  * to be exact or the answer comes back in a shape the reader below refuses.
  */
 export const ASK = [
-  'Find the distinct objects in this picture.',
+  'Find the distinct objects in this picture, and every line of printed or written text in it.',
   'Answer with JSON only: an array of objects, each with',
-  '"label" (two or three words, plain English),',
+  '"kind" ("object" or "text"),',
+  '"label" (for an object, two or three words in plain English; for text, the words exactly as they appear, never guessed),',
   '"box_2d" ([ymin, xmin, ymax, xmax], each 0-1000),',
-  'and "mask" (a base64 PNG, white where the object is).',
+  'and, for an object, "mask" (a base64 PNG, white where the object is).',
+  'Only text that is really there and readable; never read letters into hair, cloth or texture.',
   `At most ${MOST_THINGS} entries, the largest and clearest first.`,
   'No prose, no code fence, no explanation.',
 ].join(' ');
@@ -155,7 +161,8 @@ export function readFound(said: string, wide: number, tall: number): Found[] {
     const mask = typeof one.mask === 'string' && one.mask.length > 32
       ? one.mask.replace(/^data:image\/png;base64,/, '')
       : null;
-    out.push({ label: label.slice(0, 40), box, mask });
+    const kind = one.kind === 'text' ? 'text' : 'object';
+    out.push({ label: label.slice(0, kind === 'text' ? 120 : 40), kind, box, mask: kind === 'text' ? null : mask });
     if (out.length >= MOST_THINGS) break;
   }
   return out;

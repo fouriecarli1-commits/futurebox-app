@@ -57,7 +57,7 @@ ok('  and asks for JSON and nothing else',
   'a sentence in front of the JSON is the most common answer there is');
 
 ok('  and caps what it asks for',
-  ASK.includes(String(MOST_THINGS)) && MOST_THINGS <= 12,
+  ASK.includes(String(MOST_THINGS)) && MOST_THINGS <= 20,
   'forty boxes on a phone is a tap that lands on whichever one happens to'
   + ' be on top');
 
@@ -122,6 +122,18 @@ ok('  and the other spelling of the key is read',
   readFound(JSON.stringify([{ label: 'a cat', box: [0, 0, 500, 500] }]), 100, 100).length === 1,
   '`box_2d` is documented and `box` is what sometimes arrives');
 
+{
+  const both = readFound(JSON.stringify([
+    { kind: 'object', label: 'an owl', box_2d: [100, 500, 600, 900] },
+    { kind: 'text', label: 'Groot vrae. Klein uil. Groot aha.', box_2d: [900, 300, 950, 900], mask: 'x'.repeat(64) },
+  ]), 1000, 1000);
+  ok('writing comes back as text, word for word, with no mask to cut by',
+    both.length === 2 && both[0].kind === 'object' && both[1].kind === 'text'
+      && both[1].label === 'Groot vrae. Klein uil. Groot aha.' && both[1].mask === null,
+    JSON.stringify(both));
+  ok('  and a row that does not say is an object',
+    readFound(JSON.stringify([{ label: 'a cat', box_2d: [0, 0, 500, 500] }]), 100, 100)[0]?.kind === 'object');
+}
 ok('nothing is read out of prose', readFound('I cannot see any objects.', 100, 100).length === 0);
 ok('  or out of broken JSON', readFound('[{"label": "a cat",', 100, 100).length === 0);
 ok('  or out of an object that is not a list', readFound('{"label":"a cat"}', 100, 100).length === 0);

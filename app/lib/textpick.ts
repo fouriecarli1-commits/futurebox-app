@@ -62,6 +62,19 @@ const LEAST_TALL = 0.004;
 const LEAST_LETTERS = 2;
 
 /**
+ * And a line the reader made up is not writing either.
+ *
+ * Carli, 17 October 2026, a portrait with a few words on it: *"Find the text
+ * maak sommer sy eie text op."* Hair, a jacket and a sleeve came back as
+ * "LA / = Cgm RN /" and "db <a ; A A)", each with a box she could tap. Real
+ * writing is mostly letters, has a word in it, and is read with some
+ * certainty; what the reader invents out of texture is none of the three.
+ */
+const LEAST_SURE = 60;
+const MOSTLY_LETTERS = 0.8;
+const A_WORD = /\p{L}{3,}|\p{N}{2,}/u;
+
+/**
  * The lines worth offering, as shares of the picture.
  *
  * `wide` and `tall` are the picture's own pixels — the ones the engine read,
@@ -79,6 +92,8 @@ export function picksFrom(
   found.forEach((one, n) => {
     const letters = one.text.replace(/[^\p{L}\p{N}]/gu, '').length;
     if (letters < LEAST_LETTERS) return;
+    const marks = one.text.replace(/\s/g, '').length;
+    if (one.sure < LEAST_SURE || letters / Math.max(1, marks) < MOSTLY_LETTERS || !A_WORD.test(one.text)) return;
     const w = one.width / wide;
     const h = one.height / tall;
     if (w < LEAST_WIDE || h < LEAST_TALL) return;
