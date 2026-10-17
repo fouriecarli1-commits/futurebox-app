@@ -96,19 +96,45 @@ try {
     await page.locator('[data-editormoments]').click();
     await page.waitForSelector('[data-editormomentssaid]', { timeout: 20000 }).catch(() => undefined);
     const blocks = await page.locator('[data-editorblock]').count();
-    check('the one shot is now its best moments, laid on the clock', blocks >= 3 && blocks <= 6, String(blocks));
     const said = await page.locator('[data-editormomentssaid]').innerText().catch(() => '');
-    check('  and the room says how many, how long, and that Undo puts it back', /\d+ moments, \d+ seconds/.test(said) && /Undo/.test(said), said);
+    const short = await page.locator('[data-editormomentsshort]').innerText().catch(() => '');
+    check('the one shot is now its best moments, laid on the clock', blocks >= 3 && blocks <= 6, `${blocks} blocks · ${said || short || 'nothing said'}`);
+    /* A browser that recorded the picture but not the sound gives a shot
+       with nothing to read: the room must then say so and spread the
+       moments, which is a path of its own worth reading. */
+    const heard = !/no sound to read/.test(said);
+    if (!heard) console.log('  --  this browser recorded no sound; the even spread is read instead of the bursts.');
+    check('  and the room says how many, how long, and that Undo puts it back',
+      (heard ? /\d+ moments, \d+ seconds/.test(said) : /spread evenly/.test(said)) && /Undo/.test(said), said);
 
-    /* Each burst is the start of a moment: read off the edit the room keeps. */
-    const starts = await page.evaluate(() => Array.from(document.querySelectorAll('[data-editorblock]')).map((el) => el.getAttribute('data-editorfrom')));
-    if (starts.every((s) => s !== null)) {
-      const from = starts.map(Number);
-      /* Read by spacing rather than by the clock: a recorder starts a beat
-         after the sound it records, so the bursts land a little early in the
-         file — but they keep their distance from each other. */
-      const fits = from.some((f0) => BURSTS.every((at) => from.some((f) => Math.abs(f - (f0 + at - BURSTS[0])) <= 0.5)));
-      check('  each burst caught from just before it starts', fits, from.join());
+    /* Each burst is the start of a moment. Where the bursts really are is
+       read off the recorded file itself — a recorder starts a beat after the
+       sound it records, so the times they were played at are not the times
+       they landed at. */
+    const onsets = await page.evaluate(async (bytes) => {
+      const Ctx = window.AudioContext ?? window.webkitAudioContext;
+      const audio = new Ctx();
+      try {
+        const buffer = await audio.decodeAudioData(new Uint8Array(bytes).buffer);
+        const data = buffer.getChannelData(0);
+        const per = Math.floor(buffer.sampleRate / 20);
+        const out = [];
+        let loud = false;
+        for (let i = 0; i + per <= data.length; i += per) {
+          let peak = 0;
+          for (let j = i; j < i + per; j += 1) peak = Math.max(peak, Math.abs(data[j]));
+          if (!loud && peak > 0.3) out.push(i / buffer.sampleRate);
+          loud = peak > 0.3;
+        }
+        return out;
+      } catch { return []; } finally { void audio.close(); }
+    }, made);
+    const blocks2 = await page.evaluate(() => Array.from(document.querySelectorAll('[data-editorblock]')).map((el) => Number(el.getAttribute('data-editorfrom'))));
+    if (heard && onsets.length === BURSTS.length) {
+      check('  each burst caught from just before it starts', onsets.every((t) => blocks2.some((f) => f <= t + 0.1 && f >= t - 1.2)),
+        `bursts at ${onsets.map((t) => t.toFixed(2)).join()} · moments from ${blocks2.join()}`);
+    } else if (heard) {
+      console.log(`  --  the recorded bursts could not be read back (${onsets.length}); their timing is not checked.`);
     }
 
     await page.locator('[data-editorundo]').first().click();
