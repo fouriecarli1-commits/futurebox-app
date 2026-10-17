@@ -59,6 +59,19 @@ try {
       return Boolean(a && b && Math.abs(a.top - b.top) < 60);
     })));
 
+  /* Its neighbour opens the document room, over the photo editor and not behind it. */
+  await page.locator('[data-postpdf]').click();
+  await page.waitForTimeout(1500);
+  const pdfOnTop = await page.evaluate(() => {
+    const hit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 3);
+    return Boolean(hit?.closest('[data-pdfroom]'));
+  });
+  check('the PDF studio button beside it opens the document room on top', pdfOnTop);
+  await page.locator('[data-pdfclose]').click();
+  await page.waitForTimeout(500);
+  check('  and closing it is back in the photo editor', (await page.locator('[data-pdfroom]').count()) === 0
+    && (await page.locator('[data-postpicture]').count()) === 1);
+
   /* A mid-grey photograph with a red disc, so light and colour both show. */
   const brought = await page.evaluate(async () => {
     const c = document.createElement('canvas');

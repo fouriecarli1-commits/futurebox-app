@@ -4822,6 +4822,7 @@ export const STRINGS: Dict = {
   "post.groundFailed": { en: "That background could not be taken out.", af: "Daardie agtergrond kon nie uitgehaal word nie." },
   "post.stepGround": { en: "taking a plain background out", af: "om ’n egalige agtergrond uit te haal" },
   "post.darkroom": { en: "Develop like a pro", af: "Ontwikkel soos ’n pro" },
+  "post.pdfRoom": { en: "PDF studio", af: "PDF-ateljee" },
   "post.stepDevelop": { en: "developing it", af: "om dit te ontwikkel" },
   "post.developFailed": { en: "The developed photograph could not be made.", af: "Die ontwikkelde foto kon nie gemaak word nie." },
   "kids.aSongAbout": { en: "A song about", af: "’n Liedjie oor" },

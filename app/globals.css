@@ -1761,6 +1761,13 @@ html[data-singing] [data-tabbar] { display: none !important; }
   color: #fff !important;
   box-shadow: 0 0 18px rgba(236, 72, 153, 0.55) !important;
 }
+/* Its neighbour, the way into the document room, in the room's own blues. */
+[data-postpdf][data-postpdf][data-postpdf][data-postpdf] {
+  background: linear-gradient(120deg, #38bdf8, #6366f1 55%, #a855f7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  color: #fff !important;
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.55) !important;
+}
 /* The magic touch: a tap on the photo between the controls reaches the photo. */
 [data-postpop][data-passthrough="yes"] { pointer-events: none; }
 [data-postpop][data-passthrough="yes"] :is(button, input, select, textarea, label, a) { pointer-events: auto; }

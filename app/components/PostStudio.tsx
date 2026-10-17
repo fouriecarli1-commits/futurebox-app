@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, Circle, Columns2, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, Circle, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -131,6 +131,7 @@ import { liftWith, type Found } from '../lib/grabobject';
 import { TOO_MUCH, erase, shareOf, stroke } from '../lib/erase';
 import { useLang } from '../lib/i18n';
 import { OPEN_PANEL_EVENT, takePanel } from '../lib/alltools';
+import { askPdf } from '../lib/pdftools';
 import { canTouch, frontZ, movedOne, stackOf, type LayerOn } from '../lib/postlayers';
 import { GAPS, LAYOUTS, cellHas, cellsOf, frameOf, type Cell, type CellLook } from '../lib/postcells';
 import {
@@ -5775,6 +5776,18 @@ export default function PostStudio({
       >
         <Sparkles className="h-3.5 w-3.5" />
         {t('post.darkroom', 'Develop like a pro')}
+      </button>
+      {/* And the way into the document room, beside it. Carli, 17 October
+          2026: *"PDF editor sal dan ook 'n fancy button binne photo shop hê,
+          daar by bring in a photo."* */}
+      <button
+        type="button"
+        data-postpdf
+        onClick={() => askPdf(null)}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+      >
+        <FileText className="h-3.5 w-3.5" />
+        {t('post.pdfRoom', 'PDF studio')}
       </button>
       {picture && (
         <button
