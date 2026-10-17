@@ -110,6 +110,9 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   repaint: 'five credits to have a picture redrawn, inside the photo editor,'
     + ' whose other tools use no credits because they run on her own phone.'
     + ' The cards name the room; this is one press inside it',
+  /* 17 October 2026: a vector drawing saved off the device, SVG or PNG. */
+  vectorOut: 'five credits to save a vector drawing as an SVG or a PNG, once per'
+    + ' drawing, inside the vector studio — the same as taking a post out',
   /* 17 October 2026: a vector picture drawn by the AI, in the vector studio. */
   vector: 'six credits for the AI to draw a vector picture, inside the vector studio'
     + ' that opens from the photo editor. One press, priced on its own button',

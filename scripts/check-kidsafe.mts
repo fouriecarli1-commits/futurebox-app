@@ -250,16 +250,20 @@ ok('two rooms cannot spend a credit at all',
    over the photo editor, and its AI draws a vector picture from a sentence
    for six credits, its price on its button; the sentence passes the same
    screen as every other picture prompt. A SEVENTH paid door reddens this. */
-ok('  and the photo editor spends on exactly the six things it is meant to',
+/* ── The seventh, Carli's own words, 17 October 2026 ─────────────────
+   *"SVG PNG ook 5 krediete."* A vector drawing leaving the device as a file
+   is charged like a post leaving it, once per drawing. An EIGHTH paid door
+   reddens this. */
+ok('  and the photo editor spends on exactly the seven things it is meant to',
   JSON.stringify(spend.get('photo'))
     === JSON.stringify([
-      '/api/google/picture', '/api/picture/objects', '/api/post/chart', '/api/post/export', '/api/vector/draw', '/api/video',
+      '/api/google/picture', '/api/picture/objects', '/api/post/chart', '/api/post/export', '/api/vector/draw', '/api/vector/export', '/api/video',
     ]),
   `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
   + ' changing what is in it by saying what to change, finding the things in'
-  + ' it, setting a chart from words, drawing vector art, and giving it a little motion. Every'
+  + ' it, setting a chart from words, drawing vector art, saving vector art, and giving it a little motion. Every'
   + ' other tool in that room runs on the device and takes no credits. A'
-  + ' SEVENTH paid door is a decision somebody has to make out loud, which is'
+  + ' EIGHTH paid door is a decision somebody has to make out loud, which is'
   + ' what this line is for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',

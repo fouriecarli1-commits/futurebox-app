@@ -1026,6 +1026,13 @@ export const CREDITS = {
      photograph into shapes runs on the phone and costs nothing extra. Hers
      to change: put to her when it shipped. */
   vector: 6,
+  /* ── A vector drawing taken off the device, 17 October 2026 ─────────
+
+     Carli: *"SVG PNG ook 5 krediete."* The same price as taking a post out
+     (`postOut`), and on the same terms: once per drawing, so saving it as an
+     SVG and then as a PNG is one charge, and so is saving it again after a
+     change. */
+  vectorOut: 5,
 } as const;
 
 /**

@@ -18,12 +18,14 @@ const check = (label, ok, detail = '') => {
   console.log(`  ${ok ? 'ok  ' : 'NOT '} ${label}${ok || !detail ? '' : ` — ${detail}`}`);
   if (!ok) problems.push(label);
 };
+const exportAsked = [];
 const AI_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><script>window.__pwned = 1</script>'
   + '<circle cx="256" cy="256" r="200" fill="#ff7700" onclick="window.__pwned = 2"/><rect x="200" y="200" width="112" height="112" fill="#1d4ed8"/></svg>';
 const { browser, page } = await enter({
   width: 390, height: 844, touch: true, at: server.url,
   before: async (p) => {
     await p.route('**/api/vector/draw', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ svg: AI_SVG }) }));
+    await p.route('**/api/vector/export', (route) => { exportAsked.push(JSON.parse(route.request().postData() || '{}')); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, credits: 5 }) }); });
   },
 });
 page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 200)}`));
@@ -111,6 +113,18 @@ try {
   /* Each traced outline is a real shape, not collapsed to a point. */
   const tracedD = await page.locator('[data-vboard] [data-vitem="art"]').last().locator('path').evaluateAll((all) => all.map((p) => (p.getAttribute('d') ?? '').split('C').length - 1));
   check('  each a real outline, not a dot', tracedD.every((n) => n >= 4), tracedD.join());
+
+  /* Off the device: SVG and PNG, each asked for at its price, the drawing's own id sent. */
+  await onBoard(0.95, 0.05);
+  const svgButton = page.locator('[data-vsavesvg]');
+  check('saving says its price', /5 (credits|krediete)/.test(await svgButton.innerText()) && /5 (credits|krediete)/.test(await page.locator('[data-vsavepng]').innerText()));
+  const [svgFile] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), svgButton.click()]);
+  const svgText = (await import('node:fs')).readFileSync(await svgFile.path(), 'utf8');
+  check('  an SVG of the drawing is saved, with nothing that runs in it', svgText.startsWith('<svg xmlns="http://www.w3.org/2000/svg"') && svgText.includes('Hallo FutureBox') && !/script|onclick/.test(svgText));
+  const [pngFile] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), page.locator('[data-vsavepng]').click()]);
+  const saved = (await import('node:fs')).readFileSync(await pngFile.path());
+  check('  and a PNG of it', saved.slice(1, 4).toString() === 'PNG' && saved.length > 2000, String(saved.length));
+  check('  both asked the server first, for the same drawing', exportAsked.length === 2 && exportAsked[0].drawing && exportAsked[0].drawing === exportAsked[1].drawing, JSON.stringify(exportAsked));
 
   await page.locator('[data-vdone]').click();
   await page.waitForTimeout(1500);

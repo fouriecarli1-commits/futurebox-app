@@ -86,6 +86,12 @@ const WORDS = {
   traceGo: ['Choose a photo', 'Kies ’n foto'],
   colours: ['Colours', 'Kleure'],
   traceNo: ['That photo could not be turned into shapes.', 'Daardie foto kon nie in vorms omgesit word nie.'],
+  saveTitle: ['Save it to your device', 'Stoor dit op jou toestel'],
+  saveHow: ['One price for this drawing, however many times and in whichever of the two you save it.', 'Een prys vir hierdie tekening, hoeveel keer en in watter een van die twee jy dit ook al stoor.'],
+  saveSvg: ['SVG · {n} credits', 'SVG · {n} krediete'],
+  savePng: ['PNG · {n} credits', 'PNG · {n} krediete'],
+  saved: ['Saved to your device.', 'Op jou toestel gestoor.'],
+  saveNo: ['It could not be saved.', 'Dit kon nie gestoor word nie.'],
   penDone: ['Finish the line', 'Maak die lyn klaar'],
   penClose: ['Close the shape', 'Maak die vorm toe'],
   hintSelect: ['Tap a shape to choose it. Drag it to move; the round handle turns it, the square one sizes it.', 'Tik op ’n vorm om dit te kies. Sleep om te skuif; die ronde handvatsel draai dit, die vierkantige maak dit groter of kleiner.'],
@@ -139,7 +145,11 @@ export default function VectorStudio({
   const w = (word: Word): string => WORDS[word][lang === 'af' ? 1 : 0];
   useBackLayer(true, onClose);
 
-  const [doc, setDoc] = useState<VectorDoc>(() => initial ?? newDoc());
+  /* Every drawing has its own id, so saving it twice is paid once — one drawn before ids were given one gets one now. */
+  const [doc, setDoc] = useState<VectorDoc>(() => {
+    const was = initial ?? newDoc();
+    return was.id ? was : { ...was, id: newDoc().id };
+  });
   const [past, setPast] = useState<VectorDoc[]>([]);
   const [future, setFuture] = useState<VectorDoc[]>([]);
   const [tool, setTool] = useState<Tool>('select');
@@ -381,6 +391,42 @@ export default function VectorStudio({
     }
   };
 
+  /* ── Off the device: paid once per drawing, then made here ── */
+  const saveAs = async (kind: 'svg' | 'png'): Promise<void> => {
+    if (!doc.items.length || busy) return;
+    setBusy(true);
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/vector/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ drawing: doc.id }),
+      });
+      const body = (await answer.json().catch(() => ({}))) as { message?: string };
+      if (!answer.ok) { setSaid(body.message ?? w('saveNo')); return; }
+      const svg = toSvg(doc);
+      if (kind === 'svg') {
+        keepFile(new Blob([svg], { type: 'image/svg+xml' }), 'futurebox-vector.svg');
+      } else {
+        const img = new Image();
+        await new Promise<void>((done, fail) => { img.onload = () => done(); img.onerror = () => fail(new Error('svg')); img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`; });
+        const scale = Math.min(1, 4096 / Math.max(doc.w, doc.h));
+        const sheet = document.createElement('canvas');
+        sheet.width = Math.round(doc.w * scale);
+        sheet.height = Math.round(doc.h * scale);
+        sheet.getContext('2d')?.drawImage(img, 0, 0, sheet.width, sheet.height);
+        const png = await new Promise<Blob | null>((done) => sheet.toBlob(done, 'image/png'));
+        if (!png) { setSaid(w('saveNo')); return; }
+        keepFile(png, 'futurebox-vector.png');
+      }
+      setSaid(w('saved'));
+    } catch {
+      setSaid(w('saveNo'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   /* ── Pieces ── */
   const BTN = 'inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-xs font-bold text-zinc-100 disabled:opacity-40';
   const swatchRow = (now: Paint, set: (p: Paint) => void, mark: string, allowNone = true): React.ReactElement => (
@@ -487,6 +533,14 @@ export default function VectorStudio({
           <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="sr-only" data-vtracefile onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) void traceFile(file); }} />
         </label>
       </section>
+      <section className="space-y-2 rounded-2xl border border-zinc-800 p-3" data-vsave>
+        <p className="text-sm font-bold text-zinc-100">{w('saveTitle')}</p>
+        <p className="text-[11px] text-zinc-400">{w('saveHow')}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" data-vsavesvg disabled={!doc.items.length || busy} onClick={() => { void saveAs('svg'); }} className={BTN}>{w('saveSvg').replace('{n}', String(CREDITS.vectorOut))}</button>
+          <button type="button" data-vsavepng disabled={!doc.items.length || busy} onClick={() => { void saveAs('png'); }} className={BTN}>{w('savePng').replace('{n}', String(CREDITS.vectorOut))}</button>
+        </div>
+      </section>
       <section className="space-y-2">
         <p className="text-xs font-bold text-zinc-300">{w('artboard')}</p>
         <div className="flex flex-wrap gap-1.5">
@@ -577,4 +631,16 @@ export default function VectorStudio({
       )}
     </div>
   );
+}
+
+/** Hand a file to the device to keep. */
+function keepFile(data: Blob, name: string): void {
+  const url = URL.createObjectURL(data);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }

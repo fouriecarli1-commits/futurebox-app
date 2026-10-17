@@ -57,6 +57,8 @@ export type Item =
 export type ItemKind = Item['kind'];
 
 export interface VectorDoc {
+  /** The drawing's own name, so saving it twice is paid once. */
+  readonly id?: string;
   readonly w: number;
   readonly h: number;
   readonly background: Paint;
@@ -71,7 +73,9 @@ export const ARTBOARDS: readonly { readonly id: string; readonly en: string; rea
   { id: 'a4', en: 'A4', af: 'A4', w: 1240, h: 1754 },
 ];
 
-export const newDoc = (w = 1080, h = 1080): VectorDoc => ({ w, h, background: '#ffffff', items: [] });
+export const newDoc = (w = 1080, h = 1080): VectorDoc => ({
+  id: `d${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`, w, h, background: '#ffffff', items: [],
+});
 
 export const FONTS: Record<Extract<Item, { kind: 'text' }>['font'], string> = {
   sans: 'Helvetica, Arial, sans-serif',
