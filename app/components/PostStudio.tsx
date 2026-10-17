@@ -570,8 +570,10 @@ const POST_CHARTS: BenchSpec = {
   label: ['post.benchCharts', 'Charts'],
   what: ['post.benchChartsWhat', 'A chart from a design: type or paste the numbers, or let AI set them from your words.'],
 };
+/* Photo first, at the far left. Carli, 17 October 2026: *"Maak die photo tab
+   heel links en heel eerste van al die tabs."* */
 const POST_TOOLS: readonly BenchSpec[] = [
-  POST_STARTS, POST_GRID, POST_UPPER[0], POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
+  POST_UPPER[0], POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
 ];
 const POST_SHORT: Record<string, readonly [string, string]> = {
   starts: ['post.toolStarts', 'Designs'],
