@@ -67,6 +67,7 @@ export const TOOLS: readonly Tool[] = [
   { id: 'collage', group: 'photo', en: 'Collage', af: 'Collage', room: 'photo', panel: 'grid', icon: 'grid' },
   { id: 'filters', group: 'photo', en: 'Filters', af: 'Filters', room: 'photo', panel: 'filters', icon: 'filters' },
   { id: 'smartlight', group: 'photo', en: 'Smart light and adjust', af: 'Slim lig en stel', room: 'photo', panel: 'tone', icon: 'adjust' },
+  { id: 'darkroom', group: 'photo', en: 'Darkroom', af: 'Donkerkamer', room: 'photo', panel: 'darkroom', icon: 'adjust' },
   { id: 'cutout', group: 'photo', en: 'Remove background', af: 'Agtergrond uit', room: 'photo', panel: 'pic', icon: 'cutout' },
   { id: 'text', group: 'photo', en: 'Text', af: 'Teks', room: 'photo', panel: 'text', icon: 'text' },
   { id: 'grab', group: 'photo', en: 'Grab text and things', af: 'Gryp teks en dinge', room: 'photo', panel: 'read', icon: 'grab' },

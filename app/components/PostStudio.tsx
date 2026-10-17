@@ -78,6 +78,7 @@ import { useSideways } from '../lib/sideways';
 import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
 import CanvasSizeModal from './CanvasSizeModal';
+import Darkroom from './Darkroom';
 import StudioTemplatesModal from './StudioTemplatesModal';
 import { type StudioTemplateItem } from '../lib/studiotemplates';
 import { CUT_LOOK } from '../lib/cutlook';
@@ -1199,12 +1200,16 @@ export default function PostStudio({
   }, [said]);
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
+  /** The darkroom open over the room — `Darkroom.tsx`. */
+  const [darkroom, setDarkroom] = useState(false);
   /* Opened from All tools onto one of its panels — `lib/alltools.ts`. On
      arriving, and at once when the room is already open. */
   useEffect(() => {
     const openAsked = (): void => {
       const panel = takePanel('photo');
-      if (panel) setBench(panel as Bench);
+      /* The darkroom is a room of its own over this one, not a bench. */
+      if (panel === 'darkroom') setDarkroom(true);
+      else if (panel) setBench(panel as Bench);
     };
     openAsked();
     window.addEventListener(OPEN_PANEL_EVENT, openAsked);
@@ -5758,6 +5763,19 @@ export default function PostStudio({
           }}
         />
       </label>
+      {/* The way into the darkroom, dressed to be noticed. Carli, 17 October
+          2026: *"by bring a photo in … 'n fancy looking button … wat mense
+          na die lightroom toe vat."* */}
+      <button
+        type="button"
+        data-postdarkroom
+        onClick={() => setDarkroom(true)}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        style={{ background: 'linear-gradient(120deg, #f59e0b, #ec4899 55%, #8b5cf6)', boxShadow: '0 0 18px rgba(236,72,153,0.45)' }}
+      >
+        <Sparkles className="h-3.5 w-3.5" />
+        {t('post.darkroom', 'Develop like a pro')}
+      </button>
       {picture && (
         <button
           type="button"
@@ -9826,6 +9844,21 @@ export default function PostStudio({
           onClose={() => setShowTemplatesModal(false)}
           onSelectTemplate={handleSelectStudioTemplate}
           stillOnly
+        />
+      )}
+      {darkroom && (
+        <Darkroom
+          picture={picture}
+          onClose={() => setDarkroom(false)}
+          onDone={(developed) => {
+            before(t('post.stepDevelop', 'developing it'));
+            asPicture(developed, (made) => {
+              setWhole(picture);
+              setPicture(made);
+              setDarkroom(false);
+              flash();
+            }, () => setSaid(t('post.developFailed', 'The developed photograph could not be made.')));
+          }}
         />
       )}
       {showSizeModal && (

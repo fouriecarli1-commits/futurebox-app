@@ -29,8 +29,16 @@ ok(`every tool is in a group (${TOOLS.length} tools)`, TOOLS.every((one) => TOOL
 ok('  every id once', new Set(TOOLS.map((one) => one.id)).size === TOOLS.length);
 const noRoom = TOOLS.filter((one) => !rooms.has(one.room)).map((one) => `${one.id} → ${one.room}`);
 ok('every tool opens a room the studio has', noRoom.length === 0, noRoom.join(', '));
-const noPanel = TOOLS.filter((one) => one.panel && !panels.includes(one.panel)).map((one) => `${one.id} → ${one.panel}`);
+/* Rooms that open over a room instead of on its bar, and the line in that
+   room which opens them when asked. The darkroom, 17 October 2026. */
+const OVER: Record<string, { readonly file: string; readonly opens: RegExp }> = {
+  darkroom: { file: 'app/components/PostStudio.tsx', opens: /panel === 'darkroom'\) setDarkroom\(true\)/ },
+};
+const noPanel = TOOLS.filter((one) => one.panel && !panels.includes(one.panel) && !OVER[one.panel]).map((one) => `${one.id} → ${one.panel}`);
 ok('every panel a tool opens is a panel the room’s bar carries', noPanel.length === 0, noPanel.join(', '));
+for (const [panel, { file, opens }] of Object.entries(OVER)) {
+  ok(`  or a room over the room that opens when asked (${panel})`, opens.test(readFileSync(file, 'utf8')));
+}
 const wrongRoom = TOOLS.filter((one) => one.panel && one.room !== 'photo' && one.room !== 'videoedit').map((one) => one.id);
 ok('  and only in the two rooms that know how to be asked', wrongRoom.length === 0, wrongRoom.join(', '));
 for (const [file, room] of [['app/components/PostStudio.tsx', 'photo'], ['app/components/VideoEditor.tsx', 'videoedit']] as const) {

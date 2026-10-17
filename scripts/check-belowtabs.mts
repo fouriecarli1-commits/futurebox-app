@@ -221,6 +221,8 @@ const KNOWN: readonly string[] = [
      the template explorer, both full-screen over the post studio and the
      cutting room. */
   'app/components/CanvasSizeModal.tsx',
+  /* The darkroom, 17 October 2026: a developing room over the photo editor. */
+  'app/components/Darkroom.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
