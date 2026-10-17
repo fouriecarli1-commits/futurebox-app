@@ -41,6 +41,7 @@ ok('  and a press on one opens the document room', /if \(tool\.pdf\) \{\s*askPdf
 const OVER: Record<string, { readonly file: string; readonly opens: RegExp }> = {
   darkroom: { file: 'app/components/PostStudio.tsx', opens: /panel === 'darkroom'\) setDarkroom\(true\)/ },
   vector: { file: 'app/components/PostStudio.tsx', opens: /panel === 'vector'\) setVector\(/ },
+  poster: { file: 'app/components/PostStudio.tsx', opens: /panel === 'poster'\) setPoster\(true\)/ },
 };
 const noPanel = TOOLS.filter((one) => one.panel && !panels.includes(one.panel) && !OVER[one.panel]).map((one) => `${one.id} → ${one.panel}`);
 ok('every panel a tool opens is a panel the room’s bar carries', noPanel.length === 0, noPanel.join(', '));

@@ -33,7 +33,7 @@ export type ToolIcon =
   | 'titles' | 'effects' | 'generators' | 'enhance' | 'audiofx' | 'photo' | 'templates' | 'grid'
   | 'filters' | 'adjust' | 'cutout' | 'text' | 'grab' | 'layers' | 'shapes' | 'studio' | 'booth'
   | 'podcast' | 'sound' | 'hooks' | 'live' | 'channel' | 'collab'
-  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit' | 'chart' | 'vector';
+  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit' | 'chart' | 'vector' | 'poster';
 
 export interface Tool {
   readonly id: string;
@@ -56,11 +56,13 @@ export const TOOLS: readonly Tool[] = [
   { id: 'aivideo', group: 'ai', en: 'AI video', af: 'KI-video', room: 'canvas', icon: 'video', paid: true },
   { id: 'aiimage', group: 'ai', en: 'AI image', af: 'KI-prent', room: 'photo', panel: 'pic', icon: 'image', paid: true },
   { id: 'magic', group: 'ai', en: 'Magic touch', af: 'Towerraak', room: 'photo', panel: 'magic', icon: 'wand', paid: true },
+  { id: 'poster', group: 'ai', en: 'AI poster', af: 'KI-plakkaat', room: 'photo', panel: 'poster', icon: 'poster', paid: true },
   { id: 'albumart', group: 'ai', en: 'Album art', af: 'Albumkuns', room: 'albumart', icon: 'art', paid: true },
   { id: 'ads', group: 'ai', en: 'Adverts', af: 'Advertensies', room: 'campaign', icon: 'ads', paid: true },
   { id: 'voice', group: 'ai', en: 'Your voice', af: 'Jou stem', room: 'voice_studio', icon: 'voice', paid: true },
 
   { id: 'videoeditor', group: 'video', en: 'Video editor', af: 'Video-redigeerder', room: 'videoedit', icon: 'scissors' },
+  { id: 'moments', group: 'video', en: 'Best moments', af: 'Beste oomblikke', room: 'videoedit', panel: 'clip', icon: 'scissors' },
   { id: 'transitions', group: 'video', en: 'Transitions', af: 'Oorgange', room: 'videoedit', panel: 'clip', icon: 'transitions' },
   { id: 'titles', group: 'video', en: 'Titles and subtitles', af: 'Titels en onderskrifte', room: 'videoedit', panel: 'words', icon: 'titles' },
   { id: 'effects', group: 'video', en: 'Effects and filters', af: 'Effekte en filters', room: 'videoedit', panel: 'looks', icon: 'effects' },

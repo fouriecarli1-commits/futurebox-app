@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, ChartColumn, Circle, PenTool, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, ChartColumn, Circle, PenTool, Megaphone, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -80,6 +80,7 @@ import DeskSheet from './BoothCard';
 import CanvasSizeModal from './CanvasSizeModal';
 import Darkroom from './Darkroom';
 import VectorStudio from './VectorStudio';
+import PosterMaker from './PosterMaker';
 import type { VectorDoc } from '../lib/vectordoc';
 import StudioTemplatesModal from './StudioTemplatesModal';
 import { type StudioTemplateItem } from '../lib/studiotemplates';
@@ -1230,6 +1231,8 @@ export default function PostStudio({
   const [darkroom, setDarkroom] = useState(false);
   /** The vector studio open over the room — `VectorStudio.tsx` — and the art layer it is changing, if any. */
   const [vector, setVector] = useState<{ readonly editing: string | null } | null>(null);
+  /* The poster maker, over the room — `PosterMaker.tsx`. */
+  const [poster, setPoster] = useState(false);
   /* Vector art draws once its picture has loaded; this draws the post again then. */
   const [artTick, setArtTick] = useState(0);
   useEffect(() => {
@@ -1245,6 +1248,7 @@ export default function PostStudio({
       /* The darkroom is a room of its own over this one, not a bench. */
       if (panel === 'darkroom') setDarkroom(true);
       else if (panel === 'vector') setVector({ editing: null });
+      else if (panel === 'poster') setPoster(true);
       else if (panel) setBench(panel as Bench);
     };
     openAsked();
@@ -5837,6 +5841,18 @@ export default function PostStudio({
         <PenTool className="h-3.5 w-3.5" />
         {t('post.vectorRoom', 'Vector studio')}
       </button>
+      {/* And the poster maker. Carli, 16 October 2026: a poster maker with
+          three ways in — describe it, pick a kind, or fill in its lines. */}
+      <button
+        type="button"
+        data-postposter
+        onClick={() => setPoster(true)}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        style={{ background: 'linear-gradient(120deg, #d946ef, #f43f5e 55%, #f59e0b)', boxShadow: '0 0 18px rgba(217,70,239,0.4)' }}
+      >
+        <Megaphone className="h-3.5 w-3.5" />
+        {t('post.posterRoom', 'Poster')}
+      </button>
       {picture && (
         <button
           type="button"
@@ -10173,6 +10189,31 @@ export default function PostStudio({
             }
             setVector(null);
             setBench('shapes');
+          }}
+        />
+      )}
+      {poster && (
+        <PosterMaker
+          photo={picture}
+          onClose={() => setPoster(false)}
+          onMade={(img, shape) => {
+            before(t('post.stepPoster', 'making a poster'));
+            const fits = POST_SIZES.find((one) => one.id === shape);
+            if (fits) setSize(fits);
+            setPicture(img);
+            setCrop(MIDDLE);
+            setLook(PLAIN);
+            setPhotoHidden(false);
+            setPhotoAlpha(1);
+            setWhole(null);
+            lastMask.current = null;
+            setFound(null);
+            setPicking(false);
+            setPicked(null);
+            setMagicSpot(null);
+            setMagicStrokes([]);
+            setPoster(false);
+            setSaid(t('post.posterDone', 'Your poster is on the post. Change anything with the tools below, or press Undo to take it back.'));
           }}
         />
       )}

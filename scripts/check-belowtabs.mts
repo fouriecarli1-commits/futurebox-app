@@ -227,6 +227,8 @@ const KNOWN: readonly string[] = [
   'app/components/PdfRoom.tsx',
   /* The vector studio, 17 October 2026, over the photo editor. */
   'app/components/VectorStudio.tsx',
+  /* The poster maker, 17 October 2026, over the photo editor. */
+  'app/components/PosterMaker.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
