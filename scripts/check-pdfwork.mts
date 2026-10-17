@@ -18,6 +18,7 @@ import {
   hiddenInfo, insertBlank, isLocked, movePage, pageCount, protect, replaceWithPictures, rotatePages, safeUrl,
   sanitize, spot, unlock, watermark, type Mark,
 } from '../app/lib/pdfwork.ts';
+import { groupBlocks, type Run } from '../app/lib/pdfblocks.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -172,6 +173,46 @@ ok('a redacted page has no words left in it to copy out', redacted.pages[1].word
 ok('  and keeps its size as shown', redacted.pages[1].w === 400 && redacted.pages[1].h === 300);
 const turnedRedacted = await read(await replaceWithPictures(await rotatePages(base, [0], 90), [{ page: 0, data: PNG, type: 'png' }]));
 ok('  a turned page stays the shape it was shown', turnedRedacted.pages[0].w === 400 && turnedRedacted.pages[0].h === 300);
+
+/* ── Paragraphs and headings, found from loose runs ── */
+{
+  const W = 600;
+  const H = 800;
+  /* A run as pdf.js hands it over: points turned into shares of the page. */
+  const run = (text: string, x: number, base: number, size: number, width: number): Run => ({
+    text, size, font: 'sans', u1: x / W, u2: (x + width) / W, v1: (base - size) / H, v2: (base + size * 0.22) / H, base: base / H,
+  });
+  const runs: Run[] = [
+    run('Annual report', 60, 80, 28, 200),
+    /* A paragraph of three lines, the first in two runs, out of order. */
+    run('lazy dog and keeps', 230, 140, 11, 160),
+    run('The quick brown fox jumps over the', 60, 140, 11, 168),
+    run('running across the whole field un-', 60, 154, 11, 330),
+    run('til evening.', 60, 168, 11, 60),
+    /* A second paragraph, a blank line below. */
+    run('Second paragraph here.', 60, 210, 11, 140),
+    /* A side column at the same height: a block of its own. */
+    run('Sidebar', 450, 140, 11, 60),
+  ];
+  const blocks = groupBlocks(runs, W, H, 0);
+  const texts = blocks.map((b) => b.text);
+  ok('a heading in a bigger size is a block of its own', texts[0] === 'Annual report' && blocks[0].size === 28, JSON.stringify(texts));
+  ok('  lines of one paragraph are one block, runs put back in reading order', texts.includes('The quick brown fox jumps over the lazy dog and keeps running across the whole field until evening.'), JSON.stringify(texts));
+  ok('  a hyphen at a line\'s end joins the word back together', texts.some((t) => t.includes('until evening')));
+  ok('  a gap of a blank line starts a new paragraph', texts.includes('Second paragraph here.'));
+  ok('  and a column beside it is not swallowed into it', texts.includes('Sidebar'));
+  const para = blocks.find((b) => b.text.startsWith('The quick'));
+  ok('  the paragraph knows its line spacing', para !== undefined && Math.abs(para.lead - 14) < 0.01 && para.lines === 3, JSON.stringify(para));
+}
+
+/* A block edited whole wraps inside its own width, at its own spacing. */
+const wrapped = await read(await bake(base, [
+  { kind: 'text', page: 0, at: { u: 0.1, v: 0.3 }, text: 'one two three four five six seven eight nine ten eleven twelve', size: 12, colour: [0, 0, 0], font: 'sans', width: 0.4, lead: 16 },
+]));
+const wrapLines = wrapped.pages[0].items.filter((one) => /one|six|ten|twelve/.test(one.str));
+const ys = [...new Set(wrapLines.map((one) => one.y.toFixed(3)))];
+ok('a paragraph edited whole wraps inside its block', ys.length >= 2 && wrapLines.every((one) => one.x >= 0.099 && one.x < 0.12), JSON.stringify(wrapLines));
+ok('  one line under the next at the block\'s spacing', ys.length >= 2 && Math.abs((Number(ys[1]) - Number(ys[0])) * 400 - 16) < 0.6, ys.join());
 
 ok('a count of pages is a count of pages', (await pageCount(base)) === 3);
 ok('nothing written is a file only this room can open', (await PDFDocument.load(baked)).catalog.lookup(PDFName.of('Pages')) instanceof PDFDict);

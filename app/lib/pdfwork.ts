@@ -43,7 +43,9 @@ export interface At { readonly u: number; readonly v: number }
 export interface Box { readonly u1: number; readonly v1: number; readonly u2: number; readonly v2: number }
 
 export type Mark =
-  | { readonly kind: 'text'; readonly page: number; readonly at: At; readonly text: string; readonly size: number; readonly colour: Colour; readonly font: FontKind; readonly bold?: boolean }
+  /* `width` (a share of the page as shown) makes it a block that wraps, the
+     way a paragraph edited whole does; `lead` is its line spacing in points. */
+  | { readonly kind: 'text'; readonly page: number; readonly at: At; readonly text: string; readonly size: number; readonly colour: Colour; readonly font: FontKind; readonly bold?: boolean; readonly width?: number; readonly lead?: number }
   | { readonly kind: 'tick' | 'cross' | 'dot'; readonly page: number; readonly at: At; readonly size: number; readonly colour: Colour }
   | { readonly kind: 'line'; readonly page: number; readonly from: At; readonly to: At; readonly width: number; readonly colour: Colour }
   | { readonly kind: 'box'; readonly page: number; readonly box: Box; readonly colour: Colour; readonly opacity?: number }
@@ -335,10 +337,25 @@ class Fonts {
 const colourOf = (c: Colour) => rgb(c[0], c[1], c[2]);
 
 /** Lines of text at a top-left spot on the page as shown, each line under the last. */
-async function drawWords(page: PDFPage, f: Frame, fonts: Fonts, at: At, text: string, size: number, colour: Colour, kind: FontKind, bold = false): Promise<void> {
+/** Words broken into lines no wider than `most` points; a line break typed in is kept. */
+export function wrapWords(font: PDFFont, text: string, size: number, most: number): string[] {
+  const out: string[] = [];
+  for (const typed of text.split('\n')) {
+    let line = '';
+    for (const word of typed.split(/ +/)) {
+      const next = line ? `${line} ${word}` : word;
+      if (line && font.widthOfTextAtSize(next, size) > most) { out.push(line); line = word; } else line = next;
+    }
+    out.push(line);
+  }
+  return out;
+}
+
+async function drawWords(page: PDFPage, f: Frame, fonts: Fonts, at: At, text: string, size: number, colour: Colour, kind: FontKind, bold = false, width?: number, leadPt?: number): Promise<void> {
   const font = await fonts.get(kind, bold);
-  const lines = writable(font, text).split('\n');
-  const lead = size * 1.2;
+  const words = writable(font, text);
+  const lines = width ? wrapWords(font, words, size, width * f.shownW) : words.split('\n');
+  const lead = leadPt && leadPt > 0 ? leadPt : size * 1.2;
   lines.forEach((line, k) => {
     /* The baseline sits about four fifths of a line down from the top. */
     const down = at.v + (size * 0.82 + k * lead) / f.shownH;
@@ -398,7 +415,7 @@ export async function bake(data: Bytes, marks: readonly Mark[], author = 'Future
     const f = frameOf(page);
     switch (mark.kind) {
       case 'text':
-        await drawWords(page, f, fonts, mark.at, mark.text, mark.size, mark.colour, mark.font, mark.bold);
+        await drawWords(page, f, fonts, mark.at, mark.text, mark.size, mark.colour, mark.font, mark.bold, mark.width, mark.lead);
         break;
       case 'tick':
       case 'cross':

@@ -32,6 +32,7 @@ import { zipOf } from '../lib/zip';
 import { PDF_TOOLS, pdfTool, type PdfToolId } from '../lib/pdftools';
 import type { Box, Colour, FontKind, FormField, Mark, Piece } from '../lib/pdfwork';
 import type { Shown, Words } from '../lib/pdfview';
+import type { Block } from '../lib/pdfblocks';
 
 const work = () => import('../lib/pdfwork');
 const viewer = () => import('../lib/pdfview');
@@ -108,7 +109,7 @@ const WORDS = {
   hintTap: ['Tap the page where it goes.', 'Tik op die bladsy waar dit moet kom.'],
   hintDrag: ['Drag across the page.', 'Sleep oor die bladsy.'],
   hintWords: ['Drag across the words, or tap a line of them.', 'Sleep oor die woorde, of tik op ’n reël.'],
-  hintRetype: ['Tap a line of words to change it. The old words are covered over, not taken out: to remove words for good, use Redact.', 'Tik op ’n reël woorde om dit te verander. Die ou woorde word toegemaak, nie uitgehaal nie: gebruik Swart uit om woorde vir altyd te verwyder.'],
+  hintRetype: ['Every paragraph and heading has a frame. Tap one and type straight into it. The old words are covered over, not taken out: to remove words for good, use Redact.', 'Elke paragraaf en opskrif het ’n raam. Tik op een en tik reg daarin. Die ou woorde word toegemaak, nie uitgehaal nie: gebruik Swart uit om woorde vir altyd te verwyder.'],
   hintPicture: ['Choose a picture, then tap where it goes.', 'Kies ’n prent, en tik dan waar dit moet kom.'],
   hintSign: ['Make your signature, then tap where it goes.', 'Maak jou handtekening, en tik dan waar dit moet kom.'],
   noWordsHere: ['There are no words there to change. A scanned page is a picture: use Add text over it instead.', 'Daar is nie woorde daar om te verander nie. ’n Geskandeerde bladsy is ’n prent: gebruik eerder Sit teks by.'],
@@ -247,7 +248,8 @@ const PAPER = '#ffffff';
 const css = (c: Colour, alpha = 1): string => `rgba(${Math.round(c[0] * 255)}, ${Math.round(c[1] * 255)}, ${Math.round(c[2] * 255)}, ${alpha})`;
 
 /** A mark waiting to be written in. Marks made together (a cover and its new words) share a group and go together. */
-interface Held { readonly id: string; readonly group: string; readonly mark: Mark }
+/** `block` names the paragraph or heading it rewrites, so its frame steps aside. */
+interface Held { readonly id: string; readonly group: string; readonly mark: Mark; readonly block?: string }
 /** A box to black out, waiting for Redact. */
 interface Cut { readonly id: string; readonly page: number; readonly box: Box }
 /** A file waiting to be combined. */
@@ -492,6 +494,7 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
   const glass = useRef<HTMLDivElement | null>(null);
   const [glassWide, setGlassWide] = useState(1);
   const [words, setWords] = useState<Words[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const pageTool = tool !== null && PENS[tool] !== undefined;
 
   useEffect(() => {
@@ -504,7 +507,8 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
       setSize(v.shownSize(page));
       if (canvas.current) await v.draw(shown, at, canvas.current, 1600);
       const found = await v.wordsOn(shown, at);
-      if (!gone) setWords(found);
+      const grouped = await v.blocksOn(shown, at);
+      if (!gone) { setWords(found); setBlocks(grouped); }
     })().catch(() => { if (!gone) say('cantDraw'); });
     return () => { gone = true; };
   }, [shown, at, pageTool]);
@@ -557,9 +561,9 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
   const [drag, setDrag] = useState<{ from: { u: number; v: number }; to: { u: number; v: number } } | null>(null);
   const moving = useRef<{ id: string; u: number; v: number } | null>(null);
 
-  const add = (marks: readonly Mark[], select = true): void => {
+  const add = (marks: readonly Mark[], select = true, block?: string): void => {
     const group = nextId();
-    const made = marks.map((mark) => ({ id: nextId(), group, mark }));
+    const made = marks.map((mark) => ({ id: nextId(), group, mark, ...(block ? { block } : {}) }));
     setHeld((was) => [...was, ...made]);
     if (select && made.length) setPicked(made[made.length - 1].id);
   };
@@ -593,6 +597,25 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
         add([{ kind: pen, page: at, at: { u: p.u - (ptSize / 2) / size.w, v: p.v - (ptSize / 2) / size.h }, size: ptSize, colour: ink }]);
         break;
       case 'retype': {
+        /* A whole paragraph or heading, edited in place. Carli, 17 October
+           2026: *"wanneer mens op 'n hele blok kliek dan moet daai hele blok
+           ge-edit kan word."* */
+        const block = blocks.find((one) => !held.some((h) => h.block === one.key)
+          && p.u >= one.u1 - 0.006 && p.u <= one.u2 + 0.006 && p.v >= one.v1 - 0.006 && p.v <= one.v2 + 0.006);
+        if (block) {
+          const box = { u1: block.u1 - 0.004, v1: block.v1 - 0.003, u2: block.u2 + 0.004, v2: block.v2 + 0.003 };
+          add([
+            { kind: 'box', page: at, box, colour: paperAround(box) },
+            {
+              kind: 'text', page: at, at: { u: block.u1, v: block.v1 + (block.size * 0.18) / size.h }, text: block.text,
+              size: Math.round(block.size * 10) / 10, colour: inkIn(block), font: block.font,
+              /* A paragraph keeps its own width; a one-line heading may run on to the margin rather than fold. */
+              width: block.lines > 1 ? block.u2 - block.u1 + 0.01 : Math.max(block.u2 - block.u1 + 0.01, 0.96 - block.u1),
+              lead: Math.round(block.lead * 10) / 10,
+            },
+          ], true, block.key);
+          break;
+        }
         const run = runAt(p);
         if (!run) { say('noWordsHere'); break; }
         const box = { u1: run.u1 - 0.002, v1: run.v1 - 0.002, u2: run.u2 + 0.002, v2: run.v2 + 0.002 };
@@ -1016,6 +1039,8 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
     const grab = (event: React.PointerEvent): void => {
       event.stopPropagation();
       setPicked(one.id);
+      /* A paragraph being rewritten stays where its words were. */
+      if (one.block) return;
       const p = spotOf(event);
       moving.current = { id: one.id, u: p.u, v: p.v };
       glass.current?.setPointerCapture(event.pointerId);
@@ -1026,12 +1051,39 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
       return { position: 'absolute', left: `${o.u1 * 100}%`, top: `${o.v1 * 100}%`, width: `${(o.u2 - o.u1) * 100}%`, height: `${(o.v2 - o.v1) * 100}%`, boxShadow: ring };
     };
     switch (m.kind) {
-      case 'text':
+      case 'text': {
+        const face: React.CSSProperties = {
+          position: 'absolute', left: `${m.at.u * 100}%`, top: `${m.at.v * 100}%`, fontSize: m.size * perPoint,
+          lineHeight: m.lead ? `${m.lead * perPoint}px` : 1.2, color: css(m.colour),
+          fontFamily: m.font === 'serif' ? 'Times New Roman, serif' : m.font === 'mono' ? 'Courier New, monospace' : 'Helvetica, Arial, sans-serif',
+          fontWeight: m.bold ? 700 : 400,
+          ...(m.width ? { width: `${m.width * 100}%`, whiteSpace: 'pre-wrap', overflowWrap: 'break-word' } : { whiteSpace: 'pre' }),
+        };
+        /* A paragraph being rewritten is typed into right where it stands. */
+        if (on && m.width) {
+          return (
+            <textarea
+              key={one.id}
+              data-pdfblockedit
+              autoFocus
+              value={m.text}
+              onPointerDown={(event) => event.stopPropagation()}
+              onChange={(event) => { const text = event.target.value; editPicked((x) => (x.kind === 'text' ? { ...x, text } : x)); }}
+              spellCheck
+              style={{
+                ...face, ...({ fieldSizing: 'content' } as React.CSSProperties), minHeight: `${(m.lead ?? m.size * 1.2) * perPoint}px`,
+                resize: 'none', border: 0, padding: 0, margin: 0, outline: '2px solid #38bdf8', outlineOffset: 2,
+                background: 'rgba(56,189,248,0.06)', overflow: 'hidden', touchAction: 'auto',
+              }}
+            />
+          );
+        }
         return (
-          <div key={one.id} {...common} style={{ position: 'absolute', left: `${m.at.u * 100}%`, top: `${m.at.v * 100}%`, fontSize: m.size * perPoint, lineHeight: 1.2, color: css(m.colour), fontFamily: m.font === 'serif' ? 'Times New Roman, serif' : m.font === 'mono' ? 'Courier New, monospace' : 'Helvetica, Arial, sans-serif', fontWeight: m.bold ? 700 : 400, whiteSpace: 'pre', boxShadow: ring, cursor: 'move' }}>
+          <div key={one.id} {...common} style={{ ...face, boxShadow: ring, cursor: one.block ? 'text' : 'move' }}>
             {m.text || ' '}
           </div>
         );
+      }
       case 'tick':
       case 'cross':
       case 'dot': {
@@ -1109,6 +1161,17 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
             onPointerUp={onUp}
             onPointerCancel={() => { setDrag(null); moving.current = null; }}
           >
+            {/* Every paragraph and heading in a frame, while Edit text is
+                the pen: the whole page's words standing out to be tapped. */}
+            {tool === 'edit' && pen === 'retype' && blocks.filter((b) => !held.some((h) => h.block === b.key)).map((b) => (
+              <div
+                key={b.key}
+                data-pdfblock={b.key}
+                aria-hidden
+                className="pointer-events-none absolute rounded-[3px]"
+                style={{ left: `${(b.u1 - 0.004) * 100}%`, top: `${(b.v1 - 0.003) * 100}%`, width: `${(b.u2 - b.u1 + 0.008) * 100}%`, height: `${(b.v2 - b.v1 + 0.006) * 100}%`, border: '1.5px dashed rgba(14,165,233,0.85)', background: 'rgba(56,189,248,0.08)' }}
+              />
+            ))}
             {held.map(overlayFor)}
             {cuts.filter((one) => one.page === at).map((one) => {
               const o = ordered(one.box);

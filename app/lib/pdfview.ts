@@ -11,6 +11,7 @@
  * The writing is `pdfwork.ts`; this file only reads.
  */
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { groupBlocks, type Block } from './pdfblocks';
 
 type Lib = typeof import('pdfjs-dist/legacy/build/pdf.mjs');
 let lib: Promise<Lib> | null = null;
@@ -87,6 +88,8 @@ export interface Words {
   /** Its size in points, and the kind of letter, so a retyped line can match it. */
   readonly size: number;
   readonly font: 'sans' | 'serif' | 'mono';
+  /** Where its baseline sits, down the page as shown — what lines are lined up by. */
+  readonly base: number;
 }
 
 /** Every run of words on a page. */
@@ -114,10 +117,18 @@ export async function wordsOn(doc: Shown, index: number): Promise<Words[]> {
       u2: Math.max(...xs) / view.width,
       v2: (Math.max(...ys) + size * 0.22 * view.scale) / view.height,
       size,
+      base: y1 / view.height,
       font: family.includes('mono') ? 'mono' : family.includes('serif') && !family.includes('sans') ? 'serif' : 'sans',
     });
   }
   return out;
+}
+
+/** The paragraphs and headings on a page, for editing a whole block at once — `pdfblocks.ts`. */
+export async function blocksOn(doc: Shown, index: number): Promise<Block[]> {
+  const page = await doc.getPage(index + 1);
+  const view = page.getViewport({ scale: 1 });
+  return groupBlocks(await wordsOn(doc, index), view.width, view.height, index);
 }
 
 /**

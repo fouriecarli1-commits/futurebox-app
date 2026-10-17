@@ -30,6 +30,12 @@ async function sample() {
     const page = doc.addPage([595, 842]);
     page.drawText(words, { x: 60, y: 760, size: 24, font });
     page.drawText(`Footnote ${k}`, { x: 60, y: 80, size: 10, font });
+    if (k === 1) {
+      /* A paragraph of three lines, for editing a whole block at once. */
+      ['This agreement is made between the', 'artist and the label, and it sets out', 'how the songs are shared.'].forEach((line, j) => {
+        page.drawText(line, { x: 60, y: 700 - j * 15, size: 12, font });
+      });
+    }
   }
   doc.setTitle('Hidden title');
   return Buffer.from(await doc.save());
@@ -42,12 +48,15 @@ async function read(data, password) {
   const pages = [];
   for (let n = 1; n <= doc.numPages; n += 1) {
     const page = await doc.getPage(n);
-    const text = (await page.getTextContent()).items.map((one) => one.str).join(' ');
+    const items = (await page.getTextContent()).items;
+    const text = items.map((one) => one.str).join(' ');
+    /* How many lines the rewritten paragraph takes: distinct baselines of its words. */
+    const lines = new Set(items.filter((one) => /agreement is made|artist and the label|stream|shared between/.test(one.str)).map((one) => Math.round(one.transform[5]))).size;
     const annots = (await page.getAnnotations()).map((one) => one.subtype);
     const ops = await page.getOperatorList();
     const pictures = ops.fnArray.filter((fn) => fn === pdfjs.OPS.paintImageXObject).length;
     const view = page.getViewport({ scale: 1 });
-    pages.push({ text, annots, pictures, w: Math.round(view.width), h: Math.round(view.height) });
+    pages.push({ text, annots, pictures, lines, w: Math.round(view.width), h: Math.round(view.height) });
   }
   await task.destroy();
   return pages;
@@ -135,11 +144,21 @@ try {
   /* ── Edit: change words that are there, and add some ── */
   await tool('edit');
   await pen('retype');
+  /* Carli, 17 October 2026: every paragraph and heading stands out in a
+     frame, and a tap edits the whole block where it is. */
+  const frames = await page.locator('[data-pdfblock]').count();
+  check('Edit text puts a frame round every paragraph and heading', frames === 3, String(frames));
   /* "Page one of the contract", 24pt at 60,760 on an 842-tall page. */
   await onPage(0.2, (842 - 768) / 842);
-  const retyped = page.locator('[data-pdfmarktext]');
-  check('Edit text finds the line of words that was tapped', (await retyped.count()) === 1 && /Page one/.test(await retyped.inputValue()), await retyped.inputValue().catch(() => ''));
+  const retyped = page.locator('[data-pdfblockedit]');
+  check('  a tap on the heading opens it to type into, right where it is', (await retyped.count()) === 1 && /Page one/.test(await retyped.inputValue()), await retyped.inputValue().catch(() => ''));
   await retyped.fill('Page one of the agreement');
+  /* The paragraph: its three lines are one block, its sentence whole. */
+  await onPage(0.2, (842 - 693) / 842);
+  const para = page.locator('[data-pdfblockedit]');
+  check('  a tap on a paragraph opens the whole paragraph, its lines joined', /made between the artist and the label, and it sets out how the songs are shared\./.test(await para.inputValue().catch(() => '')), await para.inputValue().catch(() => ''));
+  await para.fill('This agreement is made between the artist and the label. It sets out exactly how every song, every stream and every sale is shared between them.');
+  check('  and the frame of a block being edited steps aside', (await page.locator('[data-pdfblock]').count()) === 1);
   await pen('text');
   await onPage(0.1, 0.5);
   await page.locator('[data-pdfmarktext]').fill('Added by hand');
@@ -149,7 +168,8 @@ try {
   await page.locator('[data-pdfdo="watermark"]').click();
   await page.waitForTimeout(1500);
   file = await read(await saved());
-  check('  the new words are in the saved file', file[0].text.includes('Page one of the agreement') && file[0].text.includes('Added by hand'), file[0].text);
+  check('  the new words are in the saved file', file[0].text.includes('Page one of the agreement') && file[0].text.includes('Added by hand') && file[0].text.includes('every sale is shared'), file[0].text);
+  check('  and the longer paragraph wraps onto more lines inside its block', file[0].lines >= 4, String(file[0].lines));
   check('  and a watermark is on every page', file.every((p) => /CONFIDENTIAL|VERTROULIK/.test(p.text)));
 
   /* ── Comment ── */
