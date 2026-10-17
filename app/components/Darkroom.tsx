@@ -25,6 +25,8 @@ import {
   AS_SHOT, BANDS, DEVELOP_PRESETS, PROFILES, autoTone, cleanDevelop, curveTable, developPixels, fromPreset,
   hdrTone, histogram, neutralAt, type Band, type Develop, type Wheel,
 } from '../lib/develop';
+import MeerkatTile from './MeerkatTile';
+import { meerkatThrough } from '../lib/meerkatphoto';
 
 /** Every word on this screen, English and Afrikaans side by side. */
 const WORDS = {
@@ -132,6 +134,11 @@ function sheetsOf(picture: CanvasImageSource & { width: number; height: number }
   const broad = take(Math.max(4, Math.max(w, h) / 40));
   return base && fine && broad ? { base, fine, broad } : null;
 }
+
+/** Each preset's tile: the meerkat photo through the preset, drawn once. */
+const PRESET_PICTURES: Readonly<Record<string, () => string>> = Object.fromEntries(
+  DEVELOP_PRESETS.map((one) => [one.id, () => meerkatThrough(`develop:${one.id}`, (px) => developPixels(px, null, null, fromPreset(one)))]),
+);
 
 export default function Darkroom({
   picture,
@@ -414,7 +421,19 @@ export default function Darkroom({
           {section('presets', w('presets'), (
             <>
               <div className="flex flex-wrap gap-1.5">
-                {DEVELOP_PRESETS.map((one) => chip(false, lang === 'af' ? one.af : one.en, () => setD(fromPreset(one)), `preset-${one.id}`))}
+                {/* Each the meerkat photo developed by it — the darkroom's own
+                    `developPixels`, so the tile is what the preset does. */}
+                {DEVELOP_PRESETS.map((one) => (
+                  <MeerkatTile
+                    key={one.id}
+                    label={lang === 'af' ? one.af : one.en}
+                    on={false}
+                    onPick={() => setD(fromPreset(one))}
+                    picture={PRESET_PICTURES[one.id]}
+                    size={60}
+                    data={{ 'data-darkchip': `preset-${one.id}` }}
+                  />
+                ))}
               </div>
               {mine.length > 0 && (
                 <>

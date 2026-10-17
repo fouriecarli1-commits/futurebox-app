@@ -81,6 +81,8 @@ import CanvasSizeModal from './CanvasSizeModal';
 import Darkroom from './Darkroom';
 import VectorStudio from './VectorStudio';
 import PosterMaker from './PosterMaker';
+import { MeerkatThumb } from './MeerkatTile';
+import type { MeerkatMood } from '../lib/meerkatphoto';
 import ProductShots from './ProductShots';
 import TryOn from './TryOn';
 import type { VectorDoc } from '../lib/vectordoc';
@@ -797,6 +799,22 @@ const faceFromFamily = (family: string | undefined, otherwise: FaceId): FaceId =
   if (/cursive|script/.test(said)) return 'script';
   if (/serif/.test(said) && !/sans/.test(said)) return 'book';
   return 'plain';
+};
+
+/** How each living-photo motion is pictured: the meerkat photo in its weather. */
+const MOTION_PICTURE: Readonly<Record<string, { readonly mood: MeerkatMood; readonly filter?: string; readonly over?: string; readonly pulse?: boolean }>> = {
+  clouds: { mood: 'day', over: 'radial-gradient(ellipse at 25% 18%, rgba(255,255,255,0.85), transparent 28%), radial-gradient(ellipse at 70% 12%, rgba(255,255,255,0.7), transparent 24%)' },
+  breeze: { mood: 'day', over: 'linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.18) 45%, transparent 60%)', pulse: true },
+  light: { mood: 'golden', over: 'radial-gradient(circle at 20% 50%, rgba(255,220,140,0.55), transparent 45%)', pulse: true },
+  water: { mood: 'day', filter: 'hue-rotate(-12deg) saturate(1.2)', over: 'linear-gradient(to top, rgba(56,189,248,0.55), transparent 35%)' },
+  rain: { mood: 'film', over: 'repeating-linear-gradient(105deg, rgba(255,255,255,0.35) 0 1px, transparent 1px 6px)' },
+  steam: { mood: 'mist', over: 'radial-gradient(ellipse at 50% 85%, rgba(255,255,255,0.6), transparent 45%)', pulse: true },
+  fire: { mood: 'night', over: 'radial-gradient(ellipse at 50% 100%, rgba(251,146,60,0.75), rgba(239,68,68,0.3) 35%, transparent 60%)', pulse: true },
+  blink: { mood: 'day', over: 'radial-gradient(circle at 50% 33%, rgba(255,255,255,0.45), transparent 18%)', pulse: true },
+  traffic: { mood: 'night', over: 'linear-gradient(transparent 78%, rgba(248,113,113,0.7) 80%, transparent 82%, transparent 86%, rgba(253,224,71,0.7) 88%, transparent 90%)' },
+  neon: { mood: 'neon', pulse: true, over: 'radial-gradient(circle at 80% 30%, rgba(236,72,153,0.4), transparent 40%)' },
+  dust: { mood: 'golden', over: 'radial-gradient(circle at 30% 40%, rgba(255,240,200,0.5) 0 1px, transparent 2px), radial-gradient(circle at 70% 60%, rgba(255,240,200,0.5) 0 1px, transparent 2px)', pulse: true },
+  cloth: { mood: 'day', over: 'linear-gradient(80deg, transparent 40%, rgba(244,114,182,0.35) 50%, transparent 60%)', pulse: true },
 };
 
 export default function PostStudio({
@@ -5997,9 +6015,17 @@ export default function PostStudio({
               aria-pressed={motion === one.id}
               onClick={() => setMotion(one.id)}
               title={lang === 'af' ? t(one.what[0], one.what[1]) : one.what[1]}
-              className={`${LEEG} ${motion === one.id ? GEKIES : ''}`}
+              className={`${LEEG} !h-auto flex-col gap-1 p-1.5 ${motion === one.id ? GEKIES : ''}`}
             >
-              {t(one.says[0], one.says[1])}
+              {/* The meerkat photo in that motion's weather, moving a little —
+                  every choice a picture. */}
+              <span className="relative block h-14 w-full overflow-hidden rounded-lg">
+                <MeerkatThumb className="absolute inset-0 h-full w-full !rounded-none" mood={MOTION_PICTURE[one.id]?.mood ?? 'day'} filter={MOTION_PICTURE[one.id]?.filter} />
+                {MOTION_PICTURE[one.id]?.over ? (
+                  <span aria-hidden className={`absolute inset-0 ${MOTION_PICTURE[one.id]?.pulse ? 'animate-pulse' : ''}`} style={{ background: MOTION_PICTURE[one.id]?.over }} />
+                ) : null}
+              </span>
+              <span className="text-[11px]">{t(one.says[0], one.says[1])}</span>
             </button>
           ))}
         </div>
@@ -7909,7 +7935,7 @@ export default function PostStudio({
             title={t(one.what[0], one.what[1])}
             /* A starter pack wears its own look on the button — Carli, 13
                October 2026, with Google's tiles. The plain ones stay plain. */
-            className={one.tile ? `${LEEG} !h-auto !items-start flex-col gap-1 py-3 text-left border-white/15` : LEEG}
+            className={one.tile ? `${LEEG} !h-auto !items-start flex-col gap-1 py-3 text-left border-white/15` : `${LEEG} !h-auto flex-col gap-1 p-1.5`}
             style={one.tile ? { background: `linear-gradient(135deg, ${one.tile[0]}, #000 55%, ${one.tile[1]})` } : undefined}
           >
             {one.tile ? (
@@ -7923,7 +7949,34 @@ export default function PostStudio({
                 </span>
                 <span className="text-[10px] text-zinc-300">{t(one.name[0], one.name[1])}</span>
               </>
-            ) : t(one.name[0], one.name[1])}
+            ) : (
+              /* The plain ones as a picture too — Carli, 17 October 2026:
+                 every template visual. The meerkat photo in the template's
+                 light, its lines where they go, its name under it. */
+              <>
+                <span className="relative block h-16 w-full overflow-hidden rounded-lg">
+                  <MeerkatThumb
+                    className="absolute inset-0 h-full w-full !rounded-none"
+                    filter={`brightness(${one.look?.bright ?? 1}) contrast(${one.look?.contrast ?? 1}) saturate(${one.look?.colour ?? 1})`}
+                  />
+                  {one.words.slice(0, 2).map((line, k) => (
+                    <span
+                      key={k}
+                      className="absolute left-1/2 max-w-[94%] -translate-x-1/2 -translate-y-1/2 truncate text-center font-black leading-none"
+                      style={{
+                        top: line.spot === 'top' ? '18%' : line.spot === 'middle' ? '48%' : line.spot === 'lower' ? '70%' : '86%',
+                        fontSize: k === 0 ? 11 : 8,
+                        color: line.ink,
+                        textShadow: line.glow ? `0 0 6px ${line.ink}, 0 0 1px #000` : '0 1px 2px rgba(0,0,0,0.9)',
+                      }}
+                    >
+                      {t(line.says[0], line.says[1])}
+                    </span>
+                  ))}
+                </span>
+                <span className="text-[11px] font-semibold text-zinc-200">{t(one.name[0], one.name[1])}</span>
+              </>
+            )}
           </button>
         ))}
       </div>
@@ -9140,16 +9193,18 @@ export default function PostStudio({
             </div>
 
             <div className="flex flex-wrap gap-1.5" data-postchartkinds>
+              {/* Each kind drawn with her own numbers — every choice a picture. */}
               {CHART_KINDS.map((one) => (
-                <button key={one.id} type="button" data-postchartkind={one.id} aria-pressed={spec.kind === one.id} onClick={() => edit({ kind: one.id })} className={`${LEEG} w-auto px-3 ${spec.kind === one.id ? 'ring-2 ring-emerald-400' : ''}`}>
+                <button key={one.id} type="button" data-postchartkind={one.id} aria-pressed={spec.kind === one.id} onClick={() => edit({ kind: one.id })} className={`flex w-[88px] flex-col gap-1 rounded-xl border border-zinc-700 bg-black/30 p-1 text-[11px] font-bold ${spec.kind === one.id ? 'ring-2 ring-emerald-400' : ''}`}>
+                  <span className="block aspect-[4/3] w-full"><ChartTile spec={{ ...spec, kind: one.id, title: '' }} lang={lang} /></span>
                   {lang === 'af' ? one.af : one.en}
                 </button>
               ))}
             </div>
             <div className="flex flex-wrap gap-1.5" data-postchartlooks>
               {LOOKS.map((one) => (
-                <button key={one.id} type="button" data-postchartlook={one.id} aria-pressed={spec.look === one.id} onClick={() => edit({ look: one.id })} className={`${LEEG} inline-flex w-auto items-center gap-1.5 px-3 ${spec.look === one.id ? 'ring-2 ring-emerald-400' : ''}`}>
-                  <span aria-hidden className="h-4 w-4 rounded-full border border-zinc-500" style={{ background: one.surface }} />
+                <button key={one.id} type="button" data-postchartlook={one.id} aria-pressed={spec.look === one.id} onClick={() => edit({ look: one.id })} className={`flex w-[88px] flex-col gap-1 rounded-xl border border-zinc-700 bg-black/30 p-1 text-[11px] font-bold ${spec.look === one.id ? 'ring-2 ring-emerald-400' : ''}`}>
+                  <span className="block aspect-[4/3] w-full"><ChartTile spec={{ ...spec, look: one.id, title: '' }} lang={lang} /></span>
                   {lang === 'af' ? one.af : one.en}
                 </button>
               ))}

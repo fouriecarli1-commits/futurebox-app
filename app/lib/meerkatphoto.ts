@@ -228,3 +228,31 @@ export const PICTURED: Readonly<Record<string, { readonly mood: MeerkatMood; rea
   performance: { mood: 'neon', look: 'punch' }, story: { mood: 'film' }, road: { mood: 'golden' },
   room: { mood: 'studio', look: 'warm' }, abstract: { mood: 'mist', look: 'cool' },
 };
+
+/**
+ * The photograph put through a pixel recipe — a darkroom preset — drawn once
+ * per `key`. `through` takes the pixels and gives new ones back.
+ */
+export function meerkatThrough(
+  key: string,
+  through: (px: { data: Uint8ClampedArray; width: number; height: number }) => Uint8ClampedArray,
+  mood: MeerkatMood = 'day',
+  side = 128,
+): string {
+  const name = `through:${key}:${mood}:${side}`;
+  const had = made.get(name);
+  if (had) return had;
+  if (typeof document === 'undefined') return '';
+  const canvas = document.createElement('canvas');
+  canvas.width = side;
+  canvas.height = side;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return '';
+  drawMeerkatPhoto(ctx, side, side, mood);
+  const image = ctx.getImageData(0, 0, side, side);
+  const out = through({ data: image.data, width: side, height: side });
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(out), side, side), 0, 0);
+  const url = canvas.toDataURL('image/jpeg', 0.86);
+  made.set(name, url);
+  return url;
+}

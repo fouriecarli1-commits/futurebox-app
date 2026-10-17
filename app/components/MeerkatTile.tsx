@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { meerkatPhotoUrl, type MeerkatMood } from '../lib/meerkatphoto';
 import { previewFor, roundFor, type BoxShape } from '../lib/videopaint';
 
-export default function MeerkatTile({ label, on, onPick, filter, mood = 'day', size = 68, data }: {
+export default function MeerkatTile({ label, on, onPick, filter, mood = 'day', size = 68, data, picture }: {
   readonly label: string;
   readonly on: boolean;
   readonly onPick: () => void;
@@ -20,9 +20,11 @@ export default function MeerkatTile({ label, on, onPick, filter, mood = 'day', s
   readonly size?: number;
   /** Data attributes for the probes, e.g. `{ 'data-editorlook': 'warm' }`. */
   readonly data?: Readonly<Record<string, string>>;
+  /** A picture made some other way — the photo through a recipe — instead of the plain one. */
+  readonly picture?: () => string;
 }) {
   const [src, setSrc] = useState('');
-  useEffect(() => { setSrc(meerkatPhotoUrl(mood)); }, [mood]);
+  useEffect(() => { setSrc(picture ? picture() : meerkatPhotoUrl(mood)); }, [mood, picture]);
   return (
     <button
       type="button"
