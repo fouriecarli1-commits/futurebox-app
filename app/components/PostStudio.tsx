@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, ChartColumn, Circle, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, ChartColumn, Circle, PenTool, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -56,7 +56,7 @@ import { probeVideoEngine } from '../lib/videograde';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
 import { TITLE_STYLES } from '../lib/posttitles';
 import {
-  MARK_SPECS, NEON_INKS, drawMark, isFilled, markBox, newMark, type Mark,
+  ART_READY, MARK_SPECS, NEON_INKS, drawMark, isFilled, markBox, newMark, type Mark,
 } from '../lib/postshapes';
 import {
   fromFrame, maskFor as maskOfLine, middleOf, ontoFrame, pickAt, picksFrom,
@@ -79,6 +79,8 @@ import { useAtDesk } from '../lib/atdesk';
 import DeskSheet from './BoothCard';
 import CanvasSizeModal from './CanvasSizeModal';
 import Darkroom from './Darkroom';
+import VectorStudio from './VectorStudio';
+import type { VectorDoc } from '../lib/vectordoc';
 import StudioTemplatesModal from './StudioTemplatesModal';
 import { type StudioTemplateItem } from '../lib/studiotemplates';
 import { CUT_LOOK } from '../lib/cutlook';
@@ -1226,6 +1228,15 @@ export default function PostStudio({
   const [bench, setBench] = useState<Bench>(null);
   /** The darkroom open over the room — `Darkroom.tsx`. */
   const [darkroom, setDarkroom] = useState(false);
+  /** The vector studio open over the room — `VectorStudio.tsx` — and the art layer it is changing, if any. */
+  const [vector, setVector] = useState<{ readonly editing: string | null } | null>(null);
+  /* Vector art draws once its picture has loaded; this draws the post again then. */
+  const [artTick, setArtTick] = useState(0);
+  useEffect(() => {
+    const ready = (): void => setArtTick((was) => was + 1);
+    window.addEventListener(ART_READY, ready);
+    return () => window.removeEventListener(ART_READY, ready);
+  }, []);
   /* Opened from All tools onto one of its panels — `lib/alltools.ts`. On
      arriving, and at once when the room is already open. */
   useEffect(() => {
@@ -1233,6 +1244,7 @@ export default function PostStudio({
       const panel = takePanel('photo');
       /* The darkroom is a room of its own over this one, not a bench. */
       if (panel === 'darkroom') setDarkroom(true);
+      else if (panel === 'vector') setVector({ editing: null });
       else if (panel) setBench(panel as Bench);
     };
     openAsked();
@@ -2467,6 +2479,8 @@ export default function PostStudio({
     compare, toneAll,
     /* The photo grid, and a frame being placed. */
     cells, cellOn, editingCell, framing,
+    /* Vector art arriving after its picture loads. */
+    artTick,
     marks, markOn, magicStrokes, bench, magicSpot, magicSize]);
 
   /* ── Where the picture sits, and whether it can be moved ──────────── */
@@ -5812,6 +5826,17 @@ export default function PostStudio({
         <FileText className="h-3.5 w-3.5" />
         {t('post.pdfRoom', 'PDF studio')}
       </button>
+      {/* And the vector studio. Carli, 17 October 2026: *"Ek hou van daai
+          vector illustration."* */}
+      <button
+        type="button"
+        data-postvector
+        onClick={() => setVector({ editing: null })}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+      >
+        <PenTool className="h-3.5 w-3.5" />
+        {t('post.vectorRoom', 'Vector studio')}
+      </button>
       {picture && (
         <button
           type="button"
@@ -7989,6 +8014,30 @@ export default function PostStudio({
         if (!mark) {
           return <p className="text-xs" style={{ color: INK_DIM }}>{t('post.shapesStart', 'Pick a shape. Then drag it on the photo, and pull its corner to size it.')}</p>;
         }
+        if (mark.kind === 'art') {
+          /* Vector art: sized and faded here like a shape, changed in the studio it came from. */
+          const artSlider = (label: string, value: number, min: number, max: number, step: number, set: (v: number) => void, id: string) => (
+            <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider={id}>
+              <span className="w-24 flex-shrink-0">{label}</span>
+              <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => set(Number(e.target.value))} className="h-11 min-w-0 flex-1 accent-emerald-400" />
+            </label>
+          );
+          return (
+            <div key={mark.id} data-postmark="art" className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-bold">🎨 {t('post.layerArt', 'Vector art')}</span>
+                <button type="button" onClick={() => dropMark(mark.id)} aria-label={t('post.removeArt', 'Remove this vector art')} className={`${LEEG} w-auto px-3`}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <button type="button" data-postvectoredit onClick={() => setVector({ editing: mark.id })} className={`${LEEG} inline-flex w-full items-center justify-center gap-1.5`}>
+                <PenTool className="h-3.5 w-3.5" />{t('post.vectorEdit', 'Change it in the vector studio')}
+              </button>
+              {artSlider(t('post.markSizeSlide', 'Size'), mark.size, 0.05, 1.6, 0.01, (v) => changeMark(mark.id, { size: v }), 'size')}
+              {artSlider(t('post.markSeeThrough', 'See-through'), 1 - (mark.opacity ?? 1), 0, 0.9, 0.05, (v) => changeMark(mark.id, { opacity: 1 - v }), 'opacity')}
+            </div>
+          );
+        }
         const spec = MARK_SPECS.find((one) => one.id === mark.kind) ?? MARK_SPECS[0];
         const slider = (label: string, value: number, min: number, max: number, step: number, set: (v: number) => void, id: string) => (
           <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider={id}>
@@ -8442,6 +8491,7 @@ export default function PostStudio({
       const at = cells.findIndex((one) => one.id === item.id);
       return `${t('post.layerCell', 'Photo')} ${at + 1}${(item as Cell).image ? '' : ` · ${t('post.layerCellEmpty', 'empty')}`}`;
     }
+    if (kind === 'mark' && (item as Mark).kind === 'art') return `🎨 ${t('post.layerArt', 'Vector art')}`;
     if (kind === 'mark' && (item as Mark).kind === 'chart') {
       return `📊 ${(item as Mark).chart?.title || t('post.layerChart', 'Chart')}`;
     }
@@ -10102,6 +10152,28 @@ export default function PostStudio({
           onClose={() => setShowTemplatesModal(false)}
           onSelectTemplate={handleSelectStudioTemplate}
           stillOnly
+        />
+      )}
+      {vector && (
+        <VectorStudio
+          initial={(() => {
+            const was = vector.editing ? marks.find((one) => one.id === vector.editing)?.art?.doc : null;
+            return was && typeof was === 'object' && Array.isArray((was as VectorDoc).items) ? was as VectorDoc : null;
+          })()}
+          onClose={() => setVector(null)}
+          onDone={({ svg, doc }) => {
+            const aspect = Math.max(0.2, Math.min(5, doc.w / doc.h));
+            beforeLayers(t('post.stepVector', 'putting vector art in'));
+            if (vector.editing && marks.some((one) => one.id === vector.editing)) {
+              changeMark(vector.editing, { art: { svg, doc }, stretch: aspect });
+            } else {
+              const id = freshId();
+              setMarks((was) => [...was, { ...newMark('art', id), ink: '#ffffff', glow: 'none', size: 0.7, stretch: aspect, art: { svg, doc }, z: frontZ(was, words) }]);
+              setMarkOn(id);
+            }
+            setVector(null);
+            setBench('shapes');
+          }}
         />
       )}
       {darkroom && (

@@ -170,6 +170,8 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   /* The chart's AI, 17 October 2026: found under the words the room
      directory uses for the Charts tool. */
   chart: ['chart'],
+  /* The vector studio's AI drawing, 17 October 2026. */
+  vector: ['vector'],
   /* The same film, rendered in the browser instead of bought out. One
      capability, one place; a second entry would be a second door that does
      not exist. */

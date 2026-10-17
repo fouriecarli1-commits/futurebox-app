@@ -1018,6 +1018,14 @@ export const CREDITS = {
      the same shape of work as `transcribe`, and priced beside it. Hers to
      change: put to her when it shipped. */
   chart: 4,
+  /* ── A vector picture drawn by AI, 17 October 2026 ───────────────────
+
+     Carli: *"Ek hou van daai vector illustration."* One Flash call that
+     answers an SVG — shapes, not pixels. It makes a picture, so it is priced
+     beside the magic touch (`repaint`), not beside a reading; tracing a
+     photograph into shapes runs on the phone and costs nothing extra. Hers
+     to change: put to her when it shipped. */
+  vector: 6,
 } as const;
 
 /**

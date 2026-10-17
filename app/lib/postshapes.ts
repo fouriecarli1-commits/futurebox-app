@@ -29,7 +29,10 @@ export const FILLED_KINDS = ['circle', 'box', 'triangle', 'rect', 'paint'] as co
 /* A chart (`postcharts.ts`, 17 October 2026) is a mark too, so it moves,
    sizes, stacks and exports with everything else; it is not on the shapes
    list, it has a bench of its own. */
-export const MARK_KINDS = [...FILLED_KINDS, 'cube', 'ring', 'grid', 'frame', 'chart'] as const;
+/* Vector art from the vector studio (17 October 2026) is a mark the same
+   way: an SVG drawn as a picture, carrying the drawing so it can be opened
+   and changed again. */
+export const MARK_KINDS = [...FILLED_KINDS, 'cube', 'ring', 'grid', 'frame', 'chart', 'art'] as const;
 export type MarkKind = (typeof MARK_KINDS)[number];
 
 export interface MarkSpec {
@@ -72,6 +75,28 @@ export interface Mark {
   readonly alpha?: number;
   /** A chart's data and look, for the kind 'chart'. */
   readonly chart?: ChartSpec;
+  /** Vector art, for the kind 'art': the SVG drawn, and the studio's drawing to open again. */
+  readonly art?: { readonly svg: string; readonly doc: unknown };
+}
+
+/* ── Vector art as pictures, loaded once ──────────────────────────────── */
+
+/** Fired when a piece of vector art has loaded, so the post draws again with it. */
+export const ART_READY = 'fb-art-ready';
+const ART = new Map<string, HTMLImageElement>();
+
+/** The art as a picture, or null while it loads. */
+export function artImage(svg: string): HTMLImageElement | null {
+  if (typeof Image === 'undefined') return null;
+  let img = ART.get(svg);
+  if (!img) {
+    if (ART.size > 40) ART.delete(ART.keys().next().value as string);
+    img = new Image();
+    img.onload = () => window.dispatchEvent(new Event(ART_READY));
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    ART.set(svg, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
 export const isFilled = (kind: MarkKind): boolean => (FILLED_KINDS as readonly string[]).includes(kind);
@@ -86,7 +111,7 @@ export const NEON_INKS = ['#39ff14', '#00f0ff', '#ff2bd6', '#fff200', '#ff6b00',
 export function markBox(mark: Mark, width: number, height: number): { cx: number; cy: number; w: number; h: number } {
   const short = Math.min(width, height);
   const w = mark.size * short;
-  const stretch = isFilled(mark.kind) || mark.kind === 'chart' ? Math.max(0.2, Math.min(5, mark.stretch ?? 1)) : 1;
+  const stretch = isFilled(mark.kind) || mark.kind === 'chart' || mark.kind === 'art' ? Math.max(0.2, Math.min(5, mark.stretch ?? 1)) : 1;
   return { cx: mark.x * width, cy: mark.y * height, w: w * Math.sqrt(stretch), h: w / Math.sqrt(stretch) };
 }
 
@@ -230,6 +255,16 @@ function trace(ctx: CanvasRenderingContext2D, kind: MarkKind, w: number): void {
  * second time heavier, which is what makes them read as brackets.
  */
 export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: number, height: number, lang = 'en'): void {
+  if (mark.kind === 'art') {
+    const img = mark.art ? artImage(mark.art.svg) : null;
+    if (!img) return;
+    const box = markBox(mark, width, height);
+    ctx.save();
+    ctx.globalAlpha *= Math.max(0.1, Math.min(1, mark.opacity ?? 1));
+    ctx.drawImage(img, box.cx - box.w / 2, box.cy - box.h / 2, box.w, box.h);
+    ctx.restore();
+    return;
+  }
   if (mark.kind === 'chart') {
     if (!mark.chart) return;
     const box = markBox(mark, width, height);

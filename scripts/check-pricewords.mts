@@ -54,7 +54,7 @@ const CLAIMS: readonly { readonly name: string; readonly en: RegExp; readonly is
   { name: 'an advert and a dressed film', en: /using all five is (\d+); a dressed three-minute film is (\d+)/, is: () => [CREDITS.filmOut + five, 6 * CREDITS.filmOut + five] },
   { name: 'the marketing desk', en: /plan is (\d+) credits[;,] eight advert lines (?:are )?(\d+)/, is: () => [CREDITS.marketPlan, CREDITS.adLines] },
   { name: 'dubbing', en: /(\d+) credits a minute/, is: () => [CREDITS.dub] },
-  { name: 'the photo editor', en: /picture out is (\d+) credits(?:; the AI magic touch is (\d+); finding the things in a photo is (\d+); a chart set by AI from your words is (\d+))?/, is: () => [CREDITS.postOut, CREDITS.repaint, CREDITS.grab, CREDITS.chart] },
+  { name: 'the photo editor', en: /picture out is (\d+) credits(?:; the AI magic touch is (\d+); finding the things in a photo is (\d+); a chart set by AI from your words is (\d+); a vector picture drawn by AI is (\d+))?/, is: () => [CREDITS.postOut, CREDITS.repaint, CREDITS.grab, CREDITS.chart, CREDITS.vector] },
   { name: 'training a sound', en: /Train a sound of your own.*?\b(\d+) credits/, is: () => [CREDITS.finetune] },
   { name: 'a plan\'s month', en: /^(\d+) credits a month/, is: () => [] },
 ];

@@ -1768,6 +1768,13 @@ html[data-singing] [data-tabbar] { display: none !important; }
   color: #fff !important;
   box-shadow: 0 0 18px rgba(99, 102, 241, 0.55) !important;
 }
+/* And the vector studio's, in green to blue. */
+[data-postvector][data-postvector][data-postvector][data-postvector] {
+  background: linear-gradient(120deg, #10b981, #06b6d4 55%, #3b82f6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  color: #fff !important;
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.55) !important;
+}
 /* The magic touch: a tap on the photo between the controls reaches the photo. */
 [data-postpop][data-passthrough="yes"] { pointer-events: none; }
 [data-postpop][data-passthrough="yes"] :is(button, input, select, textarea, label, a) { pointer-events: auto; }

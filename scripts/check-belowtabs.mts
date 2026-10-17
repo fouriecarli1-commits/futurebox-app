@@ -225,6 +225,8 @@ const KNOWN: readonly string[] = [
   'app/components/Darkroom.tsx',
   /* The document room, 17 October 2026: a PDF workbench over everything. */
   'app/components/PdfRoom.tsx',
+  /* The vector studio, 17 October 2026, over the photo editor. */
+  'app/components/VectorStudio.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',

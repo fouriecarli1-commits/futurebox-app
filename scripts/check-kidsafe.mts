@@ -245,16 +245,21 @@ ok('two rooms cannot spend a credit at all',
    the AI from her words: four credits, its price on its button. Nothing
    about a child changes — the photo editor is still not a room a child is
    left alone in — and a SIXTH paid door reddens this line again. */
-ok('  and the photo editor spends on exactly the five things it is meant to',
+/* ── The sixth, decided out loud on 17 October 2026 ──────────────────
+   Carli: *"Ek hou van daai vector illustration."* The vector studio opens
+   over the photo editor, and its AI draws a vector picture from a sentence
+   for six credits, its price on its button; the sentence passes the same
+   screen as every other picture prompt. A SEVENTH paid door reddens this. */
+ok('  and the photo editor spends on exactly the six things it is meant to',
   JSON.stringify(spend.get('photo'))
     === JSON.stringify([
-      '/api/google/picture', '/api/picture/objects', '/api/post/chart', '/api/post/export', '/api/video',
+      '/api/google/picture', '/api/picture/objects', '/api/post/chart', '/api/post/export', '/api/vector/draw', '/api/video',
     ]),
   `${JSON.stringify(spend.get('photo'))} — taking the picture off the device,`
   + ' changing what is in it by saying what to change, finding the things in'
-  + ' it, setting a chart from words, and giving it a little motion. Every'
+  + ' it, setting a chart from words, drawing vector art, and giving it a little motion. Every'
   + ' other tool in that room runs on the device and takes no credits. A'
-  + ' SIXTH paid door is a decision somebody has to make out loud, which is'
+  + ' SEVENTH paid door is a decision somebody has to make out loud, which is'
   + ' what this line is for');
 
 ok('  and the free rooms are not the safe ones, which is the whole finding',
