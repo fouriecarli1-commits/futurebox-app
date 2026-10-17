@@ -18,17 +18,21 @@
  */
 import { PLAIN, filterFor, paintWashes, type Look } from './postlook';
 
-export type FilterGroup = 'natural' | 'warm' | 'cool' | 'vivid' | 'mono' | 'film' | 'moody' | 'neon';
+export type FilterGroup = 'natural' | 'warm' | 'cool' | 'vivid' | 'soft' | 'vintage' | 'mono' | 'film' | 'moody' | 'neon' | 'colourpop' | 'duotone';
 
 export const FILTER_GROUPS: readonly { readonly id: FilterGroup; readonly en: string; readonly af: string }[] = [
   { id: 'natural', en: 'Natural', af: 'Natuurlik' },
   { id: 'warm', en: 'Warm', af: 'Warm' },
   { id: 'cool', en: 'Cool', af: 'Koel' },
   { id: 'vivid', en: 'Vivid', af: 'Helder' },
+  { id: 'soft', en: 'Soft', af: 'Sag' },
+  { id: 'vintage', en: 'Vintage', af: 'Retro' },
   { id: 'mono', en: 'Black and white', af: 'Swart en wit' },
   { id: 'film', en: 'Film', af: 'Film' },
   { id: 'moody', en: 'Moody', af: 'Donker' },
   { id: 'neon', en: 'Neon', af: 'Neon' },
+  { id: 'colourpop', en: 'Colour pop', af: 'Kleurknal' },
+  { id: 'duotone', en: 'Duotone', af: 'Duotoon' },
 ];
 
 export interface PostFilter {
@@ -88,6 +92,32 @@ export const POST_FILTERS: readonly PostFilter[] = [
   f('hologram', 'neon', 'Hologram', 'Hologram', { hue: 40, colour: 1.4, bright: 1.04, tint: [60, 240, 255, 0.2] }),
   f('neonglow', 'neon', 'Neon glow', 'Neongloed', { colour: 1.6, contrast: 1.2, tint: [57, 255, 20, 0.14], vignette: 0.35 }),
   f('gold', 'neon', 'Gold', 'Goud', { sepia: 0.35, warmth: 0.4, colour: 1.2, contrast: 1.1, tint: [255, 200, 60, 0.2] }),
+
+  /* Carli, 17 October 2026, screenshots of another editor's filter tabs:
+     Soft, Vintage, Colour pop and Duotone were the four this room lacked. */
+  f('morningmist', 'soft', 'Morning mist', 'Oggendmis', { bright: 1.08, contrast: 0.85, fade: 0.22, colour: 0.9 }),
+  f('blush', 'soft', 'Blush', 'Bloos', { bright: 1.06, contrast: 0.9, fade: 0.15, tint: [255, 170, 180, 0.14] }),
+  f('cotton', 'soft', 'Cotton', 'Katoen', { bright: 1.1, contrast: 0.82, colour: 0.85, fade: 0.2 }),
+  f('peach', 'soft', 'Peach', 'Perske', { bright: 1.05, warmth: 0.25, contrast: 0.9, fade: 0.12, tint: [255, 190, 140, 0.14] }),
+  f('lavender', 'soft', 'Lavender', 'Laventel', { bright: 1.05, contrast: 0.88, fade: 0.16, tint: [190, 160, 240, 0.16] }),
+
+  f('ouma', 'vintage', 'Ouma\u2019s album', 'Ouma se album', { sepia: 0.45, fade: 0.25, colour: 0.8, vignette: 0.35 }),
+  f('polaroid', 'vintage', 'Instant print', 'Kitsdruk', { fade: 0.22, warmth: 0.2, contrast: 0.95, tint: [120, 200, 170, 0.1], vignette: 0.2 }),
+  f('kodachrome', 'vintage', 'Slide film', 'Skyfiefilm', { colour: 1.25, contrast: 1.15, warmth: 0.15, vignette: 0.25 }),
+  f('dusty', 'vintage', 'Dusty road', 'Stofpad', { sepia: 0.3, fade: 0.3, warmth: 0.3, colour: 0.75 }),
+  f('postcard', 'vintage', 'Postcard', 'Poskaart', { fade: 0.18, colour: 1.1, hue: -6, tint: [255, 220, 150, 0.15], vignette: 0.3 }),
+
+  f('outrun', 'colourpop', 'Outrun', 'Uitjaag', { hue: -60, colour: 1.6, contrast: 1.15, tint: [120, 40, 255, 0.3] }),
+  f('heatwave', 'colourpop', 'Heatwave', 'Hittegolf', { hue: 160, colour: 1.5, contrast: 1.1, tint: [40, 160, 255, 0.25] }),
+  f('amethyst', 'colourpop', 'Amethyst', 'Ametis', { hue: -90, colour: 1.3, tint: [130, 70, 230, 0.32] }),
+  f('minty', 'colourpop', 'Minty', 'Kruisement', { hue: 90, colour: 1.2, bright: 1.05, tint: [80, 220, 170, 0.25] }),
+  f('lollipop', 'colourpop', 'Lollipop', 'Suigstokkie', { hue: 30, colour: 1.7, contrast: 1.2, tint: [255, 60, 160, 0.22] }),
+
+  f('cherry', 'duotone', 'Cherry', 'Kersie', { colour: 0, contrast: 1.15, tint: [200, 30, 70, 0.45] }),
+  f('fuchsia', 'duotone', 'Fuchsia', 'Fuchsia', { colour: 0, contrast: 1.1, tint: [220, 40, 180, 0.45] }),
+  f('ocean', 'duotone', 'Ocean', 'Oseaan', { colour: 0, contrast: 1.1, tint: [20, 110, 220, 0.45] }),
+  f('forest', 'duotone', 'Forest', 'Woud', { colour: 0, contrast: 1.1, tint: [30, 150, 80, 0.45] }),
+  f('sunset', 'duotone', 'Sunset', 'Sonsak', { colour: 0, contrast: 1.12, tint: [255, 110, 40, 0.45] }),
 ];
 
 export const filterById = (id: string): PostFilter | undefined => POST_FILTERS.find((one) => one.id === id);

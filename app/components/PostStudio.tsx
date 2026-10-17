@@ -4147,6 +4147,113 @@ export default function PostStudio({
   };
 
   const rubbingNow = useRef(false);
+
+  /* ── The pixel eraser ─────────────────────────────────────────────────
+     Carli, 17 October 2026, a screenshot of another editor's Pixel Eraser
+     with Erase and Restore and a size: wipe the last bits of background off
+     a cut-out by hand, or paint back what the cut took by mistake. It works
+     on a copy of the photograph and becomes the photograph on Done. */
+  const [pixelOn, setPixelOn] = useState(false);
+  const [pixelMode, setPixelMode] = useState<'erase' | 'restore'>('erase');
+  const [pixelSize, setPixelSize] = useState(0.035);
+  const pixelSheet = useRef<HTMLCanvasElement | null>(null);
+  const pixelFrom = useRef<HTMLImageElement | null>(null);
+  const pixelView = useRef<HTMLCanvasElement | null>(null);
+  const pixelLast = useRef<{ x: number; y: number } | null>(null);
+  const pixelDown = useRef(false);
+  const drawPixelView = (): void => {
+    const view = pixelView.current;
+    const sheet = pixelSheet.current;
+    if (!view || !sheet) return;
+    const wide = Math.min(900, sheet.width);
+    view.width = wide;
+    view.height = Math.max(1, Math.round(wide * (sheet.height / sheet.width)));
+    const v = view.getContext('2d');
+    if (!v) return;
+    const step = Math.max(6, Math.round(view.width / 16));
+    for (let y = 0; y < view.height; y += step) {
+      for (let x = 0; x < view.width; x += step) {
+        v.fillStyle = ((x / step) + (y / step)) % 2 === 0 ? CHECK_LIGHT : CHECK_DARK;
+        v.fillRect(x, y, step, step);
+      }
+    }
+    v.drawImage(sheet, 0, 0, view.width, view.height);
+  };
+  const startPixel = (): void => {
+    if (!picture) return;
+    const sheet = document.createElement('canvas');
+    sheet.width = picture.naturalWidth || picture.width;
+    sheet.height = picture.naturalHeight || picture.height;
+    sheet.getContext('2d')?.drawImage(picture, 0, 0);
+    pixelSheet.current = sheet;
+    /* What Restore paints back: the photograph before its background was
+       taken out, when that is the one this came from; otherwise this one. */
+    pixelFrom.current = whole && (whole.naturalWidth || whole.width) === sheet.width
+      && (whole.naturalHeight || whole.height) === sheet.height ? whole : picture;
+    setPixelOn(true);
+    window.requestAnimationFrame(drawPixelView);
+  };
+  const pixelAt = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const sheet = pixelSheet.current;
+    if (!sheet) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    if (box.width <= 0) return;
+    const x = ((event.clientX - box.left) / box.width) * sheet.width;
+    const y = ((event.clientY - box.top) / box.height) * sheet.height;
+    const r = Math.max(2, pixelSize * Math.max(sheet.width, sheet.height));
+    const from = pixelLast.current ?? { x, y };
+    pixelLast.current = { x, y };
+    const ctx = sheet.getContext('2d');
+    if (!ctx) return;
+    const line = (on: CanvasRenderingContext2D, dx = 0, dy = 0): void => {
+      on.lineCap = 'round';
+      on.lineWidth = r * 2;
+      on.beginPath();
+      on.moveTo(from.x - dx, from.y - dy);
+      on.lineTo(x - dx + 0.01, y - dy);
+      on.stroke();
+    };
+    if (pixelMode === 'erase') {
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = '#000';
+      line(ctx);
+      ctx.restore();
+    } else if (pixelFrom.current) {
+      /* Only the box the stroke covers, so a big photograph stays quick. */
+      const left = Math.max(0, Math.floor(Math.min(from.x, x) - r));
+      const top = Math.max(0, Math.floor(Math.min(from.y, y) - r));
+      const right = Math.min(sheet.width, Math.ceil(Math.max(from.x, x) + r));
+      const bottom = Math.min(sheet.height, Math.ceil(Math.max(from.y, y) + r));
+      if (right <= left || bottom <= top) return;
+      const patch = document.createElement('canvas');
+      patch.width = right - left;
+      patch.height = bottom - top;
+      const p = patch.getContext('2d');
+      if (!p) return;
+      p.strokeStyle = '#fff';
+      line(p, left, top);
+      p.globalCompositeOperation = 'source-in';
+      p.drawImage(pixelFrom.current, left, top, patch.width, patch.height, 0, 0, patch.width, patch.height);
+      ctx.drawImage(patch, left, top);
+    }
+    drawPixelView();
+  };
+  const finishPixel = (keep: boolean): void => {
+    const sheet = pixelSheet.current;
+    setPixelOn(false);
+    pixelSheet.current = null;
+    pixelLast.current = null;
+    if (!keep || !sheet || !picture) return;
+    const from = picture;
+    before(t('post.stepPixel', 'erasing by hand'));
+    asPicture(sheet, (made) => {
+      setWhole(from);
+      setPicture(made);
+      nothingBehind();
+      setSaid(t('post.pixelDone', 'Done. Press Put it back if you liked it better before.'));
+    }, () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')));
+  };
   /** Where the thumb was a moment ago, so a stroke is a line and not a dot. */
   const lastRub = useRef<{ readonly x: number; readonly y: number } | null>(null);
 
@@ -6280,6 +6387,78 @@ export default function PostStudio({
 
       </div>
     )}
+    {/* ── The pixel eraser: by hand, Erase or Restore ─────────────── */}
+    {picture && (
+      <div data-postpixel className="space-y-2 rounded-xl border p-3" style={asRoom
+        ? { borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(52,211,153,0.06)', boxShadow: RAISE }
+        : { borderColor: 'rgb(39,39,42)', background: 'rgba(24,24,27,0.5)' }}>
+        <p className={MIKRO}>{t('post.pixelTitle', 'Pixel eraser')}</p>
+        {!pixelOn ? (
+          <button type="button" data-postpixelstart onClick={startPixel} className={LEEG}>
+            <Eraser className="h-3.5 w-3.5" />
+            {t('post.pixelStart', 'Erase or restore by hand')}
+          </button>
+        ) : (
+          <>
+            <div className={RY}>
+              {(['erase', 'restore'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  data-postpixelmode={mode}
+                  aria-pressed={pixelMode === mode}
+                  onClick={() => setPixelMode(mode)}
+                  className={`${LEEG} ${pixelMode === mode ? GEKIES : ''}`}
+                >
+                  {mode === 'erase' ? <Eraser className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+                  {mode === 'erase' ? t('post.pixelErase', 'Erase') : t('post.pixelRestore', 'Restore')}
+                </button>
+              ))}
+            </div>
+            <label className="block space-y-1">
+              <span className="text-[11px]" style={{ color: INK_DIM }}>{t('post.pixelSize', 'Size')}</span>
+              <input
+                type="range" min={0.008} max={0.12} step={0.002}
+                value={pixelSize}
+                data-postpixelsize
+                onChange={(event) => setPixelSize(Number(event.target.value))}
+                className="h-11 w-full accent-emerald-400"
+              />
+            </label>
+            <canvas
+              ref={pixelView}
+              data-postpixelcanvas
+              onPointerDown={(event) => {
+                pixelDown.current = true;
+                pixelLast.current = null;
+                event.currentTarget.setPointerCapture(event.pointerId);
+                pixelAt(event);
+              }}
+              onPointerMove={(event) => { if (pixelDown.current) pixelAt(event); }}
+              onPointerUp={(event) => {
+                pixelDown.current = false;
+                pixelLast.current = null;
+                if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+              }}
+              onPointerCancel={() => { pixelDown.current = false; pixelLast.current = null; }}
+              className="w-full rounded-xl border border-zinc-800"
+              style={{ touchAction: 'none', cursor: 'crosshair' }}
+            />
+            <div className={RY}>
+              <button type="button" data-postpixelreset onClick={() => { finishPixel(false); startPixel(); }} className={LEEG}>
+                <RotateCcw className="h-3.5 w-3.5" />
+                {t('post.pixelReset', 'Start again')}
+              </button>
+              <button type="button" data-postpixeldone onClick={() => finishPixel(true)} className={VUL}>
+                <Check className="h-4 w-4" />
+                {t('post.pixelKeep', 'Done')}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    )}
+
     {/* ── Taking something small out ─────────────────────────────────
  
         Carli, 7 October 2026: *"magic eraser"*. This grows the pixels

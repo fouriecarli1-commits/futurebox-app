@@ -249,6 +249,35 @@ try {
   }
   check('  and then it is transparent', landed);
   check('  and the glow has stopped', (await page.locator('[data-postworking="long"]').count()) === 0);
+
+  /* ── The pixel eraser: Restore paints the cut background back, Erase wipes ── */
+  const glass = (fx, fy) => page.evaluate(([x, y]) => {
+    const el = document.querySelector('[data-postcanvas]');
+    const d = el.getContext('2d').getImageData(Math.round(el.width * x), Math.round(el.height * y), 1, 1).data;
+    return [d[0], d[1], d[2]];
+  }, [fx, fy]);
+  const checker = (c) => (c[0] === 0xe7 && c[2] === 0xea) || (c[0] === 0xc8 && c[2] === 0xce);
+  check('the cut-out shows nothing behind at the side', checker(await glass(0.15, 0.5)), JSON.stringify(await glass(0.15, 0.5)));
+  await page.locator('[data-postpixelstart]').click();
+  await page.waitForTimeout(300);
+  check('the pixel eraser has Erase and Restore', (await page.locator('[data-postpixelmode]').count()) === 2);
+  const pad = await page.locator('[data-postpixelcanvas]').boundingBox();
+  const sweep = async (fy, from, to) => {
+    await page.mouse.move(pad.x + pad.width * from, pad.y + pad.height * fy);
+    await page.mouse.down();
+    await page.mouse.move(pad.x + pad.width * to, pad.y + pad.height * fy, { steps: 8 });
+    await page.mouse.up();
+  };
+  await page.locator('[data-postpixelmode="restore"]').click();
+  await sweep(0.5, 0.05, 0.25);
+  await page.locator('[data-postpixelmode="erase"]').click();
+  await sweep(0.5, 0.45, 0.55);
+  await page.locator('[data-postpixeldone]').click();
+  await page.waitForTimeout(800);
+  const restored = await glass(0.15, 0.5);
+  const erased = await glass(0.5, 0.5);
+  check('  and Restore paints back what the cut took', Math.abs(restored[0] - 0x7a) < 12 && Math.abs(restored[1] - 0x7a) < 12, JSON.stringify(restored));
+  check('  and Erase wipes what it went over', checker(erased), JSON.stringify(erased));
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);
 } finally {
