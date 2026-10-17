@@ -262,10 +262,11 @@ try {
 
   const clash = () => page.locator('[data-postclash]').count();
 
-  check('a square raises no warning about a caption bar',
-    (await clash()) === 0,
-    'nothing is printed over a feed post, and a warning drawn where it is'
-    + ' false teaches somebody to ignore it where it is true');
+  /* No warning sign at all, square or story. Carli, 17 October 2026: the
+     sign was "'n weird notification wat niemand hoef te sien nie" — the
+     words are moved clear in the saved file by themselves. */
+  check('no warning sign comes up over the photo on a square',
+    (await clash()) === 0);
 
   await bench('frame');
   const story = page.locator('button').filter({ hasText: /Story/ }).first();
@@ -273,10 +274,8 @@ try {
   await story.click();
   await page.waitForTimeout(700);
 
-  check('  and on a story, words at the bottom are flagged',
-    (await clash()) > 0,
-    'they land under the caption, the username and the sound bar — which is'
-    + ' something you otherwise find out after posting');
+  check('  nor on a story',
+    (await clash()) === 0);
 
   /* ── The price, before the press ─────────────────────────────────────── */
 
@@ -1692,7 +1691,14 @@ try {
     const clear = (await button.getAttribute('aria-pressed')) === 'true';
     if (clear === wanted) return;
     await button.click();
-    await page.waitForTimeout(400);
+    /* With a photograph, Make it transparent takes the photograph's own
+       background out under a three-second glow (17 October 2026), so the
+       button is waited on rather than a fixed pause. */
+    for (let waited = 0; waited < 60; waited += 1) {
+      await page.waitForTimeout(500);
+      if (((await button.getAttribute('aria-pressed')) === 'true') === wanted) break;
+    }
+    await page.waitForTimeout(300);
   };
 
   await behind(false);
@@ -1713,6 +1719,12 @@ try {
   /* The background off, which is the state that clashes. */
   await behind(true);
   await bench('save');
+  /* Taking the background off moves the file to PNG by itself (Carli, 17
+     October 2026: the squares must never come down with the picture). */
+  check('  and taking the background off moves the file to PNG by itself',
+    (await page.locator('[data-postkind="png"]').first().getAttribute('aria-pressed')) === 'true');
+  await page.locator('[data-postkind="jpg"]').first().click();
+  await page.waitForTimeout(300);
   check('  and JPG on a see-through post warns her before the press',
     (await page.locator('[data-postkindwarn]:visible').count()) > 0,
     'she took the background out, chose the one format that cannot hold it,'
@@ -2090,7 +2102,12 @@ try {
         + ' `coverFrom` did not come with it');
     }
   }
-  const faults = noise.filter((one) => /pageerror|console: /.test(one));
+  /* The background remover's own library tries to post usage numbers home,
+     and the Content-Security-Policy refuses it — which is the policy doing
+     its job, not the room failing. Since 17 October 2026 Make it transparent
+     runs the remover, so this walk now meets that refusal. */
+  const faults = noise.filter((one) => /pageerror|console: /.test(one))
+    .filter((one) => !/Refused to connect to 'https:\/\/odml\.pa\.googleapis\.com\//.test(one));
   check('and nothing throws while it is used', faults.length === 0,
     faults.slice(0, 3).join(' · '));
 

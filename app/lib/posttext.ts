@@ -425,25 +425,3 @@ export const atInside = (at: At): At => ({
   y: Math.min(1, Math.max(0, Number.isFinite(at.y) ? at.y : 0.5)),
 });
 
-/**
- * The rectangle a block of words really occupies, for the clash warning.
- *
- * `boxFor` is the box the type is FITTED in — how large it may be and where
- * it may wrap. Once she can drag a line anywhere, that is no longer where it
- * ends up, and the warning about the platform's furniture has to be about
- * where it ends up.
- *
- * The width is the fitting box's, because a line is wrapped to that; the
- * height and the middle come from where she put it.
- */
-export function boxAround(at: At, size: PostSize, zone: Zone = ALL): Box {
-  const fitted = boxFor('middle', size, zone);
-  const w = fitted.w;
-  const h = 0.18;
-  return {
-    x: Math.min(1 - w, Math.max(0, at.x - w / 2)),
-    y: Math.min(1 - h, Math.max(0, at.y - h / 2)),
-    w,
-    h,
-  };
-}

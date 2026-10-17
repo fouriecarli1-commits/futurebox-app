@@ -43,7 +43,7 @@ ok('  with a step back before it', /before\(t\('post\.stepMagic'/.test(room));
 
 /* ── 3. It is a tool she can find, and it offers choices ──────────────── */
 ok('Magic touch is one of the tools on the bar', /POST_MAGIC/.test(room) && /magic: magicBench/.test(room));
-ok('  a finger paints the part while it is open', /bench === 'magic' && picture\)[\s\S]{0,400}setMagicStrokes\([\s\S]{0,80}setMagicSpot\(put\)/.test(room));
+ok('  a finger paints the part while it is open', /bench === 'magic' && picture && brushOn\)[\s\S]{0,400}setMagicStrokes\([\s\S]{0,80}setMagicSpot\(put\)/.test(room));
 ok('  the paint, not a box, is what is laid back', /brushRect\(brush, wide, tall\)/.test(room) && /shape = brush/.test(room));
 ok('  and the options are better, change into, and take away',
   /data-postmagicbetter/.test(room) && /data-postmagicchange/.test(room) && /data-postmagicfill/.test(room));

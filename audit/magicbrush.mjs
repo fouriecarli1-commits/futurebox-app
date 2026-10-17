@@ -65,6 +65,8 @@ try {
     const d = el.getContext('2d').getImageData(Math.round(el.width * 0.02), Math.round(el.height * 0.02), 1, 1).data;
     return { r: d[0], g: d[1], b: d[2] };
   });
+  check('  and says the squares are not in the picture that is saved',
+    (await page.locator('[data-postcheckernote]').count()) === 1);
   check('  and a see-through post shows a light checkerboard, not a dark square',
     corner.r > 180 && corner.g > 180 && corner.b > 180, JSON.stringify(corner));
   await clear.click();
@@ -77,6 +79,12 @@ try {
     const x = c.getContext('2d');
     x.fillStyle = '#7a7a7a';
     x.fillRect(0, 0, 400, 400);
+    /* Something on a plain ground, so taking the background out has a
+       subject to keep. Red, so it is never read as the brush's green. */
+    x.fillStyle = '#c0392b';
+    x.beginPath();
+    x.arc(200, 200, 70, 0, Math.PI * 2);
+    x.fill();
     const blob = await new Promise((done) => c.toBlob(done, 'image/png'));
     const input = document.querySelector('[data-poststudio] input[type=file]') ?? document.querySelector('input[type=file]');
     if (!input || !blob) return false;
@@ -124,6 +132,64 @@ try {
   await page.locator('[data-postmagicclear]').click();
   await page.waitForTimeout(300);
   check('Start over takes the paint away', (await neonIn(0, 1)) === 0);
+
+  /* ── A real finger sweep, not a mouse ──
+     Carli, 17 October 2026: "Die brush werk nie met 'n vee nie. Dit is
+     basically 'n touch." The phone took a sweep for a scroll and cancelled
+     it, which a mouse never does — so this sweeps with a touch. */
+  const cdp = await page.context().newCDPSession(page);
+  const ty = box.y + box.height * 0.7;
+  const touch = (type, x) => cdp.send('Input.dispatchTouchEvent', {
+    type, touchPoints: type === 'touchEnd' ? [] : [{ x, y: ty, id: 1 }],
+  });
+  await touch('touchStart', box.x + box.width * 0.15);
+  for (let i = 1; i <= 14; i += 1) {
+    await touch('touchMove', box.x + box.width * (0.15 + i * 0.05));
+    await page.waitForTimeout(16);
+  }
+  await touch('touchEnd');
+  await page.waitForTimeout(400);
+  const swept = await neonIn(0.66, 0.74);
+  check('a finger SWEEP paints a line, not a dab', swept > 3000, `${swept} neon pixels along the sweep`);
+  await page.locator('[data-postmagicclear]').click();
+  await page.waitForTimeout(300);
+
+  /* ── The brush switch ── */
+  const brush = page.locator('[data-postmagicbrush]');
+  check('there is a Brush button, on to begin with', (await brush.getAttribute('aria-pressed')) === 'true');
+  await brush.click();
+  await page.waitForTimeout(200);
+  await page.mouse.move(box.x + box.width * 0.2, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.7, y, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  check('  and with it off, a drag paints nothing', (await neonIn(0, 1)) === 0);
+  await brush.click();
+  check('  and nothing painted, the bench says the AI changes the whole photo',
+    /whole photo|hele foto/i.test(await says.innerText()), await says.innerText());
+
+  /* ── A press is seen ── */
+  const glowed = await page.evaluate(() => new Promise((done) => {
+    const el = document.querySelector('[data-postmagicbrush]');
+    el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    requestAnimationFrame(() => done(el.classList.contains('fb-tap')));
+  }));
+  check('a pressed button glows after the finger lifts', glowed === true);
+
+  /* ── Make it transparent works on the photograph, under a glow ── */
+  await tool('pic');
+  await page.locator('[data-postclear]').first().click();
+  await page.waitForTimeout(600);
+  check('Make it transparent glows over the photo while it works',
+    (await page.locator('[data-postworking="long"]').count()) === 1);
+  let landed = false;
+  for (let i = 0; i < 40 && !landed; i += 1) {
+    await page.waitForTimeout(500);
+    landed = (await page.locator('[data-postclear]').first().getAttribute('aria-pressed')) === 'true';
+  }
+  check('  and then it is transparent', landed);
+  check('  and the glow has stopped', (await page.locator('[data-postworking="long"]').count()) === 0);
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);
 } finally {
@@ -136,4 +202,4 @@ if (problems.length) {
   problems.forEach((one) => console.error(`  · ${one}`));
   process.exit(1);
 }
-console.log('\ncheck:magicbrush — the magic touch is a brush, Adjust works with no photograph, and see-through looks see-through.');
+console.log('\ncheck:magicbrush — the magic touch is a brush a finger can sweep, Adjust works with no photograph, a press glows, and see-through looks see-through.');

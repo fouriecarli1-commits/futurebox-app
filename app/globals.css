@@ -1376,6 +1376,79 @@ body:has([data-cubed]) {
   }
 }
 
+/* ── A glow on every press, after the finger lifts ─────────────────────
+   Carli, 17 October 2026: a press must "'n beweging of glow maak". `:active`
+   above lasts only while the finger is down; `TapGlow.tsx` puts `fb-tap` on
+   whatever was pressed and this plays out over the next half second — a ring
+   in the theme's own colour, a small bounce, then nothing. An animation, so
+   it sits over the button's own shadow without replacing it for good; the
+   bounce is the `scale` property, not `transform`, so a button placed with
+   a translate or a rotate keeps its place. */
+@keyframes fb-tap {
+  0% {
+    box-shadow: 0 0 0 0 rgb(var(--fb-primary-500) / 0.75), 0 0 0 0 rgb(var(--fb-primary-500) / 0);
+    scale: 0.95;
+  }
+  35% {
+    box-shadow: 0 0 0 3px rgb(var(--fb-primary-500) / 0.6), 0 0 22px 6px rgb(var(--fb-primary-500) / 0.45);
+    scale: 1.02;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(var(--fb-primary-500) / 0), 0 0 0 0 rgb(var(--fb-primary-500) / 0);
+    scale: 1;
+  }
+}
+.fb-tap {
+  animation: fb-tap 480ms ease-out;
+}
+/* Asked for less motion: the glow, without the bounce. */
+@keyframes fb-tap-still {
+  35% {
+    box-shadow: 0 0 0 3px rgb(var(--fb-primary-500) / 0.6), 0 0 22px 6px rgb(var(--fb-primary-500) / 0.45);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fb-tap {
+    animation-name: fb-tap-still;
+  }
+}
+
+/* ── The photograph while a tool works on it ───────────────────────────
+   Carli, 17 October 2026: the screen should glow round what is being made
+   transparent "asof hy besig is om te werk", for about three seconds, and
+   then it is suddenly done. `fb-working` pulses the frame between the
+   theme's two colours with a light sweeping across it; `fb-workflash` is one
+   short pulse for a change made in a press (sharper, turned, bigger). */
+@keyframes fb-working {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgb(var(--fb-primary-500) / 0.75), 0 0 28px 8px rgb(var(--fb-primary-500) / 0.45),
+      inset 0 0 40px 10px rgb(var(--fb-primary-500) / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgb(var(--fb-secondary-500) / 0.8), 0 0 46px 14px rgb(var(--fb-secondary-500) / 0.5),
+      inset 0 0 72px 20px rgb(var(--fb-secondary-500) / 0.4);
+  }
+}
+@keyframes fb-worksweep {
+  from { background-position: -120% 0; }
+  to { background-position: 220% 0; }
+}
+.fb-working {
+  background-image: linear-gradient(100deg, transparent 20%, rgb(var(--fb-primary-500) / 0.28) 50%, transparent 80%);
+  background-size: 60% 100%;
+  background-repeat: no-repeat;
+  animation: fb-working 1.1s ease-in-out infinite, fb-worksweep 1.4s linear infinite;
+}
+@keyframes fb-workflash {
+  30% {
+    box-shadow: 0 0 0 2px rgb(var(--fb-primary-500) / 0.75), 0 0 30px 8px rgb(var(--fb-primary-500) / 0.5),
+      inset 0 0 50px 12px rgb(var(--fb-primary-500) / 0.35);
+  }
+}
+.fb-workflash {
+  animation: fb-workflash 650ms ease-out;
+}
+
 /* ══ The screen an installed app opens with ══════════════════════════════
 
    Carli, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy

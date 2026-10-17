@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, Circle, Columns2, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, Circle, Columns2, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -64,7 +64,7 @@ import {
 } from '../lib/textpick';
 import {
   BACKDROPS, LETTER_GAP, LINE_GAP, POST_SIZES, SPOTS, atInside, atOf, behindWords,
-  blockAt, boxAround, boxFor as boxOfSpot, clashes, fitText, measureWithGap, moveInside,
+  blockAt, boxFor as boxOfSpot, fitText, measureWithGap, moveInside,
   sizeById,
   type At, type Backdrop, type Measure, type PostSize, type SpotId,
 } from '../lib/posttext';
@@ -867,6 +867,22 @@ export default function PostStudio({
   /* What her finger painted over, stroke by stroke, as shares of the photograph. */
   const [magicStrokes, setMagicStrokes] = useState<Brush['strokes']>([]);
   const brushing = useRef(false);
+  /* The brush is a switch of its own: on, a finger paints; off, the photo can
+     be moved as usual. Carli, 17 October 2026: *"Daar moet dan 'n brush
+     button wees."* */
+  const [brushOn, setBrushOn] = useState(true);
+  /* The photograph as it was before a whole-photo change, for the
+     before-and-after line — only while the photo is the one that change made. */
+  const [compareFrom, setCompareFrom] = useState<{ readonly of: HTMLImageElement; readonly from: HTMLImageElement } | null>(null);
+  /* The glow over the photograph while a tool works on it — a long one for
+     taking the background out, a short flash for a one-press change. Carli,
+     17 October 2026: *"asof hy besig is om te werk, en na so 3 sekondes moet
+     die glow stop en dan is dit eweskielik transparent"*. */
+  const [working, setWorking] = useState<'long' | 'flash' | null>(null);
+  const flash = (): void => {
+    setWorking((was) => was ?? 'flash');
+    window.setTimeout(() => setWorking((was) => (was === 'flash' ? null : was)), 650);
+  };
   const [magicInto, setMagicInto] = useState('');
   const [magicBusy, setMagicBusy] = useState('');
   const [picked, setPicked] = useState<Pick | null>(null);
@@ -1160,7 +1176,6 @@ export default function PostStudio({
     const gone = window.setTimeout(() => setSaid(''), Math.min(9000, 3000 + said.length * 35));
     return () => window.clearTimeout(gone);
   }, [said]);
-  const [clashOpen, setClashOpen] = useState(false);
   /** Which bench is open on the bar. */
   const [bench, setBench] = useState<Bench>(null);
   /* Opened from All tools onto one of its panels — `lib/alltools.ts`. On
@@ -1260,8 +1275,10 @@ export default function PostStudio({
      nothing to compare, or when another tool is opened. */
   useEffect(() => {
     if (compare === null) return;
+    /* Or to a whole photograph the magic touch changed, while it is open. */
+    if (bench === 'magic' && compareFrom && compareFrom.of === picture) return;
     if (!touched(lookNow) || (bench !== 'tone' && bench !== 'filters')) setCompare(null);
-  }, [compare, lookNow, bench]);
+  }, [compare, lookNow, bench, compareFrom, picture]);
   /** A shape being carried or stretched by the thumb. */
   const markHeld = useRef<{ id: string; dx: number; dy: number; resize: boolean } | null>(null);
   const changeMark = (id: string, how: Partial<Mark>): void =>
@@ -1729,13 +1746,16 @@ export default function PostStudio({
          wees wat oor die prent slide om te wys hoe dit gelyk het."* Left
          of the line, the photograph as it came; right of it, as it is
          now. On the glass only — the file is always the whole of it. */
-      if (guides && compare !== null && !toneAll && touched(look)) {
+      /* The before side: the photograph without its look, or — after the
+         AI changed the whole photograph — the photograph it was. */
+      const was = compareFrom && compareFrom.of === picture ? compareFrom.from : null;
+      if (guides && compare !== null && !toneAll && (touched(look) || was)) {
         ctx.save();
         ctx.beginPath();
         ctx.rect(0, 0, size.width * compare, size.height);
         ctx.clip();
         ctx.globalAlpha = photoAlpha;
-        ctx.drawImage(picture, at.left, at.top, at.width, at.height);
+        ctx.drawImage(was ?? picture, at.left, at.top, at.width, at.height);
         ctx.restore();
       }
     }
@@ -2350,7 +2370,7 @@ export default function PostStudio({
        line — the arithmetic was fine — and the glass stayed empty, because
        nothing had repainted since the boxes arrived. */
   }, [facesIn, size, picture, words, back, crop, look, cropBox, traced,
-    picking, found, picked,
+    picking, found, picked, compareFrom,
     /* The shapes and the one picked: drawn by `draw`, so they repaint it.
        A shape dragged with these missing moved in the state and stayed put
        on the glass until something else happened to repaint. */
@@ -2515,7 +2535,7 @@ export default function PostStudio({
     }
     /* The magic touch is a mode too: while its bench is out, a finger
        paints over the part the AI will work on, and does nothing else. */
-    if (bench === 'magic' && picture) {
+    if (bench === 'magic' && picture && brushOn) {
       const put = shareAt(event);
       if (put && put.x >= 0 && put.x <= 1 && put.y >= 0 && put.y <= 1) {
         brushing.current = true;
@@ -2692,11 +2712,18 @@ export default function PostStudio({
   const drag = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     /* The brush, while her finger is down on the magic touch. */
     if (brushing.current) {
-      const put = shareAt(event);
-      if (!put) return;
-      const p = { x: Math.min(1, Math.max(0, put.x)), y: Math.min(1, Math.max(0, put.y)) };
-      setMagicStrokes((was) => (was.length ? [...was.slice(0, -1), [...was[was.length - 1], p]] : [[p]]));
-      setMagicSpot(p);
+      /* Every point the finger went through, not only the ones a frame
+         happened to catch — a quick sweep is a line, not a row of dabs. */
+      const native = event.nativeEvent;
+      const passes = typeof native.getCoalescedEvents === 'function' ? native.getCoalescedEvents() : [];
+      const points: { x: number; y: number }[] = [];
+      for (const one of passes.length ? passes : [native]) {
+        const put = shareAt({ ...event, clientX: one.clientX, clientY: one.clientY } as React.PointerEvent<HTMLCanvasElement>);
+        if (put) points.push({ x: Math.min(1, Math.max(0, put.x)), y: Math.min(1, Math.max(0, put.y)) });
+      }
+      if (!points.length) return;
+      setMagicStrokes((was) => (was.length ? [...was.slice(0, -1), [...was[was.length - 1], ...points]] : [points]));
+      setMagicSpot(points[points.length - 1]);
       return;
     }
     /* A grid photo being moved about inside its frame: the same `moveBy`
@@ -2826,12 +2853,6 @@ export default function PostStudio({
     }
   };
 
-  /** Whether anything she has written lands under the platform's furniture. */
-  const covered = useMemo(
-    () => words.some((one) => one.text.trim()
-      && clashes(boxAround(one.at ?? atOf(one.spot), size), size)),
-    [words, size],
-  );
 
   /**
    * A picture off her phone, through the guard that reads pixels.
@@ -3451,6 +3472,7 @@ export default function PostStudio({
     what: string,
     made: HTMLCanvasElement | null,
     failed: string,
+    done = '',
   ): void => {
     if (!made) {
       setSaid(failed);
@@ -3465,7 +3487,8 @@ export default function PostStudio({
            every one of these three makes a new one. Changing the cut edge
            afterwards would put the old cut on the new picture. */
         lastMask.current = null;
-        setSaid('');
+        setSaid(done);
+        flash();
       },
       () => setSaid(failed),
     );
@@ -3893,6 +3916,7 @@ export default function PostStudio({
       t('post.stepSharpen', 'sharpening it'),
       sharpened(picture, how),
       t('post.sharpenFailed', 'That could not be sharpened.'),
+      t('post.sharpenDone', 'Sharper. Press Put it back to see it as it was.'),
     );
   };
 
@@ -4136,15 +4160,15 @@ export default function PostStudio({
    * background is from the edge of the frame and takes that away, which is
    * why it works on a drawing and the other remover does not.
    */
-  const flatGround = (afterNobody: boolean): void => {
-    if (!picture) return;
+  const flatGround = (afterNobody: boolean): boolean => {
+    if (!picture) return false;
     const wide = picture.naturalWidth || picture.width;
     const tall = picture.naturalHeight || picture.height;
     const sheet = document.createElement('canvas');
     sheet.width = wide;
     sheet.height = tall;
     const ctx = sheet.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return;
+    if (!ctx) return false;
     ctx.drawImage(picture, 0, 0);
     const was = ctx.getImageData(0, 0, wide, tall);
     const done = takeGround(
@@ -4156,14 +4180,14 @@ export default function PostStudio({
        picture is left exactly as it was, and she is told why. */
     if (afterNobody && (done.grounds.length === 0 || done.removed < 0.004 || done.removed > NEARLY_ALL)) {
       setSaid(t('post.cutNothingToKeep', 'No person found, and no plain background round anything either \u2014 so nothing was taken out. Use Cut out a shape and draw round what you want to keep.'));
-      return;
+      return false;
     }
     if (done.grounds.length === 0 || done.removed < 0.004) {
       setSaid(t(
         'post.groundNone',
         'There is no plain background in this picture to take away. This one looks at the edges of the frame and removes what it finds there — it works on a logo, a drawing, or something photographed on a plain sheet. For a person, use Remove the background above.',
       ));
-      return;
+      return false;
     }
     was.data.set(done.pixels.data);
     ctx.putImageData(was, 0, 0);
@@ -4179,9 +4203,10 @@ export default function PostStudio({
         )
         : t('post.cutDoneShort', 'Background removed. Save as PNG to keep it see-through.'));
     }, () => setSaid(t('post.groundFailed', 'That background could not be taken out.')));
+    return true;
   };
 
-  const takeFlatGround = (): void => flatGround(false);
+  const takeFlatGround = (): void => { flatGround(false); };
 
   /**
    * Paint what is left after the background came off.
@@ -4523,7 +4548,15 @@ export default function PostStudio({
     const tall = picture.naturalHeight || picture.height;
     let rect: Rect;
     let shape: 'box' | Brush;
-    if (thing) {
+    /* Nothing painted and no thing picked: the whole photograph. Carli, 17
+       October 2026: *"change it moet 'n object kan prompt, of die tema van
+       die hele foto verander (dan moet daar ook 'n ruler wees vir before en
+       after)"*. Taking a part away needs a part, so that one still asks. */
+    const whole = !thing && magicStrokes.length === 0 && how !== 'fill';
+    if (whole) {
+      rect = { left: 0, top: 0, width: wide, height: tall };
+      shape = 'box';
+    } else if (thing) {
       rect = padded({
         left: Math.round(thing.x * wide),
         top: Math.round(thing.y * tall),
@@ -4543,11 +4576,13 @@ export default function PostStudio({
       setSaid(t('post.magicSayWhat', 'Say what it should become first.'));
       return;
     }
-    const words = how === 'better'
-      ? MAGIC_ASKS.better
-      : how === 'fill'
-        ? MAGIC_ASKS.fill
-        : thing ? MAGIC_ASKS.replace(thing.text || 'thing', into) : MAGIC_ASKS.change(into);
+    const words = whole
+      ? (how === 'better' ? MAGIC_ASKS.wholeBetter : MAGIC_ASKS.theme(into))
+      : how === 'better'
+        ? MAGIC_ASKS.better
+        : how === 'fill'
+          ? MAGIC_ASKS.fill
+          : thing ? MAGIC_ASKS.replace(thing.text || 'thing', into) : MAGIC_ASKS.change(into);
     const from = packLed(cropOf(picture, rect), []);
     if (!from.length) {
       setSaid(t('post.askTooBig', 'Those pictures are too big to send together. Take one out, or use a smaller one.'));
@@ -4575,11 +4610,26 @@ export default function PostStudio({
       const img = new Image();
       img.onload = () => {
         URL.revokeObjectURL(came);
-        const out = laidIn(picture, wide, tall, img, rect, shape);
+        /* The whole photograph is replaced, at its own size; a part is laid
+           back into its place with a soft edge. */
+        let out: HTMLCanvasElement;
+        if (whole) {
+          out = document.createElement('canvas');
+          out.width = wide;
+          out.height = tall;
+          out.getContext('2d')?.drawImage(img, 0, 0, wide, tall);
+        } else {
+          out = laidIn(picture, wide, tall, img, rect, shape);
+        }
         before(t('post.stepMagic', 'a magic touch'));
         asPicture(out, (made) => {
           setWhole(picture);
           setPicture(made);
+          if (whole) {
+            setCompareFrom({ of: made, from: picture });
+            setToneAll(false);
+            setCompare(0.5);
+          }
           setMagicSpot(null);
           setMagicStrokes([]);
           if (thing) { setFound(null); setPicked(null); setPicking(false); }
@@ -4609,7 +4659,7 @@ export default function PostStudio({
           data-postmagicinto
           placeholder={thing
             ? t('post.magicIntoThing', 'Change it into… a red sports car')
-            : t('post.magicInto', 'Change it into… a sunflower')}
+            : t('post.magicInto', 'A sunflower… or a theme for the whole photo')}
           className="w-full rounded-lg border border-zinc-700 bg-black/40 py-2 pl-3 pr-11 text-[13px] text-zinc-100 placeholder:text-zinc-500"
         />
         <SpeakButton onHeard={(said) => setMagicInto((was) => withSaid(was, said))} className="absolute right-1 top-1/2 -translate-y-1/2" />
@@ -4794,14 +4844,51 @@ export default function PostStudio({
    * The preview then shows the checkerboard, which has been there all along
    * and is the honest picture of nothing behind it.
    */
-  const nothingBehind = (): void => setBack(null);
+  /**
+   * Make it transparent: take the photograph's own background out, under a
+   * glow for three seconds, then nothing behind it at all.
+   *
+   * Carli, 17 October 2026, with her photograph filling the frame: *"Niks
+   * gebeur wanneer ek op transparent kliek nie."* The button only took off
+   * the colour BEHIND the photograph, and hers covered all of it. What she
+   * means by transparent is the background IN the photograph, so that is
+   * what it does now; on a picture already cut, or with no photograph, it is
+   * the colour behind that goes.
+   */
+  const makeTransparent = async (): Promise<void> => {
+    if (!picture || lastMask.current?.made === picture) {
+      nothingBehind();
+      flash();
+      return;
+    }
+    setWorking('long');
+    try {
+      /* Nothing in the photograph could be cut: the colour behind it still
+         goes, which is what the button promised at the least. */
+      if (!(await cutBackground(Date.now() + 3000))) nothingBehind();
+    } finally {
+      setWorking(null);
+    }
+  };
 
-  const cutBackground = async (): Promise<void> => {
-    if (!picture || cutting !== null) return;
+  const nothingBehind = (): void => {
+    setBack(null);
+    /* And a file that can hold it. Carli, 17 October 2026: *"Die skaakbord
+       moet net nie saam aflaai en mens dit in die prent sien nie."* The
+       squares are never in the file (`draw(…, false)`); a JPG would put a
+       solid colour there instead, so the format moves to PNG with it. */
+    if (!holdsClear(kind, true)) setKind('png');
+  };
+
+  const cutBackground = async (holdUntil = 0): Promise<boolean> => {
+    if (!picture || cutting !== null) return false;
     setSaid('');
     setCutting(0);
     try {
       const cut = await cutOut(picture, (part) => setCutting(part), edgeOf(edge));
+      /* The answer waits for the glow to finish, so it lands all at once. */
+      const left = holdUntil - Date.now();
+      if (left > 0) await new Promise((done) => { window.setTimeout(done, left); });
       if (!cut.ok) {
         /* One button for both kinds of picture (Carli, 14 October 2026:
            "Die transparency en background remover werk alweer nie reg
@@ -4809,9 +4896,9 @@ export default function PostStudio({
            of a person, which takes only what matches the edge of the frame.
            So the person model goes first, and only when it finds nobody —
            a logo, a drawing, a product on a sheet — does the plain one run. */
-        if (cut.why === 'nobody') { flatGround(true); return; }
+        if (cut.why === 'nobody') return flatGround(true);
         setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.'));
-        return;
+        return false;
       }
       lastMask.current = { mask: cut.mask, of: picture };
       before(t('post.stepCut', 'taking the background out'));
@@ -4822,6 +4909,7 @@ export default function PostStudio({
         nothingBehind();
         setSaid(t('post.cutDoneShort', 'Background removed. Save as PNG to keep it see-through.'));
       }, () => setSaid(t('post.cutFailed', 'The background could not be taken out of that picture.')));
+      return true;
     } finally {
       setCutting(null);
     }
@@ -5321,13 +5409,19 @@ export default function PostStudio({
         type="button"
         data-postclear
         aria-pressed={back === null}
-        onClick={() => setBack(back === null ? lastColour : null)}
+        disabled={working === 'long'}
+        onClick={() => { if (back === null) setBack(lastColour); else void makeTransparent(); }}
         className={back === null ? VUL.replace('w-full ', '') : LEEG}
       >
         {back === null
           ? t('post.clearOn', 'Transparent \u2014 nothing behind it')
           : t('post.clearOff', 'Make it transparent')}
       </button>
+      {back === null && (
+        <p data-postcheckernote className="col-span-2 text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
+          {t('post.checkerOnlyHere', 'The squares only show you it is see-through. They are not in the picture you save.')}
+        </p>
+      )}
     </div>
 
     {/* ── A photograph given a little motion ─────────────────────────
@@ -5629,7 +5723,10 @@ export default function PostStudio({
           type="button"
           data-postcutgo
           disabled={cutting !== null}
-          onClick={() => void cutBackground()}
+          onClick={() => {
+            setWorking('long');
+            void cutBackground(Date.now() + 3000).finally(() => setWorking(null));
+          }}
           className={`${LEEG} disabled:opacity-40`}
         >
           {cutting !== null
@@ -7135,8 +7232,18 @@ export default function PostStudio({
           <p className="text-[13px] font-semibold" style={{ color: magicStrokes.length ? '#39ff14' : INK }} data-postmagicsays>
             {magicStrokes.length
               ? t('post.magicReady', 'That part is painted. Paint more, or choose what the AI does.')
-              : t('post.magicPaint', 'Paint over the part of the photo to fix.')}
+              : t('post.magicPaintOrAll', 'Brush over a part to change only that — or paint nothing, and the AI changes the whole photo.')}
           </p>
+          <button
+            type="button"
+            data-postmagicbrush
+            aria-pressed={brushOn}
+            onClick={() => setBrushOn((was) => !was)}
+            className={`${LEEG} ${brushOn ? GEKIES : ''}`}
+          >
+            <Paintbrush className="h-4 w-4" />
+            {brushOn ? t('post.magicBrushOn', 'Brush on — sweep over the photo') : t('post.magicBrushOff', 'Brush')}
+          </button>
           <label className="block space-y-1">
             <span className="text-[11px]" style={{ color: INK_DIM }}>{t('post.magicSize', 'Brush size')}</span>
             <input
@@ -8340,7 +8447,12 @@ export default function PostStudio({
           /* Only while there is something to pan, crop, trace or move: a
              permanent `touch-action: none` is a dead zone in a page that
              scrolls, which reads as the app being frozen. */
-          touchAction: movable || cropBox || traced || words.length > 0 || marks.length > 0 || cells.length > 0 ? 'none' : 'auto',
+          /* And while the brush is out: with `auto` the phone took a sweep
+             of the finger for a scroll and cancelled it after the first
+             touch, so the brush left dabs (Carli, 17 October 2026: "Die
+             brush werk nie met 'n vee nie"). */
+          touchAction: movable || cropBox || traced || words.length > 0 || marks.length > 0 || cells.length > 0
+            || (bench === 'magic' && picture && brushOn) ? 'none' : 'auto',
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
@@ -8348,6 +8460,19 @@ export default function PostStudio({
           Dragged sideways: left of it the photograph as it came, right of
           it as it is now (drawn by `draw`). Placed from the canvas's own
           box, so it sits on the picture wherever the picture sits. */}
+      {working && canvas.current && (
+        <div
+          data-postworking={working}
+          aria-hidden
+          className={`pointer-events-none absolute z-10 ${working === 'long' ? 'fb-working' : 'fb-workflash'}`}
+          style={{
+            left: canvas.current.offsetLeft,
+            top: canvas.current.offsetTop,
+            width: canvas.current.offsetWidth,
+            height: canvas.current.offsetHeight,
+          }}
+        />
+      )}
       {compare !== null && canvas.current && (
         <CompareLine
           mark="postcompare"
@@ -8546,21 +8671,14 @@ export default function PostStudio({
           foot, and Grab's answers ("Tap one to lift it out", or why the
           engine said no) were printed behind it. Carli, 15 October 2026:
           "Die grab funksie werk ook nie." */}
-      {(said || covered) && (
+      {said && (
         <div className={`pointer-events-none absolute inset-x-2 z-30 flex flex-col items-center gap-1 ${panelUp ? 'top-14' : 'bottom-2'}`}>
-          {/* A small sign, not a paragraph: the shaded bands on the photo
-              already show where; a tap says why. */}
-          {covered && (
-            <button
-              type="button"
-              data-postclash
-              onClick={() => setClashOpen((was) => !was)}
-              aria-label={t('post.covered', 'Some of your words are where the app prints its own caption and buttons. They are moved clear in the saved file; the shaded bands show where.')}
-              className="pointer-events-auto rounded-full border border-amber-400/70 bg-black/60 px-2.5 py-1 text-[12px] font-bold leading-snug text-amber-300"
-            >
-              {clashOpen ? t('post.coveredShort', 'Words under the app’s buttons — moved clear when saved') : '⚠'}
-            </button>
-          )}
+          {/* No warning sign for words under a platform's bars. Carli, 17
+              October 2026: *"Daai groen sirkel wat elke keer by die photo
+              app op kom daar onder moet weg gaan. Dit is 'n weird
+              notification wat niemand hoef te sien nie."* The words are moved
+              clear in the saved file by themselves, and the shaded bands on
+              the glass already show where the bars are. */}
           {said && <p data-postsaid className="pointer-events-auto rounded-xl bg-black/70 px-3 py-1.5 text-[12px] leading-snug text-emerald-300 backdrop-blur">{said}</p>}
         </div>
       )}

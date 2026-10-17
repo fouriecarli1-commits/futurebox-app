@@ -101,7 +101,14 @@ export function turned(
  * already more than anybody wants; the three rungs below are what the room
  * offers, and the names are what they do rather than numbers.
  */
-export const SHARPEN = { gentle: 0.5, normal: 0.9, strong: 1.5 } as const;
+/*
+ * Carli, 17 October 2026, of the three buttons: *"maak geen aksie wanneer mens
+ * op die kliek nie."* They worked and could not be seen working — a blur of a
+ * quarter of a percent finds only grain, and grain sharpened on a phone screen
+ * is invisible. The radius is wider now, so it finds the edges a person sees
+ * (an eye, a hairline), and the rungs are a step apart that shows.
+ */
+export const SHARPEN = { gentle: 0.7, normal: 1.3, strong: 2 } as const;
 export type Sharpness = keyof typeof SHARPEN;
 
 /**
@@ -140,7 +147,7 @@ export function sharpened(
   soft.height = of.height;
   const blur = soft.getContext('2d', { willReadFrequently: true });
   if (!blur) return null;
-  blur.filter = `blur(${Math.max(1, Math.min(of.width, of.height) * 0.0025)}px)`;
+  blur.filter = `blur(${Math.max(1.5, Math.min(of.width, of.height) * 0.005)}px)`;
   blur.drawImage(picture, 0, 0, of.width, of.height);
   blur.filter = 'none';
 

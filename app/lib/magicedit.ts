@@ -35,6 +35,11 @@ export const MAGIC_ASKS = {
     `Replace the ${what} in this picture with ${into}. Same position, size, light and perspective; keep everything around it exactly as it is.`,
   fill:
     'Fill this part of the photograph naturally with what would be behind it, matching the surroundings. Keep the edges of the picture as they are.',
+  /* The whole photograph, when nothing is painted. */
+  wholeBetter:
+    'Improve this whole photograph: sharper detail, cleaner, better light and colour. Keep exactly what is in it and where; do not add or remove anything.',
+  theme: (into: string): string =>
+    `Restyle this whole photograph as: ${into}. Keep every person, their face, pose and expression, and the composition exactly as they are; change the style, setting, clothing and mood to match.`,
 } as const;
 
 /**

@@ -9,6 +9,7 @@ import BlankGuard from './components/BlankGuard';
 import Blankscreen from './components/Blankscreen';
 import LaunchMark from './components/LaunchMark';
 import SpaceFull from './components/SpaceFull';
+import TapGlow from './components/TapGlow';
 import { startupImages } from './lib/splash';
 import { SITE_URL } from './lib/brand';
 
@@ -176,6 +177,8 @@ export default function RootLayout({
               has nothing else to show. It takes itself away with a CSS
               animation and never covers a tap — see the component. */}
           <LaunchMark />
+          {/* A glow on every press that outlives the finger. */}
+          <TapGlow />
           {children}
           {/* Says so when an upload was refused because the plan's cloud
               space is full — see `lib/space.ts`. */}
