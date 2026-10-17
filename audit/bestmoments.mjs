@@ -131,7 +131,7 @@ try {
     }, made);
     const blocks2 = await page.evaluate(() => Array.from(document.querySelectorAll('[data-editorblock]')).map((el) => Number(el.getAttribute('data-editorfrom'))));
     if (heard && onsets.length === BURSTS.length) {
-      check('  each burst caught from just before it starts', onsets.every((t) => blocks2.some((f) => f <= t + 0.1 && f >= t - 1.2)),
+      check('  each burst caught from just before it starts', onsets.every((t) => blocks2.some((f) => f <= t + 0.1 && f >= t - 0.6)),
         `bursts at ${onsets.map((t) => t.toFixed(2)).join()} · moments from ${blocks2.join()}`);
     } else if (heard) {
       console.log(`  --  the recorded bursts could not be read back (${onsets.length}); their timing is not checked.`);

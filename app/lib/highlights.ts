@@ -91,7 +91,14 @@ export function bestMoments(envelope: Float32Array, from: number, to: number, se
     let seen = 0;
     for (let i = Math.max(first, start - back); i < start; i += 1) { before += envelope[i]; seen += 1; }
     before = seen ? before / seen / loudest : 0;
-    scored.push({ at: start, score: full * 0.6 + Math.max(0, full - before) * 1.4 });
+    /* How loud its first half second is. Without it, every window that holds
+       the whole of a moment scores the same, the earliest wins the tie, and
+       a reel opens a second of nothing before each moment. */
+    let opening = 0;
+    const head = Math.min(width, Math.round(0.5 / TENTH));
+    for (let i = start; i < start + head; i += 1) opening += envelope[i];
+    opening /= head * loudest;
+    scored.push({ at: start, score: full * 0.6 + Math.max(0, full - before) * 1.4 + opening * 0.3 });
   }
   scored.sort((a, b) => b.score - a.score || a.at - b.at);
 
@@ -111,7 +118,10 @@ export function bestMoments(envelope: Float32Array, from: number, to: number, se
   let floor = first;
   taken.forEach((one, k) => {
     const hi = k < taken.length - 1 ? taken[k + 1].at : last;
-    const start = quietest(envelope, Math.max(floor, one.at - 5), one.at + 2);
+    /* The breath just before it: the quietest tenth in the half second
+       before the window, the latest of equals, so the cut lands as close
+       to the moment as the quiet allows. */
+    const start = quietest(envelope, Math.max(floor, one.at - 5), one.at, true);
     const end = Math.max(start + 10, quietest(envelope, Math.max(start + 10, one.at + width - 2), Math.min(hi, one.at + width + 5)));
     floor = end;
     out.push({
@@ -134,13 +144,13 @@ export function evenly(from: number, to: number, each: number, count: number): M
   });
 }
 
-/** The reading with the least sound in `[lo, hi]`, the earliest of equals. */
-function quietest(envelope: Float32Array, lo: number, hi: number): number {
+/** The reading with the least sound in `[lo, hi]`: the earliest of equals, or the latest when asked. */
+function quietest(envelope: Float32Array, lo: number, hi: number, latest = false): number {
   if (hi <= lo) return lo;
   const a = Math.max(0, lo);
   const b = Math.min(envelope.length - 1, hi);
   let at = a;
-  for (let i = a; i <= b; i += 1) if (envelope[i] < envelope[at]) at = i;
+  for (let i = a; i <= b; i += 1) if (latest ? envelope[i] <= envelope[at] : envelope[i] < envelope[at]) at = i;
   return at;
 }
 

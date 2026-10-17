@@ -34,7 +34,7 @@ ok('the bursts are the moments taken', bursts.every(([at, long]) => thirty.some(
 ok('  the loudest first in strength', thirty.find((m) => m.from <= 81 && m.to >= 81)?.score === 1);
 ok('  and each burst is caught from just before it starts, not from its middle', bursts.every(([at, long]) => {
   const first = fifteen.filter((m) => hits(m) && m.from < at + long && at < m.to)[0];
-  return first && first.from <= at && first.from >= at - 0.6;
+  return first && first.from <= at && first.from >= at - 0.25;
 }), JSON.stringify(fifteen));
 ok('they come back in the order they happened', thirty.every((m, k) => k === 0 || m.from >= thirty[k - 1].to));
 ok('  none overlaps another or leaves the shot', thirty.every((m) => m.from >= 0 && m.to <= SECONDS && m.to - m.from >= 1));
