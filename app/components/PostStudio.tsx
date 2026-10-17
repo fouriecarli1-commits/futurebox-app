@@ -48,7 +48,7 @@ import {
   Aperture,
   ArrowLeft,
   Bookmark,
-  Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
+  Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
@@ -82,6 +82,7 @@ import Darkroom from './Darkroom';
 import VectorStudio from './VectorStudio';
 import PosterMaker from './PosterMaker';
 import ProductShots from './ProductShots';
+import TryOn from './TryOn';
 import type { VectorDoc } from '../lib/vectordoc';
 import StudioTemplatesModal from './StudioTemplatesModal';
 import { type StudioTemplateItem } from '../lib/studiotemplates';
@@ -1236,6 +1237,8 @@ export default function PostStudio({
   const [poster, setPoster] = useState(false);
   /* Product photos, over the room — `ProductShots.tsx`. */
   const [product, setProduct] = useState(false);
+  /* Clothes on a model, over the room — `TryOn.tsx`. */
+  const [tryOn, setTryOn] = useState(false);
   /* Vector art draws once its picture has loaded; this draws the post again then. */
   const [artTick, setArtTick] = useState(0);
   useEffect(() => {
@@ -1253,6 +1256,7 @@ export default function PostStudio({
       else if (panel === 'vector') setVector({ editing: null });
       else if (panel === 'poster') setPoster(true);
       else if (panel === 'product') setProduct(true);
+      else if (panel === 'tryon') setTryOn(true);
       else if (panel) setBench(panel as Bench);
     };
     openAsked();
@@ -5890,6 +5894,18 @@ export default function PostStudio({
         <ShoppingBag className="h-3.5 w-3.5" />
         {t('post.productRoom', 'Product photos')}
       </button>
+      {/* And clothes on a model. Carli, 16 October 2026: *"Show clothes on
+          models."* */}
+      <button
+        type="button"
+        data-posttryon
+        onClick={() => setTryOn(true)}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold text-white shadow-lg"
+        style={{ background: 'linear-gradient(120deg, #0ea5e9, #6366f1 55%, #c026d3)', boxShadow: '0 0 18px rgba(99,102,241,0.4)' }}
+      >
+        <Shirt className="h-3.5 w-3.5" />
+        {t('post.tryOnRoom', 'Clothes on a model')}
+      </button>
       {picture && (
         <button
           type="button"
@@ -10237,6 +10253,17 @@ export default function PostStudio({
             madeWhole(img, shape, t('post.stepPoster', 'making a poster'));
             setPoster(false);
             setSaid(t('post.posterDone', 'Your poster is on the post. Change anything with the tools below, or press Undo to take it back.'));
+          }}
+        />
+      )}
+      {tryOn && (
+        <TryOn
+          photo={picture}
+          onClose={() => setTryOn(false)}
+          onMade={(img, shape) => {
+            madeWhole(img, shape, t('post.stepTryOn', 'putting the clothes on a model'));
+            setTryOn(false);
+            setSaid(t('post.tryOnDone', 'The model is wearing it, on the post. Press Undo to go back to the photo you had.'));
           }}
         />
       )}

@@ -33,7 +33,7 @@ export type ToolIcon =
   | 'titles' | 'effects' | 'generators' | 'enhance' | 'audiofx' | 'photo' | 'templates' | 'grid'
   | 'filters' | 'adjust' | 'cutout' | 'text' | 'grab' | 'layers' | 'shapes' | 'studio' | 'booth'
   | 'podcast' | 'sound' | 'hooks' | 'live' | 'channel' | 'collab'
-  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit' | 'chart' | 'vector' | 'poster' | 'product';
+  | 'pdf' | 'pages' | 'combine' | 'sign' | 'redact' | 'lock' | 'form' | 'convert' | 'comment' | 'pdfedit' | 'chart' | 'vector' | 'poster' | 'product' | 'tryon';
 
 export interface Tool {
   readonly id: string;
@@ -58,6 +58,7 @@ export const TOOLS: readonly Tool[] = [
   { id: 'magic', group: 'ai', en: 'Magic touch', af: 'Towerraak', room: 'photo', panel: 'magic', icon: 'wand', paid: true },
   { id: 'poster', group: 'ai', en: 'AI poster', af: 'KI-plakkaat', room: 'photo', panel: 'poster', icon: 'poster', paid: true },
   { id: 'product', group: 'ai', en: 'Product photos', af: 'Produkfoto’s', room: 'photo', panel: 'product', icon: 'product', paid: true },
+  { id: 'tryon', group: 'ai', en: 'Clothes on a model', af: 'Klere op ’n model', room: 'photo', panel: 'tryon', icon: 'tryon', paid: true },
   { id: 'albumart', group: 'ai', en: 'Album art', af: 'Albumkuns', room: 'albumart', icon: 'art', paid: true },
   { id: 'ads', group: 'ai', en: 'Adverts', af: 'Advertensies', room: 'campaign', icon: 'ads', paid: true },
   { id: 'voice', group: 'ai', en: 'Your voice', af: 'Jou stem', room: 'voice_studio', icon: 'voice', paid: true },

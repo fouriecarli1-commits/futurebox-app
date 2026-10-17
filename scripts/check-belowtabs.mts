@@ -231,6 +231,8 @@ const KNOWN: readonly string[] = [
   'app/components/PosterMaker.tsx',
   /* Product photos, 17 October 2026, over the photo editor. */
   'app/components/ProductShots.tsx',
+  /* Clothes on a model, 17 October 2026, over the photo editor. */
+  'app/components/TryOn.tsx',
   'app/components/StudioTemplatesModal.tsx',
   'app/components/FutureInsightsHub.tsx',
   'app/components/ArtMarket.tsx',
