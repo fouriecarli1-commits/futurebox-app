@@ -678,6 +678,23 @@ interface AiPreset {
   fx: Fx;
 }
 
+/** A preset's EQ as a small curve: low, the mid at its frequency, high. */
+function EqCurve({ eq }: { readonly eq?: { readonly low: number; readonly mid: number; readonly midHz: number; readonly high: number } }) {
+  const y = (db: number): number => 14 - Math.max(-12, Math.min(12, db)) * 1.0;
+  const lo = y(eq?.low ?? 0);
+  const mid = y(eq?.mid ?? 0);
+  const hi = y(eq?.high ?? 0);
+  /* Where the mid sits, on a log scale from 100 Hz to 10 kHz. */
+  const mx = 10 + 80 * Math.max(0, Math.min(1, Math.log10((eq?.midHz ?? 1000) / 100) / 2));
+  return (
+    <svg aria-hidden data-eqcurve viewBox="0 0 100 28" className="mb-0.5 h-7 w-full" preserveAspectRatio="none">
+      <line x1="0" y1="14" x2="100" y2="14" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      <path d={`M0 ${lo} C 10 ${lo}, ${mx - 20} ${mid}, ${mx} ${mid} S 90 ${hi}, 100 ${hi}`} fill="none" stroke="#34d399" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+      <path d={`M0 ${lo} C 10 ${lo}, ${mx - 20} ${mid}, ${mx} ${mid} S 90 ${hi}, 100 ${hi} L100 28 L0 28 Z`} fill="rgba(52,211,153,0.15)" />
+    </svg>
+  );
+}
+
 const AI_PRESETS: readonly AiPreset[] = [
   {
     id: 'vocal',
@@ -848,8 +865,11 @@ export default function BoothFx({
               key={preset.id}
               type="button"
               onClick={() => { onWhole?.('preset'); onChange({ ...preset.fx }); }}
-              className="flex h-[44px] min-w-0 flex-col items-start justify-center overflow-hidden rounded-xl border border-white/10 bg-zinc-900/60 px-2 py-1 text-left transition-all hover:border-emerald-500/50 hover:bg-emerald-950/30 active:scale-[0.98]"
+              data-tidycard=""
+              className="flex min-h-[44px] min-w-0 flex-col items-start justify-center overflow-hidden rounded-xl border border-white/10 bg-zinc-900/60 px-2 py-1 text-left transition-all hover:border-emerald-500/50 hover:bg-emerald-950/30 active:scale-[0.98]"
             >
+              {/* What it does to the sound, drawn: its EQ as a curve. */}
+              <EqCurve eq={preset.fx.eq} />
               <span className="flex items-center gap-1.5 text-xs font-black text-zinc-100">
                 <span>{preset.icon}</span>
                 <span className="truncate">{t(preset.nameKey, preset.nameFallback)}</span>

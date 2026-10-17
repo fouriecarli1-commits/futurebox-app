@@ -39,6 +39,7 @@ import { accessToken } from '../lib/cloud';
 import { LICENCES, mayBeShared, SHAREABLE, type LicenceId } from '../lib/amplicence';
 import { AMP_MAX_BYTES, ampId, rememberAmp, STOCK_AMPS } from '../lib/amps';
 import { ampMaker, ampName, loads } from '../lib/nam';
+import AmpFace from './AmpFace';
 
 interface Row {
   readonly id: string;
@@ -247,13 +248,14 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                 {t('pro.stockAmps', 'Stock Amp Modelers (Built-in)')}
               </span>
               <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-                Offline Ready
+                {t('pro.offlineReady', 'Works without internet')}
               </span>
             </div>
             <ul className="space-y-1.5">
               {STOCK_AMPS.map((amp) => (
                 <li key={amp.id} className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
+                  <AmpFace amp={amp} size={48} />
+                  <div className="min-w-0 flex-1">
                     <span className="block text-xs font-bold text-white truncate">{amp.name}</span>
                     <span className="block text-[11px] text-zinc-400 leading-tight">
                       {lang === 'af' ? amp.descAf : amp.descEn}

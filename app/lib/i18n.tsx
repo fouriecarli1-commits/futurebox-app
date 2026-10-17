@@ -4825,6 +4825,7 @@ export const STRINGS: Dict = {
   "post.pdfRoom": { en: "PDF studio", af: "PDF-ateljee" },
   "post.vectorRoom": { en: "Vector studio", af: "Vektor-ateljee" },
   "post.posterRoom": { en: "Poster", af: "Plakkaat" },
+  "pro.offlineReady": { en: "Works without internet", af: "Werk sonder internet" },
   "post.productRoom": { en: "Product photos", af: "Produkfoto’s" },
   "post.tryOnRoom": { en: "Clothes on a model", af: "Klere op ’n model" },
   "post.stepTryOn": { en: "putting the clothes on a model", af: "om die klere op ’n model te sit" },

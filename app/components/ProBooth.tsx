@@ -91,6 +91,7 @@ import { makeHistory } from '../lib/undo';
 import { notesIn, snapTo } from '../lib/humnotes';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { GROUPS, VOICES, renderHum, voiceById, type VoiceId } from '../lib/huminstrument';
+import AmpFace from './AmpFace';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -6006,7 +6007,7 @@ function LaneRow({
               <span>{t('pro.stockAmps', 'Stock Amp Modelers (Built-in)')}</span>
             </span>
             <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-              Offline Ready
+              {t('pro.offlineReady', 'Works without internet')}
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -6022,15 +6023,18 @@ function LaneRow({
                   onClick={() => onChange({ tone: amp.tone })}
                   aria-pressed={isActive}
                   title={lang === 'af' ? amp.descAf : amp.descEn}
-                  className={`min-h-[44px] px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                  className={`flex min-h-[44px] items-center gap-2 px-2 py-1.5 rounded-xl border text-left text-xs font-bold transition-all ${
                     isActive
                       ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
                       : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:text-white'
                   }`}
                 >
-                  <span className="block text-xs font-bold">{amp.name}</span>
-                  <span className="block text-[10px] text-zinc-500 font-normal">
-                    {amp.category}
+                  <AmpFace amp={amp} size={44} />
+                  <span>
+                    <span className="block text-xs font-bold">{amp.name}</span>
+                    <span className="block text-[10px] text-zinc-500 font-normal">
+                      {amp.category}
+                    </span>
                   </span>
                 </button>
               );

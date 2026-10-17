@@ -30,6 +30,21 @@ function AccentSwatch({ accentId, size = 20 }: { accentId: string; size?: number
   );
 }
 
+/** A preset as a little screen in its own colours: the page, a card, a button. */
+function ThemeThumb({ preset }: { preset: Theme }) {
+  const vars = themeVariables(preset);
+  const rgb = (name: string): string => `rgb(${vars[name] ?? '0 0 0'})`;
+  return (
+    <span aria-hidden data-themethumb className="mb-1.5 block h-14 w-full overflow-hidden rounded-lg border border-white/10 p-1.5" style={{ background: rgb('--fb-page') }}>
+      <span className="block h-1.5 w-1/2 rounded-full" style={{ background: rgb('--fb-ink'), opacity: 0.7 }} />
+      <span className="mt-1 flex gap-1">
+        <span className="block h-6 flex-1 rounded-md" style={{ background: rgb('--fb-surface-800'), border: `1px solid ${rgb('--fb-surface-700')}` }} />
+        <span className="block h-6 w-8 rounded-md" style={{ background: rgb('--fb-primary-400') }} />
+      </span>
+    </span>
+  );
+}
+
 function Row({
   label,
   hint,
@@ -124,6 +139,7 @@ export default function ThemeStudio({
               const active = (Object.keys(DEFAULT_THEME) as Array<keyof Theme>).every((k) => theme[k] === preset[k]);
               return (
                 <Option key={preset.id} active={active} onClick={() => setTheme({ ...preset })}>
+                  <ThemeThumb preset={preset} />
                   <span className="flex items-center gap-2">
                     <AccentSwatch accentId={preset.primary} size={14} />
                     <span className="text-sm font-semibold">{preset.name}</span>
