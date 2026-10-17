@@ -142,7 +142,7 @@ import {
 import { drawToolTile } from '../lib/posttooltiles';
 import { withSaid } from '../lib/speak';
 import { lookThrough, maskFromBox, maskFromGrey, maskFromStrokes, shareSelected, type SelectWhat, type Selection } from '../lib/postselect';
-import { MAGIC_STYLES, STYLE_GROUPS, drawStyleTile, styleAsk, styleById, styleLabel, type StyleGroup } from '../lib/magicstyles';
+import { STYLE_GROUPS, drawStyleTile, styleAsk, styleById, styleLabel, stylesIn, type StyleGroup } from '../lib/magicstyles';
 import { MAGIC_ASKS, brushRect, cropOf, laidIn, padded, type Brush, type Rect } from '../lib/magicedit';
 import SpeakButton from './SpeakButton';
 import { accessToken, getStorageClient } from '../lib/cloud';
@@ -888,7 +888,7 @@ export default function PostStudio({
      be moved as usual. Carli, 17 October 2026: *"Daar moet dan 'n brush
      button wees."* */
   const [brushOn, setBrushOn] = useState(true);
-  const [styleGroup, setStyleGroup] = useState<StyleGroup>('digital');
+  const [styleGroup, setStyleGroup] = useState<StyleGroup>('featured');
   /* The part of the photograph Adjust and Filters change — `lib/postselect.ts`. */
   const [selection, setSelection] = useState<Selection | null>(null);
   const [selecting, setSelecting] = useState(false);
@@ -1225,6 +1225,10 @@ export default function PostStudio({
   const [layerOn, setLayerOn] = useState<LayerOn>('all');
   const [photoHidden, setPhotoHidden] = useState(false);
   const [photoAlpha, setPhotoAlpha] = useState(1);
+  /* How many layers sit under the photo: nought is the photo at the back,
+     as it always was. Carli, 17 October 2026: *"Met die layers wil die foto
+     wat 1ste daar was nie vorentoe kom nie."* */
+  const [photoAt, setPhotoAt] = useState(0);
   const [backHidden, setBackHidden] = useState(false);
   const [allLook, setAllLook] = useState<Look>(PLAIN);
   const [toneAll, setToneAll] = useState(false);
@@ -2044,7 +2048,27 @@ export default function PostStudio({
       onto.restore();
     };
 
-    for (const layer of (editingCell ? [] : stackOf(marks, words, cells))) {
+    /* The photograph again, over the layers below it, when it has been
+       moved forward in the layer list. */
+    const photoOnTop = (): void => {
+      if (!picture || photoHidden) return;
+      const view = guides && Boolean(cropBox || traced || picking || bench === 'magic');
+      const on = place(picture, size, view ? WHOLE_VIEW : crop);
+      const part = selection && selection.of === picture && touched(look) ? selection : null;
+      ctx.save();
+      ctx.globalAlpha = photoAlpha;
+      if (part) {
+        ctx.drawImage(picture, on.left, on.top, on.width, on.height);
+        ctx.drawImage(lookThrough(picture, on.width, on.height, look, to.width / size.width, part.mask), on.left, on.top, on.width, on.height);
+      } else {
+        ctx.filter = filterFor(look, to.width / size.width);
+        ctx.drawImage(picture, on.left, on.top, on.width, on.height);
+      }
+      ctx.restore();
+    };
+    const layered = editingCell ? [] : stackOf(marks, words, cells);
+    for (const [at, layer] of layered.entries()) {
+      if (photoAt > 0 && at === photoAt) photoOnTop();
       if (layer.item.hidden) continue;
       const paint = (onto: CanvasRenderingContext2D): void => {
         if (layer.kind === 'mark') drawMark(onto, layer.item as Mark, size.width, size.height);
@@ -2075,6 +2099,7 @@ export default function PostStudio({
       ctx.drawImage(sheet, 0, 0);
       ctx.restore();
     }
+    if (photoAt > 0 && photoAt >= layered.length) photoOnTop();
 
     /* ── How it reads, over everything, when the All layer is chosen ────
        The photo's own look stays on the photo. This one is for the
@@ -2401,7 +2426,7 @@ export default function PostStudio({
        line — the arithmetic was fine — and the glass stayed empty, because
        nothing had repainted since the boxes arrived. */
   }, [facesIn, size, picture, words, back, crop, look, cropBox, traced,
-    picking, found, picked, compareFrom, selection,
+    picking, found, picked, compareFrom, selection, photoAt,
     /* The shapes and the one picked: drawn by `draw`, so they repaint it.
        A shape dragged with these missing moved in the state and stayed put
        on the glass until something else happened to repaint. */
@@ -7670,7 +7695,7 @@ export default function PostStudio({
             ))}
           </div>
           <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
-            {MAGIC_STYLES.filter((one) => one.group === styleGroup).map((one) => (
+            {stylesIn(styleGroup).map((one) => (
               <button
                 key={one.id}
                 type="button"
@@ -8233,40 +8258,74 @@ export default function PostStudio({
     <div className="space-y-3" data-postlayers>
       <div className="space-y-1.5">
         {layerRow('all', t('post.layerAll', 'All layers'), <Layers className="h-4 w-4" />, null)}
-        {[...stackNow].reverse().map((layer, at, list) => layerRow(
-          layer.id,
-          layerNameOf(layer.kind, layer.item),
-          layer.kind === 'mark' ? <Square className="h-4 w-4" /> : layer.kind === 'cell' ? <LayoutGrid className="h-4 w-4" /> : <Type className="h-4 w-4" />,
-          <>
-            <button
-              type="button"
-              data-postlayerup={layer.id}
-              disabled={at === 0}
-              aria-label={t('post.layerUp', 'Move forward')}
-              onClick={() => moveLayer(layer.id, 1)}
-              className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              data-postlayerdown={layer.id}
-              disabled={at === list.length - 1}
-              aria-label={t('post.layerDown', 'Move back')}
-              onClick={() => moveLayer(layer.id, -1)}
-              className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </button>
-            {eyeButton(Boolean(layer.item.hidden), () => hideLayer(layer.id, layer.kind, !layer.item.hidden), layer.id)}
-          </>,
-        ))}
-        {picture && layerRow(
-          'photo',
-          t('post.layerPhoto', 'Photo'),
-          <ImageIcon className="h-4 w-4" />,
-          eyeButton(photoHidden, () => setPhotoHidden((was) => !was), 'photo'),
-        )}
+        {/* Front to back, with the photograph at its own place among
+            them — it can come forward over words and shapes now. */}
+        {(() => {
+          const under = Math.min(photoAt, stackNow.length);
+          const order: ({ readonly layer: (typeof stackNow)[number] } | { readonly photo: true })[] = [
+            ...stackNow.slice(under).reverse().map((layer) => ({ layer })),
+            ...(picture ? [{ photo: true as const }] : []),
+            ...stackNow.slice(0, under).reverse().map((layer) => ({ layer })),
+          ];
+          const arrows = (at: number, up: () => void, down: () => void, id: string): React.ReactElement => (
+            <>
+              <button
+                type="button"
+                data-postlayerup={id}
+                disabled={at === 0}
+                aria-label={t('post.layerUp', 'Move forward')}
+                onClick={up}
+                className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                data-postlayerdown={id}
+                disabled={at === order.length - 1}
+                aria-label={t('post.layerDown', 'Move back')}
+                onClick={down}
+                className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </>
+          );
+          const isPhoto = (one: (typeof order)[number] | undefined): boolean => Boolean(one && 'photo' in one);
+          return order.map((one, at) => {
+            if ('photo' in one) {
+              return layerRow(
+                'photo',
+                t('post.layerPhoto', 'Photo'),
+                <ImageIcon className="h-4 w-4" />,
+                <>
+                  {arrows(
+                    at,
+                    () => { beforeLayers(t('post.stepLayerUp', 'moving a layer forward')); setPhotoAt(under + 1); },
+                    () => { beforeLayers(t('post.stepLayerDown', 'moving a layer back')); setPhotoAt(Math.max(0, under - 1)); },
+                    'photo',
+                  )}
+                  {eyeButton(photoHidden, () => setPhotoHidden((was) => !was), 'photo')}
+                </>,
+              );
+            }
+            const { layer } = one;
+            return layerRow(
+              layer.id,
+              layerNameOf(layer.kind, layer.item),
+              layer.kind === 'mark' ? <Square className="h-4 w-4" /> : layer.kind === 'cell' ? <LayoutGrid className="h-4 w-4" /> : <Type className="h-4 w-4" />,
+              <>
+                {arrows(
+                  at,
+                  () => (isPhoto(order[at - 1]) ? setPhotoAt(Math.max(0, under - 1)) : moveLayer(layer.id, 1)),
+                  () => (isPhoto(order[at + 1]) ? setPhotoAt(under + 1) : moveLayer(layer.id, -1)),
+                  layer.id,
+                )}
+                {eyeButton(Boolean(layer.item.hidden), () => hideLayer(layer.id, layer.kind, !layer.item.hidden), layer.id)}
+              </>,
+            );
+          });
+        })()}
         {layerRow(
           'back',
           back ? t('post.layerBack', 'Background') : t('post.layerBackNone', 'Background (see-through)'),

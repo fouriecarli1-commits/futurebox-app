@@ -3,68 +3,112 @@
  *
  * Carli, 17 October 2026, with screenshots of another app's style picker — a
  * row of sample tiles, one subject made in each style, under tabs for
- * drawing, digital and physical media: *"By magic moet daar ook van hierdie
- * filters wees … ons moet al daai presiese opsies en filters en templates gee
- * wat dan so oulik verander, google sal dit kan doen."*
+ * characters, digital media, physical media and craft: *"By magic moet daar
+ * ook van hierdie filters wees … ons moet al daai presiese opsies en filters
+ * en templates gee wat dan so oulik verander, google sal dit kan doen."* And
+ * then: *"Ek wil net hê jy moet elke funksie wat daar is in sit. Moet net nie
+ * 'n eend gebruik as template cover nie, gebruik dalk 'n meerkat se bolyf en
+ * gesig."*
  *
- * Ours, in our own hand: the sample on every tile is a little bird drawn here,
- * in code, in each style — nobody's picture is borrowed — and the change
- * itself is the picture engine's, through the magic touch's own paid route.
- * Each style is a sentence for the engine (`ask`) and a way to draw the bird
- * (`look`), kept side by side so a style cannot be offered without a picture
- * of what it does.
+ * Ours, in our own hand: every tile is a meerkat drawn here, in code, in that
+ * style — nobody's picture is borrowed — and the change itself is the picture
+ * engine's, through the magic touch's own paid route. Each style is a
+ * sentence for the engine (`ask`) and a way to draw the meerkat, kept side by
+ * side so a style cannot be offered without a picture of what it does.
  */
 
-export type StyleGroup = 'draw' | 'digital' | 'physical' | 'photo';
+export type StyleGroup = 'featured' | 'characters' | 'digital' | 'physical' | 'craft' | 'photo';
 
 export const STYLE_GROUPS: readonly { readonly id: StyleGroup; readonly en: string; readonly af: string }[] = [
+  { id: 'featured', en: 'Favourites', af: 'Gunstelinge' },
+  { id: 'characters', en: 'Characters', af: 'Karakters' },
   { id: 'digital', en: 'Digital', af: 'Digitaal' },
-  { id: 'draw', en: 'Drawn and painted', af: 'Geteken en geverf' },
-  { id: 'physical', en: 'Made by hand', af: 'Met die hand gemaak' },
+  { id: 'physical', en: 'Paint and print', af: 'Verf en druk' },
+  { id: 'craft', en: 'Craft and texture', af: 'Handwerk en tekstuur' },
   { id: 'photo', en: 'Photo looks', af: 'Foto-voorkoms' },
 ];
 
 type Look =
-  | 'pixel' | 'polygon' | 'voxel' | 'soft3d' | 'chrome' | 'iridescent' | 'neon'
-  | 'pencil' | 'watercolour' | 'comic' | 'anime' | 'oil' | 'cartoon'
-  | 'clay' | 'origami' | 'stitched' | 'glass' | 'mosaic' | 'marble' | 'gold'
-  | 'vintage' | 'noir' | 'pop' | 'sticker';
+  | 'moderncomic' | 'comic' | 'pop' | 'crayon' | 'doodle' | 'handdrawn' | 'cartoon' | 'cartoon3d' | 'anime'
+  | 'lineart' | 'simpleline' | 'colourline' | 'flat' | 'pixel' | 'polygon' | 'voxel' | 'soft3d' | 'chrome' | 'iridescent' | 'neon'
+  | 'etching' | 'pencil' | 'oil' | 'watercolour' | 'riso' | 'linocut' | 'dither' | 'glass' | 'mosaic'
+  | 'scrapbook' | 'cutout' | 'origami' | 'clay' | 'crochet' | 'plush' | 'stitched' | 'glossy' | 'marble' | 'gold'
+  | 'glittergold' | 'glitterorange' | 'glitterpink' | 'glittersilver' | 'glittergreen'
+  | 'vintage' | 'noir' | 'sticker';
 
 export interface MagicStyle {
   readonly id: Look;
-  readonly group: StyleGroup;
+  readonly group: Exclude<StyleGroup, 'featured'>;
   readonly en: string;
   readonly af: string;
   /** What the engine is asked to make it look like. */
   readonly ask: string;
+  /** Shown under Favourites as well. */
+  readonly featured?: boolean;
 }
 
+const glitter = (en: string, af: string, colour: string): Pick<MagicStyle, 'en' | 'af' | 'ask'> => ({
+  en, af, ask: `a figure covered all over in fine ${colour} glitter, sparkling, on a soft studio background`,
+});
+
 export const MAGIC_STYLES: readonly MagicStyle[] = [
+  /* Characters and illustration */
+  { id: 'moderncomic', group: 'characters', en: 'Modern comic', af: 'Moderne strokiesprent', ask: 'a modern comic illustration: clean bold outlines, bright flat colour, crisp cel shading', featured: true },
+  { id: 'comic', group: 'characters', en: 'Comic book', af: 'Strokiesboek', ask: 'a vintage comic-book illustration: ink outlines, flat colours and halftone dots' },
+  { id: 'pop', group: 'characters', en: 'Pop art', af: 'Popkuns', ask: 'pop art: bold flat colour blocks and halftone dots, strong outlines', featured: true },
+  { id: 'crayon', group: 'characters', en: 'Crayon', af: 'Kryt', ask: 'a crayon drawing: waxy strokes, paper texture, a child-like hand' },
+  { id: 'doodle', group: 'characters', en: 'Colourful doodle', af: 'Kleurvolle krabbel', ask: 'a playful colourful doodle: loose marker lines and bright fills' },
+  { id: 'handdrawn', group: 'characters', en: 'Coloured hand-drawn', af: 'Ingekleurde handtekening', ask: 'a coloured hand-drawn illustration: soft pencil lines and gentle colour' },
+  { id: 'cartoon', group: 'characters', en: 'Cartoon', af: 'Spotprent', ask: 'a cartoon: simple shapes, thick black outlines, cheerful flat colours' },
+  { id: 'cartoon3d', group: 'characters', en: '3D cartoon', af: '3D-spotprent', ask: 'a 3D animated-film cartoon character: soft rounded forms and studio lighting', featured: true },
+  { id: 'anime', group: 'characters', en: 'Anime', af: 'Anime', ask: 'anime illustration: clean line art, cel shading, bright expressive eyes' },
+  /* Digital */
+  { id: 'lineart', group: 'digital', en: 'Line art', af: 'Lynkuns', ask: 'clean black line art on white, no colour, fine detail lines' },
+  { id: 'simpleline', group: 'digital', en: 'Simple lines', af: 'Eenvoudige lyne', ask: 'simple thick black outlines on white, minimal detail, no colour' },
+  { id: 'colourline', group: 'digital', en: 'Coloured lines', af: 'Gekleurde lyne', ask: 'a bold outlined illustration with flat bright colour fills' },
+  { id: 'flat', group: 'digital', en: 'Flat design', af: 'Plat ontwerp', ask: 'flat design vector illustration: no outlines, simple flat shapes, soft shadows' },
   { id: 'pixel', group: 'digital', en: 'Pixel art', af: 'Pixelkuns', ask: 'pixel art: crisp square pixels, a small limited palette, retro video-game look' },
   { id: 'polygon', group: 'digital', en: 'Low poly', af: 'Lae poli', ask: 'low-poly 3D: flat-shaded triangular facets, clean geometric planes' },
   { id: 'voxel', group: 'digital', en: 'Blocks', af: 'Blokkies', ask: 'voxel art: built from small 3D cubes, like a block-building game' },
-  { id: 'soft3d', group: 'digital', en: '3D render', af: '3D-weergawe', ask: 'a smooth 3D render: soft studio light, rounded forms, gentle shadows' },
-  { id: 'chrome', group: 'digital', en: 'Chrome', af: 'Chroom', ask: 'polished liquid chrome: mirror-like silver metal with bright reflections' },
+  { id: 'soft3d', group: 'digital', en: '3D art', af: '3D-kuns', ask: 'a smooth 3D render: soft studio light, rounded forms, gentle shadows' },
+  { id: 'chrome', group: 'digital', en: 'Chrome', af: 'Chroom', ask: 'polished liquid chrome: mirror-like silver metal with bright reflections', featured: true },
   { id: 'iridescent', group: 'digital', en: 'Iridescent', af: 'Reënboogglans', ask: 'iridescent holographic: shifting pink, violet, blue and orange sheen' },
   { id: 'neon', group: 'digital', en: 'Neon', af: 'Neon', ask: 'glowing neon light lines on a dark background, vivid electric colour' },
-  { id: 'pencil', group: 'draw', en: 'Pencil sketch', af: 'Potloodskets', ask: 'a graphite pencil sketch: fine hatching and loose construction lines on paper' },
-  { id: 'watercolour', group: 'draw', en: 'Watercolour', af: 'Waterverf', ask: 'a watercolour painting: soft washes, blooms and paper texture' },
-  { id: 'comic', group: 'draw', en: 'Comic', af: 'Strokiesprent', ask: 'a comic-book illustration: bold ink outlines, flat colours, halftone dots' },
-  { id: 'anime', group: 'draw', en: 'Anime', af: 'Anime', ask: 'anime illustration: clean line art, cel shading, bright expressive eyes' },
-  { id: 'oil', group: 'draw', en: 'Oil painting', af: 'Olieverf', ask: 'a classic oil painting: thick visible brush strokes, rich colour' },
-  { id: 'cartoon', group: 'draw', en: 'Cartoon', af: 'Spotprent', ask: 'a playful cartoon: simple shapes, thick outlines, cheerful colours' },
-  { id: 'clay', group: 'physical', en: 'Clay', af: 'Klei', ask: 'handmade clay figures: soft matte plasticine with fingerprints and rounded forms' },
-  { id: 'origami', group: 'physical', en: 'Paper folds', af: 'Papiervou', ask: 'folded paper origami: crisp creases and flat paper planes' },
-  { id: 'stitched', group: 'physical', en: 'Embroidery', af: 'Borduurwerk', ask: 'embroidery on fabric: satin stitches and thread texture' },
+  /* Paint and print */
+  { id: 'etching', group: 'physical', en: 'Etching', af: 'Ets', ask: 'a fine black-ink etching: engraved cross-hatching on cream paper' },
+  { id: 'pencil', group: 'physical', en: 'Pencil sketch', af: 'Potloodskets', ask: 'a graphite pencil sketch: fine hatching and loose construction lines on paper' },
+  { id: 'oil', group: 'physical', en: 'Painterly', af: 'Skilderagtig', ask: 'a classic oil painting: thick visible brush strokes, rich colour' },
+  { id: 'watercolour', group: 'physical', en: 'Watercolour', af: 'Waterverf', ask: 'a watercolour painting: soft washes, blooms and paper texture', featured: true },
+  { id: 'riso', group: 'physical', en: 'Risograph', af: 'Risograaf', ask: 'a risograph print: two bright ink layers slightly out of register, grainy texture' },
+  { id: 'linocut', group: 'physical', en: 'Linocut', af: 'Linosnee', ask: 'a black-and-white linocut print: bold carved lines and gouge marks' },
+  { id: 'dither', group: 'physical', en: 'Dither', af: 'Stippel', ask: 'a black-and-white dithered halftone: shading made only of dots' },
   { id: 'glass', group: 'physical', en: 'Stained glass', af: 'Loodglas', ask: 'a stained glass window: bright glass pieces with dark lead lines, light shining through' },
   { id: 'mosaic', group: 'physical', en: 'Mosaic', af: 'Mosaïek', ask: 'a tile mosaic: small square stone and glass tiles with grout between' },
-  { id: 'marble', group: 'physical', en: 'Marble statue', af: 'Marmerbeeld', ask: 'a carved white marble statue with grey veins, museum lighting' },
-  { id: 'gold', group: 'physical', en: 'Gold', af: 'Goud', ask: 'solid polished gold, warm metallic highlights' },
+  /* Craft and texture */
+  { id: 'scrapbook', group: 'craft', en: 'Scrapbook', af: 'Plakboek', ask: 'a scrapbook collage: cut felt and paper pieces with visible texture and edges' },
+  { id: 'cutout', group: 'craft', en: 'Paper cutout', af: 'Papieruitknip', ask: 'layered paper cutout art: flat paper shapes stacked with soft drop shadows' },
+  { id: 'origami', group: 'craft', en: 'Paper folds', af: 'Papiervou', ask: 'folded paper origami: crisp creases and flat paper planes' },
+  { id: 'clay', group: 'craft', en: 'Clay', af: 'Klei', ask: 'handmade clay figures: soft matte plasticine with fingerprints and rounded forms', featured: true },
+  { id: 'crochet', group: 'craft', en: 'Crochet', af: 'Hekelwerk', ask: 'a crocheted amigurumi doll made of yarn: visible stitches and wool texture', featured: true },
+  { id: 'plush', group: 'craft', en: 'Plush', af: 'Pluche', ask: 'a soft fluffy plush toy: fuzzy fur and stitched seams' },
+  { id: 'stitched', group: 'craft', en: 'Embroidery', af: 'Borduurwerk', ask: 'embroidery on fabric: satin stitches and thread texture' },
+  { id: 'glossy', group: 'craft', en: 'Glossy', af: 'Blink', ask: 'shiny glossy plastic toy: smooth surfaces and bright specular highlights' },
+  { id: 'marble', group: 'craft', en: 'Marble', af: 'Marmer', ask: 'a carved white marble statue with grey veins, museum lighting' },
+  { id: 'gold', group: 'craft', en: 'Gold', af: 'Goud', ask: 'solid polished gold, warm metallic highlights' },
+  { id: 'glittergold', group: 'craft', ...glitter('Gold glitter', 'Goue glitter', 'gold') },
+  { id: 'glitterorange', group: 'craft', ...glitter('Orange glitter', 'Oranje glitter', 'orange') },
+  { id: 'glitterpink', group: 'craft', ...glitter('Pink glitter', 'Pienk glitter', 'pink') },
+  { id: 'glittersilver', group: 'craft', ...glitter('Silver glitter', 'Silwer glitter', 'silver') },
+  { id: 'glittergreen', group: 'craft', ...glitter('Green glitter', 'Groen glitter', 'green') },
+  /* Photo looks */
   { id: 'vintage', group: 'photo', en: 'Old photo', af: 'Ou foto', ask: 'an old sepia photograph: faded, soft grain, worn edges' },
   { id: 'noir', group: 'photo', en: 'Film noir', af: 'Film noir', ask: 'black-and-white film noir: hard shadows and dramatic contrast' },
-  { id: 'pop', group: 'photo', en: 'Pop art', af: 'Popkuns', ask: 'pop art: bold flat colour blocks and halftone dots, four bright colours' },
   { id: 'sticker', group: 'photo', en: 'Sticker', af: 'Plakker', ask: 'a die-cut sticker: thick white border, glossy, slight drop shadow' },
 ];
+
+/** The styles under one tab; Favourites gathers the starred ones from every tab. */
+export const stylesIn = (group: StyleGroup): readonly MagicStyle[] =>
+  MAGIC_STYLES.filter((one) => (group === 'featured' ? one.featured : one.group === group));
 
 export const styleById = (id: string): MagicStyle | undefined => MAGIC_STYLES.find((one) => one.id === id);
 
@@ -78,60 +122,85 @@ export function styleAsk(style: MagicStyle, whole: boolean): string {
     : `Restyle the main thing in this part of the photograph as ${style.ask}. Keep its shape, size, position and angle so it fits back into the photograph. Keep the edges of the picture as they are.`;
 }
 
-/* ── The bird on every tile ──────────────────────────────────────────── */
+/* ── The meerkat on every tile ───────────────────────────────────────── */
 
 interface Part {
   readonly path: Path2D;
   readonly ink: string;
+  /** Part of the outline (the fur), not a mark inside it. */
+  readonly shape: boolean;
 }
 
-/** The bird's parts on an `s`-pixel square, back to front. */
-function bird(s: number): Part[] {
-  const body = new Path2D();
-  body.ellipse(s * 0.48, s * 0.62, s * 0.3, s * 0.24, 0, 0, Math.PI * 2);
-  const head = new Path2D();
-  head.arc(s * 0.6, s * 0.34, s * 0.17, 0, Math.PI * 2);
-  const beak = new Path2D();
-  beak.moveTo(s * 0.74, s * 0.33);
-  beak.lineTo(s * 0.9, s * 0.38);
-  beak.lineTo(s * 0.74, s * 0.43);
-  beak.closePath();
-  const wing = new Path2D();
-  wing.ellipse(s * 0.4, s * 0.62, s * 0.16, s * 0.1, -0.35, 0, Math.PI * 2);
-  const eye = new Path2D();
-  eye.arc(s * 0.64, s * 0.31, s * 0.035, 0, Math.PI * 2);
+const FUR = '#c9a06a';
+const BELLY = '#ecd6aa';
+const MASK = '#4a3220';
+const DARK = '#22160c';
+
+/** The meerkat's upper body and face on an `s`-pixel square, back to front. */
+function meerkat(s: number): Part[] {
+  const e = (x: number, y: number, rx: number, ry: number, turn = 0): Path2D => {
+    const p = new Path2D();
+    p.ellipse(s * x, s * y, s * rx, s * ry, turn, 0, Math.PI * 2);
+    return p;
+  };
   return [
-    { path: body, ink: '#ffcf33' },
-    { path: head, ink: '#ffd84d' },
-    { path: wing, ink: '#f5a524' },
-    { path: beak, ink: '#ff7a1a' },
-    { path: eye, ink: '#1c1c1c' },
+    { path: e(0.5, 0.97, 0.2, 0.34), ink: FUR, shape: true },
+    { path: e(0.5, 1.0, 0.11, 0.27), ink: BELLY, shape: false },
+    { path: e(0.5, 0.58, 0.095, 0.11), ink: FUR, shape: true },
+    { path: e(0.395, 0.305, 0.028, 0.034, -0.3), ink: '#8f6a3e', shape: true },
+    { path: e(0.605, 0.305, 0.028, 0.034, 0.3), ink: '#8f6a3e', shape: true },
+    { path: e(0.5, 0.35, 0.115, 0.15), ink: FUR, shape: true },
+    { path: e(0.5, 0.465, 0.06, 0.07), ink: BELLY, shape: true },
+    { path: e(0.452, 0.345, 0.042, 0.03, 0.45), ink: MASK, shape: false },
+    { path: e(0.548, 0.345, 0.042, 0.03, -0.45), ink: MASK, shape: false },
+    { path: e(0.455, 0.342, 0.013, 0.013), ink: '#f5efe2', shape: false },
+    { path: e(0.545, 0.342, 0.013, 0.013), ink: '#f5efe2', shape: false },
+    { path: e(0.5, 0.515, 0.022, 0.016), ink: DARK, shape: false },
+    { path: e(0.445, 0.7, 0.042, 0.03, 0.4), ink: '#b8905c', shape: true },
+    { path: e(0.555, 0.7, 0.042, 0.03, -0.4), ink: '#b8905c', shape: true },
   ];
 }
 
-/** The whole bird as one outline, for styles that fill it as one thing. */
+/** The nose, which a few styles draw on their own. */
+const noseOf = (s: number): Path2D => meerkat(s).find((one) => one.ink === DARK)?.path ?? new Path2D();
+
+/** The whole animal as one outline, for styles that fill it as one thing. */
 function outline(s: number): Path2D {
   const all = new Path2D();
-  for (const part of bird(s).slice(0, 4)) all.addPath(part.path);
+  for (const part of meerkat(s)) if (part.shape) all.addPath(part.path);
   return all;
 }
 
-/** A clean outer outline: every part stroked twice as wide, the bird filled over it. */
-function inked(ctx: CanvasRenderingContext2D, s: number, ink: string, width: number): void {
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = width * 2;
-  ctx.lineJoin = 'round';
-  for (const part of bird(s).slice(0, 4)) ctx.stroke(part.path);
-}
-
-function flat(ctx: CanvasRenderingContext2D, s: number, recolour?: (ink: string) => string): void {
-  for (const part of bird(s)) {
+const flat = (ctx: CanvasRenderingContext2D, s: number, recolour?: (ink: string) => string): void => {
+  for (const part of meerkat(s)) {
     ctx.fillStyle = recolour ? recolour(part.ink) : part.ink;
     ctx.fill(part.path);
   }
-}
+};
 
-/** The bird drawn small, as pixels to build blocky styles from. */
+/** A clean outer outline: every part stroked twice as wide, the animal filled over it. */
+const inked = (ctx: CanvasRenderingContext2D, s: number, ink: string, width: number): void => {
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = width * 2;
+  ctx.lineJoin = 'round';
+  for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path);
+};
+
+/** Only the lines: an outer outline, and the face marks drawn as lines. */
+const linesOnly = (ctx: CanvasRenderingContext2D, s: number, width: number, inner = true): void => {
+  ctx.fillStyle = '#ffffff';
+  ctx.fill(outline(s));
+  inked(ctx, s, '#111', width);
+  ctx.fillStyle = '#ffffff';
+  for (const part of meerkat(s)) if (part.shape) ctx.fill(part.path);
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = width * 0.7;
+  if (inner) for (const part of meerkat(s)) if (!part.shape && part.ink !== '#f5efe2') ctx.stroke(part.path);
+  ctx.fillStyle = '#111';
+  ctx.fill(noseOf(s));
+};
+
+/** The animal drawn small, as pixels to build blocky and printed styles from. */
 function sampled(n: number): Uint8ClampedArray | null {
   const tiny = document.createElement('canvas');
   tiny.width = n;
@@ -145,11 +214,39 @@ function sampled(n: number): Uint8ClampedArray | null {
 const rgb = (d: Uint8ClampedArray, i: number, by = 0): string =>
   `rgb(${Math.max(0, Math.min(255, d[i] + by))},${Math.max(0, Math.min(255, d[i + 1] + by))},${Math.max(0, Math.min(255, d[i + 2] + by))})`;
 
+const lightOf = (d: Uint8ClampedArray, i: number): number => (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11) / 255;
+
 const grey = (ink: string): string => {
   const n = Number.parseInt(ink.slice(1), 16);
   const v = Math.round(((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11);
   return `rgb(${v},${v},${v})`;
 };
+
+/** A metal, glitter or stone: a gradient through the outline, then the face marks. */
+function material(ctx: CanvasRenderingContext2D, s: number, stops: readonly string[], marks: string): void {
+  const g = ctx.createLinearGradient(0, s * 0.15, s, s * 0.95);
+  stops.forEach((one, k) => g.addColorStop(k / (stops.length - 1), one));
+  ctx.fillStyle = g;
+  ctx.fill(outline(s));
+  ctx.fillStyle = marks;
+  for (const part of meerkat(s)) if (part.ink === MASK || part.ink === DARK) ctx.fill(part.path);
+}
+
+/** Sparkles over the outline, for glitter. */
+function sparkle(ctx: CanvasRenderingContext2D, s: number, ink: string): void {
+  ctx.save();
+  ctx.clip(outline(s));
+  let seed = 7;
+  for (let k = 0; k < 260; k += 1) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const x = (seed % 1000) / 1000;
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const y = (seed % 1000) / 1000;
+    ctx.fillStyle = k % 3 === 0 ? '#ffffff' : ink;
+    ctx.fillRect(x * s, y * s, Math.max(1, s / 90), Math.max(1, s / 90));
+  }
+  ctx.restore();
+}
 
 /** Draw a style's sample on a square canvas. */
 export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
@@ -160,33 +257,31 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
   ctx.clearRect(0, 0, s, s);
   ctx.fillStyle = '#f4f1ea';
   ctx.fillRect(0, 0, s, s);
-  const line = Math.max(1.5, s / 30);
+  const line = Math.max(1.5, s / 34);
 
   switch (id) {
-    case 'pixel': {
-      const n = 14;
+    case 'pixel':
+    case 'voxel':
+    case 'mosaic': {
+      const n = id === 'pixel' ? 16 : id === 'voxel' ? 12 : 18;
       const d = sampled(n);
       if (!d) break;
-      const cell = s / n;
+      if (id === 'mosaic') { ctx.fillStyle = '#d8d2c4'; ctx.fillRect(0, 0, s, s); }
+      const cell = s / (id === 'voxel' ? n + 1 : n);
       for (let y = 0; y < n; y += 1) {
         for (let x = 0; x < n; x += 1) {
           const i = (y * n + x) * 4;
+          if (id === 'mosaic') {
+            ctx.fillStyle = d[i + 3] < 128 ? ((x + y) % 3 === 0 ? '#8fb8c9' : '#a5c8d6') : rgb(d, i, ((x * 7 + y * 3) % 5) * 6 - 12);
+            ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, cell - 2);
+            continue;
+          }
           if (d[i + 3] < 128) continue;
-          ctx.fillStyle = rgb(d, i);
-          ctx.fillRect(Math.floor(x * cell), Math.floor(y * cell), Math.ceil(cell), Math.ceil(cell));
-        }
-      }
-      break;
-    }
-    case 'voxel': {
-      const n = 11;
-      const d = sampled(n);
-      if (!d) break;
-      const cell = s / (n + 1);
-      for (let y = 0; y < n; y += 1) {
-        for (let x = 0; x < n; x += 1) {
-          const i = (y * n + x) * 4;
-          if (d[i + 3] < 128) continue;
+          if (id === 'pixel') {
+            ctx.fillStyle = rgb(d, i);
+            ctx.fillRect(Math.floor(x * cell), Math.floor(y * cell), Math.ceil(cell), Math.ceil(cell));
+            continue;
+          }
           const px = x * cell + cell * 0.3;
           const py = y * cell + cell * 0.3;
           const lip = cell * 0.28;
@@ -194,31 +289,16 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
           ctx.fillRect(px + lip, py + lip, cell, cell);
           ctx.fillStyle = rgb(d, i, 25);
           ctx.fillRect(px, py, cell, cell);
-          ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+          ctx.strokeStyle = 'rgba(0,0,0,0.22)';
           ctx.lineWidth = 1;
           ctx.strokeRect(px, py, cell, cell);
         }
       }
       break;
     }
-    case 'mosaic': {
-      ctx.fillStyle = '#d8d2c4';
-      ctx.fillRect(0, 0, s, s);
-      const n = 16;
-      const d = sampled(n);
-      if (!d) break;
-      const cell = s / n;
-      for (let y = 0; y < n; y += 1) {
-        for (let x = 0; x < n; x += 1) {
-          const i = (y * n + x) * 4;
-          ctx.fillStyle = d[i + 3] < 128 ? ((x + y) % 3 === 0 ? '#8fb8c9' : '#a5c8d6') : rgb(d, i, ((x * 7 + y * 3) % 5) * 6 - 12);
-          ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, cell - 2);
-        }
-      }
-      break;
-    }
-    case 'polygon': {
-      const n = 9;
+    case 'polygon':
+    case 'origami': {
+      const n = id === 'polygon' ? 10 : 6;
       const d = sampled(n * 4);
       if (!d) break;
       const cell = s / n;
@@ -240,79 +320,126 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
               ctx.lineTo(x * cell, (y + 1) * cell);
             }
             ctx.closePath();
-            ctx.fillStyle = rgb(d, i, half ? -28 : 18);
+            ctx.fillStyle = rgb(d, i, half ? -26 : 18);
             ctx.fill();
+            if (id === 'origami') { ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1; ctx.stroke(); }
           }
         }
       }
       break;
     }
+    case 'dither':
+    case 'linocut':
+    case 'etching': {
+      const n = id === 'dither' ? 26 : 40;
+      const d = sampled(n);
+      if (!d) break;
+      if (id !== 'dither') { ctx.fillStyle = id === 'etching' ? '#efe6d2' : '#ffffff'; ctx.fillRect(0, 0, s, s); }
+      const cell = s / n;
+      ctx.fillStyle = '#111';
+      ctx.strokeStyle = '#111';
+      for (let y = 0; y < n; y += 1) {
+        for (let x = 0; x < n; x += 1) {
+          const i = (y * n + x) * 4;
+          if (d[i + 3] < 128) continue;
+          const dark = 1 - lightOf(d, i);
+          if (id === 'dither') {
+            ctx.beginPath();
+            ctx.arc((x + 0.5) * cell, (y + 0.5) * cell, cell * 0.55 * Math.sqrt(dark + 0.12), 0, Math.PI * 2);
+            ctx.fill();
+          } else if (id === 'linocut') {
+            if (dark > 0.35 || (x + y) % 3 === 0) ctx.fillRect(x * cell, y * cell, cell, cell * (dark > 0.35 ? 1 : 0.35));
+          } else {
+            ctx.lineWidth = Math.max(0.6, cell * 0.25 * (dark + 0.2));
+            ctx.beginPath();
+            ctx.moveTo(x * cell, y * cell);
+            ctx.lineTo((x + 1) * cell, (y + 1) * cell);
+            if (dark > 0.4) { ctx.moveTo((x + 1) * cell, y * cell); ctx.lineTo(x * cell, (y + 1) * cell); }
+            ctx.stroke();
+          }
+        }
+      }
+      if (id !== 'dither') { ctx.lineWidth = line * 0.6; for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path); }
+      break;
+    }
     case 'soft3d':
-    case 'clay': {
-      const parts = bird(s);
-      for (const part of parts) {
-        const g = ctx.createRadialGradient(s * 0.42, s * 0.3, s * 0.02, s * 0.5, s * 0.55, s * 0.5);
+    case 'clay':
+    case 'cartoon3d':
+    case 'glossy': {
+      for (const part of meerkat(s)) {
+        const g = ctx.createRadialGradient(s * 0.42, s * 0.3, s * 0.02, s * 0.5, s * 0.55, s * 0.6);
         g.addColorStop(0, '#ffffff');
-        g.addColorStop(0.25, part.ink);
-        g.addColorStop(1, id === 'clay' ? '#a8621a' : '#b77708');
-        ctx.fillStyle = part.ink === '#1c1c1c' ? part.ink : g;
-        ctx.shadowColor = 'rgba(0,0,0,0.25)';
-        ctx.shadowBlur = s / 14;
-        ctx.shadowOffsetY = s / 40;
+        g.addColorStop(id === 'glossy' ? 0.12 : 0.28, part.ink);
+        g.addColorStop(1, id === 'clay' ? '#7a4f22' : '#6e4a24');
+        ctx.fillStyle = part.shape ? g : part.ink;
+        if (part.shape) {
+          ctx.shadowColor = 'rgba(0,0,0,0.25)';
+          ctx.shadowBlur = s / 14;
+          ctx.shadowOffsetY = s / 40;
+        }
         ctx.fill(part.path);
+        ctx.shadowColor = 'transparent';
+      }
+      if (id === 'cartoon3d') {
+        ctx.fillStyle = '#ffffff';
+        for (const x of [0.458, 0.548]) { ctx.beginPath(); ctx.arc(s * x, s * 0.338, s * 0.009, 0, Math.PI * 2); ctx.fill(); }
+      }
+      if (id === 'glossy') {
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath(); ctx.ellipse(s * 0.44, s * 0.3, s * 0.05, s * 0.02, -0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(s * 0.38, s * 0.78, s * 0.06, s * 0.02, -0.6, 0, Math.PI * 2); ctx.fill();
       }
       if (id === 'clay') {
-        ctx.shadowColor = 'transparent';
-        ctx.fillStyle = 'rgba(120,70,20,0.18)';
+        ctx.fillStyle = 'rgba(90,55,20,0.18)';
         for (let k = 0; k < 9; k += 1) {
           ctx.beginPath();
-          ctx.arc(s * (0.3 + (k % 3) * 0.12), s * (0.52 + Math.floor(k / 3) * 0.08), s * 0.018, 0, Math.PI * 2);
+          ctx.arc(s * (0.36 + (k % 3) * 0.12), s * (0.74 + Math.floor(k / 3) * 0.07), s * 0.016, 0, Math.PI * 2);
           ctx.fill();
         }
       }
       break;
     }
     case 'chrome':
+      material(ctx, s, ['#f8f8f8', '#8a8f98', '#ffffff', '#4b4f57', '#d7dbe0'], '#2b2f36');
+      break;
     case 'gold':
+      material(ctx, s, ['#fff4c2', '#c8901e', '#ffe58a', '#8a5a0c', '#f2c94c'], '#5a3a08');
+      break;
     case 'marble': {
-      if (id === 'marble') { ctx.fillStyle = '#2b2b30'; ctx.fillRect(0, 0, s, s); }
-      const g = ctx.createLinearGradient(0, s * 0.15, s, s * 0.9);
-      const stops = id === 'chrome'
-        ? ['#f8f8f8', '#8a8f98', '#ffffff', '#4b4f57', '#d7dbe0']
-        : id === 'gold'
-          ? ['#fff4c2', '#c8901e', '#ffe58a', '#8a5a0c', '#f2c94c']
-          : ['#ffffff', '#e8e6e1', '#d4d1ca', '#f2f0eb', '#c9c5bc'];
-      stops.forEach((one, k) => g.addColorStop(k / (stops.length - 1), one));
-      ctx.fillStyle = g;
-      ctx.fill(outline(s));
-      if (id === 'marble') {
-        ctx.save();
-        ctx.clip(outline(s));
-        ctx.strokeStyle = 'rgba(110,110,120,0.55)';
-        ctx.lineWidth = line * 0.5;
-        for (let k = 0; k < 4; k += 1) {
-          ctx.beginPath();
-          ctx.moveTo(s * (0.15 + k * 0.18), s * 0.2);
-          ctx.bezierCurveTo(s * (0.3 + k * 0.1), s * 0.45, s * (0.1 + k * 0.2), s * 0.6, s * (0.35 + k * 0.15), s * 0.95);
-          ctx.stroke();
-        }
-        ctx.restore();
+      material(ctx, s, ['#ffffff', '#e8e6e1', '#d4d1ca', '#f2f0eb', '#c9c5bc'], '#a29d94');
+      ctx.save();
+      ctx.clip(outline(s));
+      ctx.strokeStyle = 'rgba(120,120,128,0.5)';
+      ctx.lineWidth = line * 0.45;
+      for (let k = 0; k < 4; k += 1) {
+        ctx.beginPath();
+        ctx.moveTo(s * (0.2 + k * 0.17), s * 0.2);
+        ctx.bezierCurveTo(s * (0.3 + k * 0.1), s * 0.45, s * (0.12 + k * 0.2), s * 0.6, s * (0.35 + k * 0.14), s);
+        ctx.stroke();
       }
-      ctx.fillStyle = id === 'marble' ? '#9a968e' : '#1c1c1c';
-      ctx.fill(bird(s)[4].path);
+      ctx.restore();
+      break;
+    }
+    case 'glittergold':
+    case 'glitterorange':
+    case 'glitterpink':
+    case 'glittersilver':
+    case 'glittergreen': {
+      const tone = {
+        glittergold: ['#ffe58a', '#c8901e', '#f2c94c'],
+        glitterorange: ['#ffc07a', '#e8701a', '#ff9a3c'],
+        glitterpink: ['#ffd1ea', '#e85aa8', '#ff9ccf'],
+        glittersilver: ['#ffffff', '#9aa0a8', '#d9dde2'],
+        glittergreen: ['#a8f0a0', '#22a83a', '#5fd36a'],
+      }[id];
+      material(ctx, s, tone, 'rgba(0,0,0,0.45)');
+      sparkle(ctx, s, tone[1]);
       break;
     }
     case 'iridescent': {
-      const g = ctx.createLinearGradient(s * 0.2, s * 0.15, s * 0.85, s * 0.9);
-      ['#ff4fd8', '#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#ff4fd8'].forEach((one, k, all) => g.addColorStop(k / (all.length - 1), one));
-      ctx.fillStyle = g;
-      ctx.fill(outline(s));
+      material(ctx, s, ['#ff4fd8', '#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#ff4fd8'], '#3a1450');
       ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.beginPath();
-      ctx.ellipse(s * 0.5, s * 0.5, s * 0.12, s * 0.05, -0.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#1c1c1c';
-      ctx.fill(bird(s)[4].path);
+      ctx.beginPath(); ctx.ellipse(s * 0.45, s * 0.32, s * 0.06, s * 0.025, -0.5, 0, Math.PI * 2); ctx.fill();
       break;
     }
     case 'neon': {
@@ -320,22 +447,22 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       ctx.fillRect(0, 0, s, s);
       ctx.lineWidth = line;
       ctx.shadowBlur = s / 10;
-      for (const [k, part] of bird(s).entries()) {
-        const ink = ['#ff3dc8', '#ff3dc8', '#22d3ee', '#fde047', '#22d3ee'][k];
+      meerkat(s).forEach((part, k) => {
+        const ink = part.shape ? (k < 2 ? '#ff3dc8' : '#22d3ee') : '#fde047';
         ctx.strokeStyle = ink;
         ctx.shadowColor = ink;
         ctx.stroke(part.path);
-      }
+      });
       break;
     }
     case 'pencil':
     case 'noir': {
-      if (id === 'noir') { ctx.fillStyle = '#d9d9d9'; ctx.fillRect(0, 0, s, s); flat(ctx, s, (ink) => (ink === '#1c1c1c' ? '#000' : grey(ink))); }
+      if (id === 'noir') { ctx.fillStyle = '#d9d9d9'; ctx.fillRect(0, 0, s, s); flat(ctx, s, (ink) => (ink === DARK || ink === MASK ? '#000' : grey(ink))); }
       ctx.save();
       ctx.clip(outline(s));
-      ctx.strokeStyle = id === 'noir' ? 'rgba(0,0,0,0.85)' : 'rgba(60,60,60,0.55)';
+      ctx.strokeStyle = id === 'noir' ? 'rgba(0,0,0,0.8)' : 'rgba(60,60,60,0.5)';
       ctx.lineWidth = id === 'noir' ? line * 1.6 : Math.max(1, line * 0.35);
-      for (let k = -s; k < s * 2; k += id === 'noir' ? s / 7 : s / 22) {
+      for (let k = -s; k < s * 2; k += id === 'noir' ? s / 7 : s / 24) {
         ctx.beginPath();
         ctx.moveTo(k, s);
         ctx.lineTo(k + s * 0.6, 0);
@@ -344,22 +471,43 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       ctx.restore();
       ctx.strokeStyle = '#3a3a3a';
       ctx.lineWidth = Math.max(1, line * 0.6);
-      for (const part of bird(s)) ctx.stroke(part.path);
+      for (const part of meerkat(s)) if (part.ink !== '#f5efe2') ctx.stroke(part.path);
       break;
     }
-    case 'watercolour': {
-      ctx.filter = `blur(${Math.max(1, s / 40)}px)`;
-      for (let k = 0; k < 3; k += 1) {
-        ctx.globalAlpha = 0.45;
-        ctx.save();
-        ctx.translate((k - 1) * s * 0.015, (k - 1) * s * 0.012);
+    case 'watercolour':
+    case 'crayon':
+    case 'handdrawn': {
+      if (id === 'watercolour') {
+        ctx.filter = `blur(${Math.max(1, s / 45)}px)`;
+        for (let k = 0; k < 3; k += 1) {
+          ctx.globalAlpha = 0.45;
+          ctx.save();
+          ctx.translate((k - 1) * s * 0.012, (k - 1) * s * 0.01);
+          flat(ctx, s);
+          ctx.restore();
+        }
+        ctx.filter = 'none';
+        ctx.globalAlpha = 1;
+      } else {
         flat(ctx, s);
+        ctx.save();
+        ctx.clip(outline(s));
+        ctx.strokeStyle = id === 'crayon' ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = Math.max(1, line * 0.5);
+        for (let k = 0; k < 60; k += 1) {
+          const y = (k / 60) * s;
+          ctx.beginPath();
+          ctx.moveTo(0, y + ((k * 13) % 7));
+          ctx.lineTo(s, y - ((k * 7) % 9));
+          ctx.stroke();
+        }
         ctx.restore();
+        ctx.strokeStyle = id === 'crayon' ? '#6a4520' : '#5a4030';
+        ctx.lineWidth = id === 'crayon' ? line * 0.9 : line * 0.5;
+        for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path);
       }
-      ctx.filter = 'none';
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = '#1c1c1c';
-      ctx.fill(bird(s)[4].path);
+      ctx.fillStyle = DARK;
+      ctx.fill(noseOf(s));
       break;
     }
     case 'oil': {
@@ -367,117 +515,99 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       ctx.save();
       ctx.clip(outline(s));
       ctx.lineCap = 'round';
-      for (let k = 0; k < 40; k += 1) {
+      for (let k = 0; k < 46; k += 1) {
         const x = s * (0.15 + ((k * 37) % 70) / 100);
-        const y = s * (0.15 + ((k * 53) % 75) / 100);
-        ctx.strokeStyle = k % 3 === 0 ? 'rgba(255,255,255,0.35)' : 'rgba(170,90,10,0.3)';
+        const y = s * (0.15 + ((k * 53) % 80) / 100);
+        ctx.strokeStyle = k % 3 === 0 ? 'rgba(255,255,255,0.3)' : 'rgba(110,70,30,0.3)';
         ctx.lineWidth = line * 1.2;
         ctx.beginPath();
         ctx.moveTo(x, y);
-        ctx.lineTo(x + s * 0.08, y - s * 0.03);
+        ctx.lineTo(x + s * 0.07, y - s * 0.03);
         ctx.stroke();
       }
       ctx.restore();
       break;
     }
+    case 'riso': {
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.translate(s * 0.012, s * 0.01);
+      flat(ctx, s, (ink) => (ink === DARK || ink === MASK ? '#ff4fa3' : '#ffd23f'));
+      ctx.translate(-s * 0.024, -s * 0.02);
+      ctx.strokeStyle = '#2e86de';
+      ctx.lineWidth = line * 0.8;
+      for (const part of meerkat(s)) ctx.stroke(part.path);
+      ctx.restore();
+      break;
+    }
     case 'comic':
+    case 'moderncomic':
     case 'pop': {
-      if (id === 'pop') {
-        const half = s / 2;
-        const grounds = ['#ff3dc8', '#22d3ee', '#fde047', '#34d399'];
-        grounds.forEach((one, k) => {
-          ctx.fillStyle = one;
-          ctx.fillRect((k % 2) * half, Math.floor(k / 2) * half, half, half);
-          ctx.save();
-          ctx.translate((k % 2) * half, Math.floor(k / 2) * half);
-          ctx.scale(0.5, 0.5);
-          flat(ctx, s, (ink) => (ink === '#1c1c1c' ? ink : grounds[(k + 2) % 4]));
-          ctx.restore();
-        });
-        break;
-      }
-      ctx.fillStyle = '#9ee7ff';
+      ctx.fillStyle = id === 'pop' ? '#ffde3b' : id === 'comic' ? '#9ee7ff' : '#ffe2f2';
       ctx.fillRect(0, 0, s, s);
-      ctx.fillStyle = 'rgba(0,90,140,0.25)';
+      ctx.fillStyle = id === 'pop' ? 'rgba(255,61,200,0.35)' : 'rgba(0,90,140,0.22)';
       for (let y = 0; y < s; y += s / 12) for (let x = 0; x < s; x += s / 12) {
         ctx.beginPath();
         ctx.arc(x + s / 24, y + s / 24, s / 60, 0, Math.PI * 2);
         ctx.fill();
       }
-      inked(ctx, s, '#111', line * 1.3);
-      flat(ctx, s);
-      break;
-    }
-    case 'anime':
-    case 'cartoon': {
-      inked(ctx, s, id === 'cartoon' ? '#111' : '#5a3a1a', id === 'cartoon' ? line * 1.4 : line * 0.6);
-      flat(ctx, s);
-      ctx.save();
-      ctx.clip(outline(s));
-      ctx.fillStyle = 'rgba(180,90,0,0.28)';
-      ctx.fillRect(0, s * 0.62, s, s);
-      ctx.restore();
-      if (id === 'anime') {
-        ctx.fillStyle = '#1c1c1c';
-        ctx.beginPath();
-        ctx.arc(s * 0.64, s * 0.31, s * 0.055, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(s * 0.655, s * 0.295, s * 0.018, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      break;
-    }
-    case 'origami': {
-      const pts: [number, number][][] = [
-        [[0.18, 0.62], [0.5, 0.42], [0.78, 0.66]],
-        [[0.18, 0.62], [0.78, 0.66], [0.46, 0.86]],
-        [[0.5, 0.42], [0.62, 0.18], [0.78, 0.4]],
-        [[0.5, 0.42], [0.78, 0.4], [0.78, 0.66]],
-        [[0.78, 0.4], [0.92, 0.38], [0.78, 0.46]],
-      ];
-      const inks = ['#ffd84d', '#e8b316', '#ffcf33', '#f0be22', '#ff7a1a'];
-      pts.forEach((tri, k) => {
-        ctx.beginPath();
-        tri.forEach(([x, y], n) => (n ? ctx.lineTo(x * s, y * s) : ctx.moveTo(x * s, y * s)));
-        ctx.closePath();
-        ctx.fillStyle = inks[k];
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      });
-      break;
-    }
-    case 'stitched': {
-      ctx.fillStyle = '#e9e1d0';
-      ctx.fillRect(0, 0, s, s);
-      ctx.lineWidth = line * 0.9;
-      ctx.setLineDash([line * 1.6, line * 0.8]);
-      for (const part of bird(s)) {
+      inked(ctx, s, '#111', line * (id === 'moderncomic' ? 1.1 : 1.4));
+      flat(ctx, s, id === 'pop' ? (ink) => (ink === FUR ? '#ff7a1a' : ink === BELLY ? '#ffd0a8' : ink) : undefined);
+      if (id !== 'comic') {
         ctx.save();
-        ctx.clip(part.path);
-        ctx.strokeStyle = part.ink;
-        for (let k = -s; k < s * 2; k += line * 1.3) {
-          ctx.beginPath();
-          ctx.moveTo(k, 0);
-          ctx.lineTo(k - s * 0.4, s);
-          ctx.stroke();
-        }
+        ctx.clip(outline(s));
+        ctx.fillStyle = 'rgba(120,60,0,0.25)';
+        ctx.fillRect(s * 0.5, 0, s, s);
         ctx.restore();
       }
-      ctx.setLineDash([]);
+      break;
+    }
+    case 'cartoon':
+    case 'anime':
+    case 'colourline':
+    case 'flat': {
+      if (id !== 'flat') inked(ctx, s, id === 'anime' ? '#5a3a1a' : '#111', id === 'anime' ? line * 0.6 : line * 1.2);
+      flat(ctx, s);
+      if (id === 'flat') {
+        ctx.save();
+        ctx.clip(outline(s));
+        ctx.fillStyle = 'rgba(120,70,20,0.18)';
+        ctx.fillRect(s * 0.5, 0, s, s);
+        ctx.restore();
+      }
+      if (id === 'anime') {
+        ctx.fillStyle = '#ffffff';
+        for (const x of [0.458, 0.548]) { ctx.beginPath(); ctx.arc(s * x, s * 0.338, s * 0.009, 0, Math.PI * 2); ctx.fill(); }
+      }
+      break;
+    }
+    case 'lineart':
+      linesOnly(ctx, s, line * 0.5);
+      break;
+    case 'simpleline':
+      linesOnly(ctx, s, line * 1.2, false);
+      break;
+    case 'doodle': {
+      inked(ctx, s, '#111', line * 0.8);
+      flat(ctx, s, (ink) => (ink === FUR ? '#ffb347' : ink === BELLY ? '#fff1c1' : ink));
+      const colours = ['#ff3dc8', '#22d3ee', '#34d399', '#8b5cf6'];
+      ctx.lineWidth = line * 0.7;
+      colours.forEach((one, k) => {
+        ctx.strokeStyle = one;
+        ctx.beginPath();
+        ctx.arc(s * (0.15 + k * 0.23), s * 0.12, s * 0.04, 0, Math.PI * 2);
+        ctx.stroke();
+      });
       break;
     }
     case 'glass': {
       ctx.fillStyle = '#1e3a5f';
       ctx.fillRect(0, 0, s, s);
-      const shards = ['#ffd84d', '#ffb020', '#ffe680', '#f59e0b'];
       inked(ctx, s, '#111', line * 1.2);
+      const shards = ['#e8b04a', '#c98a2c', '#f0cc7a', '#b8742a'];
       ctx.save();
       ctx.clip(outline(s));
-      for (let k = 0; k < 7; k += 1) {
+      for (let k = 0; k < 8; k += 1) {
         ctx.fillStyle = shards[k % shards.length];
         ctx.beginPath();
         ctx.moveTo(s * (k / 7), 0);
@@ -489,7 +619,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       }
       ctx.strokeStyle = '#111';
       ctx.lineWidth = line * 0.8;
-      for (let k = 1; k < 7; k += 1) {
+      for (let k = 1; k < 8; k += 1) {
         ctx.beginPath();
         ctx.moveTo(s * (k / 7), 0);
         ctx.lineTo(s * ((k + 1.6) / 7), s * 0.5);
@@ -498,11 +628,80 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       }
       ctx.restore();
       ctx.fillStyle = '#111';
-      ctx.fill(bird(s)[4].path);
+      for (const part of meerkat(s)) if (part.ink === MASK || part.ink === DARK) ctx.fill(part.path);
+      break;
+    }
+    case 'crochet':
+    case 'plush':
+    case 'stitched':
+    case 'scrapbook': {
+      if (id === 'stitched' || id === 'scrapbook') { ctx.fillStyle = '#e9e1d0'; ctx.fillRect(0, 0, s, s); }
+      for (const part of meerkat(s)) {
+        ctx.save();
+        ctx.clip(part.path);
+        ctx.fillStyle = part.ink;
+        ctx.fillRect(0, 0, s, s);
+        if (id === 'crochet') {
+          ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+          ctx.lineWidth = Math.max(1, s / 120);
+          const step = s / 22;
+          for (let y = 0; y < s; y += step) for (let x = (y / step) % 2 ? step / 2 : 0; x < s; x += step) {
+            ctx.beginPath();
+            ctx.ellipse(x, y, step * 0.42, step * 0.32, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        } else if (id === 'plush') {
+          ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+          ctx.lineWidth = 1;
+          for (let k = 0; k < 400; k += 1) {
+            const x = ((k * 97) % 1000) / 1000 * s;
+            const y = ((k * 61) % 1000) / 1000 * s;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + s / 60, y - s / 50);
+            ctx.stroke();
+          }
+        } else if (id === 'stitched') {
+          ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+          ctx.lineWidth = line * 0.5;
+          ctx.setLineDash([line * 1.2, line * 0.6]);
+          for (let k = -s; k < s * 2; k += line * 1.1) {
+            ctx.beginPath();
+            ctx.moveTo(k, 0);
+            ctx.lineTo(k - s * 0.4, s);
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          for (let k = 0; k < 120; k += 1) ctx.fillRect(((k * 37) % 100) / 100 * s, ((k * 71) % 100) / 100 * s, 2, 2);
+        }
+        ctx.restore();
+      }
+      if (id === 'scrapbook' || id === 'plush') {
+        ctx.strokeStyle = id === 'plush' ? 'rgba(120,80,40,0.5)' : 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = line * 0.5;
+        ctx.setLineDash([line, line * 0.7]);
+        for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path);
+        ctx.setLineDash([]);
+      }
+      break;
+    }
+    case 'cutout': {
+      ctx.fillStyle = '#cfe8f5';
+      ctx.fillRect(0, 0, s, s);
+      for (const part of meerkat(s)) {
+        ctx.shadowColor = 'rgba(0,0,0,0.28)';
+        ctx.shadowBlur = s / 30;
+        ctx.shadowOffsetY = s / 70;
+        ctx.fillStyle = part.ink;
+        ctx.fill(part.path);
+      }
+      ctx.shadowColor = 'transparent';
       break;
     }
     case 'vintage': {
-      flat(ctx, s, (ink) => (ink === '#1c1c1c' ? '#3b2a1a' : '#b08a5a'));
+      flat(ctx, s, (ink) => (ink === DARK || ink === MASK ? '#3b2a1a' : '#b08a5a'));
       const v = ctx.createRadialGradient(s / 2, s / 2, s * 0.25, s / 2, s / 2, s * 0.72);
       v.addColorStop(0, 'rgba(112,66,20,0.05)');
       v.addColorStop(1, 'rgba(60,35,10,0.55)');

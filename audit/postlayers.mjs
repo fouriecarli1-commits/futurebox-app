@@ -218,6 +218,29 @@ try {
   const darkPhoto = await read();
   check('  with the photo alone, the words stay as they were', darkPhoto.white > lit.white * 0.8, `${lit.white} → ${darkPhoto.white}`);
 
+  /* ── The photo forward ────────────────────────────────────────────────
+     Carli, 17 October 2026: the photo that was there first would not come
+     forward. Moved to the front, it covers the words and the shape. */
+  await page.locator('[data-postplain]').click().catch(() => undefined);
+  await page.waitForTimeout(300);
+  await tool('layers');
+  const beforeFront = await read();
+  await page.locator('[data-postlayerup="photo"]').click();
+  await page.waitForTimeout(250);
+  await page.locator('[data-postlayerup="photo"]').click();
+  await page.waitForTimeout(400);
+  order = await rows();
+  check('the photo can be moved to the front of the list', order[1] === 'photo', order.join(' | '));
+  const inFront = await read();
+  check('  and then it covers the words',
+    beforeFront.white > 30 && inFront.white < beforeFront.white * 0.2,
+    `${JSON.stringify(beforeFront)} → ${JSON.stringify(inFront)}`);
+  await page.locator('[data-postlayerdown="photo"]').click();
+  await page.waitForTimeout(250);
+  await page.locator('[data-postlayerdown="photo"]').click();
+  await page.waitForTimeout(400);
+  check('  and back again, they show', (await read()).white > beforeFront.white * 0.8);
+
   await page.screenshot({ path: shot('postlayers.png') });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 1200)}`);

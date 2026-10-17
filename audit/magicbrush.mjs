@@ -220,11 +220,11 @@ try {
   const digital = await tiles();
   check('Style match offers drawn samples', digital.length >= 5 && digital.every((one) => one > 0), JSON.stringify(digital.length));
   check('  and every sample looks different', new Set(digital).size === digital.length);
-  await page.locator('[data-poststylegroup="physical"]').click();
+  await page.locator('[data-poststylegroup="craft"]').click();
   await page.waitForTimeout(300);
   const physical = await tiles();
   check('  and another group shows other styles', physical.length >= 5 && physical[0] !== digital[0]);
-  await page.locator('[data-poststylegroup="digital"]').click();
+  await page.locator('[data-poststylegroup="featured"]').click();
   await page.locator('[data-poststyle]').first().scrollIntoViewIfNeeded();
   await page.screenshot({ path: shot('magicstyles.png') });
 
