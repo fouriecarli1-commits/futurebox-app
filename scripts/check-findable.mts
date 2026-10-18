@@ -191,6 +191,7 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   sfx: ['sound effect'],
   marketPlan: ['campaign'],
   adLines: ['advert'],
+  adLink: ['product link'],
   cutout: ['background out'],
   erase: ['item out'],
 };

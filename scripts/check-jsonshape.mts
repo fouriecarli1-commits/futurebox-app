@@ -55,6 +55,7 @@ import { join } from 'node:path';
 const PAIRS: readonly { route: string; reads: string | null; screens: readonly string[] }[] = [
   { route: 'app/api/plan/route.ts', reads: 'plan', screens: ['app/components/MarketPlan.tsx'] },
   { route: 'app/api/campaign/route.ts', reads: 'ads', screens: ['app/components/Campaign.tsx'] },
+  { route: 'app/api/campaign/link/route.ts', reads: 'found', screens: ['app/components/Campaign.tsx'] },
   {
     route: 'app/api/translate/route.ts',
     reads: 'lines',
@@ -219,7 +220,9 @@ for (const { route, reads } of PAIRS) {
   const name = route.replace(/^app\/api\//, '').replace(/\/route\.ts$/, '');
   for (const probe of probes) {
     const source = readFileSync(join('audit', probe), 'utf8');
-    const stub = new RegExp(`route\\(\\s*['"\`][^'"\`]*\\/api\\/${name}[^'"\`]*['"\`][\\s\\S]{0,2400}?\\)\\);`).exec(source);
+    /* The route's own path and nothing under it: `/api/campaign` is not
+       `/api/campaign/link`, which has a contract of its own. */
+    const stub = new RegExp(`route\\(\\s*['"\`][^'"\`]*\\/api\\/${name}(?=[?*'"\`])[^'"\`]*['"\`][\\s\\S]{0,2400}?\\)\\);`).exec(source);
     if (!stub) continue;
     const carries = reads === null
       // A bare reply: the stub must not invent a wrapper.

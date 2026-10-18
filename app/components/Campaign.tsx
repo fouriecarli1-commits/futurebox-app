@@ -75,6 +75,7 @@ import Note from './Note';
 import Card from './Card';
 import { useOpenCard } from '../lib/opencard';
 import { makeId, rememberMake } from '../lib/makes';
+import { whatFrom, type FoundProduct } from '../lib/adlink';
 
 interface Ad {
   angle: string;
@@ -650,6 +651,42 @@ export default function Campaign({
     }
   };
 
+  /* ── A product link read into the brief ─────────────────────────────
+     Carli, 18 October 2026: yes to Google's AI reading the page, three
+     credits. `lib/adlink.ts` — this app never opens the link itself. */
+  const [link, setLink] = useState('');
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkSaid, setLinkSaid] = useState('');
+  const readLink = async (): Promise<void> => {
+    if (linkBusy || !link.trim()) return;
+    setLinkBusy(true);
+    setLinkSaid('');
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/campaign/link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ url: link.trim(), lang }),
+      });
+      const got = (await answer.json().catch(() => ({}))) as { found?: FoundProduct; message?: string };
+      if (!answer.ok || !got.found) {
+        setLinkSaid(got.message ?? `${t('ads.linkFailed', 'That page could not be read.')} (${answer.status})`);
+        return;
+      }
+      const found = got.found;
+      setWhat(whatFrom(found));
+      if (found.who) setWho(found.who);
+      const offerLine = [found.offer, ...found.points].filter(Boolean).join(' · ').slice(0, 300);
+      if (offerLine) setOffer(offerLine);
+      aboutCard.arrived();
+      setLinkSaid(t('ads.linkDone', 'Read from the page and put in the boxes below. Change anything that is not right.'));
+    } catch {
+      setLinkSaid(t('ads.linkOffline', 'That could not be sent. Check the connection and try again.'));
+    } finally {
+      setLinkBusy(false);
+    }
+  };
+
   const field =
     'w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none';
 
@@ -885,6 +922,40 @@ export default function Campaign({
             )}
           </div>
         )}
+        {/* A product link, read into the boxes below. */}
+        <div className="space-y-1.5" data-adslinkbox>
+          <label className="text-sm text-zinc-400" htmlFor="ads-link">
+            {t('ads.linkLabel', 'Or start from a product link')}
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="ads-link"
+              data-adslink
+              type="url"
+              inputMode="url"
+              value={link}
+              onChange={(event) => setLink(event.target.value)}
+              placeholder={t('ads.linkHint', 'https://your-shop.co.za/product')}
+              className={`${field} min-w-0 flex-1`}
+            />
+          </div>
+          <button
+            type="button"
+            data-adslinkgo
+            disabled={linkBusy || !link.trim()}
+            onClick={() => void readLink()}
+            className="min-h-[44px] w-full rounded-xl border border-emerald-500/50 bg-emerald-500/15 px-3 text-sm font-semibold text-emerald-200 disabled:opacity-40"
+          >
+            {linkBusy
+              ? t('ads.linkBusy', 'Reading the page…')
+              : t('ads.linkGo', 'Read the link · {n} credits').replace('{n}', String(CREDITS.adLink))}
+          </button>
+          <p className="text-xs text-zinc-500">
+            {t('ads.linkWhy', 'Google’s AI reads the page and fills in what it is, who it is for and the offer. If the page cannot be read, nothing is charged.')}
+          </p>
+          {linkSaid && <p className="text-sm text-zinc-300" data-adslinksaid>{linkSaid}</p>}
+        </div>
+
         <div className="space-y-1.5">
           <label className="text-sm text-zinc-400" htmlFor="ads-what">
             {t('ads.whatLabel', 'What are you advertising?')}

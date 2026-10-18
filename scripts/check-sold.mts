@@ -160,6 +160,9 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      thought about rather than forgotten. */
   marketPlan: 'on every card, priced beside the marketing desk',
   adLines: 'on every card, priced beside the marketing desk',
+  /* 18 October 2026: priced on its own button on the advert desk, said
+     before the press, refunded when the page cannot be read. */
+  adLink: 'on its own button on the advert desk, before the press',
   cutout: 'on every card, priced beside the cutting room',
   /* The cutting room's own price, 1 October 2026. Carli: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every

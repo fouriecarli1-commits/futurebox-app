@@ -846,7 +846,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     id: "campaign",
     stage: "sell",
     purpose:
-      "Adverts: a brief in, and a set of adverts out — the line, the words under it, the button, the line to say aloud, and the shot to film.",
+      "Adverts: a brief in, and a set of adverts out — the line, the words under it, the button, the line to say aloud, and the shot to film. The brief can start from a product link: Google's AI reads the page and fills in what it is, who it is for and the offer, for credits named on its button.",
     helps: {
       en: "I can fill in any part of the brief, and say which market to write it for.",
       af: "Ek kan enige deel van die opdrag invul, en sê vir watter mark om dit te skryf.",

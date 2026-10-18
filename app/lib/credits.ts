@@ -828,6 +828,15 @@ export const CREDITS = {
    */
   adLines: 40,
   /**
+   * A product link read into the advert brief.
+   *
+   * Carli, 18 October 2026, offered "3" and answered *"Ja"*. Google's model
+   * reads the page with its URL-context tool and answers in a few lines — a
+   * small call, priced with the other small reads (`filmWords`, `sfx`).
+   * Refunded when the page cannot be read. `api/campaign/link`.
+   */
+  adLink: 3,
+  /**
    * Turning a named reference into a describable style. Per translation.
    *
    * ── Where it comes from ───────────────────────────────────────────────

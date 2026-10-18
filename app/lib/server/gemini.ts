@@ -63,6 +63,12 @@ export interface GeminiGenerateOptions {
   temperature?: number;
   maxOutputTokens?: number;
   jsonOutput?: boolean;
+  /**
+   * Let the model read the web addresses in the prompt itself, with Google's
+   * URL-context tool — so this server never fetches them. JSON mode cannot be
+   * combined with a tool, so `jsonOutput` is then read out of the text.
+   */
+  urlContext?: boolean;
 }
 
 export interface GeminiResponse {
@@ -71,6 +77,8 @@ export interface GeminiResponse {
   text: string;
   json?: unknown;
   error?: string;
+  /** With `urlContext`: whether Google's fetcher read at least one of the pages. */
+  fetched?: boolean;
 }
 
 /**
@@ -107,8 +115,9 @@ export async function askGemini(options: GeminiGenerateOptions): Promise<GeminiR
     generationConfig: {
       temperature: options.temperature ?? 0.7,
       maxOutputTokens: options.maxOutputTokens ?? 2048,
-      ...(options.jsonOutput ? { responseMimeType: 'application/json' } : {}),
+      ...(options.jsonOutput && !options.urlContext ? { responseMimeType: 'application/json' } : {}),
     },
+    ...(options.urlContext ? { tools: [{ urlContext: {} }] } : {}),
   };
 
   if (options.systemInstruction) {
@@ -157,7 +166,12 @@ export async function askGemini(options: GeminiGenerateOptions): Promise<GeminiR
     let jsonParsed: unknown = undefined;
     if (options.jsonOutput) {
       // Strip markdown code fences if present
-      const clean = textOutput.replace(/```(?:json)?\s*([\s\S]*?)```/i, '$1').trim();
+      const fenced = textOutput.replace(/```(?:json)?\s*([\s\S]*?)```/i, '$1').trim();
+      /* Words around the object only come with a tool turned on, which is
+         when JSON mode is off; an array answer elsewhere is left whole. */
+      const from = fenced.indexOf('{');
+      const to = fenced.lastIndexOf('}');
+      const clean = options.urlContext && from >= 0 && to > from ? fenced.slice(from, to + 1) : fenced;
       try {
         jsonParsed = JSON.parse(clean);
       } catch {
@@ -165,11 +179,18 @@ export async function askGemini(options: GeminiGenerateOptions): Promise<GeminiR
       }
     }
 
+    /* What Google's fetcher managed, when it was asked to read pages. */
+    const read = (firstCandidate?.urlContextMetadata?.urlMetadata ?? firstCandidate?.url_context_metadata?.url_metadata ?? []) as readonly { urlRetrievalStatus?: string; url_retrieval_status?: string }[];
+    const fetched = options.urlContext
+      ? read.some((one) => /SUCCESS/.test(String(one.urlRetrievalStatus ?? one.url_retrieval_status ?? '')))
+      : undefined;
+
     return {
       ok: true,
       status: 200,
       text: textOutput,
       json: jsonParsed,
+      ...(fetched === undefined ? {} : { fetched }),
     };
   } catch (err: any) {
     return {
