@@ -1267,6 +1267,13 @@ body:has([data-cubed]) {
  * they are in the booth: in a room that fills the screen they are not
  * decoration, they are the body text, and they have to clear 4.5 on PANEL.
  */
+/* The You page takes this room's palette too: it is drawn in the same
+   obsidian and green (the owner, 18 October 2026: *"Ek like die donker tema
+   by You. Maar jy gaan die woorde meer vorentoe moet bring"*). Without it the
+   page's words were the light theme's near-black ink on near-black cards.
+   With `body:has` the tab bar under it goes dark with it, not a white band. */
+[data-accountroom],
+body:has([data-accountroom]),
 [data-cuttingroom],
 [data-cutshell] {
   /* Obsidian, 13 October 2026 — the "Video Editor" page Google drew, under

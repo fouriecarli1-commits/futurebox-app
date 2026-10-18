@@ -209,6 +209,7 @@ export default function Account({
      thing a profile is actually for: where else you are. */
   return (
     <div
+      data-accountroom
       className="fixed inset-0 z-[60] overflow-y-auto pb-24"
       style={{ backgroundColor: PHOTO.floor, backgroundImage: PROFILE_BACKDROP, backgroundSize: PROFILE_BACKDROP_SIZE, backgroundPosition: PROFILE_BACKDROP_PLACE, backgroundAttachment: 'fixed', color: PHOTO.ink }}
       role="dialog"

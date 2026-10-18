@@ -70,6 +70,12 @@ const check = (label, ok, detail = '') => {
 };
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
+/* On a LIGHT theme, chosen, because that is where the You page's words went
+   dark on its dark cards (the owner, 18 October 2026). The page is drawn
+   dark whatever the theme; the theme must not decide its ink. */
+await p.addInitScript(() => {
+  try { window.localStorage.setItem('futurebox.theme.v3', JSON.stringify({ ...{ id: 'prolight', surface: 'daylight', primary: 'mint', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'jakarta', layout: 'rail', motion: 'full' }, chosen: true })); } catch {}
+});
 
 const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'lerato@futurebox.test' };
 await p.addInitScript((who) => {
@@ -138,6 +144,59 @@ await p.waitForTimeout(1200);
 const panel = p.locator('[role="dialog"]').first();
 check('pressing it opens the account', (await panel.count()) === 1, String(await panel.count()));
 let words = await panel.innerText();
+
+/* ── The words can be read ──────────────────────────────────────────────
+   The owner, 18 October 2026: *"Ek like die donker tema by You. Maar jy gaan
+   die woorde meer vorentoe moet bring, mens kan die woorde nie sien nie."*
+   The page is drawn dark whatever the app's theme is, and on the light theme
+   its words took the light theme's near-black ink. Every piece of writing on
+   it is measured against what is behind it; a contrast under 3:1 — the floor
+   for large type — is a word nobody can read. */
+const dim = await panel.evaluate((root) => {
+  /* What is behind the page decides nothing: the room under it here happens
+     to be dark, and on her phone it was light. So the light theme's ink is
+     put on the page's own parent, and the page must still write in light. */
+  const holder = root.parentElement;
+  if (holder) {
+    holder.style.setProperty('--fb-ink', '15 16 17');
+    holder.style.setProperty('--fb-surface-300', '70 74 78');
+    holder.style.setProperty('--fb-surface-400', '90 94 98');
+  }
+  const sheet = document.createElement('canvas').getContext('2d');
+  const rgba = (colour) => {
+    sheet.clearRect(0, 0, 1, 1);
+    sheet.fillStyle = '#000';
+    sheet.fillStyle = colour;
+    sheet.fillRect(0, 0, 1, 1);
+    const d = sheet.getImageData(0, 0, 1, 1).data;
+    return [d[0], d[1], d[2], d[3] / 255];
+  };
+  const lum = ([r, g, b]) => {
+    const f = (c) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  };
+  const behind = (el) => {
+    for (let at = el; at; at = at.parentElement) {
+      const c = rgba(getComputedStyle(at).backgroundColor);
+      if (c[3] > 0.5) return c;
+    }
+    return [0, 0, 0, 1];
+  };
+  const bad = [];
+  for (const el of root.querySelectorAll('p, span, h1, h2, h3, h4, label, a, button')) {
+    const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 1);
+    if (!own || el.offsetParent === null) continue;
+    const ink = rgba(getComputedStyle(el).color);
+    const back = behind(el);
+    const a = lum(ink);
+    const b = lum(back);
+    const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    if (ratio < 3) bad.push(`${el.textContent.trim().slice(0, 30)} (${ratio.toFixed(1)})`);
+  }
+  return bad;
+});
+check('every word on the page can be read against what is behind it', dim.length === 0,
+  dim.slice(0, 8).join(' · '));
 
 check('the address they signed up with is on it', /lerato@futurebox\.test/.test(words),
   words.split('\n').slice(0, 6).join(' / '));
