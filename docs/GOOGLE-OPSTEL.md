@@ -224,7 +224,7 @@ member making videos all afternoon takes the songs away from everybody.
 
 "Soos wat ons wins maak" is the correct instinct and the correct order — spend what has been
 earned rather than what is hoped for. What it needs to be workable is the thing
-`docs/KOSTE-EN-WINS.md` already asks for: **what one song, one picture and one video actually
+`private/KOSTE-EN-WINS.md` already asks for: **what one song, one picture and one video actually
 cost us once Google's real rates are known.** Then the cap moves on an arithmetic rather than
 on a feeling, and the credits charged for each can be checked against it.
 

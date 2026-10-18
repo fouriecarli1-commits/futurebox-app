@@ -17,7 +17,7 @@ temastelsel, animasie, die gevoel van 'n kamer.
 **Moenie:** pryse, krediete, wat 'n knoppie kos, hoeveel iets hef, veiligheid,
 die kinderkamer se reëls, of enigiets wat 'n verskaffer bereik. Daardie
 nommers is besluite wat die eienaar geneem het met die enjin se koste voor
-haar — sien `docs/KREDIETE.md`.
+haar — sien `private/KREDIETE.md`.
 
 **Moenie na `main` stoot nie.** `main` is direk aan Vercel gekoppel: wat daar
 land, is binne twee minute by betalende kliënte. Werk op die tak wat in
@@ -152,7 +152,7 @@ Die eienaar se eie woorde en die datum. Lees dit voor jy iets verander wat vreem
 lyk; dit is gewoonlik vreemd omdat iets anders al een keer verkeerd geloop
 het.
 
-- `docs/KREDIETE.md` — die hele prys lys, gegenereer uit die kode
+- `private/KREDIETE.md` — die hele prys lys, gegenereer uit die kode
 - `docs/SAFETY-REVIEW.md` — wat die app oor homself beweer, met die tellings
 - `app/lib/theme.ts` — hoe 'n tema gebou word, en die kontras-rekenkunde
 - `app/globals.css` — die kamers wat hul eie palet dra

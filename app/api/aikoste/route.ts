@@ -4,7 +4,7 @@
  * ── Why this page exists ─────────────────────────────────────────────────
  *
  * Prompt caching went on on 19 September 2026, and
- * `docs/MAANDELIKSE-KOSTE.md` deliberately recorded no saving from it:
+ * `private/MAANDELIKSE-KOSTE.md` deliberately recorded no saving from it:
  *
  *   *"'n Kas wat nooit tref nie lyk presies soos een wat altyd tref, behalwe
  *    op die rekening."*

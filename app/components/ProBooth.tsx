@@ -3869,7 +3869,7 @@ export default function ProBooth({
                 singing — and was silent about the thing that matters more.
                 Over the speech model that is `eleven_multilingual_sts_v2`:
                 §A1 of docs/OPEN-QUESTIONS.md records that it handles singing
-                badly, and §9 of docs/DIENSTE-EN-KOSTE.md called a real singing
+                badly, and §9 of private/DIENSTE-EN-KOSTE.md called a real singing
                 model the one thing this app promises and cannot deliver.
 
                 The panel is titled "Sing this in another voice", the button

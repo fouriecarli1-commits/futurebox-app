@@ -29,7 +29,7 @@
  *
  * So this asks Kits first. Every minute separated there is a minute of music
  * the ElevenLabs plan can serve instead, and the ceiling is what binds — see
- * `docs/OPSIE-E.md`.
+ * `private/OPSIE-E.md`.
  *
  * It is a preference, not a replacement. Kits being down, out of its monthly
  * minutes, or unable to take a particular recording all fall through to

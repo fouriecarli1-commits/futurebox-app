@@ -1,6 +1,6 @@
 # Pronunciation recording — release (FUTUREBOXSTUDIO (Pty) Ltd)
 
-> **This is the one you need now.** Not `docs/SINGER-AGREEMENT.md`.
+> **This is the one you need now.** Not `private/SINGER-AGREEMENT.md`.
 >
 > *The owner, 9 October 2026:*
 >
@@ -84,7 +84,7 @@ The Studio will **not**:
 
 1. **make a voice model of the Speaker.** No cloning, no RVC, no training of any
    model on this recording. Not now and not later, unless the Speaker signs a
-   separate agreement (`docs/SINGER-AGREEMENT.md`);
+   separate agreement (`private/SINGER-AGREEMENT.md`);
 2. **publish the recording** — not in the app, not as a demonstration, not on
    social media, nowhere. Nobody outside the Studio hears it;
 3. **use the recording in a released song**, including as a guide vocal underneath
@@ -125,7 +125,7 @@ Two things would need a new agreement, and both are entirely fair to ask for:
 
 | If the Studio wants to | What is then needed |
 |---|---|
-| Make a voice model of the Speaker | `docs/SINGER-AGREEMENT.md`, signed separately |
+| Make a voice model of the Speaker | `private/SINGER-AGREEMENT.md`, signed separately |
 | Use the recording as a guide vocal under a released song | a session fee for a performance, in writing, before release |
 
 The second is easy to overlook. A guide vocal that has been converted is still the

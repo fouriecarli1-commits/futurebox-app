@@ -253,7 +253,7 @@ registered, is read the SKU rates for her own region and currency and correct th
 ### What this does not change
 
 **`CREDITS.video` is 15 a unit and has one cent of margin on Kling.** That was already the open
-question in `docs/KOSTE-EN-WINS.md` and it does not get easier by adding an engine; it gets easier
+question in `private/KOSTE-EN-WINS.md` and it does not get easier by adding an engine; it gets easier
 by choosing the cheap one. If Veo Lite is really R3.84 for eight seconds, the margin problem
 solves itself. If it is really $0.75 a second, it gets much worse. So: the price is the decision,
 and the price has to come off Google's own page rather than off a blog.

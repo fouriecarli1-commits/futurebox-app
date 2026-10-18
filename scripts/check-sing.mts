@@ -1,7 +1,7 @@
 /**
  * The one thing the app promised and could not do.
  *
- * §9 of `docs/DIENSTE-EN-KOSTE.md` called singing voice conversion the gap
+ * §9 of `private/DIENSTE-EN-KOSTE.md` called singing voice conversion the gap
  * between a song made here and somebody's own voice, and the Pro Booth has
  * carried a warning under its "Sing it" button saying the model behind it is
  * built for speech. The owner chose Kits.AI on 7 September 2026 and this is the

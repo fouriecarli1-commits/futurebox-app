@@ -24,7 +24,7 @@
  * A document stating "MiniMax at 768P would lose money on a five-second
  * clip" is true today and silently false the day `CREDITS.video` moves. So
  * the arithmetic lives here, reads `CREDITS` and `RAND_PER_USD` from the
- * code, and fails when a conclusion in `docs/MINIMAX-PRYSE.md` stops being
+ * code, and fails when a conclusion in `private/MINIMAX-PRYSE.md` stops being
  * the one the numbers give.
  *
  * ── The one that matters ─────────────────────────────────────────────────
@@ -37,6 +37,7 @@
 import { readFileSync } from 'node:fs';
 import { CREDITS, TIER_CREDITS } from '../app/lib/credits.ts';
 import { RAND_PER_USD, TIER_SPECS } from '../app/lib/plans.ts';
+import { privateDoc, skipped } from './privatedocs.mts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -151,7 +152,7 @@ ok('buying MiniMax directly is in profit on a five-second clip at our price',
   rand(MINIMAX.videoPerSecond.max_768 * 5) < takenFor5s,
   `R${rand(MINIMAX.videoPerSecond.max_768 * 5).toFixed(2)} to buy against`
   + ` R${takenFor5s.toFixed(2)} taken — if this ever fails, the credit has`
-  + ' been repriced under the engine and `docs/MINIMAX-PRYSE.md` needs its'
+  + ' been repriced under the engine and `private/MINIMAX-PRYSE.md` needs its'
   + ' note rewritten');
 
 ok('  and even the dearest direct resolution still is, on the thinnest plan',
@@ -184,7 +185,7 @@ ok('  and a cover at our price still carries it several times over',
   + ` against R${rand(MINIMAX.imagePerImage).toFixed(3)} to make one`);
 
 /* ── Voice, against the supplier we already pay ─────────────────────── */
-/* ElevenLabs' own published rates, from `docs/ELEVENLABS-PRYSE.md`, which
+/* ElevenLabs' own published rates, from `private/ELEVENLABS-PRYSE.md`, which
    was written off the page the owner sent on 8 September 2026. */
 const ELEVEN = { ttsPerThousandChars: 0.10, asrPerHour: 0.22 } as const;
 
@@ -229,7 +230,7 @@ const MUREKA = {
 } as const;
 
 /* What a song costs us today: ElevenLabs music at $0.15 a minute, and a
-   song is two minutes. `docs/ELEVENLABS-PRYSE.md` works it out off the
+   song is two minutes. `private/ELEVENLABS-PRYSE.md` works it out off the
    page the owner sent on 8 September 2026. */
 const SONG_NOW = 0.15 * 2;
 
@@ -284,197 +285,206 @@ ok('  and their lyrics are cheap enough that writing them first is free in pract
   + ` song against $${MUREKA.songFromPrompt.older} for prompt-to-song`);
 
 /* ── The write-up says all of this, and says whose numbers they are ─── */
-const doc = readFileSync('docs/MINIMAX-PRYSE.md', 'utf8');
-ok('the write-up exists and dates the prices to the day she sent them',
-  doc.includes('8 Oktober 2026') && doc.length > 2000,
-  `${doc.length} characters`);
-ok('  and says I could not read either page myself',
-  /kon nie|blokkeer/i.test(doc),
-  'a figure in a document with no provenance is a figure somebody will'
-  + ' charge a member against next year');
-/* ── The catch that can turn the headline finding upside down ─────────
+/* ── The write-up and the letter, where they are kept ──────────────────
+   Both left the repository on 18 October 2026 (see `privatedocs.mts`).
+   Everything above is held against the code on every run; what follows
+   is held only where the documents are present. */
+if (privateDoc('MINIMAX-PRYSE.md') === null || privateDoc('EPOS-MUREKA.md') === null) {
+  console.log(skipped('check:minimax', ['MINIMAX-PRYSE.md', 'EPOS-MUREKA.md']));
+} else {
+  const doc = privateDoc('MINIMAX-PRYSE.md') ?? '';
+  ok('the write-up exists and dates the prices to the day she sent them',
+    doc.includes('8 Oktober 2026') && doc.length > 2000,
+    `${doc.length} characters`);
+  ok('  and says I could not read either page myself',
+    /kon nie|blokkeer/i.test(doc),
+    'a figure in a document with no provenance is a figure somebody will'
+    + ' charge a member against next year');
+  /* ── The catch that can turn the headline finding upside down ─────────
  
-   OpenArt's prices are written `$175 /Seat/mo`. That is a subscription for a
-   PERSON using their product — their own screen offers Short Film, Product
-   Ads, Character Builder, Image Upscale — and not a wholesale API rate for
-   serving another app's members.
+     OpenArt's prices are written `$175 /Seat/mo`. That is a subscription for a
+     PERSON using their product — their own screen offers Short Film, Product
+     Ads, Character Builder, Image Upscale — and not a wholesale API rate for
+     serving another app's members.
  
-   The arithmetic above is right and is not a plan until somebody reads their
-   terms. A pricing document whose headline has a licensing catch has to
-   carry the catch on the same page, or the next person to open it buys on
-   the number. */
-ok('  and says their plans are priced per seat, which may not be a wholesale rate',
-  /per sitplek|\/Seat/i.test(doc) && /herverkoop|terme/i.test(doc),
-  'the comparison is arithmetic on a consumer subscription. "Commercial use'
-  + ' rights" is permission to use what YOU make, not to resell generation to'
-  + ' third parties, and a document that leaves that out reads as a plan');
+     The arithmetic above is right and is not a plan until somebody reads their
+     terms. A pricing document whose headline has a licensing catch has to
+     carry the catch on the same page, or the next person to open it buys on
+     the number. */
+  ok('  and says their plans are priced per seat, which may not be a wholesale rate',
+    /per sitplek|\/Seat/i.test(doc) && /herverkoop|terme/i.test(doc),
+    'the comparison is arithmetic on a consumer subscription. "Commercial use'
+    + ' rights" is permission to use what YOU make, not to resell generation to'
+    + ' third parties, and a document that leaves that out reads as a plan');
 
-ok('  and carries the song comparison, which is the biggest number in it',
-  /Mureka/.test(doc) && /0,045|0\.045/.test(doc),
-  'a song is the largest single cost in this app, and a price comparison'
-  + ' that leaves it out is a comparison about the small things');
+  ok('  and carries the song comparison, which is the biggest number in it',
+    /Mureka/.test(doc) && /0,045|0\.045/.test(doc),
+    'a song is the largest single cost in this app, and a price comparison'
+    + ' that leaves it out is a comparison about the small things');
 
-ok('  and names the credit expiry, which is the catch in every plan',
-  /verval|verstryk/i.test(doc),
-  'unused credits expire monthly and do not roll over — which turns a'
-  + ' discount into a loss at a volume she has not reached yet');
+  ok('  and names the credit expiry, which is the catch in every plan',
+    /verval|verstryk/i.test(doc),
+    'unused credits expire monthly and do not roll over — which turns a'
+    + ' discount into a loss at a volume she has not reached yet');
 
-/* ── Lyria, and the one number here that is NOT from a pricing page ──
+  /* ── Lyria, and the one number here that is NOT from a pricing page ──
 
-   The owner, 8 October 2026: *"Ek is baie beindruk met google se lyria. Die
-   Afrikaans is baie mooi."*
+     The owner, 8 October 2026: *"Ek is baie beindruk met google se lyria. Die
+     Afrikaans is baie mooi."*
 
-   Her sentence is the most valuable line in this whole file and the only
-   measurement in it I could not have made. Every other figure here is
-   arithmetic on a published price; quality in Afrikaans is a thing a
-   person with an ear has to judge, in a language most of these models
-   have barely been trained on, and nobody else on this project can judge
-   it. It is also the exact question the letter to Mureka asks.
+     Her sentence is the most valuable line in this whole file and the only
+     measurement in it I could not have made. Every other figure here is
+     arithmetic on a published price; quality in Afrikaans is a thing a
+     person with an ear has to judge, in a language most of these models
+     have barely been trained on, and nobody else on this project can judge
+     it. It is also the exact question the letter to Mureka asks.
 
-   The PRICE is a different matter. The screenshot she sent is an AI
-   answer citing OpenRouter, RightsDocket and Pixazo — not Google. So
-   `$0.08 per track` is third-hand, and this check marks it as such rather
-   than letting it sit in a table looking like the others.
+     The PRICE is a different matter. The screenshot she sent is an AI
+     answer citing OpenRouter, RightsDocket and Pixazo — not Google. So
+     `$0.08 per track` is third-hand, and this check marks it as such rather
+     than letting it sit in a table looking like the others.
 
-   What raises confidence is an independent line through OpenArt: they
-   resell Lyria 3 Pro at 50 credits, which on the Wonder plan is $0.0825.
-   Two routes landing within half a cent of each other is worth more than
-   either alone — and it is still not Google's own page. */
-const LYRIA_SAID = 0.08;
-const lyriaViaOpenArt = IN_CREDITS.lyria3Pro * perCredit('wonder');
+     What raises confidence is an independent line through OpenArt: they
+     resell Lyria 3 Pro at 50 credits, which on the Wonder plan is $0.0825.
+     Two routes landing within half a cent of each other is worth more than
+     either alone — and it is still not Google's own page. */
+  const LYRIA_SAID = 0.08;
+  const lyriaViaOpenArt = IN_CREDITS.lyria3Pro * perCredit('wonder');
 
-ok('the two routes to a Lyria price agree closely enough to be worth using',
-  Math.abs(lyriaViaOpenArt - LYRIA_SAID) < 0.01,
-  `$${LYRIA_SAID} said third-hand against $${lyriaViaOpenArt.toFixed(4)} worked`
-  + ' out from OpenArt’s own credit cost — if these ever diverge, one of them'
-  + ' is wrong and the write-up should stop quoting either');
+  ok('the two routes to a Lyria price agree closely enough to be worth using',
+    Math.abs(lyriaViaOpenArt - LYRIA_SAID) < 0.01,
+    `$${LYRIA_SAID} said third-hand against $${lyriaViaOpenArt.toFixed(4)} worked`
+    + ' out from OpenArt’s own credit cost — if these ever diverge, one of them'
+    + ' is wrong and the write-up should stop quoting either');
 
-ok('  and a Lyria song would cost less than what we pay now',
-  rand(LYRIA_SAID) < rand(SONG_NOW),
-  `R${rand(LYRIA_SAID).toFixed(2)} against R${rand(SONG_NOW).toFixed(2)}`);
+  ok('  and a Lyria song would cost less than what we pay now',
+    rand(LYRIA_SAID) < rand(SONG_NOW),
+    `R${rand(LYRIA_SAID).toFixed(2)} against R${rand(SONG_NOW).toFixed(2)}`);
 
-ok('  but more than Mureka’s working model, so quality has to carry the difference',
-  LYRIA_SAID > MUREKA.songFromLyrics.v8v9,
-  `$${LYRIA_SAID} against $${MUREKA.songFromLyrics.v8v9} — which is the`
-  + ' comparison her ear decides and no figure here can');
+  ok('  but more than Mureka’s working model, so quality has to carry the difference',
+    LYRIA_SAID > MUREKA.songFromLyrics.v8v9,
+    `$${LYRIA_SAID} against $${MUREKA.songFromLyrics.v8v9} — which is the`
+    + ' comparison her ear decides and no figure here can');
 
-ok('  and it still leaves a margin at our price',
-  rand(LYRIA_SAID) < CREDITS.song * CREDIT_RAND_LOW,
-  `R${rand(LYRIA_SAID).toFixed(2)} against`
-  + ` R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)}`);
+  ok('  and it still leaves a margin at our price',
+    rand(LYRIA_SAID) < CREDITS.song * CREDIT_RAND_LOW,
+    `R${rand(LYRIA_SAID).toFixed(2)} against`
+    + ` R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)}`);
 
-/* ── And the thing in that screenshot nobody had raised ────────────
+  /* ── And the thing in that screenshot nobody had raised ────────────
 
-   Both halves of her screenshot say the same thing in passing: every track
-   from the official Lyria API carries an inaudible SynthID watermark.
+     Both halves of her screenshot say the same thing in passing: every track
+     from the official Lyria API carries an inaudible SynthID watermark.
 
-   Nothing in this app knows that word. It is not a reason not to use
-   Lyria — it sits well beside the openly-labelled-AI line in the
-   marketing — but a member whose song carries a provenance watermark
-   should be told, and `lib/filmrights.ts` already exists because this repo
-   does not let a claim about somebody's rights go unsaid. */
-const everywhere = readFileSync('docs/MINIMAX-PRYSE.md', 'utf8');
-ok('the write-up raises the watermark, which the app does not yet know about',
-  /SynthID/.test(everywhere),
-  'every track from the official Lyria API carries an inaudible provenance'
-  + ' watermark, and a member releasing that song commercially should hear'
-  + ' it from us rather than from somebody else');
+     Nothing in this app knows that word. It is not a reason not to use
+     Lyria — it sits well beside the openly-labelled-AI line in the
+     marketing — but a member whose song carries a provenance watermark
+     should be told, and `lib/filmrights.ts` already exists because this repo
+     does not let a claim about somebody's rights go unsaid. */
+  const everywhere = doc;
+  ok('the write-up raises the watermark, which the app does not yet know about',
+    /SynthID/.test(everywhere),
+    'every track from the official Lyria API carries an inaudible provenance'
+    + ' watermark, and a member releasing that song commercially should hear'
+    + ' it from us rather than from somebody else');
 
-/* ── The line that is not about a supplier at all ───────────────
+  /* ── The line that is not about a supplier at all ───────────────
 
-   The owner sent Lyria's terms summary on 8 October 2026. The royalty answer
-   is good — no royalties, no ownership claim, commercial use permitted —
-   but it carried a sentence that has nothing to do with Google:
+     The owner sent Lyria's terms summary on 8 October 2026. The royalty answer
+     is good — no royalties, no ownership claim, commercial use permitted —
+     but it carried a sentence that has nothing to do with Google:
 
-     purely AI-generated music does not hold exclusive traditional
-     copyright in most jurisdictions … you cannot stop others using
-     similar material unless human creative modification is added.
+       purely AI-generated music does not hold exclusive traditional
+       copyright in most jurisdictions … you cannot stop others using
+       similar material unless human creative modification is added.
 
-   That is true of every generated song in this app today, with the
-   supplier it already has. The terms page had the other direction —
-   "generated music is not guaranteed to be unique", which is the risk of
-   HER infringing — and had never said whether she can stop anybody else.
-   Those are different questions and only one was answered.
+     That is true of every generated song in this app today, with the
+     supplier it already has. The terms page had the other direction —
+     "generated music is not guaranteed to be unique", which is the risk of
+     HER infringing — and had never said whether she can stop anybody else.
+     Those are different questions and only one was answered.
 
-   It is held here rather than left as prose because the page is the thing
-   a member reads before releasing something, and a paragraph removed in a
-   tidy-up six months from now would take the warning with it. */
-const terms = readFileSync('app/terms/page.tsx', 'utf8');
-ok('the terms say a generated song may not be hers to DEFEND, not only that it may not be unique',
-  /not be yours to defend/i.test(terms) && /human authorship/i.test(terms),
-  'the page warns that a model can produce something close to somebody'
-  + ' else’s — the risk of her infringing — and never said the other'
-  + ' direction: whether she can stop anybody else');
+     It is held here rather than left as prose because the page is the thing
+     a member reads before releasing something, and a paragraph removed in a
+     tidy-up six months from now would take the warning with it. */
+  const terms = readFileSync('app/terms/page.tsx', 'utf8');
+  ok('the terms say a generated song may not be hers to DEFEND, not only that it may not be unique',
+    /not be yours to defend/i.test(terms) && /human authorship/i.test(terms),
+    'the page warns that a model can produce something close to somebody'
+    + ' else’s — the risk of her infringing — and never said the other'
+    + ' direction: whether she can stop anybody else');
 
-ok('  and points at the thing in this app that answers it',
-  /Pro Booth/.test(terms) && /performance/i.test(terms),
-  'singing on it is the human authorship that sentence turns on, and the'
-  + ' room for it is already built — a warning with no way out of it is a'
-  + ' warning that just makes somebody anxious');
+  ok('  and points at the thing in this app that answers it',
+    /Pro Booth/.test(terms) && /performance/i.test(terms),
+    'singing on it is the human authorship that sentence turns on, and the'
+    + ' room for it is already built — a warning with no way out of it is a'
+    + ' warning that just makes somebody anxious');
 
-ok('  and says it is unsettled rather than stating it as the law',
-  /not settled/i.test(terms) && /attorney/i.test(terms),
-  'the source is an AI summary, the position differs by country, and this'
-  + ' page already refuses to bet on our own reading of somebody else’s'
-  + ' contract — betting on our own reading of a statute would be worse');
+  ok('  and says it is unsettled rather than stating it as the law',
+    /not settled/i.test(terms) && /attorney/i.test(terms),
+    'the source is an AI summary, the position differs by country, and this'
+    + ' page already refuses to bet on our own reading of somebody else’s'
+    + ' contract — betting on our own reading of a statute would be worse');
 
-/* ── The correction, kept where the wrong claim was ─────────────
+  /* ── The correction, kept where the wrong claim was ─────────────
 
-   I read the owner's eight Lyria code examples and concluded the model was
-   instrumental. Every example WAS instrumental and one of them listed
-   `vocals` in its negative prompt — but that is a conclusion about the
-   examples written as a conclusion about the model. Examples show what a
-   vendor wanted to show; they do not show where a model stops.
+     I read the owner's eight Lyria code examples and concluded the model was
+     instrumental. Every example WAS instrumental and one of them listed
+     `vocals` in its negative prompt — but that is a conclusion about the
+     examples written as a conclusion about the model. Examples show what a
+     vendor wanted to show; they do not show where a model stops.
 
-   She then sent a song it had made: Afrikaans, sung, 2:58.
+     She then sent a song it had made: Afrikaans, sung, 2:58.
 
-   The correction stays in the document rather than being tidied away,
-   because the write-up is what somebody reads in three months and the
-   reasoning that was wrong is the part worth keeping. */
-ok('the write-up carries the correction about Lyria singing',
-  /sing wel/.test(everywhere) && /verkeerd/.test(everywhere),
-  'an inference about the examples was written as a fact about the model,'
-  + ' and a document that quietly drops a wrong claim teaches nobody');
+     The correction stays in the document rather than being tidied away,
+     because the write-up is what somebody reads in three months and the
+     reasoning that was wrong is the part worth keeping. */
+  ok('the write-up carries the correction about Lyria singing',
+    /sing wel/.test(everywhere) && /verkeerd/.test(everywhere),
+    'an inference about the examples was written as a fact about the model,'
+    + ' and a document that quietly drops a wrong claim teaches nobody');
 
-/* And the measurements off the file itself, which are the only figures in
-   this file I took rather than was given. 178.6 seconds against the
-   third-hand 184-second ceiling is the first independent support that
-   ceiling has had. */
-ok('  and the length measured off her own file supports the quoted ceiling',
-  /178,6|178\.6/.test(everywhere) && /184/.test(everywhere),
-  'the ceiling was third-hand; a song that uses 178.6 of a stated 184'
-  + ' seconds is the first evidence for it that did not come from a summary');
+  /* And the measurements off the file itself, which are the only figures in
+     this file I took rather than was given. 178.6 seconds against the
+     third-hand 184-second ceiling is the first independent support that
+     ceiling has had. */
+  ok('  and the length measured off her own file supports the quoted ceiling',
+    /178,6|178\.6/.test(everywhere) && /184/.test(everywhere),
+    'the ceiling was third-hand; a song that uses 178.6 of a stated 184'
+    + ' seconds is the first evidence for it that did not come from a summary');
 
-ok('  and names the timed-text track, which is the part that matters',
-  /tx3g/.test(everywhere) && /getydsde/.test(everywhere),
-  'the hard part of a lyric video is knowing when each line lands, and that'
-  + ' track is that answer — `drawCaption` and `wordsFrom`/`wordsTo` are'
-  + ' already in this app, so the rest is assembly rather than an engine');
+  ok('  and names the timed-text track, which is the part that matters',
+    /tx3g/.test(everywhere) && /getydsde/.test(everywhere),
+    'the hard part of a lyric video is knowing when each line lands, and that'
+    + ' track is that answer — `drawCaption` and `wordsFrom`/`wordsTo` are'
+    + ' already in this app, so the rest is assembly rather than an engine');
 
-/* ── And the letter that goes with it ──────────────────────────
+  /* ── And the letter that goes with it ──────────────────────────
  
-   The owner, 8 October 2026: *"Kan jy my help om vir mureka ’n custom sales
-   epos te skryf, wie ons is, die vrae oor ryalties, asook, wat hulle dak
-   is?"* Three questions, and the royalties one first — because if they
-   claim a share of revenue on music their model made, every figure above
-   is wrong and the comparison falls over. A price per song that later
-   becomes a percentage of turnover is not a price. */
-const letter = readFileSync('docs/EPOS-MUREKA.md', 'utf8');
-ok('the letter to Mureka asks the three questions she named',
-  /[Rr]oyalt/.test(letter) && /ceiling/i.test(letter) && /concurren/i.test(letter),
-  'royalties, their ceiling and concurrency — and royalties first, because'
-  + ' it is the one that can make every number above meaningless');
-ok('  and says the size she is actually at, not a number that sounds better',
-  /2\s?000/.test(letter) && /8\s?000/.test(letter),
-  'an inflated figure becomes a quote written for a business that does not'
-  + ' exist, and then she has to take it back');
-ok('  and keeps our own costings out of it',
-  !/R1[.,]58/.test(letter) && !/CREDITS/.test(letter),
-  'a letter that names our margin tells the other side exactly how much'
-  + ' room we have');
-ok('  and says what happens if they do not answer',
-  /22 Oktober 2026/.test(letter) && /niks is nie/.test(letter),
-  'a deadline with no consequence behind it is a request asked twice');
+     The owner, 8 October 2026: *"Kan jy my help om vir mureka ’n custom sales
+     epos te skryf, wie ons is, die vrae oor ryalties, asook, wat hulle dak
+     is?"* Three questions, and the royalties one first — because if they
+     claim a share of revenue on music their model made, every figure above
+     is wrong and the comparison falls over. A price per song that later
+     becomes a percentage of turnover is not a price. */
+  const letter = privateDoc('EPOS-MUREKA.md') ?? '';
+  ok('the letter to Mureka asks the three questions she named',
+    /[Rr]oyalt/.test(letter) && /ceiling/i.test(letter) && /concurren/i.test(letter),
+    'royalties, their ceiling and concurrency — and royalties first, because'
+    + ' it is the one that can make every number above meaningless');
+  ok('  and says the size she is actually at, not a number that sounds better',
+    /2\s?000/.test(letter) && /8\s?000/.test(letter),
+    'an inflated figure becomes a quote written for a business that does not'
+    + ' exist, and then she has to take it back');
+  ok('  and keeps our own costings out of it',
+    !/R1[.,]58/.test(letter) && !/CREDITS/.test(letter),
+    'a letter that names our margin tells the other side exactly how much'
+    + ' room we have');
+  ok('  and says what happens if they do not answer',
+    /22 Oktober 2026/.test(letter) && /niks is nie/.test(letter),
+    'a deadline with no consequence behind it is a request asked twice');
+
+}
 
 if (bad) {
   console.error(`\ncheck:minimax — ${bad} assertion(s) failed.\n`);

@@ -32,7 +32,7 @@ terugvalvertaling nie: 'n reël wat nie vertaal is nie, breek die bou.
 | `npm run checks` | 162 bron-checks. As dit groen is, is die claims in hierdie bladsy waar op vandag se kode. |
 | `app/lib/credits.ts` | Die hele geldmodel, met die afleiding van elke prys daarby. |
 | `docs/REGS-OUDIT.md` | Die regsoudit van 24 September, insluitend wat dit **nie** kon verifieer nie. |
-| `docs/KOSTE-EN-WINS.md` | Gegenereer. Wat elke knoppie kos, gelykbreek, en die kapasiteitsdak. |
+| `private/KOSTE-EN-WINS.md` | Gegenereer. Wat elke knoppie kos, gelykbreek, en die kapasiteitsdak. |
 
 ---
 

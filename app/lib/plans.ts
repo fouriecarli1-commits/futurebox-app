@@ -122,7 +122,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        behind every paying one at more music than the paying member makes, and
        that is the difference between a business that works and one that does
        not. `app/lib/credits.ts` has the numbers and
-       `docs/ELEVENLABS-PRYSE.md` the derivation.
+       `private/ELEVENLABS-PRYSE.md` the derivation.
 
        What is left is not nothing, and the card says what it is rather than
        what it lost. Everything below costs us nothing to run, and it is the
@@ -408,7 +408,7 @@ export const RAND_PER_USD = 16;
  * confident, itemised, wrong answer.
  *
  * The live model is `scripts/fixedcosts.mts` for the bills and
- * `scripts/costs-eleven.mts` for the arithmetic, and `docs/KOSTE-EN-WINS.md`
+ * `scripts/costs-eleven.mts` for the arithmetic, and `private/KOSTE-EN-WINS.md`
  * is generated from them. `fixedcosts.mts` exists because this exact fault —
  * two lists, one wrong — already happened once between a document and a
  * generator. It happened a second time, here, and this is the deletion.
@@ -439,7 +439,7 @@ export const SONG_MINUTES = 2;
  *
  * ── Two rates for one fee, found 24 September 2026 ───────────────────────
  *
- * `docs/MAANDELIKSE-KOSTE.md` said **2.9% + R1** and marked it checked.
+ * `private/MAANDELIKSE-KOSTE.md` said **2.9% + R1** and marked it checked.
  * This function charged **3.5% + R2**, and this is the one that reached every
  * margin sum on every page.
  *
@@ -472,7 +472,7 @@ export function gatewayFee(rand: number): number {
    the wrong rate and the incomplete bill list above, and read by nothing.
 
    `costs-eleven.mts` works out break-even across four ElevenLabs plans and
-   four usage scenarios and writes them all into `docs/KOSTE-EN-WINS.md`. One
+   four usage scenarios and writes them all into `private/KOSTE-EN-WINS.md`. One
    number here, hard-coded to a 60/30/10 mix and a song cost that was 45% too
    cheap, could only ever have contradicted it. */
 

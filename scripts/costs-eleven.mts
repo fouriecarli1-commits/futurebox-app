@@ -15,11 +15,11 @@
  * Die enigste getalle wat hier ingetik is, is ElevenLabs se eie planne, en
  * dié is gemerk: hulle kon nie van hierdie masjien af nagegaan word nie — die
  * proksie laat nie by elevenlabs.io uit nie. Elkeen is 'n reël in `EL_PLANS`
- * met 'n datum by, en die e-pos aan ElevenLabs (sien `docs/KOSTE-EN-WINS.md`)
+ * met 'n datum by, en die e-pos aan ElevenLabs (sien `private/KOSTE-EN-WINS.md`)
  * is juis om hulle bevestig te kry.
  *
  * Loop dit met `npx tsx scripts/costs-eleven.mts`. Dit skryf
- * `docs/KOSTE-EN-WINS.md` en druk 'n opsomming.
+ * `private/KOSTE-EN-WINS.md` en druk 'n opsomming.
  */
 import { writeFileSync } from 'node:fs';
 import { TIER_SPECS, TIERS, gatewayFee, type Tier } from '../app/lib/plans.ts';
@@ -32,6 +32,7 @@ import { paid } from '../app/data/aiprices.ts';
    `fixedcosts.mts`, sodat `check-koste.mts` dieselfde getalle kan invoer
    sonder om hierdie lêer te laat loop. Sien die kop van daardie lêer. */
 import { RAND_PER_USD, FIXED_CORE } from './fixedcosts.mts';
+import { privatePath } from './privatedocs.mts';
 
 /**
  * BTW op ElevenLabs se rekening. **Nagegaan, 8 September 2026.**
@@ -41,8 +42,8 @@ import { RAND_PER_USD, FIXED_CORE } from './fixedcosts.mts';
  * plakkerprys is $99. En $99 x 1,15 = $113,85, tot die sent. Dit is
  * Suid-Afrikaanse BTW van 15%.
  *
- * Tot vandag was BTW nêrens in hierdie lêer, in `docs/MAANDELIKSE-KOSTE.md`
- * of in `docs/KOSTE-EN-WINS.md` nie. Elke dollarbedrag was 'n plakkerprys, en
+ * Tot vandag was BTW nêrens in hierdie lêer, in `private/MAANDELIKSE-KOSTE.md`
+ * of in `private/KOSTE-EN-WINS.md` nie. Elke dollarbedrag was 'n plakkerprys, en
  * elke som daaruit was 15% te laag.
  *
  * ── Waarop dit toegepas word, en waarop nie ──────────────────────────────
@@ -106,7 +107,7 @@ const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD *
  * eenheid wat dit gebruik is musiek se $0,15, wat klop. Dit is presies
  * waarvoor die model in krediete geskryf is.
  *
- * Sien `docs/ELEVENLABS-PRYSE.md` vir die hele regstelling, insluitend die
+ * Sien `private/ELEVENLABS-PRYSE.md` vir die hele regstelling, insluitend die
  * een getal wat nog nie klop nie (transkripsie: $0,22 per uur langs 'n
  * toelaag wat $3,27 per uur impliseer).
  * Dit maak die hele som eenvoudiger en eerliker: een liedjie van twee minute
@@ -137,7 +138,7 @@ const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD *
  * Die ou gevolgtrekking hieronder — "Business is die enigste plan wat ooit
  * wins kan maak" — het op die dak gestaan, en die dak bestaan nie.
  *
- * Sien `docs/ELEVENLABS-PRYSE.md` vir die volledige lys.
+ * Sien `private/ELEVENLABS-PRYSE.md` vir die volledige lys.
  */
 const EL_PLANS = [
   { name: 'Creator', usd: 22, credits: 147 * 900 },
@@ -383,7 +384,7 @@ say('');
 say('**Nagegaan op 8 September 2026** teen ElevenLabs se eie prysbladsy.');
 say(`Musiek kos $${MUSIC_USD_PER_MINUTE} per minuut op elke plan, en die minute wat`);
 say('elke plan insluit is presies die plan se prys gedeel deur daardie koers —');
-say("'n plan is 'n dollar-begroting. Sien `docs/ELEVENLABS-PRYSE.md`.");
+say("'n plan is 'n dollar-begroting. Sien `private/ELEVENLABS-PRYSE.md`.");
 say('');
 say('| Plan | Per maand | Krediete | Rand per krediet | Wat een liedjie ons kos |');
 say('|---|---|---|---|---|');
@@ -707,7 +708,7 @@ for (const plan of EL_PLANS) {
   say("Business ($990) is presies waar hierdie besigheid gaan sit. 'n Pasgemaakte");
   say("plan wat daardie gat vul — of 'n laer koers vir musiek spesifiek — is die");
   say('enkele grootste ding wat aan hierdie somme kan verander. Sien');
-  say('`docs/DIENSTE-EN-KOSTE.md` vir wat om te vra.');
+  say('`private/DIENSTE-EN-KOSTE.md` vir wat om te vra.');
   say('');
   say('**6. Wat hier nié in is nie.** Kling is uit, soos gevra. Ook uit: Music.ai');
   say('(die kamers wat dit gebruik is af), advertensie-inkomste, borge, en die');
@@ -1114,12 +1115,10 @@ say('regte skuif en hierdie tabel is die som. Tot dan koop dit niks en kos dit')
 say('die helfte van die aanbod.');
 say('');
 /* `KOSTE_OUT` is for `check:koste`, which writes today's page somewhere else
-   and compares it to the one in docs/ — the page is only ever right on the
-   day it was generated, and nothing else notices the day after. */
-writeFileSync(
-  process.env.KOSTE_OUT ?? new URL('../docs/KOSTE-EN-WINS.md', import.meta.url),
-  out.join('\n') + '\n',
-);
+   and compares it to the kept one — the page is only ever right on the day
+   it was generated, and nothing else notices the day after. Kept in
+   `private/`, which git ignores, since 18 October 2026 (`privatedocs.mts`). */
+writeFileSync(process.env.KOSTE_OUT ?? privatePath('KOSTE-EN-WINS.md'), out.join('\n') + '\n');
 
 /* ─────────────────────────────────────────────── kort op die skerm ──── */
 
@@ -1141,4 +1140,4 @@ for (const scenario of SCENARIOS) {
   }
   console.log('');
 }
-console.log('docs/KOSTE-EN-WINS.md geskryf.\n');
+console.log('private/KOSTE-EN-WINS.md geskryf.\n');

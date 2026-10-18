@@ -124,7 +124,8 @@ if (broken.length) {
 if (skips.length) {
   console.log(
     `\n${skips.length} of ${unique.length} SKIPPED — they ran nothing:\n  ${skips.join('\n  ')}\n`
-    + '  A skip is not a pass. check:sqlruns needs a Postgres: set PGURL, or start one.\n',
+    + '  A skip is not a pass. check:sqlruns needs a Postgres: set PGURL, or start one.\n'
+    + '  The ones that read the owner\'s business documents need them in private/ (scripts/privatedocs.mts).\n',
   );
 }
 console.log(

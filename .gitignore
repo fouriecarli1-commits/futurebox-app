@@ -81,3 +81,8 @@ android/build.gradle
 android/settings.gradle
 android/store_icon.png
 android/manifest-checksum.txt
+
+# The owner's business documents: costs and profit, agreements, supplier
+# prices and letters. Kept outside the repository since 18 October 2026;
+# scripts/privatedocs.mts reads them from here when they are present.
+/private/

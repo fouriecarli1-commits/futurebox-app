@@ -25,7 +25,7 @@
  * press it. Anything at or below 1,0x is a leak; anything under the warning
  * mark is thin enough to be worth knowing about before an invoice says so.
  *
- * The upstream rates come from `docs/ELEVENLABS-PRYSE.md`, which derives them
+ * The upstream rates come from `private/ELEVENLABS-PRYSE.md`, which derives them
  * from ElevenLabs' own page: a plan is a dollar budget, and $990 buys 6 600
  * minutes of music, 8 250 of stem separation, 4 500 hours of transcription,
  * 9,9 million characters of speech, or 450 minutes of dubbing v2.
@@ -36,7 +36,7 @@
  * numbers for the same clip that are forty-three times apart, and a check
  * built on a number nobody trusts would either pass wrongly or fail wrongly.
  * It is reported instead of asserted, and it stays that way until a real
- * invoice settles it. See `docs/PRYSVOORSTEL.md` §6.
+ * invoice settles it. See `private/PRYSVOORSTEL.md` §6.
  */
 import { CREDITS, TIER_CREDITS, readCost } from '../app/lib/credits.ts';
 import { TIER_SPECS, RAND_PER_USD } from '../app/lib/plans.ts';

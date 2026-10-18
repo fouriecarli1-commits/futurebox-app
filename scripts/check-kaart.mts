@@ -13,7 +13,7 @@
  * would have no reason to doubt it — and a price list goes stale silently,
  * since nothing in a build reads one.
  *
- * So `docs/KREDIETE.md` is GENERATED, and this fails when the file on disk
+ * So `private/KREDIETE.md` is GENERATED, and this fails when the file on disk
  * is not what the generator produces from the current code. A price changed
  * in `credits.ts` without running `npm run kaart` cannot survive a push.
  *
@@ -34,7 +34,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { CARD, card } from './kredietkaart.mts';
+import { card } from './kredietkaart.mts';
 import { CREDITS } from '../app/lib/credits.ts';
 import { priced } from './enginecost.mts';
 
@@ -44,19 +44,13 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
   if (!passed) bad += 1;
 };
 
-console.log('\nThe price list on disk is the price list in the code\n');
+console.log('\nThe price list the code writes covers every price\n');
 
-const onDisk = (() => {
-  try { return readFileSync(CARD, 'utf8'); } catch { return null; }
-})();
-
-ok('the price list exists', onDisk !== null, `${CARD} — run \`npm run kaart\``);
-
-ok('  and is what the code says today',
-  onDisk === card(),
-  'a price moved in the code and the document still says the old one. Run'
-  + ' `npm run kaart`. She sets prices off this table, so a stale one is'
-  + ' worse than none — she would have no reason to doubt it');
+/* The card itself is no longer kept in the repository: `npm run kaart`
+   writes it to `private/` (the owner, 18 October 2026 — `privatedocs.mts`).
+   So the coverage rules below read what the generator writes TODAY, which
+   is the version she would get, rather than a copy that can be stale. */
+const written = card();
 
 /* ── Every price, exactly once ─────────────────────────────────────── */
 
@@ -122,7 +116,7 @@ ok('every costed row the document claims really exists',
   `${claimed.join('; ')} — a mapping that names a row which is not in`
   + ' `priced` takes that price out of BOTH tables and says nothing');
 
-const said = onDisk ?? '';
+const said = written;
 const missing: string[] = [];
 const twice: string[] = [];
 for (const key of Object.keys(CREDITS)) {

@@ -46,7 +46,7 @@
  * replaces — which means nobody is worse off than they are today, and the real
  * number arrives on the first live call: `noteCost` reads `character-cost` off
  * the response and logs it. When that number is known, this charge is revised
- * and `docs/DIENSTE-EN-KOSTE.md` gets the row. Charging nothing until then
+ * and `private/DIENSTE-EN-KOSTE.md` gets the row. Charging nothing until then
  * would leave a paid call with no ceiling on it, which is the one thing this
  * codebase does not do.
  *

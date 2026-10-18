@@ -5,7 +5,7 @@
  *
  * `/api/voice/change` is speech to speech. It is reliable on a spoken lane
  * and a gamble on a sung one, the Pro Booth says so on the button, and §9 of
- * `docs/DIENSTE-EN-KOSTE.md` has called that the one thing the app promises
+ * `private/DIENSTE-EN-KOSTE.md` has called that the one thing the app promises
  * and cannot deliver. This is the other engine: Kits.AI, RVC, models trained
  * on one singer. `lib/server/kits.ts` carries the wire format and, more
  * importantly, which half of it is known and which half is inferred.

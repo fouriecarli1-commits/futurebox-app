@@ -108,7 +108,7 @@ export const LICENCES = [
   {
     /* Theirs, and what it permits is theirs to tell us. Treated as the
        cautious answer until they do — which is the safe direction to be
-       wrong in, and is the one being asked about in `docs/EPOS-TONE3000.md`. */
+       wrong in, and is the one being asked about in `private/EPOS-TONE3000.md`. */
     id: 't3k',
     name: ['amp.licT3k', 'TONE3000 licence'],
     credit: true,

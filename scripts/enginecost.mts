@@ -27,7 +27,7 @@ import { TIER_SPECS, RAND_PER_USD } from '../app/lib/plans.ts';
 import { PER_PICTURE } from '../app/lib/server/picture.ts';
 import { paid } from '../app/data/aiprices.ts';
 
-/** What ElevenLabs Business costs a month, VAT in. `docs/MAANDELIKSE-KOSTE.md`. */
+/** What ElevenLabs Business costs a month, VAT in. `private/MAANDELIKSE-KOSTE.md`. */
 export const BUSINESS_RAND = 18216;
 
 /* Their own equivalences at $990. Each is "how much of this thing the whole
@@ -67,7 +67,7 @@ export const CUTOUT_PER_5S = 0.0225 * 5 * RAND_PER_USD;
  * and their own editor printed `Estimated (per minute) $0.07` beside a run
  * that finished in 7.44 seconds and came back with `Eb major` and `bpm 76`.
  *
- * It matters that it is measured. `docs/DIENSTE-EN-KOSTE.md` said of
+ * It matters that it is measured. `private/DIENSTE-EN-KOSTE.md` said of
  * `CREDITS.read`: *"Die presiese koers kon nie hiervandaan nagegaan word nie
  * — music.ai is ook geblokkeer"* — the host is refused from the build
  * environment, so this number could not be looked up, only guessed at and

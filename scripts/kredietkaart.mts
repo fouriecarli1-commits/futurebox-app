@@ -29,7 +29,8 @@
  * push.
  */
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { CREDITS } from '../app/lib/credits.ts';
 import { TIER_SPECS } from '../app/lib/plans.ts';
 import { TIER_CREDITS } from '../app/lib/credits.ts';
@@ -37,7 +38,9 @@ import { priced } from './enginecost.mts';
 import { FREE } from './freeroutes.mts';
 import { SURFACES } from '../app/lib/surfaces.ts';
 
-export const CARD = 'docs/KREDIETE.md';
+/* In `private/`, which git ignores: the margins on this card are the
+   owner's, and the repository is public (`privatedocs.mts`). */
+export const CARD = 'private/KREDIETE.md';
 
 /** What a credit sells for, cheapest plan first — she presses the same buttons. */
 const rates = (['maker', 'studio', 'label'] as const)
@@ -230,6 +233,7 @@ ${rooms()}
 }
 
 if (process.argv[1]?.endsWith('kredietkaart.mts')) {
+  mkdirSync(dirname(CARD), { recursive: true });
   writeFileSync(CARD, card());
   console.log(`${CARD} — written from the code.`);
 }

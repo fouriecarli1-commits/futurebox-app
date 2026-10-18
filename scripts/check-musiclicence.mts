@@ -221,7 +221,7 @@ if (problems.length) {
       'answers say different things: the account holder may sell, a member of a\n' +
       'platform selling under the platform\'s key is not explicitly covered. Do not\n' +
       'change either direction without a newer answer from them in writing —\n' +
-      'docs/ELEVENLABS-SALES.md is the letter asking for one.\n',
+      'private/ELEVENLABS-SALES.md is the letter asking for one.\n',
   );
   process.exit(1);
 }

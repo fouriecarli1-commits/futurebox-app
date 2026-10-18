@@ -66,7 +66,6 @@ if (door && stamped) {
    other way a summary lies, and unlike its truth this part IS checkable. */
 const front = upTo(from(page, 'Lees dit eerste'), '\n---\n');
 for (const [what, where] of [
-  ['the sales letter', 'docs/ELEVENLABS-SALES.md'],
   ['the dictionary route', 'app/api/eleven/dictionary/route.ts'],
 ] as const) {
   const named = front.includes(where.replace('app/api', '/api').replace('/route.ts', ''))

@@ -7,7 +7,7 @@
  * over `eleven_multilingual_sts_v2` — speech to speech. §A1 of
  * `docs/OPEN-QUESTIONS.md` records what that means on a sung lane: it keeps a
  * melody badly, and the Pro Booth has had a warning on the button saying so.
- * §9 of `docs/DIENSTE-EN-KOSTE.md` called singing conversion the one thing the
+ * §9 of `private/DIENSTE-EN-KOSTE.md` called singing conversion the one thing the
  * app promises and cannot deliver.
  *
  * Kits.AI is an RVC service: models trained on a single singer, converting a

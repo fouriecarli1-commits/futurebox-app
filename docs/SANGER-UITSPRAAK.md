@@ -1,6 +1,6 @@
 # Uitspraak-opname — vrystelling (FUTUREBOXSTUDIO (Pty) Ltd)
 
-> **Dit is die een wat jy nou nodig het.** Nie `docs/SANGER-OOREENKOMS.md` nie.
+> **Dit is die een wat jy nou nodig het.** Nie `private/SANGER-OOREENKOMS.md` nie.
 >
 > *Die eienaar, 9 Oktober 2026:*
 >
@@ -81,7 +81,7 @@ Die Studio sal **nie**:
 
 1. **'n stemmodel van die Spreker maak nie.** Geen kloning nie, geen RVC nie, geen
    opleiding van enige model op hierdie opname nie. Nie nou nie en nie later nie,
-   tensy die Spreker 'n aparte ooreenkoms teken (`docs/SANGER-OOREENKOMS.md`);
+   tensy die Spreker 'n aparte ooreenkoms teken (`private/SANGER-OOREENKOMS.md`);
 2. **die opname publiseer nie** — nie in die app nie, nie as 'n demonstrasie nie,
    nie op sosiale media nie, nêrens nie. Niemand buite die Studio hoor dit nie;
 3. **die opname in 'n vrygestelde liedjie gebruik nie**, ook nie as 'n
@@ -123,7 +123,7 @@ Twee dinge sou 'n nuwe ooreenkoms vra, en albei is heeltemal regverdig om te vra
 
 | As die Studio dit wil doen | Wat dan nodig is |
 |---|---|
-| 'n Stemmodel van die Spreker maak | `docs/SANGER-OOREENKOMS.md`, apart geteken |
+| 'n Stemmodel van die Spreker maak | `private/SANGER-OOREENKOMS.md`, apart geteken |
 | Die opname as gidsstem onder 'n vrygestelde liedjie gebruik | 'n sessie-fooi vir 'n uitvoering, skriftelik, voor die vrystelling |
 
 Die tweede een is maklik om mis te kyk. 'n Gidsstem wat omgeskakel is, is steeds

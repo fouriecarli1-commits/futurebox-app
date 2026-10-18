@@ -26,7 +26,7 @@
  * from her in so many words — monthly at the end of a calendar month, an
  * invoice after payment, and both parties signing.
  */
-import { readFileSync } from 'node:fs';
+import { privateDoc, skipped } from './privatedocs.mts';
 import { split, wallSplit, ART_RAND, ARTIST_RAND, UNIQUE_RAND, ARTIST_SHARE } from '../app/data/artmarket';
 
 let failures = 0;
@@ -35,13 +35,19 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
   if (!passed) failures += 1;
 };
 
+/* Both agreements left the repository on 18 October 2026 (`privatedocs.mts`):
+   they are held against the app wherever they are kept. */
 const PAPERS = [
-  { file: 'docs/KUNSTENAAR-OOREENKOMS.md', lang: 'Afrikaans' },
-  { file: 'docs/ARTIST-AGREEMENT.md', lang: 'English' },
+  { file: 'KUNSTENAAR-OOREENKOMS.md', lang: 'Afrikaans' },
+  { file: 'ARTIST-AGREEMENT.md', lang: 'English' },
 ] as const;
+if (PAPERS.some((paper) => privateDoc(paper.file) === null)) {
+  console.log(skipped('check:ooreenkoms', PAPERS.map((paper) => paper.file)));
+  process.exit(0);
+}
 
 for (const paper of PAPERS) {
-  const text = readFileSync(paper.file, 'utf8');
+  const text = privateDoc(paper.file) ?? '';
 
   /* ── The split table, row by row, to the cent ──────────────────────────
      Every row of the form `| R200 | R9.00 | R191.00 | **R133.70** | R57.30 |`

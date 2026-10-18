@@ -65,12 +65,12 @@ Die vier dinge wat die vorm moet sê, in gewone taal:
    moeilikste en die belangrikste: 'n stem wat onttrek kan word nadat tweehonderd mense liedjies
    daarmee gemaak het, is 'n probleem wat jy nou moet beslis en nie later nie.
 
-**`docs/SANGER-OOREENKOMS.md` is daardie vorm**, en dit is nou geskryf — Afrikaans, met
-`docs/SINGER-AGREEMENT.md` as die Engelse weergawe. Dit dek al vier die punte hierbo, plus die
+**`private/SANGER-OOREENKOMS.md` is daardie vorm**, en dit is nou geskryf — Afrikaans, met
+`private/SINGER-AGREEMENT.md` as die Engelse weergawe. Dit dek al vier die punte hierbo, plus die
 een wat die meeste behoort gelees te word: wat die Studio **nie** met die model mag doen nie
 (geen gesproke woorde in die sanger se mond nie, nooit 'n model van 'n kind nie).
 
-*Hierdie paragraaf het eers gesê om die klousule by `docs/KUNSTENAAR-OOREENKOMS.md` te voeg. Dit
+*Hierdie paragraaf het eers gesê om die klousule by `private/KUNSTENAAR-OOREENKOMS.md` te voeg. Dit
 was verkeerd en dit was geskryf sonder om daardie lêer oop te maak: daardie ooreenkoms se hele
 spil is klousule 4, “uniek, en een keer verkoop”, wat die teenoorgestelde is van 'n stemmodel —
 en 'n illustreerder hoef nie klousules oor biometriese data te onderteken nie. Dit is dus 'n
@@ -140,7 +140,7 @@ help" na "dit help" beweeg, en dit is die enigste stap wat nie geraai kan word n
 ## 4. 'n Stemmodel-sessie, as dit ooit daarby kom
 
 *Hierdie afdeling is vir die ander ding — 'n stemmodel wat lede kan gebruik, met
-`docs/SANGER-OOREENKOMS.md` daaragter. Dit is nie wat sy nou wil doen nie, en dit staan hier omdat
+`private/SANGER-OOREENKOMS.md` daaragter. Dit is nie wat sy nou wil doen nie, en dit staan hier omdat
 die dag dalk kom en die plan dan klaar is.*
 
 Een sanger, een uur, en jy het genoeg. Die bruikbare getal is **10 tot 30 minute skoon sang** —

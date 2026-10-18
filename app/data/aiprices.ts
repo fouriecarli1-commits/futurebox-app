@@ -5,7 +5,7 @@
  *
  * The owner, 19 September 2026, on finding the writing help had stopped:
  * *"Ek het nie geweet Copilot gaan betaald moet wees nie?"* Prompt caching
- * went in the same day, and `docs/MAANDELIKSE-KOSTE.md` recorded no saving
+ * went in the same day, and `private/MAANDELIKSE-KOSTE.md` recorded no saving
  * from it on purpose:
  *
  *   *"'n Kas wat nooit tref nie lyk presies soos een wat altyd tref, behalwe

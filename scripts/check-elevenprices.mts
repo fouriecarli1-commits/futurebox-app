@@ -5,7 +5,7 @@
  *
  * Until 8 September 2026 `costs-eleven.mts` opened with "ONGEVERIFIEER" and a
  * set of numbers nobody had checked, and every profit figure in
- * `docs/KOSTE-EN-WINS.md` rested on them. They were about 85% too generous. A
+ * `private/KOSTE-EN-WINS.md` rested on them. They were about 85% too generous. A
  * price list that has been verified once and then drifts is the same failure
  * with a date on it.
  *
@@ -14,7 +14,7 @@
  * Two things, and the second is the interesting one.
  *
  * **The generator and the document agree.** The minutes each plan includes
- * are written in `docs/ELEVENLABS-PRYSE.md` for a person to read and in
+ * are written in `private/ELEVENLABS-PRYSE.md` for a person to read and in
  * `scripts/costs-eleven.mts` for the sums to use. Two copies of a number is
  * one copy too many unless something holds them together.
  *
@@ -26,7 +26,17 @@
  */
 import { readFileSync } from 'node:fs';
 
-const page = readFileSync('docs/ELEVENLABS-PRYSE.md', 'utf8');
+import { privateDoc, skipped } from './privatedocs.mts';
+
+/* The page left the repository on 18 October 2026 (`privatedocs.mts`). This
+   check holds it against the generator, so without it there is nothing to
+   hold. */
+const kept = privateDoc('ELEVENLABS-PRYSE.md');
+if (kept === null) {
+  console.log(skipped('check:elevenprices', ['ELEVENLABS-PRYSE.md']));
+  process.exit(0);
+}
+const page: string = kept;
 const generator = readFileSync('scripts/costs-eleven.mts', 'utf8');
 
 let failures = 0;

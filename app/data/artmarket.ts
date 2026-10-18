@@ -112,7 +112,7 @@ export const ARTIST_RAND = 200;
  * `ARTIST_RAND` in rand, by the owner, from her own account. A credit sale
  * brings no new cash in, so the statement still lists the piece as owing
  * R200 and the studio carries it, which is written down in
- * `docs/ARTIST-AGREEMENT.md`.
+ * `private/ARTIST-AGREEMENT.md`.
  */
 export const CHEAPEST_RAND_PER_CREDIT = Math.min(
   ...TIERS.filter((tier) => TIER_SPECS[tier].rand > 0 && TIER_CREDITS[tier] > 0)

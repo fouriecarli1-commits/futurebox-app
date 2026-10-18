@@ -72,7 +72,7 @@ ok('  and a licence nobody has heard of is treated the same way',
 ok('  and TONE3000’s own is cautious until they answer',
   mayBeSold('t3k') === false,
   'what `t3k` permits is theirs to tell us, and the letter asking is in'
-  + ' docs/EPOS-TONE3000.md — until there is an answer, the safe direction');
+  + ' private/EPOS-TONE3000.md — until there is an answer, the safe direction');
 
 /* ── The credit goes to the maker, which is the half she had right ───── */
 

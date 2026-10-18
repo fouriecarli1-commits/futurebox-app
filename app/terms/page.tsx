@@ -48,7 +48,7 @@ export const metadata = {
    What replaced it is neither "you may sell" nor "you may not". It is what is
    actually settled, which is less than the first and more than the second.
    The Enterprise agreement that would settle it properly is being asked for;
-   docs/ELEVENLABS-SALES.md is that letter.
+   private/ELEVENLABS-SALES.md is that letter.
 
    Moved a third time on 15 September 2026, after reading the whole ElevenLabs
    terms stack -- fourteen documents, written up in docs/ELEVENLABS-TERME.md.

@@ -56,7 +56,7 @@ Afrikaans klink.
 
 ### Stems, alignment en transkripsie → Music.ai
 
-Die skoonste wen, en dit is reeds half gedoen: `docs/EPOS-MUSICAI.md` is 'n
+Die skoonste wen, en dit is reeds half gedoen: `private/EPOS-MUSICAI.md` is 'n
 geskrewe brief wat net gestuur moet word.
 
 - stem separation vanaf $0.05/min (instrumentaal) tot $0.15/min (drom-stems)

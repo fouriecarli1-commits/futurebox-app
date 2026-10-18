@@ -4,7 +4,7 @@
  * ── Why this needs a check at all ────────────────────────────────────────
  *
  * The owner has asked twice for the real saving from prompt caching, and
- * `docs/MAANDELIKSE-KOSTE.md` has refused twice to write one down:
+ * `private/MAANDELIKSE-KOSTE.md` has refused twice to write one down:
  *
  *   *"'n Kas wat nooit tref nie lyk presies soos een wat altyd tref, behalwe
  *    op die rekening."*

@@ -13,7 +13,7 @@
  *
  * `eleven_multilingual_sts_v2`. Speech to speech. `docs/OPEN-QUESTIONS.md` §A1
  * records that it is for talking and handles singing badly, and
- * `docs/DIENSTE-EN-KOSTE.md` §9 calls singing conversion the one thing the app
+ * `private/DIENSTE-EN-KOSTE.md` §9 calls singing conversion the one thing the app
  * promises and cannot deliver. A real singing model — Moises Voice Studio over
  * the Music.ai API, or an RVC service — is still the gap.
  *

@@ -15,10 +15,10 @@ Niks hier is kode nie. Alles hier is iets wat net jy kan doen.
 
 | # | Wat | Hoe lank | Wie |
 |---|---|---|---|
-| 1 | Stuur die fal.ai-brief (`docs/EPOS-FAL.md`) | 10 min | jy |
-| 2 | Stuur die Kits.AI-brief (`docs/EPOS-KITS.md`) | 10 min | jy |
+| 1 | Stuur die fal.ai-brief (`private/EPOS-FAL.md`) | 10 min | jy |
+| 2 | Stuur die Kits.AI-brief (`private/EPOS-KITS.md`) | 10 min | jy |
 | 3 | Registreer die Inligtingsbeampte | 30 min | jy |
-| 4 | Vra Music.ai, Resend en Kling (`docs/EPOS-DPA-KORT.md`) | 15 min | jy |
+| 4 | Vra Music.ai, Resend en Kling (`private/EPOS-DPA-KORT.md`) | 15 min | jy |
 | 5 | Sit `FUTUREBOX_LEGAL_EMAIL` in Vercel | 2 min | jy |
 | 6 | Laat 'n prokureur die lys teen die Staatskoerant hou | — | iemand anders |
 
@@ -45,7 +45,7 @@ Dit is nie 'n tegniese blokkasie nie. `check:verwerkers` laat die bou **rooi**
 word die dag iemand daardie oproep skryf sonder hulle. Dit is met opset so
 gebou, lank voor vandag.
 
-**Wat om te doen:** die brief is klaar geskryf. `docs/EPOS-FAL.md`. Vier vrae,
+**Wat om te doen:** die brief is klaar geskryf. `private/EPOS-FAL.md`. Vier vrae,
 die regte POPIA-artikels aangehaal, en 'n tabel onderaan wat sê wat ek doen by
 elke moontlike antwoord — insluitend "dan stel ek 'n ander verskaffer voor".
 
@@ -83,7 +83,7 @@ knoppie waarop dit van toepassing is** — watter enjin 'n ooreenkoms het en
 watter nie, en dat iemand wat hulle stem net na die een wil stuur, die
 sangomskakeling moet los. Dit is 'n eerlike bekendmaking, nie 'n oplossing nie.
 
-**Wat om te doen:** die brief is klaar geskryf — `docs/EPOS-KITS.md`. Vier vrae,
+**Wat om te doen:** die brief is klaar geskryf — `private/EPOS-KITS.md`. Vier vrae,
 en die vierde is een wat net hierdie verskaffer het: Kits se §1.1 verleen die
 regte aan die **intekenaar**, en dit is ons, nie 'n lid nie. Dit is nie 'n verbod
 nie, net iets om op skrif te hê eerder as af te lei.
@@ -114,7 +114,7 @@ Die veranderlike wag reeds; die regsbladsy wys dit die oomblik dit gestel is.
 stem nie — maar POPIA 72 vra 'n grond vir **elkeen** wat data oor die grens
 kry.
 
-Al drie is klaar geskryf — `docs/EPOS-DPA-KORT.md`. Een gedeelde liggaam, vier
+Al drie is klaar geskryf — `private/EPOS-DPA-KORT.md`. Een gedeelde liggaam, vier
 vrae, en 'n aanhef elk met die een ekstra vraag wat net daardie verskaffer het.
 Vyftien minute vir al drie.
 

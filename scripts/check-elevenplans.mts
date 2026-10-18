@@ -32,6 +32,7 @@
  *   npm run check:elevenplans
  */
 import { readFileSync } from 'node:fs';
+import { privateDoc, skipped } from './privatedocs.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -91,15 +92,19 @@ ok('upgrading to Business buys its extra credits at par',
    model's own comment describes: a sentence that hard-codes a conclusion
    while its numbers are computed beside it will one day lie, and this one did
    for a week. */
-const doc = readFileSync('docs/KOSTE-EN-WINS.md', 'utf8');
-ok('the written answer says there is no volume discount', /geen volume-afslag/.test(doc));
-ok('and that the ceiling it used to reason from does not exist',
-  /Daardie dak bestaan nie/.test(doc));
-ok('and it recommends the cheapest plan that covers the seats',
-  /bly op Pro/i.test(doc), 'the document still points at Business');
-/* The old claim must be gone, not merely contradicted further down. */
-ok('the old "Business is the only plan that works" claim is gone',
-  !/Business is die enigste plan wat ooit\s+wins kan maak\.\*\*/.test(doc));
+const doc = privateDoc('KOSTE-EN-WINS.md');
+if (doc === null) {
+  console.log(skipped('check:elevenplans', ['KOSTE-EN-WINS.md']));
+} else {
+  ok('the written answer says there is no volume discount', /geen volume-afslag/.test(doc));
+  ok('and that the ceiling it used to reason from does not exist',
+    /Daardie dak bestaan nie/.test(doc));
+  ok('and it recommends the cheapest plan that covers the seats',
+    /bly op Pro/i.test(doc), 'the document still points at Business');
+  /* The old claim must be gone, not merely contradicted further down. */
+  ok('the old "Business is the only plan that works" claim is gone',
+    !/Business is die enigste plan wat ooit\s+wins kan maak\.\*\*/.test(doc));
+}
 
 console.log(
   failures

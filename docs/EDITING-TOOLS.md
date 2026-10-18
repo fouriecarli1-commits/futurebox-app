@@ -146,7 +146,7 @@ So neither can do any of the three. What can:
 |---|---|
 | **Background out of a video** | Segmentation, frame by frame — and see below, because this one may need no engine at all |
 | **Item out of a shot** | Generative video inpainting. A real engine, and the expensive kind |
-| **Generating a piece you do not have** | Text-to-video: Veo, Kling, Seedance, MiniMax. Priced in `docs/MINIMAX-PRYSE.md` |
+| **Generating a piece you do not have** | Text-to-video: Veo, Kling, Seedance, MiniMax. Priced in `private/MINIMAX-PRYSE.md` |
 
 ### The first one may already be free
 

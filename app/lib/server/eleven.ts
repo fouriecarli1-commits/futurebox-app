@@ -46,7 +46,7 @@ function key(): boolean {
  * The owner, standing instruction: "ek wil net hê ons moet konstant in ag neem wat
  * ek alles maandelliks betaal want dit help nie ek maak nie 'n wins nie."
  *
- * Everything we had on that was OUR arithmetic. `docs/KOSTE-EN-WINS.md` models
+ * Everything we had on that was OUR arithmetic. `private/KOSTE-EN-WINS.md` models
  * the plans, `plans.ts` holds the credit rates, and `eleven_costs` compares
  * what they charged against what we charged. All of it inferred from the
  * character-cost header, and all of it able to drift from the invoice without

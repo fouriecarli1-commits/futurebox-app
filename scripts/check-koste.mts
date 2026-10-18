@@ -7,7 +7,7 @@
  * ── Why a check and not just a page ──────────────────────────────────────
  *
  * The monthly figure existed as a bare total — `R6 284` — written four times
- * into `docs/KOSTE-EN-WINS.md` and itemised nowhere, while the per-service
+ * into `private/KOSTE-EN-WINS.md` and itemised nowhere, while the per-service
  * numbers sat in prose in a different document. A number with no derivation
  * drifts the first time a service is added, and the way that shows up is not
  * an error: it is a profit sum that is quietly wrong.
@@ -35,8 +35,14 @@ import { FIXED_CORE } from './fixedcosts.mts';
    explanation as evidence is measuring something adjacent to the real thing,
    and this is the third time in two days. */
 import { withoutComments } from './prose.mts';
+import { privateDoc, skipped } from './privatedocs.mts';
 
-const page = readFileSync('docs/MAANDELIKSE-KOSTE.md', 'utf8');
+/* Both documents left the repository on 18 October 2026 (`privatedocs.mts`).
+   The rules that hold only the code run on every checkout; the ones that
+   hold the documents against the code run wherever the documents are. */
+const billPage = privateDoc('MAANDELIKSE-KOSTE.md');
+const sumsPage = privateDoc('KOSTE-EN-WINS.md');
+const page = billPage ?? '';
 /**
  * The service table alone, not the whole page.
  *
@@ -49,7 +55,7 @@ const table = page.slice(
   page.indexOf('| # | Diens'),
   page.indexOf('### Die vaste totaal'),
 );
-const sums = readFileSync('docs/KOSTE-EN-WINS.md', 'utf8');
+const sums = sumsPage ?? '';
 const switchOn = readFileSync('docs/SWITCH-ON.md', 'utf8');
 
 let failures = 0;
@@ -57,6 +63,93 @@ const ok = (label: string, good: boolean, detail = '') => {
   console.log(`  ${good ? 'ok ' : '✗'}  ${label}${detail ? ` — ${detail}` : ''}`);
   if (!good) failures += 1;
 };
+
+/* ── 4. One bill list, and only one ───────────────────────────────────────
+
+   `fixedcosts.mts` exists because the same monthly bill was written in two
+   places — a document and a generator — and they disagreed about which
+   service R64 belonged to. Its own header says a total that adds up is not
+   the same thing as lines that add up.
+
+   On 24 September 2026, working out every sum for a budget, it turned out to
+   have happened a SECOND time. `app/lib/plans.ts` carried a complete rival
+   cost model: `FIXED_MONTHLY`, `FIXED_TOTAL`, `SONG_COST`, `marginOf`,
+   `breakEvenMembers` and a `RAND_PER_CREDIT` built on 11 000 000 credits when
+   ElevenLabs' own email says 6 000 000. It listed GitHub, which costs nothing,
+   and omitted Kits.AI, Zoho, the domains and Spaceship — R1 259.74 a month of
+   real bills missing from a list called "monthly fixed costs".
+
+   Nothing read it, which is exactly why it survived. It was not a bug, it was
+   a landmine: `plans.ts` is the obvious file to open to ask what the business
+   costs, and it gave a confident, itemised, wrong answer.
+
+   So the rule is not "the lists agree" — it is that there is only one list.
+   A second one cannot be wrong if it cannot exist. */
+
+const NAMES = Object.keys(FIXED_CORE);
+
+/** Everywhere a second bill list could hide. */
+const SOURCES: string[] = [];
+const walk = (dir: string): void => {
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      if (entry !== 'node_modules' && entry !== '.next') walk(full);
+    } else if (/\.(ts|tsx|mts)$/.test(entry)) {
+      SOURCES.push(full);
+    }
+  }
+};
+walk('app');
+walk('scripts');
+
+/* The generator and the list itself are allowed to name suppliers with money
+   beside them. So are the checks that read them — including this one. */
+const MAY = new Set([
+  join('scripts', 'fixedcosts.mts'),
+  join('scripts', 'costs-eleven.mts'),
+  join('scripts', 'check-koste.mts'),
+  join('scripts', 'check-kredietkoste.mts'),
+]);
+
+const rivals: string[] = [];
+for (const file of SOURCES) {
+  if (MAY.has(file)) continue;
+  const text = withoutComments(readFileSync(file, 'utf8'));
+  /* A supplier name with a number beside it — `Resend: 64`, `'Vercel Pro': 320`
+     — which is what a bill list looks like and what prose does not. Two or
+     more of them in one file is a list rather than a mention. */
+  const priced = NAMES.filter((name) => {
+    const bare = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`['"\`]?${bare}['"\`]?\\s*:\\s*[0-9]`).test(text);
+  });
+  if (priced.length >= 2) rivals.push(`${file} prices ${priced.join(', ')}`);
+}
+
+ok('the monthly bill is written down in exactly one place',
+  rivals.length === 0,
+  `${rivals.join('; ')} — a second bill list cannot be kept in step, and the one that is wrong is the one nobody reads`);
+
+/* And no second answer to what an ElevenLabs credit costs. The rival model's
+   worst number was this one: $990 for 11 000 000 credits, when their own
+   email of 9 September says 6 000 000. It made a song look 45% cheaper than
+   it is, which is the single number the whole business rests on. */
+const wrongAnchor = SOURCES.filter((file) => {
+  if (MAY.has(file)) return false;
+  const text = withoutComments(readFileSync(file, 'utf8'));
+  return /11[_\s]?000[_\s]?000/.test(text) && /990/.test(text);
+});
+ok('nothing carries the old 11-million-credit anchor',
+  wrongAnchor.length === 0,
+  `${wrongAnchor.join(', ')} — ElevenLabs' own email says 6 000 000, and 11 000 000 makes a song look 45% cheaper than it is`);
+
+
+/* ── The rest needs the documents ─────────────────────────────────────── */
+if (billPage === null || sumsPage === null) {
+  console.log(skipped('check:koste', ['MAANDELIKSE-KOSTE.md', 'KOSTE-EN-WINS.md']));
+  if (failures) process.exit(1);
+  process.exit(0);
+}
 
 /* ── 1. Every host the server calls is on the bill ──────────────────────── */
 
@@ -295,90 +388,11 @@ ok('the bill says plainly which line decides everything',
     'profit per member is the subscription less the gateway, and nothing else',
     stated.length > 0 && stated.every((one) => Math.abs(one - expected) < 0.01),
     stated.length === 0
-      ? 'no per-member profit figures found in docs/KOSTE-EN-WINS.md'
+      ? 'no per-member profit figures found in KOSTE-EN-WINS.md'
       : `the sums say ${[...new Set(stated)].join(' / ')}, the plans work out to ${expected.toFixed(2)} — ` +
         'a supplier cost is being deducted from a figure the plan already pays for',
   );
 }
-
-/* ── 4. One bill list, and only one ───────────────────────────────────────
-
-   `fixedcosts.mts` exists because the same monthly bill was written in two
-   places — a document and a generator — and they disagreed about which
-   service R64 belonged to. Its own header says a total that adds up is not
-   the same thing as lines that add up.
-
-   On 24 September 2026, working out every sum for a budget, it turned out to
-   have happened a SECOND time. `app/lib/plans.ts` carried a complete rival
-   cost model: `FIXED_MONTHLY`, `FIXED_TOTAL`, `SONG_COST`, `marginOf`,
-   `breakEvenMembers` and a `RAND_PER_CREDIT` built on 11 000 000 credits when
-   ElevenLabs' own email says 6 000 000. It listed GitHub, which costs nothing,
-   and omitted Kits.AI, Zoho, the domains and Spaceship — R1 259.74 a month of
-   real bills missing from a list called "monthly fixed costs".
-
-   Nothing read it, which is exactly why it survived. It was not a bug, it was
-   a landmine: `plans.ts` is the obvious file to open to ask what the business
-   costs, and it gave a confident, itemised, wrong answer.
-
-   So the rule is not "the lists agree" — it is that there is only one list.
-   A second one cannot be wrong if it cannot exist. */
-
-const NAMES = Object.keys(FIXED_CORE);
-
-/** Everywhere a second bill list could hide. */
-const SOURCES: string[] = [];
-const walk = (dir: string): void => {
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
-      if (entry !== 'node_modules' && entry !== '.next') walk(full);
-    } else if (/\.(ts|tsx|mts)$/.test(entry)) {
-      SOURCES.push(full);
-    }
-  }
-};
-walk('app');
-walk('scripts');
-
-/* The generator and the list itself are allowed to name suppliers with money
-   beside them. So are the checks that read them — including this one. */
-const MAY = new Set([
-  join('scripts', 'fixedcosts.mts'),
-  join('scripts', 'costs-eleven.mts'),
-  join('scripts', 'check-koste.mts'),
-  join('scripts', 'check-kredietkoste.mts'),
-]);
-
-const rivals: string[] = [];
-for (const file of SOURCES) {
-  if (MAY.has(file)) continue;
-  const text = withoutComments(readFileSync(file, 'utf8'));
-  /* A supplier name with a number beside it — `Resend: 64`, `'Vercel Pro': 320`
-     — which is what a bill list looks like and what prose does not. Two or
-     more of them in one file is a list rather than a mention. */
-  const priced = NAMES.filter((name) => {
-    const bare = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`['"\`]?${bare}['"\`]?\\s*:\\s*[0-9]`).test(text);
-  });
-  if (priced.length >= 2) rivals.push(`${file} prices ${priced.join(', ')}`);
-}
-
-ok('the monthly bill is written down in exactly one place',
-  rivals.length === 0,
-  `${rivals.join('; ')} — a second bill list cannot be kept in step, and the one that is wrong is the one nobody reads`);
-
-/* And no second answer to what an ElevenLabs credit costs. The rival model's
-   worst number was this one: $990 for 11 000 000 credits, when their own
-   email of 9 September says 6 000 000. It made a song look 45% cheaper than
-   it is, which is the single number the whole business rests on. */
-const wrongAnchor = SOURCES.filter((file) => {
-  if (MAY.has(file)) return false;
-  const text = withoutComments(readFileSync(file, 'utf8'));
-  return /11[_\s]?000[_\s]?000/.test(text) && /990/.test(text);
-});
-ok('nothing carries the old 11-million-credit anchor',
-  wrongAnchor.length === 0,
-  `${wrongAnchor.join(', ')} — ElevenLabs' own email says 6 000 000, and 11 000 000 makes a song look 45% cheaper than it is`);
 
 /* ── 5. One gateway rate ──────────────────────────────────────────────────
 
@@ -390,7 +404,6 @@ ok('nothing carries the old 11-million-credit anchor',
    discrepancy however it likes, but whatever figure it presents as the one
    the sums use has to be the figure the sums use. */
 {
-  const page = readFileSync('docs/MAANDELIKSE-KOSTE.md', 'utf8');
   const pct = (GATEWAY_RATE * 100).toFixed(1).replace('.', ',');
   const fixed = String(GATEWAY_FIXED);
   ok('the bill page quotes the gateway rate the sums actually charge',
@@ -479,7 +492,7 @@ ok('nothing carries the old 11-million-credit anchor',
   let detail = `the generator exited ${ran.status}`;
   if (ran.status === 0) {
     const today = undated(readFileSync(fresh, 'utf8'));
-    const kept = undated(readFileSync('docs/KOSTE-EN-WINS.md', 'utf8'));
+    const kept = undated(sums);
     same = today === kept;
     if (!same) {
       const a = kept.split('\n');

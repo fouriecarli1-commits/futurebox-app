@@ -1859,7 +1859,7 @@ export default function MakeMusic({
 
               A paid plan used to be told "As many as you like on Pro", which
               is not what a paid plan is: every one of them has a credit
-              ceiling, and the whole of `docs/KOSTE-EN-WINS.md` turns on that
+              ceiling, and the whole of `private/KOSTE-EN-WINS.md` turns on that
               ceiling being real. The owner: "die pro version het ook beperkte
               krediete. haal dit uit."
 

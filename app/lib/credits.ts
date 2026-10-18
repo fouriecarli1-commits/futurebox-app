@@ -68,7 +68,7 @@ export function creditsSaid(n: number, say: (key: string, fallback: string) => s
  * rate nobody had ever checked against ElevenLabs. The owner sent their pricing
  * page that day: music is $0.15 a minute, so a two-minute song costs us
  * $0.30 — eighty-five per cent more than the number this file was built on.
- * `docs/ELEVENLABS-PRYSE.md` has the whole list and what it does to the
+ * `private/ELEVENLABS-PRYSE.md` has the whole list and what it does to the
  * profit sums, and the short version is that the free tier can no longer be
  * given music.
  *
@@ -119,7 +119,7 @@ export function creditsSaid(n: number, say: (key: string, fallback: string) => s
  *
  * **The trigger, if it ever comes: 358 paying members**, four times
  * break-even. That is where the plan runs dry and twenty credits becomes the
- * right move. `docs/KOSTE-EN-WINS.md` carries the whole table under "Die prys
+ * right move. `private/KOSTE-EN-WINS.md` carries the whole table under "Die prys
  * van 'n lied, uitgewerk" and regenerates it from these constants, so the sum
  * is never more than `npm run costs:eleven` away.
  *
@@ -153,7 +153,7 @@ export const CREDITS = {
   /* ── Repriced by her, 11 October 2026 ──────────────────────────────────
  
      She asked for the whole price list with the engine's cost and the profit
-     in rand beside each press — `docs/KREDIETE.md` — and then set four
+     in rand beside each press — `private/KREDIETE.md` — and then set four
      prices off it in the same minute. Her words are on each one below.
  
      Credits are whole numbers at R1.49 (the cheapest plan's rate until 15 October 2026; Label's R1.50 since), so a rand
@@ -226,7 +226,7 @@ export const CREDITS = {
    */
   /* The owner, 11 October 2026: *"Cover = 15 credits"*, given in credits rather
      than rand. R22.35. The supplier's rate for this one has still not been
-     read, so what it keeps is not known yet — see `docs/KREDIETE.md`. */
+     read, so what it keeps is not known yet — see `private/KREDIETE.md`. */
   cover: 15,
   /**
    * Putting a film together in the cutting room. **Per half minute of
@@ -234,7 +234,7 @@ export const CREDITS = {
    *
    * ── Her decision, over my advice, and that is worth recording ─────
    *
-   * On 30 September I argued in `docs/WAT-OM-TE-HEF.md` that the editor
+   * On 30 September I argued in `private/WAT-OM-TE-HEF.md` that the editor
    * should charge nothing: the cutting happens in her browser, it costs this
    * app nothing to serve, the plan cards already sell the room, and a member
    * who paid R149 and then pays again to trim a clip has paid twice. I also
@@ -1258,7 +1258,7 @@ export function readCost(characters: number): number {
  * So there is MORE air than there was — 98 members between break-even and the
  * ceiling, against 92 — while break-even itself sits six members further out.
  * A margin held as a ratio is not a margin held in rand, and the two answer
- * different questions. `docs/KOSTE-EN-WINS.md` is generated from these numbers
+ * different questions. `private/KOSTE-EN-WINS.md` is generated from these numbers
  * by `npm run costs:eleven` and carries the whole table.
  */
 export const TIER_CREDITS: Record<Tier, number> = {
@@ -1270,7 +1270,7 @@ export const TIER_CREDITS: Record<Tier, number> = {
    * Ten was two half songs, and it was decided when a song was assumed to
    * cost us R2.59. On 8 September 2026 the owner sent ElevenLabs' own pricing
    * page: music is $0.15 a minute, so a song costs R4.80, and a plan holds
-   * about half the minutes this file had assumed. `docs/ELEVENLABS-PRYSE.md`
+   * about half the minutes this file had assumed. `private/ELEVENLABS-PRYSE.md`
    * has the whole derivation.
    *
    * With the real numbers the realistic case stops working — not because the
@@ -1312,7 +1312,7 @@ export const TIER_CREDITS: Record<Tier, number> = {
      krediete kry, is die goed wat ons niks kos nie: Pro Booth se diepte,
      kommersiële regte, voorrang in die tou, meer stemme.
 
-     Sien `docs/OPSIE-E.md` vir die hele som. */
+     Sien `private/OPSIE-E.md` vir die hele som. */
   /* ── Ninety became a hundred, 4 October 2026 ────────────────────────────
 
      The owner: *"aangesien ons self ook monotize moet ons, klein bietjie ekstra
@@ -1333,7 +1333,7 @@ export const TIER_CREDITS: Record<Tier, number> = {
 
      The number that is not softened by that is the ceiling. ElevenLabs' bucket
      is fixed, so a plan that hands out eleven percent more credits feeds about
-     ten percent fewer members at the cap — `docs/OPSIE-E.md` §3 has the
+     ten percent fewer members at the cap — `private/OPSIE-E.md` §3 has the
      original arithmetic, and §8 the addendum for this.
 
      Said plainly rather than buried: this is a real cost, she asked for it with

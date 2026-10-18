@@ -104,7 +104,7 @@ export async function notecache(where: string, used: Used | null | undefined): P
 
      The line above went to the console and nowhere else, which is the same
      mistake `eleven_costs` was built to fix: a number in a log is a number
-     that ages out before anybody adds it up. `docs/MAANDELIKSE-KOSTE.md`
+     that ages out before anybody adds it up. `private/MAANDELIKSE-KOSTE.md`
      has been carrying "die egte getal kom hier in" since the day caching
      went on, and it could not, because there was nothing to read.
 

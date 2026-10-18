@@ -597,7 +597,7 @@ ok('and the request table has nowhere to put a message either',
  * van die bedrag."*
  *
  * Held here the day the arithmetic was written, before anything calls it.
- * The plan and the open question are in `docs/KUNSMARK-VASTE-PRYS.md`; what
+ * The plan and the open question are in `private/KUNSMARK-VASTE-PRYS.md`; what
  * matters for a check is that the sum is executed rather than described, so
  * the signed table it will go into has something true behind it.
  */

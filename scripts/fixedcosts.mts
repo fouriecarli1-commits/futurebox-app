@@ -40,7 +40,7 @@ export const FIXED_CORE: Record<string, number> = {
      kennisgewings stuur. Sien `app/lib/server/email.ts`.
 
      Dit het tot 16 September 2026 **GitHub** hier gestaan, teen dieselfde
-     R64, terwyl `docs/MAANDELIKSE-KOSTE.md` nommer 5 al die tyd Resend gesê
+     R64, terwyl `private/MAANDELIKSE-KOSTE.md` nommer 5 al die tyd Resend gesê
      het. Die totaal was dus heeltyd reg en die naam heeltyd verkeerd, wat die
      soort fout is wat niks breek nie en alles laat twyfel: 'n mens kan nie
      sien of dit een reël met die verkeerde naam is of twee reëls waarvan een
@@ -51,7 +51,7 @@ export const FIXED_CORE: Record<string, number> = {
   Resend: 64,
   /* Kits.AI, $40 = R640. Sangstem-omskakeling, gekies 7 September 2026. Die
      een reël op hierdie lys wat 'n gat toemaak eerder as om iets te laat loop:
-     dit is die enigste model wat sing. Sien `docs/MAANDELIKSE-KOSTE.md`. */
+     dit is die enigste model wat sing. Sien `private/MAANDELIKSE-KOSTE.md`. */
   'Kits.AI': 640,
   /* Zoho, R241,50 — BTW reeds ingesluit, want dit is wat op die staat staan
      eerder as 'n plakkerprys wat omgereken moet word. Bevestig deur the owner op
@@ -68,7 +68,7 @@ export const FIXED_CORE: Record<string, number> = {
      een nie. Sy het hulle met 'n "en" tussenin genoem, wat hulle apart maak.
      Spaceship is self 'n domeinregistrateur, so as die R168 se domeine BY
      Spaceship staan, tel ons dit twee keer en die rekening is R210,24 te
-     hoog. Een woord van haar maak dit reg; sien `docs/MAANDELIKSE-KOSTE.md`,
+     hoog. Een woord van haar maak dit reg; sien `private/MAANDELIKSE-KOSTE.md`,
      waar dieselfde vraag staan sodat dit nie hier begrawe lê nie. */
   Domeine: 168,
   /* $13,14 deur dieselfde koers as al die ander dollarreëls, eerder as 'n
