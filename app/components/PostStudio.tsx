@@ -93,6 +93,7 @@ import { PHOTO } from '../lib/photolook';
 import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { FACES, faceOf, faceReady, type FaceId } from '../lib/postfaces';
 import { fitUnder, type Limit } from '../lib/squeeze';
+import { GRID, bestCrop, interestOf, windowOf } from '../lib/smartcrop';
 import FileSize, { type Estimate } from './FileSize';
 import {
   MIDDLE, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP,
@@ -396,6 +397,8 @@ const CANVAS_MOST = { side: 16384, pixels: 16_777_216 } as const;
 const OWN_MOST = 4096;
 /** The longest side a canvas of a photo's own shape is given at least. */
 const POST_LEAST = 1080;
+/** How many cells across its longest side a photo is read at for smart crop. */
+const SMART_GRID = GRID;
 /** How far the view goes in. Out is the whole picture on the screen. */
 const VIEW_MOST = 5;
 
@@ -707,6 +710,38 @@ function DesignTile({ design, lang }: { readonly design: Design; readonly lang: 
     return () => { gone = true; };
   }, [design, lang]);
   return <canvas ref={canvas} width={180} height={Math.round(180 * tall)} aria-hidden className="w-full rounded-lg" style={{ aspectRatio: `1 / ${tall}` }} />;
+}
+
+/**
+ * One shape as a block over her photograph: the photo small, the part the
+ * shape would keep bright and outlined, the rest dimmed — `lib/smartcrop.ts`.
+ */
+function SmartTile({ picture, window: part, tall }: {
+  readonly picture: HTMLImageElement;
+  readonly window: { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
+  readonly tall: number;
+}): React.ReactElement {
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const el = canvas.current;
+    const ctx = el?.getContext('2d');
+    if (!el || !ctx) return;
+    ctx.clearRect(0, 0, el.width, el.height);
+    ctx.drawImage(picture, 0, 0, el.width, el.height);
+    const x = part.x * el.width;
+    const y = part.y * el.height;
+    const w = part.w * el.width;
+    const h = part.h * el.height;
+    ctx.fillStyle = 'rgba(0,0,0,0.62)';
+    ctx.fillRect(0, 0, el.width, y);
+    ctx.fillRect(0, y + h, el.width, el.height - y - h);
+    ctx.fillRect(0, y, x, h);
+    ctx.fillRect(x + w, y, el.width - x - w, h);
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+  }, [picture, part.x, part.y, part.w, part.h]);
+  return <canvas ref={canvas} width={160} height={Math.max(40, Math.round(160 * tall))} aria-hidden className="w-full rounded-lg" />;
 }
 
 /** One filter's picture: her photograph with it on. */
@@ -3068,6 +3103,28 @@ export default function PostStudio({
    * which every platform shows soft. So the longest side is at least 1080,
    * the size the platforms ask for, and the shape is the photo's.
    */
+  /* ── Smart crop: where each shape would stand over this photo ────────
+     Read once per photograph, small, on the phone — `lib/smartcrop.ts`. A
+     picture the browser will not let us read (one from another site) is
+     simply cut in the middle, as it always was. */
+  const interest = useMemo(() => {
+    if (!picture) return null;
+    try {
+      const k = SMART_GRID / Math.max(picture.naturalWidth, picture.naturalHeight, 1);
+      const w = Math.max(1, Math.round(picture.naturalWidth * k));
+      const h = Math.max(1, Math.round(picture.naturalHeight * k));
+      const sheet = document.createElement('canvas');
+      sheet.width = w;
+      sheet.height = h;
+      const ctx = sheet.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return null;
+      ctx.drawImage(picture, 0, 0, w, h);
+      return interestOf(ctx.getImageData(0, 0, w, h).data, w, h);
+    } catch {
+      return null;
+    }
+  }, [picture]);
+
   const ownSizeOf = (photoW: number, photoH: number): PostSize => {
     const up = Math.max(1, POST_LEAST / Math.max(photoW, photoH));
     const w = Math.round(photoW * up);
@@ -6987,6 +7044,46 @@ export default function PostStudio({
           </button>
         )}
       </div>
+      {/* ── Smart crop ───────────────────────────────────────────────────
+          The owner, 18 October 2026: *"'n dimensions blokke vir smart
+          cropping."* Every shape as a block over her photo, already standing
+          over the part worth keeping; one press makes the post that shape
+          with the photo placed there, and she can still drag it after. */}
+      {picture && (
+        <div className="mt-3" data-postsmart>
+          <p className={MIKRO}>{t('post.smartCrop', 'Smart crop')}</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-zinc-500">
+            {t('post.smartCropWhat', 'Each shape, placed over the part of your photo worth keeping. Tap one to use it — you can still drag the photo after.')}
+          </p>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {POST_SIZES.map((one) => {
+              const pictureAspect = picture.naturalWidth / Math.max(1, picture.naturalHeight);
+              const frameAspect = one.width / one.height;
+              const smart = interest ? bestCrop(interest, pictureAspect, frameAspect) : MIDDLE;
+              const on = size.id === one.id && crop.basis === 'fill' && crop.zoom === 1 && crop.x === smart.x && crop.y === smart.y;
+              return (
+                <button
+                  key={one.id}
+                  type="button"
+                  data-postsmartcrop={one.id}
+                  aria-pressed={on}
+                  onClick={() => {
+                    shapeChosen.current = true;
+                    setSize(one);
+                    setCrop(smart);
+                    setView({ scale: 1, x: 0, y: 0 });
+                  }}
+                  className={`flex flex-col items-center gap-1 rounded-xl border p-1.5 text-[10px] font-bold ${on ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200' : 'border-zinc-700 bg-zinc-950 text-zinc-300'}`}
+                >
+                  <SmartTile picture={picture} window={windowOf(smart, pictureAspect, frameAspect)} tall={picture.naturalHeight / Math.max(1, picture.naturalWidth)} />
+                  <span className="leading-tight">{one.name}</span>
+                  <span className="font-mono text-[9px] text-zinc-500">{one.width}×{one.height}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div className={`mt-2 ${RY}`}>
         <button
           type="button"

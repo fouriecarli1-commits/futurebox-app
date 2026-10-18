@@ -4735,6 +4735,8 @@ export const STRINGS: Dict = {
   "post.zoomFit": { en: "Fit", af: "Pas" },
   "post.zoomOpen": { en: "Zoom in and out", af: "Zoem in en uit" },
   "post.zoomShut": { en: "Put the zoom away", af: "Sit die zoem weg" },
+  "post.smartCrop": { en: "Smart crop", af: "Slim sny" },
+  "post.smartCropWhat": { en: "Each shape, placed over the part of your photo worth keeping. Tap one to use it — you can still drag the photo after.", af: "Elke vorm, oor die deel van jou foto wat die moeite werd is. Tik een om dit te gebruik — jy kan die foto daarna steeds sleep." },
   "size.most": { en: "File size, at most", af: "Lêergrootte, hoogstens" },
   "size.none": { en: "No limit", af: "Geen perk" },
   "size.working": { en: "Working out the size…", af: "Werk die grootte uit…" },
