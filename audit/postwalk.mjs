@@ -86,6 +86,32 @@ try {
     'a second way out that only this room has, going somewhere that depends'
     + ' on how you arrived');
 
+  /* ── A size of her own ───────────────────────────────────────────────
+     The owner, 18 October 2026: *"photo editor laat my nie regtig toe om 'n
+     foto se custom size te kies soos ek wil nie."* The shape lock was on by
+     default, so 1200 across and 500 tall came out 500 × 500. The two numbers
+     typed are the two numbers kept — then back to the square the rest of
+     this walk is measured on. */
+  const customSize = async (w, h) => {
+    await page.locator('[data-postcustomsize]').first().click();
+    await page.waitForTimeout(500);
+    await page.locator('[data-sizewide]').fill(String(w));
+    await page.locator('[data-sizetall]').fill(String(h));
+    const chosen = await page.locator('[data-sizechosen]').innerText().catch(() => '');
+    await page.locator('[data-sizeapply]').click();
+    await page.waitForTimeout(800);
+    return chosen;
+  };
+  const chosenSaid = await customSize(1200, 500);
+  const shaped = await page.evaluate(() => {
+    const one = document.querySelector('[data-poststudio] canvas');
+    return one ? one.width / one.height : 0;
+  });
+  check('a custom size is the two numbers typed, not one of them twice',
+    Math.abs(shaped - 1200 / 500) < 0.02 && /1200\s*×\s*500/.test(chosenSaid),
+    `the canvas came out ${shaped.toFixed(2)}:1, the dialog said "${chosenSaid}"`);
+  await customSize(1080, 1080);
+
 
   /**
    * Open a bench on the room's bar.

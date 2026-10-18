@@ -152,7 +152,17 @@ export default function CanvasSizeModal({
      pressed. */
   const [wideText, setWideText] = useState<string>(String(currentWidth || 1080));
   const [tallText, setTallText] = useState<string>(String(currentHeight || 1080));
-  const [lockRatio, setLockRatio] = useState<boolean>(true);
+  /* Off to begin with. The owner, 18 October 2026: *"photo editor laat my nie
+     regtig toe om 'n foto se custom size te kies soos ek wil nie."* With the
+     lock on by default, typing 1200 across a square made it 1200 tall as
+     well, and typing 500 tall then made it 500 across again — so 1200 × 500
+     came out 500 × 500, and no pair of numbers she typed was what she got.
+     Custom means the two numbers she types; the lock is there for whoever
+     wants the shape held, and says so when it is on. */
+  const [lockRatio, setLockRatio] = useState<boolean>(false);
+  /* Which box was typed in last, which is the one that leads when the
+     shape is locked. */
+  const [led, setLed] = useState<'w' | 'h'>('w');
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   /* The shape the lock holds: the size this was opened at, then whatever
      preset is picked or whatever the size was when the lock went on —
@@ -202,12 +212,35 @@ export default function CanvasSizeModal({
     setSelectedPresetId(null);
   };
 
+  /* While typing, with the shape locked, the other box follows as you go,
+     so the pair on the screen is always the pair that will be applied. */
+  const typeWidth = (raw: string): void => {
+    setWideText(raw);
+    setLed('w');
+    const n = parseInt(raw, 10);
+    if (lockRatio && n > 0) setTallText(String(Math.round(n / ratio)));
+  };
+  const typeHeight = (raw: string): void => {
+    setTallText(raw);
+    setLed('h');
+    const n = parseInt(raw, 10);
+    if (lockRatio && n > 0) setWideText(String(Math.round(n * ratio)));
+  };
+
   const handleApply = () => {
-    /* Whatever is still in the boxes, taken as if they had been left. */
-    let w = width;
-    let h = height;
-    if (wideText !== String(width)) ({ w, h } = takeWidth(wideText));
-    else if (tallText !== String(height)) ({ w, h } = takeHeight(tallText));
+    /* Exactly the two numbers in the boxes, each held between 100 and 8000.
+       Locked, the box typed in last leads and the other follows it. */
+    let w: number;
+    let h: number;
+    if (!lockRatio) {
+      w = clampSide(parseInt(wideText, 10));
+      h = clampSide(parseInt(tallText, 10));
+      setBoth(w, h);
+    } else if (led === 'w') {
+      ({ w, h } = takeWidth(wideText));
+    } else {
+      ({ w, h } = takeHeight(tallText));
+    }
     const activePreset = STANDARD_SIZES.find((s) => s.id === selectedPresetId);
     const label = activePreset && activePreset.width === w && activePreset.height === h
       ? (lang === 'af' ? activePreset.nameAf : activePreset.nameEn)
@@ -264,7 +297,12 @@ export default function CanvasSizeModal({
                 type="button"
                 onClick={() => {
                   /* Locking holds the shape it is NOW. */
-                  if (!lockRatio) setRatio(width / height);
+                  if (!lockRatio) {
+                    /* From the boxes as they read now, typed or not. */
+                    const w = parseInt(wideText, 10) || width;
+                    const h = parseInt(tallText, 10) || height;
+                    setRatio(w / h);
+                  }
                   setLockRatio(!lockRatio);
                 }}
                 aria-pressed={lockRatio}
@@ -290,7 +328,8 @@ export default function CanvasSizeModal({
                   max="8000"
                   inputMode="numeric"
                   value={wideText}
-                  onChange={(e) => setWideText(e.target.value)}
+                  data-sizewide
+                  onChange={(e) => typeWidth(e.target.value)}
                   onBlur={(e) => { takeWidth(e.target.value); }}
                   className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-hidden"
                 />
@@ -305,7 +344,8 @@ export default function CanvasSizeModal({
                   max="8000"
                   inputMode="numeric"
                   value={tallText}
-                  onChange={(e) => setTallText(e.target.value)}
+                  data-sizetall
+                  onChange={(e) => typeHeight(e.target.value)}
                   onBlur={(e) => { takeHeight(e.target.value); }}
                   className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-hidden"
                 />
@@ -384,11 +424,14 @@ export default function CanvasSizeModal({
         {/* Action Footer */}
         <div className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-950">
           <div className="text-xs text-zinc-400">
-            {t('size.selected', 'Selected')} <span className="font-mono font-bold text-zinc-200">{width} × {height} px</span>
+            {/* What is in the boxes now, not what was in them when they were
+                last left — the line under the boxes must not disagree with them. */}
+            {t('size.selected', 'Selected')} <span className="font-mono font-bold text-zinc-200" data-sizechosen>{wideText || '—'} × {tallText || '—'} px</span>
           </div>
           <button
             type="button"
             onClick={handleApply}
+            data-sizeapply
             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-amber-500 px-5 text-sm font-black text-black hover:bg-amber-400 shadow-lg active:scale-95 transition-all"
           >
             <Check className="h-4 w-4 stroke-[3]" />
