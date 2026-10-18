@@ -167,6 +167,28 @@ try {
   check('  and the room is told, with the recording small enough to share',
     Boolean(voice) && /^audio\//.test(voice.type) && voice.audio.length > 100 && voice.audio.length <= 120000 && voice.bpm === 100,
     voice ? `${voice.type}, ${voice.audio.length} characters` : 'no voice layer was sent');
+
+  /* Send to ProBooth: the loop is kept on the phone and the Booth opens,
+     saying it is waiting. */
+  const send = page.locator('[data-loopsend]');
+  check('with a loop playing, it can be sent to ProBooth', (await send.count()) === 1);
+  await send.click();
+  await page.waitForSelector('[data-booth] [data-jamwaiting], [data-jamwaiting]', { timeout: 15000 }).catch(() => undefined);
+  check('  and the Booth opens, saying the loop is waiting for a song',
+    (await page.locator('[data-jamwaiting]').count()) >= 1,
+    (await page.locator('body').innerText()).slice(0, 160));
+  const kept = await page.evaluate(() => new Promise((done) => {
+    const asked = indexedDB.open('futurebox-jamloop', 1);
+    asked.onsuccess = () => {
+      const all = asked.result.transaction('sent', 'readonly').objectStore('sent').getAll();
+      all.onsuccess = () => done(all.result.map((one) => ({ size: one.wav?.size ?? 0, bpm: one.bpm, seconds: one.seconds })));
+      all.onerror = () => done([]);
+    };
+    asked.onerror = () => done([]);
+  }));
+  check('  and one pass of it is kept on the phone as a WAV',
+    kept.length === 1 && kept[0].size > 44 && kept[0].bpm === 100 && Math.abs(kept[0].seconds - 4.8) < 0.01,
+    JSON.stringify(kept));
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);
 } finally {

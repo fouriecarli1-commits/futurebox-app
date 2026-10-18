@@ -347,6 +347,8 @@ const PLAIN_IN_ROOMS: Readonly<Record<string, string>> = {
     'a hint on the account screen \u2014 where your finished songs live. Nothing is being set up',
   'Booth.tsx|onGoToMake':
     'an empty booth pointing at Make a song \u2014 there is nothing recorded yet to carry',
+  'LiveChannel.tsx|onGoToBooth':
+    'from the jam room to the Booth: the loop itself travels on the device (lib/jamhandover.ts), so the way there carries nothing',
   'LiveChannel.tsx|onGoToMake':
     'the live room with nothing in it yet, pointing at where songs are made',
   'MakeMusic.tsx|onGoToSound':

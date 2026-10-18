@@ -17,8 +17,10 @@ export type { Pad };
  * `when` is a time on the AudioContext's clock — now for a press, a moment
  * in the next pass for the looper — and `into` is where it goes: the
  * speakers, or a layer's own volume so a muted layer goes quiet at once.
+ * Any context will do, so a pass can be rendered offline to a file for the
+ * booth (`lib/jamhandover.ts`) with exactly the sound the room plays.
  */
-export function hit(ctx: AudioContext, pad: Pad, when: number = ctx.currentTime, into: AudioNode = ctx.destination): void {
+export function hit(ctx: BaseAudioContext, pad: Pad, when: number = ctx.currentTime, into: AudioNode = ctx.destination): void {
   const now = Math.max(when, ctx.currentTime);
   const out = ctx.createGain();
   out.connect(into);

@@ -188,3 +188,14 @@ export function addInto(mine: readonly Layer[], theirs: Loop, by: string, stamp:
 export function sizeOf(loop: Loop): number {
   return JSON.stringify(loop).length;
 }
+
+/**
+ * How many times one pass goes round to cover a song, for a loop sent to the
+ * booth: at least once, never more than the booth lets a lane repeat, and
+ * eight passes when there is no song length to go by.
+ */
+export function roundsFor(songSeconds: number, passSeconds: number, most: number): number {
+  if (!(passSeconds > 0)) return 1;
+  const want = songSeconds > 0 ? Math.ceil(songSeconds / passSeconds) : 8;
+  return Math.max(1, Math.min(most, want));
+}

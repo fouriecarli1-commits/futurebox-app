@@ -524,7 +524,11 @@ function RoomPanel({
   );
 }
 
-export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }): React.ReactElement {
+export default function LiveChannel({ onGoToMake, onGoToBooth }: {
+  onGoToMake: () => void;
+  /** The Booth, where a loop sent from the jam room waits for ProBooth. */
+  onGoToBooth?: () => void;
+}): React.ReactElement {
   const { t, lang } = useLang();
   const [room, setRoom] = useState<Room>(EMPTY);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -1243,7 +1247,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       </main>
       </div>
       )}
-      {mode === 'jam' && <LiveJam here={room.here} name="" />}
+      {mode === 'jam' && <LiveJam here={room.here} name="" onToBooth={onGoToBooth} />}
 
       {openAt && (
         <RoomScreen

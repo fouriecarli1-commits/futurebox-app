@@ -4954,7 +4954,7 @@ export default function FutureBoxHome() {
               />
             )}
 
-            {studioTab === 'live' && <LiveChannel onGoToMake={() => goToRoom('make')} />}
+            {studioTab === 'live' && <LiveChannel onGoToMake={() => goToRoom('make')} onGoToBooth={() => goToRoom('booth')} />}
 
             {studioTab === 'podcast' && (
               <PodcastStudio

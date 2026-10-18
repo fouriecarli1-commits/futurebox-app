@@ -32,10 +32,11 @@
  * loop's own beat.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Circle, Mic, Play, Plus, Square, Trash2, Volume2, VolumeX, Check } from 'lucide-react';
+import { Circle, Mic, Play, Plus, Send, Square, Trash2, Volume2, VolumeX, Check } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 import { hit } from '../lib/jampads';
+import { sendToBooth } from '../lib/jamhandover';
 import {
   BARS, BEATS_PER_BAR, DEFAULT_BPM, MOST_LAYERS, MOST_VOICE_CHARS, TEMPOS,
   addInto, beatSeconds, loopSeconds, placeIn, rateFor, snap,
@@ -68,13 +69,15 @@ const fromBase64 = (text: string): ArrayBuffer => {
   return bytes.buffer;
 };
 
-export default function JamLooper({ ctx, stream, padTap }: {
+export default function JamLooper({ ctx, stream, padTap, onToBooth }: {
   /** The room's AudioContext, made on the first press. */
   readonly ctx: () => AudioContext;
   /** The microphone, when the stage is open. */
   readonly stream: MediaStream | null;
   /** Set here, called by the room's pads: a press while recording is kept. */
   readonly padTap: React.MutableRefObject<((pad: Pad) => void) | null>;
+  /** Opens the Booth, where the loop waits for ProBooth. Absent: no button. */
+  readonly onToBooth?: () => void;
 }): React.ReactElement {
   const { t } = useLang();
   const [bpm, setBpm] = useState<number>(DEFAULT_BPM);
@@ -396,6 +399,30 @@ export default function JamLooper({ ctx, stream, padTap }: {
     }
   };
 
+  /* ── To the booth ─────────────────────────────────────────────────────
+     One pass, rendered as the room plays it (muted layers left out), kept on
+     this device, and the Booth opened: the next ProBooth she opens there
+     takes it as a lane. See `lib/jamhandover.ts`. */
+  const [sending, setSending] = useState(false);
+  const toBooth = async (): Promise<void> => {
+    if (sending || !layers.length || !onToBooth) return;
+    setSending(true);
+    setSaid('');
+    try {
+      const kept = await sendToBooth(layers, bpm, muted);
+      if (kept !== 'kept') {
+        setSaid(t('loop.notKept', 'This device would not keep the loop for the booth. Make some space and try again.'));
+        return;
+      }
+      stop();
+      onToBooth();
+    } catch {
+      setSaid(t('loop.notRendered', 'The loop could not be made into a lane on this browser.'));
+    } finally {
+      setSending(false);
+    }
+  };
+
   const nameOf = (layer: Layer, at: number): string => {
     const what = layer.kind === 'pads' ? t('loop.padsLayer', 'Pads') : t('loop.voiceLayer', 'Voice');
     return `${what} ${at + 1}${layer.from ? ` · ${t('loop.from', 'from')} ${layer.from}` : ''}`;
@@ -473,6 +500,22 @@ export default function JamLooper({ ctx, stream, padTap }: {
             </li>
           ))}
         </ul>
+      )}
+
+      {onToBooth && layers.length > 0 && (
+        <button
+          type="button"
+          data-loopsend
+          onClick={() => void toBooth()}
+          disabled={sending || Boolean(recording)}
+          className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3 text-xs font-extrabold text-sky-100 disabled:opacity-50"
+        >
+          <Send className="h-3.5 w-3.5" />
+          {sending ? t('loop.sending', 'Making it a lane…') : t('loop.toBooth', 'Send to ProBooth')}
+        </button>
+      )}
+      {onToBooth && layers.length > 0 && (
+        <p className="pt-1 text-[11px] text-zinc-500">{t('loop.toBoothWhat', 'It waits on this phone. Open a song in the Booth, then ProBooth, and it is there as a lane going round to the end of the song.')}</p>
       )}
 
       {said && <p className="pt-2 text-xs text-amber-300" data-loopsaid>{said}</p>}

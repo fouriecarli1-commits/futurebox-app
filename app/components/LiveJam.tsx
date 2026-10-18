@@ -41,7 +41,12 @@ function clock(seconds: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export default function LiveJam({ here, name }: { readonly here: number; readonly name: string }): React.ReactElement {
+export default function LiveJam({ here, name, onToBooth }: {
+  readonly here: number;
+  readonly name: string;
+  /** Opens the Booth, for the looper's "Send to ProBooth". */
+  readonly onToBooth?: () => void;
+}): React.ReactElement {
   const { t } = useLang();
   const [onStage, setOnStage] = useState(false);
   const [refused, setRefused] = useState('');
@@ -230,7 +235,7 @@ export default function LiveJam({ here, name }: { readonly here: number; readonl
       </div>
 
       {/* ── The looper ──────────────────────────────────────────────── */}
-      <JamLooper ctx={ctx} stream={mic} padTap={padTap} />
+      <JamLooper ctx={ctx} stream={mic} padTap={padTap} onToBooth={onToBooth} />
     </div>
   );
 }

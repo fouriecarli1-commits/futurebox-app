@@ -82,6 +82,12 @@ export const metadata: Metadata = {
    * previews follow it without another edit.
    */
   metadataBase: new URL(SITE_URL),
+  /* Google Search Console's ownership tag, for Google Play's website check
+     (the owner, 18 October 2026). Read from the deployment, so verifying is
+     a setting in Vercel and a redeploy rather than a commit. Absent, no tag. */
+  ...(process.env.GOOGLE_SITE_VERIFICATION?.trim()
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION.trim() } }
+    : {}),
   /* ── The name, read from one place ───────────────────────────────────
 
      This said "FutureBox — Digital Learning & Creative AI Platform", and the

@@ -147,12 +147,20 @@ try {
       await open.click().catch(() => undefined);
       await p.waitForTimeout(300);
     };
-    for (let round = 0; round < 2; round += 1) {
+    /* The line goes in the middle of the first lane's clip, which is the
+       lane the cut leaves open — so every round lands inside a lane. It used
+       to go at a fixed share of the ruler, which put the second round's line
+       outside the new left half as often as not; the room then said so in a
+       line under the timeline, and that line took the very height this
+       measures. */
+    for (let round = 0; round < 3; round += 1) {
       await shutDesk();
       const ruler = p.locator('[data-axis]').first();
       const rulerBox = await ruler.boundingBox();
-      if (rulerBox) {
-        await p.mouse.click(rulerBox.x + rulerBox.width * (0.2 + round * 0.15), rulerBox.y + rulerBox.height / 2);
+      const clipBox = await p.locator('[aria-label*="Drag this sound"], [aria-label*="Sleep hierdie klank"]')
+        .first().boundingBox();
+      if (rulerBox && clipBox) {
+        await p.mouse.click(clipBox.x + clipBox.width / 2, rulerBox.y + rulerBox.height / 2);
         await p.waitForTimeout(200);
       }
       const name = p.locator('[data-lanename]').first();
@@ -170,14 +178,12 @@ try {
     }
     await shutDesk();
     await p.waitForTimeout(400);
-    /* Two is enough and two is what the cut reliably gives: the second
-       round only lands when the line falls inside the new left half, which
-       depends on where the first cut went. Two lanes at 78 pixels already
-       overflow what a 390-tall screen leaves the list, which is the
-       condition being tested — so the bar is two rather than a number
-       chosen to look thorough. */
+    /* Three lanes is what is asked for: each round halves the open lane,
+       so three rounds give four, and anything from three up overflows what a
+       390-tall screen leaves the list — with room to spare, so a line of
+       text under the timeline cannot decide it. */
     check('there are enough lanes to need scrolling',
-      (await p.locator('[data-lanename]').count()) >= 2,
+      (await p.locator('[data-lanename]').count()) >= 3,
       `${await p.locator('[data-lanename]').count()} lanes`);
 
     const scroller = await p.evaluateHandle(() => {

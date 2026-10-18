@@ -365,6 +365,25 @@ export function audible(lanes: readonly Lane[]): Lane[] {
 }
 
 /**
+ * The passes in a take recorded while a marked piece went round.
+ *
+ * The owner, 18 October 2026: loop a piece in the booth and sing it over and
+ * over. The recorder runs the whole time, so the file is every pass back to
+ * back after `offset` — the count-in plus the round trip. Each pass is a
+ * window into that one file, `length` long. A last pass cut short is kept
+ * when at least half of it was sung, and dropped when it was barely started.
+ */
+export function passesOf(duration: number, offset: number, length: number): { from: number; to: number }[] {
+  if (!(length > 0) || !(duration > offset)) return [];
+  const passes: { from: number; to: number }[] = [];
+  for (let from = Math.max(0, offset); from < duration; from += length) {
+    const to = Math.min(duration, from + length);
+    if (to - from >= length / 2) passes.push({ from, to });
+  }
+  return passes;
+}
+
+/**
  * The piece of a lane that plays.
  *
  * Clamped to the audio, and a window that has collapsed to nothing is read as
@@ -381,6 +400,9 @@ export function windowOf(lane: Lane): { readonly from: number; readonly to: numb
   return to - from < 0.01 ? { from: 0, to: length } : { from, to };
 }
 
+/** The most times one lane's piece may go round. */
+export const MOST_REPEATS = 64;
+
 /**
  * How many times a lane's piece plays.
  *
@@ -391,7 +413,7 @@ export function windowOf(lane: Lane): { readonly from: number; readonly to: numb
  */
 export function repeatOf(lane: Lane): number {
   const want = Math.round(lane.repeat ?? 1);
-  return Number.isFinite(want) ? Math.min(64, Math.max(1, want)) : 1;
+  return Number.isFinite(want) ? Math.min(MOST_REPEATS, Math.max(1, want)) : 1;
 }
 
 /** How long a lane plays for, after its cut and its repeats. */

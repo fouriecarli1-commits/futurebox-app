@@ -593,6 +593,45 @@ try {
   check('armed, a drag marks a piece of the song', (await tools.count()) > 0,
     'the marker is on and a drag across the ruler left nothing behind');
 
+  /* ── Loop it ─────────────────────────────────────────────────────────
+     The owner, 18 October 2026: play the marked piece round and round. The
+     playhead is read off the button many times across two passes or more:
+     it must stay inside the piece, and it must have gone back to the start
+     at least once — a loop that plays on past the end is just Play. */
+  const loopButton = p.locator('[data-regionloop]').first();
+  check('the marked piece can be looped', (await loopButton.count()) === 1);
+  if ((await loopButton.count()) === 1) {
+    await loopButton.click();
+    const from = Number(await loopButton.getAttribute('data-loopfrom'));
+    const to = Number(await loopButton.getAttribute('data-loopto'));
+    const length = to - from;
+    let inside = true;
+    let wrapped = false;
+    let last = -1;
+    const seen = [];
+    const until = Date.now() + Math.min(14000, Math.max(3500, length * 2600));
+    while (Date.now() < until) {
+      const now = Number(await loopButton.getAttribute('data-playat'));
+      seen.push(now);
+      if (now < from - 0.2 || now > to + 0.2) inside = false;
+      if (last >= 0 && now < last - length / 2) wrapped = true;
+      last = now;
+      await p.waitForTimeout(120);
+    }
+    check('  and looped, the playhead stays in the piece and goes round to its start',
+      (await loopButton.getAttribute('aria-pressed')) === 'true' && inside && wrapped,
+      `piece ${from}–${to}; saw ${seen.slice(0, 40).join(', ')}`);
+    /* Off again, and the song stopped. Space is pressed with nothing
+       focused: on the loop button it would be a press of that button, and
+       turn the loop straight back on. */
+    await loopButton.click();
+    check('  and pressed again, it stops looping',
+      (await loopButton.getAttribute('aria-pressed')) === 'false');
+    await p.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+    await p.keyboard.press('Space');
+    await p.waitForTimeout(300);
+  }
+
   if ((await tools.count()) > 0) {
     /* The mark is time, and the lane it acts on is the lane that is open —
        so the bar has to say which that is, or a press is a guess. */
@@ -623,11 +662,12 @@ try {
        lane's own front edge correctly leaves one, and a probe that did not
        say which lane it was marking could not tell those two apart. */
     const before = await p.locator('[data-lanename]').count();
+    const namesBefore = await p.locator('[data-lanename]').allInnerTexts();
     await p.locator('button').filter({ hasText: af ? /Sny hierdie stuk uit/ : /Cut this piece out/ }).first().click();
     await p.waitForTimeout(500);
     check('and cutting the piece out changes the session',
       (await p.locator('[data-lanename]').count()) > before,
-      `lanes before ${before}, after ${await p.locator('[data-lanename]').count()}`);
+      `lanes before ${before} (${namesBefore.join(' | ')}), after ${await p.locator('[data-lanename]').count()} (${(await p.locator('[data-lanename]').allInnerTexts()).join(' | ')}); bar said ${bar}`);
     /* The mark is spent, so the bar goes with it. */
     check('and the mark is cleared once it has been used',
       (await p.locator('[data-regiontools]').count()) === 0);
@@ -1356,6 +1396,53 @@ try {
      is stuck with last night's takes. */
   check('with one press to start fresh instead',
     await p.locator('button', { hasText: /^(Start fresh|Begin oor)$/ }).count() > 0);
+
+  /* ── A loop sent from the jam room ────────────────────────────────────
+     The owner, 18 October 2026: "Send to ProBooth" in the jam room's looper.
+     The loop waits on the device (`lib/jamhandover.ts`); this puts one there
+     the way the looper does — a short WAV on the `futurebox-jamloop` shelf —
+     and opens the room again. It must arrive as a lane, going round, and the
+     shelf must be empty after so it does not arrive twice. */
+  await p.evaluate(async () => {
+    const rate = 44100;
+    const seconds = 2.4;
+    const frames = Math.round(rate * seconds);
+    const data = new DataView(new ArrayBuffer(44 + frames * 2));
+    const text = (at, word) => { for (let i = 0; i < word.length; i += 1) data.setUint8(at + i, word.charCodeAt(i)); };
+    text(0, 'RIFF'); data.setUint32(4, 36 + frames * 2, true); text(8, 'WAVE'); text(12, 'fmt ');
+    data.setUint32(16, 16, true); data.setUint16(20, 1, true); data.setUint16(22, 1, true);
+    data.setUint32(24, rate, true); data.setUint32(28, rate * 2, true); data.setUint16(32, 2, true); data.setUint16(34, 16, true);
+    text(36, 'data'); data.setUint32(40, frames * 2, true);
+    for (let i = 0; i < frames; i += 1) data.setInt16(44 + i * 2, Math.round(Math.sin(i / 20) * 8000), true);
+    const wav = new Blob([data.buffer], { type: 'audio/wav' });
+    await new Promise((done, fail) => {
+      const asked = indexedDB.open('futurebox-jamloop', 1);
+      asked.onupgradeneeded = () => asked.result.createObjectStore('sent', { keyPath: 'id' });
+      asked.onerror = () => fail(asked.error);
+      asked.onsuccess = () => {
+        const put = asked.result.transaction('sent', 'readwrite').objectStore('sent')
+          .put({ id: 'jam-probe', made: Date.now(), wav, bpm: 100, seconds });
+        put.onsuccess = () => done(null);
+        put.onerror = () => fail(put.error);
+      };
+    });
+  });
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForSelector('[data-jamarrived]', { timeout: 15000 }).catch(() => undefined);
+  const jamLanes = (await laneNames()).filter((one) => /Jam loop|Jam-loop/.test(one));
+  check('a loop sent from the jam room arrives as a lane, and the room says so',
+    jamLanes.length === 1 && (await p.locator('[data-jamarrived]').count()) === 1,
+    `${(await laneNames()).join(' | ')}`);
+  const left = await p.evaluate(() => new Promise((done) => {
+    const asked = indexedDB.open('futurebox-jamloop', 1);
+    asked.onsuccess = () => {
+      const all = asked.result.transaction('sent', 'readonly').objectStore('sent').getAll();
+      all.onsuccess = () => done(all.result.length);
+      all.onerror = () => done(-1);
+    };
+    asked.onerror = () => done(-1);
+  }));
+  check('  and it is taken off the shelf, so it does not arrive twice', left === 0, `${left} left`);
 
   await b.close();
 } finally {

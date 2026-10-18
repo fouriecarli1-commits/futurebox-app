@@ -21,7 +21,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
-  FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, smoothedCopy, lengthOf, mixSession, monoOf, pieceOf,
+  FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
   type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
@@ -44,6 +44,8 @@ import type { VoiceState } from './VoiceLab';
 import { CREDITS, perMinute } from '../lib/credits';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepsession';
+import { takenLoop, waitingLoop } from '../lib/jamhandover';
+import { roundsFor } from '../lib/looper';
 import { encodeWav, type Depth } from '../lib/wav';
 import { zipOf } from '../lib/zip';
 import BoothScope from './BoothScope';
@@ -281,6 +283,8 @@ export default function ProBooth({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [saveFailed, setSaveFailed] = useState<'unavailable' | 'full' | 'failed' | null>(null);
   const [cameBack, setCameBack] = useState(false);
+  /* A loop sent from the jam room arrived as a lane — see below. */
+  const [jamArrived, setJamArrived] = useState(false);
   const [at, setAt] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -479,6 +483,8 @@ export default function ProBooth({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const recordFromRef = useRef(0);
+  /* The marked piece a take was looped over, or null for an ordinary take. */
+  const loopTakeRef = useRef<{ readonly from: number; readonly to: number } | null>(null);
   /** How much count-in went onto the front of the take being recorded. */
   const leadRef = useRef(0);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -664,6 +670,47 @@ export default function ProBooth({
     return ctxRef.current;
   }, []);
 
+  /* ── A loop from the jam room ──────────────────────────────────────────
+     The owner, 18 October 2026: "Send to ProBooth" in the jam room's looper.
+     The loop waits on this device (`lib/jamhandover.ts`) until a booth opens,
+     and arrives here as a lane from the top of the song that goes round to
+     its end. After the saved session is back, so it lands on top of it
+     rather than being written over by it. */
+  useEffect(() => {
+    if (restoring) return undefined;
+    let gone = false;
+    void (async () => {
+      /* Nothing waiting is the usual case, and then the audio context is
+         left alone: making it here, before anybody has pressed anything,
+         would start the room's sound on a clock nobody asked for. */
+      const sent = await waitingLoop();
+      if (!sent || gone) return;
+      const ctx = context();
+      if (!ctx) return;
+      const audio = await soundOf(sent.wav, ctx);
+      if (!audio || gone) return;
+      await takenLoop(sent.id);
+      setLanes((was) => [
+        ...was,
+        {
+          id: `lane-jam-${sent.made}`,
+          name: t('pro.jamLoop', 'Jam loop'),
+          audio,
+          at: 0,
+          gain: 1,
+          muted: false,
+          soloed: false,
+          repeat: roundsFor(backing?.duration ?? 0, audio.duration, MOST_REPEATS),
+        },
+      ]);
+      setJamArrived(true);
+    })();
+    return () => {
+      gone = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoring]);
+
   const clicker = useCallback((): Metronome | null => {
     const ctx = context();
     if (!ctx) return null;
@@ -687,14 +734,33 @@ export default function ProBooth({
     metronomeRef.current?.stop();
   }, []);
 
+  /* The marked piece, while "Loop it" is on — set further down, where the
+     mark lives, and read here by the clock. */
+  const loopSpan = useRef<{ readonly from: number; readonly to: number } | null>(null);
+
   const play = useCallback(
-    /** `lead` is a count-in: everything starts that many seconds later. */
-    (from: number, lead = 0) => {
+    /** `lead` is a count-in: everything starts that many seconds later.
+        `at` is the next pass of a loop: an exact time on the audio clock to
+        start at, with what is playing now stopped at that same moment rather
+        than at once, so the join has no gap in it. */
+    (from: number, lead = 0, at?: number) => {
       const ctx = context();
       if (!ctx) return;
-      hush();
+      if (at === undefined) {
+        hush();
+      } else {
+        playingRef.current.forEach((source) => {
+          try {
+            source.stop(at);
+          } catch {
+            // Already finished.
+          }
+        });
+        playingRef.current = [];
+        metronomeRef.current?.stop();
+      }
       void ctx.resume();
-      const begins = ctx.currentTime + 0.06 + lead;
+      const begins = at ?? ctx.currentTime + 0.06 + lead;
 
       /* The same bus the render builds, and the same one number on the end of
          it. The click is deliberately not on this bus: a metronome that got
@@ -782,6 +848,15 @@ export default function ProBooth({
       const ctx = ctxRef.current;
       if (ctx) {
         const now = startedRef.current.from + (ctx.currentTime - startedRef.current.at);
+        /* ── Round again ───────────────────────────────────────────────
+           With "Loop it" on, the next pass of the marked piece is laid down
+           a moment before this one ends, to start exactly where it ends —
+           on the audio clock, not at the next frame. Only once per pass:
+           after it is laid down the clock's start is in the future. */
+        const span = loopSpan.current;
+        if (span && startedRef.current.at <= ctx.currentTime && now >= span.to - 0.08) {
+          play(span.from, 0, startedRef.current.at + (span.to - startedRef.current.from));
+        }
         setAt(Math.max(0, Math.min(total, now)));
         if (now >= total && !recording) {
           stopPlaying();
@@ -792,7 +867,7 @@ export default function ProBooth({
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [playing, recording, stopPlaying, total]);
+  }, [playing, recording, stopPlaying, total, play]);
 
   useEffect(
     () => () => {
@@ -849,7 +924,13 @@ export default function ProBooth({
       if (event.data.size) chunksRef.current.push(event.data);
     };
     recorderRef.current = recorder;
-    recordFromRef.current = at;
+    /* Looping the marked piece: the take starts at the top of it, and every
+       pass round is kept — see `stopRecording`. */
+    const span = loopSpan.current;
+    loopTakeRef.current = span;
+    const from = span ? span.from : at;
+    if (span) setAt(span.from);
+    recordFromRef.current = from;
     /* The count-in is not trimmed off the front of the take. The recorder
        starts now and the music starts `lead` seconds later, so the first
        `lead` seconds of the file are the bars being counted — which means the
@@ -861,7 +942,7 @@ export default function ProBooth({
     leadRef.current = lead;
     // A chunk a second, so a recording that ends badly is still a recording.
     recorder.start(1000);
-    play(at, lead);
+    play(from, lead);
     setRecording(true);
   }, [at, countBars, meter, play, t]);
 
@@ -893,6 +974,34 @@ export default function ProBooth({
       if (!piece) {
         setProblem(t('pro.unreadable', 'That recording could not be read back.'));
         return null;
+      }
+      /* ── Looped: one take per pass ───────────────────────────────────
+         The recorder ran the whole time the piece went round, so the file
+         holds every pass back to back. Each becomes its own lane over the
+         marked piece — the same recording, cut to that pass — with the last
+         one on and the others muted, so she can listen through and keep the
+         best. Nothing is copied: a lane's cut is a window into its audio. */
+      const span = loopTakeRef.current;
+      loopTakeRef.current = null;
+      if (span) {
+        const passes = passesOf(piece.duration, leadRef.current + knownLatency(), span.to - span.from);
+        if (passes.length > 1) {
+          const number = lanesNow.current.filter((one) => !one.backing).length + 1;
+          const stamp = Date.now();
+          const made: Lane[] = passes.map((pass, k) => ({
+            id: `lane-${stamp}-${k}`,
+            name: `${t('pro.take', 'Take')} ${number} · ${t('pro.pass', 'pass')} ${k + 1}`,
+            audio: piece,
+            at: span.from,
+            from: pass.from,
+            to: pass.to,
+            gain: 1,
+            muted: k !== passes.length - 1,
+            soloed: false,
+          }));
+          setLanes((was) => [...was, ...made]);
+          return made[made.length - 1];
+        }
       }
       /* Named from the lanes as they are now, outside the setter, so the
          lane handed back is the same object that lands in the session. */
@@ -2374,6 +2483,17 @@ export default function ProBooth({
      would have been a button that could not. */
   const [region, setRegion] = useState<{ readonly from: number; readonly to: number } | null>(null);
   const [regionOpen, setRegionOpen] = useState(false);
+  /* ── Loop the marked piece ─────────────────────────────────────────────
+     The owner, 18 October 2026: play a marked piece round and round, and sing
+     over it until one is right. The clock reads `loopSpan`; a piece shorter
+     than a quarter of a second is not a loop, it is a stutter. */
+  const [looping, setLooping] = useState(false);
+  useEffect(() => {
+    loopSpan.current = looping && region && region.to - region.from >= 0.25 ? region : null;
+  }, [looping, region]);
+  useEffect(() => {
+    if (!region) setLooping(false);
+  }, [region]);
   /* The phone's back button closes the tools rather than leaving the room —
      the same rule every other overlay in here follows. */
   useBackLayer(regionOpen, () => setRegionOpen(false));
@@ -4865,6 +4985,15 @@ export default function ProBooth({
           they were looking at. This is the one place in the room where the
           difference is visible, so it is written down rather than left to
           whoever next reads the line. */}
+      {/* The column, and the lines that sit under it — what went wrong, the
+          TONE3000 line, the marked piece's strip. Together, so that held
+          sideways, where the room is a row, they stay under the timeline
+          rather than becoming narrow columns beside it: the marked piece's
+          strip used to squeeze the timeline while it was being marked, and
+          the far end of the mark landed seconds from where the finger was.
+          While a desk is open the column is hidden and this holds only those
+          lines, at their own size. */}
+      <div className={`flex min-w-0 flex-col overflow-hidden ${deskOpen ? 'shrink-0' : 'flex-1'}`}>
       <div className={`min-w-0 flex-1 flex-col overflow-hidden ${deskOpen ? 'hidden' : 'flex'}`}>
       <div className="relative flex flex-wrap items-center justify-between gap-3 bg-linear-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-2.5 border-b border-cyan-500/30 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.25)] shrink-0 z-30">
         {/* Subtle neon laser top accent line */}
@@ -4959,6 +5088,22 @@ export default function ProBooth({
           change. This strip is the part of that she can see — because storage
           that works silently and storage that has quietly stopped look exactly
           the same from a chair, and the difference is a night's takes. */}
+      {jamArrived && (
+        <div className="flex items-center gap-3 border-b border-emerald-500/30 bg-emerald-500/10 px-5 py-2 text-xs text-emerald-100" data-jamarrived>
+          <Repeat className="h-4 w-4 shrink-0" />
+          <span className="min-w-0 flex-1">
+            {t('pro.jamArrived', 'Your loop from the jam room is in, as the lane “Jam loop”, going round from the top to the end of the song. Drag its end to make it shorter.')}
+          </span>
+          <button
+            type="button"
+            onClick={() => setJamArrived(false)}
+            aria-label={t('pro.jamArrivedOk', 'Got it')}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {(cameBack || savedAt !== null || saveFailed) && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-800 bg-zinc-950 px-5 py-2 text-xs">
           {saveFailed ? (
@@ -5173,6 +5318,33 @@ export default function ProBooth({
           </div>
           <button
             type="button"
+            data-regionloop=""
+            data-loopfrom={region.from.toFixed(2)}
+            data-loopto={region.to.toFixed(2)}
+            data-playat={at.toFixed(2)}
+            aria-pressed={looping}
+            disabled={recording}
+            onClick={() => {
+              const next = !looping;
+              setLooping(next);
+              /* Turned on while stopped: start going round from the top of
+                 the piece, which is what pressing a loop button means. */
+              if (next && !playing && region) {
+                setAt(region.from);
+                play(region.from);
+              }
+            }}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3 py-2 text-sm font-black disabled:opacity-50"
+            style={looping
+              ? { background: 'rgba(16,185,129,0.22)', color: LIT, boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.6)' }
+              : { background: 'rgba(255,255,255,0.06)', color: INK_DIM }}
+            title={t('pro.loopWhat', 'Plays the marked piece round and round. Record while it loops and every pass is kept as its own take.')}
+          >
+            <Repeat className="h-4 w-4" />
+            {looping ? t('pro.looping', 'Looping') : t('pro.loopIt', 'Loop it')}
+          </button>
+          <button
+            type="button"
             data-regiontools=""
             onClick={() => setRegionOpen(true)}
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-linear-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-black text-onAccent shadow-[0_0_18px_rgba(16,185,129,0.35)]"
@@ -5192,6 +5364,8 @@ export default function ProBooth({
           </button>
         </div>
       )}
+
+      </div>
 
       {/* ── The two bars, and whatever is out from behind them ────────
 

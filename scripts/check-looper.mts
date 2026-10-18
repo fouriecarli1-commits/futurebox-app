@@ -12,8 +12,9 @@
  */
 import {
   BARS, BEATS_PER_BAR, MOST_HITS, MOST_LAYERS, MOST_VOICE_CHARS,
-  addInto, beatSeconds, cleanLoop, loopSeconds, placeIn, rateFor, snap, type Layer,
+  addInto, beatSeconds, cleanLoop, loopSeconds, placeIn, rateFor, roundsFor, snap, type Layer,
 } from '../app/lib/looper.ts';
+import { MOST_REPEATS, passesOf } from '../app/lib/session.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -98,6 +99,22 @@ ok('  and gets an id of its own, so adding the same loop twice does not collide'
     && addInto(both, theirs, 'Lerato', 'y').every((one, at, all) => all.findIndex((other) => other.id === one.id) === at));
 const full: Layer[] = Array.from({ length: MOST_LAYERS - 1 }, (_, at) => ({ id: `f${at}`, kind: 'pads', hits: [{ pad: 'kick', at: 0 }] }));
 ok('a full loop takes only as much as fits', theirs !== null && addInto(full, theirs, 'Lerato', 'z').length === MOST_LAYERS);
+
+/* ── The booth: a looped take, and a loop sent to it ──────────────────── */
+/* Three seconds of count-in and round trip, then a 2-second piece sung round
+   three and a half times. */
+const passes = passesOf(3 + 2 * 3.5, 3, 2);
+ok('a take sung round a 2-second piece three and a half times is three passes and a half one',
+  passes.length === 4 && passes[0].from === 3 && passes[0].to === 5 && passes[2].to === 9,
+  JSON.stringify(passes));
+ok('  and the half pass at the end is kept, cut to what was sung', passes[3]?.from === 9 && passes[3]?.to === 10);
+ok('  but a pass barely started is not a take',
+  passesOf(3 + 2 * 3.2, 3, 2).length === 3, JSON.stringify(passesOf(3 + 2 * 3.2, 3, 2)));
+ok('  and a take that never reached the piece has no passes', passesOf(2.5, 3, 2).length === 0);
+ok('a loop sent to the booth goes round to the end of a 3-minute song',
+  roundsFor(180, loopSeconds(100), MOST_REPEATS) === 38, String(roundsFor(180, loopSeconds(100), MOST_REPEATS)));
+ok('  and never more often than a lane may repeat', roundsFor(3600, 4, MOST_REPEATS) === MOST_REPEATS);
+ok('  and eight times when there is no song length to go by', roundsFor(0, 4, MOST_REPEATS) === 8);
 
 if (bad) {
   console.error(`\ncheck:looper — ${bad} assertion(s) failed.\n`);

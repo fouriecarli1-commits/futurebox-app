@@ -54,6 +54,7 @@ import Hint from './Hint';
 import Staff from './Staff';
 import Cost from './Cost';
 import ProBooth from './ProBooth';
+import { waitingLoop } from '../lib/jamhandover';
 import { check } from '../lib/entitlements';
 import { usePlan } from '../lib/useplan';
 import Card from './Card';
@@ -191,6 +192,14 @@ export default function VocalBooth({
   const [deskOpen, setDeskOpen] = useState(false);
   /** The multitrack view, over this one. */
   const [proOpen, setProOpen] = useState(false);
+  /* A loop sent from the jam room is waiting for ProBooth — said beside its
+     door so she knows which one to open. See `lib/jamhandover.ts`. */
+  const [jamWaiting, setJamWaiting] = useState(false);
+  useEffect(() => {
+    let gone = false;
+    void waitingLoop().then((one) => { if (!gone) setJamWaiting(Boolean(one)); });
+    return () => { gone = true; };
+  }, [proOpen]);
 
   /* ── Back from TONE3000, which lands on THIS room and not on the pro
         screen that reads it ────────────────────────────────────────────
@@ -2341,6 +2350,13 @@ export default function VocalBooth({
               the Pro Booth that costs money — stems, cleaning, a voice change
               — asks the server for itself, and the server does not take this
               browser's word for anything. */}
+          {jamWaiting && (
+            <p className="col-span-full rounded-xl border border-sky-400/40 bg-sky-500/10 px-3 py-2 text-xs text-sky-100" data-jamwaiting>
+              {proAllowed
+                ? t('booth.jamWaiting', 'Your loop from the jam room is waiting. Open “Lanes and mixing” and it is there as a lane.')
+                : t('booth.jamWaitingPaid', 'Your loop from the jam room is waiting for “Lanes and mixing”, which comes with every paid plan.')}
+            </p>
+          )}
           <button
             type="button"
             data-probooth

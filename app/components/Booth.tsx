@@ -64,6 +64,7 @@ import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import { forgetSong, noteSong, songIWasOn } from '../lib/singingon';
 import * as cloud from '../lib/cloud';
 import VocalBooth from './VocalBooth';
+import { waitingLoop } from '../lib/jamhandover';
 
 /**
  * What the room is, said the way somebody would say it out loud.
@@ -339,6 +340,14 @@ export default function Booth({
      the important one is whichever happens to have the longest label. */
   const BAR = 'flex min-h-[52px] w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold disabled:opacity-50';
 
+  /* A loop sent from the jam room, waiting for the song it goes into. */
+  const [jamWaiting, setJamWaiting] = useState(false);
+  useEffect(() => {
+    let gone = false;
+    void waitingLoop().then((one) => { if (!gone) setJamWaiting(Boolean(one)); });
+    return () => { gone = true; };
+  }, [open]);
+
   return (
     <div
       /* The fixed dark ramp, the same flag the timeline carries. Everything
@@ -361,6 +370,12 @@ export default function Booth({
           onSplit={() => markSplit(open.track)}
           onClose={() => { setOpen(null); forgetSong(); }}
         />
+      )}
+
+      {jamWaiting && (
+        <p className="rounded-2xl border border-sky-400/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-100" data-jamwaiting>
+          {t('booth.jamPick', 'Your loop from the jam room is waiting. Pick the song it goes into, then open “Lanes and mixing”.')}
+        </p>
       )}
 
       {/* ── What this room is ───────────────────────────────────────────── */}

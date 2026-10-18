@@ -626,6 +626,23 @@ Variables in Vercel, then redeploy:
 **How to tell it worked:** open `/legal`. The name is there, and a row says
 the further particulars are given on request through the help page.
 
+### Proving the website is ours, for Google Play
+
+Google Play asks an organisation to show it owns its website, through
+**Search Console** (search.google.com/search-console), signed in with the same
+Google account as the Play Console.
+
+1. **Add property → Domain → `futurebox.studio`.** Search Console gives a TXT
+   record. Add it at the domain registrar (DNS → add record → type TXT, host
+   `@`, the value it gives), wait a few minutes, and press **Verify**.
+2. **If the DNS cannot be reached:** choose **URL prefix**
+   (`https://futurebox.studio`) and the **HTML tag** method instead. Copy only
+   the long value inside `content="…"` into `GOOGLE_SITE_VERIFICATION` in
+   Vercel, redeploy, and press **Verify** — the app prints the tag itself.
+3. Back in the Play Console's account details, **send the verification
+   request**. It goes to the Search Console owner, which is you; approve it
+   there.
+
 ### Google Play, if the app goes there
 
 Neither of these does anything until there is an app in the Play Console,
