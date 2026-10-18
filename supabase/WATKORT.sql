@@ -7,7 +7,7 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 61 tabelle, 34 kolomme wat later
+-- Dit kyk na 62 tabelle, 34 kolomme wat later
 -- bygekom het, 8 stoor-emmers en 60 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
@@ -174,6 +174,7 @@ with verwag (l_eer, soort, naam) as (
     ('liveflags.sql', 'tabel', 'public.live_flags'),
     ('hearts.sql', 'tabel', 'public.live_hearts'),
     ('live.sql', 'tabel', 'public.live_here'),
+    ('liveloops.sql', 'tabel', 'public.live_loops'),
     ('live.sql', 'tabel', 'public.live_posts'),
     ('live.sql', 'tabel', 'public.live_says'),
     ('mail.sql', 'tabel', 'public.mail_log'),

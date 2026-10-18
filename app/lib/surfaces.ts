@@ -724,7 +724,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   live: {
     id: "live",
     stage: "release",
-    purpose: "The live room: one channel, everybody in it at the same time.",
+    purpose: "The live room: one channel, everybody in it at the same time. Its jam room has four pads and a looper — two bars at a chosen tempo, layers of pads or a voice off the microphone — and while somebody else in the room is looping, a pulsing + puts their loop into yours.",
     helps: {
       en: "I can write what you announce, set what plays next, and help you open the room.",
       af: "Ek kan skryf wat jy aankondig, stel wat volgende speel, en jou help om die kamer oop te maak.",

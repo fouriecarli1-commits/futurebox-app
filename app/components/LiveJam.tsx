@@ -23,8 +23,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, CameraOff, Mic } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { hit, type Pad } from '../lib/jampads';
+import JamLooper from './JamLooper';
 
-type Pad = 'kick' | 'snare' | 'hihat' | 'riser';
 
 const PADS: ReadonlyArray<{ id: Pad; word: string; fallback: string; look: string }> = [
   { id: 'kick', word: 'live.padKick', fallback: 'KICK', look: 'bg-rose-500/20 border-rose-500/40 text-rose-300 hover:bg-rose-500/30' },
@@ -32,58 +33,6 @@ const PADS: ReadonlyArray<{ id: Pad; word: string; fallback: string; look: strin
   { id: 'hihat', word: 'live.padHihat', fallback: 'HI-HAT', look: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30' },
   { id: 'riser', word: 'live.padRiser', fallback: 'RISER', look: 'bg-violet-500/20 border-violet-500/40 text-violet-300 hover:bg-violet-500/30' },
 ];
-
-/** One sound, made now, out of nothing but oscillators and noise. */
-function hit(ctx: AudioContext, pad: Pad): void {
-  const now = ctx.currentTime;
-  const out = ctx.createGain();
-  out.connect(ctx.destination);
-  if (pad === 'kick') {
-    const osc = ctx.createOscillator();
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.25);
-    out.gain.setValueAtTime(0.9, now);
-    out.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    osc.connect(out); osc.start(now); osc.stop(now + 0.32);
-    return;
-  }
-  if (pad === 'riser') {
-    const osc = ctx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(120, now);
-    osc.frequency.exponentialRampToValueAtTime(1800, now + 1.4);
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(400, now);
-    filter.frequency.exponentialRampToValueAtTime(6000, now + 1.4);
-    out.gain.setValueAtTime(0.0001, now);
-    out.gain.exponentialRampToValueAtTime(0.35, now + 1.2);
-    out.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-    osc.connect(filter); filter.connect(out); osc.start(now); osc.stop(now + 1.5);
-    return;
-  }
-  /* Snare and hi-hat are shaped noise. */
-  const length = Math.floor(ctx.sampleRate * (pad === 'snare' ? 0.22 : 0.08));
-  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < length; i += 1) data[i] = Math.random() * 2 - 1;
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-  const filter = ctx.createBiquadFilter();
-  filter.type = pad === 'snare' ? 'bandpass' : 'highpass';
-  filter.frequency.value = pad === 'snare' ? 1800 : 7000;
-  out.gain.setValueAtTime(pad === 'snare' ? 0.7 : 0.4, now);
-  out.gain.exponentialRampToValueAtTime(0.001, now + (pad === 'snare' ? 0.2 : 0.07));
-  noise.connect(filter); filter.connect(out); noise.start(now);
-  if (pad === 'snare') {
-    const tone = ctx.createOscillator();
-    tone.frequency.setValueAtTime(190, now);
-    const toneOut = ctx.createGain();
-    toneOut.gain.setValueAtTime(0.4, now);
-    toneOut.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    tone.connect(toneOut); toneOut.connect(ctx.destination); tone.start(now); tone.stop(now + 0.13);
-  }
-}
 
 function clock(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -103,6 +52,10 @@ export default function LiveJam({ here, name }: { readonly here: number; readonl
   const stream = useRef<MediaStream | null>(null);
   const audio = useRef<AudioContext | null>(null);
   const analyser = useRef<AnalyserNode | null>(null);
+  /* The microphone, as state, for the looper's voice layers. */
+  const [mic, setMic] = useState<MediaStream | null>(null);
+  /* Set by the looper: a pad pressed while it is recording is kept. */
+  const padTap = useRef<((pad: Pad) => void) | null>(null);
 
   const ctx = useCallback((): AudioContext => {
     if (!audio.current) audio.current = new AudioContext();
@@ -114,6 +67,7 @@ export default function LiveJam({ here, name }: { readonly here: number; readonl
     stream.current?.getTracks().forEach((track) => track.stop());
     stream.current = null;
     analyser.current = null;
+    setMic(null);
     setOnStage(false);
     setSince(null);
   }, []);
@@ -123,6 +77,7 @@ export default function LiveJam({ here, name }: { readonly here: number; readonl
     try {
       const got = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       stream.current = got;
+      setMic(got);
       if (video.current) {
         video.current.srcObject = got;
         void video.current.play().catch(() => undefined);
@@ -261,7 +216,7 @@ export default function LiveJam({ here, name }: { readonly here: number; readonl
                 key={pad.id}
                 type="button"
                 data-livepad={pad.id}
-                onClick={() => hit(ctx(), pad.id)}
+                onClick={() => { hit(ctx(), pad.id); padTap.current?.(pad.id); }}
                 className={`min-h-[52px] rounded-xl border p-3 text-xs font-extrabold transition active:scale-95 ${pad.look}`}
               >
                 {t(pad.word, pad.fallback)}
@@ -273,6 +228,9 @@ export default function LiveJam({ here, name }: { readonly here: number; readonl
           {t('live.jamHonest', 'The four sounds are made by this browser as you press them. There is no audience count, no tips and no chat in here: the room’s own box takes live addresses, by your rule, and nothing here is counted that was not.')}
         </p>
       </div>
+
+      {/* ── The looper ──────────────────────────────────────────────── */}
+      <JamLooper ctx={ctx} stream={mic} padTap={padTap} />
     </div>
   );
 }

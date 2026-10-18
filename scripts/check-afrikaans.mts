@@ -78,6 +78,8 @@ const halfDone = starts
  * rule and no list starts producing false alarms and gets switched off.
  */
 const SAME_IN_BOTH = new Set([
+  /* The jam room's looper: a musician says "looper" and "pads" in Afrikaans too. */
+  'Looper', 'Pads',
   /* Borrowed whole, because that is what people actually say. */
   /* Sonar is the Afrikaans word for sonar too. */
   'Sonar',

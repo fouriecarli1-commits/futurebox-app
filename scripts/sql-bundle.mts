@@ -122,6 +122,9 @@ export const ORDER = [
   /* The photo templates the owner saves — one table, service_role alone,
      standing on `auth.users`. See the file's own header. */
   'designs',
+  /* Loops in the live jam room — one table, service_role alone, standing on
+     `auth.users`. See the file's own header. */
+  'liveloops',
 ] as const;
 
 /**
@@ -248,6 +251,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Jou eie Kits.AI minute, los van die huis s\u2019n. Sonder dit trek elke aflaai aan dieselfde teller.',
   afrikaans:
     'Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat dit hoor. Sonder dit is die knoppie daar en die verslag gaan nooit \u00eerens heen nie.',
+  liveloops:
+    'Loops in die live jam room: een ry per persoon wat nou loop, met die loop self daarin. Terwyl iemand loop, pols \u2019n plussie op almal anders se skerm, en ’n druk daarop sit daardie loop in jou eie. Sonder dit werk die looper steeds op jou eie toestel, maar niemand in die kamer sien jou loop nie.',
   designs:
     'Die fototemplates wat the owner in die fotoredigeerder stoor vir almal: die plasing se vorm, kleur, rame, woorde en vorms — nooit foto’s nie. Lede sien dit onder "Van FutureBox" in Templates. Sonder dit werk die sestien wat saam met die app kom steeds, maar "Stoor as template" sê die tabel is nog nie daar nie.',
   berging:
