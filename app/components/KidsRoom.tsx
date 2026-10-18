@@ -853,7 +853,7 @@ export default function KidsRoom({
   );
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5 p-3 pb-28 text-ink sm:p-5 sm:pb-28" data-kidsroom>
+    <div className="mx-auto w-full max-w-5xl space-y-5 p-3 pb-28 text-white sm:p-5 sm:pb-28" data-kidsroom>
       {/* ── 1. The top of the page: Pip and the level, the name, the grown-up ── */}
       <header className="rounded-3xl border-2 border-cyan-400/50 bg-surface-50/85 px-4 py-3 shadow-[0_0_30px_rgba(52,211,153,0.25)] backdrop-blur-md">
         <div className="flex flex-wrap items-center justify-between gap-3">

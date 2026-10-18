@@ -92,10 +92,12 @@ export default function SpeakButton({ onHeard, className = '', disabled = false 
           ? 'animate-pulse border-rose-400 bg-rose-500/20 text-rose-300'
           : missed
             ? 'border-amber-500/60 bg-surface-100 text-surface-900'
-            /* The theme's own surface pair, so the microphone reads on its
-               disc in the light theme as well as the dark (check:playbutton
-               measured the grey one at 1.23:1 on the light preset). */
-            : 'border-emerald-500/50 bg-surface-100 text-surface-900 hover:border-emerald-400'
+            /* The accent disc with its own dark ink, which is bright in every
+               theme and reads in every theme. It was the theme's surface pair,
+               and on the green-black theme that is a dark disc with a dark
+               microphone — Carli, 18 October 2026: *"Daai record button kan
+               mens nie regtig sien nie."* */
+            : 'border-emerald-300 bg-emerald-400 text-onAccent shadow-[0_0_10px_rgba(52,211,153,0.45)] hover:bg-emerald-300'
       } ${className}`}
     >
       {missed ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}

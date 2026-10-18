@@ -448,7 +448,7 @@ export default function ProDawStudio({
                 {tracks.map((trk) => (
                   <div
                     key={trk.id}
-                    className="flex flex-col rounded-lg border border-zinc-850 bg-zinc-900/60 p-2 text-xs hover:border-zinc-700 transition-colors"
+                    className="flex flex-col rounded-lg border border-zinc-800 bg-zinc-900/60 p-2 text-xs hover:border-zinc-700 transition-colors"
                   >
                     {/* Header Row: Title & Icons */}
                     <div className="flex items-center justify-between">
@@ -699,7 +699,7 @@ export default function ProDawStudio({
                         className={`relative z-10 -mx-3 sm:-mx-3.5 h-20 sm:h-22 w-6 sm:w-7 rounded-b-md transition-all active:translate-y-0.5 ${
                           isPressed
                             ? 'bg-cyan-500 shadow-cyan-500/50'
-                            : 'bg-zinc-850 hover:bg-zinc-800 shadow-md'
+                            : 'bg-zinc-800 hover:bg-zinc-800 shadow-md'
                         } border border-black flex flex-col justify-end items-center pb-2`}
                       >
                         {/* Cyan scale dot matching Screenshot 1 */}
@@ -823,7 +823,7 @@ export default function ProDawStudio({
                     className={`flex items-center gap-2 rounded-lg border p-2 text-xs font-semibold transition-all ${
                       isSel
                         ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300'
-                        : 'border-zinc-850 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                        : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
                     }`}
                   >
                     <span>{inst.icon}</span>
@@ -863,7 +863,7 @@ export default function ProDawStudio({
                 className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
                   selectedStyle === 'ai_match'
                     ? 'border-cyan-400 bg-cyan-950/30'
-                    : 'border-zinc-850 bg-zinc-900/40 hover:border-zinc-700'
+                    : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-cyan-400">
@@ -885,7 +885,7 @@ export default function ProDawStudio({
                 className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
                   selectedStyle === 'alternative'
                     ? 'border-cyan-400 bg-cyan-950/30'
-                    : 'border-zinc-850 bg-zinc-900/40 hover:border-zinc-700'
+                    : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-900/50 text-blue-300">
@@ -907,7 +907,7 @@ export default function ProDawStudio({
                 className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
                   selectedStyle === 'arena'
                     ? 'border-cyan-400 bg-cyan-950/30'
-                    : 'border-zinc-850 bg-zinc-900/40 hover:border-zinc-700'
+                    : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-950/60 text-red-400 border border-red-800/40">
@@ -929,7 +929,7 @@ export default function ProDawStudio({
                 className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
                   selectedStyle === 'ballad'
                     ? 'border-cyan-400 bg-cyan-950/30'
-                    : 'border-zinc-850 bg-zinc-900/40 hover:border-zinc-700'
+                    : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400">
@@ -1051,7 +1051,7 @@ export default function ProDawStudio({
                     key={v.id}
                     onClick={() => setSelectedVoice(v.id)}
                     className={`relative flex flex-col rounded-xl border p-2 cursor-pointer overflow-hidden transition-all ${
-                      isSel ? 'border-cyan-400 bg-zinc-900' : 'border-zinc-850 bg-zinc-900/60 hover:border-zinc-700'
+                      isSel ? 'border-cyan-400 bg-zinc-900' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700'
                     }`}
                   >
                     {/* Simulated Voice Photo Card */}
@@ -1162,7 +1162,7 @@ export default function ProDawStudio({
                 <button
                   type="button"
                   onClick={() => setIsAudioEffectsOpen(true)}
-                  className="flex w-full items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/80 py-1.5 text-xs font-bold text-zinc-300 hover:border-zinc-700 hover:bg-zinc-850 hover:text-white transition-all"
+                  className="flex w-full items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/80 py-1.5 text-xs font-bold text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-white transition-all"
                 >
                   Fx
                 </button>
@@ -1204,7 +1204,7 @@ export default function ProDawStudio({
                   <div className="absolute inset-y-0 w-1.5 rounded-full bg-zinc-800 shadow-inner" />
 
                   {/* Level Meter Bar (Next to groove) */}
-                  <div className="absolute right-0 inset-y-1 w-1 rounded bg-zinc-850 overflow-hidden flex flex-col justify-end">
+                  <div className="absolute right-0 inset-y-1 w-1 rounded bg-zinc-800 overflow-hidden flex flex-col justify-end">
                     <div
                       className="w-full bg-gradient-to-t from-emerald-500 via-yellow-400 to-red-500 transition-all duration-100"
                       style={{ height: `${isPlaying ? Math.min(100, Math.max(15, (masterVolume * 0.9) + Math.random() * 10)) : 0}%` }}
@@ -1316,7 +1316,7 @@ export default function ProDawStudio({
 
       {/* ── Audio Effects Dialog (Screenshots 1 & 2) ───────────────────────── */}
       {isAudioEffectsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/60 backdrop-blur-sm animate-in fade-in duration-150" style={{ paddingBottom: barClearance(12) }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/60 backdrop-blur-sm duration-150" style={{ paddingBottom: barClearance(12) }}>
           <div
             className="relative flex flex-col w-full max-w-2xl max-h-[88vh] rounded-2xl border border-zinc-800 bg-zinc-900/95 shadow-2xl backdrop-blur-xl p-4 sm:p-5 overflow-hidden text-zinc-200"
             role="dialog"
@@ -1389,7 +1389,7 @@ export default function ProDawStudio({
 
             {/* AI Generator Expansion */}
             {isGeneratingEffect && (
-              <div className="mb-3 rounded-xl border border-purple-500/30 bg-purple-950/20 p-3 space-y-2 animate-in fade-in duration-100">
+              <div className="mb-3 rounded-xl border border-purple-500/30 bg-purple-950/20 p-3 space-y-2 duration-100">
                 <p className="text-xs font-semibold text-purple-300">
                   {t('daw.generateEffectDesc', 'Describe the sound and the knobs')}
                 </p>
@@ -1638,7 +1638,7 @@ export default function ProDawStudio({
                       className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center cursor-pointer transition-all ${
                         isSelected
                           ? 'border-cyan-400 bg-cyan-950/30 text-zinc-100 shadow-sm shadow-cyan-500/20'
-                          : 'border-zinc-800/80 bg-zinc-950/50 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-850/60'
+                          : 'border-zinc-800/80 bg-zinc-950/50 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800/60'
                       }`}
                     >
                       <div className="h-8 w-8 flex items-center justify-center mb-1.5 text-zinc-300">

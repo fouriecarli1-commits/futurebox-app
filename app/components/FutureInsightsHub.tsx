@@ -555,7 +555,7 @@ export default function FutureInsightsHub({
               )}
 
               {geminiAnalysis && (
-                <div className="space-y-3 pt-2 text-xs border-t border-teal-500/20 animate-in fade-in duration-200">
+                <div className="space-y-3 pt-2 text-xs border-t border-teal-500/20 duration-200">
                   {geminiAnalysis.headline && (
                     <p className="text-sm font-bold text-teal-200 leading-snug">
                       "{geminiAnalysis.headline}"

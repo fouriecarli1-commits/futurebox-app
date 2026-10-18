@@ -151,6 +151,9 @@ const PLAIN: Readonly<Record<string, string>> = {
   'podcast|onGoToPodcast': 'a hint from the voice studio: a show lives next door',
   'sound|onGoToSound': 'a hint: where a voice is trained',
   'make|onGoToMake': 'a hint from an empty room — make something first. There is nothing yet to carry',
+  /* Make a song's "Buy album art", 18 October 2026: the song is not made
+     yet, so there is no song to carry — it opens the market to browse. */
+  'albumart|onBrowseArt': 'from Make a song to the album art market, before the song exists: browsing covers by real artists, nothing to carry yet',
   /* The cutting room works on files from the device, not on anything the
      video desk is holding. A clip is brought in there, by her, through a file
      picker — so there is nothing the desk could hand over, and a handoff that

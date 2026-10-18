@@ -92,7 +92,7 @@ export default function CanvasFloatingToolbar({
             type="button"
             onClick={onOpenCanvasSize}
             title={t('toolbar.canvasSize', 'Canvas Size & Standard Sizes')}
-            className="flex items-center gap-1.5 rounded-full bg-zinc-900 border border-zinc-700/80 px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-850 hover:text-white active:scale-95 transition-all"
+            className="flex items-center gap-1.5 rounded-full bg-zinc-900 border border-zinc-700/80 px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white active:scale-95 transition-all"
           >
             <Maximize2 className="h-3.5 w-3.5 text-teal-400" />
             <span className="hidden sm:inline">{t('toolbar.canvasSizeShort', 'Size')}</span>
@@ -121,7 +121,7 @@ export default function CanvasFloatingToolbar({
           type="button"
           onClick={onRemoveBg}
           title={t('toolbar.bgRemover', 'Remove Background')}
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-850 hover:text-white transition-all active:scale-95"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all active:scale-95"
         >
           <Scissors className="h-4 w-4 text-cyan-400" />
           <span className="hidden md:inline">{t('toolbar.bgRemoverShort', 'BG Remover')}</span>
@@ -135,7 +135,7 @@ export default function CanvasFloatingToolbar({
           className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold transition-all active:scale-95 ${
             isEraserActive
               ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50'
-              : 'text-zinc-300 hover:bg-zinc-850 hover:text-white'
+              : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
           }`}
         >
           <Eraser className="h-4 w-4 text-rose-400" />
@@ -147,7 +147,7 @@ export default function CanvasFloatingToolbar({
           type="button"
           onClick={onFlip}
           title={t('toolbar.flip', 'Flip Horizontal')}
-          className="rounded-full p-2 text-zinc-300 hover:bg-zinc-850 hover:text-white transition-all active:scale-95"
+          className="rounded-full p-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all active:scale-95"
         >
           <FlipHorizontal className="h-4 w-4 text-zinc-300" />
         </button>
@@ -157,7 +157,7 @@ export default function CanvasFloatingToolbar({
           type="button"
           onClick={onAddText}
           title={t('toolbar.addText', 'Add Words / Heading')}
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-850 hover:text-white transition-all active:scale-95"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all active:scale-95"
         >
           <Type className="h-4 w-4 text-amber-400" />
           <span className="hidden md:inline">{t('toolbar.addTextShort', 'Text')}</span>
@@ -169,7 +169,7 @@ export default function CanvasFloatingToolbar({
             type="button"
             onClick={onOpenFontCombos}
             title={t('combo.toolbarButton', 'Font Combinations & Text Effects')}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-amber-300 hover:bg-zinc-850 hover:text-amber-200 transition-all active:scale-95 border border-amber-400/30 bg-amber-400/10"
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-amber-300 hover:bg-zinc-800 hover:text-amber-200 transition-all active:scale-95 border border-amber-400/30 bg-amber-400/10"
           >
             <Sparkles className="h-4 w-4 text-amber-400" />
             <span className="hidden md:inline">{t('combo.toolbarButtonShort', 'Font Combinations')}</span>
@@ -182,7 +182,7 @@ export default function CanvasFloatingToolbar({
             type="button"
             onClick={onOpenElements}
             title={t('elem.toolbarButton', 'Elements & Shapes')}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-teal-300 hover:bg-zinc-850 hover:text-teal-200 transition-all active:scale-95 border border-teal-400/30 bg-teal-400/10"
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-teal-300 hover:bg-zinc-800 hover:text-teal-200 transition-all active:scale-95 border border-teal-400/30 bg-teal-400/10"
           >
             <Shapes className="h-4 w-4 text-teal-400" />
             <span className="hidden md:inline">{t('elem.toolbarButtonShort', 'Elements')}</span>
@@ -194,7 +194,7 @@ export default function CanvasFloatingToolbar({
           type="button"
           onClick={onOpenLivingPhoto}
           title={t('toolbar.animate', 'Image to Video (Google Veo)')}
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-850 hover:text-white transition-all active:scale-95"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all active:scale-95"
         >
           <Video className="h-4 w-4 text-purple-400" />
           <span className="hidden md:inline">{t('toolbar.animateShort', 'Animate')}</span>
@@ -206,7 +206,7 @@ export default function CanvasFloatingToolbar({
             type="button"
             onClick={onOpenVideoApps}
             title={t('videoapps.toolbarButton', 'Video Apps')}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-indigo-300 hover:bg-zinc-850 hover:text-indigo-200 transition-all active:scale-95 border border-indigo-500/30 bg-indigo-500/10"
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-indigo-300 hover:bg-zinc-800 hover:text-indigo-200 transition-all active:scale-95 border border-indigo-500/30 bg-indigo-500/10"
           >
             <Clapperboard className="h-4 w-4 text-indigo-400" />
             <span className="hidden md:inline">{t('videoapps.toolbarButtonShort', 'Apps')}</span>
@@ -219,7 +219,7 @@ export default function CanvasFloatingToolbar({
             type="button"
             onClick={onOpenAnimateSidebar}
             title={t('animate.toolbarButton', 'Animate')}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-purple-300 hover:bg-zinc-850 hover:text-purple-200 transition-all active:scale-95 border border-purple-500/30 bg-purple-500/10"
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-purple-300 hover:bg-zinc-800 hover:text-purple-200 transition-all active:scale-95 border border-purple-500/30 bg-purple-500/10"
           >
             <Sparkles className="h-4 w-4 text-purple-400" />
             <span className="hidden md:inline">{t('animate.toolbarButtonShort', 'Motion')}</span>
@@ -259,7 +259,7 @@ export default function CanvasFloatingToolbar({
 
       {/* ── 2. Floating Context Pill over selected element (Screenshot 2 & 5) ── */}
       {selectedElementId && (
-        <div className="flex items-center gap-1 rounded-full border border-zinc-700/80 bg-zinc-900/95 px-3 py-1 shadow-xl backdrop-blur-md text-zinc-200 animate-in fade-in zoom-in-95 duration-100">
+        <div className="flex items-center gap-1 rounded-full border border-zinc-700/80 bg-zinc-900/95 px-3 py-1 shadow-xl backdrop-blur-md text-zinc-200">
           {/* Lock / Unlock */}
           {onToggleLock && (
             <button

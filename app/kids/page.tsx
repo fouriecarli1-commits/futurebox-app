@@ -45,7 +45,7 @@ export default function KidsPage(): React.ReactElement {
      grown-up's page — never over the child's room (`lib/kidslock.ts`). */
   const [grownUp, setGrownUp] = useState(true);
   return (
-    <main className="min-h-screen bg-transparent text-ink">
+    <main className="min-h-screen bg-transparent text-white">
       {grownUp && (
       <div className="mx-auto flex w-full max-w-3xl flex-wrap gap-2 px-5 pt-8">
         <Link

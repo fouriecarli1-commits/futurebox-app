@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Music, Play, Pause, Download, Share2, Repeat, Trash2, Sparkles, Wand2, Loader2,
   Video as VideoIcon, X, Mic,
-  Sliders, Image as ImageIcon, Plus, Clock, AudioLines, SlidersHorizontal,
+  Sliders, Image as ImageIcon, Plus, Clock, AudioLines, SlidersHorizontal, Palette,
 } from 'lucide-react';
 import { renderSketch, encodeWav, familyFor, sketchDurationSeconds } from '../lib/audio';
 import {
@@ -104,6 +104,7 @@ export default function MakeMusic({
   onGoToChannel,
   onGoToSound,
   onGoToArt,
+  onBrowseArt,
   engineReady,
   copilot,
 }: {
@@ -149,6 +150,8 @@ export default function MakeMusic({
    * here — see the note at the top of `Sleeve.tsx`.
    */
   onGoToArt: (song: { id: string; title: string }) => void;
+  /** The album art market, to buy a cover from a real artist. */
+  onBrowseArt?: () => void;
   engineReady: boolean;
 }) {
   const { t, lang } = useLang();
@@ -1587,7 +1590,7 @@ export default function MakeMusic({
                     )}
 
                     {pop === 'more' && (
-                      <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="grid gap-4">
                         <div>
                           {/* Tied to the slider, so it reads out as a speed and
                               not as a bare number. */}
@@ -1605,21 +1608,10 @@ export default function MakeMusic({
                           />
                           <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
                         </div>
-                        <div>
-                          <label className="text-sm text-zinc-400" htmlFor="make-key">{t('make.mood')}</label>
-                          <select
-                            id="make-key"
-                            value={songKey}
-                            onChange={(e) => setSongKey(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-zinc-800 bg-black/60 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
-                          >
-                            <option value="C Major">{t('make.mood.bright')}</option>
-                            <option value="G Major">{t('make.mood.warm')}</option>
-                            <option value="A Minor">{t('make.mood.thoughtful')}</option>
-                            <option value="D Minor">{t('make.mood.dark')}</option>
-                            <option value="F Minor">{t('make.mood.heavy')}</option>
-                          </select>
-                        </div>
+                        {/* The mood list that was here is gone: Feel already sets how
+                            the song feels, and two places to choose a mood was one
+                            too many (Carli, 18 October 2026). The key still rides
+                            along — from Feel, the copilot, or a remix. */}
                       </div>
                     )}
                   </div>
@@ -1728,7 +1720,7 @@ export default function MakeMusic({
               {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
             </p>
             <div className="pt-2">
-              <LyricHelp title={title} style={canvas.style} lyrics={lyrics} onLyrics={setLyrics} />
+              <LyricHelp title={title} style={canvas.style} lyrics={lyrics} onLyrics={setLyrics} onStyle={(value) => setCanvas((was) => ({ ...was, style: value }))} />
             </div>
           </div>
 
@@ -1821,16 +1813,26 @@ export default function MakeMusic({
             }}
             className="mt-0.5 h-4 w-4 flex-shrink-0 accent-emerald-500"
           />
-          <span>
-            {t('make.coverToo', 'Draw a cover for it too')}
-            <span className="block text-xs leading-snug text-zinc-500">
-              {t(
-                'make.coverTooWhy',
-                'A song without a picture is a row in a list. It is drawn while you listen.',
-              )}
-            </span>
-          </span>
+          <span>{t('make.coverToo', 'Make album cover')}</span>
         </label>
+        {/* Or buy one: a cover drawn by a real artist, from the album art
+            market. Carli, 18 October 2026. */}
+        {onBrowseArt && (
+          <button
+            type="button"
+            data-buyart
+            onClick={onBrowseArt}
+            className="flex w-full items-start gap-2.5 rounded-xl border border-zinc-700 bg-zinc-900/60 px-3 py-2.5 text-left text-sm text-zinc-200 hover:border-emerald-500"
+          >
+            <Palette className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+            <span>
+              {t('make.buyArt', 'Buy album art')}
+              <span className="block text-xs leading-snug text-zinc-500">
+                {t('make.buyArtWhy', 'Covers drawn by real artists — bought from them, so the artist is paid.')}
+              </span>
+            </span>
+          </button>
+        )}
 
         <button
           type="button"

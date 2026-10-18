@@ -218,7 +218,7 @@ export default function TwoHosts({
 
       {/* ── Gemini Generator Modal / Drawer ─────────────────────────────── */}
       {isAiModalOpen && (
-        <div className="rounded-xl border border-emerald-500/40 bg-zinc-950/95 p-4 space-y-3.5 shadow-xl animate-in fade-in duration-200">
+        <div className="rounded-xl border border-emerald-500/40 bg-zinc-950/95 p-4 space-y-3.5 shadow-xl duration-200">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-400" />

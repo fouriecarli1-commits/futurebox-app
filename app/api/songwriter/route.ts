@@ -77,8 +77,8 @@ function promptFor(body: Body): string {
 
   const ask: Record<Mode, string> = {
     continue: body.section
-      ? `Write four different options for the [${body.section}]. Each one two to four lines.`
-      : 'Write four different options for the next section. Each one two to four lines, and say which section it is for.',
+      ? `Write four different options for the [${body.section}]. Each one two to four lines. Words to be sung only — no [Style] block, no instruments, no production notes.`
+      : 'Write four different options for the next section. Each one two to four lines, and say which section it is for. Words to be sung only — no [Style] block, no instruments, no production notes; the sound has its own button.',
     style: 'Suggest four different style lines for this song — the comma-separated field a generator takes. Read what is actually written and let the words decide the sound, not the other way round. Name instruments, a tempo feel and a production choice.',
     polish: 'Four specific improvements to what is written. Point at an actual line, give the rewrite, say what it fixes. No general encouragement.',
   };

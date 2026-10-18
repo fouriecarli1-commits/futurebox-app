@@ -16,7 +16,7 @@
  */
 
 import React, { useCallback, useState } from 'react';
-import { Loader2, PenLine, Sparkles } from 'lucide-react';
+import { Loader2, PenLine, Sparkles, Wand2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 
@@ -31,21 +31,28 @@ export default function LyricHelp({
   style,
   lyrics,
   onLyrics,
+  onStyle,
 }: {
   title: string;
   style: string;
   lyrics: string;
   /** Replaces the lyric sheet. The caller decides what to do with the text. */
   onLyrics: (next: string) => void;
+  /** Replaces the style line — what "Generate style" hands back. */
+  onStyle?: (next: string) => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
-  const [mode, setMode] = useState<'continue' | 'polish' | null>(null);
+  const [mode, setMode] = useState<'continue' | 'polish' | 'style' | null>(null);
+  /* Which button the ideas on screen came from, so a style line goes into the
+     style field and never into the words that get sung. */
+  const [from, setFrom] = useState<'continue' | 'polish' | 'style'>('continue');
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
 
   const ask = useCallback(
-    async (which: 'continue' | 'polish') => {
+    async (which: 'continue' | 'polish' | 'style') => {
       setMode(which);
+      setFrom(which);
       setProblem(null);
       setIdeas([]);
       try {
@@ -56,7 +63,13 @@ export default function LyricHelp({
         });
         const data = (await response.json()) as { suggestions?: Idea[]; detail?: string; message?: string; error?: string };
         if (response.ok && Array.isArray(data.suggestions)) {
-          setIdeas(data.suggestions);
+          /* Words to be sung only. Carli, 18 October 2026: "Write the next
+             bit" came back with a [Style] card among the verses, and tapping
+             it would have put production notes into the sung words. Style
+             has its own button now; one that still slips through is left out. */
+          setIdeas(which === 'continue'
+            ? data.suggestions.filter((one) => !/^\s*\[style\]/i.test(one.text) && !/style tags/i.test(one.label))
+            : data.suggestions);
           return;
         }
         /* Their reason, in the reader's own language, and never the supplier's
@@ -98,6 +111,18 @@ export default function LyricHelp({
           {mode === 'polish' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
           {t('write.fix', 'What is not working')}
         </button>
+        {onStyle && (
+          <button
+            type="button"
+            data-writestyle
+            onClick={() => void ask('style')}
+            disabled={mode !== null}
+            className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-fuchsia-500 hover:text-fuchsia-300 flex items-center gap-1.5 disabled:opacity-60"
+          >
+            {mode === 'style' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+            {t('write.style', 'Generate style')}
+          </button>
+        )}
       </div>
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
@@ -109,6 +134,12 @@ export default function LyricHelp({
               type="button"
               key={idea.label}
               onClick={() => {
+                if (from === 'style' && onStyle) {
+                  /* A style line goes into the style field, whole. */
+                  onStyle(idea.text.replace(/^\s*\[style\]\s*/i, '').replace(/\s*\n\s*/g, ', ').trim());
+                  setIdeas([]);
+                  return;
+                }
                 // Added to the sheet rather than replacing it: a suggestion is
                 // the next verse, not a rewrite of everything above it.
                 const current = lyrics.trimEnd();

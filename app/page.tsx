@@ -4379,7 +4379,7 @@ export default function FutureBoxHome() {
                   className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500 text-onAccent flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
                 >
                   <Sparkles className="w-4 h-4 flex-shrink-0" />
-                  <span className="hidden xs:inline">{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
+                  <span className="hidden sm:inline">{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
                 </button>
               </div>
 
@@ -4884,6 +4884,7 @@ export default function FutureBoxHome() {
 
                    `handoff` rather than `dispatch`: at the moment this
                    fires the art room is not mounted yet. */
+                onBrowseArt={() => goToRoom('albumart')}
                 onGoToArt={(song) => {
                   goToRoom('albumart');
                   copilotBus.handoff('albumart', 'for_song', song.id);
