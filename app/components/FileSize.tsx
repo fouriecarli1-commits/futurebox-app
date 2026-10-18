@@ -35,6 +35,7 @@ export default function FileSize({
   busy,
   kind,
   limits = LIMITS,
+  idle,
 }: {
   readonly limit: Limit;
   readonly onLimit: (limit: Limit) => void;
@@ -43,6 +44,9 @@ export default function FileSize({
   /** What the file is, for the line under the readout: "picture", "film", "sound". */
   readonly kind?: 'picture' | 'film' | 'sound';
   readonly limits?: readonly Limit[];
+  /** Said while there is no number yet and none is being worked out — where
+      the size is only known once the file is made, as with a PDF. */
+  readonly idle?: string;
 }): React.ReactElement {
   const { t } = useLang();
   const less = estimate ? smallerBy(estimate.before, estimate.after) : 0;
@@ -77,7 +81,9 @@ export default function FileSize({
         className="flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2"
         aria-live="polite"
       >
-        {busy || !estimate ? (
+        {!busy && !estimate && idle ? (
+          <span className="text-xs text-zinc-400">{idle}</span>
+        ) : busy || !estimate ? (
           <span className="inline-flex items-center gap-2 text-xs text-zinc-400">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             {t('size.working', 'Working out the size…')}

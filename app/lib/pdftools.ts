@@ -26,7 +26,7 @@ export const PDF_TOOLS: readonly PdfTool[] = [
   { id: 'redact', en: 'Redact', af: 'Swart uit', enLine: 'Black out words for good, page by page or by searching.', afLine: 'Swart woorde vir altyd uit, bladsy vir bladsy of deur te soek.' },
   { id: 'protect', en: 'Protect a PDF', af: 'Beskerm ’n PDF', enLine: 'A password to open it, and nothing hidden left inside.', afLine: '’n Wagwoord om dit oop te maak, en niks versteek binne-in nie.' },
   { id: 'form', en: 'Prepare a form', af: 'Berei ’n vorm voor', enLine: 'Boxes to type in and tick, for somebody else to fill.', afLine: 'Blokkies om in te tik en te merk, vir iemand anders om in te vul.' },
-  { id: 'convert', en: 'Convert', af: 'Skakel om', enLine: 'Pages as pictures, the words as text, pictures as a PDF.', afLine: 'Bladsye as prente, die woorde as teks, prente as ’n PDF.' },
+  { id: 'convert', en: 'Convert', af: 'Skakel om', enLine: 'Pages as pictures, the words as text, pictures as a PDF, or a smaller file.', afLine: 'Bladsye as prente, die woorde as teks, prente as ’n PDF, of ’n kleiner lêer.' },
 ];
 
 export const pdfTool = (id: PdfToolId): PdfTool => PDF_TOOLS.find((one) => one.id === id) ?? PDF_TOOLS[0];

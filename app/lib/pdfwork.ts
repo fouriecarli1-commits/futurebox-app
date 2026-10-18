@@ -28,7 +28,7 @@ import {
   PDFArray, PDFCheckBox, PDFDict, PDFDocument, PDFDropdown, PDFHexString, PDFName, PDFOptionList, PDFRadioGroup,
   PDFString, PDFTextField, StandardFonts, degrees, fill, lineTo, moveTo, popGraphicsState, pushGraphicsState,
   rectangle, rgb, setFillingRgbColor, setGraphicsState, setStrokingRgbColor, setLineWidth, stroke,
-  type PDFFont, type PDFPage, type PDFRef,
+  PDFRef as PDFRefClass, type PDFFont, type PDFPage, type PDFRef,
 } from '@cantoo/pdf-lib';
 
 /* ── Kinds ──────────────────────────────────────────────────────────────── */
@@ -108,10 +108,59 @@ export async function unlock(data: Bytes, password: string): Promise<Bytes> {
       doc.context.delete(ref);
     }
   }
-  return doc.save();
+  return save(doc);
 }
 
-const save = (doc: PDFDocument): Promise<Bytes> => doc.save();
+/**
+ * Everything the document no longer uses, taken out of the file.
+ *
+ * ── Why this is here ─────────────────────────────────────────────────────
+ *
+ * Found on 18 October 2026, while making the "make it smaller" tool: a page
+ * removed from a document is removed from its list of pages and from
+ * nothing else. Its words, its pictures and its fonts stay in the file as
+ * objects nobody points at — invisible in every reader, and there for
+ * anybody who opens the file with a tool that lists its objects. A redacted
+ * page was still carrying the words it blacked out, and a "smaller" file of
+ * photographs still carried every photograph.
+ *
+ * So before every save the file is walked from its root — the catalogue,
+ * the document information and the lock, which are all a reader starts
+ * from — and whatever cannot be reached from there is deleted. Forms,
+ * bookmarks and attachments are reached from the catalogue, so they stay;
+ * only what is truly no longer part of the document goes.
+ */
+function prune(doc: PDFDocument): void {
+  const context = doc.context;
+  const seen = new Set<string>();
+  const queue: unknown[] = Object.values(context.trailerInfo).filter(Boolean);
+  while (queue.length) {
+    const next = queue.pop();
+    if (next instanceof PDFRefClass) {
+      const key = next.toString();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      queue.push(context.lookup(next));
+    } else if (next instanceof PDFDict) {
+      for (const [, value] of next.entries()) queue.push(value);
+    } else if (next instanceof PDFArray) {
+      queue.push(...next.asArray());
+    } else if (next && typeof next === 'object' && 'dict' in next && (next as { dict: unknown }).dict instanceof PDFDict) {
+      queue.push((next as { dict: PDFDict }).dict);
+    }
+  }
+  for (const [ref] of context.enumerateIndirectObjects()) {
+    if (!seen.has(ref.toString())) context.delete(ref);
+  }
+}
+
+const save = async (doc: PDFDocument): Promise<Bytes> => {
+  /* Fonts and pictures are written into the file when it is flushed, so the
+     walk comes after that or it would miss what was just added. */
+  await doc.flush();
+  prune(doc);
+  return doc.save();
+};
 
 /** How many pages. */
 export async function pageCount(data: Bytes): Promise<number> {
@@ -739,7 +788,7 @@ export async function protect(data: Bytes, lock: Lock): Promise<Bytes> {
       documentAssembly: false,
     },
   });
-  return doc.save();
+  return save(doc);
 }
 
 /** Copy the document information a file carries across to a new one. */
@@ -780,7 +829,7 @@ export async function sanitize(data: Bytes): Promise<Bytes> {
   }
   doc.setProducer('FutureBox');
   doc.setCreator('FutureBox');
-  return doc.save();
+  return save(doc);
 }
 
 /** What the file says about itself, for the room to show before it is cleaned. */

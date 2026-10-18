@@ -12,6 +12,7 @@
  * of pretending.
  */
 import { LIMITS, fitUnder, limitSaid, sizeSaid, smallerBy, type Encode } from '../app/lib/squeeze.ts';
+import { KBPS_DEFAULT, encodeMp3, kbpsUnder, mp3Bytes } from '../app/lib/mp3.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -60,6 +61,12 @@ const run = async (): Promise<void> => {
   ok('a limit nothing can meet says so, and hands back the smallest it made',
     never?.fits === false && (never?.blob.size ?? Infinity) < 10_000_000_000, JSON.stringify(never && { ...never, blob: never.blob.size }));
 
+  const kept = await fitUnder(pretend(20_000_000), 0.92, 1_000_000, false);
+  ok('where the pixels are the point, only the quality gives, and a file that still does not fit says so',
+    kept?.scale === 1 && kept.fits === false && kept.quality === 0.4, JSON.stringify(kept && { ...kept, blob: kept.blob.size }));
+  const keptFits = await fitUnder(pretend(1_800_000), 0.92, 1_000_000, false);
+  ok('  and one that can fit by quality alone does', keptFits?.fits === true && keptFits.scale === 1);
+
   const broken = await fitUnder(async () => null, 0.9, 1_000_000);
   ok('a file that could not be made is null, not a 0-byte file', broken === null);
 
@@ -71,6 +78,24 @@ const run = async (): Promise<void> => {
   ok('the limits run from none to 5 MB, and 1 MB is a thousand thousand bytes',
     LIMITS[0] === null && LIMITS.includes(1_000_000) && limitSaid(1_000_000, 'none') === '1 MB' && limitSaid(null, 'none') === 'none',
     limitSaid(1_000_000, 'none'));
+
+  /* ── The booth's MP3 ────────────────────────────────────────────────── */
+  const song = kbpsUnder(180, 5_000_000);
+  ok('a three-minute song under 5 MB is an MP3 at 192 kbps, which fits',
+    song.kbps === 192 && song.fits && mp3Bytes(180, song.kbps) <= 5_000_000, JSON.stringify(song));
+  ok('  and with no limit it is the default bitrate, never higher',
+    kbpsUnder(180, null).kbps === KBPS_DEFAULT && kbpsUnder(5, 50_000_000).kbps === KBPS_DEFAULT);
+  ok('  and a limit nothing fits under says so', kbpsUnder(3600, 1_000_000).fits === false);
+  const rate = 44_100;
+  const tone = new Float32Array(rate * 3).map((_, i) => Math.sin(i / 18) * 0.4);
+  const fake = { numberOfChannels: 2, sampleRate: rate, length: tone.length, duration: 3, getChannelData: () => tone } as unknown as AudioBuffer;
+  const made = await encodeMp3(fake, 128);
+  const head = new Uint8Array(await made.slice(0, 2).arrayBuffer());
+  ok('three seconds encoded at 128 kbps is a real MP3 of about the size it was said to be',
+    head[0] === 0xff && (head[1] & 0xe0) === 0xe0 && Math.abs(made.size - mp3Bytes(3, 128)) < mp3Bytes(3, 128) * 0.1,
+    `${made.size} bytes against ${mp3Bytes(3, 128)}`);
+  const mono = await encodeMp3(fake, 128, 'mono');
+  ok('  and mono is one channel at the same bitrate', mono.size > 0 && mono.type === 'audio/mpeg');
 };
 
 await run();

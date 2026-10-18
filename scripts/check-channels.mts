@@ -359,12 +359,17 @@ ok('the room lets her choose before it writes the file',
   /data-layout=\{one\.id\}/.test(room) && /LAYOUTS\.map/.test(room),
   'three functions nothing calls');
 ok('  and the file says which layout it is, unless it is the ordinary one',
-  /\$\{layout === 'stereo' \? '' : ` \(\$\{layout\}\)`\}(\$\{depth === 16 \? '' : ` \(\$\{depth\}-bit\)`\})?\.wav/.test(room),
+  /* WAV or MP3 since 18 October 2026: the ending is the kind chosen, and a
+     bit depth is only named on a WAV, which is the only kind that has one. */
+  (/\$\{layout === 'stereo' \? '' : ` \(\$\{layout\}\)`\}(\$\{depth === 16 \? '' : ` \(\$\{depth\}-bit\)`\})?\.wav/.test(room)
+    || /\$\{layout === 'stereo' \? '' : ` \(\$\{layout\}\)`\}\$\{ext === 'wav' && depth !== 16 \? ` \(\$\{depth\}-bit\)` : ''\}\.\$\{ext\}/.test(room)),
   'three downloads called song.wav, song (1).wav and song (2).wav tell her nothing about the one thing she got them to compare');
 ok('  and both doors write the same layout',
   /* The phone may also be asked for 24 or 32 bits (14 October 2026); the
      layout is what has to agree, and it is the same variable in both. */
-  (room.match(/encodeWav\(mixed, layout(, depth)?\)/g) ?? []).length === 2,
+  /* The phone goes through `writeSound` (WAV or MP3) since 18 October 2026;
+     what has to agree is still the layout handed in. */
+  (room.match(/(encodeWav|writeSound)\(mixed, layout(, depth)?\)/g) ?? []).length === 2,
   'the phone and the Library must not differ — nobody notices until a shop plays it');
 
 if (failures) {

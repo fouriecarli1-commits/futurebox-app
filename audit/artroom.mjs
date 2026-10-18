@@ -199,6 +199,51 @@ try {
       uploads === 0,
       `${uploads} file input(s) reachable by somebody who is not one of our artists`);
 
+    /* ── The AI cover, as a JPG under a size ───────────────────────────
+       The owner, 18 October 2026: a size limit on the cover — as a JPG whose
+       quality gives and never its pixels, because the shops refuse a cover
+       smaller than 3000 × 3000. So the file that arrives must be a JPEG,
+       under the limit, and still 3000 across. */
+    const makeTab = room.locator('[role="tab"]').filter({ hasText: /AI art|KI-kuns/ }).first();
+    if ((await makeTab.count()) > 0) {
+      await makeTab.click();
+      await p.waitForTimeout(600);
+      const jpg = p.locator('[data-artmakerkind="jpg"]').first();
+      check('the AI cover can be saved as a JPG', (await jpg.count()) === 1);
+      if ((await jpg.count()) === 1) {
+        await jpg.click();
+        await p.locator('[data-filesizepick="1000000"]').first().click();
+        const readout = p.locator('[data-filesizesaid]').first();
+        let after = '';
+        for (let tries = 0; tries < 60; tries += 1) {
+          await p.waitForTimeout(250);
+          const busy = await p.locator('[data-filesize] .animate-spin').count();
+          after = (await readout.getAttribute('data-filesizesaid')) ?? '';
+          if (!busy && after) break;
+        }
+        check('  and at most 1 MB it says how big it will be, under 1 MB',
+          Number(after) > 0 && Number(after) <= 1_000_000, `${after || 'nothing'} bytes`);
+        const waiting = p.waitForEvent('download', { timeout: 30000 }).catch(() => null);
+        await p.locator('[data-artmakerdownload]').first().click();
+        const file = await waiting;
+        const where = file ? await file.path().catch(() => null) : null;
+        const { readFileSync } = await import('node:fs');
+        const bytes = where ? readFileSync(where) : Buffer.alloc(0);
+        /* The frame's size, read out of the JPEG's own start-of-frame marker. */
+        let wide = 0;
+        for (let at = 2; at + 9 < bytes.length;) {
+          if (bytes[at] !== 0xff) break;
+          const marker = bytes[at + 1];
+          const length = bytes.readUInt16BE(at + 2);
+          if (marker >= 0xc0 && marker <= 0xc3) { wide = bytes.readUInt16BE(at + 7); break; }
+          at += 2 + length;
+        }
+        check('  and the file is a JPEG under 1 MB, still 3000 across',
+          bytes[0] === 0xff && bytes[1] === 0xd8 && bytes.length <= 1_000_000 && wide === 3000,
+          `${file ? file.suggestedFilename() : 'no file'}, ${bytes.length} bytes, ${wide} wide`);
+      }
+    }
+
     /* A JPEG, not a PNG. A full-page phone screenshot of this room is a
        1.3 MB PNG of flat paper and one photograph, which is too large to
        hand to anybody and says nothing a 200 KB JPEG does not. */

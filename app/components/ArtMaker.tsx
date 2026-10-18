@@ -27,8 +27,12 @@ import { withSaid } from '../lib/speak';
 import SpeakButton from './SpeakButton';
 import { MeerkatThumb } from './MeerkatTile';
 import type { MeerkatMood } from '../lib/meerkatphoto';
+import { LIMITS, fitUnder, type Fitted, type Limit } from '../lib/squeeze';
+import FileSize, { type Estimate } from './FileSize';
 
 const SIDE = 3000;
+/** A cover's JPG quality with no limit: 0.92, where a picture stops looking worse. */
+const JPG_QUALITY = 0.92;
 
 const STYLES: ReadonlyArray<{ id: string; word: string; fallback: string; says: string; palette: [string, string, string] }> = [
   { id: 'cyber', word: 'art.make.cyber', fallback: 'Cyberpunk', says: 'cyberpunk, neon cyan and violet, chrome, rain-lit city', palette: ['#0A0C10', '#00F0FF', '#A855F7'] },
@@ -176,14 +180,66 @@ export default function ArtMaker(): React.ReactElement {
     }
   }, [chosen.says, prompt, t]);
 
-  const download = useCallback(() => {
+  /* ── PNG or JPG, and how big ─────────────────────────────────────────
+     The owner, 18 October 2026, of a size limit on the cover: *"Ja."* — as a
+     JPG whose quality gives, never its pixels. A release cover is 3000 ×
+     3000 because the shops refuse anything smaller, so a limit that shrank
+     it would make a file that fits and is turned away. A PNG has no
+     quality to give, so it has no limit to choose. */
+  const [kind, setKind] = useState<'png' | 'jpg'>('png');
+  const [most, setMost] = useState<Limit>(null);
+  const [estimate, setEstimate] = useState<Estimate | null>(null);
+  const [estimating, setEstimating] = useState(false);
+
+  /** The cover as a file, under the limit when it is a JPG. */
+  const cover = useCallback(async (): Promise<Fitted | null> => {
     const out = document.createElement('canvas');
     paint(out, SIDE, look, picture);
+    const type = kind === 'jpg' ? 'image/jpeg' : 'image/png';
+    return fitUnder(
+      (quality) => new Promise<Blob | null>((done) => out.toBlob(done, type, quality)),
+      kind === 'jpg' ? JPG_QUALITY : undefined,
+      kind === 'jpg' ? most : null,
+      false,
+    );
+  }, [kind, look, most, picture]);
+
+  /* How big it will be, worked out a moment after the last change. A
+     3000-pixel square is nine megapixels, so not on every keystroke. */
+  useEffect(() => {
+    let gone = false;
+    setEstimating(true);
+    const soon = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const fitted = await cover();
+          if (gone || !fitted) return;
+          const out = document.createElement('canvas');
+          paint(out, SIDE, look, picture);
+          const plain = await new Promise<Blob | null>((done) => out.toBlob(done, 'image/png'));
+          if (gone) return;
+          setEstimate({ before: Math.max(plain?.size ?? 0, fitted.blob.size), after: fitted.blob.size, scale: 1, fits: fitted.fits });
+        } finally {
+          if (!gone) setEstimating(false);
+        }
+      })();
+    }, 600);
+    return () => {
+      gone = true;
+      window.clearTimeout(soon);
+    };
+  }, [cover, look, picture]);
+
+  const download = useCallback(async () => {
+    const fitted = await cover();
+    if (!fitted) return;
+    const url = URL.createObjectURL(fitted.blob);
     const link = document.createElement('a');
-    link.download = `futurebox-art-${SIDE}.png`;
-    link.href = out.toDataURL('image/png');
+    link.download = `futurebox-art-${SIDE}.${kind}`;
+    link.href = url;
     link.click();
-  }, [look, picture]);
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }, [cover, kind]);
 
   return (
     <div className="space-y-4 px-4 pb-6 pt-4" data-artmaker>
@@ -328,7 +384,35 @@ export default function ArtMaker(): React.ReactElement {
             </span>
           </div>
           <canvas ref={preview} className="aspect-square w-full rounded-xl border border-[var(--lyn)] bg-black" data-artmakercanvas />
-          <button type="button" onClick={download} className={VUL} data-artmakerdownload>
+          <div className="grid grid-cols-2 gap-2">
+            {(['png', 'jpg'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                data-artmakerkind={one}
+                aria-pressed={kind === one}
+                onClick={() => setKind(one)}
+                className={`inline-flex min-h-[44px] items-center justify-center rounded-xl border px-3 text-xs font-bold ${
+                  kind === one ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200' : 'border-zinc-700 bg-zinc-950 text-zinc-300'
+                }`}
+              >
+                {one === 'png' ? 'PNG' : 'JPG'}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] leading-relaxed text-[color:var(--gedemp)]">
+            {kind === 'png'
+              ? t('art.make.kindPng', 'Every pixel kept. The bigger file; there is nothing to squeeze.')
+              : t('art.make.kindJpg', 'Much smaller, and it stays 3000 × 3000 — a limit lowers the quality, never the size, because the shops refuse a smaller cover.')}
+          </p>
+          <FileSize
+            limit={kind === 'jpg' ? most : null}
+            onLimit={setMost}
+            estimate={estimate}
+            busy={estimating}
+            limits={kind === 'jpg' ? LIMITS : [null]}
+          />
+          <button type="button" onClick={() => void download()} className={VUL} data-artmakerdownload>
             <Download className="h-4 w-4" />
             {t('art.make.download', 'Download the 3000 × 3000 file')}
           </button>

@@ -29,6 +29,8 @@ import { useBackLayer } from '../lib/backstack';
 import { barClearance } from './TabBar';
 import { fit } from '../lib/imagefile';
 import { zipOf } from '../lib/zip';
+import type { Limit } from '../lib/squeeze';
+import FileSize, { type Estimate } from './FileSize';
 import { PDF_TOOLS, pdfTool, type PdfToolId } from '../lib/pdftools';
 import type { Box, Colour, FontKind, FormField, Mark, Piece } from '../lib/pdfwork';
 import type { Shown, Words } from '../lib/pdfview';
@@ -189,6 +191,11 @@ const WORDS = {
   formHow: ['Drag a box where somebody should type, tick or sign.', 'Sleep ’n blokkie waar iemand moet tik, merk of teken.'],
   // Convert
   toPictures: ['Every page as a picture', 'Elke bladsy as ’n prent'],
+  smaller: ['Make it smaller', 'Maak dit kleiner'],
+  smallerWhat: ['The pages are redrawn as pictures and squeezed until the file fits. The words can then no longer be selected or searched, and links and form boxes go — keep the original for those.', 'Die bladsye word as prente oorgeteken en saamgepers tot die lêer pas. Die woorde kan dan nie meer gekies of gesoek word nie, en skakels en vormblokkies verdwyn — hou die oorspronklike daarvoor.'],
+  smallerGo: ['Make it smaller and save', 'Maak kleiner en stoor'],
+  smallerIdle: ['It says how big the file came out once it is made.', 'Dit sê hoe groot die lêer uitgekom het sodra dit gemaak is.'],
+  smallerNot: ['This PDF is already smaller than pictures of its pages would be, so nothing was saved: it is as small as it gets.', 'Hierdie PDF is reeds kleiner as wat prente van sy bladsye sou wees, so niks is gestoor nie: dit is so klein as wat dit kan wees.'],
   toText: ['The words as text', 'Die woorde as teks'],
   picturesIn: ['Pictures into a PDF', 'Prente in ’n PDF'],
 } as const;
@@ -267,6 +274,11 @@ const pageOf = (m: Mark): number => m.page;
 const bytesOf = async (file: Blob): Promise<Uint8Array> => new Uint8Array(await file.arrayBuffer());
 
 /** A canvas as PNG or JPEG bytes. */
+/** How big a page is drawn before it is squeezed — about 180 dots an inch on A4. */
+const SHRINK_LONGEST = 2000;
+/** The quality a page picture starts at, with no limit: small, and still easy to read. */
+const SHRINK_QUALITY = 0.75;
+
 const canvasBytes = (canvas: HTMLCanvasElement, type: 'png' | 'jpg'): Promise<Uint8Array | null> => new Promise((done) => {
   canvas.toBlob((blob) => { if (!blob) done(null); else void bytesOf(blob).then(done); }, type === 'png' ? 'image/png' : 'image/jpeg', 0.9);
 });
@@ -836,6 +848,9 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
 
   /* ── Convert ── */
   const [picFormat, setPicFormat] = useState<'png' | 'jpg'>('jpg');
+  const [pdfMost, setPdfMost] = useState<Limit>(null);
+  const [pdfEstimate, setPdfEstimate] = useState<Estimate | null>(null);
+  const [squeezing, setSqueezing] = useState(false);
   const toPictures = async (): Promise<void> => {
     if (!shown || !bytes) return;
     setBusy(true);
@@ -858,6 +873,79 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
       setBusy(false);
     }
   };
+  /* ── Make it smaller ──────────────────────────────────────────────────
+     The owner, 18 October 2026: a compressor at every export, and of the
+     document room: *"Ja."* A PDF is made smaller the one way that works on
+     any PDF — every page redrawn as a picture and squeezed by
+     `lib/squeeze.ts` until the file fits — and the panel says what that
+     costs: the words stop being words. Each page is drawn once per size and
+     kept as a near-lossless JPEG, so the search for a quality decodes small
+     files rather than holding a canvas per page in memory. If pictures
+     would be bigger than the document already is — a PDF of plain text
+     usually is tiny — nothing is saved, and the room says why. */
+  const shrink = async (): Promise<void> => {
+    if (!shown || !bytes) return;
+    setBusy(true);
+    setSqueezing(true);
+    try {
+      const v = await viewer();
+      const pdf = await work();
+      const { fitUnder } = await import('../lib/squeeze');
+      const drawn = new Map<number, Blob[]>();
+      const pagesAt = async (share: number): Promise<Blob[]> => {
+        const kept = drawn.get(share);
+        if (kept) return kept;
+        drawn.clear();
+        const out: Blob[] = [];
+        for (let k = 0; k < shown.numPages; k += 1) {
+          const sheet = document.createElement('canvas');
+          await v.draw(shown, k, sheet, Math.max(400, Math.round(SHRINK_LONGEST * share)));
+          const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, 'image/jpeg', 0.95));
+          sheet.width = 0;
+          if (!blob) throw new Error('page');
+          out.push(blob);
+        }
+        drawn.set(share, out);
+        return out;
+      };
+      const made = await fitUnder(async (quality, share) => {
+        const pictures: { page: number; data: Uint8Array; type: 'jpg' }[] = [];
+        for (const [page, blob] of (await pagesAt(share)).entries()) {
+          const bitmap = await createImageBitmap(blob);
+          const sheet = document.createElement('canvas');
+          sheet.width = bitmap.width;
+          sheet.height = bitmap.height;
+          sheet.getContext('2d')?.drawImage(bitmap, 0, 0);
+          bitmap.close();
+          const again = await new Promise<Blob | null>((done) => sheet.toBlob(done, 'image/jpeg', quality));
+          sheet.width = 0;
+          if (!again) return null;
+          pictures.push({ page, data: new Uint8Array(await again.arrayBuffer()), type: 'jpg' });
+        }
+        const out = await pdf.replaceWithPictures(bytes, pictures);
+        return new Blob([out.slice().buffer], { type: 'application/pdf' });
+      }, SHRINK_QUALITY, pdfMost);
+      if (!made) {
+        say('failed');
+        return;
+      }
+      const original = bytes.length;
+      if (original <= made.blob.size && (pdfMost === null || original <= pdfMost)) {
+        setPdfEstimate({ before: original, after: original, scale: 1, fits: true });
+        say('smallerNot');
+        return;
+      }
+      setPdfEstimate({ before: original, after: made.blob.size, scale: made.scale, fits: made.fits });
+      keep(made.blob, pdf.renamed(name, '-smaller.pdf'));
+      say('saved');
+    } catch {
+      say('failed');
+    } finally {
+      setSqueezing(false);
+      setBusy(false);
+    }
+  };
+
   const toText = async (): Promise<void> => {
     if (!shown) return;
     setBusy(true);
@@ -1464,6 +1552,19 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
           ))}
           <button type="button" className={`${GO} flex-1`} style={goStyle} data-pdftopictures onClick={() => { void toPictures(); }}><Download className="h-4 w-4" />{w('save')}</button>
         </div>
+      </section>
+      <section className="space-y-2 rounded-2xl border border-zinc-800 p-3" data-pdfsmaller>
+        <h4 className="text-sm font-bold text-zinc-100">{w('smaller')}</h4>
+        <p className="text-xs leading-relaxed text-zinc-400">{w('smallerWhat')}</p>
+        <FileSize
+          limit={pdfMost}
+          onLimit={(most) => { setPdfMost(most); setPdfEstimate(null); }}
+          estimate={pdfEstimate}
+          busy={squeezing}
+          kind="picture"
+          idle={w('smallerIdle')}
+        />
+        <button type="button" className={`${GO} w-full`} style={goStyle} data-pdfsmallergo disabled={busy} onClick={() => { void shrink(); }}><Download className="h-4 w-4" />{w('smallerGo')}</button>
       </section>
       <section className="space-y-2 rounded-2xl border border-zinc-800 p-3">
         <h4 className="text-sm font-bold text-zinc-100">{w('toText')}</h4>

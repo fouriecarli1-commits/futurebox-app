@@ -492,6 +492,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
+    "@breezystack/lamejs": "^1.2.7",
     "@cantoo/pdf-lib": "^2.11.1",
     "@mediapipe/tasks-vision": "^1.1.0",
     "@opendaw/nam-wasm": "^1.2.0",

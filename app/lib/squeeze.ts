@@ -69,7 +69,14 @@ export interface Fitted {
  * the search, so a limit never makes a file better than she chose, only
  * smaller. Undefined means the format is lossless.
  */
-export async function fitUnder(encode: Encode, quality: number | undefined, most: Limit): Promise<Fitted | null> {
+export async function fitUnder(
+  encode: Encode,
+  quality: number | undefined,
+  most: Limit,
+  /** False where the pixels are the point — album art at 3000 × 3000 — so
+      only the quality may give, and a file that still does not fit says so. */
+  pixels = true,
+): Promise<Fitted | null> {
   const first = await encode(quality, 1);
   if (!first) return null;
   if (most === null || first.size <= most) return { blob: first, quality, scale: 1, fits: true };
@@ -103,6 +110,7 @@ export async function fitUnder(encode: Encode, quality: number | undefined, most
       if (made && made.size <= most) return { blob: made, quality: undefined, scale, fits: true };
       if (made && made.size < best.blob.size) best = { blob: made, quality: undefined, scale, fits: false };
     }
+    if (!pixels) break;
     scale = Math.round(scale * SHRINK * 1000) / 1000;
   }
   return best;

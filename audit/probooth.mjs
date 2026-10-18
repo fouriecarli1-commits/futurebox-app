@@ -1397,6 +1397,39 @@ try {
   check('with one press to start fresh instead',
     await p.locator('button', { hasText: /^(Start fresh|Begin oor)$/ }).count() > 0);
 
+  /* ── An MP3, under a size ─────────────────────────────────────────────
+     The owner, 18 October 2026: a file size at every export, and an MP3
+     encoder for the booth so that a size can mean something. One lane,
+     saved from the Stems desk as an MP3 at most 1 MB: the file that arrives
+     must be called .mp3, start like an MP3, and be under 1 MB. Then back to
+     WAV, because the choice is remembered on the device. */
+  await openDesk('Stems', 'Stamme');
+  const mp3Pick = p.locator('[data-exportkind="mp3"]').first();
+  check('the booth can save an MP3', (await mp3Pick.count()) > 0);
+  if ((await mp3Pick.count()) > 0) {
+    await mp3Pick.click();
+    await p.locator('[data-filesizepick="1000000"]').first().click();
+    const said = (await p.locator('[data-filesizesaid]').first().getAttribute('data-filesizesaid')) ?? '';
+    check('  and says how big it will be before it is made', Number(said) > 0, said || 'nothing');
+    const one = p.locator('[data-prosaveone]').first();
+    if ((await one.count()) > 0) {
+      const waiting = p.waitForEvent('download', { timeout: 60000 }).catch(() => null);
+      await one.click();
+      const file = await waiting;
+      const name = file ? file.suggestedFilename() : '';
+      const where = file ? await file.path().catch(() => null) : null;
+      const { readFileSync } = await import('node:fs');
+      const bytes = where ? readFileSync(where) : Buffer.alloc(0);
+      const framed = bytes.length > 4 && ((bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0) || bytes.slice(0, 3).toString() === 'ID3');
+      check('  and a lane saved that way is an MP3 under 1 MB',
+        /\.mp3$/.test(name) && framed && bytes.length > 0 && bytes.length <= 1_000_000,
+        `${name || 'no file'}, ${bytes.length} bytes, starts ${bytes.slice(0, 4).toString('hex')}`);
+    }
+    await p.locator('[data-filesizepick="none"]').first().click();
+    await p.locator('[data-exportkind="wav"]').first().click();
+  }
+  await shutDesk();
+
   /* ── A loop sent from the jam room ────────────────────────────────────
      The owner, 18 October 2026: "Send to ProBooth" in the jam room's looper.
      The loop waits on the device (`lib/jamhandover.ts`); this puts one there

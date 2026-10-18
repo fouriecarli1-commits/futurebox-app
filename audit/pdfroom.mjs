@@ -12,6 +12,7 @@
 import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { readFile } from 'node:fs/promises';
+import { deflateSync } from 'node:zlib';
 import { enter, studio } from './enter.mjs';
 import { serve, shot } from './where.mjs';
 
@@ -39,6 +40,46 @@ async function sample() {
   }
   doc.setTitle('Hidden title');
   return Buffer.from(await doc.save());
+}
+
+/**
+ * Two pages that are each a big photograph — a smooth wash of colour stored
+ * uncompressed, the way a scan straight off a phone arrives — for the room to
+ * make smaller. Built here, PNG and all, so the probe needs nothing installed.
+ */
+function photoPng(wide, tall) {
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const chunk = (type, data) => {
+    const head = Buffer.alloc(8); head.writeUInt32BE(data.length, 0); head.write(type, 4, 'ascii');
+    const tail = Buffer.alloc(4); tail.writeUInt32BE(crc(Buffer.concat([Buffer.from(type, 'ascii'), data])), 0);
+    return Buffer.concat([head, data, tail]);
+  };
+  const raw = Buffer.alloc((wide * 3 + 1) * tall);
+  for (let y = 0; y < tall; y += 1) {
+    const row = y * (wide * 3 + 1);
+    for (let x = 0; x < wide; x += 1) {
+      raw[row + 1 + x * 3] = (x * 255) / wide;
+      raw[row + 2 + x * 3] = (y * 255) / tall;
+      raw[row + 3 + x * 3] = 128 + 100 * Math.sin((x + y) / 40);
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(wide, 0); ihdr.writeUInt32BE(tall, 4); ihdr[8] = 8; ihdr[9] = 2;
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw, { level: 0 })), chunk('IEND', Buffer.alloc(0))]);
+}
+async function photoPdf() {
+  const doc = await PDFDocument.create();
+  for (let k = 0; k < 2; k += 1) {
+    const image = await doc.embedPng(photoPng(1000, 1400));
+    const page = doc.addPage([595, 833]);
+    page.drawImage(image, { x: 0, y: 0, width: 595, height: 833 });
+  }
+  return Buffer.from(await doc.save({ useObjectStreams: false }));
 }
 
 /** A saved file, read by pdf.js: each page's words and comment kinds, and whether it painted a picture. */
@@ -241,6 +282,44 @@ try {
   await page.locator('[data-pdfcombine]').click();
   await page.waitForTimeout(2000);
   check('  and combined, the document has both', (await pageNumber()) === '6');
+
+  /* ── Make it smaller ──────────────────────────────────────────────
+     The owner, 18 October 2026: a compressor at every export, the document
+     room included. A PDF of plain words is already smaller than pictures of
+     its pages, so the room must say so and save nothing; a PDF of
+     photographs must come out under the size chosen, every page still there. */
+  await tool('convert');
+  let wordsSaved = false;
+  page.once('download', () => { wordsSaved = true; });
+  await page.locator('[data-pdfsmallergo]').click();
+  await page.locator('[data-pdfsaid]').first().waitFor({ timeout: 30000 }).catch(() => {});
+  const saidSmall = await page.locator('[data-pdfsaid]').first().innerText().catch(() => '');
+  check('a PDF of plain words is left as it is, and the room says why',
+    !wordsSaved && /already smaller|reeds kleiner/.test(saidSmall), saidSmall || 'nothing was said');
+
+  await page.locator('[data-pdfclose]').click();
+  await page.waitForTimeout(500);
+  await page.locator('[data-opentools]:visible').first().click();
+  await page.waitForTimeout(400);
+  await page.locator('[data-alltool="pdf"]').click();
+  await page.waitForTimeout(1500);
+  const photos = await photoPdf();
+  await page.locator('[data-pdfopen]').setInputFiles({ name: 'scans.pdf', mimeType: 'application/pdf', buffer: photos });
+  await page.waitForTimeout(2000);
+  await tool('convert');
+  await page.locator('[data-filesizepick="1000000"]').first().click();
+  const [squeezed] = await Promise.all([
+    page.waitForEvent('download', { timeout: 120000 }),
+    page.locator('[data-pdfsmallergo]').click(),
+  ]);
+  const small = await readFile(await squeezed.path());
+  const smallPages = await read(small);
+  check(`a ${(photos.length / 1e6).toFixed(1)} MB PDF of photographs comes out under 1 MB`,
+    small.length <= 1_000_000 && small.length < photos.length, `${small.length} bytes`);
+  check('  with every page still there, each one a picture',
+    smallPages.length === 2 && smallPages.every((one) => one.pictures > 0), JSON.stringify(smallPages.map((one) => one.pictures)));
+  const after = Number((await page.locator('[data-filesizesaid]').first().getAttribute('data-filesizesaid')) ?? '');
+  check('  and the room says how big it came out', after === small.length, `${after} against ${small.length}`);
 
   await page.locator('[data-pdfclose]').click();
   await page.waitForTimeout(500);

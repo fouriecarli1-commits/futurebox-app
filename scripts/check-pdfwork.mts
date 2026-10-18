@@ -11,7 +11,7 @@
  * small document and the result is read back by a different library
  * (pdf.js, which is what a reader uses) rather than by the one that wrote it.
  */
-import { PDFDocument, PDFName, PDFDict, StandardFonts } from '@cantoo/pdf-lib';
+import { PDFDocument, PDFName, PDFDict, PDFRawStream, StandardFonts, decodePDFRawStream } from '@cantoo/pdf-lib';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {
   background, bake, batesLabel, batesNumber, combine, deletePages, extractPages, fillForm, formFields, headerFooter,
@@ -61,6 +61,26 @@ async function read(data: Uint8Array, password?: string): Promise<{ pages: { wor
   }
   await task.destroy();
   return { pages };
+}
+
+/**
+ * Whether a word is anywhere in the file — in any object, pointed at or not,
+ * every stream unpacked. A reader shows only what the pages point at; this
+ * looks where somebody digging through the file would.
+ */
+async function inside(data: Uint8Array, word: string): Promise<boolean> {
+  const doc = await PDFDocument.load(data, { updateMetadata: false });
+  const hex = Buffer.from(word, 'latin1').toString('hex');
+  for (const [, object] of doc.context.enumerateIndirectObjects()) {
+    let text = '';
+    if (object instanceof PDFRawStream) {
+      try { text = Buffer.from(decodePDFRawStream(object).decode()).toString('latin1'); } catch { text = ''; }
+    } else {
+      text = object.toString();
+    }
+    if (text.includes(word) || text.toLowerCase().replace(/[^0-9a-f]/g, '').includes(hex)) return true;
+  }
+  return false;
 }
 
 const base = await sample();
@@ -173,6 +193,20 @@ ok('a redacted page has no words left in it to copy out', redacted.pages[1].word
 ok('  and keeps its size as shown', redacted.pages[1].w === 400 && redacted.pages[1].h === 300);
 const turnedRedacted = await read(await replaceWithPictures(await rotatePages(base, [0], 90), [{ page: 0, data: PNG, type: 'png' }]));
 ok('  a turned page stays the shape it was shown', turnedRedacted.pages[0].w === 400 && turnedRedacted.pages[0].h === 300);
+
+/* ── Gone means gone ──
+   Found on 18 October 2026: a removed page stayed in the file as objects
+   nobody pointed at — a redacted page still carried the words it blacked
+   out. Every save now takes out what the document no longer reaches. */
+ok('the sample really does carry its words, so the three below can fail',
+  await inside(base, 'Page 2'));
+ok('a redacted page\'s words are nowhere in the file, not only off the page',
+  !(await inside(await replaceWithPictures(base, [{ page: 1, data: PNG, type: 'png' }]), 'Page 2')));
+ok('  and a deleted page\'s words are not left behind either',
+  !(await inside(await deletePages(base, [1]), 'Page 2')));
+ok('  and Remove hidden information leaves no script anywhere in the file',
+  !(await inside(await sanitize(base), 'app.alert')));
+ok('  while what the document still uses is kept', await inside(await deletePages(base, [1]), 'Page 3'));
 
 /* ── Paragraphs and headings, found from loose runs ── */
 {

@@ -47,6 +47,9 @@ import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepses
 import { takenLoop, waitingLoop } from '../lib/jamhandover';
 import { roundsFor } from '../lib/looper';
 import { encodeWav, type Depth } from '../lib/wav';
+import { encodeMp3, kbpsUnder, mp3Bytes } from '../lib/mp3';
+import { type Limit } from '../lib/squeeze';
+import FileSize from './FileSize';
 import { zipOf } from '../lib/zip';
 import BoothScope from './BoothScope';
 import { transitionsIn } from '../lib/transitions';
@@ -1250,8 +1253,85 @@ export default function ProBooth({
     setDepthState(next);
     try { window.localStorage.setItem('fb.booth.depth', String(next)); } catch { /* kept for this visit only */ }
   };
+
+  /**
+   * Mono, stereo, or folded for a surround decoder.
+   *
+   * The owner, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
+   *
+   * One state for both doors — the phone and the Library — because a song
+   * that goes to her channel in a different layout from the one she just
+   * saved is the kind of difference nobody notices until a shop plays it.
+   * Stereo to begin with, which is what every file this room has ever made
+   * has been.
+   */
+  const [layout, setLayout] = useState<Layout>('stereo');
+
+  /* ── WAV or MP3, and how big ────────────────────────────────────────
+     The owner, 18 October 2026: a file size to choose at every export, and
+     an MP3 encoder for the booth so that it can mean something — a WAV's
+     size is its length (`lib/mp3.ts` says why). WAV stays the default;
+     the choice is remembered like the depth. The limit is per file: the
+     mix, or each stem. */
+  const [soundKind, setSoundKindState] = useState<'wav' | 'mp3'>('wav');
+  const [soundMost, setSoundMost] = useState<Limit>(null);
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem('fb.booth.kind') === 'mp3') setSoundKindState('mp3');
+    } catch { /* private window: WAV it is */ }
+  }, []);
+  const setSoundKind = (next: 'wav' | 'mp3'): void => {
+    setSoundKindState(next);
+    try { window.localStorage.setItem('fb.booth.kind', next); } catch { /* kept for this visit only */ }
+  };
+  /** The file, in the kind chosen, under the limit when it is an MP3. */
+  const writeSound = useCallback(async (buffer: AudioBuffer, how: Layout = 'stereo'): Promise<{ readonly blob: Blob; readonly ext: 'wav' | 'mp3' }> => {
+    if (soundKind === 'wav') return { blob: encodeWav(buffer, how, depth), ext: 'wav' };
+    const { kbps } = kbpsUnder(buffer.duration, soundMost);
+    return { blob: await encodeMp3(buffer, kbps, how), ext: 'mp3' };
+  }, [depth, soundKind, soundMost]);
   const depthPicker = (
     <div className="space-y-1.5" data-exportquality>
+      <p className="text-xs font-semibold" style={{ color: INK_DIM }}>
+        {t('pro.kindTitle', 'Kind of file')}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {(['wav', 'mp3'] as const).map((one) => (
+          <button
+            key={one}
+            type="button"
+            data-exportkind={one}
+            aria-pressed={soundKind === one}
+            onClick={() => setSoundKind(one)}
+            className={`h-[44px] min-w-0 truncate rounded-xl border px-2 text-xs font-bold ${
+              soundKind === one
+                ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
+                : 'border-zinc-700 bg-zinc-900 text-zinc-200'
+            }`}
+          >
+            {one === 'wav' ? 'WAV' : 'MP3'}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs leading-snug" style={{ color: INK_DIM }}>
+        {soundKind === 'wav'
+          ? t('pro.kindWav', 'Every sample, written down. What a studio hands another studio — and big: a minute of stereo is about ten megabytes.')
+          : t('pro.kindMp3', 'What phones, platforms and messages take. Much smaller, and you choose how small.')}
+      </p>
+      {soundKind === 'mp3' ? (
+        <FileSize
+          limit={soundMost}
+          onLimit={setSoundMost}
+          estimate={(() => {
+            const channels = layout === 'mono' ? 1 : 2;
+            const { kbps, fits } = kbpsUnder(total, soundMost);
+            return { before: total * rate * channels * 2, after: mp3Bytes(total, kbps), scale: 1, fits };
+          })()}
+          busy={false}
+          kind="sound"
+        />
+      ) : (
+      <>
       <p className="text-xs font-semibold" style={{ color: INK_DIM }}>
         {t('pro.depthTitle', 'Quality of the file')}
       </p>
@@ -1279,6 +1359,8 @@ export default function ProBooth({
           return t(chosen.note[0], chosen.note[1]);
         })()}
       </p>
+      </>
+      )}
     </div>
   );
 
@@ -1290,15 +1372,17 @@ export default function ProBooth({
       return;
     }
     const taken = new Set<string>();
-    const entries = lanes.map((lane) => {
+    const entries: { name: string; data: Blob }[] = [];
+    for (const lane of lanes) {
       const named = lane.name.trim() || t('pro.laneOne', 'Lane');
-      let file = safeFilename(named, 'wav');
-      for (let n = 2; taken.has(file); n += 1) file = safeFilename(`${named} ${n}`, 'wav');
+      const written = await writeSound(pieceOf(lane, ctx));
+      let file = safeFilename(named, written.ext);
+      for (let n = 2; taken.has(file); n += 1) file = safeFilename(`${named} ${n}`, written.ext);
       taken.add(file);
-      return { name: file, data: encodeWav(pieceOf(lane, ctx), 'stereo', depth) };
-    });
+      entries.push({ name: file, data: written.blob });
+    }
     const zip = await zipOf(entries);
-    downloadBlob(zip, safeFilename(`${title || t('pro.untitled', 'song')} stems ${depth}-bit`, 'zip'));
+    downloadBlob(zip, safeFilename(`${title || t('pro.untitled', 'song')} stems ${soundKind === 'mp3' ? 'mp3' : `${depth}-bit`}`, 'zip'));
   };
 
   const saveLane = async (lane: Lane, what: 'wav' | 'midi'): Promise<void> => {
@@ -1310,7 +1394,8 @@ export default function ProBooth({
     const piece = pieceOf(lane, ctx);
     const named = lane.name.trim() || t('pro.laneOne', 'Lane');
     if (what === 'wav') {
-      downloadBlob(encodeWav(piece, 'stereo', depth), safeFilename(named, 'wav'));
+      const written = await writeSound(piece);
+      downloadBlob(written.blob, safeFilename(named, written.ext));
       return;
     }
     const source: Source = lane.notes?.length ? 'exact' : 'heard';
@@ -1943,18 +2028,6 @@ export default function ProBooth({
     [context, rate, t],
   );
 
-  /**
-   * Mono, stereo, or folded for a surround decoder.
-   *
-   * The owner, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
-   *
-   * One state for both doors — the phone and the Library — because a song
-   * that goes to her channel in a different layout from the one she just
-   * saved is the kind of difference nobody notices until a shop plays it.
-   * Stereo to begin with, which is what every file this room has ever made
-   * has been.
-   */
-  const [layout, setLayout] = useState<Layout>('stereo');
 
   /* ── Paying for a bounce ───────────────────────────────────────────────
 
@@ -2261,7 +2334,7 @@ export default function ProBooth({
         return false;
       }
       if (!(await payFor(mixed.duration))) return false;
-      const blob = encodeWav(mixed, layout, depth);
+      const { blob, ext } = await writeSound(mixed, layout);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -2275,7 +2348,7 @@ export default function ProBooth({
          phone's downloads folder telling you nothing about the one thing
          you downloaded them to tell apart. Stereo keeps its plain name so
          nothing about the existing file changes. */
-      link.download = `${safe || 'song'}${layout === 'stereo' ? '' : ` (${layout})`}${depth === 16 ? '' : ` (${depth}-bit)`}.wav`;
+      link.download = `${safe || 'song'}${layout === 'stereo' ? '' : ` (${layout})`}${ext === 'wav' && depth !== 16 ? ` (${depth}-bit)` : ''}.${ext}`;
       link.click();
       URL.revokeObjectURL(url);
       return true;
@@ -2290,7 +2363,7 @@ export default function ProBooth({
        made — 16-bit, for anybody who picked 24 or 32 after opening the room
        — and charged against a signature of the mix as it was then. Found on
        15 October 2026. */
-  }, [depth, lanes, layout, master, payFor, rate, t, title, trim]);
+  }, [lanes, layout, master, payFor, rate, t, title, trim, writeSound, depth]);
 
   /* ── The desks ────────────────────────────────────────────────────
 
@@ -4269,7 +4342,7 @@ export default function ProBooth({
                     aria-label={`${t('pro.saveOne', 'Download')} ${lane.name}`}
                     className="inline-flex h-[44px] min-w-0 items-center justify-center rounded-xl border border-zinc-700 px-3 text-xs font-bold text-zinc-200"
                   >
-                    WAV
+                    {soundKind === 'mp3' ? 'MP3' : 'WAV'}
                   </button>
                 </div>
               </li>
