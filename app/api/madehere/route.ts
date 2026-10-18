@@ -182,6 +182,7 @@ function inItFrom(raw: unknown, seconds: number): InTheFilm {
     joins: count(sent.joins),
     mark: sent.mark === true,
     under: sent.under === true,
+    motions: count(sent.motions),
   };
 }
 

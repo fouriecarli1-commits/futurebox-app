@@ -212,6 +212,8 @@ function billWord(
       return t('bill.join', '{n} transition(s)').replace('{n}', n);
     case 'mark':
       return t('bill.mark', 'Your mark on it');
+    case 'motion':
+      return t('bill.motion', 'Movement on {n} piece(s)').replace('{n}', n);
     default:
       return t('bill.under', 'A track under it');
   }

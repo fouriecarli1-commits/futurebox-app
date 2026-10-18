@@ -404,6 +404,13 @@ export const CREDITS = {
   /* Carli put this at R5.00, which is 3.36 credits; three is R4.47 and the
      nearest. Unchanged, and said rather than silently skipped. */
   filmUnder: 3,
+  /** The picture itself moving — a push in, a pan, keyframes of her own. */
+  /* Carli, 18 October 2026, asked whether Motion should cost at export:
+     *"Ja motion moet iets kos."* Six, the same as a look over the film: both
+     are a change the browser renders to the picture of every frame they
+     touch, so all of it is margin, and one is no smaller a decision than the
+     other. Charged once, however many shots move. */
+  filmMotion: 6,
   /**
    * Bouncing a mix out of the Pro Booth. **Per minute of finished mix.**
    *

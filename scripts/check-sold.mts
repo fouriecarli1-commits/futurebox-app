@@ -207,6 +207,7 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   filmJoin: 'the same line; itemised on the bill in the room',
   filmMark: 'the same line; itemised on the bill in the room',
   filmUnder: 'the same line; itemised on the bill in the room',
+  filmMotion: 'the same line; itemised on the bill in the room',
 };
 
 const priced = Object.keys(CREDITS);

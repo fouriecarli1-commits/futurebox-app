@@ -25,6 +25,7 @@ daardie lid druk dieselfde knoppies.
 | cleaning a take, per minute | 8 | R12.01 | R2.21 | **R9.80** | 82% | 5.4× |
 | a voice change, per minute | 8 | R12.01 | R2.21 | **R9.80** | 82% | 5.4× |
 | a look over the film (in the browser) | 6 | R9.01 | niks | **R9.01** | 100% | — geen enjin |
+| the picture moving (in the browser) | 6 | R9.01 | niks | **R9.01** | 100% | — geen enjin |
 | a style word | 6 | R9.01 | R0.31 | **R8.69** | 97% | 28.9× |
 | a still picture changed by saying what to change | 6 | R9.01 | R0.96 | **R8.05** | 89% | 9.4× |
 | a one-minute half song | 7 | R10.51 | R2.76 | **R7.75** | 74% | 3.8× |
@@ -52,6 +53,7 @@ daardie lid druk dieselfde knoppies.
 | `kidVideo` | 9 | R13.51 | nog nie gelees nie | nog nie bekend nie |
 | `video` | 18 | R27.02 | nog nie gelees nie | nog nie bekend nie |
 | `cover` | 15 | R22.51 | nog nie gelees nie | nog nie bekend nie |
+| `filmMotion` | 6 | R9.01 | nog nie gelees nie | nog nie bekend nie |
 | `browserVideo` | 0 | — (niks) | nog nie gelees nie | nog nie bekend nie |
 | `clone` | 20 | R30.02 | nog nie gelees nie | nog nie bekend nie |
 | `finetune` | 180 | R270.15 | nog nie gelees nie | nog nie bekend nie |
@@ -100,7 +102,7 @@ daardie lid druk dieselfde knoppies.
 | `studio` | Editing a song that already exists: its sections, its arrangement, its timing.. |
 | `booth` | Singing on your own track: recording takes over the backing, cleaning the room noise off a take, and lifting a vocal back out. |
 | `canvas` | The video desk: marketing, podcast and social clips built scene by scene. |
-| `videoedit` | The cutting room: their own footage on a clock, trimmed, split, reordered, faded, with words set on the picture, and put together in the browser. |
+| `videoedit` | The cutting room: their own footage on a clock, trimmed, split, reordered, faded, with words set on the picture, movement on the picture (a push in, a pan, keyframes of their own), a long shot cut into its best moments by its sound, and put together in the browser. |
 | `photo` | The photo editor: one still, made for social media. |
 | `hooks_feed` | Short vertical clips — the fifteen seconds that make somebody stop scrolling. |
 | `channels` | Your channel: your released music, in the order you want people to hear it. |

@@ -45,6 +45,7 @@
 
 import { CREDITS, perHalfMinute } from './credits';
 import { lengthOfPiece, runs, type Edit } from './videoedit';
+import { moves } from './videomotion';
 
 /**
  * What is in a film, as plain numbers.
@@ -72,17 +73,19 @@ export interface InTheFilm {
   readonly mark: boolean;
   /** Whether there is a track under it. */
   readonly under: boolean;
+  /** How many pieces move — `videomotion.ts`. Absent on an older bill is none. */
+  readonly motions?: number;
 }
 
 /** Nothing in it at all. A film of no length costs nothing, not a minimum. */
 export const NOTHING_IN_IT: InTheFilm = {
-  seconds: 0, words: 0, looks: 0, joins: 0, mark: false, under: false,
+  seconds: 0, words: 0, looks: 0, joins: 0, mark: false, under: false, motions: 0,
 };
 
 /** One row of the bill: what it is, how many, what each costs. */
 export interface BillLine {
   /** Matched to a word on the screen by `i18n`, never a sentence from here. */
-  readonly id: 'film' | 'words' | 'look' | 'join' | 'mark' | 'under';
+  readonly id: 'film' | 'words' | 'look' | 'join' | 'mark' | 'under' | 'motion';
   readonly count: number;
   readonly each: number;
   readonly credits: number;
@@ -130,6 +133,7 @@ export function inTheFilm(edit: Edit, mark: boolean): InTheFilm {
     joins: real.filter((one, i) => i > 0 && one.join && one.join !== 'cut').length,
     mark,
     under: Boolean(edit.under),
+    motions: real.filter((one) => moves(one.motion)).length,
   };
 }
 
@@ -159,6 +163,7 @@ export function billFor(what: InTheFilm): Bill {
     { id: 'join', count: counted(what.joins), each: CREDITS.filmJoin },
     { id: 'mark', count: what.mark ? 1 : 0, each: CREDITS.filmMark },
     { id: 'under', count: what.under ? 1 : 0, each: CREDITS.filmUnder },
+    { id: 'motion', count: counted(what.motions ?? 0), each: CREDITS.filmMotion },
   ];
 
   const used = parts.filter((one) => one.count > 0);

@@ -172,6 +172,7 @@ export const priced: {
   { what: 'a join between two shots (in the browser)', credits: CREDITS.filmJoin, cost: 0 },
   { what: 'a mark on the film (in the browser)', credits: CREDITS.filmMark, cost: 0 },
   { what: 'a song laid under the film (in the browser)', credits: CREDITS.filmUnder, cost: 0 },
+  { what: 'the picture moving (in the browser)', credits: CREDITS.filmMotion, cost: 0 },
   { what: 'bouncing a mix out (in the browser)', credits: CREDITS.mixOut, cost: 0 },
   { what: 'taking a post off the device (in the browser)', credits: CREDITS.postOut, cost: 0 },
 

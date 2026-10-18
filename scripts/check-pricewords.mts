@@ -39,7 +39,7 @@ const entries = [...i18n.matchAll(/"([\w.]+)": \{ en: "((?:[^"\\]|\\.)*)", af: "
 const allNumbers = (text: string): string => (text.match(/\d+/g) ?? []).join(',');
 ok(`the word table reads (${entries.length} entries)`, entries.length > 2000);
 
-const five = CREDITS.filmWords + CREDITS.filmLook + CREDITS.filmJoin + CREDITS.filmMark + CREDITS.filmUnder;
+const five = CREDITS.filmWords + CREDITS.filmLook + CREDITS.filmJoin + CREDITS.filmMark + CREDITS.filmUnder + CREDITS.filmMotion;
 
 /**
  * The sentences that may name a price, what they say in English, and what
@@ -50,8 +50,8 @@ const CLAIMS: readonly { readonly name: string; readonly en: RegExp; readonly is
   { name: 'bouncing the mix out', en: /Bouncing (?:a|the) finished mix out(?: of it)? is (\d+) credits a minute/, is: () => [CREDITS.mixOut] },
   { name: 'stems and a voice change', en: /Splitting stems is (\d+) credits a minute, changing a voice (\d+)/, is: () => [CREDITS.stems, CREDITS.voiceChange] },
   { name: 'putting a film together', en: /together is (?:what costs: )?(\d+) credits per 30 seconds/, is: () => [CREDITS.filmOut] },
-  { name: 'the five film functions', en: /words (\d+), a look (\d+), a transition (\d+), your logo (\d+), a track under it (\d+)/, is: () => [CREDITS.filmWords, CREDITS.filmLook, CREDITS.filmJoin, CREDITS.filmMark, CREDITS.filmUnder] },
-  { name: 'an advert and a dressed film', en: /using all five is (\d+); a dressed three-minute film is (\d+)/, is: () => [CREDITS.filmOut + five, 6 * CREDITS.filmOut + five] },
+  { name: 'the six film functions', en: /words (\d+), a look (\d+), a transition (\d+), your logo (\d+), a track under it (\d+), movement (\d+)/, is: () => [CREDITS.filmWords, CREDITS.filmLook, CREDITS.filmJoin, CREDITS.filmMark, CREDITS.filmUnder, CREDITS.filmMotion] },
+  { name: 'an advert and a dressed film', en: /using all six is (\d+); a dressed three-minute film is (\d+)/, is: () => [CREDITS.filmOut + five, 6 * CREDITS.filmOut + five] },
   { name: 'the marketing desk', en: /plan is (\d+) credits[;,] eight advert lines (?:are )?(\d+)/, is: () => [CREDITS.marketPlan, CREDITS.adLines] },
   { name: 'dubbing', en: /(\d+) credits a minute/, is: () => [CREDITS.dub] },
   { name: 'the photo editor', en: /picture out is (\d+) credits(?:; the AI magic touch is (\d+); finding the things in a photo is (\d+); a chart set by AI from your words is (\d+); a vector picture drawn by AI is (\d+))?/, is: () => [CREDITS.postOut, CREDITS.repaint, CREDITS.grab, CREDITS.chart, CREDITS.vector] },

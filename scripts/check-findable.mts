@@ -138,6 +138,7 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   filmJoin: ['faded'],
   filmMark: ['mark'],
   filmUnder: ['under'],
+  filmMotion: ['movement'],
   /* ── Not a room, and not a thing anybody goes looking for ───────────
  
      The style translation is the way OUT of a refusal: somebody types

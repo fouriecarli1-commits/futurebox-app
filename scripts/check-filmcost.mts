@@ -50,9 +50,9 @@ ok('  and carries no rows to show',
 const film = (over: Partial<InTheFilm>): InTheFilm => ({ ...NOTHING_IN_IT, ...over });
 
 const BARE = film({ seconds: 20 });
-const ADVERT = film({ seconds: 20, words: 1, looks: 1, joins: 1, mark: true, under: true });
-const LONGER = film({ seconds: 90, words: 3, looks: 3, joins: 2, mark: true, under: true });
-const DRESSED = film({ seconds: 180, words: 6, looks: 6, joins: 5, mark: true, under: true });
+const ADVERT = film({ seconds: 20, words: 1, looks: 1, joins: 1, mark: true, under: true, motions: 1 });
+const LONGER = film({ seconds: 90, words: 3, looks: 3, joins: 2, mark: true, under: true, motions: 2 });
+const DRESSED = film({ seconds: 180, words: 6, looks: 6, joins: 5, mark: true, under: true, motions: 4 });
 
 const bareBill = billFor(BARE);
 ok('a bare twenty-second film is one half-minute at the film rate',
@@ -63,18 +63,18 @@ ok('  and a floor of one unit, so the shortest work is not free',
   billFor(film({ seconds: 1 })).total === CREDITS.filmOut);
 
 const advertBill = billFor(ADVERT);
-ok('a twenty-second advert using all five functions is 40',
-  advertBill.total === 40,
+ok('a twenty-second advert using all six functions is 46',
+  advertBill.total === 46,
   `${advertBill.total} credits · ${rand(advertBill.total)} · ${perMonth(advertBill.total)} a month on Maker`);
 
 const longerBill = billFor(LONGER);
-ok('a minute and a half using all five is 60',
-  longerBill.total === 60,
+ok('a minute and a half using all six is 66',
+  longerBill.total === 66,
   `${longerBill.total} credits · ${rand(longerBill.total)} · ${perMonth(longerBill.total)} a month on Maker`);
 
 const dressedBill = billFor(DRESSED);
-ok('a three-minute music video using all five is 90',
-  dressedBill.total === 90,
+ok('a three-minute music video using all six is 96',
+  dressedBill.total === 96,
   `${dressedBill.total} credits · ${rand(dressedBill.total)} · ${perMonth(dressedBill.total)} a month on Maker`);
 
 /* ── And "affordable" as a number rather than a feeling ────────────────── */
@@ -128,11 +128,11 @@ ok('  and the same for looks and transitions',
    ceiling is still a known number; it is just the sum of five different
    ones now. */
 const FIVE = CREDITS.filmWords + CREDITS.filmLook + CREDITS.filmJoin
-  + CREDITS.filmMark + CREDITS.filmUnder;
+  + CREDITS.filmMark + CREDITS.filmUnder + CREDITS.filmMotion;
 
-ok('  so the dearest film of a length is the base plus all five functions',
+ok('  so the dearest film of a length is the base plus all six functions',
   billFor(film({
-    seconds: 180, words: 99, looks: 99, joins: 99, mark: true, under: true,
+    seconds: 180, words: 99, looks: 99, joins: 99, mark: true, under: true, motions: 99,
   })).total === billFor(film({ seconds: 180 })).total + FIVE,
   'whatever somebody piles on, the price has a known top');
 
@@ -228,6 +228,7 @@ const eachSaid: [string, RegExp, number][] = [
   ['a transition', /a transition (\d+)/g, CREDITS.filmJoin],
   ['your logo', /your logo (\d+)/g, CREDITS.filmMark],
   ['a track under it', /a track under it (\d+)/g, CREDITS.filmUnder],
+  ['movement', /movement (\d+)/g, CREDITS.filmMotion],
 ];
 for (const [what, re, charged] of eachSaid) {
   const said = quoted(what, re);
@@ -236,7 +237,7 @@ for (const [what, re, charged] of eachSaid) {
     `cards say ${said.join(', ') || 'nothing'}; the file charges ${charged}`);
 }
 
-const advertSaid = quoted('advert', /advert using all five is (\d+)/g);
+const advertSaid = quoted('advert', /advert using all six is (\d+)/g);
 ok('  and the advert they quote is the advert they will be billed',
   advertSaid.length >= 3 && advertSaid.every((n) => n === advertBill.total),
   `cards say ${advertSaid.join(', ')}; the bill is ${advertBill.total}`);
