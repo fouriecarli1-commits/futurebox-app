@@ -525,6 +525,45 @@ try {
     'the file input is not where this walk looks for it');
   await page.waitForTimeout(1200);
 
+  /* ── Its own size, and in and out ────────────────────────────────────
+     The owner, 18 October 2026: a photograph was cut to the square every
+     post starts on, and there was no way to see it whole or to zoom. Words
+     are already on this canvas, so the photo came in on the square; "Its own
+     size" gives the canvas the photo's 4:3, and the zoom bar goes in and
+     back out. Then back to the square the rest of this walk measures on. */
+  await bench('frame');
+  const squareId = await page.evaluate(() => document.querySelector('[data-postshape][aria-pressed="true"]')?.getAttribute('data-postshape') ?? null);
+  check('  (the shape it was on can be read, to go back to it)', squareId !== null);
+  const own = page.locator('[data-postshape="own"]').first();
+  check('the frame offers the photo\u2019s own size', (await own.count()) === 1);
+  if ((await own.count()) === 1) {
+    await own.click();
+    await page.waitForTimeout(500);
+    const shapeNow = await page.evaluate(() => {
+      const one = document.querySelector('[data-postcanvas]');
+      return one ? one.width / one.height : 0;
+    });
+    check('  and pressed, the canvas is the photo\u2019s shape, nothing cut off',
+      Math.abs(shapeNow - 4 / 3) < 0.02, `${shapeNow.toFixed(3)}:1`);
+    if (squareId) await page.locator(`[data-postshape="${squareId}"]`).first().click();
+    await page.waitForTimeout(400);
+  }
+  /* The frame bench is shut first, the way a hand would before zooming. */
+  await bench('frame');
+  await page.locator('[data-postviewopen]').first().click();
+  await page.locator('[data-postviewin]').first().click();
+  await page.locator('[data-postviewin]').first().click();
+  await page.waitForTimeout(300);
+  const zoomed = await page.locator('[data-postcanvas]').first().evaluate((one) => one.style.transform);
+  check('the zoom bar goes in', /scale\(1\.5/.test(zoomed), zoomed || 'no transform');
+  await page.locator('[data-postviewfit]').first().click();
+  await page.waitForTimeout(300);
+  const fittedBack = await page.locator('[data-postcanvas]').first().evaluate((one) => one.style.transform);
+  check('  and Fit shows the whole picture again', !fittedBack, fittedBack);
+  await page.locator('[data-postviewshut]').first().click();
+  check('  and the bar folds away again, off the top of the photograph',
+    (await page.locator('[data-postview]').count()) === 0 && (await page.locator('[data-postviewopen]').count()) === 1);
+
   /* ── Simple, or every choice there is ───────────────────────────────
  
      The owner's list, 7 October 2026: *"Simple en advances opsies."*

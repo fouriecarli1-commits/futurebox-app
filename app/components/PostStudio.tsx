@@ -383,6 +383,23 @@ type Squeeze = keyof typeof SQUEEZE;
 const CANVAS_MOST = { side: 16384, pixels: 16_777_216 } as const;
 
 /**
+ * The longest side a photograph is kept at when it comes in.
+ *
+ * The owner, 18 October 2026: *"Die photo editor laat nie groter foto's toe
+ * nie."* It did not: a photo was shrunk to the canvas's own longest side —
+ * 1080 — as it came in, then cut to the canvas's shape, so a wide picture on
+ * the square that every post starts on lost both its ends. Now a photo is
+ * kept at up to 4096 a side, which is the most a phone will draw at the
+ * export's full size (4096 × 4096 is the 16.7-megapixel line above), and on
+ * an empty canvas the canvas takes the photo's own shape.
+ */
+const OWN_MOST = 4096;
+/** The longest side a canvas of a photo's own shape is given at least. */
+const POST_LEAST = 1080;
+/** How far the view goes in. Out is the whole picture on the screen. */
+const VIEW_MOST = 5;
+
+/**
  * The first free row for a new line of words, so lines added one after
  * another land under each other instead of in one pile on the same spot.
  */
@@ -882,6 +899,10 @@ export default function PostStudio({
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [size, setSize] = useState<PostSize>(POST_SIZES[0]);
+  /* Whether she picked the shape herself — a shape button, a size of her
+     own, a template. Then a photo brought in keeps to it; otherwise the
+     first photo on an empty canvas gives the canvas its own shape. */
+  const shapeChosen = useRef(false);
   const [picture, setPicture] = useState<HTMLImageElement | null>(null);
   /* Which part of it shows, and how close. `lib/postcrop.ts` holds the
      maths and the reason the pan is a fraction rather than a number of
@@ -936,6 +957,8 @@ export default function PostStudio({
   /* How close the glass is looked at — a magnifier, not the post's own crop,
      so it works in every tool and changes nothing that is saved. */
   const [view, setView] = useState<{ scale: number; x: number; y: number }>({ scale: 1, x: 0, y: 0 });
+  /* Whether the zoom bar is unfolded — see `data-postview`. */
+  const [viewOpen, setViewOpen] = useState(false);
   /* The brush is a switch of its own: on, a finger paints; off, the photo can
      be moved as usual. The owner, 17 October 2026: *"Daar moet dan 'n brush
      button wees."* */
@@ -3040,6 +3063,49 @@ export default function PostStudio({
 
 
   /**
+   * A canvas the photograph's own shape — and its own size, unless that is
+   * smaller than a post: a 400-pixel picture would make a 400-pixel post,
+   * which every platform shows soft. So the longest side is at least 1080,
+   * the size the platforms ask for, and the shape is the photo's.
+   */
+  const ownSizeOf = (photoW: number, photoH: number): PostSize => {
+    const up = Math.max(1, POST_LEAST / Math.max(photoW, photoH));
+    const w = Math.round(photoW * up);
+    const h = Math.round(photoH * up);
+    return {
+      id: `own_${w}x${h}`,
+      name: t('post.ownSize', 'Its own size'),
+      width: w,
+      height: h,
+      furniture: false,
+      what: {
+        en: `The photo's own shape, ${w}×${h}. Nothing is cut off it.`,
+        af: `Die foto se eie vorm, ${w}×${h}. Niks word afgesny nie.`,
+      },
+    };
+  };
+
+  /**
+   * In and out, about a point that stays where it is.
+   *
+   * The owner, 18 October 2026: *"as die dimensies sukkel om in die skerm te
+   * pas moet die photo editor sommer self die foto kleiner zoom dat dit in
+   * pas, en die gebruiker moet dan in en uit kan zoom."* Out — 1× — is the
+   * whole picture fitted to the screen, which is where every picture starts
+   * whatever its size; in goes to 5×. `about` is a point on the screen,
+   * from the middle of the photograph's space, that stays under the finger
+   * or the mouse; the buttons and the slider zoom about the middle.
+   */
+  const viewTo = (next: number, about: { readonly x: number; readonly y: number } = { x: 0, y: 0 }): void => {
+    setView((was) => {
+      const scale = Math.min(VIEW_MOST, Math.max(1, next));
+      if (scale === 1) return { scale: 1, x: 0, y: 0 };
+      const by = scale / was.scale;
+      return { scale, x: about.x - (about.x - was.x) * by, y: about.y - (about.y - was.y) * by };
+    });
+  };
+
+  /**
    * A picture off her phone, through the guard that reads pixels.
    *
    * The first version of this handed the file straight to `new Image()`.
@@ -3057,7 +3123,11 @@ export default function PostStudio({
   const bringIn = async (file: File | null): Promise<void> => {
     if (!file) return;
     setSaid('');
-    const made = await fit(file, Math.max(size.width, size.height));
+    /* Nothing on the canvas yet: the canvas becomes the photo's own size,
+       rather than the photo being cut to a square nobody chose. With work
+       already there, the canvas stays and "Its own size" is one press. */
+    const fresh = picture === null && words.length === 0 && marks.length === 0 && !shapeChosen.current;
+    const made = await fit(file, OWN_MOST);
     if (!made.ok) {
       setSaid(made.why === 'too_many_pixels'
         ? t('post.tooMany', 'That picture is too large to open on a phone. A photo straight off a camera often is.')
@@ -3069,6 +3139,8 @@ export default function PostStudio({
       /* A step like any other, so bringing the wrong one in on top of work
          already done is one press to take back rather than a lost evening. */
       before(t('post.stepBring', 'bringing a picture in'));
+      if (fresh) setSize(ownSizeOf(img.naturalWidth, img.naturalHeight));
+      setView({ scale: 1, x: 0, y: 0 });
       setPicture(img);
       setCrop(MIDDLE);
       setLook(PLAIN);
@@ -4107,6 +4179,7 @@ export default function PostStudio({
       /* A step like any other, and one step for the whole press: Put back
          returns the photograph AND the words that were here before. */
       before(t('post.stepTemplate', 'putting a template on'), true);
+      shapeChosen.current = true;
       setSize(shape);
       if (tpl.bgGradient?.includes('#')) {
         const match = tpl.bgGradient.match(/#[a-fA-F0-9]{6}/);
@@ -4138,6 +4211,7 @@ export default function PostStudio({
   };
 
   const handleApplyCanvasSize = (w: number, h: number, label: string): void => {
+    shapeChosen.current = true;
     const existing = POST_SIZES.find((s) => s.width === w && s.height === h);
     if (existing) {
       setSize(existing);
@@ -6886,12 +6960,32 @@ export default function PostStudio({
                the button by the words on it, which are translated. */
             data-postshape={one.id}
             aria-pressed={one.id === size.id}
-            onClick={() => setSize(one)}
+            onClick={() => {
+              shapeChosen.current = true;
+              setSize(one);
+            }}
             className={`${LEEG} ${one.id === size.id ? GEKIES : ''}`}
           >
             {one.name} · {one.width}×{one.height}
           </button>
         ))}
+        {/* The photograph's own size — the canvas it would have had if it
+            had come in on an empty one. Wide or tall, nothing cut off. */}
+        {picture && (
+          <button
+            type="button"
+            data-postshape="own"
+            aria-pressed={size.id === ownSizeOf(picture.naturalWidth, picture.naturalHeight).id}
+            onClick={() => {
+              setSize(ownSizeOf(picture.naturalWidth, picture.naturalHeight));
+              setCrop(MIDDLE);
+              setView({ scale: 1, x: 0, y: 0 });
+            }}
+            className={`${LEEG} ${size.id === ownSizeOf(picture.naturalWidth, picture.naturalHeight).id ? GEKIES : ''}`}
+          >
+            {t('post.ownSize', 'Its own size')} · {ownSizeOf(picture.naturalWidth, picture.naturalHeight).width}×{ownSizeOf(picture.naturalWidth, picture.naturalHeight).height}
+          </button>
+        )}
       </div>
       <div className={`mt-2 ${RY}`}>
         <button
@@ -8508,6 +8602,7 @@ export default function PostStudio({
           steps.current = { back: [], forward: [] };
           setTold((n) => n + 1);
           setPost(freshId());
+          shapeChosen.current = false;
           setWords([]);
           setWordOn(null);
           setPicture(null);
@@ -9596,7 +9691,18 @@ export default function PostStudio({
 
   /* ── The photograph, as big as the space allows ───────────────────── */
   const photo = (
-    <div ref={stage} data-poststage className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp ? 'items-start pt-2' : 'items-center'}`}>
+    <div
+      ref={stage}
+      data-poststage
+      className={`relative flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden ${panelUp ? 'items-start pt-2' : 'items-center'}`}
+      onWheel={(event) => {
+        const box = event.currentTarget.getBoundingClientRect();
+        viewTo(view.scale * (event.deltaY < 0 ? 1.15 : 1 / 1.15), {
+          x: event.clientX - (box.left + box.width / 2),
+          y: event.clientY - (box.top + box.height / 2),
+        });
+      }}
+    >
       <canvas
         ref={canvas}
         data-postcanvas
@@ -9633,6 +9739,89 @@ export default function PostStudio({
           cursor: cropBox || traced ? 'crosshair' : movable ? 'grab' : 'default',
         }}
       />
+      {/* ── In and out ──────────────────────────────────────────────────
+          The owner: *"in en uit kan zoom, met 'n easy scroll button."* A
+          slider and a step either side, and "Fit" for the whole picture.
+          The mouse wheel does the same over the photograph, about the
+          mouse; two fingers already did on a phone. */}
+      {viewOpen ? (
+      <div
+        data-postview
+        /* Top right: the tools pop up over the lower half of the photograph
+           and would cover a bar at its foot, and undo sits top left. Folded
+           to one button until it is wanted, because open it covers the top
+           of the photograph, where a finger may want to draw or drag. */
+        className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-xl px-1 py-1"
+        style={{ background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` }}
+      >
+        <button
+          type="button"
+          data-postviewout
+          onClick={() => viewTo(view.scale / 1.25)}
+          disabled={view.scale <= 1}
+          aria-label={t('post.zoomOut', 'Zoom out')}
+          className="flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-40"
+          style={{ color: PHOTO.ink }}
+        >
+          <ZoomOut className="h-4 w-4" />
+        </button>
+        <input
+          type="range"
+          data-postviewslider
+          min={1}
+          max={VIEW_MOST}
+          step={0.05}
+          value={view.scale}
+          onChange={(event) => viewTo(Number(event.target.value))}
+          aria-label={t('post.zoomHow', 'How close')}
+          className="w-20 sm:w-28"
+          style={{ accentColor: PHOTO.accent }}
+        />
+        <button
+          type="button"
+          data-postviewin
+          onClick={() => viewTo(view.scale * 1.25)}
+          disabled={view.scale >= VIEW_MOST}
+          aria-label={t('post.zoomIn', 'Zoom in')}
+          className="flex h-11 w-11 items-center justify-center rounded-lg disabled:opacity-40"
+          style={{ color: PHOTO.ink }}
+        >
+          <ZoomIn className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          data-postviewfit
+          onClick={() => viewTo(1)}
+          className="flex h-11 min-w-11 items-center justify-center rounded-lg px-2 text-xs font-bold tabular-nums"
+          style={{ color: PHOTO.ink }}
+          aria-label={t('post.viewReset', 'See the whole photo again')}
+        >
+          {view.scale > 1 ? `${view.scale.toFixed(1)}×` : t('post.zoomFit', 'Fit')}
+        </button>
+        <button
+          type="button"
+          data-postviewshut
+          onClick={() => setViewOpen(false)}
+          aria-label={t('post.zoomShut', 'Put the zoom away')}
+          className="flex h-11 w-9 items-center justify-center rounded-lg"
+          style={{ color: PHOTO.ink }}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      ) : (
+        <button
+          type="button"
+          data-postviewopen
+          onClick={() => setViewOpen(true)}
+          aria-label={t('post.zoomOpen', 'Zoom in and out')}
+          className="absolute right-2 top-2 z-10 flex h-11 min-w-11 items-center justify-center gap-1 rounded-xl px-2 text-xs font-bold tabular-nums"
+          style={{ background: PHOTO.chip, border: `1px solid ${PHOTO.edge}`, color: PHOTO.ink }}
+        >
+          <ZoomIn className="h-4 w-4" />
+          {view.scale > 1 ? `${view.scale.toFixed(1)}×` : null}
+        </button>
+      )}
       {/* ── The before-and-after line, over the photograph ─────────────
           Dragged sideways: left of it the photograph as it came, right of
           it as it is now (drawn by `draw`). Placed from the canvas's own

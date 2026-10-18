@@ -31,6 +31,15 @@ try {
   await studio(page);
   await toRoom(page, 'Photo Editor');
   await page.waitForTimeout(800);
+  /* Square chosen first, on purpose. A photo on an empty canvas now gives the
+     canvas its own shape (18 October 2026) — this walk measures a wide
+     picture on a SQUARE post, so it chooses the square the way she would. */
+  await page.locator('[data-cutbench="frame"]').first().click();
+  await page.waitForTimeout(400);
+  await page.locator('[data-postshape="square"]').first().click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-cutbench="frame"]').first().click();
+  await page.waitForTimeout(300);
   const pic = page.locator('[data-cutbench="pic"]').first();
   await pic.click();
   await page.waitForTimeout(400);
