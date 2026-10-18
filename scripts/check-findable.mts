@@ -154,6 +154,8 @@ const FINDABLE: Record<string, readonly string[] | null> = {
   styleword: null,
   mixOut: ['mix'],
   postOut: ['post'],
+  hookShort: ['hook'],
+  hookReel: ['hook'],
   /* The room says "change what is IN the picture by saying what to change".
      Named with its own phrase: mine was "repaint", which appears nowhere a
      member will ever read.

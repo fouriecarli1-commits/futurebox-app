@@ -175,9 +175,11 @@ console.log('');
    waarde uitwerk"* — a sleeve can now be bought with credits through
    `/api/artmarket`, and the room's AI tab makes pictures for credits, so it
    is a room a credit can leave. Two rooms are left that cannot spend. */
-const FREE = ['collab', 'hooks_feed'];
+/* 18 October 2026: Hooks left it too. The owner: *"Hooks moet darem 3
+   krediete kos. En 6 krediete vir 30s."* One room is left that cannot spend. */
+const FREE = ['collab'];
 const nowFree = [...spend].filter(([, routes]) => routes.length === 0).map(([room]) => room).sort();
-ok('two rooms cannot spend a credit at all',
+ok('one room cannot spend a credit at all',
   JSON.stringify(nowFree) === JSON.stringify([...FREE].sort()),
   `${JSON.stringify(nowFree)} against ${JSON.stringify(FREE)} —`
   + ' `docs/OPEN-QUESTIONS.md` says which two, and a write-up whose figures'

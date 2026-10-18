@@ -175,6 +175,8 @@ export const priced: {
   { what: 'the picture moving (in the browser)', credits: CREDITS.filmMotion, cost: 0 },
   { what: 'bouncing a mix out (in the browser)', credits: CREDITS.mixOut, cost: 0 },
   { what: 'taking a post off the device (in the browser)', credits: CREDITS.postOut, cost: 0 },
+  { what: 'a 15-second hook (cut in the browser)', credits: CREDITS.hookShort, cost: 0 },
+  { what: 'a 30-second hook (cut in the browser)', credits: CREDITS.hookReel, cost: 0 },
 
   { product: true,
     decided: 'the owner, 11 Oct, with the engine cost and the profit in rand in front of her: "a background out of video R6.50"',

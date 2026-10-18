@@ -94,6 +94,8 @@ const PRICES: Readonly<Partial<Record<SurfaceId, readonly Price[]>>> = {
   ],
   photo: [
     { key: 'guide.p.postOut', en: 'Taking the finished picture off the device', credits: CREDITS.postOut },
+    { key: 'guide.p.hookShort', en: 'A 15-second hook', credits: CREDITS.hookShort },
+    { key: 'guide.p.hookReel', en: 'A 30-second hook', credits: CREDITS.hookReel },
     { key: 'guide.p.cutout', en: 'The background taken out, per five seconds of work', credits: CREDITS.cutout },
     { key: 'guide.p.erase', en: 'An item taken out, per five seconds of work', credits: CREDITS.erase },
     { key: 'guide.p.grab', en: 'Grabbing the words out of a picture', credits: CREDITS.grab },

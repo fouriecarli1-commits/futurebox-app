@@ -505,6 +505,15 @@ export const CREDITS = {
      here and nowhere else. The browser renders the export, so all of it is
      margin. */
   postOut: 5,
+  /**
+   * A hook cut from a song or a video, by its length. The owner, 18 October
+   * 2026: *"Hooks moet darem 3 krediete kos. En 6 krediete vir 30s."* The
+   * clip is cut on the device, so — like `postOut` — the charge is the
+   * price of taking it, made before it is cut and once per moment: the same
+   * moment of the same song cut again costs nothing.
+   */
+  hookShort: 3,
+  hookReel: 6,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /**
@@ -1522,4 +1531,5 @@ export function monthKey(tier: Tier, when: Date = new Date()): string {
   return `${tier}-${month}`;
 }
 
-
+/** What a hook of `seconds` costs: the reel's price past fifteen seconds. */
+export const hookCredits = (seconds: number): number => (seconds > 15 ? CREDITS.hookReel : CREDITS.hookShort);

@@ -158,6 +158,11 @@ try {
   const found = await moments.count();
   check('moments were found in the video’s own sound', found > 0, `${found} offered`);
   check('and the file is named on screen', /my own footage/.test(await says()));
+  /* The owner, 18 October 2026: *"Hooks moet darem 3 krediete kos. En 6
+     krediete vir 30s."* A paid press says its price before it is pressed. */
+  const cutSays = found > 0 ? await moments.first().innerText() : '';
+  check('and the cut button says what it costs: 3 credits for 15 seconds',
+    /3\s*credits/i.test(cutSays), cutSays);
 
   /* ── Hearing it before spending a cut on it ─────────────────────────
 

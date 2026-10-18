@@ -136,6 +136,9 @@ const NAMED_ELSEWHERE: Record<string, string> = {
     + ' ROOMS and what they cost to run, not every press inside one — a line'
     + ' for every action would be read by nobody, which is the fault this'
     + ' list exists to avoid',
+  hookShort: 'three credits for a fifteen-second hook, on the cut button and the'
+    + ' room\'s own price tag. The cards name ROOMS, not every press inside one',
+  hookReel: 'six credits for a thirty-second reel, the same way as hookShort',
   song: 'the headline of every card, as credits and as songs',
   halfSong: 'the same price twice; the card counts full songs',
   video: 'the headline of every card, as music videos',

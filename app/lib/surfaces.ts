@@ -610,7 +610,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       af: "Sien dit op jou kanaal",
     },
     purpose:
-      "Short vertical clips — the fifteen seconds that make somebody stop scrolling. A finished clip appears on their channel under Your videos on its own; there is nothing to press to put it there.",
+      `Short vertical clips — the fifteen seconds that make somebody stop scrolling. A 15-second hook costs ${CREDITS.hookShort} credits and a 30-second reel ${CREDITS.hookReel}, charged when it is cut and once per moment, so cutting the same moment again costs nothing. A finished clip appears on their channel under Your videos on its own; there is nothing to press to put it there.`,
     helps: {
       en: "I can tell you where the good bit starts, write the caption, and set how long the clip runs.",
       af: "Ek kan jou sê waar die goeie deel begin, die onderskrif skryf, en stel hoe lank die liedjie loop.",

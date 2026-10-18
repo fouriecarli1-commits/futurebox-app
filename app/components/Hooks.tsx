@@ -51,6 +51,7 @@ import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '.
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
 import type { HookCarry } from '../lib/hookhandover';
 import { accessToken } from '../lib/cloud';
+import { creditsSaid, hookCredits } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
 import History from './History';
@@ -570,7 +571,36 @@ export default function Hooks({
     if (heardFrom.current?.own) URL.revokeObjectURL(heardFrom.current.url);
   }, []);
 
+  /**
+   * Paid for, then cut. The owner, 18 October 2026: *"Hooks moet darem 3
+   * krediete kos. En 6 krediete vir 30s."* The clip is cut on this device,
+   * so the route only charges — once per moment, so the same moment cut
+   * again is not charged again — and the cut happens only on a yes. The
+   * route's own words say why when it is a no.
+   */
+  const payForCut = async (hook: Hook): Promise<boolean> => {
+    const from = shared ? `shared:${shared.id}` : video ? `video:${video.name}:${video.file.size}` : selected ? `song:${selected.id}` : '';
+    if (!from) return false;
+    try {
+      const token = await accessToken();
+      const answer = await fetch('/api/hooks/cut', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ moment: `${from}:${Math.round(hook.startSeconds * 10) / 10}`, seconds }),
+      });
+      if (answer.ok) return true;
+      const why = (await answer.json().catch(() => ({}))) as { message?: string };
+      setProblem(why.message ?? t('hooks.notPaid', 'That clip could not be paid for just now, so it was not cut.'));
+      return false;
+    } catch {
+      setProblem(t('hooks.notPaid', 'That clip could not be paid for just now, so it was not cut.'));
+      return false;
+    }
+  };
+
   const cut = async (hook: Hook, index: number) => {
+    setProblem('');
+    if (!(await payForCut(hook))) return;
     /* A video is trimmed; a song is drawn. Two different jobs behind one
        button, and the room says which is happening because they take
        different amounts of time and produce different things. */
@@ -667,8 +697,8 @@ export default function Hooks({
       });
       const ext = extensionFor(result.mimeType);
       setClip({ url: URL.createObjectURL(result.blob), blob: result.blob, ext });
-      // Cutting is free, so this is not a receipt — it is so that the clip you
-      // cut and did not download is still there tomorrow.
+      // Kept so that the clip she paid for and did not download is still
+      // there tomorrow.
       void rememberMake(
         {
           id: makeId('hooks_feed'),
@@ -828,7 +858,7 @@ export default function Hooks({
               {hooks.length === 1 ? t('hooks.foundOne') : `${hooks.length} · ${t('hooks.found')}`}
             </span>
           )}
-          <Cost credits={0} />
+          <Cost credits={hookCredits(seconds)} />
         </div>
       </div>
 
@@ -1150,7 +1180,7 @@ export default function Hooks({
                       className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-extrabold bg-emerald-500 text-onAccent hover:bg-emerald-400 flex items-center justify-center gap-1.5 disabled:opacity-50"
                     >
                       {cutting === index ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Scissors className="w-3.5 h-3.5" />}
-                      {cutting === index ? t('hooks.cutting') : t('hooks.cut')}
+                      {cutting === index ? t('hooks.cutting') : `${t('hooks.cut')} · ${creditsSaid(hookCredits(seconds), t)}`}
                     </button>
                     {/* And on to a real clip for this moment.
 

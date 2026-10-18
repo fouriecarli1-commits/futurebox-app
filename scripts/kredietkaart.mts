@@ -135,6 +135,8 @@ const ABOUT: Readonly<Record<string, keyof typeof CREDITS>> = {
   'a song laid under the film (in the browser)': 'filmUnder',
   'bouncing a mix out (in the browser)': 'mixOut',
   'taking a post off the device (in the browser)': 'postOut',
+  'a 15-second hook (cut in the browser)': 'hookShort',
+  'a 30-second hook (cut in the browser)': 'hookReel',
   'a style word': 'styleword',
   'a marketing plan': 'marketPlan',
   'eight advert lines': 'adLines',
