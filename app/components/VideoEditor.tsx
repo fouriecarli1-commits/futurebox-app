@@ -65,6 +65,8 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import FileSize from './FileSize';
+import { limitOf } from '../lib/squeeze';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Columns2, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
@@ -122,7 +124,7 @@ import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, previewFor, roundFor,
 } from '../lib/videopaint';
 import {
-  GRADES, GRADE_DEFAULT, RATES, bitsFor, gradeFor, rateFor, sizeFor, weighs,
+  GRADES, GRADE_DEFAULT, RATES, SOUND_BITS, bitsFor, bitsWithin, gradeFor, rateFor, sizeFor, tooSmallFor, weighs,
 } from '../lib/videoquality';
 import Note from './Note';
 import Recommend from './Recommend';
@@ -8195,10 +8197,31 @@ async function smallerFrame(url: string): Promise<string> {
                 about money. "About" because the bitrate is a target the
                 encoder is free to miss, and claiming a tenth of a megabyte
                 would be claiming precision this does not have. */}
+            {/* ── At most so big ───────────────────────────────────────
+                The owner, 18 October 2026: *"menend 1mb ens."* A limit is a
+                lower bitrate (`bitsWithin`), so the readout is arithmetic
+                rather than a trial render: the film at the grade's own
+                bitrate against the film under the limit, sound included. */}
+            {(() => {
+              const frame = sizeFor(shapeOf(edit), edit.grade);
+              const fps = rateFor(edit.fps);
+              const bytes = (bits: number): number => (total * (bits + SOUND_BITS)) / 8;
+              const own = bytes(bitsFor(frame.width, frame.height, fps));
+              const under = bytes(bitsWithin(frame.width, frame.height, fps, total, edit.most));
+              return (
+                <FileSize
+                  limit={limitOf(edit.most)}
+                  onLimit={(most) => commit((was) => ({ ...was, most: most ?? undefined }))}
+                  estimate={total > 0 ? { before: own, after: under, scale: 1, fits: !tooSmallFor(total, edit.most) } : null}
+                  busy={false}
+                  kind="film"
+                />
+              );
+            })()}
             <p className="text-sm" style={{ color: INK_DIM }} data-editorweight>
               {(() => {
                 const frame = sizeFor(shapeOf(edit), edit.grade);
-                const mb = weighs(total, bitsFor(frame.width, frame.height, rateFor(edit.fps)));
+                const mb = weighs(total, bitsWithin(frame.width, frame.height, rateFor(edit.fps), total, edit.most));
                 return t('edit.weighs', 'About {mb} MB, at {w}×{h}')
                   .replace('{mb}', String(mb))
                   .replace('{w}', String(frame.width))

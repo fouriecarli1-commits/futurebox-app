@@ -1828,6 +1828,11 @@ jobs:
       - name: A loop from the room is cleaned before it is kept
         run: npm run check:looper
 
+      # The compressor every way out shares: a file is made to fit the size
+      # chosen, quality first and pixels only when it must.
+      - name: A file is made to fit the size she chose
+        run: npm run check:squeeze
+
       # The price list she sets prices off is generated from the code, and
       # this fails when the file on disk is not what the code says today. A
       # price list goes stale silently, because nothing in a build reads

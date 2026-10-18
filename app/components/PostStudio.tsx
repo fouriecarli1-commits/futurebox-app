@@ -92,6 +92,8 @@ import { CUT_LOOK } from '../lib/cutlook';
 import { PHOTO } from '../lib/photolook';
 import { ROOM_HEIGHT_GUESS, useOwnScreen, useRoomHeight } from '../lib/fullroom';
 import { FACES, faceOf, faceReady, type FaceId } from '../lib/postfaces';
+import { fitUnder, type Limit } from '../lib/squeeze';
+import FileSize, { type Estimate } from './FileSize';
 import {
   MIDDLE, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP,
   canMove, moveBy, place, showsThrough, zoomTo, type Crop,
@@ -1412,6 +1414,10 @@ export default function PostStudio({
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [squeeze, setSqueeze] = useState<Squeeze>('standard');
+  /* ── At most so big — `lib/squeeze.ts`, and `FileSize` for the row. */
+  const [limit, setLimit] = useState<Limit>(null);
+  const [estimate, setEstimate] = useState<Estimate | null>(null);
+  const [estimating, setEstimating] = useState(false);
   const grip = useRef<Grip>(null);
 
   /* ── Drawing round a thing, which is the third way to cut one out ──────
@@ -3334,6 +3340,77 @@ export default function PostStudio({
    * refuses in its own words — signed out, no credits — and those sentences
    * are better than any invented here.
    */
+  /** How hard a JPG or WebP is squeezed; a PNG has nothing to squeeze, and
+      `toBlob` is not handed a number that would do nothing. */
+  const squeezedQuality = (): number | undefined => {
+    const how = formatOf(kind);
+    return typeof how.quality === 'number' ? Math.min(1, how.quality * SQUEEZE[squeeze]) : undefined;
+  };
+
+  /**
+   * The file itself, at `times` the post's size and a quality, in the kind
+   * chosen. Drawn fresh each time: the compressor asks for it several times
+   * over while it looks for the best file under a limit, and the size
+   * readout asks for it while nothing is being charged.
+   */
+  const makeFile = async (times: number, quality: number | undefined, type = formatOf(kind).type): Promise<Blob | null> => {
+    const sheet = document.createElement('canvas');
+    const how = formatOf(kind);
+    draw(sheet, false, times);
+    if (!how.clear && !back && type === how.type) {
+      const onto = document.createElement('canvas');
+      onto.width = sheet.width;
+      onto.height = sheet.height;
+      const ctx = onto.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = lastColour || '#ffffff';
+        ctx.fillRect(0, 0, onto.width, onto.height);
+        ctx.drawImage(sheet, 0, 0);
+        sheet.width = onto.width;
+        sheet.height = onto.height;
+        sheet.getContext('2d')?.drawImage(onto, 0, 0);
+      }
+    }
+    return new Promise<Blob | null>((done) => sheet.toBlob(done, type, quality));
+  };
+
+  /* ── The size readout, while the way out is open ───────────────────────
+     The owner: *"dit wys soos jy verstel die file size."* The file is made
+     here exactly as Save would make it — nothing is charged for making it,
+     only for taking it — and measured against the same picture as a PNG,
+     which is the file with nothing squeezed. Only while the save tools are
+     open: nothing else on the screen can change while they cover it, and a
+     full-size picture drawn on every keystroke would be work for nothing.
+     The makers are read through a ref, so the readout follows what can
+     change and not every render. */
+  const maker = useRef({ makeFile, squeezedQuality });
+  maker.current = { makeFile, squeezedQuality };
+  useEffect(() => {
+    if (bench !== 'save') return undefined;
+    let gone = false;
+    setEstimating(true);
+    const soon = window.setTimeout(() => {
+      void (async () => {
+        try {
+          await faceReady();
+          const { makeFile: make, squeezedQuality: quality } = maker.current;
+          const plain = await make(scale, undefined, 'image/png');
+          const fitted = await fitUnder((q, share) => make(scale * share, q), quality(), limit);
+          if (gone) return;
+          setEstimate(fitted
+            ? { before: Math.max(plain?.size ?? 0, fitted.blob.size), after: fitted.blob.size, scale: fitted.scale, fits: fitted.fits }
+            : null);
+        } finally {
+          if (!gone) setEstimating(false);
+        }
+      })();
+    }, 350);
+    return () => {
+      gone = true;
+      window.clearTimeout(soon);
+    };
+  }, [bench, kind, scale, squeeze, limit]);
+
   /**
    * Paid for, then drawn. One road for both ways out.
    *
@@ -3386,31 +3463,14 @@ export default function PostStudio({
       return null;
     }
     await faceReady();
-    const sheet = document.createElement('canvas');
-    const how = formatOf(kind);
-    /* How hard a JPG or WebP is squeezed; a PNG has nothing to squeeze, and
-       `toBlob` is not handed a number that would do nothing. */
-    const quality = typeof how.quality === 'number'
-      ? Math.min(1, how.quality * SQUEEZE[squeeze])
-      : undefined;
-    draw(sheet, false, scale);
-    if (!how.clear && !back) {
-      const onto = document.createElement('canvas');
-      onto.width = sheet.width;
-      onto.height = sheet.height;
-      const ctx = onto.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = lastColour || '#ffffff';
-        ctx.fillRect(0, 0, onto.width, onto.height);
-        ctx.drawImage(sheet, 0, 0);
-        sheet.width = onto.width;
-        sheet.height = onto.height;
-        sheet.getContext('2d')?.drawImage(onto, 0, 0);
-      }
-    }
-    const blob = await new Promise<Blob | null>((done) => sheet.toBlob(done, how.type, quality));
-    if (!blob) setSaid(t('post.noExport', 'That could not be exported.'));
-    return blob;
+    /* Under the limit she chose, if she chose one — `lib/squeeze.ts`. */
+    const fitted = await fitUnder(
+      (quality, share) => makeFile(scale * share, quality),
+      squeezedQuality(),
+      limit,
+    );
+    if (!fitted) setSaid(t('post.noExport', 'That could not be exported.'));
+    return fitted?.blob ?? null;
   };
 
   /**
@@ -8377,6 +8437,10 @@ export default function PostStudio({
         </>
       )}
     </div>
+
+    {/* ── At most so big, and how big it will be ─────────────────────
+        The owner, 18 October 2026: *"menend 1mb ens."* */}
+    <FileSize limit={limit} onLimit={setLimit} estimate={estimate} busy={estimating} kind="picture" />
 
     <div className="space-y-2">
       <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>

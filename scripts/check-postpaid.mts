@@ -214,7 +214,12 @@ const paid = upTo(from(studio, 'const paidPicture'), '\n  };');
    guard I had written happened to be correct and that is not the point — the
    shape is the fault, because the next person copies the shape. */
 ok('  and asks to be charged before it draws it',
-  paid.length > 0 && before(paid, "'/api/post/export'", '.toBlob('),
+  /* The drawing is `makeFile`, reached only through `fitUnder` — which
+     is the compressor, `lib/squeeze.ts`. So the charge must come before
+     that call, and `makeFile` must be where the one `.toBlob(` lives. */
+  paid.length > 0 && before(paid, "'/api/post/export'", 'fitUnder(')
+    && !paid.includes('.toBlob(')
+    && upTo(from(studio, 'const makeFile'), '\n  };').includes('.toBlob('),
   paid.length === 0
     ? 'there is no `paidPicture`, so this rule is reading nothing'
     : 'a charge after the draw is a charge somebody declines by closing the tab');
@@ -257,7 +262,8 @@ ok('the preview is drawn smaller than the frame it stands for',
    `guides`, which is what this rule is about; the third argument only says
    how many times the post's own size, and is never passed on the preview. */
 ok('  and the full size is what the file is drawn at',
-  /draw\(sheet, false, scale\)/.test(studio) && /const want = guides/.test(studio),
+  /draw\(sheet, false, times\)/.test(studio) && /makeFile\(scale \* share, /.test(paid)
+    && /const want = guides/.test(studio),
   'the guides flag is what separates the two, so the file must be the'
   + ' un-guided draw and nothing else');
 ok('    and the preview never asks for a multiple of it',

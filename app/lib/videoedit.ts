@@ -50,7 +50,7 @@ import { joinFits, type Join } from './videojoins';
 import { cleanAudioFx, type AudioFxOn, type SoundJoin } from './audiofx';
 import { gradeCss, type Adjust } from './videoadjust';
 import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
-import { bitsFor, rateFor, sizeFor } from './videoquality';
+import { bitsWithin, rateFor, sizeFor } from './videoquality';
 import { stretches, withSkip, wordsSpan } from './videospan';
 import type { CoverFrom } from './videocover';
 import type { Came } from './filmrights';
@@ -428,6 +428,15 @@ export interface Edit {
    */
   readonly grade?: string;
   readonly fps?: number;
+  /**
+   * The most the file may weigh, in bytes, or nothing for no limit.
+   *
+   * The owner, 18 October 2026: *"mense moet ook die size van die file kan
+   * kies by export, menend 1mb ens."* A film's size is its bitrate times its
+   * length, so a limit is a lower bitrate — `bitsUnder` — and never a
+   * higher one than the grade would have used.
+   */
+  readonly most?: number;
   /**
    * The two red lines, and whether the song comes with the cut.
    *
@@ -1003,7 +1012,7 @@ export function cutFrom(edit: Edit): Cut {
     width: frame.width,
     height: frame.height,
     fps,
-    bits: bitsFor(frame.width, frame.height, fps),
+    bits: bitsWithin(frame.width, frame.height, fps, runs(edit), edit.most),
     ...(edit.underFrom ? { audioFrom: edit.underFrom } : {}),
     ...(edit.underSkips?.length ? { audioSkips: edit.underSkips } : {}),
     ...(edit.frame && edit.frame !== 'none' ? { frame: edit.frame, frameInk: edit.frameInk ?? '#ffffff' } : {}),

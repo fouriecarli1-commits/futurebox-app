@@ -232,7 +232,9 @@ ok('  and a format that keeps the alpha is still offered, and is the one it star
   'the room starting on the lossy one is every see-through post flattened by'
   + ' default, which is the old fault with a choice in front of it');
 ok('    and a format that cannot hold it is never handed a see-through canvas',
-  /if \(!how\.clear && !back\) \{/.test(studio) && /ctx\.fillStyle = lastColour/.test(studio),
+  /* `type === how.type`: the size readout also makes the same picture as a
+     PNG to measure against, and a PNG is not flattened. */
+  /if \(!how\.clear && !back( && type === how\.type)?\) \{/.test(studio) && /ctx\.fillStyle = lastColour/.test(studio),
   'toBlob composites alpha onto BLACK — not white, and not the colour she last'
   + ' had behind it — so the flattening has to be done here, in a colour that'
   + ' was chosen');
@@ -334,7 +336,9 @@ ok('  and they are three families, not one family three times',
    fallback face. The press is where it matters: on mount there is time, and
    on a quick press there is not. */
 ok('  and the export waits for them before it draws',
-  /await faceReady\(\);\s*\n\s*const sheet = document\.createElement/.test(studio),
+  /* The file is drawn inside `fitUnder` (via `makeFile`), so the wait has to
+     come before that call — with nothing but a comment between them. */
+  /await faceReady\(\);\s*\n(\s*\/\*[\s\S]*?\*\/\s*\n)?\s*const fitted = await fitUnder\(/.test(studio),
   'a credit is already spent by that line; a race between the download and a'
   + ' quick press hands her a file in the wrong face and charges for it');
 

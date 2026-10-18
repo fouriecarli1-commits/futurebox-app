@@ -2431,6 +2431,26 @@ try {
       /\d/.test(priceTag),
       `the button reads "${priceTag.trim()}" — a charge met afterwards is a surprise about money`);
 
+    /* ── At most so big ──────────────────────────────────────────────
+       The owner, 18 October 2026: *"menend 1mb ens."* A limit is a lower
+       bitrate, so the size it says must be under the limit — or the row must
+       say that nothing watchable fits. Back to no limit afterwards. */
+    const filmSize = p.locator('[data-filesize]').first();
+    check('the film bench offers a file size, at most', (await filmSize.count()) === 1);
+    if ((await filmSize.count()) === 1) {
+      await p.locator('[data-filesizepick="1000000"]').first().click();
+      await p.waitForTimeout(300);
+      const readout = p.locator('[data-filesizesaid]').first();
+      const after = Number((await readout.getAttribute('data-filesizesaid')) ?? '');
+      const fits = await readout.getAttribute('data-filesizefits');
+      const warned = await p.locator('[data-filesizetoobig]').count();
+      check('  and under 1 MB the film is worked out to come in under it, or says it cannot',
+        (fits === 'true' && after > 0 && after <= 1_000_000) || (fits === 'false' && warned === 1),
+        `says ${after} bytes, fits ${fits}, warned ${warned}`);
+      await p.locator('[data-filesizepick="none"]').first().click();
+      await p.waitForTimeout(200);
+    }
+
     /* ── The bill, and the press that agrees to it ────────────────────────
 
        The owner, 3 October 2026: *"wanneer die video klaar is, en hulle op die

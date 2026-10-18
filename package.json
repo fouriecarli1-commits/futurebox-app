@@ -405,6 +405,7 @@
     "check:tryon": "tsx scripts/check-tryon.mts",
     "check:adlink": "tsx scripts/check-adlink.mts",
     "check:looper": "tsx scripts/check-looper.mts",
+    "check:squeeze": "tsx scripts/check-squeeze.mts",
     "check:kaart": "tsx scripts/check-kaart.mts",
     "check:boekiewalk": "node audit/boekie.mjs",
     "check:plateground": "tsx scripts/check-plateground.mts",

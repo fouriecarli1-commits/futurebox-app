@@ -126,6 +126,40 @@ export function bitsFor(width: number, height: number, fps: number): number {
   return Math.round(Math.min(24_000_000, Math.max(1_000_000, raw)));
 }
 
+/** What the sound takes of a film's bits, which a limit has to leave room for. */
+export const SOUND_BITS = 128_000;
+/** The least a limit may squeeze the picture to: below this it is mush. */
+export const LEAST_BITS = 150_000;
+
+/**
+ * The bitrate under a limit on the file's size.
+ *
+ * The owner, 18 October 2026: *"menend 1mb ens."* A film's file is its bits a
+ * second times its length, so a limit in bytes is a ceiling on the bitrate:
+ * what the limit holds, less the sound, less a tenth because the encoder
+ * aims at a bitrate and may land above it. Never more than the grade's own
+ * bitrate — a limit makes a file smaller, not better — and never below
+ * `LEAST_BITS`, where a long film under a small limit would be colours
+ * rather than a picture; the screen says when that is where it landed.
+ */
+export function bitsUnder(seconds: number, most: number | null | undefined): number | null {
+  if (!most || !(most > 0) || !Number.isFinite(seconds) || seconds <= 0) return null;
+  return Math.max(LEAST_BITS, Math.floor((most * 8 * 0.9) / seconds - SOUND_BITS));
+}
+
+/** The grade's bitrate, lowered to fit a limit when there is one. */
+export function bitsWithin(width: number, height: number, fps: number, seconds: number, most: number | null | undefined): number {
+  const own = bitsFor(width, height, fps);
+  const under = bitsUnder(seconds, most);
+  return under === null ? own : Math.min(own, under);
+}
+
+/** Whether a limit is more than even the leanest picture can come in under. */
+export function tooSmallFor(seconds: number, most: number | null | undefined): boolean {
+  if (!most || !(seconds > 0)) return false;
+  return ((LEAST_BITS + SOUND_BITS) * seconds) / 8 > most * 0.9;
+}
+
 /**
  * Roughly how big the file will be, in megabytes.
  *

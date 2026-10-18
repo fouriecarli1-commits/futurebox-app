@@ -14,7 +14,7 @@
  */
 import {
   BITS_PER_PIXEL, GRADES, GRADE_DEFAULT, RATES, RATE_DEFAULT,
-  bitsFor, gradeFor, rateFor, sizeFor, weighs,
+  SOUND_BITS, bitsFor, bitsWithin, gradeFor, rateFor, sizeFor, tooSmallFor, weighs,
 } from '../app/lib/videoquality';
 import { SHAPES } from '../app/lib/videoedit';
 import { readFileSync } from 'node:fs';
@@ -149,6 +149,22 @@ ok('  and says what the file will weigh before the press',
   /data-editorweight/.test(room) && /weighs\(/.test(room),
   'a number afterwards is a surprise, and on a metered connection a surprise'
   + ' about size is the same kind of problem as a surprise about money');
+
+/* ── A limit on the file ──────────────────────────────────────────────
+   The owner, 18 October 2026: "menend 1mb ens." A limit is a lower bitrate. */
+{
+  const own = bitsFor(1080, 1920, 30);
+  const under = bitsWithin(1080, 1920, 30, 60, 5_000_000);
+  ok('a minute under 5 MB is written at a bitrate whose file, sound and all, fits',
+    ((under + SOUND_BITS) * 60) / 8 <= 5_000_000, `${under} bits a second`);
+  ok('  and a limit never raises the bitrate above the grade\'s own',
+    bitsWithin(1080, 1920, 30, 5, 5_000_000) === own, String(bitsWithin(1080, 1920, 30, 5, 5_000_000)));
+  ok('  and with no limit the grade decides alone', bitsWithin(1080, 1920, 30, 60, undefined) === own);
+  ok('  and a limit nothing watchable fits under is said, not hidden',
+    tooSmallFor(600, 1_000_000) && !tooSmallFor(10, 1_000_000));
+  ok('  and the cut carries the lowered bitrate to the recorder',
+    /bitsWithin\(frame\.width, frame\.height, fps, runs\(edit\), edit\.most\)/.test(readFileSync('app/lib/videoedit.ts', 'utf8')));
+}
 
 if (bad) {
   console.error(`\ncheck:videoquality — ${bad} assertion(s) failed.\n`);

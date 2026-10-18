@@ -299,6 +299,38 @@ try {
     `${said} — a paid button with no price on it is the fault this repo keeps`
     + ' catching');
 
+  /* ── At most so big ──────────────────────────────────────────────────
+
+     The owner, 18 October 2026: *"menend 1mb ens."* — and, of the tool she
+     used: *"dit wys soos jy verstel die file size."* The readout is the file
+     Save would make, made for real and measured; so a JPG under 200 kB has
+     to come back under 200 kB, and say how much smaller it is. Then back to
+     PNG and no limit, because the walk below downloads a see-through PNG. */
+  const sizeRow = page.locator('[data-filesize]').first();
+  check('the way out offers a file size, at most', (await sizeRow.count()) === 1,
+    'there is no row to choose how big the file may be');
+  if ((await sizeRow.count()) === 1) {
+    await page.locator('[data-postkind="jpg"]').first().click();
+    await page.locator('[data-filesizepick="200000"]').first().click();
+    const readout = page.locator('[data-filesizesaid]').first();
+    let after = '';
+    for (let tries = 0; tries < 40; tries += 1) {
+      await page.waitForTimeout(250);
+      const busy = await page.locator('[data-filesize] .animate-spin').count();
+      after = (await readout.getAttribute('data-filesizesaid')) ?? '';
+      if (!busy && after) break;
+    }
+    const fits = await readout.getAttribute('data-filesizefits');
+    check('  and a JPG at most 200 kB is worked out to come in under it',
+      Number(after) > 0 && Number(after) <= 200_000 && fits === 'true',
+      `the readout says ${after || 'nothing'} bytes, fits ${fits}`);
+    const shown = ((await readout.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
+    check('  and says it on the screen as a size', /\d+\s*(kB|MB|B)\b/.test(shown), shown);
+    await page.locator('[data-filesizepick="none"]').first().click();
+    await page.locator('[data-postkind="png"]').first().click();
+    await page.waitForTimeout(300);
+  }
+
   /* ── Nothing behind it ───────────────────────────────────────────────
  
      Transparency is the one thing in this screen that can work perfectly and
