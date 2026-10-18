@@ -253,9 +253,9 @@ export default function Greeting({
 
            The raised surface comes from `globals.css`, which gives it to every
            boxed button in the app rather than to this one. */
-        className="group relative min-h-[44px] w-full rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3.5 text-left transition-all hover:border-emerald-400/60 hover:bg-emerald-500/[0.14] hover:shadow-[0_0_20px_rgba(16,185,129,0.18)] focus-visible:border-emerald-500 flex items-start gap-3 backdrop-blur-sm"
+        className="group relative min-h-[44px] w-full rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3.5 text-left transition-all hover:border-emerald-400/60 hover:bg-emerald-500/[0.14] hover:shadow-[0_0_20px_rgba(16,185,129,0.18)] focus-visible:border-emerald-500 flex items-start gap-3 backdrop-blur-xs"
       >
-        <span className="mt-0.5 grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-all group-hover:border-emerald-400/60 group-hover:bg-emerald-500/25 group-hover:scale-105">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-all group-hover:border-emerald-400/60 group-hover:bg-emerald-500/25 group-hover:scale-105">
           <Icon className="h-[18px] w-[18px] text-emerald-400" />
         </span>
         <span className="min-w-0 flex-1">
@@ -307,7 +307,7 @@ export default function Greeting({
        onto a desktop. */
     <div className="mx-auto w-full max-w-5xl space-y-7 py-2">
       {/* ── Who they are, and where they are ─────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-zinc-900/90 to-zinc-950 p-6 md:p-8 shadow-[0_0_50px_rgba(16,185,129,0.12)]">
+      <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-linear-to-br from-emerald-950/40 via-zinc-900/90 to-zinc-950 p-6 md:p-8 shadow-[0_0_50px_rgba(16,185,129,0.12)]">
         {/* Glow orb */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
 
@@ -336,7 +336,7 @@ export default function Greeting({
           {/* Their own face if they put one on their channel, and the
               generated cover if not — never a grey silhouette, which reads as
               something failing to load. Same rule as the channel itself. */}
-          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border border-emerald-500/40 ring-2 ring-emerald-500/20 md:h-16 md:w-16 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-emerald-500/40 ring-2 ring-emerald-500/20 md:h-16 md:w-16 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -367,13 +367,13 @@ export default function Greeting({
         {said && (
           <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-base font-bold leading-snug text-emerald-300 md:text-lg flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+              <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
               <span>{ask()}</span>
             </p>
             <button
               type="button"
               onClick={() => onGo(said.room)}
-              className="min-h-[44px] w-full flex-shrink-0 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-onAccent font-extrabold inline-flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:opacity-95 transition-all sm:w-auto hover:scale-[1.02]"
+              className="min-h-[44px] w-full shrink-0 px-6 py-3 rounded-xl bg-linear-to-r from-emerald-500 to-teal-500 text-onAccent font-extrabold inline-flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:opacity-95 transition-all sm:w-auto hover:scale-[1.02]"
             >
               {roomName(said.room)}
               <ArrowRight className="w-4 h-4" />
@@ -401,12 +401,12 @@ export default function Greeting({
             onClick={onAllTools}
             className="flex min-h-[48px] w-full items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-3 text-left"
           >
-            <LayoutGrid className="h-5 w-5 flex-shrink-0 text-emerald-400" />
+            <LayoutGrid className="h-5 w-5 shrink-0 text-emerald-400" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-bold text-emerald-300">{t('tools.title', 'All tools')}</span>
               <span className="block text-xs text-emerald-400/70">{t('tools.sub', 'Filters, templates, transitions, effects — every tool, one tap away')}</span>
             </span>
-            <ArrowRight className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+            <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400" />
           </button>
         )}
         {STAGES.map((stage) => (
@@ -415,7 +415,7 @@ export default function Greeting({
               <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-400">
                 {lang === 'af' ? stage.af : stage.en}
               </span>
-              <span className="h-px flex-1 bg-gradient-to-r from-emerald-500/20 via-zinc-800 to-transparent" aria-hidden="true" />
+              <span className="h-px flex-1 bg-linear-to-r from-emerald-500/20 via-zinc-800 to-transparent" aria-hidden="true" />
             </div>
             <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4 [&>:last-child:nth-child(odd)]:col-span-2 [&>:last-child:nth-child(odd)]:py-2.5 [&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-0 md:[&>:last-child:nth-child(odd)]:col-span-1 md:[&>:last-child:nth-child(odd)]:py-3.5 md:[&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-[2rem]">
               {surfacesInStage(stage.id).map((id) => (
@@ -439,7 +439,7 @@ export default function Greeting({
         <button
           type="button"
           onClick={onClose}
-          className="min-h-[44px] w-full sm:w-auto rounded-xl border border-emerald-500/25 bg-zinc-950/70 px-5 py-2.5 text-sm font-bold text-zinc-300 hover:border-emerald-400/60 hover:text-emerald-300 transition-all shadow-sm"
+          className="min-h-[44px] w-full sm:w-auto rounded-xl border border-emerald-500/25 bg-zinc-950/70 px-5 py-2.5 text-sm font-bold text-zinc-300 hover:border-emerald-400/60 hover:text-emerald-300 transition-all shadow-xs"
         >
           {t('hello.skip', 'Not now — take me to the feed')}
         </button>

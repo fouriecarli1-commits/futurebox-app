@@ -62,7 +62,7 @@ export default function Placement({
         <div className="space-y-1.5">
           {['Making the first track', 'Writing words that sing', 'Getting it heard'].map((title) => (
             <div key={title} className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 flex items-center gap-2.5">
-              <Headphones className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <Headphones className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-white truncate">{title}</p>
                 <Credit who={name} />
@@ -73,7 +73,7 @@ export default function Placement({
       )}
 
       {rung.id === 'headline' && (
-        <div className="rounded-xl border border-emerald-500/25 bg-gradient-to-r from-emerald-500/10 to-transparent p-3 space-y-1">
+        <div className="rounded-xl border border-emerald-500/25 bg-linear-to-r from-emerald-500/10 to-transparent p-3 space-y-1">
           <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-emerald-400">
             <Star className="w-3 h-3 fill-current" />
             {t('spon.thisMonth', 'This month on FutureBox')}

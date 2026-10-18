@@ -72,7 +72,7 @@ export default function KidsBanner({
           <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2" data-kidsbannerwhy>
             {why.map(([icon, key, en]) => (
               <li key={key} className="flex items-start gap-2.5 rounded-2xl border border-zinc-800 bg-zinc-900/70 px-3.5 py-3 text-xs leading-relaxed text-zinc-200">
-                <span className="mt-0.5 flex-shrink-0 text-emerald-400">{icon}</span>
+                <span className="mt-0.5 shrink-0 text-emerald-400">{icon}</span>
                 <span>{t(key, en)}</span>
               </li>
             ))}
@@ -82,7 +82,7 @@ export default function KidsBanner({
           <a
             href="/kids"
             data-authkids
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 text-sm font-black text-onAccent shadow-lg shadow-emerald-950 transition-transform hover:scale-[1.02]"
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-linear-to-r from-emerald-500 to-cyan-500 px-6 text-sm font-black text-onAccent shadow-lg shadow-emerald-950 transition-transform hover:scale-[1.02]"
           >
             <Baby className="h-4 w-4" />
             {t('kidsbanner.setUp', 'Set up the kids room')}

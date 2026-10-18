@@ -279,7 +279,7 @@ export default function Pictures({
             {assets.map((one) => {
               const on = chosen === one.id;
               return (
-                <li key={one.id} className="flex-shrink-0 w-24 space-y-1">
+                <li key={one.id} className="shrink-0 w-24 space-y-1">
                   <button
                     type="button"
                     onClick={() => void use(one)}
@@ -293,7 +293,7 @@ export default function Pictures({
                     <img src={one.thumb} alt={one.name} className="w-full h-full object-cover" />
                     {on && (
                       <span className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
-                        <Check className="w-6 h-6 text-white drop-shadow" />
+                        <Check className="w-6 h-6 text-white drop-shadow-sm" />
                       </span>
                     )}
                   </button>
@@ -310,7 +310,7 @@ export default function Pictures({
                         if (event.key === 'Enter') (event.target as HTMLInputElement).blur();
                         if (event.key === 'Escape') setRenaming(null);
                       }}
-                      className="w-24 bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-0.5 text-[11px] text-zinc-100 focus:border-emerald-500 focus:outline-none"
+                      className="w-24 bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-0.5 text-[11px] text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
                     />
                   ) : (
                     <button
@@ -386,7 +386,7 @@ export default function Pictures({
 
       {problem && (
         <p className="text-xs text-rose-300 flex items-center gap-1.5">
-          <X className="w-3.5 h-3.5 flex-shrink-0" />
+          <X className="w-3.5 h-3.5 shrink-0" />
           {problem}
         </p>
       )}

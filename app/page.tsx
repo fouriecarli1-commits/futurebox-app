@@ -2477,7 +2477,7 @@ export default function FutureBoxHome() {
    */
   const recoveryPanel = recovering ? (
         <div
-          className="fixed inset-0 z-[100] bg-scrim/85 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] bg-scrim/85 backdrop-blur-xs flex items-center justify-center p-4"
           data-recovering
         >
           <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-3">
@@ -2493,7 +2493,7 @@ export default function FutureBoxHome() {
                 placeholder={t('auth.resetNew')}
                 autoComplete="new-password"
                 required
-                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500"
               />
               <button
                 type="submit"
@@ -2520,7 +2520,7 @@ export default function FutureBoxHome() {
    */
   const codePanel = owesCode ? (
     <div
-      className="fixed inset-0 z-[100] bg-scrim/85 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-scrim/85 backdrop-blur-xs flex items-center justify-center p-4"
       data-owescode
     >
       <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-3">
@@ -2553,7 +2553,7 @@ export default function FutureBoxHome() {
             placeholder="000000"
             required
             data-mfaask
-            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 tabular-nums tracking-widest"
+            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500 tabular-nums tracking-widest"
           />
           <button
             type="submit"
@@ -2624,7 +2624,7 @@ export default function FutureBoxHome() {
             maxLength={7}
             required
             aria-label={t('auth.codeLabel', 'The code from the email')}
-            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-white placeholder-zinc-700 focus:outline-none focus:border-emerald-500"
+            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-white placeholder-zinc-700 focus:outline-hidden focus:border-emerald-500"
           />
           <button
             type="submit"
@@ -2671,7 +2671,7 @@ export default function FutureBoxHome() {
           onChange={(e) => setAuthEmail(e.target.value)}
           placeholder={t('auth.emailHint', 'you@example.com')}
           required
-          className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+          className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500"
         />
         {/* No password on the way back in. The person asking is the
             one who does not know it, and a box for it would be a
@@ -2683,7 +2683,7 @@ export default function FutureBoxHome() {
             placeholder={t('home.password', 'Password')}
             autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
             required
-            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500"
           />
         )}
         {authMode === 'forgot' && (
@@ -2791,9 +2791,9 @@ export default function FutureBoxHome() {
      cards it replaces: pressing it changed things nobody could see. It now
      stands inside each section, directly on top of the grid it is about. */
   const picksBar = (
-    <section className="bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
+    <section className="bg-linear-to-r from-zinc-900 via-zinc-900/80 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
       <div className="flex items-center gap-3 text-xs min-w-0">
-        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
           <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
         </div>
         <div className="min-w-0">
@@ -2823,7 +2823,7 @@ export default function FutureBoxHome() {
 
       <button
         onClick={handleAiScanRefresh}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-emerald-500 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] active:translate-y-px flex-shrink-0"
+        className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-emerald-500 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] active:translate-y-px shrink-0"
       >
         <RefreshCw className="w-3.5 h-3.5" />
         <span>{t('home.otherPicks', 'Show me different ones')}</span>
@@ -2863,7 +2863,7 @@ export default function FutureBoxHome() {
         <div className="flex items-center gap-3 min-w-0">
           {/* The mark as Google's pages draw it: a gradient hairline round
               a black squircle with the chip inside. */}
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-500/20">
+          <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-500/20">
             <div className="w-full h-full rounded-[10px] bg-black flex items-center justify-center">
               <Cpu className="w-5 h-5 text-emerald-400" />
             </div>
@@ -2920,7 +2920,7 @@ export default function FutureBoxHome() {
             }`;
             const inside = (
               <>
-                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span className="lg:hidden">{tab.short}</span>
                 <span className="hidden lg:inline">{tab.label}</span>
               </>
@@ -3244,7 +3244,7 @@ export default function FutureBoxHome() {
             only when there IS one, because a hero built out of undefined
             is a white screen where the front page was. */}
         {activeTab === 'all' && featured && (
-          <section className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-gradient-to-b from-zinc-900/60 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
+          <section className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-linear-to-b from-zinc-900/60 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
             <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
@@ -3467,9 +3467,9 @@ export default function FutureBoxHome() {
             <a
               href="/cubed"
               data-cubeddoor
-              className="group relative flex items-center gap-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-5 py-4 shadow-xl transition-all duration-300 hover:border-amber-400/60 hover:shadow-amber-500/10 hover:shadow-2xl overflow-hidden"
+              className="group relative flex items-center gap-4 rounded-2xl border border-amber-500/30 bg-linear-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-5 py-4 shadow-xl transition-all duration-300 hover:border-amber-400/60 hover:shadow-amber-500/10 hover:shadow-2xl overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-emerald-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-linear-to-r from-amber-500/5 via-transparent to-emerald-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <CubedChip size={48} />
               <span className="min-w-0 flex-1 relative z-10">
                 <span className="flex items-center gap-2">
@@ -3487,7 +3487,7 @@ export default function FutureBoxHome() {
                   )}
                 </span>
               </span>
-              <ArrowRight className="h-4 w-4 flex-shrink-0 text-amber-400 group-hover:translate-x-1 transition-transform relative z-10" />
+              <ArrowRight className="h-4 w-4 shrink-0 text-amber-400 group-hover:translate-x-1 transition-transform relative z-10" />
             </a>
 
             {picksBar}
@@ -3722,9 +3722,9 @@ export default function FutureBoxHome() {
                       target="_blank" 
                       rel="noreferrer"
                       title={t('feed.theirSite', 'Their own site — not an article')}
-                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 min-h-[32px] flex-shrink-0"
+                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 min-h-[32px] shrink-0"
                     >
-                      <Globe className="w-3 h-3 flex-shrink-0" />
+                      <Globe className="w-3 h-3 shrink-0" />
                       <span className="truncate">{item.toolName}</span>
                     </a>
 
@@ -3768,7 +3768,7 @@ export default function FutureBoxHome() {
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
                   placeholder={t('auth.emailHint', 'you@example.com')}
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
                   required
                 />
               </div>
@@ -3781,7 +3781,7 @@ export default function FutureBoxHome() {
                   placeholder="••••••••••••"
                   autoComplete="current-password"
                   required
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
                 />
               </div>
 
@@ -3823,7 +3823,7 @@ export default function FutureBoxHome() {
                   {canCharge === false ? t('pay.sub') : t('pay.subLive', 'A month at a time. Cancel from inside the app whenever you like.')}
                 </p>
               </div>
-              <button onClick={() => setPricingModalOpen(false)} className="text-zinc-400 hover:text-white flex-shrink-0">
+              <button onClick={() => setPricingModalOpen(false)} className="text-zinc-400 hover:text-white shrink-0">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -3854,7 +3854,7 @@ export default function FutureBoxHome() {
                 id="fb-region"
                 value={regionGuessed ? '' : region.code}
                 onChange={(event) => chooseRegion(event.target.value)}
-                className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:border-emerald-500"
               >
                 <option value="">
                   {t('pay.regionAuto', 'My device’s country')}
@@ -3910,7 +3910,7 @@ export default function FutureBoxHome() {
                     <ul className="space-y-1.5 flex-1">
                       {spec.includes.map((line, i) => (
                         <li key={line} className="text-sm text-zinc-300 flex gap-2 leading-relaxed">
-                          <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-1" />
+                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-1" />
                           {/* In the app's language, as the welcome page and
                               the account screen already draw them. */}
                           <span>{t(`plan.${spec.id}.inc.${i}`, line)}</span>
@@ -4260,16 +4260,16 @@ export default function FutureBoxHome() {
             {/* Not over the photo editor: it has its own back arrow at the
                 left of its own bar, and two back buttons one above the other
                 was what Carli photographed on 14 October 2026. */}
-            <div className={`flex-shrink-0 flex items-center justify-between ${
+            <div className={`shrink-0 flex items-center justify-between ${
               bareRoom ? 'px-3' : 'border-b border-zinc-800 pb-4'
             } ${studioTab === 'photo' && !atDoor ? 'hidden' : ''}`}>
               <button
                 onClick={stepOut}
                 data-backout
                 aria-label={atDoor ? t('feed.backToPlatform') : t('room.backToAll', 'Alle Kamers')}
-                className="flex items-center justify-center sm:justify-start space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 min-h-[44px] min-w-[44px] sm:min-w-0 rounded-xl transition-all flex-shrink-0"
+                className="flex items-center justify-center sm:justify-start space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 min-h-[44px] min-w-[44px] sm:min-w-0 rounded-xl transition-all shrink-0"
               >
-                <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
+                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                 {/* The words go on a phone and the arrow stays. "Back to
                     FutureBox" wraps to two lines at 390 pixels and takes a
                     third of the header with it, for a control whose meaning a
@@ -4338,13 +4338,13 @@ export default function FutureBoxHome() {
                   under the same headings the rail uses.
 
                   Green because on a phone this is the only way out of a room. */}
-              <div className={`${bareRoom ? 'hidden' : 'md:hidden'} w-full flex items-center gap-2 flex-shrink-0`}>
+              <div className={`${bareRoom ? 'hidden' : 'md:hidden'} w-full flex items-center gap-2 shrink-0`}>
                 <button
                   type="button"
                   onClick={() => setAtDoor(true)}
                   className="flex-1 flex items-center gap-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-3 text-left min-h-[44px]"
                 >
-                  <Cpu className="w-[18px] h-[18px] text-emerald-400 flex-shrink-0" />
+                  <Cpu className="w-[18px] h-[18px] text-emerald-400 shrink-0" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold text-emerald-300 leading-tight truncate">
                       {t('rail.all', 'All rooms')}
@@ -4353,7 +4353,7 @@ export default function FutureBoxHome() {
                       {ROOM_META[studioTab].label}
                     </span>
                   </span>
-                  <ArrowLeft className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <ArrowLeft className="w-4 h-4 text-emerald-400 shrink-0" />
                 </button>
                 {/* Straight to one tool, without going back to the rooms. */}
                 <button
@@ -4361,7 +4361,7 @@ export default function FutureBoxHome() {
                   data-opentools
                   onClick={() => setAllToolsOpen(true)}
                   aria-label={t('tools.title', 'All tools')}
-                  className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
                 >
                   <LayoutGrid className="h-5 w-5" />
                 </button>
@@ -4376,9 +4376,9 @@ export default function FutureBoxHome() {
                   }}
                   data-roomai-mobile
                   aria-label={t('room.aiCopilot', 'Kamer AI Assistent')}
-                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500 text-onAccent flex items-center justify-center gap-1.5 font-bold text-xs flex-shrink-0"
+                  className="min-h-[44px] px-3.5 py-3 rounded-xl border border-emerald-500/60 bg-emerald-500 text-onAccent flex items-center justify-center gap-1.5 font-bold text-xs shrink-0"
                 >
-                  <Sparkles className="w-4 h-4 flex-shrink-0" />
+                  <Sparkles className="w-4 h-4 shrink-0" />
                   <span className="hidden sm:inline">{t('room.aiCopilot', 'Kamer AI Assistent')}</span>
                 </button>
               </div>
@@ -4388,7 +4388,7 @@ export default function FutureBoxHome() {
                   exist on a phone, which is the only place the sliding was
                   ever felt. On a wide screen it is a rail, not a page. */}
               <nav
-                className={`flex-shrink-0 hidden md:flex gap-1 overflow-x-auto md:overflow-visible ${
+                className={`shrink-0 hidden md:flex gap-1 overflow-x-auto md:overflow-visible ${
                   theme.layout === 'top'
                     ? 'flex-row flex-wrap'
                     : theme.layout === 'focus'
@@ -4430,13 +4430,13 @@ export default function FutureBoxHome() {
                          see `Greeting.tsx`. It had no border and no fill at
                          all, so eleven rooms read as a list of links down the
                          side rather than eleven things to press. */
-                      className={`min-h-[44px] flex-shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
+                      className={`min-h-[44px] shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
                         theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
                       } ${atDoor
                         ? 'border-emerald-500/50 bg-emerald-500/[0.16] text-white'
                         : 'border-emerald-500/20 bg-emerald-500/[0.06] text-zinc-400 hover:border-emerald-500/45 hover:bg-emerald-500/[0.12] hover:text-white'}`}
                     >
-                      <Cpu className={`w-[18px] h-[18px] flex-shrink-0 ${atDoor ? 'text-emerald-400' : ''}`} />
+                      <Cpu className={`w-[18px] h-[18px] shrink-0 ${atDoor ? 'text-emerald-400' : ''}`} />
                       <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
                         <span className="block text-sm font-semibold leading-tight">
                           {t('hello.home', 'Home')}
@@ -4466,13 +4466,13 @@ export default function FutureBoxHome() {
                         }}
                         title={`${meta.label} — ${meta.hint}`}
                         aria-current={isActive ? 'page' : undefined}
-                        className={`min-h-[44px] flex-shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
+                        className={`min-h-[44px] shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
                           theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
                         } ${isActive
                           ? 'border-emerald-500/50 bg-emerald-500/[0.16] text-white'
                           : 'border-emerald-500/20 bg-emerald-500/[0.06] text-zinc-400 hover:border-emerald-500/45 hover:bg-emerald-500/[0.12] hover:text-white'}`}
                       >
-                        <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
+                        <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
                         <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
                           <span className="block text-sm font-semibold leading-tight">
                             {meta.label}
@@ -4632,10 +4632,10 @@ export default function FutureBoxHome() {
                   className="w-full min-h-[44px] rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-left text-sm font-semibold text-emerald-300 inline-flex items-center justify-between gap-3"
                 >
                   <span className="flex items-center gap-2">
-                    <Scissors className="w-4 h-4 flex-shrink-0" />
+                    <Scissors className="w-4 h-4 shrink-0" />
                     {t('rail.videoedit')}
                   </span>
-                  <ArrowRight className="w-4 h-4 flex-shrink-0" />
+                  <ArrowRight className="w-4 h-4 shrink-0" />
                 </button>
               </>
             )}
@@ -5194,7 +5194,7 @@ export default function FutureBoxHome() {
                    reach the thing they type into. */
                 <aside
                   data-copilotaside=""
-                  className={`pb-[var(--bar-clear)] flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
+                  className={`pb-[var(--bar-clear)] shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
                   /* Reserved through a variable rather than straight onto
                      `paddingBottom`, because the answer is different at the
                      two widths and an inline style cannot hold a media query.
@@ -5350,7 +5350,7 @@ export default function FutureBoxHome() {
             <div className="grid grid-cols-2 gap-3">
               {selectedBlueprint.mrrUsd && (
                 <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
-                  <DollarSign className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <DollarSign className="w-5 h-5 text-emerald-400 shrink-0" />
                   <div className="min-w-0">
                     {/* Said as what it is. A bare figure under "Revenue
                         Potential" reads as a forecast this app is making. */}
@@ -5365,7 +5365,7 @@ export default function FutureBoxHome() {
                 </div>
               )}
               <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
-                <Clock className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                <Clock className="w-5 h-5 text-cyan-400 shrink-0" />
                 <div>
                   <p className="text-[10px] uppercase text-zinc-500">{t('home.buildTime', 'Build time')}</p>
                   <p className="text-xs font-bold text-white">{selectedBlueprint.buildTime}</p>
@@ -5395,7 +5395,7 @@ export default function FutureBoxHome() {
                 <ol className="space-y-2">
                   {selectedBlueprint.steps.map((step, at) => (
                     <li key={step} className="flex gap-2.5 text-xs text-zinc-300 leading-relaxed">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center justify-center">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center justify-center">
                         {at + 1}
                       </span>
                       <span className="min-w-0">{step}</span>
@@ -5412,13 +5412,13 @@ export default function FutureBoxHome() {
                 rel="noreferrer"
                 className="flex-1 py-3 px-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2"
               >
-                <Globe className="w-4 h-4 flex-shrink-0" />
+                <Globe className="w-4 h-4 shrink-0" />
                 <span className="min-w-0 truncate">{t('feed.visitSite', 'Their site')} ({selectedBlueprint.toolName})</span>
-                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
               </a>
               <button 
                 onClick={() => setSelectedBlueprint(null)}
-                className="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl transition-all flex-shrink-0"
+                className="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl transition-all shrink-0"
               >
                 {t('feed.close', 'Close')}
               </button>
@@ -5485,7 +5485,7 @@ export default function FutureBoxHome() {
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
                   placeholder="Your Name / Company"
-                  className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
                   required
                 />
                 <input
@@ -5493,7 +5493,7 @@ export default function FutureBoxHome() {
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder={t('feed.emailAddress')}
-                  className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
                   required
                 />
               </div>
@@ -5502,7 +5502,7 @@ export default function FutureBoxHome() {
                 <select
                   value={budget}
                   onChange={(e) => setContactBudget(e.target.value)}
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-hidden focus:border-emerald-500"
                 >
                   {/* Priced in rand, because the audience is. The floor is
                       deliberately high: it is the filter. */}
@@ -5525,7 +5525,7 @@ export default function FutureBoxHome() {
                 value={contactMessage}
                 onChange={(e) => setContactMessage(e.target.value)}
                 placeholder="Describe your product, campaign goals, or partnership proposal..."
-                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 h-20"
+                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-hidden focus:border-emerald-500 h-20"
                 required
               />
 

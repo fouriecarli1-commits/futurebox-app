@@ -435,7 +435,7 @@ export default function SongScreen({
                   type="button"
                   onClick={toggle}
                   aria-label={playing ? t('song.pause', 'Pause') : t('song.play', 'Play')}
-                  className={`flex h-12 w-12 items-center justify-center rounded-full ${GLASS} ${INK} backdrop-blur`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-full ${GLASS} ${INK} backdrop-blur-sm`}
                 >
                   {playing ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
                 </button>
@@ -445,7 +445,7 @@ export default function SongScreen({
                     onClick={() => setShowWords((was) => !was)}
                     aria-pressed={showWords}
                     aria-label={t('song.words', 'The words')}
-                    className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur ${
+                    className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
                       showWords ? 'bg-emerald-500 text-onAccent' : `${GLASS} ${INK}`
                     }`}
                   >
@@ -465,7 +465,7 @@ export default function SongScreen({
         /* Left, because the corner search sits fixed at the top right of
            every screen and above this one — a close control under it is a
            close control nobody can press. */
-        className={`absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full ${SHADE} ${INK} backdrop-blur`}
+        className={`absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full ${SHADE} ${INK} backdrop-blur-sm`}
       >
         <X className="h-5 w-5" />
       </button>

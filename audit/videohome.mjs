@@ -164,7 +164,7 @@ try {
     const looks = await heading.first().evaluate((one) => {
       const style = getComputedStyle(one);
       const alpha = (colour) => {
-        const parts = (colour.match(/[\d.]+/g) ?? []).map(Number);
+        const parts = window.__rgba(colour).map(Number);
         return parts.length >= 4 ? parts[3] : 1;
       };
       const behind = one.parentElement ? getComputedStyle(one.parentElement).backgroundColor : '';

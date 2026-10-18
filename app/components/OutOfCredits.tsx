@@ -88,7 +88,7 @@ export default function OutOfCredits({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xl font-black text-white flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <Zap className="w-5 h-5 text-amber-400 shrink-0" />
               {refused
                 ? `${t('credits.short', 'You are short by')} ${missing}`
                 : `${short.balance} ${t('credits.youHave', 'credits')}`}
@@ -126,7 +126,7 @@ export default function OutOfCredits({
           <button
             type="button"
             onClick={onClose}
-            className="text-zinc-500 hover:text-white flex-shrink-0"
+            className="text-zinc-500 hover:text-white shrink-0"
             aria-label={t('credits.close', 'Close')}
           >
             <X className="w-5 h-5" />
@@ -185,7 +185,7 @@ export default function OutOfCredits({
                   </span>
                   <span className="block text-sm text-zinc-500 leading-snug">{buys(pack.credits)}</span>
                 </span>
-                <span className="flex items-center gap-2 flex-shrink-0">
+                <span className="flex items-center gap-2 shrink-0">
                   <span className="text-lg font-black text-white tabular-nums">R{pack.rand}</span>
                   {busy === pack.id && <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />}
                 </span>

@@ -2985,7 +2985,7 @@ export default function ProBooth({
                         : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                     }`}
                   >
-                    {locked ? <Link2Off className="h-4 w-4 flex-shrink-0" /> : <Link2 className="h-4 w-4 flex-shrink-0" />}
+                    {locked ? <Link2Off className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
                     <span className="truncate">{one.name}</span>
                   </button>
                 );
@@ -3656,13 +3656,13 @@ export default function ProBooth({
                   disabled={busy || humming}
                   className="flex w-full items-start gap-3 rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-3 text-left disabled:opacity-50"
                 >
-                  <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
                     {one.icon}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="block text-sm font-bold leading-tight text-white">{one.title}</span>
-                      <span className="flex-shrink-0 text-[11px] font-bold text-emerald-300">{one.price}</span>
+                      <span className="shrink-0 text-[11px] font-bold text-emerald-300">{one.price}</span>
                     </span>
                     <span className="block pt-0.5 text-xs leading-snug text-zinc-400">{one.says}</span>
                   </span>
@@ -3740,7 +3740,7 @@ export default function ProBooth({
                   onClick={one.run}
                   className="flex w-full items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-left"
                 >
-                  <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300">
                     {one.icon}
                   </span>
                   <span className="min-w-0">
@@ -3781,7 +3781,7 @@ export default function ProBooth({
                   disabled={busy || looking !== null}
                   className="flex w-full items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-left disabled:opacity-50"
                 >
-                  <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300">
                     {one.icon}
                   </span>
                   <span className="min-w-0">
@@ -4137,7 +4137,7 @@ export default function ProBooth({
                     onClick={() => void deRoom(lane)}
                     className="inline-flex h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 px-3 text-xs font-bold text-emerald-300 disabled:opacity-50"
                   >
-                    <Wand2 className="h-3.5 w-3.5 flex-shrink-0" />
+                    <Wand2 className="h-3.5 w-3.5 shrink-0" />
                     <span className="line-clamp-2 text-center leading-tight">
                       {t('pro.improveAi', 'Clean with AI')} · {perMinute(pieceSeconds(lane), CREDITS.clean)} {t('video.credits', 'credits')}
                     </span>
@@ -4311,7 +4311,7 @@ export default function ProBooth({
               checked={humSnap}
               data-humsnap
               onChange={(event) => setHumSnap(event.target.checked)}
-              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-sky-500"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-sky-500"
             />
             <span>
               {t('hum.snap', 'Put it on the click')}
@@ -4336,7 +4336,7 @@ export default function ProBooth({
               data-humgo
               className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sky-500/50 bg-sky-500/10 px-4 text-sm font-bold text-sky-200 disabled:opacity-50"
             >
-              <Mic2 className="h-4 w-4 flex-shrink-0" />
+              <Mic2 className="h-4 w-4 shrink-0" />
               {humming
                 ? t('hum.working', 'Listening to it\u2026')
                 : humVoices.length > 1
@@ -4866,9 +4866,9 @@ export default function ProBooth({
           difference is visible, so it is written down rather than left to
           whoever next reads the line. */}
       <div className={`min-w-0 flex-1 flex-col overflow-hidden ${deskOpen ? 'hidden' : 'flex'}`}>
-      <div className="relative flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-2.5 border-b border-cyan-500/30 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.25)] flex-shrink-0 z-30">
+      <div className="relative flex flex-wrap items-center justify-between gap-3 bg-linear-to-r from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-2.5 border-b border-cyan-500/30 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.25)] shrink-0 z-30">
         {/* Subtle neon laser top accent line */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-cyan-500 via-emerald-400 to-fuchsia-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
 
         {/* Left section: Back + Logo & Title + Undo/Redo */}
         <div className="flex items-center gap-2.5 min-w-0">
@@ -4876,7 +4876,7 @@ export default function ProBooth({
             type="button"
             /* Through `leave`: a running take is stopped and kept first. */
             onClick={() => void leave()}
-            className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+            className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{t('booth.back', 'Back')}</span>
@@ -4894,7 +4894,7 @@ export default function ProBooth({
           </div>
 
           {/* Undo / Redo */}
-          <div className="flex flex-shrink-0 items-center gap-1 pl-1">
+          <div className="flex shrink-0 items-center gap-1 pl-1">
             <button
               type="button"
               data-undo
@@ -5110,7 +5110,7 @@ export default function ProBooth({
       {problem && (
         <p
           role="alert"
-          className="flex-shrink-0 border-t px-5 py-2 text-sm font-semibold leading-snug"
+          className="shrink-0 border-t px-5 py-2 text-sm font-semibold leading-snug"
           style={{ borderColor: EDGE, background: PANEL, color: '#fbbf24' }}
         >
           {problem}
@@ -5130,7 +5130,7 @@ export default function ProBooth({
         <p
           role="status"
           data-t3ksaid=""
-          className="flex-shrink-0 flex items-start gap-2 border-t px-5 py-2 text-sm font-semibold leading-snug"
+          className="shrink-0 flex items-start gap-2 border-t px-5 py-2 text-sm font-semibold leading-snug"
           style={{ borderColor: EDGE, background: PANEL, color: '#6ee7b7' }}
         >
           <span className="min-w-0 flex-1">{t3kSaid}</span>
@@ -5138,7 +5138,7 @@ export default function ProBooth({
             type="button"
             onClick={() => setT3kSaid('')}
             aria-label={t('pro.t3kClose', 'Close')}
-            className="min-h-[24px] flex-shrink-0 text-zinc-400 hover:text-white"
+            className="min-h-[24px] shrink-0 text-zinc-400 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
@@ -5159,7 +5159,7 @@ export default function ProBooth({
           and it is only on the screen while something is marked. */}
       {region && region.to - region.from > 0.01 && (
         <div
-          className="flex flex-shrink-0 items-center gap-2 border-t px-3 py-2"
+          className="flex shrink-0 items-center gap-2 border-t px-3 py-2"
           style={{ borderColor: EDGE, background: PANEL }}
         >
           <div className="min-w-0 flex-1">
@@ -5175,7 +5175,7 @@ export default function ProBooth({
             type="button"
             data-regiontools=""
             onClick={() => setRegionOpen(true)}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-black text-onAccent shadow-[0_0_18px_rgba(16,185,129,0.35)]"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-linear-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-black text-onAccent shadow-[0_0_18px_rgba(16,185,129,0.35)]"
           >
             <Sparkles className="h-4 w-4" />
             {t('pro.regionMagic', 'AI magic')}
@@ -5449,7 +5449,7 @@ function LaneRow({
         overlapping the start-time field at 1280px — which is not a narrow
         screen. The waveform keeps a floor so it stays a waveform. */}
     <div className="p-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-      <div className="w-full sm:w-40 flex-shrink-0 space-y-1">
+      <div className="w-full sm:w-40 shrink-0 space-y-1">
         {/* ── The name, as a field rather than as text ─────────────
 
             Carli, 10 October 2026: *"Op elke track van die probooth moet daar
@@ -5476,7 +5476,7 @@ function LaneRow({
           value={lane.name}
           onChange={(event) => onChange({ name: event.target.value.slice(0, 40) })}
           placeholder={t('pro.laneNameHint', 'Bass, Lead vocal, Kick…')}
-          className="min-h-[44px] w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-sm font-semibold text-zinc-200 placeholder:font-normal placeholder:text-zinc-600 outline-none focus:border-emerald-500 focus:text-white"
+          className="min-h-[44px] w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-sm font-semibold text-zinc-200 placeholder:font-normal placeholder:text-zinc-600 outline-hidden focus:border-emerald-500 focus:text-white"
         />
         <div className="flex items-center gap-1 min-w-0">
           <button
@@ -5556,13 +5556,13 @@ function LaneRow({
         aria-expanded={open}
         title={t('pro.tone', 'Tone')}
         aria-label={t('pro.tone', 'Tone')}
-        className={`flex-shrink-0 flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2 sm:px-2 sm:py-1 rounded-lg border text-xs font-bold ${
+        className={`shrink-0 flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2 sm:px-2 sm:py-1 rounded-lg border text-xs font-bold ${
           isClean(lane.tone)
             ? 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
             : 'border-emerald-500/50 text-emerald-400'
         }`}
       >
-        <Sliders className="w-4 h-4 flex-shrink-0" />
+        <Sliders className="w-4 h-4 shrink-0" />
         {t('pro.tone', 'Tone')}
       </button>
 
@@ -5577,7 +5577,7 @@ function LaneRow({
 
           The row around it already wraps. Letting these blocks be as wide as
           they need means the wrap can do its job. */}
-      <div className="flex-shrink-0 flex flex-wrap items-center gap-1.5">
+      <div className="shrink-0 flex flex-wrap items-center gap-1.5">
         <span className="text-[11px] text-zinc-600">L</span>
         <input
           type="range"
@@ -5613,7 +5613,7 @@ function LaneRow({
 
           "ek moes die bar links skuif om daai opname mic te sien. niemand
            gaan weet dit is daar nie." Nobody was going to. */}
-      <div className="flex-shrink-0 flex flex-wrap items-center gap-1">
+      <div className="shrink-0 flex flex-wrap items-center gap-1">
         <input
           type="number"
           step={0.05}
@@ -5698,7 +5698,7 @@ function LaneRow({
             title={t('pro.save', 'Take this lane away')}
             className="flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-lg border border-zinc-800 px-2 text-xs font-bold text-zinc-500 hover:border-emerald-500/50 hover:text-emerald-400"
           >
-            <ArrowDownToLine className="h-4 w-4 flex-shrink-0" />
+            <ArrowDownToLine className="h-4 w-4 shrink-0" />
             {t('pro.save', 'Take this lane away')}
           </button>
           {saving && (

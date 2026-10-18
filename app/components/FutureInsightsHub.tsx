@@ -150,7 +150,7 @@ export default function FutureInsightsHub({
             </span>
           </div>
           <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
-            <Sparkles className="h-6 w-6 text-emerald-400 flex-shrink-0" />
+            <Sparkles className="h-6 w-6 text-emerald-400 shrink-0" />
             <span>{t('insight.hubTitle', 'Future Insights & Thought Leadership')}</span>
           </h3>
           <p className="text-sm text-zinc-400 pt-1 max-w-2xl">
@@ -223,7 +223,7 @@ export default function FutureInsightsHub({
                 setViewFilter('all');
                 setActiveCategory(cat.id);
               }}
-              className={`inline-flex min-h-[44px] flex-shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+              className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                 isSelected
                   ? 'border border-emerald-400 bg-emerald-950 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
                   : 'border border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
@@ -249,8 +249,8 @@ export default function FutureInsightsHub({
               key={article.id}
               className={`flex flex-col justify-between rounded-2xl border p-5 transition-all group ${
                 isPodcast
-                  ? 'border-teal-500/30 bg-gradient-to-b from-teal-950/20 via-zinc-900/80 to-zinc-950/90 hover:border-teal-400/60 hover:shadow-[0_0_25px_rgba(20,184,166,0.15)]'
-                  : 'border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950/90 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]'
+                  ? 'border-teal-500/30 bg-linear-to-b from-teal-950/20 via-zinc-900/80 to-zinc-950/90 hover:border-teal-400/60 hover:shadow-[0_0_25px_rgba(20,184,166,0.15)]'
+                  : 'border-zinc-800 bg-linear-to-b from-zinc-900/80 to-zinc-950/90 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]'
               }`}
             >
               <div className="space-y-3">
@@ -295,7 +295,7 @@ export default function FutureInsightsHub({
                     <span className="font-bold text-teal-200 truncate">
                       {article.podcastRef.show} · {lang === 'af' ? article.podcastRef.hostAf ?? article.podcastRef.host : article.podcastRef.host}
                     </span>
-                    <span className="text-[11px] font-mono text-teal-400/90 flex-shrink-0">
+                    <span className="text-[11px] font-mono text-teal-400/90 shrink-0">
                       {article.podcastRef.duration}
                     </span>
                   </div>
@@ -333,7 +333,7 @@ export default function FutureInsightsHub({
                           setReadingArticle(article);
                           setIsPlayingPodcast(true);
                         }}
-                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 px-3.5 py-1.5 text-xs font-black text-zinc-950 transition-colors shadow-sm"
+                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 px-3.5 py-1.5 text-xs font-black text-zinc-950 transition-colors shadow-xs"
                       >
                         <Headphones className="h-3.5 w-3.5" />
                         <span>{t('insight.listenPodcast', 'Listen to Podcast')}</span>
@@ -410,7 +410,7 @@ export default function FutureInsightsHub({
 
             {/* Podcast Player Card with Live Waveform Animation if present */}
             {readingArticle.podcastRef && (
-              <div className="rounded-2xl border border-teal-500/40 bg-gradient-to-r from-teal-950/60 via-zinc-900 to-zinc-950 p-5 space-y-3.5">
+              <div className="rounded-2xl border border-teal-500/40 bg-linear-to-r from-teal-950/60 via-zinc-900 to-zinc-950 p-5 space-y-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-300">
                     <Headphones className="h-4 w-4" />
@@ -436,7 +436,7 @@ export default function FutureInsightsHub({
                     <button
                       type="button"
                       onClick={() => setIsPlayingPodcast(!isPlayingPodcast)}
-                      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 transition-colors font-bold flex-shrink-0"
+                      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 transition-colors font-bold shrink-0"
                       aria-label={isPlayingPodcast ? t('insight.pausePreview', 'Pause Audio Preview') : t('insight.playPreview', 'Play Audio Preview')}
                     >
                       {isPlayingPodcast ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
@@ -444,10 +444,10 @@ export default function FutureInsightsHub({
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
                         <span className="flex items-center gap-1.5 text-teal-300 font-bold truncate">
-                          {isPlayingPodcast && <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping flex-shrink-0" />}
+                          {isPlayingPodcast && <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping shrink-0" />}
                           <span>{isPlayingPodcast ? t('insight.playingEpisode', 'Playing Visionary Episode') : t('insight.playPreview', 'Play Audio Preview')}</span>
                         </span>
-                        <span className="flex-shrink-0">{isPlayingPodcast ? '02:45 / ' + readingArticle.podcastRef.duration : '00:00 / ' + readingArticle.podcastRef.duration}</span>
+                        <span className="shrink-0">{isPlayingPodcast ? '02:45 / ' + readingArticle.podcastRef.duration : '00:00 / ' + readingArticle.podcastRef.duration}</span>
                       </div>
                       {/* Animated Equalizer wave bars */}
                       <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex items-center gap-0.5 px-0.5">
@@ -496,7 +496,7 @@ export default function FutureInsightsHub({
               <ul className="space-y-2 text-xs sm:text-sm text-zinc-200">
                 {(lang === 'af' ? readingArticle.takeawaysAf : readingArticle.takeawaysEn).map((point) => (
                   <li key={point} className="flex items-start gap-2.5">
-                    <Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <Check className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
                     <span>{point}</span>
                   </li>
                 ))}
@@ -504,7 +504,7 @@ export default function FutureInsightsHub({
             </div>
 
             {/* Google Gemini Live Strategic Deep Dive */}
-            <div className="rounded-2xl border border-teal-500/30 bg-gradient-to-br from-teal-950/40 via-zinc-900 to-zinc-950 p-5 space-y-3.5">
+            <div className="rounded-2xl border border-teal-500/30 bg-linear-to-br from-teal-950/40 via-zinc-900 to-zinc-950 p-5 space-y-3.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-teal-500/20 text-teal-400">
@@ -526,7 +526,7 @@ export default function FutureInsightsHub({
                   type="button"
                   onClick={() => fetchGeminiDeepDive(readingArticle)}
                   disabled={geminiBusy}
-                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-950/80 hover:bg-teal-900/80 disabled:opacity-50 px-3.5 py-1.5 text-xs font-bold text-teal-200 transition-colors shadow-sm"
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-950/80 hover:bg-teal-900/80 disabled:opacity-50 px-3.5 py-1.5 text-xs font-bold text-teal-200 transition-colors shadow-xs"
                 >
                   {geminiBusy ? (
                     <>

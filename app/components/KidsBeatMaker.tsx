@@ -43,7 +43,7 @@ export default function KidsBeatMaker({
   return (
     <div className="space-y-5" data-kidsbeat>
       {/* ── Four beats to start from ──────────────────────────────────── */}
-      <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-100/80 p-4 shadow-[0_0_28px_rgba(16,185,129,0.35)] backdrop-blur-sm sm:p-5">
+      <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-100/80 p-4 shadow-[0_0_28px_rgba(16,185,129,0.35)] backdrop-blur-xs sm:p-5">
         <div className="mb-3 flex items-center gap-2">
           <span className="text-3xl" aria-hidden>🪄</span>
           <div className="min-w-0">
@@ -81,7 +81,7 @@ export default function KidsBeatMaker({
       </div>
 
       {/* ── Transport, grid and soundboard ───────────────────────────── */}
-      <div className="space-y-5 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 backdrop-blur-sm sm:p-6">
+      <div className="space-y-5 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 backdrop-blur-xs sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface-200 pb-4">
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -151,7 +151,7 @@ export default function KidsBeatMaker({
         <div className="space-y-2" data-kidsgrid>
           {TRACKS.map((track) => (
             <div key={track.id} className="flex items-center gap-2 rounded-2xl border border-surface-200 bg-surface-100/60 p-1.5 sm:p-2">
-              <div className="flex w-10 flex-shrink-0 items-center gap-1.5 text-xs font-bold text-surface-800 sm:w-40 sm:text-sm">
+              <div className="flex w-10 shrink-0 items-center gap-1.5 text-xs font-bold text-surface-800 sm:w-40 sm:text-sm">
                 <span className="text-xl sm:text-base" aria-hidden>{track.icon}</span>
                 <span className="hidden sm:inline">{t(track.says[0], track.says[1])}</span>
               </div>

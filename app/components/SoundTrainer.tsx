@@ -224,13 +224,13 @@ export default function SoundTrainer({
                         : ` · ${t('sound.training', 'training…')}`}
                 </span>
               </span>
-              {training(sound) && <Loader2 className="w-4 h-4 animate-spin text-emerald-400 flex-shrink-0" />}
+              {training(sound) && <Loader2 className="w-4 h-4 animate-spin text-emerald-400 shrink-0" />}
               <button
                 type="button"
                 onClick={() => void remove(sound.id)}
                 disabled={busy === sound.id}
                 title={t('sound.forget', 'Delete this sound')}
-                className="text-zinc-500 hover:text-red-400 flex-shrink-0"
+                className="text-zinc-500 hover:text-red-400 shrink-0"
               >
                 {busy === sound.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
@@ -281,10 +281,10 @@ export default function SoundTrainer({
                         type="checkbox"
                         checked={picked.has(track.id)}
                         onChange={() => toggle(track.id)}
-                        className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                        className="w-4 h-4 accent-emerald-500 shrink-0"
                       />
                       <span className="min-w-0 flex-1 text-sm text-zinc-300 truncate">{track.title}</span>
-                      <span className="text-xs text-zinc-600 flex-shrink-0">{track.genre}</span>
+                      <span className="text-xs text-zinc-600 shrink-0">{track.genre}</span>
                     </label>
                   ))}
                 </div>
@@ -313,13 +313,13 @@ export default function SoundTrainer({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder={t('sound.name', 'What to call this sound')}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
           <input
             value={genre}
             onChange={(event) => setGenre(event.target.value)}
             placeholder={t('sound.genre', 'What kind of music is it — afro house, gospel, rock…')}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
 
           {/* Not buried, and not pre-ticked. The wording changes with the claim. */}
@@ -328,7 +328,7 @@ export default function SoundTrainer({
               type="checkbox"
               checked={confirmed}
               onChange={(event) => setConfirmed(event.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              className="mt-0.5 w-4 h-4 accent-emerald-500 shrink-0"
             />
             <span className="text-sm text-zinc-400 leading-snug">
               {brought.length > 0

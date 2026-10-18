@@ -157,7 +157,7 @@ export default function BoothScope({
 
   return (
     <div
-      className="flex h-11 flex-shrink-0 items-center gap-2 border-b px-3"
+      className="flex h-11 shrink-0 items-center gap-2 border-b px-3"
       style={{ borderColor: EDGE, background: PANEL }}
       data-boothscope=""
       role="img"
@@ -166,7 +166,7 @@ export default function BoothScope({
       <canvas ref={canvas} className="h-8 min-w-0 flex-1" aria-hidden />
       <span
         ref={peakLight}
-        className="h-3 w-3 flex-shrink-0 rounded-full"
+        className="h-3 w-3 shrink-0 rounded-full"
         title={t('pro.scopePeak', 'Green is fine, amber is near full, red is too loud')}
         aria-hidden
       />

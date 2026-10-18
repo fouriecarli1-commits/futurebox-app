@@ -58,7 +58,7 @@ export default function CollabDesk({
   return (
     <div className="space-y-4" data-collabdesk>
       {/* ── The bar ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-gradient-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-linear-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
             <Radar className="w-4 h-4 text-onAccent" />
@@ -96,7 +96,7 @@ export default function CollabDesk({
             value={handle}
             onChange={(event) => setHandle(event.target.value)}
             placeholder={t('collab.handlePlaceholder', 'beatmaker99')}
-            className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-white/10 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-white/10 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
           {typed ? (
             <AskToCollab

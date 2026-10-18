@@ -87,7 +87,7 @@ export default function SpeakButton({ onHeard, className = '', disabled = false 
          formats — so a microphone among them read as one more choice. */
       aria-label={on ? t('speak.stop', 'Stop listening') : t('speak.start', 'Say it instead of typing')}
       title={missed || (on ? t('speak.stop', 'Stop listening') : t('speak.start', 'Say it instead of typing'))}
-      className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition disabled:opacity-40 ${
+      className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition disabled:opacity-40 ${
         on
           ? 'animate-pulse border-rose-400 bg-rose-500/20 text-rose-300'
           : missed

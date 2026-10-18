@@ -101,7 +101,7 @@ function RadarHUD({
   readonly t: (key: string, fallback: string) => string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-zinc-950 via-cyan-950/20 to-black p-4 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.12)]">
+    <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-linear-to-b from-zinc-950 via-cyan-950/20 to-black p-4 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.12)]">
       {/* Top telemetry status line */}
       <div className="flex items-center justify-between pb-3 border-b border-cyan-500/20 text-xs">
         <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ function RadarHUD({
           className="absolute inset-0 pointer-events-none animate-spin"
           style={{ animationDuration: '6s', animationTimingFunction: 'linear' }}
         >
-          <div className="w-1/2 h-1/2 origin-bottom-right bg-gradient-to-tl from-cyan-400/35 via-cyan-500/10 to-transparent" />
+          <div className="w-1/2 h-1/2 origin-bottom-right bg-linear-to-tl from-cyan-400/35 via-cyan-500/10 to-transparent" />
         </div>
 
         {/* Center Studio Beacon */}
@@ -543,7 +543,7 @@ export default function CollabRadar({
                 data-radarname
                 onChange={(e) => setOwnTargetName(e.target.value)}
                 placeholder={t('radar.showName', 'Podcast name')}
-                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500"
               />
               {/* ── What it is about, which used to be invented ───────────
 
@@ -561,7 +561,7 @@ export default function CollabRadar({
                 data-radartopics
                 onChange={(e) => setOwnTargetTopics(e.target.value)}
                 placeholder={t('radar.showTopics', 'What it is about — theatre, Afrikaans music, comedy')}
-                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500"
               />
               <button
                 type="button"
@@ -604,10 +604,10 @@ export default function CollabRadar({
                 <textarea
                   value={pitchBody}
                   onChange={(e) => setPitchBody(e.target.value)}
-                  className="w-full h-72 bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-sm text-zinc-200 leading-relaxed focus:outline-none focus:border-emerald-500"
+                  className="w-full h-72 bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-sm text-zinc-200 leading-relaxed focus:outline-hidden focus:border-emerald-500"
                 />
                 <div className="flex items-start space-x-2 text-[13px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>
                     {t(
                       'radar.sendYourself',
@@ -660,7 +660,7 @@ export default function CollabRadar({
                     }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 mt-0.5 ${
                         isDone ? 'bg-emerald-500 border-emerald-500' : 'border-zinc-700'
                       }`}
                     >
@@ -691,19 +691,19 @@ export default function CollabRadar({
                 value={coHost}
                 onChange={(e) => setCoHost(e.target.value)}
                 placeholder={t("radar.coHost", "Co-host handle (e.g. @someone)")}
-                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500"
               />
               <input
                 value={liveTopic}
                 onChange={(e) => setLiveTopic(e.target.value)}
                 placeholder={t("radar.topic", "Topic (e.g. Build a track from a comment prompt)")}
-                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500"
               />
               <input
                 value={liveSlot}
                 onChange={(e) => setLiveSlot(e.target.value)}
                 placeholder={t("radar.slot", "Slot (e.g. Thu 19:00 SAST / 17:00 UTC)")}
-                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500"
               />
             </div>
             <div className="flex items-center justify-between">
@@ -813,13 +813,13 @@ export default function CollabRadar({
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-shrink-0 items-center gap-1 text-sm text-emerald-400 hover:underline"
+                        className="flex shrink-0 items-center gap-1 text-sm text-emerald-400 hover:underline"
                       >
                         {handles[pf.id]}
-                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                        <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
                     ) : (
-                      <span className="flex-shrink-0 text-sm text-zinc-600">
+                      <span className="shrink-0 text-sm text-zinc-600">
                         {t('radar.notSet', 'not set')}
                       </span>
                     )}
@@ -873,7 +873,7 @@ export default function CollabRadar({
               <select
                 value={postTrackId}
                 onChange={(e) => setPostTrackId(e.target.value)}
-                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500"
               >
                 {TRACK_FLAVOURS.filter((t) => t.onChannel).map((t) => (
                   <option key={t.id} value={t.id}>{t.title}</option>
@@ -885,7 +885,7 @@ export default function CollabRadar({
               <select
                 value={platformId}
                 onChange={(e) => setPlatformId(e.target.value)}
-                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-cyan-500"
               >
                 {SOCIAL_PLATFORMS.map((pf) => (
                   <option key={pf.id} value={pf.id}>{pf.name}</option>
@@ -898,14 +898,14 @@ export default function CollabRadar({
                 value={collaborator}
                 onChange={(e) => setCollaborator(e.target.value)}
                 placeholder={t("radar.theirHandle", "@their-handle")}
-                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-cyan-500"
               />
             </div>
           </div>
 
           {!canPost && (
             <p className="text-sm text-amber-300/90 flex items-start gap-2 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
-              <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <Lock className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
                 {ENTITLEMENTS['collab.post'].freeNote} Writing the caption, the hooks and the hashtags stays free —
                 copy them and post yourself, or upgrade to do it from here and to ask the channel for a boost.
@@ -941,7 +941,7 @@ export default function CollabRadar({
                   </div>
                   <pre className="text-[13px] text-zinc-300 whitespace-pre-wrap leading-relaxed">{caption}</pre>
                   <p className="text-[13px] text-zinc-500 flex items-start gap-1.5 pt-1 border-t border-zinc-800/80">
-                    <Users className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                    <Users className="w-3 h-3 shrink-0 mt-0.5" />
                     <span>{post.shotNote}</span>
                   </p>
                   <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -996,7 +996,7 @@ export default function CollabRadar({
                 value={boostUrl}
                 onChange={(e) => setBoostUrl(e.target.value)}
                 placeholder={t("radar.boostUrl", "Paste the link to your post once it is live")}
-                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-cyan-500"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <button

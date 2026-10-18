@@ -23,6 +23,7 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { dismissDoor, studioDoor, toRoom } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
+import { defineRgba } from './colour.mjs';
 
 const PORT = process.argv[2] || '3112';
 
@@ -46,6 +47,7 @@ try {
 
   browser = await chromium.launch(launchOptions());
   const p = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  await p.addInitScript(defineRgba);
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
@@ -210,11 +212,11 @@ try {
         });
         return 0.2126 * r + 0.7152 * g + 0.0722 * b;
       };
-      const parse = (s) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+      const parse = (s) => window.__rgba(s).slice(0, 3).map(Number);
       const opaque = (el) => {
         let node = el;
         while (node) {
-          const parts = (getComputedStyle(node).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+          const parts = window.__rgba(getComputedStyle(node).backgroundColor).map(Number);
           if (parts.length >= 3 && (parts.length < 4 || parts[3] > 0.85)) return parts.slice(0, 3);
           node = node.parentElement;
         }

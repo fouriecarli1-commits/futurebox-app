@@ -791,7 +791,7 @@ export default function Hooks({
       {/* ── The bar across the top ──────────────────────────────────────
           Google's page: the brand mark and the room's name, the length as
           two pills, a lit chip, and the one button that does the work. */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-gradient-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-linear-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
             <Smartphone className="w-4 h-4 text-onAccent" />
@@ -1059,7 +1059,7 @@ export default function Hooks({
                 </div>
               </div>
               <div className="w-full sm:w-48 bg-black h-3 rounded-full overflow-hidden border border-white/10 shrink-0">
-                <div className="bg-gradient-to-r from-emerald-500 via-cyan-400 to-pink-500 h-full" style={{ width: `${Math.round(chosen.score * 100)}%` }} />
+                <div className="bg-linear-to-r from-emerald-500 via-cyan-400 to-pink-500 h-full" style={{ width: `${Math.round(chosen.score * 100)}%` }} />
               </div>
             </div>
           )}

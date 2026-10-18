@@ -252,7 +252,7 @@ export default function SingItMine({
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label={t('mine.close', 'Close')}
-                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300"
                 >
                   <X className="h-4 w-4" />
                 </button>

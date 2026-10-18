@@ -243,7 +243,7 @@ check(
 const audits = readdirSync('audit')
   .filter((one) => one.endsWith('.mjs'))
   .map((one) => one.replace(/\.mjs$/, ''))
-  .filter((one) => !['enter', 'where'].includes(one));
+  .filter((one) => !['enter', 'where', 'colour'].includes(one));
 
 /** No assertions in them: they walk, they print, a person reads it. */
 /* `devices` was in here and should not have been: it exits non-zero on a page

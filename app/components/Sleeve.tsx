@@ -471,12 +471,12 @@ export default function Sleeve({
               through `standingOf` to hold that. */}
           {saysSaved(standing) ? (
             <p className="flex items-start gap-1.5 text-sm leading-snug text-emerald-300/90">
-              <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+              <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               {t('cover.kept', 'This is the song\u2019s cover now. It is saved and it goes wherever the song goes.')}
             </p>
           ) : (
             <p className="flex items-start gap-1.5 text-sm leading-snug text-amber-300/90">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               {t('cover.adrift', 'This was drawn but it is not saved in the app yet \u2014 the picture above is on a link that stops working within the hour. Press Keep it.')}
             </p>
           )}
@@ -524,7 +524,7 @@ export default function Sleeve({
           {standing === 'uncollected' && (
             <>
               <p className="flex items-start gap-1.5 text-sm leading-snug text-amber-300/90">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 {t('cover.owed', 'A cover was made for this song and never saved. Fetching it uses no credits.')}
               </p>
               {keepButton}

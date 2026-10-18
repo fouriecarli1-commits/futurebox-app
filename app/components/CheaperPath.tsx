@@ -54,7 +54,7 @@ export default function CheaperPath({
   return (
     <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3 space-y-2.5">
       <div className="flex items-start gap-2.5">
-        <PiggyBank className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <PiggyBank className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         <div className="space-y-1 min-w-0">
           <p className="text-sm font-semibold text-emerald-300">
             {t('cheaper.title', 'Cheaper the other way')}

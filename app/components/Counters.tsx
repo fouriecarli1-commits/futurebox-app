@@ -255,7 +255,7 @@ export function Counters({
     const rest = ON_PAGE.all.filter((key) => LEADING.indexOf(key) === -1).map((key) => made[key]);
 
     return (
-      <section className="relative overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-zinc-900/70 to-zinc-950 p-6 md:p-10 space-y-8 shadow-2xl">
+      <section className="relative overflow-hidden rounded-3xl border border-emerald-500/25 bg-linear-to-br from-emerald-500/10 via-zinc-900/70 to-zinc-950 p-6 md:p-10 space-y-8 shadow-2xl">
         {/* A soft light behind the numbers, so the panel reads as the top of
             the page rather than as another card in the stack. */}
         <div className="pointer-events-none absolute -top-24 -right-16 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -293,7 +293,7 @@ export function Counters({
             const Icon = tile.icon;
             return (
               <div key={tile.key} className="flex items-center gap-2.5 min-w-0">
-                <Icon className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+                <Icon className="w-4 h-4 text-zinc-500 shrink-0" />
                 <span className="min-w-0">
                   <span className="block text-xl font-extrabold text-white leading-none">
                     <Rolling value={tile.value} />
@@ -349,7 +349,7 @@ export function Counters({
             const most = breakdown[0].count || 1;
             return (
               <div key={`${row.kind}:${row.category}`} className="flex items-center gap-3">
-                <span className="text-[11px] text-zinc-400 w-32 flex-shrink-0 truncate">
+                <span className="text-[11px] text-zinc-400 w-32 shrink-0 truncate">
                   {labels?.[row.category] ?? row.category}
                 </span>
                 <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">

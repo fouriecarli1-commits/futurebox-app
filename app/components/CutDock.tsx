@@ -357,7 +357,7 @@ export default function CutDock({
          rekenaar se skerm". A wider column is the cheapest honest fix: the
          same controls, a third less scrolling, and nothing moved. */
       className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[46dvh]'} ${
-        atDesk ? 'w-[400px] flex-shrink-0 2xl:w-[520px]' : ''
+        atDesk ? 'w-[400px] shrink-0 2xl:w-[520px]' : ''
       }`}
       style={atDesk ? { borderLeft: `1px solid ${EDGE}` } : undefined}
     >
@@ -405,7 +405,7 @@ export default function CutDock({
         onClick={() => onSkip(-5)}
         aria-label={t('dock.back', 'Back five seconds')}
         data-cutback
-        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
         style={{ color: INK }}
       >
         <SkipBack className="h-5 w-5" fill="currentColor" />
@@ -415,7 +415,7 @@ export default function CutDock({
         onClick={onPlay}
         aria-label={playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
         data-cutplay
-        className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full"
+        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
         style={{ background: INK, color: '#04120b' }}
       >
         {playing ? (
@@ -429,7 +429,7 @@ export default function CutDock({
         onClick={() => onSkip(5)}
         aria-label={t('dock.forward', 'Forward five seconds')}
         data-cutforward
-        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
         style={{ color: INK }}
       >
         <SkipForward className="h-5 w-5" fill="currentColor" />
@@ -449,7 +449,7 @@ export default function CutDock({
         {sheet}
         <div
           data-cutdock=""
-          className="flex-shrink-0 flex flex-col items-center gap-1 overflow-y-auto px-1 py-2"
+          className="shrink-0 flex flex-col items-center gap-1 overflow-y-auto px-1 py-2"
           /* Wider at a desk, because there is width to spend and the labels
              under the icons are the only thing naming what a bench does. 96
              is the turned phone's, where height is what is scarce and the
@@ -459,7 +459,7 @@ export default function CutDock({
           {hasTransport ? (
             <>
               <div className="flex w-full flex-col items-center gap-1">{transport}</div>
-              <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
+              <span className="my-1 h-px w-full shrink-0" style={{ background: EDGE }} />
             </>
           ) : null}
           <div
@@ -494,7 +494,7 @@ export default function CutDock({
       {sheet}
       <div
         data-cutdock=""
-        className="flex-shrink-0"
+        className="shrink-0"
         /* ── Nothing reserved here, and that is deliberate ───────────────
  
            This carried `paddingBottom: barClearance(0)` for an afternoon,

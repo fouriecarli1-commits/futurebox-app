@@ -114,12 +114,12 @@ export default function VoiceScreen({
           onClick={onGoToBooth}
           className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-left hover:border-emerald-500/50 transition-all flex items-start gap-3"
         >
-          <Music className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <Music className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-bold text-white">{t('voice.sing')}</span>
             <span className="block text-sm text-zinc-500 leading-snug">{t('voice.singNote')}</span>
           </span>
-          <ArrowUpRight className="w-4 h-4 text-zinc-600 flex-shrink-0 mt-1" />
+          <ArrowUpRight className="w-4 h-4 text-zinc-600 shrink-0 mt-1" />
         </button>
 
         <button
@@ -127,12 +127,12 @@ export default function VoiceScreen({
           onClick={onGoToPodcast}
           className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-left hover:border-emerald-500/50 transition-all flex items-start gap-3"
         >
-          <Radio className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <Radio className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-bold text-white">{t('voice.show')}</span>
             <span className="block text-sm text-zinc-500 leading-snug">{t('voice.showNote')}</span>
           </span>
-          <ArrowUpRight className="w-4 h-4 text-zinc-600 flex-shrink-0 mt-1" />
+          <ArrowUpRight className="w-4 h-4 text-zinc-600 shrink-0 mt-1" />
         </button>
       </div>
     </div>

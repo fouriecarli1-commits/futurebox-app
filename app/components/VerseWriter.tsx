@@ -197,7 +197,7 @@ export default function VerseWriter({
       {/* Header Info */}
       <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800">
         <div className="flex items-center gap-2">
-          <Lightbulb className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <Lightbulb className="w-4 h-4 text-emerald-400 shrink-0" />
           <p className="text-xs text-zinc-300">
             {t(
               'versewriter.guideIntro',
@@ -230,7 +230,7 @@ export default function VerseWriter({
                 className="w-full flex items-center justify-between p-3.5 text-left"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-bold flex-shrink-0">
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-bold shrink-0">
                     {isAf ? sec.tag : sec.tagEn}
                   </span>
                   <div className="min-w-0">
@@ -243,7 +243,7 @@ export default function VerseWriter({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   {hasContent && (
                     <span className="text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-md font-mono">
                       {lineCount} {lineCount === 1 ? t('versewriter.line', 'line') : t('versewriter.lines', 'lines')}
@@ -262,7 +262,7 @@ export default function VerseWriter({
                 <div className="px-3.5 pb-3.5 pt-1 space-y-2.5 border-t border-zinc-800/60">
                   {/* Guide banner */}
                   <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800/80 flex items-start gap-2 text-xs text-zinc-300 leading-relaxed">
-                    <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold text-white">
                         {t('versewriter.purpose', 'Purpose of this part:')}{' '}
@@ -282,7 +282,7 @@ export default function VerseWriter({
                           ? `Skryf ${sec.tag} hier... (bv. 2 tot 4 reëls)`
                           : `Write ${sec.tagEn} here... (e.g. 2 to 4 lines)`
                       }
-                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y font-sans pr-11"
+                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500 leading-relaxed resize-y font-sans pr-11"
                     />
                     <SpeakButton onHeard={(said) => updateSectionText(sec.id, withSaid(sec.text, said))} className="absolute bottom-2 right-2" />
                   </span>

@@ -89,7 +89,7 @@ export default function StartFrame({
     return (
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
         <p className="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
-          <ImagePlus className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <ImagePlus className="w-4 h-4 text-emerald-400 shrink-0" />
           {t('frame.title', 'Start from a picture')}
         </p>
         <p className="text-xs text-zinc-500 leading-relaxed">{why}</p>
@@ -126,7 +126,7 @@ export default function StartFrame({
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
       <div>
         <p className="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
-          <ImagePlus className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <ImagePlus className="w-4 h-4 text-emerald-400 shrink-0" />
           {t('frame.title', 'Start from a picture')}
         </p>
         <p className="text-xs text-zinc-500 leading-relaxed pt-0.5">

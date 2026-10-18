@@ -317,12 +317,12 @@ export default function Darkroom({
 
   return (
     <div data-darkroom role="dialog" aria-modal="true" aria-label={w('title')} className="fixed inset-0 z-[60] flex flex-col bg-zinc-950">
-      <header className="flex flex-shrink-0 items-center gap-2 border-b border-zinc-800 px-3 py-2">
+      <header className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-3 py-2">
         <button type="button" data-darkclose onClick={onClose} aria-label={w('close')} className="grid h-11 w-11 place-items-center rounded-full border border-zinc-700 text-zinc-200">
           <X className="h-5 w-5" />
         </button>
         <h2 className="flex-1 text-lg font-black tracking-tight text-zinc-50">
-          <span className="bg-gradient-to-r from-amber-300 via-rose-300 to-violet-300 bg-clip-text text-transparent">{w('title')}</span>
+          <span className="bg-linear-to-r from-amber-300 via-rose-300 to-violet-300 bg-clip-text text-transparent">{w('title')}</span>
         </h2>
         <button
           type="button"
@@ -346,7 +346,7 @@ export default function Darkroom({
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <div className="relative flex h-[42dvh] flex-shrink-0 items-center justify-center bg-black p-2 md:h-auto md:flex-1">
+        <div className="relative flex h-[42dvh] shrink-0 items-center justify-center bg-black p-2 md:h-auto md:flex-1">
           {photo ? (
             <canvas
               ref={view}

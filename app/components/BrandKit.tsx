@@ -91,11 +91,11 @@ export default function BrandKit({
         className={`w-full flex items-center gap-2.5 px-4 text-left ${compact ? 'min-h-[44px] py-1.5' : 'py-3'}`}
       >
         {open ? (
-          <ChevronDown className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+          <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 text-zinc-500 shrink-0" />
         )}
-        <Palette className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+        <Palette className="w-4 h-4 text-emerald-400 shrink-0" />
         <span className="min-w-0">
           <span className="block text-sm font-semibold text-zinc-200">
             {t('kit.title', 'Your brand pack')}
@@ -111,7 +111,7 @@ export default function BrandKit({
           <img
             src={logo.thumb}
             alt={t('kit.logoAlt', 'Your logo')}
-            className="w-8 h-8 rounded-lg border border-zinc-700 object-cover ml-auto flex-shrink-0"
+            className="w-8 h-8 rounded-lg border border-zinc-700 object-cover ml-auto shrink-0"
           />
         )}
       </button>
@@ -132,7 +132,7 @@ export default function BrandKit({
               value={kit.name}
               onChange={(event) => put({ name: event.target.value.slice(0, 80) })}
               placeholder={t('kit.namePlaceholder', 'Bellville Bakery')}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
           </div>
 
@@ -149,7 +149,7 @@ export default function BrandKit({
                 'kit.voicePlaceholder',
                 'We are not fancy, we open at six, and we know everybody by name.',
               )}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden leading-relaxed resize-y"
             />
             <Note className="text-xs text-zinc-500 leading-relaxed">{t(
                 'kit.voiceNote',

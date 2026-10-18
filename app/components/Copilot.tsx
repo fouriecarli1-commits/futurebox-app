@@ -292,7 +292,7 @@ export default function Copilot({
       }`}
     >
       <div
-        className={`flex items-center gap-2 flex-shrink-0 ${
+        className={`flex items-center gap-2 shrink-0 ${
           bare ? 'px-1 pb-1' : 'px-4 py-3 border-b border-zinc-800'
         }`}
       >
@@ -422,7 +422,7 @@ export default function Copilot({
           e.preventDefault();
           send(draft);
         }}
-        className="flex-shrink-0 p-3 border-t border-zinc-800 flex gap-2"
+        className="shrink-0 p-3 border-t border-zinc-800 flex gap-2"
       >
         <input
           /* A handle for the probe that measures whether this box is reachable.
@@ -435,7 +435,7 @@ export default function Copilot({
           onChange={(e) => setDraft(e.target.value)}
           placeholder={offline ? t('copilot.offPlaceholder') : t('copilot.placeholder')}
           disabled={offline}
-          className="flex-1 min-w-0 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 disabled:opacity-60"
+          className="flex-1 min-w-0 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500 disabled:opacity-60"
         />
         {/* Said instead of typed (Carli, 14 October 2026). The words land in
             the box, not straight in the copilot, so she can read them first. */}

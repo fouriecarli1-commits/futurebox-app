@@ -63,10 +63,10 @@ export default function WhatWeHeard({
       <dl className="space-y-1.5">
         {readings.map((one) => (
           <div key={one.of} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <dt className="text-xs uppercase tracking-wide text-zinc-600 w-24 flex-shrink-0">
+            <dt className="text-xs uppercase tracking-wide text-zinc-600 w-24 shrink-0">
               {t(`talk.of.${one.of}`, one.of)}
             </dt>
-            <dd className="text-sm font-semibold text-zinc-200 tabular-nums flex-shrink-0">{say(one.value)}</dd>
+            <dd className="text-sm font-semibold text-zinc-200 tabular-nums shrink-0">{say(one.value)}</dd>
             {/* The clause, on the same row where there is room and wrapping
                 under the number where there is not. It is the whole point of
                 the block, so it is not hidden behind anything. */}

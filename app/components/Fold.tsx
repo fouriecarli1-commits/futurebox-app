@@ -79,10 +79,10 @@ export default function Fold({
         className="flex min-h-[56px] w-full items-center gap-2 px-3.5 py-2.5 text-left hover:bg-zinc-900/60 active:translate-y-px"
       >
         <ChevronDown
-          className={`h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
+          className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
           aria-hidden
         />
-        {icon && <span className="flex-shrink-0 text-emerald-400">{icon}</span>}
+        {icon && <span className="shrink-0 text-emerald-400">{icon}</span>}
         <span className="truncate text-sm font-semibold text-zinc-200">{title}</span>
       </button>
       {/* Unmounted rather than hidden. A shut section that is still in the

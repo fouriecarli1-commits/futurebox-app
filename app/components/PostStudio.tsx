@@ -594,7 +594,7 @@ const POST_SHORT: Record<string, readonly [string, string]> = {
   save: ['post.toolSave', 'Export'],
 };
 /** A tool along the foot on a phone: an icon over a word, small. */
-const TOOL_FOOT = 'flex min-h-[56px] w-[58px] flex-shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-0 text-[9px] font-bold leading-tight';
+const TOOL_FOOT = 'flex min-h-[56px] w-[58px] shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-0 text-[9px] font-bold leading-tight';
 /** A tool down the rail at a desk. */
 const TOOL_RAIL = 'flex min-h-[56px] w-full flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-0.5 text-[10px] font-bold leading-tight';
 
@@ -616,7 +616,7 @@ function ToolTile({ id, from, icon, size }: {
     if (canvas.current && from) setDrawn(drawToolTile(canvas.current, id, from));
   }, [id, from]);
   return (
-    <span className="relative flex flex-shrink-0 items-center justify-center" style={{ width: size, height: size }}>
+    <span className="relative flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
       <canvas
         ref={canvas}
         width={size * 2}
@@ -5659,7 +5659,7 @@ export default function PostStudio({
   const traceStrip = picture && traced ? (
     <div
       data-postdrawbar
-      className="flex-shrink-0 space-y-2 border-t px-4 py-3"
+      className="shrink-0 space-y-2 border-t px-4 py-3"
       style={asRoom
         ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
         : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
@@ -5781,7 +5781,7 @@ export default function PostStudio({
   const cropStrip = picture && cropBox ? (
     <div
       data-postcropbar
-      className="flex-shrink-0 space-y-2 border-t px-4 py-3"
+      className="shrink-0 space-y-2 border-t px-4 py-3"
       style={asRoom
         ? { borderColor: 'rgba(16,185,129,0.25)', background: FLOOR }
         : { borderColor: 'rgb(39,39,42)', background: 'rgb(9,9,11)' }}
@@ -6172,7 +6172,7 @@ export default function PostStudio({
           placeholder={picture
             ? t('post.askHint', 'Take the car out of the background. Make it evening. Write SALE on the window.')
             : t('post.makeHint', 'A konsertina on a stoep at sunset, warm light, film grain.')}
-          className="w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px] leading-relaxed outline-none focus:border-emerald-500/60 pr-11"
+          className="w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px] leading-relaxed outline-hidden focus:border-emerald-500/60 pr-11"
           style={asRoom ? { color: INK } : undefined}
         />
         <SpeakButton onHeard={(said) => setAskWords((was) => withSaid(was, said).slice(0, 500))} className="absolute bottom-2 right-2" />
@@ -6432,7 +6432,7 @@ export default function PostStudio({
               onChange={(e) => setPaintColours(
                 paintColours.map((was, which) => (which === at ? e.target.value : was)),
               )}
-              className="h-11 w-11 flex-shrink-0 cursor-pointer rounded-xl border border-zinc-700 bg-transparent p-1"
+              className="h-11 w-11 shrink-0 cursor-pointer rounded-xl border border-zinc-700 bg-transparent p-1"
             />
           ))}
 
@@ -8125,7 +8125,7 @@ export default function PostStudio({
               setMarks((was) => [...was, { ...newMark(spec.id, id), z: frontZ(was, words) }]);
               setMarkOn(id);
             }}
-            className={`${LEEG} inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap`}
+            className={`${LEEG} inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap`}
           >
             <span aria-hidden>{spec.icon}</span>
             {t(spec.name[0], spec.name[1])}
@@ -8142,7 +8142,7 @@ export default function PostStudio({
           /* Vector art: sized and faded here like a shape, changed in the studio it came from. */
           const artSlider = (label: string, value: number, min: number, max: number, step: number, set: (v: number) => void, id: string) => (
             <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider={id}>
-              <span className="w-24 flex-shrink-0">{label}</span>
+              <span className="w-24 shrink-0">{label}</span>
               <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => set(Number(e.target.value))} className="h-11 min-w-0 flex-1 accent-emerald-400" />
             </label>
           );
@@ -8165,7 +8165,7 @@ export default function PostStudio({
         const spec = MARK_SPECS.find((one) => one.id === mark.kind) ?? MARK_SPECS[0];
         const slider = (label: string, value: number, min: number, max: number, step: number, set: (v: number) => void, id: string) => (
           <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider={id}>
-            <span className="w-24 flex-shrink-0">{label}</span>
+            <span className="w-24 shrink-0">{label}</span>
             <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => set(Number(e.target.value))} className="h-9 min-w-0 flex-1 accent-emerald-400" />
           </label>
         );
@@ -8194,11 +8194,11 @@ export default function PostStudio({
                   aria-pressed={mark.ink === ink}
                   aria-label={ink}
                   onClick={() => changeMark(mark.id, { ink })}
-                  className={`h-9 w-9 flex-shrink-0 rounded-full border-2 ${mark.ink === ink ? 'border-white' : 'border-zinc-700'}`}
+                  className={`h-9 w-9 shrink-0 rounded-full border-2 ${mark.ink === ink ? 'border-white' : 'border-zinc-700'}`}
                   style={{ background: ink, boxShadow: mark.ink === ink ? `0 0 14px ${ink}` : `0 0 6px ${ink}` }}
                 />
               ))}
-              <label className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border-2 border-dashed border-zinc-500" title={t('post.markOwnColour', 'Any colour')}>
+              <label className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 border-dashed border-zinc-500" title={t('post.markOwnColour', 'Any colour')}>
                 <input
                   type="color"
                   value={mark.ink.length === 7 ? mark.ink : '#ffffff'}
@@ -8217,7 +8217,7 @@ export default function PostStudio({
                   data-postmarkglow={glow.id}
                   aria-pressed={mark.glow === glow.id}
                   onClick={() => changeMark(mark.id, { glow: glow.id })}
-                  className={`${LEEG} w-auto flex-shrink-0 px-3 ${mark.glow === glow.id ? GEKIES : ''}`}
+                  className={`${LEEG} w-auto shrink-0 px-3 ${mark.glow === glow.id ? GEKIES : ''}`}
                   style={glow.halo.length ? { textShadow: `0 0 6px ${glow.halo[2]}, 0 0 14px ${glow.halo[1]}` } : undefined}
                 >
                   {t(glow.name[0], glow.name[1])}
@@ -8646,7 +8646,7 @@ export default function PostStudio({
         onClick={() => chooseLayer(id)}
         className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-left text-xs font-bold text-zinc-200"
       >
-        <span aria-hidden className="flex-shrink-0">{icon}</span>
+        <span aria-hidden className="shrink-0">{icon}</span>
         <span className="truncate">{name}</span>
       </button>
       {extra}
@@ -8659,7 +8659,7 @@ export default function PostStudio({
       aria-pressed={!hidden}
       aria-label={hidden ? t('post.layerShow', 'Show this layer') : t('post.layerHide', 'Hide this layer')}
       onClick={flip}
-      className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-lg text-zinc-300"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-zinc-300"
     >
       {hidden ? <EyeOff className="h-4 w-4 opacity-60" /> : <Eye className="h-4 w-4" />}
     </button>
@@ -8686,7 +8686,7 @@ export default function PostStudio({
                 disabled={at === 0}
                 aria-label={t('post.layerUp', 'Move forward')}
                 onClick={up}
-                className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
+                className="grid h-11 w-9 shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
               >
                 <ChevronUp className="h-4 w-4" />
               </button>
@@ -8696,7 +8696,7 @@ export default function PostStudio({
                 disabled={at === order.length - 1}
                 aria-label={t('post.layerDown', 'Move back')}
                 onClick={down}
-                className="grid h-11 w-9 flex-shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
+                className="grid h-11 w-9 shrink-0 place-items-center rounded-lg text-zinc-300 disabled:opacity-30"
               >
                 <ChevronDown className="h-4 w-4" />
               </button>
@@ -8758,7 +8758,7 @@ export default function PostStudio({
         </p>
         {(chosenItem || layerOn === 'photo') && (
           <label className="flex items-center gap-2 text-xs font-bold text-zinc-300" data-postlayeralpha>
-            <span className="w-24 flex-shrink-0">{t('post.layerOpacity', 'Opacity')}</span>
+            <span className="w-24 shrink-0">{t('post.layerOpacity', 'Opacity')}</span>
             <input
               type="range"
               min={0.1}
@@ -9022,9 +9022,9 @@ export default function PostStudio({
       data-postcelltool={id}
       disabled={disabled}
       onClick={run}
-      className="flex w-[76px] flex-shrink-0 flex-col items-center gap-1.5 text-[11px] font-bold text-zinc-200 disabled:opacity-40"
+      className="flex w-[76px] shrink-0 flex-col items-center gap-1.5 text-[11px] font-bold text-zinc-200 disabled:opacity-40"
     >
-      <span className="grid h-14 w-14 place-items-center rounded-full border border-violet-400/40 bg-gradient-to-br from-violet-500/30 via-zinc-900 to-cyan-500/20 text-violet-200 shadow-[0_0_16px_rgba(167,139,250,0.25)]">
+      <span className="grid h-14 w-14 place-items-center rounded-full border border-violet-400/40 bg-linear-to-br from-violet-500/30 via-zinc-900 to-cyan-500/20 text-violet-200 shadow-[0_0_16px_rgba(167,139,250,0.25)]">
         {icon}
       </span>
       <span className="text-center leading-tight">{label}</span>
@@ -9042,8 +9042,8 @@ export default function PostStudio({
       </div>
       {cellNow.image && (
         <label className="flex items-center gap-2 text-xs font-bold text-zinc-300" data-postcellzoom>
-          <ZoomIn className="h-4 w-4 flex-shrink-0" />
-          <span className="w-16 flex-shrink-0">{t('post.cellZoom', 'Closer')}</span>
+          <ZoomIn className="h-4 w-4 shrink-0" />
+          <span className="w-16 shrink-0">{t('post.cellZoom', 'Closer')}</span>
           <input
             type="range"
             min={1}
@@ -9279,11 +9279,11 @@ export default function PostStudio({
             </details>
 
             <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider="size">
-              <span className="w-24 flex-shrink-0">{t('post.markSizeSlide', 'Size')}</span>
+              <span className="w-24 shrink-0">{t('post.markSizeSlide', 'Size')}</span>
               <input type="range" min={0.2} max={1.4} step={0.01} value={mark.size} onChange={(e) => changeMark(mark.id, { size: Number(e.target.value) })} className="h-11 min-w-0 flex-1 accent-emerald-400" />
             </label>
             <label className="flex items-center gap-2 text-xs font-bold" data-postmarkslider="stretch">
-              <span className="w-24 flex-shrink-0">{t('post.markStretch', 'Wide or tall')}</span>
+              <span className="w-24 shrink-0">{t('post.markStretch', 'Wide or tall')}</span>
               <input type="range" min={0.5} max={2.6} step={0.05} value={mark.stretch ?? 1} onChange={(e) => changeMark(mark.id, { stretch: Number(e.target.value) })} className="h-11 min-w-0 flex-1 accent-emerald-400" />
             </label>
           </div>
@@ -9421,7 +9421,7 @@ export default function PostStudio({
   const header = (
     <header
       data-postbar
-      className={`flex flex-shrink-0 items-center px-2 py-1.5 ${upright ? 'gap-1' : 'gap-1.5'}`}
+      className={`flex shrink-0 items-center px-2 py-1.5 ${upright ? 'gap-1' : 'gap-1.5'}`}
       style={{ background: PHOTO.floorGlass, borderBottom: `1px solid ${PHOTO.edge}` }}
     >
       {asRoom ? (
@@ -9440,7 +9440,7 @@ export default function PostStudio({
           <X className="h-4 w-4" />
         </button>
       )}
-      <div className={upright ? 'flex-shrink-0' : 'min-w-0 flex-1 overflow-hidden'}>
+      <div className={upright ? 'shrink-0' : 'min-w-0 flex-1 overflow-hidden'}>
         {/* The name of the room refuses to shrink to nothing: on a 1512-wide
             screen a heading with no width of its own was squeezed to 52
             pixels and read "noto / ditor". */}
@@ -9476,7 +9476,7 @@ export default function PostStudio({
         title={plain
           ? t('post.showAllWhat', 'Show every setting there is')
           : t('post.showLessWhat', 'One button per tool, at the setting that is right most of the time')}
-        className="flex h-9 flex-shrink-0 items-center rounded-lg px-1.5 text-[10px] font-bold sm:px-2 sm:text-[11px]"
+        className="flex h-9 shrink-0 items-center rounded-lg px-1.5 text-[10px] font-bold sm:px-2 sm:text-[11px]"
         style={chipStyle}
       >
         {plain ? t('post.showAll', 'Everything') : t('post.showLess', 'Simple')}
@@ -9650,7 +9650,7 @@ export default function PostStudio({
                 disabled={off}
                 aria-pressed={id === 'place' ? framing : undefined}
                 onClick={run}
-                className={`flex min-h-[48px] min-w-[40px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[9px] font-bold disabled:opacity-35 ${id === 'place' && framing ? 'ring-2 ring-violet-400' : ''}`}
+                className={`flex min-h-[48px] min-w-[40px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[9px] font-bold disabled:opacity-35 ${id === 'place' && framing ? 'ring-2 ring-violet-400' : ''}`}
                 style={{ color: PHOTO.ink }}
               >
                 {icon}
@@ -9668,7 +9668,7 @@ export default function PostStudio({
           style={{ background: PHOTO.popGlass, color: PHOTO.ink, border: `1px solid ${PHOTO.accentDim}` }}
         >
           <span className="truncate">{t('post.cellEditing', 'Editing one photo of your grid')}</span>
-          <span className="flex flex-shrink-0 gap-1.5">
+          <span className="flex shrink-0 gap-1.5">
             <button type="button" data-postcellcancel onClick={() => finishCell(false)} className="min-h-[36px] rounded-xl border border-zinc-600 px-3">
               {t('post.cellCancel', 'Cancel')}
             </button>
@@ -9692,7 +9692,7 @@ export default function PostStudio({
           className="absolute right-2 top-2 z-10 flex min-h-[32px] max-w-[55%] items-center gap-1.5 rounded-full px-3 text-[11px] font-bold"
           style={{ background: PHOTO.popGlass, color: PHOTO.ink, border: `1px solid ${PHOTO.accentDim}` }}
         >
-          <Layers className="h-3.5 w-3.5 flex-shrink-0" />
+          <Layers className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">
             {layerOn === 'photo'
               ? t('post.layerPhoto', 'Photo')
@@ -9703,7 +9703,7 @@ export default function PostStudio({
                   return one ? layerNameOf(one.kind, one.item) : '';
                 })()}
           </span>
-          <X className="h-3.5 w-3.5 flex-shrink-0" aria-label={t('post.layerBackToAll', 'All layers')} />
+          <X className="h-3.5 w-3.5 shrink-0" aria-label={t('post.layerBackToAll', 'All layers')} />
         </button>
       )}
       {/* The right-click menu. Carli, 14 October 2026: "in al die editor
@@ -9715,7 +9715,7 @@ export default function PostStudio({
         <div
           role="menu"
           data-postrightmenu
-          className="fixed z-[80] flex w-48 flex-col gap-1 rounded-2xl border border-zinc-700 bg-zinc-950/95 p-1.5 shadow-2xl backdrop-blur"
+          className="fixed z-[80] flex w-48 flex-col gap-1 rounded-2xl border border-zinc-700 bg-zinc-950/95 p-1.5 shadow-2xl backdrop-blur-sm"
           style={{
             left: Math.max(8, Math.min(rightMenu.x, (typeof window === 'undefined' ? 400 : window.innerWidth) - 200)),
             top: Math.max(8, Math.min(rightMenu.y, (typeof window === 'undefined' ? 400 : window.innerHeight) - 260)),
@@ -9799,7 +9799,7 @@ export default function PostStudio({
               notification wat niemand hoef te sien nie."* The words are moved
               clear in the saved file by themselves, and the shaded bands on
               the glass already show where the bars are. */}
-          {said && <p data-postsaid className="pointer-events-auto rounded-xl bg-black/70 px-3 py-1.5 text-[12px] leading-snug text-emerald-300 backdrop-blur">{said}</p>}
+          {said && <p data-postsaid className="pointer-events-auto rounded-xl bg-black/70 px-3 py-1.5 text-[12px] leading-snug text-emerald-300 backdrop-blur-sm">{said}</p>}
         </div>
       )}
       {/* The photograph's own size, for a probe to read: the canvas is the
@@ -9827,7 +9827,7 @@ export default function PostStudio({
            a tall bar over the foot of a story, and a Done that opened the
            Grab panel again. One line of what was tapped with Done beside
            it, then the buttons for it; Done closes everything. */
-        <div data-postlinebar className="flex-shrink-0 space-y-2 px-3 py-2">
+        <div data-postlinebar className="shrink-0 space-y-2 px-3 py-2">
           <div className="flex items-center gap-2">
             <p data-postlinesaid className="min-w-0 flex-1 truncate text-[12px]" style={{ color: picked ? '#39ff14' : INK_DIM }}>
               {picked ? `“${picked.text}”` : t('post.tapALine', 'Tap a line of writing on the picture.')}
@@ -9836,7 +9836,7 @@ export default function PostStudio({
               type="button"
               data-postlinedone
               onClick={() => { setPicking(false); setFound(null); setPicked(null); setBench(null); }}
-              className="inline-flex h-11 flex-shrink-0 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-black"
+              className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-black"
             >
               <Check className="h-4 w-4" />
               {t('post.lineDone', 'Done')}
@@ -9880,7 +9880,7 @@ export default function PostStudio({
         </div>
       )}
       {(picture !== null || words.length > 0) && movingWords ? (
-        <div data-postmovebar className="flex-shrink-0 space-y-2 px-3 py-2">
+        <div data-postmovebar className="shrink-0 space-y-2 px-3 py-2">
           <p className="text-[12px] leading-relaxed" style={{ color: INK_DIM }}>
             {t('post.moveWordsHow', 'Put your finger on a line of words and drag it where you want it.')}
           </p>
@@ -10019,7 +10019,7 @@ export default function PostStudio({
               data-postsocialplace={platform.id}
               aria-pressed={platform.id === feedNow.platform.id}
               onClick={() => setFeedKindId(platform.kinds[0].id)}
-              className="min-h-[44px] flex-shrink-0 rounded-xl px-3 text-xs font-bold"
+              className="min-h-[44px] shrink-0 rounded-xl px-3 text-xs font-bold"
               style={platform.id === feedNow.platform.id
                 ? { background: PHOTO.purple, color: PHOTO.floor }
                 : { ...chipStyle, color: INK }}
@@ -10094,7 +10094,7 @@ export default function PostStudio({
           ) : null}
           {feedLook === 'thumb' ? (
             <div className="flex items-start gap-2 pt-2" aria-hidden>
-              <span className="h-7 w-7 flex-shrink-0 rounded-full" style={{ background: PHOTO.accent }} />
+              <span className="h-7 w-7 shrink-0 rounded-full" style={{ background: PHOTO.accent }} />
               <div className="flex-1 space-y-1 pt-1">
                 <div className="h-2 w-5/6 rounded-full" style={{ background: INK_DIM }} />
                 <div className="h-1.5 w-1/2 rounded-full" style={{ background: PHOTO.edge }} />
@@ -10241,7 +10241,7 @@ export default function PostStudio({
             /* Sideways on purpose: Carli, 14 October 2026 — the tools stay
                small along the foot and scroll left and right, so the photo
                keeps the whole screen above them. */
-            className="flex flex-shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1"
+            className="flex shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1"
             style={{ background: PHOTO.floorGlass, borderTop: `1px solid ${PHOTO.edge}` }}
           >
             {ALL_BENCHES.map((spec) => toolButton(spec, false))}
@@ -10255,7 +10255,7 @@ export default function PostStudio({
               data-cutdock=""
               data-cutbenchrow=""
               data-postrail
-              className="flex w-[68px] flex-shrink-0 flex-col gap-1 overflow-y-auto p-1.5"
+              className="flex w-[68px] shrink-0 flex-col gap-1 overflow-y-auto p-1.5"
               style={{ background: PHOTO.floorGlass, borderRight: `1px solid ${PHOTO.edge}` }}
             >
               {ALL_BENCHES.map((spec) => toolButton(spec, true))}
@@ -10263,7 +10263,7 @@ export default function PostStudio({
             {photo}
             <aside
               data-postinspector
-              className="flex w-[340px] flex-shrink-0 min-h-0 flex-col overflow-y-auto 2xl:w-[400px]"
+              className="flex w-[340px] shrink-0 min-h-0 flex-col overflow-y-auto 2xl:w-[400px]"
               style={{ background: PHOTO.surface, borderLeft: `1px solid ${PHOTO.edge}` }}
             >
               {stripsUp ? <div className="border-b" style={{ borderColor: PHOTO.edge }}>{strips}</div> : null}

@@ -1219,9 +1219,9 @@ export default function VocalBooth({
        decision: see `check:boothline` and `lib/boothlook.ts`. */
     <div data-booth data-live={fullScreen ? '' : undefined} className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col"
       style={{ paddingBottom: fullScreen ? 'env(safe-area-inset-bottom, 0px)' : barClearance(0) }}>
-      <div className="fb-livehide relative flex items-center gap-3 px-5 py-3 border-b border-cyan-500/25 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] flex-shrink-0 overflow-hidden">
+      <div className="fb-livehide relative flex items-center gap-3 px-5 py-3 border-b border-cyan-500/25 bg-linear-to-r from-zinc-950 via-zinc-900 to-zinc-950 shadow-[0_4px_24px_-4px_rgba(6,182,212,0.18)] shrink-0 overflow-hidden">
         {/* Subtle neon laser top accent line */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-600 via-emerald-400 to-cyan-400 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-emerald-600 via-emerald-400 to-cyan-400 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
         {/* Out of the room, and it says so.
 
             Carli: "the booth en the pro booth het nie 'n back knoppie nie."
@@ -1236,7 +1236,7 @@ export default function VocalBooth({
         <button
           type="button"
           onClick={onClose}
-          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-2 text-sm font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+          className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/90 px-3 py-2 text-sm font-semibold text-zinc-200 transition-all hover:border-cyan-400 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.35)]"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('booth.back', 'Back')}
@@ -1264,7 +1264,7 @@ export default function VocalBooth({
         </div>
         <div
           data-boothtransport
-          className="flex flex-shrink-0 items-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 font-mono text-xs"
+          className="flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 font-mono text-xs"
         >
           {(track.bpm ?? 0) > 0 && (
             <span className="hidden text-zinc-400 sm:inline">
@@ -1339,7 +1339,7 @@ export default function VocalBooth({
           So the phone gets the part that answers her, and not the parts that
           need a mouse. */}
       <TakeStrip
-        className="fb-livehide sm:hidden flex-shrink-0 px-5 pb-2"
+        className="fb-livehide sm:hidden shrink-0 px-5 pb-2"
         at={at}
         guide={guide}
         trail={trailRef.current}
@@ -1370,7 +1370,7 @@ export default function VocalBooth({
           it is where the words are dragged back into time. Both are real and
           both want a wide screen and a mouse. The same song opened on a
           laptop still has them. */}
-      <div className="fb-livehide hidden sm:block flex-shrink-0 px-5 pb-2 space-y-1.5">
+      <div className="fb-livehide hidden sm:block shrink-0 px-5 pb-2 space-y-1.5">
         <NoteBar
           onHold={() => {
             holdRef.current = { at, shift: wordsShift };
@@ -1399,11 +1399,11 @@ export default function VocalBooth({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
           {note ? (
             <>
-              <span className="text-2xl font-black text-white tabular-nums flex-shrink-0">
+              <span className="text-2xl font-black text-white tabular-nums shrink-0">
                 {note.name}
                 <span className="text-zinc-500 text-base">{note.octave}</span>
               </span>
-              <span className="w-28 h-2 rounded-full bg-zinc-800 relative overflow-hidden flex-shrink-0">
+              <span className="w-28 h-2 rounded-full bg-zinc-800 relative overflow-hidden shrink-0">
                 {/* Middle is in tune. Left is flat, right is sharp. */}
                 <span className="absolute inset-y-0 left-1/2 w-px bg-zinc-600" />
                 <span
@@ -1413,14 +1413,14 @@ export default function VocalBooth({
                   style={{ left: `calc(${50 + Math.max(-50, Math.min(50, note.cents))}% - 4px)` }}
                 />
               </span>
-              <span className="text-sm text-zinc-500 tabular-nums w-12 flex-shrink-0">
+              <span className="text-sm text-zinc-500 tabular-nums w-12 shrink-0">
                 {note.cents > 0 ? '+' : ''}{note.cents}
               </span>
             </>
           ) : (
             /* Only claim to be listening while the microphone is actually
                open. Idle, the honest thing to say is what the row is for. */
-            <span className="text-sm text-zinc-700 flex-shrink-0">
+            <span className="text-sm text-zinc-700 shrink-0">
               {busyOrLive ? t('booth.listening', 'Listening…') : t('booth.noteHint', 'Your note shows here as you sing.')}
             </span>
           )}
@@ -1483,7 +1483,7 @@ export default function VocalBooth({
           opened before pressing record would put it straight back over the
           words. */}
       {sung.length > 0 && !busyOrLive && (
-        <div className="flex-shrink-0 px-5 pb-2 space-y-2">
+        <div className="shrink-0 px-5 pb-2 space-y-2">
           <button
             type="button"
             data-sangopen={sangOpen ? 'yes' : 'no'}
@@ -1492,11 +1492,11 @@ export default function VocalBooth({
             className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3.5 py-2 text-sm font-semibold text-zinc-300"
           >
             <span className="flex items-center gap-2 min-w-0">
-              <Music2 className="h-4 w-4 flex-shrink-0 text-zinc-500" />
+              <Music2 className="h-4 w-4 shrink-0 text-zinc-500" />
               <span className="truncate">{t('staff.title', 'What you sang')}</span>
             </span>
             <ChevronDown
-              className={`h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform ${sangOpen ? 'rotate-180' : ''}`}
+              className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform ${sangOpen ? 'rotate-180' : ''}`}
             />
           </button>
           {sangOpen && <Staff notes={sung} musicKey={track.key ?? ''} bpm={track.bpm ?? 0} />}
@@ -1512,7 +1512,7 @@ export default function VocalBooth({
           at a microphone is actually looking at, which is the words. Nothing
           is lost — every take is still there, and the same song opened on a
           laptop shows it. */}
-      <div className="flex-shrink-0 px-5 pb-4 space-y-2">
+      <div className="shrink-0 px-5 pb-4 space-y-2">
         {/* ── The desk instruments ────────────────────────────────────
             The waveform and the two rows that read off it: the clock, and the
             part being re-sung. All three want a mouse and a wide screen, and
@@ -1701,7 +1701,7 @@ export default function VocalBooth({
             mark where every other explanation in this app already lives,
             and the price on the button rather than under it. */}
         <div className="fb-livehide rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
-          <Ear className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <Ear className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="text-sm font-semibold text-zinc-300">
             {t('booth.heardWhat', 'The words as sung')}
           </span>
@@ -1712,7 +1712,7 @@ export default function VocalBooth({
           </Hint>
           <span className="flex-1" />
           {heard ? (
-            <div className="flex rounded-xl border border-zinc-700 overflow-hidden flex-shrink-0">
+            <div className="flex rounded-xl border border-zinc-700 overflow-hidden shrink-0">
               {[
                 { written: false, label: t('booth.asSung', 'As sung') },
                 { written: true, label: t('booth.asWritten', 'As written') },
@@ -1860,7 +1860,7 @@ export default function VocalBooth({
                for anybody on that theme. `check:scrim` said so within the
                minute, and this is the second time today a Tailwind colour
                name has meant the opposite of what it says. */
-            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim/80 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim/80 p-4 backdrop-blur-xs"
           >
             <div
               onClick={(event) => event.stopPropagation()}
@@ -1924,7 +1924,7 @@ export default function VocalBooth({
             pressing it re-wrapped the row. */}
         {!stems && (
           <div className="fb-livehide rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
-            <Users className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <Users className="w-4 h-4 text-emerald-400 shrink-0" />
             <span className="text-sm font-semibold text-zinc-300">
               {t('booth.splitWhat', 'Sing beside the voice')}
             </span>
@@ -1961,7 +1961,7 @@ export default function VocalBooth({
             {/* The rule that used to be drawn under the heading is gone with
                 the heading: the card draws its own edge. */}
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-semibold text-zinc-200 w-28 flex-shrink-0">
+              <span className="text-sm font-semibold text-zinc-200 w-28 shrink-0">
                 {t('booth.yourVoice', 'Your voice')}
               </span>
               <button
@@ -1980,7 +1980,7 @@ export default function VocalBooth({
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-semibold text-zinc-200 w-28 flex-shrink-0">
+              <span className="text-sm font-semibold text-zinc-200 w-28 shrink-0">
                 {t('booth.aiVoice', 'The AI voice')}
               </span>
               {stems ? (
@@ -2013,7 +2013,7 @@ export default function VocalBooth({
             </div>
 
             <div className="flex items-center gap-3 flex-wrap border-t border-zinc-800 pt-2.5">
-              <span className="text-sm font-semibold text-zinc-200 w-28 flex-shrink-0">
+              <span className="text-sm font-semibold text-zinc-200 w-28 shrink-0">
                 {t('booth.tune', 'Tuning')}
               </span>
               <label className="flex items-center gap-2 flex-1 min-w-[220px]">
@@ -2073,7 +2073,7 @@ export default function VocalBooth({
                     .replace('{off}', Math.round(tuned.report.averageCents).toString())
                     .replace('{moved}', Math.round(tuned.report.movedCents).toString())}
                 </p>
-                <div className="flex rounded-xl border border-zinc-700 overflow-hidden flex-shrink-0">
+                <div className="flex rounded-xl border border-zinc-700 overflow-hidden shrink-0">
                   {[
                     { raw: true, label: t('booth.hearRaw', 'As sung') },
                     { raw: false, label: t('booth.hearTuned', 'Tuned') },
@@ -2181,7 +2181,7 @@ export default function VocalBooth({
 
       {/* The buttons stay put. Scrolling to find "stop" is not a thing anybody
           should have to do with a microphone open. */}
-      <div className="flex-shrink-0 px-5 pt-2 pb-3 border-t border-zinc-800 space-y-2">
+      <div className="shrink-0 px-5 pt-2 pb-3 border-t border-zinc-800 space-y-2">
         {/* Whatever went wrong, beside the button that caused it.
 
             This sat in the scrolling middle of the page, and the record button
@@ -2221,7 +2221,7 @@ export default function VocalBooth({
             {/* The record light: the third of the three things left on the
                 screen while a take runs, with pause and stop. */}
             <span
-              className={`h-3 w-3 flex-shrink-0 rounded-full ${phase === 'recording' && !paused ? 'animate-pulse bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-amber-400'}`}
+              className={`h-3 w-3 shrink-0 rounded-full ${phase === 'recording' && !paused ? 'animate-pulse bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-amber-400'}`}
               aria-hidden
             />
             <span
@@ -2242,7 +2242,7 @@ export default function VocalBooth({
                 onClick={paused ? carryOn : hold}
                 aria-label={paused ? t('sing.carryOn', 'Carry on') : t('sing.hold', 'Pause')}
                 title={paused ? t('sing.carryOn', 'Carry on') : t('sing.hold', 'Pause')}
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-200"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-200"
               >
                 {paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
               </button>
@@ -2251,7 +2251,7 @@ export default function VocalBooth({
               type="button"
               onClick={() => void stop()}
               disabled={listening}
-              className={`${BAR} w-auto flex-shrink-0 px-6 bg-red-500/20 border-red-500 text-red-300 disabled:opacity-50`}
+              className={`${BAR} w-auto shrink-0 px-6 bg-red-500/20 border-red-500 text-red-300 disabled:opacity-50`}
             >
               <Square className="h-4 w-4 fill-current" />
               {t('take.stop', 'Stop')}
@@ -2396,7 +2396,7 @@ export default function VocalBooth({
             that was made when the headphones went on. */}
         {!busyOrLive && (
         <p className="text-sm text-zinc-600 leading-snug flex items-start gap-1.5">
-          <Mic className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+          <Mic className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           {/* Half of this line is about the note stave, which a phone no
               longer has. Saying "the note shown is what you are singing" on a
               screen with no note on it is the sort of small lie that makes

@@ -63,7 +63,7 @@ export default function PairStrip({
   return (
     <div data-pairstrip className="rounded-2xl border border-emerald-800/60 bg-emerald-950/20 p-3 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <Handshake className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+        <Handshake className="h-4 w-4 shrink-0 text-emerald-400" />
         <p className="text-sm text-zinc-300 min-w-0">
           {t('pair.with', 'In here with you:')}{' '}
           <span className="font-semibold text-white">{pair.withName}</span>
@@ -166,7 +166,7 @@ export default function PairStrip({
               value={draft}
               onChange={(event) => { setDraft(event.target.value); setHandle(''); }}
               placeholder={t('pair.linkHint', 'Paste a link — Instagram, TikTok, WhatsApp, YouTube…')}
-              className="min-w-0 flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="min-w-0 flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             <button
               type="button"
@@ -177,7 +177,7 @@ export default function PairStrip({
                 if (!said) { setDraft(''); setOpen(false); }
                 return said;
               })}
-              className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500 px-3 py-2 text-onAccent disabled:opacity-50"
+              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-emerald-500 px-3 py-2 text-onAccent disabled:opacity-50"
               aria-label={t('pair.leaveIt', 'Leave it')}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -198,7 +198,7 @@ export default function PairStrip({
             <select
               value={platform}
               onChange={(event) => setPlatform(event.target.value)}
-              className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-2 py-2 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-none"
+              className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-2 py-2 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-hidden"
             >
               {HANDLE_PLATFORMS.map((one) => (
                 <option key={one} value={one}>{one}</option>
@@ -208,7 +208,7 @@ export default function PairStrip({
               value={handle}
               onChange={(event) => { setHandle(event.target.value); setDraft(''); }}
               placeholder="@you"
-              className="min-w-0 flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="min-w-0 flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             <button
               type="button"
@@ -219,7 +219,7 @@ export default function PairStrip({
                 if (!said) { setHandle(''); setOpen(false); }
                 return said;
               })}
-              className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500 px-3 py-2 text-onAccent disabled:opacity-50"
+              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-emerald-500 px-3 py-2 text-onAccent disabled:opacity-50"
               aria-label={t('pair.leaveIt', 'Leave it')}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

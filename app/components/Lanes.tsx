@@ -294,7 +294,7 @@ export default function Lanes({
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
       <div className="flex items-start gap-2.5">
-        <Music4 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <Music4 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-zinc-200">{t('lanes.title', 'The song in tracks')}</p>
           <Note className="text-xs text-zinc-500 leading-relaxed">{t(
@@ -334,7 +334,7 @@ export default function Lanes({
               type="button"
               onClick={toggle}
               aria-label={playing ? t('common.pause', 'Pause') : t('common.play', 'Play')}
-              className="w-11 h-11 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center flex-shrink-0"
+              className="w-11 h-11 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center shrink-0"
             >
               {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
             </button>

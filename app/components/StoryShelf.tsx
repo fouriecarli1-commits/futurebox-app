@@ -159,7 +159,7 @@ export default function StoryShelf({
             type="button"
             onClick={() => (playing ? (audio.current?.pause(), setPlaying(false)) : read(open, page))}
             data-shelfplay
-            className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent"
             aria-label={playing ? t('shelf.pause', 'Pause') : t('shelf.play', 'Play')}
           >
             {playing ? <Pause className="h-6 w-6" fill="currentColor" /> : <Play className="h-6 w-6 translate-x-0.5" fill="currentColor" />}
@@ -173,7 +173,7 @@ export default function StoryShelf({
             type="button"
             onClick={shut}
             data-shelfshut
-            className="min-h-[44px] flex-shrink-0 rounded-xl border border-zinc-700 px-4 text-sm font-bold text-zinc-300"
+            className="min-h-[44px] shrink-0 rounded-xl border border-zinc-700 px-4 text-sm font-bold text-zinc-300"
           >
             {t('shelf.done', 'Done')}
           </button>
@@ -227,7 +227,7 @@ export default function StoryShelf({
               <img
                 src={url(story.pages[0].picture)}
                 alt=""
-                className="h-12 w-12 flex-shrink-0 rounded-xl object-cover"
+                className="h-12 w-12 shrink-0 rounded-xl object-cover"
               />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-bold text-zinc-100">{named(story.title)}</span>
@@ -237,7 +237,7 @@ export default function StoryShelf({
                     : t('shelf.pages', 'pages')}
                 </span>
               </span>
-              <BookOpen className="h-5 w-5 flex-shrink-0 text-emerald-400" />
+              <BookOpen className="h-5 w-5 shrink-0 text-emerald-400" />
             </button>
             {grownUp && (
               <button
@@ -245,7 +245,7 @@ export default function StoryShelf({
                 onClick={() => setOnPaper(story)}
                 data-shelfprint={story.id}
                 aria-label={t('shelf.print', 'Print it as a little book')}
-                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-400"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-400"
               >
                 <Printer className="h-4 w-4" />
               </button>
@@ -256,7 +256,7 @@ export default function StoryShelf({
                 onClick={() => { void forgetStory(story.id).then(look); }}
                 data-shelfforget={story.id}
                 aria-label={t('shelf.forget', 'Take it off the shelf')}
-                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-500"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-500"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

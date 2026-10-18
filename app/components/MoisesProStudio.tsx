@@ -536,7 +536,7 @@ export default function MoisesProStudio({
             <button
               type="button"
               onClick={onOpenDaw}
-              className="flex h-8 items-center gap-1 rounded-lg border border-cyan-700 bg-cyan-950/70 px-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-900/70 shadow-sm"
+              className="flex h-8 items-center gap-1 rounded-lg border border-cyan-700 bg-cyan-950/70 px-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-900/70 shadow-xs"
             >
               <span>🎹</span>
               <span className="hidden sm:inline">{t('daw.toggleDaw', 'DAW Arranger')}</span>
@@ -933,7 +933,7 @@ export default function MoisesProStudio({
             onClick={() => setViewMode('lyrics')}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
               viewMode === 'lyrics'
-                ? 'bg-zinc-200 text-black shadow'
+                ? 'bg-zinc-200 text-black shadow-sm'
                 : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -946,7 +946,7 @@ export default function MoisesProStudio({
             onClick={() => setViewMode('chords')}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
               viewMode === 'chords'
-                ? 'bg-zinc-200 text-black shadow'
+                ? 'bg-zinc-200 text-black shadow-sm'
                 : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -959,7 +959,7 @@ export default function MoisesProStudio({
             onClick={() => setViewMode('waveforms')}
             className={`hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
               viewMode === 'waveforms'
-                ? 'bg-zinc-200 text-black shadow'
+                ? 'bg-zinc-200 text-black shadow-sm'
                 : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -972,7 +972,7 @@ export default function MoisesProStudio({
             onClick={() => setShowSections(!showSections)}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
               showSections
-                ? 'bg-zinc-200 text-black shadow'
+                ? 'bg-zinc-200 text-black shadow-sm'
                 : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
             }`}
           >

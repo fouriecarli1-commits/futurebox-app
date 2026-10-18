@@ -620,7 +620,7 @@ export default function Storyboard({
           value={board.look ?? ''}
           onChange={(event) => setBoard((was) => ({ ...was, look: event.target.value }))}
           placeholder={t('board.lookHint', 'Warm evening light, shot on film, slow camera')}
-          className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+          className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
         />
         <p className="text-xs text-zinc-600 leading-snug">
           {t(
@@ -738,7 +738,7 @@ export default function Storyboard({
                   }
                   rows={2}
                   placeholder={t('board.hint', 'What is in the shot, what it does, what the camera does.')}
-                  className="w-full resize-y rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed pr-11"
+                  className="w-full resize-y rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden leading-relaxed pr-11"
                 />
                 <SpeakButton onHeard={(said) => setBoard((was) => changed(was, shot.id, { prompt: withSaid(shot.prompt, said) }))} className="absolute bottom-2 right-2" />
               </span>
@@ -759,7 +759,7 @@ export default function Storyboard({
                       setBoard((was) => changed(was, shot.id, { caption: event.target.value }))
                     }
                     placeholder={t('board.captionHint', 'Nothing on screen for this shot')}
-                    className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                    className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                   />
                 </div>
               )}
@@ -914,7 +914,7 @@ export default function Storyboard({
               onChange={(event) =>
                 setBoard((was) => ({ ...was, songId: event.target.value || undefined }))
               }
-              className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+              className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
             >
               <option value="">{t('board.noSong', 'No song — silent')}</option>
               {tracks.length > 0 && (
@@ -1040,7 +1040,7 @@ export default function Storyboard({
               checked={Boolean(board.speaks)}
               disabled={!canSpeak}
               onChange={(event) => setBoard((was) => ({ ...was, speaks: event.target.checked }))}
-              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              className="mt-0.5 w-4 h-4 accent-emerald-500 shrink-0"
             />
             <span className="min-w-0">
               <span className="block text-sm font-semibold text-zinc-200">

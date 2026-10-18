@@ -282,7 +282,7 @@ export default function PronunciationBooth(): React.ReactElement {
   };
 
   const BOX = 'w-full rounded-xl border border-zinc-800 bg-black/30 p-3 text-[14px]'
-    + ' text-zinc-200 outline-none focus:border-emerald-500/60';
+    + ' text-zinc-200 outline-hidden focus:border-emerald-500/60';
   const BUTTON = 'min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2'
     + ' text-sm font-semibold text-zinc-200 hover:bg-zinc-800 disabled:opacity-40';
 

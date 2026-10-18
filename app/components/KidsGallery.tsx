@@ -86,7 +86,7 @@ export default function KidsGallery({
                 onClick={() => void bin(piece.id)}
                 aria-label={t('kids.galleryBin', 'Take it off the wall')}
                 data-kidspiecebin={piece.id}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-surface-300 text-surface-700"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-surface-300 text-surface-700"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

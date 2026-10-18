@@ -284,7 +284,7 @@ function Bend({
             type="button"
             onClick={() => setView('split')}
             className={`rounded px-1.5 py-0.5 text-[9px] font-bold transition-all ${
-              view === 'split' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+              view === 'split' ? 'bg-zinc-800 text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             {t('fx.viewSplit', 'Dual HUD')}
@@ -293,7 +293,7 @@ function Bend({
             type="button"
             onClick={() => setView('wave')}
             className={`rounded px-1.5 py-0.5 text-[9px] font-bold transition-all ${
-              view === 'wave' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+              view === 'wave' ? 'bg-zinc-800 text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             {t('fx.viewWave', 'Waveform')}
@@ -302,7 +302,7 @@ function Bend({
             type="button"
             onClick={() => setView('curve')}
             className={`rounded px-1.5 py-0.5 text-[9px] font-bold transition-all ${
-              view === 'curve' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+              view === 'curve' ? 'bg-zinc-800 text-white shadow-xs' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             {t('fx.viewCurve', 'Transfer')}
@@ -626,7 +626,7 @@ function Unit({
           type="button"
           onClick={onToggle}
           aria-pressed={on}
-          className="min-h-[44px] min-w-[54px] flex-shrink-0 rounded-xl px-3 text-xs font-black tracking-wider transition-all"
+          className="min-h-[44px] min-w-[54px] shrink-0 rounded-xl px-3 text-xs font-black tracking-wider transition-all"
           style={{
             background: on ? lit(hue, 0.9) : 'rgba(255,255,255,0.08)',
             color: on ? '#05060a' : INK_DIM,
@@ -832,7 +832,7 @@ export default function BoothFx({
   return (
     <div className="space-y-3 px-4 pb-4" style={{ background: PANEL }}>
       {/* ── AI Sound Sculpting Presets Header ──────────────────────── */}
-      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-zinc-950 to-teal-950/30 p-3.5 shadow-lg shadow-emerald-950/20">
+      <div className="rounded-2xl border border-emerald-500/30 bg-linear-to-br from-emerald-950/40 via-zinc-950 to-teal-950/30 p-3.5 shadow-lg shadow-emerald-950/20">
         <div className="flex items-center justify-between gap-2 pb-2">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">

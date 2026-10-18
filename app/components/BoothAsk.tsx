@@ -186,7 +186,7 @@ export default function BoothAsk({
           rows={3}
           placeholder={t('ask.placeholder', 'The voice is buried under the drums and the guitar is all on one side.')}
           aria-label={t('ask.label', 'What do you want changed about the mix?')}
-          className="w-full rounded-xl p-3 text-sm focus:border-emerald-500 focus:outline-none pr-11"
+          className="w-full rounded-xl p-3 text-sm focus:border-emerald-500 focus:outline-hidden pr-11"
           style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: INK }}
         />
         <SpeakButton onHeard={(said) => setQuestion((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
@@ -196,7 +196,7 @@ export default function BoothAsk({
         type="button"
         onClick={() => void ask()}
         disabled={asking || !question.trim()}
-        className="flex min-h-[44px] items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 px-5 text-sm font-bold text-zinc-950 shadow-md shadow-emerald-950/50 hover:opacity-90 disabled:opacity-40 transition-all"
+        className="flex min-h-[44px] items-center gap-2 rounded-xl bg-linear-to-r from-emerald-500 via-emerald-400 to-teal-400 px-5 text-sm font-bold text-zinc-950 shadow-md shadow-emerald-950/50 hover:opacity-90 disabled:opacity-40 transition-all"
       >
         {asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
         {asking ? t('ask.asking', 'Reading the desk…') : t('ask.go', 'Ask')}

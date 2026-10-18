@@ -1,6 +1,7 @@
 /** The help page: both halves, both languages, and the form that reaches a person. */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { defineRgba } from './colour.mjs';
 const b = await chromium.launch(launchOptions());
 const problems = [];
 const check = (label, ok, detail = '') => {
@@ -13,6 +14,7 @@ const af = process.argv[3] === 'af';
 
 // A phone, because that is where somebody stuck actually asks.
 const p = await b.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+await p.addInitScript(defineRgba);
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 
 // The language is remembered in localStorage, so it is set before the page runs.
@@ -65,11 +67,11 @@ const contrast = await p.evaluate(() => {
     });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
-  const parse = (s) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+  const parse = (s) => window.__rgba(s).slice(0, 3).map(Number);
   const opaque = (el) => {
     let node = el;
     while (node) {
-      const parts = (getComputedStyle(node).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+      const parts = window.__rgba(getComputedStyle(node).backgroundColor).map(Number);
       if (parts.length >= 3 && (parts.length < 4 || parts[3] > 0.85)) return parts.slice(0, 3);
       node = node.parentElement;
     }

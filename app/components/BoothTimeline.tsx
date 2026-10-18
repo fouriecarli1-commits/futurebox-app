@@ -871,7 +871,7 @@ export default function BoothTimeline({
           only there once the song has been read — a made-up name would be
           worse than none. */}
       <div
-        className="flex flex-shrink-0 items-baseline gap-3 px-4 py-2"
+        className="flex shrink-0 items-baseline gap-3 px-4 py-2"
         style={{ borderBottom: `1px solid ${EDGE}`, background: PANEL }}
       >
         <span className="text-2xl font-black tabular-nums tracking-tight" style={{ color: INK }}>
@@ -894,7 +894,7 @@ export default function BoothTimeline({
 
             `self-center` because this row is `items-baseline`, which is right
             for the clock beside its units and wrong for a button. */}
-        <span className="ml-1 flex flex-shrink-0 items-center self-center">
+        <span className="ml-1 flex shrink-0 items-center self-center">
           {([-1, 1] as const).map((way) => {
             const off = way === -1 ? zoom <= 1 : zoom >= MOST_ZOOM;
             return (

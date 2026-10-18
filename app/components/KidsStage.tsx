@@ -159,7 +159,7 @@ export default function KidsStage({
   const chosen = SCENES.find((one) => one.id === scene) ?? SCENES[0];
 
   return (
-    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 backdrop-blur-sm sm:p-6" data-kidsstage>
+    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 backdrop-blur-xs sm:p-6" data-kidsstage>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="fb-kids-bubble flex items-center gap-2 text-xl font-bold text-surface-900 sm:text-2xl">
@@ -260,7 +260,7 @@ export default function KidsStage({
               type="button"
               data-kidsdancersreset
               onClick={() => setDancers([{ id: 1, emoji: '🐲', x: 50, y: 70 }])}
-              className="min-h-[44px] flex-shrink-0 rounded-xl border border-surface-300 bg-surface-200 px-3 text-xs font-bold text-surface-900"
+              className="min-h-[44px] shrink-0 rounded-xl border border-surface-300 bg-surface-200 px-3 text-xs font-bold text-surface-900"
             >
               {t('kids.resetDancers', 'Reset')}
             </button>

@@ -753,7 +753,7 @@ export default function RoomScreen({
 
             <div className="relative flex items-center gap-3 pb-2">
               <span
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
                 style={{ background: GLASS, color: INK }}
               >
                 {index === at && loading ? (
@@ -780,7 +780,7 @@ export default function RoomScreen({
                   than no chip. */}
               {one.genre && (
                 <span
-                  className="ml-auto flex-shrink-0 rounded-full px-3 py-1 text-xs font-bold"
+                  className="ml-auto shrink-0 rounded-full px-3 py-1 text-xs font-bold"
                   style={{ background: GLASS, color: INK_SOFT }}
                 >
                   {one.genre}

@@ -50,7 +50,7 @@ export default function KidsPage(): React.ReactElement {
       <div className="mx-auto flex w-full max-w-3xl flex-wrap gap-2 px-5 pt-8">
         <Link
           href="/"
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-sm px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-sm transition-all"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-xs px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-xs transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('kids.back', 'Back to the studio')}
@@ -66,7 +66,7 @@ export default function KidsPage(): React.ReactElement {
             childIn(false);
             void signOut().finally(() => { window.location.href = '/'; });
           }}
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-sm px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-sm transition-all"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-2 border-white/25 bg-black/20 backdrop-blur-xs px-4 py-1.5 text-sm font-black text-white hover:bg-black/30 shadow-xs transition-all"
         >
           <LogOut className="h-4 w-4" />
           {t('kids.signOut', 'Sign out')}

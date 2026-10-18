@@ -182,7 +182,7 @@ export default function CollabFinder({
             value={genre}
             onChange={(event) => setGenre(event.target.value)}
             data-radargenre
-            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-none"
+            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-hidden"
           >
             <option value="all">{t('radar.allGenres', 'All genres')}</option>
             {genres.map((one) => <option key={one} value={one}>{one}</option>)}
@@ -221,7 +221,7 @@ export default function CollabFinder({
                         {t('radar.against', 'against your')} “{entry.from.title}”
                       </p>
                     </div>
-                    <span className="text-sm font-bold text-emerald-400 tabular-nums flex-shrink-0">
+                    <span className="text-sm font-bold text-emerald-400 tabular-nums shrink-0">
                       {Math.round(entry.match.score * 100)}
                     </span>
                   </div>
@@ -234,7 +234,7 @@ export default function CollabFinder({
                   </ul>
 
                   <p className="text-sm text-emerald-300 flex items-start gap-1.5 leading-snug">
-                    <Handshake className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <Handshake className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                     {entry.match.collabFormat} — {entry.match.collabWhy}
                   </p>
 
@@ -367,13 +367,13 @@ export default function CollabFinder({
             value={creator.name}
             onChange={(event) => setCreator({ ...creator, name: event.target.value })}
             placeholder={t('radar.name', 'Your name')}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
           <input
             value={creator.handle}
             onChange={(event) => setCreator({ ...creator, handle: event.target.value })}
             placeholder={t('radar.handle', 'handle')}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
         <div className="grid sm:grid-cols-3 gap-2">
@@ -385,7 +385,7 @@ export default function CollabFinder({
                 setCreator({ ...creator, links: { ...creator.links, [key]: event.target.value } })
               }
               placeholder={`https:// — ${key}`}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
           ))}
         </div>
@@ -420,7 +420,7 @@ export default function CollabFinder({
                     checked={on}
                     disabled={busy === track.id}
                     onChange={() => void toggleShare(track)}
-                    className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                    className="w-4 h-4 accent-emerald-500 shrink-0"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold text-white truncate">{track.title}</span>
@@ -450,13 +450,13 @@ export default function CollabFinder({
             value={creator.name}
             onChange={(event) => setCreator({ ...creator, name: event.target.value })}
             placeholder={t('radar.name', 'Your name')}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
           <input
             value={creator.handle}
             onChange={(event) => setCreator({ ...creator, handle: event.target.value })}
             placeholder={t('radar.handle', 'handle')}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
         <div className="grid sm:grid-cols-3 gap-2">
@@ -468,7 +468,7 @@ export default function CollabFinder({
                 setCreator({ ...creator, links: { ...creator.links, [key]: event.target.value } })
               }
               placeholder={`https:// — ${key}`}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
           ))}
         </div>
@@ -503,7 +503,7 @@ export default function CollabFinder({
                     checked={on}
                     disabled={busy === track.id}
                     onChange={() => void toggleShare(track)}
-                    className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                    className="w-4 h-4 accent-emerald-500 shrink-0"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold text-white truncate">{track.title}</span>

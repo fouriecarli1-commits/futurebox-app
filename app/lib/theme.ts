@@ -3,7 +3,7 @@
  *
  * The trick that makes this cover the whole app rather than a corner of it:
  * Tailwind's colour, radius and font scales are pointed at CSS variables in
- * `tailwind.config.js`, so an existing `bg-zinc-900` or `text-emerald-400`
+ * the `@theme` block in `app/globals.css`, so an existing `bg-zinc-900` or `text-emerald-400`
  * already written into two thousand lines of markup follows the theme without
  * a single class being edited. Changing a variable re-skins everything.
  *

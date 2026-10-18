@@ -327,7 +327,7 @@ function Bubble({
           ? '0 10px 0 rgba(0,0,0,0.22), 0 0 0 5px rgba(255,255,255,0.95), 0 16px 24px -4px rgba(0,0,0,0.25)'
           : '0 5px 0 rgba(0,0,0,0.14), 0 8px 14px -3px rgba(0,0,0,0.1)',
       }}
-      className="relative flex flex-shrink-0 flex-col items-center justify-center gap-1 rounded-full px-2 transition-transform duration-150 disabled:opacity-40"
+      className="relative flex shrink-0 flex-col items-center justify-center gap-1 rounded-full px-2 transition-transform duration-150 disabled:opacity-40"
     >
       <div className="transition-transform duration-150">
         {face}
@@ -864,7 +864,7 @@ export default function KidsRoom({
               onClick={() => { setPip(true); spark(1); }}
               aria-label={t('kids.askPip', 'Ask Pip!')}
               title={t('kids.askPip', 'Ask Pip!')}
-              className="fb-kids-float relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border-2 border-cyan-300 bg-surface-100 text-3xl shadow-[0_0_18px_rgba(52,211,153,0.6)]"
+              className="fb-kids-float relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-cyan-300 bg-surface-100 text-3xl shadow-[0_0_18px_rgba(52,211,153,0.6)]"
             >
               <span aria-hidden>🤖</span>
             </button>
@@ -954,7 +954,7 @@ export default function KidsRoom({
 
       {/* ── 2. What is left in songs & clock, calm for the parent ─────────── */}
       <div
-        className="flex items-center justify-between gap-3 rounded-2xl border-2 border-surface-200 bg-surface-50/80 px-4 py-2.5 shadow-sm backdrop-blur-sm"
+        className="flex items-center justify-between gap-3 rounded-2xl border-2 border-surface-200 bg-surface-50/80 px-4 py-2.5 shadow-xs backdrop-blur-xs"
         data-kidsleft
       >
         <div className="min-w-0">
@@ -980,7 +980,7 @@ export default function KidsRoom({
       {/* ── Pip ──────────────────────────────────────────────────────────── */}
       {pip && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/70 p-4 backdrop-blur-xs"
           role="dialog"
           aria-modal="true"
           aria-label={t('kids.pipTitle', 'Pip the Sprite')}
@@ -1099,14 +1099,14 @@ export default function KidsRoom({
                   Google's two ideas from the first room it drew: something
                   that talks to a child who has just arrived, and a press for
                   one who cannot decide. */}
-              <div className="flex items-center gap-3 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-3.5 shadow-xl backdrop-blur-sm sm:gap-4 sm:p-4">
+              <div className="flex items-center gap-3 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-3.5 shadow-xl backdrop-blur-xs sm:gap-4 sm:p-4">
                 <button
                   type="button"
                   data-kidsmascot
                   data-kidsbob
                   onClick={() => setMascot((n) => (n + 1) % MASCOT_SAYS.length)}
                   aria-label={t('kids.mascotSays', 'Say something else')}
-                  className="flex h-16 w-16 flex-shrink-0 select-none items-center justify-center rounded-full text-4xl text-onAccent"
+                  className="flex h-16 w-16 shrink-0 select-none items-center justify-center rounded-full text-4xl text-onAccent"
                 >
                   <span aria-hidden>{MASCOT_ICONS[mascot % MASCOT_ICONS.length]}</span>
                 </button>
@@ -1120,7 +1120,7 @@ export default function KidsRoom({
                   data-kidswheel
                   onClick={wheel}
                   disabled={Boolean(busy) || Boolean(job)}
-                  className="flex min-h-[56px] flex-shrink-0 items-center gap-1.5 rounded-2xl px-3.5 text-xs font-black disabled:opacity-40 sm:gap-2 sm:px-4 sm:text-sm"
+                  className="flex min-h-[56px] shrink-0 items-center gap-1.5 rounded-2xl px-3.5 text-xs font-black disabled:opacity-40 sm:gap-2 sm:px-4 sm:text-sm"
                 >
                   <span aria-hidden className="select-none text-lg">🎲</span>
                   {t('kids.spin', 'Spin')}
@@ -1132,7 +1132,7 @@ export default function KidsRoom({
                   "How should it sound?" are a form. This is the same two
                   choices said as the thing a child is about to get, filling
                   in as they press. */}
-              <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 text-center shadow-lg backdrop-blur-sm sm:p-5">
+              <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 text-center shadow-lg backdrop-blur-xs sm:p-5">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wider text-surface-700">
                   {t('kids.realSongWhy', 'Pick what it is about and how it sounds, and a real song is made for you.')}
                 </p>
@@ -1140,7 +1140,7 @@ export default function KidsRoom({
                   {t('kids.aSongAbout', 'A song about')}{' '}
                   <span
                     data-kidssentencetopic
-                    className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base font-black shadow-sm sm:text-lg"
+                    className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base font-black shadow-xs sm:text-lg"
                     style={{
                       background: `linear-gradient(145deg, ${topicPaint.from}, ${topicPaint.to})`,
                       color: topicPaint.ink,
@@ -1151,7 +1151,7 @@ export default function KidsRoom({
                   {t('kids.thatSounds', 'that sounds')}{' '}
                   <span
                     data-kidssentencesound
-                    className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base font-black shadow-sm sm:text-lg"
+                    className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base font-black shadow-xs sm:text-lg"
                     style={{
                       background: `linear-gradient(145deg, ${soundPaint.from}, ${soundPaint.to})`,
                       color: soundPaint.ink,
@@ -1178,7 +1178,7 @@ export default function KidsRoom({
                   onChange={(e) => setWords(e.target.value)}
                   placeholder={t('kids.typeIt', 'Or type what your song is about…')}
                   aria-label={t('kids.typeIt', 'Or type what your song is about…')}
-                  className="min-h-[48px] min-w-0 flex-1 rounded-2xl border-2 border-surface-300 bg-surface-100 px-4 text-base font-bold text-surface-900 placeholder:text-surface-600 focus:border-cyan-400 focus:outline-none disabled:opacity-50"
+                  className="min-h-[48px] min-w-0 flex-1 rounded-2xl border-2 border-surface-300 bg-surface-100 px-4 text-base font-bold text-surface-900 placeholder:text-surface-600 focus:border-cyan-400 focus:outline-hidden disabled:opacity-50"
                 />
                 {canSpeak && (
                   <button
@@ -1188,7 +1188,7 @@ export default function KidsRoom({
                     disabled={Boolean(busy) || Boolean(job)}
                     aria-pressed={listening}
                     aria-label={listening ? t('kids.listening', 'Listening… press to stop') : t('kids.speak', 'Say it')}
-                    className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-white shadow-md disabled:opacity-50 ${
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-md disabled:opacity-50 ${
                       listening ? 'animate-pulse bg-rose-500' : 'bg-primary-500'
                     }`}
                   >
@@ -1202,7 +1202,7 @@ export default function KidsRoom({
                     onClick={() => setWords('')}
                     disabled={Boolean(busy) || Boolean(job)}
                     aria-label={t('kids.clearWords', 'Clear the words')}
-                    className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2 border-surface-300 bg-surface-200 text-surface-900 disabled:opacity-50"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-surface-300 bg-surface-200 text-surface-900 disabled:opacity-50"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -1272,16 +1272,16 @@ export default function KidsRoom({
               </button>
 
               {says && (
-                <p className="rounded-2xl border-2 border-surface-200 bg-surface-50/80 px-4 py-3 text-sm font-semibold text-surface-900 shadow-sm" data-kidssays>
+                <p className="rounded-2xl border-2 border-surface-200 bg-surface-50/80 px-4 py-3 text-sm font-semibold text-surface-900 shadow-xs" data-kidssays>
                   {says}
                 </p>
               )}
 
               {/* ── The player: the song, keep it, film it ─────────────── */}
               {song && (
-                <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-5 shadow-2xl backdrop-blur-sm">
+                <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-5 shadow-2xl backdrop-blur-xs">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 flex-shrink-0 select-none items-center justify-center rounded-2xl bg-cyan-500/20 text-2xl" data-kidsspin>
+                    <div className="flex h-12 w-12 shrink-0 select-none items-center justify-center rounded-2xl bg-cyan-500/20 text-2xl" data-kidsspin>
                       <span aria-hidden>💿</span>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1338,7 +1338,7 @@ export default function KidsRoom({
               </div>
             )}
           </KidsStage>
-          <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 shadow-lg backdrop-blur-sm sm:p-5">
+          <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 shadow-lg backdrop-blur-xs sm:p-5">
             {song ? (
               <div className="space-y-3">
                 <p className="text-sm font-bold text-surface-800">
@@ -1416,7 +1416,7 @@ export default function KidsRoom({
 
       {/* ── 7. FutureBox TV: the shelves ─────────────────────────────────── */}
       {tab === 'tv' && (
-        <div className="space-y-5 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 shadow-lg backdrop-blur-sm sm:p-6" data-kidstv>
+        <div className="space-y-5 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 shadow-lg backdrop-blur-xs sm:p-6" data-kidstv>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="fb-kids-bubble flex items-center gap-2 text-xl font-bold text-surface-900 sm:text-2xl">
@@ -1543,7 +1543,7 @@ export default function KidsRoom({
 
       {/* ── 10. The gallery wall ──────────────────────────────────────── */}
       {tab === 'gallery' && (
-        <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-sm sm:p-6" data-kidsgallerywall>
+        <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-xs sm:p-6" data-kidsgallerywall>
           <p className="text-xs text-surface-700">
             {t('kids.galleryWhy', 'Your drawings and pictures, on your own wall. Looking uses no credits.')}
           </p>
@@ -1553,7 +1553,7 @@ export default function KidsRoom({
 
       {/* ── 11. Achievements: badges counted off the real shelves ─────── */}
       {tab === 'badges' && (
-        <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-sm sm:p-6" data-kidsbadges>
+        <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-xs sm:p-6" data-kidsbadges>
           <p className="text-xs text-surface-700">
             {t('kids.badgesWhy', 'Every badge is counted off what you really made and kept.')}
           </p>

@@ -149,7 +149,7 @@ export default function ProfilePhoto({
 
   return (
     <div className="flex items-center gap-4">
-      <div className="relative flex-shrink-0">
+      <div className="relative shrink-0">
         {showing ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

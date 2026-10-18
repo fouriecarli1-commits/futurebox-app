@@ -1178,7 +1178,7 @@ export default function VideoCanvas({
           {engine.available ? (
             <>
               <p className="text-sm text-zinc-300 flex items-center gap-2">
-                <PlugZap className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <PlugZap className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>
                   {t('canvas.on', 'The engine is connected')} —{' '}
                   {engine.grades
@@ -1188,9 +1188,9 @@ export default function VideoCanvas({
               </p>
               <p className="text-sm text-zinc-400 flex items-center gap-2">
                 {engine.sound ? (
-                  <Volume2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <Volume2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 ) : (
-                  <VolumeX className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <VolumeX className="w-4 h-4 text-amber-400 shrink-0" />
                 )}
                 {/* Which grades, by name, read off the server. "On the higher
                     grades" was wrong twice over: Premium is the highest and
@@ -1214,7 +1214,7 @@ export default function VideoCanvas({
             </>
           ) : (
             <p className="text-sm text-amber-300 flex items-start gap-2">
-              <Plug className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <Plug className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
                 {engine.auth === 'none'
                   ? t('canvas.noKey', 'No key for the video engine reached this app. Music videos drawn in your browser still work, on any song.')
@@ -1303,7 +1303,7 @@ export default function VideoCanvas({
           )}
           {unquoted && (
             <p className="flex gap-2 text-xs leading-relaxed text-amber-300">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {t(
                   'canvas.unquoted',
@@ -1552,7 +1552,7 @@ export default function VideoCanvas({
               'canvas.hint',
               'What is in the shot, what it is doing, what the camera does, what the light does, how it feels.',
             )}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y pr-11"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden leading-relaxed resize-y pr-11"
           />
           <SpeakButton onHeard={(said) => setPrompt((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
         </span>
@@ -1599,7 +1599,7 @@ export default function VideoCanvas({
         {/* The one rule that is not obvious, said once and shown always. */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2">
           <p className="text-xs text-zinc-400 leading-relaxed flex gap-2">
-            <Quote className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <Quote className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
             <span>
               {t(
                 'canvas.quotes',
@@ -1622,7 +1622,7 @@ export default function VideoCanvas({
           )}
           {unquoted && (
             <p className="text-xs text-amber-300 leading-relaxed flex gap-2">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>
                 {t(
                   'canvas.unquoted',
@@ -1728,7 +1728,7 @@ export default function VideoCanvas({
               value={caption ?? spoken[0] ?? ''}
               onChange={(event) => setCaption(event.target.value)}
               placeholder={t('canvas.captionHint', 'Taken from the line in quotation marks, or type your own')}
-              className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
           </div>
         </Subtitles>
@@ -1770,7 +1770,7 @@ export default function VideoCanvas({
                 type="checkbox"
                 checked={brandIt}
                 onChange={(event) => setBrandIt(event.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+                className="mt-0.5 w-4 h-4 accent-emerald-500 shrink-0"
               />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-zinc-200">
@@ -1839,7 +1839,7 @@ export default function VideoCanvas({
                 setSpeak(on);
                 if (on && speakHere && speakHere !== grade) setGrade(speakHere);
               }}
-              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              className="mt-0.5 w-4 h-4 accent-emerald-500 shrink-0"
             />
             <span className="min-w-0">
               <span className="block text-sm font-semibold text-zinc-200">

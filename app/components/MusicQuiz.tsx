@@ -113,7 +113,7 @@ export default function MusicQuiz(): React.ReactElement | null {
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 sm:p-5 space-y-4">
       <div className="flex items-start gap-3">
-        <GraduationCap className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+        <GraduationCap className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
           <h3 className="text-base font-extrabold tracking-tight text-white">
             {t('quiz.title', 'One thing about music')}
@@ -160,7 +160,7 @@ export default function MusicQuiz(): React.ReactElement | null {
               className={`w-full min-h-11 text-left px-3 py-2.5 rounded-xl border transition-all flex items-start gap-3 ${after}`}
             >
               <span
-                className={`flex-shrink-0 w-6 h-6 rounded-md border grid place-items-center text-xs font-bold ${
+                className={`shrink-0 w-6 h-6 rounded-md border grid place-items-center text-xs font-bold ${
                   shown && isRight
                     ? 'border-emerald-400 text-emerald-300'
                     : chosen

@@ -252,8 +252,8 @@ export default function Account({
         <div className="rounded-2xl p-5" style={PROFILE_GLASS} data-accountbanner>
           <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="relative flex-shrink-0">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-400 via-cyan-400 to-violet-500 p-1 shadow-xl">
+              <div className="relative shrink-0">
+                <div className="h-24 w-24 rounded-full bg-linear-to-tr from-emerald-400 via-cyan-400 to-violet-500 p-1 shadow-xl">
                   <div className="flex h-full w-full items-center justify-center rounded-full text-4xl font-black text-white" style={{ background: PHOTO.floor }}>
                     {(name ?? email ?? '?').charAt(0).toUpperCase()}
                   </div>
@@ -269,13 +269,13 @@ export default function Account({
                 </div>
                 {handle && <p className="mt-1 truncate font-mono text-sm text-zinc-400">{handle}</p>}
                 <p className="mt-1.5 flex items-center gap-2 truncate text-sm text-zinc-300">
-                  <Mail className="h-4 w-4 flex-shrink-0" />
+                  <Mail className="h-4 w-4 shrink-0" />
                   <span className="truncate">{email || '—'}</span>
                 </p>
               </div>
             </div>
             {/* ── What is left in the wallet ─────────────────────────────── */}
-            <section className="flex flex-shrink-0 flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center lg:w-[480px]" style={PROFILE_CARD} data-accountwallet>
+            <section className="flex shrink-0 flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center lg:w-[480px]" style={PROFILE_CARD} data-accountwallet>
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-sm text-zinc-300">
                   <CreditCard className="h-4 w-4" style={{ color: PHOTO.accent }} />
@@ -313,7 +313,7 @@ export default function Account({
               <button
                 type="button"
                 onClick={() => { onClose(); onSeePlans(); }}
-                className="min-h-[48px] flex-shrink-0 rounded-full px-6 text-sm font-semibold"
+                className="min-h-[48px] shrink-0 rounded-full px-6 text-sm font-semibold"
                 style={{ border: `2px solid ${PHOTO.accent}`, color: PHOTO.accent, background: PHOTO.accentWash }}
               >
                 {t('account.refill', 'Quick refill')}
@@ -416,7 +416,7 @@ export default function Account({
                   <div key={one.id} className="rounded-2xl p-4" style={PROFILE_CARD}>
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-base font-bold text-white">{one.name}</p>
-                      <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: PHOTO.accent }} />
+                      <CheckCircle2 className="h-5 w-5 shrink-0" style={{ color: PHOTO.accent }} />
                     </div>
                     <p className="text-xs" style={{ color: PHOTO.accent }}>{t('account.voiceReady', 'Trained and ready')}</p>
                     <svg viewBox="0 0 200 32" className="my-2 h-8 w-full" aria-hidden>
@@ -574,7 +574,7 @@ export default function Account({
                               : t('account.tasteRoom', 'where you work')}
                           </span>
                         </span>
-                        <span className="flex-shrink-0 tabular-nums text-zinc-500">{one.times}×</span>
+                        <span className="shrink-0 tabular-nums text-zinc-500">{one.times}×</span>
                       </li>
                     ))}
                   </ul>
@@ -609,21 +609,21 @@ export default function Account({
         {/* ── Where the other things live ─────────────────────────────── */}
         <section className="grid grid-cols-1 gap-2 rounded-2xl p-5 md:grid-cols-2" style={panel}>
           <a href="/guide" className={linkRow} style={chip}>
-            <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
+            <BookOpen className="h-4 w-4 shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
               <span className="block text-sm font-bold leading-tight">{t('account.guide', 'What every room does, and what it costs')}</span>
               <span className="block text-xs leading-snug text-zinc-500">{t('account.guideNote', 'One page for the whole studio: the rooms, the prices, the words.')}</span>
             </span>
           </a>
           <a href="/help" className={linkRow} style={chip}>
-            <LifeBuoy className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
+            <LifeBuoy className="h-4 w-4 shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
               <span className="block text-sm font-bold leading-tight">{t('account.help', 'A question, or a problem')}</span>
               <span className="block text-xs leading-snug text-zinc-500">{t('account.helpNote', 'Ask about the app, your plan or a charge and get an answer here — or write to a person.')}</span>
             </span>
           </a>
           <button type="button" onClick={() => { onClose(); onGoToChannel(); }} className={`w-full ${linkRow}`} style={chip}>
-            <ListMusic className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
+            <ListMusic className="h-4 w-4 shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
               <span className="block text-sm font-bold leading-tight">{t('account.channel', 'Your channel and your picture')}</span>
               <span className="block text-xs leading-snug text-zinc-500">{t('account.channelNote', 'Your songs, your playlists, your profile picture.')}</span>
@@ -631,7 +631,7 @@ export default function Account({
           </button>
           {onAppearance && (
             <button type="button" onClick={() => { onClose(); onAppearance(); }} className={`w-full ${linkRow}`} style={chip}>
-              <Paintbrush className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
+              <Paintbrush className="h-4 w-4 shrink-0" style={{ color: PHOTO.accent }} />
               <span className="min-w-0">
                 <span className="block text-sm font-bold leading-tight">{t('account.appearance', 'App appearance, style and colors')}</span>
                 <span className="block text-xs leading-snug text-zinc-500">{t('account.appearanceNote', 'Customize primary colors, accents, dark surfaces, fonts and layout.')}</span>
@@ -642,7 +642,7 @@ export default function Account({
               an allowance is a grown-up's decision and so is handing over the
               phone. `check:bereikbaar` holds every page to having a way in. */}
           <a href="/story" data-accountstory className={linkRow} style={chip}>
-            <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: PHOTO.accent }} />
+            <BookOpen className="h-4 w-4 shrink-0" style={{ color: PHOTO.accent }} />
             <span className="min-w-0">
               <span className="block text-sm font-bold leading-tight">{t('account.story', 'Story mode')}</span>
               <span className="block text-xs leading-snug text-zinc-500">{t('account.storyNote', 'A story you write or say — or the story helper writes with you — drawn a page at a time, read aloud, and kept on the shelf.')}</span>

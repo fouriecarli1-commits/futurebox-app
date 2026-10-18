@@ -20,6 +20,7 @@ import { cpSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { defineRgba } from './colour.mjs';
 
 const PORT = process.argv[2] || '3088';
 const PROBE = 'app/blowup/page.probe.tsx';
@@ -44,6 +45,7 @@ try {
   /** What the page shows after it has fallen over. */
   const visit = async (query) => {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    await page.addInitScript(defineRgba);
     /* The throw is the point of the page; its console noise is not a fault. */
     page.on('pageerror', () => undefined);
     await page.goto(`${server.url}/blowup${query}`, { waitUntil: 'networkidle' });
@@ -65,7 +67,7 @@ try {
       let at = document.elementFromPoint(195, 422);
       while (at) {
         const colour = getComputedStyle(at).backgroundColor;
-        const parts = colour.match(/[\d.]+/g);
+        const parts = window.__rgba(colour);
         if (parts && (parts.length < 4 || Number(parts[3]) > 0)) {
           const [r, g, b] = parts.map(Number);
           return { colour, light: (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 };
@@ -136,6 +138,7 @@ try {
      body however it got that way. */
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    await page.addInitScript(defineRgba);
     page.on('pageerror', () => undefined);
     await page.goto(`${server.url}/`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1500);

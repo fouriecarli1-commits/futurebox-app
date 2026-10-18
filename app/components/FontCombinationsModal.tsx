@@ -102,9 +102,9 @@ export default function FontCombinationsModal({
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-4xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-zinc-800/80 px-5 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800/80 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 text-black shadow-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-tr from-orange-500 to-amber-400 text-black shadow-lg">
               <Type className="h-5 w-5" />
             </div>
             <div>
@@ -342,7 +342,7 @@ export default function FontCombinationsModal({
                     }`}
                   >
                     <div
-                      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
                         selectedEffect === fx.id
                           ? 'bg-amber-400 text-black'
                           : 'bg-zinc-800 text-zinc-300'

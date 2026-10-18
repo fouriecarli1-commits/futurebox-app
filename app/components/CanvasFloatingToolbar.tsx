@@ -79,7 +79,7 @@ export default function CanvasFloatingToolbar({
             type="button"
             onClick={onOpenTemplates}
             title={t('toolbar.templates', 'Templates & Starter Pack')}
-            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/40 px-2.5 py-1.5 text-xs font-bold text-purple-200 hover:brightness-110 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 rounded-full bg-linear-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/40 px-2.5 py-1.5 text-xs font-bold text-purple-200 hover:brightness-110 active:scale-95 transition-all"
           >
             <LayoutTemplate className="h-4 w-4 text-purple-400" />
             <span className="hidden sm:inline">{t('toolbar.templatesShort', 'Templates')}</span>
@@ -108,7 +108,7 @@ export default function CanvasFloatingToolbar({
           type="button"
           onClick={onOpenMagicSuite}
           title={t('toolbar.magicSuite', 'Tower-Suite (All AI Tools)')}
-          className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-purple-500/20 border border-emerald-500/40 px-3 py-1.5 text-xs font-black text-emerald-200 hover:brightness-110 active:scale-95 transition-all"
+          className="flex items-center gap-1.5 rounded-full bg-linear-to-r from-emerald-500/20 to-purple-500/20 border border-emerald-500/40 px-3 py-1.5 text-xs font-black text-emerald-200 hover:brightness-110 active:scale-95 transition-all"
         >
           <Wand2 className="h-4 w-4 text-emerald-400" />
           <span className="hidden sm:inline">{t('toolbar.magicSuiteShort', 'Tower-Suite')}</span>

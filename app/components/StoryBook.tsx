@@ -112,7 +112,7 @@ export default function StoryBook({
           onClick={onDone}
           data-storybookshut
           aria-label={t('book.shut', 'Close')}
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-300"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-300"
         >
           <X className="h-5 w-5" />
         </button>

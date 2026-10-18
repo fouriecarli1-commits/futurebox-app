@@ -1,6 +1,7 @@
 /** Sign in, open the studio, and report what is there. Shared by every audit. */
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions } from './where.mjs';
+import { defineRgba } from './colour.mjs';
 
 /** The sandbox has no route to the open internet; those are not app faults. */
 const OFFSITE = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_REFUSED/;
@@ -82,6 +83,7 @@ export async function enter({
     }
   });
 
+  await page.addInitScript(defineRgba);
   if (lang) {
     await page.addInitScript((one) => {
       try {

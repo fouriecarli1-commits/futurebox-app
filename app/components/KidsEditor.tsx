@@ -180,7 +180,7 @@ export default function KidsEditor({
   const shown = wall?.find((one) => one.id === (onScreen ?? frames[0]));
 
   return (
-    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-sm sm:p-5" data-kidseditor>
+    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-xs sm:p-5" data-kidseditor>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="fb-kids-bubble flex items-center gap-2 text-xl font-bold text-surface-900 sm:text-2xl">
           <span aria-hidden>✂️</span> {t('kids.editTitle', 'Easy Editing')}
@@ -234,11 +234,11 @@ export default function KidsEditor({
               <div key={id} data-kidspuzzle={id} style={{ background: PIECE_PAINT[index % PIECE_PAINT.length] }}
                 className={`flex h-20 min-w-[120px] items-center gap-2 rounded-2xl px-2.5 text-onAccent shadow-[0_4px_12px_rgba(0,0,0,0.5)] ${onScreen === id ? 'ring-4 ring-white' : ''}`}>
                 <button type="button" onClick={() => setOnScreen(id)} className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-label={piece.title}>
-                  <img src={urls[id]} alt="" className="h-14 w-14 flex-shrink-0 rounded-xl object-cover" />
+                  <img src={urls[id]} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
                   <span className="text-xs font-black leading-tight">{index + 1}. {piece.title}</span>
                 </button>
                 <button type="button" onClick={() => drop(id)} disabled={making} aria-label={t('kids.editDrop', 'Take it out')} data-kidspuzzledrop={id}
-                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-black/30 text-[11px] font-black text-white">✕</button>
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black/30 text-[11px] font-black text-white">✕</button>
               </div>
             );
           })}
@@ -309,7 +309,7 @@ export default function KidsEditor({
       {/* 5. The buttons along the foot of Google's page, each doing a real thing. */}
       <div className="flex flex-wrap items-center justify-center gap-3" data-kidseditoractions>
         <button type="button" onClick={previewing ? stopPreview : preview} disabled={!frames.length || making} data-kidspreview
-          className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-cyan-300 px-6 text-sm font-black text-onAccent disabled:opacity-40">
+          className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-linear-to-r from-cyan-400 to-cyan-300 px-6 text-sm font-black text-onAccent disabled:opacity-40">
           {previewing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
           {previewing ? t('kids.editPreviewStop', 'Pause') : t('kids.editPreview', 'Play it through')}
         </button>

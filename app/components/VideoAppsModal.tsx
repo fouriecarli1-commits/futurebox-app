@@ -265,7 +265,7 @@ export default function VideoAppsModal({
         {/* Top Header */}
         <div className="flex items-center justify-between border-b border-zinc-800/80 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white shadow-lg shadow-cyan-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-tr from-cyan-500 to-indigo-600 text-white shadow-lg shadow-cyan-500/20">
               <Clapperboard className="h-5 w-5" />
             </div>
             <div>
@@ -296,7 +296,7 @@ export default function VideoAppsModal({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('videoapps.searchPlaceholder', 'Search video apps and effects...')}
-              className="h-10 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/80 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+              className="h-10 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/80 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-500 focus:border-cyan-500 focus:outline-hidden focus:ring-1 focus:ring-cyan-500/50"
             />
           </div>
 
@@ -316,7 +316,7 @@ export default function VideoAppsModal({
                 onClick={() => setActiveTab(tab.id)}
                 className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow-md shadow-cyan-500/20'
+                    ? 'bg-linear-to-r from-cyan-500 to-indigo-600 text-white shadow-md shadow-cyan-500/20'
                     : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
                 }`}
               >
@@ -338,11 +338,11 @@ export default function VideoAppsModal({
               >
                 {/* App Icon Tile */}
                 <div
-                  className={`relative mb-3.5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${app.gradient} shadow-lg transition-transform duration-200 group-hover:scale-105`}
+                  className={`relative mb-3.5 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br ${app.gradient} shadow-lg transition-transform duration-200 group-hover:scale-105`}
                 >
                   {app.icon}
                   {app.badge && (
-                    <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-black shadow">
+                    <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-black shadow-sm">
                       {app.badge === 'PRO' && <Crown className="h-2.5 w-2.5 fill-black" />}
                       {app.badge}
                     </span>

@@ -335,7 +335,7 @@ export default function SongWindow({ seconds, value, onChange }: Props) {
   return (
     <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
       <div className="flex items-start gap-2.5">
-        <Music className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <Music className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
           <h3 className="text-sm font-bold text-zinc-100">
             {t('songwin.title', 'Which song, and which part of it')}
@@ -499,7 +499,7 @@ export default function SongWindow({ seconds, value, onChange }: Props) {
                 aria-valuetext={clock(which === 'from' ? value.from : value.to)}
                 onPointerDown={onDown(which)}
                 onKeyDown={onKey}
-                className="absolute inset-y-0 w-11 cursor-ew-resize touch-none focus:outline-none"
+                className="absolute inset-y-0 w-11 cursor-ew-resize touch-none focus:outline-hidden"
                 style={{
                   left: `calc(${which === 'from' ? left : left + width}% - 22px)`,
                 }}

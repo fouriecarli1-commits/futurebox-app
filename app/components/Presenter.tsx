@@ -497,7 +497,7 @@ export default function Presenter({
 
       {cast.length === 0 ? (
         <p className="text-sm text-amber-400 leading-relaxed flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           {t(
             'pres.noCast',
             'Put somebody in your cast first — the picture above is who the presenter will be.',
@@ -517,7 +517,7 @@ export default function Presenter({
                     type="button"
                     onClick={() => setWho(one.id)}
                     aria-pressed={active}
-                    className={`flex-shrink-0 w-20 rounded-xl overflow-hidden border-2 transition-all ${
+                    className={`shrink-0 w-20 rounded-xl overflow-hidden border-2 transition-all ${
                       active ? 'border-emerald-500' : 'border-zinc-800 hover:border-zinc-600'
                     }`}
                   >
@@ -547,7 +547,7 @@ export default function Presenter({
                 onChange={(event) => setScript(event.target.value)}
                 rows={3}
                 placeholder={t('pres.scriptHint', 'Hallo, ek is Sarel, en vandag wys ek jou iets nuuts.')}
-                className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed pr-11"
+                className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden leading-relaxed pr-11"
               />
               <SpeakButton onHeard={(said) => setScript((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
             </span>
@@ -561,7 +561,7 @@ export default function Presenter({
               id="presenter-voice"
               value={voiceId}
               onChange={(event) => setVoiceId(event.target.value)}
-              className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+              className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
             >
               {pickable.map((one) => (
                 <option key={one.id} value={one.id}>{one.name}</option>
@@ -673,7 +673,7 @@ export default function Presenter({
                   type="checkbox"
                   checked={consent}
                   onChange={(event) => setConsent(event.target.checked)}
-                  className="mt-0.5 w-4 h-4 flex-shrink-0 accent-emerald-500"
+                  className="mt-0.5 w-4 h-4 shrink-0 accent-emerald-500"
                 />
                 <span>
                   {t(

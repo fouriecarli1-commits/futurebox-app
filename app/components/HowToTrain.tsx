@@ -84,13 +84,13 @@ export default function HowToTrain({
   return (
     <div className={`rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.06] p-4 ${className}`}>
       <p className="flex items-center gap-2 text-sm font-bold text-emerald-300">
-        <GraduationCap className="h-4 w-4 flex-shrink-0" />
+        <GraduationCap className="h-4 w-4 shrink-0" />
         {t('train.title', 'What makes a good voice')}
       </p>
       <ul className="mt-2.5 space-y-2">
         {points.map((point) => (
           <li key={point} className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
             <span className="text-xs leading-relaxed text-zinc-300">{point}</span>
           </li>
         ))}

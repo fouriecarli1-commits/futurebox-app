@@ -348,7 +348,7 @@ export default function Cast({
   return (
     <div className="space-y-2">
       <div className="flex items-start gap-2">
-        <Users className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <Users className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-zinc-300">{t('cast.title', 'Your cast')}</p>
           <Note className="text-xs text-zinc-500 leading-relaxed">{t(
@@ -364,7 +364,7 @@ export default function Cast({
             const face = faces[one.path];
             const active = chosen === one.id;
             return (
-              <div key={one.id} className="flex-shrink-0 w-24 space-y-1">
+              <div key={one.id} className="shrink-0 w-24 space-y-1">
                 <button
                   type="button"
                   onClick={() => void use(one)}
@@ -399,7 +399,7 @@ export default function Cast({
                       if (event.key === 'Enter') (event.target as HTMLInputElement).blur();
                       if (event.key === 'Escape') setNaming(null);
                     }}
-                    className="w-24 rounded-lg border border-emerald-500 bg-zinc-900 px-1.5 py-1 text-xs text-zinc-100 focus:outline-none"
+                    className="w-24 rounded-lg border border-emerald-500 bg-zinc-900 px-1.5 py-1 text-xs text-zinc-100 focus:outline-hidden"
                   />
                 ) : (
                   <button
@@ -498,7 +498,7 @@ export default function Cast({
                 onClick={() => void addKept(one)}
                 disabled={busy}
                 title={one.name}
-                className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 border-zinc-800 hover:border-emerald-500 disabled:opacity-50"
+                className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 border-zinc-800 hover:border-emerald-500 disabled:opacity-50"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={one.thumb} alt={one.name} className="h-full w-full object-cover" />

@@ -119,7 +119,7 @@ export default function KidsLoops({
                   data-kidslayerin={isIn ? 'yes' : 'no'}
                   aria-pressed={on}
                   onClick={() => { now.toggle(layer.id); onSpark(1); }}
-                  className={`flex min-h-[44px] w-28 flex-shrink-0 items-center gap-1.5 rounded-2xl border-2 px-2 text-sm font-black ${
+                  className={`flex min-h-[44px] w-28 shrink-0 items-center gap-1.5 rounded-2xl border-2 px-2 text-sm font-black ${
                     on ? 'border-cyan-300 bg-cyan-400/20 text-surface-950' : 'border-surface-300 bg-surface-100 text-surface-600'
                   } ${isIn ? '' : 'opacity-60'}`}
                 >
@@ -172,7 +172,7 @@ export default function KidsLoops({
         {levels.map((level, index) => (
           <span
             key={index}
-            className="w-1.5 rounded-full bg-gradient-to-t from-cyan-500 to-amber-300 transition-[height] duration-75"
+            className="w-1.5 rounded-full bg-linear-to-t from-cyan-500 to-amber-300 transition-[height] duration-75"
             style={{ height: `${Math.max(8, Math.round(level * 76))}px` }}
           />
         ))}

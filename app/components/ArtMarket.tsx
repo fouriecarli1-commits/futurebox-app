@@ -123,7 +123,7 @@ import { inPlayApp } from '../lib/playbilling';
  * Every variable below is now an expression over the app's own families —
  * `--fb-surface-*` for paper and ink, `--fb-primary-*` for the accent —
  * which are what `bg-zinc-900` and `text-emerald-400` resolve to in every
- * other room (see `tailwind.config.js`). So the room follows the chosen
+ * other room (see the `@theme` block in `app/globals.css`). So the room follows the chosen
  * theme, light or dark, for free, and it cannot drift: there is no hex
  * here to go stale.
  *
@@ -195,7 +195,7 @@ const LEEG =
 
 /** A field. Quiet, and with a real label above it. */
 const VELD =
-  'mt-1.5 w-full rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3.5 py-3 text-[16px] text-[color:var(--ink)] outline-none focus:border-[var(--aksent)] focus:ring-2 focus:ring-[var(--aksent-sag)]';
+  'mt-1.5 w-full rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3.5 py-3 text-[16px] text-[color:var(--ink)] outline-hidden focus:border-[var(--aksent)] focus:ring-2 focus:ring-[var(--aksent-sag)]';
 
 /* ─────────────────────────────────────────────────────────── the shapes ── */
 
@@ -1720,7 +1720,7 @@ function PutOnSong({
               <Sleeve
                 url={one.url}
                 alt={`${one.title}, ${one.by}`}
-                className={piece === one.id ? 'outline outline-2 outline-offset-2 outline-[var(--aksent)]' : ''}
+                className={piece === one.id ? 'outline-solid outline-2 outline-offset-2 outline-[var(--aksent)]' : ''}
               />
               <span className={`${MIKRO} mt-1.5 block truncate`}>{one.by}</span>
             </button>

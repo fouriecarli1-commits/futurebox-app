@@ -724,7 +724,7 @@ export default function ProDawStudio({
                         isPressed
                           ? 'bg-cyan-200'
                           : 'bg-zinc-100 hover:bg-zinc-200'
-                      } flex flex-col justify-between items-center py-2 text-black shadow`}
+                      } flex flex-col justify-between items-center py-2 text-black shadow-sm`}
                     >
                       {/* Top cyan dot if in scale */}
                       {inScale ? (
@@ -839,7 +839,7 @@ export default function ProDawStudio({
                 type="button"
                 onClick={() => setStemTab('styles')}
                 className={`flex-1 rounded-md py-1 transition-all ${
-                  stemTab === 'styles' ? 'bg-zinc-800 text-zinc-200 shadow' : 'text-zinc-500 hover:text-zinc-300'
+                  stemTab === 'styles' ? 'bg-zinc-800 text-zinc-200 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
                 {t('daw.styles', 'Styles')}
@@ -848,7 +848,7 @@ export default function ProDawStudio({
                 type="button"
                 onClick={() => setStemTab('custom')}
                 className={`flex-1 rounded-md py-1 transition-all ${
-                  stemTab === 'custom' ? 'bg-zinc-800 text-zinc-200 shadow' : 'text-zinc-500 hover:text-zinc-300'
+                  stemTab === 'custom' ? 'bg-zinc-800 text-zinc-200 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
                 {t('daw.custom', 'Custom')}
@@ -1008,7 +1008,7 @@ export default function ProDawStudio({
                 type="button"
                 onClick={() => setVoiceTab('voices')}
                 className={`flex-1 rounded-md py-1 transition-all ${
-                  voiceTab === 'voices' ? 'bg-zinc-800 text-zinc-200 shadow' : 'text-zinc-500 hover:text-zinc-300'
+                  voiceTab === 'voices' ? 'bg-zinc-800 text-zinc-200 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
                 {t('daw.voices', 'Voices')}
@@ -1017,7 +1017,7 @@ export default function ProDawStudio({
                 type="button"
                 onClick={() => setVoiceTab('my_voices')}
                 className={`flex-1 rounded-md py-1 transition-all ${
-                  voiceTab === 'my_voices' ? 'bg-zinc-800 text-zinc-200 shadow' : 'text-zinc-500 hover:text-zinc-300'
+                  voiceTab === 'my_voices' ? 'bg-zinc-800 text-zinc-200 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
                 {t('daw.myVoices', 'My Voices')}
@@ -1032,7 +1032,7 @@ export default function ProDawStudio({
                 placeholder={t('daw.searchVoices', 'Search')}
                 value={voiceQuery}
                 onChange={(e) => setVoiceQuery(e.target.value)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 py-1.5 pl-8 pr-8 text-xs text-zinc-200 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 py-1.5 pl-8 pr-8 text-xs text-zinc-200 placeholder-zinc-500 focus:border-zinc-700 focus:outline-hidden"
               />
               <Filter className="absolute right-2.5 h-3.5 w-3.5 text-zinc-500 cursor-pointer" />
             </div>
@@ -1055,7 +1055,7 @@ export default function ProDawStudio({
                     }`}
                   >
                     {/* Simulated Voice Photo Card */}
-                    <div className={`h-24 w-full rounded-lg bg-gradient-to-tr ${v.bg} flex items-center justify-center text-2xl font-black text-white/90 shadow-inner`}>
+                    <div className={`h-24 w-full rounded-lg bg-linear-to-tr ${v.bg} flex items-center justify-center text-2xl font-black text-white/90 shadow-inner`}>
                       {v.initial}
                     </div>
                     <span className="text-xs font-bold text-zinc-200 mt-1.5 block">
@@ -1143,14 +1143,14 @@ export default function ProDawStudio({
               <div className="space-y-2">
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/40 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50 active:scale-98 transition-all shadow-sm"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/40 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50 active:scale-98 transition-all shadow-xs"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
                   <span>{t('daw.mastering', 'Mastering')}</span>
                 </button>
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/40 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50 active:scale-98 transition-all shadow-sm"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-950/40 py-2 text-xs font-bold text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50 active:scale-98 transition-all shadow-xs"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
                   <span>{t('daw.autoMix', 'Auto Mix')}</span>
@@ -1206,7 +1206,7 @@ export default function ProDawStudio({
                   {/* Level Meter Bar (Next to groove) */}
                   <div className="absolute right-0 inset-y-1 w-1 rounded bg-zinc-800 overflow-hidden flex flex-col justify-end">
                     <div
-                      className="w-full bg-gradient-to-t from-emerald-500 via-yellow-400 to-red-500 transition-all duration-100"
+                      className="w-full bg-linear-to-t from-emerald-500 via-yellow-400 to-red-500 transition-all duration-100"
                       style={{ height: `${isPlaying ? Math.min(100, Math.max(15, (masterVolume * 0.9) + Math.random() * 10)) : 0}%` }}
                     />
                   </div>
@@ -1316,7 +1316,7 @@ export default function ProDawStudio({
 
       {/* ── Audio Effects Dialog (Screenshots 1 & 2) ───────────────────────── */}
       {isAudioEffectsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/60 backdrop-blur-sm duration-150" style={{ paddingBottom: barClearance(12) }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-scrim/60 backdrop-blur-xs duration-150" style={{ paddingBottom: barClearance(12) }}>
           <div
             className="relative flex flex-col w-full max-w-2xl max-h-[88vh] rounded-2xl border border-zinc-800 bg-zinc-900/95 shadow-2xl backdrop-blur-xl p-4 sm:p-5 overflow-hidden text-zinc-200"
             role="dialog"
@@ -1335,7 +1335,7 @@ export default function ProDawStudio({
                     value={effectsSearch}
                     onChange={(e) => setEffectsSearch(e.target.value)}
                     placeholder={t('daw.searchVoices', 'Search')}
-                    className="h-7 w-28 sm:w-36 rounded-lg border border-zinc-700 bg-zinc-800/80 pl-7 pr-2 text-xs text-zinc-200 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+                    className="h-7 w-28 sm:w-36 rounded-lg border border-zinc-700 bg-zinc-800/80 pl-7 pr-2 text-xs text-zinc-200 placeholder-zinc-500 focus:border-zinc-500 focus:outline-hidden"
                   />
                 </div>
                 <button
@@ -1383,7 +1383,7 @@ export default function ProDawStudio({
                     </p>
                   </div>
                 </div>
-                <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400 shrink-0 ml-2" />
+                <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400 shrink-0 ml-2" />
               </div>
             </div>
 
@@ -1399,7 +1399,7 @@ export default function ProDawStudio({
                     value={generatePrompt}
                     onChange={(e) => setGeneratePrompt(e.target.value)}
                     placeholder={t('daw.generatePromptPlaceholder', 'e.g. Dreamy shoegaze shimmer reverb with slow pitch wobble')}
-                    className="flex-1 rounded-lg border border-purple-500/40 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-400"
+                    className="flex-1 rounded-lg border border-purple-500/40 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-hidden focus:border-purple-400"
                   />
                   <button
                     type="button"
@@ -1637,7 +1637,7 @@ export default function ProDawStudio({
                       }}
                       className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center cursor-pointer transition-all ${
                         isSelected
-                          ? 'border-cyan-400 bg-cyan-950/30 text-zinc-100 shadow-sm shadow-cyan-500/20'
+                          ? 'border-cyan-400 bg-cyan-950/30 text-zinc-100 shadow-xs shadow-cyan-500/20'
                           : 'border-zinc-800/80 bg-zinc-950/50 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800/60'
                       }`}
                     >

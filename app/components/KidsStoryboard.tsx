@@ -168,7 +168,7 @@ export default function KidsStoryboard({
       {/* ── Header Bar ───────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 border-b-2 border-surface-200 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-400 text-2xl shadow-sm">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-400 text-2xl shadow-xs">
             <span>✨</span>
           </div>
           <div>
@@ -273,7 +273,7 @@ export default function KidsStoryboard({
                   onClick={() => setActiveStep(stepIdx)}
                   className={`flex flex-col items-center justify-center gap-0.5 rounded-2xl py-2 px-1 text-center transition-all ${
                     isCurrent
-                      ? 'border-2 border-primary-500 bg-primary-500/15 shadow-sm scale-102 font-black text-primary-950'
+                      ? 'border-2 border-primary-500 bg-primary-500/15 shadow-xs scale-102 font-black text-primary-950'
                       : isDone
                         ? 'border border-surface-300 bg-surface-100/90 font-bold text-surface-800'
                         : 'border border-surface-200 bg-surface-100/40 text-surface-500'
@@ -320,7 +320,7 @@ export default function KidsStoryboard({
                             }`}
                           >
                             <span
-                              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-2xl shadow-sm"
+                              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-xs"
                               style={{
                                 background: `linear-gradient(135deg, ${choice.paint.from}, ${choice.paint.to})`,
                                 color: choice.paint.ink,
@@ -419,7 +419,7 @@ export default function KidsStoryboard({
                         </p>
                       </div>
                       <div
-                        className={`mt-3 h-2 w-full rounded-full bg-gradient-to-r ${vStyle.bgGradient}`}
+                        className={`mt-3 h-2 w-full rounded-full bg-linear-to-r ${vStyle.bgGradient}`}
                       />
                     </button>
                   );
@@ -441,7 +441,7 @@ export default function KidsStoryboard({
                   data-kidsstorybuild
                   onClick={() => void generateStory()}
                   disabled={building}
-                  className="inline-flex min-h-[52px] items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 px-6 text-sm font-black text-white shadow-xl hover:opacity-95 transition-transform active:scale-95 disabled:opacity-50"
+                  className="inline-flex min-h-[52px] items-center gap-2 rounded-2xl bg-linear-to-r from-amber-500 via-rose-500 to-purple-600 px-6 text-sm font-black text-white shadow-xl hover:opacity-95 transition-transform active:scale-95 disabled:opacity-50"
                 >
                   {building ? (
                     <>
@@ -497,7 +497,7 @@ export default function KidsStoryboard({
                 disabled={kept}
                 className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-black transition-colors ${
                   kept
-                    ? 'bg-rose-500 text-white shadow-sm'
+                    ? 'bg-rose-500 text-white shadow-xs'
                     : 'border border-surface-300 bg-surface-50 text-surface-800'
                 }`}
               >

@@ -171,7 +171,7 @@ export default function Subscription(): React.ReactElement | null {
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
       <div className="flex items-start gap-2.5">
-        <CreditCard className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <CreditCard className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-zinc-200">
             {t('sub.title', 'What you are paying')}
@@ -209,7 +209,7 @@ export default function Subscription(): React.ReactElement | null {
 
       {done && (
         <p className="text-sm text-emerald-300 flex items-center gap-1.5">
-          <Check className="w-4 h-4 flex-shrink-0" />
+          <Check className="w-4 h-4 shrink-0" />
           {t('sub.stopped', 'Stopped. Nothing further will be charged, and a confirmation is on its way to your inbox.')}
         </p>
       )}

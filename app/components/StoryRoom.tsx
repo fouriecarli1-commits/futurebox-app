@@ -410,16 +410,16 @@ export default function StoryRoom(): React.ReactElement {
                 key={page.id}
                 className="flex gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-2.5"
               >
-                <span className="w-5 flex-shrink-0 text-right text-xs font-black text-zinc-600">{i + 1}</span>
+                <span className="w-5 shrink-0 text-right text-xs font-black text-zinc-600">{i + 1}</span>
                 {made[page.id]?.picture ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={made[page.id]!.picture}
                     alt=""
-                    className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+                    className="h-12 w-12 shrink-0 rounded-lg object-cover"
                   />
                 ) : (
-                  <span className="h-12 w-12 flex-shrink-0 rounded-lg border border-dashed border-zinc-700" />
+                  <span className="h-12 w-12 shrink-0 rounded-lg border border-dashed border-zinc-700" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="line-clamp-2 block text-xs leading-snug text-zinc-300">{page.text}</span>
@@ -434,7 +434,7 @@ export default function StoryRoom(): React.ReactElement {
                     type="button"
                     onClick={() => { void new Audio(URL.createObjectURL(made[page.id]!.audio!)).play(); }}
                     aria-label={t('story.hear', 'Hear this page')}
-                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-zinc-700 text-zinc-300"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-zinc-700 text-zinc-300"
                   >
                     <Play className="h-4 w-4" />
                   </button>

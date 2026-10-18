@@ -326,7 +326,7 @@ export default function MakeSound({
                   : kind === 'music'
                     ? t('makesound.musicHint', 'Warm acoustic guitar, slow and hopeful, no singing.')
                     : t('makesound.wordsHint', 'A line for the clip, or a whole script to be read.')}
-                className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-3 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none pr-11"
+                className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-3 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden pr-11"
               />
               <SpeakButton onHeard={(said) => setWords((was) => withSaid(was, said).slice(0, MOST_CHARACTERS))} className="absolute bottom-2 right-2" />
             </span>

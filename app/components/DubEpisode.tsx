@@ -160,7 +160,7 @@ export default function DubEpisode({
       title={t('dub.title', 'Say it in another language')}
       icon={<Languages className="w-4 h-4" />}
       aside={
-        <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white flex-shrink-0">
+        <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white shrink-0">
           <X className="w-4 h-4" />
         </button>
       }
@@ -218,7 +218,7 @@ export default function DubEpisode({
               value={to}
               onChange={(event) => setTo(event.target.value.slice(0, 3))}
               aria-label={t('dub.code', 'Language code')}
-              className="w-20 bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+              className="w-20 bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
             />
           </label>
 

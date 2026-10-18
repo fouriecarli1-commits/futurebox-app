@@ -350,7 +350,7 @@ export default function PromptCards({
               asked.current = card;
               picker.current?.click();
             }}
-            className="flex min-h-[76px] w-[9.5rem] flex-shrink-0 snap-start flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 text-left hover:border-emerald-500/60 disabled:opacity-50"
+            className="flex min-h-[76px] w-[9.5rem] shrink-0 snap-start flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 text-left hover:border-emerald-500/60 disabled:opacity-50"
           >
             {/* The kind of photo it asks for, as a photo — the meerkat in a
                 light of its own per card. */}
@@ -426,7 +426,7 @@ export default function PromptCards({
                  probe did exactly that and reported the recording never
                  started while it was recording. */
               data-card={card.id}
-              className={`flex min-h-[76px] w-[9.5rem] flex-shrink-0 snap-start flex-col justify-between rounded-2xl border p-3 text-left disabled:opacity-50 ${
+              className={`flex min-h-[76px] w-[9.5rem] shrink-0 snap-start flex-col justify-between rounded-2xl border p-3 text-left disabled:opacity-50 ${
                 going
                   ? 'border-rose-500 bg-rose-500/10'
                   : 'border-zinc-800 bg-zinc-900/60 hover:border-emerald-500/60'

@@ -34,7 +34,7 @@ for (const name of ROOMS) {
       const hasBorder = ['Top', 'Right', 'Bottom', 'Left'].some(
         (side) => parseFloat(s[`border${side}Width`]) > 0 && s[`border${side}Style`] !== 'none',
       );
-      const bg = (s.backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+      const bg = window.__rgba(s.backgroundColor);
       const hasFill = bg.length >= 3 && (bg.length < 4 || bg[3] > 0.04);
       /* A gradient is a fill and does not appear in `backgroundColor`.
 

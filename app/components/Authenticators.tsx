@@ -131,7 +131,7 @@ export default function Authenticators(): React.ReactElement | null {
 
   const box =
     'w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white '
-    + 'placeholder-zinc-600 focus:outline-none focus:border-emerald-500 tabular-nums tracking-widest';
+    + 'placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500 tabular-nums tracking-widest';
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3" data-mfa>
@@ -169,7 +169,7 @@ export default function Authenticators(): React.ReactElement | null {
           {have.map((one) => (
             <div key={one.id} className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-2.5 space-y-2">
               <p className="text-sm text-zinc-200 flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="truncate">{one.name}</span>
               </p>
               {dropping === one.id ? (
@@ -300,7 +300,7 @@ export default function Authenticators(): React.ReactElement | null {
       {problem && <p className="text-sm text-rose-400 leading-snug">{problem}</p>}
       {done && (
         <p className="text-sm text-emerald-400 leading-snug flex items-center gap-1.5">
-          <KeyRound className="w-3.5 h-3.5 flex-shrink-0" />
+          <KeyRound className="w-3.5 h-3.5 shrink-0" />
           {done}
         </p>
       )}

@@ -111,17 +111,17 @@ export default function Charts({
   const line = (row: Row, at: number, kind: 'ours' | 'theirs', onPress?: () => void) => {
     const body = (
       <>
-        <span className="w-6 flex-shrink-0 text-sm font-black tabular-nums text-zinc-600">{at + 1}</span>
+        <span className="w-6 shrink-0 text-sm font-black tabular-nums text-zinc-600">{at + 1}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold text-zinc-100">{row.title}</span>
           <span className="block truncate text-sm text-zinc-500">{row.by}</span>
         </span>
         {kind === 'ours' ? (
-          <span className="flex-shrink-0 text-sm tabular-nums text-emerald-400">
+          <span className="shrink-0 text-sm tabular-nums text-emerald-400">
             {row.count} {t('chart.plays', 'plays')}
           </span>
         ) : (
-          <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-zinc-600" />
+          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
         )}
       </>
     );

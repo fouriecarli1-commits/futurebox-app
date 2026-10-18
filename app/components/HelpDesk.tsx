@@ -153,7 +153,7 @@ export default function HelpDesk(): React.ReactElement {
       {/* ── The assistant ────────────────────────────────────────────── */}
       <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 space-y-4">
         <div className="flex items-start gap-3">
-          <LifeBuoy className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <LifeBuoy className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
           <div className="min-w-0">
             <h2 className="text-lg font-black text-white tracking-tight">
               {t('help.askTitle', 'Ask about anything here')}
@@ -169,7 +169,7 @@ export default function HelpDesk(): React.ReactElement {
 
         {available === false && (
           <p className="text-sm text-amber-400 leading-relaxed flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             {t(
               'help.off',
               'The assistant is switched off for this app right now. The form below reaches a person.',
@@ -223,7 +223,7 @@ export default function HelpDesk(): React.ReactElement {
               rows={2}
               disabled={available === false}
               placeholder={t('help.placeholder', 'What does a music video cost? How do I cancel?')}
-              className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none disabled:opacity-50 pr-11"
+              className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden disabled:opacity-50 pr-11"
             />
             <SpeakButton onHeard={(said) => setQuestion((was) => withSaid(was, said))} className="absolute bottom-2 right-2" />
           </span>
@@ -245,7 +245,7 @@ export default function HelpDesk(): React.ReactElement {
       {/* ── The person ───────────────────────────────────────────────── */}
       <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 space-y-4">
         <div className="flex items-start gap-3">
-          <Mail className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <Mail className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
           <div className="min-w-0">
             <h2 className="text-lg font-black text-white tracking-tight">
               {t('help.writeTitle', 'Or write to a person')}
@@ -261,7 +261,7 @@ export default function HelpDesk(): React.ReactElement {
 
         {sent ? (
           <p className="text-sm text-emerald-300 flex items-start gap-2 leading-relaxed">
-            <Check className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <Check className="w-4 h-4 shrink-0 mt-0.5" />
             {t(
               'help.sent',
               'Sent. You will get a reply at the address you gave.',
@@ -280,7 +280,7 @@ export default function HelpDesk(): React.ReactElement {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="jy@voorbeeld.co.za"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                 />
               </div>
               <div className="space-y-1.5">
@@ -293,7 +293,7 @@ export default function HelpDesk(): React.ReactElement {
                   type="text"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
                 />
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function HelpDesk(): React.ReactElement {
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 rows={5}
-                className="w-full resize-y rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+                className="w-full resize-y rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
               />
             </div>
 

@@ -208,7 +208,7 @@ export default function Spotlight({
               aria-pressed={playing}
               aria-label={t('spot.demo', 'Studio demo')}
               data-spotlightdemo
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent shadow-lg shadow-emerald-500/20 transition-transform hover:scale-105"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent shadow-lg shadow-emerald-500/20 transition-transform hover:scale-105"
             >
               {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
             </button>
@@ -249,7 +249,7 @@ export default function Spotlight({
                   data-spotlightrelease
                   className="group min-w-[220px] max-w-[220px] rounded-2xl border border-white/10 bg-zinc-900/80 p-3 text-left transition-all hover:border-emerald-500/60 hover:shadow-[0_0_30px_rgba(15,157,110,0.35)]"
                 >
-                  <div className="relative mb-3 flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-950 via-zinc-950 to-cyan-950">
+                  <div className="relative mb-3 flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-emerald-950 via-zinc-950 to-cyan-950">
                     <span className="text-5xl font-black text-emerald-500/30">{at + 1}</span>
                     <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full border border-emerald-500/40 bg-black/60 px-2 py-0.5 text-[10px] font-medium text-emerald-400 backdrop-blur-md">
                       <Radio className="h-3 w-3" /> Live
@@ -320,7 +320,7 @@ export default function Spotlight({
             ].map((one) => (
               <div key={one.name} className="flex items-center justify-between rounded-xl p-2 transition hover:bg-zinc-800/40">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border ${one.tone}`}>{one.icon}</div>
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${one.tone}`}>{one.icon}</div>
                   <div className="min-w-0">
                     <div className="truncate text-xs font-bold text-white">{one.name}</div>
                     <div className="truncate text-[10px] text-zinc-400">{one.sub}</div>
@@ -364,7 +364,7 @@ export default function Spotlight({
         <section className={`${GLASS} space-y-3 p-5`} data-spotlightblog>
           <div className="flex items-center justify-between gap-2">
             <h3 className="flex items-center gap-2 text-sm font-bold text-white">
-              <BookOpen className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+              <BookOpen className="h-4 w-4 shrink-0 text-emerald-400" />
               <span>{t('blog.title', 'Hoe dit werk — Kennis & Handleidings')}</span>
             </h3>
             <Link href="/blog" className="min-h-[36px] whitespace-nowrap text-[11px] font-bold text-emerald-400 hover:underline">

@@ -117,7 +117,7 @@ function WhatItIs(): React.ReactElement {
             style={{ background: PANEL, border: `1px solid ${EDGE}` }}
           >
             <span
-              className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
               style={{ background: 'rgba(56,189,248,0.14)', color: LIT }}
             >
               <Icon className="h-4 w-4" />
@@ -366,7 +366,7 @@ export default function Booth({
       {/* ── What this room is ───────────────────────────────────────────── */}
       <div className="flex items-start gap-3">
         <span
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-cyan-400/40 shadow-[0_0_16px_rgba(34,211,238,0.35)]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/40 shadow-[0_0_16px_rgba(34,211,238,0.35)]"
           style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.2) 0%, rgba(16,185,129,0.15) 100%)', color: LIT }}
         >
           <Mic className="h-6 w-6 text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
@@ -376,7 +376,7 @@ export default function Booth({
             {/* Cyan and sky, not teal and emerald: the theme repaints those two
                 families, and on the dark preset they came out as dark greens on
                 black — the heading measured 1.76:1 (`check:contrast`). */}
-            <h4 className="text-2xl font-black leading-tight tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_16px_rgba(34,211,238,0.6)]">
+            <h4 className="text-2xl font-black leading-tight tracking-tight bg-linear-to-r from-cyan-300 via-sky-200 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_16px_rgba(34,211,238,0.6)]">
               {t('booth.title')}
             </h4>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/70 px-2 py-0.5 text-[10px] font-extrabold tracking-widest text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)] uppercase">
@@ -534,7 +534,7 @@ export default function Booth({
         )}
 
         <p className="flex items-start gap-1.5 pt-1 text-xs leading-snug" style={{ color: INK_DIM }}>
-          <Music className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+          <Music className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           {t('booth.free', 'Singing and redoing a line use no credits. Keeping a take mixes it into a song, paid by the minute like the Pro Booth’s bounce — the button says the price. The paid steps inside — cleaning a take, splitting a song — say their own price at their own button.')}
         </p>
       </div>

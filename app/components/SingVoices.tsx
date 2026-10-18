@@ -140,7 +140,7 @@ function Voice({
             : 'border-zinc-800 bg-zinc-900 text-zinc-300'
         }`}
       >
-        <span className="grid h-9 w-9 flex-shrink-0 place-items-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
+        <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
           {face ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
@@ -171,7 +171,7 @@ function Voice({
           type="button"
           onClick={onHear}
           aria-label={playing ? t('sing.stopDemo', 'Stop') : `${t('sing.hearDemo', 'Hear')} ${one.name}`}
-          className="min-h-[44px] w-11 flex-shrink-0 flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-emerald-400"
+          className="min-h-[44px] w-11 shrink-0 flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-emerald-400"
         >
           {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </button>

@@ -509,7 +509,7 @@ export default function Channel({
               <span>{t('chan.identity', 'Channel identity')}</span>
             </div>
             <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4 text-center">
-              <div className="mx-auto mb-3 h-20 w-20 rounded-2xl bg-gradient-to-tr from-emerald-500 via-violet-500 to-pink-500 p-1 shadow-lg shadow-emerald-500/20">
+              <div className="mx-auto mb-3 h-20 w-20 rounded-2xl bg-linear-to-tr from-emerald-500 via-violet-500 to-pink-500 p-1 shadow-lg shadow-emerald-500/20">
                 <div className="h-full w-full overflow-hidden rounded-xl bg-zinc-950">
                   {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -621,7 +621,7 @@ export default function Channel({
                      already saved on every keystroke. */
                   onKeyDown={(event) => { if (event.key === 'Enter' || event.key === 'Escape') setRenaming(null); }}
                   onBlur={() => setRenaming(null)}
-                  className="flex-1 min-w-0 min-h-[44px] rounded-lg border border-emerald-500 bg-zinc-950 px-2.5 text-sm font-bold text-white focus:outline-none"
+                  className="flex-1 min-w-0 min-h-[44px] rounded-lg border border-emerald-500 bg-zinc-950 px-2.5 text-sm font-bold text-white focus:outline-hidden"
                 />
               ) : (
                 <span data-listtitle className="flex-1 min-w-0 truncate text-sm font-bold text-white">
@@ -649,7 +649,7 @@ export default function Channel({
                   }
                   setRenaming(list.id);
                 }}
-                className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm font-semibold flex items-center gap-1.5 flex-shrink-0"
+                className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm font-semibold flex items-center gap-1.5 shrink-0"
               >
                 {renaming === list.id ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                 {renaming === list.id ? t('chan.renameDone', 'Done') : t('chan.rename', 'Rename')}
@@ -681,7 +681,7 @@ export default function Channel({
               <div className="space-y-1">
                 {listTracks.map((track, index) => (
                   <div key={track.id} className="flex items-center gap-2 text-sm">
-                    <span className="w-5 text-zinc-600 tabular-nums flex-shrink-0">{index + 1}</span>
+                    <span className="w-5 text-zinc-600 tabular-nums shrink-0">{index + 1}</span>
                     <button
                       type="button"
                       onClick={() => void play(track.id, list.trackIds.slice(index + 1))}
@@ -689,7 +689,7 @@ export default function Channel({
                     >
                       {track.title}
                     </button>
-                    <span className="text-zinc-600 tabular-nums flex-shrink-0">{clock(track.seconds)}</span>
+                    <span className="text-zinc-600 tabular-nums shrink-0">{clock(track.seconds)}</span>
                     <button type="button" onClick={() => update(lists.map((one) => (one.id === list.id ? moved(one, track.id, -1) : one)))} className="text-zinc-600 hover:text-white px-1">↑</button>
                     <button type="button" onClick={() => update(lists.map((one) => (one.id === list.id ? moved(one, track.id, 1) : one)))} className="text-zinc-600 hover:text-white px-1">↓</button>
                     <button type="button" onClick={() => update(lists.map((one) => (one.id === list.id ? withoutTrack(one, track.id) : one)))} className="text-zinc-600 hover:text-red-400 px-1">
@@ -721,7 +721,7 @@ export default function Channel({
 
         {/* ── Column two: the hub and the vault ───────────────────── */}
         <main className="space-y-4 min-w-0" data-chanvault>
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-violet-950/70 via-zinc-900 to-emerald-950/60 p-5">
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-linear-to-r from-violet-950/70 via-zinc-900 to-emerald-950/60 p-5">
             <div className="pointer-events-none absolute right-0 -top-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
             <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
@@ -814,7 +814,7 @@ export default function Channel({
             value={looking}
             onChange={(event) => setLooking(event.target.value)}
             placeholder={t('chan.find', 'Find a song')}
-            className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-zinc-800 bg-black/60 px-3.5 text-base text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-zinc-800 bg-black/60 px-3.5 text-base text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
           <button
             type="button"
@@ -985,7 +985,7 @@ export default function Channel({
                     what they made. */}
                 {counts[track.id] && counts[track.id].listens > 0 && (
                   <p className="flex items-center gap-1.5 text-sm text-emerald-300/90">
-                    <Headphones className="h-3.5 w-3.5 flex-shrink-0" />
+                    <Headphones className="h-3.5 w-3.5 shrink-0" />
                     {t('chan.listens', '{listens} listens, {listeners} people')
                       .replace('{listens}', String(counts[track.id].listens))
                       .replace('{listeners}', String(counts[track.id].listeners))}
@@ -1032,7 +1032,7 @@ export default function Channel({
                     }}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                   >
-                    <MessageSquareQuote className="w-4 h-4 flex-shrink-0" />
+                    <MessageSquareQuote className="w-4 h-4 shrink-0" />
                     {timedFor(track).length > 0
                       ? t('chan.lyrics', 'Lyrics')
                       : t('chan.getWords', 'Get the words')}
@@ -1075,7 +1075,7 @@ export default function Channel({
                   }}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                 >
-                  <Video className="w-4 h-4 flex-shrink-0" />
+                  <Video className="w-4 h-4 shrink-0" />
                   {t('chan.filmIt', 'Film yourself to it')}
                 </button>
 
@@ -1250,7 +1250,7 @@ export default function Channel({
                         id={`name-${track.id}`}
                         value={named.title}
                         onChange={(event) => setNamed((was) => ({ ...was, title: event.target.value }))}
-                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                       />
                       <label className="block text-sm text-zinc-400" htmlFor={`by-${track.id}`}>
                         {t('chan.whoBy', 'Who it is by')}
@@ -1260,7 +1260,7 @@ export default function Channel({
                         value={named.by}
                         onChange={(event) => setNamed((was) => ({ ...was, by: event.target.value }))}
                         placeholder={t('chan.whoByHint', 'Leave it empty if you do not know')}
-                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                       />
                       {/* Said plainly, because the box invites the wrong
                           answer. Somebody naming a song they brought in is

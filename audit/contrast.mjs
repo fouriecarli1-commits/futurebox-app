@@ -236,7 +236,12 @@ async function measure(target) {
       });
       return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     };
-    const parse = (s) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+    /* `__rgba` is `audit/colour.mjs`, which `enter()` puts on every page:
+       since Tailwind 4 a colour with an opacity computes as `oklab(…)`, and
+       its first three numbers are not red, green and blue. */
+    const rgba = window.__rgba;
+    const parse = (s) => rgba(s).slice(0, 3);
+    const COLOUR = /(?:rgba?|hsla?|oklab|oklch|lab|lch|color)\([^()]*\)/g;
     /* The colour behind a piece of text, walking up until something opaque.
 
        A gradient counts, since 12 October 2026. This read `backgroundColor`
@@ -251,9 +256,9 @@ async function measure(target) {
        that runs across a gradient has to read at its least-contrasting end. */
     const stops = (image) => {
       if (!/gradient\(/.test(image)) return [];
-      return (image.match(/rgba?\([^)]*\)/g) ?? [])
-        .map((one) => (one.match(/[\d.]+/g) ?? []).map(Number))
-        .filter((parts) => parts.length >= 3 && (parts.length < 4 || parts[3] > 0.85))
+      return (image.match(COLOUR) ?? [])
+        .map(rgba)
+        .filter((parts) => parts[3] > 0.85)
         .map((parts) => parts.slice(0, 3));
     };
     const opaque = (el, fg) => {
@@ -266,9 +271,8 @@ async function measure(target) {
           return painted.reduce((worst, one) =>
             Math.abs(lum(one) - l) < Math.abs(lum(worst) - l) ? one : worst);
         }
-        const bg = style.backgroundColor;
-        const parts = (bg.match(/[\d.]+/g) ?? []).map(Number);
-        if (parts.length >= 3 && (parts.length < 4 || parts[3] > 0.85)) return parts.slice(0, 3);
+        const parts = rgba(style.backgroundColor);
+        if (parts[3] > 0.85) return parts.slice(0, 3);
         node = node.parentElement;
       }
       return [255, 255, 255];

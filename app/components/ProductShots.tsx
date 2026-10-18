@@ -109,7 +109,7 @@ export default function ProductShots({ photo, onClose, onMade }: {
       <header className="flex items-center gap-2 border-b border-zinc-800 px-3 py-2">
         <button type="button" data-productclose onClick={onClose} aria-label={w('close')} className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-zinc-700"><X className="h-5 w-5" /></button>
         <ShoppingBag className="h-5 w-5 text-amber-300" />
-        <p className="min-w-0 flex-1 truncate bg-gradient-to-r from-amber-200 via-orange-300 to-rose-300 bg-clip-text text-base font-extrabold text-transparent">{w('title')}</p>
+        <p className="min-w-0 flex-1 truncate bg-linear-to-r from-amber-200 via-orange-300 to-rose-300 bg-clip-text text-base font-extrabold text-transparent">{w('title')}</p>
       </header>
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">

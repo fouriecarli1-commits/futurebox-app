@@ -135,7 +135,7 @@ for (const preset of PRESETS) {
 
 /* ── `bg-white` is never a fill ────────────────────────────────────────────
 
-   `tailwind.config.js` remaps `white` to `--fb-ink`, so that `text-white`
+   the `@theme` block in `app/globals.css` remaps `white` to `--fb-ink`, so that `text-white`
    follows the theme — near-white on a dark surface, near-black on a light one.
    That is right for text and it is a trap for a fill.
 

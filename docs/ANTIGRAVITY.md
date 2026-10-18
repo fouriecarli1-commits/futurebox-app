@@ -66,7 +66,7 @@ en dan net as niemand anders dit uitgecheck het nie. Nooit op `main` of
 
 **`bg-white` is NIE wit nie.**
 
-`tailwind.config.js` wys `white` na `--fb-ink`, en `zinc-*` en `emerald-*` na
+Die `@theme`-blok in `app/globals.css` wys `white` na `--fb-ink`, en `zinc-*` en `emerald-*` na
 `--fb-surface-*` en `--fb-primary-*`. Op 'n ligte tema verf `bg-white` dus
 **byna swart**. Dieselfde geld vir `bg-white/70`, `bg-white/5`, en elke ander
 deursigtigheid daarvan.

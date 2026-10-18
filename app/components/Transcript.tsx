@@ -182,7 +182,7 @@ export default function Transcript({
         <button
           type="button"
           onClick={onClose}
-          className="text-xs text-zinc-500 hover:text-white flex-shrink-0"
+          className="text-xs text-zinc-500 hover:text-white shrink-0"
         >
           {t('script.close', 'Close')}
         </button>
@@ -228,7 +228,7 @@ export default function Transcript({
                     }}
                     placeholder={speaker.replace(/^speaker_/, 'Speaker ')}
                     aria-label={`${t('script.nameFor', 'Name for')} ${speaker}`}
-                    className="w-36 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                    className="w-36 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                   />
                 ))}
               </div>

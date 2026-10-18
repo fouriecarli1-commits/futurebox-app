@@ -104,7 +104,7 @@ export default function WelcomeVideo() {
               void video?.play();
             }}
             aria-label={t('welcome.play', 'Play the introduction')}
-            className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/70 via-black/20 to-black/40 group"
+            className="absolute inset-0 flex items-center justify-center bg-linear-to-t from-black/70 via-black/20 to-black/40 group"
           >
             <span className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center transition-transform group-hover:scale-105">
               <Play className="w-6 h-6 text-onAccent translate-x-0.5" fill="currentColor" />

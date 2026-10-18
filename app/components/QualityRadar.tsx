@@ -53,7 +53,7 @@ function KindMark({ kind }: { kind: FeedItem['kind'] }): React.ReactElement {
   return (
     <span
       title={label}
-      className="hidden sm:flex flex-col items-center gap-1 w-14 flex-shrink-0 pt-0.5 text-zinc-500"
+      className="hidden sm:flex flex-col items-center gap-1 w-14 shrink-0 pt-0.5 text-zinc-500"
     >
       <Icon className="w-5 h-5" aria-hidden="true" />
       <span className="text-[11px] font-semibold leading-none">{label}</span>
@@ -270,7 +270,7 @@ export default function QualityRadar({
                       {verdict.signals.map((sig) => (
                         <li key={sig.label} className="flex items-start gap-2 text-sm">
                           <span
-                            className={`font-semibold w-9 flex-shrink-0 text-right ${
+                            className={`font-semibold w-9 shrink-0 text-right ${
                               sig.delta > 0 ? 'text-emerald-400' : sig.delta < 0 ? 'text-rose-400' : 'text-zinc-600'
                             }`}
                           >
@@ -287,7 +287,7 @@ export default function QualityRadar({
 
                 <span
                   title={`${verdict.score} out of 100`}
-                  className={`flex-shrink-0 text-sm font-bold tabular-nums ${
+                  className={`shrink-0 text-sm font-bold tabular-nums ${
                     verdict.band === 'signal' ? 'text-emerald-400' : 'text-zinc-500'
                   }`}
                 >
@@ -351,7 +351,7 @@ export default function QualityRadar({
               <li key={item.id} className="p-3 rounded-xl bg-zinc-950 border border-zinc-800">
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm font-semibold text-zinc-300 leading-snug">{item.title}</p>
-                  <span className="text-sm font-bold text-rose-400 flex-shrink-0">{verdict.score}</span>
+                  <span className="text-sm font-bold text-rose-400 shrink-0">{verdict.score}</span>
                 </div>
                 <p className="text-sm text-zinc-600 pt-0.5">{item.source}</p>
                 <ul className="pt-1.5 space-y-0.5">

@@ -219,7 +219,7 @@ export default function ElementsBrowserModal({
                 onInsertElement(el);
                 onClose();
               }}
-              className={`relative flex flex-shrink-0 flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 hover:border-amber-400/60 hover:bg-zinc-900 transition-all group ${
+              className={`relative flex shrink-0 flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 hover:border-amber-400/60 hover:bg-zinc-900 transition-all group ${
                 aspectRatioSquare ? 'h-20 w-20' : 'h-20 w-32'
               }`}
             >
@@ -269,7 +269,7 @@ export default function ElementsBrowserModal({
                   <button
                     type="button"
                     onClick={(e) => handlePlayAudio(track, e)}
-                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-black shadow-md hover:bg-emerald-400 transition-colors"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-black shadow-md hover:bg-emerald-400 transition-colors"
                   >
                     {isPlaying ? (
                       <Pause className="h-5 w-5 fill-current" />
@@ -313,7 +313,7 @@ export default function ElementsBrowserModal({
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Top Header & Search Bar (Screenshot 1, 3, 4, 5) */}
-        <div className="flex flex-shrink-0 flex-col border-b border-zinc-800/80 p-4 sm:p-5 gap-3">
+        <div className="flex shrink-0 flex-col border-b border-zinc-800/80 p-4 sm:p-5 gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               {selectedCategory && (
@@ -354,7 +354,7 @@ export default function ElementsBrowserModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('elem.searchPlaceholder', 'Search elements...')}
-              className="w-full rounded-2xl border border-zinc-700/80 bg-zinc-900/90 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 shadow-inner focus:border-amber-400 focus:outline-none"
+              className="w-full rounded-2xl border border-zinc-700/80 bg-zinc-900/90 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 shadow-inner focus:border-amber-400 focus:outline-hidden"
             />
             <div className="absolute right-3.5 flex items-center text-zinc-400 hover:text-zinc-200 cursor-pointer">
               <Mic className="h-4 w-4" />
@@ -513,9 +513,9 @@ export default function ElementsBrowserModal({
                 <button
                   type="button"
                   onClick={handleAiVoiceoverClick}
-                  className="flex w-full items-center gap-4 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-600/30 via-fuchsia-600/20 to-purple-800/30 p-3.5 text-left hover:border-purple-400/60 transition-all group"
+                  className="flex w-full items-center gap-4 rounded-2xl border border-purple-500/30 bg-linear-to-r from-purple-600/30 via-fuchsia-600/20 to-purple-800/30 p-3.5 text-left hover:border-purple-400/60 transition-all group"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500 to-fuchsia-500 text-white shadow-lg group-hover:scale-105 transition-transform">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-tr from-purple-500 to-fuchsia-500 text-white shadow-lg group-hover:scale-105 transition-transform">
                     <span className="text-base font-black">Aa</span>
                   </div>
                   <div>
@@ -593,7 +593,7 @@ export default function ElementsBrowserModal({
                         onInsertElement(el);
                         onClose();
                       }}
-                      className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 hover:border-amber-400/60 hover:bg-zinc-900 transition-all group"
+                      className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 hover:border-amber-400/60 hover:bg-zinc-900 transition-all group"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -617,10 +617,10 @@ export default function ElementsBrowserModal({
                       key={cat.id}
                       type="button"
                       onClick={() => setSelectedCategory(cat.id)}
-                      className="flex flex-col items-center justify-center rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 hover:border-zinc-700 hover:bg-zinc-900 transition-all group shadow-sm"
+                      className="flex flex-col items-center justify-center rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 hover:border-zinc-700 hover:bg-zinc-900 transition-all group shadow-xs"
                     >
                       <div
-                        className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr ${cat.colorGradient} shadow-md group-hover:scale-105 transition-transform`}
+                        className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-tr ${cat.colorGradient} shadow-md group-hover:scale-105 transition-transform`}
                       >
                         {renderCategoryIcon(cat.iconType)}
                       </div>

@@ -895,14 +895,14 @@ export default function VideoEditor({
                   className="min-h-[44px] flex-1 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600 disabled:opacity-60"
                 >
                   {pulling === one.id
-                    ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                    ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
                     : one.thumb
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      ? <img src={one.thumb} alt="" className="h-8 w-8 flex-shrink-0 rounded object-cover" />
-                      : <ListMusic className="w-4 h-4 flex-shrink-0" />}
+                      ? <img src={one.thumb} alt="" className="h-8 w-8 shrink-0 rounded object-cover" />
+                      : <ListMusic className="w-4 h-4 shrink-0" />}
                   <span className="min-w-0 flex-1 truncate font-semibold">{one.name}</span>
                   {one.seconds > 0 && (
-                    <span className="flex-shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
+                    <span className="shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
                   )}
                 </button>
                 {/* Starred means eviction never takes it. The shelf is capped
@@ -915,7 +915,7 @@ export default function VideoEditor({
                   aria-label={t('edit.shelfKeep', 'Keep this one')}
                   title={t('edit.shelfKeep', 'Keep this one')}
                   onClick={() => setShelf(starBrought(one.id, !one.favourite))}
-                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border"
                   style={one.favourite
                     ? { borderColor: '#fbbf24', color: '#fbbf24', background: 'rgba(251,191,36,0.12)' }
                     : { borderColor: 'rgba(16,185,129,0.3)', color: INK_DIM }}
@@ -3362,7 +3362,7 @@ async function smallerFrame(url: string): Promise<string> {
           placeholder={shotPic
             ? t('edit.shotHintChange', 'Type here… e.g. make it night, add rain, turn the car red')
             : t('edit.shotHintType', 'Type here… e.g. a konsertina on a stoep at sunset, the curtain moving in the wind')}
-          className="w-full rounded-lg border border-emerald-500/40 bg-black/30 p-2.5 pr-11 text-[13px] leading-relaxed outline-none focus:border-emerald-500/80"
+          className="w-full rounded-lg border border-emerald-500/40 bg-black/30 p-2.5 pr-11 text-[13px] leading-relaxed outline-hidden focus:border-emerald-500/80"
           style={{ color: INK }}
         />
         <SpeakButton onHeard={(said) => setShotWords((was) => withSaid(was, said).slice(0, 500))} className="absolute bottom-2 right-2" />
@@ -3745,8 +3745,8 @@ async function smallerFrame(url: string): Promise<string> {
           on the rail and on the screen's own header, so the logo went; the
           shape is two small chips; Ask and the button that finishes the film
           stay, because those two are real. */}
-      <div data-editortop className="flex flex-shrink-0 flex-wrap items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
-        <div data-editorshapes className="flex flex-shrink-0 items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/90 p-0.5" role="group" aria-label={t('edit.shapeWhich', 'Which way up the film is')}>
+      <div data-editortop className="flex shrink-0 flex-wrap items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
+        <div data-editorshapes className="flex shrink-0 items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/90 p-0.5" role="group" aria-label={t('edit.shapeWhich', 'Which way up the film is')}>
           {([
             { id: 'tall' as const, says: '9:16', on: shape.height > shape.width },
             { id: 'wide' as const, says: '16:9', on: shape.width > shape.height },
@@ -3786,7 +3786,7 @@ async function smallerFrame(url: string): Promise<string> {
         {sizeOpen && (
           <form
             data-editorsizeform
-            className="flex flex-shrink-0 items-center gap-1.5"
+            className="flex shrink-0 items-center gap-1.5"
             onSubmit={(event) => {
               event.preventDefault();
               const width = Number(sizeDraft.width);
@@ -4419,7 +4419,7 @@ async function smallerFrame(url: string): Promise<string> {
           <div className="space-y-3" data-editoropening>
             <div className="flex items-start gap-3">
               <span
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
                 style={{ background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: `0 0 0 1px rgba(16,185,129,0.35)` }}
               >
                 <Scissors className="h-6 w-6" />
@@ -4925,13 +4925,13 @@ async function smallerFrame(url: string): Promise<string> {
                   {fades.in > 0 && (
                     <div
                       style={{ width: fades.in * perSecond }}
-                      className="pointer-events-none absolute inset-y-0 left-0 rounded-l-lg bg-gradient-to-r from-black/80 to-transparent"
+                      className="pointer-events-none absolute inset-y-0 left-0 rounded-l-lg bg-linear-to-r from-black/80 to-transparent"
                     />
                   )}
                   {fades.out > 0 && (
                     <div
                       style={{ width: fades.out * perSecond }}
-                      className="pointer-events-none absolute inset-y-0 right-0 rounded-r-lg bg-gradient-to-l from-black/80 to-transparent"
+                      className="pointer-events-none absolute inset-y-0 right-0 rounded-r-lg bg-linear-to-l from-black/80 to-transparent"
                     />
                   )}
                   <div
@@ -5569,10 +5569,10 @@ async function smallerFrame(url: string): Promise<string> {
         <div
           ref={wandRef}
           data-editorwand
-          className="mx-auto flex min-h-0 max-h-[60dvh] w-full max-w-3xl flex-shrink-0 flex-col gap-2 border-t px-3 pb-3 pt-2"
+          className="mx-auto flex min-h-0 max-h-[60dvh] w-full max-w-3xl shrink-0 flex-col gap-2 border-t px-3 pb-3 pt-2"
           style={{ borderColor: 'rgba(16,185,129,0.3)', background: PANEL }}
         >
-          <div className="flex flex-shrink-0 items-center justify-between gap-2">
+          <div className="flex shrink-0 items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 text-sm font-bold" style={{ color: INK }}>
               <Wand2 className="h-4 w-4" style={{ color: LIT }} />
               {t('edit.wandTitle', 'Change this frame with AI')}
@@ -5846,12 +5846,12 @@ async function smallerFrame(url: string): Promise<string> {
                       className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600 disabled:opacity-60"
                     >
                       {pulling === one.id
-                        ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
-                        : <Film className="w-4 h-4 flex-shrink-0" />}
+                        ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                        : <Film className="w-4 h-4 shrink-0" />}
                       <span className="min-w-0 flex-1 truncate font-semibold">
                         {one.title || t('edit.channelUntitled', 'Untitled')}
                       </span>
-                      <span className="flex-shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
+                      <span className="shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
                     </button>
                   </li>
                 ))}
@@ -7038,7 +7038,7 @@ async function smallerFrame(url: string): Promise<string> {
                         {one.halo.length > 0 && (
                           <span
                             aria-hidden
-                            className="h-3 w-3 flex-shrink-0 rounded-full"
+                            className="h-3 w-3 shrink-0 rounded-full"
                             style={{ background: one.halo[2], boxShadow: `0 0 6px 2px ${one.halo[1]}` }}
                           />
                         )}
@@ -7258,10 +7258,10 @@ async function smallerFrame(url: string): Promise<string> {
                       className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600 disabled:opacity-60"
                     >
                       {pulling === one.id
-                        ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
-                        : <ListMusic className="w-4 h-4 flex-shrink-0" />}
+                        ? <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                        : <ListMusic className="w-4 h-4 shrink-0" />}
                       <span className="min-w-0 flex-1 truncate font-semibold">{one.title}</span>
-                      <span className="flex-shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
+                      <span className="shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
                     </button>
                   </li>
                 ))}
@@ -8359,7 +8359,7 @@ async function smallerFrame(url: string): Promise<string> {
                           type="checkbox"
                           checked={owns}
                           onChange={(event) => setOwns(event.target.checked)}
-                          className="mt-1 h-5 w-5 flex-shrink-0 accent-emerald-500"
+                          className="mt-1 h-5 w-5 shrink-0 accent-emerald-500"
                         />
                         <span className="text-sm leading-snug" style={{ color: INK }}>
                           {t(

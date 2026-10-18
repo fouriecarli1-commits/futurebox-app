@@ -111,7 +111,7 @@ export function Card({
           to the middle of a two-line name. */}
       <header className="flex min-w-0 items-start gap-1.5">
         {icon && (
-          <span className="mt-px flex-shrink-0" style={{ color: LIT }} aria-hidden>
+          <span className="mt-px shrink-0" style={{ color: LIT }} aria-hidden>
             {icon}
           </span>
         )}
@@ -281,12 +281,12 @@ export default function DeskSheet({
       }}
     >
       <header
-        className="flex-shrink-0 border-b px-4 py-3"
+        className="shrink-0 border-b px-4 py-3"
         style={{ borderColor: paint.EDGE, background: paint.PANEL }}
       >
       <div className="flex items-center gap-2">
         {icon && (
-          <span className="flex-shrink-0" style={{ color: paint.LIT }} aria-hidden>
+          <span className="shrink-0" style={{ color: paint.LIT }} aria-hidden>
             {icon}
           </span>
         )}
@@ -294,7 +294,7 @@ export default function DeskSheet({
           {title}
         </h2>
         {place && (
-          <span className="flex-shrink-0 text-sm font-bold tabular-nums" style={{ color: paint.LIT }}>
+          <span className="shrink-0 text-sm font-bold tabular-nums" style={{ color: paint.LIT }}>
             {place}
           </span>
         )}
@@ -305,7 +305,7 @@ export default function DeskSheet({
           onClick={onClose}
           aria-label={closeSays}
           title={closeSays}
-          className="-mr-2 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
+          className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{ color: paint.INK_DIM }}
         >
           <X className="h-5 w-5" />

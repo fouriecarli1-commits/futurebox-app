@@ -113,7 +113,7 @@ export default function BarcodeGeneratorModal({
     >
       <div className="relative flex h-full max-h-[92dvh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-zinc-800/80 p-4 sm:p-5">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800/80 p-4 sm:p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400">
               {type === 'qr' ? <QrCode className="h-5 w-5" /> : <Barcode className="h-5 w-5" />}
@@ -150,7 +150,7 @@ export default function BarcodeGeneratorModal({
                 onClick={() => { setType('qr'); if (!data.startsWith('http')) setData('https://futurebox.app'); }}
                 className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                   type === 'qr'
-                    ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-sm'
+                    ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-xs'
                     : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
                 }`}
               >
@@ -162,7 +162,7 @@ export default function BarcodeGeneratorModal({
                 onClick={() => { setType('code128'); if (data.startsWith('http')) setData('123456789'); }}
                 className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                   type === 'code128'
-                    ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-sm'
+                    ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-xs'
                     : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
                 }`}
               >
@@ -182,7 +182,7 @@ export default function BarcodeGeneratorModal({
               value={data}
               onChange={(e) => setData(e.target.value)}
               placeholder={type === 'qr' ? 'https://open.spotify.com/artist/...' : '1234567890'}
-              className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900/90 px-3.5 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900/90 px-3.5 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-500 focus:outline-hidden"
             />
             {/* Quick presets */}
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -245,7 +245,7 @@ export default function BarcodeGeneratorModal({
                     >
                       {/* Crown badge */}
                       {tpl.hasCrown && (
-                        <div className="absolute top-1.5 right-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-md bg-amber-500 text-zinc-950 shadow-sm">
+                        <div className="absolute top-1.5 right-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-md bg-amber-500 text-zinc-950 shadow-xs">
                           <Crown className="h-2.5 w-2.5 stroke-[2.5]" />
                         </div>
                       )}
@@ -329,7 +329,7 @@ export default function BarcodeGeneratorModal({
         </div>
 
         {/* Action Buttons Footer */}
-        <div className="flex flex-shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-950">
+        <div className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-950">
           <div className="flex items-center gap-2">
             <button
               type="button"

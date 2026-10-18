@@ -555,7 +555,7 @@ export default function SongSections({
           "Regeneration Room", a sentence, and a gradient button to
           regenerate the full take. The sentence is the room's own, and the
           button is `remake`, which is the only regeneration there is. */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-linear-to-r from-emerald-950/30 via-zinc-900 to-zinc-900 p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-emerald-400">
@@ -575,7 +575,7 @@ export default function SongSections({
           type="button"
           onClick={remake}
           data-regenfull
-          className="flex min-h-[44px] flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 text-xs font-extrabold text-onAccent shadow-lg shadow-emerald-500/20 transition-all hover:from-emerald-400 hover:to-cyan-400"
+          className="flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-emerald-500 to-cyan-500 px-4 text-xs font-extrabold text-onAccent shadow-lg shadow-emerald-500/20 transition-all hover:from-emerald-400 hover:to-cyan-400"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           <span>{t('sec.regenFull', 'Regenerate full take')}</span>
@@ -592,23 +592,23 @@ export default function SongSections({
             onClick={toggle}
             disabled={loading}
             aria-label={playing ? t('common.pause', 'Pause') : t('common.play', 'Play')}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent shadow-lg shadow-emerald-500/20 transition-transform hover:scale-105 disabled:opacity-50"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent shadow-lg shadow-emerald-500/20 transition-transform hover:scale-105 disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-white/10 bg-zinc-950 px-3 py-1.5">
-            <Music4 className="h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
+            <Music4 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
             <select
               value={track?.id ?? ''}
               onChange={(event) => setChosen(event.target.value)}
               aria-label={t('sec.whichSong', 'Which song?')}
-              className="min-w-0 flex-1 bg-transparent text-xs font-semibold text-white focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent text-xs font-semibold text-white focus:outline-hidden"
             >
               {usable.map((one) => (
                 <option key={one.id} value={one.id}>{one.title}</option>
               ))}
             </select>
-            <span className="hidden flex-shrink-0 rounded border border-emerald-800/60 bg-emerald-950/80 px-2 py-0.5 font-mono text-[9px] text-emerald-400 sm:inline">
+            <span className="hidden shrink-0 rounded border border-emerald-800/60 bg-emerald-950/80 px-2 py-0.5 font-mono text-[9px] text-emerald-400 sm:inline">
               {clock(duration)} • {parts.length} {t('sec.sections', 'sections')}
             </span>
           </div>
@@ -626,7 +626,7 @@ export default function SongSections({
               }}
               className="h-1.5 w-full cursor-pointer overflow-hidden rounded-full bg-zinc-800"
             >
-              <span className="block h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all" style={{ width: `${progress}%` }} />
+              <span className="block h-full bg-linear-to-r from-emerald-500 to-cyan-400 transition-all" style={{ width: `${progress}%` }} />
             </button>
           </div>
         </div>
@@ -690,7 +690,7 @@ export default function SongSections({
               >
                 <div className="flex items-center justify-between gap-2 bg-zinc-800/60 p-3">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    <GripVertical className="h-4 w-4 flex-shrink-0 text-zinc-600" aria-hidden />
+                    <GripVertical className="h-4 w-4 shrink-0 text-zinc-600" aria-hidden />
                     <input
                       value={part.name}
                       onChange={(event) => {
@@ -699,19 +699,19 @@ export default function SongSections({
                         setParts(next);
                       }}
                       aria-label={t('sec.structure', 'Song structure & section lyrics')}
-                      className={`w-24 flex-shrink-0 rounded border px-2 py-0.5 font-mono text-xs font-bold focus:outline-none sm:w-28 ${chipOf(index)}`}
+                      className={`w-24 shrink-0 rounded border px-2 py-0.5 font-mono text-xs font-bold focus:outline-hidden sm:w-28 ${chipOf(index)}`}
                     />
                     <span className="hidden min-w-0 truncate text-xs font-semibold text-zinc-300 sm:inline">{preview}</span>
                     <button
                       type="button"
                       onClick={() => mark && seek(mark.start)}
                       title={t('sec.jumpTo', 'Jump to this section')}
-                      className="flex-shrink-0 font-mono text-[10px] text-zinc-500 hover:text-emerald-300"
+                      className="shrink-0 font-mono text-[10px] text-zinc-500 hover:text-emerald-300"
                     >
                       ({mark ? clock(mark.start) : '—'} - {mark ? clock(mark.end) : '—'})
                     </button>
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-1">
                     <button type="button" onClick={() => move(index, index - 1)} disabled={index === 0} title={t('sec.up', 'Move it earlier')} aria-label={t('sec.up', 'Move it earlier')} className="min-h-[32px] min-w-[32px] rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-25">
                       <ChevronUp className="mx-auto h-3.5 w-3.5" />
                     </button>
@@ -740,7 +740,7 @@ export default function SongSections({
                         setParts(next);
                       }}
                       rows={Math.min(8, Math.max(2, part.lines.length))}
-                      className="w-full resize-y rounded-xl border border-white/10 bg-zinc-900 p-3 text-xs leading-relaxed text-white focus:border-emerald-500 focus:outline-none"
+                      className="w-full resize-y rounded-xl border border-white/10 bg-zinc-900 p-3 text-xs leading-relaxed text-white focus:border-emerald-500 focus:outline-hidden"
                     />
                   </div>
                 )}
@@ -802,7 +802,7 @@ export default function SongSections({
         <button
           type="button"
           onClick={remake}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-onAccent font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+          className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-500 to-cyan-500 text-onAccent font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
         >
           <Sparkles className="w-4 h-4" />
           {t('sec.remake', 'Make a new take with these changes')}

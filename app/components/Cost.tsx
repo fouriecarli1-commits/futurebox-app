@@ -92,7 +92,7 @@ export default function Cost({
         <>
           {price ? <span aria-hidden="true">·</span> : null}
           <span className="inline-flex items-center gap-1">
-            <Clock className="w-3 h-3 flex-shrink-0" />
+            <Clock className="w-3 h-3 shrink-0" />
             {waitMinutes >= 5
               ? t('cost.waitLong', 'takes several minutes')
               : t('cost.wait', 'takes a few minutes')}

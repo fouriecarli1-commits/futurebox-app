@@ -672,7 +672,7 @@ export default function FollowWords({
           aria-label={recording ? t('sing.stop', 'Stop') : t('play.close', 'Close')}
           /* `hover:text-white` here would have hidden the way out under the
              pointer, for the same reason as the line above. */
-          className="flex-shrink-0 opacity-75 hover:opacity-100"
+          className="shrink-0 opacity-75 hover:opacity-100"
           style={{ color: '#ffffff' }}
         >
           <X className="w-6 h-6" />
@@ -932,7 +932,7 @@ export default function FollowWords({
                 type="checkbox"
                 checked={brandIt}
                 onChange={(event) => setBrandIt(event.target.checked)}
-                className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                className="w-4 h-4 accent-emerald-500 shrink-0"
               />
               {t('sing.brandIt', 'Put my logo on the take')}
             </label>

@@ -176,7 +176,7 @@ export default function TakeStrip({
         {/* The note, and how far off it you are. */}
         {note ? (
           <>
-            <span className="text-xl font-black text-white tabular-nums flex-shrink-0">
+            <span className="text-xl font-black text-white tabular-nums shrink-0">
               {note.name}
               <span className="text-zinc-500 text-sm">{note.octave}</span>
             </span>
@@ -190,7 +190,7 @@ export default function TakeStrip({
                 style={{ left: `calc(${50 + Math.max(-50, Math.min(50, note.cents))}% - 4px)` }}
               />
             </span>
-            <span className="text-sm text-zinc-500 tabular-nums w-11 flex-shrink-0 text-right">
+            <span className="text-sm text-zinc-500 tabular-nums w-11 shrink-0 text-right">
               {note.cents > 0 ? '+' : ''}
               {note.cents}
             </span>

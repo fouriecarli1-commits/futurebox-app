@@ -64,7 +64,7 @@ function Card({
 
       <div className="p-4 flex flex-col gap-3 flex-1">
       <div className="flex items-start justify-between gap-3">
-        <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0">
           <Icon className="w-5 h-5 text-emerald-400" />
         </div>
         <span className="flex items-center gap-2.5 text-sm">

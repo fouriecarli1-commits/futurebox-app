@@ -350,7 +350,7 @@ export default function BoothDock({
       {sheet}
 
     <div
-      className="flex h-full flex-shrink-0 flex-row"
+      className="flex h-full shrink-0 flex-row"
       style={{ background: PANEL, borderLeft: `1px solid ${EDGE}` }}
     >
       {/* Two columns of icons, not one.
@@ -375,18 +375,18 @@ export default function BoothDock({
            called the rail a bar. Both shapes carry the attribute, so the
            probe measures the same thing in each. */
         data-dock=""
-        className="flex w-[156px] flex-shrink-0 flex-col items-center gap-1 overflow-y-auto px-1.5 py-2"
+        className="flex w-[156px] shrink-0 flex-col items-center gap-1 overflow-y-auto px-1.5 py-2"
         style={{ paddingRight: 'max(6px, env(safe-area-inset-right))' }}
       >
         {/* The transport at the top of the rail, where a thumb reaching
             round the corner of a held phone lands first. */}
-        <div className="flex w-full flex-shrink-0 items-center justify-center gap-1">
+        <div className="flex w-full shrink-0 items-center justify-center gap-1">
           <button
             type="button"
             onClick={() => onSkip(-5)}
             disabled={recording}
             aria-label={t('dock.back', 'Back five seconds')}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full disabled:opacity-30"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-30"
             style={{ color: INK }}
           >
             <SkipBack className="h-5 w-5" fill="currentColor" />
@@ -395,7 +395,7 @@ export default function BoothDock({
             type="button"
             onClick={onPlay}
             aria-label={recording ? t('pro.stopRecording', 'Stop recording') : playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
             style={{ background: recording ? REC : INK, color: '#05060a' }}
           >
             {recording ? (
@@ -411,14 +411,14 @@ export default function BoothDock({
             onClick={() => onSkip(5)}
             disabled={recording}
             aria-label={t('dock.forward', 'Forward five seconds')}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full disabled:opacity-30"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-30"
             style={{ color: INK }}
           >
             <SkipForward className="h-5 w-5" fill="currentColor" />
           </button>
         </div>
 
-        <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
+        <span className="my-1 h-px w-full shrink-0" style={{ background: EDGE }} />
 
         <div data-boothdeskrow="" className="grid w-full grid-cols-2 gap-1">
           {[...UPPER, ...LOWER].map((spec) => (
@@ -454,7 +454,7 @@ export default function BoothDock({
 
       <div
         data-dock=""
-        className="flex-shrink-0"
+        className="shrink-0"
         style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}
       >
 
@@ -476,7 +476,7 @@ export default function BoothDock({
           type="button"
           onClick={onPlay}
           aria-label={recording ? t('pro.stopRecording', 'Stop recording') : playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
-          className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
           style={{ background: recording ? REC : INK, color: '#05060a' }}
         >
           {recording ? (

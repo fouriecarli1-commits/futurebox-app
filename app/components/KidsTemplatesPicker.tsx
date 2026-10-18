@@ -47,11 +47,11 @@ export default function KidsTemplatesPicker({
     : KID_TEMPLATES.filter((tpl) => tpl.category === filter);
 
   return (
-    <div className="space-y-4 rounded-3xl border-4 border-surface-200/90 bg-surface-50/95 p-4 sm:p-5 shadow-xl backdrop-blur-sm">
+    <div className="space-y-4 rounded-3xl border-4 border-surface-200/90 bg-surface-50/95 p-4 sm:p-5 shadow-xl backdrop-blur-xs">
       {/* Header with playful mascot wand */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-surface-200/80 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-400/20 text-2xl select-none">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-400/20 text-2xl select-none">
             <span aria-hidden>✨</span>
           </div>
           <div>
@@ -155,7 +155,7 @@ export default function KidsTemplatesPicker({
 
               {/* Google Veo video ready icon tag */}
               <div className="mt-2 flex items-center gap-1 text-[10px] font-black opacity-85">
-                <Wand2 className="h-3 w-3 flex-shrink-0" />
+                <Wand2 className="h-3 w-3 shrink-0" />
                 <span className="truncate">
                   {t('kids.veoReady', 'Google Veo ready')}
                 </span>

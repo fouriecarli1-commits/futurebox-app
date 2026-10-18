@@ -145,7 +145,7 @@ export function CubedChip({
   return (
     <span
       data-cubedchip
-      className="flex flex-shrink-0 items-center justify-center rounded-xl bg-zinc-100"
+      className="flex shrink-0 items-center justify-center rounded-xl bg-zinc-100"
       style={{ width: size, height: size }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

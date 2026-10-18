@@ -53,7 +53,7 @@ function Moving({ paint, live, still = 0.8 }: {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [paint, live, still]);
-  return <canvas ref={canvas} width={96} height={54} aria-hidden className="h-9 w-16 flex-shrink-0 rounded-md border border-zinc-700" />;
+  return <canvas ref={canvas} width={96} height={54} aria-hidden className="h-9 w-16 shrink-0 rounded-md border border-zinc-700" />;
 }
 
 /** A group heading that folds, the same as the transitions'. */
@@ -380,7 +380,7 @@ export function AudioFxToolbox({ value, onChange, lang, t, mark }: {
                     onClick={() => flip(one.id)}
                     className={`flex min-h-[44px] w-full items-center gap-2 text-left ${on ? 'text-emerald-300' : 'text-zinc-200'}`}
                   >
-                    <AudioLines className="h-4 w-4 flex-shrink-0" />
+                    <AudioLines className="h-4 w-4 shrink-0" />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold">{audioFxLabel(one, lang)}</span>
                       <span className="block text-xs text-zinc-400">{lang === 'af' ? one.what[1] : one.what[0]}</span>

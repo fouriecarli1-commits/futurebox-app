@@ -36,6 +36,7 @@ import { cpSync, rmSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { defineRgba } from './colour.mjs';
 
 const PORT = process.argv[2] || '3072';
 const PROBE = 'app/singcheck/page.probe.tsx';
@@ -110,6 +111,7 @@ try {
   );
 
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  await page.addInitScript(defineRgba);
   const errs = [];
   page.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
   await page.addInitScript(WATCH);
@@ -207,7 +209,7 @@ try {
       return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
     };
     const parse = (colour) => {
-      const bits = (colour.match(/[\d.]+/g) || []).map(Number);
+      const bits = window.__rgba(colour).map(Number);
       return { r: bits[0] ?? 0, g: bits[1] ?? 0, b: bits[2] ?? 0, a: bits[3] ?? 1 };
     };
     const over = (top, under) => ({

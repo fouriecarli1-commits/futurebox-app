@@ -254,7 +254,7 @@ export default function StudioMagicSuiteModal({
                     onClick={() => handlePick(tool.id)}
                     className="group flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-3 text-left transition-all hover:border-emerald-500/50 hover:bg-zinc-950 hover:shadow-lg active:scale-95"
                   >
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 group-hover:scale-105 transition-transform">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 group-hover:scale-105 transition-transform">
                       {tool.icon}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -272,7 +272,7 @@ export default function StudioMagicSuiteModal({
                         {t(tool.sub[0], tool.sub[1])}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-emerald-400 self-center flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-emerald-400 self-center shrink-0" />
                   </button>
                 ))}
               </div>
@@ -293,7 +293,7 @@ export default function StudioMagicSuiteModal({
                     onClick={() => handlePick(tool.id)}
                     className="group flex items-start gap-3 rounded-2xl border border-purple-900/40 bg-purple-950/20 p-3 text-left transition-all hover:border-purple-500/60 hover:bg-purple-950/40 hover:shadow-lg active:scale-95"
                   >
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-purple-800/50 group-hover:scale-105 transition-transform">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-purple-800/50 group-hover:scale-105 transition-transform">
                       {tool.icon}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -311,7 +311,7 @@ export default function StudioMagicSuiteModal({
                         {t(tool.sub[0], tool.sub[1])}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-purple-400 group-hover:text-purple-300 self-center flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-purple-400 group-hover:text-purple-300 self-center shrink-0" />
                   </button>
                 ))}
               </div>
@@ -332,7 +332,7 @@ export default function StudioMagicSuiteModal({
                     onClick={() => handlePick(tool.id)}
                     className="group flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-3 text-left transition-all hover:border-cyan-500/50 hover:bg-zinc-950 hover:shadow-lg active:scale-95"
                   >
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 group-hover:scale-105 transition-transform">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 group-hover:scale-105 transition-transform">
                       {tool.icon}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -350,7 +350,7 @@ export default function StudioMagicSuiteModal({
                         {t(tool.sub[0], tool.sub[1])}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-cyan-400 self-center flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-cyan-400 self-center shrink-0" />
                   </button>
                 ))}
               </div>
@@ -371,7 +371,7 @@ export default function StudioMagicSuiteModal({
                     onClick={() => handlePick(tool.id)}
                     className="group flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-3 text-left transition-all hover:border-fuchsia-500/50 hover:bg-zinc-950 hover:shadow-lg active:scale-95"
                   >
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 group-hover:scale-105 transition-transform">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 group-hover:scale-105 transition-transform">
                       {tool.icon}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -382,7 +382,7 @@ export default function StudioMagicSuiteModal({
                         {t(tool.sub[0], tool.sub[1])}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-fuchsia-400 self-center flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-fuchsia-400 self-center shrink-0" />
                   </button>
                 ))}
               </div>

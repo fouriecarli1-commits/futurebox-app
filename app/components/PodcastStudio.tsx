@@ -421,7 +421,7 @@ export default function PodcastStudio({
   return (
     <div className="space-y-4">
       {/* ── BROADCAST ON-AIR MASTER HUD ─────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black p-4 sm:p-5 shadow-2xl space-y-4">
+      <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-linear-to-br from-zinc-900 via-zinc-950 to-black p-4 sm:p-5 shadow-2xl space-y-4">
         {/* Top bar: ON AIR / STANDBY badge + Timer + Teleprompter trigger */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-3.5">
           <div className="flex items-center gap-3">
@@ -633,7 +633,7 @@ export default function PodcastStudio({
               onChange={(e) => setPrompterText(e.target.value)}
               placeholder={t('pod.scriptHere', 'Type or paste your script here…')}
               rows={2}
-              className="w-full bg-zinc-900/60 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500 resize-y"
+              className="w-full bg-zinc-900/60 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-hidden focus:border-cyan-500 resize-y"
             />
           </div>
         )}
@@ -646,7 +646,7 @@ export default function PodcastStudio({
           onClick={() => setActiveTab('broadcast')}
           data-podtab="broadcast"
           aria-current={activeTab === 'broadcast' ? 'page' : undefined}
-          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
+          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
             activeTab === 'broadcast'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
@@ -659,7 +659,7 @@ export default function PodcastStudio({
           onClick={() => setActiveTab('twohosts')}
           data-podtab="twohosts"
           aria-current={activeTab === 'twohosts' ? 'page' : undefined}
-          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
+          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
             activeTab === 'twohosts'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
@@ -672,7 +672,7 @@ export default function PodcastStudio({
           onClick={() => setActiveTab('voicelab')}
           data-podtab="voicelab"
           aria-current={activeTab === 'voicelab' ? 'page' : undefined}
-          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
+          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
             activeTab === 'voicelab'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
@@ -685,7 +685,7 @@ export default function PodcastStudio({
           onClick={() => setActiveTab('channel')}
           data-podtab="channel"
           aria-current={activeTab === 'channel' ? 'page' : undefined}
-          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
+          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
             activeTab === 'channel'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
@@ -698,7 +698,7 @@ export default function PodcastStudio({
           onClick={() => setActiveTab('episodes')}
           data-podtab="episodes"
           aria-current={activeTab === 'episodes' ? 'page' : undefined}
-          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 transition-all ${
+          className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
             activeTab === 'episodes'
               ? 'border border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
               : 'border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white'
@@ -781,17 +781,17 @@ export default function PodcastStudio({
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder={t('pod.epTitle', 'Episode title')}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                 />
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                   rows={3}
                   placeholder={t('pod.epNotes', 'What is in it')}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden resize-y"
                 />
                 <p className="text-xs text-amber-400/90 leading-snug flex items-start gap-1.5">
-                  <Globe className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                  <Globe className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                   {t(
                     'pod.publicWarning',
                     'Publishing is public. The audio goes to an address anybody can open, and podcast apps will keep fetching it.',
@@ -848,7 +848,7 @@ export default function PodcastStudio({
               <button
                 type="button"
                 onClick={onUpgrade}
-                className="text-sm font-semibold text-amber-300 flex-shrink-0"
+                className="text-sm font-semibold text-amber-300 shrink-0"
               >
                 {t('pod.needsPlan', 'Paid plan')}
               </button>
@@ -861,21 +861,21 @@ export default function PodcastStudio({
             value={show?.title ?? ''}
             onChange={(event) => setShow({ ...(show ?? blankShow()), title: event.target.value })}
             placeholder={t('pod.title', 'What the show is called')}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
           <textarea
             value={show?.about ?? ''}
             onChange={(event) => setShow({ ...(show ?? blankShow()), about: event.target.value })}
             rows={3}
             placeholder={t('pod.about', 'What it is about')}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden resize-y"
           />
           <div className="grid sm:grid-cols-3 gap-2.5">
             <input
               value={show?.author ?? ''}
               onChange={(event) => setShow({ ...(show ?? blankShow()), author: event.target.value })}
               placeholder={t('pod.author', 'Who presents it')}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             <label className="sr-only" htmlFor="show-language">
               {t('pod.language', 'What language it is in')}
@@ -884,7 +884,7 @@ export default function PodcastStudio({
               id="show-language"
               value={show?.language ?? 'en'}
               onChange={(event) => setShow({ ...(show ?? blankShow()), language: event.target.value })}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
             >
               {DUB_LANGUAGES.map((one) => (
                 <option key={one.code} value={one.code}>
@@ -896,7 +896,7 @@ export default function PodcastStudio({
               value={show?.image_url ?? ''}
               onChange={(event) => setShow({ ...(show ?? blankShow()), image_url: event.target.value })}
               placeholder={t('pod.image', 'Cover picture URL')}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
           </div>
 
@@ -912,7 +912,7 @@ export default function PodcastStudio({
                   })
                 }
                 placeholder={`https:// — ${key}`}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
             ))}
           </div>
@@ -950,7 +950,7 @@ export default function PodcastStudio({
                     setCopied(true);
                     setTimeout(() => setCopied(false), 1500);
                   }}
-                  className="min-h-[44px] px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5 flex-shrink-0"
+                  className="min-h-[44px] px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5 shrink-0"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? t('make.copied', 'Copied') : t('pod.copy', 'Copy')}
@@ -990,7 +990,7 @@ export default function PodcastStudio({
                       <p className="text-sm font-semibold text-white truncate">{ep.title}</p>
                       <p className="text-xs text-zinc-500">{MADE_LABEL[ep.made]} · {ep.seconds}s</p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => setDubbing(dubbing === ep.id ? null : ep.id)}

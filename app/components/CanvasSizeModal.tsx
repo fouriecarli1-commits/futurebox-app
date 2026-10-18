@@ -228,7 +228,7 @@ export default function CanvasSizeModal({
     >
       <div className="relative flex h-full max-h-[90dvh] w-full max-w-xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-zinc-800/80 p-4 sm:p-5">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800/80 p-4 sm:p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400">
               <Maximize2 className="h-5 w-5" />
@@ -292,7 +292,7 @@ export default function CanvasSizeModal({
                   value={wideText}
                   onChange={(e) => setWideText(e.target.value)}
                   onBlur={(e) => { takeWidth(e.target.value); }}
-                  className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-none"
+                  className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-hidden"
                 />
               </div>
               <div>
@@ -307,7 +307,7 @@ export default function CanvasSizeModal({
                   value={tallText}
                   onChange={(e) => setTallText(e.target.value)}
                   onBlur={(e) => { takeHeight(e.target.value); }}
-                  className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-none"
+                  className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900 px-3.5 py-2 text-sm font-mono text-zinc-100 focus:border-amber-400 focus:outline-hidden"
                 />
               </div>
             </div>
@@ -373,7 +373,7 @@ export default function CanvasSizeModal({
                         </p>
                       </div>
                     </div>
-                    {isSelected && <Check className="h-4 w-4 text-amber-400 flex-shrink-0" />}
+                    {isSelected && <Check className="h-4 w-4 text-amber-400 shrink-0" />}
                   </button>
                 );
               })}
@@ -382,7 +382,7 @@ export default function CanvasSizeModal({
         </div>
 
         {/* Action Footer */}
-        <div className="flex flex-shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-950">
+        <div className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-950">
           <div className="text-xs text-zinc-400">
             {t('size.selected', 'Selected')} <span className="font-mono font-bold text-zinc-200">{width} × {height} px</span>
           </div>

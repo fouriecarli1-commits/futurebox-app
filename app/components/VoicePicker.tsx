@@ -103,12 +103,12 @@ export default function VoicePicker({
     <div className="space-y-2">
       {(mine.length + stock.length) > 8 && (
         <label className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
-          <SearchIcon className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+          <SearchIcon className="w-4 h-4 text-zinc-500 shrink-0" />
           <input
             value={term}
             onChange={(event) => setTerm(event.target.value)}
             placeholder={t('voices.find', 'An accent, an age, a name — “deep”, “narration”')}
-            className="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-600 focus:outline-hidden"
           />
         </label>
       )}
@@ -130,12 +130,12 @@ export default function VoicePicker({
                 className="flex-1 min-w-0 text-left"
               >
                 <span className="flex items-center gap-1.5">
-                  {on && <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />}
+                  {on && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
                   <span className={`text-sm font-semibold truncate ${on ? 'text-emerald-300' : 'text-zinc-200'}`}>
                     {one.name}
                   </span>
                   {one.yours && (
-                    <span className="text-xs text-emerald-400 flex-shrink-0">
+                    <span className="text-xs text-emerald-400 shrink-0">
                       {t('voice.mine', 'yours')}
                     </span>
                   )}
@@ -155,7 +155,7 @@ export default function VoicePicker({
                       : t('voices.hear', 'Hear this voice')
                   }
                   title={t('voices.free', 'A sample — no credits')}
-                  className="flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-zinc-300 hover:text-white hover:border-zinc-600"
+                  className="shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-zinc-300 hover:text-white hover:border-zinc-600"
                 >
                   {loading === one.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

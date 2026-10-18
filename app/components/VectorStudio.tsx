@@ -565,7 +565,7 @@ export default function VectorStudio({
     <div data-vectorstudio role="dialog" aria-modal="true" aria-label={w('title')} className="fixed inset-0 z-[60] flex flex-col bg-zinc-950 text-zinc-100" style={{ paddingBottom: barClearance(0) }}>
       <header className="flex items-center gap-2 border-b border-zinc-800 px-3 py-2">
         <button type="button" data-vclose onClick={onClose} aria-label={w('close')} className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-zinc-700"><X className="h-5 w-5" /></button>
-        <p className="min-w-0 flex-1 truncate bg-gradient-to-r from-emerald-300 via-cyan-300 to-sky-300 bg-clip-text text-base font-extrabold text-transparent">{w('title')}</p>
+        <p className="min-w-0 flex-1 truncate bg-linear-to-r from-emerald-300 via-cyan-300 to-sky-300 bg-clip-text text-base font-extrabold text-transparent">{w('title')}</p>
         <button type="button" onClick={undo} disabled={!past.length} aria-label={w('undo')} data-vundo className="grid h-11 w-11 place-items-center rounded-full border border-zinc-700 disabled:opacity-30"><Undo2 className="h-5 w-5" /></button>
         <button type="button" onClick={redo} disabled={!future.length} aria-label={w('redo')} className="grid h-11 w-11 place-items-center rounded-full border border-zinc-700 disabled:opacity-30"><Redo2 className="h-5 w-5" /></button>
         <button

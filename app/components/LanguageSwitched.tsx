@@ -47,7 +47,7 @@ export default function LanguageSwitched(): React.ReactElement | null {
 
   return (
     <div className="mx-auto mb-3 flex max-w-3xl items-start gap-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] px-4 py-3">
-      <Languages className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
+      <Languages className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
       <p className="min-w-0 flex-1 text-sm leading-snug text-zinc-300">
         {t(
           'lang.switched',
@@ -57,7 +57,7 @@ export default function LanguageSwitched(): React.ReactElement | null {
       <button
         type="button"
         onClick={undoSwitch}
-        className="min-h-[36px] flex-shrink-0 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
+        className="min-h-[36px] shrink-0 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
       >
         {t('lang.keep', 'Keep {language}').replace('{language}', back)}
       </button>

@@ -185,13 +185,13 @@ export default function StyleFinder({
               if (event.key === 'Enter' && !asking) void write();
             }}
             placeholder={t('style.askHint')}
-            className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
           <button
             type="button"
             onClick={() => void write()}
             disabled={asking}
-            className="min-h-[44px] px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5 hover:bg-emerald-500/25 disabled:opacity-60 flex-shrink-0"
+            className="min-h-[44px] px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5 hover:bg-emerald-500/25 disabled:opacity-60 shrink-0"
           >
             {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {asking ? t('style.writing') : t('style.write')}
@@ -260,7 +260,7 @@ export default function StyleFinder({
                 value={category}
                 onChange={(event) => setCategory(event.target.value as typeof category)}
                 aria-label={t('style.family', 'Family')}
-                className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-none min-w-0"
+                className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-hidden min-w-0"
               >
                 {GENRE_CATEGORIES.map((one) => (
                   <option key={one} value={one}>
@@ -272,9 +272,9 @@ export default function StyleFinder({
                 value={hunt}
                 onChange={(event) => setHunt(event.target.value)}
                 placeholder={t('style.search', 'Search by name')}
-                className="flex-1 min-w-[8rem] bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="flex-1 min-w-[8rem] bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
-              <span className="text-sm text-zinc-500 tabular-nums flex-shrink-0">
+              <span className="text-sm text-zinc-500 tabular-nums shrink-0">
                 {shelf.length}
               </span>
             </div>
@@ -294,7 +294,7 @@ export default function StyleFinder({
                     type="button"
                     onClick={() => hear(sample)}
                     aria-label={sample.name}
-                    className="relative w-12 h-12 rounded-xl border border-zinc-700 text-emerald-300 flex items-center justify-center flex-shrink-0 overflow-hidden hover:border-emerald-500"
+                    className="relative w-12 h-12 rounded-xl border border-zinc-700 text-emerald-300 flex items-center justify-center shrink-0 overflow-hidden hover:border-emerald-500"
                   >
                     <MeerkatThumb className="absolute inset-0 h-full w-full !rounded-none" mood={SHELF_PICTURES[sample.category]?.mood ?? 'day'} filter={SHELF_PICTURES[sample.category]?.filter} />
                     <span className="relative grid h-7 w-7 place-items-center rounded-full bg-black/60">
@@ -328,7 +328,7 @@ export default function StyleFinder({
                        uncaught for as long as it did because the shelf it is
                        on was folded away, and `audit/buttonlook.mjs` only
                        measures what is on the screen. */
-                    className="min-h-[44px] flex-shrink-0 rounded-xl border border-emerald-500/50 bg-emerald-500/15 px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/25"
+                    className="min-h-[44px] shrink-0 rounded-xl border border-emerald-500/50 bg-emerald-500/15 px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/25"
                   >
                     {t('style.use')}
                   </button>

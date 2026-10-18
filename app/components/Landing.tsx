@@ -171,7 +171,7 @@ export default function Landing({
             {/* The app icon's own tile (`scripts/icon.mjs`): green, lit, the
                 chip black. Carli, 13 October 2026: "die groen om die icon
                 moet brighter en neon wees, en die swart lyne bly swart". */}
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-emerald-500 shadow-[0_0_18px_rgba(5,255,147,0.55)]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-cyan-400 to-emerald-500 shadow-[0_0_18px_rgba(5,255,147,0.55)]">
               <Cpu className="h-5 w-5 text-onAccent" />
             </span>
             <span>
@@ -212,7 +212,7 @@ export default function Landing({
               data-landingstart
               className="group relative min-h-[44px] overflow-hidden rounded-full p-[1px] text-xs font-semibold shadow-lg shadow-emerald-950"
             >
-              <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500" />
+              <span className="absolute inset-0 rounded-full bg-linear-to-r from-emerald-500 to-cyan-500" />
               <span className="relative flex h-full min-h-[42px] items-center whitespace-nowrap rounded-full bg-black px-4 font-bold text-white transition-colors group-hover:bg-transparent group-hover:text-onAccent sm:px-5">
                 {t('landing.getStarted', 'Get Started Free')}
               </span>
@@ -235,7 +235,7 @@ export default function Landing({
               </div>
 
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.25)] sm:h-14 sm:w-14">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.25)] sm:h-14 sm:w-14">
                   <Cpu className="h-7 w-7 text-onAccent sm:h-8 sm:w-8" />
                 </div>
                 <p className="text-3xl font-black leading-none tracking-tighter text-white sm:text-5xl">
@@ -246,7 +246,7 @@ export default function Landing({
               <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
                 {t('landing.heroTitle', 'WORLD-CLASS AI CREATIVE PLATFORM')}
                 <br />
-                <span className="bg-gradient-to-r from-white via-cyan-200 to-emerald-400 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-white via-cyan-200 to-emerald-400 bg-clip-text text-transparent">
                   {t('landing.heroTitle2', 'AND FUTURE THINKING.')}
                 </span>
               </h1>
@@ -293,7 +293,7 @@ export default function Landing({
             <div className="relative mb-6 flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="min-w-0">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-white">
-                  <Lock className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+                  <Lock className="h-4 w-4 shrink-0 text-emerald-400" />
                   <span>{doorTitle}</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-zinc-400">{t('landing.doorSub', 'Open your studio and everything you made in it.')}</p>
@@ -306,7 +306,7 @@ export default function Landing({
                 role="tab"
                 aria-selected={mode !== 'signup'}
                 onClick={() => onMode('signin')}
-                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode !== 'signup' ? 'bg-emerald-500 text-onAccent shadow' : 'text-zinc-400 hover:text-white'}`}
+                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode !== 'signup' ? 'bg-emerald-500 text-onAccent shadow-sm' : 'text-zinc-400 hover:text-white'}`}
               >
                 {t('landing.tabSignIn', 'Sign In')}
               </button>
@@ -315,7 +315,7 @@ export default function Landing({
                 role="tab"
                 aria-selected={mode === 'signup'}
                 onClick={() => onMode('signup')}
-                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode === 'signup' ? 'bg-emerald-500 text-onAccent shadow' : 'text-zinc-400 hover:text-white'}`}
+                className={`min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-all ${mode === 'signup' ? 'bg-emerald-500 text-onAccent shadow-sm' : 'text-zinc-400 hover:text-white'}`}
               >
                 {t('landing.tabCreate', 'Create Account')}
               </button>
@@ -375,7 +375,7 @@ export default function Landing({
                 id="welcome-region"
                 value={regionGuessed ? '' : region.code}
                 onChange={(event) => chooseRegion(event.target.value)}
-                className="min-h-[44px] rounded-full border border-emerald-500/40 bg-black px-3.5 text-xs font-bold text-white focus:border-emerald-500 focus:outline-none"
+                className="min-h-[44px] rounded-full border border-emerald-500/40 bg-black px-3.5 text-xs font-bold text-white focus:border-emerald-500 focus:outline-hidden"
               >
                 <option value="">
                   {t('pay.regionAuto', 'My device’s country')}
@@ -408,12 +408,12 @@ export default function Landing({
                   key={tier}
                   className={`relative flex flex-col justify-between rounded-2xl p-6 backdrop-blur-md ${
                     lead
-                      ? 'border-2 border-emerald-500 bg-gradient-to-b from-emerald-950/30 to-black shadow-[0_0_35px_rgba(16,185,129,0.35)]'
-                      : 'border border-zinc-800 bg-gradient-to-br from-white/[0.04] to-white/[0.01]'
+                      ? 'border-2 border-emerald-500 bg-linear-to-b from-emerald-950/30 to-black shadow-[0_0_35px_rgba(16,185,129,0.35)]'
+                      : 'border border-zinc-800 bg-linear-to-br from-white/[0.04] to-white/[0.01]'
                   }`}
                 >
                   {lead && (
-                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-onAccent shadow-lg">
+                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-linear-to-r from-emerald-500 to-cyan-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-onAccent shadow-lg">
                       {t('landing.mostPopular', 'MOST POPULAR')}
                     </span>
                   )}
@@ -434,7 +434,7 @@ export default function Landing({
                     <ul className="space-y-3 border-t border-zinc-800 pt-6 text-xs text-zinc-300">
                       {spec.includes.map((line, i) => (
                         <li key={line} className="flex items-start gap-2 leading-snug">
-                          <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
+                          <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
                           {t(`plan.${spec.id}.inc.${i}`, line)}
                         </li>
                       ))}
@@ -445,7 +445,7 @@ export default function Landing({
                     onClick={onStart}
                     className={`mt-8 min-h-[44px] w-full rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
                       lead
-                        ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-onAccent shadow-lg shadow-emerald-500/20 hover:scale-[1.02]'
+                        ? 'bg-linear-to-r from-emerald-500 to-cyan-500 text-onAccent shadow-lg shadow-emerald-500/20 hover:scale-[1.02]'
                         : 'border border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700'
                     }`}
                   >
@@ -462,7 +462,7 @@ export default function Landing({
               and no plan needed to buy them — `lib/kidspacks.ts` is the one
               table the till, the webhook and this card all read. The press
               goes to the kids page, where a grown-up signs in and buys. */}
-          <div className="mt-10 rounded-2xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-500/[0.08] to-black p-6 backdrop-blur-md" data-landingkidsprices>
+          <div className="mt-10 rounded-2xl border-2 border-amber-400/50 bg-linear-to-br from-amber-500/[0.08] to-black p-6 backdrop-blur-md" data-landingkidsprices>
             <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
                 {t('landing.kidsPricesTag', 'Kids Dream Studio')}
@@ -494,7 +494,7 @@ export default function Landing({
                     <span className="text-sm font-bold text-white">{lang === 'af' ? pack.name[1] : pack.name[0]}</span>
                     <span
                       aria-hidden
-                      className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
                         kidsPick === pack.id ? 'border-amber-400 bg-amber-400' : 'border-zinc-600'
                       }`}
                     >
@@ -516,7 +516,7 @@ export default function Landing({
             <a
               href={`/kids?buy=${encodeURIComponent(kidsPick)}`}
               data-landingkidsbuy
-              className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-gradient-to-r from-amber-400 to-emerald-400 text-xs font-bold uppercase tracking-wider text-onAccent transition-transform hover:scale-[1.01] md:w-auto md:px-8"
+              className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-linear-to-r from-amber-400 to-emerald-400 text-xs font-bold uppercase tracking-wider text-onAccent transition-transform hover:scale-[1.01] md:w-auto md:px-8"
             >
               {t('landing.kidsBuy', 'Get kids credits')}
               {' \u00b7 R'}{(KIDS_PACKS.find((one) => one.id === kidsPick) ?? KIDS_PACKS[0]).rand}

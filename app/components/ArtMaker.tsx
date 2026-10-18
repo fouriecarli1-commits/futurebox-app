@@ -45,7 +45,7 @@ const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-[color
 const KAART = 'rounded-2xl border border-[var(--lyn)] bg-[var(--blad)]';
 const VUL = 'inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--aksent)] px-6 text-[15px] font-bold text-[color:var(--op-aksent)] transition active:translate-y-px active:opacity-90 disabled:opacity-35';
 const LEEG = 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-4 text-[14px] font-semibold text-[color:var(--ink)] transition active:translate-y-px active:bg-[var(--leeg)] disabled:opacity-40';
-const VELD = 'mt-1.5 w-full rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3.5 py-3 text-[16px] text-[color:var(--ink)] outline-none focus:border-[var(--aksent)] focus:ring-2 focus:ring-[var(--aksent-sag)]';
+const VELD = 'mt-1.5 w-full rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3.5 py-3 text-[16px] text-[color:var(--ink)] outline-hidden focus:border-[var(--aksent)] focus:ring-2 focus:ring-[var(--aksent-sag)]';
 
 interface Look {
   readonly title: string;
@@ -333,7 +333,7 @@ export default function ArtMaker(): React.ReactElement {
             {t('art.make.download', 'Download the 3000 × 3000 file')}
           </button>
           <p className="flex items-start gap-1.5 text-[11px] text-[color:var(--gedemp)]">
-            <Sparkles className="mt-0.5 h-3 w-3 flex-shrink-0" />
+            <Sparkles className="mt-0.5 h-3 w-3 shrink-0" />
             {t('art.make.noSong', 'There is no “put it on a song” here, on purpose. That is what the wall is for.')}
           </p>
         </div>

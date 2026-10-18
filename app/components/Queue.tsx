@@ -143,7 +143,7 @@ export default function Queue({
             id="queue-platform"
             value={platform}
             onChange={(event) => setPlatform(event.target.value)}
-            className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+            className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
           >
             <optgroup label={lang === 'af' ? 'Betaalde Advertensies' : 'Paid Advertising'}>
               <option value="google_ads">Google Ads</option>
@@ -169,7 +169,7 @@ export default function Queue({
             value={date}
             min={today()}
             onChange={(event) => setDate(event.target.value)}
-            className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+            className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
           />
           <label className="sr-only" htmlFor="queue-time">
             {t('queue.time', 'What time')}
@@ -179,7 +179,7 @@ export default function Queue({
             type="time"
             value={time}
             onChange={(event) => setTime(event.target.value)}
-            className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+            className="min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
         <textarea
@@ -187,7 +187,7 @@ export default function Queue({
           onChange={(event) => setCaption(event.target.value)}
           rows={2}
           placeholder={t('queue.caption', 'The words that go with it')}
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y"
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden resize-y"
         />
         <button
           type="button"
@@ -234,7 +234,7 @@ export default function Queue({
                   type="button"
                   onClick={() => void cancel(one.id).then(() => load())}
                   aria-label={t('queue.cancel', 'Take it out of the queue')}
-                  className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-white hover:border-zinc-600 flex items-center justify-center flex-shrink-0"
+                  className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-white hover:border-zinc-600 flex items-center justify-center shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -253,9 +253,9 @@ export default function Queue({
                 {gone.slice(0, 20).map((one) => (
                   <p key={one.id} className="text-xs text-zinc-500 flex items-start gap-1.5">
                     {one.state === 'sent' ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                     ) : (
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                     )}
                     <span className="min-w-0">
                       {shown(one.due_at, lang)} · {named(one.platform)}

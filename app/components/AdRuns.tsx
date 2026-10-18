@@ -197,7 +197,7 @@ export default function AdRuns({
                 value={run.campaign}
                 onChange={(event) => change(run.id, { campaign: event.target.value })}
                 placeholder={t('run.campaignHint', 'Winter sale')}
-                className="min-h-[44px] flex-1 min-w-[10rem] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="min-h-[44px] flex-1 min-w-[10rem] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
               <label className="sr-only" htmlFor={`run-when-${run.id}`}>
                 {t('run.when', 'The day it goes out')}
@@ -207,7 +207,7 @@ export default function AdRuns({
                 type="date"
                 value={run.when}
                 onChange={(event) => change(run.id, { when: event.target.value })}
-                className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+                className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
               />
               <span className="text-xs font-semibold tabular-nums text-zinc-400">
                 {done}/{of}
@@ -231,7 +231,7 @@ export default function AdRuns({
                 value={run.link}
                 onChange={(event) => change(run.id, { link: event.target.value })}
                 placeholder="https://…"
-                className="min-h-[44px] flex-1 min-w-[12rem] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="min-h-[44px] flex-1 min-w-[12rem] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
             </div>
 
@@ -289,7 +289,7 @@ export default function AdRuns({
                           type="button"
                           onClick={() => void copy(key, link)}
                           aria-label={`${t('run.copy', 'Copy the tagged link for')} ${channel.name}`}
-                          className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center flex-shrink-0"
+                          className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center shrink-0"
                         >
                           {copied === key ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                         </button>
@@ -302,7 +302,7 @@ export default function AdRuns({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${t('run.open', 'Open')} ${channel.name}`}
-                        className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center flex-shrink-0"
+                        className="w-11 h-11 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white flex items-center justify-center shrink-0"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>

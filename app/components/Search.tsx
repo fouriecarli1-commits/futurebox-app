@@ -150,7 +150,7 @@ export default function Search({
 
   return (
     <div
-      className="fixed inset-0 z-[90] bg-scrim/80 backdrop-blur-sm flex items-start justify-center p-4 pt-[12vh] pb-24"
+      className="fixed inset-0 z-[90] bg-scrim/80 backdrop-blur-xs flex items-start justify-center p-4 pt-[12vh] pb-24"
       onClick={onClose}
       role="presentation"
     >
@@ -162,7 +162,7 @@ export default function Search({
         aria-label={t('search.title', 'Search everything')}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800">
-          <SearchIcon className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+          <SearchIcon className="w-4 h-4 text-zinc-500 shrink-0" />
           <input
             ref={box}
             value={term}
@@ -171,13 +171,13 @@ export default function Search({
               setAt(0);
             }}
             placeholder={t('search.hint', 'A song, a room, something you made')}
-            className="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-600 focus:outline-hidden"
           />
           <button
             type="button"
             onClick={onClose}
             aria-label={t('search.close', 'Close')}
-            className="text-zinc-500 hover:text-white flex-shrink-0"
+            className="text-zinc-500 hover:text-white shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -202,7 +202,7 @@ export default function Search({
                 }`}
               >
                 <Icon
-                  className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                  className={`w-4 h-4 mt-0.5 shrink-0 ${
                     index === at ? 'text-emerald-400' : 'text-zinc-500'
                   }`}
                 />

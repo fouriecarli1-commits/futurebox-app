@@ -24,7 +24,7 @@ function AccentSwatch({ accentId, size = 20 }: { accentId: string; size?: number
   const vars = themeVariables({ ...DEFAULT_THEME, primary: accentId });
   return (
     <span
-      className="rounded-full border border-white/15 flex-shrink-0"
+      className="rounded-full border border-white/15 shrink-0"
       style={{ width: size, height: size, background: `rgb(${vars['--fb-primary-400']})` }}
     />
   );
@@ -114,7 +114,7 @@ export default function ThemeStudio({
   return (
     <div className="fixed inset-0 z-[60] flex justify-end"
       style={{ paddingBottom: barClearance(0) }}>
-      <div className="absolute inset-0 bg-scrim/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim/80 backdrop-blur-xs" onClick={onClose} />
 
       <aside className="relative w-full max-w-md h-full overflow-y-auto bg-zinc-900 border-l border-zinc-800 p-5 space-y-6">
         <header className="flex items-start justify-between gap-3 sticky top-0 bg-zinc-900 pb-3 -mt-1 pt-1 z-10">
@@ -128,7 +128,7 @@ export default function ThemeStudio({
               this device.
             </p>
           </div>
-          <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white flex-shrink-0">
+          <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white shrink-0">
             <X className="w-5 h-5" />
           </button>
         </header>

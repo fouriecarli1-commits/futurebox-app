@@ -149,12 +149,12 @@ export default function SayItWrong({
             role="dialog"
             aria-modal="true"
             aria-labelledby="sayit-dialog-title"
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-xs"
           >
             <div className="relative w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 text-emerald-400">
-                  <Ear className="w-5 h-5 flex-shrink-0" />
+                  <Ear className="w-5 h-5 shrink-0" />
                   <h3 id="sayit-dialog-title" className="text-base font-bold text-white">
                     {t('sayit.improveTitle', 'Improve Afrikaans pronunciation')}
                   </h3>
@@ -175,7 +175,7 @@ export default function SayItWrong({
               {sent ? (
                 <div className="space-y-4 py-2">
                   <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-                    <Check className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <Check className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-white">
                         {t('sayit.thanksTitle', 'Thank you for helping')}
@@ -232,7 +232,7 @@ export default function SayItWrong({
                         value={word}
                         onChange={(event) => setWord(event.target.value)}
                         placeholder={t('sayit.wordHint', 'voëltjie')}
-                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                       />
                     </div>
                     <div className="space-y-1">
@@ -244,7 +244,7 @@ export default function SayItWrong({
                         value={heard}
                         onChange={(event) => setHeard(event.target.value)}
                         placeholder={t('sayit.heardHint', 'foeltsjie')}
-                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                       />
                     </div>
                     <div className="space-y-1">
@@ -256,7 +256,7 @@ export default function SayItWrong({
                         value={should}
                         onChange={(event) => setShould(event.target.value)}
                         placeholder={t('sayit.shouldHint', 'voëlkie — leave it empty if you are not sure')}
-                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                       />
                     </div>
                   </div>
@@ -311,7 +311,7 @@ export default function SayItWrong({
   if (sent) {
     return (
       <p className="flex items-start gap-2 text-xs text-emerald-400 leading-relaxed pt-1">
-        <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+        <Check className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         {t('sayit.thanks', 'Dankie — ons kyk daarna. Dit verander nie dadelik nie; iemand lees dit eers.')}
       </p>
     );
@@ -348,7 +348,7 @@ export default function SayItWrong({
             value={word}
             onChange={(event) => setWord(event.target.value)}
             placeholder={t('sayit.wordHint', 'voëltjie')}
-            className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
         <div className="space-y-1">
@@ -360,7 +360,7 @@ export default function SayItWrong({
             value={heard}
             onChange={(event) => setHeard(event.target.value)}
             placeholder={t('sayit.heardHint', 'foeltsjie')}
-            className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
         <div className="space-y-1">
@@ -372,7 +372,7 @@ export default function SayItWrong({
             value={should}
             onChange={(event) => setShould(event.target.value)}
             placeholder={t('sayit.shouldHint', 'voëlkie — leave it empty if you are not sure')}
-            className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
       </div>

@@ -634,7 +634,7 @@ export default function KidsDoor({
                   </span>
                 </span>
                 {chosen ? (
-                  <Check className="h-7 w-7 flex-shrink-0" />
+                  <Check className="h-7 w-7 shrink-0" />
                 ) : (
                   <span className="text-3xl" aria-hidden>🔓</span>
                 )}

@@ -52,7 +52,7 @@ function JoinThumb({ join, live }: { readonly join: Join; readonly live: boolean
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [join, live]);
-  return <canvas ref={canvas} width={64} height={36} aria-hidden className="h-9 w-16 flex-shrink-0 rounded-md border border-zinc-700" />;
+  return <canvas ref={canvas} width={64} height={36} aria-hidden className="h-9 w-16 shrink-0 rounded-md border border-zinc-700" />;
 }
 
 export default function JoinToolbox({
@@ -114,7 +114,7 @@ export default function JoinToolbox({
             aria-pressed={starred}
             aria-label={starred ? t('edit.joinUnstar', 'Take out of favourites') : t('edit.joinStar', 'Keep as a favourite')}
             onClick={() => flipFavourite(id)}
-            className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-lg"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg"
           >
             <Star className={`h-4 w-4 ${starred ? 'fill-amber-300 text-amber-300' : 'text-zinc-500'}`} />
           </button>
@@ -131,7 +131,7 @@ export default function JoinToolbox({
   return (
     <div className="space-y-2" data-jointoolbox>
       <label className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-3">
-        <Search className="h-4 w-4 flex-shrink-0 text-zinc-500" />
+        <Search className="h-4 w-4 shrink-0 text-zinc-500" />
         <input
           type="search"
           data-jointoolsearch
@@ -139,7 +139,7 @@ export default function JoinToolbox({
           onChange={(event) => setLooking(event.target.value)}
           placeholder={t('edit.joinSearch', 'Find a transition')}
           aria-label={t('edit.joinSearch', 'Find a transition')}
-          className="min-h-[44px] w-full bg-transparent text-sm text-zinc-100 outline-none"
+          className="min-h-[44px] w-full bg-transparent text-sm text-zinc-100 outline-hidden"
         />
       </label>
 

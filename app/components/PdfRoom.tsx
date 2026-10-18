@@ -1526,7 +1526,7 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
       <header className="flex items-center gap-2 border-b border-zinc-800 px-3 py-2">
         <button type="button" data-pdfclose onClick={onClose} aria-label={w('close')} className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-zinc-700 text-zinc-200"><X className="h-5 w-5" /></button>
         <div className="min-w-0 flex-1">
-          <p className="truncate bg-gradient-to-r from-sky-300 via-violet-300 to-pink-300 bg-clip-text text-base font-extrabold text-transparent">{title}</p>
+          <p className="truncate bg-linear-to-r from-sky-300 via-violet-300 to-pink-300 bg-clip-text text-base font-extrabold text-transparent">{title}</p>
           {bytes && <p className="truncate text-[11px] text-zinc-500" data-pdfname>{name} · {pages} {pages === 1 ? (af ? 'bladsy' : 'page') : (af ? 'bladsye' : 'pages')}</p>}
         </div>
         {bytes && (
@@ -1608,7 +1608,7 @@ function Thumb({ doc, index, on, onTap }: { readonly doc: Shown; readonly index:
   }, [doc, index]);
   return (
     <button type="button" data-pdfthumb={index} aria-pressed={on} onClick={onTap} className={`relative flex flex-col items-center gap-1 rounded-xl border-2 p-1.5 ${on ? 'border-sky-400 bg-sky-500/10' : 'border-transparent'}`}>
-      <canvas ref={sheet} className="max-h-40 w-full object-contain shadow" style={{ background: PAPER }} />
+      <canvas ref={sheet} className="max-h-40 w-full object-contain shadow-sm" style={{ background: PAPER }} />
       <span className="text-[11px] font-bold text-zinc-400">{index + 1}</span>
       {on && <Check className="absolute right-2 top-2 h-5 w-5 rounded-full bg-sky-400 p-0.5 text-zinc-950" />}
     </button>

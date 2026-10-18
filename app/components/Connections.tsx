@@ -90,7 +90,7 @@ export default function Connections(): React.ReactElement {
                 value={handles[one.id] ?? ''}
                 onChange={(event) => set(one.id, event.target.value)}
                 placeholder={t('conn.hint', 'handle, or paste your profile address')}
-                className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
               {/* The link, so somebody can see at a glance that they typed the
                   handle rather than the whole address, or the other way
@@ -103,7 +103,7 @@ export default function Connections(): React.ReactElement {
                   className="flex items-center gap-1 truncate text-sm text-emerald-400 hover:underline"
                 >
                   <span className="truncate">{url.replace(/^https:\/\//, '')}</span>
-                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                  <ExternalLink className="h-3 w-3 shrink-0" />
                 </a>
               )}
             </div>

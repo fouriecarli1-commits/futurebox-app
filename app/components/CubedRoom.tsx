@@ -162,7 +162,7 @@ export default function CubedRoom(): React.ReactElement {
                 </span>
               </div>
               </div>
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xl font-extrabold text-emerald-400">³</div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xl font-extrabold text-emerald-400">³</div>
             </div>
 
             {/* Metric 3: What the masterclass costs — all three classes */}
@@ -180,7 +180,7 @@ export default function CubedRoom(): React.ReactElement {
                 </span>
               </div>
               </div>
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"><GraduationCap className="h-5 w-5" /></div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"><GraduationCap className="h-5 w-5" /></div>
             </div>
           </div>
 
@@ -325,10 +325,10 @@ export default function CubedRoom(): React.ReactElement {
         {/* Future Schedule Note */}
         <div
           data-cubedmore
-          className="mt-10 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-sm leading-relaxed text-zinc-400 backdrop-blur-sm"
+          className="mt-10 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-sm leading-relaxed text-zinc-400 backdrop-blur-xs"
         >
           <div className="flex items-start gap-3">
-            <Sparkles className="mt-0.5 h-5 w-5 flex-shrink-0 text-zinc-500" />
+            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-zinc-500" />
             <p>
               {t(
                 'cubed.more',
@@ -365,9 +365,9 @@ export default function CubedRoom(): React.ReactElement {
             {GUEST_TERMS.map((term, at) => (
               <li
                 key={term[0]}
-                className="flex gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-5 shadow-sm transition-all hover:border-zinc-700"
+                className="flex gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-5 shadow-xs transition-all hover:border-zinc-700"
               >
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-black tabular-nums text-zinc-400">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-black tabular-nums text-zinc-400">
                   {String(at + 1).padStart(2, '0')}
                 </span>
                 <span className="text-sm leading-relaxed text-zinc-300 font-medium">

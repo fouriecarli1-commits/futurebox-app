@@ -117,7 +117,7 @@ export default function StartPicker({
       {...data}
       aria-pressed={shelf === id}
       onClick={() => setShelf(id)}
-      className={`inline-flex min-h-[36px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border py-1 pl-1 pr-3 text-xs font-semibold ${
+      className={`inline-flex min-h-[36px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border py-1 pl-1 pr-3 text-xs font-semibold ${
         shelf === id
           ? 'border-emerald-400 bg-emerald-500 text-onAccent'
           : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500'
@@ -138,7 +138,7 @@ export default function StartPicker({
       aria-label={t('pick.title', 'Somewhere to start')}
       className="flex max-h-[min(70vh,560px)] flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 shadow-2xl"
     >
-      <div className="flex flex-shrink-0 items-center gap-2 p-3 pb-2">
+      <div className="flex shrink-0 items-center gap-2 p-3 pb-2">
         <label className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input
@@ -148,7 +148,7 @@ export default function StartPicker({
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('pick.search', 'Search feelings, styles, songs…')}
             aria-label={t('pick.search', 'Search feelings, styles, songs…')}
-            className="w-full rounded-full border border-zinc-700 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+            className="w-full rounded-full border border-zinc-700 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-hidden"
           />
         </label>
         <button
@@ -165,7 +165,7 @@ export default function StartPicker({
           buttons above a list on a phone, and the list is the point. One row,
           like theirs — the feelings first, because that is how most songs
           start, then the families of sound. */}
-      <div className="flex flex-shrink-0 gap-1.5 overflow-x-auto px-3 pb-2" data-pickershelves>
+      <div className="flex shrink-0 gap-1.5 overflow-x-auto px-3 pb-2" data-pickershelves>
         {chip('all', t('pick.all', 'All'), {})}
         {MOODS.map((one) => chip(one.id, lang === 'af' ? one.af : one.en, { 'data-shelf': one.id }))}
         {GENRE_CATEGORIES.filter((one) => one !== 'All').map((one) => chip(one, one, { 'data-family': one }))}
@@ -194,12 +194,12 @@ export default function StartPicker({
                       }}
                       className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-zinc-900"
                     >
-                      <span className="h-9 w-9 flex-shrink-0 rounded-full" style={swatch(said.title)} aria-hidden />
+                      <span className="h-9 w-9 shrink-0 rounded-full" style={swatch(said.title)} aria-hidden />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-white">{said.title}</span>
                         <span className="block truncate text-xs text-zinc-500">{said.first.split('\n')[0]}</span>
                       </span>
-                      <span className="flex-shrink-0 text-xs text-zinc-500">{one.bpm} BPM</span>
+                      <span className="shrink-0 text-xs text-zinc-500">{one.bpm} BPM</span>
                     </button>
                   </li>
                 );
@@ -227,7 +227,7 @@ export default function StartPicker({
                       onClick={() => { stop(); onStyle(one.promptSnippet); }}
                       className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
                     >
-                      <span className="h-9 w-9 flex-shrink-0 rounded-full" style={swatch(one.name)} aria-hidden />
+                      <span className="h-9 w-9 shrink-0 rounded-full" style={swatch(one.name)} aria-hidden />
                       <span className="min-w-0 flex-1">
                         <span className={`block truncate text-sm font-semibold ${chosen ? 'text-emerald-300' : 'text-white'}`}>
                           {one.name}
@@ -240,7 +240,7 @@ export default function StartPicker({
                         type="button"
                         onClick={() => listen(one)}
                         aria-label={playing === one.name ? t('repertoire.stopAudio', 'Stop sound') : t('repertoire.audition', 'Listen')}
-                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                           playing === one.name ? 'bg-emerald-500 text-onAccent' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                         }`}
                       >
@@ -261,7 +261,7 @@ export default function StartPicker({
 
       {/* Start from a song of your own or a photograph, or say the sound in
           your own words. One open at a time: either is taller than the list. */}
-      <div className="flex-shrink-0 border-t border-zinc-800 p-2">
+      <div className="shrink-0 border-t border-zinc-800 p-2">
         <button
           type="button"
           data-pickerbring

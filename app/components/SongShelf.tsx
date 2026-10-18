@@ -118,15 +118,15 @@ export default function SongShelf({
             data-songshelfplay={song.id}
             className="flex min-h-[60px] flex-1 items-center gap-3 rounded-2xl border border-zinc-700 bg-zinc-900/60 px-3 py-2 text-left"
           >
-            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
               {FACES[song.topic] ?? <Music className="h-6 w-6" />}
             </span>
             <span className="min-w-0 flex-1 truncate text-sm font-bold text-zinc-100">
               {song.title}
             </span>
             {playing === song.id
-              ? <Pause className="h-5 w-5 flex-shrink-0 text-emerald-400" fill="currentColor" />
-              : <Play className="h-5 w-5 flex-shrink-0 text-emerald-400" fill="currentColor" />}
+              ? <Pause className="h-5 w-5 shrink-0 text-emerald-400" fill="currentColor" />
+              : <Play className="h-5 w-5 shrink-0 text-emerald-400" fill="currentColor" />}
           </button>
           {grownUp && (
             <button
@@ -134,7 +134,7 @@ export default function SongShelf({
               onClick={() => { void forgetSong(song.id).then(look); }}
               data-songshelfforget={song.id}
               aria-label={t('songshelf.forget', 'Take it off the shelf')}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-500"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-500"
             >
               <Trash2 className="h-4 w-4" />
             </button>

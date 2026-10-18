@@ -185,12 +185,12 @@ export default function TwoHosts({
               value={one.name}
               onChange={(event) => setSpeaker(at, { name: event.target.value })}
               placeholder={t('hosts.name', 'What they are called in the script')}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             <select
               value={one.voiceId}
               onChange={(event) => setSpeaker(at, { voiceId: event.target.value })}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
             >
               <option value="">{t('hosts.pickVoice', 'Pick a voice')}</option>
               {all.map((voice) => (
@@ -209,7 +209,7 @@ export default function TwoHosts({
         <button
           type="button"
           onClick={() => setIsAiModalOpen(true)}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 px-3 py-1 text-xs font-bold text-emerald-300 transition-all shadow-sm"
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/60 hover:bg-emerald-900/60 px-3 py-1 text-xs font-bold text-emerald-300 transition-all shadow-xs"
         >
           <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
           <span>{lang === 'af' ? 'Skep met Gemini' : 'Generate with Gemini'}</span>
@@ -248,7 +248,7 @@ export default function TwoHosts({
                   ? 'bv. Die toekoms van AI en soewereine skeppers in Afrika'
                   : 'e.g. The Future of AI Agents and Autonomous Creators'
               }
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             {/* Quick Topic Chips */}
             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -327,7 +327,7 @@ export default function TwoHosts({
         onChange={(event) => setScript(event.target.value)}
         rows={8}
         placeholder={EXAMPLE}
-        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y leading-relaxed font-mono"
+        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden resize-y leading-relaxed font-mono"
       />
 
       {/* ── What will actually happen, before it happens ────────────────── */}

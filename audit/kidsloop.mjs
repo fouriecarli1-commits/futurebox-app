@@ -18,6 +18,7 @@
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { defineRgba } from './colour.mjs';
 
 const server = await serve(process.argv[2] || '3322');
 const problems = [];
@@ -28,6 +29,7 @@ const check = (label, ok, detail = '') => {
 
 const browser = await chromium.launch(launchOptions());
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+await page.addInitScript(defineRgba);
 const thrown = [];
 page.on('pageerror', (error) => thrown.push(String(error).slice(0, 160)));
 await page.route('**/api/kids', (route) => route.fulfill({
@@ -173,7 +175,7 @@ try {
   check('  and the book it makes says names, not keys', !/kids\.[a-zA-Z]/.test(book),
     (book.match(/kids\.[a-zA-Z]+/g) ?? []).slice(0, 3).join(', '));
   const prose = await page.locator('[data-kidspagetext]').evaluate((el) => {
-    const parse = (c) => (c.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+    const parse = (c) => window.__rgba(c).slice(0, 3).map(Number);
     const lum = ([r, g, b]) => {
       const f = (v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
       return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);

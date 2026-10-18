@@ -114,7 +114,7 @@ export default function AllTools({
           </button>
         </div>
         <label className="mt-4 flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3">
-          <Search className="h-4 w-4 flex-shrink-0 text-zinc-500" />
+          <Search className="h-4 w-4 shrink-0 text-zinc-500" />
           <input
             type="search"
             data-alltoolssearch
@@ -122,7 +122,7 @@ export default function AllTools({
             onChange={(event) => setLooking(event.target.value)}
             placeholder={t('tools.find', 'Find a tool')}
             aria-label={t('tools.find', 'Find a tool')}
-            className="min-h-[44px] w-full bg-transparent text-sm text-zinc-100 outline-none"
+            className="min-h-[44px] w-full bg-transparent text-sm text-zinc-100 outline-hidden"
           />
         </label>
 

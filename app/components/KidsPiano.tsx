@@ -186,7 +186,7 @@ export default function KidsPiano({
   const want = TUNES.find((one) => one.id === tune)!;
 
   return (
-    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-sm sm:p-5" data-kidspiano>
+    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/85 p-4 shadow-lg backdrop-blur-xs sm:p-5" data-kidspiano>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="fb-kids-bubble flex items-center gap-2 text-xl font-bold text-surface-900 sm:text-2xl">
           <span aria-hidden>🎹</span> {t('kids.pianoTitle', 'Piano')}

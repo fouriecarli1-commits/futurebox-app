@@ -158,7 +158,7 @@ export default function DubFilm({
           type="button"
           onClick={onClose}
           aria-label={t('dubfilm.close', 'Close the language panel')}
-          className="text-zinc-500 hover:text-white flex-shrink-0"
+          className="text-zinc-500 hover:text-white shrink-0"
         >
           <X className="w-4 h-4" />
         </button>

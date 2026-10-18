@@ -1153,7 +1153,7 @@ export default function MakeMusic({
                 type="button"
                 onClick={() => void toggle(activeTrack)}
                 aria-label={isPlayingThis ? t('player.pause', 'Pause track') : t('player.play', 'Play track')}
-                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-zinc-950 transition-all hover:bg-emerald-400 active:scale-95 shadow-md shadow-emerald-500/20"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-zinc-950 transition-all hover:bg-emerald-400 active:scale-95 shadow-md shadow-emerald-500/20"
               >
                 {isPlayingThis ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
               </button>
@@ -1178,7 +1178,7 @@ export default function MakeMusic({
               onClick={() => {
                 document.getElementById('made-tracks-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="flex-shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+              className="shrink-0 text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
             >
               <span>{t('make.jumpToTracks', 'Channel')}</span>
               <span className="text-zinc-400">({tracks.length})</span>
@@ -1242,7 +1242,7 @@ export default function MakeMusic({
                   aria-selected={way === one}
                   onClick={() => chooseWay(one)}
                   className={`min-h-[40px] rounded-xl px-3.5 text-sm font-semibold ${
-                    way === one ? 'bg-zinc-800 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'
+                    way === one ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   {one === 'easy' ? t('make.easy', 'Easy') : t('make.extensive', 'Extensive')}
@@ -1488,7 +1488,7 @@ export default function MakeMusic({
                             type="checkbox"
                             checked={singItYourself}
                             onChange={(event) => setSingItYourself(event.target.checked)}
-                            className="mt-0.5 h-4 w-4 flex-shrink-0 accent-emerald-500"
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500"
                           />
                           <span className="min-w-0">
                             <span className="block text-sm font-semibold text-zinc-200">{t('make.singSelf')}</span>
@@ -1511,7 +1511,7 @@ export default function MakeMusic({
                             checked={useOwnSound}
                             disabled={readySounds.length === 0}
                             onChange={(event) => toggleOwnSound(event.target.checked)}
-                            className="mt-0.5 h-4 w-4 flex-shrink-0 accent-emerald-500 disabled:opacity-40"
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500 disabled:opacity-40"
                           />
                           <span className="min-w-0">
                             <span className="block text-sm font-semibold text-zinc-200">
@@ -1567,7 +1567,7 @@ export default function MakeMusic({
                               </>
                             ) : stillTraining.length > 0 ? (
                               <p className="flex items-center gap-1.5 text-sm leading-snug text-amber-300/90">
-                                <Loader2 className="h-3.5 w-3.5 flex-shrink-0 animate-spin" />
+                                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
                                 {t('make.ownSoundTraining')}
                               </p>
                             ) : (
@@ -1659,7 +1659,7 @@ export default function MakeMusic({
                   pop === id ? 'bg-zinc-800 text-white' : 'text-zinc-300 hover:bg-zinc-800/60'
                 }`}
               >
-                <Icon className="h-4 w-4 flex-shrink-0 text-zinc-400" />
+                <Icon className="h-4 w-4 shrink-0 text-zinc-400" />
                 <span className="truncate">{label}</span>
               </button>
             ))}
@@ -1686,7 +1686,7 @@ export default function MakeMusic({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('make.namePlaceholder')}
-              className="mt-1.5 w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-base text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="mt-1.5 w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-base text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
           </div>
 
@@ -1712,7 +1712,7 @@ export default function MakeMusic({
                 onChange={(e) => setLyrics(e.target.value)}
                 placeholder={t('make.wordsPlaceholder')}
                 rows={8}
-                className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-black/60 px-4 py-3 pr-11 text-base leading-relaxed text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-black/60 px-4 py-3 pr-11 text-base leading-relaxed text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
               <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, lyrics: withSaid(was.lyrics, said) }))} className="absolute bottom-2 right-2" />
             </span>
@@ -1760,7 +1760,7 @@ export default function MakeMusic({
                 onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
                 placeholder={t('make.soundPlaceholder')}
                 rows={2}
-                className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-black/60 px-4 py-3 pr-11 text-base leading-relaxed text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-black/60 px-4 py-3 pr-11 text-base leading-relaxed text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
               <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, style: withSaid(was.style, said) }))} className="absolute bottom-2 right-2" />
             </span>
@@ -1786,7 +1786,7 @@ export default function MakeMusic({
               type="checkbox"
               checked={mineAfter}
               onChange={(event) => setMineAfter(event.target.checked)}
-              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-emerald-500"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500"
             />
             <span>
               {t('make.mineToo', 'Then sing it in my own voice')}
@@ -1811,7 +1811,7 @@ export default function MakeMusic({
                 /* A private window keeps nothing. Ticked again next time. */
               }
             }}
-            className="mt-0.5 h-4 w-4 flex-shrink-0 accent-emerald-500"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500"
           />
           <span>{t('make.coverToo', 'Make album cover')}</span>
         </label>
@@ -1890,7 +1890,7 @@ export default function MakeMusic({
             data-sayitinstead
             className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 text-sm font-bold text-amber-200 disabled:opacity-50"
           >
-            <Sparkles className="h-4 w-4 flex-shrink-0" />
+            <Sparkles className="h-4 w-4 shrink-0" />
             {saying
               ? t('make.sayingIt', 'Working out what that sounds like…')
               : `${t('make.sayIt', 'Say it as a sound instead')} · ${CREDITS.styleword} ${t('make.credits', 'credits')}`}
@@ -1936,7 +1936,7 @@ export default function MakeMusic({
                     type="button"
                     onClick={() => toggle(track)}
                     aria-label={playing === track.id ? 'Pause' : 'Play'}
-                    className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center flex-shrink-0 hover:bg-emerald-400"
+                    className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center shrink-0 hover:bg-emerald-400"
                   >
                     {playing === track.id ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                   </button>

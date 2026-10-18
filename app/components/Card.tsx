@@ -190,9 +190,9 @@ export default function Card({
           className="flex min-w-0 flex-1 basis-[11rem] items-center gap-2 text-left"
         >
           <ChevronDown
-            className={`h-4 w-4 flex-shrink-0 transition-transform ${warm ? 'text-amber-300' : 'text-zinc-500'} ${open ? '' : '-rotate-90'}`}
+            className={`h-4 w-4 shrink-0 transition-transform ${warm ? 'text-amber-300' : 'text-zinc-500'} ${open ? '' : '-rotate-90'}`}
           />
-          {icon && <span className="flex-shrink-0 text-emerald-400">{icon}</span>}
+          {icon && <span className="shrink-0 text-emerald-400">{icon}</span>}
           <span className={`truncate text-sm font-semibold ${warm ? 'text-amber-100' : 'text-zinc-200'}`}>
             {title}
           </span>
@@ -205,7 +205,7 @@ export default function Card({
             disabled={wand.busy}
             aria-label={wand.label}
             title={wand.label}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 text-emerald-300 hover:border-emerald-500 disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 text-emerald-300 hover:border-emerald-500 disabled:opacity-50"
           >
             <Sparkles className={`h-4 w-4 ${wand.busy ? 'animate-pulse' : ''}`} />
           </button>

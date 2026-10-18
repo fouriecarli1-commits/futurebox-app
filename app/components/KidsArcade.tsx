@@ -166,7 +166,7 @@ export default function KidsArcade({
   };
 
   return (
-    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 backdrop-blur-sm sm:p-6" data-kidsarcade>
+    <div className="space-y-4 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 backdrop-blur-xs sm:p-6" data-kidsarcade>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="fb-kids-bubble flex items-center gap-2 text-xl font-bold text-surface-900 sm:text-2xl">

@@ -1,7 +1,7 @@
 /**
  * The play buttons are visible in a light theme.
  *
- * They were not. `tailwind.config.js` remaps `white` to `--fb-ink` so that
+ * They were not. the `@theme` block in `app/globals.css` remaps `white` to `--fb-ink` so that
  * `text-white` follows the theme, which is right for text and a trap for a
  * fill: on the default light preset `bg-white` paints near-black. Four play
  * buttons were `bg-white text-onAccent` — a black disc with a black glyph on
@@ -65,7 +65,7 @@ const measured = await p.evaluate(() => {
     });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
-  const parse = (s) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+  const parse = (s) => window.__rgba(s).slice(0, 3).map(Number);
   /* What is actually behind the glyph.
 
      `backgroundColor` on a button with no fill is `rgba(0, 0, 0, 0)`, and
@@ -77,7 +77,7 @@ const measured = await p.evaluate(() => {
   const behind = (el) => {
     for (let one = el; one; one = one.parentElement) {
       const colour = getComputedStyle(one).backgroundColor;
-      const alpha = Number((colour.match(/[\d.]+/g) ?? [])[3] ?? 1);
+      const alpha = Number(window.__rgba(colour)[3] ?? 1);
       if (alpha > 0.05) return parse(colour);
     }
     return [255, 255, 255];
@@ -89,7 +89,7 @@ const measured = await p.evaluate(() => {
     const box = el.getBoundingClientRect();
     if (box.width < 36 || box.width > 60 || Math.abs(box.width - box.height) > 4) continue;
     if (!el.querySelector('svg')) continue;
-    const alpha = Number((style.backgroundColor.match(/[\d.]+/g) ?? [])[3] ?? 1);
+    const alpha = Number(window.__rgba(style.backgroundColor)[3] ?? 1);
     const fill = alpha > 0.05 ? parse(style.backgroundColor) : behind(el.parentElement);
     const glyph = parse(getComputedStyle(el.querySelector('svg')).color);
     if (fill.length < 3 || glyph.length < 3) continue;

@@ -526,7 +526,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                   'video.shotHint',
                   'A lonely tar road at dusk, wide shot, slow push in, dust in the headlights',
                 )}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden leading-relaxed resize-y"
               />
 
               {/* The same rule the video desk teaches, in the same words. Two
@@ -534,7 +534,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                   about how to talk to it. */}
               <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2">
                 <p className="text-xs text-zinc-400 leading-relaxed flex gap-2">
-                  <Quote className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <Quote className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                   <span>{t('canvas.quotes')}</span>
                 </p>
                 {/* "Will be spoken" was printed here, and this panel has
@@ -559,7 +559,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 )}
                 {looksUnquoted(treatment) && (
                   <p className="text-xs text-amber-300 leading-relaxed flex gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     <span>{t('canvas.unquoted')}</span>
                   </p>
                 )}
@@ -661,7 +661,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 type="checkbox"
                 checked={withWords}
                 onChange={(event) => setWithWords(event.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+                className="mt-0.5 w-4 h-4 accent-emerald-500 shrink-0"
               />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-zinc-200">{t('video.words')}</span>

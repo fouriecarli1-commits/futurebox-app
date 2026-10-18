@@ -60,7 +60,7 @@ const COLOURS: Record<string, string> = {
  * the half people read. Looked at rather than reasoned about: it is plain in
  * `audit/songform.png` and invisible in `check:form`.
  *
- * One family at four strengths, and not four families. `tailwind.config.js`
+ * One family at four strengths, and not four families. the `@theme` block in `app/globals.css`
  * folds every colour onto the theme — cyan and violet are both `secondary`
  * and `tertiary` of whatever theme is loaded, and in the light theme the app
  * ships they arrive as two blue-greys a few per cent apart. The second try

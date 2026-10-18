@@ -102,7 +102,7 @@ export default function InviteLink({ from }: { readonly from?: string }): React.
           maxLength={300}
           onChange={(event) => setWhy(event.target.value)}
           placeholder={t('invite.reasonPlaceholder', 'What it is about — one line')}
-          className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+          className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
         />
       </div>
 

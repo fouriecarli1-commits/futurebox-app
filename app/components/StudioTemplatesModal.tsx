@@ -161,7 +161,7 @@ export default function StudioTemplatesModal({
   ].filter(Boolean), []);
 
   const renderCategoryIcon = (iconType: string) => {
-    const cls = 'h-4 w-4 flex-shrink-0 text-zinc-200';
+    const cls = 'h-4 w-4 shrink-0 text-zinc-200';
     switch (iconType) {
       case 'music':
         return <Music className={cls} />;
@@ -217,7 +217,7 @@ export default function StudioTemplatesModal({
     >
       <div className="flex h-full max-h-[92dvh] w-full max-w-4xl flex-col rounded-3xl border border-zinc-700/80 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
         {/* Top Header & Search Bar (Screenshots 3 & 4) */}
-        <div className="flex flex-shrink-0 flex-col border-b border-zinc-800/80 p-4 sm:p-5 gap-3.5">
+        <div className="flex shrink-0 flex-col border-b border-zinc-800/80 p-4 sm:p-5 gap-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               {selectedCategory && (
@@ -265,7 +265,7 @@ export default function StudioTemplatesModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('stpl.searchPlaceholder', 'Search templates (e.g. Pitch deck, Nature, Flyer)...')}
-              className="w-full rounded-2xl border border-zinc-700/80 bg-zinc-900/90 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 shadow-inner focus:border-amber-400 focus:outline-none"
+              className="w-full rounded-2xl border border-zinc-700/80 bg-zinc-900/90 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 shadow-inner focus:border-amber-400 focus:outline-hidden"
             />
             <div className="absolute right-3.5 flex items-center text-zinc-400 hover:text-zinc-200 cursor-pointer">
               <Mic className="h-4 w-4" />
@@ -284,13 +284,13 @@ export default function StudioTemplatesModal({
             <button
               type="button"
               onClick={() => setSelectedCategory(null)}
-              className={`flex min-h-[44px] w-36 flex-shrink-0 snap-start items-center justify-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-bold transition-all ${
+              className={`flex min-h-[44px] w-36 shrink-0 snap-start items-center justify-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-bold transition-all ${
                 selectedCategory === null
-                  ? 'border border-amber-400 bg-amber-500/20 text-amber-200 shadow-sm'
+                  ? 'border border-amber-400 bg-amber-500/20 text-amber-200 shadow-xs'
                   : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
               }`}
             >
-              <Layout className="h-3.5 w-3.5 flex-shrink-0" />
+              <Layout className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{t('stpl.allCategories', 'All Categories')}</span>
             </button>
             {categories.map((cat: TemplateCategoryMeta) => {
@@ -300,9 +300,9 @@ export default function StudioTemplatesModal({
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex min-h-[44px] w-36 flex-shrink-0 snap-start items-center justify-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`flex min-h-[44px] w-36 shrink-0 snap-start items-center justify-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-bold transition-all ${
                     isSelected
-                      ? 'border border-amber-400 bg-amber-500/20 text-amber-200 shadow-sm'
+                      ? 'border border-amber-400 bg-amber-500/20 text-amber-200 shadow-xs'
                       : 'border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
                   }`}
                 >
@@ -334,7 +334,7 @@ export default function StudioTemplatesModal({
                         alt={lang === 'af' ? tpl.nameAf : tpl.nameEn}
                         className="h-full w-full object-contain group-hover:scale-105 transition-transform"
                       />
-                      <span className="absolute top-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-mono font-bold text-zinc-300 backdrop-blur-sm">
+                      <span className="absolute top-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-mono font-bold text-zinc-300 backdrop-blur-xs">
                         {tpl.ratioLabel}
                       </span>
                     </div>
@@ -632,7 +632,7 @@ export default function StudioTemplatesModal({
       {previewing && (
         <div
           data-templatepreview
-          className="absolute inset-0 z-10 flex items-center justify-center bg-scrim/90 p-4 backdrop-blur-sm"
+          className="absolute inset-0 z-10 flex items-center justify-center bg-scrim/90 p-4 backdrop-blur-xs"
           style={{ paddingBottom: barClearance(16) }}
         >
           <div className="w-full max-w-lg space-y-3 rounded-2xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">

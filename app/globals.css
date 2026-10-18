@@ -1,6 +1,206 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* `inline`, so every utility writes `rgb(var(--fb-…))` itself and reads the
+   ramp where it is used. Without it the colours resolve once, on :root, and
+   the rooms that repaint the ramp under themselves — the kids room, the
+   booth, the cutting room, Cubed — keep the app's colours instead of their
+   own. `emerald` is `--fb-primary-*`, `zinc` the surface ramp. */
+@theme inline {
+  --color-surface-50: rgb(var(--fb-surface-50));
+  --color-surface-100: rgb(var(--fb-surface-100));
+  --color-surface-200: rgb(var(--fb-surface-200));
+  --color-surface-300: rgb(var(--fb-surface-300));
+  --color-surface-400: rgb(var(--fb-surface-400));
+  --color-surface-500: rgb(var(--fb-surface-500));
+  --color-surface-600: rgb(var(--fb-surface-600));
+  --color-surface-700: rgb(var(--fb-surface-700));
+  --color-surface-800: rgb(var(--fb-surface-800));
+  --color-surface-900: rgb(var(--fb-surface-900));
+  --color-surface-950: rgb(var(--fb-surface-950));
+
+  --color-primary-50: rgb(var(--fb-primary-50));
+  --color-primary-100: rgb(var(--fb-primary-100));
+  --color-primary-200: rgb(var(--fb-primary-200));
+  --color-primary-300: rgb(var(--fb-primary-300));
+  --color-primary-400: rgb(var(--fb-primary-400));
+  --color-primary-500: rgb(var(--fb-primary-500));
+  --color-primary-600: rgb(var(--fb-primary-600));
+  --color-primary-700: rgb(var(--fb-primary-700));
+  --color-primary-800: rgb(var(--fb-primary-800));
+  --color-primary-900: rgb(var(--fb-primary-900));
+  --color-primary-950: rgb(var(--fb-primary-950));
+
+  --color-zinc-50: rgb(var(--fb-surface-50));
+  --color-zinc-100: rgb(var(--fb-surface-100));
+  --color-zinc-200: rgb(var(--fb-surface-200));
+  --color-zinc-300: rgb(var(--fb-surface-300));
+  --color-zinc-400: rgb(var(--fb-surface-400));
+  --color-zinc-500: rgb(var(--fb-surface-500));
+  --color-zinc-600: rgb(var(--fb-surface-600));
+  --color-zinc-700: rgb(var(--fb-surface-700));
+  --color-zinc-800: rgb(var(--fb-surface-800));
+  --color-zinc-900: rgb(var(--fb-surface-900));
+  --color-zinc-950: rgb(var(--fb-surface-950));
+
+  --color-emerald-50: rgb(var(--fb-primary-50));
+  --color-emerald-100: rgb(var(--fb-primary-100));
+  --color-emerald-200: rgb(var(--fb-primary-200));
+  --color-emerald-300: rgb(var(--fb-primary-300));
+  --color-emerald-400: rgb(var(--fb-primary-400));
+  --color-emerald-500: rgb(var(--fb-primary-500));
+  --color-emerald-600: rgb(var(--fb-primary-600));
+  --color-emerald-700: rgb(var(--fb-primary-700));
+  --color-emerald-800: rgb(var(--fb-primary-800));
+  --color-emerald-900: rgb(var(--fb-primary-900));
+  --color-emerald-950: rgb(var(--fb-primary-950));
+
+  --color-teal-50: rgb(var(--fb-primary-50));
+  --color-teal-100: rgb(var(--fb-primary-100));
+  --color-teal-200: rgb(var(--fb-primary-200));
+  --color-teal-300: rgb(var(--fb-primary-300));
+  --color-teal-400: rgb(var(--fb-primary-400));
+  --color-teal-500: rgb(var(--fb-primary-500));
+  --color-teal-600: rgb(var(--fb-primary-600));
+  --color-teal-700: rgb(var(--fb-primary-700));
+  --color-teal-800: rgb(var(--fb-primary-800));
+  --color-teal-900: rgb(var(--fb-primary-900));
+  --color-teal-950: rgb(var(--fb-primary-950));
+
+  --color-cyan-50: rgb(var(--fb-secondary-50));
+  --color-cyan-100: rgb(var(--fb-secondary-100));
+  --color-cyan-200: rgb(var(--fb-secondary-200));
+  --color-cyan-300: rgb(var(--fb-secondary-300));
+  --color-cyan-400: rgb(var(--fb-secondary-400));
+  --color-cyan-500: rgb(var(--fb-secondary-500));
+  --color-cyan-600: rgb(var(--fb-secondary-600));
+  --color-cyan-700: rgb(var(--fb-secondary-700));
+  --color-cyan-800: rgb(var(--fb-secondary-800));
+  --color-cyan-900: rgb(var(--fb-secondary-900));
+  --color-cyan-950: rgb(var(--fb-secondary-950));
+
+  --color-sky-50: rgb(var(--fb-secondary-50));
+  --color-sky-100: rgb(var(--fb-secondary-100));
+  --color-sky-200: rgb(var(--fb-secondary-200));
+  --color-sky-300: rgb(var(--fb-secondary-300));
+  --color-sky-400: rgb(var(--fb-secondary-400));
+  --color-sky-500: rgb(var(--fb-secondary-500));
+  --color-sky-600: rgb(var(--fb-secondary-600));
+  --color-sky-700: rgb(var(--fb-secondary-700));
+  --color-sky-800: rgb(var(--fb-secondary-800));
+  --color-sky-900: rgb(var(--fb-secondary-900));
+  --color-sky-950: rgb(var(--fb-secondary-950));
+
+  --color-amber-50: rgb(var(--fb-highlight-50));
+  --color-amber-100: rgb(var(--fb-highlight-100));
+  --color-amber-200: rgb(var(--fb-highlight-200));
+  --color-amber-300: rgb(var(--fb-highlight-300));
+  --color-amber-400: rgb(var(--fb-highlight-400));
+  --color-amber-500: rgb(var(--fb-highlight-500));
+  --color-amber-600: rgb(var(--fb-highlight-600));
+  --color-amber-700: rgb(var(--fb-highlight-700));
+  --color-amber-800: rgb(var(--fb-highlight-800));
+  --color-amber-900: rgb(var(--fb-highlight-900));
+  --color-amber-950: rgb(var(--fb-highlight-950));
+
+  --color-orange-50: rgb(var(--fb-highlight-50));
+  --color-orange-100: rgb(var(--fb-highlight-100));
+  --color-orange-200: rgb(var(--fb-highlight-200));
+  --color-orange-300: rgb(var(--fb-highlight-300));
+  --color-orange-400: rgb(var(--fb-highlight-400));
+  --color-orange-500: rgb(var(--fb-highlight-500));
+  --color-orange-600: rgb(var(--fb-highlight-600));
+  --color-orange-700: rgb(var(--fb-highlight-700));
+  --color-orange-800: rgb(var(--fb-highlight-800));
+  --color-orange-900: rgb(var(--fb-highlight-900));
+  --color-orange-950: rgb(var(--fb-highlight-950));
+
+  --color-violet-50: rgb(var(--fb-tertiary-50));
+  --color-violet-100: rgb(var(--fb-tertiary-100));
+  --color-violet-200: rgb(var(--fb-tertiary-200));
+  --color-violet-300: rgb(var(--fb-tertiary-300));
+  --color-violet-400: rgb(var(--fb-tertiary-400));
+  --color-violet-500: rgb(var(--fb-tertiary-500));
+  --color-violet-600: rgb(var(--fb-tertiary-600));
+  --color-violet-700: rgb(var(--fb-tertiary-700));
+  --color-violet-800: rgb(var(--fb-tertiary-800));
+  --color-violet-900: rgb(var(--fb-tertiary-900));
+  --color-violet-950: rgb(var(--fb-tertiary-950));
+
+  --color-fuchsia-50: rgb(var(--fb-tertiary-50));
+  --color-fuchsia-100: rgb(var(--fb-tertiary-100));
+  --color-fuchsia-200: rgb(var(--fb-tertiary-200));
+  --color-fuchsia-300: rgb(var(--fb-tertiary-300));
+  --color-fuchsia-400: rgb(var(--fb-tertiary-400));
+  --color-fuchsia-500: rgb(var(--fb-tertiary-500));
+  --color-fuchsia-600: rgb(var(--fb-tertiary-600));
+  --color-fuchsia-700: rgb(var(--fb-tertiary-700));
+  --color-fuchsia-800: rgb(var(--fb-tertiary-800));
+  --color-fuchsia-900: rgb(var(--fb-tertiary-900));
+  --color-fuchsia-950: rgb(var(--fb-tertiary-950));
+
+  --color-rose-50: rgb(var(--fb-danger-50));
+  --color-rose-100: rgb(var(--fb-danger-100));
+  --color-rose-200: rgb(var(--fb-danger-200));
+  --color-rose-300: rgb(var(--fb-danger-300));
+  --color-rose-400: rgb(var(--fb-danger-400));
+  --color-rose-500: rgb(var(--fb-danger-500));
+  --color-rose-600: rgb(var(--fb-danger-600));
+  --color-rose-700: rgb(var(--fb-danger-700));
+  --color-rose-800: rgb(var(--fb-danger-800));
+  --color-rose-900: rgb(var(--fb-danger-900));
+  --color-rose-950: rgb(var(--fb-danger-950));
+
+  --color-white: rgb(var(--fb-ink));
+  --color-black: rgb(var(--fb-void));
+  --color-onAccent: rgb(var(--fb-on-accent));
+  --color-scrim: rgb(var(--fb-scrim));
+
+  --radius-sm: var(--fb-radius-sm);
+  --radius: var(--fb-radius);
+  --radius-md: var(--fb-radius-md);
+  --radius-lg: var(--fb-radius-lg);
+  --radius-xl: var(--fb-radius-xl);
+  --radius-2xl: var(--fb-radius-2xl);
+  --radius-3xl: var(--fb-radius-3xl);
+
+  --font-sans: var(--fb-font-sans);
+
+  --default-transition-duration: var(--fb-motion);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/*
+  Two more of Tailwind 3's defaults, kept: a placeholder in grey rather than
+  the text's own colour at half, and the pointer over a button that can be
+  pressed (Tailwind 4 leaves buttons with the browser's arrow).
+*/
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 /**
  * The default theme variables, written out so the first paint is correct before
@@ -98,8 +298,10 @@
   --fb-radius-3xl: 24.00px;
 }
 
+@layer base {
 html {
   font-size: var(--fb-root-size);
+}
 }
 
 /* Nothing slides sideways.
@@ -119,9 +321,11 @@ html {
    every `position: sticky` inside it stop sticking — which would quietly break
    the pinned strips in the Pro Booth. `clip` cuts without creating a scroll
    container. */
+@layer base {
 html,
 body {
   overflow-x: clip;
+}
 }
 
 /* Thumbs.
@@ -137,11 +341,20 @@ body {
 
    `min-height` rather than padding, so a button that is already big enough does
    not grow, and nothing here changes where anything sits. */
+/* Tailwind 4 puts its utilities in a cascade layer, and anything outside a
+   layer beats a layer whatever its specificity. In 3 a class on a button beat
+   the bare `button` here; so the element rules are in the base layer, where a
+   class still beats them, and the role rules stay outside it, where — as in 3,
+   by coming after the utilities — they win a tie with a class. */
 @media (pointer: coarse) {
-  button,
-  select,
   [role='button'],
   [role='tab'] {
+    min-height: 44px;
+  }
+}
+@layer base { @media (pointer: coarse) {
+  button,
+  select {
     min-height: 44px;
   }
 
@@ -225,6 +438,7 @@ body {
     min-height: 44px;
   }
 }
+}
 
 /* Scrollbars.
 
@@ -244,9 +458,11 @@ body {
    an accent-bright bar down the side of every page would compete with the work
    for exactly no benefit. It comes up to full accent on hover, when somebody
    has gone looking for it. */
+@layer base {
 * {
   scrollbar-width: thin;
   scrollbar-color: rgb(var(--fb-primary-500) / 0.35) transparent;
+}
 }
 
 *::-webkit-scrollbar {
@@ -275,6 +491,7 @@ body {
   background: transparent;
 }
 
+@layer base {
 body {
   background-color: rgb(var(--fb-page));
   color: rgb(var(--fb-ink));
@@ -294,6 +511,7 @@ body {
     linear-gradient(to bottom, rgb(var(--fb-ink) / 0.045) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
   background-attachment: fixed;
+}
 }
 
 /* Reduced motion is a theme choice here, and also honoured when the operating
@@ -979,7 +1197,7 @@ body:has([data-cubed]) {
      asked for, in the one room that is meant to be the two.
 
      `emerald` maps onto `--fb-primary-*` (see the note at the top of
-     `tailwind.config.js`), so redefining that ramp here turns every
+     the `@theme` block above), so redefining that ramp here turns every
      `bg-emerald-500`, `text-emerald-400` and `border-emerald-500/60` inside
      the booth blue without one class name changing anywhere. Same shape as
      the ramp it replaces — dark at the ends, brightest at 500 — so the same
@@ -1023,7 +1241,7 @@ body:has([data-cubed]) {
  * ── Why, and it is the booth's bug exactly ───────────────────────────────
  *
  * `zinc` is remapped onto the surface family (see the top of
- * `tailwind.config.js`). The theme this app ships is LIGHT, and a light theme
+ * the `@theme` block above). The theme this app ships is LIGHT, and a light theme
  * INVERTS the ramp — so `text-zinc-400`, which on a pale page is a hint under
  * a heading, resolves to rgb(74, 70, 63) — a dark warm grey. On a pale page
  * that is correct and readable. On the cutting room's near-black floor it is

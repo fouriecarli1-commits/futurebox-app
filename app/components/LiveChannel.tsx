@@ -402,7 +402,7 @@ function RoomPanel({
           className="flex flex-col items-center gap-1 disabled:cursor-default"
         >
           <span
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur transition-transform active:scale-90"
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm transition-transform active:scale-90"
             style={{
               background: 'rgba(0,0,0,0.5)',
               color: post.hearted ? '#34d399' : '#ffffff',
@@ -433,7 +433,7 @@ function RoomPanel({
           title={t('live.playsWhy', 'Counted once somebody has listened to 65% of the song')}
         >
           <span
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur"
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm"
             style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
           >
             <Headphones className="h-5 w-5" />
@@ -461,7 +461,7 @@ function RoomPanel({
             type="button"
             onClick={onOpen}
             aria-label={t('live.listen', 'Listen')}
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur"
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm"
             style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
           >
             <Play className="ml-0.5 h-5 w-5" />
@@ -473,7 +473,7 @@ function RoomPanel({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t('live.watch', 'Watch')}
-            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur"
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm"
             style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
           >
             <Eye className="h-5 w-5" />
@@ -484,7 +484,7 @@ function RoomPanel({
             type="button"
             onClick={() => void onTakeOut()}
             aria-label={t('live.take', 'Take it out')}
-            className="flex h-10 w-10 items-center justify-center rounded-full backdrop-blur"
+            className="flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-sm"
             style={{ background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.75)' }}
           >
             <Trash2 className="h-4 w-4" />
@@ -873,13 +873,13 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                   onChange={(event) => setLooking(event.target.value)}
                   placeholder={t('live.findSong', 'Find one of your songs')}
                   aria-label={t('live.findSong', 'Find one of your songs')}
-                  className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                  className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
                 />
               )}
               <div className="max-h-72 space-y-1.5 overflow-y-auto">
                 {postable.map((track) => (
                   <div key={track.id} className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2">
-                    <Music className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+                    <Music className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
                     <span className="text-sm text-zinc-300 truncate flex-1 min-w-0">{track.title}</span>
                     {/* Says what it did, on itself — see `SaysDone`.
                         Both of this room's Post buttons went grey while the
@@ -900,7 +900,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                       label={t('live.post', 'Post it')}
                       busyLabel={t('live.posting', 'Posting…')}
                       doneLabel={t('live.wasPosted', 'Posted')}
-                      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
+                      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 shrink-0 disabled:opacity-50"
                       onDo={() =>
                         send({
                           what: 'post',
@@ -975,13 +975,13 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                 key={film.id}
                 className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2"
               >
-                <Video className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+                <Video className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
                 <span className="min-w-0 flex-1 truncate text-sm text-zinc-300">{film.title}</span>
                 {/* Filmed or generated, said on the row. They are the same
                     kind of post and they are not the same thing to a person
                     scrolling past: one is somebody's face, the other is a
                     picture an engine drew. */}
-                <span className="flex-shrink-0 text-xs text-zinc-600">
+                <span className="shrink-0 text-xs text-zinc-600">
                   {film.filmed ? t('live.filmed', 'filmed') : t('live.generated', 'generated')}
                 </span>
                 <SaysDone
@@ -990,7 +990,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                   label={t('live.post', 'Post it')}
                   busyLabel={t('live.posting', 'Posting…')}
                   doneLabel={t('live.wasPosted', 'Posted')}
-                  className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
+                  className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 shrink-0 disabled:opacity-50"
                   onDo={() =>
                     send({
                       what: 'post',
@@ -1043,20 +1043,20 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                 value={where.title}
                 onChange={(event) => setWhere({ ...where, title: event.target.value })}
                 placeholder={t('live.whatOn', 'What is it')}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
               <input
                 value={where.link}
                 onChange={(event) => setWhere({ ...where, link: event.target.value })}
                 inputMode="url"
                 placeholder={t('live.linkPaste', 'Paste the link')}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
               <input
                 type="datetime-local"
                 value={where.startsAt}
                 onChange={(event) => setWhere({ ...where, startsAt: event.target.value })}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
               />
               <button
                 type="button"
@@ -1121,7 +1121,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
           )}
           {room.says.map((said) => (
             <div key={said.id} className="flex items-start gap-2 text-sm leading-snug">
-              <span className={said.mine ? 'text-emerald-300 font-semibold flex-shrink-0' : 'text-zinc-400 font-semibold flex-shrink-0'}>
+              <span className={said.mine ? 'text-emerald-300 font-semibold shrink-0' : 'text-zinc-400 font-semibold shrink-0'}>
                 {said.by}
               </span>
               <a
@@ -1145,7 +1145,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                   onClick={() => void send({ what: 'flag', id: said.id })}
                   title={t('live.flag', 'Tell us this one is bad')}
                   aria-label={t('live.flag', 'Tell us this one is bad')}
-                  className="ml-auto flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-600 hover:border-red-500 hover:text-red-400 disabled:opacity-50"
+                  className="ml-auto shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-600 hover:border-red-500 hover:text-red-400 disabled:opacity-50"
                 >
                   <Flag className="w-4 h-4" />
                 </button>
@@ -1165,13 +1165,13 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                 }
               }}
               placeholder={t('live.sayLive', 'https://www.tiktok.com/@you/live')}
-              className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             <button
               type="button"
               disabled={busy || !draft.trim()}
               onClick={() => void send({ what: 'say', link: draft }).then((done) => { if (done) setDraft(''); })}
-              className="min-h-[44px] px-3 py-2 rounded-xl bg-emerald-500 text-onAccent flex-shrink-0 disabled:opacity-50"
+              className="min-h-[44px] px-3 py-2 rounded-xl bg-emerald-500 text-onAccent shrink-0 disabled:opacity-50"
               aria-label={t('live.send', 'Send')}
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

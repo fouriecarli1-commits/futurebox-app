@@ -3,7 +3,7 @@
  *
  * ── The fault this was written for ───────────────────────────────────────
  *
- * `tailwind.config.js` remaps `black` onto `--fb-void`, "the deepest surface",
+ * the `@theme` block in `app/globals.css` remaps `black` onto `--fb-void`, "the deepest surface",
  * so the whole app can change theme without touching markup. In the light
  * theme the app actually ships, `--fb-void` is `222 220 216` — a pale grey.
  *

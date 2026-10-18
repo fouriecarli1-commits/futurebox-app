@@ -204,7 +204,7 @@ export default function AdReport(): React.ReactElement {
             }
           }}
           placeholder={t('report.pasteHint', 'Paste the rows straight out of the spreadsheet.')}
-          className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+          className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
         />
       </div>
 

@@ -587,7 +587,7 @@ export default function VoiceLab({
                   onClick={() => void forget(voice.id)}
                   disabled={busy === voice.id}
                   title={t('voice.forget', 'Delete this voice')}
-                  className="text-zinc-500 hover:text-red-400 flex-shrink-0"
+                  className="text-zinc-500 hover:text-red-400 shrink-0"
                 >
                   {busy === voice.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </button>
@@ -630,7 +630,7 @@ export default function VoiceLab({
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder={t('voice.name', 'What to call this voice')}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
             />
             {/* Not buried, and not pre-ticked. */}
             <label className="flex items-start gap-2.5 cursor-pointer">
@@ -638,7 +638,7 @@ export default function VoiceLab({
                 type="checkbox"
                 checked={consent}
                 onChange={(event) => setConsent(event.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+                className="mt-0.5 w-4 h-4 accent-emerald-500 shrink-0"
               />
               <span className="text-sm text-zinc-400 leading-snug">
                 {t('voice.consent', VOICE_CONSENT)}
@@ -651,7 +651,7 @@ export default function VoiceLab({
                 type="checkbox"
                 checked={deRoom}
                 onChange={(event) => setDeRoom(event.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+                className="mt-0.5 w-4 h-4 accent-emerald-500 shrink-0"
               />
               <span className="text-sm text-zinc-400 leading-snug">
                 {t('voice.deRoom', 'Take the room off it first — the echo, the reverb and whatever else is behind you. A model learns whatever is in the file.')}
@@ -732,7 +732,7 @@ export default function VoiceLab({
             id="voice-model"
             value={model}
             onChange={(event) => setModel(event.target.value as 'steady' | 'wide')}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
           >
             <option value="steady">{t('voice.steady', 'Steady — best for a long read')}</option>
             <option value="wide">{t('voice.wide', 'Wide — more languages, Afrikaans included')}</option>
@@ -781,7 +781,7 @@ export default function VoiceLab({
                 type="checkbox"
                 checked={speakerBoost}
                 onChange={(event) => setSpeakerBoost(event.target.checked)}
-                className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+                className="w-4 h-4 accent-emerald-500 shrink-0"
               />
               <span className="text-sm text-zinc-400 leading-snug">
                 {t('voice.boost', 'Speaker boost \u2014 hold the likeness harder')}
@@ -795,7 +795,7 @@ export default function VoiceLab({
           onChange={(event) => setScript(event.target.value)}
           rows={5}
           placeholder={t('voice.scriptPlaceholder', 'Write what should be said…')}
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y"
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden resize-y"
         />
         <div className="flex items-center justify-between gap-3 text-sm">
           <span className={over ? 'text-amber-400' : 'text-zinc-600'}>
@@ -889,7 +889,7 @@ export default function VoiceLab({
             type="checkbox"
             checked={removeNoise}
             onChange={(event) => setRemoveNoise(event.target.checked)}
-            className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+            className="w-4 h-4 accent-emerald-500 shrink-0"
           />
           <span className="text-sm text-zinc-400 leading-snug">
             {t('voice.removeNoise', 'Take the room out of it first')}
