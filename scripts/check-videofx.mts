@@ -1,7 +1,7 @@
 /**
  * The video editor's effects reach the film, not only the preview.
  *
- * Carli, 16 October 2026, a desktop editor's toolbox with its Effects open.
+ * The owner, 16 October 2026, a desktop editor's toolbox with its Effects open.
  * `check:videofx` (the browser probe) reads the preview's pixels; this reads
  * the road from the piece to the export, which no probe can afford to render
  * on every push: the piece carries its effects, `cutFrom` hands them to the

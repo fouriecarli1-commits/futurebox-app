@@ -9,7 +9,7 @@
  * of them per turn, so it did the only other thing available and wrote a
  * paragraph about the rest.
  *
- * Carli, that morning: "copilot het mooi geskryf, maar dit het niks van die
+ * The owner, that morning: "copilot het mooi geskryf, maar dit het niks van die
  * hele platform se bars help invul nie." Nothing was disconnected.
  * Campaign.tsx registered all five operations and surfaces.ts described all
  * five. The wiring was whole and the schema was one field wide — the same
@@ -113,7 +113,7 @@ export function planActions(asked: readonly PlannedAction[], here?: string): Pla
     if (!named) {
       /* ── An op with no room belongs where the reply is TAKING them ─────
  
-         Carli, 17 September 2026: *"I tried the advert. It suggested I make
+         The owner, 17 September 2026: *"I tried the advert. It suggested I make
          a jingle in the music room. When I pushed the button it took me to
          that room, but copilot didn't have the description ready. Ok I see
          that is the problem with every room."*

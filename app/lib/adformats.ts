@@ -13,7 +13,7 @@
  * A consultancy wants an episode. A bakery wants fifteen vertical seconds and
  * nothing else. The desk had one answer to a question with eight.
  *
- * Carli, 11 September 2026: "dalk is 'n podcast styl soms die voordeel, ander
+ * The owner, 11 September 2026: "dalk is 'n podcast styl soms die voordeel, ander
  * kere weer kort videos, dalk 'n explainer video, dalk net 'n liedjie met 'n
  * foto... Die advert funksie dink ek gaan baie mense attract as dit diepte
  * het en die moeite werd is."

@@ -4,7 +4,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Dit sal goed wees dat daar twee ekstra rooi lyne is
+ * The owner, 4 October 2026: *"Dit sal goed wees dat daar twee ekstra rooi lyne is
  * waar mens 'n stuk kan uit cut, en 'n funksie om bloot net waar die curser is
  * te split. Dan ook die oomblik wanneer 'n mens 'n stuk uit cut moet die video
  * wat verder is die gaping toe maak en terug spring. Hier is die magneet
@@ -227,7 +227,7 @@ ok('and the lines are put away once their span has been cut',
 
 /* ── The caption's own lane ────────────────────────────────────────────
 
-   Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê ...
+   The owner, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê ...
    Dit kan nie die hele video bar vol wees nie, want teks is gewoonlik net daar
    vir gedeeltes van 'n video."* */
 
@@ -264,7 +264,7 @@ ok('  and a shot shorter than that still gives the caption the whole of it',
 
 /* ── Sliding a caption, which is where the runaway was ──────────────────
 
-   Carli, 4 October 2026: *"Al haal ek die magnet af spring die teks nogsteeds
+   The owner, 4 October 2026: *"Al haal ek die magnet af spring die teks nogsteeds
    rond asof die magnet aan is."* It was not the magnet — there is no magnet on
    that drag, which is why switching it off changed nothing.
 
@@ -308,7 +308,7 @@ ok('  and at the start, the same way',
 
 /* ── When the words are up, asked once and answered once ───────────────────
 
-   Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+   The owner, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
    hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
 
    She had dragged a caption's block in to half its clip and the room went on
@@ -365,7 +365,7 @@ ok('  and the preview is gated on the answer, not merely computing it',
 
 /* ── Room to run past its own shot ─────────────────────────────────────────
 
-   Carli, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As hy
+   The owner, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As hy
    op sy eie tydlyn is moet hy ruimte hê om verby 'n ander video te kan
    stretch."*
 

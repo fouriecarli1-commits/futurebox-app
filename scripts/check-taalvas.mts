@@ -1,7 +1,7 @@
 /**
  * No Afrikaans typed into the English screen.
  *
- * Carli, 12 October 2026: *"Kyk asb ook die foute wat antigravity gemaak het,
+ * The owner, 12 October 2026: *"Kyk asb ook die foute wat antigravity gemaak het,
  * deur afrikaans in 'n engelse engine te sit. Toets elke kamer se taal, daar
  * is afrikaans in die engelse window by cubed class."*
  *

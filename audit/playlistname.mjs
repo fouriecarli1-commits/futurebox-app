@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"By playlist in channel. Wanneer mens 'n new
+ * The owner, 4 October 2026: *"By playlist in channel. Wanneer mens 'n new
  * playlist add, dan moet daar darem 'n button wees wat sê rename."*
  *
  * ── Why a probe and not a source rule ────────────────────────────────────
@@ -43,7 +43,7 @@ const bar = p.locator('nav[aria-label]').first();
 await bar.locator('button').filter({ hasText: 'Channel' }).first().click();
 await p.waitForTimeout(1500);
 
-/* Every card in this app opens folded — Carli asked for that months ago, so
+/* Every card in this app opens folded — the owner asked for that months ago, so
    a room reads as its own table of contents. The playlists are inside one, so
    the heading has to be pressed before there is anything to press inside. */
 await p.locator('button[aria-expanded]').filter({ hasText: 'Playlists' }).first()

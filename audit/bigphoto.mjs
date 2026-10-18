@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, twice: "die laai jou eie foto op in shot werk steeds nie. Bladsy is
+ * The owner, twice: "die laai jou eie foto op in shot werk steeds nie. Bladsy is
  * wit." `audit/frame.mjs` already attaches a picture and has always passed,
  * which is how the fault survived two reports — it attaches a **one-pixel
  * PNG**. Everything works at one pixel. Nothing about that file exercises the

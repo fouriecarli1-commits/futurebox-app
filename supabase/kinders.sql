@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- The child's allowance, enforced where the money is
 --
--- Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+-- the owner, 9 October 2026: *"Let the parent give an allowance on an opening
 -- page."*
 --
 -- ── Why this is a table and not a number in the browser ─────────────────

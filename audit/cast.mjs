@@ -238,7 +238,7 @@ check('pressing them selects them', (await face.getAttribute('aria-pressed')) ==
    memory the tab gets killed for. So this probe has been failing on a
    correct room, and its three red lines were the first thing anybody saw
    when they ran it — which is worse than no probe, because it points at
-   the wrong half of a room Carli has reported three times.
+   the wrong half of a room the owner has reported three times.
 
    The reference that actually goes to the engine is the one the desk
    holds, and until now nothing drew it, so there was nothing to measure.

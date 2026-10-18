@@ -3,7 +3,7 @@
  *
  * ── The report ───────────────────────────────────────────────────────────
  *
- * Carli, 18 September 2026, the Stems desk in the Pro Booth, with the help
+ * The owner, 18 September 2026, the Stems desk in the Pro Booth, with the help
  * panel running off the right-hand edge of the phone: *"Hierdie een
  * description is van die bladsy af."*
  *

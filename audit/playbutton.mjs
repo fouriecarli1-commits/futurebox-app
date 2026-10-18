@@ -95,7 +95,7 @@ const measured = await p.evaluate(() => {
     if (fill.length < 3 || glyph.length < 3) continue;
     const a = lum(fill), bb = lum(glyph);
     out.push({
-      fill: alpha > 0.05 ? style.backgroundColor : `behind: rgb(${behind(el.parentElement).join(', ')})`,
+      fill: alpha > 0.05 ? `rgb(${fill.join(', ')})` : `behind: rgb(${behind(el.parentElement).join(', ')})`,
       glyph: getComputedStyle(el.querySelector('svg')).color,
       ratio: Math.round(((Math.max(a, bb) + 0.05) / (Math.min(a, bb) + 0.05)) * 100) / 100,
     });

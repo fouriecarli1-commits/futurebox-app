@@ -6,7 +6,7 @@
  *
  * ── What this is, and what it is not ─────────────────────────────────────
  *
- * Carli, 24 September 2026, after I pointed at the long-shot board and called
+ * The owner, 24 September 2026, after I pointed at the long-shot board and called
  * it an editor: *"Jy sê ons het een, maar ek vermoed jy meen die long shot
  * funksie. wat ek bedoel is 'n editing program soos 'n video editor lyk amper
  * soos die probooth. Waar jy tydlyne het, asook kan jy filters apply en
@@ -240,7 +240,7 @@ const PER_SECOND = 40;
 /**
  * And how few it may shrink to before the strip scrolls instead.
  *
- * Carli, 30 September 2026: *"video desk se grootte uit preporsie is. Die hele
+ * The owner, 30 September 2026: *"video desk se grootte uit preporsie is. Die hele
  * skerm slide by ver links en regs … Dit is net die probooth wat ruimte en
  * beweging moet hê."*
  *
@@ -317,7 +317,7 @@ function penned(spot: Spot): Spot {
 /**
  * Where an align button puts a thing's CENTRE, on one axis.
  *
- * Carli, 2 October 2026. What an align control does, wherever it appears, is
+ * The owner, 2 October 2026. What an align control does, wherever it appears, is
  * move an element to an edge or to the middle on ONE axis and leave the other
  * where it was — and that is the behaviour somebody wants: "put it at the top"
  * should not also drag it sideways into the middle.
@@ -496,7 +496,7 @@ function seconds(value: number): string {
  *
  * ── Why the swatch is the colour and not a label ─────────────────────────
  *
- * Carli asked for *"'n goeie variety van kleur keuses"*. Twenty named buttons
+ * The owner asked for *"'n goeie variety van kleur keuses"*. Twenty named buttons
  * is a list to read; twenty filled circles is a palette to look at, and the
  * eye finds the one it wants before it has read anything. The name is still
  * there for a screen reader and on hover, which is where a name belongs when
@@ -608,7 +608,7 @@ export default function VideoEditor({
   /**
    * The thing you talk to, handed in rather than built here.
    *
-   * Carli, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
+   * The owner, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
    * pop."* Everywhere else in the studio it is the third pane of a scrolling
    * page and that is right. This room does not scroll — it is a screen with a
    * bar at its foot — so a pane below it was a second screenful nobody ever
@@ -628,7 +628,7 @@ export default function VideoEditor({
    * while she is looking at a different thing entirely, and the bar is missing
    * from the door and from every tab she reaches through it.
    *
-   * Carli, 4 October 2026: *"Die res van die app se harde buttons onder het
+   * The owner, 4 October 2026: *"Die res van die app se harde buttons onder het
    * verdwyn seker toe jy die nuwe video kamer gebou het."* She was right about
    * the cause as well as the symptom.
    */
@@ -638,7 +638,7 @@ export default function VideoEditor({
   const [edit, setEdit] = useState<Edit>(NOTHING);
   /* ── The room takes the whole screen ──────────────────────────────────
  
-     Carli, 4 October 2026: *"Daai onderste harde bar van die hele app moet weg
+     The owner, 4 October 2026: *"Daai onderste harde bar van die hele app moet weg
      wees binne die kamer, dan moet die kamer se knoppies in daai spasie wees en
      die hele kamer moet groter wees."*
  
@@ -663,7 +663,7 @@ export default function VideoEditor({
 
   /* ── How tall the clock is, which she can change ──────────────────────
 
-     Carli, 4 October 2026: *"Ek sal dit ook like as mens die tydlyn se hoogte
+     The owner, 4 October 2026: *"Ek sal dit ook like as mens die tydlyn se hoogte
      kan verstel, menend dit vir oomblikke groter kan drag sodat mens die
      tydlyn mooi kan sien wanneer mens edit. En dan weer kleiner kan maak
      wanneer mens die video prent weer beter wil sien."*
@@ -698,7 +698,7 @@ export default function VideoEditor({
   /**
    * How tall a sound lane is, which follows the picture lane.
    *
-   * Carli asked for the clock's height to be hers; a sound lane that stayed 40
+   * The owner asked for the clock's height to be hers; a sound lane that stayed 40
    * pixels while the picture lane grew to 180 would be a wave she still cannot
    * read, which is the thing she wanted the height FOR. So it grows with it —
    * at a share, because a waveform needs less room than a row of thumbnails
@@ -800,7 +800,7 @@ export default function VideoEditor({
 
   /* ── Which lane the cutting controls are aimed at ───────────────────────
 
-     Carli, 5 October 2026: *"Die sound tracks onder videos moet ook geselect
+     The owner, 5 October 2026: *"Die sound tracks onder videos moet ook geselect
      kan word, sodat mens daardie tyd lyne ook kan split. Huidiglik kan mens
      nie die musiek tydlyne select nie."*
 
@@ -818,7 +818,7 @@ export default function VideoEditor({
 
   /* ── Solo and mute, the pair every desk has ─────────────────────────────
 
-     Carli, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
+     The owner, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
      mute, net soos in probooth die s, m."*
 
      Drawn here as one component rather than twice inline, because the two
@@ -992,7 +992,7 @@ export default function VideoEditor({
 
   /* ── Starting over ──────────────────────────────────────────────────────
 
-     Carli, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,
+     The owner, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,
      new project, om die huidige project weg te vat en met 'n nuwe een te
      begin."*
 
@@ -1008,7 +1008,7 @@ export default function VideoEditor({
 
   /* ── Whether she has said the brought-in material is hers to use ─────────
 
-     Carli, 5 October 2026: *"Copyright check for export."*
+     The owner, 5 October 2026: *"Copyright check for export."*
 
      Held here and not on the edit, and not remembered between films: it is a
      statement about THIS film on THIS day, and a tick that survived a new
@@ -1030,7 +1030,7 @@ export default function VideoEditor({
 
   /* ── The project, kept between visits ───────────────────────────────────
 
-     Carli, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
+     The owner, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
      perongeluk back gedruk en toe ek terug gaan was die projek weg."*
 
      The edit lived in React state and nowhere else, so the phone's own Back
@@ -1045,7 +1045,7 @@ export default function VideoEditor({
   const [opening, setOpening] = useState(true);
   const [kept, setKept] = useState<'full' | null>(null);
   /* A read that could not happen, which is not the same as nothing kept.
-     Carli, 5 October 2026: *"Toe ek terug na die editor gaan is dit ook nie
+     The owner, 5 October 2026: *"Toe ek terug na die editor gaan is dit ook nie
      meer daar nie."* `loadFilm` used to answer the same `null` for both, so
      the room opened empty on a bad read and then saved that empty clock over
      the real film — taking the material with it, because the write and the
@@ -1141,13 +1141,13 @@ export default function VideoEditor({
 
   /* ── Your own mark on the film ──────────────────────────────────────────
  
-     Carli asked for "om 'n item in te sit". The useful version of that, and
+     The owner asked for "om 'n item in te sit". The useful version of that, and
      the one that needs no engine, is a logo: `stitch.ts` has painted a mark
      into the corner of every frame since September and `logomark.ts` loads
      it. Nothing new is being built here — it is being reached.
  
      The picture and every setting of it are on the `Edit` since 15 October
-     2026 — Carli: *"Kyk mooi of elke funksie in ... video editor ... werk."*
+     2026 — the owner: *"Kyk mooi of elke funksie in ... video editor ... werk."*
      They were room state, so her logo was gone every time she came back to
      the project and a drag of it could not be taken back. What stays here is
      the DECODED image, because `cutFrom` is pure and synchronous and loading
@@ -1204,7 +1204,7 @@ export default function VideoEditor({
      words' three are on the piece, because a caption is a piece's caption. */
   /* ── What this film will cost, worked out as she builds it ──────────────
 
-     Carli, 3 October 2026: *"wanneer die video klaar is, en hulle op die export
+     The owner, 3 October 2026: *"wanneer die video klaar is, en hulle op die export
      knoppie druk dan wys daar die hoeveelheid krediete, en hulle moet dan
      confirm of hulle wil voortgaan."*
 
@@ -1234,7 +1234,7 @@ export default function VideoEditor({
 
   /* ── What is already in her channel ──────────────────────────────────────
 
-     Carli, 4 October 2026: *"die button wat sê bring it in, or choose from
+     The owner, 4 October 2026: *"die button wat sê bring it in, or choose from
      channel"*.
 
      `null` is "not asked yet" and `[]` is "asked, and there is nothing" —
@@ -1375,7 +1375,7 @@ export default function VideoEditor({
 
   /* ── Whether the words are up where the playhead is standing ───────────
 
-     Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+     The owner, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
      hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
 
      She had dragged a caption in to half its clip and this room went on
@@ -1468,7 +1468,7 @@ export default function VideoEditor({
   const wanted = useRef<number | null>(null);
   const viewer = useRef<HTMLVideoElement | null>(null);
   /* ── Before and after, over the film ───────────────────────────────
-     Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
+     The owner, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
      wat oor die prent slide om te wys hoe dit gelyk het."* Where the line
      is, as a share across the player; null when it is not shown. */
   const [compare, setCompare] = useState<number | null>(null);
@@ -1535,7 +1535,7 @@ export default function VideoEditor({
 
   /* ── The picture's size, measured, and zoom multiplies it ───────────────
 
-     Carli, 14 October 2026: "Die dimensies van zoom op video editor is nie
+     The owner, 14 October 2026: "Die dimensies van zoom op video editor is nie
      reg nie. dit laat nie toe om gradually te zoom nie, plus moet die editing
      screen vir al op die rekenaar reeds groot wees en voller."
 
@@ -1689,7 +1689,7 @@ export default function VideoEditor({
 
   /* ── The keyboard, as every editor has it ───────────────────────────────
 
-     Carli, 14 October 2026: "Die keyboard shortcuts vir sekere goed moet ook
+     The owner, 14 October 2026: "Die keyboard shortcuts vir sekere goed moet ook
      kan werk, as ek 'n text wil delete, dan moet ek die delete knoppie kan
      druk, of ctrl c en ctrl v." Delete takes the picked shot out, Ctrl+C and
      Ctrl+V copy it, Ctrl+X cuts it, Ctrl+D doubles it, S splits at the
@@ -1725,7 +1725,7 @@ export default function VideoEditor({
 
   /* ── The two red lines, and where they stick ──────────────────────────
 
-     Carli, 4 October 2026: *"Hier is die magneet funksie baie belangrik."*
+     The owner, 4 October 2026: *"Hier is die magneet funksie baie belangrik."*
 
      The points are every cut in the film, both ends and the playhead — see
      `pointsOf`. The reach is the Pro Booth's twelve pixels converted to
@@ -1819,7 +1819,7 @@ export default function VideoEditor({
 
   /* ── The song, under the preview ────────────────────────────────────────
 
-     Carli, 5 October 2026: *"Wanneer ek die musiek tydlyn in sit en ek druk
+     The owner, 5 October 2026: *"Wanneer ek die musiek tydlyn in sit en ek druk
      play, dan hoor mens nie die klank binne die video nie."*
 
      The bed was mixed in `stitch.ts` and nowhere else, so it existed only in
@@ -1859,7 +1859,7 @@ export default function VideoEditor({
     a.muted = !on.music;
     /* ── And it steps back while a shot is speaking ───────────────────
 
-       Carli, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
+       The owner, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
        sagter gaan elke keer wanneer die praat stem in kom."*
 
        The same multiplication the renderer does, against the same flag — a
@@ -2016,7 +2016,7 @@ export default function VideoEditor({
   const [shotBusy, setShotBusy] = useState<'' | 'draw' | 'move'>('');
   /* ── The frame the clip has to arrive at ───────────────────────────────
 
-     Carli sent a Gemini conversation on 9 October 2026 naming what Google's
+     The owner sent a Gemini conversation on 9 October 2026 naming what Google's
      models can do, and *"eerste/laaste raam-instellings"* was in it. The Veo
      call had sent the first frame since the day it was written and never the
      last — so the field was unused, and the thing it buys was not on offer.
@@ -2034,7 +2034,7 @@ export default function VideoEditor({
   const [drawInto, setDrawInto] = useState<'start' | 'end'>('start');
   /* ── The cast, as pictures the engine draws FROM ───────────────────────
 
-     Carli, 9 October 2026: *"al die spesiale funksies van google moet ook
+     The owner, 9 October 2026: *"al die spesiale funksies van google moet ook
      daar in wees."*
 
      The cast has existed since September — people and products she has put
@@ -2096,11 +2096,11 @@ export default function VideoEditor({
 
   /* ── A clip, tapped ─────────────────────────────────────────────────────
 
-     Carli, 14 October 2026: when a clip is tapped, options pop up — cut,
+     The owner, 14 October 2026: when a clip is tapped, options pop up — cut,
      undo, and an AI wand to change the frame. The menu sits over the strip
      where she tapped, drawn on the page itself (a portal) because the strip
      scrolls sideways and would clip anything hanging off it. */
-  /* The brand pack, at Your mark (Carli, 14 October 2026: "Open your brand
+  /* The brand pack, at Your mark (The owner, 14 October 2026: "Open your brand
      pack"). The same pack the adverts desk keeps, opened here, and its logo
      put on the film in one press. */
   const [kit, setKit] = useState<Kit | null>(null);
@@ -2469,7 +2469,7 @@ async function smallerFrame(url: string): Promise<string> {
 
         /* ── The lyrics, if the file brought any ─────────────────────
 
-           Carli, 8 October 2026, on a song she had just made: *"wat dit
+           The owner, 8 October 2026, on a song she had just made: *"wat dit
            awesome maak dat dit dadelik 'n video en album art saam create wat
            ek vir ons engine ook sal wil hê."*
 
@@ -2606,7 +2606,7 @@ async function smallerFrame(url: string): Promise<string> {
 
      The edit as it was when a gesture STARTED, held here until it ends.
  
-     Carli will never read this, and it is the reason a slider in this room is
+     The owner will never read this, and it is the reason a slider in this room is
      usable at all. A `<input type="range">` fires `change` on every pixel it
      is dragged across, and every one of those used to go through `commit`,
      which files a history step. One pull of the size slider was therefore
@@ -2817,7 +2817,7 @@ async function smallerFrame(url: string): Promise<string> {
 
   /* ── Dragging a fade, off the timeline ─────────────────────────────────
 
-     Carli, 30 September 2026: *"Op die tydlyn kan mens aan die begin en einde
+     The owner, 30 September 2026: *"Op die tydlyn kan mens aan die begin en einde
      van elke tydlyn 'n trek lyntjie in sit wat die in en uitfade moontlik maak
      om te trek."*
 
@@ -2986,7 +2986,7 @@ async function smallerFrame(url: string): Promise<string> {
 
   /* ── Dragging a caption along its own lane ──────────────────────────────
 
-     Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê.
+     The owner, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê.
      Dit moet bo op die video tydlyn kom en dan ook gedrag kan word om die
      lengte van die teks oor die video te bepaal."*
 
@@ -3013,7 +3013,7 @@ async function smallerFrame(url: string): Promise<string> {
     const grabbedAt = (event.clientX - box.left) / perSecond;
     /* ── Where it was when she grabbed it, read once ──────────────────────
 
-       Carli, 4 October 2026: *"Al haal ek die magnet af spring die teks
+       The owner, 4 October 2026: *"Al haal ek die magnet af spring die teks
        nogsteeds rond asof die magnet aan is."*
 
        It was not the magnet — there is no magnet on this drag at all, which is
@@ -3089,7 +3089,7 @@ async function smallerFrame(url: string): Promise<string> {
 
   /* ── Resizing by the corner, on the picture ─────────────────────────────
 
-     Carli, 30 September 2026: *"dit moet ook gemanipuleer moet kan word op die
+     The owner, 30 September 2026: *"dit moet ook gemanipuleer moet kan word op die
      skerm van die video, deur dit rond te kan skuif, en groter en kleiner te kan
      maak."*
 
@@ -3182,7 +3182,7 @@ async function smallerFrame(url: string): Promise<string> {
       }
       /* ── Paid for here, with the film already in hand ────────────
 
-         Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk
+         The owner, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk
          is wat krediete werd is."*
 
          After the render and before the film is handed over, which is the
@@ -3197,7 +3197,7 @@ async function smallerFrame(url: string): Promise<string> {
       try {
         /* ── The token, without which this was never payable ──────────
 
-           Carli, 5 October 2026, with a photograph: *"Wanneer ek die video
+           The owner, 5 October 2026, with a photograph: *"Wanneer ek die video
            wil export sê dit so. Al is ek in geteken"* — over "Sign in first
            — credits belong to an account."
 
@@ -3248,7 +3248,7 @@ async function smallerFrame(url: string): Promise<string> {
       if (made_.current) URL.revokeObjectURL(made_.current);
       made_.current = URL.createObjectURL(result.blob);
       setMade({ url: made_.current, blob: result.blob, ext: result.ext, seconds: result.seconds });
-      /* Carli, 14 October 2026: "Ek het op video gese put it together to het
+      /* The owner, 14 October 2026: "Ek het op video gese put it together to het
          niks gesave nie" — and then, "Toemaar ek het dit gekry". It was made;
          it was further down the room than she was looking. So the finished
          film is brought into view the moment it exists. */
@@ -3340,7 +3340,7 @@ async function smallerFrame(url: string): Promise<string> {
       <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: INK_DIM }}>
         {t('edit.shotTitle', 'Make a shot')}
       </div>
-      {/* Said as a box to type in (Carli, 14 October 2026: "Hierdie is nogal
+      {/* Said as a box to type in (The owner, 14 October 2026: "Hierdie is nogal
           deceiving. Die tik blok moet iewers sê type here. En die suggestions
           vir ai capabilities moet ook daar binne genoem word.") The example
           read as words already written; now the label says to type, the
@@ -3646,7 +3646,7 @@ async function smallerFrame(url: string): Promise<string> {
   return (
     /* ── One room, in the shape she drew ──────────────────────────────────
 
-       Carli, 4 October 2026: *"Die tydlyne moet reg onder die video prent wees.
+       The owner, 4 October 2026: *"Die tydlyne moet reg onder die video prent wees.
        … Dit is funksioneel nes soos die probooth. Dit moet lyk soos 'n editing
        kamer. Daar moet nie allerhande buttons wees soos daar nou is nie, alles
        moet binne een kamer wees en met icons. … Die oorhoofse editing funksies
@@ -3677,7 +3677,7 @@ async function smallerFrame(url: string): Promise<string> {
          did, so held sideways it stacked that rail at the BOTTOM of a
          column — neither the bar nor the rail but a squeezed ruin of both.
 
-         Found on 9 October while answering Carli's *"Die website moet nie
+         Found on 9 October while answering the owner's *"Die website moet nie
          lyk soos 'n foon app nie"*, because a desk needs exactly the same
          row and would have fallen into exactly the same hole.
          `check:lessenaar` now holds it. */
@@ -3726,7 +3726,7 @@ async function smallerFrame(url: string): Promise<string> {
       <div className="flex min-w-0 min-h-0 flex-1 flex-col overflow-hidden">
       {/* ── The one press that spends, where every editor puts it ─────────
 
-          Top right, above the picture. Carli's screenshots all have it there
+          Top right, above the picture. The owner's screenshots all have it there
           and so does every editor she sent: the thing that finishes the work
           is the thing you reach for last, and it is the one control that
           should never be behind a drawer.
@@ -3736,7 +3736,7 @@ async function smallerFrame(url: string): Promise<string> {
           behind. The bench still holds the shape, the fades and the bill; this
           is the way in to them. */}
       {/* ── One slim row across the top ─────────────────────────────────
-          Carli, 13 and 14 October 2026: *"Video editor het harde funksies en
+          The owner, 13 and 14 October 2026: *"Video editor het harde funksies en
           buttons bo op die page wat al die plek vat dan kan mens die actual
           studio nie sien nie."* On a phone this bar was four rows: a logo and
           a badge, two pills that opened other benches, a 9:16/16:9 switch
@@ -3765,7 +3765,7 @@ async function smallerFrame(url: string): Promise<string> {
               {one.says}
             </button>
           ))}
-          {/* Typed sizes, up here where the shape is chosen (Carli, 14
+          {/* Typed sizes, up here where the shape is chosen (The owner, 14
               October 2026: "Hier bo moet ook custom sizes wees wat mense
               self in tik"). The same `custom` shape and `size` the film
               bench has always set; `shapeOf` holds the sides in range. */}
@@ -3896,7 +3896,7 @@ async function smallerFrame(url: string): Promise<string> {
                 here and the frame in the finished film cannot disagree. */}
             {/* ── The picture, with the mark on it where it will really be ──
 
-                Carli, 30 September 2026: *"Mens moet die logo foto fisies moet
+                The owner, 30 September 2026: *"Mens moet die logo foto fisies moet
                 kan skuif."*
 
                 The mark is drawn over the viewer rather than beside it, because
@@ -3918,7 +3918,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── Zooming the picture ────────────────────────────────────────
 
-                Carli, 30 September 2026: *"mens moet op die prent van die video
+                The owner, 30 September 2026: *"mens moet op die prent van die video
                 kan kliek en in en uit zoom."*
 
                 This zooms the PREVIEW and not the film. It is the magnifying
@@ -3947,7 +3947,7 @@ async function smallerFrame(url: string): Promise<string> {
               >
                 &minus;
               </button>
-              {/* Carli, 14 October 2026: "Die zoom in video editor moet dalk
+              {/* The owner, 14 October 2026: "Die zoom in video editor moet dalk
                   'n slider hê dat mens gradually kan zoom." A slider beside
                   the two buttons: the buttons still land on whole numbers,
                   and the slider goes anywhere between in tenths. */}
@@ -3993,7 +3993,7 @@ async function smallerFrame(url: string): Promise<string> {
                 aspectRatio: `${shape.width} / ${shape.height}`,
                 /* ── Capped, so the picture always fits the room ─────────────
 
-                   Carli, 4 October 2026, with screenshots of a phone editor
+                   The owner, 4 October 2026, with screenshots of a phone editor
                    open: the picture sits in a band at the top and the clock and
                    the controls get the rest of the screen.
 
@@ -4377,7 +4377,7 @@ async function smallerFrame(url: string): Promise<string> {
 
         {/* ── The clock ────────────────────────────────────────────────
 
-            Carli, 29 September: *"dit moet seker ook op 'n tydlyn wees.
+            The owner, 29 September: *"dit moet seker ook op 'n tydlyn wees.
             Die ordentlike editor."*
 
             The first version drew the pieces as blocks in a row, sized by
@@ -4403,7 +4403,7 @@ async function smallerFrame(url: string): Promise<string> {
         ) : edit.pieces.length === 0 ? (
           /* ── What this room is, and the two ways in ────────────────────
 
-              Carli, 4 October 2026: *"Die probooth se opening page het half 'n
+              The owner, 4 October 2026: *"Die probooth se opening page het half 'n
               verduideliking wat hierdie funksie doen. Kan die video editor
               dieselfde hê en dan die button wat sê bring it in, or choose from
               channel."*
@@ -4510,7 +4510,7 @@ async function smallerFrame(url: string): Promise<string> {
                     or three hundred. */}
                 {/* ── The ruler ───────────────────────────────────────────
 
-                    Carli, 4 October 2026: *"die tydlyn moet mooi en netjies lyk
+                    The owner, 4 October 2026: *"die tydlyn moet mooi en netjies lyk
                     nes in probooth."*
 
                     So it is drawn the way the booth's is, and the booth's shape
@@ -4568,7 +4568,7 @@ async function smallerFrame(url: string): Promise<string> {
 
                 {/* ── The words, on a lane above the picture ────────────
 
-                    Carli, 4 October 2026: *"Video editor se teks moet ook sy
+                    The owner, 4 October 2026: *"Video editor se teks moet ook sy
                     eie tydlyn hê. Dit moet bo op die video tydlyn kom en dan
                     ook gedrag kan word om die lengte van die teks oor die
                     video te bepaal. Dit kan nie die hele video bar vol wees
@@ -4583,7 +4583,7 @@ async function smallerFrame(url: string): Promise<string> {
                     stretch rather than its piece's — which is the whole point.
                     Always drawn, even with nothing on it. It used to appear
                     only once a piece had words, which is tidier and is why
-                    Carli said on 4 October — after it was built and pushed —
+                    The owner said on 4 October — after it was built and pushed —
                     that the text still had no lane of its own: with no caption
                     typed there was no lane to see, so nothing told her the
                     lane existed or that a caption could be timed at all.
@@ -4721,7 +4721,7 @@ async function smallerFrame(url: string): Promise<string> {
                       >
                         {/* ── What the shot actually looks like ────────────
  
-                            Carli, 8 October 2026: *"Hoe moontlik is dit om die
+                            The owner, 8 October 2026: *"Hoe moontlik is dit om die
                             video se visuals op die tydlyn te wys? Dit gaan dit
                             makliker maak om te weet waar om te cut ens."*
  
@@ -4770,7 +4770,7 @@ async function smallerFrame(url: string): Promise<string> {
 
                   {/* ── The way to more material, at the end of what there is ──
 
-                      Carli's screenshots all carry one: a square with a plus on
+                      The owner's screenshots all carry one: a square with a plus on
                       it, sitting after the last clip on the strip.
 
                       It is the same door the Bring-it-in bench is, and that is
@@ -5056,7 +5056,7 @@ async function smallerFrame(url: string): Promise<string> {
                   {/* ── It says what it is ──────────────────────────────
 
                       This was a bare ten-pixel line. It worked — the probe
-                      drags it and the clock really changes height — and Carli
+                      drags it and the clock really changes height — and the owner
                       said on 4 October, after it was built and pushed, that
                       the timeline still could not be stretched. She was not
                       wrong about anything except the cause: a handle nobody
@@ -5073,7 +5073,7 @@ async function smallerFrame(url: string): Promise<string> {
 
                 {/* ── The sound, on a lane of its own ──────────────────
 
-                    Carli, 30 September 2026: *"dan moet dit soos die
+                    The owner, 30 September 2026: *"dan moet dit soos die
                     probooth die tydlyne hê, asook vir die klank."*
 
                     Inside the same scrolling strip as the blocks, which is
@@ -5091,7 +5091,7 @@ async function smallerFrame(url: string): Promise<string> {
                     can see rather than six checkboxes to go and open. */}
                 {/* ── The shots' own sound, on a lane of its own ─────────
 
-                    Carli, 4 October 2026: *"Die eie video se klank moet sy eie
+                    The owner, 4 October 2026: *"Die eie video se klank moet sy eie
                     klankbaan hê, en die musiek wat in gebring word moet nog 'n
                     tydlyn wees onder die video se klankbaan. Elke klankbaan
                     moet golwe hê, sodat golwe gematch kan word wanneer
@@ -5210,7 +5210,7 @@ async function smallerFrame(url: string): Promise<string> {
 
                 {/* ── The cursor, over every lane ─────────────────────────
 
-                    Carli, 5 October 2026: *"Daai cursor moet oor die hele
+                    The owner, 5 October 2026: *"Daai cursor moet oor die hele
                     tydlyn strek en ook die klankbane vang en speel."*
 
                     It was drawn inside the picture lane, so it stopped at the
@@ -5231,7 +5231,7 @@ async function smallerFrame(url: string): Promise<string> {
                     dead to the touch. */}
                 {/* ── The two red lines ─────────────────────────────
 
-                    Carli, 4 October 2026: *"Dit sal goed wees dat daar twee
+                    The owner, 4 October 2026: *"Dit sal goed wees dat daar twee
                     ekstra rooi lyne is waar mens 'n stuk kan uit cut."*
 
                     Red, and the only red in this room, because they are the
@@ -5442,7 +5442,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── And out to wherever it is going ───────────────────
 
-                Carli: *"elke kamer moet seker ook 'n konneksie met socials
+                The owner: *"elke kamer moet seker ook 'n konneksie met socials
                 hê, waar hulle hul videos en foto's na social media kan
                 stuur."*
 
@@ -5470,7 +5470,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── And into her channel ──────────────────────────────────
 
-                Carli, 5 October 2026: *"Ek het nou 'n video gemaak op
+                The owner, 5 October 2026: *"Ek het nou 'n video gemaak op
                 editor. Toe ek channel toe gaan is dit nie daar nie."*
 
                 The room was right and so was she. What comes out of here is
@@ -5731,7 +5731,7 @@ async function smallerFrame(url: string): Promise<string> {
           </label>
 
           {/* ── Generators: a shot made out of nothing ─────────────────
-              Carli, 16 October 2026, a desktop editor's Generators: colour,
+              The owner, 16 October 2026, a desktop editor's Generators: colour,
               gradients, test pictures — and moving backgrounds of ours.
               Made on this device and put on the clock as a piece like any
               other. `lib/videogenerators.ts`. */}
@@ -5783,7 +5783,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── Or something already in her channel ──────────────────────
 
-              Carli, 4 October 2026: *"die button wat sê bring it in, or
+              The owner, 4 October 2026: *"die button wat sê bring it in, or
               choose from channel"*.
 
               The opening page sends her here with the list already loading.
@@ -5867,7 +5867,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── Cutting: the playhead, the two lines, and what goes ─────
 
-              Carli, 4 October 2026: *"Dit sal goed wees dat daar twee ekstra
+              The owner, 4 October 2026: *"Dit sal goed wees dat daar twee ekstra
               rooi lyne is waar mens 'n stuk kan uit cut, en 'n funksie om bloot
               net waar die curser is te split. Dan ook die oomblik wanneer 'n
               mens 'n stuk uit cut moet die video wat verder is die gaping toe
@@ -5883,7 +5883,7 @@ async function smallerFrame(url: string): Promise<string> {
             </span>
             {/* ── Which lane the lines are cutting ─────────────────────
 
-                Carli, 5 October 2026: *"Die sound tracks onder videos moet ook
+                The owner, 5 October 2026: *"Die sound tracks onder videos moet ook
                 geselect kan word, sodat mens daardie tyd lyne ook kan split."*
 
                 Said on the panel and not only shown by a ring on the lane:
@@ -6062,7 +6062,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── How it arrives after the piece before it ────────────────
 
-              Carli, 3 October 2026: *"net 'n praktiese video editing en die
+              The owner, 3 October 2026: *"net 'n praktiese video editing en die
               elemente wat moontlik is."* Every join in this room was a hard
               cut until now, which is the most ordinary thing a timeline
               editor has and the most obvious thing ours was missing.
@@ -6084,7 +6084,7 @@ async function smallerFrame(url: string): Promise<string> {
                 <Shuffle className="w-3.5 h-3.5" />
                 {t('edit.join', 'How it comes in')}
               </span>
-              {/* Carli, 16 October 2026, "Kyk ook hoe netjies dit verpak is": every transition
+              {/* The owner, 16 October 2026, "Kyk ook hoe netjies dit verpak is": every transition
                   in its group, each with a little picture of what it does
                   — `JoinToolbox` and `lib/joinbook.ts`. */}
               <JoinToolbox
@@ -6182,7 +6182,7 @@ async function smallerFrame(url: string): Promise<string> {
               )}
             </div>
             {/* ── Sound effects on this shot, and its sound at the transition ──
-                Carli, 16 October 2026, a desktop editor's audio effects and
+                The owner, 16 October 2026, a desktop editor's audio effects and
                 audio transitions. `lib/audiofx.ts`. */}
             {soundOf(piece) && (
               <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorsfxbench>
@@ -6303,7 +6303,7 @@ async function smallerFrame(url: string): Promise<string> {
 
         {bench === 'motion' && piece && (() => {
           /* ── The picture moving ─────────────────────────────────────
-             Carli, 17 October 2026, about another program's motion
+             The owner, 17 October 2026, about another program's motion
              effects: *"Die effects … kan ook cool wees."* A ready-made
              movement, and keyframes of her own on top — both through
              `poseAt`, which the renderer draws with too. */
@@ -6425,7 +6425,7 @@ async function smallerFrame(url: string): Promise<string> {
                 that stay still beat one row that slides — and a look nobody
                 scrolled to is a look nobody knows is there. */}
             {/* As pictures: the meerkat photograph with each look laid on it
-                by the same `filterCss` the render uses. Carli, 17 October
+                by the same `filterCss` the render uses. The owner, 17 October
                 2026: *"Hierdie looks in video editor moet alles foto's wees
                 vir 'n voorbeeld. Alles 'n meerkat."* */}
             <div className="flex flex-wrap gap-1 pb-1">
@@ -6444,7 +6444,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── The dials, under the looks ──────────────────────────────
 
-              Carli, 4 October 2026, after sending seven more screenshots:
+              The owner, 4 October 2026, after sending seven more screenshots:
               *"Om seker te maak al die video editing tools is daar."*
 
               Her Adjust sheet carries about twenty of these. Five of them are
@@ -6532,7 +6532,7 @@ async function smallerFrame(url: string): Promise<string> {
           </div>
 
           {/* ── Effects, under the look and the dials ───────────────────
-              Carli, 16 October 2026, a desktop editor's toolbox: shake,
+              The owner, 16 October 2026, a desktop editor's toolbox: shake,
               glow, light leaks, grain, bars. On this shot only, as many as
               she likes, each with its own strength. `lib/videofx.ts`. */}
           <div className="space-y-2" data-editorfxbench>
@@ -6560,7 +6560,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── A patch of it blurred out ─────────────────────────
 
-              Carli, 8 October 2026: *"Dit laat my dink dat video editor ook 'n
+              The owner, 8 October 2026: *"Dit laat my dink dat video editor ook 'n
               blur funksie nodig het."* So the dial above was renamed Blur and
               its ceiling raised from three pixels to twenty.
 
@@ -6760,7 +6760,7 @@ async function smallerFrame(url: string): Promise<string> {
           <div className="space-y-3">
           {/* ── The film's own lyrics ────────────────────────────────────
 
-              Carli, 8 October 2026: *"wat dit awesome maak dat dit dadelik 'n
+              The owner, 8 October 2026: *"wat dit awesome maak dat dit dadelik 'n
               video en album art saam create wat ek vir ons engine ook sal wil
               hê."*
 
@@ -6888,7 +6888,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── How those words are set ────────────────────────────────
 
-              Carli, 30 September 2026: *"Die teks moet font opsies hê, en
+              The owner, 30 September 2026: *"Die teks moet font opsies hê, en
               dit moet ook gemanipuleer moet kan word op die skerm van die
               video, deur dit rond te kan skuif, en groter en kleiner te kan
               maak."*
@@ -6900,7 +6900,7 @@ async function smallerFrame(url: string): Promise<string> {
             <>
               {/* ── The colour of the words, and what sits behind them ────
 
-                  Carli, 4 October 2026: *"Onthou dat die teks 'n kleur keuse
+                  The owner, 4 October 2026: *"Onthou dat die teks 'n kleur keuse
                   ook moet hê, en 'n keuse van agtergrond vir woorde, 'n
                   square, 'n square met ronde punte, 'n verfkwas. Die
                   agtergrond moet ook kleur keuse hê. Daar moet 'n goeie
@@ -6934,7 +6934,7 @@ async function smallerFrame(url: string): Promise<string> {
 
               {/* ── The edge, which is what keeps them readable ────────────
  
-                  Carli, 9 October 2026: *"daar moet heelwat 'n verskeidenheid
+                  The owner, 9 October 2026: *"daar moet heelwat 'n verskeidenheid
                   van teks opsies wees."* Measuring first found something
                   worse than a short list: words on a film had no outline and
                   no shadow at all, so white letters over a bright sky were
@@ -7068,7 +7068,7 @@ async function smallerFrame(url: string): Promise<string> {
 
               {/* ── Turned, faint, and round ───────────────────────────
 
-                  Carli, 2 October 2026: *"Kyk asb na hierdie, hoe 'n video
+                  The owner, 2 October 2026: *"Kyk asb na hierdie, hoe 'n video
                   editor prakties lyk, asook die elemente wat dit het."* And
                   the day after, correcting me: *"Hierdie is hoe meeste video
                   editing programme lyk."*
@@ -7271,7 +7271,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── Or a sound made right here ──────────────────────────
 
-              Carli, 10 October 2026: *"Ek dink ook video editor, en video desk
+              The owner, 10 October 2026: *"Ek dink ook video editor, en video desk
               kan stem generations hê, noem dit eerder, generate a sound, asook
               'n podcast text tot speech. Dit is tipies iets wat 'n mens daar
               ook sou kon gebruik."*
@@ -7339,7 +7339,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── The music steps back while a shot speaks ──────────────
 
-                Carli, 5 October 2026: *"Dit moet ook die funksie en button in
+                The owner, 5 October 2026: *"Dit moet ook die funksie en button in
                 hê wanneer 'n video praat, dan moet die musiek sagter gaan elke
                 keer wanneer die praat stem in kom."*
 
@@ -7396,7 +7396,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── Faster, slower, and round again ──────────────────────
 
-                Carli, 5 October 2026: *"Op die sound tracks moet mens die
+                The owner, 5 October 2026: *"Op die sound tracks moet mens die
                 spoed van die klank ook kan verstel."* And: *"Duplicate
                 funksie."*
 
@@ -7454,7 +7454,7 @@ async function smallerFrame(url: string): Promise<string> {
                 said here rather than left to be discovered after a render. */}
           {/* ── Reduce noise, named for what it actually does ──────────
 
-              Carli, 5 October 2026: *"daar moet ook 'n reduce noise funksie
+              The owner, 5 October 2026: *"daar moet ook 'n reduce noise funksie
               wees."*
 
               Two filters, on the shots and not on the song: the noise is in
@@ -7628,7 +7628,7 @@ async function smallerFrame(url: string): Promise<string> {
             </label>
             {/* ── Or off the shelf, rather than out of the file manager ────
 
-                Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n
+                The owner, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n
                 foto binne die app te bêrge … Dan wanneer mens video editor
                 gebruik is dit een van die plekke wat geroep word waaruit mens
                 kan kies."*
@@ -7665,7 +7665,7 @@ async function smallerFrame(url: string): Promise<string> {
               <>
               {/* ── And off again ───────────────────────────────────────
 
-                  Carli, 5 October 2026: *"Daar is nie 'n knoppie om 'n logo
+                  The owner, 5 October 2026: *"Daar is nie 'n knoppie om 'n logo
                   uit te haal en te delete nie."*
 
                   A one-way door: the picker put a logo on and nothing took it
@@ -7810,7 +7810,7 @@ async function smallerFrame(url: string): Promise<string> {
           <div className="space-y-4">
             {/* ── Somewhere to start ────────────────────────────
 
-                Carli's list, 7 October 2026: *"Video, etc templates."*
+                The owner's list, 7 October 2026: *"Video, etc templates."*
 
                 On the film bench and above the shape, because that is the
                 order the decisions happen in: a starting point CHOOSES the
@@ -7983,7 +7983,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── The cover ──────────────────────────────────────────────
 
-                Carli, 4 October 2026: *"Daar moet ook 'n opsie wees om 'n
+                The owner, 4 October 2026: *"Daar moet ook 'n opsie wees om 'n
                 cover foto vir die video te screen shot uit die video, of een in
                 te bring wat dan die video se voorblad foto word ook wanneer die
                 video ge-export word."*
@@ -8104,7 +8104,7 @@ async function smallerFrame(url: string): Promise<string> {
 
             {/* ── What the file is written at ────────────────────────────
 
-                Carli, 4 October 2026: *"Die export moet ook 'n keuse van
+                The owner, 4 October 2026: *"Die export moet ook 'n keuse van
                 kwaliteit hê waarin dit export."*
 
                 Two choices, not three. The bitrate is the number that actually
@@ -8208,7 +8208,7 @@ async function smallerFrame(url: string): Promise<string> {
 
           {/* ── The bill, and the press that agrees to it ──────────────────
 
-              Carli, 3 October 2026: *"dan wys daar die hoeveelheid krediete, en
+              The owner, 3 October 2026: *"dan wys daar die hoeveelheid krediete, en
               hulle moet dan confirm of hulle wil voortgaan."*
 
               Itemised rather than a total, and that is the point of it: a
@@ -8307,7 +8307,7 @@ async function smallerFrame(url: string): Promise<string> {
                 <>
                 {/* ── What is in it, and what this app can vouch for ──────
 
-                    Carli, 5 October 2026: *"Copyright check for export."*
+                    The owner, 5 October 2026: *"Copyright check for export."*
 
                     It is not a copyright check and it does not say it is. A
                     real one means fingerprinting against the rights databases

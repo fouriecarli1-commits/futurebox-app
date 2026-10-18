@@ -3,7 +3,7 @@
  *
  * ── What this holds, and why each one is here ────────────────────────────
  *
- * Carli's technique, 9 October 2026: write the lyrics the way an English
+ * The owner's technique, 9 October 2026: write the lyrics the way an English
  * speaker would have to read them, because the vocal model was trained on
  * English and does not know Afrikaans spelling. Her example is the sharpest
  * assertion in this file — if her own sentence does not come out as she

@@ -3,7 +3,7 @@
  *
  * ── The rule, in her words ───────────────────────────────────────────────
  *
- * Carli, 30 September 2026: *"video desk se grootte uit preporsie is. Die
+ * The owner, 30 September 2026: *"video desk se grootte uit preporsie is. Die
  * hele skerm slide by ver links en regs. Maak seker elke kamer is reg. Dit is
  * net die probooth wat ruimte en beweging moet hê."*
  *

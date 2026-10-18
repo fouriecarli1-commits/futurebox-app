@@ -804,7 +804,7 @@ export const STRINGS: Dict = {
      lead paragraph. Everybody here is signed in and came on purpose. */
   /* The heading says whose work it is, not only what it is.
 
-     Carli, twice in one message: *"Ek voel nogsteeds die hoofopskrif moet
+     The owner, twice in one message: *"Ek voel nogsteeds die hoofopskrif moet
      sê, Album art by real artists"* and *"Jy het ook nie by gesê: Album
      art by real artists nie."* Twice, because I had put it in the line
      UNDER the heading and counted that as done. The heading is the one
@@ -824,7 +824,7 @@ export const STRINGS: Dict = {
      thing a buyer does is press buy. */
 
   /* ── The R50 buy-in, per piece ───────────────────────────────
-     Carli: *"elke persoon sal 'n R50 by in moet hê om te mag bee, want
+     The owner: *"elke persoon sal 'n R50 by in moet hê om te mag bee, want
      anders kan enige random mens die prys opstoot."*
 
      Per piece, not once for the room. I built it once-off and she
@@ -851,7 +851,7 @@ export const STRINGS: Dict = {
     af: "Die databasis kort:",
   },
   /* ── Saying no, from either chair ──────────────────────────────
-     Carli: *"Op album art moet die kunstenaar ’n aanbod kan afkeer, asook
+     The owner: *"Op album art moet die kunstenaar ’n aanbod kan afkeer, asook
      die koper. Daardie knoppies is nie daar nie."* `declined` had been a
      state on the table since it was written and nothing could set it, so a
      commission had exactly one ending. */
@@ -891,7 +891,7 @@ export const STRINGS: Dict = {
   },
   /* ── "Back" was the word, and it was the wrong one ───────────────
 
-     Carli, 8 October 2026, asking for a video editor *"asook ’n undo en
+     The owner, 8 October 2026, asking for a video editor *"asook ’n undo en
      redo"* — which it has had since September, on the surface, under the
      clock, with the arrow icons.
 
@@ -963,7 +963,7 @@ export const STRINGS: Dict = {
 
      The rail called this room "Cutting room / Snykamer". Its own heading, right
      at the top of the screen somebody is standing in, said "Video editor /
-     Video-redigeerder". Carli, twice: *"Die video editor se naam het steeds nie
+     Video-redigeerder". The owner, twice: *"Die video editor se naam het steeds nie
      verander nie."* I went looking in the app's metadata both times. It was
      here.
 
@@ -972,7 +972,7 @@ export const STRINGS: Dict = {
 
      ── And on 4 October it turned out I had unified it onto the wrong one ──
 
-     Carli, asked directly which name she meant: *"Nee, Video Editor."*
+     The owner, asked directly which name she meant: *"Nee, Video Editor."*
 
      She had said *"Die video editor se naam het steeds nie verander nie"* four
      times, and all four times I read it as "this room has two names" and fixed
@@ -1185,7 +1185,7 @@ export const STRINGS: Dict = {
 
   /* ── The room's opening page ───────────────────────────────────────────
 
-     Carli, 4 October 2026: *"Die probooth se opening page het half 'n
+     The owner, 4 October 2026: *"Die probooth se opening page het half 'n
      verduideliking wat hierdie funksie doen. Kan die video editor dieselfde
      hê en dan die button wat sê bring it in, or choose from channel"*.
 
@@ -1301,7 +1301,7 @@ export const STRINGS: Dict = {
      film on these timings is entitled to know whether they were measured. */
   /* ── What the reader found, lifted onto the picture ──────────────────
 
-     Carli, 8 October 2026: *"Find the words kry die woorde, maar van daar af
+     The owner, 8 October 2026: *"Find the words kry die woorde, maar van daar af
      moet mens die woorde kan edit en rond skuif, of delete."* Each line is
      its own words now, so each can be dragged on its own. */
   "post.grabbedOne": {
@@ -1350,7 +1350,7 @@ export const STRINGS: Dict = {
   },
   /* ── The layer sheet ───────────────────────────────────────────────────
 
-     Carli, 2 October 2026, having sent two-and-thirty screens of a video
+     The owner, 2 October 2026, having sent two-and-thirty screens of a video
      editor: *"Kyk asb na hierdie, hoe 'n video editor prakties lyk, asook die
      elemente wat dit het."* And the day after, the part that matters more:
      *"Hierdie is hoe meeste video editing programme lyk."*
@@ -1448,7 +1448,7 @@ export const STRINGS: Dict = {
   "account.build": { en: "Version", af: "Weergawe" },
   /* ── The bill in the cutting room ──────────────────────────────────────
 
-     Carli, 3 October 2026: *"dan wys daar die hoeveelheid krediete, en hulle
+     The owner, 3 October 2026: *"dan wys daar die hoeveelheid krediete, en hulle
      moet dan confirm of hulle wil voortgaan."*
 
      Itemised and not a total, because a number on its own is something to
@@ -1485,7 +1485,7 @@ export const STRINGS: Dict = {
 
   /* ── The cutting room's bar ────────────────────────────────────────────
 
-     Carli, 4 October 2026: *"alles moet binne een kamer wees en met icons …
+     The owner, 4 October 2026: *"alles moet binne een kamer wees en met icons …
      Die oorhoofse editing funksies moet heel onder op die hoof bar wees en moet
      vas wees soos in die probooth en dan van daar af wees funksies op pop
      waarvan mens kan kies."*
@@ -1813,12 +1813,12 @@ export const STRINGS: Dict = {
   },
 
   /* ── What this room is ─────────────────────────────────────────────────
-     Carli: *"Die bladsy moet ook beskryf wat hierdie is, dit is nie net
+     The owner: *"Die bladsy moet ook beskryf wat hierdie is, dit is nie net
      album art nie, dit is album art created by real artists, human made."*
      One line and not a hero paragraph: made by a person, not a machine,
      sold once, R280.
 
-     "Created", never the narrower word. Carli, twice: *"Die woorde moet
+     "Created", never the narrower word. The owner, twice: *"Die woorde moet
      ook nie sê painted by hand nie, maar created by hand (omdat daar
      verskillende mediums is)."* A painter is one kind of artist.
      Somebody working in ink, collage, photography or thread reads the
@@ -1876,7 +1876,7 @@ export const STRINGS: Dict = {
   "art.shelf": { en: "Your shelf", af: "Jou rak" },
 
   /* ── An artist's own profile ───────────────────────────────────────────
-     Carli: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
+     The owner: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
      in, want een kunstenaar kan nogal baie album art hê."* */
   "art.seeAll": { en: "See all", af: "Sien al" },
   "art.worksHere": { en: "works in the crate", af: "werke in die kis" },
@@ -1902,7 +1902,7 @@ export const STRINGS: Dict = {
   "art.isIn": { en: "On the wall", af: "Op die muur" },
   "art.waitingRoom": { en: "Waiting", af: "Wag" },
   "art.houseArtist": { en: "no account", af: "geen rekening" },
-  "art.theyGet": { en: "They receive", af: "Hulle ontvang" },
+  "art.theyGet": { en: "They are paid", af: "Hulle word betaal" },
   /* The variable's NAME is deliberately not in here. `check:security`
      keeps every secret's name out of the client bundle, and it caught this
      string on the first build after it was written — correctly: the rule is
@@ -1916,7 +1916,7 @@ export const STRINGS: Dict = {
 
   /* One piece, raised over the wall as a sheet. */
   /* ── The post studio ───────────────────────────────────────────────────
-     Carli: *"Dit is vir plasings vir sosiale media en kan ook in die video
+     The owner: *"Dit is vir plasings vir sosiale media en kan ook in die video
      editor ingesit word."* The words here are a maker's words, not a
      designer's: "shape" rather than "aspect ratio", "behind" rather than
      "background", "the words" rather than "typography". */
@@ -1959,7 +1959,7 @@ export const STRINGS: Dict = {
   "post.tplShowWhat": { en: "The date and the place, big, over a photograph.", af: "Die datum en die plek, groot, oor \u2019n foto." },
   /* ── Somewhere to start, in the cutting room ───────────────────
 
-     Carli's list, 7 October 2026: *"Video, etc templates."* The photo ones
+     The owner's list, 7 October 2026: *"Video, etc templates."* The photo ones
      are above; these dress a film she already has — a look, a join, a title
      and a sign-off — because nothing in this app can film her show for her.
      `lib/filmstart.ts` says why that distinction is the whole design. */
@@ -2086,12 +2086,12 @@ export const STRINGS: Dict = {
   "post.behindGone": { en: "Gone", af: "Weg" },
   /* ── A picture kept in the app ─────────────────────────────
 
-     Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
+     The owner, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
      die app te bêrge. Daar moet dalk ’n gallery in channel gestoor word."*
      Free, because it does not leave the device — see `keepInApp`. */
   /* ── Tap a line of writing in the photograph ─────────────────────
 
-     Carli, 8 October 2026: *"dat die masjien self objekte en text
+     The owner, 8 October 2026: *"dat die masjien self objekte en text
      identifiseer wat dan highlight en dan kan die klient op die objekte of
      text click wat hulle graag wil grab, rondskuif, of delete."*
 
@@ -2341,7 +2341,7 @@ export const STRINGS: Dict = {
   "post.freeUntil": { en: "Every tool in this room is included in your plan — they all run on your own phone. The credits are for taking the picture off the device, and the same post saved twice is charged once.", af: "Elke stuk gereedskap in hierdie kamer is by jou plan ingesluit \u2014 hulle werk alles op jou eie foon. Die krediete is om die prent van die toestel af te neem, en dieselfde plasing wat twee keer gestoor word, word een keer gehef." },
   "canvas.makePost": { en: "Make a post", af: "Maak \u2019n plasing" },
 
-  "art.ofWall": { en: "of the", af: "van die" },
+  "art.perSale": { en: "for every piece that sells.", af: "vir elke werk wat verkoop." },
   "art.priceIs": { en: "Price", af: "Prys" },
   "art.tab.make": { en: "AI art, download only", af: "KI-kuns, net aflaai" },
   "art.make.ruleTitle": { en: "Download only", af: "Net aflaai" },
@@ -2454,10 +2454,10 @@ export const STRINGS: Dict = {
   "art.hang": { en: "Hang a new piece", af: "Hang ’n nuwe werk op" },
   "art.pieceName": { en: "What the piece is called", af: "Wat die werk genoem word" },
   "art.price": { en: "Where the bidding opens, at least", af: "Waar die bod oopmaak, ten minste" },
-  "art.youGet": { en: "At that opening bid you receive", af: "By daardie openingsbod ontvang jy" },
+  "art.youGet": { en: "You are paid", af: "Jy word betaal" },
   "art.afterFees": { en: "after the card fee of", af: "ná die kaartfooi van" },
   /* ── What the artist is paid on, and what they are not ──────────────
-     Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in
+     The owner, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in
      nie, net vir die wen prys."*
 
      Said on the screen where the artist sets the opening bid, because
@@ -2465,7 +2465,7 @@ export const STRINGS: Dict = {
      what they are owed.
 
      It used to open by restating that an auction pays on the winning
-     bid and not on the opening one. Carli: *"dit is onnodige
+     bid and not on the opening one. The owner: *"dit is onnodige
      inligting."* She is right — that is what an auction is, and the
      line above it already shows the figure moving with the price. What
      is left is the one fact they could not work out for themselves. */
@@ -2490,8 +2490,8 @@ export const STRINGS: Dict = {
   "art.pieces": { en: "pieces sold", af: "werke verkoop" },
   "art.markPaid": { en: "Mark as paid", af: "Merk as betaal" },
   "art.owingWhy": {
-    en: "Their 70% of the profit, after the card fee. Pay it from your own account and press this — it writes the date down, so nothing is ever paid twice.",
-    af: "Hulle 70% van die wins, ná die kaartfooi. Betaal dit uit jou eie rekening en druk hierdie — dit skryf die datum neer, sodat niks ooit twee keer betaal word nie.",
+    en: "What they are owed for it. Pay it from your own account and press this — it writes the date down, so nothing is ever paid twice.",
+    af: "Wat hulle daarvoor toekom. Betaal dit uit jou eie rekening en druk hierdie — dit skryf die datum neer, sodat niks ooit twee keer betaal word nie.",
   },
   "cheaper.title": { en: "Cheaper the other way", af: "Goedkoper anders om" },
   "cheaper.against": { en: "against", af: "teenoor" },
@@ -2965,7 +2965,7 @@ export const STRINGS: Dict = {
   "radar.heading": { en: "Collab Radar", af: "Collab Radar" },
   /* ── The Radar, read in Afrikaans 8 October 2026 ─────────────────
 
-     Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."* Reading
+     The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."* Reading
      it in Afrikaans found fourteen pieces of English typed straight into
      the markup rather than through the dictionary — "Copy", "Copied",
      "Add", "Email draft", "Your channels", "Hide", "live", "not created
@@ -3224,7 +3224,7 @@ export const STRINGS: Dict = {
   "make.modeAll": { en: "Everything", af: "Alles" },
   "make.modeWhy": { en: "Simple asks for the three things a song needs: a name, the words, and what it should sound like. Everything opens the voice, the speed, the mood, the length and your own trained sound. Nothing is switched off by Simple \u2014 whatever you set stays set.", af: "Eenvoudig vra die drie dinge wat \u2019n liedjie nodig het: \u2019n naam, die woorde, en hoe dit moet klink. Alles maak die stem, die spoed, die stemming, die lengte en jou eie geleerde klank oop. Eenvoudig skakel niks af nie \u2014 wat jy gestel het, bly gestel." },
   /* ── Simple is the copilot now, 10 October 2026 ────────────────────────
-     Carli: *"die simple moet net 'n copilot wees, en die copilot moet alles
+     The owner: *"die simple moet net 'n copilot wees, en die copilot moet alles
      skryf en die styl, stemkeuse, en lengte van liedjie. Daarna moet daar net
      staan make song."* */
   "make.simpleSay": { en: "Open the copilot and tell it what you want \u2014 \u201ca happy song about my dog\u201d, in any language. It writes the words, the style, the voice and the length. Then press the button.", af: "Maak die copilot oop en s\u00ea vir hom wat jy wil h\u00ea \u2014 \u201c\u2019n vrolike liedjie oor my hond\u201d, in enige taal. Hy skryf die woorde, die styl, die stem en die lengte. Druk dan die knoppie." },
@@ -3255,7 +3255,7 @@ export const STRINGS: Dict = {
   "make.long": { en: "Long", af: "Lank" },
   "make.goingNote": { en: "Making it. A real song takes thirty to sixty seconds \u2014 longer for a long one.", af: "Besig. ’n Regte liedjie vat dertig tot sestig sekondes \u2014 langer vir ’n lang een." },
   "make.go": { en: "Make the song", af: "Maak die liedjie" },
-  /* The song box, Carli 15 October 2026. */
+  /* The song box, the owner 15 October 2026. */
   "kids.thenPay": { en: "Then it goes straight on to paying for {pack}.", af: "Dan gaan dit reguit aan om vir {pack} te betaal." },
   "post.alignLeft": { en: "Left", af: "Links" },
   "post.alignCenter": { en: "Centre", af: "Middel" },
@@ -3600,7 +3600,7 @@ export const STRINGS: Dict = {
   "canvas.tooShort": { en: "Say a bit more — what is in the shot, and what the camera does.", af: "S\u00ea \u2019n bietjie meer \u2014 wat in die skoot is, en wat die kamera doen." },
   "canvas.waiting": { en: "Two to four minutes. There is no progress bar because the engine does not report one — it says nothing, and then it says here is your video. If you leave, it is collected when you come back to this desk.", af: "Twee tot vier minute. Daar is geen vorderingsbalkie nie omdat die enjin nie een rapporteer nie \u2014 dit s\u00ea niks, en dan s\u00ea dit hier is jou video. As jy weggaan, word dit gehaal wanneer jy na hierdie lessenaar terugkom." },
   /* ── The video desk, 15 October 2026 ──────────────────────────────────
-     Carli: "Kyk mooi of elke funksie in video desk ... werk." The rows
+     The owner: "Kyk mooi of elke funksie in video desk ... werk." The rows
      below are what the desk now says when a quoted line will not be heard,
      when two asks cannot be made together, when the copilot asked for
      something the grade does not make, and when a clip started on an
@@ -3683,7 +3683,7 @@ export const STRINGS: Dict = {
   "video.bringWhy": { en: "A song you made here, or an audio file off this device — up to 60 MB. A brought-in song stays on this device and is not put on your channel.", af: "’n Liedjie wat jy hier gemaak het, of ’n klanklêer van hierdie toestel af — tot 60 MB. ’n Ingebringde liedjie bly op hierdie toestel en kom nie op jou kanaal nie." },
   "video.none": { en: "No songs here yet \u2014 make one, or bring one in.", af: "Nog geen liedjies hier nie \u2014 maak een, of bring een in." },
   "copilot.title": { en: "Copilot", af: "Copilot" },
-  /* Carli: *"Copilot en daardie kamer moet 'n reset hê om die kamer skoon
+  /* The owner: *"Copilot en daardie kamer moet 'n reset hê om die kamer skoon
      te maak en van vooraf te prompt."* One press, both halves — the
      conversation and what the conversation put in the room. */
   "copilot.reset": { en: "Start again", af: "Begin oor" },
@@ -3856,7 +3856,7 @@ export const STRINGS: Dict = {
   "song.evenly": { en: "The words are spread evenly over the length \u2014 this one has not been listened to yet, so they can drift.", af: "Die woorde word gelykop oor die lengte versprei \u2014 daar is nog nie na hierdie een geluister nie, so hulle kan wegdryf." },
   "song.byEar": { en: "The words are laid on the singing this app measured in the song.", af: "Die woorde l\u00ea op die sang wat hierdie toep in die liedjie gemeet het." },
   "song.bySpan": { en: "The words are laid across the part of the file that is sung.", af: "Die woorde l\u00ea oor die deel van die l\u00eaer waarop gesing word." },
-  /* The front page’s own drop-downs. Carli: everything folded except the
+  /* The front page’s own drop-downs. The owner: everything folded except the
      one big class and the maker’s advert. */
   /* How a mix comes out of the Pro Booth. The surround line says what it
      is NOT on purpose: Dolby is licensed and trademarked, and this is the
@@ -4263,7 +4263,7 @@ export const STRINGS: Dict = {
   "pod.noEpisodes": { en: "No published episodes yet. Record your first one on the Record & broadcast tab.", af: "Nog geen gepubliseerde episodes nie. Neem jou eerste een op by die Opname & uitsending-oortjie." },
   "hosts.scriptLabel": { en: "Dialogue Script", af: "Dialoogteks" },
   "edit.wandSay": { en: "This frame is on the bench. Say what the AI must change, press Draw, then Make it move to put the new shot on the clock.", af: "Hierdie raam is op die bank. S\u00ea wat die KI moet verander, druk Teken, dan Laat dit beweeg om die nuwe skoot op die klok te sit." },
-  /* The cutting room, 15 October 2026 — Carli: "Kyk mooi of elke funksie in
+  /* The cutting room, 15 October 2026 — the owner: "Kyk mooi of elke funksie in
      ... video editor ... werk." Each of these is a sentence where a press
      used to do nothing, or said something untrue. */
   "edit.channelOut": { en: "Sign in to see your channel. Clips from this device can come in without signing in.", af: "Teken in om jou kanaal te sien. Knipsels van hierdie toestel kan sonder om in te teken inkom." },
@@ -4769,7 +4769,7 @@ export const STRINGS: Dict = {
     af: "Luister na die woorde",
   },
   /* ── The read button says why it is dark, 10 October 2026 ──────────────
-     Carli: *"by probooth se sound recording is die button donker en nie
+     The owner: *"by probooth se sound recording is die button donker en nie
      beskikbaar nie wat sê listen to songs words."* It was greyed for three
      correct reasons and said none of them. */
   "booth.readWhileLive": { en: "Not while the microphone is open \u2014 stop the take first.", af: "Nie terwyl die mikrofoon oop is nie \u2014 stop eers die opname." },
@@ -5570,7 +5570,7 @@ export const STRINGS: Dict = {
   "cast.notImage": { en: "That is not a picture.", af: "Dit is nie ’n foto nie." },
   "cast.failed": { en: "That did not save. Try again in a moment.", af: "Dit het nie gestoor nie. Probeer oor ’n oomblik weer." },
   /* ── The two that used to be "that did not save" ──────────────────
-     Carli: *"Die button net onder hom wat sê dat mens ’n foto kan oplaai
+     The owner: *"Die button net onder hom wat sê dat mens ’n foto kan oplaai
      werk, maar die cast member oplaai werk nie."* The one under it keeps
      the photo on the device; this one keeps it on the account, so it needs
      a bucket AND a table. Both refusals read as one sentence, which is why
@@ -6135,7 +6135,7 @@ export const STRINGS: Dict = {
      nothing looked broken, and the app simply spoke English to an Afrikaans
      reader in all its newest rooms.
 
-     Carli reads this app in Afrikaans. That is the whole reason the
+     The owner reads this app in Afrikaans. That is the whole reason the
      dictionary exists, and `check:afrikaans` is the thing that counts. */
   "ads.poster": { en: "Make a poster", af: "Maak ’n plakkaat" },
   "ads.logoTitle": { en: "Your logo on the posters", af: "Jou logo op die plakkate" },
@@ -6731,7 +6731,7 @@ export const STRINGS: Dict = {
   "post.kindWebp": { en: "WebP", af: "WebP" },
   /* ── A photograph given a little motion, 10 October 2026 ───────────────
 
-     Carli: *"Ek wonder ook of google se modelle net bietjie motion kan gee
+     The owner: *"Ek wonder ook of google se modelle net bietjie motion kan gee
      aan foto's?"* Veo takes a start frame and the trick is the prompt; the
      photograph goes up as the opening AND the closing frame so it loops.
      `lib/livingphoto.ts` carries the twelve motions. */
@@ -7902,7 +7902,7 @@ const Context = createContext<LangContext>({
  *
  * ── Why two places for one small string ──────────────────────────────────
  *
- * Carli, for the third time and then in plain words: "By die inteken blad kan
+ * The owner, for the third time and then in plain words: "By die inteken blad kan
  * jy jou taal kies. As ek afrikaans kies, dan moet dit afrikaans in log."
  *
  * She is right, that is rule 1, and it should already work — she presses the
@@ -7949,7 +7949,7 @@ function inCookie(): Lang | null {
  *
  * ── Why a second key ─────────────────────────────────────────────────────
  *
- * Carli, six reports in: `/taal` showed `en` in storage and `en` in the
+ * The owner, six reports in: `/taal` showed `en` in storage and `en` in the
  * cookie on a phone where she had never knowingly chosen English. Both of
  * those are only ever written together by a *press* — `setLang` or
  * `undoSwitch` — so something had been pressed, and there was no way to find
@@ -8047,7 +8047,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
    * says English, they match, so nothing is announced — and then the Afrikaans
    * that `onArrival` had queued is replaced by English with no word about it.
    *
-   * Which is exactly what Carli saw, in the opposite direction to last time:
+   * Which is exactly what the owner saw, in the opposite direction to last time:
    * "Wanneer ek vanuit die afrikaanse skerm in log, spring hy na die engels toe
    * wanneer mens in is." The switch is the rule working. The silence was a
    * race.
@@ -8067,7 +8067,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   /**
    * The choice made in this session, when storage could not keep it.
    *
-   * ── Carli's phone ────────────────────────────────────────────────────
+   * ── the owner's phone ────────────────────────────────────────────────────
    *
    * "Op my foon log die afrikaans steeds in in engels. Maar op die rekenaar
    * se login sien ek dit werk reg."

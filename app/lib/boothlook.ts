@@ -5,7 +5,7 @@
  *
  * Every other room follows the theme. This one must not. It is a piece of
  * studio equipment: black with a blue line, on whatever theme somebody has
- * picked — Carli's words, *"die booth se swart met die blou musieklyn sal 'n
+ * picked — the owner's words, *"die booth se swart met die blou musieklyn sal 'n
  * unieke take wees vir die booth, dat dit heeltemal anders lyk as die res van
  * die app."*
  *
@@ -37,7 +37,7 @@ export const INK = '#eef2ff';
 /**
  * Text that is not the point of the sentence.
  *
- * Carli, 15 September 2026, with a photograph of the door: *"Kyk hoe dof is
+ * The owner, 15 September 2026, with a photograph of the door: *"Kyk hoe dof is
  * die woorde daar bo, maak dit wit."*
  *
  * It was half strength, and that was chosen when the only things wearing it

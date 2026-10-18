@@ -3,7 +3,7 @@
  *
  * ── What this guards ─────────────────────────────────────────────────────
  *
- * Carli, 19 September 2026, passing on a friend's idea and adding the part
+ * The owner, 19 September 2026, passing on a friend's idea and adding the part
  * that makes it worth building: *"dan leer dit ook mense sommer van liedjie
  * skryf en van musiek."*
  *
@@ -123,7 +123,7 @@ ok(
 
 /* ── The feeling is asked for, not picked off a wall ──────────────────
 
-   Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel wees van
+   The owner, 19 September 2026: *"Die emosie goed voel ek moes als deel wees van
    copilot. Die hele room is baie besig. Ook die begeleiding van elke sessie."*
 
    The first build put the feeling on the canvas as eight chips and a box, and
@@ -193,7 +193,7 @@ ok(
 
 /* ── One section at a time ────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"It must work verse for verse, and before every
+ * The owner, 21 September 2026: *"It must work verse for verse, and before every
  * new verse are written, ask questions and explain what this part in a song
  * is usually for. It must not generate everything at once."*
  *

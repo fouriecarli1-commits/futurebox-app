@@ -1,7 +1,7 @@
 /**
  * Cleaning a lane, and the law it must not break.
  *
- * Carli: "by die booth moet daar oor die algemeen ook reverb, echo en
+ * The owner: "by die booth moet daar oor die algemeen ook reverb, echo en
  * background cleaners wees."
  *
  * ── The law ──────────────────────────────────────────────────────────────

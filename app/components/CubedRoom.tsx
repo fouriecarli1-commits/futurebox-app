@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Die masterclass button moet ook sy eie button hê
+ * The owner, 10 October 2026: *"Die masterclass button moet ook sy eie button hê
  * en wanneer iemand daar op click vat dit jou ook na 'n futuristic kamer toe,
  * wat spectacular en modern is. Dit moet absolutely classy wees. Ek gaan baie
  * spesiale en high profile masterclasses reël."*
@@ -28,14 +28,14 @@
  *
  * *"Ons moet dit ook so uit stipuleer vir ons gaste."* A guest who reads the
  * terms before the conversation arrives at the conversation already knowing
- * the shape. The one thing the room does NOT say is the split — Carli, 12
+ * the shape. The one thing the room does NOT say is the split — the owner, 12
  * October 2026: *"Die Cubed classes kan nie die winsverdeling wys tussen my
  * en die persoon wat die klas aanbied nie."* That number lives in the written
  * agreement, and `check:cubed` refuses this file if it quotes it.
  *
  * ── Obsidian, 13 October 2026 ────────────────────────────────────────────
  *
- * Carli, with the "Cubed room" page Google drew, and the rule for the whole
+ * The owner, with the "Cubed room" page Google drew, and the rule for the whole
  * redesign: *"ons transform en totally redesign."* The room is obsidian
  * again, lit by one pool of emerald behind the mark, glass cards with a
  * hairline, and the fee and the format as two cards under the title. The
@@ -98,7 +98,7 @@ export default function CubedRoom(): React.ReactElement {
               behind the mark and nothing else lit. */}
           <div className="relative flex flex-col items-center text-center">
             <div className="pointer-events-none absolute inset-0 -top-10 rounded-full bg-emerald-500/10 blur-[120px]" aria-hidden />
-            {/* Carli, 13 October 2026: *"Maak die cubed class se logo
+            {/* The owner, 13 October 2026: *"Maak die cubed class se logo
                 transparent, en maak die logo en woorde very neon en
                 bright."* Her file is untouched; the light is a filter on
                 the way to the screen (`[data-cubedneon]` in globals.css),

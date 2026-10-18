@@ -86,7 +86,7 @@ const check = (label, ok, detail = '') => {
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
 
-const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'carli@futurebox.test' };
+const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'lerato@futurebox.test' };
 await p.addInitScript((who) => {
   try {
     window.localStorage.setItem('sb-stub-auth-token', JSON.stringify({

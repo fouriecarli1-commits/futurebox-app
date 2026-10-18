@@ -124,7 +124,7 @@ export async function POST(request: Request): Promise<Response> {
 
        What DOES go back is the list of columns this insert asked for that
        the table has not got — our own names, from our own list, never
-       parsed out of the error. Carli has lost two evenings to a migration
+       parsed out of the error. The owner has lost two evenings to a migration
        that half landed, and twice to this component, which she has asked
        me to rebuild twice. `cast.sql` may simply never have been run, and
        until now nothing anywhere could say so. */

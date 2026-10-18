@@ -14,7 +14,7 @@
  * all: it keeps buying, at about R3,08 per thousand credits, until somebody
  * reads an invoice.
  *
- * Carli, the same day: "Ek gaan eers net krediete top up totdat ek 'n beter
+ * The owner, the same day: "Ek gaan eers net krediete top up totdat ek 'n beter
  * begrip het hoeveel mense ons produk gebruik." That is the right way to run
  * it — and it is only safe with a number she sets, on this side, that stops
  * the app before the card does.

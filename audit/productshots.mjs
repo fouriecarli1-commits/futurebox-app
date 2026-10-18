@@ -1,7 +1,7 @@
 /**
  * Product photos, walked on a phone.
  *
- * Carli, 16 October 2026: *"Generate product photos in seconds."* Read off
+ * The owner, 16 October 2026: *"Generate product photos in seconds."* Read off
  * the glass and off what is sent: it opens from beside Bring a picture in;
  * with no photo on the post it asks for one and will not spend; a product
  * brought in is shown and sent as a reference with the scene chosen; the

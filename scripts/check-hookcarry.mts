@@ -3,7 +3,7 @@
  *
  * ── What this guards ─────────────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Al die kamers se AI praat nie met mekaar nie.
+ * The owner, 21 September 2026: *"Al die kamers se AI praat nie met mekaar nie.
  * Ek het nou dieselfde gesien by hooks. Ek wou 'n video maak, maar die
  * liedjie hook lê nie daar in video nie en daar is geen prompt in die video
  * desk nie."*

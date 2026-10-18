@@ -142,7 +142,7 @@ grant execute on function public.live_hello(text, uuid, text) to service_role;
 
 -- ────────────────────────────────────────── wat 'n liedjie se soort is ────
 --
--- Carli, 14 September 2026: "in die live room en in channel wys die liedjie
+-- the owner, 14 September 2026: "in die live room en in channel wys die liedjie
 -- se naam op die liedjie window, die artist name, en die genre van die
 -- liedjie. Dit gaan dit makliker maak vir ander users om by mekaar te leer en
 -- te hoor watter genre regtig werk en mooi klink."
@@ -164,7 +164,7 @@ alter table public.live_posts
 
 -- ── Die woorde van die liedjie, sodat die play room hulle kan wys ─────────
 --
--- Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+-- the owner, 14 September 2026: *"Die play room moet die liedjie se woorde
 -- speel."*
 --
 -- Niemand in die kamer kan hulle gaan haal nie. 'n Liedjie se woorde lê op sy

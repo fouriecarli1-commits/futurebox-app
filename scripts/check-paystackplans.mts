@@ -185,7 +185,7 @@ for (const one of named(guide)) {
 
 /* ── An UNSET code must match nothing ───────────────────────────────────
 
-   Carli, 6 October 2026: *"daar is nie 'n paystack marketing nie"*. She never
+   The owner, 6 October 2026: *"daar is nie 'n paystack marketing nie"*. She never
    created the plan, so `PAYSTACK_PLAN_MARKETING` is empty — and empty is the
    state these two functions have to survive.
 

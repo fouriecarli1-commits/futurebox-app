@@ -3,7 +3,7 @@
  *
  * ── What this is, and what it is honestly not ────────────────────────────
  *
- * Carli, 7 October 2026: *"magic eraser"*, in her list of what a modern
+ * The owner, 7 October 2026: *"magic eraser"*, in her list of what a modern
  * editor has. Her list also has *"magic grab om 'n item uit te haal en weer
  * 'n ander item in te sit"*, and those are two different things:
  *

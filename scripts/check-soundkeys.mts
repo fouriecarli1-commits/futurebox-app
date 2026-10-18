@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit mute,
+ * The owner, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit mute,
  * net soos in probooth die s, m. Ook stereo, mono surround. Dit moet ook die
  * funksie en button in hê wanneer 'n video praat, dan moet die musiek sagter
  * gaan elke keer wanneer die praat stem in kom."*
@@ -91,7 +91,7 @@ ok('  and a soloed music lane silences the shots in the film too',
 
 ok('the duck is carried to the renderer when it can be used',
   cutFrom({ ...film, duck: 0.3 }).duck === 0.3,
-  'Carli: "wanneer ’n video praat, dan moet die musiek sagter gaan"');
+  'the owner: "wanneer ’n video praat, dan moet die musiek sagter gaan"');
 
 ok('  and not when there is no song to duck',
   cutFrom({ pieces: [talker('a')], duck: 0.3 }).duck === undefined,

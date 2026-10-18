@@ -7,7 +7,7 @@
  * all three are the kind that stay true in the source while quietly going
  * false on the screen:
  *
- *   the keyboard   Carli: *"Geen tik moontlikhede nie, net dit."* The whole
+ *   the keyboard   the owner: *"Geen tik moontlikhede nie, net dit."* The whole
  *                  conversation between a buyer and an artist is two
  *                  buttons. One `<input>` added to the pop-out by somebody
  *                  being helpful and the room's reason for existing is gone
@@ -63,7 +63,7 @@ try {
 
   b = await chromium.launch(launchOptions());
   /* A phone, not a desk. The first version of this room passed here at
-     1280px and Carli opened it on a phone and said it looked like a
+     1280px and the owner opened it on a phone and said it looked like a
      website — which it did, and the probe had no way to notice because a
      two-column hero looks correct at desktop width. 390 × 844 is the
      screen she actually holds. */

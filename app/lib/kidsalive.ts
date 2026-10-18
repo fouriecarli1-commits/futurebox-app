@@ -6,7 +6,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026: *"a drawing board that captures their shape and
+ * The owner, 13 October 2026: *"a drawing board that captures their shape and
  * makes their drawings realistically alive, but family friendly. And also
  * prompting images (kids friendly) so that they can really flex their
  * creative muscles."*
@@ -93,13 +93,13 @@ export async function packDrawing(drawing: Blob): Promise<{ data: string; mime: 
     ink.fillStyle = '#ffffff';
     ink.fillRect(0, 0, canvas.width, canvas.height);
     ink.drawImage(image, 0, 0, canvas.width, canvas.height);
-    /* Bare base64, past the comma. Carli, 13 October 2026, with a
+    /* Bare base64, past the comma. The owner, 13 October 2026, with a
        photograph of the room: *"Om 'n prent na lewe te bring wil nie werk
        nie"* — Google answered `Base64 decoding failed for "data:image/png;
        base64,…"`, because this sent the whole data URL and the route hands
        the string straight to `inline_data`. `packpicture.ts` had always cut
        the prefix; this did not. */
-    /* `packed`, not `url`. Carli, 16 October 2026: *"Bring it to life button
+    /* `packed`, not `url`. The owner, 16 October 2026: *"Bring it to life button
        does nothing"* — this line was `const url` inside the same block as
        `one.src = url` above, so that line read THIS name before it existed:
        "Cannot access before initialization", thrown on every press, before

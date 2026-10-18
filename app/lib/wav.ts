@@ -19,7 +19,7 @@ function clamp(value: number): number {
 /**
  * The same file, in mono, stereo, or folded for a surround decoder.
  *
- * Carli, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
+ * The owner, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
  * The arithmetic is in `lib/channels.ts`, where a check can put numbers
  * through it; this only writes what comes back. Absent means stereo, which
  * is what every existing caller meant and still gets.
@@ -41,7 +41,7 @@ export function encodeWav(buffer: AudioBuffer, layout: Layout = 'stereo', depth:
 /**
  * How many bits a sample is written with.
  *
- * Carli, 14 October 2026, from the ProBooth design she sent: the quality a
+ * The owner, 14 October 2026, from the ProBooth design she sent: the quality a
  * stem or a mix is downloaded in. 16 is CD and what every caller got before
  * — small, and plays anywhere. 24 is what a studio hands another studio:
  * the quiet end keeps its detail when somebody mixes it again. 32 is

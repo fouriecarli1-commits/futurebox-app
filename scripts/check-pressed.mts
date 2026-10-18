@@ -1,7 +1,7 @@
 /**
  * A press you can see, on a screen that has no hover.
  *
- * Carli, 17 September 2026, twice: *"Die knoppies binne die videos en
+ * The owner, 17 September 2026, twice: *"Die knoppies binne die videos en
  * liedjies, soos die delete knoppie moet wys as mens dit druk, huidiglik
  * maak die knoppie geen beweging."*
  *
@@ -51,7 +51,7 @@ ok(
    passed, and what shipped was invisible. The commonest button background in
    this app is `bg-zinc-950` — rgb(9, 9, 11) — and multiplying nearly nothing
    by 1.3 leaves nearly nothing: the colour moved by THREE parts in 255, on
-   exactly the buttons Carli said were not moving. The check confirmed a rule
+   exactly the buttons the owner said were not moving. The check confirmed a rule
    existed and never asked what the rule did.
 
    So it does the arithmetic now, against the three backgrounds this app

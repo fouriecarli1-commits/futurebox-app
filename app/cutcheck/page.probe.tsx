@@ -73,7 +73,7 @@ export default function CutCheck(): React.ReactElement {
 
     /* ── A SMALL mask on a big picture, which is the real case ───────
  
-       Carli, 7 October 2026, on a photograph of herself: *"Its not looking
+       The owner, 7 October 2026, on a photograph of herself: *"Its not looking
        perfect."* The model answers at 256 by 256 whatever it is given, so on
        a phone photograph one mask pixel covers a block ten or more across —
        and stretched hard that is a staircase with streaks.
@@ -122,7 +122,7 @@ export default function CutCheck(): React.ReactElement {
 
     /* ── The staircase, which is the thing she can actually see ──────
  
-       Carli, 7 October 2026, twice: *"Its not looking perfect"* and then
+       The owner, 7 October 2026, twice: *"Its not looking perfect"* and then
        *"Nogsteeds rowwe edges"*. Softness was the wrong instrument — an edge
        can be soft and still be a staircase, and a staircase is what a blown
        up mask is.
@@ -243,7 +243,7 @@ export default function CutCheck(): React.ReactElement {
 
     /* ── A mask that has not made its mind up ─────────────────────────
 
-        Carli, 8 October 2026, with her own face cut out: *"Dit is hoe die bg
+        The owner, 8 October 2026, with her own face cut out: *"Dit is hoe die bg
         remover nou lyk."* The checkerboard was showing THROUGH her.
 
         The model answers a PROBABILITY, not a yes or a no, and this file was

@@ -147,7 +147,7 @@ for (const no of [
 
 /* ── The handover to their storage ───────────────────────────────────
  
-   Carli sent Music.ai's own upload documentation on 23 September 2026, and
+   The owner sent Music.ai's own upload documentation on 23 September 2026, and
    two things in it are worth holding here rather than finding out against a
    live key at the worst moment.
  

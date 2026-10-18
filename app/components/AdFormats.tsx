@@ -12,7 +12,7 @@
  * a bag, a church group wants a song, a consultancy wants an episode, a
  * bakery wants fifteen vertical seconds and nothing else.
  *
- * Carli, 11 September 2026: "dalk is 'n podcast styl soms die voordeel, ander
+ * The owner, 11 September 2026: "dalk is 'n podcast styl soms die voordeel, ander
  * kere weer kort videos, dalk 'n explainer video, dalk net 'n liedjie met 'n
  * foto... Die advert funksie dink ek gaan baie mense attract as dit diepte
  * het en die moeite werd is."
@@ -114,7 +114,7 @@ export default function AdFormats({
      somebody left the room. Every button on this card is a way of leaving
      the room.
  
-     Carli, 11 September 2026: "Currently I cannot go back to our previous
+     The owner, 11 September 2026: "Currently I cannot go back to our previous
      ad generation and find it as it was."
  
      Read synchronously as the first value rather than in an effect: an

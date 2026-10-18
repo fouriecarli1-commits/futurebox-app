@@ -3,7 +3,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"die video nie in die channel save nie, sodat
+ * The owner, 14 September 2026: *"die video nie in die channel save nie, sodat
  * dit later in die live channel gedeel kan word nie."*
  *
  * A take filmed against the words on screen was offered exactly one thing:
@@ -73,7 +73,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── A link to the file, so the Video Editor can bring one in ─────────
 
-     Carli, 4 October 2026: *"die button wat sê bring it in, or choose from
+     The owner, 4 October 2026: *"die button wat sê bring it in, or choose from
      channel."*
 
      The listing has always carried the path and never a way to reach the file,
@@ -184,7 +184,7 @@ export async function POST(request: Request): Promise<Response> {
          never seen. Nothing uploaded it, so no row existed, so the live
          room's list — which reads this table — had nothing to offer.
  
-         Carli, 16 September: "die music video werk nie in die live nie."
+         The owner, 16 September: "die music video werk nie in die live nie."
  
          The value matters beyond bookkeeping: the room labels a post
          "filmed" or "generated" off this column, and a stitched clip is

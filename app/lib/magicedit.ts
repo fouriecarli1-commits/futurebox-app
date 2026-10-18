@@ -1,7 +1,7 @@
 /**
  * Magic touch: the AI works on one part of a photograph, not all of it.
  *
- * Carli, 14 October 2026: *"Ek dink ook daar moet 'n magic mouse tool wees
+ * The owner, 14 October 2026: *"Ek dink ook daar moet 'n magic mouse tool wees
  * wat op dele kliek en Ai kan dan die gedeelte verbeter (daar moet dan seker
  * opsies wees)."* And of the grabs: *"Die objek moet geskuif kan word, of ai
  * gevra word om iets anders te generate."*
@@ -59,7 +59,7 @@ export function padded(rect: Rect, wide: number, tall: number, share = 0.2): Rec
 /**
  * Paint over the part, rather than a box round it.
  *
- * Carli, 16 October 2026: *"Magic se crop box werk nie, moet dit in elkgeval
+ * The owner, 16 October 2026: *"Magic se crop box werk nie, moet dit in elkgeval
  * nie 'n paint brush wees wat oor 'n gedeelte verf en dit word dan ai gemaster
  * en gefix."* Each stroke is the points her finger went through, as shares of
  * the photograph; `r` is the brush's half-width as a share of the shorter

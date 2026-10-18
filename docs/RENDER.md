@@ -1,6 +1,6 @@
 # Render, and what it could sensibly do for FutureBox
 
-*Carli, 8 October 2026:* "Ek kan nog projekte binne my plan begin in render. Ek het huidiglik die
+*Die eienaar, 8 October 2026:* "Ek kan nog projekte binne my plan begin in render. Ek het huidiglik die
 hobby plan. Maar soos ek sê is daar sinvolle funksies wat render binne ons app kan verrig?"
 
 ---

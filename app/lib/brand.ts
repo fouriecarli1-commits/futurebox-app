@@ -78,7 +78,7 @@ export const SITE_URL = `https://${SITE_HOST}`;
  * "FutureBox — Digital Learning & Creative AI Platform", which is the one place
  * a member, a search engine and anybody sending a link actually sees a name.
  *
- * Carli, 3 October 2026: *"Ons kan onsself nie vasloop met legal in probleme
+ * The owner, 3 October 2026: *"Ons kan onsself nie vasloop met legal in probleme
  * met die uitleg en die tools wat ons bou nie."* Said about the editor, and
  * true of this: the registered name and the public name have to be the same
  * name, and the reason this one has a second word is the whole point of it.

@@ -10,7 +10,7 @@
  * buyers are that is not a feed, and which numbers to watch. All of that is
  * on the screen and none of it leaves the app.
  *
- * Carli, 11 September 2026: "Ek dink daar moet waarskynlik ook 'n schedule
+ * The owner, 11 September 2026: "Ek dink daar moet waarskynlik ook 'n schedule
  * afgelaai kan word met 'n hele uitleg met die bemarkingsplan." She is right,
  * and it is the same fault as the calendar: the work was done and most of it
  * could not be taken anywhere. A plan you cannot hand to somebody is a plan

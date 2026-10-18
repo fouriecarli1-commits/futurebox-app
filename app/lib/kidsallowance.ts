@@ -3,7 +3,7 @@
  *
  * ── What she asked, in two messages ──────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+ * The owner, 9 October 2026: *"Let the parent give an allowance on an opening
  * page."* And then: *"Gee dan net vir die ouer 'n raamwerk van wat krediete
  * kan doen per liedjie, per video, per story mode."*
  *
@@ -108,7 +108,7 @@ export const KID_PRICES: readonly Priced[] = [
   },
   {
     id: 'picture',
-    /* Carli, 13 October 2026: a drawing "made realistically alive" and
+    /* The owner, 13 October 2026: a drawing "made realistically alive" and
        "prompting images (kids friendly)". Both are one press on
        `/api/google/picture`, which charges `CREDITS.repaint` — the same
        price the photo editor pays for the same engine. */
@@ -159,7 +159,7 @@ export function sane(allowance: number): boolean {
 /**
  * How long one sitting may last, in minutes.
  *
- * Carli, 10 October 2026: *"Dan moet die ouers die budget en screen time kan
+ * The owner, 10 October 2026: *"Dan moet die ouers die budget en screen time kan
  * stel. Wanneer screen time op is moet dit die kind uitskop."*
  *
  * Four steps, like the allowance above, and for the same reason: a parent

@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"en by photo editor, templates van verskillende eras,
+ * The owner, 11 October 2026: *"en by photo editor, templates van verskillende eras,
  * en voorstelle waarin mense hulle eie foto's in edit, of in sit deur google se
  * AI engine. AS mens kyk na nano banana, en veo ens. is daar templates wat help
  * om keuses te maak. Ek wil dit in die app integrate op 'n moderne stylish

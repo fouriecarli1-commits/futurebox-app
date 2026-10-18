@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026: *"ons kort amazing futuristic text, foto, en shape
+ * The owner, 13 October 2026: *"ons kort amazing futuristic text, foto, en shape
  * templates. Neon, futuristic, phantasm, etc."* Google's page listed four —
  * an isometric cube, a neon ring, a cyber grid and a hologram frame — and
  * these are those four, as real layers on the canvas rather than pictures
@@ -19,7 +19,7 @@ import type { GlowId } from './postglow';
 import { drawChart, type ChartSpec } from './postcharts';
 import { glowOf, haloPasses } from './postglow';
 
-/* Carli, 14 October 2026: "Die shapes is meestal daar as 'n background vir
+/* The owner, 14 October 2026: "Die shapes is meestal daar as 'n background vir
    die text. Daai shapes moet soos 'n sirkel, box, triangle, rectangle,
    painted box wees, en die shape moet ook gemanupileer word deur te kan
    beweeg groter en kleiner gemaak word, transparent, kan die kleur kies."
@@ -276,7 +276,7 @@ export function drawMark(ctx: CanvasRenderingContext2D, mark: Mark, width: numbe
   }
   if (isFilled(mark.kind)) {
     /* ── See-through, faded once ──────────────────────────────────────
-       Carli, 16 October 2026, found while building the layers: the shape is
+       The owner, 16 October 2026, found while building the layers: the shape is
        filled once per halo pass and once more on top, and turning the
        canvas's alpha down for each fill stacks them back up — the slider at
        ninety per cent see-through drew a shape that was nearly solid. So a

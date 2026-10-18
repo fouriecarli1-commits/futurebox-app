@@ -136,7 +136,7 @@ export default function ShareRow({
   /**
    * The phone's own share sheet, which is the right answer on a phone.
    *
-   * Carli: "Elke foon se eie share window moet op pop. dit maak dit makliker,
+   * The owner: "Elke foon se eie share window moet op pop. dit maak dit makliker,
    * want op die foon is ons reeds connected aan accounts."
    *
    * She is right, and the version of this sheet that listed ten platforms was

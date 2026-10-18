@@ -1,7 +1,7 @@
 /**
  * Google Play Billing in the Android app, Paystack on the website — held.
  *
- * Carli, 14 October 2026: "Wanneer ek die app op die playstore gaan sit gaan
+ * The owner, 14 October 2026: "Wanneer ek die app op die playstore gaan sit gaan
  * ek paystack afhaal en werk met die playstore se paying system."
  *
  * What this protects is the money, so every rule here is one whose breaking

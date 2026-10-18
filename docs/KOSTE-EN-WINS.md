@@ -5,7 +5,7 @@
 > verander die prys in daardie lêers en loop die skrip weer, anders sê die
 > pryskaart en hierdie som twee verskillende dinge.
 
-Geskryf 2026-10-16. Kling is uit die som uit.
+Geskryf 2026-10-18. Kling is uit die som uit.
 
 ## Waarop dit rus
 
@@ -218,7 +218,7 @@ Realisties — 60% verbruik — is gelykbreek **81 lede** sonder werkswinkels en
 
 ### En wat SARS daarvan vat
 
-Carli, 8 September 2026: *"ek dink sars tot en met 30% van my inkomste
+the owner, 8 September 2026: *"ek dink sars tot en met 30% van my inkomste
 neem van hierdie produk, dus wil ek nie 'n verlies ly nie."*
 
 **Die belangrikste ding eerste: maatskappybelasting is op WINS, nie op
@@ -358,7 +358,7 @@ verdien.
 
 ### Twee reëls wat nog nie 'n prys het nie
 
-Albei is deur Carli genoem en nie een kan hier geraai word:
+Albei is deur the owner genoem en nie een kan hier geraai word:
 
 | Wat | Stand | Wat elke R1 000 per maand kos |
 |---|---|---|

@@ -3,7 +3,7 @@
 /**
  * The before-and-after line, laid over a picture or a playing film.
  *
- * Carli, 16 October 2026, with a one-tap enhance open on her phone: *"Ek dink
+ * The owner, 16 October 2026, with a one-tap enhance open on her phone: *"Ek dink
  * met die auto enhance moet daar 'n ruler wees wat oor die prent slide om te
  * wys hoe dit gelyk het, en soos wat jy dit skuif wys dit die enhanced
  * image."*

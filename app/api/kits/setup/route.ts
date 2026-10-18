@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli: "maak gebruik van al die features en intergrate dit in ons app."
+ * The owner: "maak gebruik van al die features en intergrate dit in ons app."
  * One endpoint is known — the voice conversion she sent — and the rest of
  * Kits' product is behind addresses nobody here has seen. arpeggi.io is
  * blocked from the machine this app is written on, so there is no way to find
@@ -37,7 +37,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* Nine requests, and it used to be thirty-one.
 
-   The list grew twice on guesses and then shrank once on a fact: Carli sent
+   The list grew twice on guesses and then shrank once on a fact: the owner sent
    their API documentation, whose contents page lists five APIs. Guessing at
    twenty-two more addresses was work this page no longer has to do. */
 export const maxDuration = 60;
@@ -72,7 +72,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* Plain lines instead of JSON, for the person this page is actually for.
 
-     Carli, 9 September 2026: "help my mooier met hierdie asb." Fair. She has
+     The owner, 9 September 2026: "help my mooier met hierdie asb." Fair. She has
      been asked three times to send back one field out of this answer, and
      what the page gives her is a wall of unwrapped JSON on a phone — with the
      thing being asked for somewhere in the middle of it, unlabelled, in
@@ -95,7 +95,7 @@ export async function GET(request: Request): Promise<Response> {
   /* A 403 that names the plan is the most useful answer this page can give,
      and it is not the same as a refused key.
 
-     Carli's first real run came back exactly this way: "Free tier users are
+     The owner's first real run came back exactly this way: "Free tier users are
      not allowed to use the api" on every real endpoint. The key had reached
      them and they had recognised it — the account simply was not paying. That
      is the question this page was built to settle, and it deserves its own
@@ -117,7 +117,7 @@ export async function GET(request: Request): Promise<Response> {
      one is refused and nothing is created. */
   const hunt = blender.answer === 'asks' && blender.fields.length === 0 ? await blenderShape() : null;
   const canMake = await canCreateVoices();
-  /* Carli, 15 September: "In pick a voice is daar instrumente ook." The
+  /* The owner, 15 September: "In pick a voice is daar instrumente ook." The
      picker shows them mixed in with the voices because the record carries no
      field saying which a model is. Whether they can be asked for separately
      is a question about her live account, not about a docs page this machine

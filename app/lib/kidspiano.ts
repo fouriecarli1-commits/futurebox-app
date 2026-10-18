@@ -3,7 +3,7 @@
  * way to keep a tune as a song. Everything plays on the browser's own
  * oscillator (`kidsbeat.ts`) and nothing here asks a server for anything.
  *
- * Carli, 13 October 2026: *"Maybe a game section to play with music, piano,
+ * The owner, 13 October 2026: *"Maybe a game section to play with music, piano,
  * music editing and DAW stuff and creating their own songs on a childs way
  * with guidance."*
  *

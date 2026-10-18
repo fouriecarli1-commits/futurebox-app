@@ -3,7 +3,7 @@
  *
  * ── The correction this file records ─────────────────────────────────────
  *
- * Carli, 23 September 2026: *"En met billing, dat hulle hul billing
+ * The owner, 23 September 2026: *"En met billing, dat hulle hul billing
  * information kon verander?"*
  *
  * I answered that there was nowhere in the app to see the arrangement, change

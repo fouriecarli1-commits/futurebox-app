@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 12 October 2026: *"Ek dink met 'n story board moet daar na
+ * The owner, 12 October 2026: *"Ek dink met 'n story board moet daar na
  * prompting 'n page op kom wat dan storielyn suggestions op gooi, dan het
  * elke seksie 4 keuses, en dan bou hulle self die storie lyn. Dieselfde
  * direk daarna wanneer die visuals vir die storie gekies moet word, dan moet
@@ -123,7 +123,7 @@ export default function KidsStoryboard({
   };
 
   /* ── Read to me: the page aloud, then the next, to the end ──────────
-     Carli, 15 October 2026: "Read to me werk nie." It played six seconds of
+     The owner, 15 October 2026: "Read to me werk nie." It played six seconds of
      chimes. Now the phone reads the page in its own voice and turns to the
      next page when it is done, so one press reads the whole book; another
      press stops it. Free: nothing leaves the phone. */
@@ -523,7 +523,7 @@ export default function KidsStoryboard({
             {/* Page Prose */}
             {/* On the room's own paper, not amber-50: on the dark kids theme
                 the text colour is light, and light on pale cream was the
-                unreadable page in Carli's screenshot. */}
+                unreadable page in the owner's screenshot. */}
             <div className="mt-5 rounded-2xl bg-surface-100 p-4 sm:p-5 border-2 border-amber-300/80">
               <p data-kidspagetext className="text-base sm:text-lg font-bold leading-relaxed text-surface-950">
                 {story.pages[readerPage]?.text}

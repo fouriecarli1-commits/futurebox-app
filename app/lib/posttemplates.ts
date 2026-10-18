@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Video, etc templates."*
+ * The owner's list, 7 October 2026: *"Video, etc templates."*
  *
  * ── Why a starting point and not a design ────────────────────────────────
  *
@@ -65,7 +65,7 @@ export interface Template {
   readonly look?: Partial<Look>;
   readonly words: readonly TemplateWords[];
   /**
-   * The two ends of the tile the picker draws for it — Carli, 13 October
+   * The two ends of the tile the picker draws for it — the owner, 13 October
    * 2026, with Google's page: a starter pack is chosen by its look, so the
    * button that chooses it has to carry the look. Absent draws a plain
    * button, which is what every template had until today.
@@ -83,7 +83,7 @@ const NEON_LIME = '#a3e635';
 
 export const TEMPLATES: readonly Template[] = [
   /* ── The futuristic and phantasm starter packs ────────────────────────
-     Carli, 13 October 2026: "ons kort amazing futuristic text, foto, en
+     The owner, 13 October 2026: "ons kort amazing futuristic text, foto, en
      shape templates. Neon, futuristic, phantasm, etc." The four Google's
      page drew, with the glow and the face that make them what they are. */
   {

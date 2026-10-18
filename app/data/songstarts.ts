@@ -6,7 +6,7 @@
  * The hardest part of this room is the blank box, and a bad start is what a
  * bad song is made of. Somebody who does not know what to write types four
  * words, gets a take that wanders, and concludes the engine is no good — which
- * is roughly what happened to Carli before the plan was fixed, and would still
+ * is roughly what happened to the owner before the plan was fixed, and would still
  * happen to anybody arriving with nothing.
  *
  * So: fifty complete starting points. A title, a style the engine can actually

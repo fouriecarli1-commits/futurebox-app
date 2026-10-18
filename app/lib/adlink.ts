@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 16 October 2026, with a tool that turns a product link into
+ * The owner, 16 October 2026, with a tool that turns a product link into
  * adverts; on the 18th, asked whether Google's AI may read the page for 3
  * credits: *"Ja."* Paste a link on the advert desk, and the brief — what it
  * is, who it is for, the offer — fills itself from the page.

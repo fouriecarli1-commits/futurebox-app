@@ -7,7 +7,7 @@ import { SITE_HOST } from './brand';
  *
  * ── Why this had to exist ────────────────────────────────────────────────
  *
- * Carli has now reported the same list of five faults three times. Two of
+ * The owner has now reported the same list of five faults three times. Two of
  * them were fixed and pushed between the first report and the third, and
  * neither of us had any way to tell whether what she was looking at
  * contained the fix. So a repeat could mean the fix did not work, or it could
@@ -73,7 +73,7 @@ export function builtFor(): string {
 /**
  * One line for a screen: which commit, when, and where it thinks it lives.
  *
- * Three facts and not two. Carli, 3 October 2026, looking at
+ * Three facts and not two. The owner, 3 October 2026, looking at
  * `futurebox-app.vercel.app` in her own browser bar and asking whether anything
  * had been pushed at all: the commit answers that question, and the host
  * answers the one she had not asked yet.

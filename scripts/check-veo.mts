@@ -6,7 +6,7 @@
  * ── What it is, and what it is not ───────────────────────────────────────
  *
  * There was already a `veo` provider. That one is Veo **resold by
- * ElevenLabs**. This is Veo on Carli's own Vertex project, measured working
+ * ElevenLabs**. This is Veo on the owner's own Vertex project, measured working
  * on 8 October 2026 — same model, same grade, same picture. The difference
  * is where the money goes and who can stop it.
  *
@@ -119,7 +119,7 @@ ok('the ceiling is the one Google number, not a second copy of it',
 /* ── These two pinned a model her project does not have ─────────────────
  
    Until 9 October 2026 the app ran `veo-3.1-fast-generate-001` at $0.08 a
-   second, and this asserted both. Carli opened Model Garden on her own
+   second, and this asserted both. The owner opened Model Garden on her own
    project and its Veo page says `veo-3.0-generate-001` in every line —
    start, operation name and poll. The 3.1 ids were a number off a web page.
  
@@ -130,7 +130,7 @@ ok('the ceiling is the one Google number, not a second copy of it',
    belonging to a different model is a ceiling measuring the wrong thing. */
 
 const RATES: Record<string, number> = {
-  /* The top of the range Carli's price table quotes ($0.10-$0.15). A range
+  /* The top of the range the owner's price table quotes ($0.10-$0.15). A range
      is a summary rather than Google's own page, and the expensive end is the
      only safe reading of an uncertain price. */
   'veo-3.1-fast-generate-001': 150_000,

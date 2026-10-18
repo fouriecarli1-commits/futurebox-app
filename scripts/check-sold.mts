@@ -4,11 +4,11 @@
  *
  * ── The question, asked twice ────────────────────────────────────────────
  *
- * Carli, 22 September 2026: *"Kyk ook dat die nuwe album art afdeling deel
+ * The owner, 22 September 2026: *"Kyk ook dat die nuwe album art afdeling deel
  * van die free, en betalings pakkette vorm en wys."* A room had been built,
  * it sold, and no package mentioned it existed. A line was added to all four.
  *
- * Carli, 24 September 2026: *"Gaan check asb ons betalings planne of dit
+ * The owner, 24 September 2026: *"Gaan check asb ons betalings planne of dit
  * alles op ons platvorm insluit."* The same question, and it found two more:
  *
  * - The **marketing desk**, a real product at R199 a month, appeared on
@@ -71,7 +71,7 @@ const MUST_BE_ON_EVERY_CARD: { readonly what: string; readonly says: RegExp }[] 
   /* Renamed twice. On 1 October the editor became its own room and was called
      the Cutting room, because the room next door is the Video desk and two
      rooms whose names both begin with "Video" is how somebody opens the wrong
-     one. On 4 October Carli, asked directly, said *"Nee, Video Editor"* — so
+     one. On 4 October the owner, asked directly, said *"Nee, Video Editor"* — so
      that cost is one she has weighed and accepted, and the room carries the
      name she wants it to carry.
 
@@ -125,7 +125,7 @@ const NAMED_ELSEWHERE: Record<string, string> = {
     + ' and a line for every press inside one is a card nobody reads. The'
     + ' button itself says the price before it is pressed, which is where'
     + ' somebody deciding actually looks',
-  /* Priced before the screen that spends it exists, deliberately. Carli set
+  /* Priced before the screen that spends it exists, deliberately. The owner set
      the rule on 6 October — "elke keer wanneer iets afgelaai word kos dit
      krediete" — and a price agreed while the feature is being designed is a
      price nobody has to argue about later. It goes on the cards the day the
@@ -164,7 +164,7 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      before the press, refunded when the page cannot be read. */
   adLink: 'on its own button on the advert desk, before the press',
   cutout: 'on every card, priced beside the cutting room',
-  /* The cutting room's own price, 1 October 2026. Carli: *"Onthou dat
+  /* The cutting room's own price, 1 October 2026. The owner: *"Onthou dat
      hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
      card in the same sentence as the room, because a room that charges and a
      room that does not are two different products and the card has to say
@@ -192,7 +192,7 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   erase: 'on every card, in the same line as the background — same rate, same sentence',
   /* ── What is IN the film, 3 October 2026 ───────────────────────────────
 
-     Carli: *"elke element wat op die video editing gebruik word [moet]
+     The owner: *"elke element wat op die video editing gebruik word [moet]
      krediete dra ... Dus moet die tekste, die filters, die generations ens
      alles krediete dra."*
 
@@ -220,7 +220,7 @@ ok(`every price in the table is on a card or has a written reason not to be — 
   `${unexplained.join(', ')} — add it to a plan card, or to NAMED_ELSEWHERE in this file with the reason`);
 
 /* ── Two tills, and only two ──────────────────────────────────────────────
-   Carli, 24 September 2026: *"Te veel aankoop punte gaan mense afsit."*
+   The owner, 24 September 2026: *"Te veel aankoop punte gaan mense afsit."*
 
    This loop used to walk the add-on shelf and insist each thing on it was
    named on the cards. The shelf is empty now and the rule is stronger: there
@@ -254,7 +254,7 @@ for (const file of ['app/components/Account.tsx', 'app/components/Landing.tsx'])
  
    This read a plan's monthly credits as its song count times ten, which
    was exactly right while a song cost ten credits and silently wrong the
-   moment one did not. Carli put a two-minute song at R11.50 on 11 October
+   moment one did not. The owner put a two-minute song at R11.50 on 11 October
    — eight credits — and this began reporting Maker as having 120 credits
    when it has 100, and would have had somebody rewrite a card that was
    correct.
@@ -276,7 +276,7 @@ ok('  and Maker still cannot, which is why its card says so',
 /* ── And the same arithmetic for everything else a card quotes a price for ─
 
    The dubbing rule above was written for one line and caught one thing. The
-   prices rose on 24 September — Carli: *"Die krediete wat ons hef vir die
+   prices rose on 24 September — the owner: *"Die krediete wat ons hef vir die
    ekstra produkte is heeltemal te min"* — and a price rise is exactly when a
    card starts offering somebody something their month cannot reach.
 

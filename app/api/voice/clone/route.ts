@@ -104,7 +104,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   /* ── And how many have been TRAINED lately, kept or not ─────────────────
-     Carli, 14 October 2026: a strong limit on AI voice training. Every
+     The owner, 14 October 2026: a strong limit on AI voice training. Every
      training is a 'clone' spend on the ledger with the ref below, and a
      failed one is a refund with the same ref, so the count is the trainings
      that happened. Not read is not "none": a ledger that cannot be asked

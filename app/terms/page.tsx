@@ -41,7 +41,7 @@ export const metadata = {
 
    So the sentence promised members a licence the supplier has said in writing
    is not theirs to rely on. Nobody has relied on it — there are no paying
-   members, confirmed by Carli on 10 September — and that is exactly why it is
+   members, confirmed by the owner on 10 September — and that is exactly why it is
    fixed now rather than after launch, when changing it would owe everybody
    notice.
 
@@ -135,7 +135,7 @@ export default function Terms(): React.ReactElement {
           <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
             {/* ── Added 8 October 2026 ─────────────────────────────
 
-                Carli was reading Google's Lyria terms and sent a summary
+                The owner was reading Google's Lyria terms and sent a summary
                 of them. It made a point this page had never made, and the
                 point is not about Google: it is true of every generated
                 song in this app, including the ones made today.
@@ -248,7 +248,7 @@ export default function Terms(): React.ReactElement {
           <p>You need to be 18 or older to hold an account and to pay for a plan. If you are younger than that, a parent or guardian holds the account and is responsible for what is made on it.</p>
         </Section>
 
-        {/* Carli, 14 October 2026: "Onthou ons het nou 'n kids room by so
+        {/* The owner, 14 October 2026: "Onthou ons het nou 'n kids room by so
             daardie legal goed moet ook in gesit word." What the room is, who
             answers for it, and how its own credits behave — each line true
             of the code: the door is on the welcome page only, kids credits
@@ -277,7 +277,7 @@ export default function Terms(): React.ReactElement {
           </ul>
         </Section>
 
-        {/* Carli, 14 October 2026: "Onthou om 'n fair usage op te stel, en ek
+        {/* The owner, 14 October 2026: "Onthou om 'n fair usage op te stel, en ek
             dink daar moet 'n sterk limit wees op ai voice training." Every
             number here is enforced in code, not only written down: the voice
             limits in PODCAST_CAPS (lib/plans.ts) and api/voice/clone, the

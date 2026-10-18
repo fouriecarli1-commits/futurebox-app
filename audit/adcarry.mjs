@@ -3,7 +3,7 @@
  *
  * ── What this proves that no source check can ────────────────────────────
  *
- * Carli, 11 September 2026, on the desk as a product she is selling:
+ * The owner, 11 September 2026, on the desk as a product she is selling:
  *
  *   "When you push the buttons to take you to podcast, to video, to music
  *    making, the text and shots and scripts don't carry over to the next
@@ -59,7 +59,7 @@ const PICKS = {
       styleWhy: 'Hands doing the work is the one thing a generated clip cannot fake.',
     },
     {
-      /* The format Carli pressed on 18 September, and the one nothing had
+      /* The format the owner pressed on 18 September, and the one nothing had
          ever walked. Its whole payload is `write_scenes`, which lands in
          the storyboard — a card further down the video desk than the shot
          box, and shut. */
@@ -153,7 +153,7 @@ try {
 
   /* ── The room opens folded ──────────────────────────────────────
  
-     Carli, 12 September 2026: "Make sure every rooms drop down menu is
+     The owner, 12 September 2026: "Make sure every rooms drop down menu is
      closed from the beginning and the user can open it."
  
      Asserted HERE, before anything is pressed, because `toRoom` unfolds on
@@ -216,7 +216,7 @@ try {
 
   /* ── What she sees, before anything is unfolded ──────────────────
  
-     Carli, 18 September 2026: *"As ek druk op open the room dan vat hy my
+     The owner, 18 September 2026: *"As ek druk op open the room dan vat hy my
      net na die regte kamer toe, maar die AI vul nie die afdelings vir my
      in nie. Dit is 'n groot flaw."*
  
@@ -303,7 +303,7 @@ try {
 
   /* ── And the copilot beside it ──────────────────────────────────
  
-     Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds
+     The owner, 20 September 2026: *"Die advert room se prompts spring nogsteeds
      nie oor na die nuwe kamer toe se copilot nie."* And again on 22
      September: *"adverts sit nogsteeds nie die prompt in die nuwe kamers
      nie."*

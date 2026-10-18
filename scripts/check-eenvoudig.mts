@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 15 October 2026, beside a screenshot of ElevenLabs' music box:
+ * The owner, 15 October 2026, beside a screenshot of ElevenLabs' music box:
  * *"Ek dink ons moet in make a song, die simple en everything wegvat en net
  * so box rondom copilot bou wat alles in het, selfs 'n button wat uit pop om
  * die weirdness te verstel. Daar kan dan ook bo in daai raam wees 'n easy en
@@ -98,7 +98,7 @@ ok('  and the one button is under the words',
   '"onder die woorde moet die finale clear wees make the song"');
 
 /* ── 7. The newest song above the box ──────────────────────────────────
-   Carli, 15 October 2026, a phone screenshot: the song and its three buttons
+   The owner, 15 October 2026, a phone screenshot: the song and its three buttons
    on one line, and the buttons pushed the name out and ran off the screen. */
 ok('the newest song\u2019s buttons sit on their own row, and wrap',
   /data-top-mini-actions className="flex flex-wrap/.test(room)

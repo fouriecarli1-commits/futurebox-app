@@ -3,7 +3,7 @@
  *
  * ── The fault this is the fix for ────────────────────────────────────────
  *
- * Carli reported a white screen on the shot's cast three times, and the
+ * The owner reported a white screen on the shot's cast three times, and the
  * third time she said the thing that solved it:
  *
  *   *"Dit is weird want die add a photo wat net langs dit is werk, maar
@@ -132,7 +132,7 @@ ok('and the strip beside it, which always worked, still renders a thumbnail',
 
 /* ── And a refusal says WHICH refusal ────────────────────────────────────
 
-   Carli, twice: *"die add a cast member heeltemal afhaal en weer oor doen.
+   The owner, twice: *"die add a cast member heeltemal afhaal en weer oor doen.
    Die witskerm bly op kom"*, and then, a week later: *"Die button net onder
    hom wat sê dat mens 'n foto kan oplaai werk, maar die cast member oplaai
    werk nie."*

@@ -65,7 +65,7 @@ export const BAR_HEIGHT = 64;
  *
  * ── The bug this exists to end ───────────────────────────────────────────
  *
- * Carli: "in make a video, die buttons heel onder sny copilot se prompt bar
+ * The owner: "in make a video, die buttons heel onder sny copilot se prompt bar
  * af."
  *
  * The bar is `BAR_HEIGHT` of content *plus* `env(safe-area-inset-bottom)`,
@@ -96,7 +96,7 @@ export function barClearance(extra = 12): string {
  * something `position: fixed`, which is not in the flow and so is not pushed
  * by anybody's padding. Those need the number on their own `bottom`.
  *
- * Carli, 18 September 2026, with a photograph of the "Want a video for this
+ * The owner, 18 September 2026, with a photograph of the "Want a video for this
  * one?" card: *"daai pop up window is half uit die prent."* Measured on a
  * 390-pixel phone, its bottom was at 820 and the bar's top at 786 — so 34
  * pixels of it, which is exactly the button row, sat under a bar painted at
@@ -137,7 +137,7 @@ const TABS: readonly {
      place it left. */
   { id: 'live', icon: Radio, key: 'tab.live', fallback: 'Live' },
   { id: 'make', icon: Sparkles, key: 'tab.make', fallback: 'Make' },
-  /* "Channel", not "Library". Carli, 13 September 2026: "Verander ook
+  /* "Channel", not "Library". The owner, 13 September 2026: "Verander ook
      library se naam na channel."
 
      It is what the tab has always opened — her channel, with her recording

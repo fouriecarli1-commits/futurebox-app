@@ -1,7 +1,7 @@
 /**
  * The kids room's own prices: credits for the kids room and nowhere else.
  *
- * Carli, 14 October 2026: *"In die pricing page moet die kids room ook 'n
+ * The owner, 14 October 2026: *"In die pricing page moet die kids room ook 'n
  * aparte prys hê."* And on the three suggested: *"Prys voorstelle is reg vir
  * kids studio. Moet net nie die family ding sê nie, ek dink ons app kan op
  * enige device oop maak, en sodra credits op raak is dit hulle saak."*

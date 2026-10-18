@@ -3,7 +3,7 @@
  *
  * ── What she asked, and why it needed no new engine ──────────────────────
  *
- * Carli, 10 October 2026, reading Google's capability list: *"Ek hou nogal
+ * The owner, 10 October 2026, reading Google's capability list: *"Ek hou nogal
  * van die funksie Image-to-Video… Ek wonder ook of google se modelle net
  * bietjie motion kan gee aan foto's? Dit kan baie van ons photo editing tools
  * verbeter, en vir al ook vir foto's wat vir bemarking gebruik word en social

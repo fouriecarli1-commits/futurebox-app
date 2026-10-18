@@ -13,7 +13,7 @@
  *
  * ── Why it exists at all ─────────────────────────────────────────────────
  *
- * Carli hit a white screen choosing a photo, twice, and both explanations I
+ * The owner hit a white screen choosing a photo, twice, and both explanations I
  * offered were wrong — a memory death and an in-app browser, each ruled out
  * by her next message. They were beaten by the same thing: a white screen
  * keeps its reason to itself, and the console it is written to does not exist

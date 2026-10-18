@@ -15,7 +15,7 @@
  * "a video of this episode", and the first thing worth saying is that the
  * whole episode is not the video.
  *
- * Carli, 14 September 2026: "Podcast na aanbieder deur moet mens na long shot
+ * The owner, 14 September 2026: "Podcast na aanbieder deur moet mens na long shot
  * toe vat en copilot se assistence dadelik verander na dit wat die kamer vir
  * die podcast moet doen."
  *
@@ -40,7 +40,7 @@ import type { SurfaceId } from './surfaces';
 
 /* ── One was not enough, and she is the one who noticed ────────────────
  
-   Carli, 10 October 2026: *"Copilot se suggestions vir generations moet meer
+   The owner, 10 October 2026: *"Copilot se suggestions vir generations moet meer
    wees. Tans is daar net een suggestion waarmee hy voorstel om te help."*
  
    Exactly right, and the shape of the fault is worth writing down: the app

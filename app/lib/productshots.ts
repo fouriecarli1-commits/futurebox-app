@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 16 October 2026, on her phone: *"Generate product photos in
+ * The owner, 16 October 2026, on her phone: *"Generate product photos in
  * seconds."* Planned on the 17th: her own product — off the post, or brought
  * in — set on marble, on a beach, on a podium, in a kitchen, and lit as if it
  * had been there, by the same engine and route as the magic touch.

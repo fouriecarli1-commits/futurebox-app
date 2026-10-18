@@ -1,7 +1,7 @@
 /**
  * Best moments, on the video editor's clip bench, used the way she would.
  *
- * Carli, 16 October 2026: a clipper that finds the best moments and arranges
+ * The owner, 16 October 2026: a clipper that finds the best moments and arranges
  * them. A shot of near-silence with three loud bursts in it is brought in,
  * a fifteen-second reel is asked for, and the clock is read: the one shot is
  * now several, each starting at a burst, the room says what it did, and Undo

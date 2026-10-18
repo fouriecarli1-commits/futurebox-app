@@ -38,12 +38,13 @@ const check = (label: string, ok: boolean, detail = '') => {
 /**
  * Who this app may put its own name on.
  *
- * An `original` is FutureBox's own, so its instructor is somebody here. A
+ * An `original` is FutureBox's own, so its byline is FutureBox — never a
+ * person's name, since 18 October 2026. A
  * `curated` is somebody else's, so its instructor is not. Getting that
  * backwards in either direction is the fault above: our name on their work,
  * or their name on ours.
  */
-const OURS = ['futurebox', 'anre fourie', 'anré fourie', 'carli'];
+const OURS = ['futurebox'];
 const isOurs = (who: string) => OURS.some((one) => who.trim().toLowerCase().includes(one));
 
 check('there is a shelf at all', MASTERCLASSES.length > 0, `${MASTERCLASSES.length} entries`);
@@ -118,7 +119,7 @@ console.log(
 
 /* ── The one on the front page ────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Die 1 featured masterclass moet ook groot
+ * The owner, 21 September 2026: *"Die 1 featured masterclass moet ook groot
  * wees, en die res van die masterclasses in 'n drop down… Daar kan nie goed
  * op wees wat random is nie."*
  *
@@ -159,7 +160,7 @@ console.log(
 
   /* ── And the reload is not theatre ─────────────────────────────────
  
-     Carli: *"Die reload button moet actually nuwes generate."* It did move
+     The owner: *"Die reload button moet actually nuwes generate."* It did move
      the window — after waiting two seconds behind a spinner that said
      "Finding different ones…", for a change that was already decided and
      takes no time. Nothing was being found. A wait invented to make a

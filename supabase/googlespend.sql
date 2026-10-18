@@ -4,7 +4,7 @@
 --
 -- ── Waarom dit bestaan ────────────────────────────────────────────────────
 --
--- Carli het op 8 Oktober 2026 'n uitgawe-dak van $100 per maand op Vertex AI
+-- the owner het op 8 Oktober 2026 'n uitgawe-dak van $100 per maand op Vertex AI
 -- gesit, en gesê: "Ek sal my budget in google verhoog soos wat ons wins maak."
 -- Albei is reg. Maar Google se dak hang aan één DIENS, en Lyria, Nano Banana
 -- en Veo is almal daardie een diens.

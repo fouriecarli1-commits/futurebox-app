@@ -3,7 +3,7 @@
  *
  * ── The fault this fixes ─────────────────────────────────────────────────
  *
- * Carli, 11 September 2026, on the desk as a product she is selling:
+ * The owner, 11 September 2026, on the desk as a product she is selling:
  *
  *   "When you push the buttons to take you to podcast, to video, to music
  *    making, the text and shots and scripts don't carry over to the next
@@ -412,7 +412,7 @@ export function carryWords(t: (key: string, fallback: string) => string): Handov
  *
  * ── The half of the hand-off that never travelled ────────────────────────
  *
- * Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds nie
+ * The owner, 20 September 2026: *"Die advert room se prompts spring nogsteeds nie
  * oor na die nuwe kamer toe se copilot nie."* And again on 22 September:
  * *"adverts sit nogsteeds nie die prompt in die nuwe kamers nie."*
  *
@@ -538,7 +538,7 @@ export function handoverFor(input: HandoverInput): readonly Wire[] {
  *
  * ── Why the copilot gets its own wire ────────────────────────────────────
  *
- * Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds
+ * The owner, 20 September 2026: *"Die advert room se prompts spring nogsteeds
  * nie oor na die nuwe kamer toe se copilot nie. Die voorstelle in adverts is
  * puntloos as dit nie dit doen nie."*
  *

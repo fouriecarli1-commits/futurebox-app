@@ -5,7 +5,7 @@
 -- ── Waarom dit nou nodig is ──────────────────────────────────────────────
 --
 -- ElevenLabs se ondersteuning, 9 September 2026: bykoop kos $0,000165 per
--- krediet, en Auto Top Up kan aangeskakel word. Carli, dieselfde dag: "Ek gaan
+-- krediet, en Auto Top Up kan aangeskakel word. The owner, dieselfde dag: "Ek gaan
 -- eers net krediete top up totdat ek 'n beter begrip het hoeveel mense ons
 -- produk gebruik."
 --

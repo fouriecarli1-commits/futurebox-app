@@ -1,7 +1,7 @@
 /**
  * Effects on the sound: a shot's own sound, and the song under the film.
  *
- * Carli, 16 October 2026, screenshots of a desktop editor's audio effects
+ * The owner, 16 October 2026, screenshots of a desktop editor's audio effects
  * shelf — equalisers, a compressor, reverbs, echo, a de-esser, a vocal
  * channel. What a phone browser can do honestly is the Web Audio graph:
  * filters, a compressor, a delay with feedback, a convolver fed a room we
@@ -232,7 +232,7 @@ export function chainAudioFx(ctx: BaseAudioContext, from: AudioNode, to: AudioNo
 }
 
 /* ── Sound across a transition ───────────────────────────────────────────
-   Carli's screenshots carried the audio transitions too: cross fades at 0,
+   The owner's screenshots carried the audio transitions too: cross fades at 0,
    +3 and −3 dB. Shots in this room play one after another, so the sound of
    a shot fades out into a transition and the next one fades in out of it —
    which is what a cross fade sounds like when the two never overlap. The

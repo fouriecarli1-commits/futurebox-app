@@ -3,7 +3,7 @@
 /**
  * The radar — a sweep with the people on it as blips.
  *
- * Carli, 13 October 2026, with Google's Collab Radar page: *"Kyk hoe mooi
+ * The owner, 13 October 2026, with Google's Collab Radar page: *"Kyk hoe mooi
  * lyk collab, kom ons probeer dit so te hou."* The page draws a 360° sweep
  * and six blips. This draws the same sweep over the people who are actually
  * on the radar: everybody who put a name on it, placed by how near their

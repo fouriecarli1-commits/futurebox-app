@@ -102,7 +102,7 @@ for (const name of ONLY === 'pages' ? [] : ROOMS) {
      live inside a bench that opens from one of those icons.
 
      So this walked in, measured an empty floor, reported two nodes and passed,
-     while the labels inside the benches sat at 1.88:1. Carli found it with
+     while the labels inside the benches sat at 1.88:1. The owner found it with
      four photographs and the words *"Niks is duidelik nie."*
 
      That is this probe's own failure mode, not the room's: a measurement of

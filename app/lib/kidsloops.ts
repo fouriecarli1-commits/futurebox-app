@@ -4,7 +4,7 @@
  * From Google's "Create Music Studio" page, 13 October 2026: four picture
  * cards — Dino Stomp, Cosmic Disco, Hero March, Sparkle Dreams. They each
  * played one short tune on one oscillator, round and round, and that was
- * all. Carli, 15 October 2026, looking at them: *"Dit sal cool wees as die
+ * all. The owner, 15 October 2026, looking at them: *"Dit sal cool wees as die
  * funksie regtig loops bou."*
  *
  * So a card now builds a loop the way a loop is built: four layers — drums,

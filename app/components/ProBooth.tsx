@@ -320,24 +320,24 @@ export default function ProBooth({
    */
   const [deskOpen, setDeskOpen] = useState<Desk>(null);
 
-  /* The app's own tab bar goes while this room is open. Carli: *"daai buttons
+  /* The app's own tab bar goes while this room is open. The owner: *"daai buttons
      vervang die harde buttons van die hele app, dan val daai hele bar van die
      app in die booth weg."* */
   useOwnScreen(true);
 
   /* Held sideways, the room lays out across rather than down: the timeline
      and the lane controls in a column on the left, the dock as a rail on
-     the right. Carli: *"dan gaan die buttons weer beter werk aan die kant
+     the right. The owner: *"dan gaan die buttons weer beter werk aan die kant
      van die skerm en nie onder nie."* See `app/lib/sideways.ts`. */
   const sideways = useSideways();
   /* A desk wants the rail for the same reason a turned phone does: width to
      spare. This room already had the rail and only ever offered it to a
-     phone. Carli, 9 October 2026: *"Die website moet nie lyk soos 'n foon
+     phone. The owner, 9 October 2026: *"Die website moet nie lyk soos 'n foon
      app nie."* `lib/atdesk.ts` carries why these are two questions. */
   const atDesk = useAtDesk();
   const onEdge = sideways || atDesk;
   /* Antigravity's studio console and DAW screens were mounted in front of
-     the lanes from 13 October; on 14 October Carli: *"die hele probooth
+     the lanes from 13 October; on 14 October the owner: *"die hele probooth
      moet oorgedoen word … Dit werk nie."* They were mock screens — their
      stems hard-coded, their playback a timer — and a member saw them first
      while the probes, by a special case on the probe's address, saw the
@@ -419,7 +419,7 @@ export default function ProBooth({
      on the same lane should show what the first one bought. */
   /* `saw` is what the workflow actually called its outputs.
  
-     Carli ran the read on 6 October with all three slugs confirmed against
+     The owner ran the read on 6 October with all three slugs confirmed against
      her account, and got "nothing in the answer was a tempo, a key or a list
      of chords" — the workflow ran, and what came back was in a shape this app
      did not recognise. From here that is unfixable: the answer was thrown
@@ -453,7 +453,7 @@ export default function ProBooth({
    * file brought in, a lane thrown out, the copilot's moves, and "Start
    * fresh". After any of those the old loudness trim went on being applied
    * — to what she heard and to the file she exported — for a mix that no
-   * longer existed. Found on 15 October 2026 (Carli: *"Kyk mooi of elke
+   * longer existed. Found on 15 October 2026 (The owner: *"Kyk mooi of elke
    * funksie in … probooth … werk."*).
    *
    * So the reading remembers the lanes it was taken of, and any lane that
@@ -488,7 +488,7 @@ export default function ProBooth({
 
   /* ── The canvas, which is longer than the song ────────────────────
 
-     Carli: *"Wil nie ver op die timeline beweeg nie."*
+     The owner: *"Wil nie ver op die timeline beweeg nie."*
 
      It would not, and the reason is circular rather than a clamp: the song's
      length IS the end of its last lane, so dragging a clip to the right made
@@ -537,7 +537,7 @@ export default function ProBooth({
   /**
    * Come back to where she was.
    *
-   * Carli, 9 September 2026: "'n projek waarmee mens besig is moet half kan
+   * The owner, 9 September 2026: "'n projek waarmee mens besig is moet half kan
    * stoor, en restart waar 'n mens is."
    *
    * Runs once. A lane whose audio will not decode is dropped rather than
@@ -746,7 +746,7 @@ export default function ProBooth({
    *
    * There was no way to do this at all: `at` only ever moved because
    * something was playing, so the only way to hear the middle of a song was
-   * to play it from the top. Carli: *"Die lyn wat deur die timeline beweeg
+   * to play it from the top. The owner: *"Die lyn wat deur die timeline beweeg
    * moet langer wees sodat 'n vinger hom kan vang en die klank plek kan
    * drag."* — a line you can catch is only worth catching if letting go of it
    * moves the sound.
@@ -926,7 +926,7 @@ export default function ProBooth({
   /**
    * Out of the room — and never with a take still running.
    *
-   * Found on 15 October 2026, when Carli asked for every function in the
+   * Found on 15 October 2026, when the owner asked for every function in the
    * booth to be looked at (*"Kyk mooi of elke funksie in … probooth …
    * werk."*). The header's Back and the phone's back gesture both closed the
    * room while the recorder ran. The room unmounted, the recorder with it,
@@ -1069,7 +1069,7 @@ export default function ProBooth({
   /**
    * ── Where this lane's sound changes ──────────────────────────
    *
-   * Carli, 10 October 2026: *"sal dit 'n goeie funksie wees as die booth na
+   * The owner, 10 October 2026: *"sal dit 'n goeie funksie wees as die booth na
    * die klank baan luister, en die natuurlike oorgange identifiseer … dan as
    * mens op dit click spring die driehoekies aan die onderste lyn van die
    * klank baan op by elke natuurlike oorgange, progressies, modulasies. Dit
@@ -1108,7 +1108,7 @@ export default function ProBooth({
   /**
    * ── A lane out of the room, as sound or as notes ───────────────
    *
-   * Carli, 10 October 2026: *"iemand op 'n spesifieke track kan click en dan
+   * The owner, 10 October 2026: *"iemand op 'n spesifieke track kan click en dan
    * is daar 'n dropdownmenu wat die opsie gee vir download midi, download
    * wav. Dit gee die geleentheid om 'n sekere klank te save vir 'n ander
    * projek."*
@@ -1126,7 +1126,7 @@ export default function ProBooth({
    * from a broken export.
    */
   /* ── The quality a file is written in ─────────────────────────────
-     Carli, 14 October 2026, from the ProBooth design she sent: the stems
+     The owner, 14 October 2026, from the ProBooth design she sent: the stems
      and the mix come out at the quality she picks. Remembered on this
      device, because somebody who works in 24-bit works in 24-bit every
      time; the storage can be missing, so 16 stands when it is. */
@@ -1273,7 +1273,7 @@ export default function ProBooth({
    *
    * ── What she asked for ────────────────────────────────────────────────
    *
-   * Carli, 16 September 2026: *"ook 'n interlock funksie om twee tydlyne met
+   * The owner, 16 September 2026: *"ook 'n interlock funksie om twee tydlyne met
    * mekaar vas te maak."*
    *
    * ── Joining two locks, which is the case that goes wrong ──────────────
@@ -1329,7 +1329,7 @@ export default function ProBooth({
   /**
    * Move a lane up or down the stack, swapping it with its neighbour.
    *
-   * Carli: *"Tracks moet ook geswitch kan word, menend op en af beweeg en
+   * The owner: *"Tracks moet ook geswitch kan word, menend op en af beweeg en
    * omgeruil word."* A swap rather than a lift-and-insert, because that is
    * what she described and because on a phone it is the gesture that can be
    * done with one thumb and undone with the other button.
@@ -1351,7 +1351,7 @@ export default function ProBooth({
    * interlocked group in half every time one of its members was moved —
    * because a swap knows about two indexes and nothing about a group.
    *
-   * Carli, 18 September 2026, asked for the arrows to be in the gutter and
+   * The owner, 18 September 2026, asked for the arrows to be in the gutter and
    * gave the reason in the same breath: *"dit raak belangrik wanneer 'n hele
    * tydlyn se klankbane gelyktydig opgeskuif moet word."* The reason was the
    * real finding. The arrows already existed, here on the lane's own card —
@@ -1664,7 +1664,7 @@ export default function ProBooth({
            it, so the screen could not even read a reason and fell back to
            "The room could not be taken off that lane."
  
-           Carli hit exactly that on 6 October, on a 1:12 lane. `runThrough`
+           The owner hit exactly that on 6 October, on a 1:12 lane. `runThrough`
            two hundred lines up has used `attach` since it was written, and
            `/api/voice/clean` has taken a storage key for just as long — the
            road existed and this one call was not on it. */
@@ -1682,7 +1682,7 @@ export default function ProBooth({
         });
         if (!response.ok) {
           const said = (await response.json().catch(() => ({}))) as { message?: string };
-          /* The status when there are no words. Carli pressed this on
+          /* The status when there are no words. The owner pressed this on
              6 October and got the bare sentence, which means the refusal
              carried no `message` at all — a `charge()` that answered with
              only an `error`, or an engine that refused without one. Those
@@ -1837,7 +1837,7 @@ export default function ProBooth({
   /**
    * Mono, stereo, or folded for a surround decoder.
    *
-   * Carli, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
+   * The owner, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
    *
    * One state for both doors — the phone and the Library — because a song
    * that goes to her channel in a different layout from the one she just
@@ -1849,7 +1849,7 @@ export default function ProBooth({
 
   /* ── Paying for a bounce ───────────────────────────────────────────────
 
-     Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
+     The owner, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
      krediete werd is."* The same decision as the cutting room, and the same
      shape: everything in this room — recording, the lanes, the grid, the
      metronome, the faders, the mastering, undo — is free however long
@@ -1997,7 +1997,7 @@ export default function ProBooth({
 
   /* ── Out of the room, as a file ─────────────────────────────────
 
-     Carli, 15 September 2026: *"Onthou die volledige mixing moet uiteindelik
+     The owner, 15 September 2026: *"Onthou die volledige mixing moet uiteindelik
      'n export knoppie hê, mens moet dit kan save op 'n manier na channel en
      foon."*
 
@@ -2055,7 +2055,7 @@ export default function ProBooth({
         /* ── Why, and not just that ───────────────────────────────────
  
            This said "That amp could not be brought in" for six different
-           refusals. Carli pressed it on 6 October, got that sentence, and
+           refusals. The owner pressed it on 6 October, got that sentence, and
            neither of us could tell an amp with no NAM file in it from
            TONE3000 refusing the download from our own database being
            unreachable — three problems with three different answers, and
@@ -2185,7 +2185,7 @@ export default function ProBooth({
 
   /* ── The desks ────────────────────────────────────────────────────
 
-     Carli, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
+     The owner, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
      button bar … en links en regs van dit is Track control icon en
      mix/master icon, en daaruit pop al die netjiese funksies op."*
 
@@ -2253,7 +2253,7 @@ export default function ProBooth({
 
   /* ── The cut, which is a cut and costs nothing ──────────────────
 
-     Carli, 15 September: *"Die cut tool doen niks nie. Daar moet 'n
+     The owner, 15 September: *"Die cut tool doen niks nie. Daar moet 'n
      moontlikheid wees om die timeline te split."*
 
      There was no cut tool. There were two pairs of scissors that meant
@@ -2337,7 +2337,7 @@ export default function ProBooth({
 
   /* ── A marked piece of the song ──────────────────────────────────────
 
-     Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging
+     The owner, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging
      lines in die timeline te hê wat 'n gedeelte uitsonder, dan highlight
      daai gedeelte met 'n button wat op pop met verskillende opsies binne die
      button, cut, dalk ai tool wat die klank verbeter, of 'n instrument
@@ -2544,7 +2544,7 @@ export default function ProBooth({
    * them already take a lane and send `pieceOf` it; there is nothing to
    * change in either.
    */
-  /* Up to three at once (Carli, 14 October 2026: "die ai magic vir
+  /* Up to three at once (The owner, 14 October 2026: "die ai magic vir
      humming wat weer stems create"): one hum, played back as a stem per
      instrument, each on a lane of its own. A fourth press replaces the
      oldest, so the list never needs emptying first. */
@@ -2599,7 +2599,7 @@ export default function ProBooth({
     setRegionOpen(false);
   }, [carveHere, commit, context]);
 
-  /* The keyboard. Carli, 14 October 2026: "Die keyboard shortcuts vir sekere
+  /* The keyboard. The owner, 14 October 2026: "Die keyboard shortcuts vir sekere
      goed moet ook kan werk". The same keys the video editor answers: Ctrl+Z
      and Ctrl+Y (or Ctrl+Shift+Z) step back and forward, Space plays and
      stops, S cuts the open lane at the playhead, and Delete takes out the
@@ -2911,7 +2911,7 @@ export default function ProBooth({
 
         {/* ── Where this lane sits, and what it is locked to ────────────
 
-            Carli, 16 September 2026: *"Tracks moet ook geswitch kan word,
+            The owner, 16 September 2026: *"Tracks moet ook geswitch kan word,
             menend op en af beweeg en omgeruil word"* and *"'n interlock
             funksie om twee tydlyne met mekaar vas te maak."*
 
@@ -3034,7 +3034,7 @@ export default function ProBooth({
 
   /* ── Getting the song out of the room ─────────────────────────
 
-     Carli, 15 September: *"Dan wil ek weet hoe export 'n liedjie? Ek sien
+     The owner, 15 September: *"Dan wil ek weet hoe export 'n liedjie? Ek sien
      nerens iets oor dit nie?"*
 
      Both destinations existed and neither was findable. "Save to my phone"
@@ -3063,7 +3063,7 @@ export default function ProBooth({
     >
       {/* ── Which layout the file comes out in ─────────────────────────
 
-          Carli, 21 September 2026: *"Mono/stereo/dolby surround. Download
+          The owner, 21 September 2026: *"Mono/stereo/dolby surround. Download
           type."*
 
           Above both buttons, not beside one, because it is a property of
@@ -3261,7 +3261,7 @@ export default function ProBooth({
 
       {/* ── Taking things off the mix ─────────────────────────────
 
-          Carli's mastering list had "Take off, rumble, hiss" on it and this
+          The owner's mastering list had "Take off, rumble, hiss" on it and this
           desk had neither. Both are one filter and both run on the shared
           master bus, so what she hears is what the file gets — see
           `wireMaster`. */}
@@ -3604,7 +3604,7 @@ export default function ProBooth({
 
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4 pt-2">
               {/* ── AI magic, on the marked piece alone ──────────────────
-                  Carli, 14 October 2026: "Pobooth moet ook die klanke kan
+                  The owner, 14 October 2026: "Pobooth moet ook die klanke kan
                   skoon maak, verbeter of verander via AI. Daai drag lines om
                   sekere gedeeltes te verbeter, of om oorgange uit te smooth."
                   Each one cuts the mark onto a piece of its own first, so
@@ -3982,7 +3982,7 @@ export default function ProBooth({
      Stems that did not mention splitting would send people looking. */
   /* ── Hum it, and have it played ────────────────────────────────────────
  
-     Carli, 9 October 2026, about a thing Suno had launched: *"Wat oulik is
+     The owner, 9 October 2026, about a thing Suno had launched: *"Wat oulik is
      is dat mens die ritme van 'n liedjie met jou stem kan sing en in sit, en
      dan kies jy net die instrument tipe."*
  
@@ -4001,7 +4001,7 @@ export default function ProBooth({
  
      The one picked, or the newest take if nothing is picked.
  
-     Carli, 9 October 2026, looking at the first version: *"Daar is niks wat
+     The owner, 9 October 2026, looking at the first version: *"Daar is niks wat
      record nie."* She was right, and it was the whole feature: the card said
      "Pick a lane first" and the way to MAKE that lane was a record button on
      a different desk. Recording does not pick the new lane either — only a
@@ -4098,7 +4098,7 @@ export default function ProBooth({
   const stemDesk = (
     <>
       {/* ── Every lane, as its own file; and a lane made better by AI ──────
-          Carli, 14 October 2026: *"Stems moet ook apart gedownload kan word.
+          The owner, 14 October 2026: *"Stems moet ook apart gedownload kan word.
           Stems moet ook deur ai integration verbeter kan word."* Each lane
           could already be taken away one at a time from its own card, and
           cleaned one at a time from there too. Both are here now for every
@@ -4230,7 +4230,7 @@ export default function ProBooth({
           </div>
 
           {/* ── 2. Pick the sound ─────────────────────────────────────────
-              One column, not two. Carli, 9 October 2026: *"Dit lyk nie goed
+              One column, not two. The owner, 9 October 2026: *"Dit lyk nie goed
               nie."* This desk is already two columns wide on a phone, so a
               grid of two inside one of them gave each button about forty
               pixels of text — "An / octave / down / from / what / you /
@@ -4238,7 +4238,7 @@ export default function ProBooth({
               separate lines, uses the width the card actually has. */}
           <div className="space-y-1.5">
             {/* ── Or a voice ─────────────────────────────────────────────
-                Carli, 14 October 2026: *"Die sing/humm vir stem parts moet
+                The owner, 14 October 2026: *"Die sing/humm vir stem parts moet
                 ook daar wees."* An instrument plays the notes of a hum on
                 the device; a VOICE has to sing them, and that is the voice
                 changer every lane already has — the hum is sung back in a
@@ -4259,7 +4259,7 @@ export default function ProBooth({
             </p>
             {/* ── Under headings, because there are thirteen of them now ──
 
-                Four on 9 October, thirteen on the 10th. Carli: *"daar moet
+                Four on 9 October, thirteen on the 10th. The owner: *"daar moet
                 van alles wat opsies is, 'n verskeidenheid wees."*
 
                 Thirteen in one column is the list nobody reads past the
@@ -4373,7 +4373,7 @@ export default function ProBooth({
 
   /* ── The copilot's desk ────────────────────────────────────────────
 
-     Carli: *"Copilot pop op en vra dat persoon 'n mixing voorstel en copilot
+     The owner: *"Copilot pop op en vra dat persoon 'n mixing voorstel en copilot
      kan die mixing verander volgens die vraag en voorstel."*
 
      What it is told is the desk — every lane's name, fader, place and which
@@ -4452,7 +4452,7 @@ export default function ProBooth({
           at the foot of the screen. */}
       {/* ── Two across, one width each ───────────────────────────────
  
-          Carli, 7 October 2026: *"bars binne pop outs moet ewe groot en lank
+          The owner, 7 October 2026: *"bars binne pop outs moet ewe groot en lank
           wees"*. This was `flex flex-wrap`, which gives every button the width
           of its own words: "Play" came out 81, "Click" 85 and "Back to the
           start" 140, three in a row with a ragged right edge, and the row
@@ -4472,7 +4472,7 @@ export default function ProBooth({
             {/* Not "Stop".
 
                 While a take is being recorded the transport beside this one
-                also reads "Stop", and Carli hit both: two buttons, the same
+                also reads "Stop", and the owner hit both: two buttons, the same
                 word, one ends the recording and one ends the playback. A
                 stop button has to say what it stops. */}
             {t('pro.stopRecording', 'Stop recording')}
@@ -4491,7 +4491,7 @@ export default function ProBooth({
 
         {/* ── The way to the words ─────────────────────────────────────────
 
-            Carli: "wanneer mens record moet daar op 'n manier 'n baie meer
+            The owner: "wanneer mens record moet daar op 'n manier 'n baie meer
             duidelike riglyn wees hoe om te kom by die plek waar mens saam met
             die woorde kan record en dan die opsie om saam met die AI stem te
             record."
@@ -4537,7 +4537,7 @@ export default function ProBooth({
 
         {/* ── The click, beside the thing you press to hear it ───────────
 
-            Carli, 21 September 2026, asking for a feature that already
+            The owner, 21 September 2026, asking for a feature that already
             exists: *"Metronome in probooth."*
 
             It is built and it is good — its own class, its own clock, a
@@ -4649,7 +4649,7 @@ export default function ProBooth({
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {/* Not "Mix it down".
  
-              Carli: "wanneer daar baie klanke en sound bars gelayer word, hoe
+              The owner: "wanneer daar baie klanke en sound bars gelayer word, hoe
               word dit uiteindelik as een liedjie ge-export? is dit duidelik?
               gaan mense weet hoe?"
  
@@ -4671,7 +4671,7 @@ export default function ProBooth({
 
         {/* Getting the song out of the room has a card of its own on Mix &
             master — see `exportCard`. It was here, at the end of a wrapping
-            row of seven buttons, and Carli looked for it and did not find
+            row of seven buttons, and the owner looked for it and did not find
             it: *"Dan wil ek weet hoe export 'n liedjie? Ek sien nerens iets
             oor dit nie?"* A button that exists at the bottom of a strip is
             a button that does not exist. */}
@@ -4824,7 +4824,7 @@ export default function ProBooth({
        bar with nothing to say so, and every probe had rendered the room
        without the bar, so nothing had ever noticed.
 
-       Carli, 9 September 2026: "hoe export mens of bring alles by mekaar?
+       The owner, 9 September 2026: "hoe export mens of bring alles by mekaar?
        Iets soos 'n mix together knoppie?" It was there. It was covered.
 
        The number lives in one place now — the `below-tabs` rule in
@@ -4951,7 +4951,7 @@ export default function ProBooth({
 
       {/* ── That the work is being kept, and that it was picked back up ────
 
-          Carli lost a whole session to a back gesture: "toe ek terug swipe of
+          The owner lost a whole session to a back gesture: "toe ek terug swipe of
           back druk, dan gooi hy mens heeltemal uit na die home screen toe en
           jy verloor jou hele projek."
 
@@ -4998,7 +4998,7 @@ export default function ProBooth({
 
       {/* ── The timeline ───────────────────────────────────────────────
 
-          Carli, 14 September 2026: *"Die timeline van die verskillende layers
+          The owner, 14 September 2026: *"Die timeline van die verskillende layers
           moet reg by en teen mekaar wees."*
 
           One shared axis for the ruler and every lane, so alignment is a
@@ -5091,7 +5091,7 @@ export default function ProBooth({
 
           Outside the column above, and that is the whole point of the line.
 
-          Carli, 15 September: *"Die stem generation op die ai liedjies wil
+          The owner, 15 September: *"Die stem generation op die ai liedjies wil
           nie die instrumente split van die liedjies nie."*
 
           It may well be refusing for a reason it is perfectly willing to
@@ -5147,7 +5147,7 @@ export default function ProBooth({
 
       {/* ── The marked piece, and the button that opens its tools ──────
 
-          Carli: *"highlight daai gedeelte met 'n button wat op pop met
+          The owner: *"highlight daai gedeelte met 'n button wat op pop met
           verskillende opsies binne die button."*
 
           One button, and the options inside it. Pinned above the bars rather
@@ -5317,7 +5317,7 @@ function LaneRow({
 
   /* ── The shelf ────────────────────────────────────────────────────────
  
-     Carli, 23 September 2026: *"ek wil 'n ordentlike probooth bou en voel ons
+     The owner, 23 September 2026: *"ek wil 'n ordentlike probooth bou en voel ons
      moet ook nog amp modellers in bring."*
  
      The modelling was already here. What was not was anywhere to keep a
@@ -5384,7 +5384,7 @@ function LaneRow({
       await runThrough(json, name);
       /* ── Who made it, and what may be done with it ────────────────
  
-         Carli, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us
+         The owner, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us
          permission if we add their name on products?"* Partly — three of
          the eight licences a capture can carry forbid selling outright,
          and the credit a `cc-by` asks for is the MAKER's name, not the
@@ -5452,7 +5452,7 @@ function LaneRow({
       <div className="w-full sm:w-40 shrink-0 space-y-1">
         {/* ── The name, as a field rather than as text ─────────────
 
-            Carli, 10 October 2026: *"Op elke track van die probooth moet daar
+            The owner, 10 October 2026: *"Op elke track van die probooth moet daar
             'n manier wees om die track 'n naam te gee. Vir 'n professional
             moet hulle weet watter instrument is waar."*
 
@@ -5525,14 +5525,14 @@ function LaneRow({
           waveform with a note saying a ruler across the top could not be
           trusted, because "bar 2 on the ruler sat nowhere near bar 2 in the
           audio". That note was right about this layout and is the reason
-          there is a different one. Carli: *"Die timeline van die verskillende
+          there is a different one. The owner: *"Die timeline van die verskillende
           layers moet reg by en teen mekaar wees."*
 
           Two places to cut the same lane would also be two places to
           disagree about where the cut is. */}
       {/* ── The word, which this did not have ─────────────────────────
  
-          Carli, 6 October 2026: *"Daai drie strepies ekstra funksies is
+          The owner, 6 October 2026: *"Daai drie strepies ekstra funksies is
           darem baie weggesteek."*
  
           She is right, and the fault was not where the drawer sits. Behind
@@ -5571,7 +5571,7 @@ function LaneRow({
           This was `w-32` — 128 pixels — and `flex-shrink-0`, holding an L, a
           slider and an R that come to 155. A box that may not shrink and is
           smaller than its contents does not scroll and does not wrap: it
-          paints the overflow over whatever is beside it. What Carli saw was
+          paints the overflow over whatever is beside it. What the owner saw was
           this block's "R" printed underneath the start-time field next to it:
           "kyk fyn na bar langs die skertjie. daar is iets dubbel daar."
 
@@ -5594,7 +5594,7 @@ function LaneRow({
              out the width of "L", a gap and "R", and the slider painted
              straight across the R and into the start-time field beside it.
  
-             Carli, looking at the fix: "daar is steeds iets bo oor die R. dit
+             The owner, looking at the fix: "daar is steeds iets bo oor die R. dit
              lyk soos 'n 0." It was the slider, over the R, over the 0.
  
              A stated width contributes itself to the measurement, which is
@@ -5668,7 +5668,7 @@ function LaneRow({
         </button>
         {/* ── Take this one away ─────────────────────────────
 
-            Carli, 10 October 2026: *"iemand op 'n spesifieke track kan click
+            The owner, 10 October 2026: *"iemand op 'n spesifieke track kan click
             en dan is daar 'n dropdownmenu wat die opsie gee vir download midi,
             download wav. Dit gee die geleentheid om 'n sekere klank te save
             vir 'n ander projek."*
@@ -5757,7 +5757,7 @@ function LaneRow({
         )}
         {/* ── What the row of icons does, before it is pressed ────────────
 
-            Carli: "daar moet pop out vraagtekens wees by die skêr, en die
+            The owner: "daar moet pop out vraagtekens wees by die skêr, en die
             layer, en die sirkel. voordat mense daarop click moet hulle weet
             wat dit gaan doen."
 
@@ -5854,7 +5854,7 @@ function LaneRow({
     {open && (
       <div className="border-t border-zinc-800 px-3 py-2.5 space-y-2">
         {/* ── The rig, at a glance ───────────────────────────────────────
-            Carli, 14 October 2026, from the TONE3000 page in her ProBooth
+            The owner, 14 October 2026, from the TONE3000 page in her ProBooth
             design: the capture, the cabinet and the pedals as three cards.
             These are the three things this lane really runs through — the
             amp capture from the shelf or the catalogue below, the speaker,
@@ -5874,7 +5874,7 @@ function LaneRow({
         </div>
         {/* ── Taking things off, before shaping what is left ─────────────
 
-            Carli: "by die booth moet daar oor die algemeen ook reverb, echo en
+            The owner: "by die booth moet daar oor die algemeen ook reverb, echo en
             background cleaners wees."
 
             Above the tone stack because that is the order it runs in, and the
@@ -6165,7 +6165,7 @@ function LaneRow({
           )}
           {/* ── What this capture came under ─────────────────────────────
  
-              Carli, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us
+              The owner, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us
               permission if we add their name on products?"* Partly. Three of
               the eight licences a capture can carry forbid selling outright,
               and the credit a `cc-by` asks for is the maker's name and not

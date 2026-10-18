@@ -29,12 +29,12 @@
  * everything inside the one capped service.
  *
  * That sentence was an inference for a day, and an uncomfortable one: every
- * Veo sample on Carli's Model Garden page answers with a `gs://` path, so
+ * Veo sample on the owner's Model Garden page answers with a `gs://` path, so
  * the reasonable fear was that Veo always writes to a bucket and this app
  * had no way to read one. The samples all send `storageUri` and this app
  * never does, so the samples could not settle it.
  *
- * **Carli ran `/api/google/videotest` on 9 October 2026 and it answered
+ * **The owner ran `/api/google/videotest` on 9 October 2026 and it answered
  * `needsBucket: false`.** One real four-second clip, through these two
  * functions rather than through a probe beside them, and the bytes came
  * back. No bucket, nothing to switch on, and the Cloud Storage question is
@@ -65,7 +65,7 @@ import type { Grade, Progress, Provider, StartRequest, Started } from './types';
  *
  * ── 80 000 was this app's own number and nobody had ever read it ─────────
  *
- * Carli found a price table on 9 October 2026: Veo Lite $0.05 a second, Veo
+ * The owner found a price table on 9 October 2026: Veo Lite $0.05 a second, Veo
  * Fast $0.10 to $0.15, Veo Standard $0.40. This app had been counting Fast
  * at $0.08 — a figure that has been in the file since the provider was
  * written and that no one, including me, ever checked against anything.
@@ -98,7 +98,7 @@ import type { Grade, Progress, Provider, StartRequest, Started } from './types';
  *
  * ── Raised to 200 000 earlier the same day, and put back ─────────────────
  *
- * Carli sent her Model Garden cards one at a time. On the first — the 3.0
+ * The owner sent her Model Garden cards one at a time. On the first — the 3.0
  * one — I concluded the fast id this app used did not exist, moved the
  * chosen model to the full one, and raised this number to match it. Three
  * cards later `veo-3.1-fast-generate-001` appeared on her own screen.
@@ -124,7 +124,7 @@ const PER_SECOND = 150_000;
  *
  * ── It was $0.40, which was the MIDDLE of a range ────────────────────────
  *
- * Carli's per-second figures, 9 October 2026: Lite about $0.03 to $0.05,
+ * The owner's per-second figures, 9 October 2026: Lite about $0.03 to $0.05,
  * Fast about $0.10 to $0.15, and Quality **about $0.35 to $0.50** — with
  * audio or 4K it can run to $0.60 or $0.75.
  *
@@ -149,7 +149,7 @@ const PER_SECOND = 150_000;
 const FULL_PER_SECOND = 500_000;
 
 /**
- * And Lite, at $0.05 a second — Carli's own price table, 9 October 2026.
+ * And Lite, at $0.05 a second — the owner's own price table, 9 October 2026.
  *
  * Five seconds costs R4.00 against the R22.35 standard takes, which is 5.6
  * times and the same band the engines already in use sit in.
@@ -243,7 +243,7 @@ export const VIDEO_FIELDS = ['bytesBase64Encoded', 'videoBytes', 'video', 'bytes
 /**
  * The finished clip can come back as a PLACE instead of as bytes.
  *
- * Carli's Model Garden page, 9 October 2026, shows a finished Veo operation
+ * The owner's Model Garden page, 9 October 2026, shows a finished Veo operation
  * answering with `videos: [{ gcsUri: "gs://BUCKET/…", mimeType: "video/mp4" }]`
  * — the file written into a Cloud Storage bucket, because the sample asks
  * for that with a `storageUri` parameter.
@@ -360,7 +360,7 @@ async function check(model: string, taskId: string): Promise<Progress> {
  *
  * ── Why this became a factory on 9 October 2026 ──────────────────────────
  *
- * Carli: *"Ons gaan ook nie meer Kling gebruik nie, die video generation
+ * The owner: *"Ons gaan ook nie meer Kling gebruik nie, die video generation
  * deur kling is sleg."*
  *
  * Kling was the only engine behind `premium`. Taking it out left that rung
@@ -452,7 +452,7 @@ export const googleVeoLite: Provider = rung({
 /**
  * The full model, on the top rung.
  *
- * `veo-3.1-generate-001` came off Carli's own Model Garden page on 9 October
+ * `veo-3.1-generate-001` came off the owner's own Model Garden page on 9 October
  * 2026 — it is not a guessed id. The rate is the expensive end of what
  * is quoted for it: her summary said $0.40 a second for full quality where
  * Google's own page reads $0.20, and an uncertain price is taken at the top

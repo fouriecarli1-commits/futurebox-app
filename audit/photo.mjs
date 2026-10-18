@@ -178,7 +178,7 @@ const cta = p.locator('button, a').filter({ hasText: af ? /begin|gratis|teken/i 
 await cta.waitFor({ state: 'visible', timeout: 40000 });
 await cta.click();
 await p.waitForTimeout(700);
-await p.locator('input[type="email"]').first().fill('anri.fourie@futurebox.test');
+await p.locator('input[type="email"]').first().fill('zoe.smit@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('toets-wagwoord-1234');
 await agreeAndSubmit(p);

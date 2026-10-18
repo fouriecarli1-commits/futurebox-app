@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 13 September 2026: "Partykeer laai mens jou eie liedjies self op
+ * The owner, 13 September 2026: "Partykeer laai mens jou eie liedjies self op
  * wat wys in jou channel. Kan daar opsies wees om na die liedjie se woorde
  * te luister? Sodat dit doen wat die ander liedjies doen. Kan die liedjie
  * gerename word, en die artist name in gesit word."

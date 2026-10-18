@@ -9,7 +9,7 @@
  * panel are all overlays on the same page, which is right for how it works
  * and wrong for the hardware button under everybody's thumb: pressing Back
  * anywhere in the studio left the site entirely, because as far as the
- * browser was concerned nothing had been navigated to. Carli: "die actual
+ * browser was concerned nothing had been navigated to. The owner: "die actual
  * foon se back knoppie maak dat die hele app uit gaan en dan moet jy van voor
  * af in log."
  *

@@ -1,6 +1,6 @@
 # Open questions and things not yet settled
 
-A running register. Carli asks about a service, a limit or an idea, an answer
+A running register. The owner asks about a service, a limit or an idea, an answer
 gets given in a conversation, and then it is gone. This is where those live so
 they can be reviewed in one place instead of remembered.
 
@@ -275,7 +275,7 @@ re-asked.
 
 ## B. Mixing and mastering — what else could make this better
 
-Carli's question: *"die ekstra apps wat mixing ens beter kan maak"*.
+The owner's question: *"die ekstra apps wat mixing ens beter kan maak"*.
 
 ### B1. What we do ourselves, today
 
@@ -407,7 +407,7 @@ then cut with that sound on them. Bringing a song in works there too.
 
 ## E2. `OWNER_EMAIL` — the variable nothing documented, and what it costs
 
-**Found 2026-09-05**, by Carli: "ek het gevra dat niemand die futurebox naam
+**Found 2026-09-05**, by die eienaar: "ek het gevra dat niemand die futurebox naam
 kan gebruik nie, maar jy het my ook op dit geblok."
 
 She is right, and the cause is not the rule. `server/owners.ts` reads
@@ -433,7 +433,7 @@ refusing the owner with no way to tell why. The route sends one bit,
 
 ---
 
-## E. Still Carli's to switch on
+## E. Still the owner's to switch on
 
 **The working list is `docs/SWITCH-ON.md`** — in dependency order, each entry
 saying where it goes, what is broken until it does, and how to tell it worked.
@@ -473,8 +473,8 @@ What was true is worse in a quieter way: the app had **two** names for one
 person and showed one at a time. `toAccount` builds a name out of the
 sign-up email, because at sign-up that is all there is, and the header, the
 greeting and the account panel showed that. The recording name went out on
-the releases. So somebody called Anré was `anrefourie` in the corner of every
-screen and "Anré Fourie" on their own song, with nothing to say which was
+the releases. So somebody called Zoë was `zoesmit` in the corner of every
+screen and "Zoë Smit" on their own song, with nothing to say which was
 which.
 
 Now the chosen name is read once and used by all of the chrome, the handle
@@ -574,7 +574,7 @@ wearing the probe's clothes.
 | Google se model-ids, uit haar éie Model Garden op 9 Oktober 2026. **Musiek:** `lyria-3-pro-preview` (hele liedjie) en `lyria-3-clip-preview` (snitte) — albei op ’n héeltemal ander API: `v1beta1`, `locations/global`, `/interactions`, model in die liggaam. Daarom het `models/lyria-3-pro-preview:predict` 404 gegee; dit is nie ’n publisher-model nie. **Video:** vier, almal regionaal — `veo-3.1-fast-generate-001` (die een wat die app altyd gehad het, en reg gehad het), `veo-3.1-lite-generate-001`, `veo-3.1-generate-001`, `veo-3.0-generate-001`. **Prente:** `gemini-nano-banana-2.1`, op die onregionale gasheer met `locations/global` | 2026-10-09 | `lib/server/google.ts`, `lib/server/lyria.ts` |
 | Die photo editor wat glo fotos stoor sonder dat export gedruk is. Nie herhaalbaar nie, en op 9 Oktober is **al negentien** plekke in die app wat 'n lêer op 'n toestel skryf nagegaan: elkeen sit agter 'n druk. Die oorblywende verduidelikings is buite die kode — die prente wat sy sien is dalk die **oorspronklikes** wat sy self gekies het (die was altyd in haar galery), of 'n lang-druk op 'n prent, wat elke blaaier op elke bladsy aanbied. **Die een vraag wat dit uitmaak, en wat sy nog nie beantwoord het nie: is die prente die oorspronklikes of die ge-edite weergawes?** `check:onlyonpress` maak die vorm wat sy beskryf het onmoontlik eerder as onwaarskynlik | 2026-10-09 | `check:onlyonpress`, `check:postpaid` |
 | Die video se visuals op die tydlyn. Sy het gevra: *“Hoe moontlik is dit om die video se visuals op die tydlyn te wys? Dit gaan dit makliker maak om te weet waar om te cut ens.”* — ’n blok het net ’n naam en ’n lengte gedra, wat sê WÁTTER skoot dit is en niks oor waar enigiets daarin gebeur nie. Die prente word op die toestel uit materiaal wat reeds in die blaaier is, ontsyfer: niks opgelaai nie, niks gegenereer nie, niks gehef nie, werk op die gratis plan | 2026-10-09 | `lib/filmstrip.ts`, `components/FilmStrip.tsx`, `check:filmstrip`, `audit/editor.mjs` |
-| Making a song and separating stems were dead for three days — a path with no host, left behind when supplier calls moved behind one door on 5 October. Confirmed fixed by Carli on the live site the same evening. `check:onedoor` is the rule that catches it, and it found the stems one itself | 2026-10-08 | `633ffd4`, `check:onedoor` |
+| Making a song and separating stems were dead for three days — a path with no host, left behind when supplier calls moved behind one door on 5 October. Confirmed fixed by the owner on the live site the same evening. `check:onedoor` is the rule that catches it, and it found the stems one itself | 2026-10-08 | `633ffd4`, `check:onedoor` |
 | An album cover was copied into our storage BY THE BROWSER, so a finished song, a closed tab or a sleeping phone lost a picture already paid for — and the panel printed “it is saved” over the route’s own `kept: false`. The job is written down before the credits go, the panel pins itself open while it works, and a failed cover refunds | 2026-10-08 | `633ffd4`, `check:coverkeep`, `supabase/coverkeep.sql` |
 | TONE3000 has an API; amp modelling built | 2026-09 | `lib/nam.ts`, `check:nam` |
 | The mixer really does mix | 2026-09 | `check:mix`, measured audio |
@@ -623,7 +623,7 @@ wearing the probe's clothes.
 | The card shape in the rest of the rooms, proved room by room | 2026-09-06 | `399426c`, `3e7c33a` |
 | The wand fills a card in, one press | 2026-09-06 | `e2a985d` |
 | Twenty-six prompt cards instead of an empty box | 2026-09-06 | `b3aab44` |
-| CIPC 2026/714071/07 recorded; the number's shape checked | 2026-09-06 | `b3aab44` |
+| CIPC registration recorded; the number's shape checked | 2026-09-06 | `b3aab44` |
 | The owner is reported, not implied by a letter arriving | 2026-09-06 | `0e5b58f` |
 | The charts stopped publishing songs nobody shared | 2026-09-06 | `adef346` |
 | The live room: two questions, messages, panels, a closed link list | 2026-09-06 | `c9c4075` |
@@ -1548,11 +1548,11 @@ passed.
 
 ---
 
-## What is still Carli's, as of this session
+## What is still the owner's, as of this session
 
 Unchanged from section E unless noted:
 
-- **The legal entity.** CIPC `2026/714071/07` is recorded.
+- **The legal entity.** The CIPC registration is recorded.
   `FUTUREBOX_LEGAL_NAME`, `_ADDRESS` and `_PHONE` are hers to set in Vercel.
   No placeholder registration number is published.
 - **Singing voice conversion.** Still the one gap between a made song and her
@@ -1632,7 +1632,7 @@ fault: see `284de09`.
 - **`supabase/buildon.sql` must be run again.** It gained
   `style text not null default ''`. Confirmed run — both columns verified in
   her SQL editor this session. *(Done.)*
-- **Nothing else new.** Everything in the previous "What is still Carli's"
+- **Nothing else new.** Everything in the previous "What is still the owner's"
   section stands unchanged.
 
 ## The commercial licence, settled in writing
@@ -1688,7 +1688,7 @@ the slots run out under everybody at once — and the per-member cap in
 `/api/voice/clone` cannot see that, because it counts a different thing.
 Before this, the member recorded a minute, was charged, was refused upstream,
 was refunded, and read ElevenLabs' English sentence about an account limit
-they have never heard of. Then so did the next member, and nothing told Carli.
+they have never heard of. Then so did the next member, and nothing told the owner.
 
 Now: `voiceRoom()` reads the slots, the clone route asks **before** charging
 and refuses with `voice_slots_full` (its own code, its own Afrikaans, and
@@ -1853,7 +1853,7 @@ opt-in behind `timings: true`:
 **never been seen from the live API from this machine**, which cannot reach
 it. Everything above is written so that a different shape produces null and a
 sentence on screen rather than invented timings — but whether it is null or
-words in practice is settled by the first read Carli makes in the presenter.
+words in practice is settled by the first read the owner makes in the presenter.
 
 **Said exactly, because the loose version is not true:** this saves
 `/api/transcribe` for speech this app generates — and nothing does that today.
@@ -2088,7 +2088,7 @@ now reads the first argument whatever follows it.
 ## The CIPC certificate arrived (#36)
 
 Registered **5 September 2026**. `FUTUREBOXSTUDIO (Pty) Ltd`, enterprise
-number `2026/714071/07`, one director.
+number on the certificate, one director.
 
 **The name is one word.** Not "FutureBox Studio (Pty) Ltd" with a space, which
 is how the product is written everywhere else and is what `.env.example`
@@ -2823,7 +2823,7 @@ All three pass. All three read exactly like a check that works.
 
 ## One unset variable had the legal page calling the company unregistered
 
-Carli sent a screenshot of `futurebox.studio/legal` on 11 September. It said,
+The owner sent a screenshot of `futurebox.studio/legal` on 11 September. It said,
 in a yellow box: *"The company behind FutureBox is being registered."*
 
 **CIPC registered it on 5 September.** The sentence had been false for six
@@ -2895,7 +2895,7 @@ complete the moment the variable is set, and nothing of hers ever appears.
 her.** A company's registered office address is part of the CIPC record, and
 the CIPC register is searchable by anybody — so while the record says her
 house, that address is already reachable by anyone who looks up
-`2026/714071/07`, whether or not this app prints it. Withholding it here does
+the company's registration number, whether or not this app prints it. Withholding it here does
 not withhold it. Moving the record is what actually removes it, and it
 removes it everywhere at once.
 
@@ -3145,7 +3145,7 @@ that moves; the screen prints that rather than hiding it.
 
 ## The schema had never been run by anything (11 September, evening)
 
-Carli asked for help running `supabase/afrikaans.sql`. It does not run.
+The owner asked for help running `supabase/afrikaans.sql`. It does not run.
 
 ```
 ERROR:  functions in index expression must be marked IMMUTABLE
@@ -3299,7 +3299,7 @@ names `text-to-dialogue`; removing it from `speak` names `text-to-speech`.
 
 ## No screen in the app showed a real cover (11 September, evening)
 
-Carli, testing: "As iemand op die live post… en dan verander jy eers later
+Die eienaar, testing: "As iemand op die live post… en dan verander jy eers later
 die cover page van die liedjie, verander die cover page dan op die live
 channel ook?"
 
@@ -3356,7 +3356,7 @@ time, full screen, with its hearts and counts intact.
 
 ## The advert desk sent one field to every room (11 September, night)
 
-Carli, on the desk as a product she is selling:
+The owner, on the desk as a product she is selling:
 
 > "When you push the buttons to take you to podcast, to video, to music
 > making, the text and shots, and scripts don't carry over to the next room.
@@ -3585,7 +3585,7 @@ mutation landed before drawing a conclusion from a green run.
 
 ## Every card starts shut (12 September)
 
-Carli, after looking at the video desk:
+The owner, after looking at the video desk:
 
 > "The video desk looks good. You did a nice thing there every long action is
 > a drop down menu. … And when I open the video desk, can all the drop down
@@ -3948,7 +3948,7 @@ as having learned it.
 
 ## The Desk panel was painted over by a button behind it (13 September)
 
-Carli's photograph: the Booth's Desk open, and **"Keep this take" printed
+The owner's photograph: the Booth's Desk open, and **"Keep this take" printed
 straight across the Timing fader's explanation** — through a panel with a
 solid fill and a `shadow-2xl` on it.
 
@@ -4000,7 +4000,7 @@ timed out. It closes by the panel's own ✕ now.
 
 ## Filming yourself: a pause, and a take you cannot walk away from (13 September)
 
-Carli, on the channel's "Film yourself to it":
+The owner, on the channel's "Film yourself to it":
 
 > "1. Jy kan nie pause nie. 2. Jy kan na 'n volgende liedjie scroll terwyl jy
 > film. Dit recording van jouself moet vas wees binne in een liedjie."
@@ -4054,7 +4054,7 @@ recorder, the lock removed, and the X leaving mid-take.
 
 ## Buttons that look like buttons, and the rooms in green (13 September)
 
-Carli:
+The owner:
 
 > "Kyk na al die huidige buttons. Dit moet definition hê, dit moet uitstaan en
 > lyk soos 'n knoppie wat jy kan druk, maar netjies met baie klas. Dieselfde
@@ -4103,7 +4103,7 @@ screen.
 
 ### A regeneration room, said at the top
 
-Carli: *"As die liedjie nie oor gedoen kan word nie, moet die studio dit
+Die eienaar: *"As die liedjie nie oor gedoen kan word nie, moet die studio dit
 verklaar en sê dat hierdie 'n regeneration spasie is, dat as iemand die
 produk wil hou die enigste opsie recording is in die booth."*
 
@@ -4142,7 +4142,7 @@ next button forgets.
 
 ### And a name cut in half, that my own new check could not see
 
-Carli's photograph of the door: **"Sound trai…"** and **"Make a so…"**.
+The owner's photograph of the door: **"Sound trai…"** and **"Make a so…"**.
 
 `check:notcut` was written yesterday for exactly this fault and passed
 happily, because it walks the ROOMS — and the studio's front door is not a
@@ -4623,7 +4623,7 @@ sien. Twee was myne, drie was ouer.
 | `audit/storyboard.mjs` | Dit lees 'n **gevoude** kaart. Elke paneel begin gevou sedert 13 Sept; 'n kaart se titel is op die skerm en alles daaronder nie. Die sinne was altyd reg. | myne, 13 Sept |
 | `audit/photosong.mjs` | Die fikstuur het gesê "a real 2×2 PNG" en was afgekap: die IDAT se CRC pas nie en daar is geen IEND nie. `<img>` verdra dit, `createImageBitmap` nie — en die streng dekodering is juis hoekom 'n 200-megapixel foto nie meer die oortjie doodmaak nie. Die fikstuur is nou gegenereer. | ouer, ontdek |
 | `app/components/Booth.tsx` | `booth.given` — "Aan jou gestuur deur" — was in die woordeboek sedert die collab-kamer 'n liedjie kon oorgee, en **niks in die app het dit ooit geteken nie**. Nou 'n vierde groep in die keuselys plus 'n reël wat sê daar wag iets. | ouer, ontdek |
-| `audit/greeting.mjs` | Dit het beweer die welkom-skerm dra die fyn skrif wat Carli op 14 Sept laat verwyder het. Die stelling is omgedraai; die openbaarmaking word nou op die rekeningblad vasgehou deur `check:finepr`. | ouer, ontdek |
+| `audit/greeting.mjs` | Dit het beweer die welkom-skerm dra die fyn skrif wat die eienaar op 14 Sept laat verwyder het. Die stelling is omgedraai; die openbaarmaking word nou op die rekeningblad vasgehou deur `check:finepr`. | ouer, ontdek |
 
 ### Die les, geskryf sodat dit nie herhaal nie
 
@@ -4672,7 +4672,7 @@ kortkom. Gevind terwyl `link` bygesit is, wat die vierde is.
 
 ## P. Dieselfde lys, drie keer — en wat dit werklik gekos het
 
-*18 September 2026. Carli het dieselfde vyf foute drie agtereenvolgende kere
+*18 September 2026. The owner het dieselfde vyf foute drie agtereenvolgende kere
 gerapporteer. Hierdie afdeling is oor wat elke ronde geleer het, want die
 patroon is meer werd as enige een van die regmakings.*
 
@@ -4931,7 +4931,7 @@ op 'n manier wat 'n valse negatief onmoontlik maak.
 
 ## T. Die nag van die agttiende: vier verslae, en een fout onder drie van hulle
 
-Carli het vier dinge in 'n uur gestuur, en drie daarvan was dieselfde fout in
+The owner het vier dinge in 'n uur gestuur, en drie daarvan was dieselfde fout in
 drie kamers: **die ding hét gebeur, en niemand kon dit sien nie.**
 
 ### Die advertensie-oorgee — die belangrikste een
@@ -5018,7 +5018,7 @@ wat "die waarde is daar" meet, moet ook vra **"en is dit op die skerm?"**
 
 ## U. Die interlock het gewerk. Die snit kon net nie opgetel word nie
 
-Carli, 19 September 2026: *"Die interlocking werk nie. Dit wys die funksie is
+The owner, 19 September 2026: *"Die interlocking werk nie. Dit wys die funksie is
 aan maar die bane is nie vas aan mekaar nie."*
 
 Die interlock hét gewerk. `handoverFor` se ekwivalent hier — `lane.link`, die
@@ -5079,7 +5079,7 @@ wat aan die probe behoort.
 
 ## V. Die sessie wat van 0:26 na 11:52 weggehardloop het
 
-Carli, 19 September 2026, twee boodskappe agtermekaar:
+The owner, 19 September 2026, twee boodskappe agtermekaar:
 
 > *"Die grid het eweskielik groter geword, en toe sit gebeur toe wil niks
 > meer beweeg nie."*
@@ -5153,7 +5153,7 @@ en nie die ding s'n nie.
 
 ## §W · Tien versigtige hande is nie 'n reël nie (19 September 2026)
 
-Carli stuur 'n foto van Make a song. Waar vier geskrewe idees hoort, staan
+The owner stuur 'n foto van Make a song. Waar vier geskrewe idees hoort, staan
 daar:
 
 ```
@@ -5206,7 +5206,7 @@ tweede keer.
 
 ## §X · Die kas wat nooit tref, lyk soos die een wat altyd tref (19 September 2026)
 
-Carli, toe sy hoor die skryfhulp is af omdat die modelrekening leeg is:
+Die eienaar, toe sy hoor die skryfhulp is af omdat die modelrekening leeg is:
 *"Ek het nie geweet Copilot gaan betaald moet wees nie? As mens 'n windows365
 account het, val dit nie daar binne nie?"*
 
@@ -5269,7 +5269,7 @@ self probeer, of as 'n prompt by die oproep self saamgestel word.
 
 ## §Y · 'n Ry chips is nie begeleiding nie (19 September 2026)
 
-Carli, oor die eerste sny van die emosie-eerste herontwerp:
+Die eienaar, oor die eerste sny van die emosie-eerste herontwerp:
 
 > *"Wat weird is van jou verandering in make a song. Die emosie goed voel ek
 > moes als deel wees van copilot. Die hele room is baie besig. Ook die
@@ -5326,7 +5326,7 @@ word nie.
 
 ## §Z · Die kamer maak oop as 'n inhoudsopgawe, nie as 'n werkbank nie (19 September 2026)
 
-Carli, nadat §Y se snit gepush is:
+The owner, nadat §Y se snit gepush is:
 
 > *"Ek dink dit is 'n goeie plan, maar doen dit alles so dat dit super netjies
 > en aantreklik is en die buttons moet lyk soos 'n button wat uitstaan."*
@@ -5387,7 +5387,7 @@ waarom hierdie snit veilig was om te doen en die vorige een nie was nie.
 
 ## §AA · 'n Belofte in die openingsreël is 'n operasie, of dit is 'n leuen (19 September 2026)
 
-Carli, oor die song-kamer se Copilot:
+Die eienaar, oor die song-kamer se Copilot:
 
 > *"Die Copilot in die make a song booth moet iets sê van, jy kan alles deur
 > my doen in hierdie kamer, sê net wat jy nodig het, die tema, die tyd, die
@@ -5442,7 +5442,7 @@ aanspraak; 'n voorbeeld is 'n demonstrasie.**
 
 ## §AB · Die toets het die fout twee keer in 'n kommentaar weggepraat (19 September 2026)
 
-Carli:
+The owner:
 
 > *"Die probooth se interlock. Maar ek het nou gesien met 'n instrument
 > waarmee ek dit geinterlock het, het die 2de baan nogsteeds kleinbietjie
@@ -5568,7 +5568,7 @@ te noem in plaas van dit onder 'n etiket weg te steek.
 
 ## §AD · Dit het al die werk gedoen en toe die antwoord gedruk (20 September 2026)
 
-Carli: *"Wat moet ek doen met die ads-af"* — niks. Dit was nooit hare nie.
+The owner: *"Wat moet ek doen met die ads-af"* — niks. Dit was nooit hare nie.
 
 `audit/ads-af.mjs` is die advertensie-desk end tot end in Afrikaans.
 Twee-en-twintig sigbare strings gesoek, vyftien Engelse lekke gesoek,
@@ -5688,7 +5688,7 @@ halwe toets nie. Dit is nul toets met die koste van een.
 
 ## §AF · Twee besluite wat geld kos, neergeskryf eerder as half gebou (20 September 2026)
 
-Carli, 20 September 2026:
+The owner, 20 September 2026:
 
 > *"Kan jy hierdie vir my stoor en 'n nota maak oor iets wat ek nog moet
 > besluit, dieselfde met die copyright van musiek program. Daar bestaan wel
@@ -5758,7 +5758,7 @@ ding wat reg lyk en niks doen nie.
 
 ### Die art room, vier keer oorgebou en elke keer verkeerd
 
-Carli het vier keer gesê dit lyk soos *"'n website binne 'n app"*, en vier
+Die eienaar het vier keer gesê dit lyk soos *"'n website binne 'n app"*, en vier
 keer het ek die kamer **meer** eiesoortig gemaak — beige papier, 'n indigo
 aksent, 'n serif, alles in vaste hex. Die kommentaar bo daardie palet het die
 fout self neergeskryf: *"it is not emerald, which is the rest of this app,
@@ -5847,7 +5847,7 @@ mens leer om dit te ignoreer.
 
 ## §AH · Die meting het aan die verkeerde kant van 'n normaliseerder gestaan (21 September 2026)
 
-Carli het mono/stereo/surround as 'n download-tipe gevra. Die rekenkunde is
+Die eienaar het mono/stereo/surround as 'n download-tipe gevra. Die rekenkunde is
 maklik; wat dit interessant maak is dat die **check reg was oor die getal en
 verkeerd oor waar dit gemeet word** — en dat die jag na daardie verskil twee
 regte foute uitgewys het wat niemand gesoek het nie.
@@ -6042,7 +6042,7 @@ vier kaarte teen `START_RAND` en `UNIQUE_RAND`.
 
 ## §AK · Die probe het die paneel self oopgemaak en toe berig dat dit toe is (22 September 2026)
 
-Carli: *"Kyk asb in make a song en channel dat daar by cover art 'n opsie is
+The owner: *"Kyk asb in make a song en channel dat daar by cover art 'n opsie is
 vir real art."*
 
 Die omslag-paneel het net een soort prent aangebied — die een wat 'n masjien
@@ -6178,7 +6178,7 @@ vloer bly.
 
 ## §AM · Die quiz van 62 na 131, en 'n reël wat dit aan die kamer vasmaak (22 September 2026)
 
-Carli het sewe temas in een boodskap gevra: musiekterme (triool, tonika,
+Die eienaar het sewe temas in een boodskap gevra: musiekterme (triool, tonika,
 valset, deskant, p/f/ff, mol teenoor kruis, altviool, alt, sopraan), die Pro
 Booth se funksies, 'n 80's/90's-quiz, koor, musiekgrappe, hoe om goeie musiek
 te **prompt**, en die rekenaarwetenskap agter musiekmaak.
@@ -6216,7 +6216,7 @@ Agt mutasies, agt keer rooi.
 
 ## §AN · Een woord op een versoek, en die hele kamer was stil (23 September 2026)
 
-Carli: *"Gaan kyk na long shot in video. Elke klein gedeelt moet 'n knoppie hê
+The owner: *"Gaan kyk na long shot in video. Elke klein gedeelt moet 'n knoppie hê
 om net die stukkie af te laai. Dit wil ook voorkom dat daai kamer glad nie
 klank wat praat genereer nie."*
 
@@ -6276,7 +6276,7 @@ nou die knoppie: 'n regte lêer kom uit, uit 'n geknipte skoot.
 
 ## §AO · Die lêer wat sy plak was self stukkend (23 September 2026)
 
-Carli: *"Is daar enige sql? Dit voel asof jy niks gefix het nie."*
+The owner: *"Is daar enige sql? Dit voel asof jy niks gefix het nie."*
 
 Ja, daar is — en die antwoord is erger as dit klink.
 
@@ -6554,7 +6554,7 @@ kommentaar wat 'n reël beskryf wat nooit geskryf is nie.**
 
 ### 1. Veertien skrywes sonder 'n filter
 
-Carli het oor die bod-knoppie by album art gekla. Onder dit het `/api/artmarket`
+Die eienaar het oor die bod-knoppie by album art gekla. Onder dit het `/api/artmarket`
 die veilingsklok gestel **sonder enige filter**, onder 'n paragraaf wat sê dit
 filter op twee. Die eerste bod op enige een prent het 'n 36-uur-klok op **elke**
 prent in die mark gesit.
@@ -7042,7 +7042,7 @@ toets.
 
 ## Still owed to her — 8 October 2026
 
-**The amp modellers.** Carli: *"Jy moet ook onthou om my te help om die amp modelers af te laai
+**The amp modellers.** Die eienaar: *"Jy moet ook onthou om my te help om die amp modelers af te laai
 en dan op ons app te sit."* TONE3000 is the source and `docs/EPOS-TONE3000.md` and
 `docs/KITS-TERME.md` already cover the supplier side; what is not built is the downloading and
 the putting-on. Written down here because it was asked in the middle of a different piece of
@@ -7065,7 +7065,7 @@ the account and Vertex lists its shutdown as 15 March 2027. Nano Banana Pro 404s
 of its names today. Re-run `/google` from time to time and move the moment Pro appears.
 
 **`RAND_PER_USD = 16` may be a seventh out, and everything rests on it.**
-Carli, 8 October 2026, on Lyria: *"$0.08 (~R1.40 tot R1.50) per gegenereerde liedjie."* At 16 to
+The owner, 8 October 2026, on Lyria: *"$0.08 (~R1.40 tot R1.50) per gegenereerde liedjie."* At 16 to
 the dollar, $0.08 is R1.28. Her figure implies **17.5 to 18.75**.
 
 The number itself is small. What is not small is where it sits: every supplier cost in this app
@@ -7077,7 +7077,7 @@ rate her card is actually billed at, which is the only rate that matters, and wo
 the margins afterwards rather than before.
 
 **Gemini Omni Flash's rate per token, and whether video editing is worth it at any price.**
-Carli pasted her own documentation page on 10 October 2026: `gemini-omni-flash-preview`, on the
+The owner pasted her own documentation page on 10 October 2026: `gemini-omni-flash-preview`, on the
 same `interactions` endpoint Lyria 3 Pro is on, doing text-to-video, image-to-video,
 reference-to-video and — the one nothing in this app can do at any price — **editing a video that
 already exists**. "Make it evening", "take the car out", "make her turn round".
@@ -7090,7 +7090,7 @@ tokens**, 479 total. So it is priced per token, the thinking is 95% of it, and a
 prompt length would be wrong by a factor of eighteen. `lib/server/googlespend.ts` cannot hold a
 cap for an engine whose rate nobody has read, and this app does not run an engine without a cap.
 
-Carli, the same day, having looked: *"Gemini omni flash is baie duur."* So the question is not
+The owner, the same day, having looked: *"Gemini omni flash is baie duur."* So the question is not
 only the number — it is whether a credit price that covers it is a price anybody would pay for
 one edited clip. Read the rate off Google's pricing page, work out what four seconds of a real
 edit costs, and compare it with what the cutting room charges for a whole clip today.
@@ -7104,7 +7104,7 @@ desk so the copy is about what is actually on screen. Which model id is current 
 a `/google` press, not a guess.
 
 **Two of this app's chosen Google models may be the wrong kind, and one press settles it.**
-Carli pasted her whole Model Garden listing on 10 October 2026. Every card carries a badge:
+The owner pasted her whole Model Garden listing on 10 October 2026. Every card carries a badge:
 **Serverless** — answers an API call and bills per use — or **Self-deployed**, which does not.
 A self-deployed model is one you put on an endpoint of your own, a machine that bills by the hour
 whether anything calls it or not, and it has no per-call address until you do. A request to one
@@ -7141,7 +7141,7 @@ That settles the entry above — video editing is not a per-call engine she can 
 infrastructure — and it is worth re-reading before anybody is tempted by the capability list again.
 
 **Gemma 4 for the languages Lyria does not sing, and the half of that problem it cannot fix.**
-Carli, 10 October 2026: *"Ek wonder of mens 'n model soos Gemma 4 26B A4B IT API Service kan
+The owner, 10 October 2026: *"Ek wonder of mens 'n model soos Gemma 4 26B A4B IT API Service kan
 gebruik om die taal barrier te oorkom met ons liedjie generation."* Her Model Garden lists it as
 **Serverless**, badged NEW, and she gives its languages as Afrikaans, isiZulu, isiXhosa, Sesotho,
 Setswana and Shona.
@@ -7172,7 +7172,7 @@ writing in one app means two voices in her product unless the split is by langua
 else.
 
 **Pronunciation for the African languages: the Bible idea, and why a lexicon beats it.**
-Carli, 10 October 2026: *"Ek probeer net te dink hoe ons foenetiese woord uitsprake vinniger kan
+Die eienaar, 10 October 2026: *"Ek probeer net te dink hoe ons foenetiese woord uitsprake vinniger kan
 doen en kry vir die Afrika tale, sal dit nie werk om die Audio Bible van die verskillende tale op
 te laai nie, daar in sal al die uitsprake wees. Of moet dit gesing word om die uitsprake beter te
 kry?"*
@@ -7192,7 +7192,7 @@ people find first.
 
 **It is far more work than the problem needs** — and here I was wrong in a way worth recording.
 I wrote that getting phonetics out of audio means "forced alignment, then transcription, then
-phoneme extraction — a research pipeline". Carli: *"But isn't there a way for an AI to listen to
+phoneme extraction — a research pipeline". The owner: *"But isn't there a way for an AI to listen to
 the phonetic sounds of someone speaking isiXhosa?"*
 
 There is, and it is ordinary. **Phone recognition** — audio in, phonetic symbols out — has existed
@@ -7296,7 +7296,7 @@ mode again, since the footer no longer sits under the kids pages.
 
 ## Regenerating part of a song — 10 October 2026
 
-Carli: *"Kan die studio ook nie 'n drag funksie hê, wat ook natuurlike oorgange detect, en dan kan
+Die eienaar: *"Kan die studio ook nie 'n drag funksie hê, wat ook natuurlike oorgange detect, en dan kan
 byvoorbeeld, 15 sekonder gedeeltes van 'n liedjie oorgegenerate word in die woorde, of die
 progressie van die klank nie? Ek weet nie hoe moontlik dit is vir al met google nie?"*
 
@@ -7385,7 +7385,7 @@ timeline that snap to it, and the two honest regenerate routes above.
 
 ## Nobody can correct the country we price them in — 11 October 2026
 
-**Answered the same day.** Carli: *"Maak 'n country picker"*. It is on both
+**Answered the same day.** The owner: *"Maak 'n country picker"*. It is on both
 screens that show a price — the front page first, because that is the one a
 buyer reads before they have an account — as a plain `<select>` with "My
 device's country" as the way back to the guess, a line admitting the guess

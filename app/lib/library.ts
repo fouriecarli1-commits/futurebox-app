@@ -75,7 +75,7 @@ export interface Track {
    * goes stale the day somebody renames themselves.
    *
    * A file dragged in is the case that breaks that, and it breaks it in the
-   * ordinary direction: it may well not be theirs. Carli, 13 September 2026:
+   * ordinary direction: it may well not be theirs. The owner, 13 September 2026:
    * "Kan die liedjie gerename word, en die artist name in gesit word." So
    * the name is asked for rather than assumed, and a brought-in song with
    * nobody named stays unattributed instead of quietly becoming yours.
@@ -85,7 +85,7 @@ export interface Track {
    * The cover, when it was painted by one of our artists rather than
    * generated.
    *
-   * Carli, 20 September 2026: *"Hierdie kunswerk moet ook saam met die
+   * The owner, 20 September 2026: *"Hierdie kunswerk moet ook saam met die
    * liedjie in die channel en live kan funksioneer en werk."* So the credit
    * is on the song, not on the picture file — a picture is bytes, and bytes
    * do not know whose hand made them. Every room that shows the song reads

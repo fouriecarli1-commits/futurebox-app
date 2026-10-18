@@ -1,7 +1,7 @@
 /**
  * All tools, on one page, each straight to its tool.
  *
- * Carli, 16 October 2026, another app's All tools page: round buttons under
+ * The owner, 16 October 2026, another app's All tools page: round buttons under
  * Generative AI, Video editing, Photo editing, Shoot and record. Walked on a
  * phone: the page opens from the studio's front door and from inside a room,
  * it finds a tool by name, and pressing a tool opens its room AND the panel

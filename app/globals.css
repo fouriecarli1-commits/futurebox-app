@@ -401,7 +401,7 @@ body {
      parent laid out, so it overflows its own row, above and below, and prints
      on its neighbours.
 
-     That is what Carli photographed three times: "die bars is oor al oor
+     That is what the owner photographed three times: "die bars is oor al oor
      mekaar gedruk", and again after the row was rebuilt as a grid, because a
      grid cannot save you from an item that overflows its own cell.
 
@@ -497,7 +497,7 @@ body {
   color: rgb(var(--fb-ink));
   font-family: var(--fb-font-sans);
   /* ── The landing page's light, under every page ──────────────────────
-     Carli, 13 October 2026: "Kan daai grid futuristic agtergrond wat op
+     The owner, 13 October 2026: "Kan daai grid futuristic agtergrond wat op
      die landing page is nie op elke blad wees nie?" Two pools of the
      theme's own colour blurred past recognition and a faint grid, fixed,
      so the page scrolls over them. In the theme's colours rather than the
@@ -534,7 +534,7 @@ body {
 
 /* ── A button that looks like one ──────────────────────────────────────────
 
-   Carli, 13 September 2026:
+   The owner, 13 September 2026:
 
      "Kyk na al die huidige buttons. Dit moet definition hê, dit moet uitstaan
       en lyk soos 'n knoppie wat jy kan druk, maar netjies met baie klas."
@@ -627,7 +627,7 @@ button:disabled {
 
 /* ── And they are green ────────────────────────────────────────────────────
 
-   Carli, 13 September 2026, with five photographs of rooms full of white
+   The owner, 13 September 2026, with five photographs of rooms full of white
    boxes: "Omtrent nog elke kamer se buttons moet verkleur word na groen en
    moet uitstaan."
 
@@ -674,7 +674,7 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
 
 /* ── The booth is its own room, and does not follow the theme ────────────
  *
- * Carli, 14 September 2026: *"die booth se swart met die blou musieklyn sal
+ * The owner, 14 September 2026: *"die booth se swart met die blou musieklyn sal
  * 'n unieke take wees vir die booth, dat dit heeltemal anders lyk as die res
  * van die app."*
  *
@@ -707,7 +707,7 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
  */
 /* ── Cubed: iron on a black that is not quite black ──────────────────────
  *
- * Carli, 10 October 2026: *"wanneer iemand daar op click vat dit jou ook na 'n
+ * The owner, 10 October 2026: *"wanneer iemand daar op click vat dit jou ook na 'n
  * futuristic kamer toe, wat spectacular en modern is. Dit moet absolutely
  * classy wees."*
  *
@@ -732,7 +732,7 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
  */
 /* ── The child's room ───────────────────────────────────────────────────
 
-   Carli, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
+   The owner, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
    dit moet colourful en exciting wees… dit moet vol kleur en excitement
    wees."*
 
@@ -756,7 +756,7 @@ body:has([data-kidsdoor]) {
   --fb-font-sans: var(--fb-font-round), "Trebuchet MS", system-ui, sans-serif;
 
   /* ── Deep emerald, not pale mint ──────────────────────────────────────
-     Carli, 13 October 2026, with the "Kids Dream Studio" page Google drew:
+     The owner, 13 October 2026, with the "Kids Dream Studio" page Google drew:
      *"Kom ons begin om die app self te upgrade."* That page is a dark
      emerald kingdom — near-black green cards, mint and gold words on them,
      a bright emerald for the thing you press — and this block is that
@@ -842,7 +842,7 @@ body:has([data-kidsroom]),
 body:has([data-kidsdoor]) {
   background-color: #022c22;
   /* ── Her photograph, 13 October 2026 ──────────────────────────────────
-     Carli: "ek wil hê jy moet direk die foto gebruik wat ek jou gee as
+     The owner: "ek wil hê jy moet direk die foto gebruik wat ek jou gee as
      agtergrond, en dan die funksies wat daarop moet kom." The room she had
      drawn — green lightning, a city through the window, two children at a
      console — is the ground now, under a green-black wash so the glass
@@ -1066,7 +1066,7 @@ body:has([data-kidsdoor]) main {
 
 /* ── The Cubed room, in daylight ────────────────────────────────────────
 
-   Carli, 11 October 2026: *"Gebruik die transparent weergawe, die logo moenie
+   The owner, 11 October 2026: *"Gebruik die transparent weergawe, die logo moenie
    'n wit agtergrond hê nie."* And when shown what that costs: *"Maak die
    kamer lig."*
 
@@ -1105,7 +1105,7 @@ body:has([data-kidsdoor]) main {
 [data-cubed],
 body:has([data-cubed]) {
   /* ── Obsidian, with one emerald ──────────────────────────────────────
-     Carli, 13 October 2026, with the "Cubed room" page Google drew: a
+     The owner, 13 October 2026, with the "Cubed room" page Google drew: a
      near-black page lit by one pool of emerald, glass cards with a
      hairline, grey type that is allowed to be large. The ramp runs the
      app's own way for a dark room: 950 is the page and 100 is the brightest
@@ -1150,7 +1150,7 @@ body:has([data-cubed]) {
 }
 
 /* ── Her lockup, neon ──────────────────────────────────────────────────
-   Carli, 13 October 2026: "Maak die cubed class se logo transparent, en
+   The owner, 13 October 2026: "Maak die cubed class se logo transparent, en
    maak die logo en woorde very neon en bright." The file is hers and is
    not redrawn: the navy is inverted to light on the way to the screen,
    tinted to the room's emerald, and set glowing. `check:cubed` works out
@@ -1188,7 +1188,7 @@ body:has([data-cubed]) {
 
   /* ── And the accent goes blue with it ──────────────────────────────
 
-     Carli, 15 September 2026: *"Dit sal beter lyk as die hele probooth kamer
+     The owner, 15 September 2026: *"Dit sal beter lyk as die hele probooth kamer
      die swart en blou is, nie net 'n gedeelte nie."*
 
      The surface ramp above made the room black. The accent was still the
@@ -1207,7 +1207,7 @@ body:has([data-cubed]) {
      playhead has to be the brightest thing on the screen, and an accent as
      bright as it would take that away from it. */
   /* ── And now emerald, as Google's ProBooth page draws it ─────────────
-     Carli, 13 and 14 October 2026, with Google's "ProBooth DAW & Voice
+     The owner, 13 and 14 October 2026, with Google's "ProBooth DAW & Voice
      Recording Studio" page: *"ons transform en totally redesign"*, and of
      the booth: *"lyk oud en nie soos ek voorgestel het nie."* That page is
      the obsidian floor and one emerald accent, #0F9D6E, with cyan kept for
@@ -1234,7 +1234,7 @@ body:has([data-cubed]) {
 
 /* ── The cutting room: the same lesson the booth learnt, one room later ──
  *
- * Carli, 4 October 2026, with four photographs of benches: *"Niks is duidelik
+ * The owner, 4 October 2026, with four photographs of benches: *"Niks is duidelik
  * nie."* And she was not being fussy — measured in a browser, the words inside
  * every bench came out at **1.88:1** against the 4.5 that body text needs.
  *
@@ -1288,7 +1288,7 @@ body:has([data-cubed]) {
 
   /* The accent is left alone, unlike the booth's.
  
-     The booth turned its emerald blue because Carli asked for a black-and-blue
+     The booth turned its emerald blue because the owner asked for a black-and-blue
      room. This room is the GREEN one — it carries the FutureBox green down the
      whole page on purpose, at her own request on 30 September — so the app's
      own primary ramp is already the right accent here. Changing it would be
@@ -1312,7 +1312,7 @@ body:has([data-cubed]) {
 
 /* ── Buttons in a dark room ──────────────────────────────────────────────
  *
- * Carli, 4 October 2026, with a photograph of the "Bring it in" bench:
+ * The owner, 4 October 2026, with a photograph of the "Bring it in" bench:
  * *"Wanneer ek kliek op bring it in kan mens die skrif nie duidelik lees nie.
  * Alles moet baie duidelik wees en 'n button moet diepte hê en lyk soos 'n
  * knoppie wat 'n mens druk."*
@@ -1382,7 +1382,7 @@ body:has([data-cubed]) {
 
 /* ── The gallery: the album art room, and everything around it ───────────
 
-   Carli, 20 September 2026: *"Kyk net hoe netjies het jy die probooth
+   The owner, 20 September 2026: *"Kyk net hoe netjies het jy die probooth
    verander. Die hele kamer in probooth lyk dieselfde. So moet hierdie een
    se hele kamer ook dieselfde lyk … Dit is 'n gallery wat kunswerk moet
    verkoop. Dit moet high class en baie aantreklik wees. Dit is waar mense
@@ -1503,7 +1503,7 @@ body:has([data-cubed]) {
 }
 /* ── A press you can see, on a screen with no hover ──────────────────────
 
-   Carli, 17 September 2026, twice: *"Die knoppies binne die videos en
+   The owner, 17 September 2026, twice: *"Die knoppies binne die videos en
    liedjies, soos die delete knoppie moet wys as mens dit druk, huidiglik
    maak die knoppie geen beweging."*
 
@@ -1595,7 +1595,7 @@ body:has([data-cubed]) {
 }
 
 /* ── A glow on every press, after the finger lifts ─────────────────────
-   Carli, 17 October 2026: a press must "'n beweging of glow maak". `:active`
+   The owner, 17 October 2026: a press must "'n beweging of glow maak". `:active`
    above lasts only while the finger is down; `TapGlow.tsx` puts `fb-tap` on
    whatever was pressed and this plays out over the next half second — a ring
    in the theme's own colour, then nothing. An animation, so it sits over the
@@ -1619,7 +1619,7 @@ body:has([data-cubed]) {
 }
 
 /* ── The photograph while a tool works on it ───────────────────────────
-   Carli, 17 October 2026: the screen should glow round what is being made
+   The owner, 17 October 2026: the screen should glow round what is being made
    transparent "asof hy besig is om te werk", for about three seconds, and
    then it is suddenly done. `fb-working` pulses the frame between the
    theme's two colours with a light sweeping across it; `fb-workflash` is one
@@ -1660,7 +1660,7 @@ body:has([data-cubed]) {
 
 /* ══ The screen an installed app opens with ══════════════════════════════
 
-   Carli, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
+   The owner, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
    huidiglik net met die app icon, maar ek sal wil hê die woorde futurebox moet
    saam met die icon/logo launch."*
 
@@ -1709,7 +1709,7 @@ body:has([data-cubed]) {
   border-radius: 1.4rem;
   /* The same tile the app icon (`scripts/icon.mjs`) is drawn with, since
      13 October 2026: the brightest green the page owns, lit from behind,
-     the chip on it black. Carli: "die groen om die icon moet brighter en
+     the chip on it black. The owner: "die groen om die icon moet brighter en
      neon wees, en die swart lyne bly swart … net nie geel nie." Literal
      colours on purpose: a theme preset must not reach into the brand
      mark. */
@@ -1754,7 +1754,7 @@ body:has([data-cubed]) {
 
 /* ── The booklet ─────────────────────────────────────────────────────────
 
-   Carli, 10 October 2026: *"templates vir die kinders om op te druk"*, and
+   The owner, 10 October 2026: *"templates vir die kinders om op te druk"*, and
    then *"Ja, die kinders se eie storie as 'n boekie."*
 
    `lib/storybook.ts` carries the reasoning; this is the paper.
@@ -1916,7 +1916,7 @@ body:has([data-cubed]) {
 
 /* ── The welcome page's grid, behind every room ─────────────────────────
 
-   Carli, 14 October 2026: "Kyk ook dat daai grid background by welcoming
+   The owner, 14 October 2026: "Kyk ook dat daai grid background by welcoming
    page, in elke kamer se agtergrond is. Live room kort dit nog, channel,
    you, make, en elke kamer in make." The grid on `body` was hidden in every
    room, because every room is drawn on the studio sheet, which is a solid
@@ -1942,7 +1942,7 @@ body:has([data-cubed]) {
 }
 
 /* ── The singing booth, while a take runs ─────────────────────────────
-   Carli, 14 October 2026: "Die woorde gaan oor die hele foon moet wys en die
+   The owner, 14 October 2026: "Die woorde gaan oor die hele foon moet wys en die
    buttons moet dan dissapear en al wat oor bly is dan die record, pause en
    stop buttons." Everything marked `fb-livehide` steps aside from the press
    on record until the stop; the words and the dock are what is left. */
@@ -1950,7 +1950,7 @@ body:has([data-cubed]) {
 html[data-singing] [data-tabbar] { display: none !important; }
 
 /* ── The photo editor's tool controls, floating over the photograph ─────
-   Carli, 14 October 2026: "sonder 'n background en very bright neon en
+   The owner, 14 October 2026: "sonder 'n background en very bright neon en
    highlighted dat mens dit bo op die prent kan sien". No panel behind
    them: every control is drawn in neon with a glow, and every letter gets
    a dark edge so it reads over a white sky and a black shirt alike. */
@@ -1971,7 +1971,7 @@ html[data-singing] [data-tabbar] { display: none !important; }
 }
 [data-postpop][data-neon] input[type="range"] { accent-color: #39ff14; filter: drop-shadow(0 0 4px rgba(57, 255, 20, 0.8)); }
 /* The way into the darkroom keeps its own colours wherever the bench is
-   drawn — neon over the photo or glass under it. Carli, 17 October 2026:
+   drawn — neon over the photo or glass under it. The owner, 17 October 2026:
    "'n fancy looking button". Four times the name outweighs the rules above. */
 [data-postdarkroom][data-postdarkroom][data-postdarkroom][data-postdarkroom] {
   background: linear-gradient(120deg, #f59e0b, #ec4899 55%, #8b5cf6) !important;
@@ -1998,7 +1998,7 @@ html[data-singing] [data-tabbar] { display: none !important; }
 [data-postpop][data-passthrough="yes"] :is(button, input, select, textarea, label, a) { pointer-events: auto; }
 
 /* ── Photo editor, phone: a tool's controls under the photograph ────────────
-   Carli, 15 October 2026: the functions in the black space under the photo,
+   The owner, 15 October 2026: the functions in the black space under the photo,
    "in 'n side scroll". The panel's body scrolls sideways and each section of
    the tool is a column of its own that scrolls down by itself, so one tool's
    whole set is a swipe away rather than a long scroll over the picture.

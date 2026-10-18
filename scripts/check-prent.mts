@@ -145,7 +145,7 @@ ok('  and a size is always asked for, so the price is knowable',
 
 ok('  and the price written down is the one for that size',
   (() => {
-    /* The quoted figures, in micro-dollars, from Carli's price layout of
+    /* The quoted figures, in micro-dollars, from the owner's price layout of
        9 October 2026. The rate must cover the size being asked for — and
        must not be another model's number, which is how 150 000 (Nano Banana
        PRO) got in here in the first place. */
@@ -189,7 +189,7 @@ ok('  and the member pays more than twice what the picture costs us',
 
 /* ── 5b. A model that is not there is not the end of it ─────────────────
 
-   Carli pasted her whole Model Garden listing on 10 October 2026 and asked
+   The owner pasted her whole Model Garden listing on 10 October 2026 and asked
    *"Ok sal jy die models dan reg maak?"* Every card on it carries a badge,
    and `Gemini Nano Banana 2.1` — this app's chosen picture model — is badged
    **Self-deployed**: no per-call address at all until somebody runs a

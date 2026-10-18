@@ -3,7 +3,7 @@
  *
  * ── Why it needed building at all ────────────────────────────────────────
  *
- * Carli, 23 September 2026: *"ek wil 'n ordentlike probooth bou en voel ons
+ * The owner, 23 September 2026: *"ek wil 'n ordentlike probooth bou en voel ons
  * moet ook nog amp modellers in bring."*
  *
  * The modelling was built in September and verified by `check:nam`. What was
@@ -129,7 +129,7 @@ ok(`the strip speaks Afrikaans — ${KEYS.length} keys`, KEYS.length >= 6 && noA
 
 /* ── The maker can be typed where the file did not say ──────────────── */
 
-/* Carli, 11 October 2026: "ons maak dan net seker die eienaar van die amp
+/* The owner, 11 October 2026: "ons maak dan net seker die eienaar van die amp
    kry die eer." The credit line names the maker, and `ampMaker` reads one
    out of the file — but not every capture carries `modeled_by`, and before
    today a capture without one had nowhere for the name to go, so the shelf

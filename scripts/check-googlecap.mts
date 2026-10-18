@@ -166,7 +166,7 @@ ok('the real `enough` asks in that order',
    This counted `if (error) return null;` twice in the whole file and was
    satisfied. On 8 October 2026 both error branches grew a body — they now
    record WHY the read failed, so a missing table can say "run this file"
-   instead of "try again in a moment", which is what Carli was told while
+   instead of "try again in a moment", which is what the owner was told while
    trying again could never work. The one-line form was gone and the count
    went to nought, which is the rule failing for its own shape rather than
    for what it is about.

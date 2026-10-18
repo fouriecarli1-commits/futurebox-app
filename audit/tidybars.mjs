@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 7 October 2026: *"Die pop out bars moet ook netjies gespasieer
+ * The owner, 7 October 2026: *"Die pop out bars moet ook netjies gespasieer
  * wees, bars binne pop outs moet ewe groot en lank wees, en alles moet baie
  * eenvoudig en maklik wees. Dieselfde met video editor, asook probooth."*
  *

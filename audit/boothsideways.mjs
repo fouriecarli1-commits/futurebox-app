@@ -3,7 +3,7 @@
  *
  * ── The report ───────────────────────────────────────────────────────────
  *
- * Carli, 16 September 2026: *"die scroll op die timeline werk nie reg in die
+ * The owner, 16 September 2026: *"die scroll op die timeline werk nie reg in die
  * probooth wanneer mens die foon dwars swaai."*
  *
  * Landscape is not an edge case in this room. It is the orientation somebody
@@ -96,7 +96,7 @@ try {
 
     /* ── The CLIP, which is where a thumb actually lands ────────────────
 
-       Carli reported the scroll a second time, in portrait: *"Die probooth
+       The owner reported the scroll a second time, in portrait: *"Die probooth
        se scroll up and down werk nie. Ek wou na ander tydlyne gaan toe werk
        dit nie."*
 

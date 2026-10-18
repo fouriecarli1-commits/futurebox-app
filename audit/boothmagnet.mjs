@@ -1,7 +1,7 @@
 /**
  * The magnet's switch, the interlock, and two lanes swapping places.
  *
- * Carli, 16 September 2026: *"Die timeline het 'n magnet nodig, en ook 'n
+ * The owner, 16 September 2026: *"Die timeline het 'n magnet nodig, en ook 'n
  * interlock funksie om twee tydlyne met mekaar vas te maak. Tracks moet ook
  * geswitch kan word, menend op en af beweeg en omgeruil word."*
  *
@@ -222,7 +222,7 @@ try {
     /* ── A finger first, because that is what she is holding ──────────
  
        Every drag probe in this repo uses `p.mouse`, and every person in
-       this room is on a phone. Carli, 19 September 2026: *"Die
+       this room is on a phone. The owner, 19 September 2026: *"Die
        interlocking werk nie. Dit wys die funksie is aan maar die bane is
        nie vas aan mekaar nie."* The mouse drag below was already here and
        already passing while she was reporting that.
@@ -248,7 +248,7 @@ try {
 
     /* ── The clip goes where the finger went, in pixels ───────────────
  
-       Carli, 19 September 2026, on a session that had been twenty-six
+       The owner, 19 September 2026, on a session that had been twenty-six
        seconds long the night before: *"Die grid het eweskielik groter
        geword, en toe sit gebeur toe wil niks meer beweeg nie."* The
        transport read 11:52, the clips were slivers eleven minutes apart,
@@ -341,7 +341,7 @@ try {
        middle of the clip was "Where this lane ends".
  
        Every touch was a trim. Nothing moved, the lock could not be seen to
-       hold, and Carli reported the interlock as broken. It was not: the
+       hold, and the owner reported the interlock as broken. It was not: the
        clip could not be picked up. */
     const middles = await p.evaluate(() => {
       const clips = Array.from(document.querySelectorAll(
@@ -400,7 +400,7 @@ try {
 
     /* ── LEFT, into the beginning of the song ────────────────────────
 
-       Carli, 19 September 2026: *"met 'n instrument waarmee ek dit
+       The owner, 19 September 2026: *"met 'n instrument waarmee ek dit
        geinterlock het, het die 2de baan nogsteeds kleinbietjie sonder die
        ander bar beweeg al was dit geinterlock. Dit is dus nie 100% vas
        nie."*
@@ -462,7 +462,7 @@ try {
 
     /* ── And the picture says the same thing ─────────────────────────
 
-       Carli, 19 September 2026: *"met 'n instrument waarmee ek dit
+       The owner, 19 September 2026: *"met 'n instrument waarmee ek dit
        geinterlock het, het die 2de baan nogsteeds kleinbietjie sonder die
        ander bar beweeg al was dit geinterlock. Dit is dus nie 100% vas
        nie."*
@@ -564,7 +564,7 @@ try {
 
   /* ── Along the song, which did not exist at all ──────────────────────
 
-     Carli, 18 September 2026: *"Die probooth se sideways scroll werk nie."*
+     The owner, 18 September 2026: *"Die probooth se sideways scroll werk nie."*
 
      It did not work because there was nothing to work: the whole session was
      squeezed into whatever width the screen had, so on a 390-pixel phone a
@@ -578,7 +578,7 @@ try {
      last one is what a horizontal scroller usually breaks. */
   /* ── The ruler and the grid run the whole length of the song ────────
 
-     Carli, 18 September 2026, a photograph of the Pro Booth on her phone:
+     The owner, 18 September 2026, a photograph of the Pro Booth on her phone:
      *"Die grid op die foon app gaan nie lank genoeg aan nie. Die tyd en
      grid raak weg."*
 
@@ -611,7 +611,7 @@ try {
 
     /* ── The smaller reference ───────────────────────────────────────
 
-       Carli, 21 September 2026: *"the grid needs to have smaller marks
+       The owner, 21 September 2026: *"the grid needs to have smaller marks
        on top at the time reference, specifically to have that smaller
        reference."*
 
@@ -676,7 +676,7 @@ try {
 
     /* ── Zoomed in and pushed to the far end ─────────────────────────
  
-       Carli's photograph is of a timeline whose grid and clock stop
+       The owner's photograph is of a timeline whose grid and clock stop
        partway along while the sound carries on. The assertions above
        measure the whole axis, which is the right question and only the
        first half of it: the part she is LOOKING at is a window onto that
@@ -708,7 +708,7 @@ try {
     });
     /* ── Counted, not merely present ─────────────────────────────────
 
-       These two asserted `> 0` and passed for days while Carli kept
+       These two asserted `> 0` and passed for days while the owner kept
        reporting *"die tyd en grid raak weg"*. One bar line and one label
        in a 390-pixel window IS the fault, and `> 0` cannot see it.
 

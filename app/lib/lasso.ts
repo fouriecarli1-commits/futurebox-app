@@ -241,7 +241,7 @@ export function cutAlong(
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Ek dink daai opsie moet verskillende shapes hê
+ * The owner, 8 October 2026: *"Ek dink daai opsie moet verskillende shapes hê
  * waarvan iemand kan kies om mee te cut. 'N circle, 'n vierkand, 'n lyn, 'n
  * pencil waar jy totale vryheid het om mooi om elke edge te sny."*
  *

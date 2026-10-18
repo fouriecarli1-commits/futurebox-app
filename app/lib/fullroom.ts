@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026, on the booth's new bars: *"daai buttons vervang
+ * The owner, 14 September 2026, on the booth's new bars: *"daai buttons vervang
  * die harde buttons van die hele app, dan val daai hele bar van die app in
  * die booth weg, let wel, links heel bo moet dan darem 'n back icon wees om
  * uit die booth te kom."*

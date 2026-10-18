@@ -5,7 +5,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli: "Wanneer ek inlog in engels, spring die blad afrikaans toe."
+ * The owner: "Wanneer ek inlog in engels, spring die blad afrikaans toe."
  *
  * She is right, and the code was doing what it was told. The rule is that a
  * language chosen in this browser is never overruled, and the account answers

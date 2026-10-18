@@ -1,7 +1,7 @@
 /**
  * The long-form board: every piece saveable, and a room that can speak.
  *
- * Carli, 23 September 2026: *"Gaan kyk na long shot in video. Elke klein
+ * The owner, 23 September 2026: *"Gaan kyk na long shot in video. Elke klein
  * gedeelt moet 'n knoppie hê om net die stukkie af te laai. Dit wil ook
  * voorkom dat daai kamer glad nie klank wat praat genereer nie."*
  *

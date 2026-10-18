@@ -47,7 +47,7 @@ export const maxDuration = 60;
  * the files are still there. Adding a bucket anywhere in the app means adding
  * it here.
  */
-/* Every bucket that holds a member's files under their own id. Carli, 14
+/* Every bucket that holds a member's files under their own id. The owner, 14
    October 2026, in the growth plan: deleting an account left avatars, cast
    pictures, the kids shelf and every sub-folder (work files, filmed takes)
    behind — rows gone by cascade, files orphaned, and under POPIA a person's

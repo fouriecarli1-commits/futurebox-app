@@ -5,7 +5,7 @@
  *
  * ── The gap ──────────────────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Maak seker probooth se funksies werk en kan maklik
+ * The owner, 8 October 2026: *"Maak seker probooth se funksies werk en kan maklik
  * gevind word."*
  *
  * They work: `audit/probooth.mjs` presses 109 things in that room and every

@@ -1,6 +1,6 @@
 /**
  * The photo editor's own colours, as Google's "Photo Editor v4.2" page
- * drew them (Carli, 13 October 2026: *"ons transform en totally redesign"*).
+ * drew them (The owner, 13 October 2026: *"ons transform en totally redesign"*).
  *
  * Obsidian floor, a slightly lifted panel, a lighter well inside a panel,
  * one emerald accent, and the glows. Here rather than in the component

@@ -1,7 +1,7 @@
 /**
  * Google Play purchases, from inside the Play Store app.
  *
- * Carli, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
+ * The owner, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
  * ek paystack afhaal en werk met die playstore se paying system."* On the
  * website `/api/checkout` and Paystack carry on exactly as before; inside the
  * Android app the same buttons come here instead (`lib/playbilling.ts`).

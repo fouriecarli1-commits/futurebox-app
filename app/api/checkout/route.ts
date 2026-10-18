@@ -95,7 +95,7 @@ async function priceOf(want: Want, who: string): Promise<{ cents: number; label:
 
     /* ── One price, and it is not on the row ────────────────────────
 
-       Carli, 6 October 2026: *"Ek dink ons moet 'n vaste rate van R280
+       The owner, 6 October 2026: *"Ek dink ons moet 'n vaste rate van R280
        vra vir 'n kunswerk."*
 
        The price is `ART_RAND` and it is read from the file that owns it,
@@ -187,7 +187,7 @@ export async function POST(request: Request): Promise<Response> {
 
   /* ── Credits are for members who already pay ──────────────────────────
 
-     Carli: "iemand kan nie krediete koop sonder 'n subscribed plan nie."
+     The owner: "iemand kan nie krediete koop sonder 'n subscribed plan nie."
 
      `/api/credits` hides the shelf from a free member, and a hidden button is
      not a closed door: `pack` is a string in a body anybody can post. The
@@ -208,7 +208,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   /* ── Selling never stops ──────────────────────────────────────────────
-     Carli, 14 October 2026: "Ek wil nie gecap wees nie, ek wil groot gaan."
+     The owner, 14 October 2026: "Ek wil nie gecap wees nie, ek wil groot gaan."
      The till used to refuse a new plan with a waiting list once the
      ElevenLabs month was 85% spent. It sells at every level now; what keeps
      the work going is the budget behind it — usage-based billing on the
@@ -239,7 +239,7 @@ export async function POST(request: Request): Promise<Response> {
   const origin = new URL(request.url).origin;
   /* ── Back into the room she paid from ────────────────────────────────
 
-     Carli, 21 September 2026: *"Met die album art wanneer die betaling
+     The owner, 21 September 2026: *"Met die album art wanneer die betaling
      terug kom is dit nie in dieselfde kamer nie. Ek betaal die R50 om die
      bid te begin, maar dan gebeur daar niks nie."*
 
@@ -260,7 +260,7 @@ export async function POST(request: Request): Promise<Response> {
       : null;
   /* ── And WHICH piece ──────────────────────────────────────────────────
    *
-   * Carli, 22 September 2026: *"Daar is nerens 'n afdeling om verder te bid
+   * The owner, 22 September 2026: *"Daar is nerens 'n afdeling om verder te bid
    * op daardie spesifieke prent nie."*
    *
    * The bid button lives inside the opened piece, not on the wall. So
@@ -301,7 +301,7 @@ export async function POST(request: Request): Promise<Response> {
         ...(want.kind === 'plan' && planCode(want.tier)
           ? { plan: planCode(want.tier) }
           : {}),
-        /* Card or EFT, when the buyer chose one. Carli, 14 October 2026:
+        /* Card or EFT, when the buyer chose one. The owner, 14 October 2026:
            album art paid "via eft, or with credits". Paystack then shows only
            that way to pay; with nothing chosen it shows every way the account
            has switched on, which is what every other checkout here does. */
@@ -322,7 +322,7 @@ export async function POST(request: Request): Promise<Response> {
              saying the payment went through. */
           /* ── And the bid pass carries a piece too ──────────────────
  
-             Carli, 23 September 2026, for the third time: *"die album art
+             The owner, 23 September 2026, for the third time: *"die album art
              se bid het nogsteeds nie gewerk nie."* This line is why. It
              read `want.kind === 'art'`, so a `bidpass` went to Paystack
              with `work: null` — and the webhook, which requires it, logged

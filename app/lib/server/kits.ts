@@ -11,7 +11,7 @@
  * app promises and cannot deliver.
  *
  * Kits.AI is an RVC service: models trained on a single singer, converting a
- * sung performance rather than a spoken one. Carli chose it on 7 September
+ * sung performance rather than a spoken one. The owner chose it on 7 September
  * 2026 and put the key in Vercel.
  *
  * ── What is known here, and what is inferred ─────────────────────────────
@@ -60,7 +60,7 @@ function key(): string {
  * anybody. `KITS_VOICE_MODELS` pairs them with names, the same shape the rest
  * of this app uses for a list in an environment variable:
  *
- *     KITS_VOICE_MODELS=1014961=Carli, 1023456=Die koor
+ *     KITS_VOICE_MODELS=1014961=the owner, 1023456=Die koor
  *
  * Unset is not an error. The room then asks for an id and remembers it in the
  * browser, which is the honest fallback for a list this app cannot fetch: a
@@ -220,7 +220,7 @@ export type Want = 'mix' | 'voice';
  *
  * This used to be a scan of every https URL in the answer, scored by what its
  * field was called, because nothing about their answer had ever been seen.
- * Carli sent the Inference Job type on 8 September 2026 and the guessing is
+ * The owner sent the Inference Job type on 8 September 2026 and the guessing is
  * over. An inference job carries:
  *
  *     outputFileUrl           the converted audio
@@ -309,7 +309,7 @@ export function audioUrlIn(value: unknown): string | null {
  *
  * ── CONFIRMED against a real job, 8 September 2026 ─────────────────────────
  *
- * This was written off their documentation. Carli's account had one finished
+ * This was written off their documentation. The owner's account had one finished
  * stem split on it, and `/api/kits/setup` read its field names back:
  *
  *     id, createdAt, type, status, jobStartTime, jobEndTime,
@@ -378,7 +378,7 @@ export const CANDIDATES = [
 
      ── ASKED, AND ANSWERED. There is no account API. ──────────────────────
 
-     Carli ran this against the live account on 8 September 2026. All four
+     The owner ran this against the live account on 8 September 2026. All four
      answered **200 with 5925 bytes of text/html** — their website's own page,
      the same body for all four. Not a 404, which is the trap: a status check
      alone would have reported four working endpoints and this file would now
@@ -505,12 +505,12 @@ export async function probe(path: string): Promise<{
  *   401 / 403   the address is there and this key may not use it. A plan or a
  *               permission question, not an API question.
  *
- * Nothing is created on any branch. That is the whole design of it: Carli's
+ * Nothing is created on any branch. That is the whole design of it: the owner's
  * account is hers, and finding something out must not change it.
  *
  * ── ASKED, AND ANSWERED: 404. There is no create. ────────────────────────
  *
- * Carli ran this against the live account on 9 September 2026. `POST
+ * The owner ran this against the live account on 9 September 2026. `POST
  * /voice-models` answers **404**, which is the `no` branch below: the address
  * takes a GET and not a POST.
  *
@@ -529,7 +529,7 @@ export async function probe(path: string): Promise<{
  *
  * ── The question, and why it is asked here rather than read ─────────────
  *
- * Carli, 15 September 2026: *"In pick a voice is daar instrumente ook."*
+ * The owner, 15 September 2026: *"In pick a voice is daar instrumente ook."*
  *
  * Right — Kits' catalogue holds instrument models beside the voices, a sung
  * line turned into a saxophone. The picker shows them mixed in with the
@@ -735,7 +735,7 @@ export function fieldsIn(raw: string): string[] {
  * The same trick as `canCreateVoices`, and for the same reason: `{}` cannot
  * become a blend. There is nothing to blend in it. What comes back is the
  * service's own complaint, and a validation complaint names the fields it
- * wanted — which turns "ask Carli to find out" into one measurement she can
+ * wanted — which turns "ask the owner to find out" into one measurement she can
  * take by opening a page.
  *
  * A 2xx would mean something WAS made out of nothing, and that is the one
@@ -814,7 +814,7 @@ export async function blenderNeeds(): Promise<{
  * Not a 2xx, which would mean something was made.
  *
  * The first version of this said: any code that is not `E_VALIDATION_FAILURE`
- * means that body got further. Carli ran it and it answered, confidently, that
+ * means that body got further. The owner ran it and it answered, confidently, that
  * `voiceModelIds` was the shape — on the strength of **429
  * E_TOO_MANY_REQUESTS**. Kits had rate-limited the sixth POST in a row to the
  * same address, which says nothing whatever about the body, and the report
@@ -1058,7 +1058,7 @@ function rememberFace(id: string, url: string | null): boolean {
  *
  * ── And the fact that matters more than any field name ─────────────────────
  *
- * `myModels=true` came back EMPTY. Carli has trained no voices. So the
+ * `myModels=true` came back EMPTY. The owner has trained no voices. So the
  * catalogue read — `listModels(false)`, cached by `catalogue()` below — is not
  * the nice-to-have that comment describes it as. Today it is the ONLY thing
  * anybody can sing in, hers included. If it fails, every voice picker in this
@@ -1292,7 +1292,7 @@ export interface Dials {
 /**
  * The effects by name, and why names rather than numbers.
  *
- * Carli, 9 September 2026: "Daar moet ook 'n mixer setting wees vir die stemme
+ * The owner, 9 September 2026: "Daar moet ook 'n mixer setting wees vir die stemme
  * wat gebruik word wat 'n conversion slider het, 'n dynamic slider (model
  * volume), pre en post processing effects om te hoor wat klink die beste."
  *

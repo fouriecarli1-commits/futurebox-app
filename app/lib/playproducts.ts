@@ -1,7 +1,7 @@
 /**
  * What can be bought inside the Play Store app, and what each one grants.
  *
- * Carli, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
+ * The owner, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
  * ek paystack afhaal en werk met die playstore se paying system."* Google's
  * rule is that credits and plans bought inside an app from Play go through
  * Play's own billing. On the website nothing changes — Paystack, as before.

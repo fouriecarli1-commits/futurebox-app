@@ -90,7 +90,7 @@ try {
 
          It looked for "reads the words off the recording", and on 18
          September that failed against a room where the feature is perfectly
-         present. The sentence is behind the question mark because Carli
+         present. The sentence is behind the question mark because the owner
          asked for it to be: 17 September, *"daai read the words of the song
          met 2 credits moet net 'n button wees en vat die verduideliking
          weg"* — the paragraph was taking a phone's height and shoving the
@@ -126,7 +126,7 @@ try {
        §27 took the stave and the waveform off a phone because they crowded
        the words, and it was right about that. What it did not notice is that
        it also took away the answer to the only question somebody singing
-       asks. Carli, holding the phone: "dit vat mens nie na 'n recording
+       asks. The owner, holding the phone: "dit vat mens nie na 'n recording
        studio toe ... of dalk 'n note balk dat mens kan sien of mens op noot
        sing nie."
 

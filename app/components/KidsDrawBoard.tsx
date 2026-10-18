@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026: *"Maybe a drawing board that captures their shape
+ * The owner, 13 October 2026: *"Maybe a drawing board that captures their shape
  * and makes their drawings realistically alive, but family friendly."*
  *
  * ── What this file is ────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
  * Make a song's two sliders reach the engine, and the podcast room speaks
  * the app's language.
  *
- * Carli, 14 October 2026: *"Ek wil ook hê daar moet sliders wees by
+ * The owner, 14 October 2026: *"Ek wil ook hê daar moet sliders wees by
  * everything in make a song. Light heavy, en weirdness level. Sal die ai
  * musiek masjien dit kan optel?"* — and: *"Kyk net in podcasts. In die
  * engelse app is alles afrikaans daar binne."* And: *"Onthou om in make a

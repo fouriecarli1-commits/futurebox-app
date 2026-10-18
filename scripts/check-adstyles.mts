@@ -3,7 +3,7 @@
  *
  * ── What this file is for ────────────────────────────────────────────────
  *
- * Carli asked whether the advert desk could look at what is stylish and
+ * The owner asked whether the advert desk could look at what is stylish and
  * current for a product range. Pinterest, Canva and Pinterest Trends are all
  * blocked from the machine this was written on, so what they offer could not
  * be checked and was not guessed at.

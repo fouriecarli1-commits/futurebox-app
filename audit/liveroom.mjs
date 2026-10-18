@@ -1,7 +1,7 @@
 /**
  * Live, played the way a phone plays things.
  *
- * Carli moved Live onto a tab where the search used to be: "Dit is waar mense
+ * The owner moved Live onto a tab where the search used to be: "Dit is waar mense
  * die tiktik like videos van almal gaan kyk." A tab that is where everybody
  * else's work is has to play like the thing it is compared to — one at a time,
  * full screen, thumb up for the next one.
@@ -59,10 +59,10 @@ function wav() {
    on the post gave one song two different pictures, and neither of them was
    the picture that song has in Make a song. */
 const POSTS = [
-  { title: 'Karoo Wind', by: 'Anré', note: 'First thing I made here.', song: 't-1700000000001' },
+  { title: 'Karoo Wind', by: 'Zoë', note: 'First thing I made here.', song: 't-1700000000001' },
   { title: 'Second Song', by: 'Someone Else', note: '', song: 't-1700000000002' },
   { title: 'Third Song', by: 'A Third Person', note: 'Made on a phone.', song: 't-1700000000003' },
-  { title: 'Karoo Wind', by: 'Anré', note: 'Put it back in.', song: 't-1700000000001' },
+  { title: 'Karoo Wind', by: 'Zoë', note: 'Put it back in.', song: 't-1700000000001' },
 ].map((one, i) => ({
   id: `post-${i}`,
   kind: 'track',
@@ -88,7 +88,7 @@ const POSTS = [
 
 /* ── And one that is not a song ──────────────────────────────────────────
 
-   Carli: *"Music videos en music shorts moet ook na live toe kan post."*
+   The owner: *"Music videos en music shorts moet ook na live toe kan post."*
 
    The room holds two shapes now — a sleeve with a song under it, and a moving
    picture with its own sound — and they are drawn by different elements and
@@ -109,7 +109,7 @@ POSTS.push({
   link: '',
   startsAt: null,
   at: new Date().toISOString(),
-  by: 'Anré',
+  by: 'Zoë',
   mine: false,
   audio: null,
   video: '/probe-room-film.webm',
@@ -120,7 +120,7 @@ POSTS.push({
 
 /* ── And one that cannot be played, which knows why ──────────────────────
  
-   Carli, 23 September 2026, fourth time: *"die video werk steeds nie op live
+   The owner, 23 September 2026, fourth time: *"die video werk steeds nie op live
    nie."*
  
    `/api/live` has worked out which of four things went wrong since 21
@@ -142,7 +142,7 @@ POSTS.push({
   link: '',
   startsAt: null,
   at: new Date().toISOString(),
-  by: 'Anré',
+  by: 'Zoë',
   mine: false,
   audio: null,
   video: null,
@@ -217,7 +217,7 @@ let signed = 0;
            EVERY request, and a Supabase signature carries the moment it was
            issued — so the same file on the same row comes back under a
            different url every few seconds. This stub handed back the same
-           string for ever, which is why it could not see the fault Carli
+           string for ever, which is why it could not see the fault the owner
            reported five times: `RoomScreen` bound that address straight into
            the markup, React rewrote the attribute on each refresh, and a
            browser throws its buffer away whenever `src` is set. A stub that
@@ -370,7 +370,7 @@ let signed = 0;
   check('the newest song is the first one in the room',
     topPanel.includes('Karoo Wind'), topPanel.slice(0, 60));
   check('and it carries the name of the person whose song it is',
-    topPanel.includes('Anré'), topPanel.slice(0, 60));
+    topPanel.includes('Zoë'), topPanel.slice(0, 60));
 
   /* ── Play opens the room, it does not play under the list ──────────
 
@@ -500,7 +500,7 @@ let signed = 0;
 
   /* ── The one that cannot be played is IN the scroller, saying why ────
  
-     Carli's fourth report. The route worked out the reason, the list printed
+     The owner's fourth report. The route worked out the reason, the list printed
      it, and this screen — the only one somebody scrolling ever reaches —
      dropped the post. A film she had posted was simply absent, and there was
      no sentence anywhere near it to photograph.
@@ -647,7 +647,7 @@ let signed = 0;
 
   /* ── The other shape in the scroller ─────────────────────────────────
 
-     Carli: *"Music videos en music shorts moet ook na live toe kan post. Ek
+     The owner: *"Music videos en music shorts moet ook na live toe kan post. Ek
      sien huidiglik dat my videos nie 'n opsie het om na live toe te kan post
      nie."*
 
@@ -692,7 +692,7 @@ let signed = 0;
 
     /* ── And it is still playing after the room refreshes under it ───────
  
-       Carli, five times, most recently 6 October 2026: *"Video speel
+       The owner, five times, most recently 6 October 2026: *"Video speel
        nogsteeds nie in live room nie."*
  
        The room asks the server again every eight seconds and the answer

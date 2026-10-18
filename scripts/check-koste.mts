@@ -1,7 +1,7 @@
 /**
  * What she pays every month, kept true.
  *
- * Carli: "ek wil net hê ons moet konstant in ag neem wat ek alles maandelliks
+ * The owner: "ek wil net hê ons moet konstant in ag neem wat ek alles maandelliks
  *  betaal want dit help nie ek maak nie 'n wins nie."
  *
  * ── Why a check and not just a page ──────────────────────────────────────
@@ -136,7 +136,7 @@ function randFor(label: string): number | null {
 const cents = (value: number): number => Math.round(value * 100);
 
 /* Zoho joined this list on 8 September 2026. It was on no cost page at all
-   until Carli named it — not a sum that was wrong, a line that did not exist,
+   until the owner named it — not a sum that was wrong, a line that did not exist,
    and the kind nobody sees until the bank takes it. */
 const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI', 'Zoho', 'Domeine', 'Spaceship', 'Antigravity'];
 const parts = lines.map(randFor);

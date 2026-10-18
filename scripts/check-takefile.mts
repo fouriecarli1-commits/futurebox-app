@@ -3,7 +3,7 @@
  *
  * ── Three faults in one flow ─────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Die film myself terwyl mens 'n liedjie luister
+ * The owner, 14 September 2026: *"Die film myself terwyl mens 'n liedjie luister
  * neem in wide screen in plaas van in 'n long screen vir tick tok… Die
  * afgelaaide video kan nie die klank speel nie, dit sê audio codec not
  * supported."*

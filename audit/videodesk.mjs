@@ -147,7 +147,7 @@ if (await toPremium.count()) {
 const wide = await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 /* ── Her own logo, uploadable from the desk it goes out on ───────────
 
-   Carli, 18 September 2026: *"Let ook wel dat die video studio glad nie 'n
+   The owner, 18 September 2026: *"Let ook wel dat die video studio glad nie 'n
    image oplaai het vir iemand wat hulle logo op 'n video wou sit nie. Dit
    het net die oplaai vir 'n cast member."*
 

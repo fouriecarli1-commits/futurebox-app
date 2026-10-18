@@ -1,7 +1,7 @@
 /**
  * Several files in one .zip, stored rather than compressed.
  *
- * Carli, 14 October 2026: "die download seperate stems". One press for every
+ * The owner, 14 October 2026: "die download seperate stems". One press for every
  * stem used to be one download per lane, 400 ms apart — a phone asks about
  * each one, and some browsers stop after the third. One archive is one
  * question. Stored, not deflated: a WAV barely shrinks, and storing needs

@@ -4,7 +4,7 @@
  * ── Why this exists ──────────────────────────────────────────────────────
  *
  * `Card` gained a `tone` prop so the studio's regeneration notice could be
- * yellow while shut. Carli: "Maak daai a new take boksie lig geel sodat
+ * yellow while shut. The owner: "Maak daai a new take boksie lig geel sodat
  * mense dit wel oop maak." That is a real argument — a fold's one cost is
  * that a shut card is a heading in a row of identical headings, and colour
  * is how one of them says "this is a caution, not a setting".

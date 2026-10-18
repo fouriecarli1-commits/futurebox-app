@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 16 October 2026, on her phone: *"Show clothes on models — easily
+ * The owner, 16 October 2026, on her phone: *"Show clothes on models — easily
  * create on-model images with AI."* Planned on the 17th: a photo of the
  * garment, and either a model described here or a photo of a real person
  * who is her or has agreed, worn in a setting and a pose — by the same

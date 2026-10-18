@@ -3,7 +3,7 @@
 /**
  * A stock amp as a little amp: its covering by kind, a grille, and knobs
  * turned to its own drive and colour — so the amps are chosen by looking.
- * Carli, 17 October 2026: every template in every room visual.
+ * The owner, 17 October 2026: every template in every room visual.
  */
 import type { StockAmp } from '../lib/amps';
 

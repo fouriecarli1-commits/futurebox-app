@@ -2,7 +2,7 @@
  * The photo editor's magic brush, Adjust with no photograph, and a
  * see-through background that can be seen.
  *
- * Carli, 16 October 2026: *"Adjust se funksies kom nie uit nie. Magic se crop
+ * The owner, 16 October 2026: *"Adjust se funksies kom nie uit nie. Magic se crop
  * box werk nie, moet dit in elkgeval nie 'n paint brush wees wat oor 'n
  * gedeelte verf en dit word dan ai gemaster en gefix"* — and *"Ek sien ook nog
  * nerens transparent en dat dit werk nie."*
@@ -134,7 +134,7 @@ try {
   check('Start over takes the paint away', (await neonIn(0, 1)) === 0);
 
   /* ── A real finger sweep, not a mouse ──
-     Carli, 17 October 2026: "Die brush werk nie met 'n vee nie. Dit is
+     The owner, 17 October 2026: "Die brush werk nie met 'n vee nie. Dit is
      basically 'n touch." The phone took a sweep for a scroll and cancelled
      it, which a mouse never does — so this sweeps with a touch. */
   const cdp = await page.context().newCDPSession(page);

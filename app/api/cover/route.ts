@@ -21,7 +21,7 @@
  *
  * ── The keep was being done by her browser ───────────────────────────────
  *
- * Carli, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
+ * The owner, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
  * moet daar 'n opsie wees 'keep'. Ek sien ek het een gegenerate en nou is dit
  * weg."*
  *
@@ -158,7 +158,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── A screenful of songs, in one call ─────────────────────────────
  
-     Carli, 11 September 2026, testing: does a sleeve she changes later show
+     The owner, 11 September 2026, testing: does a sleeve she changes later show
      up in the live room? It did not, and the reason ran wider than the live
      room — a sleeve appeared only on the ONE card whose button had been
      pressed, in that session, and was gone again on the next load. Two
@@ -393,7 +393,7 @@ export async function PUT(request: Request): Promise<Response> {
  *
  * ── Why there was no way to ──────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"daar is nerens 'n keep knoppie nie… en dalk 'n
+ * The owner, 14 September 2026: *"daar is nerens 'n keep knoppie nie… en dalk 'n
  * remove button."* A cover could be made and it could be replaced, and those
  * were the only two things that had ever been possible. A picture you cannot
  * take off is a picture you have to live with, and the one place that hurts

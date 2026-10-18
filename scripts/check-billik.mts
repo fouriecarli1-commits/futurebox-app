@@ -1,7 +1,7 @@
 /**
  * Fair use: what the terms say is what the code does.
  *
- * Carli, 14 October 2026: *"Onthou om 'n fair usage op te stel, en ek dink
+ * The owner, 14 October 2026: *"Onthou om 'n fair usage op te stel, en ek dink
  * daar moet 'n sterk limit wees op ai voice training."* The terms state the
  * numbers; these lines hold them to PODCAST_CAPS, and hold the clone route
  * to counting trainings rather than only voices kept.

@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Ek dink die child funksie is net om met liedjie
+ * The owner, 9 October 2026: *"Ek dink die child funksie is net om met liedjie
  * maak te speel - en dalk om die liedjie 'n video te maak."* Then: *"Let the
  * parent give an allowance on an opening page."* Then: *"Gaan aan met die
  * kids kamer."*
@@ -35,7 +35,7 @@
  *
  * ── Why this room looks nothing like the rest of the app ────────────────
  *
- * Carli, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
+ * The owner, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
  * dit moet colourful en exciting wees… dit moet vol kleur en excitement
  * wees, en selfs die uitleg moet anders en uniek wees as die status quo."*
  *
@@ -65,7 +65,7 @@
  *
  * ── The Dream Studio ─────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026, with a whole page Google had drawn: *"Kom ons
+ * The owner, 13 October 2026, with a whole page Google had drawn: *"Kom ons
  * begin om die app self te upgrade. Hier is 'n nuwe kids studio."* The page
  * is a dark emerald kingdom with five doors across the top — Music Maker,
  * Video Studio, Story Maker, Arcade Fun, FutureBox TV — a star counter, and
@@ -204,7 +204,7 @@ type Tab = 'home' | 'music' | 'video' | 'story' | 'games' | 'draw' | 'edit' | 'q
 /**
  * ── The six doors, 13 October 2026 ──────────────────────────────────────
  *
- * Carli, with a second page Google drew and the room's photograph: *"Ek wil
+ * The owner, with a second page Google drew and the room's photograph: *"Ek wil
  * hê jy moet 'n nuwe kids kamer maak wat meer futureristic is… ek wil hê jy
  * moet direk die foto gebruik wat ek jou gee as agtergrond, en dan die
  * funksies wat daarop moet kom."*
@@ -227,7 +227,7 @@ const DOORS: readonly Door[] = [
     ['kids.doorMusic1', 'Press the bubbles, or type or say your own idea'],
     ['kids.doorMusic2', 'Four loops to tap, a real song, a beat machine'],
   ] },
-  /* Its own door. Carli, 15 October 2026: *"Ek sien ook nie die story mode
+  /* Its own door. The owner, 15 October 2026: *"Ek sien ook nie die story mode
      waar kinders kinder stories ontwikkel nie."* It was the second tab
      inside the video door, which nobody looking for stories opens. */
   { id: 'story', icon: '📖', says: ['kids.doorStory', 'Story Maker!'], lines: [
@@ -374,7 +374,7 @@ export default function KidsRoom({
   /**
    * The child's own words, typed or spoken.
    *
-   * Carli, 12 October 2026: *"Die kids room moet ook 'n tikboks hê, daar is
+   * The owner, 12 October 2026: *"Die kids room moet ook 'n tikboks hê, daar is
    * kinders wat kan tik, wat oulik sal wees as dit 'n record button het
    * sodat 'n kind kan praat en woorde so prompt."*
    *
@@ -485,7 +485,7 @@ export default function KidsRoom({
   useEffect(() => { void kidsNow().then(setState); }, []);
 
   /* Just signed in from here: the grown-up's page first, whatever the
-     allowance says — only a grown-up signs in. Carli, 15 October 2026: "dan
+     allowance says — only a grown-up signs in. The owner, 15 October 2026: "dan
      het dit sommer die grown up gedeelte geskip." A fresh sign-in is also how
      a forgotten code is replaced, so it is forgotten here. */
   useEffect(() => {
@@ -518,7 +518,7 @@ export default function KidsRoom({
   /**
    * ── The clock, counted down here and owned by the server ─────────
    *
-   * Carli, 10 October 2026: *"Wanneer screen time op is moet dit die kind
+   * The owner, 10 October 2026: *"Wanneer screen time op is moet dit die kind
    * uitskop."*
    *
    * The number comes from the server — `secondsLeft`, worked out against
@@ -686,7 +686,7 @@ export default function KidsRoom({
   const canPicture = left >= picturePrice && !busy && !job;
 
   /* ── A picture, two ways ───────────────────────────────────────────
-     Carli, 13 October 2026: a drawing "made realistically alive", and
+     The owner, 13 October 2026: a drawing "made realistically alive", and
      "prompting images (kids friendly)". One route, one price, and the
      allowance refuses it at the server the moment it is spent. What comes
      back goes straight onto the gallery wall: there is no download in this
@@ -756,7 +756,7 @@ export default function KidsRoom({
 
   /* ── Keeping it ────────────────────────────────────────────────────────
  
-     Carli, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
+     The owner, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
      is."* A song played in the room and was gone when the page closed — work
      that stops existing, and worse here than anywhere else, because it cost
      real credits out of an allowance a parent set and the person it happens
@@ -884,7 +884,7 @@ export default function KidsRoom({
           </div>
           <div className="min-w-0 text-center" aria-label={t('kids.dreamTitle', 'FutureBox Kids Dream Studio')}>
             {/* Held for three seconds, the grown-up's way back in. There is no
-                button for it: Carli, 15 October 2026, "daar moet nie 'n grown
+                button for it: the owner, 15 October 2026, "daar moet nie 'n grown
                 up button binne die studio wees nie want kinders gaan dit self
                 stel." */}
             <GrownUpHold onHeld={() => setAskCode(true)}>
@@ -893,7 +893,7 @@ export default function KidsRoom({
               </h1>
             </GrownUpHold>
             {/* ── And a small lock, for a grown-up who cannot find the hold ──
-                Carli, 16 October 2026: *"Daar is nie 'n logout by die kids
+                The owner, 16 October 2026: *"Daar is nie 'n logout by die kids
                 studio nie. Ek sukkel om daar uit te kom."* The hold was the
                 only way out, and nothing said it was there. The lock opens the
                 same code pad, so a child who presses it meets four numbers
@@ -914,7 +914,7 @@ export default function KidsRoom({
             </p>
           </div>
           {/* ── Sign out, on the home screen itself ───────────────────────
-              Carli, 16 October 2026: *"Daar moet 'n sign out button wees op
+              The owner, 16 October 2026: *"Daar moet 'n sign out button wees op
               die hoof home screen van die kids studio."* Plain to see, and
               behind the same four numbers as the lock: a child who presses it
               meets the code pad, a grown-up types the code and is signed out. */}
@@ -1327,7 +1327,7 @@ export default function KidsRoom({
 
       {/* ── 4. Video Studio: the stage, and the real video on it ───────────
           The Story Maker tab that sat here went on 16 October 2026, when it
-          had a door of its own: Carli, "story maker nou op 2 plekke is". */}
+          had a door of its own: the owner, "story maker nou op 2 plekke is". */}
       {tab === 'video' && (
         <>
           <KidsStage caption={caption} onSpark={spark}>
@@ -1386,7 +1386,7 @@ export default function KidsRoom({
       {/* ── 6. Arcade ────────────────────────────────────────────────────── */}
       {tab === 'games' && (
         <>
-          {/* Carli, 13 October 2026: "a game section to play with music,
+          {/* The owner, 13 October 2026: "a game section to play with music,
               piano… and creating their own songs on a childs way with
               guidance." The piano and its copy-me game; a kept tune lands
               on the song shelf, so it plays at bedtime with the rest. */}
@@ -1449,7 +1449,7 @@ export default function KidsRoom({
                 {t('kids.mySongs', 'My songs')}
               </h3>
               <SongShelf again={shelfAgain} />
-              {/* Carli, 13 October 2026: "'n playlist funksie sodat kinders
+              {/* The owner, 13 October 2026: "'n playlist funksie sodat kinders
                   letterlik aan die slaap kan raak op hulle playlist." */}
               <KidsSleep again={shelfAgain} onSpark={spark} />
             </div>

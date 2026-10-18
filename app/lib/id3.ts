@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Liedjies moet ook kan export saam met hulle Album
+ * The owner, 9 October 2026: *"Liedjies moet ook kan export saam met hulle Album
  * art."*
  *
  * Until now a song and its cover were two separate things: the audio came

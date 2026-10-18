@@ -5,7 +5,7 @@
  *
  * ── Whose idea ───────────────────────────────────────────────────────────
  *
- * Carli, 12 October 2026: *"Ek wonder of ons ook nie 'n tweede pop out
+ * The owner, 12 October 2026: *"Ek wonder of ons ook nie 'n tweede pop out
  * website moet maak waarin al die terms en funksies van ons website in
  * verduidelik word nie."* Built as a page of this site, `/guide`, so it reads
  * the rooms and the prices from the same lists the app does.

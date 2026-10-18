@@ -187,7 +187,7 @@ try {
      order, and it was broken in four of the twenty-five: once anybody pressed
      Library, `studioTab` kept "channels" for the rest of the session, so the
      bar said Library at the front door on every screen and **Make never lit
-     at all**. Carli found it by using the app. A walk proves a walk; a matrix
+     at all**. The owner found it by using the app. A walk proves a walk; a matrix
      proves the bar. */
   const TABS = af
     ? ['Kollig', 'Live', 'Maak', 'Kanaal', 'Jy']

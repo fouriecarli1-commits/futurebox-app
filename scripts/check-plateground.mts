@@ -4,7 +4,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026, of a logo this app had just made: *"Kyk gou of jy
+ * The owner, 10 October 2026, of a logo this app had just made: *"Kyk gou of jy
  * hierdie sien as transparent"* — and it was not. Then: *"Well this was done
  * on our own app. How are we going to get transparency?"*
  *

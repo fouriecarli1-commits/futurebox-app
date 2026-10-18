@@ -180,7 +180,7 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     freeNote: 'Single classes are open. A path is four sittings that end in a finished release \u2014 Studio and up.',
   },
   /* ── The three rooms that came in from the cold, 24 September 2026 ──────
-     Carli: *"Ek dink net ons moet ons gratis funksies monotise, dit moet
+     The owner: *"Ek dink net ons moet ons gratis funksies monotise, dit moet
      pakkette word wat mense koop. Die probooth, die video editing."* And on
      the advert desk, which had been sold separately at R199 a month: *"dit
      moenie 'n ekstra produk wees nie ... Te veel aankoop punte gaan mense
@@ -206,7 +206,7 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     /* ── Opened to everybody, 3 October 2026 ───────────────────────────────
 
        This was `free: 0` — the room was shut and the cards sold it as a
-       paid-plan feature. Carli: *"hulle kan 'n video bou, en die funksies
+       paid-plan feature. The owner: *"hulle kan 'n video bou, en die funksies
        toets, maar nie hulle video export nie want hulle het nie genoeg
        krediete nie."*
 

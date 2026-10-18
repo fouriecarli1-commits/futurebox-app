@@ -1,6 +1,6 @@
 # Van veiling na vaste prys — die plan, en die klousules klaar geskryf
 
-Carli, 6 Oktober 2026:
+Die eienaar, 6 Oktober 2026:
 
 > *"Dit is prohibited in Suid-Afrika om te bet op die album art in ons app.
 > Dit is baie sad, maar dit beteken ons sal daardie funksie moet verander. Ek

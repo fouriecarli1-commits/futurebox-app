@@ -9,7 +9,7 @@
  *
  * ── The brief ────────────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"in die live room en in channel wys die liedjie
+ * The owner, 14 September 2026: *"in die live room en in channel wys die liedjie
  * se naam op die liedjie window, die artist name, en die genre van die
  * liedjie. Dit gaan dit makliker maak vir ander users om by mekaar te leer en
  * te hoor watter genre regtig werk en mooi klink."*
@@ -97,7 +97,7 @@ ok('  and bounds what it stores', /\.trim\(\)\.slice\(0, 60\)/.test(route));
 
 /* ── The third song window, which is the one she opens to LISTEN ───────
 
-   Carli, 14 September 2026: *"Die oomblik wanneer hy binne die play in gaan
+   The owner, 14 September 2026: *"Die oomblik wanneer hy binne die play in gaan
    dan wys dit nie daar binne ook die genre van die liedjie nie, net buite die
    play room."*
 

@@ -35,7 +35,7 @@ export interface Lane {
   /**
    * The piece of this lane that plays, in seconds into its own audio.
    *
-   * Carli: "Ek dink maar net of klanke gecut kan word?"
+   * The owner: "Ek dink maar net of klanke gecut kan word?"
    *
    * A cut and not a deletion. The recording underneath is untouched, so the
    * cut can be moved or undone, and the amp and the stems — which are baked
@@ -52,7 +52,7 @@ export interface Lane {
   /**
    * How many times the cut piece plays, end to end. Absent or 1 is once.
    *
-   * Carli, 15 September: *"Kan nie die instrument generated parts drag om
+   * The owner, 15 September: *"Kan nie die instrument generated parts drag om
    * groter te word nie."*
    *
    * Right, and it was not a broken handle: the end of a clip stopped at the
@@ -70,7 +70,7 @@ export interface Lane {
   /**
    * The interlock: lanes carrying the same string move together.
    *
-   * Carli, 16 September 2026: *"ook 'n interlock funksie om twee tydlyne met
+   * The owner, 16 September 2026: *"ook 'n interlock funksie om twee tydlyne met
    * mekaar vas te maak."*
    *
    * A group name rather than "linked to that one", and that is the whole
@@ -93,7 +93,7 @@ export interface Lane {
   /**
    * How long the lane fades up from silence, and down to it, in seconds.
    *
-   * Carli, 14 October 2026, of the ProBooth: *"die lyne of drie hoekies wat
+   * The owner, 14 October 2026, of the ProBooth: *"die lyne of drie hoekies wat
    * die natuurlike oorgange wys."* Every desk she has used draws a small
    * triangle in the top corner of a clip that drags inward to fade it. Two
    * numbers on the lane, measured on what plays (the cut piece, repeats and
@@ -120,7 +120,7 @@ export interface Lane {
   /**
    * Where this lane's sound changes, in seconds into its own audio.
    *
-   * Carli, 10 October 2026: *"Kan die studio ook nie 'n drag funksie hê, wat
+   * The owner, 10 October 2026: *"Kan die studio ook nie 'n drag funksie hê, wat
    * ook natuurlike oorgange identifiseer"*, and then for this room: *"dan as
    * mens op dit click spring die driehoekies aan die onderste lyn van die
    * klank baan op by elke natuurlike oorgange, progressies, modulasies."*
@@ -202,7 +202,7 @@ export interface Master {
    * Take the rumble off: everything below this many hertz, in dB per octave
    * of roll-off that a single biquad gives. 0 is off.
    *
-   * Carli asked for "take off rumble" on the mastering list. It is a
+   * The owner asked for "take off rumble" on the mastering list. It is a
    * high-pass and nothing cleverer: a phone microphone picks up traffic, a
    * table being knocked and the singer's own breath as energy under 60 Hz
    * that nobody hears and every limiter ducks for.
@@ -425,7 +425,7 @@ export interface Carved {
 /**
  * One lane, cut where a region begins and where it ends.
  *
- * Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging lines
+ * The owner, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging lines
  * in die timeline te hê wat 'n gedeelte uitsonder, dan highlight daai
  * gedeelte met 'n button wat op pop met verskillende opsies binne die
  * button."*
@@ -509,7 +509,7 @@ export function carveLane(lane: Lane, from: number, to: number): Carved | null {
 /**
  * A lane's fades, handed out to the pieces it was cut into.
  *
- * Found on 15 October 2026, when Carli asked for every function in the booth
+ * Found on 15 October 2026, when the owner asked for every function in the booth
  * to be looked at properly: every piece of a carved lane was a copy of the
  * lane, fades and all, so a lane that faded in and out became three lanes
  * that each faded in and out — a dip in the level at both cuts that nobody
@@ -899,7 +899,7 @@ export function fadedCopy(
 /**
  * A copy of a piece whose loudness glides from its start to its end.
  *
- * Carli, 14 October 2026: *"Daai drag lines om sekere gedeeltes te verbeter,
+ * The owner, 14 October 2026: *"Daai drag lines om sekere gedeeltes te verbeter,
  * of om oorgange uit te smooth."* A transition that jumps — a verse that
  * comes in louder than the chorus left off, a join between two takes —
  * marked, and smoothed: the level at the front of the mark and the level at

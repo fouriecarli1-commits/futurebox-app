@@ -3,7 +3,7 @@
  *
  * ── Why the second half matters as much as the first ─────────────────────
  *
- * Carli, 4 October 2026: *"kyk asb weer na al die foto's wat ek gestuur het. Om
+ * The owner, 4 October 2026: *"kyk asb weer na al die foto's wat ek gestuur het. Om
  * seker te maak al die video editing tools is daar."*
  *
  * Her screenshots carry about twenty dials. Five of them are in this app. The
@@ -122,7 +122,7 @@ ok('  and so does the preview she is judging',
 
 /* ── And the scale really does something ─────────────────────────
  
-   Carli, 8 October 2026: *"Dit laat my dink dat video editor ook ’n blur
+   The owner, 8 October 2026: *"Dit laat my dink dat video editor ook ’n blur
    funksie nodig het."* It had one, capped at three pixels, because it was
    written as a CORRECTION for soft footage rather than as a thing you do to
    a shot on purpose. Three pixels on a 1080-wide frame is not a blur.

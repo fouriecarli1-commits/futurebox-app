@@ -5,7 +5,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli put Live on a tab where the search used to be: "Dit is waar mense die
+ * The owner put Live on a tab where the search used to be: "Dit is waar mense die
  * tiktik like videos van almal gaan kyk." A tab that is where everybody else's
  * work is has to play like the thing it is compared to — one at a time, full
  * screen, thumb up for the next one. A list of cards with a Listen button on
@@ -61,7 +61,7 @@ export interface RoomPost {
   /**
    * A moving picture with its own sound, where the post is a video.
    *
-   * Carli: *"Music videos en music shorts moet ook na live toe kan post."*
+   * The owner: *"Music videos en music shorts moet ook na live toe kan post."*
    *
    * Its own field rather than `audio`, and that is not tidiness: a panel that
    * found a url in `audio` would draw a still with a player under it and play
@@ -74,7 +74,7 @@ export interface RoomPost {
    *
    * ── A panel that vanishes teaches nothing ────────────────────────────
    *
-   * Carli, 23 September 2026, for the fourth time: *"die video werk steeds
+   * The owner, 23 September 2026, for the fourth time: *"die video werk steeds
    * nie op live nie."*
    *
    * `/api/live` has worked out which of four things went wrong since 21
@@ -104,7 +104,7 @@ export interface RoomPost {
   /**
    * What kind of song it is, where the maker wrote one down.
    *
-   * Carli, 14 September 2026: *"Die oomblik wanneer hy binne die play in gaan
+   * The owner, 14 September 2026: *"Die oomblik wanneer hy binne die play in gaan
    * dan wys dit nie daar binne ook die genre van die liedjie nie, net buite
    * die play room."* The list outside is the directory of the room; this is
    * the room, and the reason she wanted a genre on a song at all was so
@@ -118,7 +118,7 @@ export interface RoomPost {
   /**
    * The song's plan — its `[Section]` blocks, their lines and their lengths.
    *
-   * Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+   * The owner, 14 September 2026: *"Die play room moet die liedjie se woorde
    * speel."*
    *
    * Carried on the post because nothing in here can look them up: a song's
@@ -134,7 +134,7 @@ export interface RoomPost {
   /**
    * How many people have hearted it, and whether this reader is one of them.
    *
-   * Carli, seeing them on the list and not in here: "dit moet binne die play
+   * The owner, seeing them on the list and not in here: "dit moet binne die play
    * the room funksie ook wees wanneer mens scroll van 1 liedjie na die
    * volgende." She is right that this is the screen that needs them most —
    * the list is the directory of the room and this is the room, and a heart
@@ -237,7 +237,7 @@ export default function RoomScreen({
     const element = new Audio();
     /* ── Fetch ahead, rather than starting on the first few kilobytes ──
 
-       Carli, 14 September 2026: *"Die een liedjie wat ek in die live room
+       The owner, 14 September 2026: *"Die een liedjie wat ek in die live room
        gepost het is hakkerig."*
 
        This set `src` and called `play()`, which starts as soon as the
@@ -322,7 +322,7 @@ export default function RoomScreen({
     if (!element || !(one.audio || one.video)) return;
     /* ── Already playing this one? Then leave it alone ──────────────────
 
-       Carli, 14 September 2026: *"Die een liedjie wat ek in die live room
+       The owner, 14 September 2026: *"Die een liedjie wat ek in die live room
        gepost het is hakkerig."* — of a GENERATED song, which is a few
        megabytes of mp3 and not the 31MB WAV a Booth mixdown is. So it was
        never bandwidth, and that is what made this findable.
@@ -379,7 +379,7 @@ export default function RoomScreen({
      seconds, and its cleanup pauses the song on the way. */
   /* ── On WHICH post, and on nothing else ────────────────────────────
 
-     Carli, 14 September 2026, after the first fix shipped: *"Al die
+     The owner, 14 September 2026, after the first fix shipped: *"Al die
      liedjies binne live room is hakkerig."* — all of them, not the one.
 
      The first fix keyed this on the post's id AND on its audio url, on
@@ -577,7 +577,7 @@ export default function RoomScreen({
                   videos.current.set(one.id, element);
                   /* ── The address is set ONCE, not on every render ──────
  
-                     Carli, 6 October 2026: *"Video speel nogsteeds nie in
+                     The owner, 6 October 2026: *"Video speel nogsteeds nie in
                      live room nie."* Nogsteeds, after four fixes.
  
                      This read `src={one.video}` in the markup, which looks
@@ -628,7 +628,7 @@ export default function RoomScreen({
 
             {/* ── The words, following the song ──────────────────────────
 
-                Carli, 14 September 2026: *"Die play room moet die liedjie se
+                The owner, 14 September 2026: *"Die play room moet die liedjie se
                 woorde speel."*
 
                 Above the play control rather than inside the caption: this

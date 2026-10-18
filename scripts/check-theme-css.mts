@@ -196,7 +196,7 @@ for (const file of walk('app')) {
 
   /* ── And no room brings its own colours ──────────────────────────────
 
-     Carli, four times across two days, about the album art room: *"dit lyk
+     The owner, four times across two days, about the album art room: *"dit lyk
      soos 'n website binne 'n app"*, and then *"daai hele bladsy en kamer
      moet die selfde kleur en tema regdeur hê"*, and finally *"dit lyk
      uiters crap"*.

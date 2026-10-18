@@ -92,7 +92,7 @@ export function expected(): Expected[] {
 
     /* ── The policies, which nothing looked for at all ──────────────────
  
-       Carli, 23 September 2026: *"Is daar enige sql? ... die video werk
+       The owner, 23 September 2026: *"Is daar enige sql? ... die video werk
        steeds nie op live nie."*
  
        This file proved that tables, columns and buckets exist. It said

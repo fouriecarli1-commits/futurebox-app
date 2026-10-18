@@ -1,7 +1,7 @@
 /**
  * How much cloud space this member is using, and how much their plan holds.
  *
- * Carli, 16 October 2026: *"Please impliment the storage plan as you
+ * The owner, 16 October 2026: *"Please impliment the storage plan as you
  * suggested."* The limit lives in the database (`supabase/berging.sql`) —
  * this only reads it, for the gauge on the account screen and for the
  * sentence an upload refused for space is answered with.

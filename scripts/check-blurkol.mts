@@ -3,11 +3,11 @@
  *
  * ── What she asked, twice ────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Dit laat my dink dat video editor ook 'n blur
+ * The owner, 8 October 2026: *"Dit laat my dink dat video editor ook 'n blur
  * funksie nodig het."* The answer then was to rename the `sharp` dial Blur and
  * raise its ceiling from three pixels to twenty.
  *
- * Carli, 10 October 2026: *"Ek sien ook nogsteeds nie 'n blur funksie nie."*
+ * The owner, 10 October 2026: *"Ek sien ook nogsteeds nie 'n blur funksie nie."*
  *
  * She was right and the first answer was the wrong feature. A dial blurs the
  * WHOLE FRAME, which is a mood. A blur tool is a patch over one thing — a face

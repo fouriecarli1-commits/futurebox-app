@@ -3,7 +3,7 @@
  *
  * ── The report ───────────────────────────────────────────────────────────
  *
- * Carli, 18 September 2026, on the advert desk — the room she calls the
+ * The owner, 18 September 2026, on the advert desk — the room she calls the
  * important one:
  *
  *   "As ek druk op open the room dan vat hy my net na die regte kamer toe,

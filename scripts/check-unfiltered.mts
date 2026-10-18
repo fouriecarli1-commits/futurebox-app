@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 24 September 2026: *"uiteindelik maak dit bid oop by album art,
+ * The owner, 24 September 2026: *"uiteindelik maak dit bid oop by album art,
  * maar die knoppie van die bid vat mens nie verder nie."*
  *
  * Looking for why, `/api/artmarket` turned out to hold this:

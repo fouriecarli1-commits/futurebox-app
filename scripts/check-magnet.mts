@@ -1,7 +1,7 @@
 /**
  * The magnet, the interlock, and lanes that can be reordered.
  *
- * Carli, 16 September 2026: *"Die timeline het 'n magnet nodig, en ook 'n
+ * The owner, 16 September 2026: *"Die timeline het 'n magnet nodig, en ook 'n
  * interlock funksie om twee tydlyne met mekaar vas te maak. Tracks moet ook
  * geswitch kan word, menend op en af beweeg en omgeruil word."*
  *
@@ -149,7 +149,7 @@ ok('a locked clip says so on the timeline', /lane\.link && \(/.test(line));
 
    A swap knows about two indexes and nothing about a group, so it tore an
    interlocked pair in half every time one of its members moved. That is the
-   one thing Carli said she wanted the arrows FOR. The move now goes through
+   one thing the owner said she wanted the arrows FOR. The move now goes through
    `app/lib/laneorder.ts`, and `check:laneorder` owns what it should do,
    including a group with a stranger between its members.
 

@@ -5,7 +5,7 @@
  *
  * ── Whose idea ───────────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Ek wil die amps manually oplaai, dan word dit 'n
+ * The owner, 11 October 2026: *"Ek wil die amps manually oplaai, dan word dit 'n
  * katelogus waarna mense in ons app kan soek. Dit moet alles in ons sisteem
  * en databasis wees."* And earlier the same day: *"ons maak dan net seker die
  * eienaar van die amp kry die eer."*

@@ -1,9 +1,9 @@
 /**
  * Future Insights & Knowledge Hub — Curated High-Quality, Ad-Free Articles & Podcasts.
  *
- * ── What Carli asked for ─────────────────────────────────────────────────
+ * ── What the owner asked for ─────────────────────────────────────────────────
  *
- * Carli, 12 October 2026: *"Kyk ook na elke kamer, na spotlight, hoe artikels
+ * The owner, 12 October 2026: *"Kyk ook na elke kamer, na spotlight, hoe artikels
  * uitgelig word, ek is ook opsoek na kwaliteit toekomsgerigte artikels, oor AI,
  * besigheid, vibecoding, gaming, en technologies oor alle velde wat vooruitgaan.
  * Die artikels word gerate volgens kwaliteit van bronne, en die artikels moet ad
@@ -411,12 +411,12 @@ export const FUTURE_INSIGHTS: readonly InsightArticle[] = [
       'Onafhanklike skeppers behou volle intellektuele eiendom en verspreidingsbeheer.',
     ],
     bodyEn: [
-      'In this edition of Futurebox Toekomsgesprekke, host Carli Fourie and visionary guests examine how regional language communities can lead global technology waves rather than waiting for Silicon Valley translation.',
+      'In this edition of Futurebox Toekomsgesprekke, the FutureBox hosts and visionary guests examine how regional language communities can lead global technology waves rather than waiting for Silicon Valley translation.',
       'By implementing native Afrikaans phonetics, poetic structures, and cultural idioms directly within state-of-the-art voice cloning and lyrical generators, Futurebox ensures Afrikaans creators stand shoulder-to-shoulder with any international production studio.',
       'From Cape Town to London, independent artists are proving that cultural authenticity paired with visionary AI yields timeless, sovereign art.',
     ],
     bodyAf: [
-      'In hierdie uitgawe van Futurebox Toekomsgesprekke bespreek Carli Fourie en gasskeppers hoe plaaslike taalgemeenskappe globale tegnologiegolwe kan lei in plaas van wag vir Silicon Valley-vertalings.',
+      'In hierdie uitgawe van Futurebox Toekomsgesprekke bespreek die FutureBox-aanbieders en gasskeppers hoe plaaslike taalgemeenskappe globale tegnologiegolwe kan lei in plaas van wag vir Silicon Valley-vertalings.',
       'Deur egte Afrikaanse fonetiek, rymstrukture en kultuur-idiome direk in stemkloning en liriekskryf te integreer, verseker Futurebox dat Afrikaanse skeppers skouer aan skouer staan met enige internasionale produksie-ateljee.',
       'Van Kaapstad tot Londen bewys onafhanklike kunstenaars dat kulturele egtheid gekoppel aan visioenêre KI tydlose, soewereine kuns skep.',
     ],

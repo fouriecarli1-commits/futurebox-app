@@ -84,7 +84,7 @@ async function authed(): Promise<Record<string, string>> {
  *
  * ── The fault this ends ──────────────────────────────────────────────────
  *
- * Carli, 23 September 2026, with a photograph of her own screen: a face in
+ * The owner, 23 September 2026, with a photograph of her own screen: a face in
  * the cast at the top, and under it, in amber, *"Put somebody in your cast
  * first — the picture above is who the presenter will be."*
  *
@@ -140,7 +140,7 @@ export type Added =
       readonly ok: false;
       /* ── Why 'failed' became three words ──────────────────────────────
  
-         Carli, twice: *"die add a cast member heeltemal afhaal en weer oor
+         The owner, twice: *"die add a cast member heeltemal afhaal en weer oor
          doen. Die witskerm bly op kom"*, and then *"Die button net onder
          hom wat sê dat mens 'n foto kan oplaai werk, maar die cast member
          oplaai werk nie."*
@@ -182,7 +182,7 @@ export type Added =
  *
  * ── Why there are two doors ──────────────────────────────────────────────
  *
- * The other one opens the operating system's file picker, and for Carli, on
+ * The other one opens the operating system's file picker, and for the owner, on
  * her phone, that press leaves a white screen: the page comes back empty,
  * nothing is saved, and a reload cures it. Three explanations have been ruled
  * out — memory, an in-app browser, and any error the page could throw — and
@@ -315,7 +315,7 @@ export async function removeFromCast(member: Member): Promise<boolean> {
  *
  * ── The white screen, and what was actually causing it ──────────────────
  *
- * Carli, three times now, most recently 20 September 2026: *"Die witskerm
+ * The owner, three times now, most recently 20 September 2026: *"Die witskerm
  * bly op kom. Dit is weird want die add a photo wat net langs dit is werk,
  * maar daai cast funksie werk nie."*
  *

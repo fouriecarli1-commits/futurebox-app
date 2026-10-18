@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026: *"Die kamer moet ook 'n playlist funksie hê sodat
+ * The owner, 13 October 2026: *"Die kamer moet ook 'n playlist funksie hê sodat
  * kinders letterlik aan die slaap kan raak op hulle playlist."*
  *
  * ── What it is ───────────────────────────────────────────────────────────

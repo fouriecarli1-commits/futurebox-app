@@ -1,7 +1,7 @@
 /**
  * Every tool in the app, on one page, in groups — and how to open one.
  *
- * Carli, 16 October 2026, screenshots of another app's "All tools" page:
+ * The owner, 16 October 2026, screenshots of another app's "All tools" page:
  * round buttons with a picture and a name, under Generative AI, Video
  * editing, Photo editing, Shoot and record and Quick actions. The rooms are
  * the app's big doors; this is the small door straight to one tool inside a

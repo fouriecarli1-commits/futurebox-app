@@ -3,7 +3,7 @@
  *
  * ── What happened ────────────────────────────────────────────────────────
  *
- * Carli, 9 September 2026: "ek het nou links geswipe toe kom die voice cloning
+ * The owner, 9 September 2026: "ek het nou links geswipe toe kom die voice cloning
  * goed op … toe ek terug swipe of back druk, dan gooi hy mens heeltemal uit na
  * die home screen toe en jy verloor jou hele projek. 'n projek waarmee mens
  * besig is moet half kan stoor, en restart waar 'n mens is."
@@ -35,7 +35,7 @@
  * ── One session a song, and only a few songs ─────────────────────────────
  *
  * The store held ONE session, under one key, and that was the fault found on
- * 15 October 2026 when Carli asked for every function in the booth to be
+ * 15 October 2026 when the owner asked for every function in the booth to be
  * looked at properly (*"Kyk mooi of elke funksie in … probooth … werk."*).
  * Opening the booth on song B found nothing for B — right — and then, two
  * seconds later, wrote B's lanes over the only slot there was. Song A's takes

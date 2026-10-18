@@ -5,7 +5,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: choosing a photo in the video desk leaves a white
+ * The owner, 14 September 2026: choosing a photo in the video desk leaves a white
  * screen. Scrolling does nothing, a reload fixes it, and nothing is saved.
  *
  * Two explanations were offered and both were wrong — a memory death, ruled
@@ -76,7 +76,7 @@ export interface Problem {
    *
    * ── Why a record needs this ─────────────────────────────────────────
    *
-   * Carli has reported the same white screen three times: *"die wit blad met
+   * The owner has reported the same white screen three times: *"die wit blad met
    * die avatar oplaai ... Dit is nogsteeds net wit."* Every answer so far has
    * been a guess, and the reason they stayed guesses is that `page` says
    * which SCREEN and nothing says which STEP. The screen was the channel both

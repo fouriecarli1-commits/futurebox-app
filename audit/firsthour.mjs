@@ -10,7 +10,7 @@
  * tab that opens on nothing — and every per-room probe stays green through
  * all of it.
  *
- * Carli has testers signing up now. The one thing worth knowing before they
+ * The owner has testers signing up now. The one thing worth knowing before they
  * do is whether a person can get from the front door to a song in the room
  * without hitting a wall, and that is a question no probe here has ever
  * asked.

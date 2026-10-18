@@ -3,7 +3,7 @@
  *
  *   npm run check:tryon
  *
- * Carli, 16 October 2026: *"Show clothes on models."* What has to hold is
+ * The owner, 16 October 2026: *"Show clothes on models."* What has to hold is
  * that the garment is said to stay exactly itself, first and last; that a
  * real person's photo keeps them themselves and is never sent without the
  * box ticked; that every model, described or real, is an adult; and that it

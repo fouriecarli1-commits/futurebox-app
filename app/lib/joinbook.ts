@@ -1,7 +1,7 @@
 /**
  * The transition book: every transition beyond the first six, as numbers.
  *
- * Carli, 16 October 2026, a run of screenshots of a desktop editor's toolbox:
+ * The owner, 16 October 2026, a run of screenshots of a desktop editor's toolbox:
  * *"Ek gaan nou vir jou 'n klomp foto's gee wat belangrik is vir video
  * editing … Kyk ook hoe netjies dit verpak is."* Dissolves, irises, motion,
  * shapes, wipes and the Fusion set, each in its own group with a little

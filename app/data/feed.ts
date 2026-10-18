@@ -281,7 +281,7 @@ export const FEED_ITEMS: readonly FeedItem[] = [
   {
     id: 'f16',
     title: 'Composing for models that cannot hold a key',
-    source: 'Anre Fourie',
+    source: 'FutureBox',
     summary:
       'A working writeup of what breaks when a generative model is asked to stay in D minor for three minutes, with 40 attempts logged and the prompts that fixed it.',
     kind: 'article',

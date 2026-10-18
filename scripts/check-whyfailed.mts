@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 29 September 2026: *"Wat is die grootte van videos wat opgelaai kan
+ * The owner, 29 September 2026: *"Wat is die grootte van videos wat opgelaai kan
  * word? Noudat ons supabase en vercel betaal?"*
  *
  * Reading the code to answer her turned up something worse than a number.

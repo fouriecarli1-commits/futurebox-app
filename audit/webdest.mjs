@@ -3,7 +3,7 @@
  *
  * ── What was asked ───────────────────────────────────────────────────────
  *
- * Carli, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie moet
+ * The owner, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie moet
  * maak waar advertensies gepost gaan word. Dit moet ook daar wees om te kan
  * tick."
  *

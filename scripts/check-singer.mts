@@ -3,7 +3,7 @@
  *
  * ── What was found ───────────────────────────────────────────────────────
  *
- * Carli, 10 September 2026: "wanneer ek 'n liedjie generate is daar bars wat
+ * The owner, 10 September 2026: "wanneer ek 'n liedjie generate is daar bars wat
  * sê ek moet 'n stem kies, as ek daar 'n man of 'n vrou stem kies tel hy dit
  * nie op nie, want hy generate net wat hy wil."
  *

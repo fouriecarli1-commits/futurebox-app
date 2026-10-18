@@ -1,7 +1,7 @@
 /**
  * A video she made, in the place she goes looking for it.
  *
- * Carli: "Ek het nou net 'n video gegenerate, en toe gesê sit dit in my
+ * The owner: "Ek het nou net 'n video gegenerate, en toe gesê sit dit in my
  *  channel, en nou kry ek dit nie in my channel nie." And then: "Kan jy asb ook
  *  daardie video vir my soek? want ek kry dit meer nerens nie."
  *

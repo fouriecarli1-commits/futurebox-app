@@ -3,7 +3,7 @@
  *
  * ── Where this came from ─────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, after testing Google's own app: *"'n mens kan vir
+ * The owner, 9 October 2026, after testing Google's own app: *"'n mens kan vir
  * gemini vra dat jy 'n liedjie soek wat baie klink soos michael jackson se
  * liedjie beat it, en dit kry dit regtig reg om dit 'n moontlikheid te
  * maak."*

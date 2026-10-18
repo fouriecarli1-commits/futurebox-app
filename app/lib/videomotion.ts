@@ -2,7 +2,7 @@
  * A shot that moves: its picture pushed in, panned, shaken, turned or faded,
  * by a ready-made movement or by keyframes she sets herself.
  *
- * Carli, 17 October 2026, about another program's motion effects: *"Die
+ * The owner, 17 October 2026, about another program's motion effects: *"Die
  * effects … kan ook cool wees."* The words already
  * move (`videoextras.ts`); this moves the picture under them.
  *

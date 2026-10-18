@@ -3,7 +3,7 @@
  *
  * ── The question ─────────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"hoe kan ek video toets om te sien of ek 'n bucket
+ * The owner, 9 October 2026: *"hoe kan ek video toets om te sien of ek 'n bucket
  * nodig het"*.
  *
  * Every Veo sample on her Model Garden page answers with
@@ -67,7 +67,7 @@ const SECONDS = 4;
 /**
  * Which rung to ask, because the answer is per MODEL and not per project.
  *
- * Carli settled the cheap rung on 9 October 2026: `needsBucket: false`, the
+ * The owner settled the cheap rung on 9 October 2026: `needsBucket: false`, the
  * bytes came back. The full model on `premium` is a different publisher
  * model and has never been asked, which is a good inference rather than a
  * measurement — and this project has been burnt by exactly that distinction
@@ -189,7 +189,7 @@ export async function GET(request: Request): Promise<Response> {
           ? ' This is the DEARER rung: about $1.60, call it R26. The cheap one'
             + ' was already answered on 9 October 2026 — no bucket needed —'
             + ' so this only settles the full model behind the premium grade.'
-          : ' About $0.60, call it R10. Carli already ran this on'
+          : ' About $0.60, call it R10. It was already run on'
             + ' 9 October 2026 and it answered no bucket needed, so there is'
             + ' nothing left to find out here unless the model changes.'),
       alreadyAnswered: rung === 'better' ? 'needsBucket: false, 9 October 2026' : null,

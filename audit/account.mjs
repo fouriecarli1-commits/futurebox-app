@@ -71,7 +71,7 @@ const check = (label, ok, detail = '') => {
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
 
-const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'carli@futurebox.test' };
+const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'lerato@futurebox.test' };
 await p.addInitScript((who) => {
   try {
     window.localStorage.setItem('sb-stub-auth-token', JSON.stringify({
@@ -89,7 +89,7 @@ await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'app
 let creditsAnswer = { metered: true, signedIn: true, ready: true, balance: 87, monthly: 120, cap: 400, packs: [] };
 await p.route('**/api/credits*', (r) =>
   r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(creditsAnswer) }));
-/* Cloud space: Carli's storage plan, 16 October 2026 — 10 GB on Maker. */
+/* Cloud space: the owner's storage plan, 16 October 2026 — 10 GB on Maker. */
 const GB = 1073741824;
 let spaceAnswer = { metered: true, signedIn: true, ready: true, cap: 10 * GB, used: Math.round(2.5 * GB), full: false, tier: 'maker' };
 await p.route('**/api/space*', (r) =>
@@ -130,7 +130,7 @@ if (there) {
 
 /* The press itself. Their own name in the corner — which is where somebody
    looks for their account, and which used to do nothing at all. */
-const mine = p.locator('header button').filter({ hasText: /carli/i }).first();
+const mine = p.locator('header button').filter({ hasText: /lerato/i }).first();
 check('their own name is a control in the header', (await mine.count()) > 0);
 await mine.click();
 await p.waitForTimeout(1200);
@@ -139,7 +139,7 @@ const panel = p.locator('[role="dialog"]').first();
 check('pressing it opens the account', (await panel.count()) === 1, String(await panel.count()));
 let words = await panel.innerText();
 
-check('the address they signed up with is on it', /carli@futurebox\.test/.test(words),
+check('the address they signed up with is on it', /lerato@futurebox\.test/.test(words),
   words.split('\n').slice(0, 6).join(' / '));
 check('the plan is named', af ? /Jou plan/.test(words) : /Your plan/.test(words));
 check('the balance is the one the server gave', /\b87\b/.test(words), words.match(/\b\d+\b/g)?.join(',') ?? 'none');

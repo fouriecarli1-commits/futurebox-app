@@ -5,7 +5,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 15 September 2026: *"Onthou om ook vanaand die wit skerm te fix daar
+ * The owner, 15 September 2026: *"Onthou om ook vanaand die wit skerm te fix daar
  * waar die foto opgelaai moet word. Dit bly 'n regte probleem."*
  *
  * `Watchdog` records everything a white screen can be — a throw, a rejected
@@ -94,7 +94,7 @@ export default function Blankscreen(): React.ReactElement | null {
 
     /* ── Watched, not checked once ──────────────────────────────────────
 
-       Carli, 15 September 2026: *"Ek sien die wit blad met die avatar oplaai
+       The owner, 15 September 2026: *"Ek sien die wit blad met die avatar oplaai
        werk nie. Dit is nogsteeds net wit."*
 
        The first build looked once, six seconds after the page loaded, and

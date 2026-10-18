@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026, with the "Welcoming en login page" Google drew: an
+ * The owner, 13 October 2026, with the "Welcoming en login page" Google drew: an
  * obsidian page lit from behind by two blurred emerald and cyan pools and a
  * faint grid; a glass header with the mark, three anchors, the language
  * switch and two buttons; a hero in two columns — the pitch on the left, and
@@ -82,7 +82,7 @@ export default function Landing({
   const { t, lang } = useLang();
   const [region, setRegion] = useState<Region>(REGIONS[0]);
   /* The kids pack chosen on the welcome page, carried to the kids page so the
-     next stop is the payment (Carli, 15 October 2026). */
+     next stop is the payment (The owner, 15 October 2026). */
   const [kidsPick, setKidsPick] = useState<string>(
     (KIDS_PACKS.find((one) => one.pick) ?? KIDS_PACKS[0]).id,
   );
@@ -153,7 +153,7 @@ export default function Landing({
         <div className="absolute bottom-10 left-1/4 h-80 w-80 rounded-full bg-emerald-900/20 blur-[100px]" />
         {/* The same grid as every room, in the theme's ink. It was white at
             three per cent inside a sixty per cent layer — under two per cent,
-            which no screen shows (Carli, 16 October 2026: the grid "is nie
+            which no screen shows (The owner, 16 October 2026: the grid "is nie
             agter die make studio en landing page nie"). */}
         <div
           className="absolute inset-0"
@@ -169,7 +169,7 @@ export default function Landing({
         <div className={`${GUTTER} flex h-20 items-center justify-between gap-3`}>
           <button type="button" onClick={to('top')} className="flex items-center gap-3 text-left">
             {/* The app icon's own tile (`scripts/icon.mjs`): green, lit, the
-                chip black. Carli, 13 October 2026: "die groen om die icon
+                chip black. The owner, 13 October 2026: "die groen om die icon
                 moet brighter en neon wees, en die swart lyne bly swart". */}
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-cyan-400 to-emerald-500 shadow-[0_0_18px_rgba(5,255,147,0.55)]">
               <Cpu className="h-5 w-5 text-onAccent" />
@@ -276,7 +276,7 @@ export default function Landing({
         )}
 
         {/* ── The door, under the video ──────────────────────────────
-            Carli, 13 October 2026: "Die video moet bo die log in wees. Net
+            The owner, 13 October 2026: "Die video moet bo die log in wees. Net
             onder die login moet die kids room bemark word, en dan daarna
             die pricing." The form is the real one from `page.tsx`, handed
             in as `door`; the hero no longer carries a second way in. */}
@@ -330,7 +330,7 @@ export default function Landing({
         </section>
 
         {/* ── The kids room, for the parent reading this ──────────────────
-            Carli, 13 October 2026: "die kids studio moet baie duidelik en
+            The owner, 13 October 2026: "die kids studio moet baie duidelik en
             gefeature wees ook op die landing page. Dit moet ouers gerus
             stel." Her picture, and under it only what the room really does. */}
         <section id="kids" className={`${GUTTER} scroll-mt-24 border-t border-zinc-800/80 py-24`} data-landingkids>
@@ -361,7 +361,7 @@ export default function Landing({
             </p>
 
             {/* ── Which country these prices are in ───────────────────
-                Carli, 11 October 2026: *"Maak 'n country picker"*. A plain
+                The owner, 11 October 2026: *"Maak 'n country picker"*. A plain
                 `<select>`, so the operating system draws it: nineteen
                 countries on a 390px phone is the one job a native picker
                 does better than anything built here. The first option
@@ -457,7 +457,7 @@ export default function Landing({
           </div>
 
           {/* ── The kids room, priced on its own ──────────────────────────
-              Carli, 14 October 2026: "In die pricing page moet die kids room
+              The owner, 14 October 2026: "In die pricing page moet die kids room
               ook 'n aparte prys hê." Its own credits, for the kids room only,
               and no plan needed to buy them — `lib/kidspacks.ts` is the one
               table the till, the webhook and this card all read. The press
@@ -472,7 +472,7 @@ export default function Landing({
               </span>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {/* Pressable, one chosen at a time. Carli, 15 October 2026:
+              {/* Pressable, one chosen at a time. The owner, 15 October 2026:
                   *"Hierdie buttons en prys keuse wil ook nie geclick word
                   nie. Maak ook seker dit vat jou na die payment system toe."*
                   They were three cards that looked like buttons and did

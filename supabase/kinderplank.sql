@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- The kids' shelf, on the account rather than on one phone
 --
--- Carli, 9 October 2026: *"Skuif die stories en liedjies na die server
+-- the owner, 9 October 2026: *"Skuif die stories en liedjies na die server
 -- toe."*
 --
 -- ── What was wrong with the device, and what was right about it ─────────

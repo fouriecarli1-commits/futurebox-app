@@ -1,7 +1,7 @@
 /**
  * The album art goes INSIDE the song, and the song still plays.
  *
- * Carli, 9 October 2026: *"Liedjies moet ook kan export saam met hulle Album
+ * The owner, 9 October 2026: *"Liedjies moet ook kan export saam met hulle Album
  * art."*
  *
  * ── Why this is driven rather than read ──────────────────────────────────
@@ -59,7 +59,7 @@ ok('a WAV is handed back untouched rather than tagged',
 
 /* ── 2. The tag is where a reader looks for it ─────────────────────────── */
 
-const made = await bytesOf(withCover(AUDIO, ART, { title: 'Môre', artist: 'Carli' }));
+const made = await bytesOf(withCover(AUDIO, ART, { title: 'Môre', artist: 'Lerato' }));
 
 ok('the file starts with ID3',
   made[0] === 0x49 && made[1] === 0x44 && made[2] === 0x33);

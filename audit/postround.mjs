@@ -2,7 +2,7 @@
  * The photo editor on a 360-pixel phone: the bar, the tools, the way out,
  * and the purple eye.
  *
- * Carli, 15 October 2026, four things in two messages:
+ * The owner, 15 October 2026, four things in two messages:
  *
  *   "Daai take it out button daar regs bo is afgesny."
  *   "Die scrolling bar onder moet 'n bietjie groter. Beweeg die hele ding op
@@ -85,7 +85,7 @@ try {
   check('  and the green button shuts it again', (await page.locator('[data-postsavefull]').count()) === 0);
 
   /* ── Grab, on a picture with words low down ─────────────────────────
-     Carli, 15 October 2026: "Die grab funksie werk ook nie." Two faults on a
+     The owner, 15 October 2026: "Die grab funksie werk ook nie." Two faults on a
      phone, both of them the tool panel: what Grab said was printed at the
      foot of the photograph, behind the panel, so a press looked like
      nothing; and while picking, the panel lay over the lower half of the
@@ -135,7 +135,7 @@ try {
   check('  and tapping it picks that line', /MARKET|DAY/i.test(took), took || 'nothing picked');
   await page.locator('[data-postlinedone]').click();
   await page.waitForTimeout(400);
-  /* Done closes everything — Carli, 16 October 2026: the panels that popped
+  /* Done closes everything — the owner, 16 October 2026: the panels that popped
      up "wil ook nie weg gaan nie". */
   check('  and Done puts every panel away, the photograph clear again',
     (await page.locator('[data-postlinebar], [data-postbenchpanel]').count()) === 0);

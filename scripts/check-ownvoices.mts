@@ -19,7 +19,7 @@
  *
  * The decision table of `whose()`, driven against a stand-in database rather
  * than described: four answers, and the two that matter are "somebody else's"
- * and "could not tell". Then the caps Carli chose, the refusals, and the
+ * and "could not tell". Then the caps the owner chose, the refusals, and the
  * three places in the app that have to act on all of it.
  */
 import { readFileSync } from 'node:fs';

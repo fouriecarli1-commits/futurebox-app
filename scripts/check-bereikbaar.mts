@@ -3,7 +3,7 @@
  *
  * ── What she asked, and the answer ───────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Waar lewe die kids funksie"*.
+ * The owner, 10 October 2026: *"Waar lewe die kids funksie"*.
  *
  * Nowhere anybody could get to. `/kids` is a finished room — a grown-up's
  * page that sets an allowance, a child's page with two presses on it, and a
@@ -204,7 +204,7 @@ ok('  and every route without one says why',
 
 /* ── The two that were lost, named ─────────────────────────────────────── */
 
-/* Carli, 14 October 2026: "Die kids room met sy aparte credits moet net van
+/* The owner, 14 October 2026: "Die kids room met sy aparte credits moet net van
    die welcoming page af geaccess kan word. Dit moenie binne die app geaccess
    kan word nie." The kids room has exactly one door, on the welcome page. */
 ok('the kids room is reached from the welcome page',
@@ -218,7 +218,7 @@ ok('  and from nowhere inside the app',
     .every((file) => !/href=\{?['"`]\/kids['"`]|(push|replace|assign)\(['"`]\/kids['"`]/.test(withoutComments(readFileSync(file, 'utf8')))),
   'a door to /kids inside the app is the one thing she asked to be gone');
 
-/* Carli, 15 October 2026: no grown-up button in the kids room, "want kinders
+/* The owner, 15 October 2026: no grown-up button in the kids room, "want kinders
    gaan dit self stel". So a child who reaches the studio — by Back, or by
    closing and opening the app — is sent back to the room. That is not a door:
    nothing is pressed or shown, and it fires only while the device remembers a

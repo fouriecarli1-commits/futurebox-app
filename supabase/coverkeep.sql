@@ -5,7 +5,7 @@
 --
 -- ── The fault this exists for ────────────────────────────────────────────
 --
--- Carli, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
+-- the owner, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
 -- moet daar 'n opsie wees 'keep'. Ek sien ek het een gegenerate en nou is dit
 -- weg."*
 --

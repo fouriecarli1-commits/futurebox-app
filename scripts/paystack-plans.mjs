@@ -64,7 +64,7 @@ const TIERS = [
 
 /* ── No add-ons, as of 24 September 2026 ────────────────────────────────
    The marketing desk was R199 a month with its own plan code. It is in every
-   paid plan now — Carli: *"Te veel aankoop punte gaan mense afsit."* — so
+   paid plan now — the owner: *"Te veel aankoop punte gaan mense afsit."* — so
    there is nothing here that needs a Paystack plan of its own, and this
    script creates three codes rather than four.
 
@@ -76,7 +76,7 @@ const TIERS = [
 const ADDONS = [];
 
 /* ── The two monthly kids packs, 14 October 2026 ───────────────────────
-   Carli: "In die pricing page moet die kids room ook 'n aparte prys hê."
+   The owner: "In die pricing page moet die kids room ook 'n aparte prys hê."
    Kids Try is a single payment and needs no plan; these two renew every
    month, so each is a Paystack plan at the price `app/lib/kidspacks.ts`
    states — read from there, like the tiers from plans.ts, so the plan can

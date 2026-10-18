@@ -91,7 +91,7 @@ check('no mailbox is written into the letter footer',
 
 /* ── A second owner ─────────────────────────────────────────────────────
  
-   "Kan ek 'n tweede owner stel, sodat anrefourie@gmail.com ook die app kan
+   "Kan ek 'n tweede owner stel, sodat haar eie adres ook die app kan
     toets saam met my?"
  
    Yes, and asking turned up a bug that would have answered "no" without ever

@@ -66,7 +66,7 @@ Postgres-fout op reël tweehonderd van iets wat jy pas geplak het.
 Elkeen van daardie kamers sê "nie opgestel nie" in gewone woorde eerder as om
 te breek — daardie sin *is* die toets.
 
-**Wat dit kos:** **R544 ($34) per maand** op Pro, bevestig deur Carli op
+**Wat dit kos:** **R544 ($34) per maand** op Pro, bevestig deur die eienaar op
 24 September 2026 toe sy opgegradeer het. Hierdie reël het R400 gesê — Supabase
 se plakkerprys van $25 — en haar rekening is $34, want Pro se basis is nie al
 wat op die staat staan nie. Die gratis plan werk vir 'n handjievol toetsers,
@@ -156,7 +156,7 @@ die werkvloeie wat werklik op die rekening is en sê watter kodes gestel is.
 
 **Wat dit kos:** per minuut klank per werkvloei-loop.
 
-**Die lees-werkvloei is nou gemeet: $0.07 per minuut, R1.12.** Carli het op
+**Die lees-werkvloei is nou gemeet: $0.07 per minuut, R1.12.** Die eienaar het op
 5 Oktober 2026 die *Chords and Beat Mapping*-werkvloei in hul eie
 redigeerder oopgemaak en dit het `Estimated (per minute) $0.07` gewys langs
 'n loop wat in 7,44 sekondes klaar was en met `Eb major` en `bpm 76`
@@ -303,7 +303,7 @@ spesifieke antwoord:
 - Waar dit staan: die toep is gebou en loop; die eerste toetsers is in.
 - Wat die verbruik gaan wees: ongeveer 1 800 krediete per vol liedjie, en die
   som verwag 60–250 betalende lede in die eerste jaar.
-- Die maatskappy: **futureboxstudio**, CIPC 2026/714071/07.
+- Die maatskappy: **futureboxstudio**, geregistreer by CIPC (nommer op die sertifikaat).
 
 ## Praktiese punte
 

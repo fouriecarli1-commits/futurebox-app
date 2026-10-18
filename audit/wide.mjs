@@ -102,7 +102,7 @@ try {
         if (r.width < 2 || r.height < 2) continue;
         if (r.right <= vw + slack && r.left >= -slack) continue;
         /* Inside a row that scrolls sideways on purpose (the photo editor's
-           tools along the foot, Carli 14 October 2026), past the edge is
+           tools along the foot, the owner 14 October 2026), past the edge is
            where the next tool waits, not a page that does not fit. */
         if (el.closest('[data-sideways]')) continue;
         seen.push({
@@ -165,7 +165,7 @@ try {
         if (r.width < 2 || r.height < 2) continue;
         if (r.right <= vw + slack && r.left >= -slack) continue;
         /* Inside a row that scrolls sideways on purpose (the photo editor's
-           tools along the foot, Carli 14 October 2026), past the edge is
+           tools along the foot, the owner 14 October 2026), past the edge is
            where the next tool waits, not a page that does not fit. */
         if (el.closest('[data-sideways]')) continue;
         seen.push({

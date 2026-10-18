@@ -64,7 +64,7 @@ ok('  and it refuses nothing on the way in',
 
 /* ── Every .sql file is accounted for ─────────────────────────────────
  *
- * Carli, 21 September 2026, asking for the cast member a third time.
+ * The owner, 21 September 2026, asking for the cast member a third time.
  *
  * `cast.sql` was written on 4 September and this bundle on the 6th, and
  * nobody put one in the other. She runs the bundle; anything outside it she

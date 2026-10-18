@@ -3,7 +3,7 @@
 /**
  * Pro DAW Studio ("Azure Horizon" style workstation).
  *
- * Implements the arrangement & workstation UI requested by Carli:
+ * Implements the arrangement & workstation UI requested by the owner:
  *   1. Arranger & Timeline Grid with track headers (New Track, Virtual Instrument)
  *      with Mute (M), Solo (S), Record Arm (R), Input Monitor (I), volume faders,
  *      pan knobs, bar grid 1..12+, snap magnet, and zoom.

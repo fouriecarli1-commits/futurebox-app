@@ -4,7 +4,7 @@
  * ── Why there is a front door at all ─────────────────────────────────────
  *
  * `docs/OPEN-QUESTIONS.md` is 2,600 lines and grows every session. Eleven
- * sections were appended to it on 10 September alone. Carli said she would
+ * sections were appended to it on 10 September alone. The owner said she would
  * "alles later kyk" — and nobody reads 2,600 lines of chronological append,
  * so a register in that shape is not a register, it is an archive with a
  * misleading name.

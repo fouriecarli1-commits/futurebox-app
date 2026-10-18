@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"ons moet 'n afsny punte hê."* A cut-off set
+ * The owner, 11 October 2026: *"ons moet 'n afsny punte hê."* A cut-off set
  * without a measurement is a cut-off set against an imagined customer. This
  * is the measurement, and it is the only reason `lib/server/conduct.ts`
  * writes anything at all.

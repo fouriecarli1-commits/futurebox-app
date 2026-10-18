@@ -3,7 +3,7 @@
 /**
  * The document room: a PDF workbench on the phone.
  *
- * Carli, 17 October 2026: *"Die PDF craft is nogal belangrik."* — with
+ * The owner, 17 October 2026: *"Die PDF craft is nogal belangrik."* — with
  * screenshots of a full PDF workbench:
  * organise pages, combine files, comment, prepare a form, edit (text,
  * pictures, header and footer, watermark, links, Bates numbering,
@@ -597,7 +597,7 @@ export default function PdfRoom({ start, onClose }: { readonly start: PdfToolId 
         add([{ kind: pen, page: at, at: { u: p.u - (ptSize / 2) / size.w, v: p.v - (ptSize / 2) / size.h }, size: ptSize, colour: ink }]);
         break;
       case 'retype': {
-        /* A whole paragraph or heading, edited in place. Carli, 17 October
+        /* A whole paragraph or heading, edited in place. The owner, 17 October
            2026: *"wanneer mens op 'n hele blok kliek dan moet daai hele blok
            ge-edit kan word."* */
         const block = blocks.find((one) => !held.some((h) => h.block === one.key)

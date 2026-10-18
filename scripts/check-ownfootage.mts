@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat ek moet
+ * The owner, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat ek moet
  * bou vir 'n funksie, ek wil sniplets uit my videos gebruik vir bemarking"*,
  * and then *"Ek wonder of dit moontlik is om 'n basic video editor te bou?
  * … Ook met 'n paar filter moontlikhede."*

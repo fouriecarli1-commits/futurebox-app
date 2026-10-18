@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 23 September 2026: *"Sou ons ook 'n funksie vir video generation
+ * The owner, 23 September 2026: *"Sou ons ook 'n funksie vir video generation
  * kon bou vir mense wat 'n bemarking wil bou met hulle eie video en images?
  * Ek het byvoorbeeld nou 'n bemarking wat ek moet bou vir 'n funksie, ek wil
  * sniplets uit my videos gebruik vir bemarking."*

@@ -3,7 +3,7 @@
  *
  * ── Why there is no chat ─────────────────────────────────────────────────
  *
- * Carli, 24 September 2026: *"Ek wonder oor kommunikasie en hoe hulle kan
+ * The owner, 24 September 2026: *"Ek wonder oor kommunikasie en hoe hulle kan
  * kommunikeer. Ek dink nie ek wil 'n chat plek in sit nie. Dalk net die opsie
  * om 'n social link te kan share. Dan chat hulle maar op 'n ander platform."*
  *

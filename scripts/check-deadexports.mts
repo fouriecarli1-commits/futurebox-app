@@ -46,7 +46,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 
 /** Kept on purpose, and why. Empty today; a reason goes in with any name. */
 /* Antigravity's console and DAW came back on 13 October 2026 (1653903) at
-   Carli's word, with the files beside them, and that commit says plainly
+   The owner's word, with the files beside them, and that commit says plainly
    that the console's buttons do not yet call the work behind them. These are
    what they will call. Deleting them now would undo what she asked for; they
    leave this list as the screens are wired. */

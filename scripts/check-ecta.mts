@@ -5,7 +5,7 @@
  *
  * ── Why a check over a document ──────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Legal check van app."* `docs/LEGAL-REVIEW.md`
+ * The owner's list, 7 October 2026: *"Legal check van app."* `docs/LEGAL-REVIEW.md`
  * is the handover for the attorney: every particular the Electronic
  * Communications and Transactions Act asks an online supplier to disclose,
  * where this app says it, and the five that are missing.
@@ -54,10 +54,10 @@ const PARTICULARS: readonly {
   readonly shows: RegExp | null;
 }[] = [
   { s: '43(1)(a)', what: 'full name and legal status', shows: /who\.name/ },
-  { s: '43(1)(b)', what: 'physical address and telephone', shows: /FUTUREBOX_LEGAL_ADDRESS|address/i },
-  { s: '43(1)(c)', what: 'web address and email', shows: /who\.email/ },
+  { s: '43(1)(b)', what: 'physical address and telephone', shows: /given on\s+request/ },
+  { s: '43(1)(c)', what: 'web address and email', shows: /SITE_HOST/ },
   { s: '43(1)(d)', what: 'self-regulatory body', shows: null },
-  { s: '43(1)(e)', what: 'registration number and office bearers', shows: /who\.registration/ },
+  { s: '43(1)(e)', what: 'registration number and office bearers', shows: /The registration number[\s\S]{0,120}given on\s+request/ },
   { s: '43(1)(f)', what: 'code of conduct', shows: null },
   { s: '43(1)(g)', what: 'description of the goods', shows: /What is sold here/ },
   { s: '43(1)(h)', what: 'full price', shows: /what it costs/ },

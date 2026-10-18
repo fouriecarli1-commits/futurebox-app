@@ -15,7 +15,7 @@
  * is an mp3: roughly a megabyte a minute. So this is not an edge case, it is
  * most of what this app sends.
  *
- * ── Carli found it the way users find things ─────────────────────────────
+ * ── the owner found it the way users find things ─────────────────────────────
  *
  * 6 October 2026, on a 1:12 lane: *"The room could not be taken off that
  * lane."* The route had taken a storage key since it was written and
@@ -209,7 +209,7 @@ ok('  and nothing fetches a URL that arrived on the form',
   !/fetch\(/.test(server), 'lib/server/workfile.ts');
 
 /* ── A Response is answered once ───────────────────────────────────────
-   Carli, 15 October 2026: the kids studio would not open after signing in.
+   The owner, 15 October 2026: the kids studio would not open after signing in.
    `/api/kids` built its 401 once, at module level, and returned the same
    object to every signed-out request; a body can be read once, so the
    second one became a 500 and the page never learnt to ask her to sign in.

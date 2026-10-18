@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 14 September 2026, with four pictures of what she wants: *"Die booth
+ * The owner, 14 September 2026, with four pictures of what she wants: *"Die booth
  * moet heeltemal verander. Die timeline van die verskillende layers moet reg
  * by en teen mekaar wees. Die lyn wat deur die timeline beweeg moet langer
  * wees sodat 'n vinger hom kan vang en die klank plek kan drag. Reg bo die
@@ -31,7 +31,7 @@
  *
  * ── The look, which is deliberate and not the app's ──────────────────────
  *
- * Carli: *"die booth se swart met die blou musieklyn sal 'n unieke take wees
+ * The owner: *"die booth se swart met die blou musieklyn sal 'n unieke take wees
  * vir die booth, dat dit heeltemal anders lyk as die res van die app."*
  *
  * So every colour in here is a literal, and none of them is a palette token.
@@ -91,7 +91,7 @@ function hueFor(index: number, count: number): number {
  *
  * Both grew when M and S became buttons instead of lights. They were 28 by
  * 18, which this app's own rule — 44 pixels under a coarse pointer — forbids
- * and which no thumb can hit: Carli found it by trying.
+ * and which no thumb can hit: the owner found it by trying.
  *
  * ── And then both came back down ─────────────────────────────────────────
  *
@@ -184,7 +184,7 @@ export default function BoothTimeline({
   /**
    * Listen to this lane and show where it changes — or stop showing.
    *
-   * Carli, 10 October 2026: *"Daar kan dalk ook 'n button wees links by s m,
+   * The owner, 10 October 2026: *"Daar kan dalk ook 'n button wees links by s m,
    * wat dan 'n helder blou driehoekie is, dan as mens op dit click spring die
    * driehoekies aan die onderste lyn van die klank baan op by elke natuurlike
    * oorgange, progressies, modulasies. Dit help die editor om te weet waar om
@@ -229,7 +229,7 @@ export default function BoothTimeline({
    *
    * ── The runaway ─────────────────────────────────────────────────────
    *
-   * Carli, 19 September 2026, a photograph of a session that had been
+   * The owner, 19 September 2026, a photograph of a session that had been
    * twenty-six seconds long the night before: *"Die grid het eweskielik
    * groter geword, en toe sit gebeur toe wil niks meer beweeg nie."* The
    * transport read **11:52**, the clips were slivers eleven minutes apart,
@@ -329,7 +329,7 @@ export default function BoothTimeline({
   /**
    * The magnet, and it starts ON.
    *
-   * Carli, 16 September 2026: *"Die timeline het 'n magnet nodig."*
+   * The owner, 16 September 2026: *"Die timeline het 'n magnet nodig."*
    *
    * Off by default would be a feature nobody finds — and unlike the marker,
    * which changes what a drag MEANS, the magnet only changes where a drag
@@ -346,7 +346,7 @@ export default function BoothTimeline({
    *
    * ── What was missing, and it was the whole thing ─────────────────────
    *
-   * Carli, 18 September 2026: *"Die probooth se sideways scroll werk nie."*
+   * The owner, 18 September 2026: *"Die probooth se sideways scroll werk nie."*
    *
    * It did not work because it did not exist. Until now the whole session
    * was squeezed into whatever width the screen had: on a 390-pixel phone
@@ -436,7 +436,7 @@ export default function BoothTimeline({
    *
    * ── Why this is not the ruler's alone ────────────────────────────────
    *
-   * Carli, 15 September 2026: *"Die mark button wat jy in die probooth gesit
+   * The owner, 15 September 2026: *"Die mark button wat jy in die probooth gesit
    * het doen niks nie. Die bar se ekstra lyne trek nie om 'n plek af te
    * baken nie."*
    *
@@ -591,7 +591,7 @@ export default function BoothTimeline({
     } else {
       /* ── The end: a trim up to the recording, repeats past it ───────
 
-         Carli: *"Kan nie die instrument generated parts drag om groter te
+         The owner: *"Kan nie die instrument generated parts drag om groter te
          word nie."* The end used to stop dead at `whole`, the length of the
          recording, which is right for a trim and is not what a clip's end
          does anywhere else: past the recording, the recording repeats.
@@ -618,7 +618,7 @@ export default function BoothTimeline({
    *
    * ── Why the two ends are not the same rule ──────────────────────────
    *
-   * Carli, 19 September 2026: *"met 'n instrument waarmee ek dit
+   * The owner, 19 September 2026: *"met 'n instrument waarmee ek dit
    * geinterlock het, het die 2de baan nogsteeds kleinbietjie sonder die
    * ander bar beweeg al was dit geinterlock. Dit is dus nie 100% vas nie."*
    *
@@ -688,7 +688,7 @@ export default function BoothTimeline({
      a mark every five seconds is forty-eight labels in the width of a phone. */
   /* ── Chosen from PIXELS, not from seconds ─────────────────────────
 
-     Carli, 19 September 2026: *"Die grid op die foon app gaan nie lank
+     The owner, 19 September 2026: *"Die grid op die foon app gaan nie lank
      genoeg aan nie. Die tyd en grid raak weg."* Two people looked at this
      twice and could not reproduce it, because both looked at zoom 1.
 
@@ -720,7 +720,7 @@ export default function BoothTimeline({
 
   /* ── The smaller marks between the numbers ────────────────────────────
 
-     Carli, 21 September 2026: *"the grid needs to have smaller marks on top
+     The owner, 21 September 2026: *"the grid needs to have smaller marks on top
      at the time reference, specifically to have that smaller reference."*
 
      The ruler had numbers and nothing else — no tick under a number, and
@@ -941,7 +941,7 @@ export default function BoothTimeline({
             that is always on the screen and always looked at.
 
             A mode nobody can see is a mode that reads as a broken button —
-            which is how Carli found this one. The switch in the corner tints,
+            which is how the owner found this one. The switch in the corner tints,
             the ruler tints, and this says the sentence. */}
         {marking && !region ? (
           <span
@@ -995,7 +995,7 @@ export default function BoothTimeline({
               Naming every cell removes the auto-placement pass entirely. */}
           {/* ── The corner, which used to be a blank square ──────────────
 
-              Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra
+              The owner, 15 September 2026: *"Is daar nie 'n manier om ekstra
               dragging lines in die timeline te hê wat 'n gedeelte uitsonder,
               dan highlight daai gedeelte met 'n button wat op pop met
               verskillende opsies binne die button."*
@@ -1249,7 +1249,7 @@ export default function BoothTimeline({
               <React.Fragment key={lane.id}>
                 {/* ── The gutter: the lane's name, and its M and S ───────
 
-                    Carli, 15 September 2026: *"Die m en s langs klankbaan
+                    The owner, 15 September 2026: *"Die m en s langs klankbaan
                     kan ook nie gedruk word nie."*
 
                     They could not. They were two `<span>`s inside the
@@ -1321,7 +1321,7 @@ export default function BoothTimeline({
 
                   {/* ── Where this lane changes ─────────────────────
 
-                      Carli, 10 October 2026: *"Daar kan dalk ook 'n button
+                      The owner, 10 October 2026: *"Daar kan dalk ook 'n button
                       wees links by s m, wat dan 'n helder blou driehoekie is,
                       dan as mens op dit click spring die driehoekies aan die
                       onderste lyn van die klank baan op by elke natuurlike
@@ -1439,7 +1439,7 @@ export default function BoothTimeline({
                 <div
                   /* ── `touch-none` only while marking ────────────────────
  
-                     Carli, 16 September 2026: *"die scroll op die timeline
+                     The owner, 16 September 2026: *"die scroll op die timeline
                      werk nie reg in die probooth wanneer mens die foon dwars
                      swaai."*
  
@@ -1528,7 +1528,7 @@ export default function BoothTimeline({
                     data-at={lane.at}
                     /* ── And the CLIP has to let a thumb scroll too ────────
  
-                       Carli, 17 September 2026, the second time: *"Die
+                       The owner, 17 September 2026, the second time: *"Die
                        probooth se scroll up and down werk nie. Ek wou na
                        ander tydlyne gaan toe werk dit nie."*
  
@@ -1661,7 +1661,7 @@ export default function BoothTimeline({
                       ))}
                     {/* ── The triangles, along the foot of the clip ──────
 
-                        Carli: *"dan as mens op dit click spring die
+                        The owner: *"dan as mens op dit click spring die
                         driehoekies aan die onderste lyn van die klank baan op
                         by elke natuurlike oorgange, progressies, modulasies.
                         Dit help die editor om te weet waar om oorgange te kry
@@ -1719,7 +1719,7 @@ export default function BoothTimeline({
                         it is only if you read the gutter at the same time,
                         and on a phone the gutter truncates at about twelve
                         characters. It is also what is left when the wave
-                        cannot draw — which is how Carli found the canvas
+                        cannot draw — which is how the owner found the canvas
                         fault above, looking at a clip that said nothing. */}
                     <span
                       className="pointer-events-none absolute left-1.5 top-1 max-w-[calc(100%-1rem)] truncate text-[10px] font-bold"
@@ -1758,7 +1758,7 @@ export default function BoothTimeline({
                     )}
                     {/* ── The two ends, and the grip between them ──────────
 
-                        Carli, 19 September 2026: *"Die interlocking werk nie.
+                        The owner, 19 September 2026: *"Die interlocking werk nie.
                         Dit wys die funksie is aan maar die bane is nie vas
                         aan mekaar nie."*
 
@@ -1787,7 +1787,7 @@ export default function BoothTimeline({
                         — the handles simply get narrower with the thing
                         they belong to. */}
                     {/* ── The fades: a triangle in each top corner ──────────
-                        Carli, 14 October 2026: *"die lyne of drie hoekies wat
+                        The owner, 14 October 2026: *"die lyne of drie hoekies wat
                         die natuurlike oorgange wys."* The shaded wedge is the
                         fade as it sounds — level rising from nothing at the
                         start, falling to nothing at the end — and the small
@@ -2068,7 +2068,7 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
        and never more than the shape can give.
 
        The floor under the divisor is the repair for the white rectangle in
-       Carli's photograph of 15 September: with `Math.max(0.001, …)` under it
+       The owner's photograph of 15 September: with `Math.max(0.001, …)` under it
        instead, a clip whose window had collapsed asked for a hundred and
        twenty-six million columns on a three-minute song, the allocation
        failed on the phone, and Chrome drew the dead canvas as a broken

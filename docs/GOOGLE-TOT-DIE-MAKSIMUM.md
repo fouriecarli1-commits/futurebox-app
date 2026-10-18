@@ -1,6 +1,6 @@
 # Google tot die maksimum — kamer vir kamer
 
-*Carli, 9 Oktober 2026:*
+*Die eienaar, 9 Oktober 2026:*
 
 > "Dink regtig mooi hoe ons google se produkte tot die maksimum kan benut tot die fynste
 > bruikbare funksies binne die verskillende plekke in creative studio. Daardie elemente wat die

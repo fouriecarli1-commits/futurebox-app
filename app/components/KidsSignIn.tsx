@@ -3,7 +3,7 @@
 /**
  * Signing a grown-up in, at the kids room's own door.
  *
- * Carli, 14 October 2026: *"Die kids room het 'n flaw, ek kry nie daar in
+ * The owner, 14 October 2026: *"Die kids room het 'n flaw, ek kry nie daar in
  * gelog nie. Dit voel of dit sy eie log in moet hê."*
  *
  * The kids room is reached from the welcome page — the page somebody sees

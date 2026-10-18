@@ -28,7 +28,7 @@
  *
  * ── Why it became a folder ───────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek dink ook daar moet 'n brand pack wees. Iemand
+ * The owner, 10 October 2026: *"Ek dink ook daar moet 'n brand pack wees. Iemand
  * moet 'n folder kan hê met hulle brand goed op."*
  *
  * It held ONE logo. A business has a logo and a wordmark and a white version

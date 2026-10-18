@@ -5,7 +5,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Die export se png en jpg buttons moet highlight
+ * The owner, 8 October 2026: *"Die export se png en jpg buttons moet highlight
  * wanneer mens dit kies."*
  *
  * They already did, in the DOM. Every chip in the photo editor carries

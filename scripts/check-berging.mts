@@ -3,7 +3,7 @@
  *
  *   npm run check:berging
  *
- * Carli, 16 October 2026: *"Please impliment the storage plan as you
+ * The owner, 16 October 2026: *"Please impliment the storage plan as you
  * suggested."* — 1 GB on Free, 10 GB on Maker, 50 GB on Studio, 200 GB on
  * Label.
  *

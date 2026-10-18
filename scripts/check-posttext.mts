@@ -215,7 +215,7 @@ ok('  and the checkerboard that proves it is drawn only as a guide',
 /* ── The alpha, which one of the two formats cannot hold ───────────────
  
    This was "the download is a PNG", and it was right while PNG was the only
-   thing the room wrote. Carli asked for a choice on 7 October — *"Ook die
+   thing the room wrote. The owner asked for a choice on 7 October — *"Ook die
    formaat van export?"* — so JPEG is offered on purpose, and the rule has to
    become the thing it was protecting rather than the implementation that
    happened to protect it.
@@ -245,7 +245,7 @@ ok('  and the background can be put back without hunting for the colour again',
 
 /* ── Something behind the words, so they can be read ─────────────────
  
-   Carli has two photographs in the fixtures of this repo where her own
+   The owner has two photographs in the fixtures of this repo where her own
    caption is over a bright sky. Every line is drawn with a soft shadow
    under it, which is right and is not enough: a shadow loses to a bright
    sky and to a patterned wall, which is two of the three photographs

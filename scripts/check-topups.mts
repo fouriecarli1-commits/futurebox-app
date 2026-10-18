@@ -3,7 +3,7 @@
  *
  * ── What was found ───────────────────────────────────────────────────────
  *
- * Carli, 10 September 2026: "Ek sien om verdere krediete aan te koop baie
+ * The owner, 10 September 2026: "Ek sien om verdere krediete aan te koop baie
  * goedkoper is as die planne wat 'n mens uit neem."
  *
  * She was right, and `credits.ts` claimed the opposite in a comment: that the

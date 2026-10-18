@@ -3,9 +3,9 @@
 /**
  * Future Insights Hub — High-Quality, Ad-Free Articles and Visionary Podcasts.
  *
- * ── What Carli asked for ─────────────────────────────────────────────────
+ * ── What the owner asked for ─────────────────────────────────────────────────
  *
- * Carli, 12 October 2026: *"Kyk ook na elke kamer, na spotlight, hoe artikels
+ * The owner, 12 October 2026: *"Kyk ook na elke kamer, na spotlight, hoe artikels
  * uitgelig word, ek is ook opsoek na kwaliteit toekomsgerigte artikels, oor AI,
  * besigheid, vibecoding, gaming, en technologies oor alle velde wat vooruitgaan.
  * Die artikels word gerate volgens kwaliteit van bronne, en die artikels moet ad

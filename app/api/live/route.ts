@@ -278,7 +278,7 @@ export async function GET(request: Request): Promise<Response> {
 
          A handle is an address and a name is what goes on a release. Beside a
          song title in a room full of listeners, the address is the wrong one
-         of the two — nobody introduces a track as "@anrefourie". */
+         of the two — nobody introduces a track as "@zoesmit". */
       const named = ((one.name as string) ?? '').trim();
       const handle = ((one.handle as string) ?? '').trim();
       names.set(one.owner as string, named || handle);
@@ -301,7 +301,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── A video post's file ─────────────────────────────────────────────
 
-     Carli: *"Music videos en music shorts moet ook na live toe kan post."*
+     The owner: *"Music videos en music shorts moet ook na live toe kan post."*
 
      Same shape as the episodes above and for the same reason: a video post
      carries the `videos` row's id, the file lives at a path on that row, and
@@ -345,7 +345,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── The sleeves, in one call rather than forty ──────────────────────
  
-     Carli, 11 September 2026, testing: "As iemand op die live post… en dan
+     The owner, 11 September 2026, testing: "As iemand op die live post… en dan
      verander jy eers later die cover page van die liedjie, verander die
      cover page dan op die live channel ook?"
  
@@ -401,7 +401,7 @@ export async function GET(request: Request): Promise<Response> {
       let video: string | null = null;
       /* ── Why there is no picture, when there is no picture ────────────
 
-         Carli, 20 September 2026: *"Die videos in die live room werk
+         The owner, 20 September 2026: *"Die videos in die live room werk
          nogsteeds nie."* Three tasks have been closed on this and it is
          still broken, which means all three were guesses — and they were
          guesses because the room cannot tell the three causes apart.
@@ -633,7 +633,7 @@ export async function POST(request: Request): Promise<Response> {
 
   /* ── Not a chat any more ──────────────────────────────────────────────
 
-     Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
+     The owner, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
      werk moet daar net tiktok live links gedeel word."*
 
      This took five hundred characters of anything, screened by the safety
@@ -902,7 +902,7 @@ export async function POST(request: Request): Promise<Response> {
     genre: String(body.genre ?? '').trim().slice(0, 60),
     /* ── Who painted the cover ─────────────────────────────────────────
 
-       Carli: *"Binne live moet die liedjie naam, artist naam, style en dan
+       The owner: *"Binne live moet die liedjie naam, artist naam, style en dan
        die kunstenaar se naam en art naam appear."*
 
        Bounded like the genre, and for the sharper reason: these two are a
@@ -930,7 +930,7 @@ export async function POST(request: Request): Promise<Response> {
   });
   /* ── A video refused by the room is not the room being off ────────────
 
-     Carli, three times: *"Video werk steeds nie in live nie."* Three rounds
+     The owner, three times: *"Video werk steeds nie in live nie."* Three rounds
      of code went into this and changed nothing, because the code was never
      the problem: `supabase/livevideo.sql` widens `live_posts`'s `kind` check
      to accept 'video' and it has not been run on her project. So Postgres

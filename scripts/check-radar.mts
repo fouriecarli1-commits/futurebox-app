@@ -5,7 +5,7 @@
  *
  * ── What she asked, and what the reading found ───────────────────────────
  *
- * Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
+ * The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
  *
  * Three faults, and all three read as working:
  *
@@ -115,8 +115,8 @@ ok('  and two shows with the same name are still two rows',
 
 /* ── 3. No number where there is nothing to measure ─────────────────── */
 const profile: CreatorProfile = {
-  name: 'Carli',
-  handle: '@carli',
+  name: 'Lerato',
+  handle: '@lerato',
   topics: ['teater', 'afrikaans'],
   followers: 1200,
   models: ['FutureBox'],
@@ -171,11 +171,11 @@ ok('  and is told what would give them one',
    "vibe coding". It is the same fault as the invented topics on the show,
    one side over — and a score worked out from invented topics on EITHER
    side is a percentage about nothing. */
-const hers = profileFromTracks('Carli', '@carli', 10, [{
+const hers = profileFromTracks('Lerato', '@lerato', 10, [{
   id: 'one',
   title: 'Aandklas',
-  creator: 'Carli',
-  handle: '@carli',
+  creator: 'Lerato',
+  handle: '@lerato',
   genre: 'Afrikaans teater',
   tags: ['teater', 'afrikaans'],
   bpm: 100,

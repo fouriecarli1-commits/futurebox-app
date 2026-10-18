@@ -40,6 +40,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { screen } from '@/app/lib/moderation';
 import { tooMany } from '@/app/lib/server/brake';
 import { asData } from '@/app/lib/server/asdata';
@@ -97,7 +98,8 @@ Rules that matter more than sounding clever:
 - The style line is always in English: it is read by a music model trained on
   English descriptions of music, whatever language the song is in.
 
-${AFRIKAANS_RULE}`;
+${AFRIKAANS_RULE}
+${DISCRETION_RULE}`;
 
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('songfrom', request, LIMITS)) {

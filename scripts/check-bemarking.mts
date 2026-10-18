@@ -5,7 +5,7 @@
  *
  * ── Why this is a check and not a proofread ──────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Bemarkingsmateriaal."*
+ * The owner's list, 7 October 2026: *"Bemarkingsmateriaal."*
  *
  * An advertisement is the one place an overclaim becomes a complaint, and it
  * has already happened once in this repo. The Label card carried *"Five seats

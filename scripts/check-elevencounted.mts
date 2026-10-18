@@ -100,7 +100,7 @@ for (const file of FILES) {
  
        So a two-argument call is recorded and then invisible, which is worse
        than not recording it: the page reads as "this was never used". Found
-       on 30 September, when Carli made her first video and asked how to see
+       on 30 September, when the owner made her first video and asked how to see
        what it cost. The video row was there and the page would have shown
        nothing. `align` had been in that state since it was written.
  

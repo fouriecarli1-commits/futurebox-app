@@ -82,7 +82,7 @@ export interface StartRequest {
    *
    * ── What it buys, which is not "a bit more control" ───────────────────
    *
-   * Carli sent a Gemini conversation on 9 October 2026 listing what Google's
+   * The owner sent a Gemini conversation on 9 October 2026 listing what Google's
    * models can do, and this was in it — *"eerste/laaste raam-instellings"*.
    * The Veo call here had sent the first frame since it was written and
    * never the last, so the field was unused: a capability that had been

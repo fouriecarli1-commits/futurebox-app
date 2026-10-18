@@ -93,7 +93,7 @@ export async function createTemplateVideoBlob(tpl: StudioTemplateItem, durationS
  * One frame of a template's motion, `progress` of the way through (0 to 1).
  *
  * Lifted out of the recorder below so the templates window can PLAY it
- * before anybody picks it — Carli, 14 October 2026: *"Die motion templates
+ * before anybody picks it — the owner, 14 October 2026: *"Die motion templates
  * moet 'n simulator hê wanneer mens op dit kliek."* The preview and the clip
  * that is recorded are drawn by this one function, so what plays in the
  * window is what lands on the clock.

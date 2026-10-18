@@ -12,7 +12,7 @@
  * The first version of the answer to that was: "make a song and look at
  * `X-Song-Words` in the browser's network tab."
  *
- * Carli, 9 October 2026: *"Verduidelik beter wat ek moet doen?"*
+ * The owner, 9 October 2026: *"Verduidelik beter wat ek moet doen?"*
  *
  * She is right and the instruction was the fault. Asking somebody to open
  * developer tools on a phone, decode base64 by eye and report a header is

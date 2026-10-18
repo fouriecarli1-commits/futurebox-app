@@ -87,7 +87,7 @@ create table if not exists public.tone3000_tokens (
 
 -- ── Die refresh token mag ontbreek ────────────────────────────────────────
 --
--- Carli, 11 Oktober 2026, nadat die tabelle gemaak is en die aanmelding
+-- the owner, 11 Oktober 2026, nadat die tabelle gemaak is en die aanmelding
 -- deurgegaan het: "tone3000 werk nogsteeds nie".
 --
 -- Ons vra nooit vir 'n refresh token nie — die magtigingsversoek stuur glad

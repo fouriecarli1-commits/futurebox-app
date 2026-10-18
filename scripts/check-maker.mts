@@ -1,7 +1,7 @@
 /**
  * A clip that leaves the app says whose it is.
  *
- * Carli, 7 September 2026: "let wel dat die creator van die liedjie se channel
+ * The owner, 7 September 2026: "let wel dat die creator van die liedjie se channel
  * naam ook daarop moet verskyn."
  *
  * The drawn snippet carried the title and the style line — "Ons Springbok
@@ -45,11 +45,11 @@ function ok(what: string, passed: boolean, detail = ''): void {
 /* ── The name itself ────────────────────────────────────────────────────── */
 
 ok('a channel with a name is called by it',
-  nameOf({ name: 'Carli', handle: 'carli', about: '', links: {} } as never) === 'Carli');
+  nameOf({ name: 'Lerato', handle: 'lerato', about: '', links: {} } as never) === 'Lerato');
 ok('a channel with only a handle is called by the handle',
-  nameOf({ name: '', handle: 'carli', about: '', links: {} } as never) === '@carli');
+  nameOf({ name: '', handle: 'lerato', about: '', links: {} } as never) === '@lerato');
 ok('and whitespace is not a name',
-  nameOf({ name: '   ', handle: 'carli', about: '', links: {} } as never) === '@carli');
+  nameOf({ name: '   ', handle: 'lerato', about: '', links: {} } as never) === '@lerato');
 ok('a channel with neither gets nothing, not a placeholder',
   nameOf({ name: '', handle: '', about: '', links: {} } as never) === '' && nameOf(null) === '',
   'a word like "Unknown" drawn across somebody’s video is worse than a blank');
@@ -57,7 +57,7 @@ ok('a channel with neither gets nothing, not a placeholder',
 /* ── It reaches the thing that gets drawn ───────────────────────────────── */
 
 ok('the name travels on the style the renderer is handed',
-  styleFor('Ons Springbok tribe', 'dance pop', 155, 'Carli').by === 'Carli');
+  styleFor('Ons Springbok tribe', 'dance pop', 155, 'Lerato').by === 'Lerato');
 ok('and no name means an empty one rather than an absent field',
   styleFor('Ons Springbok tribe', 'dance pop', 155).by === '');
 

@@ -3,7 +3,7 @@
  *
  * ── Where it came from ───────────────────────────────────────────────────
  *
- * Carli, 13 October 2026, on the new room: a drawing board "that captures
+ * The owner, 13 October 2026, on the new room: a drawing board "that captures
  * their shape and makes their drawings realistically alive", picture
  * prompting "so that they can really flex their creative muscles", and an
  * editor "so that they can through drawings create their own video". Each

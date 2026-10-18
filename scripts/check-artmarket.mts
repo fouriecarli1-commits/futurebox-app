@@ -3,7 +3,7 @@
  *
  * ── Why this is a check and not a comment ────────────────────────────────
  *
- * Carli, 20 September 2026: *"70% van wins vir kunstenaar, 30% wins vir
+ * The owner, 20 September 2026: *"70% van wins vir kunstenaar, 30% wins vir
  * ons."* Wins — profit. Somebody reading "70%" a year from now will
  * reasonably compute it on the sticker price, and be wrong by the gateway's
  * cut every single time: R6.30 of the artist's money on a R200 piece, paid
@@ -46,7 +46,7 @@ ok('the artist takes 70%', ARTIST_SHARE === 0.7, `${ARTIST_SHARE}`);
 
 /* ── And the packages say the room exists, at the right prices ─────────
  *
- * Carli, 22 September 2026: *"Kyk ook dat die nuwe album art afdeling deel
+ * The owner, 22 September 2026: *"Kyk ook dat die nuwe album art afdeling deel
  * van die free, en betalings pakkette vorm en wys."* The room was built,
  * it takes money, and not one of the four plan cards mentioned it — so
  * somebody comparing plans could not tell it was there at all.
@@ -184,7 +184,7 @@ ok(
 
 /* ── The conversation has no keyboard in it ────────────────────────────────
 
-   Carli: *"Daai dm moet net buttons hê wat hulle kan kies … Geen tik
+   The owner: *"Daai dm moet net buttons hê wat hulle kan kies … Geen tik
    moontlikhede nie. Ek as eienaar van die app moet bewus wees van dit, sodat
    kunstenaar nie agter my rug kan kunswerk verkoop nie."*
 
@@ -226,7 +226,7 @@ ok('and the request table has nowhere to put a message either',
 
 /* ── The auction ──────────────────────────────────────────────────────────
 
-   Carli, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
+   The owner, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
    moet op die bee, en die hoogste bee wen die art binne 36 hours."*
 
    R200 stopped being a price that day and became a floor. That is a small
@@ -248,7 +248,7 @@ ok('and the request table has nowhere to put a message either',
    column the price comes from, and only the source can say. */
 /* ── The wall's price comes from the wall, not from the artist ──────
 
-   Carli, 6 October 2026: *"Ek dink ons moet 'n vaste rate van R280 vra vir
+   The owner, 6 October 2026: *"Ek dink ons moet 'n vaste rate van R280 vra vir
    'n kunswerk."* The auction's two rules here — charge the winning bid, and
    only the winner may pay — described a sale that no longer exists, and a
    rule that describes a feature nobody has is worse than none: it goes red
@@ -316,7 +316,7 @@ ok('and the request table has nowhere to put a message either',
 
 /* ── The buy-in is not the artist's money ───────────────────────
 
-   Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
+   The owner, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
    net vir die wen prys."*
 
    Twelve people paying R50 to bid on one piece is R600 that has nothing to do
@@ -355,7 +355,7 @@ ok('and the request table has nowhere to put a message either',
     'art.paidOnWin does not say the buy-in is not theirs, in both languages');
 
   /* The BUYER is deliberately not told this, and that is a decision and
-     not an omission. Carli, looking at the room: *"dit is onnodige
+     not an omission. The owner, looking at the room: *"dit is onnodige
      inligting."* How the studio and the artist divide the money is
      between the studio and the artist — it is in clause 6 of both
      signed agreements, where the person it concerns will read it. A
@@ -369,7 +369,7 @@ ok('and the request table has nowhere to put a message either',
 
 /* ── Every sheet has a way out, and it clears the tab bar ────────────────
 
-   Two faults Carli found in one minute, on the same three sheets, both
+   Two faults the owner found in one minute, on the same three sheets, both
    invisible to every check in this repository:
 
      *"Wanneer mens binne artist se profile kyk is daar nie 'n back knoppie
@@ -426,7 +426,7 @@ ok('and the request table has nowhere to put a message either',
 
 /* ── Either side can say no ──────────────────────────────────────────────
 
-   Carli, 21 September 2026: *"Op album art moet die kunstenaar 'n aanbod
+   The owner, 21 September 2026: *"Op album art moet die kunstenaar 'n aanbod
    kan afkeer, asook die koper. Daardie knoppies is nie daar nie."*
 
    `declined` has been a state on `art_offers` since the table was written
@@ -469,7 +469,7 @@ ok('and the request table has nowhere to put a message either',
 
 /* ── An artist who cannot sign in still gets answered ────────────────────
 
-   Carli, having brought a painter in and then commissioned him:
+   The owner, having brought a painter in and then commissioned him:
    *"Because I have added the artist I am supposed to approve this
    artwork. I want to test it."*
 
@@ -513,7 +513,7 @@ ok('and the request table has nowhere to put a message either',
 
 /* ── The heading carries the claim, and the room is for every medium ─────
 
-   Carli, in one message, twice: *"Ek voel nogsteeds die hoofopskrif moet
+   The owner, in one message, twice: *"Ek voel nogsteeds die hoofopskrif moet
    sê, Album art by real artists"* … *"Jy het ook nie by gesê: Album art
    by real artists nie."* She had to say it twice because I put it in the
    line under the heading and counted that as done. A claim in the body
@@ -592,7 +592,7 @@ ok('and the request table has nowhere to put a message either',
 /* ── The wall's fixed price, which is not a share at all ───────────────── */
 
 /**
- * Carli, 6 October 2026, moving the wall off an auction: *"Ek dink ons moet
+ * The owner, 6 October 2026, moving the wall off an auction: *"Ek dink ons moet
  * 'n vaste rate van R280 vra vir 'n kunswerk. Die kunstenaar kry dan R200
  * van die bedrag."*
  *
@@ -679,7 +679,7 @@ ok('the sale is granted to whoever paid for an unsold piece',
 
 /* ── Or the same R280 in credits ──────────────────────────────────────────
 
-   Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
+   The owner, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
    cash, of ons moet krediet in dieselfde waarde uitwerk."*
 
    And her second word on it: *"make the credits more expensive and on the

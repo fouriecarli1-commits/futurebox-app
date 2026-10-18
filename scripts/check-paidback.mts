@@ -3,7 +3,7 @@
  *
  * ── What this guards ─────────────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Kyk na die redirect na betalings. Met die
+ * The owner, 21 September 2026: *"Kyk na die redirect na betalings. Met die
  * album art wanneer die betaling terug kom is dit nie in dieselfde kamer
  * nie. Ek betaal die R50 om die bid te begin, maar dan gebeur daar niks
  * nie. Daar is nie 'n countdown nie en nie 'n teen bid button nie."*

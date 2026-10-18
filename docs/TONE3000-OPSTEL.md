@@ -1,6 +1,6 @@
 # TONE3000 opstel — stap vir stap
 
-Hierdie een is vir Carli, voor haar rekenaar, met niks oop nie.
+Hierdie een is vir die eienaar, voor haar rekenaar, met niks oop nie.
 
 Dit is in drie dele: **by TONE3000 gaan haal**, **in Vercel insit**, en
 **toets dat dit werklik werk**. Doen hulle in daardie orde. Deel drie is nie
@@ -53,7 +53,7 @@ halfuur deur menu's te krap, en dit is 'n vraag wat hulle elke week kry.
 > ruil stuur `grant_type`, `code`, `code_verifier`, `redirect_uri` en
 > `client_id`, en niks anders nie.
 >
-> Toe Carli niks kon vind nie, het ek gesê die geheim bestaan nie vir hierdie
+> Toe die eienaar niks kon vind nie, het ek gesê die geheim bestaan nie vir hierdie
 > vloei nie en hulle gee hom nie uit nie. Ook verkeerd — **hy is op die
 > bladsy**. Wat waar bly is dat ons hom vandag nie gebruik nie; wat ek as
 > feit geskryf het en net aangeneem het, is dat hulle hom nie gee nie.

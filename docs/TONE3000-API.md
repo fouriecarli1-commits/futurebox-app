@@ -430,7 +430,7 @@ daarvan wat nooit klaargemaak is nie. `whereiwas` onthou die **kamer** in
 'n bladsy wat weggegooi is — deur Android, deur 'n herlaai, of deur 'n reis
 na TONE3000 toe en terug — terugkom waar sy was.
 
-Dit is nie 'n TONE3000-regstelling nie. Dit is Carli se eie klagte van
+Dit is nie 'n TONE3000-regstelling nie. Dit is die eienaar se eie klagte van
 30 September (*"Hy gooi jou heeltemal uit en vergeet waarmee hy besig was"*),
 waarvan net die eerste helfte beantwoord is. Die reis na TONE3000 was bloot
 die eerste ding wat die ander helfte onmisbaar gemaak het.
@@ -716,7 +716,7 @@ se liedjie reeds verkoop is nie.
 
 ### Wat op 7 Oktober 2026 gebou is, voordat die integrasie bestaan
 
-Carli het gevra: *"Didn't Tone3000 give us permission if we add their name on
+Die eienaar het gevra: *"Didn't Tone3000 give us permission if we add their name on
 products?"* — deels, en die deel wat nie is nie, is die deel wat saak maak.
 
 Punt 1 hierbo is klaar. `lib/amplicence.ts` dra al agt lisensies en wat elkeen

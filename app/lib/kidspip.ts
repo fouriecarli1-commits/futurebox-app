@@ -84,7 +84,7 @@ export function sayAloud(words: string, lang: 'en' | 'af'): boolean {
 /**
  * Read words aloud and say when it has finished, for "Read to me".
  *
- * Carli, 15 October 2026, under the storybook: *"Read to me werk nie."* The
+ * The owner, 15 October 2026, under the storybook: *"Read to me werk nie."* The
  * button played six seconds of made-up chimes and read nothing. This reads
  * the page in the phone's own voice — free, nothing sent — and tells the
  * caller when the page is done, so the book can turn to the next one.

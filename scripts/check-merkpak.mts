@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek dink ook daar moet 'n brand pack wees. Iemand
+ * The owner, 10 October 2026: *"Ek dink ook daar moet 'n brand pack wees. Iemand
  * moet 'n folder kan hê met hulle brand goed op."*
  *
  * There was one. It held a name, a line about the voice, **one** picture and

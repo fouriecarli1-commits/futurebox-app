@@ -126,7 +126,7 @@ export default function Hooks({
   /**
    * Into the video desk, with the song under it and the shape set.
    *
-   * Carli, 18 September 2026: *"Hooks benodig ook die button wat hierdie
+   * The owner, 18 September 2026: *"Hooks benodig ook die button wat hierdie
    * video na die video desk toe kan vat om 'n video vir die sniplet te
    * maak."* The room finds the moment worth posting and then can only cut a
    * still with sound on it; making a real clip for that moment meant going
@@ -144,7 +144,7 @@ export default function Hooks({
   /**
    * Which moment is playing, if one is.
    *
-   * Carli, 18 September 2026: *"Daar moet 'n play knoppie wees om die
+   * The owner, 18 September 2026: *"Daar moet 'n play knoppie wees om die
    * stukkie wat voorgestel word te hoor."* The room was recommending a
    * moment by a number — "at 0:22, steady and clear" — and the only way to
    * find out whether it was the right one was to spend a cut on it.
@@ -1167,7 +1167,7 @@ export default function Hooks({
                           stopHearing();
                           /* Everything the moment knows, not its length.
  
-                             Carli, 21 September 2026: *"die liedjie hook
+                             The owner, 21 September 2026: *"die liedjie hook
                              lê nie daar in video nie en daar is geen
                              prompt in die video desk nie."* The callback
                              took `seconds` and the studio dropped it, so

@@ -4,7 +4,7 @@
  *
  * ── The hole this fills ──────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Ek sien ek het een gegenerate en nou is dit weg."*
+ * The owner, 8 October 2026: *"Ek sien ek het een gegenerate en nou is dit weg."*
  *
  * It was. The copy from the engine into our storage happened inside
  * `GET /api/cover?id=…`, and that handler runs only because an open panel is
@@ -66,7 +66,7 @@ export async function remember(
    in this file is which rows that query asks for: ignore the kept, ignore the
    failed, take the newest. That is three conditions, and a check that reads
    the source for the words `kept_at` is checking the spelling rather than the
-   rule — the thing Carli objects to most in this repo, and rightly.
+   rule — the thing the owner objects to most in this repo, and rightly.
 
    So `pending` takes its client. `check:coverkeep` hands it a few rows and a
    fake that APPLIES the filters it is given, so a forgotten `.is` comes back

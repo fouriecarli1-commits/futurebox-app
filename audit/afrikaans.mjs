@@ -3,7 +3,7 @@
  *
  * ── What was wrong ───────────────────────────────────────────────────────
  *
- * Carli signed in with the app set to Afrikaans and said everything had
+ * The owner signed in with the app set to Afrikaans and said everything had
  * reverted to English — "die afrikaanse funksie is glad nie meer afrikaans
  * nie". Nothing had reverted: the language is kept in this browser and it
  * survives a sign-in. The landing page is translated, and the rooms behind it
@@ -283,7 +283,7 @@ try {
     await dismissDoor(p);
     await p.waitForTimeout(900);
 
-    /* The half of Carli's report that was a guess: whether the language
+    /* The half of the owner's report that was a guess: whether the language
        survives signing in. Worth answering rather than assuming — if it did
        not, the fix would be somewhere else entirely. */
     const after = await p.evaluate(() => document.documentElement.lang);
@@ -356,7 +356,7 @@ try {
   /* ── And whether the Afrikaans FITS ──────────────────────────────────── */
 
   /**
-   * Carli, 6 October 2026, with a photograph of the room grid: *"Hier is 'n
+   * The owner, 6 October 2026, with a photograph of the room grid: *"Hier is 'n
    * afrikaanse woord wat oor die button gaan. Toets die hele app en of alles
    * mooi inpas in afrikaans."*
    *

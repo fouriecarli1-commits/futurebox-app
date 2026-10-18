@@ -4,7 +4,7 @@
  * ── Why this is measured rather than eyeballed ───────────────────────────
  *
  * "Dit moet net soos in hierdie prente eenvoudiger verpak word." The
- * screenshots Carli sent are of an app whose Create screen is a box and a
+ * screenshots the owner sent are of an app whose Create screen is a box and a
  * button; ours explains itself under every field. Both of those are opinions
  * until somebody counts the characters.
  *

@@ -97,7 +97,7 @@ export async function GET(request: Request): Promise<Response> {
     },
     /* What the ceiling should be, worked out rather than guessed.
  
-       Carli asked where the roof ought to sit. The honest answer is that it
+       The owner asked where the roof ought to sit. The honest answer is that it
        depends on how many people are paying, so this reports it from the real
        count instead of naming a figure that goes stale. It is deliberately a
        recommendation: a ceiling that raised itself would be raised by the very

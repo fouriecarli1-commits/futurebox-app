@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Ek dink die child funksie is net om met liedjie
+ * The owner, 9 October 2026: *"Ek dink die child funksie is net om met liedjie
  * maak te speel - en dalk om die liedjie 'n video te maak."* And: *"Gaan aan
  * met die kids kamer."*
  *
@@ -80,7 +80,7 @@ ok('  and the only way out is the grown-up\'s own page',
   + ' closing the app — and a parent who cannot find the way out turns the'
   + ' whole thing off instead');
 
-/* Carli, 15 October 2026: *"Plus moet daar nie 'n grown up button binne die
+/* The owner, 15 October 2026: *"Plus moet daar nie 'n grown up button binne die
    studio wees nie want kinders gaan dit self stel."* The way out is a hold
    on the name and a code the grown-up chose — never a button that goes
    straight to the grown-up's page. */
@@ -92,7 +92,7 @@ ok('  and no button in the child\'s room goes straight to the grown-up\'s page',
 
    This held "nothing in the room can be typed into" — a child typing into a
    prompt that reaches a music model and a video model, and a moderation
-   gate is not a design. Carli, 12 October 2026: *"Die kids room moet ook
+   gate is not a design. The owner, 12 October 2026: *"Die kids room moet ook
    'n tikboks hê, daar is kinders wat kan tik, wat oulik sal wees as dit 'n
    record button het sodat 'n kind kan praat en woorde so prompt."*
 
@@ -156,7 +156,7 @@ ok('  and at the grade it priced',
   + " the plain one, which costs a quarter of premium — so a parent's whole"
   + ' allowance goes on one video');
 
-/* The kids room's own price (Carli, 14 October 2026), which `/api/video`
+/* The kids room's own price (The owner, 14 October 2026), which `/api/video`
    charges only for a ten-second plain-grade request marked `kids: true`. */
 const videoRoute = readFileSync('app/api/video/route.ts', 'utf8');
 ok('  so the two agree on what a video costs',

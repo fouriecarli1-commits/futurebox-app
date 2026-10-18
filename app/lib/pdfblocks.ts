@@ -2,7 +2,7 @@
  * The words on a PDF page, gathered into the paragraphs and headings a
  * person sees.
  *
- * Carli, 17 October 2026: *"Die hele dokument se woorde moet uit spring en
+ * The owner, 17 October 2026: *"Die hele dokument se woorde moet uit spring en
  * die hele dokument moet editable word. Dan wanneer mens op 'n hele blok
  * kliek dan moet daai hele blok ge-edit kan word. Dus trek lyne/blokke om
  * paragrawe en opskrifte sodat mens dit kan edit."*

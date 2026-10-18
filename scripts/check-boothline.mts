@@ -3,7 +3,7 @@
  *
  * ── The alignment ────────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Die timeline van die verskillende layers moet
+ * The owner, 14 September 2026: *"Die timeline van die verskillende layers moet
  * reg by en teen mekaar wees."*
  *
  * The old room drew each lane's waveform inside its own row, between that
@@ -24,7 +24,7 @@
  *
  * ── The look, which is a requirement and not a slip ──────────────────────
  *
- * Carli: *"die booth se swart met die blou musieklyn sal 'n unieke take wees
+ * The owner: *"die booth se swart met die blou musieklyn sal 'n unieke take wees
  * vir die booth, dat dit heeltemal anders lyk as die res van die app."*
  *
  * Every other screen in this app must follow the theme, and `check:theme`
@@ -90,7 +90,7 @@ ok(
 ok(
   '  with a head big enough for a thumb to catch',
   /h-7 w-7 touch-none/.test(line),
-  'Carli asked for a line a finger can catch; a 2-pixel line is not one',
+  'the owner asked for a line a finger can catch; a 2-pixel line is not one',
 );
 /* The ruler's press used to be four lines and this was a four-line regex.
    It is not any more: armed, the same drag marks a piece of the song instead
@@ -105,7 +105,7 @@ ok(
 ok(
   '  and armed, that same drag marks a piece instead of scrubbing',
   /if \(marking\) \{/.test(line) && /what: 'region', anchor: where/.test(line),
-  'Carli asked for dragging lines that single a piece out; one button says which of the two the ruler is doing',
+  'the owner asked for dragging lines that single a piece out; one button says which of the two the ruler is doing',
 );
 ok(
   '  and the marked piece is drawn across every lane, not inside one',
@@ -135,11 +135,11 @@ ok(
   'a clip can be dragged the length of the song',
   /onSlide\(now\.with\.map\(\(one\) => \(\{ id: one\.id, at: one\.at \+ shift \}\)\)\)/.test(line) &&
     /high = Math\.min\(high, scaleTotal - 0\.5 - one\.at\)/.test(line),
-  'Carli: the added instrument sound must be draggable over the whole song',
+  'the owner: the added instrument sound must be draggable over the whole song',
 );
 /* ── And not one second before it starts ────────────────────────────────
 
-   Carli, 19 September 2026: *"met 'n instrument waarmee ek dit geinterlock
+   The owner, 19 September 2026: *"met 'n instrument waarmee ek dit geinterlock
    het, het die 2de baan nogsteeds kleinbietjie sonder die ander bar beweeg
    al was dit geinterlock."*
 

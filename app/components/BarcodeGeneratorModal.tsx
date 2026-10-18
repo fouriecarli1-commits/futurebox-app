@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli: *"Die Photo editor moet ook 'n QR Code generator hê, en verskillende
+ * The owner: *"Die Photo editor moet ook 'n QR Code generator hê, en verskillende
  * templates om dit in te sit. En allerhande searchable graphics, animations, audio.
  * O ja, alles wat jy doen, moet jy in beide doen, in die enegelse blad, en
  * afrikaans vir die afrikaanse blad."*

@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Kan die studio ook nie 'n drag funksie hê, wat
+ * The owner, 10 October 2026: *"Kan die studio ook nie 'n drag funksie hê, wat
  * ook natuurlike oorgange detect"*.
  *
  * The studio draws a song as blocks, and until now it got those blocks from

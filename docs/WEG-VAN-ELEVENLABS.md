@@ -1,6 +1,6 @@
 # Weg van ElevenLabs — wat dit werklik sou verg
 
-Carli, 5 Oktober 2026: *"Hulle antwoord my nie, en ek sal nie so kan besigheid
+Die eienaar, 5 Oktober 2026: *"Hulle antwoord my nie, en ek sal nie so kan besigheid
 doen nie."*
 
 'n Billike besluit, en dit is 'n besigheidsbesluit eerder as 'n tegniese een.

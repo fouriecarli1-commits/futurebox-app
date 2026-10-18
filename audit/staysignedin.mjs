@@ -1,7 +1,7 @@
 /**
  * Signed in stays signed in.
  *
- * Carli, twice: "as iemand klaar in gelog het moet mens die heeltyd in log
+ * The owner, twice: "as iemand klaar in gelog het moet mens die heeltyd in log
  * nie, dit moet jou dadelik in die app vat", and then "onthou dat die app wat
  * in gelog is in gelog bly. Dit moenie heeltyd oor en oor in log nie."
  *

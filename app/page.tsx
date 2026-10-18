@@ -202,7 +202,7 @@ export default function FutureBoxHome() {
   /* ── A way back to the class listing ────────────────────────────────
  
      The Spotlight pill that used to show it is a door to the Cubed room
-     now — Carli, 11 October 2026 — so the listing needs an address of its
+     now — the owner, 11 October 2026 — so the listing needs an address of its
      own or it is a page nobody can reach. `/?tab=masterclasses` is that
      address, and the room links to it in words.
  
@@ -343,7 +343,7 @@ export default function FutureBoxHome() {
   /**
    * Setting a new password, having arrived from the letter.
    *
-   * Carli, 23 September 2026: *"ek wil net seker maak dat die login 'n forget
+   * The owner, 23 September 2026: *"ek wil net seker maak dat die login 'n forget
    * password funksie het."* It did not, and the cost was total: somebody who
    * forgot was locked out for good, because the only way back was a second
    * account on a second address — leaving every song, video and credit behind
@@ -360,7 +360,7 @@ export default function FutureBoxHome() {
   /**
    * The session owes a code from an authenticator app.
    *
-   * Carli, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die
+   * The owner, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die
    * app te beveilig met 'n authenticator app as hulle wil."*
    *
    * The trap this exists for: a password sign-in against an account with an
@@ -557,7 +557,7 @@ export default function FutureBoxHome() {
    * on a device they were handing over.
    *
    * Seen, not reasoned about: `audit/greeting.mjs` pressed Sign out, and the
-   * screenshot it took afterwards has "Carli Fourie" and a Sign out button
+   * screenshot it took afterwards has her own name and a Sign out button
    * still in the header.
    *
    * A few seconds is the whole window — the request that can do this was
@@ -577,7 +577,7 @@ export default function FutureBoxHome() {
    * effects that would otherwise open the door run AFTER it. Both of them
    * read the URL themselves at first, and both saw a URL the paid effect had
    * already cleaned, so both went on putting her at the door. That is the
-   * fault Carli reported three times: the room was chosen correctly and then
+   * fault the owner reported three times: the room was chosen correctly and then
    * covered.
    *
    * A ref rather than state: nothing re-renders because of it, and it must
@@ -613,7 +613,7 @@ export default function FutureBoxHome() {
     }
     /* ── A return from the till is not an arrival at the door ──────────
      *
-     * Carli, 22 September 2026, for the third time: *"Na betaling gooi hy
+     * The owner, 22 September 2026, for the third time: *"Na betaling gooi hy
      * my uit die kamer."*
      *
      * The effect further down reads `?paid=1&room=…`, opens the studio and
@@ -827,10 +827,10 @@ export default function FutureBoxHome() {
      and a chat panel above it is 352 px between you and the thing you
      came for. */
   /* Since 15 October 2026 the song room holds the copilot itself, inside
-     its song box (Carli: "net so box rondom copilot bou wat alles in het"),
+     its song box (The owner: "net so box rondom copilot bou wat alles in het"),
      so it is never lifted above the room any more. */
   /* The video desk the same way: on Simple its copilot is drawn inside the
-     room, right above "Make it" (Carli, 14 October 2026). */
+     room, right above "Make it" (The owner, 14 October 2026). */
   const [canvasAdvanced, setCanvasAdvanced] = useState(true);
 
   /* Every room, and how to draw it. Read by the rail on a desktop and by the
@@ -880,7 +880,7 @@ export default function FutureBoxHome() {
    * all along.
    *
    * So the app has been calling one person two different things depending on
-   * which screen they were looking at: `anrefourie` in the corner, and their
+   * which screen they were looking at: `zoesmit` in the corner, and their
    * real name on their own release. This is where the chosen one is read, once,
    * and everything in the chrome below uses it.
    */
@@ -1003,7 +1003,7 @@ export default function FutureBoxHome() {
   /**
    * A post made on the video desk, on its way to the editor under it.
    *
-   * Carli: *"Dit is vir plasings vir sosiale media en kan ook in die video
+   * The owner: *"Dit is vir plasings vir sosiale media en kan ook in die video
    * editor ingesit word."* The desk and the cutting room are two different
    * tabs, so neither is mounted when the other is and neither can hand the
    * other anything — this is the wire between them, and it is one `File`.
@@ -1024,7 +1024,7 @@ export default function FutureBoxHome() {
    * two screens down and pressing Channel drops you two screens into the
    * Channel, halfway through something you have never seen.
    *
-   * Carli: "wanneer mens tussen kamers beweeg dat die kamer elke keer weer
+   * The owner: "wanneer mens tussen kamers beweeg dat die kamer elke keer weer
    * heel bo begin ... dan voel mens lost."
    *
    * Both, because which one is scrolling depends on the width and this file
@@ -1058,7 +1058,7 @@ export default function FutureBoxHome() {
 
   /* ── Back where she was, after Android threw the tab away ──────────
 
-     Carli, 30 September 2026: *"wanneer ek die app minimize en weer terug
+     The owner, 30 September 2026: *"wanneer ek die app minimize en weer terug
      gaan … Hy gooi jou heeltemal uit en vergeet waarmee hy besig was."*
 
      Almost word for word what she said about the Pro Booth on 9 September,
@@ -1100,7 +1100,7 @@ export default function FutureBoxHome() {
      which `restored` below asks to decide whether to open the door. A mount
      that wrote `{make, false}` straight away would answer yes to its own
      question on a tab nobody had used, and the door would stop opening for
-     anybody — breaking the thing Carli asked for in September to fix the
+     anybody — breaking the thing the owner asked for in September to fix the
      thing she asked for today. So the memory is created by going somewhere,
      and this only follows the door after that. */
   useEffect(() => {
@@ -1131,7 +1131,7 @@ export default function FutureBoxHome() {
 
   /* ── Back from the till, into the room she paid from ────────────────
 
-     Carli, 21 September 2026: *"Met die album art wanneer die betaling
+     The owner, 21 September 2026: *"Met die album art wanneer die betaling
      terug kom is dit nie in dieselfde kamer nie. Ek betaal die R50 om die
      bid te begin, maar dan gebeur daar niks nie. Daar is nie 'n countdown
      nie en nie 'n teen bid button nie."*
@@ -1257,7 +1257,7 @@ export default function FutureBoxHome() {
    * This used to do nothing, and the note here argued for it — coming back to
    * a tab is not signing in, and the welcome had already been wrong in both
    * directions once. What that reasoning missed is what somebody signed in is
-   * here for. Carli: "na in log moet make die eerste blad wees wat die klient
+   * here for. The owner: "na in log moet make die eerste blad wees wat die klient
    * sien." Somebody with an account opens this app to make something, and the
    * feed is what they were shown.
    *
@@ -1273,7 +1273,7 @@ export default function FutureBoxHome() {
   const restored = useCallback(() => {
     /* ── Unless this tab was already inside ─────────────────────────────
 
-       Carli, 30 September 2026: *"wanneer ek die app minimize en weer terug
+       The owner, 30 September 2026: *"wanneer ek die app minimize en weer terug
        gaan … Hy gooi jou heeltemal uit en vergeet waarmee hy besig was."*
 
        Everything above this is right and stays. What it could not tell apart
@@ -1604,7 +1604,7 @@ export default function FutureBoxHome() {
   /**
    * The handle in the header, from the account and from nowhere else.
    *
-   * This was `useState('anrefourie')` and nothing ever set it, so the studio
+   * This was `useState('zoesmit')` and nothing ever set it, so the studio
    * header showed one particular person's handle to everybody who opened the
    * app — signed in, signed out, and on somebody else's phone. The block at
    * the top of `creator` says the app had stopped calling one person two
@@ -1688,7 +1688,7 @@ export default function FutureBoxHome() {
          somebody else's talk, and the numbers beside it were of a thing
          that was not there.
 
-         Carli, 21 September 2026: *"Die content moet ons oor doen en
+         The owner, 21 September 2026: *"Die content moet ons oor doen en
          double check… wat goeie sources is. Daar kan nie goed op wees
          wat random is nie."* This is what she means. Taken out rather
          than pointed somewhere plausible: the right link is a fact,
@@ -1764,7 +1764,7 @@ export default function FutureBoxHome() {
    *
    * ── The two seconds that were theatre ────────────────────────────────
    *
-   * Carli, 21 September 2026: *"Die reload button moet actually nuwes
+   * The owner, 21 September 2026: *"Die reload button moet actually nuwes
    * generate."*
    *
    * It did move the window along — and it waited two seconds first, with a
@@ -1982,7 +1982,7 @@ export default function FutureBoxHome() {
 
   /* ── The cutting room keeps nothing above it but the way out ──────────
 
-     Carli, 4 October 2026, with a photograph: *"Daai boonste goed moet weg
+     The owner, 4 October 2026, with a photograph: *"Daai boonste goed moet weg
      wees, die kamer moet net 'n back knoppie hê."*
 
      Above the room were a balance, a search button, her own handle, and under
@@ -2010,7 +2010,7 @@ export default function FutureBoxHome() {
      worse, it makes the page scroll again and the room's own bar can be
      scrolled off the bottom. `audit/underbar.mjs` found exactly that. */
   /* And the song room: the copilot is the middle of its song box
-     (Carli, 15 October 2026). */
+     (The owner, 15 October 2026). */
   const copilotInside = studioTab === 'voice_studio' || studioTab === 'videoedit'
     || studioTab === 'make'
     || (studioTab === 'canvas' && !canvasAdvanced)
@@ -2349,7 +2349,7 @@ export default function FutureBoxHome() {
    *
    * ── The fault this exists for ──────────────────────────────────────────
    *
-   * Carli, 30 September 2026: *"Die back knoppie in make gaan terug na
+   * The owner, 30 September 2026: *"Die back knoppie in make gaan terug na
    * spotlight en nie creative studio kamer nie."*
    *
    * The phone's own Back button was right — a room falls back to the door
@@ -2581,7 +2581,7 @@ export default function FutureBoxHome() {
 
   /* ── The door's form, as a value ───────────────────────────────────────
 
-     Carli, 13 October 2026, with the welcome page Google drew: the sign-in
+     The owner, 13 October 2026, with the welcome page Google drew: the sign-in
      is a card in the hero, not a modal over it. This is the real form —
      Supabase, the six-digit code, the forgotten-password letter, the kids
      room door — and it is handed to `Landing` to draw inside that card.
@@ -2735,7 +2735,7 @@ export default function FutureBoxHome() {
       </p>
 
       {/* The kids room is not sold here any more: on the landing page its
-          banner sits directly under this door (Carli, 13 October 2026:
+          banner sits directly under this door (The owner, 13 October 2026:
           "Hierdie hele gedeelte moenie hier wees nie, want net onder dit
           adverteer die kids page"). `check:skermtyd` reads the banner. */}
         </>
@@ -2801,7 +2801,7 @@ export default function FutureBoxHome() {
             {t('home.todaysPicks', 'Today’s picks')}
             {/* Which set, said plainly.
 
-                Carli: *"Die reload button moet actually nuwes generate."*
+                The owner: *"Die reload button moet actually nuwes generate."*
                 It always did move the window — what it did first was wait
                 two seconds behind a spinner that said "Finding different
                 ones…", for a change that was already decided. Nothing was
@@ -2927,7 +2927,7 @@ export default function FutureBoxHome() {
             );
             /* ── The one pill that is a door rather than a filter ────────
  
-                Carli, 11 October 2026: *"heel bo aan die bladsy by spotlight
+                The owner, 11 October 2026: *"heel bo aan die bladsy by spotlight
                 click mens op masterclass, daai button se naam moet Cubed
                 Class wees... As jy op daai button click dan moet die cubed
                 kamer dadelik oopmaak."*
@@ -2994,7 +2994,7 @@ export default function FutureBoxHome() {
                   `button[class*="border"]`, `border-l` contains "border",
                   and a button with a background but no radius and no box
                   is a green rectangle with one sharp edge stuck inside a
-                  rounded pill. Carli photographed exactly that.
+                  rounded pill. The owner photographed exactly that.
 
                   The lesson is the selector's, not this button's — a rule
                   that colours buttons was written to match the word
@@ -3226,7 +3226,7 @@ export default function FutureBoxHome() {
 
         {/* ── 1. THE ONE BIG CLASS ───────────────────────────────────────
 
-            Carli, 21 September 2026: *"Die 1 featured masterclass moet ook
+            The owner, 21 September 2026: *"Die 1 featured masterclass moet ook
             groot wees, en die res van die masterclasses in 'n drop down…
             Daar kan nie goed op wees wat random is nie."*
 
@@ -3266,7 +3266,7 @@ export default function FutureBoxHome() {
                 <p className="text-sm text-zinc-400 leading-relaxed">{lang === 'af' ? OUTCOME_AF[featured.id] ?? featured.outcome : featured.outcome}</p>
 
                 {/* Where it came from, said on the front page rather than
-                    only inside the classes room. Carli: the content has to
+                    only inside the classes room. The owner: the content has to
                     be from good sources — a source nobody can see is a
                     claim, and this is the one card everybody sees. */}
                 {featured.source && (
@@ -3350,7 +3350,7 @@ export default function FutureBoxHome() {
               /* Four across at a desk. This stopped at three past 768 pixels,
                  which inside a 1,280-pixel gutter is a 400-pixel card — so on
                  a monitor the feed was three enormous tiles where a website
-                 shows a shelf. Carli, 9 October 2026: *"Die website moet nie
+                 shows a shelf. The owner, 9 October 2026: *"Die website moet nie
                  lyk soos 'n foon app nie."* `check:voordeur` holds that no
                  shelf here stops widening at `md`. */
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"
@@ -3442,7 +3442,7 @@ export default function FutureBoxHome() {
           <section className="space-y-6">
             {/* ── Cubed, its own door ─────────────────────────────
 
-                Carli, 10 October 2026: *"Die masterclass button moet ook sy
+                The owner, 10 October 2026: *"Die masterclass button moet ook sy
                 eie button hê en wanneer iemand daar op click vat dit jou ook
                 na 'n futuristic kamer toe, wat spectacular en modern is."*
 
@@ -3569,7 +3569,7 @@ export default function FutureBoxHome() {
                 and no JL Records; the embed played Andrej Karpathy's LLM
                 lecture and the link went to klingai.org.
 
-                Carli, 21 September 2026: *"Die content moet ons oor doen
+                The owner, 21 September 2026: *"Die content moet ons oor doen
                 en double check… Daar kan nie goed op wees wat random
                 is nie."*
 
@@ -3830,7 +3830,7 @@ export default function FutureBoxHome() {
 
             {/* ── Which country these prices are in ──────────────────────
  
-                Carli, 11 October 2026: *"Maak 'n country picker"*.
+                The owner, 11 October 2026: *"Maak 'n country picker"*.
  
                 Here rather than in the appearance panel or an account screen,
                 because this is the one place the number it changes is on the
@@ -4037,7 +4037,7 @@ export default function FutureBoxHome() {
               }}
               /* ── To the feed, which is what the button says ───────────
 
-                 Carli, 4 October 2026: *"Daai not now - take me to the feed
+                 The owner, 4 October 2026: *"Daai not now - take me to the feed
                  button vat my na die video editor. Ek vermoed daai button moet
                  my na spotlight toe vat."* She is right on both counts.
 
@@ -4119,7 +4119,7 @@ export default function FutureBoxHome() {
           It takes no copilot bus of its own; the hand-off below reaches the
           bus directly, and the room it opens is inside the provider. */}
       {/* ── All tools, on one page ─────────────────────────────────────
-          Carli, 16 October 2026, another app's All tools page. A tool is a
+          The owner, 16 October 2026, another app's All tools page. A tool is a
           room and, where it is one panel of it, that panel: the room opens
           the usual way and is asked to open the panel (`askPanel`). */}
       <AllTools
@@ -4168,7 +4168,7 @@ export default function FutureBoxHome() {
         <CopilotBusContext.Provider value={copilotBus}>
         {/* ── The booth takes the whole room with it ────────────────────
 
-            Carli, 15 September 2026: *"Dit sal beter lyk as die hele probooth
+            The owner, 15 September 2026: *"Dit sal beter lyk as die hele probooth
             kamer die swart en blou is, nie net 'n gedeelte nie."*
 
             The door was a dark slab sitting on a white studio — the rail
@@ -4186,7 +4186,7 @@ export default function FutureBoxHome() {
             `check:boothline` for why the exception exists. */}
         {/* And the gallery, the same way and for the same reason.
 
-            Carli: *"Die hele kamer in probooth lyk dieselfde. So moet
+            The owner: *"Die hele kamer in probooth lyk dieselfde. So moet
             hierdie een se hele kamer ook dieselfde lyk."* The flag goes on
             the studio's own root, not on the room inside it, so the header,
             the rail, the working surface and the copilot all become the
@@ -4195,7 +4195,7 @@ export default function FutureBoxHome() {
             `globals.css` and `GALLERY_THEME` in `lib/theme.ts`. */}
         {/* And the cutting room, the same way and for the same reason.
 
-            Carli, 4 October 2026: *"Plus moet die hele kamer dieselfde lyk,
+            The owner, 4 October 2026: *"Plus moet die hele kamer dieselfde lyk,
             tot bo."* Which is the sentence the gallery got above, almost word
             for word, and the answer is the same one: the flag goes on the
             studio's OWN root, not on the room inside it.
@@ -4241,7 +4241,7 @@ export default function FutureBoxHome() {
             /* The bar's strip only while the bar is there. A room that owns
                the screen (the video editor, the photo editor) has taken the
                bar away, and the strip left behind cut the bottom 80 pixels
-               off every panel and the timeline's lanes at a desk — Carli,
+               off every panel and the timeline's lanes at a desk — the owner,
                14 October 2026: "Omdat elke balk onder afsny kan ek
                byvoorbeeld nie woorde op sit nie." */
             style={{ paddingBottom: roomOwnsScreen ? 12 : barClearance(12) }}
@@ -4259,7 +4259,7 @@ export default function FutureBoxHome() {
                 twelve is visible as a bar lying under somebody else's page. */}
             {/* Not over the photo editor: it has its own back arrow at the
                 left of its own bar, and two back buttons one above the other
-                was what Carli photographed on 14 October 2026. */}
+                was what the owner photographed on 14 October 2026. */}
             <div className={`shrink-0 flex items-center justify-between ${
               bareRoom ? 'px-3' : 'border-b border-zinc-800 pb-4'
             } ${studioTab === 'photo' && !atDoor ? 'hidden' : ''}`}>
@@ -4499,7 +4499,7 @@ export default function FutureBoxHome() {
                   };
 
                   /* No kids room on the rail: it is reached only from the
-                     welcome page, with its own credits (Carli, 14 October
+                     welcome page, with its own credits (The owner, 14 October
                      2026). */
                   if (theme.layout !== 'rail') return [home, ...SURFACE_IDS.map(row)];
 
@@ -4603,7 +4603,7 @@ export default function FutureBoxHome() {
                 />
                 {/* ── The editor, under the desk it belongs to ──────────────
  
-                    Carli, 24 September 2026: *"wat ek bedoel is 'n editing
+                    The owner, 24 September 2026: *"wat ek bedoel is 'n editing
                     program soos 'n video editor lyk amper soos die probooth.
                     Waar jy tydlyne het, asook kan jy filters apply en
                     export."*
@@ -4621,7 +4621,7 @@ export default function FutureBoxHome() {
                     say different things. */}
                 {/* ── And the way into the cutting room ──────────────────
 
-                    Carli, 30 September 2026: *"'N knoppie wat jou vat na sy
+                    The owner, 30 September 2026: *"'N knoppie wat jou vat na sy
                     eie kamer."* The editor moved out of this desk on 1
                     October; what stays here is the door to it, because this
                     is where somebody who has just made a clip is standing. */}
@@ -4645,12 +4645,12 @@ export default function FutureBoxHome() {
                 Its own room since 1 October, and it looks like it: the whole
                 page carries the FutureBox green rather than the studio's
                 zinc, so there is no mistaking which room you are standing in.
-                Carli: *"Daardie studio kan dan ook regdeur die hele bladsy
+                The owner: *"Daardie studio kan dan ook regdeur die hele bladsy
                 die futurebox groen kleure hê … sodat daardie kamer ook anders
                 lyk."* */}
             {/* ── The photo editor ────────────────────────────────────────
  
-                Carli, 7 October 2026: *"add next to it Photo Editor. Then
+                The owner, 7 October 2026: *"add next to it Photo Editor. Then
                 make the photo editor the same look as the video editor."*
  
                 It was a sheet off the video desk, which is not a room: no
@@ -4666,7 +4666,7 @@ export default function FutureBoxHome() {
                 was cutting her words off. */}
             {/* ── Why this room is NOT pulled out past its pane ──────────
 
-                Carli, 10 and 11 October 2026: *"Kyk hoe sny alles af op
+                The owner, 10 and 11 October 2026: *"Kyk hoe sny alles af op
                 die rekenaar se skerm"*, and a day later, still: *"Die
                 kamer met die afgesnyde woorde is ook nog nie reg op die
                 rekenaar se website nie."*
@@ -4721,7 +4721,7 @@ export default function FutureBoxHome() {
             {studioTab === 'videoedit' && (
               /* ── Solid, and edge to edge ───────────────────────────────
 
-                 Carli, 4 October 2026, with a photograph of it: *"Dit lyk
+                 The owner, 4 October 2026, with a photograph of it: *"Dit lyk
                  nie goed nie ... Die hele kamer moet solid wees."*
 
                  It was `bg-gradient-to-b from-emerald-950 via-emerald-950/80
@@ -4757,7 +4757,7 @@ export default function FutureBoxHome() {
                   postCover={postCover}
                   /* The copilot as a button rather than a column.
 
-                     Carli, same message: *"Die copilot kan ook net 'n button
+                     The owner, same message: *"Die copilot kan ook net 'n button
                      wees wat uit pop."* In every other room it is the third
                      pane and that is right, because in every other room the
                      page scrolls. This room does not — it is a screen with a
@@ -4779,7 +4779,7 @@ export default function FutureBoxHome() {
               <Hooks
                 /* The moment worth posting, on to a real clip.
 
-                   Carli, 18 September 2026: *"Hooks benodig ook die button
+                   The owner, 18 September 2026: *"Hooks benodig ook die button
                    wat hierdie video na die video desk toe kan vat om 'n
                    video vir die sniplet te maak."*
 
@@ -4793,7 +4793,7 @@ export default function FutureBoxHome() {
                   setVideoSong(trackId);
                   /* Every wire, not the shape alone.
 
-                     Carli, 21 September 2026: *"die liedjie hook lê nie
+                     The owner, 21 September 2026: *"die liedjie hook lê nie
                      daar in video nie en daar is geen prompt in die video
                      desk nie."* This sent `set_aspect` and nothing else,
                      so the desk opened with the right song under it, the
@@ -4812,7 +4812,7 @@ export default function FutureBoxHome() {
                      those are different conversations. */
                   goToRoom('canvas', { id: 'hook_video', subject: hook.title ?? '' });
                   /* Straight down to the copilot, where the hook's brief now
-                     is — Carli, 14 October 2026: *"dan moet die video desk
+                     is — the owner, 14 October 2026: *"dan moet die video desk
                      kamer direk spring na die heel onder kant van die kamer
                      waar copilot is."* */
                   window.setTimeout(() => {
@@ -4825,7 +4825,7 @@ export default function FutureBoxHome() {
 
                    The credit is put in the title rather than appended to the
                    style, because the style string is a prompt the engine
-                   reads. "in die styl van Carli" inside it is an instruction
+                   reads. "in die styl van <'n naam>" inside it is an instruction
                    to the model about a person it has never heard, which is
                    both useless and the wrong kind of claim. In the title it
                    is what it actually is: a note about where this started. */
@@ -4875,7 +4875,7 @@ export default function FutureBoxHome() {
                 onGoToSound={() => goToRoom('sound')}
                 /* The other kind of cover.
 
-                   Carli, 22 September 2026: *"Kyk asb in make a song en
+                   The owner, 22 September 2026: *"Kyk asb in make a song en
                    channel dat daar by cover art 'n opsie is vir real
                    art."* The cover panel makes a picture with a machine;
                    the album art room sells one painted by a person. The
@@ -4919,7 +4919,7 @@ export default function FutureBoxHome() {
                 }}
                 /* The other kind of cover.
 
-                   Carli, 22 September 2026: *"Kyk asb in make a song en
+                   The owner, 22 September 2026: *"Kyk asb in make a song en
                    channel dat daar by cover art 'n opsie is vir real
                    art."* The cover panel makes a picture with a machine;
                    the album art room sells one painted by a person. The
@@ -5012,7 +5012,7 @@ export default function FutureBoxHome() {
                    button that says take it to the Booth, arrived at a
                    list to find it in again.
 
-                   Carli, 21 September 2026: *"Al die kamers se AI praat
+                   The owner, 21 September 2026: *"Al die kamers se AI praat
                    nie met mekaar nie."* */
                 onBooth={(title) => {
                   goToRoom('booth');
@@ -5061,7 +5061,7 @@ export default function FutureBoxHome() {
                     /* And the copilot in there is told it is not one person
                        working alone.
 
-                       Carli, 21 September: *"Al die kamers se AI praat nie
+                       The owner, 21 September: *"Al die kamers se AI praat nie
                        met mekaar nie."* Found again by `check:handover`,
                        which asks of every door whether the next room was
                        told anything: without this the booth opens with two
@@ -5087,7 +5087,7 @@ export default function FutureBoxHome() {
                     copilotBus.handoff('booth', 'pick_song', title);
                     /* And the copilot in there is told whose it is.
 
-                       Carli, 21 September 2026: *"Al die kamers se AI
+                       The owner, 21 September 2026: *"Al die kamers se AI
                        praat nie met mekaar nie."* The song arrived and
                        the conversation did not, so what the copilot in
                        the booth knew about a song somebody had sent her
@@ -5145,7 +5145,7 @@ export default function FutureBoxHome() {
  
                        `audit/underbar.mjs` found it on its first run — "Sing on
                        it yourself", the whole button, behind the tab bar in
-                       Make a song. That is the fourth room Carli has had to
+                       Make a song. That is the fourth room the owner has had to
                        report this in, which is why that probe now walks all
                        twelve rather than waiting to be told about a fifth. */
                     <div
@@ -5253,7 +5253,7 @@ export default function FutureBoxHome() {
 
                    ── And the song goes with her as a SHOT ────────────
 
-                   Carli, 21 September 2026: *"Al die kamers se AI praat
+                   The owner, 21 September 2026: *"Al die kamers se AI praat
                    nie met mekaar nie."* She reported it about hooks and
                    it was just as true here, one screen earlier. This set
                    the song under the desk, moved her, and stopped — an
@@ -5594,7 +5594,7 @@ export default function FutureBoxHome() {
 
       {/* `roomOwnsScreen`: a room that has claimed the whole screen.
 
-          Carli, 14 September 2026, on the booth's new bars: *"daai buttons
+          The owner, 14 September 2026, on the booth's new bars: *"daai buttons
           vervang die harde buttons van die hele app, dan val daai hele bar
           van die app in die booth weg."* The booth now carries its own two
           rows of controls, and a third row belonging to a different

@@ -9,7 +9,7 @@
  * whatever a room keeps down there is underneath it.
  *
  * The Pro Booth's "Mix it down" — the button that whole room exists to reach —
- * was under it, and Carli asked for a feature that had been built and covered:
+ * was under it, and the owner asked for a feature that had been built and covered:
  * "hoe word dit uiteindelik as een liedjie ge-export?" Asking the same question
  * of The Booth found two more, one of them "Take the room off it", which is a
  * paid control.
@@ -49,7 +49,7 @@ ok('and states its height as a number other files can import',
    its own 57 — read off the bar's `min-h-[56px]` plus a border. `TabBar`
    already exported `barClearance()` built on `BAR_HEIGHT`, which is **64**,
    and already had `check:tabbar` guarding it. So the new rule was a second
-   source of truth that was seven pixels short, and Carli found the difference
+   source of truth that was seven pixels short, and the owner found the difference
    the way it is always found: "By your voice is daar ook 'n hele button onder
    agter die main button bar."
  
@@ -101,7 +101,7 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
      painted at its controls, and that is written down rather than assumed. */
   /* The pro booth does not clear the bar because the bar is not there.
  
-     Carli, 14 September 2026: *"daai buttons vervang die harde buttons van
+     The owner, 14 September 2026: *"daai buttons vervang die harde buttons van
      die hele app, dan val daai hele bar van die app in die booth weg."* The
      room carries its own two rows of controls, so it claims the screen and
      `app/page.tsx` stops drawing the tab bar for as long as it is open.
@@ -122,7 +122,7 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
   /* The photo editor, 7 October 2026, for the same reason and with the same
      conditions.
  
-     Carli asked for its tools along the bottom — *"Die editing tools moet ook
+     The owner asked for its tools along the bottom — *"Die editing tools moet ook
      onder in 'n bar wees"* — and the app's bar is along the bottom. It
      reserved the strip with `barClearance` while it was one long scroll, which
      was right then; with a bar of its own, 64 pixels of padding under that bar

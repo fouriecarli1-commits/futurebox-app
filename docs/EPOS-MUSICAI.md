@@ -2,7 +2,7 @@
 
 > ## ⬇ STUUR HIERDIE EEN
 >
-> Carli, 5 Oktober 2026, oor ElevenLabs: *"Hulle antwoord my nie, en ek sal
+> Die eienaar, 5 Oktober 2026, oor ElevenLabs: *"Hulle antwoord my nie, en ek sal
 > nie so kan besigheid doen nie."*
 >
 > Hierdie lêer het **twee** briewe gedra: 'n eerste kontak met volumes wat te
@@ -165,7 +165,7 @@ hierdie twee stuur as jy die een hierbo gestuur het nie.**
 
 ## Die oorspronklike eerste kontak
 
-Konsep vir Carli om te stuur. **Vul die drie plekhouers in waar jy dit stuur —
+Konsep vir die eienaar om te stuur. **Vul die drie plekhouers in waar jy dit stuur —
 hulle staan met opset nie in hierdie lêer nie:** jou naam en rol onderaan, die
 maatskappy se adres, en die kontak-e-pos.
 
@@ -331,7 +331,7 @@ lys is 'n verbetering; hierdie een maak 'n funksie klaar.
 
 # Opvolg-epos — die volumes reggestel
 
-Carli, 23 September 2026: *"Ek dink nou net ons het die verkeerde getalle vir
+Die eienaar, 23 September 2026: *"Ek dink nou net ons het die verkeerde getalle vir
 music.ai gestuur, want in realiteit gaan ons net enkele professionele mense kry
 wat die produk so gaan gebruik."*
 

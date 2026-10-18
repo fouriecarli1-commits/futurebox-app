@@ -5,7 +5,7 @@
  *
  * ── What was asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 September 2026:
+ * The owner, 11 September 2026:
  *
  *   "The advert also has to be able to resume a previous session. It should
  *    still be open when moving between rooms. And the ones that I have

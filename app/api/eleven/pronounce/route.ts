@@ -12,7 +12,7 @@
  * ElevenLabs has the lever — pronunciation dictionaries, applied per request
  * via `pronunciation_dictionary_locators`. Alias rules need no phonetics: a
  * word and a respelling. So the dictionary is easy to build and impossible to
- * build well, because what belongs in it has to come from LISTENING. Carli is
+ * build well, because what belongs in it has to come from LISTENING. The owner is
  * the one who can hear it; a list invented at this desk would be a list of
  * words a model probably says fine, and would miss the ones it does not.
  *

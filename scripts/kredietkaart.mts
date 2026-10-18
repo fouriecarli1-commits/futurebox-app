@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Ek het nodig dat jy vir my elke funksie met
+ * The owner, 11 October 2026: *"Ek het nodig dat jy vir my elke funksie met
  * krediete uitwys. Ek moet in 'n tabel sien wat kos die engines wat ons
  * gebruik, vs die krediete wat ons vra vir daardie funksie. In daardie tabel
  * moet ek ook sien watter verskillende funksies op die app is, maak nie saak
@@ -50,7 +50,7 @@ const rand = (amount: number): string => `R${amount.toFixed(2)}`;
 /**
  * Every priced row, with the money and not only the ratio.
  *
- * Carli, 11 October 2026: *"Jy het nie die somme reg gedoen nie, ek moet kan
+ * The owner, 11 October 2026: *"Jy het nie die somme reg gedoen nie, ek moet kan
  * sien, wat kos die engines wat ons gebruik, en wat ons wins is wat ons bo op
  * sit? Ek wil sien dat ons nie net gelyk breuk nie maar dat ons wins maak."*
  *

@@ -5,7 +5,7 @@
  *
  * ── Why a check and not care ─────────────────────────────────────────────
  *
- * Carli's standing rule, since the company was registered: nothing off the
+ * The owner's standing rule, since the company was registered: nothing off the
  * CIPC certificate — the registered address, the director's identity number —
  * and not her own email address. The reason is not squeamishness. This
  * repository is read by more than the two of us, it is cloned onto machines
@@ -28,13 +28,21 @@
  * Neither is dangerous on its own. Both are the rule being forgotten, which
  * is what a check is for.
  *
- * ── What it deliberately does not say ────────────────────────────────────
+ * ── What changed on 18 October 2026 ──────────────────────────────────────
  *
- * Her first name in a comment is not private information. This codebase
- * attributes design decisions to the person who asked for them, by name and
- * date, which is the most useful thing a comment can say and is why so many
- * of them do. A name is not an address, an inbox or a number.
+ * This used to say that her first name in a comment was not private, because
+ * comments here record who asked for what. The owner said otherwise: her
+ * name, her email address, her telephone number and the company's CIPC
+ * number must not appear anywhere, and only the company's registered name
+ * may. The repository is public, so "anywhere" includes the comments, the
+ * docs and the probes' test data — and the comments now say "the owner".
+ *
+ * Section 0 below holds that. It compares HASHES of words rather than the
+ * words, because a list of the names it forbids would be the names, written
+ * into the repository by the check that keeps them out.
  */
+import { createHash } from 'node:crypto';
+import { execSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 
 let bad = 0;
@@ -58,6 +66,45 @@ const FILES = ['app', 'scripts', 'audit', 'supabase', 'docs', '.github']
   .concat(['package.json', 'next.config.mjs', 'README.md'].filter((one) => {
     try { readFileSync(one); return true; } catch { return false; }
   }));
+
+/* ── 0. No name, handle or number that belongs to the owner ────────────
+
+   Every tracked text file — code, comments, docs, probes, settings — split
+   into words, and each word's SHA-256 compared with these. The first sixteen
+   hex digits are enough to never collide by accident with an ordinary word.
+   What each one is, in words, lives with the owner and not here: her first
+   name and surname, the other given name, the handles made of them, her
+   mailbox, the GitHub account, and the company's CIPC number. */
+const FORBIDDEN = new Set([
+  'ba4644260b68599a', '682a2e8aaac3f261', 'ea8933db4ffe674c', '078dc3268eb17a32',
+  '728b353ff899d865', 'e528b1ff307d7f2c', '269cf1876003bafb', '623976eace2c54fa',
+  'dd0111703f9abd6b',
+]);
+const short = (word: string): string => createHash('sha256').update(word.normalize('NFC')).digest('hex').slice(0, 16);
+const tracked = execSync('git ls-files', { encoding: 'utf8' }).split('\n')
+  .filter((one) => one && one !== 'package-lock.json'
+    && !/\.(png|jpe?g|gif|webp|ico|mp3|mp4|wav|webm|woff2?|ttf|otf|pdf|docx|zip|wasm|tflite|binarypb|data|bin|onnx|task)$/i.test(one)
+    && !one.startsWith('public/pdf/'));
+const named: string[] = [];
+for (const file of tracked) {
+  let text = '';
+  try { text = readFileSync(file, 'utf8'); } catch { continue; }
+  const words = new Set<string>();
+  for (const hit of text.toLowerCase().normalize('NFC').matchAll(/[\p{L}\p{N}@._-]+/gu)) {
+    const word = hit[0].replace(/^[@._-]+|[@._-]+$/g, '');
+    if (!word) continue;
+    /* The whole word, and its pieces: a handle inside an address, or a name
+       inside `name.surname`, is still the name. */
+    words.add(word);
+    for (const piece of word.split(/[@._-]+/)) if (piece) words.add(piece);
+  }
+  for (const hit of text.matchAll(/\b\d{4}\/\d{4,7}\/\d{2}\b/g)) words.add(hit[0]);
+  const found = [...words].filter((word) => FORBIDDEN.has(short(word)));
+  if (found.length) named.push(`${file} (${found.length})`);
+}
+ok('no name, handle, mailbox or registration number of the owner is in any tracked file',
+  named.length === 0,
+  `${named.slice(0, 8).join(' | ')} — the words are not printed here, because printing them is the fault`);
 
 /* ── 1. No real mailbox ──────────────────────────────────────────────
  
@@ -121,17 +168,16 @@ for (const file of FILES) {
 }
 ok('  and no telephone number', phones.length === 0, phones.slice(0, 4).join(' | '));
 
-/* ── 4. The registered address is named, never typed ─────────────────
+/* ── 4. The registered address is never typed, and never read ──────────
  
    It is deliberately EMPTY until the CIPC record carries a business
    address, and `lib/server/entity.ts` reads it from the environment so that
    setting it is a change in Vercel and not a commit. A value typed into the
    code would be in the history for good. */
-const entity = readFileSync('app/lib/server/entity.ts', 'utf8');
-ok('the registered address is read from the environment, not typed',
-  /process\.env\.FUTUREBOX_LEGAL_ADDRESS/.test(entity),
-  'typed into the code it is in the git history for good, and the whole'
-  + ' reason it is a variable is that it has not been decided yet');
+const entity = readFileSync('app/lib/server/entity.ts', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+ok('the registered address is not read at all — only the company name is printed',
+  !/FUTUREBOX_LEGAL_ADDRESS/.test(entity),
+  'the owner decided on 18 October 2026 that no address appears in the app');
 /* A street called Example or Voorbeeld is not an address, it is the shape
    of one — which `docs/SWITCH-ON.md` has to print to explain what goes in
    the variable. The exception is the word, not the file, so a real address

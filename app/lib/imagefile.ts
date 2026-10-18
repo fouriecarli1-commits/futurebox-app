@@ -30,7 +30,7 @@
  * throw. It is killed, which is a white screen with no error in it, because
  * the thing that would have drawn the error died too.
  *
- * Carli, 14 September 2026, choosing a photo on her phone: *"Toe ek 'n foto
+ * The owner, 14 September 2026, choosing a photo on her phone: *"Toe ek 'n foto
  * kies op my foon maak die skerm so blank."* Scrolling did nothing, a reload
  * fixed it, and the picture was never saved — which is exactly the shape of a
  * process that stopped existing rather than a render that failed.
@@ -253,7 +253,7 @@ export async function square(file: File, side: number): Promise<Made> {
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 20 September 2026, about the art market: *"Screenshots gaan die
+ * The owner, 20 September 2026, about the art market: *"Screenshots gaan die
  * kunswerke skade doen."* She is right, and the honest position is that
  * neither a screenshot nor a phone camera pointed at the screen can be
  * stopped by anything a web page is able to do. What CAN be done is make
@@ -297,7 +297,7 @@ export async function squareMarked(
  *
  * ── Why this is not inside `fit` any more ────────────────────────────────
  *
- * Carli has reported the cast strip three times. `audit/cast.mjs` claimed to
+ * The owner has reported the cast strip three times. `audit/cast.mjs` claimed to
  * hold the rule that matters most about it — *a wide picture stays wide, it
  * is fitted and not cropped square* — by uploading 1600×900 and measuring
  * what came back out of the bucket. The bucket in that probe is a stub that

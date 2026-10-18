@@ -3,7 +3,7 @@
  *
  * ── Why ──────────────────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Onthou dat ons probooth ook moet monotize, nie te
+ * The owner, 5 October 2026: *"Onthou dat ons probooth ook moet monotize, nie te
  * duur nie."*
  *
  * The rule she set on 24 September is already in `credits.ts`: **entering a
@@ -69,7 +69,7 @@ const SPENDS = [
   'server/spotify',
   /* ── Google, missing until 9 October 2026 ───────────────────
 
-     Every one of these spends real money on Carli's own Vertex project, and
+     Every one of these spends real money on the owner's own Vertex project, and
      not one of them was on this list. The whole file says "nothing reaches a
      supplier for free by accident" and it has been green every day since
      8 October while four routes reached Google and nobody counted.

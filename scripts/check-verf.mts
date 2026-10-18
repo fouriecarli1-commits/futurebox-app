@@ -5,7 +5,7 @@
  *
  * ── What is actually at risk ─────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan verander
+ * The owner, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan verander
  * ... die pearlescent funksie ... waar twee na 3 kleure saam blend"*.
  *
  * She reaches this with a mark she has just cut out by hand, and the cut is

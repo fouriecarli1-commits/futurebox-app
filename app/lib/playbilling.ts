@@ -1,7 +1,7 @@
 /**
  * Paying through Google Play, when the app is the one from the Play Store.
  *
- * Carli, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
+ * The owner, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
  * ek paystack afhaal en werk met die playstore se paying system."*
  *
  * The Android app is this website inside a Trusted Web Activity

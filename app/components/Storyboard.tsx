@@ -322,7 +322,7 @@ export default function Storyboard({
          in this room ever told anybody, the copilot or her, that what they
          had written was not enough to make a video from.
  
-         Carli, 9 October 2026: *"Die video studio se ai is baie kort af. Dit
+         The owner, 9 October 2026: *"Die video studio se ai is baie kort af. Dit
          moet baie descriptive wees en daardie ai moet weet wat verwag word,
          om genoeg beskrywing te gee sodat 'n ai 'n sinvolle video kan
          maak."* The instruction was already long by then; the floor was the
@@ -490,7 +490,7 @@ export default function Storyboard({
 
   /* ── One piece, on its own ────────────────────────────────────────────
    *
-   * Carli, 23 September 2026: *"Elke klein gedeelt moet 'n knoppie hê om
+   * The owner, 23 September 2026: *"Elke klein gedeelt moet 'n knoppie hê om
    * net die stukkie af te laai."*
    *
    * The whole room had one download on it, at the bottom, for the finished
@@ -813,7 +813,7 @@ export default function Storyboard({
                   and both are paid for whatever happens. */}
               {/* ── The grade ────────────────────────────────────────────
  
-                  Carli, 23 September 2026: *"Ook met 'n paar filter
+                  The owner, 23 September 2026: *"Ook met 'n paar filter
                   moontlikhede."*
  
                   Only once there is a clip, for the same reason as the trim:
@@ -828,7 +828,7 @@ export default function Storyboard({
               {shot.makeId && (
                 <div className="flex flex-wrap gap-1.5" data-grade={shot.id}>
                   {/* As photos of the meerkat, each under its own filter —
-                      Carli, 17 October 2026: every look a picture. */}
+                      The owner, 17 October 2026: every look a picture. */}
                   {FILTERS.map((one) => (
                     <MeerkatTile
                       key={one.id}
@@ -868,7 +868,7 @@ export default function Storyboard({
 
       {/* ── Her own filming, on the same board ────────────────────────────
  
-          Carli, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat
+          The owner, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat
           ek moet bou vir 'n funksie, ek wil sniplets uit my videos gebruik
           vir bemarking."*
  
@@ -1011,7 +1011,7 @@ export default function Storyboard({
 
           {/* ── The shots saying their lines ────────────────────────────
 
-              Carli, 23 September 2026: *"Dit wil ook voorkom dat daai kamer
+              The owner, 23 September 2026: *"Dit wil ook voorkom dat daai kamer
               glad nie klank wat praat genereer nie."*
 
               It did not, and the reason was one missing word on a request.
@@ -1294,7 +1294,7 @@ function Trim({
 
       {/* ── It plays what the film will play ───────────────────────────────
  
-          Carli, 9 October 2026: *"I just made a video with speech. No sound
+          The owner, 9 October 2026: *"I just made a video with speech. No sound
           is coming out."*
  
           This was a bare `muted`, so "Play just this bit" was silent on every
@@ -1348,7 +1348,7 @@ function Trim({
              to 8, and from and to were both 8: a window of nothing, reported
              as the whole clip, with a play button that did nothing.
  
-             That is Carli's screenshot of 9 October 2026. The guard was
+             That is the owner's screenshot of 9 October 2026. The guard was
              written and then undone one line later by a clamp, which is why
              `check:knipvenster` drives the two handles against each other
              rather than reading this rule. */

@@ -1,7 +1,7 @@
 /**
  * The Booth, walked the way she walks it, on the phone she walks it on.
  *
- * Carli: "met die booth is daar nogteeds probleme."
+ * The owner: "met die booth is daar nogteeds probleme."
  *
  * That sentence has been sitting unanswered because I asked which booth and
  * what she was seeing, and asking was the wrong move — the room is here and it
@@ -155,7 +155,7 @@ try {
 
   /* The door is a dropdown now, not a card per song.
 
-     Carli, 15 September 2026: "Die liedjies wat jy wil verander moet nie so
+     The owner, 15 September 2026: "Die liedjies wat jy wil verander moet nie so
      lank uitgelê word nie, daar moet eerder net 2 buttons wees. Een wat sê
      Choose a song en dit het 'n drop down. Twee Bring a song in." So the song
      is an option rather than a heading with a button under it, and choosing
@@ -200,7 +200,7 @@ try {
 
   /* ── The desk is a layer, not just a shadow ──────────────────────────
 
-     Carli's photograph, 13 September 2026: the Desk open, and "Keep this
+     The owner's photograph, 13 September 2026: the Desk open, and "Keep this
      take" printed straight across the Timing fader's explanation — through a
      panel with a solid fill and a `shadow-2xl` on it.
 
@@ -273,7 +273,7 @@ try {
 
     /* ── The screen belongs to the words while the microphone is open ──
 
-       Carli, 15 September 2026, with a photograph: *"Die spasie is min vir
+       The owner, 15 September 2026, with a photograph: *"Die spasie is min vir
        recording. Die oomblik wanneer mens op record druk moet daai buttons
        verdwyn ... Die woorde moet die grootste gedeelte van die skerm vat."*
 
@@ -294,7 +294,7 @@ try {
     check('and stopping the take is',
       (await room.locator('button').filter({ hasText: /^Stop|Hou op/ }).count()) > 0);
 
-    /* Carli, 14 October 2026: "Die woorde gaan oor die hele foon moet wys en
+    /* The owner, 14 October 2026: "Die woorde gaan oor die hele foon moet wys en
        die buttons moet dan dissapear en al wat oor bly is dan die record,
        pause en stop buttons." The header, the read row and the word report
        step aside too, and the words take the space: the back button is gone
@@ -372,7 +372,7 @@ try {
      The Pro Booth's "Mix it down" was underneath it for months and nothing
      said so: that room is z-[70], TabBar is `fixed bottom-0 z-[95]`, and
      asking whether the *page* scrolls sideways or off the bottom never sees
-     it. Carli found it by asking for a button that was already there.
+     it. The owner found it by asking for a button that was already there.
 
      Eleven full-screen overlays in this app sit below that bar. This is the
      room she actually records in, and its whole toolbar — play, the way to

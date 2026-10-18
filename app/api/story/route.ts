@@ -1,7 +1,7 @@
 /**
  * The story helper: Story mode's own AI.
  *
- * Carli, 14 October 2026: *"Story mode binne my profile, moet ook 'n ai hê."*
+ * The owner, 14 October 2026: *"Story mode binne my profile, moet ook 'n ai hê."*
  *
  * Story mode was built on her answer that the words are the writer's, not the
  * app's (`lib/storypages.ts`). That stays true: this writes into the box, and
@@ -25,6 +25,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { tooMany } from '@/app/lib/server/brake';
@@ -72,6 +73,7 @@ const SYSTEM = [
   '- Never use a real, named person or a character somebody else owns.',
   '- Answer in the language the person wrote in. If they wrote Afrikaans, write Afrikaans.',
   `${AFRIKAANS_RULE}`,
+  `${DISCRETION_RULE}`,
 ].join('\n');
 
 function promptFor(body: Body, pages: number): string {

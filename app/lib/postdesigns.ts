@@ -1,7 +1,7 @@
 /**
  * Photo templates: whole designs with places for her photographs.
  *
- * Carli, 16 October 2026, with a page of finished designs open in another
+ * The owner, 16 October 2026, with a page of finished designs open in another
  * app: *"Hoe hou ons sulke cool templates? Moet ons dit generate en oor tyd
  * op bou?"* — and afterwards, *"gaan aan met die template-stelsel."*
  *
@@ -233,7 +233,7 @@ export const DESIGNS: readonly Design[] = [
     slots: [{ x: 0.42, y: 0.72, w: 0.16, h: 0.16, look: 'round' }],
     words: [
       w('“Make the thing you wish existed.”', '“Maak die ding wat jy wens bestaan het.”', 'book', 0.5, 0.4, 0.6, '#f9fafb'),
-      w('— Carli', '— Carli', 'plain', 0.5, 0.93, 0.28, '#9ca3af'),
+      w('— FutureBox', '— FutureBox', 'plain', 0.5, 0.93, 0.28, '#9ca3af'),
     ],
     marks: [],
   },
@@ -267,7 +267,7 @@ export const DESIGNS: readonly Design[] = [
 ];
 
 /* ── Artwork from her device ─────────────────────────────────────────────
-   Carli, 16 October 2026: *"Ek wonder of ek templates ook van my device af
+   The owner, 16 October 2026: *"Ek wonder of ek templates ook van my device af
    kan oplaai?"* — *"Ek bedoel templates wat gestoor moet word."* A design
    she made somewhere else comes in as a picture; it is kept in the public
    `designs` bucket under a name the server gives it, and the design names

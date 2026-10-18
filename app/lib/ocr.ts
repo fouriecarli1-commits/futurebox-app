@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 7 October 2026, listing a modern editor's tools: *"grab text"*, and
+ * The owner, 7 October 2026, listing a modern editor's tools: *"grab text"*, and
  * *"Dit is alles code wat ons oor tyd kan develop."*
  *
  * This is the first of the free half of that list. Tesseract is a real OCR
@@ -80,7 +80,7 @@ export function canRead(): boolean {
  *
  * ── Why these were being thrown away ───────────────────────────
  *
- * Carli, 8 October 2026: *"dat dit AI integrated is en die masjien
+ * The owner, 8 October 2026: *"dat dit AI integrated is en die masjien
  * identifiseer self objekte en text wat dan highlight en dan kan die klient
  * op die objekte of text click wat hulle graag wil grab, rondskuif, of
  * delete."*
@@ -221,7 +221,7 @@ export async function readWords(
  *
  * ── What she was shown ───────────────────────────────────────────────────
  *
- * Carli, 7 October 2026, having pressed Read English on a photograph of her
+ * The owner, 7 October 2026, having pressed Read English on a photograph of her
  * own face: *"Wat is daai words in the picture"*. It had answered:
  *
  *     SN

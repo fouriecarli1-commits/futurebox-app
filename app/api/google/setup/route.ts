@@ -80,7 +80,7 @@ export async function GET(request: Request): Promise<Response> {
   /* ── One line per KIND, worked out from the list ────────────────────
 
      The first version of this named music and video in two hand-written
-     sentences. Then Carli chose Nano Banana, a third kind arrived, and the
+     sentences. Then the owner chose Nano Banana, a third kind arrived, and the
      report she sent back on 8 October said nothing at all about images —
      while the answer she needed was in the rows above it.
 

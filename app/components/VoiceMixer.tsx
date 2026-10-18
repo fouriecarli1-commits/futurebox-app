@@ -6,7 +6,7 @@
  *
  * ── What this exposes, and where it was ──────────────────────────────────
  *
- * Carli, 9 September 2026: "Daar moet ook 'n mixer setting wees vir die stemme
+ * The owner, 9 September 2026: "Daar moet ook 'n mixer setting wees vir die stemme
  * wat gebruik word wat 'n conversion slider het, 'n dynamic slider (model
  * volume), pre en post processing effects om te hoor wat klink die beste."
  *

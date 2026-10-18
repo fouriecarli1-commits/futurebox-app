@@ -3,7 +3,7 @@
  *
  * ── What was on the screen ───────────────────────────────────────────────
  *
- * Carli photographed the header on her phone, in her light theme. Beside
+ * The owner photographed the header on her phone, in her light theme. Beside
  * her name, where "Sign out" should be, was a pale green rectangle with
  * square corners sitting inside a rounded grey pill — a block of colour
  * with the words only just readable on it, looking like a rendering fault.

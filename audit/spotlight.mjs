@@ -3,7 +3,7 @@
  *
  * ── What this holds ──────────────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Wanneer jy tyd kry moet jy die hele spotlight
+ * The owner, 21 September 2026: *"Wanneer jy tyd kry moet jy die hele spotlight
  * room 100% oor check en herbedink. Die buttons is randomely oor al. Dit is
  * nie netjies nie… Ek dink alles moet drop down menus wees behalwe die maker
  * se advertensie. En die 1 featured masterclass moet ook groot wees, en die

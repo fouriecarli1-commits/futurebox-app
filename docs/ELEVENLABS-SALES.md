@@ -24,7 +24,7 @@ ours to publish in a cold email.
 Hi,
 
 I'm the founder of FutureBox (FUTUREBOXSTUDIO (Pty) Ltd, South Africa,
-registration 2026/714071/07). We're an Afrikaans-first creative studio —
+registration [registration number]). We're an Afrikaans-first creative studio —
 members write and record songs, generate music and voice-overs, make music
 videos and publish to their own channels. We're built on ElevenLabs and
 recently moved up to Business.
@@ -164,7 +164,7 @@ Happy to share our projections, our cost modelling and a walkthrough of the
 product on a call. What's the best way to start?
 
 Kind regards,
-Anré Fourie
+[Your name]
 Founder, FutureBox
 futurebox.studio
 
@@ -360,7 +360,7 @@ cost model, the product walkthrough, and our POPIA position in advance if that
 is useful.
 
 Kind regards,
-Anré Fourie
+[Your name]
 Founder, FutureBox
 futurebox.studio
 

@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Ek dink ons moet dan lyria, nano banana en veo
+ * The owner, 8 October 2026: *"Ek dink ons moet dan lyria, nano banana en veo
  * gebruik."* Lyria makes the songs and Veo makes the clips. Nano Banana was
  * chosen the same day, named on the setup page, written into `CHOSEN.image`
  * — and nothing in the app ever called it. A model picked and never wired is
@@ -17,7 +17,7 @@
  * decision about paying artists rather than a gap. Nothing here changes
  * that: cover art still goes through `lib/server/cover.ts`.
  *
- * What the editor cannot do at all is change what is IN a picture. Carli
+ * What the editor cannot do at all is change what is IN a picture. The owner
  * sent a Model Garden sample on 9 October 2026 doing exactly that — a chat
  * where each turn hands back a new version of the same image. That is the
  * thing being built here: say what to change, get the picture back changed.
@@ -48,7 +48,7 @@ import { CHOSEN, addressOf, configured as googleOn } from './google';
 /**
  * The size asked for, and why it is asked for rather than left to the model.
  *
- * Carli sent the price layout on 9 October 2026, and the thing that matters
+ * The owner sent the price layout on 9 October 2026, and the thing that matters
  * in it is not any one number — it is that **the price is per
  * resolution**. For this model, Nano Banana 2.1: about $0.0336 at 1K and
  * $0.0504 at 2K, with 4K unquoted.
@@ -205,7 +205,7 @@ export { MOST_PICTURES };
  *
  * ── Why this is a list now ───────────────────────────────────────────────
  *
- * Carli pasted her whole Model Garden listing on 10 October 2026, and every
+ * The owner pasted her whole Model Garden listing on 10 October 2026, and every
  * card on it carries a badge. `Gemini Nano Banana 2.1` — the chosen one — is
  * badged **Self-deployed**, which means it has no per-call address at all
  * until somebody puts it on a machine that bills by the hour. A request to
@@ -226,11 +226,11 @@ export { MOST_PICTURES };
  * model. If it 404s, the one that is measured to resolve is used. The app is
  * correct under both readings and nobody has to guess.
  *
- * Carli: *"Ok sal jy die models dan reg maak?"* This is what fixing them
+ * The owner: *"Ok sal jy die models dan reg maak?"* This is what fixing them
  * looks like when the evidence is good but not certain.
  */
 /* ── And after them, the 3.1 image models ───────────────────────────────
-   Carli, 15 October 2026, under a child's drawing that never came back:
+   The owner, 15 October 2026, under a child's drawing that never came back:
    *"Hierdie werk nie. Prente word nie lewendig."* Both names above can be
    missing now: 2.1 is Self-deployed on her listing, so it has no address
    until it is deployed, and `gemini-2.5-flash-image` was listed for shutdown

@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"templates vir die kinders om op te druk"*, and
+ * The owner, 10 October 2026: *"templates vir die kinders om op te druk"*, and
  * when asked which kind: *"Ja, die kinders se eie storie as 'n boekie."*
  *
  * `lib/storybook.ts` carries why it is their own story and not a worksheet,

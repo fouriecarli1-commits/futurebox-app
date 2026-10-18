@@ -3,7 +3,7 @@
  *
  * ── What their support said, 9 September 2026 ────────────────────────────
  *
- * Carli asked what happens when the credits run out. The reply settled the
+ * The owner asked what happens when the credits run out. The reply settled the
  * biggest open number in the whole cost model:
  *
  *   Pro       $99/month    600,000 credits

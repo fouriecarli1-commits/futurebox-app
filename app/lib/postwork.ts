@@ -16,7 +16,7 @@
  *
  * ── None of this is AI, and the screen says so ───────────────────────────
  *
- * Carli listed an "upscaler" among the modern tools she wanted, and the
+ * The owner listed an "upscaler" among the modern tools she wanted, and the
  * honest version of that is two different products. One guesses detail that
  * was never in the photograph, needs a model and a supplier, and costs money
  * per press. The other resamples what is there, runs on the phone in a
@@ -102,7 +102,7 @@ export function turned(
  * offers, and the names are what they do rather than numbers.
  */
 /*
- * Carli, 17 October 2026, of the three buttons: *"maak geen aksie wanneer mens
+ * The owner, 17 October 2026, of the three buttons: *"maak geen aksie wanneer mens
  * op die kliek nie."* They worked and could not be seen working — a blur of a
  * quarter of a percent finds only grain, and grain sharpened on a phone screen
  * is invisible. The radius is wider now, so it finds the edges a person sees

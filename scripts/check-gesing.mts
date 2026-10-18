@@ -20,7 +20,7 @@
  * The rows arrive unlabelled: a song can come back with its lyrics, a
  * description of what was made, a refusal, or several of those. `lyria.ts`
  * left it as *"the FIRST REAL SONG says which is which"*, which meant asking
- * Carli to look at a row and tell me what it was. She has already said what
+ * The owner to look at a row and tell me what it was. She has already said what
  * that feels like, about a different question of mine: *"ek weet eintlik
  * glad nie wat jy soek nie."*
  *

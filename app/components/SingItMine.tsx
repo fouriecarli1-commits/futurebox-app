@@ -8,7 +8,7 @@
  * The Pro Booth's version works on a lane, which means it is for somebody who
  * has already recorded something. This is for the other case, which is most
  * people: a song came out of the machine, it is good, and the voice on it is
- * not theirs. Carli asked for the singing engine "in Pro Booth en in Make a
+ * not theirs. The owner asked for the singing engine "in Pro Booth en in Make a
  * song", and this is the second half of that.
  *
  * It runs over `/api/voice/sing` — Kits.AI, a model trained on one singer —

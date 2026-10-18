@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 30 September 2026: *"wanneer ek die app minimize en weer terug gaan
+ * The owner, 30 September 2026: *"wanneer ek die app minimize en weer terug gaan
  * … Hy gooi jou heeltemal uit en vergeet waarmee hy besig was."*
  *
  * Almost word for word what she said about the Pro Booth on 9 September, which

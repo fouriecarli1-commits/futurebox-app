@@ -5,7 +5,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Ek moet in 'n tabel sien wat kos die engines wat
+ * The owner, 11 October 2026: *"Ek moet in 'n tabel sien wat kos die engines wat
  * ons gebruik, vs die krediete wat ons vra vir daardie funksie."*
  *
  * She is setting prices off that table. A document that was true the day it

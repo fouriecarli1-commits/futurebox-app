@@ -3,7 +3,7 @@
  *
  * ── What this guards ─────────────────────────────────────────────────────
  *
- * Carli, 10 September 2026: "elke woord tjie, soos voëltjie word verkeerd
+ * The owner, 10 September 2026: "elke woord tjie, soos voëltjie word verkeerd
  * uitgespreek as chi. tjie moet uitgespreek word as kie dan is dit
  * byvoorbeeld voëlkie."
  *

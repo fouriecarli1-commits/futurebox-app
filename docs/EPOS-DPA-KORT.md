@@ -1,6 +1,6 @@
 # Drie kort briewe — Music.ai, Resend en Kling
 
-Konsep vir Carli om te stuur. Een e-pos elk, dieselfde vier vrae, verskillende
+Konsep vir die eienaar om te stuur. Een e-pos elk, dieselfde vier vrae, verskillende
 aanhef. **Vul die twee plekhouers in waar jy dit stuur:** jou naam en rol
 onderaan, en die kontak-e-pos.
 
@@ -23,7 +23,7 @@ Stuur al drie op dieselfde dag. Dit is vyftien minute.
 ## Die gedeelde liggaam
 
 > We're FutureBox Studio (FUTUREBOXSTUDIO (Pty) Ltd, South Africa, registration
-> 2026/714071/07), a creative studio for music, voice and video. We're already
+> [registration number]), a creative studio for music, voice and video. We're already
 > integrated with you and approaching launch.
 >
 > South Africa's POPIA treats us as the responsible party and you as an operator

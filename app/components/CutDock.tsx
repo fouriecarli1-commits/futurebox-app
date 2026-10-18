@@ -5,7 +5,7 @@
  *
  * ── What she drew ────────────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Dit is funksioneel nes soos die probooth. Dit moet
+ * The owner, 4 October 2026: *"Dit is funksioneel nes soos die probooth. Dit moet
  * lyk soos 'n editing kamer. Daar moet nie allerhande buttons wees soos daar nou
  * is nie, alles moet binne een kamer wees en met icons. … Die oorhoofse editing
  * funksies moet heel onder op die hoof bar wees en moet vas wees soos in die
@@ -218,7 +218,7 @@ const LOWER: readonly BenchSpec[] = [
     label: ['cut.looks', 'Looks'],
     what: ['cut.looksWhat', 'Thirteen looks, applied in your own browser, on the shot you have picked.'],
   },
-  /* Carli, 17 October 2026, about another program's motion effects: *"Die
+  /* The owner, 17 October 2026, about another program's motion effects: *"Die
      effects … kan ook cool wees."* `lib/videomotion.ts`. */
   {
     id: 'motion',
@@ -285,7 +285,7 @@ export default function CutDock({
   /**
    * The benches, so a second room can have this exact bar.
    *
-   * Carli, 7 October 2026: *"Die editing tools moet ook onder in 'n bar wees
+   * The owner, 7 October 2026: *"Die editing tools moet ook onder in 'n bar wees
    * ... Dieselfde met video editor, asook probooth. Pop out bars moet netjies
    * gespasieer wees."* The way to make two rooms space their bars the same is
    * not to space them the same twice; it is for there to be one bar.
@@ -306,7 +306,7 @@ export default function CutDock({
   const sideways = useSideways();
   /* ── Two ways to be wider than you are tall ─────────────────────────────
 
-     Carli, 9 October 2026: *"Die website moet nie lyk soos 'n foon app
+     The owner, 9 October 2026: *"Die website moet nie lyk soos 'n foon app
      nie."*
 
      She is looking at this bar. A desktop browser was getting the layout
@@ -439,7 +439,7 @@ export default function CutDock({
 
   /* ── Held sideways, the bar becomes a rail on the edge ───────────────────
 
-     Carli said it of the booth in September — *"baie mense gaan die dwarsdraai
+     The owner said it of the booth in September — *"baie mense gaan die dwarsdraai
      wil gebruik, en dan gaan die buttons weer beter werk aan die kant van die
      skerm en nie onder nie"* — and a cutting room is MORE likely to be held
      sideways than a booth, because a wide film is the shape of the screen. */
@@ -521,7 +521,7 @@ export default function CutDock({
             left edge at 8 and the last one's right edge at 382, while the back
             button, the Ask button, the hint and the export all sat at 12 and
             378 — so the bar was four pixels wider than everything above it on
-            both sides, which is exactly the kind of thing Carli meant by *"Kyk
+            both sides, which is exactly the kind of thing the owner meant by *"Kyk
             dan mooi dat alles mooi allign en netjies is."* Four pixels is not
             visible as four pixels; it is visible as a bar that does not line
             up with the room. */}

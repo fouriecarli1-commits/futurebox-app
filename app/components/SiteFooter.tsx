@@ -52,7 +52,7 @@ import { useLang } from '../lib/i18n';
 /**
  * The routes a child is handed the phone on. No footer there: Help, Terms,
  * Who we are and a compliance badge are nine links out of a room that was
- * built to have two presses in it. Carli, 12 October 2026, with a photograph
+ * built to have two presses in it. The owner, 12 October 2026, with a photograph
  * of the kids room's foot: *"Hierdie onderste goed moet nie in die kids room
  * wees nie."* The story room is the same screen for the same child.
  */
@@ -105,7 +105,7 @@ export function SiteFooter() {
               {t('foot.who', 'Who we are')}
             </a>
             {/* Story mode, from every route. The kids room is not here:
-                Carli, 14 October 2026, its one door is the welcome page. */}
+                The owner, 14 October 2026, its one door is the welcome page. */}
             {/* The articles, from every route. They are written to be found
                 by somebody who has not signed up, and the footer is the one
                 thing on every page. */}
@@ -121,7 +121,7 @@ export function SiteFooter() {
         {/* The "Verified by VibefyCode" badge that hung here since 31 August is
             gone: its host answers nothing any more, so every visitor got a
             broken-image glyph and a sentence of alt text at the foot of every
-            page — Carli's photograph of the kids room, 12 October 2026, shows
+            page — the owner's photograph of the kids room, 12 October 2026, shows
             it. A badge that does not load is a claim nobody can check. Put it
             back the day the host serves it again. */}
       </div>

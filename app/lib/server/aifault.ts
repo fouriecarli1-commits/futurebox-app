@@ -3,7 +3,7 @@
  *
  * ── The bug this fixes ───────────────────────────────────────────────────
  *
- * Carli sent a screenshot of the Make-a-song room. Under "Write the next bit",
+ * The owner sent a screenshot of the Make-a-song room. Under "Write the next bit",
  * where four written ideas belong, the app had printed this:
  *
  *     400 {"type":"error","error":{"type":"invalid_request_error","message":

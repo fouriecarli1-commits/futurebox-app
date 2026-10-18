@@ -3,7 +3,7 @@
 /**
  * Best moments: the picked shot read by its sound and cut into a reel.
  *
- * Carli, 16 October 2026: *"Let AI instantly find and arrange your best
+ * The owner, 16 October 2026: *"Let AI instantly find and arrange your best
  * moments."* Done on the phone, by the reading in `lib/highlights.ts`, so it
  * spends nothing — and what it lays down is ordinary pieces on the clock,
  * every one still trimmable, and Undo puts the long shot back whole.

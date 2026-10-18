@@ -96,7 +96,7 @@ ok(
 
 /* ── And the camera has its own button now ─────────────────────────────
 
-   Carli, 10 September 2026: "elke liedjie [moet] ook die opsie en button het
+   The owner, 10 September 2026: "elke liedjie [moet] ook die opsie en button het
    om ’n film yourself to it".
 
    It was already reachable on every song — through the button above, which

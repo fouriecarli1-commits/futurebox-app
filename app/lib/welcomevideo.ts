@@ -7,7 +7,7 @@
  * file and `if (!source) return null` at the bottom. That was right while the
  * player was the only thing that needed the answer.
  *
- * On 9 October the landing page needed it too. Carli: *"Gaan aan met die
+ * On 9 October the landing page needed it too. The owner: *"Gaan aan met die
  * website se home page"*, and the shape a home page wants at a desk is the
  * words on the left with the thing to look at on the right. But the thing to
  * look at is this player, and this player renders NOTHING when the visitor's

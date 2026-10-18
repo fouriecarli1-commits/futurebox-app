@@ -3,7 +3,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Die een liedjie wat ek in die live room gepost
+ * The owner, 14 September 2026: *"Die een liedjie wat ek in die live room gepost
  * het is hakkerig."* — of a GENERATED song, which matters: that is a few
  * megabytes of mp3, not the thirty-one a three-minute Booth WAV is. So it was
  * never bandwidth, and ruling bandwidth out is what made it findable.
@@ -19,7 +19,7 @@
  *
  * ── And the half of it the first fix got wrong ───────────────────────────
  *
- * Carli, the same day, after that shipped: *"Al die liedjies binne live room
+ * The owner, the same day, after that shipped: *"Al die liedjies binne live room
  * is hakkerig."* All of them, not one — so the fix had changed nothing.
  *
  * The effect had been keyed on the post's id AND on its audio url, on the

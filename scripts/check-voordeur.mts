@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Gaan aan met die website se home page."* After
+ * The owner, 9 October 2026: *"Gaan aan met die website se home page."* After
  * the rooms were given a desk layout, and after she said the thing this file
  * exists for: *"Die website moet nie lyk soos 'n foon app nie."*
  *
@@ -21,7 +21,7 @@
  * different widths: the header and the hero at `max-w-4xl`, the prices and
  * the footer at `max-w-6xl`. So the logo at the top sat 128 pixels inside
  * the price cards below it, and nothing on the page lined up with anything
- * else on it. Carli, repeatedly, and about every screen: *"Kyk dan mooi dat
+ * else on it. The owner, repeatedly, and about every screen: *"Kyk dan mooi dat
  * alles mooi allign en netjies is."* Counted rather than eyeballed, because
  * a fifth container added next month at a fifth width is exactly how this
  * happened the first time.
@@ -83,7 +83,7 @@ ok('  and every section of the page stands in it',
 /* ── 2. One column, in her order ─────────────────────────────────────────
 
    The two-column hero this file used to ask for went on 13 October 2026
-   (7c7efa7), at Carli's word: *"Maak eerder die landing page baie skoon. Die
+   (7c7efa7), at the owner's word: *"Maak eerder die landing page baie skoon. Die
    video moet bo die log in wees. Net onder die login moet die kids room
    bemark word, en dan daarna die pricing."* So the page is one column and
    what is measured is her order — the video, the door, the kids room, the

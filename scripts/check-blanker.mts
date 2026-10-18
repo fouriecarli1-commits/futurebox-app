@@ -8,7 +8,7 @@
  * wrongly wipes is a region NO check can see — and the way that shows up is
  * not an error. It is a green assertion about code that is not there.
  *
- * That is the one failure mode Carli has asked about more than any other: a
+ * That is the one failure mode the owner has asked about more than any other: a
  * check that is green because it measured something adjacent to the real
  * thing. Here the adjacent thing is "the file, minus a hole nobody knows
  * about".

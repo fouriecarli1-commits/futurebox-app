@@ -103,7 +103,7 @@ export default function Channel({
 
   /* ── Which playlist is being renamed ────────────────────────────────────
 
-     Carli, 4 October 2026: *"Wanneer mens 'n new playlist add, dan moet daar
+     The owner, 4 October 2026: *"Wanneer mens 'n new playlist add, dan moet daar
      darem 'n button wees wat sê rename."*
 
      The name has always been editable. It was a bare `<input>` with no border,
@@ -140,7 +140,7 @@ export default function Channel({
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
   /* ── The sleeves that already exist, for the whole grid ─────────────
  
-     Carli, 11 September 2026, testing the live room, which led here.
+     The owner, 11 September 2026, testing the live room, which led here.
  
      A cover cost two credits and was visible on ONE card — the one whose
      button had been pressed — until the tab was closed. `Sleeve` is
@@ -469,7 +469,7 @@ export default function Channel({
 
      This used to answer "nothing" for any song without a stored plan, so a
      song brought in from a file — or written before the plan was kept — had
-     no Lyrics button at all, and Carli's "elke liedjie moet ook daai button
+     no Lyrics button at all, and the owner's "elke liedjie moet ook daai button
      hê" was true of about half of them. `wordsFor` falls back to spreading
      the sheet evenly over the length, and the screen showing it says which
      of the two it is doing. */
@@ -886,7 +886,7 @@ export default function Channel({
 
                     ── And only over the picture ─────────────────────────
 
-                    Carli, 15 September 2026, with a photograph: *"Kyk hoe
+                    The owner, 15 September 2026, with a photograph: *"Kyk hoe
                     snaaks maak die liedjie wanneer ek druk op cover art."*
 
                     Pressing Cover art swaps the picture for the maker — a
@@ -1041,7 +1041,7 @@ export default function Channel({
 
                 {/* ── Filming yourself to it, on every song ────────────────
 
-                    Carli: "elke liedjie [moet] ook die opsie en button het om
+                    The owner: "elke liedjie [moet] ook die opsie en button het om
                     ’n film yourself to it".
 
                     It was already possible on every song — behind the button
@@ -1180,7 +1180,7 @@ export default function Channel({
                     {track.source !== 'upload' && <PostToLive track={track} />}
                     {/* ── Naming a song somebody brought in ─────────────
 
-                        Carli: "Kan die liedjie gerename word, en die artist
+                        The owner: "Kan die liedjie gerename word, en die artist
                         name in gesit word."
 
                         Both, in one panel, because they are one question.
@@ -1342,7 +1342,7 @@ export default function Channel({
           <div className="scroll-mt-20" data-chanshelf="pictures">
       {/* ── Your pictures ───────────────────────────────────
 
-          Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto
+          The owner, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto
           binne die app te bêrge. Daar moet dalk ’n gallery in channel
           gestoor word."*
 
@@ -1443,7 +1443,7 @@ export default function Channel({
           songFile={() => readAudio(lyricsFor.track.id)}
           /* ── Listening again, on this device, for nothing ────────────
 
-             Carli, 5 October 2026: *"By channel moet daar ook nie 'n listen to
+             The owner, 5 October 2026: *"By channel moet daar ook nie 'n listen to
              words wees wat iets kos nie. Partykeer allign die woorde nie met
              die lied nie, dan help dit om te kliek op listen to words."*
 

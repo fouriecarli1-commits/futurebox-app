@@ -1,41 +1,17 @@
 /**
- * The one page in this app that prints an address.
+ * The legal page prints the company's name, and nothing about its people.
  *
- * ── Two states, and both have to be right ────────────────────────────────
+ * Section 43 of the Electronic Communications and Transactions Act lists what
+ * a supplier selling online makes available before somebody transacts. The
+ * owner decided on 18 October 2026 that the registered name of the company
+ * shows and nothing else does — no person's name, email address, telephone
+ * number, registration number or address — and that the further particulars
+ * are given on request through the help page.
  *
- * Section 43 of the Electronic Communications and Transactions Act requires a
- * supplier selling to South Africans to publish its name, legal status,
- * registration number, physical address and telephone number before somebody
- * transacts. Everywhere else this app deliberately prints no address at all,
- * so this page is a single deliberate exception and it is worth checking that
- * it is exactly that: the particulars where the law wants them, and nowhere
- * else.
- *
- * The second state is the one that matters more today. The company is not
- * registered, so there is nothing true to publish — and the page has to say so
- * rather than showing a blank list or a plausible-looking placeholder. A
- * fabricated registration number on a legal page is a false statement about a
- * legal person; an admitted gap while a company is being registered is not.
- *
- * The run also checks the address does not reach the client bundle. It is read
- * on the server and rendered into HTML, which is what lets the page exist
- * without undoing the rule it appears to break.
- */
-/*
- * ── Why this had never run ───────────────────────────────────────────────
- *
- * It was written against a server somebody had left on port 3000 — the fault
- * `serve()` exists to fix and `check:probes` holds every wired probe to — so
- * it was never given a `check:` name and has sat here being run by nobody.
- * Assertions about the one page in this app with a legal duty attached to it.
- *
- * Three states are checked in one run, on three servers. The unset state is
- * what she had before registering; the configured state is what she gets with
- * every variable filled in; and the third is the one she is actually in — a
- * registered company whose owner works from home and does not want her own
- * mobile number on a public page. That third state used to render as "the
- * company is being registered", months after it was, and this is the probe
- * that would have caught it.
+ * Two states, on two servers. Unset: the page admits the gap and invents
+ * nothing. Configured, with EVERY old variable filled in as well: the name is
+ * printed, the page says how to ask for the rest, and not one of the other
+ * values reaches the page or the client bundle.
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
@@ -50,14 +26,9 @@ const FIXTURE = {
   FUTUREBOX_LEGAL_PHONE: '+27 21 555 0100',
   FUTUREBOX_LEGAL_EMAIL: 'toetsdoos@voorbeeld.co.za',
   FUTUREBOX_LEGAL_ADDRESS: '12 Voorbeeldstraat\nKaapstad\n8001',
+  FUTUREBOX_LEGAL_INFORMATION_OFFICER: 'A. Voorbeeld',
+  FUTUREBOX_LEGAL_VAT: '4123456789',
 };
-
-/* The state she is actually likely to be in: registered, addressed, and with
-   no business telephone line yet — because the only number she has is her own
-   mobile and she has said she does not want it published. This used to make
-   the page fall back to "the company is being registered", which is both
-   untrue and the shape a payments reviewer stops on. */
-const NO_PHONE = { ...FIXTURE, FUTUREBOX_LEGAL_PHONE: '' };
 
 const problems = [];
 /* The detail here is written for the failure — "name missing", "one appeared"
@@ -68,17 +39,16 @@ const check = (label, ok, detail = '') => {
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 
-/** One pass over the page, in one of its three states. */
+/** One pass over the page, in one of its two states. */
 async function look(state) {
   const configured = state !== 'unset';
   const HOW = {
     unset: 'with nothing set',
-    full: 'with the particulars set',
-    nophone: 'registered, but with no telephone number to publish',
+    full: 'with every particular set',
   };
   console.log(`\n  ${HOW[state]}:`);
-  const OFFSET = { unset: 0, full: 1, nophone: 2 };
-  const ENV = { unset: {}, full: FIXTURE, nophone: NO_PHONE };
+  const OFFSET = { unset: 0, full: 1 };
+  const ENV = { unset: {}, full: FIXTURE };
   const server = await serve(PORT + OFFSET[state], { env: ENV[state] });
   const b = await chromium.launch(launchOptions());
   const p = await b.newPage({ viewport: { width: 1100, height: 900 } });
@@ -103,36 +73,25 @@ async function look(state) {
 
   if (configured) {
     check('the registered name is printed', /Toetsdoos \(Edms\) Bpk/.test(words), 'name missing');
-    check('the registration number is printed', /2026\/123456\/07/.test(words), 'number missing');
-    check('the address is printed, line by line',
-      /12 Voorbeeldstraat/.test(words) && /Kaapstad/.test(words), 'address missing');
-    check('an address to write to is printed', /toetsdoos@voorbeeld\.co\.za/.test(words), 'email missing');
+    check('and it says the further particulars are given on request, and where to ask',
+      /given on\s+request/.test(words) && /Ask on the help page/.test(words));
     check('and it does not still claim the details are unpublished',
       !/not published yet/.test(words));
-
-    if (state === 'full') {
-      check('a telephone number is printed', /\+27 21 555 0100/.test(words), 'phone missing');
-    } else {
-      /* The point of this state. Four true particulars are published, the one
-         that is missing is named out loud, and no number is invented to fill
-         the row — the failure this page exists to prevent is a plausible
-         particular, not an admitted gap. */
-      check('the registered name is still published without a telephone number',
-        /Toetsdoos \(Edms\) Bpk/.test(words), 'the page went dark over the missing number');
-      check('the telephone row says it is not published, rather than vanishing',
-        /Telephone/.test(words) && /Not published/.test(words), 'no telephone row at all');
-      check('and no number is invented to fill it',
-        !/\+27\s*\d/.test(words), 'a telephone number appeared from somewhere');
-      check('and the reader is sent somewhere that answers',
-        /form on the help page/.test(words));
-    }
+    const printed = [
+      ['the registration number', /2026\/123456\/07/],
+      ['the address', /Voorbeeldstraat|Kaapstad/],
+      ['the telephone number', /\+27\s*21\s*555/],
+      ['the mailbox', /toetsdoos@voorbeeld/],
+      ['a person named as Information Officer', /A\. Voorbeeld/],
+    ].filter(([, look]) => look.test(words)).map(([what]) => what);
+    check('nothing else that was set is printed', printed.length === 0, printed.join(', '));
 
     /* The whole reason this page is a server component. If the address is in a
        JavaScript file, the page has undone the rule it was allowed to break. */
     let inBundle = null;
     for (const r of scripts) {
       const text = await r.text().catch(() => '');
-      if (/12 Voorbeeldstraat|2026\/123456\/07|\+27 21 555 0100|toetsdoos@voorbeeld\.co\.za/.test(text)) {
+      if (/Toetsdoos|Voorbeeldstraat|2026\/123456\/07|\+27 21 555 0100|toetsdoos@voorbeeld\.co\.za/.test(text)) {
         inBundle = r.url().split('/').pop();
         break;
       }
@@ -175,11 +134,10 @@ async function look(state) {
 
 await look('unset');
 await look('full');
-await look('nophone');
 
 if (problems.length) {
   console.error(`\ncheck:legalpage — ${problems.length} problem(s):`);
   problems.forEach((one) => console.error(`  · ${one}`));
   process.exit(1);
 }
-console.log('\ncheck:legalpage — the particulars appear where the law asks, and nowhere else.');
+console.log('\ncheck:legalpage — the company\'s name is printed, the rest is on request, and nothing else that was set reaches the page or the bundle.');

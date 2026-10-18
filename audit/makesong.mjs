@@ -1,7 +1,7 @@
 /**
  * The room this app is for, pressed the way somebody presses it.
  *
- * Two things Carli reported, in Afrikaans, an hour apart:
+ * Two things the owner reported, in Afrikaans, an hour apart:
  *
  *   "By make a song is daar nie 'n lengte keuse vir liedjies nie."
  *   "Die make a song generate glad nie reg nie … net klank het uitgekom."
@@ -207,7 +207,7 @@ try {
   /* ── The song box ───────────────────────────────────────────────────
 
      Since 15 October 2026 the room is one box around the copilot, with the
-     words open under it and the button under those (Carli: "Dan onder
+     words open under it and the button under those (The owner: "Dan onder
      daardie boks kom die woorde uit, en onder die woorde moet die finale
      clear wees 'make the song'"). Nothing folds, so there is no card shape
      to assert here any more — `check:simple` walks the box itself. */
@@ -303,7 +303,7 @@ try {
      exactly that — three checks passed for the wrong reason, and one failed
      because the style it was counting was no longer ours. */
   /* Behind the box's plus since 15 October 2026, under "Upload a song or a
-     photo to start from" — Carli: "by daardie plus kan daar ook 'n opsie wees
+     photo to start from" — the owner: "by daardie plus kan daar ook 'n opsie wees
      om 'n liedjie op te laai om vanaf dit te begin". */
   const openBring = async () => {
     if ((await room.locator('[data-makepicker]').count()) === 0) {
@@ -488,7 +488,7 @@ try {
      of their terms. So the screen carried three sentences saying so, and this
      probe asserted that they were there.
 
-     Carli, on seeing it: "as ons daai funksie van die links nie kan gebruik om
+     The owner, on seeing it: "as ons daai funksie van die links nie kan gebruik om
      na die styl van die liedjie te luister nie, dan moet ons dit uithaal,
      asook die description oor wat die link bar doen." A control that needs a
      paragraph of apology under it is a control that does not work.
@@ -507,7 +507,7 @@ try {
 
   /* ── Behind the plus now ────────────────────────────────────────────
 
-     Carli, 19 September 2026: *"die vyftig beginpunte en foto-kaarte net
+     The owner, 19 September 2026: *"die vyftig beginpunte en foto-kaarte net
      daar is vir wie dit soek"* — and on 15 October 2026 the place they are
      kept became the plus on the song box, as one list with feelings to
      narrow it ("so selfde netjiese lys … vir keuses van gevoel"). */
@@ -542,7 +542,7 @@ try {
 
   /* ── The feeling is asked for, not picked off a wall ────────────────
 
-     Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel wees
+     The owner, 19 September 2026: *"Die emosie goed voel ek moes als deel wees
      van copilot. Die hele room is baie besig. Ook die begeleiding van elke
      sessie."*
 
@@ -576,7 +576,7 @@ try {
     check('  and opens by asking how you feel rather than listing what it can do',
       /how you are feeling|hoe jy voel/i.test(opening),
       `it opened with: ${opening.slice(0, 120)}`);
-    /* Carli, 19 September 2026: the room must also say *"jy kan alles deur
+    /* The owner, 19 September 2026: the room must also say *"jy kan alles deur
        my doen in hierdie kamer, sê net wat jy nodig het, die tema, die tyd,
        die styl, jou stem keuse"* — and say it as well as the feeling
        question, not instead of it. Both halves are asserted, because

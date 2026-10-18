@@ -3,10 +3,10 @@
  *
  * ── The night this is for ────────────────────────────────────────────────
  *
- * Carli sent a photograph of the album art room with eight lines of my own
+ * The owner sent a photograph of the album art room with eight lines of my own
  * explanation rendered across it, in the room's serif, over the artwork:
  *
- *     /* `max-h-full`, not a share of the viewport. Carli: *"Die back
+ *     /* `max-h-full`, not a share of the viewport. The owner: *"Die back
  *     buttons is daar, maar is ook weggesteek."* They were, and it was my
  *     own fix from an hour earlier…
  *

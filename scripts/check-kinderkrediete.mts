@@ -1,7 +1,7 @@
 /**
  * Kids credits: bought on their own, spent only in the kids room.
  *
- * Carli, 14 October 2026: *"In die pricing page moet die kids room ook 'n
+ * The owner, 14 October 2026: *"In die pricing page moet die kids room ook 'n
  * aparte prys hê. Die kids room met sy aparte credits …"* and, on the three
  * packs suggested: *"Prys voorstelle is reg vir kids studio. Moet net nie
  * die family ding sê nie."*

@@ -24,7 +24,7 @@ export interface VideoStyle {
   /**
    * Whose it is: the channel name, or the @handle where there is no name yet.
    *
-   * Carli: "let wel dat die creator van die liedjie se channel naam ook
+   * The owner: "let wel dat die creator van die liedjie se channel naam ook
    * daarop moet verskyn." The clip carried the title and the style and said
    * nothing about who made it, which on somebody else's feed is an anonymous
    * clip — the one thing a snippet exists to stop being.

@@ -3,7 +3,7 @@
  *
  * ── What she saw ─────────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Copilot se suggestions vir generations moet meer
+ * The owner, 10 October 2026: *"Copilot se suggestions vir generations moet meer
  * wees. Tans is daar net een suggestion waarmee hy voorstel om te help."*
  *
  * She was looking at `lib/errands.ts`, which had exactly one errand in it —

@@ -1,7 +1,7 @@
 /**
  * The room this app is for, checked where it actually broke.
  *
- * Carli: "Die make a song generate glad nie reg nie. iets is ernstig fout. Ek
+ * The owner: "Die make a song generate glad nie reg nie. iets is ernstig fout. Ek
  * het nou 'n afrikaanse liedjie probeer generate en net klank het uitgekom."
  *
  * She was right, and the fault was not in the engine or in Afrikaans. A free
@@ -60,7 +60,7 @@ const text = (sung.composition_plan?.chunks ?? []).map((chunk) => chunk.text).jo
 /* ── Respelled, not verbatim, since 9 October 2026 ───────────────
 
    This read `text.includes(line)` and it was right to: the fault it was
-   written for is the one Carli hit on an Afrikaans song — "net klank het
+   written for is the one the owner hit on an Afrikaans song — "net klank het
    uitgekom" — where the words somebody typed were thrown away on the
    server and the room showed lyrics the audio did not have.
 
@@ -128,7 +128,7 @@ check('and "let it decide" adds nothing, which is what it means',
 /* ── 6. The shape of the song, which is what was making them bad ──────── */
 const FOUR_LINES = [{ name: 'Verse', lines: ['one', 'two', 'three', 'four'] }];
 
-/* The exact case Carli paid for: four lines, three minutes. The old rule made
+/* The exact case the owner paid for: four lines, three minutes. The old rule made
    one part of a hundred and twenty seconds holding four lines, and asked the
    model to stretch one verse over two minutes. */
 const long = shapeSong(FOUR_LINES, 180);

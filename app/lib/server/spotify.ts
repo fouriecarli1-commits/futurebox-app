@@ -54,7 +54,7 @@ export interface SpotifyLook {
 /**
  * Spotify's own global chart.
  *
- * Carli, 6 October 2026: *"ek vra vir international playlist nie south
+ * The owner, 6 October 2026: *"ek vra vir international playlist nie south
  * african nie. dit is beter"* — so it is Top 50 Global rather than Top 50
  * South Africa. The reasoning is hers and it is sound: the room already
  * counts what South Africa is playing *here*, which is the chart above this

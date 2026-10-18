@@ -170,7 +170,7 @@ ok('  and the renewal asks for a renewal',
 
 /* ── What is kept when the token comes back ────────────────────────────
 
-   Carli, 11 October 2026, with the tables created and the sign-in going
+   The owner, 11 October 2026, with the tables created and the sign-in going
    through: *"tone3000 werk nogsteeds nie"*.
 
    The handler refused the whole sign-in unless the answer carried a REFRESH

@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, twice. The capability: *"onthou nano banana kan
+ * The owner, 9 October 2026, twice. The capability: *"onthou nano banana kan
  * woorde in foto sit."* Then: *"gaan aan met die advert desk."*
  *
  * The desk wrote adverts and handed them to the video desk or the voice

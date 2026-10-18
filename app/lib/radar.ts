@@ -220,7 +220,7 @@ export async function fetchCreatorState(): Promise<{
 /**
  * What to print on something that leaves the app: the channel name.
  *
- * Carli: "let wel dat die creator van die liedjie se channel naam ook daarop
+ * The owner: "let wel dat die creator van die liedjie se channel naam ook daarop
  * moet verskyn." A clip on somebody else's feed with no name on it is an
  * anonymous clip, which is the one thing a snippet exists to stop being.
  *

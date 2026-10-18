@@ -3,7 +3,7 @@
  *
  * ── What was asked ───────────────────────────────────────────────────────
  *
- * Carli, 20 September 2026:
+ * The owner, 20 September 2026:
  *
  *   *"Die hele app moet dan glad nie toelaat om screenshots te kan neem
  *    nie. Screenshots gaan die kunswerke skade doen. Is daar programme wat

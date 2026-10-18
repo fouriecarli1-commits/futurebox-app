@@ -3,7 +3,7 @@
  *
  * ── The one that shipped ─────────────────────────────────────────────────
  *
- * Carli, 19 September 2026, a photograph of Make a song. Where four written
+ * The owner, 19 September 2026, a photograph of Make a song. Where four written
  * ideas belong, the room had printed a raw Anthropic 400 — the billing
  * sentence, the JSON around it, and our own request_id — in English, in an
  * Afrikaans room, telling her to go and buy credits on an account she has no

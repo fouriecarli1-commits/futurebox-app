@@ -15,6 +15,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { tooMany } from '@/app/lib/server/brake';
@@ -63,6 +64,7 @@ const SYSTEM = [
   '- If the writer wrote in Afrikaans, or any language other than English, answer in that language.',
   '- Four options, genuinely different from each other. Not four rewrites of one idea.',
   `${AFRIKAANS_RULE}`,
+  `${DISCRETION_RULE}`,
 ].join('\n');
 
 function promptFor(body: Body): string {

@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Ek dink hierdie funksie by photo editor moet net
+ * The owner, 11 October 2026: *"Ek dink hierdie funksie by photo editor moet net
  * sê grab, dan moet die objekte en woorde gehighlight word, en dit moet dan
  * rondgeskuif kan word en ge-edit word."*
  *
@@ -73,7 +73,7 @@ export const GRID = 1000;
  * How many things are worth finding in one picture.
  *
  * Twelve things was the ceiling while it found only things. Since 17 October
- * 2026 it reads the writing too — Carli: *"Die text en die objekte moet
+ * 2026 it reads the writing too — the owner: *"Die text en die objekte moet
  * highlight"*, and the phone's own reader was inventing words out of hair —
  * so a poster's lines count as well, and twenty leaves room for both before
  * the boxes overlap on a phone.
@@ -104,7 +104,7 @@ export const ASK = [
 
 /**
  * What to ask for when the whole point is a clean cut-out: only the main
- * subjects, each with its shape. Carli, 17 October 2026, a portrait of a
+ * subjects, each with its shape. The owner, 17 October 2026, a portrait of a
  * woman beside an owl, cut out by the phone's person model with the owl gone:
  * *"Die twee hoof objekte op die prent moes netjies uitgehaal word."*
  */

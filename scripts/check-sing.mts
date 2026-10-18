@@ -4,7 +4,7 @@
  * §9 of `docs/DIENSTE-EN-KOSTE.md` called singing voice conversion the gap
  * between a song made here and somebody's own voice, and the Pro Booth has
  * carried a warning under its "Sing it" button saying the model behind it is
- * built for speech. Carli chose Kits.AI on 7 September 2026 and this is the
+ * built for speech. The owner chose Kits.AI on 7 September 2026 and this is the
  * wiring of it.
  *
  * ── Why this file is half assertions about behaviour ─────────────────────
@@ -101,10 +101,10 @@ ok('and one that is, is kept', safeModelId('1014961') === '1014961');
 ok(
   'the named models list drops anything that is not a number',
   (() => {
-    process.env.KITS_VOICE_MODELS = '1014961=Carli, rubbish=Nope, 22=Koor';
+    process.env.KITS_VOICE_MODELS = '1014961=Lerato, rubbish=Nope, 22=Koor';
     const got = namedModels();
     delete process.env.KITS_VOICE_MODELS;
-    return got.length === 2 && got[0].name === 'Carli' && got[1].id === '22';
+    return got.length === 2 && got[0].name === 'Lerato' && got[1].id === '22';
   })(),
 );
 
@@ -289,7 +289,7 @@ ok('and the key is never in what it answers', !/KITS_API_KEY/.test(setup));
 
 /* The two things the first real run taught it.
 
-   Carli ran the page on 8 September and every real endpoint answered
+   The owner ran the page on 8 September and every real endpoint answered
    `403 {"error":"Free tier users are not allowed to use the api"}`. That is
    not a refused key — it is the key working and the account not paying — and
    it is the exact question the page was built to settle, so it gets its own

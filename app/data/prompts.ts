@@ -3,7 +3,7 @@
  *
  * ── Where these come from and why they matter ────────────────────────────
  *
- * `docs/PACKAGING.md` §4, read off the screenshots Carli sent: a row of cards
+ * `docs/PACKAGING.md` §4, read off the screenshots the owner sent: a row of cards
  * above the feed, each one a sentence and an icon, and the app does the rest.
  * It is called the single best idea in those screenshots and it is, for a
  * reason that is not about design.

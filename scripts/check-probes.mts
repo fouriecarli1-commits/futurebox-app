@@ -381,7 +381,7 @@ ok('serve() refuses to hand back a server that never came up', /throw new Error\
    measuring an app with those rules switched off.
 
    That is not a theoretical gap. It is why three rounds of `check:sharesheet`
-   came back green while Carli was holding a photograph of the share sheet
+   came back green while the owner was holding a photograph of the share sheet
    with its buttons printed on top of each other: the rule that broke it only
    exists on a touchscreen.
 

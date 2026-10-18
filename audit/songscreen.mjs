@@ -88,7 +88,7 @@ try {
 
   /* And the camera has its own, on every song.
 
-     Carli, 10 September 2026: "elke liedjie [moet] ook die opsie en button het
+     The owner, 10 September 2026: "elke liedjie [moet] ook die opsie en button het
      om ’n film yourself to it". It was reachable on every song already —
      through the words button, which says "Lyrics" whenever the song has words,
      and nearly all of them do. Not gated any more, and still hidden: behind a

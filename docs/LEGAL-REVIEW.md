@@ -1,6 +1,6 @@
 # What to put in front of the attorney
 
-Carli's list, 7 October 2026: *"Legal check van app."*
+The owner's list, 7 October 2026: *"Legal check van app."*
 
 This is a handover, not advice. I am not a lawyer and nothing here is legal
 advice — what it is, is the work a lawyer should not have to do at their
@@ -24,10 +24,10 @@ one and where it stands.
 | § | What it asks for | Where it is | Standing |
 |---|---|---|---|
 | 43(1)(a) | Full name and legal status | `/legal`, from `FUTUREBOX_LEGAL_NAME` | **Done** |
-| 43(1)(b) | Physical address and telephone | `/legal` | **Waiting on you** — the address variable is deliberately empty until the CIPC record carries a business address, and the page says so rather than inventing one. Same for the telephone. |
-| 43(1)(c) | Web address and email | `/legal` | **Done** |
+| 43(1)(b) | Physical address and telephone | `/legal`, "Further particulars" | **On request** — the owner's decision, 18 October 2026: nothing about the people behind the company is printed, and the address and a telephone number are sent on request through the help page, before anybody buys. The Act lists them as particulars to make available; whether "on request" satisfies it is a question for the attorney. |
+| 43(1)(c) | Web address and email | `/legal` — the web address, and the help-page form for writing | **Partly** — the web address is printed; an email address is not, by the owner's decision of 18 October 2026, and the form on the help page reaches a person. A question for the attorney. |
 | 43(1)(d) | Membership of any self-regulatory body | — | **Gap.** We belong to none. A line saying so is the honest answer and I have not written it, because "we subscribe to no code" is a statement with legal weight. |
-| 43(1)(e) | Registration number, **names of office bearers**, place of registration | `/legal` has the number | **Gap** — the directors are not named, and the place of registration is not stated. Both are on the CIPC certificate. Note this is the one item that puts a **person's name** on a public page, which is why I have not added it without being told to. |
+| 43(1)(e) | Registration number, **names of office bearers**, place of registration | `/legal`, "Further particulars" | **Gap**, by decision — since 18 October 2026 the registration number is given on request rather than printed, and no person's name is on any page. All three are on the CIPC certificate. |
 | 43(1)(f) | Any code of conduct it subscribes to | — | **Gap**, same as (d). |
 | 43(1)(g) | Sufficient description of the goods | `/legal`, `/terms`, and every room says its own price | **Done** |
 | 43(1)(h) | Full price, including transport, taxes and other fees | `/legal`, the plans screen, and on the button before every press | **Done** |
@@ -155,7 +155,7 @@ quietly stop being true.
 
 ## Added 8 October 2026 — does an AI-generated song attract copyright in South Africa?
 
-Carli sent Google's Lyria terms summary on 8 October 2026. The royalty
+The owner sent Google's Lyria terms summary on 8 October 2026. The royalty
 answer was clean — no royalties, no ownership claim by Google, commercial
 use permitted on the paid API — but it carried a sentence that has nothing
 to do with Google and everything to do with this app:

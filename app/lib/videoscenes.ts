@@ -428,7 +428,7 @@ export function spokenLines(prompt: string): string[] {
  * subtitle defaulted to nothing, and the clip came back with somebody
  * mouthing silence.
  *
- * Carli, 11 September 2026: "die description staan toe reeds in die shot
+ * The owner, 11 September 2026: "die description staan toe reeds in die shot
  * window. Maar wat dit nie in het nie, daar is nie aanhalings vir spoken
  * words nie."
  *

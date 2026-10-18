@@ -2,7 +2,7 @@
  * The words on a film: the subtitle looks, the lower thirds and the new
  * motions, put on a shot and read off the picture.
  *
- * Carli, 16 October 2026, screenshots of a title library — subtitles in a
+ * The owner, 16 October 2026, screenshots of a title library — subtitles in a
  * column of looks, lower thirds left, middle and right, and titles that flip,
  * scale, scramble, spin, glitch and flicker in. All of it lives in the
  * cutting room's Templates, under Subtitles and Motion.
@@ -114,7 +114,12 @@ try {
   await p.waitForTimeout(800);
   const look = await p.locator('[data-editorwordsdrag]').first().evaluate((el) => {
     const s = getComputedStyle(el);
-    return { text: el.textContent, color: s.color, back: s.backgroundColor };
+    /* As rgb, whatever the browser computed: see audit/colour.mjs. */
+    const rgb = (colour) => {
+      const [r, g, b, a] = window.__rgba(colour);
+      return a < 1 ? `rgba(${r}, ${g}, ${b}, ${Math.round(a * 100) / 100})` : `rgb(${r}, ${g}, ${b})`;
+    };
+    return { text: el.textContent, color: rgb(s.color), back: rgb(s.backgroundColor) };
   }).catch(() => null);
   check('  and black on white puts the words on a solid white box',
     Boolean(look && /Subtitle/.test(look.text ?? '') && /rgb\(0, 0, 0\)/.test(look.color) && /rgba?\(2(4[2-9]|5\d), 2(4[2-9]|5\d), 2(4[2-9]|5\d)(, 1)?\)/.test(look.back)),

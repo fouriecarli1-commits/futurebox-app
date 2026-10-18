@@ -3,7 +3,7 @@
  *
  * ── The one that shipped ─────────────────────────────────────────────────
  *
- * Carli, 19 September 2026, a photograph of the Pro Booth with the zoom
+ * The owner, 19 September 2026, a photograph of the Pro Booth with the zoom
  * readout showing:
  *
  *     4\u00d7

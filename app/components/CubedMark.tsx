@@ -3,7 +3,7 @@
  *
  * ── Whose drawing this is ────────────────────────────────────────────────
  *
- * Hers. Carli sent the artwork and said *"Kan jy die nie die logo net so vat
+ * Hers. The owner sent the artwork and said *"Kan jy die nie die logo net so vat
  * nie?"*, then, when the answer to that had been a trace of her line work:
  * *"Ek wil nie jou design gebruik nie. Ek wil my designs gebruik. Ek wil nie
  * hê jy moet dit remake nie."* Four marks of mine came before it and all four
@@ -11,7 +11,7 @@
  *
  * ── Her own pair, one language each ──────────────────────────────────────
  *
- * Carli, 11 October 2026, having checked both files were see-through and
+ * The owner, 11 October 2026, having checked both files were see-through and
  * then: *"Ja, sit dit in die app."*
  *
  * `class-en.png` and `class-af.png` are her files, byte for byte as they
@@ -28,7 +28,7 @@
  *
  * ── And nothing is drawn behind them ─────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Gebruik die transparent weergawe, die logo moenie
+ * The owner, 11 October 2026: *"Gebruik die transparent weergawe, die logo moenie
  * 'n wit agtergrond hê nie."*
  *
  * A panel under a see-through file is the white background she asked not to

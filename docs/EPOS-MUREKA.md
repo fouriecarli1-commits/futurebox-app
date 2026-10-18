@@ -1,6 +1,6 @@
 # Epos aan Mureka — tantieme, hul plafon, en 'n prys vir 2 000 tot 8 000 lede
 
-Carli, 8 Oktober 2026: *"Kan jy my help om vir mureka 'n custom sales epos te
+Die eienaar, 8 Oktober 2026: *"Kan jy my help om vir mureka 'n custom sales epos te
 skryf, wie ons is, die vrae oor ryalties, asook, wat hulle dak is? Ek wil
 groei, maar wil begin met 2000-moontlik 8000 subscribers."*
 

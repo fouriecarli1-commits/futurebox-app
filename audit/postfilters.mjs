@@ -1,7 +1,7 @@
 /**
  * Filters in the photo editor, and its tools shown as pictures.
  *
- * Carli, 16 October 2026: *"Kyk asb ook hoe oulik dit is om die funksies op
+ * The owner, 16 October 2026: *"Kyk asb ook hoe oulik dit is om die funksies op
  * prentjies te wys (onthou mense is visueel). Ek soek ook al daai funksies en
  * ook sulke oulike filters ... Ons foto's en filter prentjies moet net iets
  * anders wees en anders lyk."*
@@ -118,7 +118,7 @@ try {
   check('Adjust shows what the filter did', colour !== null && Number(colour) > 1.05, String(colour));
 
   /* ── Before and after ──
-     Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
+     The owner, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
      wat oor die prent slide om te wys hoe dit gelyk het."* */
   await page.locator('[data-postauto]').click();
   await page.waitForTimeout(400);

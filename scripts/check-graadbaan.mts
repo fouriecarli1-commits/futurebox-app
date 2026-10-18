@@ -3,7 +3,7 @@
  *
  * ── Why this file exists ─────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Ons gaan ook nie meer Kling gebruik nie, die
+ * The owner, 9 October 2026: *"Ons gaan ook nie meer Kling gebruik nie, die
  * video generation deur kling is sleg."*
  *
  * Taking an engine out of a list is one line, and two things can go wrong
@@ -72,7 +72,7 @@ for (const one of RETIRED) {
 
 ok('Kling in particular is retired, because she said so',
   RETIRED.some((one) => one.id === 'kling') && !PROVIDERS.some((one) => one.id === 'kling'),
-  'Carli, 9 October 2026: "Ons gaan ook nie meer Kling gebruik nie, die'
+  'the owner, 9 October 2026: "Ons gaan ook nie meer Kling gebruik nie, die'
   + ' video generation deur kling is sleg." Putting it back is a decision'
   + ' of hers to reverse, not a list to tidy');
 
@@ -192,7 +192,7 @@ for (const one of PROVIDERS) {
   const takes = videoCost(one.grade as Grade, 5) * RAND_PER_CREDIT;
   ok(`  and on ${one.grade} it takes R${takes.toFixed(2)} for the R${costs.toFixed(2)} it spends`,
     takes >= costs * 2,
-    `${(takes / costs).toFixed(1)}x — Carli, 9 October 2026: "ons moet net`
+    `${(takes / costs).toFixed(1)}x — the owner, 9 October 2026: "ons moet net`
     + ' seker maak ons maak ordentlike wins uit elke generation uit". Under'
     + ' twice the supplier price there is nothing left for the platform fee,'
     + ' the storage or a retry');

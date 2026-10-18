@@ -4,7 +4,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Onthou dat die teks 'n kleur keuse ook moet hê, en
+ * The owner, 4 October 2026: *"Onthou dat die teks 'n kleur keuse ook moet hê, en
  * 'n keuse van agtergrond vir woorde, 'n square, 'n square met ronde punte, 'n
  * verfkwas. Die agtergrond moet ook kleur keuse hê. Daar moet 'n goeie variety
  * van kleur keuses wees."*
@@ -280,7 +280,7 @@ ok('the renderer paints the chosen colours rather than the old literals',
   "the box was rgba(0, 0, 0, 0.62) and the text '#ffffff', both written in");
 
 /* Unless a subtitle look asks for a solid box — black on a white box is
-   only readable solid (Carli, 16 October 2026). Absent, it is 62%. */
+   only readable solid (The owner, 16 October 2026). Absent, it is 62%. */
 ok('  and keeps the box see-through at the same 62% unless a style asks for solid',
   /tint\(set\?\.back \?\? '#000000', Math\.max\(0, Math\.min\(1, set\?\.backSolid \?\? 0\.62\)\)\)/.test(render),
   'a chosen colour that becomes an opaque slab has taken the picture away,'

@@ -242,7 +242,7 @@ function RoomPanel({
   const { t } = useLang();
   /* ── A post has its own medium, and a video's is not `audio` ──────────
    *
-   * Carli, 18 September 2026, with a photograph of two video posts in the
+   * The owner, 18 September 2026, with a photograph of two video posts in the
    * room, each wearing "That file is not there any more": *"Video in live
    * room."*
    *
@@ -307,7 +307,7 @@ function RoomPanel({
         </p>
         {/* ── The genre, as a chip rather than as more of the line above ──
 
-            Carli: "wys die liedjie se naam op die liedjie window, die artist
+            The owner: "wys die liedjie se naam op die liedjie window, die artist
             name, en die genre van die liedjie. Dit gaan dit makliker maak vir
             ander users om by mekaar te leer en te hoor watter genre regtig
             werk en mooi klink."
@@ -342,7 +342,7 @@ function RoomPanel({
         )}
         {/* ── Who painted the cover ────────────────────────────────────
 
-            Carli, 20 September 2026: *"Binne live moet die liedjie naam,
+            The owner, 20 September 2026: *"Binne live moet die liedjie naam,
             artist naam, style en dan die kunstenaar se naam en art naam
             appear."* The first three are the three lines above. This is the
             fourth and fifth, and it is last on purpose: the song is what
@@ -497,7 +497,7 @@ function RoomPanel({
 
           ── And WHICH nothing, on a video ───────────────────────────────
 
-          Carli, 21 September 2026: *"Die live se videos wys nogsteeds
+          The owner, 21 September 2026: *"Die live se videos wys nogsteeds
           nie."* The fifth report of this.
 
           The route was taught to say which of the causes it hit and the
@@ -665,7 +665,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
    * the clock, is about sixteen million invocations a month — from a room
    * nobody is looking at.
    *
-   * Carli, planning for five to ten thousand users in the first month, asked
+   * The owner, planning for five to ten thousand users in the first month, asked
    * which plans she needs. This is the answer to a good part of it: a phone
    * that has been put in a pocket, or a tab behind six others, went on asking
    * at full rate for as long as the page existed.
@@ -910,7 +910,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                           /* The genre and the words, which this button did
                              not send and the share sheet in the Library did.
 
-                             Carli, 15 September 2026: *"Die woorde van die
+                             The owner, 15 September 2026: *"Die woorde van die
                              liedjies speel nogsteeds nie in die live room
                              nie."* Reported twice, and the second time was
                              this: a song's words and its genre live on its
@@ -948,7 +948,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
 
       {/* ── A video in the room ──────────────────────────────────────────
 
-          Carli: *"Music videos en music shorts moet ook na live toe kan post.
+          The owner: *"Music videos en music shorts moet ook na live toe kan post.
           Ek sien huidiglik dat my videos nie 'n opsie het om na live toe te
           kan post nie."*
 
@@ -1087,7 +1087,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       <main className="space-y-4 min-w-0" data-livefeed>
       {/* ── Who is live right now ───────────────────────────────────────
 
-          Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as
+          The owner, 24 September 2026: *"Daai open chat moenie kan werk nie, as
           dit werk moet daar net tiktok live links gedeel word."*
 
           It was a chat box: five hundred characters of anything, screened by

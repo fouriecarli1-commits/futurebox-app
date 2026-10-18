@@ -3,7 +3,7 @@
  *
  * ── Why these five, and why none of them is downloaded ───────────────────
  *
- * Carli, 30 September 2026: *"Die teks moet font opsies hê."*
+ * The owner, 30 September 2026: *"Die teks moet font opsies hê."*
  *
  * Every one of these is a stack of faces the device already has. That is the
  * whole design, and it is the same decision as the looks: `stitch.ts` paints
@@ -97,7 +97,7 @@ export const FONTS: readonly VideoFont[] = [
   },
   /* ── The photo room's fifteen, 15 October 2026 ─────────────────────────
 
-     Carli: *"Die gedagte is ook om al hoe meer uit te brei oor tyd, meer text
+     The owner: *"Die gedagte is ook om al hoe meer uit te brei oor tyd, meer text
      possibilities, meer templates."* The photo room had fifteen real faces
      and this room had the five above, and a text style carried over from
      there was folded down to the nearest of five — a Script line came out

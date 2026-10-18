@@ -1,7 +1,7 @@
 /**
  * Style match: the photograph, or the part of it painted, made over in a style.
  *
- * Carli, 17 October 2026, with screenshots of another app's style picker — a
+ * The owner, 17 October 2026, with screenshots of another app's style picker — a
  * row of sample tiles, one subject made in each style, under tabs for
  * characters, digital media, physical media and craft: *"By magic moet daar
  * ook van hierdie filters wees … ons moet al daai presiese opsies en filters

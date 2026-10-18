@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
+ * The owner, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
  * saam met die liedjie."* As standard, with the song.
  *
  * Until now a cover was a button to be found after the fact, which is why

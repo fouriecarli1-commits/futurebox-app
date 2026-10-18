@@ -1,7 +1,7 @@
 /**
  * Asking and setting a child's allowance, from the browser.
  *
- * Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+ * The owner, 9 October 2026: *"Let the parent give an allowance on an opening
  * page."* This is the page's half of that: three calls to `/api/kids`, which
  * is where the account is read off the token and never off the body.
  *
@@ -51,7 +51,7 @@ export interface KidsState {
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 12 October 2026: *"Wel die kids room gaan nie verder as die parental
+ * The owner, 12 October 2026: *"Wel die kids room gaan nie verder as die parental
  * page nie."* Every call here used to answer `null` for four different
  * things — signed out, a network blip, a 4xx with a sentence in it, a 503 —
  * and the door swallowed the null and did nothing. A parent pressing "20

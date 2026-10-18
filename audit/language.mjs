@@ -29,7 +29,7 @@ import { launchOptions, serve } from './where.mjs';
    of the time — the same shape as every "check that stopped checking" this
    codebase keeps finding.
  
-   Brought back because the thing it guards broke twice in front of Carli, in
+   Brought back because the thing it guards broke twice in front of the owner, in
    both directions, and both times the code was reasoned about rather than
    run. */
 const PORT = process.argv[2] || '3018';
@@ -249,7 +249,7 @@ async function chooseAfrikaans(p) {
 
 // ── Four: the account overrules a guess, and says so ─────────────────────
 /*
-   Carli, 9 September 2026: "Wanneer ek vanuit die afrikaanse skerm in log,
+   The owner, 9 September 2026: "Wanneer ek vanuit die afrikaanse skerm in log,
    spring hy na die engels toe wanneer mens in is."
 
    The switch is the rule working — an Afrikaans page on an Afrikaans phone is
@@ -324,7 +324,7 @@ async function chooseAfrikaans(p) {
      This scene used to assert the opposite, from the months when signing in
      did not consult the account at all. That rule left somebody arriving
      signed out — a fresh browsing context, which is what a phone hands you —
-     with the account never asked and the locale deciding. Carli's `/taal`
+     with the account never asked and the locale deciding. The owner's `/taal`
      screenshot is that state: four empties and a guess.
 
      The account answers again now, and it can only ever be replacing a
@@ -343,7 +343,7 @@ async function chooseAfrikaans(p) {
 
 // ── Five: the same rule on a phone, and whether she is told ──────────────
 /*
-   Carli, 9 September 2026: "Op my foon log die afrikaans steeds in in engels.
+   The owner, 9 September 2026: "Op my foon log die afrikaans steeds in in engels.
    Maar op die rekenaar se login sien ek dit werk reg."
 
    The first theory was storage: phones lose it, laptops do not. That theory is
@@ -473,7 +473,7 @@ async function chooseAfrikaans(p) {
 
 // ── Six: her own words, and the reload that was losing them ──────────────
 /*
-   Carli, after three reports and two wrong fixes: "By die inteken blad kan jy
+   The owner, after three reports and two wrong fixes: "By die inteken blad kan jy
    jou taal kies. As ek afrikaans kies, dan moet dit afrikaans in log. As ek
    engels kies moet dit in engels in log."
 

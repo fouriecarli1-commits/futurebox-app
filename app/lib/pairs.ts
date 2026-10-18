@@ -5,7 +5,7 @@
  *
  * ── What this is instead of ──────────────────────────────────────────────
  *
- * Carli asked for every create-room to be duplicated for two people. Put to
+ * The owner asked for every create-room to be duplicated for two people. Put to
  * her, she chose the version that is not nine copies: *"dieselfde kamer, in
  * 'n paar-modus"*. The rooms stay one room each. A pair is a row saying
  * which two people, which room, and which of them may act — and the room

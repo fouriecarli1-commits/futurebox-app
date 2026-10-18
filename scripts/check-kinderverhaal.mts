@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
+ * The owner, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
  * kamer."*
  *
  * ── The four things that go wrong without saying so ──────────────────────

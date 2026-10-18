@@ -1,7 +1,7 @@
 /**
  * Ask the copilot what to change about the mix, and get changes back.
  *
- * Carli, 14 September 2026: *"AI icon (Copilot pop op en vra dat persoon 'n
+ * The owner, 14 September 2026: *"AI icon (Copilot pop op en vra dat persoon 'n
  * mixing voorstel en copilot kan die mixing verander volgens die vraag en
  * voorstel)"*
  *
@@ -31,6 +31,7 @@ import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { tooMany } from '@/app/lib/server/brake';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { planMix, MOST_MOVES, type LaneNow } from '@/app/lib/mixplan';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
@@ -77,6 +78,7 @@ const SYSTEM = [
   'Only switch an effect on if they asked for something it does. Do not put a reverb on everything.',
   'If what they asked for cannot be done from the desk — a bad take, a wrong note, a room recording — say so plainly and return no moves. Advice you cannot act on is better than a fader moved for the sake of it.',
   `- ${AFRIKAANS_RULE}`,
+  `- ${DISCRETION_RULE}`,
 ].join('\n');
 
 interface Body {

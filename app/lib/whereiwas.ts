@@ -5,12 +5,12 @@
  *
  * ── What happened, twice ─────────────────────────────────────────────────
  *
- * Carli, 9 September 2026, about the Pro Booth: *"toe ek terug swipe of back
+ * The owner, 9 September 2026, about the Pro Booth: *"toe ek terug swipe of back
  * druk, dan gooi hy mens heeltemal uit na die home screen toe en jy verloor
  * jou hele projek."* That became `lib/keepsession.ts`, and the booth's takes
  * have survived leaving the room ever since.
  *
- * Carli, 30 September 2026, about the app: *"wanneer ek die app minimize en
+ * The owner, 30 September 2026, about the app: *"wanneer ek die app minimize en
  * weer terug gaan … Hy gooi jou heeltemal uit en vergeet waarmee hy besig
  * was."*
  *

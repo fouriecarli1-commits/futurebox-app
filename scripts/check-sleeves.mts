@@ -3,7 +3,7 @@
  *
  * ── What this found the day it was written ───────────────────────────────
  *
- * Carli, 11 September 2026, testing: "As iemand op die live post… en dan
+ * The owner, 11 September 2026, testing: "As iemand op die live post… en dan
  * verander jy eers later die cover page van die liedjie, verander die cover
  * page dan op die live channel ook?"
  *

@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"dat dit AI integrated is en die masjien
+ * The owner, 8 October 2026: *"dat dit AI integrated is en die masjien
  * identifiseer self objekte en text wat dan highlight en dan kan die klient
  * op die objekte of text click wat hulle graag wil grab, rondskuif, of
  * delete."*
@@ -86,7 +86,7 @@ ok('a picture of no size gives nothing rather than dividing by it',
 {
   const picks = picksFrom([
     line('Groot vrae. Klein uil.', 100, 50, 400, 40, 88),
-    /* Carli's portrait, 17 October 2026: texture read as letters. */
+    /* The owner's portrait, 17 October 2026: texture read as letters. */
     line('LA / = Cgm RN /', 100, 150, 300, 30, 71),
     line('db <a ; A A)', 100, 200, 300, 30, 64),
     line('Fou', 100, 300, 200, 30, 31),
@@ -238,7 +238,7 @@ ok('  and a reading with no blocks still answers with its text',
 
 /* ── Lifted as words she can actually work with ────────────────────────
 
-   Carli, 8 October 2026: *"Find the words kry die woorde, maar van daar af
+   The owner, 8 October 2026: *"Find the words kry die woorde, maar van daar af
    moet mens die woorde kan edit en rond skuif, of delete."*
 
    All three already existed on the Words bench — a box to retype, a handle

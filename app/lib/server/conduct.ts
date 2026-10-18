@@ -3,7 +3,7 @@
  *
  * ── What this is for ─────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026, asking whether fair social usage could be tracked:
+ * The owner, 11 October 2026, asking whether fair social usage could be tracked:
  * *"ons moet 'n afsny punte hê."* A cut-off needs a number, and there is no
  * number. This makes one over thirty days, and then she sets the line.
  *

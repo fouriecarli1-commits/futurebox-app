@@ -3,7 +3,7 @@
  *
  * ── The gap this fills ───────────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Die advert se copilot skryf nie die shots in
+ * The owner, 21 September 2026: *"Die advert se copilot skryf nie die shots in
  * die volgende kamer nie."*
  *
  * The third time she has reported a version of this, and each earlier time
@@ -206,7 +206,7 @@ try {
 
   /* ── The second half: the button the copilot could not press ──────────
 
-     Carli, 21 September 2026: *"Die advert se copilot skryf nie die shots
+     The owner, 21 September 2026: *"Die advert se copilot skryf nie die shots
      in die volgende kamer nie."*
 
      Above, the copilot wrote a shot of its own and it arrived — so the

@@ -1,6 +1,6 @@
 # Pryse en krediete, van vooraf — met video in
 
-Carli, 8 September 2026: *"gee my 'n nuwe voorstel ... dink heeltemal van vooraf
+The owner, 8 September 2026: *"gee my 'n nuwe voorstel ... dink heeltemal van vooraf
 oor pryse en krediete"*, en toe: *"onthou videos is ook deel van alles en dit
 vat geweldig baie meer krediete. huidiglik lyk jou voorstel nog soos niks
 sonder krediete want videos moet nog by kom."*
@@ -24,7 +24,7 @@ Oktober 2026, toe Antigravity (R109,99) bygekom het.*
 `/api/dub` gebruik dit. Teen Maker se effektiewe R1,24 'n krediet is dit
 **R18,60 per minuut gevra**.
 
-ElevenLabs se eie prysbladsy — die een wat Carli gestuur het — sê 450 minute
+ElevenLabs se eie prysbladsy — die een wat die eienaar gestuur het — sê 450 minute
 oorklanking v2 is $990. Op Business met BTW is dit **R40,48 per minuut betaal**.
 
 > **Elke minuut wat oorgeklank word, kos R21,88 uit haar sak.**

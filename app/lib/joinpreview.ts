@@ -1,7 +1,7 @@
 /**
  * The little moving picture beside each transition's name.
  *
- * Carli's screenshots show a picture by every transition. These
+ * The owner's screenshots show a picture by every transition. These
  * are drawn by `paintJoin` itself, over two sample frames — a teal sky with a
  * sun leaving, an orange evening with a mountain arriving — so the picture in
  * the list is the transition, not an illustration of it.

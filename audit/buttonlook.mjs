@@ -1,7 +1,7 @@
 /**
  * Every button has to look like a button.
  *
- * Carli: "Die button, made here before is amper onsienbaar want dit lyk nie
+ * The owner: "Die button, made here before is amper onsienbaar want dit lyk nie
  *  soos 'n button."
  *
  * She reported one. `ShareRow`'s own trigger — the single control that gets a

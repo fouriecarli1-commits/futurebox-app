@@ -75,7 +75,7 @@ for (const one of reserved) {
    something `position: fixed`, which is not in the flow and so is not moved
    by anybody's padding — it needs the number on its own `bottom`.
 
-   Carli, 18 September 2026, with a photograph of the "Want a video for this
+   The owner, 18 September 2026, with a photograph of the "Want a video for this
    one?" card: *"daai pop up window is half uit die prent."* On a 390-pixel
    phone its bottom measured 820 against the bar's top at 786, so 34 pixels
    of it — the whole button row — sat under a bar painted at z-95 over its

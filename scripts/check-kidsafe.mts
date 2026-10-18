@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Dalk 'n kindervriendelike weergawe."*
+ * The owner's list, 7 October 2026: *"Dalk 'n kindervriendelike weergawe."*
  * Maybe a child-friendly version.
  *
  * The obvious build is a switch that hides the rooms a child should not be
@@ -170,7 +170,7 @@ console.log('');
 /* ── 3. The figures the write-up rests on ───────────────────────────── */
 /* Named rather than counted, so a room that becomes free and a room that
    stops being free both fail rather than cancelling out. */
-/* 13 October 2026: the album art room left this list. Carli: *"Ek dink album
+/* 13 October 2026: the album art room left this list. The owner: *"Ek dink album
    art moet ons die keuse gee R280 cash, of ons moet krediet in dieselfde
    waarde uitwerk"* — a sleeve can now be bought with credits through
    `/api/artmarket`, and the room's AI tab makes pictures for credits, so it
@@ -217,7 +217,7 @@ ok('two rooms cannot spend a credit at all',
    at length, what must NOT, and a four-second clip comes back that loops.
    It is the video route, so it is the video price.
 
-   Carli asked for it in those words:
+   The owner asked for it in those words:
 
      *"Ek hou nogal van die funksie Image-to-Video: Transform static images
      into videos. Ek wonder ook of google se modelle net bietjie motion kan
@@ -229,7 +229,7 @@ ok('two rooms cannot spend a credit at all',
    the FOURTH paid door in this room reddens too. */
 /* ── And the fourth door, decided out loud on 11 October 2026 ──────────
  
-   Carli: *"dan moet die objekte en woorde gehighlight word."* And when the
+   The owner: *"dan moet die objekte en woorde gehighlight word."* And when the
    version that runs on the phone was offered as the cheap one: *"Niks is
    gratis."* So finding the things in a picture asks Gemini and takes two
    credits, and this line reddened exactly as the note above says it
@@ -240,17 +240,17 @@ ok('two rooms cannot spend a credit at all',
    left alone in, and the press says its price before it is pressed. The
    rule stays as it is — the FIFTH paid door reddens too. */
 /* ── The fifth, decided out loud on 17 October 2026 ───────────────────
-   Carli: *"Wat cool sal wees as dit AI verstelbaar is dat data ingevoer kan
+   The owner: *"Wat cool sal wees as dit AI verstelbaar is dat data ingevoer kan
    word en AI die data in die grafiek verstel."* A chart's numbers set by
    the AI from her words: four credits, its price on its button. Nothing
    about a child changes — the photo editor is still not a room a child is
    left alone in — and a SIXTH paid door reddens this line again. */
 /* ── The sixth, decided out loud on 17 October 2026 ──────────────────
-   Carli: *"Ek hou van daai vector illustration."* The vector studio opens
+   The owner: *"Ek hou van daai vector illustration."* The vector studio opens
    over the photo editor, and its AI draws a vector picture from a sentence
    for six credits, its price on its button; the sentence passes the same
    screen as every other picture prompt. A SEVENTH paid door reddens this. */
-/* ── The seventh, Carli's own words, 17 October 2026 ─────────────────
+/* ── The seventh, the owner's own words, 17 October 2026 ─────────────────
    *"SVG PNG ook 5 krediete."* A vector drawing leaving the device as a file
    is charged like a post leaving it, once per drawing. An EIGHTH paid door
    reddens this. */

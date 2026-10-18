@@ -143,7 +143,7 @@ export default function Greeting({
     let live = true;
     /* The songs and the history are on this device and answer at once; the
        name and the picture are a round trip. Both are set together so the
-       greeting never renders as "Hello!" and then jumps to "Hello, Carli!" —
+       greeting never renders as "Hello!" and then jumps to "Hello, Lerato!" —
        a name that arrives late reads worse than one that arrives whole. */
     void (async () => {
       /* Both at once. The account's counts are what make this follow somebody
@@ -240,7 +240,7 @@ export default function Greeting({
       <button
         type="button"
         onClick={() => onGo(id)}
-        /* Light, transparent green, with a real edge on it. Carli, 13
+        /* Light, transparent green, with a real edge on it. The owner, 13
            September 2026: "Die buttons daar soos make a song, booth ens. moet
            'n ligte transparent groen button he, maar weereens met definition,
            en classy so dat dit lyk soos 'n knoppie."
@@ -260,7 +260,7 @@ export default function Greeting({
         </span>
         <span className="min-w-0 flex-1">
           {/* Wraps. It was `truncate`, and two rooms out of eleven had names
-              longer than half a 390-pixel screen: Carli's photograph shows
+              longer than half a 390-pixel screen: the owner's photograph shows
               "Sound trai…" and "Make a so…" on a door whose whole job is to
               say what each room is.
 
@@ -274,7 +274,7 @@ export default function Greeting({
               Wrapping happens between WORDS, and Afrikaans builds compounds:
               `Videolessenaar` is one fourteen-letter word with nowhere to
               break, so it did not wrap — it ran ten pixels out of the card,
-              which is what Carli photographed. English never showed it
+              which is what the owner photographed. English never showed it
               because "Video desk" is two words.
  
               `break-words` breaks a word only when it has to, so nothing
@@ -383,7 +383,7 @@ export default function Greeting({
       </div>
 
 
-      {/* The kids room has no door here. Carli, 14 October 2026: "Die kids
+      {/* The kids room has no door here. The owner, 14 October 2026: "Die kids
           room met sy aparte credits moet net van die welcoming page af
           geaccess kan word. Dit moenie binne die app geaccess kan word nie."
           Its one door is the banner on the signed-out welcome page. */}
@@ -453,7 +453,7 @@ export default function Greeting({
           that it can be cleared. All of it true, and none of it wanted on
           this screen.
 
-          Carli, 14 September 2026, with a photograph of it: "Haal daai fyn
+          The owner, 14 September 2026, with a photograph of it: "Haal daai fyn
           skrif uit op die make a song room." It sat under the doors as six
           lines of grey type on the one screen that is supposed to be a set
           of choices, and it read as terms rather than as an answer.

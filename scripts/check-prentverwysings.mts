@@ -10,7 +10,7 @@
  * the same child on page four as on page one, put my logo on this poster,
  * make this look like that.
  *
- * Carli, 9 October 2026: *"al die spesiale funksies van google moet ook daar
+ * The owner, 9 October 2026: *"al die spesiale funksies van google moet ook daar
  * in wees."* This was the largest one missing, and it was missing by a line.
  *
  * ── What can be got wrong here, which is why this file exists ────────────

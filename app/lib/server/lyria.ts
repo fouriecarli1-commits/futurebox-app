@@ -53,7 +53,7 @@ export function audioIn(body: unknown): { base64: string; under: string } | null
   if (!top) return null;
   /* ── `outputs`, and the row that calls itself audio ────────────────
  
-     Measured, at last. Carli's own Model Garden page, 9 October 2026:
+     Measured, at last. The owner's own Model Garden page, 9 October 2026:
  
        { "status": "completed",
          "outputs": [ { "text": "LYRICS", "type": "text" },

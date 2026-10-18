@@ -88,7 +88,7 @@ if (process.env.PROBE === '1') pageExtensions.push('probe.tsx');
 /** @type {import('next').NextConfig} */
 /* ── Which build is on the phone ──────────────────────────────────────────
  *
- * Carli reported the same five faults three times. Two were fixed and pushed
+ * The owner reported the same five faults three times. Two were fixed and pushed
  * between the first report and the third, and neither of us could tell
  * whether what she was holding contained the fix — so a repeat could mean the
  * fix failed, or that her phone still had yesterday's app, and those need

@@ -122,7 +122,7 @@ export default function Account({
   const [store, setStore] = useState<{ used: number; quota: number } | null>(null);
   /**
    * And what this member keeps in the cloud, against what the plan holds —
-   * Carli, 16 October 2026: 1 GB on Free, 10 on Maker, 50 on Studio, 200 on
+   * The owner, 16 October 2026: 1 GB on Free, 10 on Maker, 50 on Studio, 200 on
    * Label. Counted by the database (`supabase/berging.sql`), so it is the
    * same number the limit itself is held to.
    */
@@ -199,7 +199,7 @@ export default function Account({
   const linkRow = 'min-h-[44px] rounded-xl px-4 py-3 flex items-center gap-3 text-left text-zinc-300 hover:text-white';
 
   /* ── Google's profile page, 13 October 2026 ──────────────────────────
-     Carli: *"Die You gedeelte van my eie profile lyk ook nie soos ek vir
+     The owner: *"Die You gedeelte van my eie profile lyk ook nie soos ek vir
      jou gegee het nie."* It had the page's banner and wallet in the app's
      own grey sheet, and the rest of the page was not there. Now it is the
      page: the obsidian floor, a control bar with the credits and a refill

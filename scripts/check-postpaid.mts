@@ -3,7 +3,7 @@
  *
  * ── The decision this protects ───────────────────────────────────────────
  *
- * Carli, 6 October 2026, asked whether the image tools needed a watermark:
+ * The owner, 6 October 2026, asked whether the image tools needed a watermark:
  *
  *   "Onthou dat alles wat ons bied krediete kos, elke keer wanneer iets
  *    afgelaai word kos dit krediete, so 'n watermerk sal nie nodig wees
@@ -87,7 +87,7 @@ const INSIDE: Readonly<Record<string, string>> = {
     + ' page: no anchor, and nothing anybody can save from',
   /* ── The shelf, added 8 October 2026 ──────────────────────────
  
-     Carli: *"Daar moet ook ’n opsie wees om ’n foto binne die app te
+     The owner: *"Daar moet ook ’n opsie wees om ’n foto binne die app te
      bêrge."* `keepInApp` draws the picture and writes it into
      `lib/assets.ts`, which is two more makers — and this rule caught both
      within the minute, which is what it is for.
@@ -109,7 +109,7 @@ const INSIDE: Readonly<Record<string, string>> = {
     + ' `check:shelf`',
   /* ── The picture on its way to be looked at, 11 October 2026 ──
  
-     Carli asked for the things in a photograph to be found so one can be
+     The owner asked for the things in a photograph to be found so one can be
      lifted out, and that means sending the picture to our own route. Its
      canvas is `looked` rather than `sheet` for the reason the shelf's is
      `shelved`: this list matches on the name in front of the dot, so
@@ -251,7 +251,7 @@ ok('the preview is drawn smaller than the frame it stands for',
   'right-click on a canvas offers "Save image as…" and hands over the exact'
   + ' file — the preview being the finished picture is a free road out');
 
-/* `draw(sheet, false, scale)` since 7 October: Carli asked for a choice of
+/* `draw(sheet, false, scale)` since 7 October: the owner asked for a choice of
    size on the way out — *"Ook die formaat van export?"* — so the un-guided
    draw takes a multiplier. The flag that separates preview from file is still
    `guides`, which is what this rule is about; the third argument only says
@@ -277,7 +277,7 @@ ok(`  and the price is ${CREDITS.postOut} credits, not nothing`, CREDITS.postOut
 
 /* ── And nothing ELSE in the photo flow can write a file ───────────────
 
-   Carli, 8 October 2026: *"Die photo editor save ook fotos op 'n mens se
+   The owner, 8 October 2026: *"Die photo editor save ook fotos op 'n mens se
    foon sonder dat mens die export gedruk het."*
 
    Everything above holds `PostStudio.tsx` to one way out, behind the charge.

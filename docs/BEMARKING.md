@@ -1,6 +1,6 @@
 # Bemarkingsmateriaal
 
-Jou lys, 7 Oktober 2026: *"Bemarkingsmateriaal"* en *"Soft launch aan Anré se
+Jou lys, 7 Oktober 2026: *"Bemarkingsmateriaal"* en *"Soft launch aan [naam] se
 mense"*.
 
 Alles hieronder is in Afrikaans, want die mense vir wie die sagte

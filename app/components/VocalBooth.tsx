@@ -689,7 +689,7 @@ export default function VocalBooth({
   }, [t]);
 
   /* ── Listening to the song before the first take ───────────────────
-     Carli, 14 October 2026: *"Die masjien gaan outomaties altyd na 'n
+     The owner, 14 October 2026: *"Die masjien gaan outomaties altyd na 'n
      liedjie moet luister om die woorde reg te kry, so ons moet daai
      krediete outomaties hef wanneer hulle op die record knoppie druk."*
      So the press on record reads the words off the song first when that has
@@ -761,7 +761,7 @@ export default function VocalBooth({
 
   /* ── Holding a take, and picking it up again ─────────────────────────
 
-     Carli asked for a pause in the slim dock, and the room did not have one:
+     The owner asked for a pause in the slim dock, and the room did not have one:
      the take could only be finished. `FollowWords` got one in September for
      the same reason — *"Jy kan nie pause nie."* — and this room is where
      somebody actually sings a whole song.
@@ -953,7 +953,7 @@ export default function VocalBooth({
 
   /* ── Keeping a take is paid, by the minute ─────────────────────────────
 
-     Carli, 13 October 2026: *"Niks is verniet nie, ons is juis hier om geld
+     The owner, 13 October 2026: *"Niks is verniet nie, ons is juis hier om geld
      te maak … Vir al op plekke soos photo editor, video editor en
      probooth."* Until then this was the one door in the booth a finished
      song left through for nothing: a take mixed over the backing and kept
@@ -1143,7 +1143,7 @@ export default function VocalBooth({
 
   /* ── The whole lyric, as a sheet ──────────────────────────────────────
  
-     Carli, 10 October 2026: *"die liedjie se woord moet ook op 'n button
+     The owner, 10 October 2026: *"die liedjie se woord moet ook op 'n button
      beskikbaar wees, waar die hele liedjie se woorde kan op pop vir iemand
      wat so wil record en die woorde in die geheel wil sien."*
  
@@ -1165,7 +1165,7 @@ export default function VocalBooth({
    *
    * The full width of whatever column it is in, 52 tall, a border and a
    * highlight along the top edge so it has a rim rather than being a patch of
-   * flat colour. Carli asked for buttons that "definisie hê en lyk soos 'n
+   * flat colour. The owner asked for buttons that "definisie hê en lyk soos 'n
    * button wat uit staan"; a class rather than five sets of padding is how
    * that stays true of the sixth one somebody adds.
    */
@@ -1206,7 +1206,7 @@ export default function VocalBooth({
        until `check:boothwalk` was taught to ask. */
     /* ── Black with a blue line, like the room it belongs to ───────────
 
-       Carli, 15 September 2026: *"Dan moet die volgende page ook donker wees
+       The owner, 15 September 2026: *"Dan moet die volgende page ook donker wees
        en 'n netjies uitleg wees van die recording."*
 
        It was written as a dark room and it was not one. Every surface in here
@@ -1224,7 +1224,7 @@ export default function VocalBooth({
         <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-emerald-600 via-emerald-400 to-cyan-400 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
         {/* Out of the room, and it says so.
 
-            Carli: "the booth en the pro booth het nie 'n back knoppie nie."
+            The owner: "the booth en the pro booth het nie 'n back knoppie nie."
             There was a way out — a bare grey cross in the top right — and it
             was not a button by this app's own rule: no box, no word, the
             lightest grey on the screen, in the corner a thumb reaches last.
@@ -1242,7 +1242,7 @@ export default function VocalBooth({
           {t('booth.back', 'Back')}
         </button>
         {/* ── Google's ProBooth bar ──────────────────────────────────────
-            Carli, 13 and 14 October 2026: the booth *"lyk oud en nie soos ek
+            The owner, 13 and 14 October 2026: the booth *"lyk oud en nie soos ek
             voorgestel het nie"*, with Google's "ProBooth DAW & Voice
             Recording Studio" page as the picture of it. Its top bar is the
             mark, the room's badge and the song; then a transport pill with
@@ -1332,7 +1332,7 @@ export default function VocalBooth({
           singing actually asks — am I on the note — and whether the microphone
           is hearing anything at all.
 
-          Carli, holding the phone: "dit vat mens nie na 'n recording studio
+          The owner, holding the phone: "dit vat mens nie na 'n recording studio
           toe wat die liedjie se woorde wys, of enigsins 'n klank baan wys of
           dalk 'n note balk dat mens kan sien of mens op noot sing nie."
 
@@ -1468,7 +1468,7 @@ export default function VocalBooth({
 
           ── And behind a button ─────────────────────────────────────────
 
-          Carli, 15 September 2026: *"Haal daai gedeelte uit, wat you sang.
+          The owner, 15 September 2026: *"Haal daai gedeelte uit, wat you sang.
           Dit kan dalk iewers beskikbaar wees in 'n funksie knoppie waarop 'n
           mens druk om dit te sien."*
 
@@ -1601,7 +1601,7 @@ export default function VocalBooth({
             </button>
             {/* ── Listen to the words, again, for nothing ──────────────
 
-                Carli, 5 October 2026: *"Probooth moet ook button hê, listen to
+                The owner, 5 October 2026: *"Probooth moet ook button hê, listen to
                 the words (of is dit reeds binne recording?)"*
 
                 It was already inside. The booth measures where the singing
@@ -1678,7 +1678,7 @@ export default function VocalBooth({
             moving the words about in time fixes a word that is not there. */}
         {/* ── One row, and the paragraph behind the mark ──────────────────
 
-            Carli, 17 September 2026: *"Ek dink daai read the words of the
+            The owner, 17 September 2026: *"Ek dink daai read the words of the
             song met 2 credits moet net 'n button wees en vat die
             verduideliking weg, dan sal die recording room baie meer spasie
             hê en alles nie so rond hop nie, die woorde gaan dan ook meer
@@ -1775,7 +1775,7 @@ export default function VocalBooth({
               </button>
               {/* ── Why it is dark, said rather than left to be guessed ────
 
-                  Carli, 10 October 2026: *"by probooth se sound recording is
+                  The owner, 10 October 2026: *"by probooth se sound recording is
                   die button donker en nie beskikbaar nie wat sê listen to
                   songs words."*
 
@@ -1801,7 +1801,7 @@ export default function VocalBooth({
           )}
           {/* ── The whole lyric, free, and available while recording ────
 
-              Carli, 10 October 2026: *"die liedjie se woord moet ook op 'n
+              The owner, 10 October 2026: *"die liedjie se woord moet ook op 'n
               button beskikbaar wees, waar die hele liedjie se woorde kan op
               pop vir iemand wat so wil record en die woorde in die geheel
               wil sien."*
@@ -1828,7 +1828,7 @@ export default function VocalBooth({
           )}
         </div>
         {/* ── A word that came out wrong ─────────────────────────────────
-            Carli, 14 October 2026: *"Remember to add a button for Afrikaans
+            The owner, 14 October 2026: *"Remember to add a button for Afrikaans
             words feedback."* The same form Make a song and every reading room
             carry: the word, how it sounded, how it should sound — kept for the
             owner's list that fixes how the voices say Afrikaans. In the booth
@@ -2113,7 +2113,7 @@ export default function VocalBooth({
            to. This had no z-index at all, so it sat in the ordinary flow of
            its stacking context and every element written after it in the JSX
            painted straight over the top — the bar of buttons below it most
-           of all. Carli's photograph: "Keep this take" printed across the
+           of all. The owner's photograph: "Keep this take" printed across the
            Timing fader's explanation, through a panel with a solid
            background and a shadow.
  
@@ -2193,7 +2193,7 @@ export default function VocalBooth({
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
         {/* ── While the microphone is open: nothing but the words ───────
 
-            Carli, 15 September 2026, with a photograph of the room: *"Die
+            The owner, 15 September 2026, with a photograph of the room: *"Die
             spasie is min vir recording. Die oomblik wanneer mens op record
             druk moet daai buttons verdwyn, en dan moet dit eweskielik soos
             binne die probooth net heel onder 'n play, pause, ProBooth button
@@ -2261,7 +2261,7 @@ export default function VocalBooth({
         <>
         {/* ── The controls, every one of them the same bar ─────────────
 
-            Carli, 15 September 2026: *"die buttons daarin moet meer reguit,
+            The owner, 15 September 2026: *"die buttons daarin moet meer reguit,
             horisontaal, dieselfde size op mekaar gestack wees. Dit moet
             definisie hê en lyk soos 'n button wat uit staan."*
 
@@ -2318,7 +2318,7 @@ export default function VocalBooth({
               This said "Pro", which is a name and not a direction. Somebody
               pressed it, landed in a room with a large green Record button and
               no words on screen, and had no way to know what they had left
-              behind — Carli did exactly that, then asked how to get back to
+              behind — the owner did exactly that, then asked how to get back to
               the place where you sing along with the words.
 
               The label says what the room is for and the title says what it

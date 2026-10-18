@@ -1,7 +1,7 @@
 /**
  * The other kind of cover, offered where a cover is being chosen.
  *
- * Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar by
+ * The owner, 22 September 2026: *"Kyk asb in make a song en channel dat daar by
  * cover art 'n opsie is vir real art."*
  *
  * ── What is already held elsewhere, and is not repeated here ─────────────

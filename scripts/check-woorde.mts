@@ -3,7 +3,7 @@
  *
  * ── What this is about ───────────────────────────────────────────────────
  *
- * Carli's own Model Garden page, 9 October 2026, shows Lyria answering with
+ * The owner's own Model Garden page, 9 October 2026, shows Lyria answering with
  * three rows: two of type `text` and one of type `audio`. The two text rows
  * are the words it wrote and a description of what it made.
  *

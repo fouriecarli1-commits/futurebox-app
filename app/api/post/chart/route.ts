@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 17 October 2026: *"Wat cool sal wees as dit AI verstelbaar is dat
+ * The owner, 17 October 2026: *"Wat cool sal wees as dit AI verstelbaar is dat
  * data ingevoer kan word en AI die data in die grafiek verstel."* The photo
  * editor's chart (`lib/postcharts.ts`) is sent with what she typed — numbers,
  * a pasted report, or a change like "add July at 90" — and comes back as the

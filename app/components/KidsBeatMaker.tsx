@@ -3,7 +3,7 @@
 /**
  * The beat machine, as a child sees it.
  *
- * Google's "Kids Dream Studio" page, brought by Carli on 13 October 2026,
+ * Google's "Kids Dream Studio" page, brought by the owner on 13 October 2026,
  * opened on this: four beats to start from, a grid of squares to light up, a
  * turtle-to-cheetah speed slider and a soundboard. The engine behind it is
  * `lib/kidsbeat.ts`, and this file only draws what the engine holds and

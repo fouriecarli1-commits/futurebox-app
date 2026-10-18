@@ -38,7 +38,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 /* ── The room, 3 October 2026 ─────────────────────────────────────────────
 
    This read "the editor is shut on Free" until today, and it was right about
-   what the app did. Carli: *"hulle kan 'n video bou, en die funksies toets,
+   what the app did. The owner: *"hulle kan 'n video bou, en die funksies toets,
    maar nie hulle video export nie want hulle het nie genoeg krediete nie."*
 
    The room renders in the member's own browser and costs this app nothing to

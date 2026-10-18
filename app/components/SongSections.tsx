@@ -21,7 +21,7 @@
  *
  * ## Obsidian, 13 October 2026
  *
- * Carli, with the "Studio" page Google drew — a regeneration banner with
+ * The owner, with the "Studio" page Google drew — a regeneration banner with
  * one gradient button, section cards with a coloured chip, a preview line,
  * a time range and a row of small controls, a stem deck under them — and
  * the rule for the whole redesign: *"ons transform en totally redesign."*
@@ -154,7 +154,7 @@ export default function SongSections({
   /**
    * ── And the song goes with them ────────────────────────────────────
    *
-   * Carli, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
+   * The owner, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
    * nie."*
    *
    * This took no argument, and the note in `page.tsx` explained why:
@@ -432,7 +432,7 @@ export default function SongSections({
      there is one worth keeping, not after. */
   /* ── What this room cannot do, at the top and not in a footnote ────────
 
-     Carli, 13 September 2026: "As die liedjie nie oor gedoen kan word nie,
+     The owner, 13 September 2026: "As die liedjie nie oor gedoen kan word nie,
      moet die studio dit verklaar en sê dat hierdie 'n regeneration spasie is,
      dat as iemand die produk wil hou die enigste opsie recording is in die
      booth."
@@ -460,7 +460,7 @@ export default function SongSections({
      paragraphs and a button, roughly a phone screen of writing before the
      room's first control.
 
-     Carli, 14 September 2026, with a photograph of it: "Can you make this
+     The owner, 14 September 2026, with a photograph of it: "Can you make this
      yellow explainer a drop down menu in the studio room?" — which is the
      rule the whole app already follows. `Card` exists because she said
      three times that the rooms show too much at once, and this was the one

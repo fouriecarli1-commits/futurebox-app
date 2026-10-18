@@ -1,7 +1,7 @@
 /**
  * The vector studio's drawing: what is in it, and how it becomes an SVG.
  *
- * Carli, 17 October 2026, with another app's vector illustration on screen:
+ * The owner, 17 October 2026, with another app's vector illustration on screen:
  * *"Ek hou van daai vector illustration."* A vector picture is shapes, not
  * pixels — it stays sharp at any size, every part can be moved and
  * recoloured, and it is small. This file is the drawing as data: items with

@@ -13,7 +13,7 @@
  * per maand'."* The timezone list is written by hand, and the next zone
  * missing from it fails the same silent way.
  *
- * Carli, 11 October 2026: *"Maak 'n country picker"*.
+ * The owner, 11 October 2026: *"Maak 'n country picker"*.
  *
  * ── What this holds, and what it cannot ─────────────────────────────────
  *

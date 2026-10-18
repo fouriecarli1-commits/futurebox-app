@@ -3,7 +3,7 @@
  *
  *   npm run check:highlights
  *
- * Carli, 16 October 2026: a clipper that finds the best moments and arranges
+ * The owner, 16 October 2026: a clipper that finds the best moments and arranges
  * them. What has to hold is that the loud, rising parts are the ones taken,
  * that they add up to about what was asked for, that none overlaps another
  * or leaves the shot, that they come back in the order they happened, that a

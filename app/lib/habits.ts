@@ -333,7 +333,7 @@ export function partOfDay(at: Date): PartOfDay {
 /**
  * The first name alone, which is what a greeting uses.
  *
- * "Hello, Carli" rather than "Hello, Carli Fourie". A channel name is not
+ * "Hello, Lerato" rather than "Hello, Lerato Dlamini". A channel name is not
  * always a person's name, so anything that does not look like one is left
  * whole: "Hello, Blue Room Records" is right and "Hello, Blue" is not.
  */

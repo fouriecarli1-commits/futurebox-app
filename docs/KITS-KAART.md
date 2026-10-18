@@ -1,6 +1,6 @@
 # Kits.AI se hele produk, en waar elke stuk in FutureBox land
 
-Carli het op 8 September 2026 die Professional Plan gekoop en skerms van elke
+Die eienaar het op 8 September 2026 die Professional Plan gekoop en skerms van elke
 skerm gestuur. Hierdie dokument is die kaart: elke ding wat Kits doen, waar dit
 by ons hoort, en wat dit **vervang** — want die plan is 'n vaste maandelikse
 bedrag, en alles wat ons daarheen skuif is 'n rekening wat ophou per gebruik
@@ -72,7 +72,7 @@ Supabase, anders is daar niks om in te tel nie en die rem staan oop.
 
 ## 2. Wat oor die API bereikbaar is, en wat nie
 
-Carli het op 8 September Kits se API-dokumentasie gestuur. Die inhoudsblad lys
+Die eienaar het op 8 September Kits se API-dokumentasie gestuur. Die inhoudsblad lys
 **vyf** API's en niks meer nie:
 
 | API | Wat dit gee |
@@ -131,7 +131,7 @@ Music.ai, want Kits se Key and BPM Finder is nie oor die API beskikbaar nie.
 
 ## 4. Wat die egte rekening geantwoord het
 
-Carli het `/api/kits/setup` op 8 September 2026 teen die lewendige rekening
+Die eienaar het `/api/kits/setup` op 8 September 2026 teen die lewendige rekening
 oopgemaak. Dít is nie meer afgelei nie — dit is gemeet.
 
 **Die sleutel werk, en die plan is reg.** `ready: true`, `needsPlan: false`.
@@ -191,7 +191,7 @@ wat dit vasmaak.
 
 **BEANTWOORD, 9 September 2026: nee. `POST /voice-models` gee 404.**
 
-Carli het die verslag teen die lewendige rekening laat loop. Daar is geen skep
+Die eienaar het die verslag teen die lewendige rekening laat loop. Daar is geen skep
 oor die API nie — stemmodelle is lees-alleen. Dit maak die vraag toe, en dit
 maak dit teen die kamer toe: stem-opleiding kán nie in The Booth inkom nie.
 Nie omdat dit nie gebou is nie, maar omdat Kits dit glad nie oor die API
@@ -204,7 +204,7 @@ lys stemme en sing daarin; dit maak nie een nie. Die uitgaande skakel na
 kits.ai is dus nie 'n gat in hierdie toep nie — dit is die enigste deur wat
 bestaan, en `HowToTrain` sê dit nou so, met die datum van die meting.
 
-**Die Voice Blender se velde — nou vraagbaar.** Dit was 'n vraag vir Carli:
+**Die Voice Blender se velde — nou vraagbaar.** Dit was 'n vraag vir die eienaar:
 hulle dokumentasie noem die adres en nie die lyf nie, en 'n kamer gebou teen 'n
 raaiskoot is presies die knoppie waarteen §2 waarsku.
 

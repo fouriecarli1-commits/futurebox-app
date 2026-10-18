@@ -3,7 +3,7 @@
 /**
  * Ask the copilot what to change about the mix, and see it before it happens.
  *
- * Carli, 14 September 2026: *"AI icon (Copilot pop op en vra dat persoon 'n
+ * The owner, 14 September 2026: *"AI icon (Copilot pop op en vra dat persoon 'n
  * mixing voorstel en copilot kan die mixing verander volgens die vraag en
  * voorstel)"*
  *
@@ -148,7 +148,7 @@ export default function BoothAsk({
           {t('ask.proTips', 'Ask it like an engineer')}
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {/* Carli, 14 October 2026: "Copilot in daardie booth moet dan ook
+          {/* The owner, 14 October 2026: "Copilot in daardie booth moet dan ook
               goeie suggestions hê vir professionals om te vra." Each one is
               something this desk can actually do — a fader, a pan, or an
               effect on a lane switched on or off — said the way an engineer

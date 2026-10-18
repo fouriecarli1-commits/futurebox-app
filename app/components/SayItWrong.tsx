@@ -10,7 +10,7 @@
  * a desk is a list of words a model probably says fine. One person's ear
  * found `-tjie`. Every member's ear finds the rest.
  *
- * Carli, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
+ * The owner, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
  * vir ons terugvoer te gee as afrikaanse woorde nie reg uit kom nie? Iets
  * soos: Help ons om suiwer Afrikaans te genereer."
  *
@@ -53,7 +53,7 @@ export default function SayItWrong({
   readonly said?: string;
   /**
    * If true, shows in both English and Afrikaans mode.
-   * Carli, 12 October 2026: Afrikaans speakers often prefer the English UI
+   * The owner, 12 October 2026: Afrikaans speakers often prefer the English UI
    * but prompt Afrikaans songs, and need to be able to report pronunciation.
    */
   readonly alwaysShow?: boolean;
@@ -76,7 +76,7 @@ export default function SayItWrong({
   const [sent, setSent] = useState(false);
   const [problem, setProblem] = useState('');
 
-  /* Carli, 12 October 2026: "want onthou afrikaans-sprekendes verkies ook
+  /* The owner, 12 October 2026: "want onthou afrikaans-sprekendes verkies ook
      somtyds die engelse blad maar prompt nogsteeds afrikaanse liedjies".
      If alwaysShow is true, we allow English readers to report Afrikaans
      pronunciation errors without forcing them to change the whole app language. */

@@ -15,7 +15,7 @@
  * The **recording name** is the one somebody chose, on the `creators` row,
  * and it is what the live room and the collab radar already put beside a
  * song. So the app has been calling the same person two different things
- * depending on which screen they were looking at — `anrefourie` in the
+ * depending on which screen they were looking at — `zoesmit` in the
  * corner, and their real name on their own release.
  *
  * This is the one place that name is set, and it is mounted in both places
@@ -123,7 +123,7 @@ export default function RecordingName({
   const was = row ?? EMPTY;
   const wantedName = name.trim().slice(0, 60);
   /* The same shape the server enforces, applied while it is being typed so
-     nobody saves "Anré Fourie!" and gets back "anrfourie" with no explanation. */
+     nobody saves "Zoë Smit!" and gets back "zosmit" with no explanation. */
   const wantedHandle = handle.toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 24);
   const changed = wantedName !== (was.name ?? '') || wantedHandle !== (was.handle ?? '');
   /* Refused here as somebody types it, and refused again by the route when

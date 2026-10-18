@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek besef ook in spotlight gaan ons 'n Blog ook moet
+ * The owner, 10 October 2026: *"Ek besef ook in spotlight gaan ons 'n Blog ook moet
  * hê, daarin sal ek artikels moet deel oor hoe die verskillende funksies in die
  * app werk."*
  *

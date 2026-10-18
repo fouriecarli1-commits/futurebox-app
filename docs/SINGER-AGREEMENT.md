@@ -6,7 +6,7 @@
 > ask for. This one applies only where a voice model is made and members can sing in it.
 >
 > **Read this first.** This document was drafted by building the app, not by a
-> lawyer. It says exactly what the app does and what Carli undertakes to do, in
+> lawyer. It says exactly what the app does and what the owner undertakes to do, in
 > plain language, and it is an honest starting point — but have a lawyer look at
 > it **before the first singer signs**. The reason is sharper here than in the
 > artist agreement: a voice is **special personal information** under POPIA, and

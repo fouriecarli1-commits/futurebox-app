@@ -40,7 +40,7 @@ try {
 
     /* ── The one room where the copilot is behind a button ───────────────
 
-       Carli, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
+       The owner, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
        pop."* The cutting room is a fixed-height screen with a bar at its foot
        rather than a page that scrolls, so the third pane below it was a second
        screenful nobody reached. It opens from a button on the room's top row
@@ -128,7 +128,7 @@ try {
       /* The bar this room actually has.
 
          A room that claims the screen (see `app/lib/fullroom.ts`) sends the
-         app's tab bar away and draws its own in that space — Carli asked for
+         app's tab bar away and draws its own in that space — the owner asked for
          it for the Pro Booth in September and for the cutting room in October.
          So in those rooms `nav[aria-label]` is correctly absent, and this
          probe returned null and reported "no input or no bar on this screen",

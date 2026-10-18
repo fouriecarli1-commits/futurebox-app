@@ -3,7 +3,7 @@
  *
  * ── Which half of her list this is ───────────────────────────────────────
  *
- * Carli, 7 October 2026: *"magic grab ... BG remover, magic eraser,
+ * The owner, 7 October 2026: *"magic grab ... BG remover, magic eraser,
  * upscaler, auto focus, blur, grab text, image to video ... Dit is alles
  * code wat ons oor tyd kan develop."*
  *

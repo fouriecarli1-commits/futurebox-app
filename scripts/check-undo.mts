@@ -3,7 +3,7 @@
  *
  * ── Why the booth has never had one ──────────────────────────────────────
  *
- * Carli: *"ek wil 'n ordentlike probooth bou."*
+ * The owner: *"ek wil 'n ordentlike probooth bou."*
  *
  * The room's doctrine is that almost nothing costs anything — a cut points
  * at the recording rather than replacing it, a move is a number, and all of

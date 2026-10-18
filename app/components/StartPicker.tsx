@@ -3,7 +3,7 @@
 /**
  * The plus in the song box: somewhere to start, as one neat list.
  *
- * Carli, 15 October 2026, pointing at ElevenLabs' finetune list: *"Daar kan
+ * The owner, 15 October 2026, pointing at ElevenLabs' finetune list: *"Daar kan
  * 'n plus wees wat uit pop en keuses gee in woorde soos daai finetunes een
  * wat ook sommer die style uitwys, dat ons so selfde netjiese lys het vir
  * keuses van gevoel ens om van te begin, en by daardie plus kan daar ook 'n

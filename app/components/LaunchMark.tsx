@@ -5,7 +5,7 @@ import { Cpu } from 'lucide-react';
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
+ * The owner, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
  * huidiglik net met die app icon, maar ek sal wil hê die woorde futurebox moet
  * saam met die icon/logo launch. Dus die futurebox woorde logo moet saam
  * launch"*.

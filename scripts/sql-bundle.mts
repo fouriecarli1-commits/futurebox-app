@@ -249,11 +249,11 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
   afrikaans:
     'Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat dit hoor. Sonder dit is die knoppie daar en die verslag gaan nooit \u00eerens heen nie.',
   designs:
-    'Die fototemplates wat Carli in die fotoredigeerder stoor vir almal: die plasing se vorm, kleur, rame, woorde en vorms — nooit foto’s nie. Lede sien dit onder "Van FutureBox" in Templates. Sonder dit werk die sestien wat saam met die app kom steeds, maar "Stoor as template" sê die tabel is nog nie daar nie.',
+    'Die fototemplates wat the owner in die fotoredigeerder stoor vir almal: die plasing se vorm, kleur, rame, woorde en vorms — nooit foto’s nie. Lede sien dit onder "Van FutureBox" in Templates. Sonder dit werk die sestien wat saam met die app kom steeds, maar "Stoor as template" sê die tabel is nog nie daar nie.',
   berging:
     'Wolkspasie per plan: 1 GB op Free, 10 GB op Maker, 50 GB op Studio, 200 GB op Label. Drie funksies wat tel hoeveel ’n lid in sy eie vouers hou en hoeveel sy plan toelaat, en een beleid op `storage.objects` wat ’n nuwe oplaai weier sodra die spasie vol is — in die databasis, want die meeste lêers gaan reguit uit die blaaier op en ’n perk in die app sou enige blaaier kon oorslaan. Sonder hierdie lêer is daar geen perk nie en wys die meter op die rekening niks.',
   amps:
-    'Die versterker-katalogus: vasvangs wat Carli self aflaai en deur die eienaarsdeur oplaai, met die maker se naam en \u2019n lisensie wat ons toelaat om dit aan te stuur. Lede soek dit in die booth. Sonder dit s\u00ea die booth "die katalogus is nog nie opgestel nie".',
+    'Die versterker-katalogus: vasvangs wat the owner self aflaai en deur die eienaarsdeur oplaai, met die maker se naam en \u2019n lisensie wat ons toelaat om dit aan te stuur. Lede soek dit in die booth. Sonder dit s\u00ea die booth "die katalogus is nog nie opgestel nie".',
   tone3000:
     'Die TONE3000-aanmelding: \u2019n handdruk wat loop, en die tokens daarna. Albei is service_role alleen en het met opset geen leesbeleid nie \u2014 \u2019n refresh token is blywende toegang tot iemand anders se TONE3000-rekening, en \u2019n blaaier wat hom kan lees maak die hele rede om hom bediener-kant te hou ongedaan. Sonder dit stuur die Browse TONE3000-knoppie haar weg en niks weet wie terugkom nie.',
   kinders:

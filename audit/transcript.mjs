@@ -9,7 +9,7 @@ await page.route('**/api/show*', async (route) => {
     status: 200, contentType: 'application/json',
     body: JSON.stringify({
       configured: true, signedIn: true,
-      show: { id: 'show-1', title: 'Two People Talking', description: 'A show', author: 'Anre', language: 'en', image_url: '' },
+      show: { id: 'show-1', title: 'Two People Talking', description: 'A show', author: 'Sipho', language: 'en', image_url: '' },
       episodes: [{
         id: 'ep-1', title: 'The first one', notes: 'Notes', made: 'spoken',
         seconds: 1800, audio_path: 'ep-1.mp3', published_at: '2026-09-01',
@@ -55,9 +55,9 @@ if (await btn.count()) {
   console.log('speaker naming offered:', /Who is who/.test(text));
   const box = room.locator('input[aria-label*="Name for"]').first();
   if (await box.count()) {
-    await box.fill('Anre');
+    await box.fill('Sipho');
     await page.waitForTimeout(500);
-    console.log('renaming takes effect:', (await room.innerText()).includes('Anre —'));
+    console.log('renaming takes effect:', (await room.innerText()).includes('Sipho —'));
   }
   await page.screenshot({ path: shot('transcript.png') });
 }

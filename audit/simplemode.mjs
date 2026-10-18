@@ -3,7 +3,7 @@
  *
  * ── What this is for ─────────────────────────────────────────────────────
  *
- * Carli, with nine screenshots of a competitor: "Dit is wat ek wil hê vir ons
+ * The owner, with nine screenshots of a competitor: "Dit is wat ek wil hê vir ons
  * app, net met al ons ekstra oulike goed by. Die oulike goed waaraan ons
  * gewerk het moenie wegval nie." Simpler, and nothing lost.
  *
@@ -92,7 +92,7 @@ try {
 
   /* ── One box, around the copilot ─────────────────────────────────────
 
-     Carli, 15 October 2026: *"die simple en everything wegvat en net so box
+     The owner, 15 October 2026: *"die simple en everything wegvat en net so box
      rondom copilot bou wat alles in het, selfs 'n button wat uit pop om die
      weirdness te verstel. … Dan onder daardie boks kom die woorde uit, en
      onder die woorde moet die finale clear wees 'make the song'."* This probe

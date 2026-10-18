@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Copyright check for export."*
+ * The owner, 5 October 2026: *"Copyright check for export."*
  *
  * ── The rule that matters most here is a rule about not lying ────────────
  *

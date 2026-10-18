@@ -5,7 +5,7 @@
  *
  * ── Where these prices come from ─────────────────────────────────────────
  *
- * Carli pasted them on 8 October 2026: MiniMax's own pay-as-you-go tables,
+ * The owner pasted them on 8 October 2026: MiniMax's own pay-as-you-go tables,
  * and OpenArt's four plans with the credit cost of each model on them.
  *
  * **I could not read either page.** The outbound network blocks both, as it
@@ -105,7 +105,7 @@ const rand = (usd: number): number => usd * RAND_PER_USD;
    price that works on the generous plan and loses on the mean one loses.
 
    Read off the tiers, not typed. This was `0.23` — true on 8 October, when
-   the figures were sent, and false from 13 October, when Carli repriced
+   the figures were sent, and false from 13 October, when the owner repriced
    the credit ("Sal the credits more expensive … all the plans pay that
    same price"): a credit now sells for R1.49 at the thinnest plan, and a
    typed 0.23 kept this check saying MiniMax loses money and a song runs
@@ -185,7 +185,7 @@ ok('  and a cover at our price still carries it several times over',
 
 /* ── Voice, against the supplier we already pay ─────────────────────── */
 /* ElevenLabs' own published rates, from `docs/ELEVENLABS-PRYSE.md`, which
-   was written off the page Carli sent on 8 September 2026. */
+   was written off the page the owner sent on 8 September 2026. */
 const ELEVEN = { ttsPerThousandChars: 0.10, asrPerHour: 0.22 } as const;
 
 ok('MiniMax reads text aloud for less than we pay now',
@@ -201,7 +201,7 @@ ok('  but transcribes for more, so this is not one decision',
 
 /* ── Mureka, which is the one that matters ──────────────────────
 
-   Carli sent their whole price list on 8 October 2026, signed in to their
+   The owner sent their whole price list on 8 October 2026, signed in to their
    site. A song is the biggest single cost in this app and the one the
    whole credit scale was built round, so this comparison is worth more
    than the other two put together.
@@ -230,7 +230,7 @@ const MUREKA = {
 
 /* What a song costs us today: ElevenLabs music at $0.15 a minute, and a
    song is two minutes. `docs/ELEVENLABS-PRYSE.md` works it out off the
-   page Carli sent on 8 September 2026. */
+   page the owner sent on 8 September 2026. */
 const SONG_NOW = 0.15 * 2;
 
 console.log(`  a song brings in R${(CREDITS.song * CREDIT_RAND_LOW).toFixed(2)}`
@@ -321,7 +321,7 @@ ok('  and names the credit expiry, which is the catch in every plan',
 
 /* ── Lyria, and the one number here that is NOT from a pricing page ──
 
-   Carli, 8 October 2026: *"Ek is baie beindruk met google se lyria. Die
+   The owner, 8 October 2026: *"Ek is baie beindruk met google se lyria. Die
    Afrikaans is baie mooi."*
 
    Her sentence is the most valuable line in this whole file and the only
@@ -382,7 +382,7 @@ ok('the write-up raises the watermark, which the app does not yet know about',
 
 /* ── The line that is not about a supplier at all ───────────────
 
-   Carli sent Lyria's terms summary on 8 October 2026. The royalty answer
+   The owner sent Lyria's terms summary on 8 October 2026. The royalty answer
    is good — no royalties, no ownership claim, commercial use permitted —
    but it carried a sentence that has nothing to do with Google:
 
@@ -420,7 +420,7 @@ ok('  and says it is unsettled rather than stating it as the law',
 
 /* ── The correction, kept where the wrong claim was ─────────────
 
-   I read Carli's eight Lyria code examples and concluded the model was
+   I read the owner's eight Lyria code examples and concluded the model was
    instrumental. Every example WAS instrumental and one of them listed
    `vocals` in its negative prompt — but that is a conclusion about the
    examples written as a conclusion about the model. Examples show what a
@@ -453,7 +453,7 @@ ok('  and names the timed-text track, which is the part that matters',
 
 /* ── And the letter that goes with it ──────────────────────────
  
-   Carli, 8 October 2026: *"Kan jy my help om vir mureka ’n custom sales
+   The owner, 8 October 2026: *"Kan jy my help om vir mureka ’n custom sales
    epos te skryf, wie ons is, die vrae oor ryalties, asook, wat hulle dak
    is?"* Three questions, and the royalties one first — because if they
    claim a share of revenue on music their model made, every figure above

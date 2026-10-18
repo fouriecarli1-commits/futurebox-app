@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Does that mean that I can use the booth to
+ * The owner, 10 October 2026: *"Does that mean that I can use the booth to
  * record phonetic sounds?"*
  *
  * Yes. Somebody who speaks the language says the word into the phone, a
@@ -48,7 +48,7 @@
  * where somebody would otherwise assume the job was done. The page says
  * which it is, every time.
  *
- * Carli, 10 October 2026: *"Gaan aan met die keep button."* Before it, this
+ * The owner, 10 October 2026: *"Gaan aan met die keep button."* Before it, this
  * page showed her JSON to paste into a source file by hand.
  */
 

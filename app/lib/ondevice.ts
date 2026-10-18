@@ -7,7 +7,7 @@
  *
  * `lib/storykeep.ts` was written first, for the stories a grown-up makes
  * and a child plays. The next day the same thing was needed for the songs a
- * child makes — Carli, 9 October 2026: *"Gaan aan met die kind se liedjies
+ * child makes — the owner, 9 October 2026: *"Gaan aan met die kind se liedjies
  * wat keepbaar is"* — and the honest options were a second copy of that file
  * or this.
  *

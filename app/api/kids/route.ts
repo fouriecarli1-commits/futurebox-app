@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+ * The owner, 9 October 2026: *"Let the parent give an allowance on an opening
  * page."*
  *
  * So: `GET` to ask where the allowance stands, `POST` to set one, `PUT` to
@@ -12,7 +12,7 @@
  *
  * ── The clock is the grown-up's, and only the grown-up's ─────────────────
  *
- * Carli, 10 October 2026: *"Wanneer screen time op is moet dit die kind
+ * The owner, 10 October 2026: *"Wanneer screen time op is moet dit die kind
  * uitskop."*
  *
  * `PUT` is the only thing that moves the clock, and it is reached from the
@@ -47,7 +47,7 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/* A function, not a constant. Carli, 15 October 2026: *"Die kids studio
+/* A function, not a constant. The owner, 15 October 2026: *"Die kids studio
    wil nie oop maak wanneer ek in log nie."* This was one Response built when
    the module loaded and handed back to every signed-out request. A body can
    be read once: on a warm server the second signed-out ask was answered with

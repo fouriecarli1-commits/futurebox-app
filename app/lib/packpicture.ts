@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"al die spesiale funksies van google moet ook daar
+ * The owner, 9 October 2026: *"al die spesiale funksies van google moet ook daar
  * in wees."* The largest unused one was that Gemini reads SEVERAL pictures in
  * a turn: put this person into that scene, keep the same child on page four
  * as on page one, put my logo on this poster.

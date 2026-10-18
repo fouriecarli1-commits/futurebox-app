@@ -5,7 +5,7 @@
  *
  * ── What she drew ────────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
+ * The owner, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
  * button bar, wat in die middel 'n play/pause button het, back en forward, en
  * links en regs van dit is Track control icon en mix/master icon, en daaruit
  * pop al die netjiese funksies op. … Vier icon buttons heel onder wat netjies
@@ -71,7 +71,7 @@ const REC = '#f87171';
  *
  * ── Why the sentence is here and not in a tooltip ───────────────────────
  *
- * Carli, 14 September 2026: *"Maak ook seker dat knoppies pop-ups het wat sê
+ * The owner, 14 September 2026: *"Maak ook seker dat knoppies pop-ups het wat sê
  * wat 'n funksie is, en maak seker betaalde funksies word uitgewys."*
  *
  * Six icons in two rows is six pictures, and a picture of a wand does not
@@ -236,7 +236,7 @@ export default function BoothDock({
    * A take is being recorded. The big button becomes "Stop recording" and
    * the two skips stand down.
    *
-   * Found on 15 October 2026, when Carli asked for every function in the
+   * Found on 15 October 2026, when the owner asked for every function in the
    * booth to be looked at: the dock's play and skip buttons drove the song
    * while the recorder kept running, so a thumb on "forward five seconds"
    * mid-take moved the music under the singer and the take landed five
@@ -263,7 +263,7 @@ export default function BoothDock({
   const sideways = useSideways();
   /* And at a desk, for the same reason. The rail below is a grid of six
      either way, so a desk needs no third layout — only to be offered the
-     one a turned phone already gets. Carli, 9 October 2026: *"Die website
+     one a turned phone already gets. The owner, 9 October 2026: *"Die website
      moet nie lyk soos 'n foon app nie."* */
   const atDesk = useAtDesk();
   const onEdge = sideways || atDesk;
@@ -271,7 +271,7 @@ export default function BoothDock({
   /**
    * The open desk, framed.
    *
-   * Carli: *"Maak ook seker dat knoppies pop-ups het wat sê wat ’n funksie
+   * The owner: *"Maak ook seker dat knoppies pop-ups het wat sê wat ’n funksie
    * is, en maak seker betaalde funksies word uitgewys."* — the name, the
    * coin and the sentence are all in `DeskSheet`'s header now.
    *
@@ -320,7 +320,7 @@ export default function BoothDock({
 
   /* ── Sideways, the controls go to the edge ─────────────────────────
 
-     Carli, 14 September 2026: *"Die booth moet asb op die dwars draai
+     The owner, 14 September 2026: *"Die booth moet asb op die dwars draai
      funksie van 'n foon en tablet getoets word. Want baie mense gaan die
      dwarsdraai wil gebruik, en dan gaan die buttons weer beter werk aan die
      kant van die skerm en nie onder nie."*

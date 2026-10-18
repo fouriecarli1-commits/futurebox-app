@@ -3,7 +3,7 @@
  *
  *   npm run check:charts
  *
- * Carli, 17 October 2026: graph templates in the photo editor, many kinds,
+ * The owner, 17 October 2026: graph templates in the photo editor, many kinds,
  * and data that can be typed in and set by the AI. What goes wrong quietly
  * in a chart is the axis that does not start at nought, the pasted "1 234,5"
  * read as 1, the ninth colour invented on the spot, and an AI answer with a

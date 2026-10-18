@@ -7,7 +7,7 @@
  * panel are overlays on the same page. That is right for how it works and
  * wrong for the hardware button under everybody's thumb — as far as the
  * browser was concerned nothing had been navigated to, so Back from anywhere
- * in the studio left the site. Carli: "die actual foon se back knoppie maak
+ * in the studio left the site. The owner: "die actual foon se back knoppie maak
  * dat die hele app uit gaan en dan moet jy van voor af in log."
  *
  * ── What is asserted ─────────────────────────────────────────────────────

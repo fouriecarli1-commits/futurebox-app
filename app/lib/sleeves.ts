@@ -8,7 +8,7 @@
  * working on, and `Channel.tsx` mounts exactly one of it for exactly that
  * reason — twenty songs on a screen should not be twenty generate buttons.
  *
- * The cost of that was found by Carli testing on 11 September: a sleeve
+ * The cost of that was found by the owner testing on 11 September: a sleeve
  * showed only on the card whose button had been pressed, in that session,
  * and was gone on the next load. Two credits for a picture visible until you
  * close the tab. The grid never knew a cover existed because asking per card

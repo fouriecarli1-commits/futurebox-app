@@ -306,7 +306,7 @@ planning to use?" unticked. Web API is greyed out because it is always
 included; the rest are a browser player, advertising and two mobile SDKs, and
 ticking one asks for something we do not use.
 
-**It is the GLOBAL chart, not the South African one.** Carli, 6 October 2026:
+**It is the GLOBAL chart, not the South African one.** The owner, 6 October 2026:
 *"ek vra vir international playlist nie south african nie. dit is beter."*
 The reasoning is hers and it is right — the bar above it already counts what
 South Africa is playing *here*, which is the chart that is actually ours. Two
@@ -353,7 +353,7 @@ has been shown to anything is a key somebody else may already have.
 `KITS_VOICE_MODELS` is optional and holds the names of the voices you have
 trained there, because this app has no verified way to list them:
 
-    KITS_VOICE_MODELS=1014961=Carli, 1023456=Die koor
+    KITS_VOICE_MODELS=1014961=the owner, 1023456=Die koor
 
 The numbers are the model ids — they are in the address bar when you open a
 voice on kits.ai. Unset is fine: the Pro Booth then asks for the number and
@@ -504,7 +504,7 @@ the voice button. With the key set there are two boxed choices at the top of the
 panel — **Sangmodel** and **Spraakmodel** — and the singing one is chosen for
 you. Without it there are none.
 
-**Answered, 8 September 2026: the API needs the paid plan.** Carli ran the
+**Answered, 8 September 2026: the API needs the paid plan.** The owner ran the
 page below and every real endpoint came back:
 
     403  {"error":"Free tier users are not allowed to use the api"}
@@ -550,7 +550,7 @@ so make one the day you pay.
 **`SING_PHONETIC` — leave it empty. Set it to `off` only if you want the
 phonetic respelling switched off.**
 
-Carli's technique, 9 October 2026: the vocal models were trained on English,
+The owner's technique, 9 October 2026: the vocal models were trained on English,
 so they do not know Afrikaans spelling. The lyrics are now respelled on the
 way to the engine — *"Ek is baie lief vir jou"* goes out as *"Eck iss buy-a
 leef fir yo"* — which is the same thing her `tjie → kie` dictionary does for
@@ -605,43 +605,26 @@ request comes back refused.
 
 ### 14. CIPC — registered, and what to type where
 
-**Done: CIPC issued `2026/714071/07` on 5 September 2026**, for the enterprise
-name `futureboxstudio`. The `/07` suffix is a private company, so the page's
-default status — "Private company registered in the Republic of South Africa"
-— is the right one and does not need setting.
+**Done.** The company is registered as a private company. Its registration
+number lives on the certificate and nowhere in this repository.
 
-> ### ⚠ Alles hieronder word op 'n openbare bladsy gedruk
->
-> Nie "in die app gehou" nie. Nie "uit die kode gehou" nie. **Gedruk**, in
-> volle, op `futurebox.studio/legal`, waar enigiemand dit sonder om in te
-> teken kan lees. Dít is hierdie veranderlikes se hele doel: artikel 43 van
-> die ECT-wet sê 'n verskaffer wat oor die internet verkoop moet publiseer
-> wie dit is.
->
-> **Die verwarring wat hierdie waarskuwing keer.** Op 11 September 2026 het
-> Carli haar huisadres in `FUTUREBOX_LEGAL_ADDRESS` gesit en ontplooi, omdat
-> sy 'n vroeëre versekering verstaan het as "dit bly privaat". Daardie
-> versekering was eg en het oor iets anders gegaan: dat **niks uit die
-> CIPC-sertifikaat in die bewaarplek geskryf word nie** — daarom is dit
-> omgewingsveranderlikes en nie reëls kode nie, sodat hulle nooit in git se
-> geskiedenis beland nie.
->
-> **"Uit die bewaarplek" en "privaat" is nie dieselfde ding nie**, en die
-> gaping tussen hulle is 'n huisadres op 'n openbare bladsy. Dit was 'n paar
-> uur lank op en is afgehaal.
->
-> As jy 'n waarde nie op 'n advertensiebord sou sit nie, sit dit nie in 'n
-> `FUTUREBOX_LEGAL_*`-veranderlike nie.
+> **Net die maatskappy se naam word gewys.** Op 18 Oktober 2026 besluit:
+> niks oor die mense agter die maatskappy verskyn in die app nie — geen
+> persoon se naam, e-posadres, selfoonnommer, registrasienommer of adres nie.
+> Die verdere besonderhede wat die ECT-wet noem, word op versoek gegee, deur
+> die hulpblad. Die app lees net die twee veranderlikes hieronder; die ander
+> `FUTUREBOX_LEGAL_*`-waardes wat dalk nog in Vercel staan, word deur niks
+> gelees nie en kan uitgevee word.
 
 Variables in Vercel, then redeploy:
 
 | Variable | What to put | Have it? |
 |---|---|---|
-| `FUTUREBOX_LEGAL_REGISTRATION` | `2026/714071/07` | yes |
 | `FUTUREBOX_LEGAL_NAME` | `FUTUREBOXSTUDIO (Pty) Ltd` — **one word**, exactly as the certificate prints it | yes |
-| `FUTUREBOX_LEGAL_ADDRESS` | The registered office, pipe-separated: `12 Example Street\|Bellville\|Cape Town\|7530`. **Published in full.** Leave it empty and the page says the address comes on request — honest, and one row short of complete | **leave empty until the CIPC record carries a business address** |
-| `FUTUREBOX_LEGAL_EMAIL` | An address a person can write to, on the domain rather than a personal one | **set this** |
-| `FUTUREBOX_LEGAL_PHONE` | A number a person can actually ring — **not necessarily your own** | when you have a business line |
+| `FUTUREBOX_LEGAL_STATUS` | Leave empty: a name ending in (Pty) Ltd is read as a private company | — |
+
+**How to tell it worked:** open `/legal`. The name is there, and a row says
+the further particulars are given on request through the help page.
 
 ### Google Play, if the app goes there
 
@@ -659,64 +642,6 @@ to put to the attorney before submitting.
 Without these the installed app shows a browser address bar across the top
 of every screen, which is both ugly and, on a store listing, suspicious.
 
-### Your own phone number, and why it is not the price of admission
-
-Section 43(1) asks for a telephone number, subsection (b), **and** an e-mail
-address, subsection (c). They are two separate requirements and one does not
-replace the other.
-
-It used to be the case here that the page published nothing at all without a
-telephone number, which offered exactly two options: your own mobile number on
-a public page, or a legal page that said "the company is being registered"
-months after CIPC registered it. The second is worse — it withholds four true
-particulars to enforce a fifth, and a payments reviewer opening it finds a
-supplier declaring itself unavailable.
-
-So now: **set the e-mail address and the page publishes.** The telephone row is
-still printed, and it says the number is not published and a business line is
-being arranged. An admitted gap is defensible. An invented number is not, and a
-missing row that reads as a shorter list is not either.
-
-**Then get a number that is not yours.** It costs very little and it closes the
-gap properly:
-
-- a second prepaid SIM in a cheap handset — the least effort, R10 or so;
-- a WhatsApp Business number, which can be that same second SIM;
-- a VoIP number that rings through to your phone, roughly R50–R150 a month,
-  and it can be a Cape Town `021` number rather than a mobile.
-
-Any of those is a real number a consumer can ring, which is what the Act asks
-for, and none of them is the number your family uses.
-
-**Copy the name off the certificate rather than typing what you call it.** The
-registered name and the trading name are allowed to differ and often do, and
-`/legal` is the one page whose whole job is to be true about a legal person.
-`FUTUREBOX_LEGAL_STATUS` stays empty — the number justifies the default, and
-setting it by hand is how the two end up disagreeing.
-
-**Nothing appears until the name, the address and at least one way to reach a
-person are all set.** Three out of five reads as a page with something missing
-rather than as a page still being filled in — but a page with a name, a number
-and an address on it and no way to make contact has met the letter of a list
-and missed the point of it, so the floor is one contact, never none.
-
-**How to tell it worked:** open `/legal`. Either the particulars are there and
-right, or the page says they are not published yet.
-
-**Two more the page will print if you set them, and skip if you do not.**
-`FUTUREBOX_LEGAL_VAT` is your VAT number, once SARS issues one — registration
-is compulsory above R1 million of turnover in twelve months and voluntary above
-R50 000, so for now this stays unset. `FUTUREBOX_LEGAL_INFORMATION_OFFICER` is
-item 14 below. Neither is part of the four: the particulars publish without
-them.
-
-`npm run check:entity` holds the shape of the number and nine other cases. It
-catches a mangled year, a missing entity code, the wrong separators, and the
-name pasted into the number field. It does **not** catch a digit dropped from
-the serial — CIPC serials have had four to seven digits over the years, so a
-shorter one is somebody's real company. Read the number back off the page once
-after you set it.
-
 ### 15. The trademark
 
 CIPC's register, classes 9 and 42. A registered domain and a registered company
@@ -725,9 +650,9 @@ can trade under the name at all. EUIPO and USPTO are free and take minutes.
 
 ### 16. POPIA
 
-An information officer registered with the Information Regulator, and
-`FUTUREBOX_LEGAL_INFORMATION_OFFICER` set. You process personal data of South
-Africans, so it applies.
+An information officer registered with the Information Regulator. The legal
+page says the post exists and sends people to the help page; it names nobody.
+You process personal data of South Africans, so it applies.
 
 ---
 
@@ -841,14 +766,14 @@ that prefix would ship the list of who runs the place to every visitor.
 
 Die laaste twee is nie iets om aan te skakel nie; hulle staan hier omdat die
 app hulle lees en alles wat die app lees op hierdie bladsy moet staan. Hulle
-bestaan omdat Carli dieselfde vyf foute drie keer gerapporteer het en niemand
+bestaan omdat die eienaar dieselfde vyf foute drie keer gerapporteer het en niemand
 kon sê of die weergawe in haar hand die regmaak in het nie — 'n herhaling het
 gelees soos "die regmaak het gefaal", en die volgende uur het in kode gegaan
 wat al reg was.
 
 ### Die waarskuwing as die krediete opraak — en die twee dinge wat moet gebeur
 
-Carli, 9 September 2026: *"Ek gaan op 'n manier 'n alert moet kry as die
+Die eienaar, 9 September 2026: *"Ek gaan op 'n manier 'n alert moet kry as die
 krediete laag raak, sodat ek kan koop."*
 
 Die app skryf nou self aan `OWNER_EMAIL` by **50%, 75%, 90% en 100%** van die
@@ -904,7 +829,7 @@ weergawe** aangespreek, en 'n halwe adres is 'n 422 op elke voorlesing — wat
 gestuur as net een gestel is nie.
 
 **Wat dit doen.** ElevenLabs se stemmodel lees `-tjie` as die Engelse "ch".
-Carli, 10 September 2026: *"elke woord tjie, soos voëltjie word verkeerd
+The owner, 10 September 2026: *"elke woord tjie, soos voëltjie word verkeerd
 uitgespreek as chi. tjie moet uitgespreek word as kie dan is dit byvoorbeeld
 voëlkie."* Die reëls staan in `app/lib/server/sayit.ts` — as bronkode, sodat
 'n verandering aan hoe Afrikaans klink in 'n diff sigbaar is — en gaan op elke
@@ -993,7 +918,7 @@ spends about 1 000 characters of the ElevenLabs plan, once, and stores nothing.
 
 ## Banked: checking an upload for somebody else's copyright
 
-**Your decision, not a switch.** Carli, 13 September 2026: *"Ons app moet ook
+**Your decision, not a switch.** Die eienaar, 13 September 2026: *"Ons app moet ook
 luister vir original copywrited fraud in sulke liedjies."* Then, the same
 evening: *"Ok kom ons bank die kopiereg toets vir nou. Hou dit asb as iets wat
 ek nog moet doen."*

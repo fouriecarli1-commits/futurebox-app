@@ -38,7 +38,7 @@ const say = (ok: boolean, line: string) => {
  * member is charged now means changing it in two places deliberately rather
  * than in one place by accident. That duplication is the entire point of it.
  */
-/* Carli, 14 October 2026, each grade set on its own: Veo Lite "18", the
+/* The owner, 14 October 2026, each grade set on its own: Veo Lite "18", the
    better grade "30", Veo Quality "60" — five seconds each. */
 const BASE = 18;
 const PER_FIVE = { standard: 18, better: 30, premium: 60 } as const;

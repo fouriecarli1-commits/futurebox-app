@@ -8,7 +8,7 @@
  * six times, nothing below cost — and the wrong place for the numbers
  * themselves, because something else needs them now.
  *
- * Carli, 11 October 2026: *"Ek moet in 'n tabel sien wat kos die engines wat
+ * The owner, 11 October 2026: *"Ek moet in 'n tabel sien wat kos die engines wat
  * ons gebruik, vs die krediete wat ons vra vir daardie funksie."*
  *
  * A table typed out by hand beside a check that computes the same figures is
@@ -63,7 +63,7 @@ export const CUTOUT_PER_5S = 0.0225 * 5 * RAND_PER_USD;
  * Music.ai reading a song — chords, key, tempo — per minute of audio.
  *
  * $0.07, and for once that is a MEASURED number rather than a published
- * one. Carli opened the Chords and Beat Mapping workflow on 5 October 2026
+ * one. The owner opened the Chords and Beat Mapping workflow on 5 October 2026
  * and their own editor printed `Estimated (per minute) $0.07` beside a run
  * that finished in 7.44 seconds and came back with `Eb major` and `bpm 76`.
  *
@@ -91,7 +91,7 @@ export const priced: {
   /**
    * A rate rather than a press.
    *
-   * Carli's supplier-plus-one rule is about what somebody is CHARGED for one
+   * The owner's supplier-plus-one rule is about what somebody is CHARGED for one
    * action. A row that prices an internal unit — 150 characters of reading —
    * is not an action: nobody is ever billed for 150 characters on its own,
    * because `readCost` has a floor of two credits. Held against the smallest
@@ -102,7 +102,7 @@ export const priced: {
    */
   rate?: boolean;
 }[] = [
-  { product: true, decided: 'Carli, 24 Sept: the plan is prepaid capacity, so a dearer song adds nothing to margin. See credits.ts',
+  { product: true, decided: 'the owner, 24 Sept: the plan is prepaid capacity, so a dearer song adds nothing to margin. See credits.ts',
     what: 'a two-minute song', credits: CREDITS.song, cost: 2 * MUSIC_PER_MIN },
   { product: true, decided: 'half of the song, same decision',
     what: 'a one-minute half song', credits: CREDITS.halfSong, cost: MUSIC_PER_MIN },
@@ -112,13 +112,13 @@ export const priced: {
   { what: 'a voice change, per minute', credits: CREDITS.voiceChange, cost: STEMS_PER_MIN },
   { what: 'singing it, per minute (Kits)', credits: CREDITS.sing, cost: SING_PER_MIN },
   { product: true,
-    decided: 'Carli, 11 Oct, having asked what to do about it and been shown what a 10- and 30-minute job comes to: "110 krediete, maak dit so"',
+    decided: 'the owner, 11 Oct, having asked what to do about it and been shown what a 10- and 30-minute job comes to: "110 krediete, maak dit so"',
     what: 'dubbing, per minute', credits: CREDITS.dub, cost: DUB_PER_MIN },
   /* `readCost` is one credit per 150 characters with a floor of two, so one
      credit is what 150 characters must cover. */
   { rate: true, what: 'reading 150 characters (a rate, not a press)', credits: 1, cost: 150 * CHAR },
   /* And the smallest thing anybody is actually charged for a read, which is
-     what Carli's rule governs: `readCost` is `Math.max(2, ...)`, so two
+     what the owner's rule governs: `readCost` is `Math.max(2, ...)`, so two
      credits buys up to 300 characters and nothing smaller can be billed. */
   { what: 'the smallest read anybody is charged (300 characters)', credits: readCost(300), cost: 300 * CHAR },
   /* A sound effect, 14 October 2026. ElevenLabs bill sound generation at
@@ -152,7 +152,7 @@ export const priced: {
   { product: true, what: 'eight advert lines', credits: CREDITS.adLines, cost: ADS_CALL },
   /* ── The ones that cost us nothing, named so they stop being blank ──
  
-     Carli, 11 October 2026: *"doen al die prys verstellings"*. She cannot
+     The owner, 11 October 2026: *"doen al die prys verstellings"*. She cannot
      set a price with no cost beside it, and fourteen of them had none. Six
      of those have none because there IS none: the film is cut and rendered
      in the customer's own browser, the mix is bounced there, and a post
@@ -177,12 +177,12 @@ export const priced: {
   { what: 'taking a post off the device (in the browser)', credits: CREDITS.postOut, cost: 0 },
 
   { product: true,
-    decided: 'Carli, 11 Oct, with the engine cost and the profit in rand in front of her: "a background out of video R6.50"',
+    decided: 'the owner, 11 Oct, with the engine cost and the profit in rand in front of her: "a background out of video R6.50"',
     what: 'a background taken out, per five seconds', credits: CREDITS.cutout, cost: CUTOUT_PER_5S },
   /* Estimated at the dearest thing in the same family — see `CREDITS.erase`.
      Held against that same rate so it can never quietly fall under it. */
   { product: true,
-    decided: 'Carli, 11 Oct, same table, same minute: "An item taken out of a video moet ook verander word. R7.00"',
+    decided: 'the owner, 11 Oct, same table, same minute: "An item taken out of a video moet ook verander word. R7.00"',
     what: 'an item taken out, per five seconds', credits: CREDITS.erase, cost: CUTOUT_PER_5S },
   /* A still picture changed by saying what to change — Nano Banana on her
      own Google project. `PER_PICTURE` is micro-dollars and is itself the

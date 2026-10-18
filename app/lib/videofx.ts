@@ -1,7 +1,7 @@
 /**
  * Effects on a shot: the moving kind, painted over the picture every frame.
  *
- * Carli, 16 October 2026, screenshots of a desktop editor's toolbox — camera
+ * The owner, 16 October 2026, screenshots of a desktop editor's toolbox — camera
  * shake, glow, light rays, letterbox, vignette among its effects: *"Kyk ook
  * hoe netjies dit verpak is."*
  *

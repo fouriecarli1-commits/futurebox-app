@@ -1,7 +1,7 @@
 /**
  * Paying inside the Android app goes through Google Play — walked.
  *
- * Carli, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
+ * The owner, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
  * ek paystack afhaal en werk met die playstore se paying system."*
  *
  * A browser cannot be a Trusted Web Activity, so the two things a TWA has

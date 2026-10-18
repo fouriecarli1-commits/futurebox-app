@@ -3,7 +3,7 @@
  *
  * ── What was asked for ───────────────────────────────────────────────────
  *
- * Carli, 12 September 2026, on the video desk:
+ * The owner, 12 September 2026, on the video desk:
  *
  *   "when I open the video desk, can all the drop down menus be closed, and
  *    not open, then the user can open it. Then that desk would also look
@@ -89,7 +89,7 @@ const ALLOWED: Readonly<Record<string, {
     always: true,
     why: 'the list of videos, inside a Card that is shut. One press, not two, to see a video just made',
   },
-  /* Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar
+  /* The owner, 22 September 2026: *"Kyk asb in make a song en channel dat daar
      by cover art 'n opsie is vir real art."* Somebody arriving from a
      song's cover panel is handed straight to the shelf that puts a piece
      ON that song, with the song already chosen — and a preselection inside
@@ -221,7 +221,7 @@ for (const one of NAMED) {
    who is pressing it.
 
    Eight of these arrived together on 18 September, and they are one
-   answer to one report: Carli, of the advert desk, *"As ek druk op open
+   answer to one report: the owner, of the advert desk, *"As ek druk op open
    the room dan vat hy my net na die regte kamer toe, maar die AI vul nie
    die afdelings vir my in nie."* It did fill them in. It filled them into
    cards that were shut, and a filled card that is shut is a room that

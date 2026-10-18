@@ -3,7 +3,7 @@
  *
  *   npm run check:develop
  *
- * Carli, 17 October 2026: a professional developing room. What can go wrong
+ * The owner, 17 October 2026: a professional developing room. What can go wrong
  * quietly is the arithmetic — a curve that bulges, a slider that moves the
  * wrong way, white balance that drifts the picture rather than neutralising
  * it — so each is driven here on a few pixels where the answer is known.

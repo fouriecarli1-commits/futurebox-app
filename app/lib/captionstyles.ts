@@ -1,7 +1,7 @@
 /**
  * Subtitle looks and lower thirds, one press each.
  *
- * Carli, 16 October 2026, screenshots of a title library: a column of
+ * The owner, 16 October 2026, screenshots of a title library: a column of
  * subtitle styles — black on a white box, white on a rounded purple one, a
  * sheared yellow band, plain words with a shadow — and the lower thirds,
  * left, middle and right. Every one of them is a combination of controls the

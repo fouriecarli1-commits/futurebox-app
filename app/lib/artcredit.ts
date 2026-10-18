@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 20 September 2026: *"Binne live moet die liedjie naam, artist naam,
+ * The owner, 20 September 2026: *"Binne live moet die liedjie naam, artist naam,
  * style en dan die kunstenaar se naam en art naam appear."*
  *
  * The first three were already on the card. This is the fourth and fifth:

@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026, with the "Spotlight" page Google drew, and the
+ * The owner, 13 October 2026, with the "Spotlight" page Google drew, and the
  * rule that goes with every page of this redesign: *"ons hou nie die oud en
  * sit hierdie by nie, ons transform en totally redesign."* The page is an
  * obsidian two-column board: on the left a stats banner with a live dot, a
@@ -358,7 +358,7 @@ export default function Spotlight({
         </div>
 
         {/* ── How it works & Blog ─────────────────────────────────────────
-            Carli, 10 October 2026: "Ek besef ook in spotlight gaan ons 'n
+            The owner, 10 October 2026: "Ek besef ook in spotlight gaan ons 'n
             Blog ook moet hê." Checked by scripts/check-blog.mts: requires
             [data-spotlightblog] and href="/blog". */}
         <section className={`${GLASS} space-y-3 p-5`} data-spotlightblog>

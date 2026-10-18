@@ -1,6 +1,6 @@
 # Switching Google on: which APIs, and which to leave alone
 
-*Carli, 8 October 2026, inside the Cloud console with a $100 monthly spend cap already
+*The owner, 8 October 2026, inside the Cloud console with a $100 monthly spend cap already
 configured:* "Watter API's moet ek enable?"
 
 Written against what her screens showed on the day. Google renames things, so if a name below is
@@ -141,7 +141,7 @@ worth testing with a card.*
 
 ## An API key or a service account
 
-*Carli, 8 October 2026, pasting what Google's starter handed her:*
+*The owner, 8 October 2026, pasting what Google's starter handed her:*
 
 ```python
 client = genai.Client(vertexai=True, api_key=API_KEY)
@@ -200,7 +200,7 @@ that the model ids matter, and the sources disagree:
 
 ## The three engines, chosen
 
-*Carli, 8 October 2026:* "Ek dink ons moet dan lyria, nano banana en veo gebruik." And:
+*The owner, 8 October 2026:* "Ek dink ons moet dan lyria, nano banana en veo gebruik." And:
 "Ek sal my budget in google verhoog soos wat ons wins maak."
 
 So: **Lyria** for music, **Nano Banana** for pictures, **Veo** for video. One project, one key,
@@ -290,7 +290,7 @@ argument for keeping `/google` rather than deleting it once it has been used onc
 
 ## Open it without spending a secret
 
-*Carli, 8 October 2026, when told to open `?key=<POST_SECRET>`:* "maar dan gaan ek nou weer 'n
+*Die eienaar, 8 October 2026, when told to open `?key=<POST_SECRET>`:* "maar dan gaan ek nou weer 'n
 password weggee wat ek weer gaan moet verander."
 
 **She was right, and it was this app's fault rather than hers.** An hour earlier her Google key

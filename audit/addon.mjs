@@ -72,7 +72,7 @@ const check = (label, ok, detail = '') => {
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
 
-const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'carli@futurebox.test' };
+const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'lerato@futurebox.test' };
 await p.addInitScript((who) => {
   try {
     window.localStorage.setItem('sb-stub-auth-token', JSON.stringify({
@@ -133,7 +133,7 @@ const room = p.locator('div.fixed.inset-0.z-50').first();
    panel with a price on it, a sales screen, a checkout, and then the desk
    opening once it was owned.
 
-   None of that exists. Carli, 24 September 2026: *"Ek dink dieselfde met
+   None of that exists. The owner, 24 September 2026: *"Ek dink dieselfde met
    advert, dit moenie 'n ekstra produk wees nie, eerder dit monotise en
    krediete vra saam met die pakkette wat ons reeds het. Te veel aankoop punte
    gaan mense afsit."* The marketing desk was R199 a month with its own

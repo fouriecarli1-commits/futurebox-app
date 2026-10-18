@@ -3,7 +3,7 @@
  *
  * ── The photograph that caused this ──────────────────────────────────────
  *
- * Carli, 4 October 2026, with a picture of the room on her phone: *"Dit is hoe
+ * The owner, 4 October 2026, with a picture of the room on her phone: *"Dit is hoe
  * dit huidiglik lyk. Dit lyk nie goed nie. Die copilot kan ook net 'n button
  * wees wat uit pop. Die hele kamer moet solid wees."*
  *
@@ -99,7 +99,7 @@ ok('  and does carry one flat background of its own',
 const HEX = /#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/.exec(WRAPPER);
 const rgb = HEX ? HEX.slice(1, 4).map((pair) => parseInt(pair, 16)) : null;
 
-/* Obsidian since 13 October 2026 — Carli, with the "Video Editor" page
+/* Obsidian since 13 October 2026 — the owner, with the "Video Editor" page
    Google drew: a cool near-black, `#0A0C10`, where the room used to lead
    with green. The rule is the page's: every channel under 24, and blue not
    under green, so a warm or green floor cannot creep back in and call
@@ -149,13 +149,13 @@ ok('  and the room restates the surface ramp for a dark room',
   'zinc maps onto the surface family and the theme this app ships is light,'
   + ' which inverts the ramp — so every text-zinc-400 in a dark room resolves'
   + ' to a dark warm grey. Measured at 1.88:1 before this block existed, which'
-  + ' is what Carli meant by "niks is duidelik nie". The SHELL takes the same'
+  + ' is what the owner meant by "niks is duidelik nie". The SHELL takes the same'
   + ' block: on the room alone it painted the floor and stopped at the header,'
   + ' so the back button sat on a white strip above a green room');
 
 /* ── And the shell, which is the difference between a room and a card ───
 
-   Carli, 4 October 2026: *"Plus moet die hele kamer dieselfde lyk, tot bo."*
+   The owner, 4 October 2026: *"Plus moet die hele kamer dieselfde lyk, tot bo."*
    The booth and the gallery both learnt this and both solved it the same way —
    the flag goes on the studio's OWN root, not on the room inside it, so the
    header above the room is the room too. */
@@ -178,7 +178,7 @@ ok('  and the room claims the whole screen, so the app bar steps aside',
 
 /* ── And gives it back the moment it stops being the screen ─────────────
 
-   Carli, 4 October 2026: *"Die res van die app se harde buttons onder het
+   The owner, 4 October 2026: *"Die res van die app se harde buttons onder het
    verdwyn seker toe jy die nuwe video kamer gebou het."*
 
    The room stays MOUNTED when the room list is drawn over it, so an
@@ -310,7 +310,7 @@ ok('  and measures inside whatever scrolls, so scrolling cannot grow the room',
 
 ok('  and the photo editor is the same shape, measured the same way',
   /useRoomHeight\(\)/.test(withoutComments(readFileSync('app/components/PostStudio.tsx', 'utf8'))),
-  'Carli asked for the same bar in that room on 7 October — a room with a bar'
+  'the owner asked for the same bar in that room on 7 October — a room with a bar'
   + ' at its foot and no height is a room that grows a page under itself');
 
 ok('  and sets a height, not only a minimum',

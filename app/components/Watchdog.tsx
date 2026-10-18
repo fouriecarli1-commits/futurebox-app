@@ -37,7 +37,7 @@ export default function Watchdog(): null {
     };
     /* ── And the white screen that is not an error ──────────────────────
 
-       Carli's, most likely. A page that throws nothing, rejects nothing,
+       The owner's, most likely. A page that throws nothing, rejects nothing,
        comes back blank and recovers on a reload has not failed: Android
        has thrown the tab away to give its memory to something else — a
        file picker or a camera app is the commonest reason — and put an

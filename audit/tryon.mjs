@@ -1,7 +1,7 @@
 /**
  * Clothes on a model, walked on a phone.
  *
- * Carli, 16 October 2026: *"Show clothes on models."* Read off the glass and
+ * The owner, 16 October 2026: *"Show clothes on models."* Read off the glass and
  * off what is sent: it opens from beside Bring a picture in; a garment
  * brought in goes up with a described model; choosing a real person keeps
  * the button shut until their photo is in and the box is ticked, and then

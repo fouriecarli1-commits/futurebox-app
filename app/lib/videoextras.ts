@@ -3,7 +3,7 @@
  * words that move, a frame round the picture, and the photo room's text
  * styles carried over.
  *
- * Carli, 14 October 2026, looking at the video editor's recipe cards: *"Ek
+ * The owner, 14 October 2026, looking at the video editor's recipe cards: *"Ek
  * verstaan nie wat hierdie is nie? Dan moet ons seker maak dat die cool text
  * templates in die photo editor ook hierdie kant kom. Ons kort shapes,
  * frames, en motion templates."* And: *"Die motion templates moet 'n
@@ -26,7 +26,7 @@ import type { EdgeId } from './wordsedge';
 /* ── Words that move ───────────────────────────────────────────────────── */
 
 export type MotionId = 'none' | 'pop' | 'rise' | 'slide' | 'type' | 'fade' | 'pulse' | 'drop'
-  /* Carli, 16 October 2026, screenshots of a title library: fourteen more. */
+  /* The owner, 16 October 2026, screenshots of a title library: fourteen more. */
   | 'flip' | 'scale' | 'shrink' | 'write' | 'rotate' | 'stretch' | 'spin'
   | 'glitch' | 'flicker' | 'jitter' | 'scroll' | 'vslide' | 'hslide' | 'bounce';
 
@@ -47,7 +47,7 @@ export const WORD_MOTIONS: readonly WordMotion[] = [
   { id: 'drop', name: ['motion.drop', 'Drop'], what: ['motion.dropWhat', 'Fall in from above and land.'] },
   { id: 'pulse', name: ['motion.pulse', 'Pulse'], what: ['motion.pulseWhat', 'Beat gently for as long as they are up.'] },
   /* ── Fourteen more, 16 October 2026 ───────────────────────────────────
-     Carli's screenshots of a desktop editor's title library: flip up, scale
+     The owner's screenshots of a desktop editor's title library: flip up, scale
      up, random write on, rotate, stretch zoom, spin twist, glitch, neon
      flicker, jitter, scroll and the slides. Each is the same kind of thing
      as the eight above — numbers for one moment — so the preview and the

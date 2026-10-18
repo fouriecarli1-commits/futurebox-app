@@ -1,5 +1,5 @@
 /**
- * The kids room, held to what Carli asked of it on 15 October 2026.
+ * The kids room, held to what the owner asked of it on 15 October 2026.
  *
  *   "Plus moet daar nie 'n grown up button binne die studio wees nie want
  *    kinders gaan dit self stel."
@@ -95,7 +95,7 @@ try {
   check('  and the grown-up\u2019s page has a way to sign out', (await page.locator('[data-kidssignout]').count()) === 1);
   await page.getByRole('button', { name: /Back to the music|Terug na die musiek/i }).first().click();
   await page.waitForTimeout(600);
-  /* Carli, 16 October 2026: "Ek sukkel om daar uit te kom." A small lock
+  /* The owner, 16 October 2026: "Ek sukkel om daar uit te kom." A small lock
      opens the same code pad, for a grown-up who cannot find the hold. */
   await page.locator('[data-kidslock]').click();
   await page.waitForTimeout(300);
@@ -104,7 +104,7 @@ try {
   check('  and the code takes the grown-up to their page', (await page.locator('[data-kidscodechooser]').count()) === 1);
   await page.getByRole('button', { name: /Back to the music|Terug na die musiek/i }).first().click();
   await page.waitForTimeout(600);
-  /* Carli, 16 October 2026: "Daar moet 'n sign out button wees op die
+  /* The owner, 16 October 2026: "Daar moet 'n sign out button wees op die
      hoof home screen van die kids studio." Plain to see, behind the code. */
   check('the kids home screen has its own Sign out', await page.locator('[data-kidshomesignout]').isVisible());
   await page.locator('[data-kidshomesignout]').click();
@@ -155,7 +155,7 @@ try {
     && (await page.locator('[data-kidsloopbuilder]').count()) === 0);
 
   /* ── The Story Maker, a door of its own, and a book that reads ────────
-     Carli, 15 October 2026: "Ek sien ook nie die story mode waar kinders
+     The owner, 15 October 2026: "Ek sien ook nie die story mode waar kinders
      kinder stories ontwikkel nie", then "Read to me werk nie" beside a page
      that printed "kids.heroDinoTitle". */
   await page.locator('[data-kidshome]').first().click().catch(() => undefined);
@@ -199,7 +199,7 @@ try {
     said.length === 4 && said.every((one) => one.length > 20 && !/kids\./.test(one)), JSON.stringify(said).slice(0, 160));
 
   /* ── Bring it to life ─────────────────────────────────────────────────
-     Carli, 16 October 2026: "Bring it to life button does nothing." It
+     The owner, 16 October 2026: "Bring it to life button does nothing." It
      threw before it sent anything — a name read before it was declared in
      `packDrawing` — and what it would have said landed under the bottom bar.
      The engine is a stand-in here; what is measured is that the press goes

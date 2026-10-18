@@ -10,7 +10,7 @@
  *
  * One person's ear found `-tjie`. Every member's ear finds the rest.
  *
- * Carli, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
+ * The owner, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
  * vir ons terugvoer te gee as afrikaanse woorde nie reg uit kom nie? Dit kan
  * baie help."
  *

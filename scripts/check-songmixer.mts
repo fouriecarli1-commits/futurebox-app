@@ -3,7 +3,7 @@
  *
  * ── Two things, and the second is a bug that was shipping ────────────────
  *
- * Carli asked for the voice desk in general terms — "'n mixer setting … vir
+ * The owner asked for the voice desk in general terms — "'n mixer setting … vir
  * die stemme wat gebruik word". It went into the Pro Booth and not into Make a
  * song, which is the room most people are actually in: a song came out of the
  * machine and the voice on it is not theirs.

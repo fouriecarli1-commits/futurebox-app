@@ -3,7 +3,7 @@
 /**
  * The vector studio: shapes, lines and words that stay sharp at any size.
  *
- * Carli, 17 October 2026, with another app's vector illustration on screen:
+ * The owner, 17 October 2026, with another app's vector illustration on screen:
  * *"Ek hou van daai vector illustration. Ek weet nie waar sal mens dit in
  * bou nie."* It opens over the photo editor (beside Bring a picture in, and
  * from All tools), and what is drawn goes back onto the post as a layer of

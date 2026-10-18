@@ -64,7 +64,7 @@ export const configured = (): boolean => !!key() && !!project();
  *
  * ── Three engines, three addresses ───────────────────────────────────────
  *
- * Carli's own Model Garden, 9 October 2026, pasted sample by sample:
+ * The owner's own Model Garden, 9 October 2026, pasted sample by sample:
  *
  *   Veo       us-central1-aiplatform.googleapis.com … /locations/us-central1
  *   Nano      aiplatform.googleapis.com            … /locations/global
@@ -142,7 +142,7 @@ export interface Candidate {
    * somebody deploys it, so a request to one answers 404, which reads
    * exactly like a wrong model name.
    *
-   * Carli pasted the whole Model Garden listing on 10 October 2026 and every
+   * The owner pasted the whole Model Garden listing on 10 October 2026 and every
    * card carries one badge or the other. Reading those badges answered two
    * things nobody here knew and one that nobody here suspected — see the
    * notes on the Veos and on Nano Banana below.
@@ -158,7 +158,7 @@ export const MODELS: readonly Candidate[] = [
   { id: 'lyria-002', what: 'music', verb: 'predict', hosting: 'serverless', note: 'A real publisher model on :predict \u2014 a different api from the two below. Instrumental only and about 30 seconds, so not the booth\u2019s button.' },
   /* ── The two that are really there, and on another API ────────────
  
-     Carli's Model Garden, 9 October 2026. Both of these are `interactions`
+     The owner's Model Garden, 9 October 2026. Both of these are `interactions`
      models — `v1beta1`, `locations/global`, model named in the body — and
      neither is a publisher model you can `:predict`. That is why asking
      `models/lyria-3-pro-preview:predict` answered "Publisher model was not
@@ -170,7 +170,7 @@ export const MODELS: readonly Candidate[] = [
   { id: 'lyria-3-clip-preview', what: 'music', verb: 'predict', hosting: 'serverless', on: 'interactions', note: 'Song CLIPS, same interactions api. Seen on her page beside the pro one. The right one for a short piece rather than a whole song.' },
   /* ── Four Veos on her project, and the app already had the right one ─
  
-     Carli walked Model Garden on 9 October 2026 and pasted card after card.
+     The owner walked Model Garden on 9 October 2026 and pasted card after card.
      Four ids came off her own screen, each with the same flow:
  
        veo-3.0-generate-001
@@ -213,7 +213,7 @@ export const MODELS: readonly Candidate[] = [
   { id: 'veo-3.0-fast-generate-001', what: 'video', verb: 'predictLongRunning', hosting: 'serverless', note: 'Veo 3 Fast. Her catalogue listing shows this tile and no 3.1 tile, 10 October 2026 — while she pasted four 3.1 cards the day before. The id is a guess at the fast 3.0 name; the probe is what answers.' },
   /* ── Nano Banana, where the names are worst ────────────────────
 
-     Carli, 8 October 2026: *"Ek dink ons moet dan lyria, nano banana en veo
+     The owner, 8 October 2026: *"Ek dink ons moet dan lyria, nano banana en veo
      gebruik."*
 
      Four candidates for one model, because on the day she asked the sources
@@ -234,7 +234,7 @@ export const MODELS: readonly Candidate[] = [
   { id: 'gemini-3.1-flash-lite-image', what: 'image', verb: 'generateContent', note: 'The lighter 3.1 image model; what cover.ts draws album covers with. Last in IMAGE_ORDER, 15 October 2026.' },
   /* ── The one that can CHANGE a video ──────────────────────────────
  
-     Carli pasted her own documentation page on 10 October 2026: the
+     The owner pasted her own documentation page on 10 October 2026: the
      capability list, the endpoint, the request body and a whole response.
      So this id is read rather than guessed — and it differs from the name
      the Gemini conversation gave on the 9th, which was
@@ -249,7 +249,7 @@ export const MODELS: readonly Candidate[] = [
      nothing in this app can do at any price. */
   /* ── The one that LISTENS ──────────────────────────────────────────
  
-     Carli, 10 October 2026: *"But isn't there a way for an AI to listen to
+     The owner, 10 October 2026: *"But isn't there a way for an AI to listen to
      the phonetic sounds of someone speaking isiXhosa?"* There is, and her
      own listing has a Flash-class Gemini badged Serverless to do it with.
      `lib/server/hearword.ts` is the prompt and the reader; this is the name,
@@ -262,7 +262,7 @@ export const MODELS: readonly Candidate[] = [
   /* ── Its successors, because it is being switched off ──────────────
      Google lists Gemini 2.5 Flash for discontinuation no earlier than 16
      October 2026 — its release notes say the 16th, its lifecycle page the
-     20th — and a retired model answers 404. Four rooms call it. Carli sent
+     20th — and a retired model answers 404. Four rooms call it. The owner sent
      her Model Garden listing on 15 October 2026 and these are the Flash
      tiles on it, every one Serverless; `flashCall` below walks on to them,
      newest first, when 2.5 is gone. */
@@ -297,7 +297,7 @@ export const MODELS: readonly Candidate[] = [
  *
  * ── What the 400s actually measured, 8 October 2026 ──────────────────────
  *
- * Carli, that evening, with Google's own words on her screen:
+ * The owner, that evening, with Google's own words on her screen:
  *
  *   Publisher model `…/models/lyria-3-pro-preview` was not found or your
  *   project does not have access to it.
@@ -363,7 +363,7 @@ export const CHOSEN = {
 
      Said plainly because I got Lyria wrong in the other direction earlier
      in the same week — I read eight instrumental code examples and
-     concluded the model could not sing, and Carli corrected me. Examples
+     concluded the model could not sing, and the owner corrected me. Examples
      show what a vendor chose to show. A model page says what a model is. */
   music: 'lyria-3-pro-preview',
   /* And the one that was almost the default has a real job: thirty seconds
@@ -380,7 +380,7 @@ export const CHOSEN = {
   /* Hers, seen in her console, over the one that merely answered a probe. */
   /* ── Flagged 10 October 2026, and NOT changed from here ─────────────
 
-     Carli pasted her whole Model Garden listing, and every card carries a
+     The owner pasted her whole Model Garden listing, and every card carries a
      badge: **Serverless** or **Self-deployed**. Two of this app's own
      choices read badly against it.
 
@@ -409,7 +409,7 @@ export const CHOSEN = {
  *
  * ── Where these come from, and how sure they are ─────────────────────────
  *
- * From the pricing Carli sent on 8 October 2026: Lyria-002 at $0.06 for a
+ * From the pricing the owner sent on 8 October 2026: Lyria-002 at $0.06 for a
  * 30-second clip, and the clip Google's own page documents is 32.8 seconds.
  * So one press of Lyria is 60 000 micro-dollars.
  *
@@ -424,7 +424,7 @@ export const COSTS = {
    * One Lyria 3 Pro song, up to about three minutes.
    *
    * $0.08. Written from a secondary source, then **corroborated the same
-   * day by Carli from her own reading**: *"Die amptelike/gemiddelde prys is
+   * day by the owner from her own reading**: *"Die amptelike/gemiddelde prys is
    * $0.08 (~R1.40 tot R1.50) per gegenereerde liedjie."* Two independent
    * sources agreeing is not an invoice, but it is no longer one blog.
    *
@@ -469,7 +469,7 @@ export const readAddressOf = (model: string): string =>
 /**
  * Where Lyria 3 actually lives, which is not where the rest of them live.
  *
- * Carli pasted her own Model Garden page on 9 October 2026, and it is a
+ * The owner pasted her own Model Garden page on 9 October 2026, and it is a
  * different API in every part:
  *
  *   host      aiplatform.googleapis.com      not {region}-aiplatform…
@@ -507,7 +507,7 @@ export const listAddress = (): string =>
  * "the model is there". That was a fact about the request, not the project,
  * because `:predict` validates the body before it resolves the name.
  *
- * The second read the model as a resource instead. Carli pressed it on
+ * The second read the model as a resource instead. The owner pressed it on
  * 9 October 2026 and Google answered, for all eight:
  *
  *   API keys are not supported by this API. Expected OAuth2 access token or

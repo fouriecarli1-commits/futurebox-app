@@ -1,6 +1,6 @@
 # Ander verskaffers as ElevenLabs
 
-*Nagegaan 29 September 2026, nadat Carli gevra het: "Kan jy my ook help om te
+*Nagegaan 29 September 2026, nadat die eienaar gevra het: "Kan jy my ook help om te
 kyk na ander verskaffers as elevenlabs? Hulle vat te lank om my te antwoord.
 Dalk seedance, Veo, ByteData, nano banana?"*
 

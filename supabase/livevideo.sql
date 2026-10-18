@@ -4,7 +4,7 @@
 --
 -- ── What this is for ─────────────────────────────────────────────────────
 --
--- Carli: *"Music videos en music shorts moet ook na live toe kan post. Ek sien
+-- the owner: *"Music videos en music shorts moet ook na live toe kan post. Ek sien
 -- huidiglik dat my videos nie 'n opsie het om na live toe te kan post nie."*
 --
 -- She was right and the reason was in the schema rather than in the screen:

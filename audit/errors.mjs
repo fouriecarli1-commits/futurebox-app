@@ -3,7 +3,7 @@
  *
  * ── The two halves of one fault ──────────────────────────────────────────
  *
- * 19 September 2026, Carli photographed Make a song with this where four
+ * 19 September 2026, the owner photographed Make a song with this where four
  * written ideas belong:
  *
  *     400 {"type":"error","error":{"type":"invalid_request_error","message":

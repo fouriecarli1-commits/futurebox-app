@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
+ * The owner, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
  * is."*
  *
  * A song played in the room and was gone when the page closed. That is the
@@ -133,7 +133,7 @@ ok('keeping a song makes the shelf look again',
 /* ── 6. The lists a child browses ──────────────────────────────────────
 
    Six topics and four sounds until 10 October 2026, chosen quickly so the
-   room could be finished. Carli: *"daar moet van alles wat opsies is, 'n
+   room could be finished. The owner: *"daar moet van alles wat opsies is, 'n
    verskeidenheid wees."*
 
    A child who presses the same six buttons gets the same six songs and stops
@@ -178,7 +178,7 @@ for (const one of [...KID_TOPICS, ...KID_SOUNDS]) {
 
 /* And the prompt a child's song is actually built from carries both. */
 /* ── The child's own words ───────────────────────────────────────────
-   Carli, 12 October 2026: "Die kids room moet ook 'n tikboks hê, daar is
+   The owner, 12 October 2026: "Die kids room moet ook 'n tikboks hê, daar is
    kinders wat kan tik, wat oulik sal wees as dit 'n record button het sodat
    'n kind kan praat en woorde so prompt." */
 {

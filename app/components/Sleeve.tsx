@@ -29,7 +29,7 @@
  *
  * ── There is no "keep" button, and that was the fault ────────────────────
  *
- * Carli, 14 September 2026: *"daar is nerens 'n keep knoppie nie wat jou help
+ * The owner, 14 September 2026: *"daar is nerens 'n keep knoppie nie wat jou help
  * om te sê dat jy die image kies en save as cover art, die anther button gaan
  * lê ook agter daai cover art image… en dalk 'n remove button."*
  *
@@ -42,7 +42,7 @@
  *
  * ── Which was wrong, and she found out the expensive way ─────────────────
  *
- * Carli, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
+ * The owner, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
  * moet daar 'n opsie wees 'keep'. Ek sien ek het een gegenerate en nou is dit
  * weg."*
  *
@@ -79,7 +79,7 @@
  *
  * ── The other kind of cover ──────────────────────────────────────────────
  *
- * Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar by
+ * The owner, 22 September 2026: *"Kyk asb in make a song en channel dat daar by
  * cover art 'n opsie is vir real art."*
  *
  * Everything above this line makes a picture with a machine. The album art
@@ -127,7 +127,7 @@ export default function Sleeve({
    *
    * ── What she asked ─────────────────────────────────────────────────
    *
-   * Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album
+   * The owner, 9 October 2026: *"Plus generate dit dan standaard 'n album
    * cover saam met die liedjie."* As standard, with the song.
    *
    * Until now a cover was a button somebody had to go and find after the
@@ -277,7 +277,7 @@ export default function Sleeve({
    */
   /* ── Drawn as standard, with the song ──────────────────────────────────
  
-     Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
+     The owner, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
      saam met die liedjie."*
  
      Three conditions, and each one is a way this could charge for nothing.

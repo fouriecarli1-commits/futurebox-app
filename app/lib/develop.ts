@@ -1,7 +1,7 @@
 /**
  * The darkroom: developing a photograph the way a professional does.
  *
- * Carli, 17 October 2026, with screenshots of a professional photo
+ * The owner, 17 October 2026, with screenshots of a professional photo
  * developer: *"daar moet tog 'n lightroom … wees vir mense wat professioneel
  * edit."* Light (exposure, contrast, highlights, shadows, whites, blacks), a
  * tone curve, colour (white balance, temperature, tint, vibrance,

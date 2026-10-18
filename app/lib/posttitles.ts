@@ -1,7 +1,7 @@
 /**
  * Title styles: a title and a line under it, in one press.
  *
- * Carli, 14 October 2026: *"ons kort goeie text templates, vat dieselfde in
+ * The owner, 14 October 2026: *"ons kort goeie text templates, vat dieselfde in
  * album art se ai art."* Album art's AI art offers six looks — cyberpunk,
  * acid graphics, minimalist Swiss, retro vinyl, hyper-realism and abstract
  * ink (`ArtMaker.tsx`). These are the same six as type on a photograph: a
@@ -64,7 +64,7 @@ export const TITLE_STYLES: readonly TitleStyle[] = [
     under: { says: ['post.title.inkUnder', 'a quiet record'], face: 'book', ink: '#a8a29e', glow: 'none', letterGap: 0.2 },
   },
   /* ── Ten more, 15 October 2026 ───────────────────────────────────────
-     Carli: *"meer text possibilities, meer templates."* The posts people in
+     The owner: *"meer text possibilities, meer templates."* The posts people in
      her studio actually make — a gospel night, a wedding, a street release,
      an amapiano party, a sale, a game night, a fashion drop, a gig, a podcast
      episode and a birthday — each in the new faces and glows. */

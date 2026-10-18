@@ -3,7 +3,7 @@
 /**
  * The opening page of the kids room.
  *
- * Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+ * The owner, 9 October 2026: *"Let the parent give an allowance on an opening
  * page."*
  *
  * ── Why a page of its own and not a room on the rail ─────────────────────
@@ -55,7 +55,7 @@ export default function KidsPage(): React.ReactElement {
           <ArrowLeft className="h-4 w-4" />
           {t('kids.back', 'Back to the studio')}
         </Link>
-        {/* Carli, 16 October 2026: *"Daar is nie 'n logout by die kids studio
+        {/* The owner, 16 October 2026: *"Daar is nie 'n logout by die kids studio
             nie."* On the grown-up's page only, beside the way back — the
             child's room has none, and the lock in its corner is how a
             grown-up reaches this page. */}

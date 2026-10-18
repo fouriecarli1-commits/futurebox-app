@@ -12,7 +12,7 @@
  * at a microphone is looking at, which is the words.
  *
  * What that decision missed is that it also took away the answer to the only
- * question a singer asks while singing. Carli, holding the phone: "dit vat
+ * question a singer asks while singing. The owner, holding the phone: "dit vat
  * mens nie na 'n recording studio toe wat die liedjie se woorde wys, of
  * enigsins 'n klank baan wys of dalk 'n note balk dat mens kan sien of mens op
  * noot sing nie."
@@ -157,7 +157,7 @@ export default function TakeStrip({
 
       {/* ── A row that does not change height ──────────────────────────
 
-          Carli, 15 September 2026: *"daai listening bar bietjie afskuif, want
+          The owner, 15 September 2026: *"daai listening bar bietjie afskuif, want
           hy hop amper in 'n flikker elke keer wanneer die noot wat gesing
           word wil uit kom, dus moet daar spasie gemaak word vir die
           listening bar en die note wat op pop om gesien te word."*

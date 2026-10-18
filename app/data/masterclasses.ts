@@ -63,7 +63,7 @@ export interface Masterclass {
    *
    * ── Why it is a field and not a copy ────────────────────────────────
    *
-   * Carli, 21 September 2026: *"Die 1 featured masterclass moet ook groot
+   * The owner, 21 September 2026: *"Die 1 featured masterclass moet ook groot
    * wees… Daar kan nie goed op wees wat random is nie."*
    *
    * It was already big and it was also hard-coded: the title, the
@@ -136,7 +136,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-games-start',
     title: 'What a generative tool can and cannot do inside a game',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'ai-games',
@@ -149,7 +149,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-games-assets',
     title: 'Assets that survive contact with an art director',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'ai-games',
@@ -162,7 +162,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-games-npc',
     title: 'An NPC that talks back, and what it costs per player',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'ai-games',
@@ -175,7 +175,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-games-ship',
     title: 'Shipping a small game that uses AI, and saying so',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'ai-games',
@@ -226,7 +226,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-music-prompt',
     title: 'Prompting a generator that will not stay in key',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'in-production',
     track: 'ai-music',
@@ -238,7 +238,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-music-structure',
     title: 'Structure: why your generated song falls apart at 2:10',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'ai-music',
@@ -250,7 +250,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-video-continuity',
     title: 'Continuity across a three-minute cut',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'ai-video',
@@ -274,7 +274,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-vibecode-weekend',
     title: 'Ship a working app in a weekend',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'vibecoding',
@@ -298,7 +298,7 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   {
     id: 'mc-one-person-company',
     title: 'The economics of a one-person media company',
-    instructor: 'Anre Fourie',
+    instructor: 'FutureBox',
     provenance: 'original',
     status: 'planned',
     track: 'business',

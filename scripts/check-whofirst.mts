@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 24 September 2026: *"Die cast het nie gewerk nie ... dit het
+ * The owner, 24 September 2026: *"Die cast het nie gewerk nie ... dit het
  * heeltemal 'n ander persoon uitgegooi."*
  *
  * `Presenter.tsx` chose the presenter like this:

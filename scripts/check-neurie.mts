@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, about something Suno had launched: *"Wat oulik is
+ * The owner, 9 October 2026, about something Suno had launched: *"Wat oulik is
  * is dat mens die ritme van 'n liedjie met jou stem kan sing en in sit, en
  * dan kies jy net die instrument tipe."*
  *
@@ -371,7 +371,7 @@ ok('  and offers the snap she asked about, switchable',
 
 /* ── The report that the feature's first step was missing ────────────────
  
-   Carli, 9 October 2026, looking at the first version: *"Daar is niks wat
+   The owner, 9 October 2026, looking at the first version: *"Daar is niks wat
    record nie."* The card asked for a lane and the way to MAKE one was a
    record button on a different desk — and recording does not pick the new
    lane either, so there were two screens between "I want to hum something"

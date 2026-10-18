@@ -5,7 +5,7 @@
  *
  * ── Three reports, and what is actually happening ────────────────────────
  *
- * Carli, 14, 16 and 17 September 2026: *"Die add a photo in Shot gee steeds
+ * The owner, 14, 16 and 17 September 2026: *"Die add a photo in Shot gee steeds
  * net 'n wit blad. Die foto is baie klein 854kb."* And again, on its own
  * line: *"Bladsy is steeds wit."*
  *
@@ -55,7 +55,7 @@ const EMPTY = 20;
  *
  * ── Why this is not `document.body.innerText` ────────────────────────────
  *
- * It was, and that is why this guard has never once fired for Carli.
+ * It was, and that is why this guard has never once fired for the owner.
  *
  * On 18 September she sent a photograph of the white screen. The page is
  * empty — no header, no room, nothing — and across the bottom of it, drawn

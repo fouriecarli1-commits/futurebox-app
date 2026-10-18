@@ -162,7 +162,7 @@ await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'app
 // Their channel: a name, a handle, and a picture at a path in the public bucket.
 await p.route('**/api/creator*', (r) => r.fulfill({ status: 200, contentType: 'application/json',
   body: JSON.stringify({ creator: {
-    name: 'Carli Fourie', handle: 'carli', about: '', links: {},
+    name: 'Lerato Dlamini', handle: 'lerato', about: '', links: {},
     avatar_path: `${WHO.id}/1.webp`,
   } }) }));
 
@@ -220,7 +220,7 @@ await p.goto(server.url, { waitUntil: 'domcontentloaded' });
 await p.locator('button').filter({ hasText: af ? /^Begin verniet$/ : /^Start free$/ }).first()
   .waitFor({ timeout: 30_000 });
 check('a page load on its own shows no welcome — that is for arriving',
-  !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
+  !/Hello, Lerato!|Hallo, Lerato!/.test(await p.locator('body').innerText()));
 await signIn();
 const room = p.locator('div.fixed.inset-0.z-50').first();
 /* The welcome is its own page over everything, not a panel inside the studio,
@@ -229,15 +229,15 @@ const door = p.locator('div.fixed.inset-0.z-\\[55\\]').first();
 /* The door draws a beat after the studio does, once the habit is read; the
    words were read before it had, and the run reported a door that was on
    the screenshot a moment later. Waited for, then read. */
-await p.getByText(af ? /Hallo, Carli!/ : /Hello, Carli!/).first()
+await p.getByText(af ? /Hallo, Lerato!/ : /Hello, Lerato!/).first()
   .waitFor({ timeout: 15_000 }).catch(() => undefined);
 let words = await p.locator('body').innerText();
 
 // ── It is the first thing shown, addressed to them ───────────────────────
 check('the studio opens on the door, not on a room',
-  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
+  af ? /Hallo, Lerato!/.test(words) : /Hello, Lerato!/.test(words),
   words.split('\n').slice(0, 12).join(' / '));
-check('the surname is not read back at them', !/Carli Fourie!/.test(words));
+check('the surname is not read back at them', !/Lerato Dlamini!/.test(words));
 check('it welcomes them back rather than for the first time',
   af ? /welkom terug by FutureBox/i.test(words) : /welcome back to FutureBox/i.test(words));
 /* The icon's file was renamed to icon-neon-192.png; either name is the mark. */
@@ -248,8 +248,8 @@ check('and it is its own page, not a panel inside the studio',
 // The alt is the first name, the same one in the greeting — the habit carries
 // `firstName`, so the picture and the sentence above it agree.
 check('their own picture is shown, not a generated cover',
-  (await door.locator('img[alt="Carli"]').count()) === 1 && servedPhoto > 0,
-  `${await door.locator('img[alt="Carli"]').count()} matching, served ${servedPhoto}`);
+  (await door.locator('img[alt="Lerato"]').count()) === 1 && servedPhoto > 0,
+  `${await door.locator('img[alt="Lerato"]').count()} matching, served ${servedPhoto}`);
 
 await p.screenshot({
   path: shot(`welcome-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`),
@@ -270,7 +270,7 @@ check('and names no other genre',
 
    These two used to assert the opposite: that this screen carried a
    paragraph saying what the suggestion is read off and that nothing extra
-   is recorded. Both sentences were true and Carli asked for them gone —
+   is recorded. Both sentences were true and the owner asked for them gone —
    14 September 2026, with a photograph of the screen: *"Haal daai fyn skrif
    uit op die make a song room."* Six lines of grey type on the one screen
    that is meant to be a set of choices, reading as terms rather than as an
@@ -317,7 +317,7 @@ await open.click();
 await p.waitForTimeout(4000);
 words = await p.locator('body').innerText();
 check('pressing it lands in the room, and the room stays',
-  !/Hello, Carli!|Hallo, Carli!/.test(words),
+  !/Hello, Lerato!|Hallo, Lerato!/.test(words),
   'the greeting came back over the room');
 
 /* Which room it is, is now behind a fold.
@@ -345,7 +345,7 @@ await home.click();
 await p.waitForTimeout(900);
 words = await p.locator('body').innerText();
 check('and it goes back',
-  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words));
+  af ? /Hallo, Lerato!/.test(words) : /Hello, Lerato!/.test(words));
 
 /* ── Out and in again ────────────────────────────────────────────────────
 
@@ -382,7 +382,7 @@ await notNow.waitFor({ timeout: 20_000 });
 await notNow.click();
 await p.waitForTimeout(1200);
 check('there is a way past it that is not a room',
-  !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()),
+  !/Hello, Lerato!|Hallo, Lerato!/.test(await p.locator('body').innerText()),
   'the greeting was still up');
 
 /* Out of the studio next: the overlay covers the header the sign-out lives in,
@@ -391,7 +391,7 @@ check('there is a way past it that is not a room',
    Only if that button is still there. Pressing "Not now — take me to the feed"
    above used to lower the door and leave the studio open behind it, so this
    step was needed. On 4 October that button started doing what it says —
-   Carli: *"Daai not now - take me to the feed button vat my na die video
+   The owner: *"Daai not now - take me to the feed button vat my na die video
    editor. Ek vermoed daai button moet my na spotlight toe vat."* — and the
    feed is not inside the studio, so by the time we get here we are already
    where this click was going.
@@ -430,7 +430,7 @@ await toThePage(p);
 await p.locator('button').filter({ hasText: af ? /^Teken uit$/ : /^Sign out$/ }).first().click();
 await p.waitForTimeout(1500);
 check('signing out closes the door behind them',
-  !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
+  !/Hello, Lerato!|Hallo, Lerato!/.test(await p.locator('body').innerText()));
 /* And actually leaves. The screen used to keep the name and the library of
    somebody who had just signed out, because the press waited on the network
    before touching anything — so on a bad connection nothing visible happened
@@ -469,7 +469,7 @@ await signIn();
    surprise several minutes later. A sign-in has to arrive at it. */
 words = await p.locator('body').innerText();
 check('signing in arrives at the door without pressing anything else',
-  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
+  af ? /Hallo, Lerato!/.test(words) : /Hello, Lerato!/.test(words),
   words.split('\n').slice(0, 10).join(' / '));
 
 /* ── A room chosen from the front page ───────────────────────────────────
@@ -505,7 +505,7 @@ await podcast.click();
 await p.waitForTimeout(2500);
 words = await p.locator('body').innerText();
 check('a room chosen on the front page opens that room, not the door',
-  !/Hello, Carli!|Hallo, Carli!/.test(words), words.split('\n').slice(0, 6).join(' / '));
+  !/Hello, Lerato!|Hallo, Lerato!/.test(words), words.split('\n').slice(0, 6).join(' / '));
 check('and the rail moves with it',
   (await room.locator('nav button[aria-current="page"]').first().innerText()).startsWith('Podcast'),
   await room.locator('nav button[aria-current="page"]').first().innerText());
@@ -524,7 +524,7 @@ await p.locator('nav[aria-label]').first().waitFor({ timeout: 40_000 });
 await p.waitForTimeout(2500);
 words = await p.locator('body').innerText();
 check('coming back from Google arrives at the door too',
-  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
+  af ? /Hallo, Lerato!/.test(words) : /Hello, Lerato!/.test(words),
   words.split('\n').slice(0, 8).join(' / '));
 check('and the mark is wiped out of the address bar',
   !p.url().includes('welcome='), p.url());
@@ -549,7 +549,7 @@ await p.locator('nav[aria-label]').first().waitFor({ timeout: 40_000 });
 await p.waitForTimeout(2500);
 words = await p.locator('body').innerText();
 check('an ordinary return to a signed-in tab lands on the door, not the feed',
-  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
+  af ? /Hallo, Lerato!/.test(words) : /Hello, Lerato!/.test(words),
   words.split('\n').slice(0, 8).join(' / '));
 
 await p.screenshot({

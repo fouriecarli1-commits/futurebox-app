@@ -3,7 +3,7 @@
  *
  * ── Why this exists, and what it replaced ────────────────────────────────
  *
- * Carli, 24 September 2026: *"dit moenie 'n ekstra produk wees nie, eerder
+ * The owner, 24 September 2026: *"dit moenie 'n ekstra produk wees nie, eerder
  * dit monotise en krediete vra saam met die pakkette wat ons reeds het. Te
  * veel aankoop punte gaan mense afsit."*
  *

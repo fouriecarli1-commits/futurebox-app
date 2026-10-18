@@ -115,14 +115,14 @@ export default function Copilot({
    * its own name at the top. That is what tells you it is a thing beside the
    * room rather than part of it.
    *
-   * The cutting room opens it in a sheet instead, since 4 October — Carli:
+   * The cutting room opens it in a sheet instead, since 4 October — the owner:
    * *"Die copilot kan ook net 'n button wees wat uit pop."* A sheet already
    * has a border, a fill and a title with a close button on it, so the card
    * inside it was a second panel drawn on the first: a grey translucent box
    * four pixels in from a near-black one, under two headings, one saying "Ask
    * the copilot" and the next saying "Copilot".
    *
-   * `bare` drops the chrome and the name. It keeps the reset — Carli asked
+   * `bare` drops the chrome and the name. It keeps the reset — the owner asked
    * for that by name in September and it is the only control in the header —
    * and it keeps everything below, which is the whole panel.
    */
@@ -147,7 +147,7 @@ export default function Copilot({
   }, [turns, busy]);
 
   /* ── A new room is a new conversation ────────────────────────────────
-     Carli, 14 October 2026: *"As iemand nie wil prompt nie en uit die kamer
+     The owner, 14 October 2026: *"As iemand nie wil prompt nie en uit die kamer
      gaan, dan moet die prompt uit copilot gevee word, want ek sien daai
      prompt bly in copilot al gaan jy weer na ander kamers toe."* One copilot
      is mounted for the whole studio and only its room changes, so whatever
@@ -167,7 +167,7 @@ export default function Copilot({
 
   /* ── What the last room handed over ──────────────────────────────────
  
-     Carli, 20 September 2026: *"Die advert room se prompts spring
+     The owner, 20 September 2026: *"Die advert room se prompts spring
      nogsteeds nie oor na die nuwe kamer toe se copilot nie. Die
      voorstelle in adverts is puntloos as dit nie dit doen nie."*
  
@@ -300,7 +300,7 @@ export default function Copilot({
         {!bare && <p className="text-sm font-bold text-white">{t('copilot.title')}</p>}
         {/* ── Start again ────────────────────────────────────────────────
 
-            Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n
+            The owner, 21 September 2026: *"Copilot en daardie kamer moet 'n
             reset hê om die kamer skoon te maak en van vooraf te prompt."*
 
             Both halves, one press. Clearing the conversation alone leaves
@@ -437,7 +437,7 @@ export default function Copilot({
           disabled={offline}
           className="flex-1 min-w-0 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-hidden focus:border-emerald-500 disabled:opacity-60"
         />
-        {/* Said instead of typed (Carli, 14 October 2026). The words land in
+        {/* Said instead of typed (The owner, 14 October 2026). The words land in
             the box, not straight in the copilot, so she can read them first. */}
         <SpeakButton onHeard={(said) => setDraft((was) => withSaid(was, said))} disabled={offline} className="self-center" />
         <button

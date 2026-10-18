@@ -137,7 +137,7 @@ export interface SingerWords {
  * This was a row of buttons on the song screen until 10 September 2026, and it
  * did not work: the words went into the style list last, where the twelve-item
  * cap and `buildRequest`'s six-item reminder threw them away on every chunk
- * after the intro. Carli asked for a man or a woman and got whatever the model
+ * after the intro. The owner asked for a man or a woman and got whatever the model
  * felt like, and her instruction was to take the control out rather than keep
  * tuning it.
  *

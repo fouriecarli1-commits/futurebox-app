@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Ek dink ook 'n story mode om geleesde stories met
+ * The owner, 9 October 2026: *"Ek dink ook 'n story mode om geleesde stories met
  * 'n video sal baie oulik wees."* A story read aloud, with a video. Then:
  * *"Gaan aan met story mode."*
  *

@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli: *"Dan weet ek nie of google 'n template pack het waarvan 'n video
+ * The owner: *"Dan weet ek nie of google 'n template pack het waarvan 'n video
  * of foto kan begin nie? Dit is wat meeste editing programme amazing maak
  * is hulle templates."*
  *
@@ -59,7 +59,7 @@ export interface TemplateCategoryMeta {
 }
 
 export const TEMPLATE_CATEGORIES: readonly TemplateCategoryMeta[] = [
-  /* First, because this is a music studio. Carli, 15 October 2026: "meer
+  /* First, because this is a music studio. The owner, 15 October 2026: "meer
      templates". */
   { id: 'music', nameKey: 'tplcat.music', nameEn: 'Music & Artists', nameAf: 'Musiek & Kunstenaars', iconType: 'music', colorBg: 'from-fuchsia-500/20 to-amber-500/30' },
   { id: 'neon', nameKey: 'tplcat.neon', nameEn: 'Neon & Cyber Glow', nameAf: 'Neon & Kuber-gloed', iconType: 'sparkles', colorBg: 'from-cyan-500/20 to-fuchsia-500/30' },
@@ -86,7 +86,7 @@ export const TEMPLATE_CATEGORIES: readonly TemplateCategoryMeta[] = [
 
 export const STARTER_TEMPLATES: readonly StudioTemplateItem[] = [
   // ── Music & artists, 15 October 2026 ──
-  // Carli: "meer templates". The posts a music studio's members make most:
+  // The owner: "meer templates". The posts a music studio's members make most:
   // a single, an album night, tour dates, a gig, a worship night, an
   // amapiano party, a mixtape, a podcast, a lyric card, new-music Friday, a
   // video thumbnail and a love song. Pictures only — the words go on as

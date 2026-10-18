@@ -389,7 +389,7 @@ export async function exactFor(track: Track, audio: Blob | null): Promise<Timed>
      looks for an `aligned` answer, does not find the `heard` one sitting
      right there, and pays to align words it already has the timings for.
 
-     Carli: "As hy een keer geluister het moet hy die woorde stoor op die
+     The owner: "As hy een keer geluister het moet hy die woorde stoor op die
      liedjie en dit hou. Mens kan nie oor en oor met krediete betaal nie."
 
      So the question asked first is the one she is actually asking: has this

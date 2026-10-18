@@ -5,7 +5,7 @@
  *
  * ── Why this exists, and what it is not ──────────────────────────────────
  *
- * Carli, 24 September 2026: *"Jy sê ons het een, maar ek vermoed jy meen die
+ * The owner, 24 September 2026: *"Jy sê ons het een, maar ek vermoed jy meen die
  * long shot funksie. wat ek bedoel is 'n editing program soos 'n video editor
  * lyk amper soos die probooth. Waar jy tydlyne het, asook kan jy filters
  * apply en export."*
@@ -82,7 +82,7 @@ export interface Piece {
   /**
    * Where this shot came from: filmed here, made here, or carried in.
    *
-   * Carli, 5 October 2026: *"Copyright check for export."* This app cannot
+   * The owner, 5 October 2026: *"Copyright check for export."* This app cannot
    * check copyright and does not claim to — see `lib/filmrights.ts` — but it
    * does know which parts of a film came out of itself, and a piece made from
    * a file off a phone used to be indistinguishable from one taken out of her
@@ -101,7 +101,7 @@ export interface Piece {
   /**
    * Parts of this shot blurred out: a face, a plate, a screen.
    *
-   * Carli, 10 October 2026: *"Ek sien ook nogsteeds nie 'n blur funksie nie."*
+   * The owner, 10 October 2026: *"Ek sien ook nogsteeds nie 'n blur funksie nie."*
    * The dial in `videoadjust.ts` blurs the whole frame, which is a mood; this
    * is the one anybody means by a blur tool. See `lib/videoblur.ts`.
    *
@@ -134,7 +134,7 @@ export interface Piece {
    * How those words are set: the face, the size as a share of frame height,
    * and where on the picture they sit.
    *
-   * Carli, 30 September 2026: *"Die teks moet font opsies hê, en dit moet ook
+   * The owner, 30 September 2026: *"Die teks moet font opsies hê, en dit moet ook
    * gemanipuleer moet kan word op die skerm van die video, deur dit rond te
    * kan skuif, en groter en kleiner te kan maak."*
    *
@@ -153,7 +153,7 @@ export interface Piece {
   /**
    * The colour of the words, the shape behind them, and that shape's colour.
    *
-   * Carli, 4 October 2026: *"Onthou dat die teks 'n kleur keuse ook moet hê, en
+   * The owner, 4 October 2026: *"Onthou dat die teks 'n kleur keuse ook moet hê, en
    * 'n keuse van agtergrond vir woorde, 'n square, 'n square met ronde punte,
    * 'n verfkwas. Die agtergrond moet ook kleur keuse hê."*
    *
@@ -165,7 +165,7 @@ export interface Piece {
   /**
    * When the words come up and go down, in seconds into this piece.
    *
-   * Carli, 4 October 2026: *"Dit kan nie die hele video bar vol wees nie, want
+   * The owner, 4 October 2026: *"Dit kan nie die hele video bar vol wees nie, want
    * teks is gewoonlik net daar vir gedeeltes van 'n video."*
    *
    * Both absent is the whole piece, which is what a caption did before it
@@ -201,7 +201,7 @@ export interface Piece {
   /**
    * How the words come in — `lib/videoextras.ts`. Absent is still.
    *
-   * Carli, 14 October 2026: *"Ons kort ... motion templates."*
+   * The owner, 14 October 2026: *"Ons kort ... motion templates."*
    */
   readonly wordsMotion?: MotionId;
   /** A neon glow round the letters, from the photo room's text styles. */
@@ -276,7 +276,7 @@ export interface Piece {
    * Carry this piece's own sound. ON unless switched off — read it through
    * `soundOf`, never as `piece.sound`.
    *
-   * It was off by default ("most material is room tone"), and Carli, 14
+   * It was off by default ("most material is room tone"), and the owner, 14
    * October 2026: "Ek hoor nogsteeds nie klank in die video editor nie." A
    * clip with somebody talking in it played silent until she found a switch
    * on that one clip; a film is expected to sound like its clips. Only an
@@ -351,7 +351,7 @@ export const ASPECTS: Readonly<Record<string, '9:16' | '16:9' | '1:1'>> = {
  *
  * ── Why a function and not `SHAPES[edit.shape]` ──────────────────────────
  *
- * Carli, 9 October 2026: *"Die video desk en photo editor moet 'n opsie hê
+ * The owner, 9 October 2026: *"Die video desk en photo editor moet 'n opsie hê
  * om custom sizes te kies. Dat die ratios perfek is."*
  *
  * Named shapes cover the common cases and will never cover all of them — a
@@ -420,7 +420,7 @@ export interface Edit {
   /**
    * What the file is written at.
    *
-   * Carli, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
+   * The owner, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
    * waarin dit export."* A grade id from `videoquality.ts` and a frame rate;
    * the bitrate is worked out from those two rather than being a third thing
    * to choose, because the number that matters is bits per pixel per frame and
@@ -431,7 +431,7 @@ export interface Edit {
   /**
    * The two red lines, and whether the song comes with the cut.
    *
-   * Carli, 4 October 2026: *"twee ekstra rooi lyne ... en ook die keuse van
+   * The owner, 4 October 2026: *"twee ekstra rooi lyne ... en ook die keuse van
    * interlock net soos by probooth."*
    *
    * `span` is where the lines are, in film seconds, and is absent until she
@@ -446,7 +446,7 @@ export interface Edit {
   /**
    * The film's cover, and where it came from.
    *
-   * Carli, 4 October 2026: *"'n opsie ... om 'n cover foto vir die video te
+   * The owner, 4 October 2026: *"'n opsie ... om 'n cover foto vir die video te
    * screen shot uit die video, of een in te bring wat dan die video se
    * voorblad foto word ook wanneer die video ge-export word."*
    *
@@ -482,7 +482,7 @@ export interface Edit {
   /**
    * The two sound lanes, switched off and soloed.
    *
-   * Carli, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
+   * The owner, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
    * mute, net soos in probooth die s, m."*
    *
    * The same pair the Pro Booth's desk carries, and the same rule: solo wins
@@ -497,7 +497,7 @@ export interface Edit {
   /**
    * How far the music drops while a shot is speaking, as a multiplier.
    *
-   * Carli, 5 October 2026: *"Dit moet ook die funksie en button in hê wanneer
+   * The owner, 5 October 2026: *"Dit moet ook die funksie en button in hê wanneer
    * 'n video praat, dan moet die musiek sagter gaan elke keer wanneer die
    * praat stem in kom."*
    *
@@ -515,7 +515,7 @@ export interface Edit {
   /**
    * Stereo, or folded to mono.
    *
-   * Carli asked for "stereo, mono surround". Two of those three are real
+   * The owner asked for "stereo, mono surround". Two of those three are real
    * here: the file this browser writes is a webm with a stereo track, and
    * mono is that track with both sides the same. Surround is not something
    * `MediaRecorder` can be asked for — there is no six-channel webm at the
@@ -527,7 +527,7 @@ export interface Edit {
   /**
    * How fast the song under the film plays, as a multiple.
    *
-   * Carli, 5 October 2026: *"Op die sound tracks moet mens die spoed van die
+   * The owner, 5 October 2026: *"Op die sound tracks moet mens die spoed van die
    * klank ook kan verstel."*
    *
    * The shots have had this since the speed slider was built; the bed never
@@ -543,7 +543,7 @@ export interface Edit {
   /**
    * Repeat the song when the film outlasts it.
    *
-   * Carli: *"Duplicate funksie."* The song stops and the rest of the film is
+   * The owner: *"Duplicate funksie."* The song stops and the rest of the film is
    * silent; this plays it again from wherever the bed was scrubbed to, as
    * many times as the film needs.
    */
@@ -553,7 +553,7 @@ export interface Edit {
   /**
    * Take the rumble and the hiss off the shots' own sound.
    *
-   * Carli: *"daar moet ook 'n reduce noise funksie wees."*
+   * The owner: *"daar moet ook 'n reduce noise funksie wees."*
    *
    * Two filters and nothing more, and it is named for what it does rather
    * than for what the phrase usually promises. It is not a model that
@@ -575,7 +575,7 @@ export interface Edit {
    * and the photo room's own `lib/postshapes.ts`, drawn by the same
    * functions on the preview and in the file.
    *
-   * Carli, 14 October 2026: *"Ons kort shapes, frames, en motion templates."*
+   * The owner, 14 October 2026: *"Ons kort shapes, frames, en motion templates."*
    * Film-wide rather than per shot: a frame that came and went with the cuts
    * would read as a fault, and a shape she wants on one shot only is one she
    * can take off the next.
@@ -586,7 +586,7 @@ export interface Edit {
   /**
    * Her own mark on the film: the logo, and how it sits.
    *
-   * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... video editor
+   * The owner, 15 October 2026: *"Kyk mooi of elke funksie in ... video editor
    * ... werk."* These lived in the room's state and nowhere else, so the one
    * thing on the film she sets once and expects to stay — her logo — was
    * gone every time she came back, and a turn or a drag of it could not be
@@ -648,7 +648,7 @@ export function runs(edit: Edit): number {
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As hy
+ * The owner, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As hy
  * op sy eie tydlyn is moet hy ruimte hê om verby 'n ander video te kan
  * stretch."*
  *
@@ -890,7 +890,7 @@ export function cutFrom(edit: Edit): Cut {
 
   /* ── The captions, laid out on the FILM and then cut up again ─────────
 
-     Carli, 5 October 2026: *"As hy op sy eie tydlyn is moet hy ruimte hê om
+     The owner, 5 October 2026: *"As hy op sy eie tydlyn is moet hy ruimte hê om
      verby 'n ander video te kan stretch."*
 
      A caption used to be a field on its own scene, which is the one shape that
@@ -1064,7 +1064,7 @@ export function heard(edit: Edit): { readonly music: boolean; readonly shots: bo
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Binne die video editor. Wanneer ek die musiek
+ * The owner, 5 October 2026: *"Binne die video editor. Wanneer ek die musiek
  * tydlyn in sit en ek druk play, dan hoor mens nie die klank binne die video
  * nie."*
  *
@@ -1112,7 +1112,7 @@ export function songSecond(edit: Edit, second: number): number | null {
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Die sound tracks onder videos moet ook geselect kan
+ * The owner, 5 October 2026: *"Die sound tracks onder videos moet ook geselect kan
  * word, sodat mens daardie tyd lyne ook kan split. Huidiglik kan mens nie die
  * musiek tydlyne select nie."*
  *
@@ -1290,7 +1290,7 @@ export function split(edit: Edit, id: string, at: number): Edit {
 /**
  * Split whatever the playhead is standing on, where it is standing.
  *
- * Carli, 4 October 2026: *"'n funksie om bloot net waar die curser is te
+ * The owner, 4 October 2026: *"'n funksie om bloot net waar die curser is te
  * split."*
  *
  * `split` already existed and already took a film second — what it also took
@@ -1311,7 +1311,7 @@ export function splitHere(edit: Edit, second: number): Edit {
 /**
  * Take a span out of the film, and let everything after it close up.
  *
- * Carli, 4 October 2026: *"die oomblik wanneer 'n mens 'n stuk uit cut moet
+ * The owner, 4 October 2026: *"die oomblik wanneer 'n mens 'n stuk uit cut moet
  * die video wat verder is die gaping toe maak en terug spring."*
  *
  * ── Which it does by construction, and that is worth saying ──────────────

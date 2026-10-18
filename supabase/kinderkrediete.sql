@@ -1,6 +1,6 @@
 -- Kids credits: bought for the kids room, and spendable nowhere else.
 --
--- Carli, 14 October 2026: "In die pricing page moet die kids room ook 'n
+-- the owner, 14 October 2026: "In die pricing page moet die kids room ook 'n
 -- aparte prys hê. Die kids room met sy aparte credits moet net van die
 -- welcoming page af geaccess kan word." And on the prices: "Prys voorstelle
 -- is reg vir kids studio."

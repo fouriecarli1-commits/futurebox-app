@@ -74,7 +74,7 @@ ok('  and is not the English copied across where there were words to translate',
 
 /* ── The places that are not an account ─────────────────────────────────
  *
- * Carli, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie
+ * The owner, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie
  * moet maak waar advertensies gepost gaan word. Dit moet ook daar wees om te
  * kan tick."
  *

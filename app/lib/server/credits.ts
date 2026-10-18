@@ -238,7 +238,7 @@ export async function charge(
 
   /* ── The child's allowance, before the account's balance ──────────────
  
-     Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+     The owner, 9 October 2026: *"Let the parent give an allowance on an opening
      page."* This is the line that makes that allowance real. Everything
      else about kids mode is a room and a page; this is the only place the
      limit is actually applied, because this is the only place the money
@@ -253,7 +253,7 @@ export async function charge(
      An account not in kids mode gets `true` and never touches the table. */
   /* ── Kids credits, before anything of the account's ────────────────
  
-     Carli, 14 October 2026: the kids room has its own credits, bought with
+     The owner, 14 October 2026: the kids room has its own credits, bought with
      a kids pack. While the room is open they pay first, and only what they
      do not cover goes on to the allowance and the account. A charge the
      kids balance covers whole touches neither. `kids_wallet_take` takes

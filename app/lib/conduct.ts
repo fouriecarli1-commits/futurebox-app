@@ -3,7 +3,7 @@
  *
  * ── What she asked, and what this is ─────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Fair social usage. Ek wil nie hê mense moet AI
+ * The owner, 11 October 2026: *"Fair social usage. Ek wil nie hê mense moet AI
  * robots vloek nie… maar ons moet 'n afsny punte hê."* And, in the same
  * breath, the thing that makes this fair: *"Mense verloor hulle humeur en dit
  * is te verstane."*

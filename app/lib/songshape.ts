@@ -3,7 +3,7 @@
  *
  * ── Why the songs were coming out badly ──────────────────────────────────
  *
- * Carli: "dit kom baie baie sleg uit … ek mors letterlik my geld." She is
+ * The owner: "dit kom baie baie sleg uit … ek mors letterlik my geld." She is
  * right, and it was not the engine. The plan being sent to it was wrong in a
  * way that guarantees a bad take.
  *

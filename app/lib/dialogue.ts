@@ -134,7 +134,7 @@ export function spoken(turns: readonly Turn[]): number {
 }
 
 export interface Speaker {
-  /** What they are called in the script, e.g. "Anre". Matched case-blind. */
+  /** What they are called in the script, e.g. "Sipho". Matched case-blind. */
   readonly name: string;
   readonly voiceId: string;
 }
@@ -151,8 +151,8 @@ const SPOKEN_LINE = /^\s*([^:]{1,40}?)\s*:\s*(.*)$/;
 /**
  * Read a script the way people write one.
  *
- *     Anre: So what changed this year?
- *     Carli: Everything, and none of it at once.
+ *     Sipho: So what changed this year?
+ *     The owner: Everything, and none of it at once.
  *       And that is the part nobody expected.
  *
  * A line with no name in front of it belongs to whoever spoke last, because

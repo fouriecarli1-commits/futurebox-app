@@ -16,7 +16,7 @@ import { SITE_URL } from './lib/brand';
 /**
  * The child's room's own face.
  *
- * Carli, 10 October 2026, having taken the question to Google herself and
+ * The owner, 10 October 2026, having taken the question to Google herself and
  * come back with its answer: a playful rounded face, not the system one.
  *
  * Loaded through `next/font` rather than a stylesheet link, which means it is
@@ -43,7 +43,7 @@ const fredoka = localFont({
   display: 'swap',
 });
 
-/* The headline face of the kids room — Carli, 13 October 2026, with the
+/* The headline face of the kids room — the owner, 13 October 2026, with the
    "Kids Dream Studio" page Google drew: its headings were Bubblegum Sans, a
    fat rounded display face a child reads as a toy. Local for the same reason
    as Fredoka, and a variable for the same reason: only `.fb-kids-bubble`
@@ -57,7 +57,7 @@ const bubblegum = localFont({
   display: 'swap',
 });
 
-/* The face of the whole app — Carli, 13 October 2026, with the home page
+/* The face of the whole app — the owner, 13 October 2026, with the home page
    Google drew for the overall look: Plus Jakarta Sans, a geometric
    humanist that reads warm at small sizes and sharp in a heading. Local for
    the same reason as the two above. The theme engine's `jakarta` font
@@ -127,7 +127,7 @@ export const metadata: Metadata = {
      the owner's own short form of their own name. */
   /* ── And the picture it opens with ───────────────────────────────────
 
-     Carli, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
+     The owner, 4 October 2026: *"wanneer mens die app icon druk, dan launch hy
      huidiglik net met die app icon, maar ek sal wil hê die woorde futurebox
      moet saam launch."*
 

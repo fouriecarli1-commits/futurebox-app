@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Daar moet ook 'n opsie wees om 'n cover foto vir die
+ * The owner, 4 October 2026: *"Daar moet ook 'n opsie wees om 'n cover foto vir die
  * video te screen shot uit die video, of een in te bring wat dan die video se
  * voorblad foto word ook wanneer die video ge-export word."*
  *

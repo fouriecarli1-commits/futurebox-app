@@ -173,7 +173,7 @@ export default function Campaign({
    * video desk is for to somebody who had just walked in with an advert in
    * their hands.
    *
-   * Carli, 10 October 2026: *"Copilot se suggestions vir generations moet
+   * The owner, 10 October 2026: *"Copilot se suggestions vir generations moet
    * meer wees. Tans is daar net een suggestion waarmee hy voorstel om te
    * help."*
    */
@@ -364,7 +364,7 @@ export default function Campaign({
   const [problem, setProblem] = useState<string | null>(null);
   /* ── The advert as a still, with its words in the picture ──────────────
  
-     Carli, 9 October 2026, twice: *"onthou nano banana kan woorde in foto
+     The owner, 9 October 2026, twice: *"onthou nano banana kan woorde in foto
      sit"*, and then *"gaan aan met die advert desk."*
  
      The desk wrote adverts and handed them to the video desk or the voice
@@ -520,7 +520,7 @@ export default function Campaign({
     },
     /* ── The two buttons the copilot could not press ──────────────────
 
-       Carli, 21 September 2026: *"Die advert se copilot skryf nie die
+       The owner, 21 September 2026: *"Die advert se copilot skryf nie die
        shots in die volgende kamer nie."*
 
        The third report of this, and the first two were answered by fixing
@@ -652,7 +652,7 @@ export default function Campaign({
   };
 
   /* ── A product link read into the brief ─────────────────────────────
-     Carli, 18 October 2026: yes to Google's AI reading the page, three
+     The owner, 18 October 2026: yes to Google's AI reading the page, three
      credits. `lib/adlink.ts` — this app never opens the link itself. */
   const [link, setLink] = useState('');
   const [linkBusy, setLinkBusy] = useState(false);
@@ -1388,7 +1388,7 @@ export default function Campaign({
       {/* ── No sales screen here any more ──────────────────────────────
  
           This used to be `owns(paid, MARKETING) ? <the desk> : <AddOn>` — a
-          second shop, inside a room, for R199 a month. Carli, 24 September
+          second shop, inside a room, for R199 a month. The owner, 24 September
           2026: *"Te veel aankoop punte gaan mense afsit."*
  
           The desk is drawn for everybody now. What decides whether it works
@@ -1425,7 +1425,7 @@ export default function Campaign({
           <span>
             {/* It ended "— what that would take, per platform", which is not a
                 sentence: a summary line that trails off, on a `<details>`
-                nobody knew was pressable. Carli: "daai een sin ... maak nie
+                nobody knew was pressable. The owner: "daai een sin ... maak nie
                 vir my sin nie."
 
                 It says the reason now — every platform wants its own approved

@@ -63,7 +63,7 @@ export default function LyricHelp({
         });
         const data = (await response.json()) as { suggestions?: Idea[]; detail?: string; message?: string; error?: string };
         if (response.ok && Array.isArray(data.suggestions)) {
-          /* Words to be sung only. Carli, 18 October 2026: "Write the next
+          /* Words to be sung only. The owner, 18 October 2026: "Write the next
              bit" came back with a [Style] card among the verses, and tapping
              it would have put production notes into the sung words. Style
              has its own button now; one that still slips through is left out. */

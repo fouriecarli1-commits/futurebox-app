@@ -3,7 +3,7 @@
  *
  * ── The fault this is written against ───────────────────────────────────
  *
- * Carli, 14 September 2026: *"Copilot pop op en vra dat persoon 'n mixing
+ * The owner, 14 September 2026: *"Copilot pop op en vra dat persoon 'n mixing
  * voorstel en copilot kan die mixing verander volgens die vraag en
  * voorstel."*
  *

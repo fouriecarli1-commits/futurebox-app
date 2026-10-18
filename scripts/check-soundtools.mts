@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Op die sound tracks moet mens die spoed van die
+ * The owner, 5 October 2026: *"Op die sound tracks moet mens die spoed van die
  * klank ook kan verstel, daar moet ook 'n reduce noise funksie wees.
  * Duplicate funksie."*
  *
@@ -102,7 +102,7 @@ ok('  and sets the rate on every run, not only the first',
 ok('the song can be told to play again when the film outlasts it',
   cutFrom({ ...film, underLoop: true }).audioLoop === true
   && cutFrom(film).audioLoop === undefined,
-  'Carli: "Duplicate funksie" — the song stopped and the rest of the film was'
+  'the owner: "Duplicate funksie" — the song stopped and the rest of the film was'
   + ' silent');
 
 ok('  and the renderer really loops the source',
@@ -149,7 +149,7 @@ ok('  and the room says what it cannot do',
 ok('the booth can put the words back where it measured them',
   /data-boothlisten/.test(booth)
   && /setIntroAt\(null\); setWordsShift\(0\)/.test(booth),
-  'Carli asked whether a listen-to-the-words was already inside the booth. It'
+  'the owner asked whether a listen-to-the-words was already inside the booth. It'
   + ' was — `phrasesOf` and `vocalSpanOf` run free on every open — but once a'
   + ' hand had moved `introAt` or `wordsShift` there was no way back to it,'
   + ' so the thing somebody reaches for when the words drift was also what'

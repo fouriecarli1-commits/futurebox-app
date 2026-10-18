@@ -166,7 +166,7 @@ export interface TokenAnswer {
  *
  * ── Why a refresh token is not required ──────────────────────────────────
  *
- * Carli, 11 October 2026, after the tables were created and the sign-in went
+ * The owner, 11 October 2026, after the tables were created and the sign-in went
  * through: *"tone3000 werk nogsteeds nie"* — amps still would not come.
  *
  * This refused the WHOLE sign-in unless the answer carried a refresh token:
@@ -320,7 +320,7 @@ export type Fetched =
    * 429 and a 500 — a sign-in that is not what we think it is, a scope we
    * never asked for, too many tries, and their server having a bad minute.
    * Four different problems, four different answers, and from here they all
-   * read the same. Carli hit this on 6 October with the whole journey
+   * read the same. The owner hit this on 6 October with the whole journey
    * otherwise working.
    */
   | { readonly how: 'no'; readonly why: string; readonly status?: number };

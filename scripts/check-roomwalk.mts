@@ -9,7 +9,7 @@
  * pick the room off the door".
  *
  * That copy was correct when it was written. Then the cutting room was built
- * and Carli asked for it to BE the screen, so `roomOwnsScreen` takes the
+ * and the owner asked for it to BE the screen, so `roomOwnsScreen` takes the
  * app's bar away there — `check:underbar` holds it that way on purpose. The
  * Video Editor is seventh of fourteen in `ROOMS`, so from the eighth room
  * onwards every one of those probes was pressing a bar the app had correctly

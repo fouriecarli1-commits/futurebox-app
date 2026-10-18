@@ -1,7 +1,7 @@
 /**
  * Photo grids in the photo editor, used the way she showed them.
  *
- * Carli, 16 October 2026, a four-photo collage open on her phone: *"Kyk ook
+ * The owner, 16 October 2026, a four-photo collage open on her phone: *"Kyk ook
  * wanneer foto's in so grid is dan moet mens op een foto kan kliek en dit kan
  * ge-edit word."* Read off the canvas: a frame filled is that quarter of the
  * picture changing colour, a photo moved in its frame is its pixels moving,

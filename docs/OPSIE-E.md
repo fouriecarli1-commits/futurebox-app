@@ -1,6 +1,6 @@
 # Opsie E — alles daaroor
 
-Carli, 8 September 2026: *"gaan asb voort met opsie E."*
+The owner, 8 September 2026: *"gaan asb voort met opsie E."*
 
 Dit is gedoen. Hierdie bladsy is die volledige rekord: wat verander het, hoekom,
 wat dit aan die syfers doen, en wat sy self by Paystack en Vercel moet doen.
@@ -32,7 +32,7 @@ Verander in `app/lib/plans.ts` (pryse, liedjies, videos, die kaartteks),
 
 ---
 
-## 2. Hoekom, en dit was Carli se eie punt
+## 2. Hoekom, en dit was die eienaar se eie punt
 
 Sy het gesê: *"mense koop altyd die duurder produkte want hoe meer jy betaal hoe
 goedkoper word dit."* Dit is waar, en dit is hoekom die vorige raamwerk verkeerd
@@ -252,7 +252,7 @@ weer nagegaan word by launch.
 
 ## Byvoegsel — elke plan kry 11% meer krediete, 4 Oktober 2026
 
-Carli: *"Ek dink aangesien ons self ook monotize moet ons, klein bietjie
+Die eienaar: *"Ek dink aangesien ons self ook monotize moet ons, klein bietjie
 ekstra krediete by elke plan sit. Ek dink jy moet besluit wat kos 'n video,
 want ons wil nie dit onmoontlik maak vir mense op maker plan om videos te
 maak nie."*

@@ -4,7 +4,7 @@
 --
 -- ── Waarvandaan ──────────────────────────────────────────────────────────
 --
--- Carli, 16 Oktober 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
+-- the owner, 16 Oktober 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
 -- generate en oor tyd op bou?"* — en toe: *"gaan aan met die
 -- template-stelsel."*
 --
@@ -44,7 +44,7 @@ alter table public.post_designs enable row level security;
 
 -- ───────────────────────────────────────── die prente van haar toestel af ──
 --
--- Carli, 16 Oktober 2026: *"Ek wonder of ek templates ook van my device af
+-- the owner, 16 Oktober 2026: *"Ek wonder of ek templates ook van my device af
 -- kan oplaai?"* — *"Ek bedoel templates wat gestoor moet word."*
 --
 -- 'n Ontwerp wat sy elders gemaak het, kom in as 'n prent en word die

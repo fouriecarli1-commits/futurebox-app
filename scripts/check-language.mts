@@ -177,7 +177,7 @@ const read = (path: string): string => readFileSync(join(ROOT, path), 'utf8');
 const provider = read('app/lib/i18n.tsx');
 /* ── Her second report, and the race that silenced the notice ───────────
  *
- * Carli, 9 September 2026: "Wanneer ek vanuit die afrikaanse skerm in log,
+ * The owner, 9 September 2026: "Wanneer ek vanuit die afrikaanse skerm in log,
  * spring hy na die engels toe wanneer mens in is." The mirror image of the
  * first one, which is why the notice exists at all.
  *

@@ -38,8 +38,8 @@ function fake({ bytesPerCall = 480, fail = null } = {}) {
 {
   const calls = fake();
   const result = await converse([
-    { voiceId: 'v-anre', text: 'So what changed this year?' },
-    { voiceId: 'v-carli', text: 'Everything, and none of it at once.' },
+    { voiceId: 'v-sipho', text: 'So what changed this year?' },
+    { voiceId: 'v-lerato', text: 'Everything, and none of it at once.' },
   ]);
   say(result.ok, `a two-turn conversation failed: ${result.ok ? '' : result.message}`);
   say(calls.length === 1, `expected one request, saw ${calls.length}`);
@@ -58,7 +58,7 @@ function fake({ bytesPerCall = 480, fail = null } = {}) {
   say(call.body.inputs.length === 2, `sent ${call.body.inputs.length} inputs for two turns`);
   say('voice_id' in call.body.inputs[0], 'a turn carries voiceId rather than voice_id');
   say(!('voiceId' in call.body.inputs[0]), 'the camelCase name leaked onto the wire');
-  say(call.body.inputs[0].voice_id === 'v-anre', 'the first turn went out in the wrong voice');
+  say(call.body.inputs[0].voice_id === 'v-sipho', 'the first turn went out in the wrong voice');
   say(call.body.inputs[0].text === 'So what changed this year?', 'the words changed on the way out');
   say(typeof call.body.model_id === 'string' && call.body.model_id, 'no model was named');
   say(call.body.apply_text_normalization === 'auto', 'text normalisation was not set');

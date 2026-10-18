@@ -5,7 +5,7 @@
  *
  * ── What she asked for, and the one part that is a refusal ───────────────
  *
- * Carli, 6 October 2026: *"Kan ons 'n image generator kry, asook 'n image
+ * The owner, 6 October 2026: *"Kan ons 'n image generator kry, asook 'n image
  * editor? Dit moet al die goeie funksies hê om teks op te kan sit, mooi teks
  * formate …"* — and then, about where it is for: *"Dit is vir plasings vir
  * sosiale media en kan ook in die video editor ingesit word."*
@@ -20,7 +20,7 @@
  *
  * ── The wall is not this room ────────────────────────────────────────────
  *
- * Carli, same message: *"'n Album art kan net op die spot generate word, of
+ * The owner, same message: *"'n Album art kan net op die spot generate word, of
  * kuns kan gekoop word. Ons blok mense om hulle eie prente in te sit,
  * andersins gaan hulle nooit album art koop nie."*
  *
@@ -163,7 +163,7 @@ const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-5
 
 /* ── One control, one row ─────────────────────────────────────────────────
  
-   Carli, 7 October 2026: *"bars binne pop outs moet ewe groot en lank wees,
+   The owner, 7 October 2026: *"bars binne pop outs moet ewe groot en lank wees,
    en alles moet baie eenvoudig en maklik wees."*
  
    Measured before changing anything, the picture bench held controls 34, 36
@@ -192,7 +192,7 @@ const LEEG = KNOP;
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Die export se png en jpg buttons moet highlight
+ * The owner, 8 October 2026: *"Die export se png en jpg buttons moet highlight
  * wanneer mens dit kies."*
  *
  * They already did, in the DOM: every chip in this room carries
@@ -245,7 +245,7 @@ const THINGS_SIDE = 1600;
  * The checkerboard under a see-through post, on screen only.
  *
  * Light, the way every editor shows see-through. It was two dark greys, and
- * on the dark room a transparent post looked like a black one — Carli, 16
+ * on the dark room a transparent post looked like a black one — the owner, 16
  * October 2026: *"Ek sien ook nog nerens transparent en dat dit werk nie."*
  * Two greys that nothing else in a post is likely to be exactly, so the
  * probe can tell the guide from the picture.
@@ -289,7 +289,7 @@ interface Words {
   /**
    * Where it actually sits, as a share of the picture.
    *
-   * Carli, 8 October 2026: *"Die woord op die screen kan nog nie geskuif en
+   * The owner, 8 October 2026: *"Die woord op die screen kan nog nie geskuif en
    * gecrop word nie."* The four spots stay — they are quick and they are
    * where a caption usually goes — and this is underneath them. Absent
    * means "wherever the spot says", which is every line written before
@@ -309,13 +309,13 @@ interface Words {
    */
   readonly behind?: Backdrop;
   /**
-   * The light the line gives off — Carli, 13 October 2026: "Neon,
+   * The light the line gives off — the owner, 13 October 2026: "Neon,
    * futuristic, phantasm". Absent is none. `lib/postglow.ts` says how it
    * is drawn so that it exports.
    */
   readonly glow?: GlowId;
   /**
-   * How big, against the size the room fits it at. Carli, 15 October 2026:
+   * How big, against the size the room fits it at. The owner, 15 October 2026:
    * *"When I touch the text box … a cropping ring so that we can adjust the
    * size of the text on screen."* Pulled by the ring's corners; absent is 1.
    */
@@ -338,7 +338,7 @@ const WORDS_SIZE = { min: 0.3, max: 3 } as const;
 /**
  * One step of the room's history, in the order it happened.
  *
- * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
+ * The owner, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
  * werk."* Undo only knew pictures, so a line of words or a shape thrown away
  * by a stray Delete was gone for good while Put back sat there lit for some
  * earlier crop. Words and shapes are a few hundred bytes, so a step of theirs
@@ -362,7 +362,7 @@ const KEEP_STEPS = 40;
  *
  * ── Why this replaced "Draft (720p)" and "Ultra (4K)" ────────────────────
  *
- * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
+ * The owner, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
  * werk."* The old row promised a resolution it never set — the draft came
  * out at full size, the "4K" was twice the post (2160 across on a square),
  * and choosing it quietly overrode How big. A label that is not what the file
@@ -404,7 +404,7 @@ function freeRow(was: readonly Words[], from: number): At {
 /* ── The cutting room's colours ───────────────────────────────────────────
  
    Taken from `VideoEditor.tsx` rather than guessed at, so the two rooms are
-   the same room with different work in them. The floor is the one Carli
+   the same room with different work in them. The floor is the one the owner
    picked for the cutting room; INK and INK_DIM are its text, and RAISE is
    what lifts a control off the floor instead of a border drawn round it. */
 const FLOOR = '#0A0C10';
@@ -459,7 +459,7 @@ const POST_LOWER: readonly BenchSpec[] = [
     icon: <ScanText className="h-5 w-5" />,
     /* ── Not "Read it", which nobody could work out ──────────────────
  
-       Carli, 7 October 2026: *"Ek weet nogsteeds nie wat is die read it
+       The owner, 7 October 2026: *"Ek weet nogsteeds nie wat is die read it
        funksie in die photo editor nie."* — the second time she had asked.
  
        "Read" is the wrong word in an app with three rooms that read things
@@ -469,7 +469,7 @@ const POST_LOWER: readonly BenchSpec[] = [
        that, and it says it in two words a thumb can read on a bar. */
     /* ── "Grab", once it really grabs more than words ────────────────
  
-       Carli, 11 October 2026: *"Ek dink hierdie funksie by photo editor
+       The owner, 11 October 2026: *"Ek dink hierdie funksie by photo editor
        moet net sê grab, dan moet die objekte en woorde gehighlight word."*
  
        The rename waited for the second half to exist. A bench called
@@ -504,7 +504,7 @@ const POST_LOWER: readonly BenchSpec[] = [
 ] as const;
 
 /* ── The eight tools ───────────────────────────────────────────────────
-   Carli, 14 October 2026: *"Ek dink daar moet funksie buttons onder aan die
+   The owner, 14 October 2026: *"Ek dink daar moet funksie buttons onder aan die
    page wees, modern en klein, dit pop dan die editing tools uit."* The six
    benches, with templates and shapes lifted out of the words bench to be
    buttons of their own, in the order work is done. `POST_SHORT` is what
@@ -521,7 +521,7 @@ const POST_SHAPES: BenchSpec = {
   label: ['post.benchShapes', 'Shapes'],
   what: ['post.benchShapesWhat', 'A cube, a ring, a grid or a frame, lit with the same glow as the words, in one of five places at one of three sizes.'],
 };
-/* Carli, 14 October 2026: *"Ek dink ook daar moet 'n magic mouse tool wees
+/* The owner, 14 October 2026: *"Ek dink ook daar moet 'n magic mouse tool wees
    wat op dele kliek en Ai kan dan die gedeelte verbeter (daar moet dan seker
    opsies wees)."* `lib/magicedit.ts` carries how only the tapped part is
    sent and laid back in. */
@@ -532,7 +532,7 @@ const POST_MAGIC: BenchSpec = {
   what: ['post.benchMagicWhat', 'Tap a part of the photo and the AI improves it, changes it into something else, or takes it away. Only that part changes.'],
   paid: true,
 };
-/* Carli, 16 October 2026: *"Die photo editor sal moet layers kry."* Beside
+/* The owner, 16 October 2026: *"Die photo editor sal moet layers kry."* Beside
    the shapes, because the layers are the words and shapes she has put on. */
 const POST_LAYERS: BenchSpec = {
   id: 'layers',
@@ -540,7 +540,7 @@ const POST_LAYERS: BenchSpec = {
   label: ['post.benchLayers', 'Layers'],
   what: ['post.benchLayersWhat', 'Every layer on the picture, front to back: choose the one you are editing, or All for everything together. Hide one, move it forward or back, or make it see-through.'],
 };
-/* Carli, 16 October 2026: photos in a grid, each one tapped and edited on
+/* The owner, 16 October 2026: photos in a grid, each one tapped and edited on
    its own — `lib/postcells.ts`. */
 const POST_GRID: BenchSpec = {
   id: 'grid',
@@ -548,7 +548,7 @@ const POST_GRID: BenchSpec = {
   label: ['post.benchGrid', 'Photo grids'],
   what: ['post.benchGridWhat', 'Two, three, four or nine photos on one post. Tap a frame to put a photo in it, then tap a photo to change just that one.'],
 };
-/* Carli, 16 October 2026: *"Ek soek ook ... sulke oulike filters."* Their
+/* The owner, 16 October 2026: *"Ek soek ook ... sulke oulike filters."* Their
    own tool rather than a row in Adjust: a filter is chosen by looking, and
    looking needs the room the pictures take. `lib/postfilters.ts`. */
 const POST_FILTER_BENCH: BenchSpec = {
@@ -564,7 +564,7 @@ const POST_CELL: BenchSpec = {
   label: ['post.benchCell', 'This photo'],
   what: ['post.benchCellWhat', 'Replace it, move it about in its frame, zoom in, or open it on its own with every tool in the room.'],
 };
-/* Carli, 17 October 2026: *"In photo editor sal daar ook graph templates
+/* The owner, 17 October 2026: *"In photo editor sal daar ook graph templates
    moet wees, en verskillende verskeidenheid van graphs."* `lib/postcharts.ts`. */
 const POST_CHARTS: BenchSpec = {
   id: 'charts',
@@ -572,7 +572,7 @@ const POST_CHARTS: BenchSpec = {
   label: ['post.benchCharts', 'Charts'],
   what: ['post.benchChartsWhat', 'A chart from a design: type or paste the numbers, or let AI set them from your words.'],
 };
-/* Photo first, at the far left. Carli, 17 October 2026: *"Maak die photo tab
+/* Photo first, at the far left. The owner, 17 October 2026: *"Maak die photo tab
    heel links en heel eerste van al die tabs."* */
 const POST_TOOLS: readonly BenchSpec[] = [
   POST_UPPER[0], POST_STARTS, POST_GRID, POST_UPPER[1], POST_UPPER[2], POST_FILTER_BENCH, POST_MAGIC, POST_LOWER[0], POST_LOWER[1], POST_SHAPES, POST_CHARTS, POST_LAYERS, POST_LOWER[2],
@@ -599,7 +599,7 @@ const TOOL_FOOT = 'flex min-h-[56px] w-[58px] shrink-0 snap-start flex-col items
 const TOOL_RAIL = 'flex min-h-[56px] w-full flex-col items-center justify-center gap-1 rounded-xl border border-transparent px-0.5 text-[10px] font-bold leading-tight';
 
 /* ── Tools and filters as pictures ────────────────────────────────────
-   Carli, 16 October 2026: *"onthou mense is visueel"*. Both are drawn
+   The owner, 16 October 2026: *"onthou mense is visueel"*. Both are drawn
    from one small square of her photograph (`thumbOf`), so a whole row of
    them is a row of draws of a tiny canvas. */
 
@@ -712,7 +712,7 @@ const freshId = (): string => `p${Date.now().toString(36)}${Math.random().toStri
 
 /* ── A template's own lettering, taken out of its picture ─────────────────
 
-   Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
+   The owner, 15 October 2026: *"Kyk mooi of elke funksie in ... photo editor
    werk."* The older starter templates draw their headline and subtitle into
    the picture as SVG <text>, and the room then put the same headline on top
    as editable words — so every one of them came in with the title twice, the
@@ -824,7 +824,7 @@ export default function PostStudio({
   /**
    * Drawn as a room of its own rather than a sheet over whatever was behind.
    *
-   * Carli, 7 October 2026: *"Make hooks the same shape as video desk and add
+   * The owner, 7 October 2026: *"Make hooks the same shape as video desk and add
    * next to it Photo Editor. Then make the photo editor the same look as the
    * video editor."* A sheet off the video desk is not a room: it is absent
    * from the menu, nothing points at it, and the only way to find it was to
@@ -856,7 +856,7 @@ export default function PostStudio({
    * looking at a different thing entirely — and the bar is missing from the
    * door and from every tab she reaches through it.
    *
-   * Carli reported exactly that about the cutting room on 4 October: *"Die
+   * The owner reported exactly that about the cutting room on 4 October: *"Die
    * res van die app se harde buttons onder het verdwyn."* Written in here on
    * the day this room started claiming the screen, rather than waiting to be
    * told about it a second time. `audit/underbar.mjs` walks out of the room
@@ -900,7 +900,7 @@ export default function PostStudio({
    *
    * ── What she asked for ───────────────────────────────────
    *
-   * Carli, 8 October 2026: *"dat die masjien self objekte en text
+   * The owner, 8 October 2026: *"dat die masjien self objekte en text
    * identifiseer wat dan highlight en dan kan die klient op die objekte of
    * text click wat hulle graag wil grab, rondskuif, of delete."*
    *
@@ -935,7 +935,7 @@ export default function PostStudio({
      so it works in every tool and changes nothing that is saved. */
   const [view, setView] = useState<{ scale: number; x: number; y: number }>({ scale: 1, x: 0, y: 0 });
   /* The brush is a switch of its own: on, a finger paints; off, the photo can
-     be moved as usual. Carli, 17 October 2026: *"Daar moet dan 'n brush
+     be moved as usual. The owner, 17 October 2026: *"Daar moet dan 'n brush
      button wees."* */
   const [brushOn, setBrushOn] = useState(true);
   const [styleGroup, setStyleGroup] = useState<StyleGroup>('featured');
@@ -946,7 +946,7 @@ export default function PostStudio({
      before-and-after line — only while the photo is the one that change made. */
   const [compareFrom, setCompareFrom] = useState<{ readonly of: HTMLImageElement; readonly from: HTMLImageElement } | null>(null);
   /* The glow over the photograph while a tool works on it — a long one for
-     taking the background out, a short flash for a one-press change. Carli,
+     taking the background out, a short flash for a one-press change. The owner,
      17 October 2026: *"asof hy besig is om te werk, en na so 3 sekondes moet
      die glow stop en dan is dit eweskielik transparent"*. */
   const [working, setWorking] = useState<'long' | 'flash' | null>(null);
@@ -959,7 +959,7 @@ export default function PostStudio({
   const [picked, setPicked] = useState<Pick | null>(null);
   /* ── The things in the picture, beside the words in it ────────────────
  
-     Carli, 11 October 2026: *"dan moet die objekte en woorde gehighlight
+     The owner, 11 October 2026: *"dan moet die objekte en woorde gehighlight
      word, en dit moet dan rondgeskuif kan word en ge-edit word."*
  
      They go into the SAME `found` list the reader fills, so a thing and a
@@ -985,7 +985,7 @@ export default function PostStudio({
   const [groundReach, setGroundReach] = useState<'everywhere' | 'edges'>('everywhere');
   /* ── Giving a cut-out shape a new colour ──────────────────────────────
  
-     Carli, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan
+     The owner, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan
      verander ... die pearlescent funksie ... waar twee na 3 kleure saam
      blend vir 'n kleur skakering."*
  
@@ -1045,7 +1045,7 @@ export default function PostStudio({
      were missing are the ordinary photograph shapes — 4:3 and 3:4 — which is
      to say the shapes most pictures in the world actually are, left out of a
      list of three for no reason beyond the list having been written quickly.
-     Carli, 9 October 2026: *"daar moet van alles wat opsies is, 'n
+     The owner, 9 October 2026: *"daar moet van alles wat opsies is, 'n
      verskeidenheid wees."* */
   const [askShape, setAskShape] = useState<ShapeId>(SHAPE_DEFAULT);
   /* ── Pictures to copy from, which is the capability that was sitting idle ─
@@ -1066,7 +1066,7 @@ export default function PostStudio({
 
   /* ── A photograph given a little motion ───────────────────────────────
 
-     Carli, 10 October 2026: *"Ek wonder ook of google se modelle net bietjie
+     The owner, 10 October 2026: *"Ek wonder ook of google se modelle net bietjie
      motion kan gee aan foto's? Dit kan baie van ons photo editing tools
      verbeter, en vir al ook vir foto's wat vir bemarking gebruik word en
      social media."*
@@ -1086,7 +1086,7 @@ export default function PostStudio({
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
   const [liveBusy, setLiveBusy] = useState(false);
   /* ── Which engine can bring a photo to life, asked before the press ────
-     Carli, 15 October 2026: *"Give it a little motion werk ook nie."* Two
+     The owner, 15 October 2026: *"Give it a little motion werk ook nie."* Two
      faults, both silent until pressed. The photo goes up as the opening and
      the closing frame, and only Google's own Veo reads either — the
      ElevenLabs engines take no picture at all. And a square post asked for a
@@ -1239,7 +1239,7 @@ export default function PostStudio({
     }
   };
   const [said, setSaid] = useState('');
-  /* Carli, 14 October 2026, over a photograph with two notes on it: "Al
+  /* The owner, 14 October 2026, over a photograph with two notes on it: "Al
      daai woorde is te veel. Ek dink nie mense hoef dit te sien nie." What
      the room says now goes again by itself, after long enough to read it. */
   useEffect(() => {
@@ -1289,7 +1289,7 @@ export default function PostStudio({
   /** The shape whose handles are showing, picked by a tap or by adding it. */
   const [markOn, setMarkOn] = useState<string | null>(null);
   /* ── Layers — `lib/postlayers.ts` ─────────────────────────────────────
-     Carli, 16 October 2026: *"As mens op die layers click moet mens kan
+     The owner, 16 October 2026: *"As mens op die layers click moet mens kan
      kies op watter layer jy nou edit, en natuurlik 'n all layer wat alles
      by mekaar het."* Which layer a thumb on the glass means; the photo's
      and the background's switches and the photo's opacity, which have no
@@ -1299,7 +1299,7 @@ export default function PostStudio({
   const [photoHidden, setPhotoHidden] = useState(false);
   const [photoAlpha, setPhotoAlpha] = useState(1);
   /* How many layers sit under the photo: nought is the photo at the back,
-     as it always was. Carli, 17 October 2026: *"Met die layers wil die foto
+     as it always was. The owner, 17 October 2026: *"Met die layers wil die foto
      wat 1ste daar was nie vorentoe kom nie."* */
   const [photoAt, setPhotoAt] = useState(0);
   const [backHidden, setBackHidden] = useState(false);
@@ -1308,7 +1308,7 @@ export default function PostStudio({
   /** Where the before-and-after line is, as a share across the post; null when it is not shown. */
   const [compare, setCompare] = useState<number | null>(null);
   /* ── The photo grid — `lib/postcells.ts` ─────────────────────────────
-     Carli, 16 October 2026: *"wanneer foto's in so grid is dan moet mens op
+     The owner, 16 October 2026: *"wanneer foto's in so grid is dan moet mens op
      een foto kan kliek en dit kan ge-edit word."* The frames and their
      photographs, the one tapped, the gap between them, and a photo held by
      the thumb while it is dragged about inside its frame. */
@@ -1383,7 +1383,7 @@ export default function PostStudio({
     setMarks((was) => was.map((m) => (m.id === id ? { ...m, ...how } : m)));
   /* ── Cutting the photograph down, which is not the same as framing it ───
  
-     Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
+     The owner, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
      nie."* `postcrop.ts` chooses which part of a photograph shows through a
      frame; this cuts the rest of the photograph away for good. `cropbox.ts`
      carries the difference and why both belong here.
@@ -1395,13 +1395,13 @@ export default function PostStudio({
 
   /* ── What kind of file, and how big ────────────────────────────────────
  
-     Carli, 7 October 2026: *"Ook die formaat van export?"* It was a PNG at
+     The owner, 7 October 2026: *"Ook die formaat van export?"* It was a PNG at
      the post's own size, always, with no choice. `lib/postfile.ts` carries
      the two formats, why the other four were left out, and the one thing
      about JPEG that has to be said out loud. */
   /* ── Simple, or every choice there is ────────────────────────────────
  
-     Carli's list, 7 October 2026: *"Simple en advances opsies."* Every tool
+     The owner's list, 7 October 2026: *"Simple en advances opsies."* Every tool
      is in both; what simple hides is the rungs. `lib/plainmode.ts` carries
      why that distinction is the whole design. */
   const plain = usePlain();
@@ -1416,7 +1416,7 @@ export default function PostStudio({
 
   /* ── Drawing round a thing, which is the third way to cut one out ──────
  
-     Carli, 7 October 2026: *"Gaan aan met die free-hand cut."*
+     The owner, 7 October 2026: *"Gaan aan met die free-hand cut."*
  
      `cutout.ts` finds a person and knows nothing about a guitar; `erase.ts`
      grows the picture over something small and cannot invent what was behind
@@ -1556,7 +1556,7 @@ export default function PostStudio({
   const tracingNow = useRef(false);
   /* ── Which of the four, and where the drag started ────────────────────
  
-     Carli, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil waar
+     The owner, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil waar
      jy totale vryheid het om mooi om elke edge te sny."* Four answers to
      "how hard is this edge", and `lib/lasso.ts` carries which is for what.
  
@@ -1730,7 +1730,7 @@ export default function PostStudio({
          construction rather than by two call sites agreeing. */
       /* ── And the whole photograph while the magic touch is aimed ─────
 
-         Carli, 15 October 2026: *"Kyk mooi of elke funksie ... werk."* A
+         The owner, 15 October 2026: *"Kyk mooi of elke funksie ... werk."* A
          tap is turned into a spot by `shareAt`, which reads it against the
          whole photograph — and the glass was showing her crop, so the ring
          and the part the AI changed landed away from her finger, and a tap
@@ -1781,7 +1781,7 @@ export default function PostStudio({
           ctx.fillStyle = chosen ? 'rgba(52,211,153,0.28)' : 'rgba(52,211,153,0.10)';
           ctx.fillRect(box.left, box.top, box.width, box.height);
           ctx.strokeRect(box.left, box.top, box.width, box.height);
-          /* Its name on it (Carli, 14 October 2026: the grabs must be
+          /* Its name on it (The owner, 14 October 2026: the grabs must be
              visible), so a box is a thing she can choose by what it is. */
           const name = one.text.length > 22 ? `${one.text.slice(0, 21)}\u2026` : one.text;
           if (name) {
@@ -1850,7 +1850,7 @@ export default function PostStudio({
         ctx.restore();
       }
       /* ── Before and after ─────────────────────────────────────────
-         Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler
+         The owner, 16 October 2026: *"met die auto enhance moet daar 'n ruler
          wees wat oor die prent slide om te wys hoe dit gelyk het."* Left
          of the line, the photograph as it came; right of it, as it is
          now. On the glass only — the file is always the whole of it. */
@@ -1869,7 +1869,7 @@ export default function PostStudio({
     }
 
     /* ── The layers, back to front ─────────────────────────────────────
-       Carli, 16 October 2026: *"Die photo editor sal moet layers kry."*
+       The owner, 16 October 2026: *"Die photo editor sal moet layers kry."*
        Every shape and every line of words in one stack, in the order the
        layer list shows — `lib/postlayers.ts`. Before there was an order,
        every shape sat under every line of words; a layer that was never
@@ -2283,7 +2283,7 @@ export default function PostStudio({
     }
 
     /* ── The ring round the line she touched ──────────────────────────────
-       Carli, 15 October 2026: *"When I touch the text box on photo editor I
+       The owner, 15 October 2026: *"When I touch the text box on photo editor I
        have to see that I am touching it by making a cropping ring so that we
        can adjust the size of the text on screen."* The crop box's look — a
        bright edge and a handle at each corner — on the screen only. A corner
@@ -2543,7 +2543,7 @@ export default function PostStudio({
    */
   /* ── Delete, copy, paste, undo: the keyboard and the right-click ────────
 
-     Carli, 14 October 2026: "in al die editor plekke moet daar 'n right
+     The owner, 14 October 2026: "in al die editor plekke moet daar 'n right
      click wees wat funksies vinniger kry … as ek 'n text wil delete, dan
      moet ek die delete knoppie kan druk, of ctrl c en ctrl v." */
   /* A shape or a line thrown away is a step, so Put back brings it back. */
@@ -2655,7 +2655,7 @@ export default function PostStudio({
 
   const grab = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     /* ── Two fingers: the photograph zooms, not the screen ────────────
-       Carli, 17 October 2026: *"Wanneer mens met twee vingers op die foto
+       The owner, 17 October 2026: *"Wanneer mens met twee vingers op die foto
        zoom, dan moet die foto zoom en nie die app se screen nie."* The
        second finger down turns whatever the first one started into a
        pinch, and the pinch is the photograph's own zoom. */
@@ -2710,7 +2710,7 @@ export default function PostStudio({
     }
     /* ── The words next, because a thumb on a word means the word ─────
  
-        Carli, 8 October 2026: *"Die woord op die screen kan nog nie
+        The owner, 8 October 2026: *"Die woord op die screen kan nog nie
         geskuif en gecrop word nie."* Before this, a drag on the glass
         could only ever mean the picture, and the caption went where the
         spot said and stayed there.
@@ -2719,7 +2719,7 @@ export default function PostStudio({
         mode somebody turned on and is unambiguous, and a thumb that lands
         on a word while neither is on means the word. */
     /* ── The layers, front first ───────────────────────────────────────
-       Carli, 16 October 2026: one layer chosen in the layer list is the only
+       The owner, 16 October 2026: one layer chosen in the layer list is the only
        one a thumb takes hold of; with All, whichever is in FRONT at that
        spot — the order the layer list shows, not words-before-shapes. A
        layer switched off cannot be caught. `lib/postlayers.ts`. */
@@ -2805,7 +2805,7 @@ export default function PostStudio({
             return;
           }
           /* A shape: picked up and carried, or pulled bigger by its corner.
-             Carli, 14 October 2026: "Objects wat in gesit word kan nie
+             The owner, 14 October 2026: "Objects wat in gesit word kan nie
              geskuif word nie sien ek, die shapes bedoel ek." */
           const mark = layer.item as Mark;
           const box = markBox(mark, size.width, size.height);
@@ -2820,7 +2820,7 @@ export default function PostStudio({
           return;
         }
         if (cellOn) setCellOn(null);
-        /* Missed every line: the ring lets go. Carli, 15 October 2026 —
+        /* Missed every line: the ring lets go. The owner, 15 October 2026 —
            "Dit voel of daar nie 'n manier is om hierdie raam weg te kry
            nie." Tapping the photo anywhere else is how a selection ends in
            every editor she has used. */
@@ -3149,7 +3149,7 @@ export default function PostStudio({
   const layoutNow = useRef<string | null>(null);
 
   /* ── One photo of the grid, on its own ────────────────────────────────
-     Carli's screenshots: tap a photo in the grid and its tools come up —
+     The owner's screenshots: tap a photo in the grid and its tools come up —
      background off, adjust, the magic tools. Rather than teach every tool
      in this room about frames, the photo is opened ALONE: the post steps
      aside, the photo becomes the picture every tool already works on, and
@@ -3339,7 +3339,7 @@ export default function PostStudio({
    *
    * ── Why the film has to come through here too ────────────────────────
    *
-   * Carli: *"Dit is vir plasings vir sosiale media en kan ook in die video
+   * The owner: *"Dit is vir plasings vir sosiale media en kan ook in die video
    * editor ingesit word."* So a post can go next door as the film's cover —
    * and the video editor charges nothing, because it cuts and exports
    * entirely on the device: *"no credits, no queue, no waiting."*
@@ -3666,7 +3666,7 @@ export default function PostStudio({
 
   /* ── Straightening, sharpening and enlarging ───────────────────────────
  
-     Carli's list, 7 October 2026: *"Prent editor om nog canva funksies in te
+     The owner's list, 7 October 2026: *"Prent editor om nog canva funksies in te
      bring."* These three are the ones every editor has and this one did not,
      and all three run on the phone for nothing. `lib/postwork.ts` carries
      why the enlarger is not called an upscaler.
@@ -3703,7 +3703,7 @@ export default function PostStudio({
   /**
    * A whole post, in one press, for the thing she is actually making.
    *
-   * Carli's list, 7 October 2026: *"Video, etc templates."* The empty room is
+   * The owner's list, 7 October 2026: *"Video, etc templates."* The empty room is
    * the hardest screen in this app — a picture, a shape, three fonts and a
    * blank text box is twenty decisions before the first word. This is a
    * shape, a look and the words already in place; everything in it is hers
@@ -3878,7 +3878,7 @@ export default function PostStudio({
   };
 
   /* ── Templates from her device: each picture its own template ──
-     Carli, 16 October 2026: *"Ek wonder of ek templates ook van my device
+     The owner, 16 October 2026: *"Ek wonder of ek templates ook van my device
      af kan oplaai?"* Each picture is made the right size, uploaded, and
      saved as a template of the group chosen above, named after its file.
      She can open any of them afterwards, add frames and words, and save it
@@ -4245,7 +4245,7 @@ export default function PostStudio({
   const rubbingNow = useRef(false);
 
   /* ── The pixel eraser ─────────────────────────────────────────────────
-     Carli, 17 October 2026, a screenshot of another editor's Pixel Eraser
+     The owner, 17 October 2026, a screenshot of another editor's Pixel Eraser
      with Erase and Restore and a size: wipe the last bits of background off
      a cut-out by hand, or paint back what the cut took by mistake. It works
      on a copy of the photograph and becomes the photograph on Done. */
@@ -4355,7 +4355,7 @@ export default function PostStudio({
 
   /* ── The three things she can do with a line she tapped ───────────
 
-      Carli, 8 October 2026: *"dan kan die klient op die objekte of text
+      The owner, 8 October 2026: *"dan kan die klient op die objekte of text
       click wat hulle graag wil grab, rondskuif, of delete."*
 
       Three actions, two primitives, and both primitives were already here:
@@ -4370,7 +4370,7 @@ export default function PostStudio({
    *
    * ── Why not one block ───────────────────────────────────────────────
    *
-   * Carli, 8 October 2026: *"Find the words kry die woorde, maar van daar af
+   * The owner, 8 October 2026: *"Find the words kry die woorde, maar van daar af
    * moet mens die woorde kan edit en rond skuif, of delete."*
    *
    * All three of those already worked — on the Words bench, where every line
@@ -4446,7 +4446,7 @@ export default function PostStudio({
     setFound(null);
     setPicked(null);
     /* Chosen, so its ring shows. White words lifted exactly onto the same
-       words in the photograph look like nothing happened — Carli, 16
+       words in the photograph look like nothing happened — the owner, 16
        October 2026: *"huidiglik lyk dit of niks gegrab word nie"*. */
     setWordOn(id);
     setMarkOn(null);
@@ -4460,7 +4460,7 @@ export default function PostStudio({
   /**
    * Take a plain background off — the cut that is not a person.
    *
-   * Carli, 10 October 2026, of a logo this app had just made her: *"Well this
+   * The owner, 10 October 2026, of a logo this app had just made her: *"Well this
    * was done on our own app. How are we going to get transparency?"*
    *
    * An image model cannot make transparency. It hands back opaque pixels, and
@@ -4784,7 +4784,7 @@ export default function PostStudio({
    * the photograph onto a layer of its own, exactly where it was and ready to
    * drag, and the place it came from filled in from what is around it.
    *
-   * Carli, 17 October 2026: *"Die woord copy hy eerder as grab."* Make it text
+   * The owner, 17 October 2026: *"Die woord copy hy eerder as grab."* Make it text
    * put new words on top and left the old ones in the photo, which reads as a
    * copy. This is the grab: the same letters, the same look, moved. A thing is
    * cut by its own shape; a line by its box. Where the hole is too big to fill
@@ -4910,7 +4910,7 @@ export default function PostStudio({
    *
    * ── One control, two jobs, and why it is not two ──────────────────────
    *
-   * Carli, 9 October 2026: *"Ek sien nie veranderinge met ons nuwe tools in
+   * The owner, 9 October 2026: *"Ek sien nie veranderinge met ons nuwe tools in
    * photo en video editor nie... daar moet seker ook 'n AI in wees en daar
    * moet generate an image ook wees, asook die funksie waar jy 'n image vir
    * die generator gee wat hy ook kan verander."*
@@ -4959,7 +4959,7 @@ export default function PostStudio({
     const tall = picture.naturalHeight || picture.height;
     let rect: Rect;
     let shape: 'box' | Brush;
-    /* Nothing painted and no thing picked: the whole photograph. Carli, 17
+    /* Nothing painted and no thing picked: the whole photograph. The owner, 17
        October 2026: *"change it moet 'n object kan prompt, of die tema van
        die hele foto verander (dan moet daar ook 'n ruler wees vir before en
        after)"*. Taking a part away needs a part, so that one still asks. */
@@ -5232,7 +5232,7 @@ export default function PostStudio({
    *
    * ── The fault this exists for ───────────────────────────────
    *
-   * Carli, 8 October 2026: *"Take the background out gee die ilusie dat dit
+   * The owner, 8 October 2026: *"Take the background out gee die ilusie dat dit
    * transparent is, maar dit is nog nie."*
    *
    * She was exactly right, and the reason was one default. `back` opens at
@@ -5263,7 +5263,7 @@ export default function PostStudio({
    * Make it transparent: take the photograph's own background out, under a
    * glow for three seconds, then nothing behind it at all.
    *
-   * Carli, 17 October 2026, with her photograph filling the frame: *"Niks
+   * The owner, 17 October 2026, with her photograph filling the frame: *"Niks
    * gebeur wanneer ek op transparent kliek nie."* The button only took off
    * the colour BEHIND the photograph, and hers covered all of it. What she
    * means by transparent is the background IN the photograph, so that is
@@ -5289,7 +5289,7 @@ export default function PostStudio({
   /**
    * Every main subject cut out cleanly — all of them, not only a person.
    *
-   * Carli, 17 October 2026, a woman beside an owl, where the phone's person
+   * The owner, 17 October 2026, a woman beside an owl, where the phone's person
    * model kept the woman and lost the owl: *"Die twee hoof objekte op die
    * prent moes netjies uitgehaal word."* The engine is asked for the main
    * subjects and their shapes (one paid look, `CREDITS.grab`); the person
@@ -5354,7 +5354,7 @@ export default function PostStudio({
 
   const nothingBehind = (): void => {
     setBack(null);
-    /* And a file that can hold it. Carli, 17 October 2026: *"Die skaakbord
+    /* And a file that can hold it. The owner, 17 October 2026: *"Die skaakbord
        moet net nie saam aflaai en mens dit in die prent sien nie."* The
        squares are never in the file (`draw(…, false)`); a JPG would put a
        solid colour there instead, so the format moves to PNG with it. */
@@ -5371,7 +5371,7 @@ export default function PostStudio({
       const left = holdUntil - Date.now();
       if (left > 0) await new Promise((done) => { window.setTimeout(done, left); });
       if (!cut.ok) {
-        /* One button for both kinds of picture (Carli, 14 October 2026:
+        /* One button for both kinds of picture (The owner, 14 October 2026:
            "Die transparency en background remover werk alweer nie reg
            nie"). She had pressed the plain-background one on a photograph
            of a person, which takes only what matches the edge of the frame.
@@ -5399,7 +5399,7 @@ export default function PostStudio({
   /**
    * The person kept sharp, and the room behind them put out of focus.
    *
-   * Carli's list of modern tools, 7 October 2026: *"auto focus, blur"*. The
+   * The owner's list of modern tools, 7 October 2026: *"auto focus, blur"*. The
    * blur the room already had is the whole picture, which is a mood; this is
    * the one people mean by it — what a phone's portrait mode does.
    *
@@ -5457,7 +5457,7 @@ export default function PostStudio({
    *
    * ── What she asked for ───────────────────────────────────
    *
-   * Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
+   * The owner, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
    * die app te bêrge. Daar moet dalk ’n gallery in channel gestoor word.
    * Dan wanneer mens video editor gebruik is dit een van die plekke wat
    * geroep word waaruit mens kan kies."*
@@ -5544,7 +5544,7 @@ export default function PostStudio({
 
   /* ── This room is the screen while it is open ───────────────────────────
  
-     Carli asked for the tools along the bottom, and the app's own tab bar is
+     The owner asked for the tools along the bottom, and the app's own tab bar is
      along the bottom too. Two bars stacked is the fault the booth had in
      September — *"daai buttons vervang die harde buttons van die hele app"* —
      and here it was worse than untidy: the app's bar is `fixed bottom-0
@@ -5574,7 +5574,7 @@ export default function PostStudio({
 
   /* ── A row when the bar is on an edge ───────────────────────────────────
 
-     Carli, 9 October 2026: *"Die website moet nie lyk soos 'n foon app
+     The owner, 9 October 2026: *"Die website moet nie lyk soos 'n foon app
      nie."* A desk and a turned phone want the same thing from this room —
      the bench down the side instead of across the foot — and until now it
      asked for neither. `lib/atdesk.ts` carries why they are two questions.
@@ -5592,7 +5592,7 @@ export default function PostStudio({
 
   /* ── The benches ──────────────────────────────────────────────────────
  
-     Carli, 7 October 2026: *"Die photo editor moet ook netjies wees. Die
+     The owner, 7 October 2026: *"Die photo editor moet ook netjies wees. Die
      editing tools moet ook onder in 'n bar wees ... en alles moet baie
      eenvoudig en maklik wees."*
  
@@ -5607,7 +5607,7 @@ export default function PostStudio({
      are both "the frame". */
   /* ── Cutting it down ───────────────────────────────────────────────────
  
-     Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
+     The owner, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
      nie."*
  
      On the picture's own bench rather than the frame's, because what it
@@ -5622,7 +5622,7 @@ export default function PostStudio({
   /**
    * The way into cutting a shape out, on the picture's own bench.
    *
-   * Carli, 8 October 2026: *"Daai moet eerder 'n ander naam kry.
+   * The owner, 8 October 2026: *"Daai moet eerder 'n ander naam kry.
    * Free-hand-cut."* She is right — "draw around something" says how it
    * works rather than what it does, and it had stopped being true anyway
    * the moment there were four shapes to do it with.
@@ -5854,7 +5854,7 @@ export default function PostStudio({
           }}
         />
       </label>
-      {/* The way into the darkroom, dressed to be noticed. Carli, 17 October
+      {/* The way into the darkroom, dressed to be noticed. The owner, 17 October
           2026: *"by bring a photo in … 'n fancy looking button … wat mense
           na die lightroom toe vat."* */}
       <button
@@ -5867,7 +5867,7 @@ export default function PostStudio({
         <Sparkles className="h-3.5 w-3.5" />
         {t('post.darkroom', 'Develop like a pro')}
       </button>
-      {/* And the way into the document room, beside it. Carli, 17 October
+      {/* And the way into the document room, beside it. The owner, 17 October
           2026: *"PDF editor sal dan ook 'n fancy button binne photo shop hê,
           daar by bring in a photo."* */}
       <button
@@ -5879,7 +5879,7 @@ export default function PostStudio({
         <FileText className="h-3.5 w-3.5" />
         {t('post.pdfRoom', 'PDF studio')}
       </button>
-      {/* And the vector studio. Carli, 17 October 2026: *"Ek hou van daai
+      {/* And the vector studio. The owner, 17 October 2026: *"Ek hou van daai
           vector illustration."* */}
       <button
         type="button"
@@ -5890,7 +5890,7 @@ export default function PostStudio({
         <PenTool className="h-3.5 w-3.5" />
         {t('post.vectorRoom', 'Vector studio')}
       </button>
-      {/* And the poster maker. Carli, 16 October 2026: a poster maker with
+      {/* And the poster maker. The owner, 16 October 2026: a poster maker with
           three ways in — describe it, pick a kind, or fill in its lines. */}
       <button
         type="button"
@@ -5902,7 +5902,7 @@ export default function PostStudio({
         <Megaphone className="h-3.5 w-3.5" />
         {t('post.posterRoom', 'Poster')}
       </button>
-      {/* And product photos. Carli, 16 October 2026: *"Generate product
+      {/* And product photos. The owner, 16 October 2026: *"Generate product
           photos in seconds."* */}
       <button
         type="button"
@@ -5914,7 +5914,7 @@ export default function PostStudio({
         <ShoppingBag className="h-3.5 w-3.5" />
         {t('post.productRoom', 'Product photos')}
       </button>
-      {/* And clothes on a model. Carli, 16 October 2026: *"Show clothes on
+      {/* And clothes on a model. The owner, 16 October 2026: *"Show clothes on
           models."* */}
       <button
         type="button"
@@ -5991,7 +5991,7 @@ export default function PostStudio({
 
     {/* ── A photograph given a little motion ─────────────────────────
 
-        Carli, 10 October 2026: *"Ek wonder ook of google se modelle net
+        The owner, 10 October 2026: *"Ek wonder ook of google se modelle net
         bietjie motion kan gee aan foto's? Dit kan baie van ons photo editing
         tools verbeter, en vir al ook vir foto's wat vir bemarking gebruik
         word en social media."*
@@ -6093,7 +6093,7 @@ export default function PostStudio({
             />
             {/* Its sound, on a press. The engine makes sound with the motion
                 (Veo 3.1 does), and the clip was always muted here, so it
-                looked as if the photo editor brought no sound in (Carli,
+                looked as if the photo editor brought no sound in (The owner,
                 14 October 2026). Starts silent because a phone will not
                 autoplay sound; one press and it is heard. */}
             <button
@@ -6137,7 +6137,7 @@ export default function PostStudio({
 
     {/* ── Make a picture, or change this one, by saying it ───────────
 
-        Carli, 9 October 2026: *"Ek sien nie veranderinge met ons nuwe tools
+        The owner, 9 October 2026: *"Ek sien nie veranderinge met ons nuwe tools
         in photo en video editor nie... daar moet seker ook 'n AI in wees en
         daar moet generate an image ook wees, asook die funksie waar jy 'n
         image vir die generator gee wat hy ook kan verander."*
@@ -6275,7 +6275,7 @@ export default function PostStudio({
     </div>
     {/* ── The background, taken out ──────────────────────────────────
  
-        Carli, 7 October 2026: *"BG remover"*. It looks for a PERSON —
+        The owner, 7 October 2026: *"BG remover"*. It looks for a PERSON —
         the model is very good at somebody against anything and knows
         nothing about a guitar — so it refuses with a reason rather than
         handing back an empty frame. A fully transparent picture and a
@@ -6308,7 +6308,7 @@ export default function PostStudio({
         </button>
         {/* How hard the cut edge is.
  
-            Carli, 7 October 2026, with a photograph of herself cut out:
+            The owner, 7 October 2026, with a photograph of herself cut out:
             *"Its not looking perfect."* The model answers at 256 square
             whatever it is given, so on a phone photograph one mask pixel
             is a block ten or more across and the edge comes out as a
@@ -6352,7 +6352,7 @@ export default function PostStudio({
         </span>
         {/* ── And the one for everything that is not a person ───────────
  
-            Carli, 10 October 2026, of a logo this app had just made her:
+            The owner, 10 October 2026, of a logo this app had just made her:
             *"Well this was done on our own app. How are we going to get
             transparency?"*
  
@@ -6410,7 +6410,7 @@ export default function PostStudio({
         )}
         {/* ── And what colour the thing that is left should be ──────────
  
-            Carli, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan
+            The owner, 11 October 2026: *"om 'n logo, of 'n objek se kleur te kan
             verander. Ek dink ook wanneer dit kom by kleur, moet mens ook die
             pearlescent funksie in sit waar twee na 3 kleure saam blend vir
             'n kleur skakering."*
@@ -6505,7 +6505,7 @@ export default function PostStudio({
         </div>
         {/* ── And the other thing to do with the same mask ──────────────
  
-            Carli's list, 7 October 2026: *"auto focus, blur"*. Beside taking
+            The owner's list, 7 October 2026: *"auto focus, blur"*. Beside taking
             the background OUT, because it is the same model, the same mask
             and the same edge — and because somebody standing here looking at
             a photograph of a person is already thinking about what to do
@@ -6542,7 +6542,7 @@ export default function PostStudio({
         </p>
         {/* ── And the other blur, pointed at from where she looked ─────
 
-            Carli, 8 October 2026: *"Daar is nou ’n blur behind a person, dit
+            The owner, 8 October 2026: *"Daar is nou ’n blur behind a person, dit
             is goed. Ons benodig wel ook ’n blur funksie vir die hele foto."*
 
             It is there, and has been: a Blur slider on the Looks bench that
@@ -6637,7 +6637,7 @@ export default function PostStudio({
 
     {/* ── Taking something small out ─────────────────────────────────
  
-        Carli, 7 October 2026: *"magic eraser"*. This grows the pixels
+        The owner, 7 October 2026: *"magic eraser"*. This grows the pixels
         around a gap inwards over it, which is arithmetic and costs us
         nothing. It is not *"magic grab"* — nothing here imagines what
         was behind — and the sentence under the button says so, because
@@ -6856,7 +6856,7 @@ export default function PostStudio({
 
     {/* ── Cutting it down, with the frame and not with the picture ──────
  
-        Carli, 7 October 2026: *"Ek dink wel cutting moet by The frame wees
+        The owner, 7 October 2026: *"Ek dink wel cutting moet by The frame wees
         nie picture nie. Jy moet prakties dink oor waar funksies hoort."*
  
         It was on the picture's bench, on the reasoning that a crop changes
@@ -6897,7 +6897,7 @@ export default function PostStudio({
     {cropStart}
     {/* ── Which part of it shows ─────────────────────────────────────
  
-        Carli, 7 October 2026, having found the screen: *"Waar edit ek 'n
+        The owner, 7 October 2026, having found the screen: *"Waar edit ek 'n
         foto?"* This is the half that was missing. A phone photograph is
         4:3 and a story is 9:16, so something always falls off — and
         until now the app chose what, every time, with no way to argue.
@@ -7103,7 +7103,7 @@ export default function PostStudio({
     <div className="space-y-4">
     {/* ── How it reads ───────────────────────────────────────────────
  
-        Carli, 7 October 2026, listing what a modern editor has: *"auto
+        The owner, 7 October 2026, listing what a modern editor has: *"auto
         focus, blur ... Dit is alles code wat ons oor tyd kan develop om
         ons editing tools te upgrade."*
  
@@ -7117,7 +7117,7 @@ export default function PostStudio({
         nothing recovers a photograph that was soft when it was taken.
         `AUTO` is honest about being a lift.
 
-        Shown with no photograph too. Carli, 16 October 2026: *"Adjust se
+        Shown with no photograph too. The owner, 16 October 2026: *"Adjust se
         funksies kom nie uit nie"* — on a template or a grid there is no one
         photograph, the panel was empty, and the tool looked broken. Then it
         changes the whole picture, which is all there is to change. */}
@@ -7262,7 +7262,7 @@ export default function PostStudio({
     <div className="space-y-4">
     {/* ── The words already in the picture ───────────────────────────
  
-        Carli, 7 October 2026: *"grab text"*, in the list of what a
+        The owner, 7 October 2026: *"grab text"*, in the list of what a
         modern editor has. The engine is Tesseract compiled to
         WebAssembly and it runs on her own phone — it calls nobody, needs
         no key, and costs us nothing however many times it is pressed.
@@ -7285,7 +7285,7 @@ export default function PostStudio({
           <p className={MIKRO}>{t('post.grab', 'Words in the picture')}</p>
           {/* ── Said on the screen, not behind the mark ──────────────────
  
-              Carli asked what this was twice — *"Ek weet nogsteeds nie wat is
+              The owner asked what this was twice — *"Ek weet nogsteeds nie wat is
               die read it funksie in die photo editor nie"* — and both times
               the answer was sitting behind the question mark on the bar. A
               tool nobody can name is a tool nobody presses, so the sentence
@@ -7339,7 +7339,7 @@ export default function PostStudio({
           </button>
           {/* ── And the same reading, tappable ────────────────────
 
-              Carli, 8 October 2026: *"dat die masjien self objekte en text
+              The owner, 8 October 2026: *"dat die masjien self objekte en text
               identifiseer wat dan highlight en dan kan die klient op die
               objekte of text click wat hulle graag wil grab, rondskuif, of
               delete."*
@@ -7430,7 +7430,7 @@ export default function PostStudio({
     <div className="space-y-4">
     {/* ── Somewhere to start ────────────────────────────────────────────
  
-        Carli's list, 7 October 2026: *"Video, etc templates."* On the words'
+        The owner's list, 7 October 2026: *"Video, etc templates."* On the words'
         bench, because a template is mostly words in the right places, and
         because this is the bench somebody opens when they have a picture and
         no idea what to put on it.
@@ -7439,11 +7439,11 @@ export default function PostStudio({
         met before the blank page is. */}
     <div className="space-y-2">
       {/* ── The neon words: one press, one lit line ─────────────────────
-          Carli, 13 October 2026: "amazing futuristic text … Neon,
+          The owner, 13 October 2026: "amazing futuristic text … Neon,
           futuristic, phantasm". Each chip is drawn in its own face, ink
           and glow, so the chip is a sample of the line it adds. */}
       {/* ── Title styles: album art's six looks, as type ──────────────
-          Carli, 14 October 2026: *"ons kort goeie text templates, vat
+          The owner, 14 October 2026: *"ons kort goeie text templates, vat
           dieselfde in album art se ai art."* A title and the line under it,
           in one press, in the look the cover can be drawn in. */}
       <p className={MIKRO}>{t('post.titleStyles', 'Title styles')}</p>
@@ -7571,7 +7571,7 @@ export default function PostStudio({
       )}
 
       {/* The line touched on the picture first, and marked: its controls are
-          what she reached for (Carli, 15 October 2026). Pressing a card picks
+          what she reached for (The owner, 15 October 2026). Pressing a card picks
           its line, so the ring shows which one these sliders move. */}
       {[...words].sort((a, b) => (a.id === wordOn ? -1 : b.id === wordOn ? 1 : 0)).map((one) => (
         <div
@@ -7687,7 +7687,7 @@ export default function PostStudio({
 
           {/* ── The two spacings ──────────────────────────────────────
  
-              Carli, 8 October 2026: *"Daar moet 'n ook 'n line spacing
+              The owner, 8 October 2026: *"Daar moet 'n ook 'n line spacing
               scroll bar wees, en spacing tussen die woorde self. Dus moet
               daar twee spacing bars wees."*
  
@@ -7697,7 +7697,7 @@ export default function PostStudio({
               written. The letter one is measured as well as drawn, so the
               type still fits the box it was fitted to. */}
           {/* ── Where the lines line up, and how big ───────────────────
-              Carli, 15 October 2026: *"If I type a paragraph, it has to
+              The owner, 15 October 2026: *"If I type a paragraph, it has to
               have the functions of center text or put it to the left, or
               right, or adjust the letter spacing, and line spacing."* Shown
               in simple mode too, with the two spacings, because she asked
@@ -7795,7 +7795,7 @@ export default function PostStudio({
   );
 
   /* ── Templates, as a tool of their own ─────────────────────────────────
-     Carli, 14 October 2026: *"die template pack wat gegee word moet actual
+     The owner, 14 October 2026: *"die template pack wat gegee word moet actual
      templates kry"*. The room's own designs — the neon, synthwave, hologram
      and gold packs — were the first thing on the words bench, behind a
      button called Words. They are a button now, with the starter pack of
@@ -7806,7 +7806,7 @@ export default function PostStudio({
   const startsBench = (
     <div className="space-y-3" data-poststarts>
     {/* ── Photo templates ───────────────────────────────────────────────
-        Carli, 16 October 2026: *"Hoe hou ons sulke cool templates?"* Whole
+        The owner, 16 October 2026: *"Hoe hou ons sulke cool templates?"* Whole
         designs with frames for her photos — `lib/postdesigns.ts` — and the
         ones she saves for everybody, under From FutureBox. */}
     <div className="space-y-2" data-postdesigns>
@@ -7933,7 +7933,7 @@ export default function PostStudio({
             data-posttemplate={one.id}
             onClick={() => startFrom(one)}
             title={t(one.what[0], one.what[1])}
-            /* A starter pack wears its own look on the button — Carli, 13
+            /* A starter pack wears its own look on the button — the owner, 13
                October 2026, with Google's tiles. The plain ones stay plain. */
             className={one.tile ? `${LEEG} !h-auto !items-start flex-col gap-1 py-3 text-left border-white/15` : `${LEEG} !h-auto flex-col gap-1 p-1.5`}
             style={one.tile ? { background: `linear-gradient(135deg, ${one.tile[0]}, #000 55%, ${one.tile[1]})` } : undefined}
@@ -7950,7 +7950,7 @@ export default function PostStudio({
                 <span className="text-[10px] text-zinc-300">{t(one.name[0], one.name[1])}</span>
               </>
             ) : (
-              /* The plain ones as a picture too — Carli, 17 October 2026:
+              /* The plain ones as a picture too — the owner, 17 October 2026:
                  every template visual. The meerkat photo in the template's
                  light, its lines where they go, its name under it. */
               <>
@@ -7997,7 +7997,7 @@ export default function PostStudio({
         /* One column, not three. Under the photo on a phone each section of
            a tool is a column of its own, and the instruction, the size and
            the buttons were three — the buttons landed off the right edge of
-           the screen, and Carli read it as the magic touch not working
+           the screen, and the owner read it as the magic touch not working
            (15 October 2026). */
         <div className="space-y-3">
           <p className="text-[13px] font-semibold" style={{ color: magicStrokes.length ? '#39ff14' : INK }} data-postmagicsays>
@@ -8054,7 +8054,7 @@ export default function PostStudio({
         </div>
       )}
       {/* ── Style match ──────────────────────────────────────────────
-          Carli, 17 October 2026: the styles another app shows as a row of
+          The owner, 17 October 2026: the styles another app shows as a row of
           sample tiles under tabs — ours, drawn here (`lib/magicstyles.ts`).
           A press restyles what is painted, or the whole photograph when
           nothing is, with the before-and-after line after. */}
@@ -8107,7 +8107,7 @@ export default function PostStudio({
   const shapesBench = (
     <div className="space-y-3">
     {/* ── The shapes ───────────────────────────────────────────────────
-        Carli, 13 October 2026: "ons kort amazing … shape templates." The
+        The owner, 13 October 2026: "ons kort amazing … shape templates." The
         four Google's page drew — a cube, a ring, a grid, a frame — as real
         layers in `lib/postshapes.ts`: drawn, lit with the same glow the
         words use, put in one of five places at one of three sizes, and
@@ -8235,7 +8235,7 @@ export default function PostStudio({
     <div className="space-y-4">
     {/* ── What it costs, before the work and not only on the button ──
  
-        Carli, 7 October 2026: *"Remember to monetize and nothing is free
+        The owner, 7 October 2026: *"Remember to monetize and nothing is free
         in this app."*
  
         Nothing here is free to take away: a picture off this screen
@@ -8262,7 +8262,7 @@ export default function PostStudio({
     </p>
     {/* ── What kind of file, and how big ────────────────────────────────
  
-        Carli, 7 October 2026: *"Ook die formaat van export?"* — and, of the
+        The owner, 7 October 2026: *"Ook die formaat van export?"* — and, of the
         four that were offered back: *"los PDF en SVG uit."* `lib/postfile.ts`
         carries why those four are out.
  
@@ -8410,7 +8410,7 @@ export default function PostStudio({
 
       {/* ── And into the film next door ─────────────────────────────
  
-          Carli: *"kan ook in die video editor ingesit word."* The editor
+          The owner: *"kan ook in die video editor ingesit word."* The editor
           is the room under this desk, so this is a hand-over and not a
           download — but it goes through the same charge, because the
           editor cuts and exports on the device for nothing and a free
@@ -8500,7 +8500,7 @@ export default function PostStudio({
      a canvas in the card — never a file: a full-size image in an <img>
      is a picture somebody can long-press and save, which is a way out that
      skips the one paid press (`check:postpaid`). */
-  /* Carli, 15 October 2026: "Die pers ogie moet vir jou opsies gee van tipe
+  /* The owner, 15 October 2026: "Die pers ogie moet vir jou opsies gee van tipe
      posts. Elke platform se size lyk anders." So it opens on the kind of post
      nearest the post's own shape, and every other kind is a press away,
      drawn in its own shape with the picture filling it the way that place
@@ -8567,7 +8567,7 @@ export default function PostStudio({
     return () => window.removeEventListener('keydown', key, true);
   }, [bench]);
   /* ── The layer list ────────────────────────────────────────────────────
-     Carli, 16 October 2026: *"Die photo editor sal moet layers kry. As mens
+     The owner, 16 October 2026: *"Die photo editor sal moet layers kry. As mens
      op die layers click moet mens kan kies op watter layer jy nou edit, en
      natuurlik 'n all layer wat alles by mekaar het."* Front at the top, the
      way every editor lists them; All above that. `lib/postlayers.ts` holds
@@ -9079,7 +9079,7 @@ export default function PostStudio({
   );
 
   /* ── Charts ─────────────────────────────────────────────────────────
-     Carli, 17 October 2026: *"graph templates … en verskillende
+     The owner, 17 October 2026: *"graph templates … en verskillende
      verskeidenheid van graphs. Wat cool sal wees as dit AI verstelbaar is
      dat data ingevoer kan word en AI die data in die grafiek verstel."* A
      chart is a mark (`postshapes.ts`) carrying its data (`postcharts.ts`):
@@ -9311,7 +9311,7 @@ export default function PostStudio({
 
   /* ── Her picture of the room, 14 October 2026 ───────────────────────────
 
-     Carli, with a photograph of a desktop photo editor: *"Photo editor se
+     The owner, with a photograph of a desktop photo editor: *"Photo editor se
      page moet ook hersien word, die harde gedeelte op die page vat al die
      plek … Die buttons moet min plek vat, sodat die foto die hele skerm vol
      maak. En wanneer editing funksies op kom dan moet die background van die
@@ -9346,7 +9346,7 @@ export default function PostStudio({
      half of it out of the brush's reach. */
   const brushUp = bench === 'magic' && picture !== null;
   /* ── On a phone, a tool opens UNDER the photograph ─────────────────────
-     Carli, 15 October 2026, a red ring drawn round the empty black under a
+     The owner, 15 October 2026, a red ring drawn round the empty black under a
      square photo: *"Kan die funksies in plaas van dat dit oor die prent op
      kom, eerder in daai swart gedeelte … op kom en in 'n side scroll in
      gaan. Daar is genoeg plek as dit side scroll."* So the photograph moves
@@ -9522,7 +9522,7 @@ export default function PostStudio({
 
   /* Every tool that takes a while — anything the AI does, reading the
      words, cutting the background out — glows over the photograph until it
-     is done. Carli, 17 October 2026: *"Die hele foto moet so glow effect hê
+     is done. The owner, 17 October 2026: *"Die hele foto moet so glow effect hê
      wat oor die skerm pulse soos 'n neon ruler pulse wat oor die skerm
      beweeg oor en oor totdat die funksie geapply is."* */
   const glowing: 'long' | 'flash' | null = working === 'long' || reading !== null || looking
@@ -9559,7 +9559,7 @@ export default function PostStudio({
              scrolls, which reads as the app being frozen. */
           /* And while the brush is out: with `auto` the phone took a sweep
              of the finger for a scroll and cancelled it after the first
-             touch, so the brush left dabs (Carli, 17 October 2026: "Die
+             touch, so the brush left dabs (The owner, 17 October 2026: "Die
              brush werk nie met 'n vee nie"). */
           touchAction: movable || cropBox || traced || words.length > 0 || marks.length > 0 || cells.length > 0
             || (bench === 'magic' && picture && brushOn)
@@ -9706,7 +9706,7 @@ export default function PostStudio({
           <X className="h-3.5 w-3.5 shrink-0" aria-label={t('post.layerBackToAll', 'All layers')} />
         </button>
       )}
-      {/* The right-click menu. Carli, 14 October 2026: "in al die editor
+      {/* The right-click menu. The owner, 14 October 2026: "in al die editor
           plekke moet daar 'n right click wees wat funksies vinniger kry soos
           cut". A right press chooses what is under it first (the same grab a
           left press does), so the menu acts on that. Drawn on the page so the
@@ -9745,12 +9745,12 @@ export default function PostStudio({
         </div>,
         document.body,
       )}
-      {/* Gone the moment a tool is open. Carli, 14 October 2026, with the
+      {/* Gone the moment a tool is open. The owner, 14 October 2026, with the
           templates open over it: "Die oomblik wanneer mens op templates
           kliek dan moet daai hele bar verdwyn anders is dit in die pad." */}
       {/* And gone when there is a photo grid: its empty frames are the start,
           and this card over them would catch the tap meant for a frame. */}
-      {/* And gone when anything is on the picture at all. Carli, 17 October
+      {/* And gone when anything is on the picture at all. The owner, 17 October
           2026, a chart on an empty post: *"Die chart wil nie op die skerm
           agter bly nie. Die oomblik as ek kruisie druk dan gaan die chart
           ook weg."* It had not gone — this card sat over it, as it sat over
@@ -9789,11 +9789,11 @@ export default function PostStudio({
       {/* What the room just said, over the foot of the photograph — or, on a
           phone with a tool open, over the top of it: the tool covers the
           foot, and Grab's answers ("Tap one to lift it out", or why the
-          engine said no) were printed behind it. Carli, 15 October 2026:
+          engine said no) were printed behind it. The owner, 15 October 2026:
           "Die grab funksie werk ook nie." */}
       {said && (
         <div className={`pointer-events-none absolute inset-x-2 z-30 flex flex-col items-center gap-1 ${panelUp ? 'top-14' : 'bottom-2'}`}>
-          {/* No warning sign for words under a platform's bars. Carli, 17
+          {/* No warning sign for words under a platform's bars. The owner, 17
               October 2026: *"Daai groen sirkel wat elke keer by die photo
               app op kom daar onder moet weg gaan. Dit is 'n weird
               notification wat niemand hoef te sien nie."* The words are moved
@@ -9821,7 +9821,7 @@ export default function PostStudio({
       {cropStrip}
       {traceStrip}
       {picking && (
-        /* Small, so the photograph stays in sight above it. Carli, 16
+        /* Small, so the photograph stays in sight above it. The owner, 16
            October 2026: *"Mens kan nie die prent sien tydens die grab nie"*
            and *"Daai funksies wat op gepop het wil ook nie weg gaan nie"* —
            a tall bar over the foot of a story, and a Done that opened the
@@ -10156,7 +10156,7 @@ export default function PostStudio({
               outside it, on glass she can see the photograph through the
               edges of. */}
           {/* ── The photograph never shrinks ─────────────────────────────
-              Carli, 14 October 2026: "Die prent moet nooit kleiner gemaak
+              The owner, 14 October 2026: "Die prent moet nooit kleiner gemaak
               word wanneer funksie bars oopgemaak word nie ... alles moet
               klein en heel onder bly, die opsies kan eerder links en regs
               scroll, en as jy op een van daardie funksies kliek, dan pop
@@ -10171,7 +10171,7 @@ export default function PostStudio({
             {photo}
             {/* Undo and redo ride on the photograph's corner on a phone: in
                 the bar they pushed "Take it out" off the right edge of a
-                360-pixel screen (Carli, 15 October 2026: "Daai take it out
+                360-pixel screen (The owner, 15 October 2026: "Daai take it out
                 button daar regs bo is afgesny"). */}
             {undoRedo ? <div data-postundorow className="absolute left-2 top-2 z-10 flex gap-1">{undoRedo}</div> : null}
             {view.scale > 1 && (
@@ -10188,7 +10188,7 @@ export default function PostStudio({
               </button>
             )}
             {saveFull && toolSheet ? (
-              /* Carli, 15 October 2026: "Take it out se pop out kan oor die
+              /* The owner, 15 October 2026: "Take it out se pop out kan oor die
                  hele skerm gaan." So it does: the whole space between the
                  bar and the tools, on a solid floor, scrolling down. The bar
                  and the tools stay, so the green button shuts it again and
@@ -10210,7 +10210,7 @@ export default function PostStudio({
                 data-passthrough={bench === 'magic' || stripsUp ? 'yes' : undefined}
                 data-neon
                 className="absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col"
-                /* Up to the middle of the photograph. Carli, 15 October
+                /* Up to the middle of the photograph. The owner, 15 October
                    2026: "Die scrolling bar onder moet 'n bietjie groter.
                    Beweeg die hele ding op tot in die middel van die
                    prent." The photo sits at the top (pt-2, 8 pixels), so
@@ -10238,7 +10238,7 @@ export default function PostStudio({
             data-cutbenchrow=""
             data-postfoot
             data-sideways
-            /* Sideways on purpose: Carli, 14 October 2026 — the tools stay
+            /* Sideways on purpose: the owner, 14 October 2026 — the tools stay
                small along the foot and scroll left and right, so the photo
                keeps the whole screen above them. */
             className="flex shrink-0 snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1.5 pt-1"

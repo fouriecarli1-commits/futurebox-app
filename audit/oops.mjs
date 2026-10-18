@@ -9,7 +9,7 @@
  * written, whether `/oops` reads the same key back. Source can show the code
  * and prove none of it.
  *
- * It exists because Carli hit a white screen and I gave two wrong
+ * It exists because the owner hit a white screen and I gave two wrong
  * explanations. The recorder is the thing that ends the guessing, so a
  * recorder that quietly records nothing would be worse than none at all — it
  * would turn the next white screen into a confident "nothing was recorded, so
@@ -62,7 +62,7 @@ check('and when', written.every((one) => !Number.isNaN(Date.parse(one.at))));
 
 /* ── Three: the page thrown away and put back ────────────────────────────
 
-   The likeliest cause of Carli's white screen, and the one that leaves NO
+   The likeliest cause of the owner's white screen, and the one that leaves NO
    error behind — which is exactly why it has to be detected rather than
    inferred from an empty list. `document.wasDiscarded` is true on the load
    that follows a discard, so it is set before the page loads, the way the

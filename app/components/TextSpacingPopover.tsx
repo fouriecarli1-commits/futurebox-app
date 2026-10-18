@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Daar is goed wat ek voel die video en photo
+ * The owner, 11 October 2026: *"Daar is goed wat ek voel die video en photo
  * editor nog nodig het... letter spacing, line spacing, anchor text box...
  * soos by alle video en photo editors."*
  */

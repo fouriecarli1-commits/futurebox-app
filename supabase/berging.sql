@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- Cloud space per plan
 --
--- Carli, 16 October 2026: *"Please impliment the storage plan as you
+-- the owner, 16 October 2026: *"Please impliment the storage plan as you
 -- suggested."* — 1 GB on Free, 10 GB on Maker, 50 GB on Studio, 200 GB on
 -- Label, for what a member keeps in the cloud.
 --

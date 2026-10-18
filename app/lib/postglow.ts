@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026, with the "Photo Editor" page Google drew: *"Hierdie
+ * The owner, 13 October 2026, with the "Photo Editor" page Google drew: *"Hierdie
  * photo editor is 'n huge selling point … ons kort amazing futuristic text,
  * foto, en shape templates. Neon, futuristic, phantasm, etc."*
  *

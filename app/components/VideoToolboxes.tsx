@@ -6,7 +6,7 @@
  * one row per tool with a small moving picture of what it does beside its
  * name.
  *
- * Carli, 16 October 2026, screenshots of a desktop editor's toolbox: *"Kyk
+ * The owner, 16 October 2026, screenshots of a desktop editor's toolbox: *"Kyk
  * ook hoe netjies dit verpak is."*
  *
  * The pictures are drawn by the same code that makes the film:

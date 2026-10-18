@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Die kids room het ook baie templates nodig vir
+ * The owner, 11 October 2026: *"Die kids room het ook baie templates nodig vir
  * 'n kind om net van te kies."*
  *
  * ── Why templates for a child ────────────────────────────────────────────

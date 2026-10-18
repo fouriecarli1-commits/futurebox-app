@@ -21,7 +21,7 @@
  *
  * ── The rebuild of 15 September 2026 ─────────────────────────────────────
  *
- * Carli: *"Kyk ook na die landing page van die booth. Dit moet baie meer
+ * The owner: *"Kyk ook na die landing page van die booth. Dit moet baie meer
  * exciting verduidelik wat hierdie kamer is. Die liedjies wat jy wil verander
  * moet nie so lank uitgelê word nie, daar moet eerder net 2 buttons wees. Een
  * wat sê Choose a song en dit het 'n drop down. Twee Bring a song in. Hierdie
@@ -333,7 +333,7 @@ export default function Booth({
   /* One button, and it is the same shape every time it is drawn: a bar the
      width of the room, 52 tall, with a border it can be seen by.
 
-     Carli: *"die buttons daarin moet meer reguit, horisontaal, dieselfde size
+     The owner: *"die buttons daarin moet meer reguit, horisontaal, dieselfde size
      op mekaar gestack wees. Dit moet definisie hê en lyk soos 'n button wat
      uit staan."* A row of buttons each sized by its own words is a row where
      the important one is whichever happens to have the longest label. */
@@ -401,7 +401,7 @@ export default function Booth({
 
       {/* ── The two buttons ─────────────────────────────────────────────
 
-          Carli: *"daar moet eerder net 2 buttons wees. Een wat sê Choose a
+          The owner: *"daar moet eerder net 2 buttons wees. Een wat sê Choose a
           song en dit het 'n drop down. Twee Bring a song in."*
 
           The dropdown opens the room the moment a song is chosen. It could

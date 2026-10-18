@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Dit sal goed wees dat daar twee ekstra rooi lyne is
+ * The owner, 4 October 2026: *"Dit sal goed wees dat daar twee ekstra rooi lyne is
  * waar mens 'n stuk kan uit cut, en 'n funksie om bloot net waar die curser is
  * te split. Dan ook die oomblik wanneer 'n mens 'n stuk uit cut moet die video
  * wat verder is die gaping toe maak en terug spring. Hier is die magneet
@@ -168,7 +168,7 @@ export function stretches(
 /**
  * Where a caption sits inside its own piece, with both ends filled in.
  *
- * Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê. Dit
+ * The owner, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê. Dit
  * moet bo op die video tydlyn kom en dan ook gedrag kan word om die lengte van
  * die teks oor die video te bepaal."*
  *
@@ -184,7 +184,7 @@ export function wordsSpan(
    * How far past its own piece this caption may run, in seconds from the
    * piece's start.
    *
-   * Carli, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As
+   * The owner, 5 October 2026: *"Dit wil wel nie verby een video stretch nie. As
    * hy op sy eie tydlyn is moet hy ruimte hê om verby 'n ander video te kan
    * stretch."*
    *
@@ -217,7 +217,7 @@ export function wordsSpan(
  *
  * Because it was two lines once, in `stitch.ts`, and NOWHERE in the room.
  *
- * Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+ * The owner, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
  * hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
  *
  * She had dragged a caption's block in to half the clip and the room went on
@@ -277,7 +277,7 @@ export function heldWords(
  *
  * ── Why this is here and not inside the drag handler ─────────────────────
  *
- * It was inside it, and it had the bug Carli reported on 4 October: *"Al haal
+ * It was inside it, and it had the bug the owner reported on 4 October: *"Al haal
  * ek die magnet af spring die teks nogsteeds rond asof die magnet aan is."*
  * The displacement was applied to the span read from the LIVE piece on every
  * pointermove, while the distance was measured from the pointer's original

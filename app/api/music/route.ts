@@ -209,7 +209,7 @@ export async function POST(request: Request): Promise<Response> {
          path, so the words somebody wrote were thrown away on the server and
          what came back was music with nobody singing them. Nothing on the way
          said so: the room showed the lyrics it had sent, the release carried
-         them, and the audio did not. Carli hit it on an Afrikaans song — "net
+         them, and the audio did not. The owner hit it on an Afrikaans song — "net
          klank het uitgekom" — and it was every free song, in every language,
          since the day the line was written.
  
@@ -253,7 +253,7 @@ export async function POST(request: Request): Promise<Response> {
 
   /* ── Which engine answers ──────────────────────────────────────────
 
-     Carli, 8 October 2026: *"Wire dit agter die booth se button in."*
+     The owner, 8 October 2026: *"Wire dit agter die booth se button in."*
 
      One button, two possible engines, named by `MUSIC_ENGINE`. The default
      stays ElevenLabs — what works today keeps working, and switching back
@@ -270,7 +270,7 @@ export async function POST(request: Request): Promise<Response> {
      they cannot be lived with. */
   /* ── Afrikaans goes to ElevenLabs, whatever the switch says ──────
 
-     Carli, 9 October 2026: *"Ek dink ons moet Afrikaanse liedjies steeds
+     The owner, 9 October 2026: *"Ek dink ons moet Afrikaanse liedjies steeds
      deur elevenlabs hardloop. Elevenlabs se afrikaans is beter as lyria
      sin."*
 
@@ -287,7 +287,7 @@ export async function POST(request: Request): Promise<Response> {
 
      A song with no words at all — an instrumental — has nothing to read,
      so it follows the switch. */
-  /* The kids room's song, one price whichever engine sings it — Carli, 14
+  /* The kids room's song, one price whichever engine sings it — the owner, 14
      October 2026: "maak al die kids songs 8 credits". Only for what the kids
      room asks for: a song of a minute or less. */
   const kidsSong = (body as { kids?: unknown }).kids === true && length <= 60;
@@ -352,7 +352,7 @@ export async function POST(request: Request): Promise<Response> {
 
   /* ── Out of the one door, which this call never went through ──────
  
-     Carli, 8 October 2026, having switched Google off again: *"Could not
+     The owner, 8 October 2026, having switched Google off again: *"Could not
      reach the music service. Try again in a moment."*
  
      That sentence is this route's catch block, and what it was catching was

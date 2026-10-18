@@ -1,7 +1,7 @@
 /**
  * A product link read into an advert brief.
  *
- * Carli, 18 October 2026: yes to Google's AI reading a product page for
+ * The owner, 18 October 2026: yes to Google's AI reading a product page for
  * three credits. `lib/adlink.ts` carries the why; the short of it is that
  * this route never fetches the link — Gemini's URL-context tool reads the
  * page on Google's side, and what comes back is cleaned like any other

@@ -1,7 +1,7 @@
 /**
  * The video editor's generators and effects, used the way she would.
  *
- * Carli, 16 October 2026, a desktop editor's toolbox with its Generators and
+ * The owner, 16 October 2026, a desktop editor's toolbox with its Generators and
  * Effects open: *"Kyk ook hoe netjies dit verpak is."* Read off pixels: a
  * generator becomes a shot on the clock that shows what it was, and an effect
  * turned on changes the picture the way its name says — cinema bars are black

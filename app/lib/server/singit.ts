@@ -3,7 +3,7 @@
  *
  * ── What she sent ────────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, with four techniques for getting Afrikaans and
+ * The owner, 9 October 2026, with four techniques for getting Afrikaans and
  * African languages sung properly. The first one:
  *
  *   *"Aangesien Engels die primêre opleidingstaal vir die vokale uitspraak

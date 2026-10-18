@@ -3,7 +3,7 @@
  *
  * ── Why this exists, which is the uncomfortable part ─────────────────────
  *
- * Carli reported the same five faults three times. Two of them were fixed and
+ * The owner reported the same five faults three times. Two of them were fixed and
  * pushed between the first report and the third, and neither of us had any
  * way to tell whether what she was holding contained the fix.
  *
@@ -69,7 +69,7 @@ ok(
 
 /* ── And on a screen somebody reaches without crashing ────────────────────
 
-   3 October 2026. Carli: *"Het jy enige iets gepush en gestoot? Ek sien nie
+   3 October 2026. The owner: *"Het jy enige iets gepush en gestoot? Ek sien nie
    veranderings nie."* Six commits had gone to `main` that morning, and neither
    of us could tell whether her phone was holding any of them.
 

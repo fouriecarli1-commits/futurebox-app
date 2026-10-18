@@ -42,7 +42,7 @@ const mine = !process.argv[2] ? await serve(PORT) : null;
  * separate run rather than an afterthought for that reason.
  *
  * And phones sideways, which this swept twelve profiles without once doing.
- * Carli, 14 September 2026: *"baie mense gaan die dwarsdraai wil gebruik."*
+ * The owner, 14 September 2026: *"baie mense gaan die dwarsdraai wil gebruik."*
  * A phone turned sideways is the hardest screen this app has — about 290
  * pixels tall, less than a third of what the upright one gives — so it is
  * where a header, a bar and a panel run out of room first. Every tablet was

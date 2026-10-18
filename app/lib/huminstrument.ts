@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Wat oulik is is dat mens die ritme van 'n liedjie
+ * The owner, 9 October 2026: *"Wat oulik is is dat mens die ritme van 'n liedjie
  * met jou stem kan sing en in sit, en dan kies jy net die instrument
  * tipe."* `lib/humnotes.ts` is the first half — the hum, as notes. This is
  * the second: those notes, played.
@@ -25,7 +25,7 @@
  * ── It said "why four and not twenty", and she asked for twenty ──────────
  *
  * The paragraph that used to be here argued that four was enough: a low end,
- * a sustained one, a short percussive one, and a kit. Carli, 9 October 2026:
+ * a sustained one, a short percussive one, and a kit. The owner, 9 October 2026:
  * *"Ek dink ook daar moet heelwat 'n verskeidenheid van teks opsies wees,
  * daar moet van alles wat opsies is, 'n verskeidenheid wees."*
  *
@@ -57,7 +57,7 @@
  *
  * ── And a section is not a soloist ───────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Die hoeveelheid stems wat ons het bepaal ook die
+ * The owner, 10 October 2026: *"Die hoeveelheid stems wat ons het bepaal ook die
  * sukses van die produk. Ek dink aan instrumente wat ek nie sien nie soos,
  * tjello, kontra-bas."*
  *

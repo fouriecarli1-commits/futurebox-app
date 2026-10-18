@@ -3,7 +3,7 @@
  *
  * ── The three faults ─────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"daar is nerens 'n keep knoppie nie wat jou help
+ * The owner, 14 September 2026: *"daar is nerens 'n keep knoppie nie wat jou help
  * om te sê dat jy die image kies en save as cover art, die anther button gaan
  * lê ook agter daai cover art image… en dalk 'n remove button."*
  *
@@ -87,7 +87,7 @@ ok(
 
 /* ── Nothing over the maker, either ──────────────────────────────────────
 
-   Carli, 15 September 2026, with a photograph: *"Kyk hoe snaaks maak die
+   The owner, 15 September 2026, with a photograph: *"Kyk hoe snaaks maak die
    liedjie wanneer ek druk op cover art."*
 
    The card's picture carries a full-size press-to-open overlay with a green

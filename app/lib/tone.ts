@@ -200,7 +200,7 @@ export function wireTone(
  *
  * ── Why it is not part of `Tone` ─────────────────────────────────────────
  *
- * Carli: "by die booth moet daar oor die algemeen ook reverb, echo en
+ * The owner: "by die booth moet daar oor die algemeen ook reverb, echo en
  * background cleaners wees."
  *
  * The tone stack shapes a sound somebody wants. This takes away a sound

@@ -1,7 +1,7 @@
 /**
  * Filters for the photo editor: grouped, named, and shown on her own photo.
  *
- * Carli, 16 October 2026, with a filter row from another app open: *"Ek soek
+ * The owner, 16 October 2026, with a filter row from another app open: *"Ek soek
  * ook al daai funksies en ook sulke oulike filters ... Ons foto's en filter
  * prentjies moet net iets anders wees en anders lyk."*
  *
@@ -93,7 +93,7 @@ export const POST_FILTERS: readonly PostFilter[] = [
   f('neonglow', 'neon', 'Neon glow', 'Neongloed', { colour: 1.6, contrast: 1.2, tint: [57, 255, 20, 0.14], vignette: 0.35 }),
   f('gold', 'neon', 'Gold', 'Goud', { sepia: 0.35, warmth: 0.4, colour: 1.2, contrast: 1.1, tint: [255, 200, 60, 0.2] }),
 
-  /* Carli, 17 October 2026, screenshots of another editor's filter tabs:
+  /* The owner, 17 October 2026, screenshots of another editor's filter tabs:
      Soft, Vintage, Colour pop and Duotone were the four this room lacked. */
   f('morningmist', 'soft', 'Morning mist', 'Oggendmis', { bright: 1.08, contrast: 0.85, fade: 0.22, colour: 0.9 }),
   f('blush', 'soft', 'Blush', 'Bloos', { bright: 1.06, contrast: 0.9, fade: 0.15, tint: [255, 170, 180, 0.14] }),

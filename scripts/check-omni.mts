@@ -8,7 +8,7 @@
  * exists because the video reader was guessed at, and `check:prent` because
  * the picture one was. Both were written after the near-miss.
  *
- * This time the answer arrived first. Carli pasted her own documentation page
+ * This time the answer arrived first. The owner pasted her own documentation page
  * on 10 October 2026 — the endpoint, the request and a complete response —
  * so the reader can be settled against the real shape before a cent is
  * spent, rather than after.
@@ -32,7 +32,7 @@
  *
  * Her sample bills by TOKEN, and the thinking is 95% of it. The rate is
  * unread, so `googlespend.ts` cannot hold a ceiling — and an engine with no
- * ceiling is one this app does not run. Carli, 10 October 2026, on seeing the
+ * ceiling is one this app does not run. The owner, 10 October 2026, on seeing the
  * price: *"Gemini omni flash is baie duur."* So the check below holds that no
  * route calls it, which is a thing that would otherwise be undone quietly by
  * somebody wiring a button.
@@ -253,7 +253,7 @@ ok('no route charges for it yet, because its rate is unread',
   calling.length === 0,
   `${calling.join(', ')} — it bills per TOKEN and the thinking is 95% of her`
   + ' own sample, so `googlespend.ts` cannot hold a ceiling for it. An engine'
-  + ' with no ceiling is one this app does not run. Carli on the price:'
+  + ' with no ceiling is one this app does not run. The owner on the price:'
   + ' "Gemini omni flash is baie duur." Put the rate in'
   + ' docs/OPEN-QUESTIONS.md with a source, then wire it');
 

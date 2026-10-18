@@ -1,7 +1,7 @@
 /**
  * The photo editor's magic touch, and grabs that can be seen.
  *
- * Carli, 14 October 2026: *"Ek dink ook daar moet 'n magic mouse tool wees
+ * The owner, 14 October 2026: *"Ek dink ook daar moet 'n magic mouse tool wees
  * wat op dele kliek en Ai kan dan die gedeelte verbeter (daar moet dan seker
  * opsies wees)."* And of the grabs: they must be visible, and a thing found
  * must be able to be changed by the AI.

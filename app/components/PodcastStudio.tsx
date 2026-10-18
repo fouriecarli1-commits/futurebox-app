@@ -119,7 +119,7 @@ export default function PodcastStudio({
   const [prompterPlaying, setPrompterPlaying] = useState(false);
   const [prompterFontSize, setPrompterFontSize] = useState(22);
   /* In the app's language. It was Afrikaans for everybody, so the English
-     app opened a podcast room with an Afrikaans script in it (Carli, 14
+     app opened a podcast room with an Afrikaans script in it (The owner, 14
      October 2026: "In die engelse app is alles afrikaans daar binne"). */
   const [prompterText, setPrompterText] = useState(() => (lang === 'af'
     ? 'Welkom by vandag se episode!\n\n1. Inleiding & hoofnuus van die week\n2. Onderhoud met ons spesiale gas\n3. Luisteraarsvrae & terugvoer\n4. Afsluiting & vooruitskouing'

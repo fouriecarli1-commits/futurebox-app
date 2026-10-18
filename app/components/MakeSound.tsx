@@ -5,7 +5,7 @@
  *
  * ── What she asked, and her name for it ──────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek dink ook video editor, en video desk kan stem
+ * The owner, 10 October 2026: *"Ek dink ook video editor, en video desk kan stem
  * generations hê, noem dit eerder, generate a sound, asook 'n podcast text tot
  * speech. Dit is tipies iets wat 'n mens daar ook sou kon gebruik."*
  *
@@ -77,7 +77,7 @@ export const MOST_CHARACTERS = 6000;
 export const FEWEST_CHARACTERS = 2;
 
 /**
- * What kind of sound. Carli, 14 October 2026: "Generate a sound" must make
+ * What kind of sound. The owner, 14 October 2026: "Generate a sound" must make
  * sound effects and music too, not only speech. Three engines, three prices,
  * one box: what she types is the line to read, the sound to make, or the
  * music to play, and the button says which price applies before the press.

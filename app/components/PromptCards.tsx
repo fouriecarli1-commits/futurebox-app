@@ -339,7 +339,7 @@ export default function PromptCards({
       {/* sideways on purpose: a snap carousel, and the snapping is the tell.
           `snap-mandatory` means a swipe lands on a card rather than anywhere —
           this is a control somebody operates, not a page that got away from
-          its width. Carli: say the word and these wrap like the rest. */}
+          its width. The owner: say the word and these wrap like the rest. */}
       <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1">
         {cards.map((card) => (
           <button
@@ -409,7 +409,7 @@ export default function PromptCards({
       {/* sideways on purpose: a snap carousel, and the snapping is the tell.
           `snap-mandatory` means a swipe lands on a card rather than anywhere —
           this is a control somebody operates, not a page that got away from
-          its width. Carli: say the word and these wrap like the rest. */}
+          its width. The owner: say the word and these wrap like the rest. */}
       <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 pt-1">
         {talking.map((card) => {
           const going = taping?.id === card.id;

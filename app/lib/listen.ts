@@ -3,7 +3,7 @@
  *
  * ── What this is for ─────────────────────────────────────────────────────
  *
- * Carli: "Is daar nie 'n manier dat iemand 'n liedjie kan oplaai sodat die app
+ * The owner: "Is daar nie 'n manier dat iemand 'n liedjie kan oplaai sodat die app
  * na die styl kan luister en daarna die styl vir die liedjie kies nie … dit is
  * net om 'n idee te kry vir 'n styl."
  *

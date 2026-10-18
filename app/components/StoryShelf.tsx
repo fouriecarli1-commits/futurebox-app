@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
+ * The owner, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
  * kamer."*
  *
  * ── Why this is a third component and not part of the kids room ──────────
@@ -55,7 +55,7 @@ export default function StoryShelf({
 }): React.ReactElement {
   const { t } = useLang();
   /* Stories kept before 15 October 2026 carry the Story Maker's fault in
-     their own words: "kids.heroDinoTitle" where a name should be (Carli's
+     their own words: "kids.heroDinoTitle" where a name should be (The owner's
      screenshot, and "snaakse woorde … soos kids.dinostory"). They are saved
      as they were made, so the shelf puts the names back as it shows them. */
   const named = (words: string): string => words.replace(/\bkids\.[A-Za-z0-9]+/g, (key) => {

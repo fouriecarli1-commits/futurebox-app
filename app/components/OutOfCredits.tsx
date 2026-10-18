@@ -42,7 +42,7 @@ export default function OutOfCredits({
    * What is for sale to this person, which is nothing at all unless they are
    * already on a plan.
    *
-   * Carli: "iemand kan nie krediete koop sonder 'n subscribed plan nie. Daai
+   * The owner: "iemand kan nie krediete koop sonder 'n subscribed plan nie. Daai
    * opsie moet glad nie sigbaar wees voordat iemand 'n betaalde plan aangekoop
    * het nie." `/api/credits` sends an empty list to a free member, and the
    * client no longer falls back to the full shelf when it arrives empty.

@@ -1,7 +1,7 @@
 /**
  * Handing somebody their song, with the sleeve in it.
  *
- * Carli, 9 October 2026: *"Liedjies moet ook kan export saam met hulle Album
+ * The owner, 9 October 2026: *"Liedjies moet ook kan export saam met hulle Album
  * art."*
  *
  * Three screens downloaded a song before this existed — the channel, the

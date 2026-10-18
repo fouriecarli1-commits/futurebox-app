@@ -43,7 +43,7 @@ function key(): boolean {
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, standing instruction: "ek wil net hê ons moet konstant in ag neem wat
+ * The owner, standing instruction: "ek wil net hê ons moet konstant in ag neem wat
  * ek alles maandelliks betaal want dit help nie ek maak nie 'n wins nie."
  *
  * Everything we had on that was OUR arithmetic. `docs/KOSTE-EN-WINS.md` models
@@ -65,7 +65,7 @@ function key(): boolean {
  * which is exactly why this asks the narrower endpoint.
  *
  * NOT VERIFIED against the live API — the machine this is written on cannot
- * reach elevenlabs.io. Read off the pages Carli sent. Every field is optional
+ * reach elevenlabs.io. Read off the pages the owner sent. Every field is optional
  * and every number is coerced, so a shape that differs comes back thin rather
  * than throwing.
  */
@@ -283,7 +283,7 @@ export async function keyGuards(): Promise<
  *
  * Every price in `lib/credits.ts` is a number somebody worked out from a rate
  * card, and `check:prices` keeps it honest against that card. What neither can
- * do is tell you what a real song, on a real evening, actually cost. Carli:
+ * do is tell you what a real song, on a real evening, actually cost. The owner:
  * "ek wil net hê ons moet konstant in ag neem wat ek alles maandelliks betaal
  * want dit help nie ek maak nie 'n wins nie."
  *
@@ -1737,7 +1737,7 @@ export async function dropFinetune(id: string): Promise<boolean> {
  * audio, credits are charged, `POST /v1/voices/add` is refused, the credits
  * are refunded, and they are shown ElevenLabs' own English sentence about a
  * limit on an account they have never heard of. Then it happens to the next
- * member, and the next, and nothing tells Carli — the first she knows is
+ * member, and the next, and nothing tells the owner — the first she knows is
  * somebody writing to say voice cloning is broken.
  *
  * The per-member cap in `/api/voice/clone` does not help here. That one says

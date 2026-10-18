@@ -10,7 +10,7 @@
  * and reachable by nothing at all.
  *
  * That is the same fault as a button behind the tab bar, one layer down: built,
- * working, and impossible to get at. Carli asked for the desk without knowing
+ * working, and impossible to get at. The owner asked for the desk without knowing
  * most of it was already there.
  *
  * ── The four ways it goes wrong again ────────────────────────────────────

@@ -85,7 +85,7 @@ export default function Pictures({
    * to be one height, and the drop zone measured 109 pixels against the
    * bench's 44. A row of controls where one is two and a half times the
    * height of the others is what reads as untidy, and that check exists
-   * because Carli said so on 4 October: *"Kyk mooi alles allign nie."*
+   * because the owner said so on 4 October: *"Kyk mooi alles allign nie."*
    */
   pickOnly?: boolean;
   /**
@@ -120,7 +120,7 @@ export default function Pictures({
    *
    * ── Why this was rewritten, 16 September 2026 ─────────────────────────
    *
-   * Carli, twice: *"die laai jou eie foto op in shot werk steeds nie. Bladsy
+   * The owner, twice: *"die laai jou eie foto op in shot werk steeds nie. Bladsy
    * is wit."* The second report is the one that matters — the first was
    * answered by defending the image path, and the page still went white.
    *
@@ -242,7 +242,7 @@ export default function Pictures({
            them". It was true when it was written and is not any more: the
            cast's presenter-face input accepts the same five types, sits in
            the same overlay, and comes first in the DOM. So the tool built to
-           reproduce Carli's white page had been filling the cast's input and
+           reproduce the owner's white page had been filling the cast's input and
            reporting that nothing was stored — a true sentence about a
            control that was never going to store a picture here.
  

@@ -3,7 +3,7 @@
  *
  * ── What it is for ───────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: "Podcast na aanbieder deur moet mens na long
+ * The owner, 14 September 2026: "Podcast na aanbieder deur moet mens na long
  * shot toe vat en copilot se assistence dadelik verander na dit wat die
  * kamer vir die podcast moet doen."
  *

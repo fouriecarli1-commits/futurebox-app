@@ -1,6 +1,6 @@
 # MiniMax en OpenArt se pryse, teen ons eie
 
-*Carli het hierdie pryse op **8 Oktober 2026** gestuur: MiniMax se eie
+*Die eienaar het hierdie pryse op **8 Oktober 2026** gestuur: MiniMax se eie
 betaal-soos-jy-gaan tabelle, en OpenArt se vier planne met die kredietkoste
 van elke model daarop.*
 
@@ -209,7 +209,7 @@ genoem op die Wonder-plan, maar niks wat sê dit doen generatiewe inpainting met
 
 # Mureka, en die grootste syfer in die hele app
 
-*Carli het hulle hele pryslys op **8 Oktober 2026** gestuur, ingeteken op
+*Die eienaar het hulle hele pryslys op **8 Oktober 2026** gestuur, ingeteken op
 hulle werf. Weer eens: ek kon die bladsy nie self oopmaak nie. Die pryse is
 hare; die rekenkunde is myne, en `check:minimax` hou dit teen `credits.ts`.*
 
@@ -309,7 +309,7 @@ tou. Dit is die een syfer om oor te onderhandel, en dit is nie die prys nie.
 
 # Google se Lyria — en die een ding wat niemand genoem het nie
 
-*Carli, 8 Oktober 2026: "Ek is baie beïndruk met google se lyria. Die
+*Die eienaar, 8 Oktober 2026: "Ek is baie beïndruk met google se lyria. Die
 Afrikaans is baie mooi."*
 
 ## Jou sin is die waardevolste reël in hierdie hele lêer
@@ -442,7 +442,7 @@ vraag vir die prokureur. Dit staan op daardie lys.
 
 # Reggestel: Lyria sing wel — en wat in die lêer was
 
-*Carli het op 8 Oktober 2026 'n liedjie gestuur wat sy pas op Lyria gemaak
+*Die eienaar het op 8 Oktober 2026 'n liedjie gestuur wat sy pas op Lyria gemaak
 het: **"Vrye Vlug"**. In Afrikaans. Gesing.*
 
 ## Ek was verkeerd, en dit is die moeite werd om te sê hoe
@@ -542,7 +542,7 @@ dinge. Die twee toetse wat nou saak maak, en albei is joune:
 
 # Waar om te registreer: Vertex AI, nie AI Studio nie
 
-*Carli, 8 Oktober 2026: "Jy moet my help om te sê watter platform ek moet
+*Die eienaar, 8 Oktober 2026: "Jy moet my help om te sê watter platform ek moet
 gebruik om op te teken vir google se lyria."*
 
 ## Kort antwoord

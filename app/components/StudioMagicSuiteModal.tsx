@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Daar is goed wat ek voel die video en photo
+ * The owner, 11 October 2026: *"Daar is goed wat ek voel die video en photo
  * editor nog nodig het... hierdie goed is regdeur die bank by alle video en
  * photo editors, ons kan die produk net 'n ander naam gee, en gebruik maak
  * van google se engines om met van die goed te help."*

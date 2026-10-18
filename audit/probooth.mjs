@@ -207,7 +207,7 @@ try {
 
   /* ── And it makes a sound ────────────────────────────────────────────
 
-     Carli, 21 September 2026, asking for something that was already
+     The owner, 21 September 2026, asking for something that was already
      built: *"Metronome in probooth."* Every assertion above is about the
      switch and the words beside it, and all of them would pass over a
      metronome that schedules nothing at all — which is the one thing a
@@ -323,7 +323,7 @@ try {
      Until 14 September the room stacked every lane's full set of controls
      down the page. It does not any more: the timeline holds the screen, and
      a lane's controls come out when its name is tapped in the gutter —
-     Carli's rebuild, and the direction the rest of it is going in (four
+     The owner's rebuild, and the direction the rest of it is going in (four
      icons at the foot, everything behind them).
 
      So this probe has to do what a person does. It failed here first, with
@@ -438,7 +438,7 @@ try {
      `audit/boothback.mjs`, which walks the way back. This is the other
      half: that the way OUT is in the room, where somebody can press it. */
   /* The word on the drawer, not just the drawer.
-     Carli found the cleaners, the tone stack and the amp all behind one
+     The owner found the cleaners, the tone stack and the amp all behind one
      unlabelled slider icon: "darem baie weggesteek". A title and an
      aria-label are not a label — one needs a mouse, the other a screen
      reader — so this asks for the text a person can actually see. */
@@ -525,7 +525,7 @@ try {
 
   /* ── Marking a piece of the song, and the tools inside the button ─────
 
-     Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging
+     The owner, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging
      lines in die timeline te hê wat 'n gedeelte uitsonder, dan highlight
      daai gedeelte met 'n button wat op pop met verskillende opsies binne
      die button."*
@@ -687,7 +687,7 @@ try {
      not a narrow screen, and which no assertion about text would ever
      have caught. Boxes are compared, not looked at. */
   /* 360 as well as 390. A great many Android phones report 360 CSS pixels —
-     Carli's own screenshots are one — and a row that fits at 390 and overflows
+     The owner's own screenshots are one — and a row that fits at 390 and overflows
      at 360 is a row that overflows for a large share of the people using this.
      The phone-only assertions below run at both. */
   for (const width of [1280, 390, 360]) {
@@ -755,7 +755,7 @@ try {
          the lanes a few lines. So below `sm` it became one column that
          scrolled, and this asserted nothing inside it scrolled on its own.
 
-         Carli, 14 September 2026, with four pictures of what she wants
+         The owner, 14 September 2026, with four pictures of what she wants
          instead: *"Die booth moet heeltemal verander."* The timeline is the
          room now — it holds the screen and scrolls its own lanes, and the
          controls come out from behind icons rather than standing in strips
@@ -820,7 +820,7 @@ try {
          probe before this one rendered the room alone, so the bar was not
          there to cover anything, and the room's own "Mix it down" — the
          button that produces the file — sat underneath it on a phone with
-         nothing to say so. Carli found it by using the app.
+         nothing to say so. The owner found it by using the app.
 
          Scrolled to the bottom, because that is where somebody looking for
          the finishing button goes, and it is where the bar bites. */
@@ -834,11 +834,11 @@ try {
 
          This used to look for controls painted over by the tab bar, and it
          found a real one: "Mix it down", the button that produces the file,
-         sat underneath it on a phone with nothing to say so, and Carli
+         sat underneath it on a phone with nothing to say so, and the owner
          found that by using the app.
 
          The booth now claims the screen and the bar stands down while it is
-         open — Carli: *"dan val daai hele bar van die app in die booth
+         open — the owner: *"dan val daai hele bar van die app in die booth
          weg."* So the question changes from "does the bar cover anything"
          to "is the bar gone, and is there still a way out". Both halves,
          because the bar gone with no back button is a room a phone cannot
@@ -1089,7 +1089,7 @@ try {
 
   /* ── Turned sideways ─────────────────────────────────────────────────
 
-     Carli, 14 September 2026: *"Die booth moet asb op die dwars draai
+     The owner, 14 September 2026: *"Die booth moet asb op die dwars draai
      funksie van 'n foon en tablet getoets word. Want baie mense gaan die
      dwarsdraai wil gebruik, en dan gaan die buttons weer beter werk aan die
      kant van die skerm en nie onder nie."*
@@ -1302,7 +1302,7 @@ try {
 
   /* ── The session is still there after the room is closed ─────────────
 
-     Carli, 9 September 2026: "toe ek terug swipe of back druk, dan gooi hy
+     The owner, 9 September 2026: "toe ek terug swipe of back druk, dan gooi hy
      mens heeltemal uit na die home screen toe en jy verloor jou hele projek.
      'n projek waarmee mens besig is moet half kan stoor, en restart waar 'n
      mens is."

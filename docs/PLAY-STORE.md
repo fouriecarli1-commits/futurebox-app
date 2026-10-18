@@ -1,6 +1,6 @@
 # Putting FutureBox on Google Play
 
-Carli's list, 7 October 2026: *"Registrasie op playstore."*
+The owner's list, 7 October 2026: *"Registrasie op playstore."*
 
 This is everything that can be written down in advance, so that the day you
 sit down to do it is an hour of typing rather than a week of deciding. The
@@ -108,7 +108,7 @@ do, and looking is a two-minute search on Dun & Bradstreet's site.
 
 Dun & Bradstreet created the number on 15 October 2026, "verified through
 outside sources", for **FUTUREBOXSTUDIO**, Pretoria. The number itself and
-the street address are in Carli's resolution email from D&B and are not
+the street address are in the owner's resolution email from D&B and are not
 copied here; this repository keeps no personal or business details.
 
 **Read the name and the address off that email, not off CIPC, from here on.**
@@ -142,7 +142,7 @@ links.
 
 ### How it was got
 
-Carli, 11 October 2026: *"Help my met die DUNS ding?"*
+The owner, 11 October 2026: *"Help my met die DUNS ding?"*
 
 **Step 1 — find out whether you already have one.** Many registered companies
 do, without ever asking. Apple runs a free public lookup that searches the
@@ -172,7 +172,7 @@ application comes back weeks later:
 | Field | What to put |
 |---|---|
 | Legal name | `FUTUREBOXSTUDIO (PTY) LTD` — exactly as CIPC has it. Not "FutureBox", not "FutureBox Studio", not the domain |
-| Registration number | `2026/714071/07` |
+| Registration number | the registration number on the certificate |
 | Registered address | The one on the CIPC certificate, exactly, including the postal code |
 | Trading name | Only if CIPC has one. A trade name on its own is refused |
 | Telephone | A number that answers — they may phone to verify |
@@ -232,7 +232,7 @@ explained in `android/README.md`.
 
 ## Paying in the Android app — Google Play Billing **yours, with the code done**
 
-Carli, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
+Die eienaar, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
 ek paystack afhaal en werk met die playstore se paying system."*
 
 That is how it is built. **On the website nothing changes** — Paystack, as

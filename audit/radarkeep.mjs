@@ -5,7 +5,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
+ * The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
  *
  * The Radar's "Add a show you found yourself" kept its list in `useState`,
  * so every show she found, looked up and typed in was gone the next time

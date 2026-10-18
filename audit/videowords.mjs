@@ -1,7 +1,7 @@
 /**
  * The words on a music video: whose timing, and whose language.
  *
- * Carli: "Music video moet beter hulp hê met language en onderskrifte."
+ * The owner: "Music video moet beter hulp hê met language en onderskrifte."
  *
  * ── The two things that were wrong ───────────────────────────────────────
  *

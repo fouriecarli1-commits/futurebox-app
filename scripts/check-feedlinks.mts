@@ -3,7 +3,7 @@
  *
  * ── What this is here to catch ───────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Die content moet ons oor doen en double
+ * The owner, 21 September 2026: *"Die content moet ons oor doen en double
  * check… wat goeie sources is. Daar kan nie goed op wees wat random is
  * nie."*
  *

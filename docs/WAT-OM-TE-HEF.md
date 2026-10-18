@@ -1,6 +1,6 @@
 # Waar krediete hoort, en waar nie
 
-*30 September 2026. Carli: "Ons moet krediete aan ons eie video editing heg,
+*30 September 2026. Die eienaar: "Ons moet krediete aan ons eie video editing heg,
 asook probooth … wees asb billik met die prys uitleg en voorstelle, asook
 adverts (gaan kyk na elke kamer in creative studio en kyk waar ons gratis
 sinvolle funksies bied waar ons krediete aan dit kan heg)."*
@@ -50,7 +50,7 @@ hou.
 
 ## 2a. En haar besluit, wat die bostaande oorheers
 
-Carli, 1 Oktober 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
+Die eienaar, 1 Oktober 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
 krediete werd is."*
 
 Sy het die beswaar gehoor en dit twee keer gestel. **Die snykamer hef nou.**
@@ -192,7 +192,7 @@ editor", en dit hef presies waar ons betaal.
 
 ## 5. Adverts
 
-Carli, dieselfde aand: *"Die advert krediete moet wel duurder wees. Daai is 'n
+Die eienaar, dieselfde aand: *"Die advert krediete moet wel duurder wees. Daai is 'n
 premium funksie wat baie smart is en mense behoort heelwat duurder en met meer
 krediete vir daardie funksie te betaal."*
 

@@ -78,7 +78,7 @@ export default function Subscription(): React.ReactElement | null {
   /* Somebody who is not paying anything.
  
      This used to render nothing at all, which is defensible — there is no
-     subscription to cancel — and is exactly why Carli asked "waar is die
+     subscription to cancel — and is exactly why the owner asked "waar is die
      unsubscribe button?". A person looking for the way out of a payment does
      not conclude "I must not have one" from an absence; they conclude the
      button is hidden, which is the reputation this panel exists to avoid.
@@ -128,7 +128,7 @@ export default function Subscription(): React.ReactElement | null {
 
   /* ── Changing the card ────────────────────────────────────────────────
  
-     Carli, 23 September 2026: *"En met billing, dat hulle hul billing
+     The owner, 23 September 2026: *"En met billing, dat hulle hul billing
      information kon verander?"* Seeing the arrangement and stopping it were
      both here; changing the card it is charged to was not — and a card
      expires long before anybody wants to leave, so the ordinary end of a

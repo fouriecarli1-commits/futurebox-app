@@ -23,7 +23,7 @@
  * ── Not verified against the live API ────────────────────────────────────
  *
  * The proxy blocks elevenlabs.io from the machine this was written on, so the
- * endpoint shapes come off the pages Carli sent and nothing here has ever had
+ * endpoint shapes come off the pages the owner sent and nothing here has ever had
  * a real answer back. It is written to fail loudly rather than plausibly: an
  * answer whose shape it does not recognise is reported as such, with what
  * came back, instead of being mapped to an empty result. "Could not ask" is

@@ -3,7 +3,7 @@
  *
  * ── The gap this closes ──────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Ek dink ook daar moet heelwat 'n verskeidenheid
+ * The owner, 9 October 2026: *"Ek dink ook daar moet heelwat 'n verskeidenheid
  * van teks opsies wees."*
  *
  * Measuring before adding found something worse than a short list. Words

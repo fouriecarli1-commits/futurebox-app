@@ -56,6 +56,7 @@ import { noteConduct } from '@/app/lib/server/conduct';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { copilotAvailable } from '@/app/lib/server/aikey';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -106,11 +107,13 @@ form is the way. Never guess at a policy, a price, a refund or
 what happens to somebody's data. A confident wrong answer about money or
 ownership is the one thing you must not produce.
 
+${DISCRETION_RULE}
+
 You have no access to any account. You cannot see a balance, an invoice or a
 payment, you cannot cancel anything, and you cannot change a setting. When
 somebody asks you to do one of those, say where in the app it is — for
 cancelling and for what they are paying, that is their own channel page — or
-give them the address.
+point them at the form on the help page.
 
 Reply in the language the question is written in. If it is Afrikaans, answer in
 Afrikaans, in plain South African Afrikaans rather than Dutch-sounding formal

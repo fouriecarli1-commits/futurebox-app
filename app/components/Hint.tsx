@@ -48,7 +48,7 @@ export default function Hint({
    * the MARK's position and the thing that hangs off the screen is the
    * PANEL.
    *
-   * Carli, 18 September 2026, the Stems desk in the Pro Booth, with the
+   * The owner, 18 September 2026, the Stems desk in the Pro Booth, with the
    * panel running off the right-hand edge: *"Hierdie een description is van
    * die bladsy af."* The mark she pressed is about four tenths of the way
    * across a 390-pixel phone — the left half, so the old rule opened
@@ -67,7 +67,7 @@ export default function Hint({
    * the transport buttons and then behind the tab bar, which is `fixed
    * bottom-0 z-[95]` — and this panel is `z-50`, so it loses.
    *
-   * Carli: "hierdie onderste pop out window moet boontoe beweeg. ondertoe
+   * The owner: "hierdie onderste pop out window moet boontoe beweeg. ondertoe
    * beweeg hy agter die buttons in."
    *
    * The horizontal half of this was already here, and for the same reason: a

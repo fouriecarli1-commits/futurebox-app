@@ -3,7 +3,7 @@
  *
  * ── Why this left the card ───────────────────────────────────────────────
  *
- * Carli, 9 October 2026, with a screenshot: the trim card read *"Trim it
+ * The owner, 9 October 2026, with a screenshot: the trim card read *"Trim it
  * 8.0s of 8.0s"*, both handles were hard right, and "Play just this bit" did
  * nothing.
  *

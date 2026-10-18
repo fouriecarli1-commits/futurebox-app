@@ -6,7 +6,7 @@
  * ── What this replaced, and why ──────────────────────────────────────────
  *
  * A link to Kits' own tutorial video sat in the three places where somebody is
- * about to clone a voice. Carli, 9 September 2026: "Ek dink vir nou moet ons
+ * about to clone a voice. The owner, 9 September 2026: "Ek dink vir nou moet ons
  * die kits video uithaal wat verduidelik hoe 'n stem geleer word. ek dink ons
  * moet eerder die verduideliking skryf."
  *
@@ -25,7 +25,7 @@
  * This card used to end: "The training itself happens at kits.ai — this app
  * sings in a voice that already exists."
  *
- * Carli, 9 September 2026: "Sjoe hierdie is net nie waar nie. kits doen juis
+ * The owner, 9 September 2026: "Sjoe hierdie is net nie waar nie. kits doen juis
  * ook stemkloning vir liedjies. Ek het juis al daardie geld betaal vir hierdie
  * funksie."
  *

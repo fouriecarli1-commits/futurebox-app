@@ -4,7 +4,7 @@
  *
  * ── What this is for ─────────────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Al die kamers se AI praat nie met mekaar nie.
+ * The owner, 21 September 2026: *"Al die kamers se AI praat nie met mekaar nie.
  * Ek het nou dieselfde gesien by hooks. Ek wou 'n video maak, maar die
  * liedjie hook lê nie daar in video nie en daar is geen prompt in die video
  * desk nie."*
@@ -164,7 +164,7 @@ export function lengthForHook(seconds: number): number {
 /**
  * What the copilot in the video desk is told, so the conversation carries.
  *
- * Carli: *"Al die kamers se AI praat nie met mekaar nie."* Arriving at a
+ * The owner: *"Al die kamers se AI praat nie met mekaar nie."* Arriving at a
  * desk that has been set up by a copilot which then knows nothing about it
  * means changing one thing costs describing the whole thing again, to the
  * app that just wrote it. Her own words are not paraphrased: what it is
@@ -195,7 +195,7 @@ export function videoFromHook(hook: HookCarry): readonly Wire[] {
 
 /* ── A whole song, not a moment in one ───────────────────────────────────
  *
- * Carli, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
+ * The owner, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
  * nie."* She reported it about hooks; it was just as true one screen
  * earlier. "Put a video to it", the card that appears the moment a song
  * finishes, set the song under the desk and moved her there — and that was

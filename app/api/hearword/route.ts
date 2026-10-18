@@ -3,7 +3,7 @@
  *
  * ── What this is for ─────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"But isn't there a way for an AI to listen to the
+ * The owner, 10 October 2026: *"But isn't there a way for an AI to listen to the
  * phonetic sounds of someone speaking isiXhosa?"* — and then: *"Does that
  * mean that I can use the booth to record phonetic sounds?"*
  *

@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 September 2026: "Ek gaan op 'n manier 'n alert moet kry as die
+ * The owner, 9 September 2026: "Ek gaan op 'n manier 'n alert moet kry as die
  * krediete laag raak, sodat ek kan koop. Is daar 'n manier dat ek 'n
  * waarskuwing kan kry?"
  *
@@ -182,7 +182,7 @@ ok('and the count includes members who have cancelled but are still paid up',
 
 /* ── Google, which was not watched at all ──────────────────────────
 
-   Carli, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer my
+   The owner, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer my
    budgets in elevenlabs en google op raak."* ElevenLabs was watched and
    Google was not, so the first thing she would have known about a Google
    month running out is `enough()` refusing a member’s song.

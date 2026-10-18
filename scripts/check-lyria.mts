@@ -34,7 +34,7 @@ const SONG = 'U'.repeat(900);
 
 /* ── 0. The shape her own console shows ───────────────────────────────── */
 
-/* Measured at last, 9 October 2026, off Carli's Model Garden page. Every
+/* Measured at last, 9 October 2026, off the owner's Model Garden page. Every
    assertion below this used to be about shapes I had guessed at; this one is
    about the shape that actually arrives, and it is first because it is the
    only one with evidence behind it. */

@@ -4,7 +4,7 @@
 --
 -- ── Wat dit regmaak ──────────────────────────────────────────────────────
 --
--- Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+-- the owner, 14 September 2026: *"Die play room moet die liedjie se woorde
 -- speel."*
 --
 -- Die speelkamer het die woorde nie gehad nie, en dit was nie 'n skerm wat
@@ -28,7 +28,7 @@
 
 -- ── Dieselfde kolom staan ook in supabase/live.sql ─────────────────
 --
--- Carli, 15 September: *"Dit lyk of ek 2 sql's moet hardloop."*
+-- the owner, 15 September: *"Dit lyk of ek 2 sql's moet hardloop."*
 --
 -- Dit is EEN verandering. live.sql bou die tabel, so die kolom hoort daar
 -- vir 'n nuwe projek; hierdie lêer bestaan omdat live.sql reeds geloop het

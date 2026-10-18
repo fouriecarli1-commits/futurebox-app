@@ -3,7 +3,7 @@
  *
  * ── What it is and what it is not ────────────────────────────────────────
  *
- * Carli, 7 October 2026: *"BG remover"*, in her list of what a modern editor
+ * The owner, 7 October 2026: *"BG remover"*, in her list of what a modern editor
  * has. This is the second of the free half of that list, and the one with a
  * limit worth saying out loud in the room rather than burying here:
  *
@@ -44,7 +44,7 @@ const HERE = '/segment';
 /**
  * The person-parts model, 15 October 2026.
  *
- * Carli: *"Ek kan sien die BG remover werk ook nogsteeds nie."* It was the old
+ * The owner: *"Ek kan sien die BG remover werk ook nogsteeds nie."* It was the old
  * MediaPipe selfie model — made for a webcam call, a face close up against a
  * wall — and on her studio photograph it kept the microphone and left dark
  * patches round the shoulders. `selfie_multiclass_256x256` is trained on
@@ -134,7 +134,7 @@ export function maskOnto(
   if (!ctx) return out;
   /* High, and not the default.
  
-     Carli, 7 October 2026, with a photograph of herself cut out: *"Its not
+     The owner, 7 October 2026, with a photograph of herself cut out: *"Its not
      looking perfect."* The edges were stair-stepped and her shoulders were
      streaking sideways.
  
@@ -172,7 +172,7 @@ export const SOFTNESS = 1.6;
  *
  * ── The fault this fixes ─────────────────────────────────────────────────
  *
- * Carli, 8 October 2026, with a photograph of her own face cut out: *"Dit is
+ * The owner, 8 October 2026, with a photograph of her own face cut out: *"Dit is
  * hoe die bg remover nou lyk."* The checkerboard was showing THROUGH her.
  * Her face was a ghost of itself and everything below her chin had gone.
  *
@@ -254,7 +254,7 @@ export function decided(
 /**
  * How soft the edge is, as a choice rather than a guess.
  *
- * Carli photographed the fault and I cannot photograph the fix: how an edge
+ * The owner photographed the fault and I cannot photograph the fix: how an edge
  * reads depends on the picture, on how much of the frame the person fills and
  * on the hair. One number chosen from one screenshot is a guess that costs
  * her a day to disprove.
@@ -293,7 +293,7 @@ export function feathered(
 
   /* ── Softened at the MASK's own size, before anything is stretched ────
  
-     Carli, 7 October 2026, twice, with photographs of herself: *"Its not
+     The owner, 7 October 2026, twice, with photographs of herself: *"Its not
      looking perfect"*, then *"Nogsteeds rowwe edges"* — and the second
      picture showed the answer. The rough edges were HORIZONTAL streaks
      along her collar.
@@ -519,7 +519,7 @@ export const behindOf = (id: string, of: { readonly width: number; readonly heig
  *
  * ── Why this is here and not a filter ────────────────────────────────────
  *
- * Carli listed "auto focus, blur" among the tools a modern editor has. The
+ * The owner listed "auto focus, blur" among the tools a modern editor has. The
  * blur that `postlook.ts` already had is the whole picture, which is a mood;
  * this is the one people actually mean by it — the thing a phone's portrait
  * mode does, where the subject stays sharp and the room behind them does not.

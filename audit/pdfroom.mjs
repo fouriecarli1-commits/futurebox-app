@@ -2,7 +2,7 @@
  * The document room, walked: a PDF opened, changed with each tool, saved,
  * and the saved file read back by a different reader.
  *
- * Carli, 17 October 2026: *"Die PDF craft is nogal belangrik."* What fails
+ * The owner, 17 October 2026: *"Die PDF craft is nogal belangrik."* What fails
  * quietly in a PDF tool is the file
  * that looks right on the screen and is wrong on disk — a redaction that only
  * covers the words, a password that was never put on, a signature that was
@@ -144,7 +144,7 @@ try {
   /* ── Edit: change words that are there, and add some ── */
   await tool('edit');
   await pen('retype');
-  /* Carli, 17 October 2026: every paragraph and heading stands out in a
+  /* The owner, 17 October 2026: every paragraph and heading stands out in a
      frame, and a tap edits the whole block where it is. */
   const frames = await page.locator('[data-pdfblock]').count();
   check('Edit text puts a frame round every paragraph and heading', frames === 3, String(frames));

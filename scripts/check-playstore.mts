@@ -5,7 +5,7 @@
  *
  * ── Why a check for a thing that happens once ────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Registrasie op playstore."* The app that
+ * The owner's list, 7 October 2026: *"Registrasie op playstore."* The app that
  * goes on Google Play is this website in a wrapper — a Trusted Web Activity —
  * and what it is built from is the manifest, the icons and one file under
  * `/.well-known`. None of those is read by anything in day-to-day use, which

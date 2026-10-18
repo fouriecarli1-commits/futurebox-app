@@ -62,7 +62,7 @@ export interface Shot {
    *
    * ── Why the board needed to know the difference ───────────────────────
    *
-   * Carli, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat ek
+   * The owner, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat ek
    * moet bou vir 'n funksie, ek wil sniplets uit my videos gebruik vir
    * bemarking."*
    *
@@ -122,7 +122,7 @@ export interface Storyboard {
   /**
    * Whether a shot's quoted line is spoken aloud by the engine that makes it.
    *
-   * Carli, 23 September 2026: *"Dit wil ook voorkom dat daai kamer glad nie
+   * The owner, 23 September 2026: *"Dit wil ook voorkom dat daai kamer glad nie
    * klank wat praat genereer nie."* It did not, and not because it could
    * not: `VideoRequest.speak` has been there all along and this board was
    * the one screen that never sent it. Every shot it has ever made was
@@ -165,7 +165,7 @@ export interface Storyboard {
    * route answers one line for one line and refuses when it cannot, and a
    * per-shot call would have no way to notice a line that came back missing.
    *
-   * Carli: "Video desk moet ook 'n tick box hê vir add subtitles, en dan 'n
+   * The owner: "Video desk moet ook 'n tick box hê vir add subtitles, en dan 'n
    * tik boksie wat sê in watter language".
    */
   readonly subtitleLang?: string;
@@ -235,7 +235,7 @@ export function shotsFrom(text: string, seconds: number): Shot[] {
      like it will break something. So the shots came back as single clauses,
      and a video engine given a clause invents the rest.
  
-     Carli said it twice, a month apart — 11 September: *"CoPilot moet net
+     The owner said it twice, a month apart — 11 September: *"CoPilot moet net
      baie meer descriptive wees wanneer video shots geskryf word"*, and 9
      October: *"Die video studio se ai is baie kort af."* The first fix was a
      longer instruction, which could not work while this line was here.

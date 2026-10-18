@@ -90,7 +90,7 @@ try {
   /**
    * Open a bench on the room's bar.
    *
-   * Carli, 7 October 2026: *"Die editing tools moet ook onder in 'n bar
+   * The owner, 7 October 2026: *"Die editing tools moet ook onder in 'n bar
    * wees."* Every control in this room is behind one of six benches now, so
    * a walk that reaches straight for a button is a walk that times out —
    * which is what this one did, on `data-addwords`, the moment the bar
@@ -262,7 +262,7 @@ try {
 
   const clash = () => page.locator('[data-postclash]').count();
 
-  /* No warning sign at all, square or story. Carli, 17 October 2026: the
+  /* No warning sign at all, square or story. The owner, 17 October 2026: the
      sign was "'n weird notification wat niemand hoef te sien nie" — the
      words are moved clear in the saved file by themselves. */
   check('no warning sign comes up over the photo on a square',
@@ -281,7 +281,7 @@ try {
 
   /* The bill before the work, not only on the button.
  
-     Carli: *"Remember to monetize and nothing is free in this app."* The
+     The owner: *"Remember to monetize and nothing is free in this app."* The
      cutting room shows an itemised bill before it charges; this room let
      somebody build a whole post and meet the price at the foot of it. */
   await bench('save');
@@ -412,7 +412,7 @@ try {
 
   /* ── Which part of the photograph shows ──────────────────────────────
  
-     Carli, 7 October 2026: *"Waar edit ek 'n foto?"* `check:postcrop` walks
+     The owner, 7 October 2026: *"Waar edit ek 'n foto?"* `check:postcrop` walks
      the arithmetic — 6804 placements, none of them uncovering the frame. What
      arithmetic cannot say is whether the screen is wired to it: a slider that
      updates its own label and a canvas that never changes is exactly what a
@@ -469,7 +469,7 @@ try {
 
   /* ── Simple, or every choice there is ───────────────────────────────
  
-     Carli's list, 7 October 2026: *"Simple en advances opsies."*
+     The owner's list, 7 October 2026: *"Simple en advances opsies."*
  
      The thing worth proving is the distinction the design turns on: every
      TOOL is in both modes and only the RUNGS come and go. A mode that
@@ -690,7 +690,7 @@ try {
 
   /* ── Smaller than the frame, and movable while it is ─────────────────
  
-     Carli, 7 October 2026: *"Die foto moet ook kan shrink onder 1.00 dit moet
+     The owner, 7 October 2026: *"Die foto moet ook kan shrink onder 1.00 dit moet
      ook gedrag kan word soos mens die behoefte het."*
  
      Two separate things, and the second is the one that was missing for a
@@ -774,7 +774,7 @@ try {
 
   /* ── How it reads, which is free and on the device ───────────────────
  
-     Carli, 7 October 2026, listing a modern editor's tools. Half of that
+     The owner, 7 October 2026, listing a modern editor's tools. Half of that
      list runs on the phone for nothing and this is it; the other half needs
      an engine and a price per use.
  
@@ -810,12 +810,12 @@ try {
     return img ? { width: Number(img.dataset.w), height: Number(img.dataset.h) } : null;
   });
 
-  /* On the FRAME's bench, not the picture's. Carli, 7 October 2026: *"Ek dink
+  /* On the FRAME's bench, not the picture's. The owner, 7 October 2026: *"Ek dink
      wel cutting moet by The frame wees nie picture nie."* Somebody looking
      for a crop looks where the shapes are. */
   /* ── Turning it, which is the one somebody does first ───────────────
  
-     Carli's list, 7 October 2026: *"Prent editor om nog canva funksies in te
+     The owner's list, 7 October 2026: *"Prent editor om nog canva funksies in te
      bring."*
      A quarter turn of a 4:3 photograph is 3:4, and a canvas sized the old way
      crops the two ends off it without a word — so the reading is the
@@ -879,7 +879,7 @@ try {
       + ' the box rather than from the words');
     /* ── Where the words are, measured off the glass ─────────────────
  
-       Carli, 8 October 2026: *"Die woord op die screen kan nog nie geskuif
+       The owner, 8 October 2026: *"Die woord op die screen kan nog nie geskuif
        en gecrop word nie. Daar moet 'n ook 'n line spacing scroll bar wees,
        en spacing tussen die woorde self."*
  
@@ -1026,7 +1026,7 @@ try {
 
       /* ── The two bars, measured as RATIOS and not as sizes ──────────
 
-          Carli, 8 October 2026: *"Daar moet 'n ook 'n line spacing scroll
+          The owner, 8 October 2026: *"Daar moet 'n ook 'n line spacing scroll
           bar wees, en spacing tussen die woorde self."*
 
           The obvious assertions — line spacing makes the block taller,
@@ -1039,7 +1039,7 @@ try {
           box does not grow — the TYPE shrinks instead, and the block's
           height lands within a pixel of where it was. On the fixture here
           it is 96 rows at 1.2 and 97 rows at 2.2. An assertion on height is
-          an assertion about the box, which is the kind of green Carli
+          an assertion about the box, which is the kind of green the owner
           minds most: a check that passes because it is measuring something
           next to the thing it names.
 
@@ -1195,7 +1195,7 @@ try {
 
   /* ── Somewhere to start, which the empty room needed most ───────────
  
-     Carli's list, 7 October 2026: *"Video, etc templates."*
+     The owner's list, 7 October 2026: *"Video, etc templates."*
  
      `check:posttemplates` holds that none of them puts words where a
      platform prints its own. What a browser has to answer is that pressing
@@ -1272,7 +1272,7 @@ try {
 
   /* ── Cutting the photograph down, which is not framing it ───────────
  
-     Carli, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
+     The owner, 7 October 2026: *"Ek sien nie goeie cropping en cutting tools
      nie."* `lib/cropbox.ts` carries why that is a different tool from the
      framing above, and `check:cropbox` holds the arithmetic — no gesture can
      put the box outside the picture, inside out, or down to nothing.
@@ -1379,7 +1379,7 @@ try {
 
   /* ── Drawing round a thing, which is the third way to cut one out ────
  
-     Carli, 7 October 2026: *"Gaan aan met die free-hand cut."*
+     The owner, 7 October 2026: *"Gaan aan met die free-hand cut."*
  
      The picture is square by now — the crop above made it so — and it is
      still half red and half blue, so tracing round the blue half and
@@ -1424,7 +1424,7 @@ try {
 
     /* ── The four shapes, which is what she asked for ─────────────────
  
-       Carli, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil."*
+       The owner, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil."*
        The square is the one to prove by dragging, because its area is
        arithmetic anybody can do in their head: a drag across the middle
        half of a picture keeps a quarter of it, and what comes back has to
@@ -1483,7 +1483,7 @@ try {
 
       /* ── And a cut really leaves nothing behind it ───────────────
 
-         Carli, 8 October 2026: *"Take the background out gee die ilusie dat
+         The owner, 8 October 2026: *"Take the background out gee die ilusie dat
          dit transparent is, maar dit is nog nie."*
 
          She was exactly right and it was one default. `back` opened at
@@ -1609,7 +1609,7 @@ try {
 
   /* ── What kind of file, and the one warning that has to reach her ────
  
-     Carli, 7 October 2026: *"Ook die formaat van export?"* Two formats now,
+     The owner, 7 October 2026: *"Ook die formaat van export?"* Two formats now,
      and the whole reason this is a browser assertion rather than a source
      one is the clash between them: JPEG has three channels, so a see-through
      post saved as a JPG comes out on a solid colour and no setting undoes
@@ -1617,7 +1617,7 @@ try {
      ROOM says so, on the screen, before the credit is spent. */
   /* ── Kept in the app, which is the free half of leaving ──────────
 
-     Carli, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
+     The owner, 8 October 2026: *"Daar moet ook ’n opsie wees om ’n foto binne
      die app te bêrge. Daar moet dalk ’n gallery in channel gestoor word."*
 
      `check:shelf` holds that the free press does not touch the paid route
@@ -1719,7 +1719,7 @@ try {
   /* The background off, which is the state that clashes. */
   await behind(true);
   await bench('save');
-  /* Taking the background off moves the file to PNG by itself (Carli, 17
+  /* Taking the background off moves the file to PNG by itself (The owner, 17
      October 2026: the squares must never come down with the picture). */
   check('  and taking the background off moves the file to PNG by itself',
     (await page.locator('[data-postkind="png"]').first().getAttribute('aria-pressed')) === 'true');
@@ -1794,7 +1794,7 @@ try {
 
   /* ── Taking something out ────────────────────────────────────────────
  
-     Carli, 7 October 2026: *"magic eraser"*. `check:erase` walks the
+     The owner, 7 October 2026: *"magic eraser"*. `check:erase` walks the
      arithmetic with known pixels. What it cannot say is whether a thumb
      dragged across a canvas reaches the right pixels of the photograph —
      the brush is painted on a view of the whole picture and the mask is in
@@ -1932,7 +1932,7 @@ try {
 
   /* ── And it can go next door ─────────────────────────────────────────
  
-     Carli: *"kan ook in die video editor ingesit word."* The editor is the
+     The owner: *"kan ook in die video editor ingesit word."* The editor is the
      room under this desk, so this is the whole feature: press once, and the
      picture is the film's cover with no trip through the camera roll.
  
@@ -1991,7 +1991,7 @@ try {
     if (!sheet2) return ['no sheet'];
     /* ── No app bar is the answer here now, not a missing measurement ─────
  
-       The photo editor claims the screen since 7 October — Carli asked for
+       The photo editor claims the screen since 7 October — the owner asked for
        its tools along the bottom, and two bars stacked is the fault the booth
        had in September. So nothing CAN be stranded under a bar that is not
        drawn, and what has to be true instead is that the room's own bar is
@@ -2042,7 +2042,7 @@ try {
      in the middle of this walk that reopened the sheet afterwards was how
      the first version of it broke the three assertions below it.
  
-     Carli: *"kan ook in die video editor ingesit word."* A confirmation
+     The owner: *"kan ook in die video editor ingesit word."* A confirmation
      sentence in the studio is the studio agreeing with itself. The cover
      appearing downstairs is the only thing that says the hand-over
      happened — and if it did not, she was charged for nothing. */

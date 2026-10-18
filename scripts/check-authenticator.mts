@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die app
+ * The owner, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die app
  * te beveilig met 'n authenticator app as hulle wil."*
  *
  * ── The two properties worth a rule, and why they are these two ──────────

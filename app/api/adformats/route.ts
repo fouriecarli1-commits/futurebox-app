@@ -4,7 +4,7 @@
  * ── The question the desk never asked ────────────────────────────────────
  *
  * `/api/campaign` writes adverts and is good at it. It assumes the answer is
- * an advert, filmed — and for a great many small businesses it is not. Carli,
+ * an advert, filmed — and for a great many small businesses it is not. The owner,
  * 11 September 2026: "dalk is 'n podcast styl soms die voordeel, ander kere
  * weer kort videos, dalk 'n explainer video, dalk net 'n liedjie met 'n
  * foto... die advert funksie gaan baie mense attract as dit diepte het."
@@ -53,6 +53,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { tooMany } from '@/app/lib/server/brake';
 import { FORMAT_IDS, describeFormats, formatById } from '@/app/lib/adformats';
 import { RANGES, STYLE_IDS, describeStyles, styleById } from '@/app/lib/adstyles';
@@ -168,6 +169,7 @@ const SYSTEM = [
   '- Short. Two or three sentences each. They are deciding, not reading.',
   '- In their language.',
   `- ${AFRIKAANS_RULE}`,
+  `- ${DISCRETION_RULE}`,
   '- Never promise a result. You do not know how it will do and neither does anybody else.',
 ].join('\n');
 

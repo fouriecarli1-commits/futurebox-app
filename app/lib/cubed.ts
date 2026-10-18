@@ -3,7 +3,7 @@
  *
  * ── What she asked, and why the name is the feature ──────────────────────
  *
- * Carli, 10 October 2026: *"Die masterclass section wil ek rename na Cubed
+ * The owner, 10 October 2026: *"Die masterclass section wil ek rename na Cubed
  * classes… Die rede vir cubed gaan oor die mag 3. Ek wil elke masterclass 3
  * klasse lank maak. Ons moet dit ook so uit stipuleer vir ons gaste. Ons gaan
  * 'n 60/40 winsverdeling doen. Dus 60% vir die gas."*
@@ -34,7 +34,7 @@
  * that cannot book the next one.
  *
  * It is in code for the written agreement a guest signs, not for the page.
- * Carli, 12 October 2026: *"Die Cubed classes kan nie die winsverdeling wys
+ * The owner, 12 October 2026: *"Die Cubed classes kan nie die winsverdeling wys
  * tussen my en die persoon wat die klas aanbied nie."* The public room says
  * the series is shared and that the terms are written down before anybody
  * says yes; the number itself stays between her and the guest. One file
@@ -54,9 +54,9 @@ export const CLASSES_IN_A_SERIES = 3;
 /**
  * What a Cubed masterclass costs, in rand — all three classes together.
  *
- * Carli, 11 October 2026: *"Ek beplan om R949 vir 'n cubed class te vra."*
+ * The owner, 11 October 2026: *"Ek beplan om R949 vir 'n cubed class te vra."*
  * Read for a day as the price of ONE class, with the series shown as three
- * times that. Carli, 12 October 2026: *"Nee, jy verstaan verkeerd, al drie
+ * times that. The owner, 12 October 2026: *"Nee, jy verstaan verkeerd, al drie
  * klasse is gelykstaande aan R949."* A "cubed class" IS the three classes;
  * R949 buys the masterclass, and there is no per-class price.
  *
@@ -133,7 +133,7 @@ export interface Series {
 /**
  * The series.
  *
- * Deliberately short and deliberately honest about stage. Carli: *"Ek gaan
+ * Deliberately short and deliberately honest about stage. The owner: *"Ek gaan
  * baie spesiale en high profile masterclasses reël."* They are not arranged
  * yet, and a room that listed six imaginary guests would be the landing page
  * promising something — the thing this app has a check about. What is here is

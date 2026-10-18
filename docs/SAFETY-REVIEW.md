@@ -40,7 +40,7 @@ music, stems, dubbing, video, voice training and every voice route — had no ca
 at all, so a retry loop could spend the ElevenLabs month in a few hours and the
 Kits month faster than that.
 
-Carli found it by asking, 9 September 2026: *"kan een retry op enige funksie nie
+The owner found it by asking, 9 September 2026: *"kan een retry op enige funksie nie
 gestop word nie, kan ons nie iets in bou wat dit stop nie?"* Every one of them
 is capped now, before anything is charged or asked for, and `check:brake`
 **discovers** the routes rather than listing them — a new route that reaches a
@@ -73,7 +73,7 @@ figures below replaced a set that had gone wrong in four places at once — one
 of which said "44 checks, of which 82 are browser probes", which cannot be
 true of anything.
 
-- **467 checks** wired into CI, of which **164 are browser probes** that drive
+- **467 checks** wired into CI, of which **165 are browser probes** that drive
   the real app rather than reading the code. All pass. (Was 44 and 82.)
 
   *This figure went from 264 to 265 while it was being written down, because

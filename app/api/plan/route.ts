@@ -37,6 +37,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { tooMany } from '@/app/lib/server/brake';
 import { paidRoom } from '@/app/lib/server/room';
 import { charge } from '@/app/lib/server/credits';
@@ -193,6 +194,7 @@ const SYSTEM = [
   '',
   'Do not use the words "engagement", "leverage", "synergy", "brand awareness" or "content strategy". Say the thing itself.',
   `${AFRIKAANS_RULE}`,
+  `${DISCRETION_RULE}`,
 ].join('\n');
 
 function briefFor(body: Body): string {
@@ -278,7 +280,7 @@ export async function POST(request: Request): Promise<Response> {
 
      It used to ask whether the R199 marketing add-on had been bought. There
      is no add-on any more: the desk is in every paid plan, and what is made
-     in it is charged in credits below. Carli, 24 September 2026 — *"Te veel
+     in it is charged in credits below. The owner, 24 September 2026 — *"Te veel
      aankoop punte gaan mense afsit."* */
   const door = await paidRoom(request, 'market.desk');
   if (!door.ok) return door.response;

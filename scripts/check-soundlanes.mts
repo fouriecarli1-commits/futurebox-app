@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Die sound tracks onder videos moet ook geselect kan
+ * The owner, 5 October 2026: *"Die sound tracks onder videos moet ook geselect kan
  * word, sodat mens daardie tyd lyne ook kan split. Huidiglik kan mens nie die
  * musiek tydlyne select nie."*
  *

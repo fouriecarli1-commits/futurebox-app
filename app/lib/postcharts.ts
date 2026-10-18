@@ -1,7 +1,7 @@
 /**
  * Charts on a post: the data, the templates, and the drawing.
  *
- * Carli, 17 October 2026: *"In photo editor sal daar ook graph templates
+ * The owner, 17 October 2026: *"In photo editor sal daar ook graph templates
  * moet wees, en verskillende verskeidenheid van graphs. Wat cool sal wees as
  * dit AI verstelbaar is dat data ingevoer kan word en AI die data in die
  * grafiek verstel."*

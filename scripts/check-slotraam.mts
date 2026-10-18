@@ -8,7 +8,7 @@
  * the day the call was written and never the closing one, so the field sat
  * unread in a request shape that has always had it.
  *
- * Carli sent a Gemini conversation on 9 October 2026 listing what Google's
+ * The owner sent a Gemini conversation on 9 October 2026 listing what Google's
  * models do, and *"eerste/laaste raam-instellings"* was in it. That is how it
  * was found: not by anything in this repository noticing.
  *

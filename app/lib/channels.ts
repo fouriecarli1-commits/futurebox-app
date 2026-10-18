@@ -3,7 +3,7 @@
  *
  * ── What she asked for, and what is honest to give ───────────────────────
  *
- * Carli, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
+ * The owner, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
  *
  * Two of the three are arithmetic and this file does them exactly. The third
  * needs saying plainly, because getting it wrong would be a claim her company

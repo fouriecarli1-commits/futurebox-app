@@ -3,7 +3,7 @@
  *
  * ── Why these five and not twenty ────────────────────────────────────────
  *
- * Carli, 3 October 2026: *"net 'n praktiese video editing en die elemente wat
+ * The owner, 3 October 2026: *"net 'n praktiese video editing en die elemente wat
  * moontlik is."* A transition between two shots is the most ordinary element
  * a timeline editor has and ours had none: every join was a hard cut.
  *
@@ -57,7 +57,7 @@ export type Join = typeof FIRST[number]['id'] | BookId;
 /**
  * Which join, by name — the first six and the transition book after them.
  *
- * Carli, 16 October 2026, with a desktop editor's toolbox open: the book in
+ * The owner, 16 October 2026, with a desktop editor's toolbox open: the book in
  * `joinbook.ts` adds the dissolves, irises, motion, shapes, wipes and effects
  * from her screenshots. Every one of them works the same way as the first
  * six — over the frame the last shot left — and is drawn by `joinpaint.ts`.

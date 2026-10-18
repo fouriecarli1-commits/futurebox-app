@@ -1,7 +1,7 @@
 /**
  * The FutureBox app icon, drawn neon.
  *
- * Carli, 13 October 2026, with her home screen: *"Ek sal wil hê dit moet
+ * The owner, 13 October 2026, with her home screen: *"Ek sal wil hê dit moet
  * neon wees sodat dit tussen ander apps uitstaan."* And, seeing a first
  * version that put a lit chip on a black tile: *"Ek dink weer eerder die
  * groen om die icon moet brighter en neon wees, en die swart lyne bly
@@ -50,7 +50,7 @@ const glyph = `
  * ground and shrinks the tile into the safe zone; otherwise the corners are
  * transparent and the tile fills the square but for the glow's room.
  */
-/* Carli, 13 October 2026, shown the plain tile and the dark-ground one:
+/* The owner, 13 October 2026, shown the plain tile and the dark-ground one:
    "Die een" — the plain one. So the maskable file is the same green all the
    way to the edge, the chip inside the safe zone, and a launcher that cuts
    a circle cuts green, not a dark square. */

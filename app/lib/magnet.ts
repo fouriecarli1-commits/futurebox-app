@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 16 September 2026: *"Die timeline het 'n magnet nodig."*
+ * The owner, 16 September 2026: *"Die timeline het 'n magnet nodig."*
  *
  * The room already had a grid. `snapped` in `lib/tempo` rounds a start time
  * to the nearest bar or beat, and the Snap box on the dock chooses which. So

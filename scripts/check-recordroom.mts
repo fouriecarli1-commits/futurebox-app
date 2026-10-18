@@ -1,7 +1,7 @@
 /**
  * The recording room holds still.
  *
- * Carli, 17 September 2026: *"Die record skerm in Probooth moet hard wees en
+ * The owner, 17 September 2026: *"Die record skerm in Probooth moet hard wees en
  * nie beweeg nie. Huidiglik hop alles rond. Ek dink daai read the words of
  * the song met 2 credits moet net 'n button wees en vat die verduideliking
  * weg, dan sal die recording room baie meer spasie hê en alles nie so rond

@@ -3,7 +3,7 @@
  *
  * ── Why this is one file and not thirteen copies ─────────────────────────
  *
- * A dozen routes in this app answer a question only Carli has any business
+ * A dozen routes in this app answer a question only the owner has any business
  * asking — what Google has on her project, what ElevenLabs charged, what the
  * cache saved — and every one of them had the same forty lines pasted into
  * it: a constant-time compare, three places to look for the secret, a 404
@@ -33,7 +33,7 @@
  *
  * ── Why a signed-in owner needs no secret ────────────────────────────────
  *
- * Carli, 8 October 2026, on being told to open `?key=<POST_SECRET>`:
+ * The owner, 8 October 2026, on being told to open `?key=<POST_SECRET>`:
  * *"maar dan gaan ek nou weer 'n password weggee wat ek weer gaan moet
  * verander."*
  *

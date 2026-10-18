@@ -1,7 +1,7 @@
 /**
  * The kids room: can a grown-up find it, and does the door let them through?
  *
- * Carli, 12 October 2026, three messages in a row: *"Ek sien nerens die kids
+ * The owner, 12 October 2026, three messages in a row: *"Ek sien nerens die kids
  * room nie, waar kry ek dit?"* — *"die kids room kan nie weggesteek word nie,
  * dit moet 'n highlight wees"* — *"Wel die kids room gaan nie verder as die
  * parental page nie."*
@@ -89,7 +89,7 @@ async function stubKids(page, onPost) {
      press — see enter.mjs. */
   await studio(page);
 
-  /* Carli, 14 October 2026: "Die kids room met sy aparte credits moet net
+  /* The owner, 14 October 2026: "Die kids room met sy aparte credits moet net
      van die welcoming page af geaccess kan word. Dit moenie binne die app
      geaccess kan word nie." So inside the app there is no door at all —
      not on the rail, not on the greeting, not in the profile — and the one
@@ -121,7 +121,7 @@ async function stubKids(page, onPost) {
   await page.locator('[data-kidspaid]').waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
   check('  and coming back says the payment went through', await page.locator('[data-kidspaid]').isVisible().catch(() => false));
   /* A pack chosen on the welcome page arrives as `?buy=` and goes straight
-     on to the till once somebody is signed in (Carli, 15 October 2026:
+     on to the till once somebody is signed in (The owner, 15 October 2026:
      "Maak ook seker dit vat jou na die payment system toe"). */
   tillAsked = null;
   await page.goto(`${server.url}/kids?buy=kids-month`, { waitUntil: 'networkidle' });
@@ -136,7 +136,7 @@ async function stubKids(page, onPost) {
   check("the grown-up's page is the first thing there", await door.isVisible().catch(() => false));
   check('  with no sign-in step, because somebody is signed in', (await page.locator('[data-kidssignin]').count()) === 0);
 
-  /* No room without a grown-up code: it is the way out again (Carli, 16
+  /* No room without a grown-up code: it is the way out again (The owner, 16
      October 2026, "Ek sukkel om daar uit te kom"). */
   await page.locator('[data-kidsstep]').first().click();
   await page.waitForTimeout(500);
@@ -230,7 +230,7 @@ async function stubKids(page, onPost) {
   const steps = page.locator('[data-kidsstep]');
   const disabled = await steps.evaluateAll((all) => all.length > 0 && all.every((one) => one.disabled));
   check('  and every allowance button is switched off', disabled);
-  /* Signed in HERE (Carli, 14 October 2026: "ek kry nie daar in gelog nie").
+  /* Signed in HERE (The owner, 14 October 2026: "ek kry nie daar in gelog nie").
      It used to send her back to the welcome page, which is where she had
      come from — a circle with no sign-in on it. */
   check('  and signs in right here, without going anywhere',

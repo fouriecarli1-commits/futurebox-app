@@ -9,7 +9,7 @@
  * reads them all out and hands them to the browser as rows, deliberately
  * unnamed, with the note: *"the FIRST REAL SONG says which is which."*
  *
- * That was the right call for an afternoon and the wrong plan. Asking Carli
+ * That was the right call for an afternoon and the wrong plan. Asking the owner
  * to look at a row and tell me which one it is puts a debugging task on the
  * person the app is for — and she said what that feels like on 9 October,
  * about a different question of mine: *"ek weet eintlik glad nie wat jy soek

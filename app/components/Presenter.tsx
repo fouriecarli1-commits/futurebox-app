@@ -134,7 +134,7 @@ export default function Presenter({
 
   /* Re-read whenever the cast changes, not only at mount.
  
-     Carli, 23 September 2026, with a photograph of her screen: a face in the
+     The owner, 23 September 2026, with a photograph of her screen: a face in the
      cast above, and this panel underneath saying "Put somebody in your cast
      first". It had loaded once, `Cast` had written a member since, and
      nothing connected the two — they are three components apart. See the
@@ -234,7 +234,7 @@ export default function Presenter({
 
   /* ── Whoever was chosen, and nobody else ────────────────────────────────
  
-     Carli, 24 September 2026: *"Die cast het nie gewerk nie ... dit het
+     The owner, 24 September 2026: *"Die cast het nie gewerk nie ... dit het
      heeltemal 'n ander persoon uitgegooi."*
  
      This line read `cast.find(...) ?? cast[0] ?? null`, and that `?? cast[0]`
@@ -421,7 +421,7 @@ export default function Presenter({
       /* ── Waiting, at the pace ElevenLabs asks for ──────────────────
 
          This asked every four seconds. Their own guidance, on the Image &
-         Video quickstart Carli sent on 10 September 2026, is **no more than
+         Video quickstart the owner sent on 10 September 2026, is **no more than
          once every ten seconds** for video, and that sustained aggressive
          polling earns 429s. Four seconds is two and a half times too fast,
          and every one of those asks is a Vercel invocation *and* a call to
@@ -720,7 +720,7 @@ export default function Presenter({
 
         {/* ── Where the ear reports back ─────────────────────────────────
  
-            Carli, 24 September 2026: *"En dan moet ons nog iewers die klient die
+            The owner, 24 September 2026: *"En dan moet ons nog iewers die klient die
             geleentheid gee om foute in spraak uit te wys. Hoe doen ons dit?"*
  
             It was built in September and mounted in exactly two rooms — the

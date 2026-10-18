@@ -3,7 +3,7 @@
  *
  * ── Where it came from ───────────────────────────────────────────────────
  *
- * Carli, 13 October 2026, with a page Google drew of a "Kids Dream Studio":
+ * The owner, 13 October 2026, with a page Google drew of a "Kids Dream Studio":
  * *"Kom ons begin om die app self te upgrade. Hier is 'n nuwe kids studio."*
  * The page had a step sequencer a child fills by pressing squares, four
  * ready-made beats to start from, and a soundboard to bang on. All of it ran

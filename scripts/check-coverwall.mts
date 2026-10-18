@@ -3,7 +3,7 @@
  *
  * ── Whose rule this is ───────────────────────────────────────────────────
  *
- * Carli, 6 October 2026, about the image tools she had just asked for:
+ * The owner, 6 October 2026, about the image tools she had just asked for:
  *
  *   "'n Album art kan net op die spot generate word, of kuns kan gekoop
  *    word. Ons blok mense om hulle eie prente in te sit, andersins gaan

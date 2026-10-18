@@ -6,7 +6,7 @@
  * `TabBar` is `fixed bottom-0 z-[95]`. Every full-screen room in this app is
  * below that, so the bar is painted over the foot of each of them.
  *
- * It was found one room at a time, and each time by Carli rather than by a
+ * It was found one room at a time, and each time by the owner rather than by a
  * check. The Pro Booth's "Mix it down" — the button that room exists to reach
  * — was underneath it, and she asked for a feature that had been built and
  * covered. Fixing that, the same question of The Booth found two more, one of
@@ -105,7 +105,7 @@ try {
 
     /* ── A room that claims the screen has no bar, and that is the point ──
 
-       Carli asked for it twice, about two rooms: *"daai buttons vervang die
+       The owner asked for it twice, about two rooms: *"daai buttons vervang die
        harde buttons van die hele app, dan val daai hele bar van die app in die
        booth weg"* (14 September, the Pro Booth) and *"Daai onderste harde bar
        van die hele app moet weg wees binne die kamer"* (4 October, the cutting
@@ -163,7 +163,7 @@ try {
 
   /* ── And the bar comes BACK when the room stops being the screen ───────
 
-     Carli, 4 October 2026: *"Die res van die app se harde buttons onder het
+     The owner, 4 October 2026: *"Die res van die app se harde buttons onder het
      verdwyn seker toe jy die nuwe video kamer gebou het."*
 
      She was right about the cause as well as the symptom. A room that claims
@@ -181,7 +181,7 @@ try {
      bar has to be there. */
   /* Both of them. The photo editor claims the screen too since 7 October, and
      a room that holds the claim after she has walked out of it takes the
-     whole app's navigation away — which is what Carli reported about the
+     whole app's navigation away — which is what the owner reported about the
      cutting room, so it is not hypothetical in either. */
   for (const claiming of ROOMS.filter((one) => one === 'Video Editor' || one === 'Photo Editor')) {
     try {

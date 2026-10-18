@@ -18,7 +18,7 @@
  *
  * ── Why the messages are buttons ─────────────────────────────────────────
  *
- * Carli: *"Ek as eienaar van die app moet bewus wees van dit, sodat
+ * The owner: *"Ek as eienaar van die app moet bewus wees van dit, sodat
  * kunstenaar nie agter my rug kan kunswerk verkoop nie. Daarom net daai
  * buttons."*
  *
@@ -42,7 +42,7 @@ import { wrote } from '../../lib/server/wrote';
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import {
-  ART_MAX_BYTES, ART_RAND, ARTIST_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
+  ART_MAX_BYTES, ART_RAND, ROW_FLOOR, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
 } from '@/app/data/artmarket';
 
 export const runtime = 'nodejs';
@@ -61,7 +61,7 @@ const NO_ACCOUNTS = {
 
 interface ArtistRow {
   id: string;
-  /* Null for a house artist: somebody Carli brought in who has no account.
+  /* Null for a house artist: somebody the owner brought in who has no account.
      See `supabase/albumart.sql` for why that had to be allowed. */
   owner: string | null;
   name: string;
@@ -133,7 +133,7 @@ async function look(
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 20 September 2026, holding her phone: *"The gallery could not be
+ * The owner, 20 September 2026, holding her phone: *"The gallery could not be
  * read just now."* That sentence is honest and completely useless. Five
  * reads in this route can produce it, each against a different table, and
  * the difference between "you have not run the SQL" and "one column is
@@ -160,7 +160,7 @@ function say(which: string, error: { message?: string; code?: string } | null): 
  *
  * ── Why the room names them ──────────────────────────────────────────────
  *
- * `which` was a real improvement and it was not enough. It got Carli to
+ * `which` was a real improvement and it was not enough. It got the owner to
  * *"(works)"* and then to a hand-written `information_schema` query I had
  * to compose for her, which found `ends_at` and `won_by` missing. That is
  * the second evening lost to a migration that only half landed, and the
@@ -414,7 +414,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── And the inbox of every artist who cannot sign in ────────────────
 
-     Carli, 20 September 2026, having brought Milan in and then asked him
+     The owner, 20 September 2026, having brought an artist in and then asked them
      for a piece: *"Because I have added the artist I am supposed to
      approve this artwork. I want to test it."*
 
@@ -444,7 +444,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── What the owner owes, and to whom ────────────────────────────────
 
-     Carli, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
+     The owner, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
      uitbetalings nie. Dit sal in my rekening uitbetaal word en ek betaal
      dit uit aan die kunstenaar."*
 
@@ -487,7 +487,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* ── Every artist's own work, on their own profile ───────────────────
 
-     Carli: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
+     The owner: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
      in, want een kunstenaar kan nogal baie album art hê."*
 
      Counted here rather than filtered in the browser: the crate shows one
@@ -562,7 +562,6 @@ export async function GET(request: Request): Promise<Response> {
        per sleeve. `startRand` was the floor a first BID had to clear and
        meant nothing on its own; this is what a buyer actually pays. */
     artRand: ART_RAND,
-    artistRand: ARTIST_RAND,
     uniqueRand: UNIQUE_RAND,
   });
 }
@@ -620,7 +619,7 @@ export async function POST(request: Request): Promise<Response> {
    * Which artist this request is acting as.
    *
    * Normally the caller's own row. The owner may name one instead, because
-   * a house artist has no account to sign in with — Carli uploads their
+   * a house artist has no account to sign in with — the owner uploads their
    * work and pays them by hand, which is the arrangement she has anyway.
    *
    * The override is owner-only and it is checked here, once, rather than
@@ -810,7 +809,7 @@ export async function POST(request: Request): Promise<Response> {
        browser that skipped the till. */
     /* ── No, from either side ────────────────────────────────────────
 
-       Carli, 21 September 2026: *"Op album art moet die kunstenaar 'n
+       The owner, 21 September 2026: *"Op album art moet die kunstenaar 'n
        aanbod kan afkeer, asook die koper. Daardie knoppies is nie daar
        nie."*
 
@@ -1027,7 +1026,7 @@ export async function POST(request: Request): Promise<Response> {
 
     /* ── A bid ───────────────────────────────────────────────────────
 
-       Carli: *"mense moet op die bee, en die hoogste bee wen die art
+       The owner: *"mense moet op die bee, en die hoogste bee wen die art
        binne 36 hours."*
 
        Every rule that decides who wins is enforced here and nowhere else.
@@ -1036,7 +1035,7 @@ export async function POST(request: Request): Promise<Response> {
        all. */
     /* ── Bring an artist in, or change one ───────────────────────────
 
-       Carli: *"Ek het nou reeds 'n kunstenaar wat ek wil in sit."*
+       The owner: *"Ek het nou reeds 'n kunstenaar wat ek wil in sit."*
 
        Owner only, and it is the one place `approved` is ever written.
        `apply` above deliberately cannot touch it — a marketplace anybody
@@ -1045,7 +1044,7 @@ export async function POST(request: Request): Promise<Response> {
 
        It creates a HOUSE artist when no id is given: a row with no
        `owner`, for a painter who has no FutureBox account and does not
-       want one. Carli uploads their work and pays them by hand, which is
+       want one. The owner uploads their work and pays them by hand, which is
        the arrangement she already has with them. */
     case 'artist': {
       if (!callerIsOwner(caller)) {
@@ -1090,7 +1089,7 @@ export async function POST(request: Request): Promise<Response> {
        bank statement, in her own words. */
     /* ── A piece off the wall, paid in credits ────────────────────────
 
-       Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee
+       The owner, 13 October 2026: *"Ek dink album art moet ons die keuse gee
        R280 cash, of ons moet krediet in dieselfde waarde uitwerk."*
 
        The card path is `/api/checkout` and the webhook, and this is its

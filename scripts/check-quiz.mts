@@ -171,7 +171,7 @@ ok('  and nothing on that page comes after it',
 
 /* ── A question about this app has to be true of this app ────────────
  *
- * Carli, 22 September 2026: *"Bou die verskillende funksies uit wat binne
+ * The owner, 22 September 2026: *"Bou die verskillende funksies uit wat binne
  * ons probooth is en waarvoor dit is."*
  *
  * Twelve of these questions describe the Pro Booth, and a quiz that

@@ -2,7 +2,7 @@
  * The photo templates: every one can be drawn, is in both languages, and
  * keeps its words out of the platform's own furniture on a story.
  *
- * Carli, 16 October 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
+ * The owner, 16 October 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
  * generate en oor tyd op bou?"* The starting set lives in
  * `lib/postdesigns.ts`; the ones she saves go through `/api/designs` and the
  * same `cleanDesign`. This holds both halves to one rule: a template is a

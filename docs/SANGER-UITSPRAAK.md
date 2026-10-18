@@ -2,7 +2,7 @@
 
 > **Dit is die een wat jy nou nodig het.** Nie `docs/SANGER-OOREENKOMS.md` nie.
 >
-> *Carli, 9 Oktober 2026:*
+> *Die eienaar, 9 Oktober 2026:*
 >
 > > "My ding is net, ek wil die sangers gebruik vir uitspraak, nie dat hulle stemme
 > > deur ander gebruik word nie."

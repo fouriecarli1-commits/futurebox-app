@@ -8,7 +8,7 @@
  *
  * The rule this replaced was "open leftwards, unless the mark is past the
  * middle of the window". That is correct at both ends and wrong in the
- * band between them, which is where Carli found it on 18 September: a mark
+ * band between them, which is where the owner found it on 18 September: a mark
  * four tenths of the way across a 390-pixel phone, in the left half, with a
  * 240-pixel panel hanging off the right-hand edge. *"Hierdie een
  * description is van die bladsy af."*

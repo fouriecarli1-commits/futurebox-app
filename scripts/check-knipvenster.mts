@@ -3,7 +3,7 @@
  *
  * ── What she sent ────────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, with a screenshot of the video desk: *"I just made
+ * The owner, 9 October 2026, with a screenshot of the video desk: *"I just made
  * a video with speech. No sound is coming out."*
  *
  * The screenshot carried the second fault as well, which she had not

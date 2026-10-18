@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 23 September 2026, reporting the album art bid for the third time:
+ * The owner, 23 September 2026, reporting the album art bid for the third time:
  * *"die album art se bid het nogsteeds nie gewerk nie."*
  *
  * `/api/checkout` built Paystack's metadata like this:

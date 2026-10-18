@@ -5,13 +5,13 @@
  *
  * ── The report this exists to answer ─────────────────────────────────────
  *
- * Carli, 17 September 2026: *"Die record skerm in Probooth moet hard wees en
+ * The owner, 17 September 2026: *"Die record skerm in Probooth moet hard wees en
  * nie beweeg nie. Huidiglik hop alles rond."* That was answered once, by
  * taking the paragraph out of the read-the-words row, and `check:recordroom`
  * holds it. That check says out loud what it does not claim: *"'Alles hop
  * rond' may have more than this one cause."*
  *
- * It did. Carli, 18 September 2026, still: *"Hierdie skerm is nogsteeds nie
+ * It did. The owner, 18 September 2026, still: *"Hierdie skerm is nogsteeds nie
  * hard nie. Die skerm spring rond soos wat die woorde meer en minder is."*
  *
  * The words themselves were the rest of it, and she named the mechanism
@@ -116,7 +116,7 @@ export interface SungWordsProps {
 /**
  * One line, with the neon running over it.
  *
- * Carli, 14 October 2026: *"daar moet meer lyne by mekaar wees, en dan
+ * The owner, 14 October 2026: *"daar moet meer lyne by mekaar wees, en dan
  * hardloop daar 'n neon kleur oor die woorde, om te wys waar die woorde is."*
  * Each word fills from the left as it is sung — the colour clipped to the
  * letters, so it reads as the word lighting up rather than a bar behind it —

@@ -5,7 +5,7 @@
  *
  * ── The half of `whereiwas` that was never finished ──────────────────────
  *
- * Carli, 30 September 2026: *"wanneer ek die app minimize en weer terug gaan
+ * The owner, 30 September 2026: *"wanneer ek die app minimize en weer terug gaan
  * … Hy gooi jou heeltemal uit en vergeet waarmee hy besig was."*
  *
  * `lib/whereiwas.ts` answered that with the ROOM: a tab Android discarded

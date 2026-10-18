@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Video, etc templates."* The photo editor
+ * The owner's list, 7 October 2026: *"Video, etc templates."* The photo editor
  * got its six in `posttemplates.ts`; this is the same idea one room over,
  * and the difference between the two rooms is the whole design of this file.
  *
@@ -238,7 +238,7 @@ export const STARTS: readonly FilmStart[] = [
   {
     /* ── The six below were added on 10 October ────────────────────────
  
-       Carli: *"Gaan aan met die video templates."* The first six were the
+       The owner: *"Gaan aan met die video templates."* The first six were the
        obvious ones — a show, a reel, behind the scenes. These are the six
        her members actually post next, judged against what the rest of this
        app is for: music out, an advert, a podcast, a how-to, a countdown and

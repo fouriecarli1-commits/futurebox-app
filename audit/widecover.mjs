@@ -3,7 +3,7 @@
  *
  * ── Why a second width probe ─────────────────────────────────────────────
  *
- * Carli, 6 October 2026, with a photograph of the song list scrolled
+ * The owner, 6 October 2026, with a photograph of the song list scrolled
  * sideways: *"Die oomblik wanneer ek op 'n liedjie se cover art druk, dan
  * gooi dit die skerm wyd uit. Op mobile moet dit nie so maak nie."*
  *
@@ -67,7 +67,7 @@ const PIXEL =
  * nothing: one is a single wide button, the other is a square image above a
  * wrapping row of two. Measuring one and naming the file after the panel is
  * the same fault this probe exists to catch, one level further in — and the
- * screen Carli photographed is a library of songs that have covers.
+ * screen the owner photographed is a library of songs that have covers.
  */
 let hasCover = false;
 

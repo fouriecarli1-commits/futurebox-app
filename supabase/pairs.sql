@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- Two people in one room, and who is holding the pen
 --
--- Carli, 24 September 2026: *"Ek wil hê jy moet elke kamer dupliseer waarin
+-- the owner, 24 September 2026: *"Ek wil hê jy moet elke kamer dupliseer waarin
 -- create word … in daai moment moet die duplicated room oop maak waar in net
 -- hierdie twee mense is en beide kry functionality om binne die kamer te
 -- werk."*

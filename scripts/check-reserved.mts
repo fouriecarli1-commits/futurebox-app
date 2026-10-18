@@ -66,7 +66,7 @@ for (const one of REFUSED) {
 /* And what must not be. A rule that blocks these is a rule that has stopped
    being about impersonation and started being about the word "box". */
 const ALLOWED = [
-  'Anré Fourie',
+  'Zoë Smit',
   'Official Records',
   'The Box',
   'Boxer',

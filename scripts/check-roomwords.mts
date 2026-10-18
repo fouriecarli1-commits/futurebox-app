@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+ * The owner, 14 September 2026: *"Die play room moet die liedjie se woorde
  * speel."*
  *
  * The full-screen panel in the live room has been silent since it was
@@ -58,7 +58,7 @@ ok('a post has somewhere to keep the words',
   'live_posts needs the column, and this file has to be re-runnable');
 /* ── BOTH places that post, not the one this check was written against ──
 
-   Carli reported the silent room twice. The first fix went into the share
+   The owner reported the silent room twice. The first fix went into the share
    sheet in the Library, this check was written against that file, and both
    were right — while the room's OWN composer, the "put one of your own songs
    in" card that somebody standing in Live actually uses, sent no words at

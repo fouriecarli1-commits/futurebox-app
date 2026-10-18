@@ -1,6 +1,6 @@
 # Packaging: what to take from the screenshots, and what to leave
 
-Carli sent nine screenshots of Suno's Android app (September 2026) with one
+The owner sent nine screenshots of Suno's Android app (September 2026) with one
 instruction: *"Dit is wat ek wil hê vir ons app, net met al ons ekstra oulike
 goed by. Die oulike goed waaraan ons gewerk het moenie wegval nie, dit moet net
 soos in hierdie prente eenvoudiger verpak word."*
@@ -58,7 +58,7 @@ there is one column and there always was.
 
 ### Every card is: a chevron, a magic wand, a box, and a row of small buttons
 
-This is the pattern Carli means by *"elke opsie is klein buttons onder"*:
+This is the pattern the owner means by *"elke opsie is klein buttons onder"*:
 
 ```
 ┌────────────────────────────────────────┐
@@ -210,7 +210,7 @@ of 3` with the single next action as a card. Then `Creators to Follow` with an
 
 Two things from there we should take:
 - **The step counter.** "Step 2 of 3" with one action beats a settings page.
-  We have a list of things Carli still has to switch on; this is its shape.
+  We have a list of things the owner still has to switch on; this is its shape.
 - **Changing your name is on this screen**, not buried. It is the recording
   name that goes out with every post — on a song, on a video, in the slider
   and on the Collab Radar. Asked for three times, and it does not exist:

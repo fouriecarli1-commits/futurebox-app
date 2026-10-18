@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Audio effects (Compressor; gate; limiter; EQ;
+ * The owner, 14 September 2026: *"Audio effects (Compressor; gate; limiter; EQ;
  * Utility; Visualizer; Amp modeler; Bit crusher; Saturater; Wave folder;
  * Chorus; Tremolo; Delay; Reverb; Voice tuner; vocoder) - As hierdie funksies
  * kleurvolle visualizers kon hê om te wys hoe buig die klankbaan sou dit baie
@@ -182,7 +182,7 @@ const CURVE = 1024;
 /**
  * The exact array a `WaveShaperNode` is given, for each of the three shapers.
  *
- * Returned rather than built inline so the panel can draw it. Carli asked for
+ * Returned rather than built inline so the panel can draw it. The owner asked for
  * a picture of how the sound is bent; for these three the honest picture is
  * the function itself, and a second hand-drawn approximation of it would be a
  * picture of something the app is not doing.

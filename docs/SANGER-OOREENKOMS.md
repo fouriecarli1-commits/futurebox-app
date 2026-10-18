@@ -7,7 +7,7 @@
 > daarin kan sing.
 >
 > **Lees dit eers.** Hierdie dokument is deur die bou van die app opgestel,
-> nie deur 'n prokureur nie. Dit sê presies wat die app doen en wat Carli
+> nie deur 'n prokureur nie. Dit sê presies wat die app doen en wat die eienaar
 > onderneem om te doen, in gewone taal, en dit is 'n eerlike beginpunt — maar
 > laat 'n prokureur daarna kyk **voordat die eerste sanger teken**. Hier is
 > die rede skerper as by die kunstenaar-ooreenkoms: 'n stem is **spesiale

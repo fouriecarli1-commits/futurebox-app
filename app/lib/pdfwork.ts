@@ -1,7 +1,7 @@
 /**
  * The document room's work on a PDF, without a screen.
  *
- * Carli, 17 October 2026: *"Die PDF craft is nogal belangrik."* — with
+ * The owner, 17 October 2026: *"Die PDF craft is nogal belangrik."* — with
  * screenshots of a full PDF workbench:
  * organise pages, combine files, comment, prepare a form, edit, fill and
  * sign, redact, protect and convert.

@@ -1,7 +1,7 @@
 /**
  * The video editor's Motion bench, used the way she would.
  *
- * Carli, 17 October 2026, about another program's motion effects: *"Die
+ * The owner, 17 October 2026, about another program's motion effects: *"Die
  * effects … kan ook cool wees."* Read off the player: a movement chosen moves
  * the picture by the same numbers the renderer uses, How strong makes it
  * stronger, a keyframe set at the playhead changes the picture there, and

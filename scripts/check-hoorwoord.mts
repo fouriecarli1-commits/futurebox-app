@@ -3,7 +3,7 @@
  *
  * ── Why this is a check and not a try ────────────────────────────────────
  *
- * Carli, 10 October 2026: *"But isn't there a way for an AI to listen to the
+ * The owner, 10 October 2026: *"But isn't there a way for an AI to listen to the
  * phonetic sounds of someone speaking isiXhosa?"* There is, and I had just
  * said otherwise about something adjacent — turning a whole audio Bible into
  * a lexicon IS a pipeline; transcribing one word is one call.
@@ -193,7 +193,7 @@ ok('no route turns what it heard straight into a dictionary entry',
   `${writing.join(', ')} — the model’s IPA for a language it has heard`
   + ' little of is a guess with symbols in it. A person hears the playback'
   + ' and presses save; that loop is the same one /api/eleven/pronounce was'
-  + ' built around, because Carli can hear it and this desk cannot');
+  + ' built around, because the owner can hear it and this desk cannot');
 
 const lib = withoutComments(readFileSync('app/lib/server/hearword.ts', 'utf8'));
 ok('  and the library itself keeps no state and saves nothing',
@@ -203,7 +203,7 @@ ok('  and the library itself keeps no state and saves nothing',
 
 /* ── 7. The booth, and the one thing it must not do ────────────────────
 
-   Carli: *"Does that mean that I can use the booth to record phonetic
+   The owner: *"Does that mean that I can use the booth to record phonetic
    sounds?"* Yes — and the booth is an OWNER's page rather than a room,
    because there is one dictionary for the whole app: `sayit.ts` applies it
    to every read through `ELEVEN_DICT_ID` and `ELEVEN_DICT_VERSION`, one id
@@ -291,7 +291,7 @@ ok('  and names the languages rather than taking a typed one',
 
 /* ── 8. Keeping it, which is a different decision ──────────────────────
 
-   Carli: *"Gaan aan met die keep button."*
+   The owner: *"Gaan aan met die keep button."*
 
    Three presses, and the gaps between them are the whole design: a person
    LISTENS between the transcription and the keep, and the difference between

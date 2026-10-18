@@ -5,7 +5,7 @@
  *
  * ── Why a strip and not a room of its own ────────────────────────────────
  *
- * Carli asked for every create-room to be duplicated for two people. Put to
+ * The owner asked for every create-room to be duplicated for two people. Put to
  * her, she chose the version that keeps one room each and opens it in a pair
  * mode. This is that mode, drawn: the booth is still the booth, with a line
  * at the top saying you are not alone in it.

@@ -5,7 +5,7 @@
  *
  * ── The fault this closes ────────────────────────────────────────────────
  *
- * Carli, 16 September 2026: *"die music video werk nie in die live nie."*
+ * The owner, 16 September 2026: *"die music video werk nie in die live nie."*
  *
  * It was never a playback fault, and that is why looking at the player found
  * nothing. A music video is not one file that arrives from an engine: the
@@ -24,7 +24,7 @@
  *
  * ── The button says what happened, on itself ─────────────────────────────
  *
- * Carli, the same day: *"met elke relevante button waar dit sal sin maak,
+ * The owner, the same day: *"met elke relevante button waar dit sal sin maak,
  * moet dit darem 'n vinnige status update gee. Soos in live room. As mens dit
  * post, dan moet die button sê posted."*
  *

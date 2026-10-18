@@ -1,7 +1,7 @@
 /**
  * Adverts from a product link, walked on a phone.
  *
- * Carli, 18 October 2026: yes to Google's AI reading a product page for
+ * The owner, 18 October 2026: yes to Google's AI reading a product page for
  * three credits. Read off the glass and off what is sent: the link field is
  * on the advert desk, its button says its price and waits for a link, the
  * link goes up as typed with her language, and what comes back is put in the

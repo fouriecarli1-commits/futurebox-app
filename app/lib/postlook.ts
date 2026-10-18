@@ -3,7 +3,7 @@
  *
  * ── Where this sits in what she asked for ────────────────────────────────
  *
- * Carli, 7 October 2026: *"ek dink die moderne editing tools, soos magic grab
+ * The owner, 7 October 2026: *"ek dink die moderne editing tools, soos magic grab
  * om 'n item uit te haal en weer 'n ander item in te sit, BG remover, magic
  * eraser, upscaler, auto focus, blur, grab text, image to video, om motion by
  * 'n prent te sit."*
@@ -49,7 +49,7 @@ export interface Look {
   /** 0..20, in frame units at the picture's drawn size. */
   readonly blur: number;
   /* ── What a filter adds — none of these has a slider of its own ────
-     Carli, 16 October 2026: *"Ek soek ook ... sulke oulike filters."* A
+     The owner, 16 October 2026: *"Ek soek ook ... sulke oulike filters."* A
      filter is a look with a mood, and a mood needs a few things the five
      sliders do not reach. Absent is none, so every look saved before these
      existed reads exactly as it did. */
@@ -210,7 +210,7 @@ export function towards(look: Look, share: number): Look {
 }
 
 /* ── Smart lighting ───────────────────────────────────────────────────────
-   Carli, 16 October 2026, a "fix your dark photos with one tap" tool open on
+   The owner, 16 October 2026, a "fix your dark photos with one tap" tool open on
    her phone. Not a model: a dark photograph is a measurement. How bright it
    is on average, and how far its darkest and brightest parts are from black
    and white, say how much to lift and how much to stretch — so a photo that

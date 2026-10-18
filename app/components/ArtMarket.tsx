@@ -5,7 +5,7 @@
  *
  * ── What this room has to do ─────────────────────────────────────────────
  *
- * Carli's list, across 20 September 2026:
+ * The owner's list, across 20 September 2026:
  *
  *   real artists' real work at the top, buyable, R200 on every piece
  *   every piece unique and sold exactly once, and the room must SHOW that
@@ -94,7 +94,7 @@ import { square } from '../lib/imagefile';
 import { previewOf } from '../lib/artmark';
 import ArtMaker from './ArtMaker';
 import {
-  ART_MAX_BYTES, ART_SIDE, ART_SIZE_SAID, ART_RAND, ARTIST_RAND, UNIQUE_RAND, WINDOWS, split, ART_CREDITS,
+  ART_MAX_BYTES, ART_SIDE, ART_SIZE_SAID, ART_RAND, ARTIST_RAND, UNIQUE_RAND, WINDOWS, ART_CREDITS,
 } from '../data/artmarket';
 import { inPlayApp } from '../lib/playbilling';
 
@@ -105,7 +105,7 @@ import { inPlayApp } from '../lib/playbilling';
  *
  * ── The mistake this replaces ────────────────────────────────────────────
  *
- * Four times Carli said this room looked like *"'n website binne 'n app"*,
+ * Four times the owner said this room looked like *"'n website binne 'n app"*,
  * and four times I answered by making it MORE its own thing: cream paper,
  * an indigo accent, a serif. The comment that used to stand here said so
  * out loud — *"it is not emerald, which is the rest of this app, which is
@@ -218,7 +218,7 @@ interface AnyArtist {
   readonly about: string;
   readonly place: string;
   readonly approved: boolean;
-  /** True for somebody Carli brought in who has no FutureBox account. */
+  /** True for somebody the owner brought in who has no FutureBox account. */
   readonly house: boolean;
   readonly works: number;
   readonly sold: number;
@@ -518,7 +518,7 @@ function StatusBar({ state, said }: { readonly state: OfferState; readonly said:
  *
  * ── Why it is tabs and not a scroll ──────────────────────────────────────
  *
- * Carli, twice: *"Die album art plek lyk steeds soos 'n website in plaas
+ * The owner, twice: *"Die album art plek lyk steeds soos 'n website in plaas
  * van 'n app."* She was right both times and the reason was structural,
  * not decorative. What I kept building was:
  *
@@ -556,7 +556,7 @@ export default function ArtMarket(): React.ReactElement {
   const [problem, setProblem] = useState('');
   /* ── And a place to say something WORKED ────────────────────────────────
  
-     Carli, 24 September 2026: *"uiteindelik maak dit bid oop by album art,
+     The owner, 24 September 2026: *"uiteindelik maak dit bid oop by album art,
      maar die knoppie van die bid vat mens nie verder nie."*
  
      The room had a way to report a refusal and no way at all to report a
@@ -597,7 +597,7 @@ export default function ArtMarket(): React.ReactElement {
       if (!response.ok || !said) {
         /* `which` on the end, in brackets.
 
-           Carli sent a screenshot of "The gallery could not be read just
+           The owner sent a screenshot of "The gallery could not be read just
            now." and neither of us could act on it: five reads in the route
            produce that sentence, against five different tables, and the
            screen named none of them. The word is the route's own label —
@@ -631,7 +631,7 @@ export default function ArtMarket(): React.ReactElement {
 
   /* ── Coming back from the till ────────────────────────────────────────
 
-     Carli, 21 September 2026: *"Ek betaal die R50 om die bid te begin,
+     The owner, 21 September 2026: *"Ek betaal die R50 om die bid te begin,
      maar dan gebeur daar niks nie. Daar is nie 'n countdown nie en nie 'n
      teen bid button nie."*
 
@@ -665,7 +665,7 @@ export default function ArtMarket(): React.ReactElement {
   useCopilotOps('albumart', {
     /* `said` is the piece she paid against, when the till knew one.
      *
-     * Carli, 22 September 2026: *"Daar is nerens 'n afdeling om verder te
+     * The owner, 22 September 2026: *"Daar is nerens 'n afdeling om verder te
      * bid op daardie spesifieke prent nie."* The bid button is inside the
      * opened piece, so landing on the wall with everything shut is a room
      * that is correct and still answers no. Re-opened after the read, not
@@ -702,7 +702,7 @@ export default function ArtMarket(): React.ReactElement {
     },
     /* The song somebody opened this room from, off a cover panel.
      *
-     * Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar
+     * The owner, 22 September 2026: *"Kyk asb in make a song en channel dat daar
      * by cover art 'n opsie is vir real art."* The door is in `Sleeve.tsx`;
      * this is the other side of it. Arriving with the song means the shelf
      * below already knows where a won piece is going, instead of asking her
@@ -871,7 +871,7 @@ export default function ArtMarket(): React.ReactElement {
       {/* Something went wrong reads as something went wrong.
 
           This wore the accent, so "the gallery could not be read" arrived
-          in the same colour as the Bid button — which on Carli's screen
+          in the same colour as the Bid button — which on the owner's screen
           made a failure look like a feature. The app has a danger family
           and it follows the theme like everything else. */}
       {problem && (
@@ -1075,7 +1075,7 @@ export default function ArtMarket(): React.ReactElement {
                             >
                               {t('art.byEft')} · R{thread.offer.rand}
                             </button>
-                            {/* Carli: *"Op album art moet die kunstenaar 'n aanbod
+                            {/* The owner: *"Op album art moet die kunstenaar 'n aanbod
                                 kan afkeer, asook die koper. Daardie knoppies is
                                 nie daar nie."* Beside the price and not under a
                                 menu: saying no to a number is as ordinary as
@@ -1285,7 +1285,7 @@ export default function ArtMarket(): React.ReactElement {
  * ── What this replaces ───────────────────────────────────────────────────
  *
  * A 40 x 4 pixel grab handle, painted in the room's border colour, with the
- * word "Close" only in an `aria-label`. Carli, 20 September 2026: *"Wanneer
+ * word "Close" only in an `aria-label`. The owner, 20 September 2026: *"Wanneer
  * mens binne artist se profile kyk is daar nie 'n back knoppie nie."*
  *
  * She is right and it was worse than it looks. The handle is the iOS
@@ -1358,7 +1358,7 @@ function WorkSheet({
       className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
       /* The sheet ends ABOVE the tab bar, rather than reaching under it.
 
-         Carli: *"Al die onderste buttons kruip weg agter die hoof
+         The owner: *"Al die onderste buttons kruip weg agter die hoof
          buttons."* Padding inside the sheet's scrolling body was not
          enough and was the wrong shape of answer: it made the button
          reachable by scrolling to it, when the complaint is that the one
@@ -1368,7 +1368,7 @@ function WorkSheet({
          is not there and `md:` keeps the sheet centred as before. */
     >
       {/* `max-h-full`, not a share of the viewport.
-          Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
+          The owner: *"Die back buttons is daar, maar is ook weggesteek."* They
           were, and it was my own fix from an hour earlier. The overlay now
           stops above the tab bar, so its content box is `100vh` minus the
           bar — but the sheet still asked for 92vh of the VIEWPORT, which is
@@ -1407,7 +1407,7 @@ function WorkSheet({
 
           {/* ── Said before the button, not after ───────────────────────
  
-              Carli: *"die kliente in die app moet dit weet en dit moet
+              The owner: *"die kliente in die app moet dit weet en dit moet
               iewers staan."* A piece sells once, and a buyer has to be
               able to read that before they decide, not discover it in a
               clause afterwards. It stands directly under the price,
@@ -1439,7 +1439,7 @@ function WorkSheet({
               not on the wall at all, so there is nothing to say about
               one. */}
           {/* ── Card, EFT, or credits ──────────────────────────────────
-              Carli, 14 October 2026: *"give a choice, to pay the art via
+              The owner, 14 October 2026: *"give a choice, to pay the art via
               eft, or with credits."* Card and EFT both go through Paystack,
               which shows only the way chosen here; credits never leave the
               app. */}
@@ -1450,7 +1450,7 @@ function WorkSheet({
             {t('art.byEft')} · R{ART_RAND}
           </button>
           {/* ── Or the same R280 in credits ────────────────────────────
-              Carli, 13 October 2026: *"die keuse gee R280 cash, of ons
+              The owner, 13 October 2026: *"die keuse gee R280 cash, of ons
               moet krediet in dieselfde waarde uitwerk."* The number is
               `ART_CREDITS`, worked out at the top-up rate, never typed. */}
           <button type="button" onClick={onBuyCredits} data-buycredits className={`${LEEG} mt-2 w-full`}>
@@ -1467,7 +1467,7 @@ function WorkSheet({
 /**
  * One artist, and everything they have for sale.
  *
- * Carli: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
+ * The owner: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
  * in, want een kunstenaar kan nogal baie album art hê."*
  *
  * The crate shows one sleeve at a time, which is right for browsing and
@@ -1504,7 +1504,7 @@ function ArtistSheet({
       className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
       /* The sheet ends ABOVE the tab bar, rather than reaching under it.
 
-         Carli: *"Al die onderste buttons kruip weg agter die hoof
+         The owner: *"Al die onderste buttons kruip weg agter die hoof
          buttons."* Padding inside the sheet's scrolling body was not
          enough and was the wrong shape of answer: it made the button
          reachable by scrolling to it, when the complaint is that the one
@@ -1514,7 +1514,7 @@ function ArtistSheet({
          is not there and `md:` keeps the sheet centred as before. */
     >
       {/* `max-h-full`, not a share of the viewport.
-          Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
+          The owner: *"Die back buttons is daar, maar is ook weggesteek."* They
           were, and it was my own fix from an hour earlier. The overlay now
           stops above the tab bar, so its content box is `100vh` minus the
           bar — but the sheet still asked for 92vh of the VIEWPORT, which is
@@ -1606,7 +1606,7 @@ function Popout({
       className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
       /* The sheet ends ABOVE the tab bar, rather than reaching under it.
 
-         Carli: *"Al die onderste buttons kruip weg agter die hoof
+         The owner: *"Al die onderste buttons kruip weg agter die hoof
          buttons."* Padding inside the sheet's scrolling body was not
          enough and was the wrong shape of answer: it made the button
          reachable by scrolling to it, when the complaint is that the one
@@ -1616,7 +1616,7 @@ function Popout({
          is not there and `md:` keeps the sheet centred as before. */
     >
       {/* `max-h-full`, not a share of the viewport.
-          Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
+          The owner: *"Die back buttons is daar, maar is ook weggesteek."* They
           were, and it was my own fix from an hour earlier. The overlay now
           stops above the tab bar, so its content box is `100vh` minus the
           bar — but the sheet still asked for 92vh of the VIEWPORT, which is
@@ -1839,7 +1839,7 @@ function Apply({
 /**
  * The owner's way to put a real artist on the wall.
  *
- * Carli, 20 September 2026: *"Ek het nou reeds 'n kunstenaar wat ek wil in
+ * The owner, 20 September 2026: *"Ek het nou reeds 'n kunstenaar wat ek wil in
  * sit. Hoe kan ek die kunswerke vir jou gee?"*
  *
  * The honest answer is that she does not give them to anybody — they go
@@ -1949,7 +1949,7 @@ function BringArtist({
 
               {/* ── Answering for them ──────────────────────────────
 
-                  Carli: *"Because I have added the artist I am supposed to
+                  The owner: *"Because I have added the artist I am supposed to
                   approve this artwork. I want to test it."* A house artist
                   has no account, so a commission addressed to one waits on
                   somebody who cannot sign in. `art.bringWhy` already
@@ -1993,13 +1993,15 @@ function BringArtist({
  
                       A price box stood above this and the artist typed an
                       opening bid into it. There is nothing to type now: the
-                      wall is R280 and the artist is paid R200, the same on
-                      every piece, every month — a number somebody can hold
-                      against a bank statement without doing arithmetic. */}
+                      artist is paid one fixed amount for every piece — a
+                      number somebody can hold against a bank statement
+                      without doing arithmetic. Said to the artist alone, and
+                      never beside the wall's price: how a sale is divided is
+                      not shown in the app (the owner, 18 October 2026). */}
                   <p className="text-[13px] leading-relaxed">
                     {t('art.theyGet')}{' '}
                     <strong className="text-[color:var(--ink)]">R{ARTIST_RAND}</strong>{' '}
-                    {t('art.ofWall')} R{ART_RAND}.
+                    {t('art.perSale')}
                   </p>
                   <label className={`${VUL} cursor-pointer`}>
                     {busy ? t('art.uploading') : t('art.choose')}
@@ -2132,7 +2134,7 @@ function BringArtist({
  *
  * ── Why this is a component and not a second copy ────────────────────────
  *
- * Carli, having brought a painter in and then asked him for a piece:
+ * The owner, having brought a painter in and then asked him for a piece:
  * *"Because I have added the artist I am supposed to approve this artwork.
  * I want to test it."*
  *
@@ -2238,7 +2240,7 @@ function Inbox({
                       {t('art.send')}
                     </button>
                     {/* And the artist's no, before a price is ever named.
-                        Carli: *"Op album art moet die kunstenaar 'n aanbod
+                        The owner: *"Op album art moet die kunstenaar 'n aanbod
                         kan afkeer, asook die koper."* This is the more
                         common no of the two — somebody asks for a piece the
                         painter does not want to make — and it had no button
@@ -2336,15 +2338,16 @@ function ArtistDesk({
         {/* ── What they take home, before they choose a file ─────────
  
             A price box stood here and the artist typed an opening bid into
-            it, with a sum under it working out 70% of the profit at that
-            number. Neither survives a fixed price: the wall is R280, the
-            artist is R200, and the same two numbers appear on every piece.
+            it, with a sum under it. Neither survives a fixed price: the
+            artist is paid one fixed amount for every piece, said here on its
+            own and never beside the wall's price — how a sale is divided is
+            not shown in the app (the owner, 18 October 2026).
  
             Still said BEFORE the upload rather than discovered on a
             statement, which was the reason this paragraph existed. */}
         <p className="text-[14px] leading-relaxed">
           {t('art.youGet')} <strong className="text-[color:var(--ink)]">R{ARTIST_RAND}</strong>{' '}
-          {t('art.ofWall')} R{ART_RAND}.
+          {t('art.perSale')}
         </p>
         <label className={`${VUL} cursor-pointer`}>
           {busy ? t('art.uploading') : t('art.choose')}

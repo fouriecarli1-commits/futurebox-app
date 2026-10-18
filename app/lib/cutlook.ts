@@ -3,7 +3,7 @@
  *
  * ── Obsidian, 13 October 2026 ────────────────────────────────────────────
  *
- * Carli, with the "Video Editor" page Google drew and the rule for the whole
+ * The owner, with the "Video Editor" page Google drew and the rule for the whole
  * redesign — *"ons transform en totally redesign"*: the room is obsidian
  * now, `#0A0C10`, with `#12161F` raised off it, a white hairline between
  * things, and the one emerald light kept. Green no longer leads in the
@@ -11,7 +11,7 @@
  *
  * ── Why this file exists ─────────────────────────────────────────────────
  *
- * Carli, 4 October 2026, with four photographs of the room: *"Niks is duidelik
+ * The owner, 4 October 2026, with four photographs of the room: *"Niks is duidelik
  * nie ... Kyk mooi alles allign nie. Plus moet die hele kamer dieselfde lyk,
  * tot bo."*
  *
@@ -91,7 +91,7 @@ export const COIN = 'rgba(250,204,21,0.9)';
 /**
  * A button that looks pressable.
  *
- * Carli: *"'n button moet diepte hê en lyk soos 'n knoppie wat 'n mens druk."*
+ * The owner: *"'n button moet diepte hê en lyk soos 'n knoppie wat 'n mens druk."*
  *
  * Depth on a dark surface is not a drop shadow — a shadow under a near-black
  * button on a near-black panel is invisible. It is a light edge along the top
@@ -110,7 +110,7 @@ export const PRESS = '0 1px 0 0 rgba(0,0,0,0.45) inset, 0 -1px 0 0 rgba(226,232,
  *
  * ── Why only this room ───────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Die pop out bars onder belemmer die view van die
+ * The owner, 9 October 2026: *"Die pop out bars onder belemmer die view van die
  * video. Of dit moet kleiner gesquash word onder, of die background van die
  * buttons moet baie deursigtig wees."*
  *

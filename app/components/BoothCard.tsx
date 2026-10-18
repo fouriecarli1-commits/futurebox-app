@@ -3,7 +3,7 @@
  *
  * ── The fault this repairs ───────────────────────────────────────────────
  *
- * Carli, 15 September 2026: *"die uitspring van funksies moet meer prakties
+ * The owner, 15 September 2026: *"die uitspring van funksies moet meer prakties
  * wees, dit moenie in so dun bar uitspring waarin met afscroll nie, dit kan
  * alles weer met icons vervat word wat weer in die skerm in oop maak ... dit
  * moet prakties wees, mooi wees, netjies lyk en dit moet werk."*
@@ -94,7 +94,7 @@ export function Card({
     >
       {/* ── The name wraps; it does not vanish ─────────────────────
 
-          Carli, 15 September, with a photograph: *"Kyk hoe die woorde nie
+          The owner, 15 September, with a photograph: *"Kyk hoe die woorde nie
           volledig van 'n opsie gesien kan word nie. Dit verdwyn agv plek en
           lengte."*
 
@@ -228,7 +228,7 @@ export default function DeskSheet({
    * made the column about 170 pixels: the colour swatches wrapped after three
    * of twenty, and the caption box was half the width of its own sheet.
    *
-   * Carli, 4 October 2026: *"Kyk dan mooi dat alles mooi allign en netjies
+   * The owner, 4 October 2026: *"Kyk dan mooi dat alles mooi allign en netjies
    * is."* Half an empty sheet is the loudest version of that.
    */
   readonly single?: boolean;
@@ -251,7 +251,7 @@ export default function DeskSheet({
    * one way to close it — and inherited a blue-black body and a sky-blue
    * heading icon inside a room painted green.
    *
-   * Carli, 4 October 2026, with photographs: *"die hele kamer moet dieselfde
+   * The owner, 4 October 2026, with photographs: *"die hele kamer moet dieselfde
    * lyk, tot bo."* Measured in a browser the bench body was rgb(20, 24, 38)
    * sitting inside a room painted rgb(5, 24, 15).
    *

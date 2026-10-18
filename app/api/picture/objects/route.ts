@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"dan moet die objekte en woorde gehighlight word,
+ * The owner, 11 October 2026: *"dan moet die objekte en woorde gehighlight word,
  * en dit moet dan rondgeskuif kan word en ge-edit word."* And, when told the
  * version that runs on the phone would be free: *"Niks is gratis."*
  *

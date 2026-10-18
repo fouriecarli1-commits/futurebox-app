@@ -5,7 +5,7 @@
  *
  * Kits cannot create a voice over its API — measured 9 September 2026,
  * `POST /voice-models` answers 404 — so a singing voice is an afternoon of
- * Carli's own work on kits.ai: a dataset gathered, uploaded, trained,
+ * The owner's own work on kits.ai: a dataset gathered, uploaded, trained,
  * listened to. The app is not in that loop and cannot be.
  *
  * So the app cannot know who a new voice was made for. Only she does, and

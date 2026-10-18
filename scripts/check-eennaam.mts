@@ -3,7 +3,7 @@
  *
  * ── What she saw ─────────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"square word 3 keer genoem in video editor."*
+ * The owner, 10 October 2026: *"square word 3 keer genoem in video editor."*
  *
  * Three controls, three entirely different things, one word. The film's
  * SHAPE can be square. A caption box's corners can be square. A picture

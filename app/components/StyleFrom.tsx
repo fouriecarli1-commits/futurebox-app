@@ -35,7 +35,7 @@
  * It never listened to it. Downloading the audio behind one of those links
  * breaks every one of their terms, so the screen had to spend three sentences
  * saying so — "it reads what the song is called, not how it sounds" — which
- * is a control that needs a paragraph of apology under it. Carli: "as ons daai
+ * is a control that needs a paragraph of apology under it. The owner: "as ons daai
  * funksie van die links nie kan gebruik om na die styl van die liedjie te
  * luister nie, dan moet ons dit uithaal, asook die description oor wat die
  * link bar doen."
@@ -183,7 +183,7 @@ export default function StyleFrom({
        megabytes on disk, sails under any byte ceiling, and then asks the
        browser for eight hundred megabytes in one allocation. The tab is not
        thrown from, it is killed — a white screen with nothing in the
-       console, which is what Carli reported twice.
+       console, which is what the owner reported twice.
  
        `fit` reads the dimensions out of the file's own header first and
        scales during the decode. Nothing is lost for this component's

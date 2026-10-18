@@ -70,7 +70,7 @@ this app does not run: a Vercel function has neither the time nor the memory
 for a three-minute encode.
 
 **Half of that first reason is wrong, and was found to be on 8 October 2026**
-— Carli's list asked *"Hoe kan ons render benut"*, meaning Render, the host
+— the owner's list asked *"Hoe kan ons render benut"*, meaning Render, the host
 where a real machine keeps running.
 
 It stands for her own footage: video off a phone has to go up, and that is
@@ -198,7 +198,7 @@ The studio's owner sent these after looking at what other editors do. Each is a
 real idea and each is a different size.
 
 They are written here as *what they do*, not as anybody's product, and that is
-deliberate — see `check:ownwords`. Carli, 3 October 2026: *"Ons kan onsself nie
+deliberate — see `check:ownwords`. Die eienaar, 3 October 2026: *"Ons kan onsself nie
 vasloop met legal in probleme met die uitleg en die tools wat ons bou nie."* A
 heading that said "worth stealing, from <a company>" was a note claiming
 deliberate copying of one named competitor, about controls that are in fact the

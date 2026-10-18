@@ -37,7 +37,7 @@ export default function manifest(): MetadataRoute.Manifest {
       'The whole studio in one place: write a song with AI and sing on it yourself, clone your voice for the show, and put a video to it.',
     /* ── The fields a store asks for, which a browser does not ───────
  
-        Carli's list, 7 October 2026: *"Registrasie op playstore."* An app
+        The owner's list, 7 October 2026: *"Registrasie op playstore."* An app
         on Google Play that is this web app in a wrapper reads this file at
         build time, and four of these are things it needs and a browser
         shrugs at:

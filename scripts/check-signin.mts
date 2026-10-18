@@ -4,7 +4,7 @@
  *
  * ── The report ───────────────────────────────────────────────────────────
  *
- * Carli, 24 September 2026: *"Die google sign in op die app het eweskielik
+ * The owner, 24 September 2026: *"Die google sign in op die app het eweskielik
  * verdwyn."*
  *
  * `providersOn` answered `[]` three ways — no environment variables, a

@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli: *"Dan weet ek nie of google 'n template pack het waarvan 'n video of
+ * The owner: *"Dan weet ek nie of google 'n template pack het waarvan 'n video of
  * foto kan begin nie? Dit is wat meeste editing programme amazing maak is
  * hulle templates. En foto's en video's moet 'n plek hê waar jy die standaard
  * sizes kan kies, asook custom sizes. Met export moet mens die kwaliteit van
@@ -44,7 +44,7 @@ const moves = (tpl: StudioTemplateItem): boolean =>
 /**
  * The simulator: a motion template playing on a loop before it is chosen.
  *
- * Carli, 14 October 2026: *"Die motion templates moet 'n simulator hê
+ * The owner, 14 October 2026: *"Die motion templates moet 'n simulator hê
  * wanneer mens op dit kliek."* Drawn by `drawTemplateFrame`, the function
  * that records the clip, so this is the clip.
  */
@@ -94,7 +94,7 @@ export default function StudioTemplatesModal({
   /**
    * The video editor: only the templates that move.
    *
-   * Carli, 15 October 2026: *"Kyk mooi of elke funksie in ... video editor
+   * The owner, 15 October 2026: *"Kyk mooi of elke funksie in ... video editor
    * ... werk."* Opened from the cutting room this showed every template in
    * the app — pitch decks, business cards, menus — and picking one of those
    * put a four-second clip of a business card on her film. The editor's own
@@ -273,7 +273,7 @@ export default function StudioTemplatesModal({
           </div>
 
           {/* ── The categories: one row, every bar the same size ─────────
-              Carli, 15 October 2026: *"Dit lyk nogsteeds of hierdie
+              The owner, 15 October 2026: *"Dit lyk nogsteeds of hierdie
               templates nie templates het nie … Elke bar moet ewe groot
               wees, dit moet netjies wees."* Twenty-one buttons wrapping in
               their own widths filled the whole pop-out on a phone and left

@@ -87,7 +87,7 @@ ok('and says so plainly if one is ever made anyway', /UNEXPECTED/.test(call.slic
 
    `blenderShape()` sends a small ordered set of plausible bodies and watches
    for the complaint to change. The first version counted **any** status other
-   than E_VALIDATION_FAILURE as a hit, and the first time Carli ran it against
+   than E_VALIDATION_FAILURE as a hit, and the first time the owner ran it against
    the live account it reported, confidently, that `voiceModelIds` was the
    shape — on the strength of a 429. Kits had rate-limited the sixth POST in a
    row to one address, which says nothing at all about the body.
@@ -131,7 +131,7 @@ const run = async (
 const SAME = { status: 422, body: '{"error":"E_VALIDATION_FAILURE","code":"E_VALIDATION_FAILURE"}' };
 const LIMITED = { status: 429, body: '{"error":"Too many requests","code":"E_TOO_MANY_REQUESTS"}' };
 
-await run('a rate limit is not the shape — the bug Carli found', [LIMITED], {
+await run('a rate limit is not the shape — the bug the owner found', [LIMITED], {
   found: null, stopped: 'rate-limited',
 });
 await run('nor is a server error', [{ status: 502, body: 'bad gateway' }], {

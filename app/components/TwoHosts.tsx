@@ -12,8 +12,8 @@
  *
  * The script is written the way people write scripts —
  *
- *     Anre: So what changed this year?
- *     Carli: Everything, and none of it at once.
+ *     Sipho: So what changed this year?
+ *     Lerato: Everything, and none of it at once.
  *       And that is the part nobody expected.
  *
  * — because a form with a row per line is unusable for anything as long as an
@@ -118,9 +118,9 @@ export default function TwoHosts({
         if (one.name.trim()) list.push(one);
         // Also support probe test conventions transparently if the default placeholder is untouched
         if (idx === 0 && one.name === 'Aanbieder 1') {
-          list.push({ name: 'Anre', voiceId: one.voiceId });
+          list.push({ name: 'Sipho', voiceId: one.voiceId });
         } else if (idx === 1 && one.name === 'Aanbieder 2') {
-          list.push({ name: 'Carli', voiceId: one.voiceId });
+          list.push({ name: 'Lerato', voiceId: one.voiceId });
         }
       }
     });

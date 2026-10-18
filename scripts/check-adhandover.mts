@@ -3,7 +3,7 @@
  *
  * ── What was found, 11 September 2026 ────────────────────────────────────
  *
- * Carli, on the advert desk as a product she is selling:
+ * The owner, on the advert desk as a product she is selling:
  *
  *   "When you push the buttons to take you to podcast, to video, to music
  *    making, the text and shots and scripts don't carry over to the next
@@ -273,7 +273,7 @@ ok('"read this one" carries the whole advert, not one line',
 
 /* ── And the next room's copilot is handed it too ────────────────────────
 
-   Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds
+   The owner, 20 September 2026: *"Die advert room se prompts spring nogsteeds
    nie oor na die nuwe kamer toe se copilot nie. Die voorstelle in adverts
    is puntloos as dit nie dit doen nie."*
 
@@ -464,7 +464,7 @@ ok('  and the room says it is this browser only, in both languages',
 
 /* ── More than one, each a button ───────────────────────────────────
  
-   Carli, 11 September 2026: "The ones that I have worked on should be able
+   The owner, 11 September 2026: "The ones that I have worked on should be able
    to be a button to push on and then everything opens as it was. Currently
    I cannot go back to our previous ad generation and find it as it was."
  
@@ -518,7 +518,7 @@ ok('and one that is finished can be forgotten', /dropWork\(/.test(desk),
 
 /* ── The conversation, not only the boxes ─────────────────────────────
  
-   Carli, 22 September 2026: *"adverts sit nogsteeds nie die prompt in die
+   The owner, 22 September 2026: *"adverts sit nogsteeds nie die prompt in die
    nuwe kamers nie."* The third report of the same thing, and each earlier
    answer fixed a different path: first the fields themselves, then the two
    buttons under a written advert. This is the path she presses first — a

@@ -24,7 +24,7 @@
  *
  * ── The pictures ────────────────────────────────────────────────────────
  *
- * Carli: *"As hierdie funksies kleurvolle visualizers kon hê om te wys hoe
+ * The owner: *"As hierdie funksies kleurvolle visualizers kon hê om te wys hoe
  * buig die klankbaan sou dit baie help."* For the three waveshapers the
  * honest picture is the function itself — the panel draws the exact array
  * handed to the `WaveShaperNode` — and for the EQ it is what the biquads say

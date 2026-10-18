@@ -3,7 +3,7 @@
  *
  * ── Her decision, in her words ───────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"'n Album art kan net op die spot generate word, of
+ * The owner, 5 October 2026: *"'n Album art kan net op die spot generate word, of
  * kuns kan gekoop word. Ons blok mense om hulle eie prente in te sit,
  * andersins gaan hulle nooit album art koop nie."*
  *

@@ -1,7 +1,7 @@
 /**
  * What used to be sold on top of a plan, and no longer is.
  *
- * ── Carli, 24 September 2026 ─────────────────────────────────────────────
+ * ── the owner, 24 September 2026 ─────────────────────────────────────────────
  *
  * *"Ek dink dieselfde met advert, dit moenie 'n ekstra produk wees nie,
  * eerder dit monotise en krediete vra saam met die pakkette wat ons reeds

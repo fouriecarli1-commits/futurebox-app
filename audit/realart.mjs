@@ -1,7 +1,7 @@
 /**
  * Real art, offered where somebody is thinking about a cover.
  *
- * Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar by
+ * The owner, 22 September 2026: *"Kyk asb in make a song en channel dat daar by
  * cover art 'n opsie is vir real art."*
  *
  * ── Why this is walked and not read ──────────────────────────────────────

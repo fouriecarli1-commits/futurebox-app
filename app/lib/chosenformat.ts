@@ -39,7 +39,7 @@ const KEY = 'futurebox.adformats.v1';
  * reasons, the thing to watch out for and the line naming the wrong
  * answer were all written, shown once, and dropped.
  *
- * Carli, 11 September 2026: "Currently I cannot go back to our previous
+ * The owner, 11 September 2026: "Currently I cannot go back to our previous
  * ad generation and find it as it was."
  *
  * The reasons ARE the recommendation. An id and a sentence is a note

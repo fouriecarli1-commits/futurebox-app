@@ -157,11 +157,11 @@
 --                   skootrekenaar gemaak is, is nie op die foon se plank nie.
 --   uitspraak.sql Die woorde wat sy gehoor sê is, met hul klanke, en ’n
 --                 wyser na watter uitspraakwoordeboek tans lewendig is.
---   amps.sql      Die versterker-katalogus: vasvangs wat Carli self aflaai
---                 en deur die eienaarsdeur oplaai, met die maker se naam en
---                 ’n lisensie wat ons toelaat om dit aan te stuur. Lede soek
---                 dit in die booth. Sonder dit sê die booth "die katalogus
---                 is nog nie opgestel nie".
+--   amps.sql      Die versterker-katalogus: vasvangs wat the owner self
+--                 aflaai en deur die eienaarsdeur oplaai, met die maker se
+--                 naam en ’n lisensie wat ons toelaat om dit aan te stuur.
+--                 Lede soek dit in die booth. Sonder dit sê die booth "die
+--                 katalogus is nog nie opgestel nie".
 --   playbilling.sql Aankope deur Google Play in die Android-toep: wie elke
 --                   aankoop besit, sodat een betaling nooit twee keer toegeken
 --                   word nie en ’n hernuwing maande later sy eienaar vind.
@@ -174,9 +174,9 @@
 --                 die app sou enige blaaier kon oorslaan. Sonder hierdie
 --                 lêer is daar geen perk nie en wys die meter op die
 --                 rekening niks.
---   designs.sql   Die fototemplates wat Carli in die fotoredigeerder stoor
---                 vir almal: die plasing se vorm, kleur, rame, woorde en
---                 vorms — nooit foto’s nie. Lede sien dit onder "Van
+--   designs.sql   Die fototemplates wat the owner in die fotoredigeerder
+--                 stoor vir almal: die plasing se vorm, kleur, rame, woorde
+--                 en vorms — nooit foto’s nie. Lede sien dit onder "Van
 --                 FutureBox" in Templates. Sonder dit werk die sestien wat
 --                 saam met die app kom steeds, maar "Stoor as template" sê
 --                 die tabel is nog nie daar nie.
@@ -449,7 +449,7 @@ revoke all on function public.grant_addon(uuid, text, integer, text) from public
 --
 -- Een mens se oor het `-tjie` gevind. Elke lid se oor vind die res.
 --
--- Carli, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
+-- the owner, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
 -- vir ons terugvoer te gee as afrikaanse woorde nie reg uit kom nie?"
 --
 -- ── 'n Verslag is 'n KANDIDAAT, nooit 'n reël nie ────────────────────────
@@ -545,7 +545,7 @@ create unique index if not exists afrikaans_reports_one_a_day
 
 -- ─────────────────────────────────────── wat dit werklik geklink het ────
 --
--- Carli, 14 September 2026: "Daar moet ook 'n pop out wees wat verduidelik
+-- the owner, 14 September 2026: "Daar moet ook 'n pop out wees wat verduidelik
 -- waarvoor hierdie feedback bar is en vra: hoe klink dit? Hoe moet dit
 -- foneties klink?"
 --
@@ -1288,7 +1288,7 @@ $$;
 --
 -- ── The fault this exists for ────────────────────────────────────────────
 --
--- Carli, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
+-- the owner, 8 October 2026: *"Wanneer 'n liedjie se album art gegenerate word dan
 -- moet daar 'n opsie wees 'keep'. Ek sien ek het een gegenerate en nou is dit
 -- weg."*
 --
@@ -1599,7 +1599,7 @@ grant select on public.eleven_price_check to service_role;
 -- ── Waarom dit nou nodig is ──────────────────────────────────────────────
 --
 -- ElevenLabs se ondersteuning, 9 September 2026: bykoop kos $0,000165 per
--- krediet, en Auto Top Up kan aangeskakel word. Carli, dieselfde dag: "Ek gaan
+-- krediet, en Auto Top Up kan aangeskakel word. The owner, dieselfde dag: "Ek gaan
 -- eers net krediete top up totdat ek 'n beter begrip het hoeveel mense ons
 -- produk gebruik."
 --
@@ -1918,7 +1918,7 @@ grant execute on function public.kits_seconds_this_month() to service_role;
 
 -- ── Wat één lid hierdie maand van Kits gebruik het ──────────────────────────
 --
--- Carli, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
+-- the owner, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
 -- sit vir kits se stemkloning. Dus iets soos 5min per persoon. Dan stop ons die
 -- funksie wanneer dit opgebruik word deur 'n maand."
 --
@@ -2048,7 +2048,7 @@ create policy voice_owners_own_read on public.voice_owners
 --
 -- ── Waarom dit bestaan ────────────────────────────────────────────────────
 --
--- Carli het op 8 Oktober 2026 'n uitgawe-dak van $100 per maand op Vertex AI
+-- the owner het op 8 Oktober 2026 'n uitgawe-dak van $100 per maand op Vertex AI
 -- gesit, en gesê: "Ek sal my budget in google verhoog soos wat ons wins maak."
 -- Albei is reg. Maar Google se dak hang aan één DIENS, en Lyria, Nano Banana
 -- en Veo is almal daardie een diens.
@@ -2150,7 +2150,7 @@ grant execute on function public.google_micros_this_month_for(text, uuid) to ser
 
 -- ── Wat één lid hierdie maand van Kits gebruik het ──────────────────────────
 --
--- Carli, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
+-- the owner, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
 -- sit vir kits se stemkloning. Dus iets soos 5min per persoon. Dan stop ons die
 -- funksie wanneer dit opgebruik word deur 'n maand."
 --
@@ -2452,7 +2452,7 @@ grant execute on function public.stats_board() to service_role;
 -- Loop dit ná events.sql en charts.sql, in dieselfde projek. Veilig om weer te
 -- loop.
 --
--- ── Wat Carli gevra het ────────────────────────────────────────────────────
+-- ── Wat the owner gevra het ────────────────────────────────────────────────────
 --
 --   "As ons top liedjies uitwys uit ons eie engine, track dit dan die
 --    hoeveelheid listens per liedjie?"
@@ -2697,7 +2697,7 @@ grant execute on function public.live_hello(text, uuid, text) to service_role;
 
 -- ────────────────────────────────────────── wat 'n liedjie se soort is ────
 --
--- Carli, 14 September 2026: "in die live room en in channel wys die liedjie
+-- the owner, 14 September 2026: "in die live room en in channel wys die liedjie
 -- se naam op die liedjie window, die artist name, en die genre van die
 -- liedjie. Dit gaan dit makliker maak vir ander users om by mekaar te leer en
 -- te hoor watter genre regtig werk en mooi klink."
@@ -2719,7 +2719,7 @@ alter table public.live_posts
 
 -- ── Die woorde van die liedjie, sodat die play room hulle kan wys ─────────
 --
--- Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+-- the owner, 14 September 2026: *"Die play room moet die liedjie se woorde
 -- speel."*
 --
 -- Niemand in die kamer kan hulle gaan haal nie. 'n Liedjie se woorde lê op sy
@@ -3397,7 +3397,7 @@ create policy "read creators" on public.creators for select using (true);
 --
 -- ── Wat dit regmaak ──────────────────────────────────────────────────────
 --
--- Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+-- the owner, 14 September 2026: *"Die play room moet die liedjie se woorde
 -- speel."*
 --
 -- Die speelkamer het die woorde nie gehad nie, en dit was nie 'n skerm wat
@@ -3421,7 +3421,7 @@ create policy "read creators" on public.creators for select using (true);
 
 -- ── Dieselfde kolom staan ook in supabase/live.sql ─────────────────
 --
--- Carli, 15 September: *"Dit lyk of ek 2 sql's moet hardloop."*
+-- the owner, 15 September: *"Dit lyk of ek 2 sql's moet hardloop."*
 --
 -- Dit is EEN verandering. live.sql bou die tabel, so die kolom hoort daar
 -- vir 'n nuwe projek; hierdie lêer bestaan omdat live.sql reeds geloop het
@@ -3882,7 +3882,7 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────────
 -- Album art by real artists.
 --
--- Carli, 20 September 2026: a room under SELL IT where real artists sell
+-- the owner, 20 September 2026: a room under SELL IT where real artists sell
 -- album art. R200 a piece off the wall, R500 for a commissioned one-off.
 -- Every piece unique and sold exactly once. An artist has a profile that
 -- pops out, and a button — not a text box — that asks them for a one-off.
@@ -4018,7 +4018,7 @@ alter table public.art_offers enable row level security;
 
 -- ── The credit that travels with the song ───────────────────────────────
 --
--- Carli: *"Binne live moet die liedjie naam, artist naam, style en dan die
+-- the owner: *"Binne live moet die liedjie naam, artist naam, style en dan die
 -- kunstenaar se naam en art naam appear."*
 --
 -- Written onto the post rather than looked up. A live post is read by
@@ -4069,7 +4069,7 @@ on conflict (id) do update set public = false;
 
 -- ── Wat aan elke kunstenaar uitbetaal moet word ─────────────────────────
 --
--- Carli, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
+-- the owner, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
 -- uitbetalings nie. Dit sal in my rekening uitbetaal word en ek betaal dit
 -- uit aan die kunstenaar."*
 --
@@ -4111,7 +4111,7 @@ create or replace view public.art_owing as
 
 -- ── 'n Kunstenaar wat nog nie 'n rekening het nie ───────────────────────
 --
--- Carli, 20 September 2026: *"Ek het nou reeds 'n kunstenaar wat ek wil in
+-- the owner, 20 September 2026: *"Ek het nou reeds 'n kunstenaar wat ek wil in
 -- sit."*
 --
 -- Daardie persoon is 'n regte skilder, nie 'n app-lid nie. Die tabel het
@@ -4133,7 +4133,7 @@ alter table public.art_artists alter column owner drop not null;
 
 -- ── Die voorskou, en waarom die skoon lêer apart lê ─────────────────────
 --
--- Carli, 20 September 2026: *"Screenshots gaan die kunswerke skade doen."*
+-- the owner, 20 September 2026: *"Screenshots gaan die kunswerke skade doen."*
 --
 -- Sy is reg, en die eerlike posisie is dat nóg 'n screenshot nóg 'n foon se
 -- kamera wat na die skerm wys, gekeer kan word deur enigiets wat 'n
@@ -4154,7 +4154,7 @@ alter table public.art_works
 
 -- ── Dit is 'n veiling, nie 'n prys nie ─────────────────────────────────
 --
--- Carli, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
+-- the owner, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
 -- moet op die bee, en die hoogste bee wen die art binne 36 hours."*
 --
 -- Dit verander die hele model. R200 is nie meer wat 'n werk kos nie — dit
@@ -4215,7 +4215,7 @@ create or replace view public.art_top_bids as
 
 -- ── Die klok begin by die eerste bod ───────────────────────────────────
 --
--- Carli, 20 September 2026: *"Die beeing begin wanneer iemand begin bee."*
+-- the owner, 20 September 2026: *"Die beeing begin wanneer iemand begin bee."*
 --
 -- Dit was 36 uur vandat die werk opgehang is, wat beteken 'n werk wat op 'n
 -- Dinsdagoggend opgaan en wat niemand Woensdag sien nie, se veiling is
@@ -4276,7 +4276,7 @@ alter table public.art_works
 -- `paid_rand` eers 'n paar reëls hierbo, en 'n aansig kan nie na 'n kolom
 -- verwys wat nog nie daar is nie.
 --
--- Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
+-- the owner, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
 -- net vir die wen prys."* Die R50 inkoop staan in `art_bidders` en daardie
 -- tabel word hier nêrens gejoin nie — dit is wat daardie reël in die
 -- databasis waar hou. Die staat tel net verkoopte werke.
@@ -4295,7 +4295,7 @@ create or replace view public.art_owing as
 
 -- ── Die buy-in is PER WERK ──────────────────────────────────────────────
 --
--- Carli, 20 September 2026: *"Jy het dit ook verkeerd R50 buy in is per
+-- the owner, 20 September 2026: *"Jy het dit ook verkeerd R50 buy in is per
 -- piece. Dit is nie vir elke bidding nie."*
 --
 -- Ek het dit as een keer vir altyd gebou. Dit is 'n ander ding: 'n eenmalige
@@ -4492,7 +4492,7 @@ alter table public.live_posts
 --
 -- Run this after events.sql, in the same project. Safe to run again.
 --
--- ── What Carli asked for ───────────────────────────────────────────────────
+-- ── What the owner asked for ───────────────────────────────────────────────────
 --
 --   "top 10 AI musiek in Suid afrika … Ek dink daar moet ook top 10 podcasts
 --    wees, net 'n bar waarop mens kliek en dan oop maak en opsies gee wat op
@@ -4643,7 +4643,7 @@ grant select, insert, delete on public.live_hearts to service_role;
 --
 -- ── What this is for ─────────────────────────────────────────────────────
 --
--- Carli: *"Music videos en music shorts moet ook na live toe kan post. Ek sien
+-- the owner: *"Music videos en music shorts moet ook na live toe kan post. Ek sien
 -- huidiglik dat my videos nie 'n opsie het om na live toe te kan post nie."*
 --
 -- She was right and the reason was in the schema rather than in the screen:
@@ -4730,7 +4730,7 @@ create policy "put own filmed video" on storage.objects
 -- ─────────────────────────────────────────────────────────────────────────
 -- The room says which links are bad
 --
--- Carli, 24 September 2026, about the live room's message box: *"Dit moet
+-- the owner, 24 September 2026, about the live room's message box: *"Dit moet
 -- gescreen word om general bad videos teen te werk."*
 --
 -- The box now takes only a TikTok live address, and the handle is screened
@@ -4769,7 +4769,7 @@ grant select, insert, delete on public.live_flags to service_role;
 -- ─────────────────────────────────────────────────────────────────────────
 -- Two people in one room, and who is holding the pen
 --
--- Carli, 24 September 2026: *"Ek wil hê jy moet elke kamer dupliseer waarin
+-- the owner, 24 September 2026: *"Ek wil hê jy moet elke kamer dupliseer waarin
 -- create word … in daai moment moet die duplicated room oop maak waar in net
 -- hierdie twee mense is en beide kry functionality om binne die kamer te
 -- werk."*
@@ -4976,7 +4976,7 @@ create table if not exists public.tone3000_tokens (
 
 -- ── Die refresh token mag ontbreek ────────────────────────────────────────
 --
--- Carli, 11 Oktober 2026, nadat die tabelle gemaak is en die aanmelding
+-- the owner, 11 Oktober 2026, nadat die tabelle gemaak is en die aanmelding
 -- deurgegaan het: "tone3000 werk nogsteeds nie".
 --
 -- Ons vra nooit vir 'n refresh token nie — die magtigingsversoek stuur glad
@@ -5027,7 +5027,7 @@ grant execute on function public.tone3000_sweep() to service_role;
 -- ─────────────────────────────────────────────────────────────────────────
 -- The child's allowance, enforced where the money is
 --
--- Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+-- the owner, 9 October 2026: *"Let the parent give an allowance on an opening
 -- page."*
 --
 -- ── Why this is a table and not a number in the browser ─────────────────
@@ -5165,7 +5165,7 @@ grant execute on function public.kids_release(uuid, integer) to service_role;
 -- ─────────────────────────────────────────────────────────────────────────
 -- Screen time, on the same row as the allowance
 --
--- Carli, 10 October 2026: *"Dan moet die ouers die budget en screen time kan
+-- the owner, 10 October 2026: *"Dan moet die ouers die budget en screen time kan
 -- stel. Wanneer screen time op is moet dit die kind uitskop."*
 --
 -- ── Why it is a sitting and not a daily total ───────────────────────────
@@ -5359,7 +5359,7 @@ grant execute on function public.kids_stand(uuid) to service_role;
 
 -- Kids credits: bought for the kids room, and spendable nowhere else.
 --
--- Carli, 14 October 2026: "In die pricing page moet die kids room ook 'n
+-- the owner, 14 October 2026: "In die pricing page moet die kids room ook 'n
 -- aparte prys hê. Die kids room met sy aparte credits moet net van die
 -- welcoming page af geaccess kan word." And on the prices: "Prys voorstelle
 -- is reg vir kids studio."
@@ -5541,7 +5541,7 @@ grant execute on function public.kids_wallet_return(uuid, integer) to service_ro
 -- ─────────────────────────────────────────────────────────────────────────
 -- The kids' shelf, on the account rather than on one phone
 --
--- Carli, 9 October 2026: *"Skuif die stories en liedjies na die server
+-- the owner, 9 October 2026: *"Skuif die stories en liedjies na die server
 -- toe."*
 --
 -- ── What was wrong with the device, and what was right about it ─────────
@@ -5672,7 +5672,7 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────────
 -- The words she has heard said, and where the dictionary currently lives
 --
--- Carli, 10 October 2026: *"Gaan aan met die keep button."*
+-- the owner, 10 October 2026: *"Gaan aan met die keep button."*
 --
 -- ── What the keep button needed, and why a table ────────────────────────
 --
@@ -5788,7 +5788,7 @@ alter table public.said_dictionary enable row level security;
 --
 -- ── Waarvandaan ──────────────────────────────────────────────────────────
 --
--- Carli, 11 Oktober 2026: *"Ek wil die amps manually oplaai, dan word dit 'n
+-- the owner, 11 Oktober 2026: *"Ek wil die amps manually oplaai, dan word dit 'n
 -- katelogus waarna mense in ons app kan soek. Dit moet alles in ons sisteem
 -- en databasis wees. Ons kan nie deur hulle website werk nie, want dit werk
 -- nie."*
@@ -5857,7 +5857,7 @@ alter table public.amp_catalogue enable row level security;
 
 -- Purchases made through Google Play, inside the Play Store app.
 --
--- Carli, 14 October 2026: "Wanneer ek die app op die playstore gaan sit gaan
+-- the owner, 14 October 2026: "Wanneer ek die app op die playstore gaan sit gaan
 -- ek paystack afhaal en werk met die playstore se paying system." The website
 -- keeps Paystack; inside the Android app, Play bills. See `app/lib/playproducts.ts`
 -- and `app/api/play/route.ts`.
@@ -5910,7 +5910,7 @@ alter table public.play_purchases enable row level security;
 -- ─────────────────────────────────────────────────────────────────────────
 -- Cloud space per plan
 --
--- Carli, 16 October 2026: *"Please impliment the storage plan as you
+-- the owner, 16 October 2026: *"Please impliment the storage plan as you
 -- suggested."* — 1 GB on Free, 10 GB on Maker, 50 GB on Studio, 200 GB on
 -- Label, for what a member keeps in the cloud.
 --
@@ -6029,7 +6029,7 @@ $$;
 --
 -- ── Waarvandaan ──────────────────────────────────────────────────────────
 --
--- Carli, 16 Oktober 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
+-- the owner, 16 Oktober 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
 -- generate en oor tyd op bou?"* — en toe: *"gaan aan met die
 -- template-stelsel."*
 --
@@ -6069,7 +6069,7 @@ alter table public.post_designs enable row level security;
 
 -- ───────────────────────────────────────── die prente van haar toestel af ──
 --
--- Carli, 16 Oktober 2026: *"Ek wonder of ek templates ook van my device af
+-- the owner, 16 Oktober 2026: *"Ek wonder of ek templates ook van my device af
 -- kan oplaai?"* — *"Ek bedoel templates wat gestoor moet word."*
 --
 -- 'n Ontwerp wat sy elders gemaak het, kom in as 'n prent en word die

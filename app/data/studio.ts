@@ -122,7 +122,7 @@ export const PODCAST_TARGETS: readonly PodcastTarget[] = [
   },
   /* ── Three placeholder rows, taken out 8 October 2026 ──────────────
 
-     Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
+     The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
 
      Where these are now there were three rows reading `[Your target] AI
      music creator show`, `[Your target] vibe-coding / indie build show`

@@ -1,7 +1,7 @@
 /**
  * The grown-up's code, and the room staying a kids room.
  *
- * Carli, 15 October 2026: *"Plus moet daar nie 'n grown up button binne die
+ * The owner, 15 October 2026: *"Plus moet daar nie 'n grown up button binne die
  * studio wees nie want kinders gaan dit self stel."* Two "Grown-up" buttons
  * sat in the child's room, and a child presses every button. So there is no
  * button: the grown-up holds the FUTUREBOX name for three seconds and types

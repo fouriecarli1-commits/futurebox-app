@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"is dit moontlik om die website anders te maak as
+ * The owner, 9 October 2026: *"is dit moontlik om die website anders te maak as
  * die phone app? Die website moet nie lyk soos 'n foon app nie."*
  *
  * Yes, and in two of the rooms it already half was. `lib/sideways.ts` asks

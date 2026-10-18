@@ -1,6 +1,6 @@
 # Epos aan Kits.AI — verwerkersooreenkoms, bewaring, en wie se lisensie dit is
 
-Konsep vir Carli om te stuur. **Vul die drie plekhouers in waar jy dit stuur —
+Konsep vir die eienaar om te stuur. **Vul die drie plekhouers in waar jy dit stuur —
 hulle staan met opset nie in hierdie lêer nie:** jou naam en rol onderaan, die
 maatskappy se adres, en die kontak-e-pos.
 
@@ -43,7 +43,7 @@ is nie 'n oplossing nie.
 Hi,
 
 I'm the founder of FutureBox Studio (FUTUREBOXSTUDIO (Pty) Ltd, South Africa,
-registration 2026/714071/07), a creative studio for music and voice aimed at
+registration [registration number]), a creative studio for music and voice aimed at
 independent artists and small businesses. We're a Kits.AI subscriber and the
 integration is built and running — voice training and voice conversion, both
 through the API.
@@ -113,7 +113,7 @@ Kind regards,
 
 [JOU NAAM]
 [JOU ROL], FUTUREBOXSTUDIO (Pty) Ltd
-Reg. 2026/714071/07 · South Africa
+Reg. [registration number] · South Africa
 [KONTAK-E-POS]
 
 ---

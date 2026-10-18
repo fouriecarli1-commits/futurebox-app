@@ -194,7 +194,7 @@ export const PRESETS: readonly Preset[] = [
      From 21 September the default was Clean, the near-white one below, on
      the reasoning in its own note: a creative tool spends its screen on the
      person's work, and a pale room separates panels with nothing but space.
-     That reasoning was mine. On 12 October Carli had Antigravity redo the
+     That reasoning was mine. On 12 October the owner had Antigravity redo the
      whole look — "Dark Luxury Cyber-Emerald", in its words: deep green
      grounds, glass, glow — and asked for all of it. Every class it wrote
      goes through the theme engine, so under a light default its dark
@@ -211,7 +211,7 @@ export const PRESETS: readonly Preset[] = [
      it, the accent goes to mint (#00F087), and the face is Plus Jakarta
      Sans. Same bones, pulled darker and brighter. */
   { id: 'emerald', name: 'Pro Studio', blurb: 'Green-black, mint and glass. The default.', surface: 'greenblack', primary: 'mint', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'jakarta', layout: 'rail', motion: 'full' },
-  /* The same look in daylight — Carli, 13 October 2026: *"Die ligte tema
+  /* The same look in daylight — the owner, 13 October 2026: *"Die ligte tema
      moet nogsteeds die spectaculat neon en futuristic theme hê."* Cool
      white ground, the same mint, cyan and violet, solved for AA on white by
      the same ramp. The switch on the home page goes between this and the
@@ -251,7 +251,7 @@ export const THEME_EVENT = 'futurebox:theme';
  *
  * ── Why a second theme and not a skin inside the room ────────────────────
  *
- * Carli, 20 September 2026: *"Kyk net hoe netjies het jy die probooth
+ * The owner, 20 September 2026: *"Kyk net hoe netjies het jy die probooth
  * verander. Die hele kamer in probooth lyk dieselfde. So moet hierdie een se
  * hele kamer ook dieselfde lyk … Dink mooi oor die art room. Dit is 'n
  * gallery wat kunswerk moet verkoop. Dit moet high class en baie aantreklik
@@ -294,7 +294,7 @@ export const THEME_EVENT = 'futurebox:theme';
  * the two.
  */
 export const GALLERY_THEME: Theme = {
-  /* Carli, 13 October 2026, with Google's album art page and the new house
+  /* The owner, 13 October 2026, with Google's album art page and the new house
      look: *"Verander asb net die art gallery, die oranje lyk sleg."* The
      ember wall and the gold accent go; the gallery stands on the same
      green-black as the rest of the app, lit mint, and keeps amber only as
@@ -651,7 +651,7 @@ export function applyTheme(theme: Theme): void {
 /* `v2` since 12 October 2026, the evening the look changed to Emerald Studio.
    A key bump is a one-time reset: every device, including one whose owner
    once pressed a theme in the studio, opens on the new default once, and the
-   studio keeps working from there. Carli, that evening, looking at a phone
+   studio keeps working from there. The owner, that evening, looking at a phone
    still painted in the old Clean: *"Asb verander net die app. Dit is wat ek
    gevra het!"* A stored choice from the old look must not be the reason the
    new one cannot reach her. */

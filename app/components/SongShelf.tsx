@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
+ * The owner, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
  * is."*
  *
  * ── Why playing one costs nothing ────────────────────────────────────────

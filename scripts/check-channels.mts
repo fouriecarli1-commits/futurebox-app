@@ -3,7 +3,7 @@
  *
  * ── Why this can be checked at all ───────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
+ * The owner, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
  *
  * The same argument as `fitTo` and `check:photo`: a number you can only get
  * by rendering audio in a browser is a number nobody can check, and audio is

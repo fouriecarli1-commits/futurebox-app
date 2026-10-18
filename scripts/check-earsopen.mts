@@ -3,7 +3,7 @@
  *
  * ── The question this answers ────────────────────────────────────────────
  *
- * Carli, 24 September 2026: *"En dan moet ons nog iewers die klient die
+ * The owner, 24 September 2026: *"En dan moet ons nog iewers die klient die
  * geleentheid gee om foute in spraak uit te wys. Hoe doen ons dit?"*
  *
  * We already did. `SayItWrong` and `/api/afrikaans` were built in September

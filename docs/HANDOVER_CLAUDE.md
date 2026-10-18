@@ -4,9 +4,9 @@
 
 ---
 
-## 1. Agtergrond & Carli se Versoeke
+## 1. Agtergrond & die eienaar se Versoeke
 
-Carli, 11 Oktober 2026:
+Die eienaar, 11 Oktober 2026:
 > *"Dan weet ek nie of google 'n template pack het waarvan 'n video of foto kan begin nie? Dit is wat meeste editing programme amazing maak is hulle templates. En foto's en video's moet 'n plek hê waar jy die standaard sizes kan kies, asook custom sizes. Met export moet mens die kwaliteit van export kies, en daardie verstellings moet alles krediete kos. Ek werk so standaard op 5 krediete."*
 
 Drie kernfunksies is versoek en volledig gebou:
@@ -42,7 +42,7 @@ Drie kernfunksies is versoek en volledig gebou:
 * `StudioTemplatesModal` en `CanvasSizeModal` gekoppel aan die film-ateljee met sneller-knoppies in die werkbank.
 
 ### C. [`app/lib/credits.ts`](app/lib/credits.ts)
-* `CREDITS.postOut` op **5** gestel (was 2), soos Carli uitdruklik gevra het (*„Ek werk so standaard op 5 krediete”*).
+* `CREDITS.postOut` op **5** gestel (was 2), soos die eienaar uitdruklik gevra het (*„Ek werk so standaard op 5 krediete”*).
 
 ### D. [`scripts/check-sold.mts`](scripts/check-sold.mts) & [`scripts/check-postpaid.mts`](scripts/check-postpaid.mts)
 * Bygewerk om die 5-krediet standaard te handhaaf en te bevestig.

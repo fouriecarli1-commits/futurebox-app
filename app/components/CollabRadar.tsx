@@ -219,7 +219,7 @@ export default function CollabRadar({
   const [ownTargetTopics, setOwnTargetTopics] = useState('');
   /* ── Kept between visits, which it was not ───────────────────────
 
-     Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."* This was
+     The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."* This was
      a plain `useState([])`, so every show she found, looked up and typed in
      was gone the next time the page loaded — and the panel's own note two
      hundred lines down says the best targets are shows nobody has pitched

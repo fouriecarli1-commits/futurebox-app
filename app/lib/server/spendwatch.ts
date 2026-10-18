@@ -3,7 +3,7 @@
  *
  * ── The question this answers ────────────────────────────────────────────
  *
- * Carli, 9 September 2026: "Ek gaan op 'n manier 'n alert moet kry as die
+ * The owner, 9 September 2026: "Ek gaan op 'n manier 'n alert moet kry as die
  * krediete laag raak, sodat ek kan koop. Is daar 'n manier dat ek 'n
  * waarskuwing kan kry?"
  *
@@ -86,7 +86,7 @@ export type Supplier =
   /**
    * Google, one supplier per ENGINE and not one for all three.
    *
-   * Carli, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer my
+   * The owner, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer my
    * budgets in elevenlabs en google op raak."*
    *
    * ElevenLabs was already watched and Google was not watched at all, so this

@@ -5,7 +5,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"die video nie in die channel save nie, sodat
+ * The owner, 14 September 2026: *"die video nie in die channel save nie, sodat
  * dit later in die live channel gedeel kan word nie."*
  *
  * A take filmed against the words on screen was offered exactly one thing:

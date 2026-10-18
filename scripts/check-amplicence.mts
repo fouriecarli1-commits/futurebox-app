@@ -5,7 +5,7 @@
  *
  * ── The question this answers, and when it is asked ──────────────────────
  *
- * Carli, 7 October 2026: *"Didn't Tone3000 give us permission if we add their
+ * The owner, 7 October 2026: *"Didn't Tone3000 give us permission if we add their
  * name on products? That is how I understood it."*
  *
  * Partly. Three of the eight licences a tone can carry are NonCommercial, and

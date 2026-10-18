@@ -1,6 +1,6 @@
 # Hoe om die stembiblioteek op te neem
 
-*Carli, 9 Oktober 2026:*
+*Die eienaar, 9 Oktober 2026:*
 
 > "Ek wonder of dit nie baie vinniger en makliker gaan wees om 'n RVC stem opname van
 > verskillende tale in Suid-Afrika op te neem en vir jou te gee nie. Om foneties te tik is baie
@@ -102,7 +102,7 @@ Twee dinge om by te voeg wat vir 'n *biblioteek* geld en nie vir een lid se eie 
 
 ## 4a. Die uitspraak-sessie — en dít is die een om eerste te doen
 
-*Carli, 9 Oktober 2026: "ek wil die sangers gebruik vir uitspraak, nie dat hulle stemme deur ander
+*Die eienaar, 9 Oktober 2026: "ek wil die sangers gebruik vir uitspraak, nie dat hulle stemme deur ander
 gebruik word nie."*
 
 Dan is dit **nie 'n sang-sessie nie, dit is 'n woordelys.** Heeltemal anders as §4 hieronder, en
@@ -112,7 +112,7 @@ Die vorm: `docs/SANGER-UITSPRAAK.md`. Geen model word gemaak nie, niemand anders
 nie, en dit is 'n baie makliker ding om vir iemand te vra.
 
 **Die lys self is `docs/LEESLYS-AFRIKAANS.md`** — 175 genommerde reëls, die app se eie woorde
-eerste. Carli, 12 Oktober 2026: *"Gaan jy 'n lang teks opstel wat iemand kan lees en jy presies
+eerste. Die eienaar, 12 Oktober 2026: *"Gaan jy 'n lang teks opstel wat iemand kan lees en jy presies
 weet watter woord hoort waar?"* Nie 'n lang teks nie: 'n lys, en die spreker sê elke nommer
 hardop voor die woord, sodat die nommer in die opname self staan en niemand hoef te raai nie.
 

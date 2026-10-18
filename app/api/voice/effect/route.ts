@@ -1,7 +1,7 @@
 /**
  * A sound effect from words: a door slamming, rain on a tin roof, a crowd.
  *
- * Carli, 14 October 2026, of the video editor's "Generate a sound": it must
+ * The owner, 14 October 2026, of the video editor's "Generate a sound": it must
  * make sound effects and music too, not only speech. Speech is
  * `/api/voice/speak`; music is `/api/music`, asked for without words. This is
  * the third: ElevenLabs' sound generation, `POST /v1/sound-generation` with

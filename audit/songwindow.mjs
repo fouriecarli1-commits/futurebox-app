@@ -1,7 +1,7 @@
 /**
  * Choosing a song, and dragging the piece of it a video is cut against.
  *
- * Carli: "Die video desk het nie 'n opsie om liedjies te kies vir 'n musiek
+ * The owner: "Die video desk het nie 'n opsie om liedjies te kies vir 'n musiek
  *  video nie. as op die music video kies, dan moet hy vir my dadelik opsies op
  *  pop van my liedjie, en 'n knoppie om een te kan upload. Dan moet die liedjie
  *  in 'n sound bar gesit word met twee dragging lines wat gecap word op die

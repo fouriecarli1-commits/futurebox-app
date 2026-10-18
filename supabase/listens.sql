@@ -3,7 +3,7 @@
 -- Loop dit ná events.sql en charts.sql, in dieselfde projek. Veilig om weer te
 -- loop.
 --
--- ── Wat Carli gevra het ────────────────────────────────────────────────────
+-- ── Wat the owner gevra het ────────────────────────────────────────────────────
 --
 --   "As ons top liedjies uitwys uit ons eie engine, track dit dan die
 --    hoeveelheid listens per liedjie?"

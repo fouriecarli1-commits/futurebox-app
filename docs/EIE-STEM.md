@@ -1,6 +1,6 @@
 # Our own voice conversion, and what it would really take to cut Kits out
 
-*Carli, 8 October 2026:*
+*The owner, 8 October 2026:*
 
 > "Ek wil die volgende doen, sodat ons kits ook eventually uitsny: So-VITS-SVC en Diff-SVC
 > gebruik gevorderde AI-argitekture om die unieke kenmerke (die timbere en klankkleur) van een
@@ -211,7 +211,7 @@ listened to before anything is built around it.
 
 ## And if Google takes the music, what takes the video?
 
-*Carli, 8 October 2026:* "Ek besef nou net ons gaan die musiek probleem vervang met google, maar
+*Die eienaar, 8 October 2026:* "Ek besef nou net ons gaan die musiek probleem vervang met google, maar
 wat van die video generation?"
 
 **The same account.** That is the whole answer and it is the reason the question is worth asking

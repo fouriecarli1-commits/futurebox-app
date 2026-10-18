@@ -1,7 +1,7 @@
 /**
  * The pages that are not the studio, in Afrikaans — and in English.
  *
- * Carli, 12 October 2026: *"Toets elke kamer se taal, daar is afrikaans in
+ * The owner, 12 October 2026: *"Toets elke kamer se taal, daar is afrikaans in
  * die engelse window by cubed class."* `check:taalvas` reads the source for
  * Afrikaans typed into the markup. This reads the SCREEN: with Afrikaans
  * chosen, the Cubed room, the guide and the kids room say their words in

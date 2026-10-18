@@ -1,7 +1,7 @@
 /**
  * The share sheet, on the phone she uses.
  *
- * Carli, with a photograph: "kyk hoe lyk dit wanneer ek 'n liedjie wil share.
+ * The owner, with a photograph: "kyk hoe lyk dit wanneer ek 'n liedjie wil share.
  *  die bars is oor al oor mekaar gedruk." And a day later, with another one:
  * "wanneer ek druk op post it lyk dit nogsteeds so."
  *
@@ -377,7 +377,7 @@ try {
   }
   /* ── And on a phone, it is the phone's own sheet ──────────────────────
 
-     Carli: "Elke foon se eie share window moet op pop. dit maak dit makliker,
+     The owner: "Elke foon se eie share window moet op pop. dit maak dit makliker,
      want op die foon is ons reeds connected aan accounts."
 
      The list of ten composers was solving a problem the phone had already

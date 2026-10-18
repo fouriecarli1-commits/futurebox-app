@@ -3,7 +3,7 @@
  *
  * ── What she reported ────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026, two things in one message:
+ * The owner, 10 October 2026, two things in one message:
  *
  *   *"by probooth se sound recording is die button donker en nie beskikbaar
  *   nie wat sê listen to songs words."*

@@ -3,7 +3,7 @@
  *
  * ── Why the booth asks ──────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Die booth moet asb op die dwars draai funksie
+ * The owner, 14 September 2026: *"Die booth moet asb op die dwars draai funksie
  * van 'n foon en tablet getoets word. Want baie mense gaan die dwarsdraai wil
  * gebruik, en dan gaan die buttons weer beter werk aan die kant van die skerm
  * en nie onder nie."*

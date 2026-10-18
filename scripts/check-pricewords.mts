@@ -7,10 +7,10 @@
  *
  * 17 October 2026. Three sentences people read had gone stale while the
  * buttons beside them were right: the copilot told people Grab was two
- * credits a week after Carli made it fifteen; the photo editor's export
+ * credits a week after the owner made it fifteen; the photo editor's export
  * panel said one credit where the button said five; the video editor said a
  * frame was five credits where it is six. A button reads `CREDITS`; a
- * sentence was typed, and nothing held it. Carli: *"Jy moet altyd alles
+ * sentence was typed, and nothing held it. The owner: *"Jy moet altyd alles
  * regmaak wat jy optel."*
  *
  * So: every sentence on the price cards that names a price is matched here

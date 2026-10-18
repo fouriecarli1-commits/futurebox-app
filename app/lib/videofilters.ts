@@ -3,7 +3,7 @@
  *
  * ── Why these are free and instant ───────────────────────────────────────
  *
- * Carli, 23 September 2026: *"Ek wonder of dit moontlik is om 'n basic video
+ * The owner, 23 September 2026: *"Ek wonder of dit moontlik is om 'n basic video
  * editor te bou? Sodat mense hulle content self kan edit? Ook met 'n paar
  * filter moontlikhede."*
  *
@@ -92,7 +92,7 @@ export const FILTERS: readonly VideoFilter[] = [
 
   /* ── Six more, 1 October 2026 ───────────────────────────────────────────
 
-     Carli: *"Ek hou daarvan dat daar filters is, meer filters sal goed
+     The owner: *"Ek hou daarvan dat daar filters is, meer filters sal goed
      wees."*
 
      Each one is a grade somebody actually reaches for, not a slot filled to

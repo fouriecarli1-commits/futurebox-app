@@ -349,7 +349,7 @@ export const RECOVERING = 'recover';
  *
  * ── Why this was missing, and what it cost ───────────────────────────────
  *
- * Carli, 23 September 2026, going through the account screens: *"ek wil net
+ * The owner, 23 September 2026, going through the account screens: *"ek wil net
  * seker maak dat die login 'n forget password funksie het."*
  *
  * It did not. There was no `resetPasswordForEmail` anywhere in this
@@ -429,7 +429,7 @@ export function onPasswordRecovery(handler: () => void): () => void {
 
 /* ── An authenticator app, for the people who want one ───────────────────
  *
- * Carli, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die app
+ * The owner, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die app
  * te beveilig met 'n authenticator app as hulle wil."*
  *
  * Optional, exactly as she said. A studio is not a bank and most members will
@@ -621,7 +621,7 @@ export const ARRIVED = 'welcome';
  *
  * ── Why the choice needs a lift ──────────────────────────────────────────
  *
- * Carli, five times: she picks Afrikaans on the sign-in page and lands in
+ * The owner, five times: she picks Afrikaans on the sign-in page and lands in
  * English. On a laptop it works. On the app installed on her phone it does
  * not. Three fixes have gone in — a ref, then localStorage, then a cookie —
  * and each one is a different place on the device to leave the choice while
@@ -716,7 +716,7 @@ const KIDS_SIGNED_IN_KEY = 'fb-kids-signed-in';
 /**
  * Whether the person in front of the kids room has just signed in, once.
  *
- * Carli, 15 October 2026: *"dan het dit sommer die grown up gedeelte
+ * The owner, 15 October 2026: *"dan het dit sommer die grown up gedeelte
  * geskip."* An account with an allowance already running opened straight
  * into the child's room — after a sign-in, which only the grown-up does. So
  * the room asks this when it opens and shows the grown-up's page first if it
@@ -744,7 +744,7 @@ export function justSignedInForKids(): boolean {
 export function backAfterSignIn(): string | null {
   if (typeof window === 'undefined') return null;
   try {
-    /* Kept in localStorage, not sessionStorage. Carli, 15 October 2026,
+    /* Kept in localStorage, not sessionStorage. The owner, 15 October 2026,
        after the first fix: *"Dit log in by my normale page, dan druk ek twee
        keer back dan wys dit eers die kids studio."* A session store belongs to
        one tab, and the round trip through Google does not always come back to
@@ -797,7 +797,7 @@ export function justArrived(): boolean {
  *
  * ── Why the list is longer than three ────────────────────────────────────
  *
- * Carli, 24 September 2026: *"Ek dink in elkgeval op daardie punt moet daar
+ * The owner, 24 September 2026: *"Ek dink in elkgeval op daardie punt moet daar
  * nog meer sign in opsies wees, ek het heel aan die begin die verskillende
  * konneksie sign ins genoem."*
  *
@@ -847,7 +847,7 @@ export type Provider = (typeof PROVIDERS)[number];
  *
  * ── "None are on" and "we could not ask" are not the same answer ─────────
  *
- * Carli, 24 September 2026: *"Die google sign in op die app het eweskielik
+ * The owner, 24 September 2026: *"Die google sign in op die app het eweskielik
  * verdwyn."*
  *
  * This used to answer `[]` three different ways — no environment variables,
@@ -907,7 +907,7 @@ export async function signInWith(
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
   /* ── From a page that is not the studio: back by way of the front door ──
-     Carli, 15 October 2026: *"Nogsteeds as ek binne die kids room sign in
+     The owner, 15 October 2026: *"Nogsteeds as ek binne die kids room sign in
      dan vat dit my na die normale futurebox toe."* The kids page asked
      Google to come back to /kids, and an address that is not on the
      Supabase project's list of allowed returns is silently swapped for the

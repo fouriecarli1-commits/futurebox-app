@@ -5,7 +5,7 @@
  *
  * ── Why this page exists ─────────────────────────────────────────────────
  *
- * Carli, five separate times: she chooses Afrikaans on the sign-in page and
+ * The owner, five separate times: she chooses Afrikaans on the sign-in page and
  * lands in English. On a laptop it works. On the app installed on her phone it
  * does not. Three fixes have gone in — a React ref, then localStorage, then a
  * cookie — and each was a different guess about which of four things fails on

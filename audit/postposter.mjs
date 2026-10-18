@@ -1,7 +1,7 @@
 /**
  * The poster maker, walked on a phone.
  *
- * Carli, 16 October 2026: a poster maker with three ways in. Read off the
+ * The owner, 16 October 2026: a poster maker with three ways in. Read off the
  * glass and off what is sent: it opens from beside Bring a picture in; its
  * button says its price and waits until there is something to draw; a kind
  * sends its look and asks for words in her language; the poster comes back

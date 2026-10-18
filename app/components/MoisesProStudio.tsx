@@ -3,7 +3,7 @@
 /**
  * Moises-style AI Audio & Stems Studio for ProBooth.
  *
- * Implements the 5 reference screens provided by Carli:
+ * Implements the 5 reference screens provided by the owner:
  *   1. Left Stem Mixer Console (Vocals, Background Vocals, Drums, Bass,
  *      Lead Guitar, Rhythm Guitar, Other, Smart Metronome) with Mute (M),
  *      Solo (S), cyan horizontal level faders, and Rotary Pan Knobs (L - R).

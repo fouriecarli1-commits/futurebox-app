@@ -465,11 +465,9 @@ if (!existsSync(LEGAL_PAGE)) {
   fail('the supplier disclosure page exists', `${LEGAL_PAGE} is missing`);
 } else {
   const page = readFileSync(LEGAL_PAGE, 'utf8');
-  /* Both contact rows, because section 43(1) asks for a telephone number
-     (b) and an e-mail address (c). The page renders the telephone row whether
-     or not a number is set — an unset one says so in words rather than
-     disappearing — so this stays a fair thing to require of the source. */
-  for (const wanted of ['Registered name', 'Registration number', 'Registered address', 'Telephone', 'Email']) {
+  /* The company's name, and the further particulars on request: the owner's
+     decision of 18 October 2026, and `check:entity` holds the detail. */
+  for (const wanted of ['Registered name', 'Further particulars', 'given on']) {
     if (!page.includes(wanted)) {
       fail('the disclosure page carries what ECTA asks for', `no "${wanted}" on ${LEGAL_PAGE}`);
     }

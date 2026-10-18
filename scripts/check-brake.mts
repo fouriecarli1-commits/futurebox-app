@@ -87,7 +87,7 @@ forgetEverything();
  * every voice route — the ones that spend ElevenLabs and Kits — had nothing.
  * `docs/SAFETY-REVIEW.md` even recorded the state as complete.
  *
- * Carli, 9 September 2026: "kan een retry op enige funksie nie gestop word
+ * The owner, 9 September 2026: "kan een retry op enige funksie nie gestop word
  * nie, kan ons nie iets in bou wat dit stop nie?"
  *
  * So this is discovered rather than listed: any route that reaches a supplier

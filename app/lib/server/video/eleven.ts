@@ -34,7 +34,7 @@
  *
  * ── And support answered: not on this plan, ever ─────────────────────────
  *
- * ElevenLabs, 10 September 2026, to Carli:
+ * ElevenLabs, 10 September 2026, to the owner:
  *
  *   "I checked internally and Seedance models are available via API for
  *    Enterprise customers, who can request access... As such, it won't be

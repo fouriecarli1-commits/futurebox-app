@@ -1,6 +1,6 @@
 # Wat jy moet uitsorteer — die generate-funksies en POPIA
 
-Carli, 3 Oktober 2026: *"Maak dan asb 'n nota vir my van die generate en popia
+Die eienaar, 3 Oktober 2026: *"Maak dan asb 'n nota vir my van die generate en popia
 ding wat ek moet uitsorteer. Ek is nie by 'n rekenaar om hierdie goed te doen
 nie."*
 

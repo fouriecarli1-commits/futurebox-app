@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 16 October 2026, a poster maker open on her phone with three ways
+ * The owner, 16 October 2026, a poster maker open on her phone with three ways
  * in: describe it, pick what kind of poster it is, or fill in its lines.
  * Planned on the 17th as one sheet in the photo editor, drawn by the same
  * engine and the same route as the magic touch — so the same price, said

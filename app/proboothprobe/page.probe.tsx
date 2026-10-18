@@ -20,7 +20,7 @@
  * painted **over** the bottom of the room. Rendering the room alone tests a
  * screen nobody has.
  *
- * Carli, 9 September 2026, from a phone: "hoe export mens of bring alles by
+ * The owner, 9 September 2026, from a phone: "hoe export mens of bring alles by
  * mekaar? Iets soos 'n mix together knoppie?" The button was there. The bar
  * was on top of it.
  *

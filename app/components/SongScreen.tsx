@@ -6,7 +6,7 @@
  * ── What this is ─────────────────────────────────────────────────────────
  *
  * The channel is a grid of small cards, which is right for finding a song and
- * wrong for listening to one. Carli, pointing at a phone: tap a song and it
+ * wrong for listening to one. The owner, pointing at a phone: tap a song and it
  * should open full screen like TikTok, swipe up for the next, and on a song
  * with no video the words should be on the screen, moving and highlighting
  * with the music.
@@ -355,7 +355,7 @@ export default function SongScreen({
 
                 {/* ── Whose it is ──────────────────────────────────────────
 
-                    Carli: "wys die liedjie se naam op die liedjie window, die
+                    The owner: "wys die liedjie se naam op die liedjie window, die
                     artist name, en die genre van die liedjie."
 
                     The name was here and the genre was here, folded into a

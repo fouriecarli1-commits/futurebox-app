@@ -3,7 +3,7 @@
  *
  *   npm run check:filmstrip
  *
- * Carli, 8 October 2026: *"Hoe moontlik is dit om die video se visuals op die
+ * The owner, 8 October 2026: *"Hoe moontlik is dit om die video se visuals op die
  * tydlyn te wys? Dit gaan dit makliker maak om te weet waar om te cut ens."*
  *
  * A block used to carry a name and a duration, which says WHICH shot it is

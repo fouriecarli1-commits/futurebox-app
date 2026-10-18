@@ -1,6 +1,6 @@
 # What the Kits.AI terms let FutureBox do
 
-Read against the documents Carli pasted on 15 September 2026: the **Kits
+Read against the documents the owner pasted on 15 September 2026: the **Kits
 Royalty-Free AI Model License Terms** (Arpeggi, Inc.) and six help-centre
 answers on rights, datasets, licences and API access.
 

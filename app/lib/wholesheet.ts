@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek dink ook die liedjie se woord moet ook op 'n
+ * The owner, 10 October 2026: *"Ek dink ook die liedjie se woord moet ook op 'n
  * button beskikbaar wees, waar die hele liedjie se woorde kan op pop vir
  * iemand wat so wil record en die woorde in die geheel wil sien."*
  *

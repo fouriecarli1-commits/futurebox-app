@@ -5,7 +5,7 @@
  *
  * ── Where it comes from ──────────────────────────────────────────────────
  *
- * `docs/PACKAGING.md` §2, read off the screenshots Carli sent:
+ * `docs/PACKAGING.md` §2, read off the screenshots the owner sent:
  *
  *     ┌──────────────────────────────────────┐
  *     │  ⌄  The words                   [✨] │   collapse, and fill it in
@@ -28,7 +28,7 @@
  * ── Every card starts shut ───────────────────────────────────────────────
  *
  * This used to open, and `startShut` was the exception a few panels asked
- * for. Carli, 12 September 2026:
+ * for. The owner, 12 September 2026:
  *
  *   "when I open the video desk, can all the drop down menus be closed, and
  *    not open, then the user can open it. Then that desk would also look
@@ -112,7 +112,7 @@ export default function Card({
   /**
    * A warm card, for a fold whose whole job is to be opened.
    *
-   * Carli, 14 September 2026, of the studio's regeneration notice: "Maak
+   * The owner, 14 September 2026, of the studio's regeneration notice: "Maak
    * daai a new take boksie lig geel sodat mense dit wel oop maak." She is
    * right, and the reason is the one thing a fold costs you — a shut card
    * is a heading in a row of identical headings, and the reader decides

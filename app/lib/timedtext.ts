@@ -3,7 +3,7 @@
  *
  * ── Where this came from ─────────────────────────────────────────────────
  *
- * Carli, 8 October 2026, with a song she had just made: *"wat dit awesome
+ * The owner, 8 October 2026, with a song she had just made: *"wat dit awesome
  * maak dat dit dadelik 'n video en album art saam create wat ek vir ons
  * engine ook sal wil hê."*
  *

@@ -49,7 +49,7 @@ export async function enter({
      Playwright's desktop Chromium reports a *fine* pointer whatever viewport
      it is handed, so a probe that only shrinks the window is measuring the app
      with those rules switched off. That is how the share sheet passed three
-     rounds of measurement while Carli was holding a photograph of it failing. */
+     rounds of measurement while the owner was holding a photograph of it failing. */
   /* `scale` is the screen's pixel density: 3 makes a 360-wide phone a
      1080-pixel picture, which is what the Play Store's screenshots want. */
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale, ...(touch ? { hasTouch: true } : {}) });
@@ -379,7 +379,7 @@ export async function studio(page) {
      me to the feed".
 
      On 4 October that button started doing what it says. It used to only lower
-     the door, leaving whatever room was behind it — Carli: *"Daai not now -
+     the door, leaving whatever room was behind it — the owner: *"Daai not now -
      take me to the feed button vat my na die video editor."* It now calls the
      app's own `goTab('spotlight')`, which closes the studio as well, because
      the feed is not inside the studio.
@@ -403,7 +403,7 @@ export async function studio(page) {
  * rail in it — so it dismisses the door on the way through. A handful of
  * probes want the door itself, because the door IS the studio's home page:
  * the greeting is on it, the room buttons are on it, and so is the music
- * quiz card, which Carli asked for "op die home page onder van die creative
+ * quiz card, which the owner asked for "op die home page onder van die creative
  * studio".
  *
  * Split out because the two are not the same destination and sharing one
@@ -494,7 +494,7 @@ export async function pressTab(page, label) {
   }
 
   /* ── And the room that took the bar away ──────────────────────────────
-     Carli, 4 October 2026, about the cutting room: she asked for the room to
+     The owner, 4 October 2026, about the cutting room: she asked for the room to
      BE the screen. So `roomOwnsScreen` drops the app's bar entirely there,
      and `check:underbar` holds it that way — "the app's bar is away while
      the room IS the screen".
@@ -616,7 +616,7 @@ export async function toRoom(page, name, { folded = false } = {}) {
     }
     /* The card, if the room draws one — and `:visible`, which it did not ask.
 
-       The cutting room stopped drawing it on 4 October: Carli asked for *"net
+       The cutting room stopped drawing it on 4 October: the owner asked for *"net
        'n back knoppie"* and the arrow in the top-left corner already made the
        same press, so the card is `hidden` there rather than removed. `count()`
        still finds a hidden button, so this helper picked it, waited thirty
@@ -663,7 +663,7 @@ export async function toRoom(page, name, { folded = false } = {}) {
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 12 September 2026: "Make sure every rooms drop down menu is closed
+ * The owner, 12 September 2026: "Make sure every rooms drop down menu is closed
  * from the beginning and the user can open it." So `Card` starts shut, and
  * a room now opens as its own table of contents.
  *

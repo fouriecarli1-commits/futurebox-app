@@ -41,7 +41,7 @@ export interface TimedLine {
   /**
    * When each word was really sung, if the song was listened to.
    *
-   * Carli, 14 October 2026: *"dan hardloop daar 'n neon kleur oor die woorde,
+   * The owner, 14 October 2026: *"dan hardloop daar 'n neon kleur oor die woorde,
    * om te wys waar die woorde is"*. The sweep runs over the word being sung,
    * and a transcriber hands back a start and an end for every word — which
    * `linesFrom` used to throw away when it joined them into lines. Absent on
@@ -98,7 +98,7 @@ export function partsOf(lyrics: string): Part[] {
  * posted from the Library carried its words and the same song posted from
  * inside Live carried none, and the room showed nothing to read along with.
  *
- * Carli, 15 September 2026: *"Die woorde van die liedjies speel nogsteeds nie
+ * The owner, 15 September 2026: *"Die woorde van die liedjies speel nogsteeds nie
  * in die live room nie."* Twice reported, because the first fix was made in
  * one of the two places that post.
  */

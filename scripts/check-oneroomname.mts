@@ -3,7 +3,7 @@
  *
  * ── Why this is worth a check of its own ─────────────────────────────────
  *
- * Carli said it twice, four days apart: *"die naam is nogsteeds nie verander
+ * The owner said it twice, four days apart: *"die naam is nogsteeds nie verander
  * nie"*, and then *"Die video editor se naam het steeds nie verander nie."*
  *
  * I went looking in the app's metadata both times, found a stale title there,

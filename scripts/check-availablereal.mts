@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 30 September 2026: *"Copilot doesnt want to work."* She asked the
+ * The owner, 30 September 2026: *"Copilot doesnt want to work."* She asked the
  * Make tab for an eight-second shot, twice, and got back **"The key this app
  * uses was rejected. Nothing has been charged."** both times.
  *

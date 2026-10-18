@@ -3,7 +3,7 @@
  *
  * ── The regression this exists for ───────────────────────────────────────
  *
- * Carli, 14 September 2026: *"As hy een keer geluister het moet hy die woorde
+ * The owner, 14 September 2026: *"As hy een keer geluister het moet hy die woorde
  * stoor op die liedjie en dit hou. Mens kan nie oor en oor met krediete
  * betaal nie."*
  *

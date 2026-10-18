@@ -59,7 +59,7 @@ export default function SingCheck() {
    * `?words=none` mounts the branch a song with no lyrics shows.
    *
    * It is a different panel, not the same one emptied — its own paragraph and
-   * its own button — and it is the one Carli photographed on 14 September
+   * its own button — and it is the one the owner photographed on 14 September
    * 2026 with both labels nearly invisible. A probe that can only reach the
    * screen with words on it cannot measure the screen she was looking at.
    *

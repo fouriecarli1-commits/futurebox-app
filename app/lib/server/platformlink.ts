@@ -114,7 +114,7 @@ export function readPlatformLink(
  *
  * ── Why the room's message box became this ───────────────────────────────
  *
- * Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
+ * The owner, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
  * werk moet daar net tiktok live links gedeel word."*
  *
  * The box took five hundred characters of anything. Free text in a room of

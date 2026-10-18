@@ -1,7 +1,7 @@
 /**
  * The photo editor's charts, walked on a phone.
  *
- * Carli, 17 October 2026: *"In photo editor sal daar ook graph templates
+ * The owner, 17 October 2026: *"In photo editor sal daar ook graph templates
  * moet wees, en verskillende verskeidenheid van graphs. Wat cool sal wees as
  * dit AI verstelbaar is dat data ingevoer kan word en AI die data in die
  * grafiek verstel."*
@@ -108,7 +108,7 @@ try {
   const afterAi = await page.locator('[data-postchartlabel]').evaluateAll((all) => all.map((one) => one.value));
   check('  and its answer becomes the chart', afterAi.join() === 'Jan,Feb,Mar,Apr' && (await page.locator('[data-postcharttitle]').inputValue()) === 'From the AI', afterAi.join());
 
-  /* Carli, 17 October 2026: closing the panel hid the chart behind the
+  /* The owner, 17 October 2026: closing the panel hid the chart behind the
      start card on a post with no photo. It stays in sight. */
   await tool('charts');
   await page.waitForTimeout(500);

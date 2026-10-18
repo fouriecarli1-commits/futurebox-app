@@ -77,7 +77,7 @@ ok('the transport shows the bar', /sayPlace\(placeAt\(/.test(booth));
    audio. Drawing the lines inside the wave was the only way to make them
    agree with it.
  
-   Carli, 14 September 2026: *"Die timeline van die verskillende layers moet
+   The owner, 14 September 2026: *"Die timeline van die verskillende layers moet
    reg by en teen mekaar wees."* The layout is the thing that changed. One CSS
    grid with a fixed gutter and one `1fr` column puts the ruler and every lane
    in the SAME column, so there is now a single mapping from seconds to pixels

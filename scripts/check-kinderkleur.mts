@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
+ * The owner, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
  * dit moet colourful en exciting wees… dit moet vol kleur en excitement
  * wees, en selfs die uitleg moet anders en uniek wees as die status quo."*
  *
@@ -209,7 +209,7 @@ ok('  and no compliance claim is drawn on the wall as decoration',
 
 /* ── 6. Brighter is not looser ────────────────────────────────────────── */
 
-/* This held "nothing to type in this room" until Carli, 12 October 2026:
+/* This held "nothing to type in this room" until the owner, 12 October 2026:
    "daar is kinders wat kan tik." One box, then, and only one — and what is
    typed goes to /api/music where `guard` reads every prompt, capped to one
    line (`check:kinderliedjie` holds both). The rule is narrower, not gone. */

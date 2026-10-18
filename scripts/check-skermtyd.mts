@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek dink die kids afdeling moet by login page wees.
+ * The owner, 10 October 2026: *"Ek dink die kids afdeling moet by login page wees.
  * Daar moet dan die opsie wees om in die kids channel in te log. Dan moet die
  * ouers die budget en screen time kan stel. Wanneer screen time op is moet dit
  * die kind uitskop."*

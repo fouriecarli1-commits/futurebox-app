@@ -3,7 +3,7 @@
  *
  *   npm run check:pdfwork
  *
- * Carli, 17 October 2026: a PDF workbench — organise, combine, comment,
+ * The owner, 17 October 2026: a PDF workbench — organise, combine, comment,
  * edit, fill and sign, redact, protect, convert. What goes wrong quietly in
  * a PDF is the file that opens in this room and nowhere else, a page turned
  * the wrong way, a signature that lands upside down on a rotated page, or a
@@ -129,11 +129,11 @@ ok('words on a turned page land where they were put on the page as shown', uprig
 /* ── Forms ── */
 const fields = await formFields(baked);
 ok('the room finds the fields to fill', fields.some((one) => one.name === 'Full_name' && one.kind === 'text') && fields.some((one) => one.name === 'Agree' && one.kind === 'check'), JSON.stringify(fields));
-const filled = await fillForm(baked, { Full_name: 'Carli Fourie', Agree: true });
+const filled = await fillForm(baked, { Full_name: 'Lerato Dlamini', Agree: true });
 const filledFields = await formFields(filled);
-ok('  and fills them', filledFields.find((one) => one.name === 'Full_name')?.value === 'Carli Fourie' && filledFields.find((one) => one.name === 'Agree')?.value === true);
-const flat = await read(await fillForm(baked, { Full_name: 'Carli Fourie' }, true));
-ok('  and flattened, the answer is part of the page', flat.pages[2].words.includes('Carli Fourie') && !flat.pages[2].annots.includes('Widget'), flat.pages[2].words);
+ok('  and fills them', filledFields.find((one) => one.name === 'Full_name')?.value === 'Lerato Dlamini' && filledFields.find((one) => one.name === 'Agree')?.value === true);
+const flat = await read(await fillForm(baked, { Full_name: 'Lerato Dlamini' }, true));
+ok('  and flattened, the answer is part of the page', flat.pages[2].words.includes('Lerato Dlamini') && !flat.pages[2].annots.includes('Widget'), flat.pages[2].words);
 
 /* ── Whole document ── */
 const edged = await read(await headerFooter(base, { header: 'Contract', footer: 'Page {n} of {total}', numbers: 'none', size: 9, align: 'centre' }));

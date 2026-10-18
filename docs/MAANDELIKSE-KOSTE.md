@@ -1,6 +1,6 @@
 # Wat FutureBox elke maand kos
 
-Carli, 7 September 2026: *"ek wil net hê ons moet konstant in ag neem wat ek
+Die eienaar, 7 September 2026: *"ek wil net hê ons moet konstant in ag neem wat ek
 alles maandelliks betaal want dit help nie ek maak nie 'n wins nie."*
 
 Hierdie bladsy bestaan omdat die getal voorheen nêrens uitgewerk was nie.
@@ -19,7 +19,7 @@ winssomme gebruik, en elke diens met 'n sleutel moet daardie sleutel in
 
 Randkoers **R16 = $1**, dieselfde aanname as `app/lib/plans.ts`.
 
-**BTW.** Carli se egte ElevenLabs-faktuur is $113,85 waar die plakkerprys $99
+**BTW.** Die eienaar se egte ElevenLabs-faktuur is $113,85 waar die plakkerprys $99
 is — en $99 × 1,15 = $113,85, tot die sent. Dit is 15% Suid-Afrikaanse BTW, en
 tot 8 September 2026 was dit **nêrens** op hierdie bladsy of in
 `docs/KOSTE-EN-WINS.md` nie. Elke dollarbedrag hier was 'n plakkerprys.
@@ -36,7 +36,7 @@ reggemaak is, net in die ander rigting.
 | 1 | **ElevenLabs** | musiek, stemme, stem-skeiding, video | R18 216 (Business, BTW in) | vas | **BTW ja** — teen haar eie faktuur, 8 Sept. Die $990 self kom van hulle prysbladsy |
 | 2 | **Anthropic** | die kopiloot, die liedjieskrywer, die advertensies | R1 500 | vas, skatting | **nee** — 'n skatting, nie 'n faktuur nie |
 | 3 | **Vercel** | waar dit loop | R320 (Pro) | vas | nee — afgelei, sien hieronder |
-| 4 | **Supabase** | rekeninge, liedjies, die kanaal | **R544** ($34, Pro) | vas | **ja** — opgegradeer 24 Sept, bedrag van Carli af |
+| 4 | **Supabase** | rekeninge, liedjies, die kanaal | **R544** ($34, Pro) | vas | **ja** — opgegradeer 24 Sept, bedrag van die eienaar af |
 | 5 | **Resend** | uitnodigings, wagwoorde, kennisgewings | R64 ($4) | vas | nee |
 | 6 | **Werkswinkels** | die masterclass-inhoud | R4 000 | vas, opsioneel | ja |
 | 7 | **Music.ai** | akkoorde, toonaard, tempo, benoemde stukke | per minuut klank | per gebruik | **nee** — music.ai is ook geblokkeer |
@@ -47,7 +47,7 @@ reggemaak is, net in die ander rigting.
 | 12 | **Zoho** | die posbus agter die domein | R241,50 (BTW in) | vas | **ja** — van haar staat af, 8 Sept |
 | 13 | **Domeine** | die name self | R168 | vas | **ja** — van haar staat af, 8 Sept |
 | 14 | **Spaceship** | domeinregistrateur | $13,14 = R210,24 | vas | **ja** — van haar staat af, 8 Sept |
-| 15 | **Antigravity** | Google se ontwerp-werkbank, waarin die voorkoms van die toep gedoen word — sien `docs/ANTIGRAVITY.md` | R109,99 | vas | **ja** — bedrag van Carli af, 11 Okt |
+| 15 | **Antigravity** | Google se ontwerp-werkbank, waarin die voorkoms van die toep gedoen word — sien `docs/ANTIGRAVITY.md` | R109,99 | vas | **ja** — bedrag van die eienaar af, 11 Okt |
 
 ### Die vaste totaal, uitgewerk
 
@@ -80,7 +80,7 @@ en `R26 013,73` is die getal waarteen gelykbreek uitgewerk word.
 **Is die R168 se domeine dieselfde domeine wat by Spaceship staan?**
 
 Spaceship is self 'n domeinregistrateur. Hulle staan hier as twee reëls omdat
-Carli hulle met 'n "en" tussenin genoem het, wat hulle apart maak. As dit
+Die eienaar hulle met 'n "en" tussenin genoem het, wat hulle apart maak. As dit
 eintlik een ding is, tel ons dit twee keer en die rekening is **R210,24 te
 hoog**.
 
@@ -96,7 +96,7 @@ die bank dit trek.
 **Twee reëls het teen mekaar gestaan, en albei is op 16 September 2026
 opgelos.**
 
-Die R64 het hier Resend gesê en in die generator GitHub. Carli het dit
+Die R64 het hier Resend gesê en in die generator GitHub. Die eienaar het dit
 beantwoord: **Resend is reg, GitHub is nie op die lys nie** — GitHub kos haar
 niks. Die generator dra nou dieselfde naam.
 
@@ -108,7 +108,7 @@ die verkeerde bedrag teen die verkeerde diens gehad.
 
 Hierdie paragraaf het gesê **Supabase Pro is $25**, afgelei uit hulle
 gepubliseerde prys, en het bygevoeg dat die eerste regte staat dit seker sal
-maak. Op 24 September 2026 het Carli opgegradeer en gesê wat sy betaal:
+maak. Op 24 September 2026 het die eienaar opgegradeer en gesê wat sy betaal:
 
 > *"Supabase is nou geupgrade na pro." ... "Dit is 34 dollars 'n maand."*
 
@@ -241,7 +241,7 @@ rekening kom, gaan hierdie drie na en werk die tabel by:
 1. **Anthropic R1 500** — die grootste skatting op die bladsy en die maklikste
    om verkeerd te hê. Die kopiloot loop op elke skerm.
 
-   **19 September 2026 — prompt caching aan, saldo leeg.** Carli se saldo het
+   **19 September 2026 — prompt caching aan, saldo leeg.** Die eienaar se saldo het
    opgeraak en die skryfhulp het gaan staan. Daarmee saam is gevind dat geen
    een van die elf model-routes gekas het nie: elke druk het die hele vaste
    instruksieblok teen vol prys gestuur, woord vir woord dieselfde as die
@@ -291,7 +291,7 @@ rekening kom, gaan hierdie drie na en werk die tabel by:
    512-token vloer en kas dus niks, ook nie met die merker op nie. Dit is nie
    'n fout nie — die merker wag tot die prompt groei — maar dit beteken die
    besparing kom van `help`, `copilot` en `songfrom`, en van nêrens anders nie.
-2. ~~**ElevenLabs se planne**~~ — **klaar, 8 September 2026.** Carli het hulle
+2. ~~**ElevenLabs se planne**~~ — **klaar, 8 September 2026.** Die eienaar het hulle
    prysbladsy gestuur. Musiek kos $0,15 per minuut en 'n plan is 'n
    dollar-begroting; die volledige lys en wat dit aan die winssomme doen staan
    in `docs/ELEVENLABS-PRYSE.md`. Kortweg: 'n liedjie kos ons R4,80 en nie

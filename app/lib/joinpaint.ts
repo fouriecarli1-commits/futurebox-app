@@ -4,7 +4,7 @@
  *
  * The export (`stitch.ts`) and the toolbox's little moving pictures both call
  * `paintJoin`, so what a transition looks like in the list is exactly what it
- * does to the film — Carli's screenshots put a picture beside every
+ * does to the film — the owner's screenshots put a picture beside every
  * name, and a picture drawn by different code would be a promise this file
  * could break.
  *

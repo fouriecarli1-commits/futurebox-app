@@ -113,7 +113,7 @@ daardie lid druk dieselfde knoppies.
 | `podcast` | A show with its own feed: episodes, hosts, and the dub into other languages.. |
 | `sound` | Training a sound of your own from songs you have already made, so the next ones come out sounding like them.. |
 | `campaign` | Adverts: a brief in, and a set of adverts out — the line, the words under it, the button, the line to say aloud, and the shot to film. |
-| `albumart` | Album art by real artists: a wall of one-off pieces at R200 and up, each sold exactly once, and a way to commission a painter for a particular song.. |
+| `albumart` | Album art by real artists: a wall of one-off pieces at R280 each, each sold exactly once, and a way to commission a painter for a particular song.. |
 
 ---
 

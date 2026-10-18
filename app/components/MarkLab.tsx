@@ -4,7 +4,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Vra ons google partner om vir ons logo te maak?
+ * The owner, 10 October 2026: *"Vra ons google partner om vir ons logo te maak?
  * Joune is baie primitief."* And: *"Het jy vir google gevra sonder jou
  * voorbeelde?"*
  *

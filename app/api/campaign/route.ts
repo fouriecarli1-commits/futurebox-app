@@ -33,6 +33,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { tooMany } from '@/app/lib/server/brake';
@@ -131,6 +132,7 @@ const SYSTEM = [
   '- No named living person, no real brand other than theirs, no borrowed slogan.',
   '- No urgency that is not real: no invented deadline, no invented stock level.',
   `${AFRIKAANS_RULE}`,
+  `${DISCRETION_RULE}`,
 ].join('\n');
 
 function briefFor(body: Body): string {
@@ -207,7 +209,7 @@ export async function POST(request: Request): Promise<Response> {
      `tooMany` stops a loop; it does not decide who may be here or what this
      costs. Until 24 September 2026 that was the whole of the protection on
      this route: anybody signed out could take eight ad-writing calls a minute
-     off Carli's Anthropic account forever, free.
+     off the owner's Anthropic account forever, free.
 
      The desk is in every paid plan now and the writing comes out of the same
      credits as a song — `CREDITS.adLines`, worked back from this call's own

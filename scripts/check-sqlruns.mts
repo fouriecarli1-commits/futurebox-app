@@ -15,7 +15,7 @@
  * A `timestamptz` cast to a `date` depends on the session's TimeZone, so the
  * expression can give a different answer tomorrow than today — and an index
  * has to give the same one. Nothing in this repository could have told us.
- * The file was written, reviewed, committed, bundled, and handed to Carli to
+ * The file was written, reviewed, committed, bundled, and handed to the owner to
  * paste into the SQL editor, where she would have read an error and had no
  * table.
  *
@@ -197,10 +197,10 @@ psql(BUNDLE_DB, ['-f', 'scripts/sql-stubs.sql']);
  * project: `events` was ordered after the two files that alter it, and
  * `usage` after the file whose `language sql` function reads its table. So
  * listens, charts and event counting were dead on any project built the
- * way Carli is told to build one, and the errors scrolled past in a
+ * way the owner is told to build one, and the errors scrolled past in a
  * Supabase editor that does not stop.
  *
- * Carli, 23 September 2026: *"Is daar enige sql? Dit voel asof jy niks
+ * The owner, 23 September 2026: *"Is daar enige sql? Dit voel asof jy niks
  * gefix het nie."*
  *
  * Stubs only now. The stubs are `auth.users` and the storage tables —
@@ -496,7 +496,7 @@ if (placeholder) {
 
   /* ── The child's allowance actually stops ─────────────────────────────
  
-     Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+     The owner, 9 October 2026: *"Let the parent give an allowance on an opening
      page."* The page is a page; `kids_spend` is the allowance. Driven here
      rather than read, because a limit that is off by one in the direction
      that matters looks exactly like a limit that works — right up to the
@@ -542,7 +542,7 @@ if (placeholder) {
 
   /* ── And the clock stops a press as well as the screen does ────────
  
-     Carli, 10 October 2026: *"Wanneer screen time op is moet dit die kind
+     The owner, 10 October 2026: *"Wanneer screen time op is moet dit die kind
      uitskop."* The room closing itself is the polite half: a page can be
      reloaded, opened in a second tab, or left open while the clock runs
      out. If the only thing stopping a press were the page, a child who

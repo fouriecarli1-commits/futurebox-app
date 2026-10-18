@@ -59,7 +59,7 @@ function nextStep(have: number, wrong: readonly string[], unset: readonly string
       + ' `yourWorkflows` below into it in Vercel, then redeploy.';
   }
   /* The answer this page did not have on 6 October 2026, which is the day
-     Carli got everything right and was told to go and do it.
+     The owner got everything right and was told to go and do it.
 
      Three branches were written — no workflows, a wrong slug, and a default
      that assumed something was still missing — and the state where nothing

@@ -3,7 +3,7 @@
  *
  * ── Why this is arithmetic and not a screen ──────────────────────────────
  *
- * Carli, 7 October 2026: *"magic eraser"*. The algorithm is ours — the
+ * The owner, 7 October 2026: *"magic eraser"*. The algorithm is ours — the
  * background remover's model is Google's, but every pixel this writes is
  * written by `app/lib/erase.ts` — so the only honest test is to put known
  * pixels in and check the ones that come out.

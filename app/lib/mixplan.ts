@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"AI icon (Copilot pop op en vra dat persoon 'n
+ * The owner, 14 September 2026: *"AI icon (Copilot pop op en vra dat persoon 'n
  * mixing voorstel en copilot kan die mixing verander volgens die vraag en
  * voorstel)"* — the copilot asks for a mixing suggestion and can change the
  * mix according to it.

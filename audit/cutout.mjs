@@ -3,7 +3,7 @@
  *
  * ── Two halves, and only one of them is ours ─────────────────────────────
  *
- * Carli, 7 October 2026: *"BG remover"*. Google's model decides what is a
+ * The owner, 7 October 2026: *"BG remover"*. Google's model decides what is a
  * person. `maskOnto` decides what that answer does to her picture. They fail
  * in completely different ways and this walk tests them separately.
  *
@@ -28,7 +28,7 @@
  * nothing that can be drawn into a canvas is one: a flat rectangle, a
  * gradient and a drawn figure all come back as nobody, correctly. That needs
  * a photograph and a human looking at the result. It is written down in
- * `docs/EDITING-TOOLS.md` as the one thing waiting on Carli rather than
+ * `docs/EDITING-TOOLS.md` as the one thing waiting on the owner rather than
  * pretended at here.
  *
  * ── Which is why there is a bench page ───────────────────────────────────
@@ -93,7 +93,7 @@ try {
       normal > bare * 1.8,
       `${normal} pixels part way against ${bare} with no feather — the shipped`
       + ' version stretched a 256-square mask over a whole photograph, which is'
-      + ' the staircase and the streaks Carli photographed');
+      + ' the staircase and the streaks the owner photographed');
     check('  and each edge is a real step from the one before it',
       tight < normal && normal < softest && tight > 0,
       `${tight} / ${normal} / ${softest} — three buttons that all do the same`
@@ -122,7 +122,7 @@ try {
       normalStair > 0 && normalStair <= 2,
       `the edge jumps ${normalStair} pixels sideways between neighbouring rows,`
       + ` where one mask pixel is ${bench.scale} — a jump the size of a mask`
-      + ' pixel IS the staircase, and it is what Carli photographed twice');
+      + ' pixel IS the staircase, and it is what the owner photographed twice');
     check('  and better than the single jump that shipped',
       rawStair > normalStair,
       `${rawStair} in one jump at the browser's default quality against`
@@ -136,7 +136,7 @@ try {
 
     /* ── And the blur that keeps the person sharp ─────────────────────
  
-       Carli's list, 7 October 2026: *"auto focus, blur"*. Measured on
+       The owner's list, 7 October 2026: *"auto focus, blur"*. Measured on
        vertical stripes, because a blur is only visible as a loss of
        difference between neighbouring pixels and flat colour has none to
        lose: a blur over red is red, and every reading of it would pass.
@@ -145,7 +145,7 @@ try {
        half so the feather at the seam is not what is being measured. */
     /* ── The model answers a probability, not a yes ───────────────────
 
-       Carli, 8 October 2026, with a photograph of her own face cut out:
+       The owner, 8 October 2026, with a photograph of her own face cut out:
        *"Dit is hoe die bg remover nou lyk."* The checkerboard was showing
        THROUGH her, and everything below her chin had gone.
 
@@ -242,7 +242,7 @@ try {
   /* ── The bench with the picture row on it, opened first ───────────────
  
      The room's tools live behind a bar along the bottom since 7 October —
-     Carli: *"Die editing tools moet ook onder in 'n bar wees."* So the file
+     The owner: *"Die editing tools moet ook onder in 'n bar wees."* So the file
      input is not in the page until the bench holding it is open, and a walk
      written against the old long scroll fell over on `null.files` with no
      clue that the room had simply changed shape. */

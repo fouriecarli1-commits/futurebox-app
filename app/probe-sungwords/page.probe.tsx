@@ -6,7 +6,7 @@
  *
  * ── Why a page and not a source check ────────────────────────────────────
  *
- * `check:recordroom` reads `VocalBooth.tsx` and holds the one cause Carli
+ * `check:recordroom` reads `VocalBooth.tsx` and holds the one cause the owner
  * named in September: the read-the-words row. It says out loud what it does
  * not claim — *"'Alles hop rond' may have more than this one cause"* — and
  * the rest of it turned out to be the words themselves. A source check could

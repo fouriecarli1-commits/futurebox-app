@@ -17,7 +17,7 @@
  * So this is the seam: the app asks for a recording in a voice, and does not
  * know who answers. Kits answers today.
  *
- * Carli, 8 October 2026: *"gaan aan met die seam."*
+ * The owner, 8 October 2026: *"gaan aan met die seam."*
  *
  * ── What is in the shape, and why so little ──────────────────────────────
  *

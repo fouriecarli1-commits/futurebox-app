@@ -93,7 +93,7 @@ for (const name of unique) {
   }
   /* ── A skip is not a pass ─────────────────────────────────────────
    *
-   * Carli, 23 September 2026: *"Is daar enige sql? Dit voel asof jy niks
+   * The owner, 23 September 2026: *"Is daar enige sql? Dit voel asof jy niks
    * gefix het nie."*
    *
    * `check:sqlruns` needs a Postgres and exits 0 without one, printing

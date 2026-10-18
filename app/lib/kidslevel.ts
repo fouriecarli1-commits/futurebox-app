@@ -3,7 +3,7 @@
  *
  * ── Where it came from ───────────────────────────────────────────────────
  *
- * Carli, 13 October 2026, with the "Kids Dream Studio" page Google drew:
+ * The owner, 13 October 2026, with the "Kids Dream Studio" page Google drew:
  * the corner of it has a robot face, "Level 5" and a bar under it, and the
  * foot of it an "Achievements" door. Both are good ideas for a child, and
  * both are the kind of thing that arrives as decoration: a number typed

@@ -1,7 +1,7 @@
 /**
  * Photo templates the owner saves, for every member's photo editor.
  *
- * Carli, 16 October 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
+ * The owner, 16 October 2026: *"Hoe hou ons sulke cool templates? Moet ons dit
  * generate en oor tyd op bou?"* The app carries a starting set
  * (`lib/postdesigns.ts`); this is the set that grows — she makes a post she
  * likes and saves it as a template.

@@ -3,7 +3,7 @@
  *
  * ── Why the text is not generated ────────────────────────────────────────
  *
- * Carli asked for an image tool that can put text on a post "met mooi teks
+ * The owner asked for an image tool that can put text on a post "met mooi teks
  * formate". The tempting answer is to ask the image model for it. That answer
  * is wrong, and it is wrong in a way that only shows up on the finished post:
  * these models draw something letter-SHAPED. "FutureBox" comes back as
@@ -341,7 +341,7 @@ export function behindWords(
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Die woord op die screen kan nog nie geskuif en
+ * The owner, 8 October 2026: *"Die woord op die screen kan nog nie geskuif en
  * gecrop word nie. Daar moet 'n ook 'n line spacing scroll bar wees, en
  * spacing tussen die woorde self. Dus moet daar twee spacing bars wees."*
  *

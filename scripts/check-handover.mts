@@ -3,7 +3,7 @@
  *
  * ── Why an inventory and not a rule ──────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
+ * The owner, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
  * nie."*
  *
  * She had reported it three times by then, about three different doors, and
@@ -32,7 +32,7 @@
  *
  * ── And the doors that are not in `page.tsx` ─────────────────────────────
  *
- * Carli, 22 September 2026: *"adverts sit nogsteeds nie die prompt in die
+ * The owner, 22 September 2026: *"adverts sit nogsteeds nie die prompt in die
  * nuwe kamers nie."* The fourth report of this family, and the door she was
  * pressing — "Open the room and start it", on a recommendation card — was
  * not in the inventory below, because it lives in `AdFormats.tsx` and calls
@@ -224,7 +224,7 @@ const mustBrief: Readonly<Record<string, string>> = {
   'booth|onBooth': 'a song being taken out of the studio to be sung',
   'booth|onOpenInBooth': 'a song somebody sent through the collab room',
   'make|onBuildOn': 'building on somebody else’s song',
-  /* Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar
+  /* The owner, 22 September 2026: *"Kyk asb in make a song en channel dat daar
      by cover art 'n opsie is vir real art."* Somebody who presses this is
      standing on one particular song, and the gallery is a wall of tiles
      that has no way of knowing which. The id alone is not enough either:

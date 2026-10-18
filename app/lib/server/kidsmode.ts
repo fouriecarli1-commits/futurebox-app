@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+ * The owner, 9 October 2026: *"Let the parent give an allowance on an opening
  * page."*
  *
  * ── Why any of this is server-side ───────────────────────────────────────

@@ -72,7 +72,7 @@ const SAID: Record<string, { en: string; af: string }> = {
   },
   /* ── The room works for songs and not for videos ─────────────────────
 
-     Carli, three times: *"Video werk steeds nie in live nie."* Three rounds
+     The owner, three times: *"Video werk steeds nie in live nie."* Three rounds
      of code went in and changed nothing, because the code was never it:
      `supabase/livevideo.sql` widens `live_posts`'s `kind` check to accept
      'video', and it has not been run. Postgres refuses the row.

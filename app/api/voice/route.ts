@@ -116,7 +116,7 @@ async function singing(owner?: string | null, runsThePlace = false): Promise<{
      one that matters, because that window is widest the day a voice is new.
 
      Closing it costs nothing today. The account has had no trained voices on
-     it since it was measured on 9 September 2026, and Carli confirmed on
+     it since it was measured on 9 September 2026, and the owner confirmed on
      8 October that she has still not cloned a voice. There is no list to
      break. A default that is safe now and would have been awkward later is
      one worth setting while it is free.

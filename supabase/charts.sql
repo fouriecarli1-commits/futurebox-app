@@ -2,7 +2,7 @@
 --
 -- Run this after events.sql, in the same project. Safe to run again.
 --
--- ── What Carli asked for ───────────────────────────────────────────────────
+-- ── What the owner asked for ───────────────────────────────────────────────────
 --
 --   "top 10 AI musiek in Suid afrika … Ek dink daar moet ook top 10 podcasts
 --    wees, net 'n bar waarop mens kliek en dan oop maak en opsies gee wat op

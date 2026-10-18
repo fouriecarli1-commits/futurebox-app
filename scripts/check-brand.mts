@@ -114,7 +114,7 @@ check('the address is not typed anywhere but brand.ts', typed.length === 0, type
 
 /* ── The NAME, which had drifted the way the address once did ─────────────
 
-   3 October 2026. Carli: *"die naam is nogsteeds nie verander nie."*
+   3 October 2026. The owner: *"die naam is nogsteeds nie verander nie."*
 
    The app was calling itself three different things in three files — "FutureBox
    — Digital Learning & Creative AI Platform" on the tab, "FutureBox" in the

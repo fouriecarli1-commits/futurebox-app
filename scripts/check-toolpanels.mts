@@ -1,7 +1,7 @@
 /**
  * Every tool on the All tools page opens something that exists.
  *
- * Carli, 16 October 2026: another app's All tools page, built here as
+ * The owner, 16 October 2026: another app's All tools page, built here as
  * `components/AllTools.tsx`. A tool names a room and, inside it, a panel.
  * A panel name nobody has is a button that opens the room and then nothing,
  * which reads as the tool being broken. So every panel named in

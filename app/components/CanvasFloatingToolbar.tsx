@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Daar is goed wat ek voel die video en photo
+ * The owner, 11 October 2026: *"Daar is goed wat ek voel die video en photo
  * editor nog nodig het... hierdie goed is regdeur die bank by alle video en
  * photo editors... top toolbar: Edit, Replace, BG Remover, Eraser, Flip,
  * Animate, Position... floating context bar: Comment, Lock, Duplicate,
@@ -163,7 +163,7 @@ export default function CanvasFloatingToolbar({
           <span className="hidden md:inline">{t('toolbar.addTextShort', 'Text')}</span>
         </button>
 
-        {/* Font Combinations & Typography Effects (Carli, 11 Oct 2026) */}
+        {/* Font Combinations & Typography Effects (The owner, 11 Oct 2026) */}
         {onOpenFontCombos && (
           <button
             type="button"

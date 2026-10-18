@@ -3,7 +3,7 @@
  *
  *   npm run check:adlink
  *
- * Carli, 18 October 2026: yes to Google's AI reading a product page for
+ * The owner, 18 October 2026: yes to Google's AI reading a product page for
  * three credits. What has to hold is that this server never fetches the
  * link — the model's own URL-context tool does — that a private or malformed
  * address is refused before anything is charged, that what comes back is

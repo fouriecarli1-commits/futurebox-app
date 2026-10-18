@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 17 October 2026, with another app's vector illustration on screen:
+ * The owner, 17 October 2026, with another app's vector illustration on screen:
  * *"Ek hou van daai vector illustration."* The vector studio
  * (`components/VectorStudio.tsx`) sends a description; Gemini answers with
  * one SVG document; the studio reads it through `cleanTree`

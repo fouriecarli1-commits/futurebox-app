@@ -4,7 +4,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 13 October 2026: *"colouring must also be able to edit in a very
+ * The owner, 13 October 2026: *"colouring must also be able to edit in a very
  * easy video editor, so that they can through drawings create their own
  * video, and maybe even record their own story that goes over that
  * drawings (and remember, they can AI that drawing into live in this

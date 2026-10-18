@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 30 September 2026: *"Die back knoppie in make gaan terug na spotlight
+ * The owner, 30 September 2026: *"Die back knoppie in make gaan terug na spotlight
  * en nie creative studio kamer nie."*
  *
  * The app had two Backs and they disagreed. The phone's own button walked the

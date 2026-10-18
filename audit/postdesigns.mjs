@@ -1,7 +1,7 @@
 /**
  * Photo templates, used the way she would.
  *
- * Carli, 16 October 2026: *"Hoe hou ons sulke cool templates?"* and then
+ * The owner, 16 October 2026: *"Hoe hou ons sulke cool templates?"* and then
  * *"gaan aan met die template-stelsel."* Read off the canvas: choosing a
  * template sets the post's colour, makes its frames and writes its words,
  * and a photo already in the room lands in the first frame rather than being

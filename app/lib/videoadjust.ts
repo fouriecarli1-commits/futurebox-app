@@ -3,7 +3,7 @@
  *
  * ── Why these five and not the forty she sent ────────────────────────────
  *
- * Carli, 4 October 2026, with a phone editor open across seven screenshots:
+ * The owner, 4 October 2026, with a phone editor open across seven screenshots:
  * *"kyk asb weer na al die foto's wat ek gestuur het. Om seker te maak al die
  * video editing tools is daar."*
  *
@@ -88,7 +88,7 @@ export const DIALS: readonly Dial[] = [
    * little softening. Three pixels is plenty for that and the dial was
    * capped there and called Softness.
    *
-   * Carli, 8 October 2026: *"Dit laat my dink dat video editor ook 'n blur
+   * The owner, 8 October 2026: *"Dit laat my dink dat video editor ook 'n blur
    * funksie nodig het."* A blur is not a correction. It is a thing you do to
    * a shot on purpose — behind a title, under a credit roll, over a face you
    * do not have permission for — and at three pixels on a 1080-wide frame
@@ -122,7 +122,7 @@ export type Adjust = Partial<Record<Dial['id'], number>>;
 /**
  * One press of Auto enhance, for a shot off a phone.
  *
- * Carli, 16 October 2026, a one-tap enhance with a before-and-after line
+ * The owner, 16 October 2026, a one-tap enhance with a before-and-after line
  * open on her phone. The same small lift as the photo editor's `AUTO`: a
  * phone protects its highlights, so what it films is safe and a little flat.
  * Small on purpose — a big automatic lift makes every film in a feed look

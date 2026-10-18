@@ -60,7 +60,7 @@ export {
  *
  * ── Two Veos, and they are the same picture ─────────────────────────────
  *
- * `veo` is Veo resold by ElevenLabs. `googleVeo` is Veo on Carli's own
+ * `veo` is Veo resold by ElevenLabs. `googleVeo` is Veo on the owner's own
  * Vertex project, switched on 8 October 2026. Same model, same grade, and
  * the member cannot tell them apart — which is the point: a grade is a
  * promise about the RESULT, and who bills for it is ours to decide.
@@ -84,7 +84,7 @@ export const PROVIDERS: readonly Provider[] = [
  *
  * ── Kling, retired 9 October 2026 ───────────────────────────────────────
  *
- * Carli: *"Ons gaan ook nie meer Kling gebruik nie, die video generation
+ * The owner: *"Ons gaan ook nie meer Kling gebruik nie, die video generation
  * deur kling is sleg."* It is not a price decision and it is not arguable
  * from here — she has watched what comes out of it and this app has not.
  *

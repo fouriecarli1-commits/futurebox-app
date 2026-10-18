@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"hoe moontlik is dit wanneer mens die magic eraser
+ * The owner, 8 October 2026: *"hoe moontlik is dit wanneer mens die magic eraser
  * button click, of die grab text, dat dit AI integrated is en die masjien
  * identifiseer self objekte en text wat dan highlight en dan kan die klient
  * op die objekte of text click wat hulle graag wil grab, rondskuif, of
@@ -64,7 +64,7 @@ const LEAST_LETTERS = 2;
 /**
  * And a line the reader made up is not writing either.
  *
- * Carli, 17 October 2026, a portrait with a few words on it: *"Find the text
+ * The owner, 17 October 2026, a portrait with a few words on it: *"Find the text
  * maak sommer sy eie text op."* Hair, a jacket and a sleeve came back as
  * "LA / = Cgm RN /" and "db <a ; A A)", each with a box she could tap. Real
  * writing is mostly letters, has a word in it, and is read with some

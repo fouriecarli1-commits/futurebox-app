@@ -5,7 +5,7 @@
  *
  * ── The fault this fixes ─────────────────────────────────────────────────
  *
- * Carli, 23 September 2026: *"ek wil 'n ordentlike probooth bou en voel ons
+ * The owner, 23 September 2026: *"ek wil 'n ordentlike probooth bou en voel ons
  * moet ook nog amp modellers in bring."*
  *
  * The amp modelling itself has been built and verified since September —
@@ -65,7 +65,7 @@ export interface Amp {
   /**
    * Who made the capture, read out of the file where it says.
    *
-   * Carli, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us permission
+   * The owner, 7 October 2026, on TONE3000: *"Didn't Tone3000 give us permission
    * if we add their name on products?"* Partly — and the name a `cc-by`
    * licence asks for is the MAKER's, not the site's. A NAM file carries
    * `modeled_by` often enough to be worth reading, and `ampMaker` reads it.
@@ -179,7 +179,7 @@ export function setAmpLicence(id: string, licence: LicenceId): Amp[] {
 /**
  * Who made it, typed in where the file did not say.
  *
- * Carli, 11 October 2026, on the captures she downloads from TONE3000 by
+ * The owner, 11 October 2026, on the captures she downloads from TONE3000 by
  * hand: *"ons maak dan net seker die eienaar van die amp kry die eer."* The
  * file carries `modeled_by` often, not always, and a credit line that falls
  * back to the capture's own name is not the maker's credit. Emptied, the

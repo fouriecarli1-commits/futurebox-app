@@ -1,6 +1,6 @@
 # The editing tools, and what each one costs us
 
-Carli, 7 October 2026:
+The owner, 7 October 2026:
 
 > "Kan jy wanneer jy nie besig is nie begin om te develop? ... magic grab om 'n item uit te
 > haal en weer 'n ander item in te sit, BG remover, magic eraser, upscaler, auto focus, blur,
@@ -77,7 +77,7 @@ been a crop they made elsewhere.
 drawn into a canvas is one — a flat rectangle, a gradient and a drawn figure all come back as
 nobody, correctly. `audit/cutout.mjs` proves the model loads, runs and answers under this app's
 own policy, and that a mask keeps exactly what it covers. Whether the mask is a good one needs a
-photograph and Carli's eyes. **This is the one item on this page waiting on her rather than on
+photograph and the owner's eyes. **This is the one item on this page waiting on her rather than on
 me.**
 
 ### ~~Magic eraser, for small things~~ — done, 7 October 2026
@@ -110,7 +110,7 @@ Every one of these calls out, costs us money on each press, and must show its pr
 confirm **before** it spends — the pattern the cutting room already uses for the three doors
 that need an engine.
 
-| Tool | What it really is | The decision waiting on Carli |
+| Tool | What it really is | The decision waiting on the owner |
 |---|---|---|
 | **Magic grab** — take an item out, put another in | generative inpainting with a mask | price per go |
 | **Background remover for anything** | a segmentation model beyond people | price, or ship the free people-only one and leave it |
@@ -126,7 +126,7 @@ back from it, the way `app/lib/credits.ts` already does for the engines we use.
 
 ## The three in the cutting room, and the question she asked about them
 
-*Carli, 8 October 2026, looking at the card in the video editor that lists taking a background
+*The owner, 8 October 2026, looking at the card in the video editor that lists taking a background
 out, taking an item out of a shot, and generating a piece you do not have:* "Sal google se lyria
 engine dit kan doen? Dit voel ook soos iets wat elevenlabs moet kan doen."
 

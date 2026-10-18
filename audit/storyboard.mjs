@@ -309,7 +309,7 @@ const trims = room.locator('input[id^="from-"]');
 check('a trim appears once a shot has a clip', (await trims.count()) === 3, String(await trims.count()));
 /* ── The looks ─────────────────────────────────────────────────────
  
-   Carli, 23 September 2026: *"Ook met 'n paar filter moontlikhede."*
+   The owner, 23 September 2026: *"Ook met 'n paar filter moontlikhede."*
  
    `check:ownfootage` proves the grade reaches the canvas in the right
    order and that both cut paths carry it. What it cannot show is that
@@ -393,7 +393,7 @@ check('and it can be saved',
 
 /* ── And one piece on its own ──────────────────────────────────────────
  
-   Carli, 23 September 2026: *"Elke klein gedeelt moet 'n knoppie hê om net
+   The owner, 23 September 2026: *"Elke klein gedeelt moet 'n knoppie hê om net
    die stukkie af te laai."* The room had exactly one download on it, at the
    bottom, for the finished film.
  

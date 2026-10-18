@@ -7,7 +7,7 @@
  * engine runs, no supplier is called, and the bytes never reach this server.
  * So this route does exactly one thing: it charges.
  *
- * Carli, 6 October 2026, on whether the image tools need a watermark:
+ * The owner, 6 October 2026, on whether the image tools need a watermark:
  *
  *   "Onthou dat alles wat ons bied krediete kos, elke keer wanneer iets
  *    afgelaai word kos dit krediete, so 'n watermerk sal nie nodig wees

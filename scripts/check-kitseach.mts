@@ -3,7 +3,7 @@
  *
  * ── Her decision, and the arithmetic under it ────────────────────────────
  *
- * Carli, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
+ * The owner, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
  * sit vir kits se stemkloning. Dus iets soos 5min per persoon. Dan stop ons die
  * funksie wanneer dit opgebruik word deur 'n maand."
  *

@@ -1,7 +1,7 @@
 /**
  * Every button that does something says it did it.
  *
- * Carli, 16 September 2026: *"Met elke relevante button waar dit sal sin
+ * The owner, 16 September 2026: *"Met elke relevante button waar dit sal sin
  * maak, moet dit darem 'n vinnige status update gee. Soos in live room. As
  * mens dit post, dan moet die button sê posted."*
  *

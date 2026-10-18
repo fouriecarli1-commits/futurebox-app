@@ -3,7 +3,7 @@
 /**
  * Story mode, at an address.
  *
- * Carli, 9 October 2026: *"Gaan aan met story mode."*
+ * The owner, 9 October 2026: *"Gaan aan met story mode."*
  *
  * ── Why a page and not a room on the rail ────────────────────────────────
  *

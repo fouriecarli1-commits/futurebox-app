@@ -13,7 +13,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 18 September 2026, on the advert desk — the room she calls the
+ * The owner, 18 September 2026, on the advert desk — the room she calls the
  * important one: *"As ek druk op open the room dan vat hy my net na die
  * regte kamer toe, maar die AI vul nie die afdelings vir my in nie. Dit is
  * 'n groot flaw en uiteindelik dan 'n produk wat ons nie sal kan lewer nie."*
@@ -23,7 +23,7 @@
  * `audit/adcarry.mjs` both said so.
  *
  * What neither of them said is that a room opens as its own table of
- * contents — every panel folded, which is how Carli asked for it in
+ * contents — every panel folded, which is how the owner asked for it in
  * September: *"when I open the video desk, can all the drop down menus be
  * closed"*. So the value landed in a box inside a shut card, three headings
  * down a page, and the desk she was taken to looked exactly like a desk

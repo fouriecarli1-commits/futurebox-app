@@ -1,36 +1,23 @@
 /**
- * Who you are buying from — the disclosures section 43 of ECTA requires.
+ * Who you are buying from — section 43 of ECTA.
  *
- * ── Why this page exists ─────────────────────────────────────────────────
+ * ── What is printed, and what is not ─────────────────────────────────────
  *
- * Everywhere else, this app prints no address. `/help` is a form that reaches
- * the one inbox with the sender's own address as reply-to, and
- * `check:security` fails the build if a mailbox or a `mailto:` gets into
- * anything the browser can reach. That is the right default for every screen
- * somebody works in, and it stays.
- *
- * The Electronic Communications and Transactions Act asks for something a form
- * cannot give: a supplier selling to South Africans must make its full name,
- * legal status, registration number, physical address, telephone number and
- * e-mail address available to a consumer *before* they transact. The usual and honest
- * resolution is not to abandon the form — it is one page that carries the
- * particulars, linked from the footer of every page, with the form still doing
- * the actual contacting.
+ * The company's registered name and its legal status, and nothing about the
+ * people behind it. The owner decided on 18 October 2026 that no person's
+ * name, email address, telephone number, registration number or address
+ * appears anywhere in the app; the further particulars the Act lists are
+ * given on request, through the help page, before anybody buys.
  *
  * ── A server component, deliberately ─────────────────────────────────────
  *
- * The particulars are read from the environment on the server and rendered
- * into HTML. They never enter the client bundle, so the address is here for a
- * reader and a regulator without sitting in a JavaScript file for a scraper to
- * walk — which is what the original decision was actually protecting against.
+ * The name is read from the environment on the server and rendered into
+ * HTML. It never enters the client bundle.
  *
  * ── Nothing is invented ──────────────────────────────────────────────────
  *
- * The company is not registered yet. Until the variables in
- * `lib/server/entity.ts` are set, this page says so plainly. A blank list
- * would read as broken and a placeholder registration number would be a false
- * statement about a legal person; an honest gap while a company is being
- * registered is neither.
+ * Until `FUTUREBOX_LEGAL_NAME` is set, this page says so plainly. A
+ * placeholder name would be a false statement about a legal person.
  */
 
 import React from 'react';
@@ -53,12 +40,11 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Who you are buying from — FutureBox',
   description:
-    'The supplier details South African law requires: name, legal status, registration number, address, and how to reach a person.',
+    'Who the supplier is, its legal status, how to reach a person, and how to ask for the further particulars South African law lists.',
 };
 
-/* Contact is still a page, not an address. The particulars below are what the
-   law requires to be available; the form is what anybody should actually use,
-   and it reaches the same person faster. */
+/* Contact is a page, not an address: the form reaches a person, and the
+   particulars the Act lists are sent from there on request. */
 const CONTACT_PAGE = '/help';
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -90,13 +76,12 @@ export default function Legal(): React.ReactElement {
           <h1 className="text-4xl font-black text-white tracking-tight">Who you are buying from</h1>
           <p className="text-base text-zinc-400 leading-relaxed">
             Section 43 of the Electronic Communications and Transactions Act says a supplier selling
-            over the internet has to tell you who it is before you buy. This is that page. It is the
-            one place in this app where an address is printed; everywhere else, writing to us goes
-            through{' '}
+            over the internet has to tell you who it is before you buy. This is that page. Writing to
+            us goes through{' '}
             <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
               the form on the help page
             </Link>
-            , which reaches the same person and does not put an inbox in front of a crawler.
+            , which reaches a person and does not put an inbox in front of a crawler.
           </p>
         </header>
 
@@ -105,110 +90,38 @@ export default function Legal(): React.ReactElement {
             <dl className="border-t border-zinc-800">
               <Row label="Registered name">{who.name}</Row>
               <Row label="Legal status">{who.status}</Row>
-              {/* Only where there is one. A sole proprietor has no registration
-                  number, and an empty row under that label reads as something
-                  withheld rather than something that does not exist. */}
-              {who.registration && (
-                <Row label="Registration number">{who.registration}</Row>
-              )}
-              {/* The address, or an honest sentence where it is not set yet.
- 
-                  It used to be a condition of printing ANY of this: one unset
-                  variable and the whole disclosure vanished behind "the
-                  company is being registered", six days after CIPC registered
-                  it. Section 43(1)(b) does ask for a physical address and this
-                  page is not complete without one — but a row that admits the
-                  gap and says how to close it is a reader being told the
-                  truth, and a page that says the company does not exist yet is
-                  not. */}
-              <Row label="Registered address">
-                {who.address ? (
-                  who.address.map((line) => (
-                    <span key={line} className="block">
-                      {line}
-                    </span>
-                  ))
-                ) : (
-                  <>
-                    Not published on this page yet. The company is registered and its
-                    registered address is on the CIPC record;{' '}
-                    <Link
-                      href={CONTACT_PAGE}
-                      className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-                    >
-                      ask on the help page
-                    </Link>{' '}
-                    and it will be sent to you, before you buy anything.
-                  </>
-                )}
-              </Row>
-              {/* The Act asks for a telephone number and an e-mail address —
-                  section 43(1)(b) and (c) — so both rows are here, and the one
-                  that is not set says so instead of vanishing. A row quietly
-                  missing reads as a list that was never that long; a row that
-                  admits the gap is a reader being told the truth, and it is
-                  also the only version that stays honest when the supplier is
-                  one person who has not yet separated her own mobile number
-                  from her business. */}
-              <Row label="Telephone">
-                {who.phone ?? (
-                  <span className="text-zinc-400">
-                    Not published. This is a small company run by one person, and the only number
-                    it has is a private one; a business line is being arranged and will be printed
-                    here. Until it is, write to the address below or use{' '}
-                    <Link
-                      href={CONTACT_PAGE}
-                      className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-                    >
-                      the form on the help page
-                    </Link>
-                    , which is answered by a person.
-                  </span>
-                )}
-              </Row>
-              {who.email && <Row label="Email">{who.email}</Row>}
-              {who.vat && <Row label="VAT number">{who.vat}</Row>}
               <Row label="Website">{SITE_HOST}</Row>
+              {/* Only the company's name is printed. The owner's decision,
+                  18 October 2026: nothing about the people behind it — no
+                  person's name, no email address, no telephone number, no
+                  registration number, no address — and anything further on
+                  request. `lib/server/entity.ts` does not read those values
+                  at all, so no later change to this page can print them. */}
+              <Row label="Further particulars">
+                The registration number, the registered address and a telephone number are given on
+                request.{' '}
+                <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+                  Ask on the help page
+                </Link>{' '}
+                and they are sent to you, before you buy anything.
+              </Row>
               <Row label="Writing to us">
                 <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
                   The form on the help page
                 </Link>
-                . It reaches one person, with your own address as the reply-to.
+                . It reaches a person, with your own address as the reply-to.
               </Row>
-              {/* The row always shows, named or not.
- 
-                  POPIA requires a responsible party to appoint an Information
-                  Officer and register them WITH THE REGULATOR. It does not
-                  require the name on a web page — so a reader needs to know
-                  the role exists and how to reach it, which is a different
-                  thing from knowing whose name is in the post.
- 
-                  Carli asked for her name off this row on 11 September. It
-                  was never a legal requirement that it be here; it was a
-                  variable somebody could set, and setting it was the only way
-                  to make the row appear at all. Now the row appears either
-                  way and the unnamed version sends people somewhere that
-                  answers, which is what a reader actually wanted. */}
+              {/* POPIA requires an Information Officer to be appointed and
+                  registered WITH THE REGULATOR, not named on a web page. A
+                  reader needs to know the role exists and how to reach it. */}
               <Row label="Information Officer">
-                {who.informationOfficer ? (
-                  <>
-                    {who.informationOfficer}, for anything under POPIA. Registered with the
-                    Information Regulator of South Africa.
-                  </>
-                ) : (
-                  <>
-                    Appointed and registered with the Information Regulator of South Africa, as
-                    POPIA requires. For anything under POPIA — a copy of what is held about you, a
-                    correction, a deletion, or a complaint —{' '}
-                    <Link
-                      href={CONTACT_PAGE}
-                      className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-                    >
-                      enquire on the help page
-                    </Link>{' '}
-                    and it reaches them.
-                  </>
-                )}
+                Appointed and registered with the Information Regulator of South Africa, as POPIA
+                requires. For anything under POPIA — a copy of what is held about you, a correction,
+                a deletion, or a complaint —{' '}
+                <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+                  enquire on the help page
+                </Link>{' '}
+                and it reaches them.
               </Row>
             </dl>
           ) : (
@@ -216,19 +129,10 @@ export default function Legal(): React.ReactElement {
               <p className="text-base font-bold text-amber-300">
                 These details are not published yet, and that is deliberate.
               </p>
-              {/* Reworded 11 September 2026. It used to say the company "is
-                  being registered", which stopped being true on 5 September
-                  and then kept being printed because a single unset variable
-                  sent the page down this path. It now says only what is true
-                  whatever is set: nothing is being claimed here, and a person
-                  who asks is answered. A fallback that guesses at the state of
-                  the world is a fallback that will eventually be caught
-                  lying. */}
               <p>
                 Nothing about the supplier is being stated on this page at the moment. A
-                placeholder name or registration number on a legal page would be a false
-                statement about a legal person, which is worse than an admitted gap — so
-                there is a gap, and it is admitted.
+                placeholder name on a legal page would be a false statement about a legal person,
+                which is worse than an admitted gap — so there is a gap, and it is admitted.
               </p>
               <p>
                 Until then:{' '}

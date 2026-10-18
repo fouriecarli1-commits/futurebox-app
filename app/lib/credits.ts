@@ -19,7 +19,7 @@ export function creditsSaid(n: number, say: (key: string, fallback: string) => s
 /**
  * ── The floor under every price that leaves this app ─────────────────────
  *
- * Carli, 7 October 2026: *"alles in die app wat na 'n outside supplier toe
+ * The owner, 7 October 2026: *"alles in die app wat na 'n outside supplier toe
  * gaan moet darem een krediet meer vra as wat die supplier aan ons eis, sodat
  * ons ook op daardie manier geld maak."*
  *
@@ -65,7 +65,7 @@ export function creditsSaid(n: number, say: (key: string, fallback: string) => s
  * a factor of two apart rather than the 12% this note used to claim.
  *
  * The song figure was R2.59 until 8 September 2026, worked out from a credit
- * rate nobody had ever checked against ElevenLabs. Carli sent their pricing
+ * rate nobody had ever checked against ElevenLabs. The owner sent their pricing
  * page that day: music is $0.15 a minute, so a two-minute song costs us
  * $0.30 — eighty-five per cent more than the number this file was built on.
  * `docs/ELEVENLABS-PRYSE.md` has the whole list and what it does to the
@@ -77,7 +77,7 @@ export function creditsSaid(n: number, say: (key: string, fallback: string) => s
  * a price rise that belongs in its own decision rather than in a comment
  * repair.
  *
- * ── Carli took that decision on 24 September 2026: it stays at ten ──────
+ * ── the owner took that decision on 24 September 2026: it stays at ten ──────
  *
  * *"Maak die lied ook reg, werk daai prys uit."* — and then, with the sums
  * in front of her: *"Los dit op tien dan."*
@@ -142,7 +142,7 @@ import type { Tier } from './plans';
 
 export const CREDITS = {
   /** A full song: two minutes, clean, yours. */
-  /* Carli, 11 October 2026: *"a two minute song, R11.50"*. Eight credits is
+  /* The owner, 11 October 2026: *"a two minute song, R11.50"*. Eight credits is
      R11.92 — 42c over her figure and the nearest whole credit; seven would
      be R10.43, a rand under. Against R5.52 of ElevenLabs that keeps R6.40.
  
@@ -159,7 +159,7 @@ export const CREDITS = {
      Credits are whole numbers at R1.49 (the cheapest plan's rate until 15 October 2026; Label's R1.50 since), so a rand
      figure cannot always be hit exactly. Each is the nearest credit, and the
      rand it really lands on is written beside it. */
-  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+  /* The owner, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
      wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
   /* A song from Google Lyria 3 Pro: one flat price, "High, I choose 8". Lyria
      charges per song, not per minute, so this is not multiplied by length. */
@@ -170,14 +170,14 @@ export const CREDITS = {
    */
   /* Four, because a song is this a minute and she put a two-minute song at
      R11.50. R5.96 against R2.76 of ElevenLabs, which keeps R3.20. */
-  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+  /* The owner, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
      wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
   /* A one-minute ElevenLabs song, "7". Each minute after the first is
      `songMinute`, so a two-minute ElevenLabs song is her "Medium 15". */
   halfSong: 7,
   /** Each ElevenLabs minute after the first. 7 + 8 = 15 for two minutes. */
   songMinute: 8,
-  /* The kids room, Carli, 14 October 2026: "maak al die kids songs 8
+  /* The kids room, the owner, 14 October 2026: "maak al die kids songs 8
      credits" — one price whichever engine sings it, for the one-minute song
      the kids room asks for. */
   kidSong: 8,
@@ -211,7 +211,7 @@ export const CREDITS = {
    * dearest one it may pick is the only way the number on the button is safe
    * whichever answers.
    */
-  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+  /* The owner, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
      wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
   /* Five seconds of Veo Lite, "18". The better and premium grades are
      their own numbers now (`VIDEO_GRADES`), "30" and "60". */
@@ -224,7 +224,7 @@ export const CREDITS = {
    * button gets pressed forty times in a row by somebody deciding, and forty
    * of anything is a bill.
    */
-  /* Carli, 11 October 2026: *"Cover = 15 credits"*, given in credits rather
+  /* The owner, 11 October 2026: *"Cover = 15 credits"*, given in credits rather
      than rand. R22.35. The supplier's rate for this one has still not been
      read, so what it keeps is not known yet — see `docs/KREDIETE.md`. */
   cover: 15,
@@ -241,7 +241,7 @@ export const CREDITS = {
    * quoted her own words back — *"Te veel aankoop punte gaan mense afsit"* —
    * which is why `ADDONS` was deleted.
    *
-   * Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
+   * The owner, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
    * krediete werd is."*
    *
    * She is the one selling it, she has heard the objection, and she has said
@@ -258,7 +258,7 @@ export const CREDITS = {
    * video is worth more than an eight-second advert and should cost more.
    *
    * This was **three a minute** when the room first charged, on 1 October. It
-   * is ten a half minute because Carli said so on 4 October: *"3 krediete om
+   * is ten a half minute because the owner said so on 4 October: *"3 krediete om
    * 'n video te maak op video editor is te goedkoop ... om net 'n video te
    * maak, moet 10 krediete per 30 sekondes wees."*
    *
@@ -276,7 +276,7 @@ export const CREDITS = {
   /**
    * ── What is IN the film, on top of the film itself ──────────────────────
    *
-   * Carli, 3 October 2026: *"elke element wat op die video editing gebruik word
+   * The owner, 3 October 2026: *"elke element wat op die video editing gebruik word
    * [moet] krediete dra ... Dus moet die tekste, die filters, die generations
    * ens alles krediete dra."* And in the same breath, the constraint: *"Nie te
    * hoë krediete nie, dit moet bekostigbaar wees om 'n video uiteindelik te
@@ -312,7 +312,7 @@ export const CREDITS = {
   /**
    * ── Five each, and counted PER FUNCTION rather than per use ─────────────
    *
-   * Carli, 4 October 2026: *"3 krediete om 'n video te maak op video editor is
+   * The owner, 4 October 2026: *"3 krediete om 'n video te maak op video editor is
    * te goedkoop. Elke funksie moet krediete dra, die teks, filters etc. En om
    * net 'n video te maak, moet 10 krediete per 30 sekondes wees. En dan 5
    * krediete vir elke bykomende funksies soos filters, teks, ens."*
@@ -330,7 +330,7 @@ export const CREDITS = {
    *
    * ── Five became three, 4 October 2026 ──────────────────────────────────
    *
-   * Carli: *"Ek dink jy moet besluit wat kos 'n video, want ons wil nie dit
+   * The owner: *"Ek dink jy moet besluit wat kos 'n video, want ons wil nie dit
    * onmoontlik maak vir mense op maker plan om videos te maak nie."*
    *
    * At five a function, a twenty-second advert with words, a look, a logo, a
@@ -366,7 +366,7 @@ export const CREDITS = {
   /** Words anywhere in the film. Three, however many shots carry them. */
   filmWords: 3,
   /** A look anywhere in the film. Three, however many shots carry one. */
-  /* Carli, 11 October 2026: *"a look over the film, R8.50"*. Six credits is
+  /* The owner, 11 October 2026: *"a look over the film, R8.50"*. Six credits is
      R8.94, the nearest whole credit. The browser renders it, so all of it is
      margin. */
   filmLook: 6,
@@ -375,7 +375,7 @@ export const CREDITS = {
   /** Her own mark on the film. */
   /* ── Fifteen, asked twice and answered twice ────────────────────────
  
-     Carli, 11 October 2026, first: *"a mark on the film, R14.90"* — ten
+     The owner, 11 October 2026, first: *"a mark on the film, R14.90"* — ten
      credits. That was flagged back to her, because it made a mark cost the
      same as putting the WHOLE film together and nearly double a look over
      it, and because R14.90 is the film-out price sitting one row above it
@@ -401,11 +401,11 @@ export const CREDITS = {
      Rendered in the browser, so all R22.35 of it is margin. */
   filmMark: 15,
   /** A track under the whole thing. */
-  /* Carli put this at R5.00, which is 3.36 credits; three is R4.47 and the
+  /* The owner put this at R5.00, which is 3.36 credits; three is R4.47 and the
      nearest. Unchanged, and said rather than silently skipped. */
   filmUnder: 3,
   /** The picture itself moving — a push in, a pan, keyframes of her own. */
-  /* Carli, 18 October 2026, asked whether Motion should cost at export:
+  /* The owner, 18 October 2026, asked whether Motion should cost at export:
      *"Ja motion moet iets kos."* Six, the same as a look over the film: both
      are a change the browser renders to the picture of every frame they
      touch, so all of it is margin, and one is no smaller a decision than the
@@ -434,7 +434,7 @@ export const CREDITS = {
    * to the Library AND to the phone, and `spend_credits` now takes a charge
    * once per reference — so that is one mix and one charge, not two.
    */
-  /* Carli, 11 October 2026: *"Bouncing a mix out, R5"*. Three credits is
+  /* The owner, 11 October 2026: *"Bouncing a mix out, R5"*. Three credits is
      R4.47, up from one. Bounced in the browser, so all of it is margin. */
   mixOut: 3,
   /**
@@ -442,7 +442,7 @@ export const CREDITS = {
    *
    * ── Why anything, when it costs us nothing to run ───────────────────────
    *
-   * Carli, 6 October 2026, on whether the image tools need a watermark:
+   * The owner, 6 October 2026, on whether the image tools need a watermark:
    *
    *   "Onthou dat alles wat ons bied krediete kos, elke keer wanneer iets
    *    afgelaai word kos dit krediete, so 'n watermerk sal nie nodig wees
@@ -456,7 +456,7 @@ export const CREDITS = {
    *
    * ── Two, and why not three and not one ─────────────────────────────────
    *
-   * Carli, 7 October 2026: *"Om 'n foto te download 2 krediete."* Her number,
+   * The owner, 7 October 2026: *"Om 'n foto te download 2 krediete."* Her number,
    * and the right end of the range.
    *
    * A post is made in one sitting and exported several times — once it is
@@ -497,7 +497,7 @@ export const CREDITS = {
    * free account used as an unlimited design tool — which a screenshot at
    * phone resolution is not.
    */
-  /* Two instructions from Carli on 11 October 2026 that did not say the
+  /* Two instructions from the owner on 11 October 2026 that did not say the
      same number. To this desk: *"Taking a post off the device, R5"*, which
      is three credits (R4.47). To Antigravity, on the export-quality tiers it
      built the same day: *"Ek werk so standaard op 5 krediete."* Asked which
@@ -520,7 +520,7 @@ export const CREDITS = {
    * The numbers are their rates plus the usual margin. See `perMinute` below.
    */
   /** Splitting a song into the voice and the backing, per minute. */
-  /* Carli, 11 October 2026: *"Stems/cleaning/voice change = R8.50"*. Six
+  /* The owner, 11 October 2026: *"Stems/cleaning/voice change = R8.50"*. Six
      credits is R8.94, the nearest whole credit above it; five would be
      R7.45. R2.21 of ElevenLabs, so it keeps R6.73 — up from R3.75.
  
@@ -528,12 +528,12 @@ export const CREDITS = {
      margin while everything else in the app sat between 73% and 98%. They
      are the thinnest lines and the most-pressed buttons, which is the worst
      pair of facts to have together. */
-  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+  /* The owner, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
      wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
   /* "Split stems – 8", the row that also carried the clean and the voice change. */
   stems: 8,
   /** Hearing what was actually sung, per minute. Their speech-to-text. */
-  /* Carli, 11 October 2026: *"Transcribing per minute = R4.50"*. Three
+  /* The owner, 11 October 2026: *"Transcribing per minute = R4.50"*. Three
      credits is R4.47, three cents under her figure and the nearest whole
      credit. ElevenLabs bill R0.07 a minute for it, so it keeps R4.40.
  
@@ -541,7 +541,7 @@ export const CREDITS = {
      is the point she made about multiples: it was already forty-four times
      and keeping R2.91, which is less actual money than almost anything else
      in the app. A ratio is not a wage. */
-  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+  /* The owner, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
      wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
   /* "Read the words, gemini listener - 4". Per minute. */
   transcribe: 4,
@@ -564,7 +564,7 @@ export const CREDITS = {
    */
   /* ── Raised with the voice change, 11 October 2026 ──────────────────
  
-     Not a price she set. Carli put stems, cleaning and the voice change at
+     Not a price she set. The owner put stems, cleaning and the voice change at
      R8.50 — six credits — and left this one alone, which made the BETTER
      engine the cheaper one: Kits sings a line in a chosen voice, the voice
      change converts an existing take, and this app's own rule is that
@@ -580,7 +580,7 @@ export const CREDITS = {
   /** Making a voice from a minute of somebody reading. Estimated. */
   clone: 20,
   /** Training a sound of your own — ElevenLabs' music fine-tune, on her songs. */
-  /* 180, Carli, 15 October 2026 (was 300). ElevenLabs lists about $1.50 a
+  /* 180, the owner, 15 October 2026 (was 300). ElevenLabs lists about $1.50 a
      training, R27.60 with VAT; 180 at Studio's R1.70 is R306, so it keeps
      its margin and fits inside one Studio month of 205. */
   finetune: 180,
@@ -594,7 +594,7 @@ export const CREDITS = {
    * pricing page with any confidence."
    *
    * It became knowable on 8 September 2026. ElevenLabs' own pricing page,
-   * which Carli sent, gives the plan's equivalences at $990:
+   * which the owner sent, gives the plan's equivalences at $990:
    *
    *     450 minutes of dubbing v2 = $990
    *
@@ -623,7 +623,7 @@ export const CREDITS = {
    */
   /* ── Lowered to 110 by her, 11 October 2026 ─────────────────────────
  
-     Carli, with the whole price list and the engine's bill in front of her:
+     The owner, with the whole price list and the engine's bill in front of her:
      *"Dubbing moet hersien word, wat stel jy voor?"* — and, given the
      arithmetic below, *"110 krediete, maak dit so"*.
  
@@ -659,7 +659,7 @@ export const CREDITS = {
   parts: 8,
   /**
    * A sound effect from words, up to ten seconds: a door slamming, rain on a
-   * roof, a stadium crowd. Carli, 14 October 2026: "Generate a sound" must
+   * roof, a stadium crowd. The owner, 14 October 2026: "Generate a sound" must
    * make sound effects and music too, not only speech.
    *
    * ElevenLabs bill a sound effect by its length — about forty of their
@@ -672,7 +672,7 @@ export const CREDITS = {
 
   /* ─────────────────────────────── the rooms that used to be a second till ─
    *
-   * Carli, 24 September 2026, twice in one evening and about two different
+   * The owner, 24 September 2026, twice in one evening and about two different
    * rooms:
    *
    *   *"Ek dink net ons moet ons gratis funksies monotise, dit moet pakkette
@@ -699,7 +699,7 @@ export const CREDITS = {
    * **entering a room is included, generating in it costs credits.** The Pro
    * Booth, the video editor and the advert desk come with every paid plan.
    *
-   * Carli said it again on 5 October 2026 — *"Onthou dat ons probooth ook
+   * The owner said it again on 5 October 2026 — *"Onthou dat ons probooth ook
    * moet monotize, nie te duur nie"* — and the answer is that it already is,
    * under this rule, out of this wallet. What was NOT held anywhere was the
    * other half: a route that reaches a supplier and charges nothing. Twelve
@@ -722,7 +722,7 @@ export const CREDITS = {
    *
    * ── How these numbers were arrived at, and what was wrong the first time ─
    *
-   * Carli, on the first attempt: *"Die krediete wat ons hef vir die ekstra
+   * The owner, on the first attempt: *"Die krediete wat ons hef vir die ekstra
    * produkte is heeltemal te min."*
    *
    * She was right, and the error is worth writing down because it is the kind
@@ -780,7 +780,7 @@ export const CREDITS = {
    * **Seventy-five credits is R124.20 against that, 25x** — the highest
    * multiple in this file after dubbing, and deliberately so.
    *
-   * Carli, 30 September 2026: *"Die advert krediete moet wel duurder wees.
+   * The owner, 30 September 2026: *"Die advert krediete moet wel duurder wees.
    * Daai is 'n premium funksie wat baie smart is en mense behoort heelwat
    * duurder en met meer krediete vir daardie funksie te betaal."*
    *
@@ -800,7 +800,7 @@ export const CREDITS = {
    * It was 10 first — the price of one song, which said a month of marketing
    * for a business is worth the same as one song — then 40.
    */
-  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+  /* The owner, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
      wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
   /* She chose 15 after hearing it stood at 75, not the 40 the chart showed. */
   marketPlan: 15,
@@ -830,7 +830,7 @@ export const CREDITS = {
   /**
    * A product link read into the advert brief.
    *
-   * Carli, 18 October 2026, offered "3" and answered *"Ja"*. Google's model
+   * The owner, 18 October 2026, offered "3" and answered *"Ja"*. Google's model
    * reads the page with its URL-context tool and answers in a few lines — a
    * small call, priced with the other small reads (`filmWords`, `sfx`).
    * Refunded when the page cannot be read. `api/campaign/link`.
@@ -841,7 +841,7 @@ export const CREDITS = {
    *
    * ── Where it comes from ───────────────────────────────────────────────
    *
-   * Carli, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie
+   * The owner, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie
    * soek wat baie klink soos michael jackson se liedjie beat it"*, and then
    * the sentence that made it buildable: *"dit kry dit net mooi reg om die
    * 80's se styl in baie nader aan daardie formaat te genereer."* The era
@@ -867,7 +867,7 @@ export const CREDITS = {
    * It is also the band the other small calls sit in — `cover` is 2,
    * `transcribe` is 2, `repaint` is 5 — rather than a number of its own.
    */
-  /* Carli, 11 October 2026: *"A style word, R9"*. Six credits is R8.94.
+  /* The owner, 11 October 2026: *"A style word, R9"*. Six credits is R8.94.
      Against the R0.31 of tokens this costs, it keeps R8.63. */
   styleword: 6,
   /**
@@ -904,7 +904,7 @@ export const CREDITS = {
    * Estimated from a published page rather than an invoice, and
    * `check:kredietkoste` holds it against that page.
    */
-  /* Carli, 11 October 2026: *"a background out of video R6.50"*. Four
+  /* The owner, 11 October 2026: *"a background out of video R6.50"*. Four
      credits is R5.96, 54c under her figure and the nearest whole credit;
      five would be R7.45, 95c over. Against R1.80 of Google that keeps
      R4.16 — down from R10.12, which is her decision to make and she made
@@ -924,7 +924,7 @@ export const CREDITS = {
    * R18.22 against the background's measured R1.80, **10.1x**. Same reasoning
    * as `clone` and `finetune`, and marked the same way.
    */
-  /* Carli, 11 October 2026: *"An item taken out of a video moet ook
+  /* The owner, 11 October 2026: *"An item taken out of a video moet ook
      verander word. R7.00"*. Five credits is R7.45, the nearest whole
      credit. Against R1.80 that keeps R5.65.
  
@@ -969,7 +969,7 @@ export const CREDITS = {
    * Priced from a published page rather than an invoice, like `cutout`, and
    * `check:kredietkoste` holds it against that page.
    */
-  /* Carli, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
+  /* The owner, 14 October 2026, off the margin chart: "Ek wil altyd kyk vir 'n 85%
      wins margin, maar waar dit ridiculous is dan eerder tussen 50-70%." */
   /* "Picture google – 6". */
   repaint: 6,
@@ -978,7 +978,7 @@ export const CREDITS = {
    *
    * ── What it is ─────────────────────────────────────────────────────────
    *
-   * Carli, 11 October 2026: *"dan moet die objekte en woorde gehighlight
+   * The owner, 11 October 2026: *"dan moet die objekte en woorde gehighlight
    * word, en dit moet dan rondgeskuif kan word en ge-edit word."* The words
    * half runs on her own device. This half asks Gemini what is in the
    * picture and where, and hands back a box and a mask for each thing.
@@ -1028,7 +1028,7 @@ export const CREDITS = {
   grab: 15,
   /* ── A chart's data from words, 17 October 2026 ─────────────────────
 
-     Carli: *"Wat cool sal wees as dit AI verstelbaar is dat data ingevoer
+     The owner: *"Wat cool sal wees as dit AI verstelbaar is dat data ingevoer
      kan word en AI die data in die grafiek verstel."* One short Flash call
      that reads what she typed and answers a few hundred bytes of numbers —
      the same shape of work as `transcribe`, and priced beside it. Hers to
@@ -1036,7 +1036,7 @@ export const CREDITS = {
   chart: 4,
   /* ── A vector picture drawn by AI, 17 October 2026 ───────────────────
 
-     Carli: *"Ek hou van daai vector illustration."* One Flash call that
+     The owner: *"Ek hou van daai vector illustration."* One Flash call that
      answers an SVG — shapes, not pixels. It makes a picture, so it is priced
      beside the magic touch (`repaint`), not beside a reading; tracing a
      photograph into shapes runs on the phone and costs nothing extra. Hers
@@ -1044,7 +1044,7 @@ export const CREDITS = {
   vector: 6,
   /* ── A vector drawing taken off the device, 17 October 2026 ─────────
 
-     Carli: *"SVG PNG ook 5 krediete."* The same price as taking a post out
+     The owner: *"SVG PNG ook 5 krediete."* The same price as taking a post out
      (`postOut`), and on the same terms: once per drawing, so saving it as an
      SVG and then as a PNG is one charge, and so is saving it again after a
      change. */
@@ -1084,7 +1084,7 @@ export type VideoGrade = 'standard' | 'better' | 'premium';
  * the length and a charge that does not is worse than a flat price.
  */
 /**
- * Five seconds of each grade of video. Carli, 14 October 2026: Veo Lite
+ * Five seconds of each grade of video. The owner, 14 October 2026: Veo Lite
  * "18", the better grade "30", Veo Quality "60" — set one by one off the
  * margin chart rather than as multiples of the first, which is why this is a
  * table and no longer `video` times two and four.
@@ -1125,7 +1125,7 @@ export type SongEngine = 'eleven' | 'google';
 /**
  * What a song costs, by the engine that will sing it.
  *
- * Carli, 14 October 2026: ElevenLabs "Medium 15" for a two-minute song and a
+ * The owner, 14 October 2026: ElevenLabs "Medium 15" for a two-minute song and a
  * half song at "7"; Google "High, I choose 8". ElevenLabs bills by the minute,
  * so its songs are priced by the minute — the first at `halfSong`, each after
  * it at `songMinute`. Lyria bills one price per song up to about three
@@ -1216,7 +1216,7 @@ export function perMinute(seconds: number, rate: number): number {
 /**
  * The same, by the half minute.
  *
- * Carli, 4 October 2026: *"om net 'n video te maak, moet 10 krediete per 30
+ * The owner, 4 October 2026: *"om net 'n video te maak, moet 10 krediete per 30
  * sekondes wees."* A film is the one thing in this app priced in half minutes,
  * because most of what leaves this room is an advert and a minute is three
  * adverts rounded up to one.
@@ -1268,7 +1268,7 @@ export const TIER_CREDITS: Record<Tier, number> = {
    * ── Why it was ten, and why it is nought ────────────────────────────────
    *
    * Ten was two half songs, and it was decided when a song was assumed to
-   * cost us R2.59. On 8 September 2026 Carli sent ElevenLabs' own pricing
+   * cost us R2.59. On 8 September 2026 the owner sent ElevenLabs' own pricing
    * page: music is $0.15 a minute, so a song costs R4.80, and a plan holds
    * about half the minutes this file had assumed. `docs/ELEVENLABS-PRYSE.md`
    * has the whole derivation.
@@ -1281,7 +1281,7 @@ export const TIER_CREDITS: Record<Tier, number> = {
    *
    * Turning that off is the whole difference between a business that works
    * and one that does not: break-even goes from 165 members against a
-   * capacity of 132, to 103 against 214. Carli's decision, 8 September.
+   * capacity of 132, to 103 against 214. The owner's decision, 8 September.
    *
    * ── What the free tier is instead, and why it is not nothing ────────────
    *
@@ -1315,7 +1315,7 @@ export const TIER_CREDITS: Record<Tier, number> = {
      Sien `docs/OPSIE-E.md` vir die hele som. */
   /* ── Ninety became a hundred, 4 October 2026 ────────────────────────────
 
-     Carli: *"aangesien ons self ook monotize moet ons, klein bietjie ekstra
+     The owner: *"aangesien ons self ook monotize moet ons, klein bietjie ekstra
      krediete by elke plan sit."*
 
      Eleven percent on each tier, and it is not free. At full consumption a
@@ -1341,7 +1341,7 @@ export const TIER_CREDITS: Record<Tier, number> = {
      two. */
   /* ── Set by the rand a credit, 15 October 2026 ────────────────────────
 
-     Carli: *"Label must be R1.50 per credit, studio R1.70, maker R1.80
+     The owner: *"Label must be R1.50 per credit, studio R1.70, maker R1.80
      (don't change the amounts on screen, just adjust the amount of credits
      accordingly)."* The prices stay R149, R349 and R899; the credits are
      the price over her rate, to the nearest whole credit:
@@ -1392,7 +1392,7 @@ export interface Pack {
  *
  * ── What was wrong ───────────────────────────────────────────────────────
  *
- * Carli, 10 September 2026: "Ek sien om verdere krediete aan te koop baie
+ * The owner, 10 September 2026: "Ek sien om verdere krediete aan te koop baie
  * goedkoper is as die planne wat 'n mens uit neem."
  *
  * She is right, and the comment that used to stand here claimed the opposite.
@@ -1448,7 +1448,7 @@ export const RAND_PER_TOPUP_CREDIT = 2.5;
  * between plans.** See `RAND_PER_TOPUP_CREDIT`. A subscription business whose
  * own shop sells the same thing cheaper has no subscribers.
  *
- * **And the credits shrink with the money, exactly.** Carli: "dit is sinvol
+ * **And the credits shrink with the money, exactly.** The owner: "dit is sinvol
  * om kleiner bedrae te verkoop vir top up's maar dan moet die krediete krimp
  * saam met die bedrae." The comment here used to say a volume discount
  * between the packs was fine. It is not: a discount for buying more is the
@@ -1474,7 +1474,7 @@ export function packById(id: string): Pack | null {
 /**
  * Whether this member may buy credits at all.
  *
- * ── Carli, 10 September 2026 ─────────────────────────────────────────────
+ * ── the owner, 10 September 2026 ─────────────────────────────────────────────
  *
  * "Dit moet ook nie die standaard wees van die begin af nie, iemand kan nie
  * krediete koop sonder 'n subscribed plan nie. Daai opsie moet glad nie

@@ -175,7 +175,7 @@ export default function VoiceLab({
   /**
    * Take the room off the sample before it is cloned.
    *
-   * Carli: "Daar moet dan tick boksies wees wat sê remove backing vocals, en
+   * The owner: "Daar moet dan tick boksies wees wat sê remove backing vocals, en
    * remove reverb & echo."
    *
    * This one is real here and the other is not, which is why only this one is
@@ -927,7 +927,7 @@ export default function VoiceLab({
 
         {/* ── Where the ear reports back ─────────────────────────────────
 
-            Carli, 24 September 2026: *"En dan moet ons nog iewers die klient
+            The owner, 24 September 2026: *"En dan moet ons nog iewers die klient
             die geleentheid gee om foute in spraak uit te wys."* It existed,
             in two rooms out of four. This is one of the two it was missing
             from, and a voice changer is where a wrong vowel is most audible.

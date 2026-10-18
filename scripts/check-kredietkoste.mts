@@ -69,9 +69,9 @@ console.log(`Everything below is priced against R${WORST.toFixed(3)} — the che
 const FLOOR = 1;
 
 /**
- * And one whole credit of margin on top of that, which is Carli's rule.
+ * And one whole credit of margin on top of that, which is the owner's rule.
  *
- * Carli, 7 October 2026: *"alles in die app wat na 'n outside supplier toe
+ * The owner, 7 October 2026: *"alles in die app wat na 'n outside supplier toe
  * gaan moet darem een krediet meer vra as wat die supplier aan ons eis, sodat
  * ons ook op daardie manier geld maak."*
  *
@@ -99,7 +99,7 @@ const THIN = 1.8;
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 24 September 2026: *"Die krediete wat ons hef vir die ekstra
+ * The owner, 24 September 2026: *"Die krediete wat ons hef vir die ekstra
  * produkte is heeltemal te min."* She was right, and the table below is what
  * should have told me so before she did.
  *
@@ -134,7 +134,7 @@ for (const one of priced) {
  
      Nothing below it applies either. `FLOOR` asks whether a price covers
      its cost — a cost of nought is covered by any price — and
-     `OVER_SUPPLIER` is Carli's rule that whatever a supplier bills, the
+     `OVER_SUPPLIER` is the owner's rule that whatever a supplier bills, the
      app charges that and one credit more. There is no supplier to be a
      credit above. */
   const free = one.cost === 0;

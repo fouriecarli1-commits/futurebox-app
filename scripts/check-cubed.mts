@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Die masterclass section wil ek rename na Cubed
+ * The owner, 10 October 2026: *"Die masterclass section wil ek rename na Cubed
  * classes… Die rede vir cubed gaan oor die mag 3. Ek wil elke masterclass 3
  * klasse lank maak. Ons moet dit ook so uit stipuleer vir ons gaste. Ons gaan
  * 'n 60/40 winsverdeling doen. Dus 60% vir die gas."* And: *"Ek soek ook 'n
@@ -103,7 +103,7 @@ ok('  and the length adds up',
 
 /* ── 2. The split, which is NOT quoted to guests ──────────────────────
 
-   It was, until Carli, 12 October 2026: "Die Cubed classes kan nie die
+   It was, until the owner, 12 October 2026: "Die Cubed classes kan nie die
    winsverdeling wys tussen my en die persoon wat die klas aanbied nie." The
    number stays in `lib/cubed.ts` for the written agreement, and the room,
    the page's metadata and the dictionary say the series is shared and that
@@ -158,7 +158,7 @@ ok('  and the room says the terms out loud',
 
 /* ── 2b. The third class, and the opening line ────────────────────────
 
-   Carli, 12 October 2026: "klas nommer 3 moet nie gaan oor what goes wrong
+   The owner, 12 October 2026: "klas nommer 3 moet nie gaan oor what goes wrong
    nie, eerder, what is next" — and, of the top of the page, "iets soos dive
    into the future and attend a class curated by a professional". */
 
@@ -321,7 +321,7 @@ ok('her lockup carries no ground of its own',
   !/background: PAPER/.test(mark) && !/bg-(white|zinc-(50|100|200))/.test(
     /data-cubedmark[\s\S]{0,400}/.exec(mark)?.[0] ?? '',
   ),
-  'Carli, 11 October 2026: "Gebruik die transparent weergawe, die logo'
+  'the owner, 11 October 2026: "Gebruik die transparent weergawe, die logo'
   + ' moenie \u2019n wit agtergrond h\u00ea nie." A panel under a see-through'
   + ' file is the white background she asked not to have, drawn by us'
   + ' instead of baked into the picture');
@@ -407,7 +407,7 @@ const lit = (rgb: readonly number[]): number =>
 /**
  * The room is light, and light enough for her navy.
  *
- * Carli, 11 October 2026: *"Maak die kamer lig."* Her mark is navy line
+ * The owner, 11 October 2026: *"Maak die kamer lig."* Her mark is navy line
  * work and measured 1.15:1 against the near-black this room used to be —
  * a logo nobody can see. The page is the only thing that was allowed to
  * move: a panel under the mark she refused, and recolouring her lines she
@@ -426,7 +426,7 @@ const stop = (name: string): number[] | null => {
 };
 const pageRgb = stop('page');
 
-/* Carli, 13 October 2026, with the room Google drew, then in her own words:
+/* The owner, 13 October 2026, with the room Google drew, then in her own words:
    "Maak die cubed class se logo transparent, en maak die logo en woorde
    very neon en bright." Her file stays hers; a filter inverts the navy to
    light on the way to the screen and tints it. So the thing measured is
@@ -512,7 +512,7 @@ ok('  and the door carries her mark',
 ok('  and the pill is called what she called it',
   /t\('tab\.classes', 'Cubed Class'\)/.test(page)
   && /"tab\.classes": \{ en: "Cubed Class", af: "Kubieke Klas" \}/.test(words),
-  'Carli, 11 October 2026: "daai button se naam moet Cubed Class wees, of in'
+  'the owner, 11 October 2026: "daai button se naam moet Cubed Class wees, of in'
   + ' Afrikaans Kubieke Klas"');
 
 ok('  and pressing it opens the room rather than filtering the page',
@@ -531,13 +531,13 @@ ok('  and the listing it used to show is still reachable',
 
 ok('the room says what a masterclass costs',
   /data-cubedprice/.test(room) && /randSaid\(seriesRand\(\)\)/.test(room),
-  'Carli, 11 October 2026: "Ek beplan om R949 vir \u2019n cubed class te'
+  'the owner, 11 October 2026: "Ek beplan om R949 vir \u2019n cubed class te'
   + ' vra." A guest deciding whether three evenings are worth it cannot work'
   + ' that out from a percentage');
 
 ok('  and it is the price she said, for all three classes together',
   SERIES_RAND === 949 && seriesRand() === SERIES_RAND,
-  'Carli, 12 October 2026: "al drie klasse is gelykstaande aan R949"');
+  'the owner, 12 October 2026: "al drie klasse is gelykstaande aan R949"');
 
 ok('  and nothing multiplies it into a per-class price or a series total',
   !/CLASS_RAND|\* CLASSES_IN_A_SERIES|CLASSES_IN_A_SERIES \*/.test(room)

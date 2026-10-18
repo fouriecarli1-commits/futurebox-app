@@ -292,8 +292,8 @@ check('and with nothing at all, nothing is claimed',
   habitOf([], [], '', []).source === 'none', habitOf([], [], '').source);
 
 // ── The name ─────────────────────────────────────────────────────────────
-check('a first name is used alone', firstName('Carli Fourie') === 'Carli', firstName('Carli Fourie'));
-check('one name is left as it is', firstName('Carli') === 'Carli');
+check('a first name is used alone', firstName('Lerato Dlamini') === 'Lerato', firstName('Lerato Dlamini'));
+check('one name is left as it is', firstName('Lerato') === 'Lerato');
 check('a stage name is not chopped in half',
   firstName('Blue Room Records') === 'Blue Room Records', firstName('Blue Room Records'));
 check('nor is one with a number in it',
@@ -301,12 +301,12 @@ check('nor is one with a number in it',
 check('an accented name survives', firstName('José Marais') === 'José', firstName('José Marais'));
 check('an apostrophe is part of a name', firstName("D'Arcy Smit") === "D'Arcy", firstName("D'Arcy Smit"));
 check('extra spaces do not make a third word',
-  firstName('  Carli   Fourie ') === 'Carli', firstName('  Carli   Fourie '));
+  firstName('  Lerato   Dlamini ') === 'Lerato', firstName('  Lerato   Dlamini '));
 check('no name is no name', firstName('   ') === '');
 
 // The name reaches the habit, first name only.
 check('the habit carries the first name',
-  habitOf([], [], 'Carli Fourie').name === 'Carli', habitOf([], [], 'Carli Fourie').name);
+  habitOf([], [], 'Lerato Dlamini').name === 'Lerato', habitOf([], [], 'Lerato Dlamini').name);
 
 // ── The clock ────────────────────────────────────────────────────────────
 check('midnight is morning', partOfDay(new Date(2026, 0, 1, 0, 1)) === 'morning');

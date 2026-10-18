@@ -24,7 +24,7 @@ import CollabRoom from '@/app/components/CollabRoom';
 export default function CollabRoomProbe() {
   return (
     <div className="min-h-screen bg-zinc-950 p-4">
-      <CollabRoom reloadKey={1} me="@carli" />
+      <CollabRoom reloadKey={1} me="@lerato" />
     </div>
   );
 }

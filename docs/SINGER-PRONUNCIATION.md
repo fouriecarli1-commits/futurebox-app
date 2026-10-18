@@ -2,7 +2,7 @@
 
 > **This is the one you need now.** Not `docs/SINGER-AGREEMENT.md`.
 >
-> *Carli, 9 October 2026:*
+> *The owner, 9 October 2026:*
 >
 > > "My ding is net, ek wil die sangers gebruik vir uitspraak, nie dat hulle stemme
 > > deur ander gebruik word nie."

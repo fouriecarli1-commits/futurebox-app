@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
+ * The owner, 10 October 2026: *"Sjoe, die kids room page is dood en vervelig,
  * dit moet colourful en exciting wees… dit moet vol kleur en excitement
  * wees, en selfs die uitleg moet anders en uniek wees as die status quo."*
  *
@@ -148,7 +148,7 @@ export const sizeAt = (at: number): number => SIZES[at % SIZES.length];
  *
  * ── Where they came from ─────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Kan jy asb nie op jou eie engine staat maak om
+ * The owner, 10 October 2026: *"Kan jy asb nie op jou eie engine staat maak om
  * kreatiewe idees uit te dink vir die kids room nie. Jy is nie goed daarmee
  * nie. Jy sal moet ons google engines gebruik!"* She then took the question to
  * Google herself and sent back what it drew: a bright room with a bobbing

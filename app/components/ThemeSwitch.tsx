@@ -3,7 +3,7 @@
 /**
  * Dark or light, from the home page.
  *
- * Carli, 13 October 2026: *"Ek dink homepage moet 'n swipe hê vir dark of
+ * The owner, 13 October 2026: *"Ek dink homepage moet 'n swipe hê vir dark of
  * light … mense moet op die home page reeds net kan swipe tussen dark en
  * light."*
  *

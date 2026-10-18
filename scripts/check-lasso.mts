@@ -108,7 +108,7 @@ for (const of of [{ width: 4032, height: 3024 }, { width: 64, height: 64 }, { wi
 
 /* ── The four shapes, which are four answers to one question ────────
  
-   Carli, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil waar
+   The owner, 8 October 2026: *"'N circle, 'n vierkand, 'n lyn, 'n pencil waar
    jy totale vryheid het."* All four end as the same path, so what can go
    wrong is the arithmetic that makes them: a circle that is a polygon you
    can see the corners of, a rectangle drawn backwards, or either of them

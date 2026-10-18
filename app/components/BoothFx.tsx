@@ -6,7 +6,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"As hierdie funksies kleurvolle visualizers kon
+ * The owner, 14 September 2026: *"As hierdie funksies kleurvolle visualizers kon
  * hê om te wys hoe buig die klankbaan sou dit baie help."*
  *
  * And user request: *"dit moet baie visueel wees en die klank vorm visueel maak
@@ -648,7 +648,7 @@ function Unit({
  * rack mounts every time a lane is picked or the desk is opened. Browsers
  * limit how many live contexts a page may hold, and each one holds the
  * audio hardware awake, so flicking through lanes could leave the room's
- * own context unable to start. Found on 15 October 2026 (Carli: *"Kyk mooi of elke funksie in …
+ * own context unable to start. Found on 15 October 2026 (The owner: *"Kyk mooi of elke funksie in …
  * probooth … werk."*). An `OfflineAudioContext` answers
  * `getFrequencyResponse` just the same, never touches the hardware, and one
  * of them serves every rack on the page.

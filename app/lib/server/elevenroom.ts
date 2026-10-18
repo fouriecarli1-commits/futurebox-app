@@ -162,7 +162,7 @@ export async function roomFor(weight: Weight): Promise<Room> {
   const percent = await spentPercent();
   const stopsAt = ROOM[weight];
   /* Usage-based billing on (ElevenLabs says the account may go past its
-     plan): the month cannot run out, so nothing is braked. Carli, 14 October
+     plan): the month cannot run out, so nothing is braked. The owner, 14 October
      2026: "Ek wil nie gecap wees nie." The ladder is for an account without
      it, where 100% is every route failing at once. */
   if (held?.canExceed) return { go: true, percent, stopsAt };

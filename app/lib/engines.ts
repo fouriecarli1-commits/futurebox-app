@@ -228,7 +228,7 @@ export { probeVideo, probeVideoEngine, videoIsReady, type VideoEngine, type Vide
  * the length in proportion to how many lines it carried. Four lines and three
  * minutes came out as one part of a hundred and twenty seconds holding four
  * lines, and what comes back from asking a model to stretch one verse over two
- * minutes is a wandering, repeating take — the "baie baie sleg" Carli paid for
+ * minutes is a wandering, repeating take — the "baie baie sleg" The owner paid for
  * more than once.
  *
  * The words now get the time the words need and the surplus goes to parts with
@@ -470,7 +470,7 @@ export const engines: Engines = {
 
 /* ── A job that outlives the page that started it ──────────────────────────
 
-   Carli, 15 October 2026: *"Kyk mooi of elke funksie in video desk ... werk."*
+   The owner, 15 October 2026: *"Kyk mooi of elke funksie in video desk ... werk."*
 
    The poll had no try around it. One dropped connection on a phone in the
    eight minutes a clip takes threw out of the loop, the id went with it, and

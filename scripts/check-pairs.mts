@@ -3,7 +3,7 @@
  *
  * ── What she asked for, and what was built instead ───────────────────────
  *
- * Carli, 24 September 2026: *"Ek wil hê jy moet elke kamer dupliseer waarin
+ * The owner, 24 September 2026: *"Ek wil hê jy moet elke kamer dupliseer waarin
  * create word … in daai moment moet die duplicated room oop maak waar in net
  * hierdie twee mense is en beide kry functionality om binne die kamer te
  * werk."*
@@ -158,9 +158,9 @@ ok('  and a WhatsApp link is marked as carrying a number',
 /* ── 5. The link reader, run rather than read ─────────────────────────── */
 
 for (const [what, link] of [
-  ['an Instagram profile', 'https://instagram.com/carli'],
+  ['an Instagram profile', 'https://instagram.com/lerato'],
   ['a WhatsApp number', 'https://wa.me/27821234567'],
-  ['one of the original seven', 'https://www.tiktok.com/@carli'],
+  ['one of the original seven', 'https://www.tiktok.com/@lerato'],
 ] as const) {
   ok(`${what} is taken`, !('ok' in readShareLink(link)), link);
 }
@@ -174,8 +174,8 @@ for (const [what, link] of [
 
 ok('a handle on its own is taken, and stays a handle',
   (() => {
-    const read = readHandle('Instagram', '@carli');
-    return !('ok' in read) && read.url === '' && read.shown === '@carli';
+    const read = readHandle('Instagram', '@lerato');
+    return !('ok' in read) && read.url === '' && read.shown === '@lerato';
   })(),
   'built into a URL it is a link wearing a handle’s clothes, and the option exists so there is nothing to press');
 

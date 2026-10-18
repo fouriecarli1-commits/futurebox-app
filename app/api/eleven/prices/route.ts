@@ -27,7 +27,7 @@
  *     perKind   what we charged members for that work
  *
  * and the gap between them is whether the month made a profit. That is the
- * thing Carli keeps asking for, and until now no page could answer it.
+ * thing the owner keeps asking for, and until now no page could answer it.
  *
  * `keyGuard` is the third, smaller thing on the page: whether the key is
  * fenced to the endpoints this app uses and whether it has a ceiling. It is a
@@ -84,7 +84,7 @@ export async function GET(request: Request): Promise<Response> {
 
      They used to be one: a database that could not be read returned 503 and
      the page was over. That is now the wrong shape, because the half that
-     answers Carli's actual question — what ElevenLabs will charge — does not
+     answers the owner's actual question — what ElevenLabs will charge — does not
      touch the database at all. A missing table must not take the invoice down
      with it, and a refused key must not take the margin table down with it. */
   const [comparison, money, guard] = await Promise.all([
@@ -118,7 +118,7 @@ export async function GET(request: Request): Promise<Response> {
 
     /* ── Whether the key is fenced in ────────────────────────────────────── */
     /* An empty list is an ANSWER, not an absence, and it needs saying in
-       words. Carli's first real open of this page returned `[]`: the read
+       words. The owner's first real open of this page returned `[]`: the read
        succeeded and the workspace has no service accounts, which means the key
        in use is a personal key and the service-accounts restriction API does
        not apply to it at all. Left as a bare `[]` that reads as "nothing
@@ -177,7 +177,7 @@ async function readComparison(): Promise<{ rows: Row[]; problem: string | null }
 
   /* ── And when the view is empty, WHY it is empty ────────────────────────
 
-     Carli, 30 September 2026, after making her first video and opening the
+     The owner, 30 September 2026, after making her first video and opening the
      table: *"Characters en credits sê net int4"* — the column types, because
      there were no rows under them.
 

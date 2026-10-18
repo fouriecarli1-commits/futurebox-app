@@ -3,7 +3,7 @@
  *
  * ── What was wrong ───────────────────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."* Looked at
+ * The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."* Looked at
  * properly, the Radar's own "Add a show you found yourself" had two faults,
  * and both are the kind that read as working.
  *

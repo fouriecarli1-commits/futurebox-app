@@ -3,7 +3,7 @@
 /**
  * The pictures along one block on the clock.
  *
- * Carli, 8 October 2026: *"Hoe moontlik is dit om die video se visuals op die
+ * The owner, 8 October 2026: *"Hoe moontlik is dit om die video se visuals op die
  * tydlyn te wys? Dit gaan dit makliker maak om te weet waar om te cut ens."*
  *
  * The arithmetic — how many, taken from where, remembered under what — is in

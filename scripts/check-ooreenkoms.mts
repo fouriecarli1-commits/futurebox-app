@@ -3,7 +3,7 @@
  *
  * ── Why this needs a check ───────────────────────────────────────────────
  *
- * Carli asked for a signed agreement between her and each artist, with the
+ * The owner asked for a signed agreement between her and each artist, with the
  * split table in it. That table is now in two documents that real people
  * put their names to, and it is also computed in `app/data/artmarket.ts`
  * every time a piece sells.

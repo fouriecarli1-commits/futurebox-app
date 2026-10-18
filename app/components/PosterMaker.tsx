@@ -3,7 +3,7 @@
 /**
  * The poster maker: a poster drawn whole, words and all, from the photo editor.
  *
- * Carli, 16 October 2026, a poster maker with three ways in. The sentences
+ * The owner, 16 October 2026, a poster maker with three ways in. The sentences
  * and the kinds are `lib/postposter.ts`; this is the sheet — choose a way,
  * say what it is, choose a shape, and press a button that says its price.
  * What comes back becomes the picture on the post, the post takes the

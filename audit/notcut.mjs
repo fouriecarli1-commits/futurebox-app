@@ -33,7 +33,7 @@
  *
  * ── And both SHAPES, because a phone was not the screen she was on ───────
  *
- * Carli, 10 and 11 October 2026: *"Kyk hoe sny alles af op die rekenaar se
+ * The owner, 10 and 11 October 2026: *"Kyk hoe sny alles af op die rekenaar se
  * skerm"*, and a day later, still: *"Die kamer met die afgesnyde woorde is
  * ook nog nie reg op die rekenaar se website nie."*
  *
@@ -75,7 +75,7 @@ const check = (label, ok, detail = '') => {
  * Where to look.
  *
  * The room, the studio's front DOOR, and the tab bar — because the first
- * version of this scanned only the room, and Carli photographed the door with
+ * version of this scanned only the room, and the owner photographed the door with
  * "Sound trai…" and "Make a so…" on it. Eleven rooms, and the one screen whose
  * whole job is to name them was the one screen this did not read.
  *
@@ -124,7 +124,7 @@ const SQUEEZED = () => {
     /* ── Why the question is CAN it, not IS it ──────────────────────────
  
        The first version of this rule asked whether a pane was sitting at a
-       non-zero `scrollLeft`, which is the state Carli was looking at. Put
+       non-zero `scrollLeft`, which is the state the owner was looking at. Put
        the original fault back and run it, and it passed: the pane only
        slides sideways once the browser has scrolled something into view,
        and a walk that opens a room and reads it never does that. A rule

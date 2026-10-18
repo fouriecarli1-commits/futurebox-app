@@ -181,7 +181,7 @@ export function guessRegion(appLang?: string): RegionGuess {
    written by hand and the next zone missing from it fails the same silent
    way.
 
-   Carli, 11 October 2026: *"Maak 'n country picker"*.
+   The owner, 11 October 2026: *"Maak 'n country picker"*.
 
    What a choice here does and does not do is worth being exact about, and
    the picker says it on the screen. It changes the number a person is SHOWN.

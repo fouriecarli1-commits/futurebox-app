@@ -1,7 +1,7 @@
 /**
  * The invoice reader, exercised — because it cannot be exercised anywhere else.
  *
- * `bill()` and `warningsFor()` answer the one question Carli keeps asking:
+ * `bill()` and `warningsFor()` answer the one question the owner keeps asking:
  * "ek wil net hê ons moet konstant in ag neem wat ek alles maandelliks betaal
  * want dit help nie ek maak nie 'n wins nie." They read ElevenLabs' own
  * numbers rather than our arithmetic about them.

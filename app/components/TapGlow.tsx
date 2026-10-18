@@ -3,7 +3,7 @@
 /**
  * Every press answers with a glow that outlives the finger.
  *
- * Carli, 17 October 2026: *"Doen 'n oudit van alle buttons. Dit moet 'n
+ * The owner, 17 October 2026: *"Doen 'n oudit van alle buttons. Dit moet 'n
  * beweging of glow maak wanneer 'n button gedruk word."* The press state in
  * `globals.css` is `:active`, and `:active` lasts exactly as long as the
  * finger is down — on a quick tap that is a tenth of a second, under the

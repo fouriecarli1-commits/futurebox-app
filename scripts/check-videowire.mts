@@ -3,7 +3,7 @@
  *
  * ── Where this comes from ────────────────────────────────────────────────
  *
- * Carli sent the Image & Video quickstart on 10 September 2026, along with
+ * The owner sent the Image & Video quickstart on 10 September 2026, along with
  * support's answer about Seedance. Until then this repository read the wire
  * format off the SDK's serialisers and said so — several comments in
  * `lib/server/video/eleven.ts` are careful to mark what was inferred rather

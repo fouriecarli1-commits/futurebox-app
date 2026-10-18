@@ -14,7 +14,7 @@
  * world actually are. They were left out because a list of three got written
  * quickly and nothing ever compared it to what the engine takes.
  *
- * Carli, 9 October 2026: *"daar moet van alles wat opsies is, 'n
+ * The owner, 9 October 2026: *"daar moet van alles wat opsies is, 'n
  * verskeidenheid wees."* `check:prentvorms` holds this list against the
  * route's and against the rooms', so a sixth ratio appears everywhere or the
  * check says which room missed it.

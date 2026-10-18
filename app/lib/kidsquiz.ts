@@ -2,7 +2,7 @@
  * The quizzes: questions somebody wrote, in both languages, with nothing
  * behind them but this file.
  *
- * Carli, 13 October 2026: *"And then also quizies fun child quizies, like
+ * The owner, 13 October 2026: *"And then also quizies fun child quizies, like
  * would you rather, and also music quizies that will teach music skills,
  * story telling, video editing, photo editing."*
  *

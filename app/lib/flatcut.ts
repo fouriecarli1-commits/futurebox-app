@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026, looking at a logo this app had just made for her:
+ * The owner, 10 October 2026, looking at a logo this app had just made for her:
  * *"Kyk gou of jy hierdie sien as transparent"* — and it was not. Then:
  * *"Well this was done on our own app. How are we going to get
  * transparency?"*
@@ -22,7 +22,7 @@
  *
  * ── It works, and here is the measurement ────────────────────────────────
  *
- * Carli reported this broken more than once — on 11 October 2026, flatly:
+ * The owner reported this broken more than once — on 11 October 2026, flatly:
  * *"Die transparency BG remover werk steeds nie in die app nie."* Every
  * attempt to reproduce it passed, which is an uncomfortable place to leave a
  * feature: a green check and a user saying no.

@@ -1,7 +1,7 @@
 /**
  * The shapes each platform shows a post in, for the photo editor's preview.
  *
- * Carli, 15 October 2026, about the purple eye: *"Die pers ogie moet vir jou
+ * The owner, 15 October 2026, about the purple eye: *"Die pers ogie moet vir jou
  * opsies gee van tipe posts. Elke platform se size lyk anders."* The eye used
  * to show one card at the post's own size, which answered nothing: a picture
  * that is right as an Instagram post is cut in half as a YouTube thumbnail.

@@ -5,7 +5,7 @@
  *
  * ── Why the front page needed one ────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Ek dink alles moet drop down menus wees
+ * The owner, 21 September 2026: *"Ek dink alles moet drop down menus wees
  * behalwe die maker se advertensie. En die 1 featured masterclass moet ook
  * groot wees, en die res van die masterclasses in 'n drop down."*
  *
@@ -30,7 +30,7 @@
  * stranger sees before signing in, and none of these sections can be filled
  * in by anything.
  *
- * What it does need to share is the LOOK. Carli's words about this page were
+ * What it does need to share is the LOOK. The owner's words about this page were
  * *"die buttons is randomely oor al. Dit is nie netjies nie."* A second kind
  * of fold, six pixels from the Top 10 ones, is exactly that complaint: the
  * first version of this had its chevron on the right and a grey line of

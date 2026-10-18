@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Ons het defnitief meer teks voorstelle en
+ * The owner, 11 October 2026: *"Ons het defnitief meer teks voorstelle en
  * amazing teks templates nodig... font combinations soos BOLD moves, ROCK,
  * static, BOO!, CUSTOM PAINT, SPOOKY, SCARY story, TALK TO US... en apps
  * soos TypeExtrude, TypeCutOut, TypeLettering, TypeGradient, Signature."*

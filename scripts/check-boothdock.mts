@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
+ * The owner, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
  * button bar, wat in die middel 'n play/pause button het, back en forward,
  * en links en regs van dit is Track control icon en mix/master icon, en
  * daaruit pop al die netjiese funksies op. … Vier icon buttons heel onder
@@ -79,7 +79,7 @@ ok(
 
 /* ── Turned sideways ───────────────────────────────────────────
 
-   Carli: *"die booth moet asb op die dwars draai funksie van 'n foon en
+   The owner: *"die booth moet asb op die dwars draai funksie van 'n foon en
    tablet getoets word … dan gaan die buttons weer beter werk aan die kant
    van die skerm en nie onder nie."*
 
@@ -127,7 +127,7 @@ ok('  as does Escape', /event\.key === 'Escape'/.test(dock));
 
 /* ── Every icon says what it is, and what it costs ───────────────────
 
-   Carli, 14 September 2026: *"Maak ook seker dat knoppies pop-ups het wat sê
+   The owner, 14 September 2026: *"Maak ook seker dat knoppies pop-ups het wat sê
    wat 'n funksie is, en maak seker betaalde funksies word uitgewys."*
 
    Six icons in two rows is six pictures, and a picture of a wand does not

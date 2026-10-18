@@ -43,14 +43,14 @@ say(await button.isDisabled(), 'the button is live with an empty script');
 // ── Casting, then a script ─────────────────────────────────────────────
 const pickers = page.locator('select');
 say(await pickers.count() === 2, `expected two voice pickers, saw ${await pickers.count()}`);
-await pickers.nth(0).selectOption('v-anre');
-await pickers.nth(1).selectOption('v-carli');
+await pickers.nth(0).selectOption('v-sipho');
+await pickers.nth(1).selectOption('v-lerato');
 
 await script.fill([
-  'Anre: So what changed this year?',
-  'Carli: Everything, and none of it at once.',
+  'Sipho: So what changed this year?',
+  'Lerato: Everything, and none of it at once.',
   '  And that is the part nobody expected.',
-  'Anre: Say more.',
+  'Sipho: Say more.',
 ].join('\n'));
 
 const body = () => page.locator('body').innerText();
@@ -69,7 +69,7 @@ const body = () => page.locator('body').innerText();
 }
 
 // ── A speaker nobody was cast for is named, not guessed at ─────────────
-await script.fill('Anre: Hello.\nGuest: Hello back.\nAnre: Goodbye.');
+await script.fill('Sipho: Hello.\nGuest: Hello back.\nSipho: Goodbye.');
 {
   const text = await body();
   say(/Nobody is cast as/i.test(text), 'an uncast speaker passed without a word said about it');
@@ -79,7 +79,7 @@ await script.fill('Anre: Hello.\nGuest: Hello back.\nAnre: Goodbye.');
 }
 
 // ── A long script says how many passes it takes ────────────────────────
-await script.fill(`Anre: ${'A sentence about the future. '.repeat(90)}\nCarli: And another.`);
+await script.fill(`Sipho: ${'A sentence about the future. '.repeat(90)}\nLerato: And another.`);
 {
   const text = await body();
   say(/Passes[^0-9]*[2-9]/.test(text), `a script well over their cap claims one pass: ${/Passes[^\n]*/.exec(text)?.[0]}`);
@@ -87,22 +87,22 @@ await script.fill(`Anre: ${'A sentence about the future. '.repeat(90)}\nCarli: A
 }
 
 // ── Over the plan is refused here rather than upstream ─────────────────
-await script.fill(`Anre: ${'word '.repeat(1400)}`);
+await script.fill(`Sipho: ${'word '.repeat(1400)}`);
 {
   say(await button.isDisabled(), 'a script over the plan\'s limit can still be sent, to be refused upstream');
 }
 
 // ── And a real one goes, and comes back as the draft ───────────────────
-await script.fill('Anre: So what changed this year?\nCarli: Everything, and none of it at once.');
+await script.fill('Sipho: So what changed this year?\nLerato: Everything, and none of it at once.');
 await button.click();
 await page.waitForFunction(() => Number(document.querySelector('#mounted')?.dataset.got) > 0, { timeout: 10000 })
   .catch(() => say(false, 'the finished conversation never reached the episode draft'));
 
 say(sent !== null, 'nothing was sent');
 say(Array.isArray(sent?.turns) && sent.turns.length === 2, `sent ${sent?.turns?.length} turns for two lines`);
-say(sent?.turns?.[0]?.voiceId === 'v-anre', 'the first turn went in the wrong voice');
-say(sent?.turns?.[1]?.voiceId === 'v-carli', 'the second turn went in the wrong voice');
-say(!/Anre:/.test(sent?.turns?.[0]?.text ?? ''), 'the speaker\'s name was sent as part of what they say');
+say(sent?.turns?.[0]?.voiceId === 'v-sipho', 'the first turn went in the wrong voice');
+say(sent?.turns?.[1]?.voiceId === 'v-lerato', 'the second turn went in the wrong voice');
+say(!/Sipho:/.test(sent?.turns?.[0]?.text ?? ''), 'the speaker\'s name was sent as part of what they say');
 
 const player = page.locator('audio');
 say(await player.count() === 1, 'there is nothing to listen to afterwards');

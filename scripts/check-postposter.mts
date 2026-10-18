@@ -3,7 +3,7 @@
  *
  *   npm run check:postposter
  *
- * Carli, 16 October 2026: a poster maker with three ways in. What has to
+ * The owner, 16 October 2026: a poster maker with three ways in. What has to
  * hold is that what she typed is what is asked to be drawn, exactly and in
  * quotation marks that her own quotes cannot break; that a kind carries its
  * look and asks for words in her language; that a photo goes up as the

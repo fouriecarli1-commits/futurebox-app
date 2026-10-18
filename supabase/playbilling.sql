@@ -1,6 +1,6 @@
 -- Purchases made through Google Play, inside the Play Store app.
 --
--- Carli, 14 October 2026: "Wanneer ek die app op die playstore gaan sit gaan
+-- the owner, 14 October 2026: "Wanneer ek die app op die playstore gaan sit gaan
 -- ek paystack afhaal en werk met die playstore se paying system." The website
 -- keeps Paystack; inside the Android app, Play bills. See `app/lib/playproducts.ts`
 -- and `app/api/play/route.ts`.

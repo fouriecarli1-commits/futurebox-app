@@ -4,7 +4,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek dink ook video editor, en video desk kan stem
+ * The owner, 10 October 2026: *"Ek dink ook video editor, en video desk kan stem
  * generations hê, noem dit eerder, generate a sound, asook 'n podcast text tot
  * speech. Dit is tipies iets wat 'n mens daar ook sou kon gebruik."*
  *

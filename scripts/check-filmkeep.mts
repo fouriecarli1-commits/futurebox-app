@@ -3,7 +3,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
+ * The owner, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
  * perongeluk back gedruk en toe ek terug gaan was die projek weg."*
  *
  * ── What this holds that the browser walk cannot ─────────────────────────
@@ -125,7 +125,7 @@ ok('  and the room says so on the screen',
 
 /* ── An empty film cannot land on a film ───────────────────────────────── */
 
-/* Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor... Toe ek
+/* The owner, 5 October 2026: *"Ek het nou 'n video gemaak op editor... Toe ek
    terug na die editor gaan is dit ook nie meer daar nie."*
 
    The first version of the keeping had the loss built into it. `loadFilm`
@@ -221,7 +221,7 @@ ok('saving waits until she stops',
 
 /* ── And out the other side ────────────────────────────────────────────── */
 
-/* Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
+/* The owner, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
    channel toe gaan is dit nie daar nie."*
 
    Correct, and for the same reason the music videos were missing in

@@ -5,7 +5,7 @@
  *
  * It lived in `check-gratis.mts`, which is the right home for the RULE —
  * nothing reaches a supplier for free by accident — and was the only home
- * for the list as well. Then Carli asked for the list itself:
+ * for the list as well. Then the owner asked for the list itself:
  *
  *   *"noem alles wat gratis is en niks kos nie"*
  *

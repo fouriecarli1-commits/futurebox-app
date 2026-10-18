@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ek wonder met video desk of dit nie ook so kan
+ * The owner, 10 October 2026: *"Ek wonder met video desk of dit nie ook so kan
  * werk met simpl as net 'n copilot en 'n everything."* Said straight after
  * the same two landed on Make a song, so the shape is settled; what is not
  * settled is that this desk is a harder room to cut in half than that one.

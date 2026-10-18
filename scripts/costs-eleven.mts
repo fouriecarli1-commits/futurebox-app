@@ -36,7 +36,7 @@ import { RAND_PER_USD, FIXED_CORE } from './fixedcosts.mts';
 /**
  * BTW op ElevenLabs se rekening. **Nagegaan, 8 September 2026.**
  *
- * Carli se egte faktuur, gelees deur `/api/eleven/prices`:
+ * The owner se egte faktuur, gelees deur `/api/eleven/prices`:
  * `next_invoice.amount_due_cents` was 11385, oftewel $113,85. Pro se
  * plakkerprys is $99. En $99 x 1,15 = $113,85, tot die sent. Dit is
  * Suid-Afrikaanse BTW van 15%.
@@ -48,7 +48,7 @@ import { RAND_PER_USD, FIXED_CORE } from './fixedcosts.mts';
  * ── Waarop dit toegepas word, en waarop nie ──────────────────────────────
  *
  * NET op ElevenLabs, en op Zoho hieronder wat reeds ingesluit ingevoer word.
- * Dit is wat Carli op haar staat gesien het en bevestig het.
+ * Dit is wat the owner op haar staat gesien het en bevestig het.
  *
  * Anthropic, Vercel, Supabase, Resend en Kits.AI is ook dollarrekeninge en hef
  * dit dálk ook — maar dit is nie nagegaan nie, en 'n som wat 15% aanvaar waar
@@ -63,7 +63,7 @@ const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD *
 /**
  * ElevenLabs se planne — **nagegaan**, 8 September 2026.
  *
- * Carli het hulle prysbladsy gestuur. Dit was tot vandag die grootste
+ * The owner het hulle prysbladsy gestuur. Dit was tot vandag die grootste
  * onbekende in hierdie hele lêer: die reël hier het gesê "ONGEVERIFIEER ...
  * dit is wat die kode tot dusver aangeneem het", en die aanname was met
  * omtrent 85% te ruim.
@@ -93,7 +93,7 @@ const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD *
  * Albei was agteruit afgelei uit 'n aanvaarde toelaag eerder as uit 'n prys
  * wat iemand gesien het.
  *
- * Carli het ElevenLabs se volledige diens-vir-diens tabelle gestuur. Die
+ * The owner het ElevenLabs se volledige diens-vir-diens tabelle gestuur. Die
  * regte anker is nie dollars per eenheid nie, dit is **krediete** per
  * eenheid: musiek 900 per minuut, stem-verwisselaar en -afsonderaar 1 000,
  * klankeffekte 200 per stuk, oorklanking 2 000 / 3 000 / 13 500 per minuut
@@ -114,7 +114,7 @@ const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD *
  *
  * ── Wat ElevenLabs se ondersteuning self gesê het, 9 September 2026 ─────
  *
- * Carli het gevra wat gebeur as die krediete opraak. Hulle antwoord het drie
+ * The owner het gevra wat gebeur as die krediete opraak. Hulle antwoord het drie
  * dinge vasgemaak wat hierdie lêer tot nou afgelei het, en een daarvan draai
  * die hele gevolgtrekking om.
  *
@@ -617,7 +617,7 @@ for (const plan of EL_PLANS) {
   say('');
   say('### En wat SARS daarvan vat');
   say('');
-  say('Carli, 8 September 2026: *"ek dink sars tot en met 30% van my inkomste');
+  say('the owner, 8 September 2026: *"ek dink sars tot en met 30% van my inkomste');
   say('neem van hierdie produk, dus wil ek nie \'n verlies ly nie."*');
   say('');
   say('**Die belangrikste ding eerste: maatskappybelasting is op WINS, nie op');
@@ -719,7 +719,7 @@ for (const plan of EL_PLANS) {
 
 /* ── Wat 'n krediet verdien, en wat 'n krediet kos ───────────────────────
 
-   Bygevoeg 16 September 2026, want Carli het dit gevra: "hoeveel maak ons
+   Bygevoeg 16 September 2026, want the owner het dit gevra: "hoeveel maak ons
    per krediet, en vat al my uitgawes in ag".
 
    Die antwoord is nie een getal nie, en dít is die punt. 'n FutureBox-krediet
@@ -803,7 +803,7 @@ for (const plan of EL_PLANS) {
   say('');
   say('### Twee reëls wat nog nie '.concat("'n prys het nie"));
   say('');
-  say('Albei is deur Carli genoem en nie een kan hier geraai word:');
+  say('Albei is deur the owner genoem en nie een kan hier geraai word:');
   say('');
   say('| Wat | Stand | Wat elke R1 000 per maand kos |');
   say('|---|---|---|');
@@ -820,7 +820,7 @@ for (const plan of EL_PLANS) {
    WAT ELKE KNOPPIE KOS — die tabel waarop 'n begroting rus
    ═══════════════════════════════════════════════════════════════════════
 
-   Carli, 24 September 2026: *"Werk al die somme uit asb. Dit is uiters
+   The owner, 24 September 2026: *"Werk al die somme uit asb. Dit is uiters
    belangrik vir begroting en uitgawes."*
 
    Alles hierbo antwoord een vraag — kan die besigheid werk — en antwoord dit
@@ -1010,7 +1010,7 @@ say('');
    DIE PRYS VAN 'N LIED — uitgewerk, 24 September 2026
    ═══════════════════════════════════════════════════════════════════════
 
-   Carli: *"Maak die lied ook reg, werk daai prys uit."*
+   The owner: *"Maak die lied ook reg, werk daai prys uit."*
 
    Dit volg op die tabel hierbo, waar 'n lied op 3,0x uitkom terwyl elke
    ander PRODUK op ses tot sewe sit. Die gevolgtrekking lyk
@@ -1021,7 +1021,7 @@ say('');
 
 /* The prices worth looking at beside the one in force. `CREDITS.song` is
    included so the "(nou)" mark always has something to land on — it was a
-   literal 10 and stopped matching the moment Carli repriced a song to 8 on
+   literal 10 and stopped matching the moment the owner repriced a song to 8 on
    11 October, which the typechecker caught and a reader would not have. */
 const SONG_OPTIONS = [...new Set<number>([CREDITS.song, 10, 15, 20, 23])]
   .sort((a, b) => a - b);

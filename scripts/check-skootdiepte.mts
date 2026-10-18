@@ -3,10 +3,10 @@
  *
  * ── The same complaint, a month apart ────────────────────────────────────
  *
- * Carli, 11 September 2026: *"CoPilot moet net baie meer descriptive wees
+ * The owner, 11 September 2026: *"CoPilot moet net baie meer descriptive wees
  * wanneer video shots geskryf word."*
  *
- * Carli, 9 October 2026: *"Die video studio se ai is baie kort af. Dit moet
+ * The owner, 9 October 2026: *"Die video studio se ai is baie kort af. Dit moet
  * baie descriptive wees en daardie ai moet weet wat verwag word, om genoeg
  * beskrywing te gee sodat 'n ai 'n sinvolle video kan maak."*
  *

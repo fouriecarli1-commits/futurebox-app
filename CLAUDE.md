@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# How to talk to Carli
+# How to talk to the owner
 
 Afrikaans, with the working words left in English.
 

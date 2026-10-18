@@ -3,7 +3,7 @@
  *
  * ── Why this is its own file ─────────────────────────────────────────────
  *
- * Carli, 18 September 2026: *"Die probooth moet 'n op en af skuif knoppie hê
+ * The owner, 18 September 2026: *"Die probooth moet 'n op en af skuif knoppie hê
  * heel links by elke tydlyn, daar by die S en M en die tydlyne moet dan kan
  * op en af skuif."* And in the same breath, the reason: *"dit raak belangrik
  * wanneer 'n hele tydlyn se klankbane gelyktydig opgeskuif moet word."*

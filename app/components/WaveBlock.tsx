@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Die eie video se klank moet sy eie klankbaan hê, en
+ * The owner, 4 October 2026: *"Die eie video se klank moet sy eie klankbaan hê, en
  * die musiek wat in gebring word moet nog 'n tydlyn wees onder die video se
  * klankbaan. Elke klankbaan moet golwe hê, sodat golwe gematch kan word wanneer
  * nodig."*

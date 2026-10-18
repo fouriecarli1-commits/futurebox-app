@@ -5,7 +5,7 @@
  *
  * ── What this guards ─────────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Daar moet ook 'n opsie wees om 'n foto binne die
+ * The owner, 8 October 2026: *"Daar moet ook 'n opsie wees om 'n foto binne die
  * app te bêre. Daar moet dalk 'n gallery in channel gestoor word. Dan
  * wanneer mens video editor gebruik is dit een van die plekke wat geroep
  * word waaruit mens kan kies."*

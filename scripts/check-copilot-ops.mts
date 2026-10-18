@@ -123,7 +123,7 @@ for (const file of readdirSync(DIR).filter((name) => name.endsWith('.tsx'))) {
 
 /* ── A promise in the opening line is an operation, or it is a lie ──────
 
-   Carli, 19 September 2026, on the song room: *"Die Copilot in die make a
+   The owner, 19 September 2026, on the song room: *"Die Copilot in die make a
    song booth moet iets sê van, jy kan alles deur my doen in hierdie kamer,
    sê net wat jy nodig het, die tema, die tyd, die styl, jou stem keuse."*
 
@@ -187,7 +187,7 @@ for (const room of ['make'] as const) {
 
 /* ── Starting over ────────────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n reset hê om
+ * The owner, 21 September 2026: *"Copilot en daardie kamer moet 'n reset hê om
  * die kamer skoon te maak en van vooraf te prompt."*
  *
  * Two halves that are useless apart. A button that clears the conversation

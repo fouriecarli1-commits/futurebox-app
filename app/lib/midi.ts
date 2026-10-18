@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Ons sal ook die funksie op probooth moet bied waar
+ * The owner, 10 October 2026: *"Ons sal ook die funksie op probooth moet bied waar
  * iemand op 'n spesifieke track kan click en dan is daar 'n dropdownmenu wat
  * die opsie gee vir download midi, download wav. Dit gee die geleentheid om 'n
  * sekere klank te save vir 'n ander projek."*

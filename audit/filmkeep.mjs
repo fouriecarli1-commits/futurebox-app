@@ -3,7 +3,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
+ * The owner, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
  * perongeluk back gedruk en toe ek terug gaan was die projek weg."*
  *
  * The edit lived in React state and nowhere else, so the phone's own Back
@@ -171,7 +171,7 @@ if (!made) {
 
   /* ── The read that goes wrong ────────────────────────────────────────
 
-     Carli, 5 October 2026: *"Toe ek terug na die editor gaan is dit ook nie
+     The owner, 5 October 2026: *"Toe ek terug na die editor gaan is dit ook nie
      meer daar nie."*
 
      This is the fault, and it is the one thing above that no amount of

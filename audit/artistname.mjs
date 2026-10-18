@@ -12,8 +12,8 @@
  * `email.split('@')[0]` — because at sign-up that is genuinely all there is.
  * The header, the greeting and the account panel showed that. Meanwhile the
  * recording name on the `creators` row went out on the releases. So somebody
- * called Anré, signed up as anrefourie@…, was `anrefourie` in the corner of
- * every screen and "Anré Fourie" on their own song, and nothing on the screen
+ * called Zoë, signed up as zoesmit@…, was `zoesmit` in the corner of
+ * every screen and "Zoë Smit" on their own song, and nothing on the screen
  * explained which one was which.
  *
  * ── What is proved here ──────────────────────────────────────────────────
@@ -33,10 +33,10 @@ import { dismissDoor } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3077';
-const NAME = 'Anré Fourie';
-const HANDLE = 'AnreF.01';
+const NAME = 'Zoë Smit';
+const HANDLE = 'ZoeS.01';
 /** What the server's own `cleanHandle` would make of that. */
-const CLEANED = 'anref.01';
+const CLEANED = 'zoes.01';
 
 const problems = [];
 const check = (label, ok, detail = '') => {
@@ -95,7 +95,7 @@ try {
   await cta.waitFor({ state: 'visible', timeout: 60000 });
   await cta.click();
   await p.waitForTimeout(700);
-  await p.locator('input[type="email"]').first().fill('anrefourie@futurebox.test');
+  await p.locator('input[type="email"]').first().fill('zoesmit@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('artist-password-1234');
   await agreeAndSubmit(p);
@@ -117,7 +117,7 @@ try {
     ((await corner.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
 
   check('with nothing chosen, the corner falls back to the sign-up name',
-    /anrefourie/.test(await headerSays()), (await headerSays()).slice(0, 80));
+    /zoesmit/.test(await headerSays()), (await headerSays()).slice(0, 80));
 
   /* ── Set it, from the tab a phone user would press ──────────────────── */
   const bar = p.locator('nav[aria-label]').first();
@@ -173,7 +173,7 @@ try {
   const after = await headerSays();
   check('the corner of every screen changes to it', after.includes(NAME), after.slice(0, 80));
   check('with the chosen handle, not one made from the email',
-    after.includes(`@${CLEANED}`) && !after.includes('@anrefourie'), after.slice(0, 80));
+    after.includes(`@${CLEANED}`) && !after.includes('@zoesmit'), after.slice(0, 80));
 
   /* ── It is the same field in the channel ────────────────────────────── */
   await bar.locator('button').filter({ hasText: 'Channel' }).first().click();
@@ -218,7 +218,7 @@ try {
 
   /* A name of their own is fine again — the block is about the app's name,
      not about having changed your mind. */
-  await nameBox.fill('Anré Fourie');
+  await nameBox.fill('Zoë Smit');
   await p.waitForTimeout(400);
   check('a name of your own still saves',
     !(await p.locator('div[role="dialog"] button').filter({ hasText: /^Save$/ }).first().isDisabled()));

@@ -3,7 +3,7 @@
  *
  * ── What this is for ─────────────────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Registrasie op playstore."* The app that
+ * The owner's list, 7 October 2026: *"Registrasie op playstore."* The app that
  * goes on Google Play is this website in a wrapper — a Trusted Web Activity —
  * and the one thing that makes it feel like an app rather than a browser is
  * this file. Android fetches it before opening the wrapper. If the

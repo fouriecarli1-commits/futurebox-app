@@ -3,7 +3,7 @@
  *
  * ── Why this is a file and not an API ────────────────────────────────────
  *
- * Carli, 11 September 2026: "kan dit nie sinvol wees om advertensie style na
+ * The owner, 11 September 2026: "kan dit nie sinvol wees om advertensie style na
  * te gaan in die tipe produk range en style uit te wys wat stylvol en
  * huidiglik die trend is nie? Ek weet nie of pinterest of canva sulke toegange
  * gee nie."
@@ -34,7 +34,7 @@
  * ── Whose opinion this is ────────────────────────────────────────────────
  *
  * Mine, on the date each entry says, and it is the weakest thing in this
- * repository. Carli sells in this market and I have never seen it. Every
+ * repository. The owner sells in this market and I have never seen it. Every
  * entry is written to be argued with and corrected rather than trusted, and
  * `reviewed` is required by the type so that no entry can pretend to be
  * newer than it is.

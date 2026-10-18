@@ -3,7 +3,7 @@
  *
  * ── Where this came from ─────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie soek
+ * The owner, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie soek
  * wat baie klink soos michael jackson se liedjie beat it, en dit kry dit
  * regtig reg om dit 'n moontlikheid te maak."* And then the sentence that
  * made it buildable: *"google is ook nie bereid om copy write wette te
@@ -218,7 +218,7 @@ ok('the style translation costs less than the advert writer',
 /* ── The band moved under this rule on 11 October 2026 ─────────────────
  
    It held the style word at or below `repaint`, as a stand-in for "the
-   small calls all sit together". Carli then priced the whole app in one
+   small calls all sit together". The owner then priced the whole app in one
    afternoon off the table that shows each press's engine cost and profit,
    and the two parted: a style word at six credits, a picture change at
    five.

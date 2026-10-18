@@ -6,7 +6,7 @@
  * ── The gap ──────────────────────────────────────────────────────────────
  *
  * The radar drafts an email to a podcast host or another maker, and that
- * email had nowhere to send them. Carli: "Send an email, sal dit 'n link he
+ * email had nowhere to send them. The owner: "Send an email, sal dit 'n link he
  * na die kamer." It did not, and could not: the room only exists once two
  * FutureBox accounts have accepted each other, so a stranger reading the
  * email had four steps between "yes, interesting" and a conversation — find

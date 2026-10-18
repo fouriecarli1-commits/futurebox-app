@@ -1,7 +1,7 @@
 /**
  * The fine print she asked off the welcome screen, and where it went.
  *
- * Carli, 14 September 2026, with a photograph of the screen: *"Haal daai fyn
+ * The owner, 14 September 2026, with a photograph of the screen: *"Haal daai fyn
  * skrif uit op die make a song room."*
  *
  * Six lines of grey type under the doors, explaining what the suggestion is

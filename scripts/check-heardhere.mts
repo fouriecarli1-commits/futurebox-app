@@ -4,7 +4,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Binne die video editor. Wanneer ek die musiek
+ * The owner, 5 October 2026: *"Binne die video editor. Wanneer ek die musiek
  * tydlyn in sit en ek druk play, dan hoor mens nie die klank binne die video
  * nie."*
  *
@@ -108,7 +108,7 @@ ok('  at the loudness she set for it',
 ok('a logo can be taken off',
   /data-editormarkoff[\s\S]{0,200}onClick=\{\(\) => setMark\(null\)\}/.test(room)
     && /markPicture: undefined/.test(room),
-  'Carli: "daar is nie ’n knoppie om ’n logo uit te haal en te delete'
+  'the owner: "daar is nie ’n knoppie om ’n logo uit te haal en te delete'
   + ' nie" — a one-way door, and reloading the page stopped clearing it on the'
   + ' day the room started remembering the project');
 
@@ -121,7 +121,7 @@ ok('  and taking it off takes it off the bill too',
 
 ok('there is a way to start a new project',
   /data-editornewproject/.test(room),
-  'Carli: "om die huidige project weg te vat en met ’n nuwe een te begin".'
+  'the owner: "om die huidige project weg te vat en met ’n nuwe een te begin".'
   + ' It became necessary the day the room started remembering: before that,'
   + ' leaving and coming back WAS a new project, badly');
 

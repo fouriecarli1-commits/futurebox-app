@@ -3,7 +3,7 @@
 /**
  * All tools, on one page: round buttons in groups, each straight to its tool.
  *
- * Carli, 16 October 2026, screenshots of another app's "All tools" page —
+ * The owner, 16 October 2026, screenshots of another app's "All tools" page —
  * round buttons with a picture and a name under Generative AI, Video editing,
  * Photo editing, Shoot and record and Quick actions. Ours in our own look:
  * the dark studio, a soft neon ring per group, and a line under a tool that

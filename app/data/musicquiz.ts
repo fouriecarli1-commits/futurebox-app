@@ -1,7 +1,7 @@
 /**
  * One music question every time you come back.
  *
- * ── What Carli asked for, 10 September 2026 ──────────────────────────────
+ * ── What the owner asked for, 10 September 2026 ──────────────────────────────
  *
  * "add to the bottom of the creative page everytime someone logs in a quiz
  *  about music knowledge with a tick box of answers. and then reveal the
@@ -994,7 +994,7 @@ export const QUIZ: readonly QuizQuestion[] = [
 
   /* ── The words on a page of music ─────────────────────────────────────
 
-     Carli, 22 September 2026: *"Wat is 'n triool, tonika, 'n valsetto,
+     The owner, 22 September 2026: *"Wat is 'n triool, tonika, 'n valsetto,
      deskant, verskillende stemme, oktaaf hoër, p, f, ff, musiektermes wat
      baie gebruik word, key change, wat is die verskil tussen mol en kruis,
      wat is 'n alt, viool en soprano."*
@@ -1281,7 +1281,7 @@ export const QUIZ: readonly QuizQuestion[] = [
 
   /* ── The Pro Booth, desk by desk ──────────────────────────────────────
 
-     Carli: *"Bou die verskillende funksies uit wat binne ons probooth is
+     The owner: *"Bou die verskillende funksies uit wat binne ons probooth is
      en waarvoor dit is."*
 
      A room with six desks in it is only six desks if somebody knows what
@@ -1476,7 +1476,7 @@ export const QUIZ: readonly QuizQuestion[] = [
 
   /* ── Two decades everybody half-remembers ─────────────────────────────
 
-     Carli: *"goeie general 80's, 90's bekende musiek quiz."*
+     The owner: *"goeie general 80's, 90's bekende musiek quiz."*
 
      The only questions in this file that are facts about music rather
      than about somebody's own song, and they earn it a different way:
@@ -1668,7 +1668,7 @@ export const QUIZ: readonly QuizQuestion[] = [
 
   /* ── The choir, and five jokes that are really questions ─────────────
 
-     Carli: *"sommer 'n paar choir en music joke quiz."*
+     The owner: *"sommer 'n paar choir en music joke quiz."*
 
      The choir ones are here because choral singing is the biggest music
      tradition in this country by a distance, and almost nothing written
@@ -1847,7 +1847,7 @@ export const QUIZ: readonly QuizQuestion[] = [
 
   /* ── Asking for a song, and what is happening when you do ────────────
 
-     Carli: *"ook lekker goed wat help om te leer wat om in gedagte te hou
+     The owner: *"ook lekker goed wat help om te leer wat om in gedagte te hou
      om goeie musiek te prompt, dalk kan jy die computer science agter
      musiekmaak ook uitlig."*
 

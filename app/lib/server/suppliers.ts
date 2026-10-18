@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026, about ElevenLabs: *"Hulle antwoord my nie, en ek sal
+ * The owner, 5 October 2026, about ElevenLabs: *"Hulle antwoord my nie, en ek sal
  * nie so kan besigheid doen nie."* And then, on what she is waiting for:
  * *"'n kwotasie en wat hulle ceiling is, want ek wil groot gaan en baie
  * kliente aanneem."*

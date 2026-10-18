@@ -3,7 +3,7 @@
  *
  * ── The evening this is for ──────────────────────────────────────────────
  *
- * Carli, 20 September 2026, twice in one night: *"The gallery could not be
+ * The owner, 20 September 2026, twice in one night: *"The gallery could not be
  * read just now."* The first time it was `paid_rand`; the second it was
  * `ends_at` and `won_by`. Both times the room showed one sentence, neither
  * of us could tell which column, and the second one needed a hand-written

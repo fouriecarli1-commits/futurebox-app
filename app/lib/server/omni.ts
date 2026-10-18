@@ -3,7 +3,7 @@
  *
  * ── Where this came from ─────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, pasted a Gemini conversation naming it. I said I
+ * The owner, 9 October 2026, pasted a Gemini conversation naming it. I said I
  * could not verify the name from here — this machine cannot reach Google's
  * consoles and a model name out of a chat is not evidence — and asked for
  * her own page.

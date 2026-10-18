@@ -1,7 +1,7 @@
 /**
  * Talking instead of typing, into any box an AI reads.
  *
- * Carli, 14 October 2026: *"ek sal verkies dat al ons ai's ook 'n listening
+ * The owner, 14 October 2026: *"ek sal verkies dat al ons ai's ook 'n listening
  * tool het, sodat mense ook dit met praat in invoer."*
  *
  * The browser's own recogniser does the listening — the same one the kids

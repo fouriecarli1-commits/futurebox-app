@@ -3,7 +3,7 @@
  *
  * ── Why this exists the day the room does ────────────────────────────────
  *
- * Because the last thing called an editor in this app was not one. Carli,
+ * Because the last thing called an editor in this app was not one. The owner,
  * 24 September 2026: *"Jy sê ons het een, maar ek vermoed jy meen die long
  * shot funksie."* She was right — it was a storyboard with a render button.
  *
@@ -58,7 +58,7 @@ p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`))
  *
  * ── Why most of this file now starts with one of these ───────────────────
  *
- * Carli, 4 October 2026: *"Daar moet nie allerhande buttons wees soos daar nou
+ * The owner, 4 October 2026: *"Daar moet nie allerhande buttons wees soos daar nou
  * is nie, alles moet binne een kamer wees en met icons … en dan van daar af wees
  * funksies op pop waarvan mens kan kies."*
  *
@@ -83,7 +83,7 @@ await studio(p);
 
 /* ── The button she asked for, walked before anything else ──────────────
 
-   Carli, 30 September 2026: *"'N knoppie wat jou vat na sy eie kamer."*
+   The owner, 30 September 2026: *"'N knoppie wat jou vat na sy eie kamer."*
 
    The rail can reach the cutting room and so can the door, but neither is
    what she described: she described the moment somebody has just made a clip
@@ -131,7 +131,7 @@ try {
 
   /* ── Its own room, and it looks like one ─────────────────────
 
-     Carli, 30 September 2026: *"dit moet ook sy eie studio op sy eie video
+     The owner, 30 September 2026: *"dit moet ook sy eie studio op sy eie video
      wees … Daardie studio kan dan ook regdeur die hele bladsy die futurebox
      groen kleure hê … sodat daardie kamer ook anders lyk."*
 
@@ -147,7 +147,9 @@ try {
   const paint = await p.locator('[data-cuttingroom]').evaluate((el) => {
     const style = getComputedStyle(el);
     const found = `${style.backgroundImage} ${style.backgroundColor}`;
-    return [...found.matchAll(/rgba?\((\d+),\s*(\d+),\s*(\d+)/g)].map((m) => m.slice(1).map(Number));
+    /* Each colour through `__rgba` (audit/colour.mjs): since Tailwind 4 a
+       gradient stop can compute as oklab, which no rgb pattern reads. */
+    return (found.match(/(?:rgba?|hsla?|oklab|oklch|lab|lch|color)\([^()]*\)/g) ?? []).map((one) => window.__rgba(one).slice(0, 3));
   }).catch(() => []);
   /* Obsidian since 13 October 2026 — the "Video Editor" page Google drew.
      The room's own colour is now a cool near-black, #0A0C10, and the thing
@@ -168,7 +170,7 @@ try {
 
   /* ── The opening page, before anything is on the clock ──────────────────
 
-     Carli, 4 October 2026: *"Die probooth se opening page het half 'n
+     The owner, 4 October 2026: *"Die probooth se opening page het half 'n
      verduideliking wat hierdie funksie doen. Kan die video editor dieselfde hê
      en dan die button wat sê bring it in, or choose from channel"*.
 
@@ -331,7 +333,7 @@ try {
 
     /* ── Pictures on the block, which is the half a source rule cannot see ──
 
-       Carli, 8 October 2026: *"Hoe moontlik is dit om die video se visuals op
+       The owner, 8 October 2026: *"Hoe moontlik is dit om die video se visuals op
        die tydlyn te wys? Dit gaan dit makliker maak om te weet waar om te cut
        ens."*
 
@@ -442,7 +444,7 @@ try {
       `the viewer's filter is "${styled}"`);
 
     /* ── Before and after, over the film ──
-       Carli, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
+       The owner, 16 October 2026: *"met die auto enhance moet daar 'n ruler wees
        wat oor die prent slide om te wys hoe dit gelyk het."* The left of the
        line is the frame as shot — drawn, so it is read off pixels. */
     await p.locator('[data-editorcompare]').click();
@@ -466,7 +468,7 @@ try {
 
     /* ── It is a clock, and the clock is what you steer by ─────────
 
-       Carli, 29 September 2026: *"dit moet seker ook op 'n tydlyn wees. Die
+       The owner, 29 September 2026: *"dit moet seker ook op 'n tydlyn wees. Die
        ordentlike editor."* She was right about the strip too. What was there
        was a row of blocks sized in PROPORTION to each other — which makes a
        ten-second film and a ten-minute one look identical and leaves nowhere
@@ -531,7 +533,7 @@ try {
 
     /* ── Fades you pull, rather than set somewhere else ───────────
 
-       Carli, 30 September 2026: *"Op die tydlyn kan mens aan die begin en
+       The owner, 30 September 2026: *"Op die tydlyn kan mens aan die begin en
        einde van elke tydlyn 'n trek lyntjie in sit wat die in en uitfade
        moontlik maak om te trek."*
 
@@ -650,7 +652,7 @@ try {
 
     /* ── The sound, on a lane of its own ───────────────────────────────
 
-       Carli, 30 September 2026: *"dan moet dit soos die probooth die tydlyne
+       The owner, 30 September 2026: *"dan moet dit soos die probooth die tydlyne
        hê, asook vir die klank."*
 
        The lane is in the same scrolling strip as the blocks, so what is
@@ -663,7 +665,7 @@ try {
        and the room has to be able to tell "nothing yet" from "broken". */
     /* ── Zoom, which magnifies the preview and not the film ────────────
 
-       Carli, 30 September 2026: *"mens moet op die prent van die video kan
+       The owner, 30 September 2026: *"mens moet op die prent van die video kan
        kliek en in en uit zoom."*
 
        Measured as a change to the PICTURE's rendered width, not as a class
@@ -722,7 +724,7 @@ try {
         `${before} marks before, ${await p.locator('[data-editorownsound]').count()} after`);
       /* ── And the wave can be pressed ────────────────────────────────
 
-         Carli, 5 October 2026: *"Die sound tracks onder videos moet ook
+         The owner, 5 October 2026: *"Die sound tracks onder videos moet ook
          geselect kan word, sodat mens daardie tyd lyne ook kan split.
          Huidiglik kan mens nie die musiek tydlyne select nie."*
 
@@ -759,7 +761,7 @@ try {
 
     /* ── Words, set and placed by hand ─────────────────────
 
-       Carli, 30 September 2026: *"Die teks moet font opsies hê, en dit moet
+       The owner, 30 September 2026: *"Die teks moet font opsies hê, en dit moet
        ook gemanipuleer moet kan word op die skerm van die video, deur dit
        rond te kan skuif, en groter en kleiner te kan maak."*
 
@@ -983,7 +985,7 @@ try {
 
       /* ── Turned, faint, round, and nudged ──────────────────────────────
 
-         Carli, 2 October 2026, having sent two-and-thirty screens of a video
+         The owner, 2 October 2026, having sent two-and-thirty screens of a video
          editor. Turned, how solid and how round are the ordinary handles on
          anything sitting on a frame.
 
@@ -1030,7 +1032,7 @@ try {
 
       /* ── Bigger and smaller by the corner ──────────────────────────────
 
-         Carli, 30 September 2026: *"dit moet ook gemanipuleer moet kan word op
+         The owner, 30 September 2026: *"dit moet ook gemanipuleer moet kan word op
          die skerm van die video, deur dit rond te kan skuif, en groter en
          kleiner te kan maak."* The dragging landed that week; the resizing has
          been a slider in another card ever since, which is reaching away from
@@ -1126,7 +1128,7 @@ try {
 
     /* ── The mark, moved by hand ───────────────────────────
 
-       Carli, 30 September 2026: *"Mens moet die logo foto fisies moet kan
+       The owner, 30 September 2026: *"Mens moet die logo foto fisies moet kan
        skuif."*
 
        Four corner buttons cannot answer the only useful question about a
@@ -1168,7 +1170,7 @@ try {
 
       /* ── And off again ──────────────────────────────────────────
 
-         Carli, 5 October 2026: *"Daar is nie 'n knoppie om 'n logo uit te
+         The owner, 5 October 2026: *"Daar is nie 'n knoppie om 'n logo uit te
          haal en te delete nie."*
 
          A one-way door until today, and a worse one since the room started
@@ -1319,7 +1321,7 @@ try {
 
     /* ── The two red lines, and the film closing up behind them ────────
 
-       Carli, 4 October 2026: *"twee ekstra rooi lyne is waar mens 'n stuk kan
+       The owner, 4 October 2026: *"twee ekstra rooi lyne is waar mens 'n stuk kan
        uit cut ... die oomblik wanneer 'n mens 'n stuk uit cut moet die video
        wat verder is die gaping toe maak en terug spring."*
 
@@ -1352,7 +1354,7 @@ try {
        this room because it is the only thing in it that deletes, and a line
        that came out green would say the opposite of what it does. */
     const lineRed = await p.locator('[data-editorspanin]').evaluate((el) => {
-      const [r, g, b] = (getComputedStyle(el).backgroundColor.match(/\d+/g) ?? []).map(Number);
+      const [r, g, b] = window.__rgba(getComputedStyle(el).backgroundColor);
       return { r, g, b };
     });
     check('  and the lines really are red',
@@ -1388,7 +1390,7 @@ try {
 
     /* ── The caption's own lane, and the clock's height ────────────────
 
-       Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê
+       The owner, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê
        ... Dit kan nie die hele video bar vol wees nie"* and *"Ek sal dit ook
        like as mens die tydlyn se hoogte kan verstel."*
 
@@ -1438,7 +1440,7 @@ try {
 
     /* ── A drag moves it by what the hand moved, and no more ───────────
 
-       Carli, 4 October 2026: *"Al haal ek die magnet af spring die teks
+       The owner, 4 October 2026: *"Al haal ek die magnet af spring die teks
        nogsteeds rond asof die magnet aan is."*
 
        It was not the magnet. `had` was read from the LIVE piece on every
@@ -1510,7 +1512,7 @@ try {
 
     /* ── The words are on the frame only where their block is ───────────
 
-       Carli, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
+       The owner, 4 October 2026: *"al maak ek die teks kleiner dat dit nie oor die
        hele video stuk strek nie, wys die teks steeds oor die hele video stuk."*
 
        The FILM was right the whole time — `stitch.ts` has gated on the
@@ -1678,7 +1680,7 @@ try {
 
     /* ── The song under the preview, and the cursor over every lane ──────
 
-       Carli, 5 October 2026: *"Wanneer ek die musiek tydlyn in sit en ek druk
+       The owner, 5 October 2026: *"Wanneer ek die musiek tydlyn in sit en ek druk
        play, dan hoor mens nie die klank binne die video nie."* And: *"Daai
        cursor moet oor die hele tydlyn strek en ook die klankbane vang en
        speel."*
@@ -1771,7 +1773,7 @@ try {
 
     /* ── Solo and mute, pressed ─────────────────────────────────────
 
-       Carli, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
+       The owner, 5 October 2026: *"Mens moet op 'n music track kan kliek en dit
        mute, net soos in probooth die s, m."*
 
        A source rule can see the buttons exist. What a browser is for here is
@@ -1843,7 +1845,7 @@ try {
        It happened because the cursor was moved into a wrapper it was not
        actually inside: one stray closing tag earlier in the file put its
        nearest positioned ancestor at the page rather than at the clock. The
-       markup compiled, this probe went green, and Carli sent a photograph of
+       markup compiled, this probe went green, and the owner sent a photograph of
        a green line down her whole screen. */
     const clockBox = await p.locator('[data-editorstrip]').boundingBox();
     check('  and stops at the bottom of the clock rather than running down the page',
@@ -1911,7 +1913,7 @@ try {
 
     /* ── Two sound lanes, each with the sound's real shape in it ────────
 
-       Carli, 4 October 2026: *"Die eie video se klank moet sy eie klankbaan hê,
+       The owner, 4 October 2026: *"Die eie video se klank moet sy eie klankbaan hê,
        en die musiek wat in gebring word moet nog 'n tydlyn wees onder die video
        se klankbaan. Elke klankbaan moet golwe hê, sodat golwe gematch kan word
        wanneer nodig."*
@@ -1923,7 +1925,7 @@ try {
        all the way across is a texture, not a picture of a sound. */
     /* ── Every lane is there before it has anything on it ──────────────
 
-       Carli, 4 October 2026, about two things that had already been built and
+       The owner, 4 October 2026, about two things that had already been built and
        pushed: *"Ek sien die timeline kan nog nie gerek word nie"* and *"onthou
        die teks moet ook op sy eie tydlyn kan kom."*
 
@@ -2016,7 +2018,7 @@ try {
 
     /* ── The cover ──────────────────────────────────────────────────────
 
-       Carli, 4 October 2026: *"'n opsie ... om 'n cover foto vir die video te
+       The owner, 4 October 2026: *"'n opsie ... om 'n cover foto vir die video te
        screen shot uit die video, of een in te bring wat dan die video se
        voorblad foto word ook wanneer die video ge-export word."*
 
@@ -2163,7 +2165,7 @@ try {
 
     /* ── How a piece comes in ─────────────────────────────────────────────
 
-       Carli, 3 October 2026: *"net 'n praktiese video editing en die elemente
+       The owner, 3 October 2026: *"net 'n praktiese video editing en die elemente
        wat moontlik is."* Every join in this room was a hard cut until today.
 
        The arithmetic is read without a browser by `check:joins` — a four-tenth
@@ -2221,7 +2223,7 @@ try {
       + ' control that hid that would be a control that lies');
 
     /* ── The transition toolbox ─────────────────────────────────────────
-       Carli, 16 October 2026, screenshots of a toolbox: "Kyk ook hoe
+       The owner, 16 October 2026, screenshots of a toolbox: "Kyk ook hoe
        netjies dit verpak is." Every transition in a group that folds, with a
        little picture drawn by the same code as the film. */
     check('the transitions come in six groups',
@@ -2411,7 +2413,7 @@ try {
        loaded runner was half a second slow teaches nobody anything. */
     /* ── The price, said before the press ─────────────────────
 
-       Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is
+       The owner, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is
        wat krediete werd is."*
 
        Everything in this room is free and exactly one press costs, which
@@ -2431,7 +2433,7 @@ try {
 
     /* ── The bill, and the press that agrees to it ────────────────────────
 
-       Carli, 3 October 2026: *"wanneer die video klaar is, en hulle op die
+       The owner, 3 October 2026: *"wanneer die video klaar is, en hulle op die
        export knoppie druk dan wys daar die hoeveelheid krediete, en hulle moet
        dan confirm of hulle wil voortgaan."*
 
@@ -2550,7 +2552,7 @@ try {
 
     /* ── And a way to her channel ──────────────────────────────────────
 
-       Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
+       The owner, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
        channel toe gaan is dit nie daar nie."*
 
        She was right and so was the Channel. What this room hands back is a
@@ -2646,7 +2648,7 @@ try {
 
   /* ── Putting the project down ────────────────────────────────────────
 
-     Carli, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,
+     The owner, 5 October 2026: *"Iewers moet daar 'n button wees by bring it in,
      new project, om die huidige project weg te vat en met 'n nuwe een te
      begin."*
 
@@ -2688,7 +2690,7 @@ try {
 
   /* ── What is in the film, before the money ───────────────────────────
 
-     Carli, 5 October 2026: *"Copyright check for export."*
+     The owner, 5 October 2026: *"Copyright check for export."*
 
      It is not a copyright check and the room says so. What a browser is for
      here is the half a source rule cannot reach: that the tick is actually in
@@ -2751,7 +2753,7 @@ try {
 
   /* ── The copilot, and the thing that can go wrong with moving it ──────
 
-     Carli, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
+     The owner, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
      pop."* It was a 22rem pane below this room and is a button on its top row
      now, opening a sheet over the room.
 
@@ -2848,7 +2850,7 @@ try {
 
   /* ── Somewhere to start, which the room with footage in it needed ────
 
-     Carli's list, 7 October 2026: *"Video, etc templates."*
+     The owner's list, 7 October 2026: *"Video, etc templates."*
 
      `check:filmstart` holds the arithmetic — nothing lands under the
      platform's furniture, nothing is timed past the end of its own shot,
@@ -2931,7 +2933,7 @@ try {
   /* ── And then the same room on a phone ────────────────────────────────
 
      Everything above runs at 1280x900, which is right for most of it. Three
-     of Carli's complaints on 4 October are only true on a phone, and two of
+     of the owner's complaints on 4 October are only true on a phone, and two of
      them cannot even be asked at a desk:
 
        *"Kyk mooi alles allign nie."*

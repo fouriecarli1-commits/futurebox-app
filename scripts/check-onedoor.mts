@@ -5,7 +5,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 8 October 2026, after switching the Google engine off again:
+ * The owner, 8 October 2026, after switching the Google engine off again:
  * *"Could not reach the music service. Try again in a moment."*
  *
  * The booth's own button had been broken since 5 October. On that day every

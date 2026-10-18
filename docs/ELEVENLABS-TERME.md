@@ -1,6 +1,6 @@
 # What the ElevenLabs terms let FutureBox do
 
-Read against the fourteen documents Carli pasted on 15 September 2026. The
+Read against the fourteen documents the owner pasted on 15 September 2026. The
 short version is at the top because it changed while the document was being
 written: **the OEM Terms turned up, and on the Business plan they permit the
 thing that was blocking the product.**
@@ -66,7 +66,7 @@ Not nothing. Three things:
 
 1. **The account has to be the company's.** "Business Entity" *"expressly
    exclude[s] individual users acting in their personal capacity."* If the
-   ElevenLabs account is in Carli's own name rather than FUTUREBOXSTUDIO
+   ElevenLabs account is in the owner's own name rather than FUTUREBOXSTUDIO
    (Pty) Ltd's, the definition is not met on its face. This is a five-minute
    fix and it is worth making before anything else on this list.
 2. **The End User definition does not fit a creator.** §1(I) defines an End
@@ -688,7 +688,7 @@ explicitly that for **Self-Serve Services** the "Agreement" means the Terms
 and "Customer" means you.
 
 So: **the DPA is our operative data document**, and the Privacy Policy tells
-us how they treat Carli's own account data and what their practices look like
+us how they treat the owner's own account data and what their practices look like
 generally.
 
 ### What the DPA puts on us
@@ -786,7 +786,7 @@ either.
 
 ## 10b. What Business actually includes
 
-Carli sent the full per-service feature tables on 15 September. They are not
+The owner sent the full per-service feature tables on 15 September. They are not
 terms, but three of them answer questions that were in the sales letter and
 one of them was a live bug.
 
@@ -854,7 +854,7 @@ reading above:
 **Free, and this week:**
 
 1. **Check the ElevenLabs account is in FUTUREBOXSTUDIO (Pty) Ltd's name**,
-   not Carli's personal name. The OEM permission rests on being a Business
+   not the owner's personal name. The OEM permission rests on being a Business
    Entity, and the definition excludes individuals in a personal capacity.
 2. **Flip the training opt-out** — account → Terms and Privacy → Data use.
    Not retroactive, so every day it is off costs something.

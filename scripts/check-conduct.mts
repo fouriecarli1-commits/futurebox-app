@@ -3,7 +3,7 @@
  *
  * ── Why the not-flagged cases are the important half ─────────────────────
  *
- * Carli asked for this so she can set a cut-off from a real number:
+ * The owner asked for this so she can set a cut-off from a real number:
  * *"Fair social usage… ons moet 'n afsny punte hê."* A count that is wrong
  * in the generous direction misses some people. A count that is wrong in the
  * other direction puts her own best customers on a list of the worst

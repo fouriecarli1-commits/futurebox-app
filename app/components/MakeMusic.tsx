@@ -176,7 +176,7 @@ export default function MakeMusic({
 
   /* ── What can be put in this room from somewhere else ────────────────
  
-     Carli, 11 September 2026: "the text and shots, and scripts don't carry
+     The owner, 11 September 2026: "the text and shots, and scripts don't carry
      over to the next room… It is supposed to copy and paste the information
      to the next page."
  
@@ -207,7 +207,7 @@ export default function MakeMusic({
   useCopilotOps('make', {
     /* ── Start again, and mean it ─────────────────────────────────────
 
-       Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n reset
+       The owner, 21 September 2026: *"Copilot en daardie kamer moet 'n reset
        hê om die kamer skoon te maak en van vooraf te prompt."*
 
        The copilot's button clears the conversation; this clears what the
@@ -234,7 +234,7 @@ export default function MakeMusic({
     },
     /* ── The song arrives a section at a time ─────────────────────────
 
-       Carli, 21 September 2026: *"It must work verse for verse, and
+       The owner, 21 September 2026: *"It must work verse for verse, and
        before every new verse are written, ask questions and explain what
        this part in a song is usually for. It must not generate everything
        at once."*
@@ -265,7 +265,7 @@ export default function MakeMusic({
     },
     /* ── The feeling, asked for rather than picked ────────────────────
 
-       Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel
+       The owner, 19 September 2026: *"Die emosie goed voel ek moes als deel
        wees van copilot. Die hele room is baie besig."*
 
        She is right, and the shape she is describing is the one her own
@@ -292,7 +292,7 @@ export default function MakeMusic({
     },
     /* ── How long, asked for in words ─────────────────────────────────
 
-       Carli, 19 September 2026: the copilot's opening must say *"jy kan
+       The owner, 19 September 2026: the copilot's opening must say *"jy kan
        alles deur my doen in hierdie kamer, sê net wat jy nodig het, die
        tema, die tyd, die styl, jou stem keuse."*
 
@@ -318,7 +318,7 @@ export default function MakeMusic({
    * The wand: one press that fills a card in.
    *
    * `docs/PACKAGING.md` §2 has had a ✨ on every card header since the shape
-   * was drawn off Carli's screenshots — "collapse, and fill it in" — and
+   * was drawn off the owner's screenshots — "collapse, and fill it in" — and
    * `Card` has had the slot since it was written. Nothing ever filled it.
    *
    * ── Why it is not the panel underneath, with fewer presses ───────────
@@ -399,7 +399,7 @@ export default function MakeMusic({
   };
   /* ── Easy, or extensive ───────────────────────────────────────────────
 
-     Carli, 15 October 2026, with ElevenLabs' music box beside it: *"Ek dink
+     The owner, 15 October 2026, with ElevenLabs' music box beside it: *"Ek dink
      ons moet in make a song, die simple en everything wegvat en net so box
      rondom copilot bou wat alles in het, selfs 'n button wat uit pop om die
      weirdness te verstel. Daar kan dan ook bo in daai raam wees 'n easy en
@@ -456,7 +456,7 @@ export default function MakeMusic({
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
   const [weirdness, setWeirdness] = useState(15);
-  /* Light to heavy, Carli 14 October 2026: "sliders by everything in make a
+  /* Light to heavy, the owner 14 October 2026: "sliders by everything in make a
      song. Light heavy, en weirdness level." 50 is neither, and adds nothing. */
   const [weight, setWeight] = useState(50);
   /**
@@ -480,7 +480,7 @@ export default function MakeMusic({
    * Which language it should be sung in.
    *
    * Nothing was ever telling the engine, so Afrikaans words came back sung as
-   * though they were English often enough to be the first thing Carli noticed
+   * though they were English often enough to be the first thing the owner noticed
    * about a song in her own language. `auto` is the old behaviour and stays on
    * the menu, because a lyric that mixes the two is a real thing and asking
    * for one of them would be wrong.
@@ -587,7 +587,7 @@ export default function MakeMusic({
   const [status, setStatus] = useState<string | null>(null);
   /* ── The one refusal with a way out of it ──────────────────────────────
  
-     Carli, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie
+     The owner, 9 October 2026: *"'n mens kan vir gemini vra dat jy 'n liedjie
      soek wat baie klink soos michael jackson se liedjie beat it"*, and then
      the sentence that made it buildable — *"dit kry dit net mooi reg om die
      80's se styl in baie nader aan daardie formaat te genereer."*
@@ -619,7 +619,7 @@ export default function MakeMusic({
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
   /* ── A cover as standard, with the song ────────────────────────────────
  
-     Carli, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
+     The owner, 9 October 2026: *"Plus generate dit dan standaard 'n album cover
      saam met die liedjie."*
  
      Ticked by default, which is what "standaard" means — and a tick rather
@@ -796,7 +796,7 @@ export default function MakeMusic({
   }, []);
 
   /* ── In my own voice ────────────────────────────────────────────────
-     Carli, 14 October 2026: "Ek sien ook nie in make a song, use my own
+     The owner, 14 October 2026: "Ek sien ook nie in make a song, use my own
      voice (wat kits se trained voice is nie)." It was there, as "Sing it in
      my voice" on each song in the list further down — out of sight on
      Simple. So it is a choice on the form too: ticked, the panel that sings
@@ -1141,7 +1141,7 @@ export default function MakeMusic({
             data-top-mini-player
             className="space-y-3 rounded-2xl border border-emerald-500/30 bg-zinc-900/50 p-3 sm:p-4"
           >
-            {/* Two rows, not one. Carli, 15 October 2026, a phone screenshot:
+            {/* Two rows, not one. The owner, 15 October 2026, a phone screenshot:
                 with the song, "Verbeter Afrikaans", "Sing it in my voice" and
                 the channel button on one line, the buttons took the whole
                 width — the name vanished, the label lay over the play button
@@ -1188,7 +1188,7 @@ export default function MakeMusic({
 
             <div data-top-mini-actions className="flex flex-wrap items-center gap-2">
             {/* An Afrikaans word sung wrong is reported from the song she is
-                listening to, not only from the list further down (Carli,
+                listening to, not only from the list further down (The owner,
                 14 October 2026). */}
             <SayItWrong
               surface="music_studio"
@@ -1219,7 +1219,7 @@ export default function MakeMusic({
 
       {/* ── The song box ────────────────────────────────────────────────
 
-          Carli, 15 October 2026: *"net so box rondom copilot bou wat alles
+          The owner, 15 October 2026: *"net so box rondom copilot bou wat alles
           in het"* — the shape of ElevenLabs' music box and of most music
           prompting engines. How the words get written along the top, the
           writing in the middle, and every setting as a small button along
@@ -1610,7 +1610,7 @@ export default function MakeMusic({
                         </div>
                         {/* The mood list that was here is gone: Feel already sets how
                             the song feels, and two places to choose a mood was one
-                            too many (Carli, 18 October 2026). The key still rides
+                            too many (The owner, 18 October 2026). The key still rides
                             along — from Feel, the copilot, or a remix. */}
                       </div>
                     )}
@@ -1816,7 +1816,7 @@ export default function MakeMusic({
           <span>{t('make.coverToo', 'Make album cover')}</span>
         </label>
         {/* Or buy one: a cover drawn by a real artist, from the album art
-            market. Carli, 18 October 2026. */}
+            market. The owner, 18 October 2026. */}
         {onBrowseArt && (
           <button
             type="button"
@@ -1860,7 +1860,7 @@ export default function MakeMusic({
               A paid plan used to be told "As many as you like on Pro", which
               is not what a paid plan is: every one of them has a credit
               ceiling, and the whole of `docs/KOSTE-EN-WINS.md` turns on that
-              ceiling being real. Carli: "die pro version het ook beperkte
+              ceiling being real. The owner: "die pro version het ook beperkte
               krediete. haal dit uit."
 
               Nothing is put in its place. The balance is in the studio header
@@ -2117,7 +2117,7 @@ export default function MakeMusic({
 
         {/* ── Why this scrolls itself into view ─────────────────────────
 
-            Carli, 9 October 2026: *"As ek kliek op make a video by 'n
+            The owner, 9 October 2026: *"As ek kliek op make a video by 'n
             liedjie doen dit niks nie."*
 
             It did do something. This panel is drawn AFTER the whole list of

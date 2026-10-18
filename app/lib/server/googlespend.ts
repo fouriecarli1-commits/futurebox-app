@@ -3,7 +3,7 @@
  *
  * ── Why ours has to exist at all ─────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"Ek sal my budget in google verhoog soos wat ons
+ * The owner, 8 October 2026: *"Ek sal my budget in google verhoog soos wat ons
  * wins maak."* Correct, and in the right order — spend what has been earned
  * rather than what is hoped for.
  *
@@ -120,7 +120,7 @@ export const shareFor = (kind: Kind): number => {
 
 /* ── "Try again in a moment" sent her round a circle ────────────────────
 
-   Carli, 8 October 2026, having set `MUSIC_ENGINE=google` and redeployed:
+   The owner, 8 October 2026, having set `MUSIC_ENGINE=google` and redeployed:
    *"Die liedjie wil nie gemaak word nie."*
 
    The reads below answer null when they fail, and `enough` turns a null into
@@ -217,7 +217,7 @@ const money = (micros: number): string => `$${(micros / DOLLAR).toFixed(2)}`;
  * The member's own share is checked first and the engine's month second.
  * Both refuse, but they are different sentences and send somebody to
  * different places: "you are out" is wait or upgrade, "everybody is out" is
- * wait or ask Carli to raise the budget.
+ * wait or ask the owner to raise the budget.
  */
 export async function enough(
   kind: Kind,
@@ -294,7 +294,7 @@ export async function note(
 
   /* ── And tell her, while there is still something she can do ────────
  
-     Carli, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer
+     The owner, 10 October 2026: *"Die sisteem gaan ook alerts moet stel wanneer
      my budgets in elevenlabs en google op raak."* ElevenLabs was watched
      already — `watchEleven` has run on every generation since September —
      and Google was not watched at all. The first thing she would have known

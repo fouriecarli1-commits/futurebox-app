@@ -4,7 +4,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, about something Suno had launched: *"Wat oulik is
+ * The owner, 9 October 2026, about something Suno had launched: *"Wat oulik is
  * is dat mens die ritme van 'n liedjie met jou stem kan sing en in sit, en
  * dan kies jy net die instrument tipe."* Sing the rhythm of a song with your
  * voice, put it in, and then just pick the instrument.
@@ -234,7 +234,7 @@ export function notesIn(samples: Float32Array, rate: number): HumNote[] {
 /**
  * Put the notes on the grid.
  *
- * Carli's own instinct about this feature, and the right one: a hummed
+ * The owner's own instinct about this feature, and the right one: a hummed
  * rhythm is never quite in time, and the point is to get something usable
  * rather than something faithful. Sixteenths, because eighths flatten a
  * swung or dotted figure into a march and thirty-seconds snap to nothing.

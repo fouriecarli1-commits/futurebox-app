@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Die live se videos wys nogsteeds nie."* The
+ * The owner, 21 September 2026: *"Die live se videos wys nogsteeds nie."* The
  * fifth report of the same panel.
  *
  * The round before this one taught `app/api/live/route.ts` to say WHICH of

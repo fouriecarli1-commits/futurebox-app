@@ -444,7 +444,7 @@ export default function CollabRoom({
 
         {/* ── Into a room where the two of you actually make something ───
 
-            Carli: *"in daai moment moet die duplicated room oop maak waar in
+            The owner: *"in daai moment moet die duplicated room oop maak waar in
             net hierdie twee mense is en beide kry functionality om binne die
             kamer te werk."*
 
@@ -607,7 +607,7 @@ export default function CollabRoom({
 /**
  * The two things one person can want from another.
  *
- * Carli, 24 September 2026: *"Dan moet hierdie mense voorstelle kry van 2
+ * The owner, 24 September 2026: *"Dan moet hierdie mense voorstelle kry van 2
  * buttons en opsies. 1 jy kan 'n lied met iemand deel en vra vir hulle
  * inset, of die persoon kan accept om saam in 'n room te werk."*
  *

@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- Album art by real artists.
 --
--- Carli, 20 September 2026: a room under SELL IT where real artists sell
+-- the owner, 20 September 2026: a room under SELL IT where real artists sell
 -- album art. R200 a piece off the wall, R500 for a commissioned one-off.
 -- Every piece unique and sold exactly once. An artist has a profile that
 -- pops out, and a button — not a text box — that asks them for a one-off.
@@ -137,7 +137,7 @@ alter table public.art_offers enable row level security;
 
 -- ── The credit that travels with the song ───────────────────────────────
 --
--- Carli: *"Binne live moet die liedjie naam, artist naam, style en dan die
+-- the owner: *"Binne live moet die liedjie naam, artist naam, style en dan die
 -- kunstenaar se naam en art naam appear."*
 --
 -- Written onto the post rather than looked up. A live post is read by
@@ -188,7 +188,7 @@ on conflict (id) do update set public = false;
 
 -- ── Wat aan elke kunstenaar uitbetaal moet word ─────────────────────────
 --
--- Carli, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
+-- the owner, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
 -- uitbetalings nie. Dit sal in my rekening uitbetaal word en ek betaal dit
 -- uit aan die kunstenaar."*
 --
@@ -230,7 +230,7 @@ create or replace view public.art_owing as
 
 -- ── 'n Kunstenaar wat nog nie 'n rekening het nie ───────────────────────
 --
--- Carli, 20 September 2026: *"Ek het nou reeds 'n kunstenaar wat ek wil in
+-- the owner, 20 September 2026: *"Ek het nou reeds 'n kunstenaar wat ek wil in
 -- sit."*
 --
 -- Daardie persoon is 'n regte skilder, nie 'n app-lid nie. Die tabel het
@@ -252,7 +252,7 @@ alter table public.art_artists alter column owner drop not null;
 
 -- ── Die voorskou, en waarom die skoon lêer apart lê ─────────────────────
 --
--- Carli, 20 September 2026: *"Screenshots gaan die kunswerke skade doen."*
+-- the owner, 20 September 2026: *"Screenshots gaan die kunswerke skade doen."*
 --
 -- Sy is reg, en die eerlike posisie is dat nóg 'n screenshot nóg 'n foon se
 -- kamera wat na die skerm wys, gekeer kan word deur enigiets wat 'n
@@ -273,7 +273,7 @@ alter table public.art_works
 
 -- ── Dit is 'n veiling, nie 'n prys nie ─────────────────────────────────
 --
--- Carli, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
+-- the owner, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
 -- moet op die bee, en die hoogste bee wen die art binne 36 hours."*
 --
 -- Dit verander die hele model. R200 is nie meer wat 'n werk kos nie — dit
@@ -334,7 +334,7 @@ create or replace view public.art_top_bids as
 
 -- ── Die klok begin by die eerste bod ───────────────────────────────────
 --
--- Carli, 20 September 2026: *"Die beeing begin wanneer iemand begin bee."*
+-- the owner, 20 September 2026: *"Die beeing begin wanneer iemand begin bee."*
 --
 -- Dit was 36 uur vandat die werk opgehang is, wat beteken 'n werk wat op 'n
 -- Dinsdagoggend opgaan en wat niemand Woensdag sien nie, se veiling is
@@ -395,7 +395,7 @@ alter table public.art_works
 -- `paid_rand` eers 'n paar reëls hierbo, en 'n aansig kan nie na 'n kolom
 -- verwys wat nog nie daar is nie.
 --
--- Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
+-- the owner, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
 -- net vir die wen prys."* Die R50 inkoop staan in `art_bidders` en daardie
 -- tabel word hier nêrens gejoin nie — dit is wat daardie reël in die
 -- databasis waar hou. Die staat tel net verkoopte werke.
@@ -414,7 +414,7 @@ create or replace view public.art_owing as
 
 -- ── Die buy-in is PER WERK ──────────────────────────────────────────────
 --
--- Carli, 20 September 2026: *"Jy het dit ook verkeerd R50 buy in is per
+-- the owner, 20 September 2026: *"Jy het dit ook verkeerd R50 buy in is per
 -- piece. Dit is nie vir elke bidding nie."*
 --
 -- Ek het dit as een keer vir altyd gebou. Dit is 'n ander ding: 'n eenmalige

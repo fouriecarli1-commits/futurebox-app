@@ -3,7 +3,7 @@
  *
  * ── The ask ──────────────────────────────────────────────────────────────
  *
- * Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
+ * The owner, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
  * werk moet daar net tiktok live links gedeel word. Dit moet gescreen word
  * om general bad videos teen te werk."*
  *
@@ -45,18 +45,18 @@ const sql = readFileSync('supabase/liveflags.sql', 'utf8');
 /* ── 1. The reader, run rather than read ──────────────────────────────── */
 
 const yes = (link: string) => readTikTokLive(link).ok;
-ok('a real live address is taken', yes('https://www.tiktok.com/@carli/live'));
+ok('a real live address is taken', yes('https://www.tiktok.com/@lerato/live'));
 ok('  and the same one with a share sheet’s tracking on it',
-  yes('https://www.tiktok.com/@carli/live?is_from_webapp=1&sender_device=pc'));
+  yes('https://www.tiktok.com/@lerato/live?is_from_webapp=1&sender_device=pc'));
 ok('  and the tracking is dropped rather than republished to the room',
-  (readTikTokLive('https://www.tiktok.com/@carli/live?is_from_webapp=1') as { url: string }).url
-    === 'https://www.tiktok.com/@carli/live',
+  (readTikTokLive('https://www.tiktok.com/@lerato/live?is_from_webapp=1') as { url: string }).url
+    === 'https://www.tiktok.com/@lerato/live',
   'a parameter a share sheet added is printed to everybody under the sharer’s name');
 
 for (const [what, link] of [
-  ['a profile rather than a stream', 'https://www.tiktok.com/@carli'],
-  ['a video rather than a stream', 'https://www.tiktok.com/@carli/video/123'],
-  ['something after /live', 'https://www.tiktok.com/@carli/live/extra'],
+  ['a profile rather than a stream', 'https://www.tiktok.com/@lerato'],
+  ['a video rather than a stream', 'https://www.tiktok.com/@lerato/video/123'],
+  ['something after /live', 'https://www.tiktok.com/@lerato/live/extra'],
   ['a short link, which could be anything', 'https://vm.tiktok.com/ZM8abc/'],
   ['another platform', 'https://youtube.com/watch?v=1'],
   ['plain words, which is what this box used to be for', 'hello everyone'],

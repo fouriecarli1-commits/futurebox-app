@@ -11,7 +11,7 @@
  * stored, described as being for exactly this, and then read by a single
  * screen — the brand-kit card, showing it back to the person who chose it.
  *
- * Carli, 18 September 2026, looking for it on the video desk: *"die video
+ * The owner, 18 September 2026, looking for it on the video desk: *"die video
  * studio het glad nie 'n image oplaai het vir iemand wat hulle logo op 'n
  * video wou sit nie."* She was right about the desk. The upload was on the
  * advert desk, two rooms away, feeding nothing.
@@ -36,7 +36,7 @@
  *
  * ── Burned in when the video is MADE, not when it is posted ──────────────
  *
- * Carli asked for it on a filmed take and on anything that goes to Live. The
+ * The owner asked for it on a filmed take and on anything that goes to Live. The
  * cheap reading of that is to draw it in the Live player, and that would put
  * the logo on the screen but not in the file: download the clip, hand it to
  * TikTok, and the branding is gone at exactly the moment it was meant to
@@ -124,7 +124,7 @@ export function markBox(
 
   /* ── A place of its own, when one has been chosen ──────────────────────
 
-     Carli, 30 September 2026: *"Mens moet die logo foto fisies moet kan
+     The owner, 30 September 2026: *"Mens moet die logo foto fisies moet kan
      skuif."*
 
      Four corners is a good default and a poor answer: the corner that is
@@ -194,7 +194,7 @@ export function drawMark(
   /**
    * Turned, and how solid, in degrees and in a share of full.
    *
-   * Carli, 2 October 2026. Anything sitting on a frame, in any editor with a
+   * The owner, 2 October 2026. Anything sitting on a frame, in any editor with a
    * timeline in it, carries three handles: where it is, how far it is turned,
    * and how solid it is. Ours carried a place and nothing else, which is why a
    * logo could be put where she wanted and then not quietened behind the

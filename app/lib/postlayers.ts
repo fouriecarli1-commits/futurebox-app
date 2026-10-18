@@ -1,7 +1,7 @@
 /**
  * The photo editor's layers.
  *
- * Carli, 16 October 2026: *"Die photo editor sal moet layers kry. As mens op
+ * The owner, 16 October 2026: *"Die photo editor sal moet layers kry. As mens op
  * die layers click moet mens kan kies op watter layer jy nou edit, en
  * natuurlik 'n all layer wat alles by mekaar het."*
  *

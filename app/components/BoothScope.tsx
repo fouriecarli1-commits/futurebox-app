@@ -3,7 +3,7 @@
 /**
  * The sound, live: what is coming out of the booth right now.
  *
- * Carli, 14 October 2026, from the ProBooth design she sent: "die
+ * The owner, 14 October 2026, from the ProBooth design she sent: "die
  * visualizer vir klank". The design drew a curve from three slider values.
  * This draws the real thing — an analyser on the master, after the fader,
  * so the bars are the music she is hearing and they stop when it stops.

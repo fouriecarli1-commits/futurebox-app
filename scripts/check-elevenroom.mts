@@ -125,7 +125,7 @@ for (const path of ['app/api/music/route.ts', 'app/api/dub/route.ts']) {
 // ── Selling: the free tier stays open, paying members stay served ────────
 
 const checkout = code(readFileSync('app/api/checkout/route.ts', 'utf8'));
-/* Carli, 14 October 2026: "Ek wil nie gecap wees nie, ek wil groot gaan."
+/* The owner, 14 October 2026: "Ek wil nie gecap wees nie, ek wil groot gaan."
    The till sells at every level; the budget behind it grows instead. */
 ok('the checkout never turns a buyer away for the supplier month',
   !/roomToSell|waiting_list/.test(checkout),

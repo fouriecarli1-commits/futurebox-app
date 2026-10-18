@@ -1,7 +1,7 @@
 /**
  * Select a part of the photograph, and change only that.
  *
- * Carli's screenshots of another editor's Select: an element, an area, the
+ * The owner's screenshots of another editor's Select: an element, an area, the
  * foreground — then every edit lands on that part alone. Here a selection is
  * an alpha mask the size of the photograph: opaque where the edit goes,
  * clear where it does not, soft at the edge. It comes from what the room

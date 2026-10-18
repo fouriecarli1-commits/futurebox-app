@@ -1,6 +1,6 @@
 # Epos aan fal.ai — verwerkersooreenkoms en oorgrens-oordrag
 
-Konsep vir Carli om te stuur. **Vul die drie plekhouers in waar jy dit stuur —
+Konsep vir die eienaar om te stuur. **Vul die drie plekhouers in waar jy dit stuur —
 hulle staan met opset nie in hierdie lêer nie:** jou naam en rol onderaan, die
 maatskappy se adres, en die kontak-e-pos.
 
@@ -41,7 +41,7 @@ antwoorde terug is, is dit 'n privaatheidsreël plus een `fetch`.
 Hi,
 
 I'm the founder of FutureBox Studio (FUTUREBOXSTUDIO (Pty) Ltd, South Africa,
-registration 2026/714071/07), a creative studio for music, voice and video
+registration [registration number]), a creative studio for music, voice and video
 aimed at independent artists and small businesses.
 
 We want to use fal.ai for three video features: background removal, object
@@ -105,7 +105,7 @@ Kind regards,
 
 [JOU NAAM]
 [JOU ROL], FUTUREBOXSTUDIO (Pty) Ltd
-Reg. 2026/714071/07 · South Africa
+Reg. [registration number] · South Africa
 [KONTAK-E-POS]
 
 ---

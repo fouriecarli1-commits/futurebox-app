@@ -203,7 +203,7 @@ export async function arrangementOf(customerCode: string): Promise<Arrangement |
  *
  * ── Why this is a link and not a form ────────────────────────────────────
  *
- * Carli, 23 September 2026: *"En met billing, dat hulle hul billing
+ * The owner, 23 September 2026: *"En met billing, dat hulle hul billing
  * information kon verander?"*
  *
  * The obvious build is a card form in the account screen. It would be the

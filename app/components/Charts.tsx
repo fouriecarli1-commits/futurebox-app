@@ -27,7 +27,7 @@
  *
  * ── And Spotify's, beside ours ───────────────────────────────────────────
  *
- * Carli's choice, asked and answered: their public chart alongside ours. It is
+ * The owner's choice, asked and answered: their public chart alongside ours. It is
  * theirs and it is labelled theirs, opening on their own pages. It is not the
  * source of the AI chart and cannot be — their API has no idea what was made
  * with AI, so a "top 10 AI music" built from it would be us deciding and

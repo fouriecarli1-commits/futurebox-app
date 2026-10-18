@@ -177,7 +177,7 @@ export const FUTUREBOX_TAG = '@futurebox';
  *
  * ── Why this is not in PLATFORMS ─────────────────────────────────────────
  *
- * Carli, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie moet
+ * The owner, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie moet
  * maak waar advertensies gepost gaan word. Dit moet ook daar wees om te kan
  * tick."
  *

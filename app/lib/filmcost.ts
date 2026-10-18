@@ -3,7 +3,7 @@
  *
  * ── Why this is a module and not a line in the route ─────────────────────
  *
- * Carli, 3 October 2026: *"elke element wat op die video editing gebruik word
+ * The owner, 3 October 2026: *"elke element wat op die video editing gebruik word
  * [moet] krediete dra ... Dan wanneer die video klaar is, en hulle op die
  * export knoppie druk dan wys daar die hoeveelheid krediete, en hulle moet dan
  * confirm of hulle wil voortgaan."*
@@ -29,7 +29,7 @@
  *
  * ── Counted per FUNCTION, which is what replaced the ceiling ─────────────
  *
- * Carli, 4 October 2026: *"5 krediete vir elke bykomende funksies soos filters,
+ * The owner, 4 October 2026: *"5 krediete vir elke bykomende funksies soos filters,
  * teks, ens."* Each additional FUNCTION, not each use of one. Words on six
  * shots is one charge for words.
  *

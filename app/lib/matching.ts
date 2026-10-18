@@ -188,7 +188,7 @@ export function profileFromTracks(
     followers,
     /* ── Her topics, and not five of ours in front of them ──────────
  
-       Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
+       The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."*
  
        This line read:
  
@@ -227,7 +227,7 @@ export interface PodcastMatch {
   /**
    * How well it fits, or `null` when that cannot honestly be answered.
    *
-   * Carli's list, 7 October 2026: *"Kyk nog mooi na colab radar."* A show
+   * The owner's list, 7 October 2026: *"Kyk nog mooi na colab radar."* A show
    * she added herself used to arrive with three topics hard-coded into the
    * panel — `ai music`, `ai`, `creators` — whatever the show was about, and
    * the matcher then scored it against those and drew a percentage. An

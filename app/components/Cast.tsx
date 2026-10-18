@@ -26,7 +26,7 @@
  *
  * ── Rebuilt, 20 September 2026, and what was wrong with it ──────────────
  *
- * Carli, for the third time: *"Die witskerm bly op kom. Dit is weird want
+ * The owner, for the third time: *"Die witskerm bly op kom. Dit is weird want
  * die add a photo wat net langs dit is werk, maar daai cast funksie werk
  * nie. Bou dit net heeltemal van vooraf."*
  *
@@ -81,7 +81,7 @@ import Note from './Note';
  * There were two of these ladders — one for the file picker, one for the
  * device shelf — and they had already drifted: the second knew about three
  * of the seven reasons and said "that did not save" to the other four.
- * Carli has reported this component as broken twice and asked for it to be
+ * The owner has reported this component as broken twice and asked for it to be
  * rebuilt from scratch, and the two most useful sentences it could have
  * said were in neither ladder.
  *
@@ -110,7 +110,7 @@ function whySaid(
   if (why === 'not_an_image') return t('cast.notImage', 'That is not a picture.');
   /* ── The two that used to be one word ──────────────────────────────
 
-     Carli: *"Die button net onder hom wat sê dat mens 'n foto kan oplaai
+     The owner: *"Die button net onder hom wat sê dat mens 'n foto kan oplaai
      werk, maar die cast member oplaai werk nie."* The button under this
      one is the device shelf, which touches no server. This one keeps the
      picture on the ACCOUNT, so it needs a bucket AND a table — and both
@@ -209,7 +209,7 @@ export default function Cast({
       try {
         /* The filename, unless the filename is not a name.
  
-           Carli, 23 September 2026, with a photograph of her own screen: the
+           The owner, 23 September 2026, with a photograph of her own screen: the
            member she had just added was called `1000402633`. That is what a
            phone calls a picture out of its camera roll, and it was being
            used verbatim as somebody's name.
@@ -457,7 +457,7 @@ export default function Cast({
       {/* ── The second door ─────────────────────────────────────────────
 
           The one above opens the operating system's file picker, and on
-          Carli's phone that press leaves a white screen: the page comes
+          The owner's phone that press leaves a white screen: the page comes
           back empty, nothing is saved, and a reload cures it. Memory, the
           in-app browser and every error the page could throw have all been
           ruled out, and it cannot be reproduced from here — the video

@@ -44,7 +44,7 @@
  * `noteTaste` correctly returns before it sends anything. That is an app with
  * no accounts behind it behaving exactly as it should.
  *
- * The claim was written into a commit message and told to Carli before it was
+ * The claim was written into a commit message and told to the owner before it was
  * checked. It is wrong and this is where it is corrected.
  *
  * ── A second correction, of the first correction ────────────────────────
@@ -117,7 +117,7 @@ const check = (label, ok, detail = '') => {
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
 
-const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'carli@futurebox.test' };
+const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'lerato@futurebox.test' };
 await p.addInitScript((who) => {
   try {
     window.localStorage.setItem('sb-stub-auth-token', JSON.stringify({
@@ -131,7 +131,7 @@ await p.route('**/auth/v1/**', (r) => r.fulfill({ status: 200, contentType: 'app
   body: JSON.stringify({ id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }) }));
 await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
 await p.route('**/api/creator*', (r) => r.fulfill({ status: 200, contentType: 'application/json',
-  body: JSON.stringify({ creator: { name: 'Carli', handle: 'carli', about: '', links: {} } }) }));
+  body: JSON.stringify({ creator: { name: 'Lerato', handle: 'lerato', about: '', links: {} } }) }));
 
 /* The account's own memory, stood up here. Amapiano nine times against gospel
    twice: enough to be a habit and not the only thing in it, so the answer is a
@@ -240,7 +240,7 @@ check('and not the genre sitting in this browser', !/trance/i.test(words));
 
    These two lines used to be checked here, on this screen, and they failed
    for the best possible reason: the paragraph they looked for is gone
-   because Carli asked for it to go. 14 September 2026, with a photograph:
+   because the owner asked for it to go. 14 September 2026, with a photograph:
    *"Haal daai fyn skrif uit op die make a song room."* Six lines of grey
    type under the doors read as terms and conditions on the one screen that
    is meant to be a set of choices.
@@ -261,7 +261,7 @@ await p.waitForTimeout(1200);
 /* The header is on the PAGE and the studio is over it, so this press was
    landing on a button behind an overlay this probe had opened itself. */
 await toThePage(p);
-await p.locator('header button').filter({ hasText: /carli/i }).first().click();
+await p.locator('header button').filter({ hasText: /lerato/i }).first().click();
 await p.waitForTimeout(1500);
 const panel = p.locator('[role="dialog"]').first();
 let shown = await panel.innerText();

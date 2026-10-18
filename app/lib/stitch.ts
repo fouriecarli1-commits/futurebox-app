@@ -55,7 +55,7 @@
  * against each other under a song is noise.
  *
  * That was written as though room tone were the only thing in a clip, and it
- * is not. Carli, 23 September 2026: *"Dit wil ook voorkom dat daai kamer glad
+ * is not. The owner, 23 September 2026: *"Dit wil ook voorkom dat daai kamer glad
  * nie klank wat praat genereer nie."* A shot generated with a spoken line has
  * a voice in it, and muting every clip threw that away along with the hiss —
  * so a film whose shots had been paid to speak came out silent, twice over.
@@ -210,7 +210,7 @@ export interface Scene {
   /**
    * Turned, how solid, and how round its band is.
    *
-   * Carli, 2 October 2026. Turned, how solid, and how round its band is: the
+   * The owner, 2 October 2026. Turned, how solid, and how round its band is: the
    * three handles any editor puts on something sitting on a frame. Ours carried
    * a place, a size and a face. The three below are what turns "words on a
    * picture" into an element somebody is designing with.
@@ -221,7 +221,7 @@ export interface Scene {
   /**
    * The colour of the words, the shape behind them and that shape's colour.
    *
-   * Carli, 4 October 2026: *"die teks 'n kleur keuse ook moet hê, en 'n keuse
+   * The owner, 4 October 2026: *"die teks 'n kleur keuse ook moet hê, en 'n keuse
    * van agtergrond vir woorde, 'n square, 'n square met ronde punte, 'n
    * verfkwas. Die agtergrond moet ook kleur keuse hê."*
    *
@@ -233,7 +233,7 @@ export interface Scene {
   /**
    * When the words come up and go down, in this scene's own film seconds.
    *
-   * Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê ...
+   * The owner, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê ...
    * gedrag kan word om die lengte van die teks oor die video te bepaal. Dit kan
    * nie die hele video bar vol wees nie, want teks is gewoonlik net daar vir
    * gedeeltes van 'n video."*
@@ -257,7 +257,7 @@ export interface Scene {
    *
    * ── Why this exists beside the single fields above ───────────────────
    *
-   * Carli, 5 October 2026: *"As hy op sy eie tydlyn is moet hy ruimte hê om
+   * The owner, 5 October 2026: *"As hy op sy eie tydlyn is moet hy ruimte hê om
    * verby 'n ander video te kan stretch."*
    *
    * A caption may now outlive the shot it starts on. The fields above can
@@ -342,7 +342,7 @@ export interface Cut {
   /**
    * How far the song drops while a scene is speaking, as a multiplier.
    *
-   * Carli, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
+   * The owner, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
    * sagter gaan elke keer wanneer die praat stem in kom."*
    *
    * Ramped rather than switched, over `DUCK_IN`: a song that drops to a
@@ -404,7 +404,7 @@ export interface Cut {
   /**
    * Stretches of the song to skip, in the song's own seconds.
    *
-   * Carli, 4 October 2026: *"ook die keuse van interlock net soos by
+   * The owner, 4 October 2026: *"ook die keuse van interlock net soos by
    * probooth."* With the interlock on, a span cut out of the picture is cut
    * out of the music too, so every shot keeps the music it was cut to.
    *
@@ -443,7 +443,7 @@ export interface Cut {
   /**
    * How the file is written: frames a second, and bits a second.
    *
-   * Carli, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
+   * The owner, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
    * waarin dit export."* The SIZE is already `width`/`height` above — a grade
    * is applied by `videoquality.ts` before a cut is built, so by the time it
    * reaches here the film simply is that size. These two are the parts the
@@ -1311,7 +1311,7 @@ export async function stitch(cut: Cut): Promise<Made> {
       let sceneLevel: GainNode | null = null;
       /* ── The music steps back while the shot speaks ────────────────
 
-         Carli, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
+         The owner, 5 October 2026: *"wanneer 'n video praat, dan moet die musiek
          sagter gaan elke keer wanneer die praat stem in kom."*
 
          Ramped over `DUCK_IN` rather than switched: a song that drops to a

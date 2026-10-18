@@ -63,7 +63,7 @@ if (open >= 0) {
   ok('  the wall is dark enough for a painting to glow', page.length === 3 && bright < 60,
     `the page is rgb(${page.join(' ')}) — a gallery at an evening viewing is not a pale room`);
 
-  /* Carli, 13 October 2026: *"Verander asb net die art gallery, die oranje
+  /* The owner, 13 October 2026: *"Verander asb net die art gallery, die oranje
      lyk sleg."* The accent was gold and this rule held it there. The gallery
      is the house green now, with gold kept for the highlight family the
      price chips draw from — so the rule holds the new truth: the accent is

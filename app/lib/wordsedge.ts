@@ -3,7 +3,7 @@
  *
  * ── The gap this closes ──────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Ek dink ook daar moet heelwat 'n verskeidenheid
+ * The owner, 9 October 2026: *"Ek dink ook daar moet heelwat 'n verskeidenheid
  * van teks opsies wees."* Measuring before adding found something worse than
  * a short list: words burned into a film had **no outline and no shadow at
  * all**. `stitch.ts` set a fill colour and called `fillText`, and that was

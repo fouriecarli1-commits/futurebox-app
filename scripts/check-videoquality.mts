@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
+ * The owner, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
  * waarin dit export."*
  *
  * The trap in a setting like this is that it is easy to build the picker and

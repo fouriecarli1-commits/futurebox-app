@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026, on what the kids room is for: *"Ek dink die child
+ * The owner, 9 October 2026, on what the kids room is for: *"Ek dink die child
  * funksie is net om met liedjie maak te speel - en dalk om die liedjie 'n
  * video te maak."* Then, the same day: *"Gaan aan met die kids kamer."*
  *
@@ -59,7 +59,7 @@ export interface Choice {
  *
  * ── Why there are more of them than there were ───────────────────────────
  *
- * Six, chosen quickly so the room could be finished. Carli, 9 October 2026:
+ * Six, chosen quickly so the room could be finished. The owner, 9 October 2026:
  * *"daar moet van alles wat opsies is, 'n verskeidenheid wees."*
  *
  * Fourteen. A child who presses the same six buttons gets the same six songs
@@ -146,7 +146,7 @@ export async function makeKidSong(
   const how = choice(KID_SOUNDS, sound);
   const own = kidWords(words);
   /* A bubble OR the child's own words say what it is about; a bubble says
-     how it sounds. Carli, 12 October 2026: "daar is kinders wat kan tik".
+     how it sounds. The owner, 12 October 2026: "daar is kinders wat kan tik".
      The words go to /api/music exactly like a grown-up's prompt, which is
      where `guard` reads every prompt before anything is made — the room
      does not get a softer door for being a child's. */

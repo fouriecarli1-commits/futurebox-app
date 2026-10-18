@@ -28,6 +28,7 @@ import { ERRANDS, briefFor, isErrandId } from '@/app/lib/errands';
 import { tooMany } from '@/app/lib/server/brake';
 import { noteConduct } from '@/app/lib/server/conduct';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { DISCRETION_RULE } from '@/app/lib/server/discretion';
 import { SINGERS } from '@/app/data/sound';
 import { craftBrief } from '@/app/data/songcraft';
 import { planActions } from '@/app/lib/copilotplan';
@@ -60,7 +61,7 @@ const ReplySchema = z.object({
      offer, the tone, the market — and the copilot could set exactly one
      of them per turn.
  
-     Carli, 11 September 2026: "copilot het mooi geskryf, maar dit het
+     The owner, 11 September 2026: "copilot het mooi geskryf, maar dit het
      niks van die hele platform se bars help invul nie." Of course not.
      It wrote about the brief because filling it was not on offer.
  
@@ -170,7 +171,7 @@ const SYSTEM = [
 
      Suggesting it matters as much as accepting it: somebody who does not know
      the model has an opinion about the singer will never think to say so, and
-     will get whatever it feels like. That is the fault Carli reported. */
+     will get whatever it feels like. That is the fault the owner reported. */
   '- Who sings is part of the style, not a setting. There is no voice control on any screen and no voice parameter in the music engine — the only way to ask is in words, inside set_style.',
   `- Put the singer FIRST in the list, before the genre, because the engine weights what comes first. Phrases that work: ${SINGERS.map((one) => one.words).join('; ')}.`,
   '- If they have asked for a song and said nothing about who sings it, offer one. Say what you would pick and why in half a sentence, and set it. Do not ask them an open question about it — a suggestion they can change beats a form they have to fill in.',
@@ -182,7 +183,7 @@ const SYSTEM = [
   '- surface_op changes something in a room. Only the operations listed in the context exist; there is never a general-purpose one. If what they want is not in that list, say what you would do and let them do it.',
   /* ── The rule that was never stated ───────────────────────────────────
    *
-   * Carli, 22 September 2026, having reported it before: *"Soos die adverts,
+   * The owner, 22 September 2026, having reported it before: *"Soos die adverts,
    * die advert kamer se copilot vul nie die nuwe kamer se shots byvoorbeeld
    * in nie. Dit is baie belangrik om daardie produk te maak werk."*
    *
@@ -216,7 +217,7 @@ const SYSTEM = [
      which are craft decisions with a right answer the person asking usually
      does not have.
 
-     Carli, 11 September 2026, sent to the video desk by the copilot: the
+     The owner, 11 September 2026, sent to the video desk by the copilot: the
      shot was written and "hy het ook nie die res van die goed verander nie,
      die wide of vertical, die lengte van die video ens." Of course not. It
      had been told not to. */
@@ -224,7 +225,7 @@ const SYSTEM = [
   '- But DO make the craft decisions. The shape of a video, its length, the look it shares, where an advert should run — these have right answers, you know them, and the person asking usually does not. Set them, and say in half a sentence why, so they can change it. Leaving a box empty that you could have filled correctly is not caution, it is work handed back.',
   '- So: when you set something up, set ALL of it. A shot written onto a video desk with the shape and the length left as they were is a job half done — a nine-second wide clip for something they told you was going on TikTok.',
   '- At most one generate and at most one go per reply, and it goes last.',
-  /* Carli, 12 October 2026: "copilot moet altyd 'n titel uit dink vir 'n
+  /* The owner, 12 October 2026: "copilot moet altyd 'n titel uit dink vir 'n
      song." A song that reaches the shelf as "Untitled" is a song nobody can
      find again, and the person in Simple mode never typed a title because
      the whole point of Simple is that they do not have to. The model is
@@ -249,6 +250,7 @@ const SYSTEM = [
   '- Never imitate a named living artist, and never suggest prompting for one.',
   '- Never claim the song is finished, released, or published. It is theirs, on their screen.',
   '- You never spend their money. The studio asks before anything that costs.',
+  `- ${DISCRETION_RULE}`,
 ].join('\n');
 
 /**
@@ -391,7 +393,7 @@ const LIMITS = { perMinute: 20, perHour: 200 };
 
 /* ── What each part of a song is for ───────────────────────────────────
 
-   Carli, 19 September 2026, passing on a friend's idea and adding the part
+   The owner, 19 September 2026, passing on a friend's idea and adding the part
    that makes it worth building: *"dan leer dit ook mense sommer van liedjie
    skryf en van musiek."*
 

@@ -1,7 +1,7 @@
 /**
  * Every AI box can be talked into, and Story mode has its own AI.
  *
- * Carli, 14 October 2026: *"Story mode binne my profile, moet ook 'n ai hê en
+ * The owner, 14 October 2026: *"Story mode binne my profile, moet ook 'n ai hê en
  * ek sal verkies dat al ons ai's ook 'n listening tool het, sodat mense ook
  * dit met praat in invoer."*
  *

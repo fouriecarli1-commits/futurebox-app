@@ -1,6 +1,6 @@
 # Epos aan ElevenLabs — 'n kwotasie, hul plafon, en 'n datum
 
-Carli, 5 Oktober 2026: *"Ek het al lank terug gemail. Het ook nog nie 'n
+Die eienaar, 5 Oktober 2026: *"Ek het al lank terug gemail. Het ook nog nie 'n
 antwoord gekry nie."* En oor waarvoor sy wag: *"'n kwotasie en wat hulle
 ceiling is, want ek wil groot gaan en baie kliënte aanneem."*
 
@@ -10,7 +10,7 @@ waarop jy vantevore geskryf het. Die sperdatum hieronder staan as 19 Oktober
 
 ## Gestuur
 
-Carli het dit op **5 Oktober 2026** gestuur. Die sperdatum in die brief is
+Die eienaar het dit op **5 Oktober 2026** gestuur. Die sperdatum in die brief is
 **19 Oktober 2026**. As daar niks teen daardie datum is nie, geld die laaste
 afdeling van hierdie lêer.
 

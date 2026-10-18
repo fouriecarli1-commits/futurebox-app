@@ -1,7 +1,7 @@
 /**
  * The two Make a song sliders, as words.
  *
- * Carli, 14 October 2026: *"Ek wil ook hê daar moet sliders wees by everything
+ * The owner, 14 October 2026: *"Ek wil ook hê daar moet sliders wees by everything
  * in make a song. Light heavy, en weirdness level. Sal die ai musiek masjien
  * dit kan optel?"* It can — as words. Neither engine takes a number for
  * either: ElevenLabs composes from a list of styles and Lyria from a prompt,

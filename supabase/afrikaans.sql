@@ -11,7 +11,7 @@
 --
 -- Een mens se oor het `-tjie` gevind. Elke lid se oor vind die res.
 --
--- Carli, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
+-- the owner, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
 -- vir ons terugvoer te gee as afrikaanse woorde nie reg uit kom nie?"
 --
 -- ── 'n Verslag is 'n KANDIDAAT, nooit 'n reël nie ────────────────────────
@@ -107,7 +107,7 @@ create unique index if not exists afrikaans_reports_one_a_day
 
 -- ─────────────────────────────────────── wat dit werklik geklink het ────
 --
--- Carli, 14 September 2026: "Daar moet ook 'n pop out wees wat verduidelik
+-- the owner, 14 September 2026: "Daar moet ook 'n pop out wees wat verduidelik
 -- waarvoor hierdie feedback bar is en vra: hoe klink dit? Hoe moet dit
 -- foneties klink?"
 --

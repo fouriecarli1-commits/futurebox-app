@@ -45,7 +45,7 @@ export const FASTEST = 300;
 /**
  * What a musician calls this speed.
  *
- * Carli's list for the track controls had "moderato" on it, between the
+ * The owner's list for the track controls had "moderato" on it, between the
  * count-in and the capo. It is not decoration: somebody asked for a tempo
  * answers in these words, and a room that only counts beats a minute is a
  * room built by somebody who does not play.
@@ -184,7 +184,7 @@ export type Snap = 'off' | 'bar' | 'beat' | 'smart';
  *
  * ── Why the grid has a reach at all ──────────────────────────────────────
  *
- * Carli, 21 September 2026: *"Ruler is not lose to be very precise, it jumps
+ * The owner, 21 September 2026: *"Ruler is not lose to be very precise, it jumps
  * from grid to grid. It needs to be loose."*
  *
  * It did, and there was nothing between the grid lines. Every snap here was

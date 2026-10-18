@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
+ * The owner, 9 October 2026: *"Gaan aan met die kind se liedjies wat keepbaar
  * is."*
  *
  * A child's song played in the room and was gone when the page closed. That
@@ -28,7 +28,7 @@
  *
  * ── On the account since 9 October ───────────────────────────────────────
  *
- * It was on the device for a day. Carli, as soon as she saw it working:
+ * It was on the device for a day. The owner, as soon as she saw it working:
  * *"Skuif die stories en liedjies na die server toe."* A song made on one
  * phone was not on another, which is not a shelf. `lib/shelfmove.ts` carries
  * up anything still sitting in the old one.

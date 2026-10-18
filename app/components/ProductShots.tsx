@@ -3,7 +3,7 @@
 /**
  * Product photos: her product set in a scene, from the photo editor.
  *
- * Carli, 16 October 2026: *"Generate product photos in seconds."* The scenes
+ * The owner, 16 October 2026: *"Generate product photos in seconds."* The scenes
  * and the sentence are `lib/productshots.ts`; this is the sheet — the
  * product (the photo on the post, or one brought in here), a scene, a few
  * words more if she wants, a shape, and a button that says its price. What

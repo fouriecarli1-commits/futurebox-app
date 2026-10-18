@@ -1,6 +1,6 @@
 # ElevenLabs se pryse — die egte lys
 
-Carli het op **8 September 2026** hulle prysbladsy gestuur. Tot daardie dag
+Die eienaar het op **8 September 2026** hulle prysbladsy gestuur. Tot daardie dag
 was hierdie die grootste onbekende in die hele besigheid: `costs-eleven.mts`
 het bo-aan gestaan met **"ONGEVERIFIEER … dit is wat die kode tot dusver
 aangeneem het"**, en `docs/DIENSTE-EN-KOSTE.md` het die e-pos aan ElevenLabs
@@ -62,7 +62,7 @@ Randkoers **R16 = $1**, dieselfde aanname as `app/lib/plans.ts`.
 
 ### Per eenheid — en waar hierdie lys op 15 September reggemaak is
 
-*Carli het op 15 September 2026 ElevenLabs se **volledige diens-vir-diens
+*Die eienaar het op 15 September 2026 ElevenLabs se **volledige diens-vir-diens
 tabelle** gestuur — een blad per produk, met die ingeslote hoeveelheid en die
 ekstra-eenheid-prys op elke plan. Dit is die eerste keer dat hierdie getalle
 van hulle eie bladsy af kom eerder as afgelei word, en **vier reëls hieronder
@@ -210,7 +210,7 @@ krediete is dit **meer ElevenLabs-minute as wat die betalende lid self
 gebruik**. Dit was altyd die grootste hefboom; met die egte pryse was dit nie
 meer 'n hefboom nie, dit was die enigste pad.
 
-**Carli het dit op 8 September 2026 getrek: die gratis laag kry nie meer
+**Die eienaar het dit op 8 September 2026 getrek: die gratis laag kry nie meer
 musiek nie.** `TIER_CREDITS.free` is nul.
 
 | | Voorheen | Nou |

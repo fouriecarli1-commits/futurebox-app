@@ -3,7 +3,7 @@
  *
  * ── Why this is a file and not three strings in the studio ───────────────
  *
- * Carli asked for *"nice fonts"*. What was there was three system stacks —
+ * The owner asked for *"nice fonts"*. What was there was three system stacks —
  * `system-ui`, `Georgia`, `ui-monospace` — and the note above them said
  * "loaded by the page already, so nothing is fetched", which was true and
  * was the problem. Georgia is not on most Android phones. Neither is a
@@ -67,7 +67,7 @@ export const BOOK = localFont({
 
 /* ── Three more shapes, 9 October 2026 ──────────────────────────────────
  
-   Carli: *"Ek dink ook daar moet heelwat 'n verskeidenheid van teks opsies
+   The owner: *"Ek dink ook daar moet heelwat 'n verskeidenheid van teks opsies
    wees."* Measured before adding: three faces here and five in the cutting
    room, which was the thinnest list in the app.
  
@@ -114,7 +114,7 @@ export const ROUND = localFont({
 /* The plain one IS preloaded, because it is the default a post opens in and
    the one most posts will keep. */
 /**
- * The futuristic face — Carli, 13 October 2026: "amazing futuristic text".
+ * The futuristic face — the owner, 13 October 2026: "amazing futuristic text".
  * Orbitron, the geometric display face Google's page set its neon words
  * in; local like the rest, latin only, which is all Google serves of it.
  */
@@ -144,7 +144,7 @@ export interface Face {
 
 /* ── Eight more shapes, 15 October 2026 ─────────────────────────────────
 
-   Carli: *"Die gedagte is ook om al hoe meer uit te brei oor tyd, meer text
+   The owner: *"Die gedagte is ook om al hoe meer uit te brei oor tyd, meer text
    possibilities, meer templates."* The rule from 9 October still holds —
    each is a SHAPE none of the seven could make, with a post somebody makes
    in it: a script for a wedding or a love song, spray paint for the street

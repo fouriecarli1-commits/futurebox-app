@@ -1,7 +1,7 @@
 /**
  * The photo editor's layers, used the way she asked for them.
  *
- * Carli, 16 October 2026: *"Die photo editor sal moet layers kry. As mens op
+ * The owner, 16 October 2026: *"Die photo editor sal moet layers kry. As mens op
  * die layers click moet mens kan kies op watter layer jy nou edit, en
  * natuurlik 'n all layer wat alles by mekaar het."*
  *
@@ -219,7 +219,7 @@ try {
   check('  with the photo alone, the words stay as they were', darkPhoto.white > lit.white * 0.8, `${lit.white} → ${darkPhoto.white}`);
 
   /* ── The photo forward ────────────────────────────────────────────────
-     Carli, 17 October 2026: the photo that was there first would not come
+     The owner, 17 October 2026: the photo that was there first would not come
      forward. Moved to the front, it covers the words and the shape. */
   await page.locator('[data-postplain]').click().catch(() => undefined);
   await page.waitForTimeout(300);

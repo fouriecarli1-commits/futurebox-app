@@ -7,7 +7,7 @@
  *
  * It was written for the storyboard — the form that cuts many shots into one
  * film — and lived inside it. So the desk's other half, the one that makes a
- * single clip from a single sentence, had no subtitles at all. Carli, 11
+ * single clip from a single sentence, had no subtitles at all. The owner, 11
  * September 2026, after an hour in the advert platform: "Wat die video kamer
  * ook kort is 'n hele bar vir subtitles en die language waarin die subtitles
  * is... Al die goed soos subtitles ens is by die funksie, make a longer
@@ -100,7 +100,7 @@ export default function Subtitles({
     <div className="space-y-2.5">
       {/* A tick, not two buttons.
 
-          Carli: "Video desk moet ook 'n tick box hê vir add subtitles, en dan
+          The owner: "Video desk moet ook 'n tick box hê vir add subtitles, en dan
           'n tik boksie wat sê in watter language". Two buttons reading
           "Printed on" and "None" is a switch dressed as a choice, and it made
           somebody read both to work out which state they were in. A tick has

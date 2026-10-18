@@ -3,7 +3,7 @@
  *
  * ── What she asked, and what it was ──────────────────────────────────────
  *
- * Carli, 7 October 2026: *"Waar edit ek 'n foto?"* She found the screen, and
+ * The owner, 7 October 2026: *"Waar edit ek 'n foto?"* She found the screen, and
  * the thing it did not do was choose which part of a picture shows. A phone
  * photograph is 4:3 and a story is 9:16, so something always falls off — and
  * the app chose what, every time, with no argument.
@@ -71,7 +71,7 @@ const PICTURES: readonly Size[] = [PHOTO, { width: 3024, height: 4032 }, { width
    picture until it covers, and a multiple of one or more of that still
    covers.
  
-   Carli, 7 October 2026: *"Die foto moet ook kan shrink onder 1.00."* Below
+   The owner, 7 October 2026: *"Die foto moet ook kan shrink onder 1.00."* Below
    one it does not cover, and that is the whole point of being allowed below
    one: a small photograph on a colour, with room around it for words. So the
    rule splits — above one it still may not leak, below one it must, and the
@@ -134,7 +134,7 @@ ok('  and the screen is told the rest is background', showsThrough(fits, STORY))
    slack was `Math.max(0, overhang)` — nought for a picture smaller than the
    frame, so it was nailed to the middle.
  
-   Carli, 7 October 2026: *"dit moet ook gedrag kan word soos mens die
+   The owner, 7 October 2026: *"dit moet ook gedrag kan word soos mens die
    behoefte het."* A picture smaller than the frame has exactly as much room
    to move as one bigger than it; moving it slides it about INSIDE the frame
    instead of sliding the frame about inside it, and nailed to the centre it

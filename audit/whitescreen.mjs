@@ -1,7 +1,7 @@
 /**
  * A white screen is never an acceptable answer.
  *
- * Carli: "I accidentally went out of videodesk, and now when I want to go back
+ * The owner: "I accidentally went out of videodesk, and now when I want to go back
  *  in, it only shows a white screen."
  *
  * There was no error boundary in this app — no `error.tsx`, no
@@ -122,7 +122,7 @@ try {
 
   /* ── The white screen that nothing threw ─────────────────────────────
 
-     Carli, 15 September 2026: *"Ek sien die wit blad met die avatar oplaai
+     The owner, 15 September 2026: *"Ek sien die wit blad met die avatar oplaai
      werk nie. Dit is nogsteeds net wit."*
 
      This is the other half and it is the half she keeps hitting. Nothing

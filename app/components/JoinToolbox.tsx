@@ -3,7 +3,7 @@
 /**
  * The transitions, packed neatly: grouped, pictured, findable.
  *
- * Carli, 16 October 2026, screenshots of a desktop editor's toolbox: *"Kyk ook
+ * The owner, 16 October 2026, screenshots of a desktop editor's toolbox: *"Kyk ook
  * hoe netjies dit verpak is."* Groups with a heading that folds, one row per
  * transition with a small picture of what it does beside its name, and the
  * ones she uses most kept at the top as favourites.

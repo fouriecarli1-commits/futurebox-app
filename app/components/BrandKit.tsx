@@ -52,7 +52,7 @@ export default function BrandKit({
  
        This opened itself on a first visit — "an empty panel nobody opens is
        the same as no panel" — and that was a fair argument when it was the
-       only panel behaving that way. Carli, 12 September 2026: "Make sure
+       only panel behaving that way. The owner, 12 September 2026: "Make sure
        every rooms drop down menu is closed from the beginning and the user
        can open it." One panel that decides for itself is the exception that
        makes the rule unreadable, and a room where one thing is open and
@@ -159,7 +159,7 @@ export default function BrandKit({
 
           {/* ── The folder ───────────────────────────────────
 
-              Carli, 10 October 2026: *"Ek dink ook daar moet 'n brand pack
+              The owner, 10 October 2026: *"Ek dink ook daar moet 'n brand pack
               wees. Iemand moet 'n folder kan hê met hulle brand goed op."*
 
               It held ONE picture. A business has a logo, a wordmark, a white

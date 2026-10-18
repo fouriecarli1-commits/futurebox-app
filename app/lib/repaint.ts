@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Iets wat ek ook nou beleef het met die logo wat
+ * The owner, 11 October 2026: *"Iets wat ek ook nou beleef het met die logo wat
  * ek transparent gemaak het, wat ook belangrik kan wees is om 'n logo, of 'n
  * objek se kleur te kan verander. Ek dink ook wanneer dit kom by kleur, moet
  * mens ook die pearlescent funksie in sit waar twee na 3 kleure saam blend

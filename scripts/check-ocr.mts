@@ -120,7 +120,7 @@ ok(`both languages are offered (${READABLE.length})`, READABLE.length >= 2
 
 /* ── A reading that is not words is not offered as words ──────────────────
  
-   Carli, 7 October 2026, having pressed Read English on a photograph of her
+   The owner, 7 October 2026, having pressed Read English on a photograph of her
    own face: *"Wat is daai words in the picture"*. The fixture below is
    exactly what it showed her — Tesseract finding letter-shaped things in
    hair and skin, at a confidence of about thirty, which this code was

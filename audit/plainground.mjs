@@ -3,7 +3,7 @@
  *
  * ── Why this one needs a walk ────────────────────────────────────────────
  *
- * Carli, 10 October 2026, after it shipped: *"Die background remove nogsteeds
+ * The owner, 10 October 2026, after it shipped: *"Die background remove nogsteeds
  * nie."* `check:plateground` drives the maths on pictures it builds itself
  * and proves the wiring by reading the file — and both of those pass while
  * the button on the screen does nothing at all. A control behind a bench

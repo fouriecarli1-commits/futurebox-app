@@ -3,7 +3,7 @@
  *
  * ── Why this is arithmetic and not a browser ─────────────────────────────
  *
- * Carli asked for the buttons *"heel links by elke tydlyn, daar by die S en
+ * The owner asked for the buttons *"heel links by elke tydlyn, daar by die S en
  * M"*, and for a reason that is not about buttons at all: *"dit raak
  * belangrik wanneer 'n hele tydlyn se klankbane gelyktydig opgeskuif moet
  * word."* The part that can be got wrong is what happens to an interlocked

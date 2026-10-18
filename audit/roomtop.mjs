@@ -1,7 +1,7 @@
 /**
  * Every room opens at the top.
  *
- * Carli: "wanneer mens tussen kamers beweeg dat die kamer elke keer weer heel
+ * The owner: "wanneer mens tussen kamers beweeg dat die kamer elke keer weer heel
  *  bo begin. huidiglik bly dit waar jy voorheen gescroll het, dan voel mens
  *  lost."
  *

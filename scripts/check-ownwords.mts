@@ -3,7 +3,7 @@
  *
  * ── Why this exists ──────────────────────────────────────────────────────
  *
- * Carli, 3 October 2026, the morning after I built the cutting room's layer
+ * The owner, 3 October 2026, the morning after I built the cutting room's layer
  * controls: *"Ek vra nie dat jy canva oor bou nie, net 'n praktiese video
  * editing en die elemente wat moontlik is. Hierdie is hoe meeste video editing
  * programme lyk, canva sin is nie uniek nie. Ons kan onsself nie vasloop met
@@ -89,7 +89,7 @@ const RESEARCH: Readonly<Record<string, string>> = {
     + 'could not be reached',
   /* ── Her own sentence about where the demand comes from ────────────
  
-     Carli, 11 October 2026, settling what `grab` should cost: *"dit is
+     The owner, 11 October 2026, settling what `grab` should cost: *"dit is
      wat ek \u2019n duisend keer gebruik op canva en wat ek die meeste
      nodig het."*
  
@@ -160,12 +160,12 @@ for (const root of WHERE) {
  
            Narrow on purpose, and narrowed again once it was tested: the
            first version wanted only the name and a quotation mark, and
-           `Carli said "do it like <rival>" so we copied the sheet` walked
+           `the owner said "do it like <rival>" so we copied the sheet` walked
            straight through it. The line has to carry the attribution in the
            form this codebase actually uses — the name, the date and the
            quotation — which is three things to write on purpose rather than
            one to write by accident. */
-        if (/\bCarli\b/.test(line) && /\b(19|20)\d{2}\b/.test(line)
+        if (/\b([Tt]he owner|[Dd]ie eienaar)\b/.test(line) && /\b(19|20)\d{2}\b/.test(line)
           && /[“”"]/.test(line)) continue;
         found.push(`${path}:${i + 1}  ${line.trim().slice(0, 100)}`);
         return;

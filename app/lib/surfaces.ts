@@ -128,7 +128,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "Making a song from nothing: a title, a style, the words, then the track itself.",
     /* ── The room's opening question ──────────────────────────────────
 
-       Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel wees
+       The owner, 19 September 2026: *"Die emosie goed voel ek moes als deel wees
        van copilot. Die hele room is baie besig. Ook die begeleiding van elke
        sessie."*
 
@@ -159,7 +159,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     ops: {
       /* ── Starting over ────────────────────────────────────────────
 
-         Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n
+         The owner, 21 September 2026: *"Copilot en daardie kamer moet 'n
          reset hê om die kamer skoon te maak en van vooraf te prompt."*
 
          The Start again button on the copilot's header clears the
@@ -184,7 +184,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is the words of the song, with [Verse], [Chorus] and [Bridge] markers on their own lines. Send all of them, not a description of them. Use this to REPLACE a sheet that is already there - rewriting, tidying, translating. It is not how a song gets written from nothing here",
       /* ── One section at a time ────────────────────────────────────
 
-         Carli, 21 September 2026: *"The copilot must guide someone in a
+         The owner, 21 September 2026: *"The copilot must guide someone in a
          song in make a song. It must work verse for verse, and before
          every new verse are written, ask questions and explain what this
          part in a song is usually for. It must not generate everything at
@@ -228,7 +228,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     /* ── Four, and each one is a different kind of person ────────────
 
        Two feelings, for somebody who does not know what they want and can
-       always answer how they feel. One full instruction, because Carli's
+       always answer how they feel. One full instruction, because the owner's
        ask was that the room say *"jy kan alles deur my doen... sê net wat jy
        nodig het, die tema, die tyd, die styl, jou stem keuse"* — and a
        capability named in a sentence with no example under it is a claim,
@@ -294,7 +294,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     /* ── The Pro Booth is behind this door, and nothing said so ───────
  
-       Carli, 8 October 2026: *"Maak seker probooth se funksies werk en kan
+       The owner, 8 October 2026: *"Maak seker probooth se funksies werk en kan
        maklik gevind word."*
  
        They work — `audit/probooth.mjs` presses 109 things in that room and
@@ -384,7 +384,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
          The length of it. "As you would tell a camera operator" was meant
          to convey detail and conveys none: a model reads it as a register,
          writes one clause, and a video engine given one clause invents the
-         other ninety per cent. Carli, 11 September 2026, testing the advert
+         other ninety per cent. The owner, 11 September 2026, testing the advert
          desk: "CoPilot moet net baie meer descriptive wees wanneer video
          shots geskryf word."
 
@@ -398,7 +398,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
          switched off. */
       /* ── Shown, not described ────────────────────────────────────────
  
-         Carli said this twice, a month apart. 11 September: *"CoPilot moet
+         The owner said this twice, a month apart. 11 September: *"CoPilot moet
          net baie meer descriptive wees wanneer video shots geskryf word."*
          9 October: *"Die video studio se ai is baie kort af. Dit moet baie
          descriptive wees en daardie ai moet weet wat verwag word, om genoeg
@@ -467,7 +467,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
          a grade has never switched the voice on, and the switch was a tick
          box only Everything shows. `set_speak` is that switch, and it picks
          the quality that can speak by itself — so the grade line no longer
-         claims a grade means a voice. Found 15 October 2026, the day Carli
+         claims a grade means a voice. Found 15 October 2026, the day the owner
          asked for every function on the desk to be looked at. */
       set_grade:
         "the value is exactly one of standard, better or premium. Standard is " +
@@ -520,7 +520,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   },
   /* ── The cutting room ──────────────────────────────────────────────────
 
-     Carli, 30 September 2026: *"Wat ons wel moet verander dit moet ook sy eie
+     The owner, 30 September 2026: *"Wat ons wel moet verander dit moet ook sy eie
      studio op sy eie video wees. 'N knoppie wat jou vat na sy eie kamer en dan
      moet dit soos die probooth die tydlyne hê."*
 
@@ -567,7 +567,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     stage: "show",
     /* Beside the cutting room, not inside it.
 
-       Carli, 7 October 2026: *"Make hooks the same shape as video desk and
+       The owner, 7 October 2026: *"Make hooks the same shape as video desk and
        add next to it Photo Editor."* It was a sheet off the video desk, and
        a sheet is not a room: it has no place in the menu, nothing points at
        it, and the only way to find it was to already know it was there — in
@@ -861,7 +861,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is one of: English, Afrikaans, isiZulu, Sesotho, Portuguese, French, Spanish",
       /* ── The two hand-offs, as operations ────────────────────────
 
-         Carli, 21 September 2026: *"Die advert se copilot skryf nie die
+         The owner, 21 September 2026: *"Die advert se copilot skryf nie die
          shots in die volgende kamer nie."*
 
          These only appear once an advert has been written, because the
@@ -894,10 +894,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     id: "albumart",
     stage: "sell",
     purpose:
-      "Album art by real artists: a wall of one-off pieces at R200 and up, each sold exactly once, and a way to commission a painter for a particular song.",
+      "Album art by real artists: a wall of one-off pieces at R280 each, each sold exactly once, and a way to commission a painter for a particular song.",
     /* ── Why the copilot cannot send a message here ──────────────────
 
-       Carli: *"Daai dm moet net buttons hê wat hulle kan kies … Geen tik
+       The owner: *"Daai dm moet net buttons hê wat hulle kan kies … Geen tik
        moontlikhede nie."*
 
        The copilot is a text box, and a text box that reaches an artist is
@@ -912,7 +912,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     can: [
       "explain the price and the four windows",
-      /* Carli, 14 October 2026: *"ek wil nie hê die hele publiek moet sien
+      /* The owner, 14 October 2026: *"ek wil nie hê die hele publiek moet sien
          hoeveel kry die kunstenaar nie."* What an artist is paid is shown
          to that artist, where they hang a piece, and to nobody else. */
       "keep what an artist is paid private: it is between the artist and the studio, so never say it, never estimate it, and if asked, say it is shown to the artist when they hang a piece",
@@ -921,7 +921,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     ],
     /* ── One operation, and it is not the copilot's ──────────────────
 
-       Carli, 21 September 2026: *"Ek betaal die R50 om die bid te begin,
+       The owner, 21 September 2026: *"Ek betaal die R50 om die bid te begin,
        maar dan gebeur daar niks nie."* The till sent everybody back to
        the front page, and the studio now brings her back into this room
        and sends `paid` so it reads itself again — the webhook marks the
@@ -942,7 +942,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the studio's own, not yours. It is sent when somebody comes back from paying, so the wall reads itself again. Never choose it: you cannot know whether a payment happened, and saying one did when it did not is the worst thing this room could say",
       /* ── Arriving from a song's cover panel ────────────────────────
 
-         Carli, 22 September 2026: *"Kyk asb in make a song en channel
+         The owner, 22 September 2026: *"Kyk asb in make a song en channel
          dat daar by cover art 'n opsie is vir real art."*
 
          The cover panel in both of those rooms now offers this room as

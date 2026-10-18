@@ -216,7 +216,7 @@ const carries = new Set(
    measuring, and the check went green every day by looking at the eight
    processors it had been told about instead of at the code.
 
-   Carli's own standing complaint about this project, and she is right: a
+   The owner's own standing complaint about this project, and she is right: a
    check that is green because it measures something ADJACENT is worse than
    no check, because it is also a claim.
 

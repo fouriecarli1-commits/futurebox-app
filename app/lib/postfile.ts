@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 7 October 2026, having seen what other editors offer on the way out:
+ * The owner, 7 October 2026, having seen what other editors offer on the way out:
  * *"Ook die formaat van export?"* — and then, when the options were put to
  * her: *"gaan aan, en los PDF en SVG uit."*
  *
@@ -33,7 +33,7 @@
  *
  * ── WebP, which was not left out for a reason ────────────────────────────
  *
- * It was simply not thought of. Carli, 9 October 2026: *"daar moet van alles
+ * It was simply not thought of. The owner, 9 October 2026: *"daar moet van alles
  * wat opsies is, 'n verskeidenheid wees."*
  *
  * And it is the one that should have been here first: it holds a see-through

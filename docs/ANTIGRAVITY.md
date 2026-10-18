@@ -2,7 +2,7 @@
 
 **Paste hierdie hele lêer, of net die skakel daarna, as die eerste boodskap.**
 
-Carli, 11 Oktober 2026: *"Ek is mal oor wat ons al hierop gedoen het, maar jy
+Die eienaar, 11 Oktober 2026: *"Ek is mal oor wat ons al hierop gedoen het, maar jy
 is net nie so goed met estetiese soos google nie."* Sy is reg. Hierdie lêer
 bestaan sodat 'n agent wat beter is met die voorkoms kan inkom en help sonder
 om stil-stil iets anders te breek.
@@ -148,7 +148,7 @@ anders se skerm breek.
 ## 4. Waar die redes staan
 
 Byna elke lêer begin met 'n kop wat sê **hoekom** dit so is, dikwels met
-Carli se eie woorde en die datum. Lees dit voor jy iets verander wat vreemd
+Die eienaar se eie woorde en die datum. Lees dit voor jy iets verander wat vreemd
 lyk; dit is gewoonlik vreemd omdat iets anders al een keer verkeerd geloop
 het.
 
@@ -183,7 +183,7 @@ het.
 ## 5a. Een ding wat op 11 Oktober geleer is
 
 Die **Simple / Everything**-knoppie bo in *Make a song* en op die videolessenaar
-staan bo-aan die kamer, buite elke kaart, omdat Carli so gevra het. Moenie dit
+staan bo-aan die kamer, buite elke kaart, omdat die eienaar so gevra het. Moenie dit
 terug in 'n kaart skuif nie, en moenie die kamers se "Simple" verander om weer
 kaarte te wys nie: Simple is die copilot, een knoppie en 'n vier-reël opsomming.
 

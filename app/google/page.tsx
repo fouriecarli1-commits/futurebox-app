@@ -5,7 +5,7 @@
  *
  * ── Why this page exists ─────────────────────────────────────────────────
  *
- * Carli, 8 October 2026: *"maar dan gaan ek nou weer 'n password weggee wat
+ * The owner, 8 October 2026: *"maar dan gaan ek nou weer 'n password weggee wat
  * ek weer gaan moet verander."*
  *
  * She was right. An hour earlier her Google API key had to be rotated
@@ -44,7 +44,7 @@ export default function GoogleSetup(): React.ReactElement {
    *
    * ── Why every one of them has to come through here ───────────────────
    *
-   * Carli, 9 October 2026, sent a screenshot of
+   * The owner, 9 October 2026, sent a screenshot of
    * `www.futurebox.studio/api/google/wordtest` answering `no`. She had
    * typed the address, because that is what I told her to do.
    *

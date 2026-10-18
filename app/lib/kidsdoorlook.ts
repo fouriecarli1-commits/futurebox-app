@@ -1,7 +1,7 @@
 /**
  * The light on the grown-up's page of the kids room.
  *
- * Carli, 13 October 2026: *"Hierdie op die parents room moet meer die
+ * The owner, 13 October 2026: *"Hierdie op die parents room moet meer die
  * futuristic tema bevat … super helder en neon … moet skree van dieselfde
  * tema as by die kids room."* The page sits on her photograph of the room,
  * so what makes it read as the same room is the glow: mint on the glass,

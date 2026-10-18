@@ -3,7 +3,7 @@
 /**
  * Clothes on a model, from the photo editor.
  *
- * Carli, 16 October 2026: *"Show clothes on models."* The models, settings
+ * The owner, 16 October 2026: *"Show clothes on models."* The models, settings
  * and sentence are `lib/tryon.ts`; this is the sheet — the garment (the
  * photo on the post, or one brought in), a model described here or a photo
  * of a real person, a setting, a pose, a shape, and a button that says its

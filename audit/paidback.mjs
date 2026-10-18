@@ -3,7 +3,7 @@
  *
  * ── Why this is walked and not read ──────────────────────────────────────
  *
- * Carli asked for this twice in two days:
+ * The owner asked for this twice in two days:
  *
  *   *"Kyk na die redirect na betalings. Met die album art wanneer die
  *    betaling terug kom is dit nie in dieselfde kamer nie. Ek betaal die R50
@@ -123,7 +123,7 @@ try {
 
   /* ── The door, BEFORE anything takes it down ───────────────────────────
    *
-   * Carli, 22 September 2026, third time: *"Na betaling gooi hy my uit die
+   * The owner, 22 September 2026, third time: *"Na betaling gooi hy my uit die
    * kamer."* And this probe passed every time she said it.
    *
    * Because the line here used to be `await dismissDoor(p)` — before the

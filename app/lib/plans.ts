@@ -88,7 +88,7 @@ export interface TierSpec {
    */
   readonly videos: number;
   /**
-   * Cloud space for what a member keeps, in gigabytes. Carli, 16 October
+   * Cloud space for what a member keeps, in gigabytes. The owner, 16 October
    * 2026: *"Please impliment the storage plan as you suggested."* The limit
    * itself is in the database (`supabase/berging.sql`, `storage_cap`) so a
    * browser cannot skip it; `check:berging` holds the two in step.
@@ -134,7 +134,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Style previews, so you can hear a sound before you buy anything',
       'A generated song is on a plan — every one of them costs real money to make',
       /* ── Album art, on every plan ────────────────────────────────────
-         Carli, 22 September 2026: *"Kyk ook dat die nuwe album art
+         The owner, 22 September 2026: *"Kyk ook dat die nuwe album art
          afdeling deel van die free, en betalings pakkette vorm en wys."*
          The room was built, it sells, and no package mentioned it existed.
          It is not gated by tier — `app/api/artmarket/route.ts` reads no
@@ -152,7 +152,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          from what the till charges. */
       'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
-         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         24 September 2026. The owner: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die
          probooth, die video editing."* And on the advert desk, which was
          R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
@@ -172,7 +172,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The Video Editor is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and included, because it runs in your own browser. Putting the finished film together is what costs: 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3, movement 6. This plan holds no credits, so you can build and try everything here, and the film waits for you.',
       'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 15 credits, eight advert lines 40.',
       'Dubbing an episode into another language is the dearest thing here: 110 credits a minute, so it needs Studio or Label.',
-      /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
+      /* The owner, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor is open on this plan too — crop, tone, words, shapes, templates and the background remover, all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits, and this plan holds none, so the picture waits for you.',
       '1 GB of cloud space for what you keep — songs, films, recordings and pictures.',
@@ -184,7 +184,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     rand: 149,
     /* ── Recounted 11 October 2026, when a song got cheaper ─────────
  
-       Carli put a two-minute song at R11.50, which is eight credits rather
+       The owner put a two-minute song at R11.50, which is eight credits rather
        than ten, so the same allowance buys MORE songs than this card used
        to promise. `check:sold` compares the number on the card against what
        the credits actually buy and failed the moment the price moved —
@@ -205,7 +205,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Every workshop',
       'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
-         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         24 September 2026. The owner: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die
          probooth, die video editing."* And on the advert desk, which was
          R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
@@ -225,7 +225,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3, movement 6 — however many shots it is on. A twenty-second advert using all six is 46; a dressed three-minute film is 96.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
       'Dubbing is 110 credits a minute — more than this plan holds, so it starts at Studio.',
-      /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
+      /* The owner, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; a chart set by AI from your words is 4; a vector picture drawn by AI is 6; giving it a little motion is priced like a video.',
       '10 GB of cloud space for what you keep — songs, films, recordings and pictures.',
@@ -261,7 +261,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
       '205 credits a month — 25 full songs, or 5 music videos',
-      /* 180 credits against 205 a month (Carli, 15 October 2026): said on
+      /* 180 credits against 205 a month (The owner, 15 October 2026): said on
          the card, so the price is known before paying. */
       'Train a sound of your own on your own songs — 180 credits',
       'Everything in Maker, and three cloned voices',
@@ -272,7 +272,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          every paid plan, so it was not something Studio adds. */
       'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
-         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         24 September 2026. The owner: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die
          probooth, die video editing."* And on the advert desk, which was
          R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
@@ -292,7 +292,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3, movement 6 — however many shots it is on. A twenty-second advert using all six is 46; a dressed three-minute film is 96.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
       'Dubbing into another language, in the same voice — 110 credits a minute out of your 205.',
-      /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
+      /* The owner, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; a chart set by AI from your words is 4; a vector picture drawn by AI is 6; giving it a little motion is priced like a video.',
       '50 GB of cloud space for what you keep — songs, films, recordings and pictures.',
@@ -320,7 +320,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Five full songs a day — the most of any plan',
       'Album art by real artists — R280 a piece, or R500 to commission one. On every plan, paid per piece.',
       /* ── The rooms that used to be free, or sold separately ───────────
-         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         24 September 2026. The owner: *"Ek dink net ons moet ons gratis
          funksies monotise, dit moet pakkette word wat mense koop. Die
          probooth, die video editing."* And on the advert desk, which was
          R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
@@ -340,7 +340,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The Video Editor: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and included, on every plan, because it happens in your own browser. Putting the finished film together is 10 credits per 30 seconds, plus what each function costs — words 3, a look 6, a transition 3, your logo 15, a track under it 3, movement 6 — however many shots it is on. A twenty-second advert using all six is 46; a dressed three-minute film is 96.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 15 credits; eight advert lines are 40.',
       'Dubbing into another language, in the same voice — 110 credits a minute out of your 599.',
-      /* Carli, 16 October 2026: the cards must say what the plan unlocks. The
+      /* The owner, 16 October 2026: the cards must say what the plan unlocks. The
          Photo Editor was on none of them, while its export is charged. */
       'The Photo Editor: crop, tone, words, shapes, templates and the background remover — all of it unlimited and included, because it runs in your own browser. Taking the finished picture out is 5 credits; the AI magic touch is 6; finding the things in a photo is 15; a chart set by AI from your words is 4; a vector picture drawn by AI is 6; giving it a little motion is priced like a video.',
       '200 GB of cloud space for what you keep — songs, films, recordings and pictures.',
@@ -397,7 +397,7 @@ export const RAND_PER_USD = 16;
  *     email of 9 September says 6 000 000. The rate was 45% too cheap.
  *   · `SONG_COST` therefore said "about R2.59 on Business". `credits.ts` has
  *     said since 8 September that a song is R5.52, and says so at length.
- *   · `FIXED_MONTHLY` listed GitHub at R64 — which Carli confirmed costs her
+ *   · `FIXED_MONTHLY` listed GitHub at R64 — which the owner confirmed costs her
  *     nothing — and was missing Kits.AI (R640), Zoho (R241.50), the domains
  *     (R168) and Spaceship (R210.24). R1 259.74 a month of real bills absent
  *     from a list called "monthly fixed costs".
@@ -633,7 +633,7 @@ export interface PodcastCaps {
   /**
    * How many voices may be TRAINED in any 30 days, whatever is kept.
    *
-   * Carli, 14 October 2026: *"ek dink daar moet 'n sterk limit wees op ai
+   * The owner, 14 October 2026: *"ek dink daar moet 'n sterk limit wees op ai
    * voice training."* `voices` alone was a cap on keeping, not on training:
    * delete one, train another, delete it, train again — each is a call to
    * the voice service and a recording of somebody's voice made and thrown
@@ -652,7 +652,7 @@ export interface PodcastCaps {
 /**
  * How many SINGING voices of her own a tier may hold.
  *
- * Carli, 8 October 2026, choosing the numbers: *"Free 0 / Maker 1 / Studio 2
+ * The owner, 8 October 2026, choosing the numbers: *"Free 0 / Maker 1 / Studio 2
  * / Label 5."*
  *
  * ── Why this is a different number from `PODCAST_CAPS.voices` ────────────

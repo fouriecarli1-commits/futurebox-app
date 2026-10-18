@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+ * The owner, 9 October 2026: *"Let the parent give an allowance on an opening
  * page."* And: *"Gee dan net vir die ouer 'n raamwerk van wat krediete kan
  * doen per liedjie, per video, per story mode."*
  *
@@ -59,7 +59,7 @@ const priceOf = (id: string): number => KID_PRICES.find((one) => one.id === id)?
    an afternoon: `/api/cover` needs a saved `trackId`, the kids room does not
    save to her library, so the room cannot make the picture and the price list
    must not include one. The correction is recorded in `kidsallowance.ts`. */
-/* Carli, 14 October 2026: "maak al die kids songs 8 credits. Bring video af
+/* The owner, 14 October 2026: "maak al die kids songs 8 credits. Bring video af
    na 'n 36% margin." The kids room has its own two prices, and the routes
    charge them only for a request that says it is the kids room's. */
 const musicRoute = readFileSync('app/api/music/route.ts', 'utf8');

@@ -3,7 +3,7 @@
 /**
  * The darkroom: a photograph developed by somebody who edits for a living.
  *
- * Carli, 17 October 2026, screenshots of a professional photo developer —
+ * The owner, 17 October 2026, screenshots of a professional photo developer —
  * a histogram, Auto, B&W, HDR and Reset, a profile, Light, a tone curve,
  * Colour with a white-balance dropper, a mixer for eight colours, colour
  * grading on three wheels, Effects and Detail — and: *"Binne photoshop wonder

@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- The words she has heard said, and where the dictionary currently lives
 --
--- Carli, 10 October 2026: *"Gaan aan met die keep button."*
+-- the owner, 10 October 2026: *"Gaan aan met die keep button."*
 --
 -- ── What the keep button needed, and why a table ────────────────────────
 --

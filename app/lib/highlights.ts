@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 16 October 2026, a clipper open on her phone: *"Let AI instantly
+ * The owner, 16 October 2026, a clipper open on her phone: *"Let AI instantly
  * find and arrange your best moments."* Planned on the 17th as the one tool
  * from that list that needs nobody else's computer: the hooks room already
  * finds a moment in a video by where something arrives in its sound, and

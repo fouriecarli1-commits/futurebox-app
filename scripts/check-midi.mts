@@ -3,7 +3,7 @@
  *
  * ── Why this one is worth bytes ──────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"download midi, download wav. Dit gee die
+ * The owner, 10 October 2026: *"download midi, download wav. Dit gee die
  * geleentheid om 'n sekere klank te save vir 'n ander projek."*
  *
  * A MIDI file is the one thing this app produces that **nothing in this app

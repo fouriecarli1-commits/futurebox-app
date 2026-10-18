@@ -64,7 +64,7 @@ export function monthlyMinutes(): number {
  *
  * ── Why a per-member cap on top of the workspace roof ────────────────────
  *
- * Carli, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
+ * The owner, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
  * sit vir kits se stemkloning. Dus iets soos 5min per persoon."
  *
  * `monthlyMinutes()` above is Kits' own roof and it stops the account running

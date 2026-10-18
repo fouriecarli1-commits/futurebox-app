@@ -141,7 +141,7 @@ export default function StartFrame({
 
       {/* ── The picture you attached, where you can see it ──────────────
 
-          Carli has reported the cast strip three times. Two of those rounds
+          The owner has reported the cast strip three times. Two of those rounds
           went into the file picker and the route; this is the third thing
           that was wrong and nobody had looked at it, because nothing on
           screen could show it.

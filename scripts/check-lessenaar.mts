@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"is dit moontlik om die website anders te maak as
+ * The owner, 9 October 2026: *"is dit moontlik om die website anders te maak as
  * die phone app? Die website moet nie lyk soos 'n foon app nie."*
  *
  * ── Why the answer was already half-written, and half-broken ─────────────
@@ -120,7 +120,7 @@ for (const room of ROOMS) {
   /* The assertion that caught the real one. `VideoEditor.tsx` carried the
      literal string "flex flex-col" on the element holding `data-cutroom`,
      so the bar's 96-pixel side rail was stacked at the bottom of a column
-     instead of standing on an edge — the rail Carli asked for in September
+     instead of standing on an edge — the rail the owner asked for in September
      did not exist in that room and nothing said so. */
   ok(`  and picks its direction from it`,
     /onEdge \? 'flex-row' : 'flex-col'/.test(src),

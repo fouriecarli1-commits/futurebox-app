@@ -102,7 +102,7 @@ ok('  and the Veo she can actually see is carried, cheap tier included',
 ok('  and the image ones too, where the names are worst of all',
   MODELS.filter((one) => one.what === 'image').length >= 3,
   MODELS.filter((one) => one.what === 'image').map((one) => one.id).join(', ')
-  + ' \u2014 on the day Carli chose Nano Banana, Google\u2019s own page, a'
+  + ' \u2014 on the day the owner chose Nano Banana, Google\u2019s own page, a'
   + ' third-party guide and two Google shutdown notices disagreed about every'
   + ' one of these. One of the shutdown dates had already passed');
 
@@ -152,7 +152,7 @@ ok(`  and a video on the publisher api is asked for as a long-running job (${pub
    that 404 reads exactly like a wrong model name, which is the single most
    expensive confusion this file exists to prevent.
 
-   Carli pasted the whole listing on 10 October 2026 and two of this app's
+   The owner pasted the whole listing on 10 October 2026 and two of this app's
    own choices read badly against it. Nothing was changed from here: a badge
    in a catalogue is not a probe, and this file already records what happened
    the last time a model name was rewritten from one more screenshot than the
@@ -247,7 +247,7 @@ const lib = withoutComments(readFileSync('app/lib/server/google.ts', 'utf8'));
    from nothing. Every one of them passed, every day, while the probe was
    answering a question about my own request.
  
-   Carli's screen settled it: `lyria-3-pro-preview` — which this probe had
+   The owner's screen settled it: `lyria-3-pro-preview` — which this probe had
    reported as "there" — came back from a real call as *"was not found or
    your project does not have access to it"*. On `:predict` Google validates
    the body BEFORE resolving the model, so an empty body earns a 400 from the
@@ -263,7 +263,7 @@ const lib = withoutComments(readFileSync('app/lib/server/google.ts', 'utf8'));
 /* ── Wrong twice, and the second time for a new reason ───────────────────
  
    These asserted that the probe READS the model rather than poking it, which
-   was the 8 October rewrite. Carli pressed it on 9 October and Google
+   was the 8 October rewrite. The owner pressed it on 9 October and Google
    answered, for all eight models:
  
      API keys are not supported by this API. Expected OAuth2 access token or
@@ -415,7 +415,7 @@ ok('every chosen id is one that was actually measured',
 /* ── Chosen because she SAW them, not because a probe inferred them ─────
  
    Until 9 October 2026 these asserted a model picked from a probe reading
-   and a model picked from a web page. Carli opened Model Garden on her own
+   and a model picked from a web page. The owner opened Model Garden on her own
    project and pasted what it shows, and two of the three were wrong:
  
      video   veo-3.0-generate-001        the app had veo-3.1-…
@@ -452,7 +452,7 @@ ok('  and a global model is addressed without a region',
 
 /* ── 7. A person does not have to spend a secret to use it ───────────── */
 
-/* Carli, 8 October 2026, on being told to open `?key=<POST_SECRET>`:
+/* The owner, 8 October 2026, on being told to open `?key=<POST_SECRET>`:
    *"maar dan gaan ek nou weer 'n password weggee wat ek weer gaan moet
    verander."*
 

@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die app
+ * The owner, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die app
  * te beveilig met 'n authenticator app as hulle wil."*
  *
  * Optional, exactly as she said it. Most members will never switch this on.
@@ -146,7 +146,7 @@ export default function Authenticators(): React.ReactElement | null {
 
       {/* ── And what an authenticator app even is ──────────────────────
  
-          Carli, 23 September 2026: *"As ons die authenticator voorstel, moet
+          The owner, 23 September 2026: *"As ons die authenticator voorstel, moet
           daar net 'n verduideliking wees wat sê laai 'n authenticator app
           af."*
  

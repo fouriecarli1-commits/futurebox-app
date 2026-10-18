@@ -134,7 +134,7 @@ try {
      smudge that reads as a design choice. */
   const readable = await page.evaluate(() => {
     const lum = (colour) => {
-      const [r, g, b] = colour.match(/\d+/g).slice(0, 3).map(Number).map((v) => {
+      const [r, g, b] = window.__rgba(colour).slice(0, 3).map((v) => {
         const s = v / 255;
         return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
       });
@@ -194,7 +194,7 @@ try {
      `bg-scrim` is dark in every theme by design. `zinc` is remapped onto the
      surface family, and a light surface family inverts the ramp, so the low
      zinc numbers — the dark-theme spelling of "bright label" — come out
-     near-black. On 14 September 2026 Carli photographed both buttons of the
+     near-black. On 14 September 2026 the owner photographed both buttons of the
      no-words screen: boxed, green-washed, pressable, and their words almost
      gone.
    
@@ -299,7 +299,7 @@ try {
 
   /* ── A take can be held, and cannot be walked away from ──────────────
  
-     Carli, 13 September 2026, on the channel's "Film yourself to it":
+     The owner, 13 September 2026, on the channel's "Film yourself to it":
      "1. Jy kan nie pause nie. 2. Jy kan na 'n volgende liedjie scroll
      terwyl jy film. Dit recording van jouself moet vas wees binne in een
      liedjie."

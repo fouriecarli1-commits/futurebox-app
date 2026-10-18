@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli: *"En foto's en video's moet 'n plek hê waar jy die standaard sizes
+ * The owner: *"En foto's en video's moet 'n plek hê waar jy die standaard sizes
  * kan kies, asook custom sizes. Met export moet mens die kwaliteit van export
  * kies, en daardie verstellings moet alles krediete kos. Ek werk so standaard
  * op 5 krediete."*

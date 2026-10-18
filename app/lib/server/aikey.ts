@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 30 September 2026, with a screenshot of the Make tab: *"Copilot
+ * The owner, 30 September 2026, with a screenshot of the Make tab: *"Copilot
  * doesnt want to work."* Twice, she asked for an eight-second shot; twice the
  * room answered **"The key this app uses was rejected. Nothing has been
  * charged."**

@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 20 September 2026: *"Daar moet Album art by real artists. Daar in
+ * The owner, 20 September 2026: *"Daar moet Album art by real artists. Daar in
  * moet heel bo kunstenaars se regte art in kom wat op gebee kan word.
  * Starting rate wat op elke foto kom, R200. Die kamer moet ook mooi kan
  * uitwys dat elke kunswerk wat te koop is uniek is en net een keer
@@ -50,7 +50,7 @@ export const ROW_FLOOR = 200;
  *
  * ── Why the auction is gone ──────────────────────────────────────────────
  *
- * Carli, 6 October 2026: *"Dit is prohibited in Suid-Afrika om te bet op die
+ * The owner, 6 October 2026: *"Dit is prohibited in Suid-Afrika om te bet op die
  * album art in ons app. Dit is baie sad, maar dit beteken ons sal daardie
  * funksie moet verander. Ek dink ons moet 'n vaste rate van R280 vra vir 'n
  * kunswerk. Die kunstenaar kry dan R200 van die bedrag."*
@@ -90,7 +90,7 @@ export const ARTIST_RAND = 200;
 /**
  * The same R280, paid in credits.
  *
- * Carli, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
+ * The owner, 13 October 2026: *"Ek dink album art moet ons die keuse gee R280
  * cash, of ons moet krediet in dieselfde waarde uitwerk."* And, told that
  * a plan's credits come in cheaper than the top-up rate: *"make the credits
  * more expensive and on the more expensive rand to credit, and all the
@@ -247,7 +247,7 @@ export function split(paid: number): Split {
 
 /* ── How big a picture has to be ──────────────────────────────────────────
 
-   Carli asked it plainly: *"What size must the artist album art be, in
+   The owner asked it plainly: *"What size must the artist album art be, in
    kb/mb and physical size?"*
 
    3000 × 3000. That is the square every distributor asks for — Spotify,

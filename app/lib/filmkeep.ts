@@ -5,7 +5,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
+ * The owner, 5 October 2026: *"Die kamer onthou nie die projek nie. Ek het
  * perongeluk back gedruk en toe ek terug gaan was die projek weg."*
  *
  * The edit lived in React state and nowhere else. One press of Back — the
@@ -59,7 +59,7 @@ export type Kept = 'kept' | 'held' | 'full' | 'off';
 /**
  * What a read found, which is three things and not two.
  *
- * Carli, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
+ * The owner, 5 October 2026: *"Ek het nou 'n video gemaak op editor. Toe ek
  * channel toe gaan is dit nie daar nie. Toe ek terug na die editor gaan is
  * dit ook nie meer daar nie."*
  *

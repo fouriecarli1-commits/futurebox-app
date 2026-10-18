@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Die probooth se opening page het half 'n
+ * The owner, 4 October 2026: *"Die probooth se opening page het half 'n
  * verduideliking wat hierdie funksie doen. Kan die video editor dieselfde hê
  * en dan die button wat sê bring it in, or choose from channel"*.
  *
@@ -71,7 +71,7 @@ ok('the explanation is long enough to actually explain',
    somebody arriving from a plan card needs to know what the meter does in
    this room, where every frame is painted in their own browser.
  
-   Carli, 11 October 2026: *"Niks is gratis."* So the app stopped telling
+   The owner, 11 October 2026: *"Niks is gratis."* So the app stopped telling
    her customers that her own tools are free — the fact kept, the giveaway
    dropped — and this assertion, which demanded the giveaway, failed the
    moment the copy was fixed. Which is the assertion doing its job: it is

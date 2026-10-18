@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 12 October 2026: *"Ek sien ook nie 'n story generation plek waar 'n
+ * The owner, 12 October 2026: *"Ek sien ook nie 'n story generation plek waar 'n
  * storie gegenereer kan word nie, die storie moet ook visuals kan genereer.
  * Kinders moet ook met stem kan prompt vir stories of musiek. Maar daar moet
  * ook maklike buttons wees wat 'n storie of liedjie bou. Ek dink met 'n
@@ -380,7 +380,7 @@ export async function buildStoryboardStory({
    * Turns a choice's `[key, English]` into words in the language chosen.
    * The pages read `title[0]` as English and `title[1]` as Afrikaans, and a
    * title is `[key, English]` — so English stories printed
-   * "kids.heroDinoTitle" (Carli's screenshot, 15 October 2026) and Afrikaans
+   * "kids.heroDinoTitle" (The owner's screenshot, 15 October 2026) and Afrikaans
    * ones printed English. Both pages now take the name from here.
    */
   readonly say: (pair: readonly [string, string]) => string;

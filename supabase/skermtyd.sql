@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- Screen time, on the same row as the allowance
 --
--- Carli, 10 October 2026: *"Dan moet die ouers die budget en screen time kan
+-- the owner, 10 October 2026: *"Dan moet die ouers die budget en screen time kan
 -- stel. Wanneer screen time op is moet dit die kind uitskop."*
 --
 -- ── Why it is a sitting and not a daily total ───────────────────────────

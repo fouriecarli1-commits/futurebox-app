@@ -3,7 +3,7 @@
  *
  * ── The fault this exists to prevent ─────────────────────────────────────
  *
- * Carli, 14 September 2026, choosing a photo on her phone: *"Toe ek 'n foto
+ * The owner, 14 September 2026, choosing a photo on her phone: *"Toe ek 'n foto
  * kies op my foon maak die skerm so blank."* `app/lib/imagefile.ts` was
  * written that day, and its header explains the mechanism: a modern phone's
  * camera writes a 200-megapixel JPEG that is ten or twelve megabytes on disk.
@@ -22,7 +22,7 @@
  * Because it was already fixed once and it came back. The guard was applied
  * to `avatar.ts` and `cast.ts` and nobody moved `Pictures.tsx` onto it — so
  * the shot's own-photo strip kept its `FileReader`, its `new Image()` and a
- * four-megabyte ceiling on bytes. Carli reported the white page a SECOND
+ * four-megabyte ceiling on bytes. The owner reported the white page a SECOND
  * time, on 16 September, with the word "steeds", and the reason two reports
  * produced no fix is that they were two different code paths and only one of
  * them had been looked at.

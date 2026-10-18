@@ -1,7 +1,7 @@
 /**
  * The video editor's three asks of 14 October 2026, held.
  *
- * Carli: a clip tapped pops its options — cut, undo, and an AI wand that
+ * The owner: a clip tapped pops its options — cut, undo, and an AI wand that
  * changes the frame; "Generate a sound" makes sound effects and music, not
  * only speech; and Your mark opens the brand pack.
  */
@@ -83,7 +83,7 @@ ok('  and none of them steal a key from a box being typed in',
   [editor, post, booth].every((one) => /closest\('input, textarea, select/.test(one)));
 
 /* ── 7. Templates: text styles, motion, shapes and frames ─────────────────
-   Carli, 14 October 2026: "Dan moet ons seker maak dat die cool text
+   The owner, 14 October 2026: "Dan moet ons seker maak dat die cool text
    templates in die photo editor ook hierdie kant kom. Ons kort shapes,
    frames, en motion templates." And: "Die motion templates moet 'n
    simulator hê wanneer mens op dit kliek." */

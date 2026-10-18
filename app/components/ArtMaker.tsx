@@ -3,7 +3,7 @@
 /**
  * The AI art studio in the album art room — download only.
  *
- * Carli, 13 October 2026: *"Album art, sien ook die ekstra kamer waar album
+ * The owner, 13 October 2026: *"Album art, sien ook die ekstra kamer waar album
  * art gegenerate kan word, dit kan wel nie op die songs gebruik word nie,
  * maar kan afgelaai word."*
  *
@@ -273,7 +273,7 @@ export default function ArtMaker(): React.ReactElement {
             {/* Three rows, one a colour of the ground, each nine swatches in a
                 grid that is always the width of the card. It was three
                 rows that could not wrap, of swatches the app's button rule
-                grew to a thumb's width — Carli, 14 October 2026: *"die kleur
+                grew to a thumb's width — the owner, 14 October 2026: *"die kleur
                 skema op die mobile app, gaan langer as die kamer aan."* */}
             <div className="mt-1.5 space-y-2" data-artmakerpalette>
               {([

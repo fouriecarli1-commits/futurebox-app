@@ -5,7 +5,7 @@
  *
  * ── Where this came from ─────────────────────────────────────────────────
  *
- * Carli, 7 October 2026: *"Die photo editor save ook fotos op 'n mens se foon
+ * The owner, 7 October 2026: *"Die photo editor save ook fotos op 'n mens se foon
  * sonder dat mens die export gedruk het."*
  *
  * It could not be reproduced then and it cannot be reproduced now: the photo

@@ -270,7 +270,7 @@ export default function VideoCanvas({
   /**
    * How much of the desk is on screen.
    *
-   * Carli, 10 October 2026: *"Ek wonder met video desk of dit nie ook so kan
+   * The owner, 10 October 2026: *"Ek wonder met video desk of dit nie ook so kan
    * werk met simpl as net 'n copilot en 'n everything."* The same two as Make
    * a song, for the same reason: this desk is six kinds of video, a genre row,
    * a song window, a shot box, a quality row, a caption, a logo, a voice
@@ -338,7 +338,7 @@ export default function VideoCanvas({
   const [brandIt, setBrandIt] = useState(true);
   /* Read again after an upload, not only when the room opens.
 
-     Carli, 18 September 2026: *"Let ook wel dat die video studio glad nie 'n
+     The owner, 18 September 2026: *"Let ook wel dat die video studio glad nie 'n
      image oplaai het vir iemand wat hulle logo op 'n video wou sit nie. Dit
      het net die oplaai vir 'n cast member."* She was right, and the row
      below is the answer — which only works if the desk can notice the logo
@@ -609,7 +609,7 @@ export default function VideoCanvas({
   /**
    * A sound made on this desk, to go under the clip.
    *
-   * Carli, 10 October 2026: *"Ek dink ook video editor, en video desk kan stem
+   * The owner, 10 October 2026: *"Ek dink ook video editor, en video desk kan stem
    * generations hê, noem dit eerder, generate a sound, asook 'n podcast text
    * tot speech."*
    *
@@ -1093,7 +1093,7 @@ export default function VideoCanvas({
         </p>
         {/* ── A still, beside the moving ones ───────────────────────────
  
-            Carli: *"Dit is vir plasings vir sosiale media en kan ook in die
+            The owner: *"Dit is vir plasings vir sosiale media en kan ook in die
             video editor ingesit word."* So it lives on this desk rather than
             in a room of its own: a post and a clip are the same errand, and
             what comes out of it is a picture the editor next door can take.
@@ -1121,7 +1121,7 @@ export default function VideoCanvas({
 
       {/* ── How much of the desk ────────────────────────────────
 
-          Carli, 10 October 2026: *"Ek wonder met video desk of dit nie ook so
+          The owner, 10 October 2026: *"Ek wonder met video desk of dit nie ook so
           kan werk met simpl as net 'n copilot en 'n everything."*
 
           First thing under the heading, which is the only place a choice
@@ -1459,7 +1459,7 @@ export default function VideoCanvas({
             on this desk, working, three lines away, and invisible unless
             they had pressed a tile they had no reason to press.
 
-            Carli, 11 September 2026: "Die video kamer benodig ook 'n
+            The owner, 11 September 2026: "Die video kamer benodig ook 'n
             oplaai button as mens 'n liedjie binne 'n video wou gebruik, of
             selfs een uit jou channel wil gebruik." Both of those are in
             this component already — `SongWindow` lists the channel's songs
@@ -1482,7 +1482,7 @@ export default function VideoCanvas({
 
       {/* ── A sound made right here ────────────────────────────
 
-          Carli, 10 October 2026: *"Ek dink ook video editor, en video desk kan
+          The owner, 10 October 2026: *"Ek dink ook video editor, en video desk kan
           stem generations hê, noem dit eerder, generate a sound, asook 'n
           podcast text tot speech. Dit is tipies iets wat 'n mens daar ook sou
           kon gebruik."*
@@ -1742,7 +1742,7 @@ export default function VideoCanvas({
             On by default, because somebody who went and uploaded a logo has
             said what they want. Off is one press, and it needs to be: a
             logo belongs on your own advert and not on a music video you cut
-            for somebody else. Carli asked for this on filmed takes and on
+            for somebody else. The owner asked for this on filmed takes and on
             anything going to Live, which is most things — so the way OUT
             has to be as easy as the way in. */}
         {/* ── The logo: the upload, and the one case it must not be on ───
@@ -2000,7 +2000,7 @@ export default function VideoCanvas({
           screen, so "say a bit more" has nowhere else to be said — and that
           refusal is the desk's answer when the copilot has not written
           enough yet. */}
-      {/* On Simple the copilot sits right above the button (Carli, 14 October
+      {/* On Simple the copilot sits right above the button (The owner, 14 October
           2026: "in simple skuif die copilot net bo the make it button"). */}
       {!advanced && copilot && (
         <div data-canvascopilot className="rounded-2xl border border-zinc-800 bg-zinc-950/60">
@@ -2161,7 +2161,7 @@ export default function VideoCanvas({
                   </button>
                   {/* ── Keep it, which is what puts it in the live room ──
  
-                      Carli, 16 September: "die music video werk nie in die
+                      The owner, 16 September: "die music video werk nie in die
                       live nie." It was never a playback fault. The engine
                       hands back a silent clip, `lib/stitch.ts` lays the song
                       under it HERE, in the browser, and what comes out is a

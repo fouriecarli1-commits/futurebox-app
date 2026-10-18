@@ -90,19 +90,19 @@ const strip = (text) => text.replace(/\s+/g, '');
 
 // ── Reading a script the way people write one ──────────────────────────
 {
-  const cast = [{ name: 'Anre', voiceId: 'v-anre' }, { name: 'Carli', voiceId: 'v-carli' }];
+  const cast = [{ name: 'Sipho', voiceId: 'v-sipho' }, { name: 'Lerato', voiceId: 'v-lerato' }];
   const { turns, uncast } = readScript(
     [
-      'Anre: So what changed this year?',
-      'Carli: Everything, and none of it at once.',
+      'Sipho: So what changed this year?',
+      'Lerato: Everything, and none of it at once.',
       '  And that is the part nobody expected.',
       '',
-      'Anre: Say more.',
+      'Sipho: Say more.',
     ].join('\n'),
     cast,
   );
   say(turns.length === 3, `expected three turns, got ${turns.length}`);
-  say(turns[0].voiceId === 'v-anre' && turns[1].voiceId === 'v-carli', 'the speakers came out in the wrong voices');
+  say(turns[0].voiceId === 'v-sipho' && turns[1].voiceId === 'v-lerato', 'the speakers came out in the wrong voices');
   say(
     turns[1].text === 'Everything, and none of it at once. And that is the part nobody expected.',
     'a line with no name in front of it did not join the paragraph above it',
@@ -110,8 +110,8 @@ const strip = (text) => text.replace(/\s+/g, '');
   say(uncast.length === 0, 'a cast speaker was reported as uncast');
 
   // Case and spacing are how people actually type.
-  const loose = readScript('  anre :  hello there  ', cast);
-  say(loose.turns.length === 1 && loose.turns[0].voiceId === 'v-anre', 'a name typed in lower case was not recognised');
+  const loose = readScript('  sipho :  hello there  ', cast);
+  say(loose.turns.length === 1 && loose.turns[0].voiceId === 'v-sipho', 'a name typed in lower case was not recognised');
   say(loose.turns[0].text === 'hello there', 'the spacing around what was said was kept');
 }
 
@@ -119,23 +119,23 @@ const strip = (text) => text.replace(/\s+/g, '');
 // Handing an unknown speaker to the first voice makes an episode in which two
 // people are one person, and does it silently.
 {
-  const cast = [{ name: 'Anre', voiceId: 'v-anre' }];
-  const { turns, uncast } = readScript('Anre: Hello.\nGuest: Hello back.\nGuest: Still me.', cast);
+  const cast = [{ name: 'Sipho', voiceId: 'v-sipho' }];
+  const { turns, uncast } = readScript('Sipho: Hello.\nGuest: Hello back.\nGuest: Still me.', cast);
   say(turns.length === 1, 'an uncast speaker was given somebody else\'s voice');
   say(uncast.length === 1 && uncast[0] === 'Guest', `uncast came back as ${JSON.stringify(uncast)}`);
-  say(turns.every((t) => t.voiceId === 'v-anre'), 'the cast speaker lost their voice');
+  say(turns.every((t) => t.voiceId === 'v-sipho'), 'the cast speaker lost their voice');
 }
 
 // ── A stray line before anybody is named ───────────────────────────────
 {
-  const { turns } = readScript('An intro nobody attributed\nAnre: Now we start.', [{ name: 'Anre', voiceId: 'v1' }]);
+  const { turns } = readScript('An intro nobody attributed\nSipho: Now we start.', [{ name: 'Sipho', voiceId: 'v1' }]);
   say(turns.length === 1 && turns[0].text === 'Now we start.', 'a line before the first speaker was put in somebody\'s mouth');
 }
 
 // ── A colon in the middle of a sentence is not a speaker ───────────────
 {
-  const cast = [{ name: 'Anre', voiceId: 'v1' }];
-  const { turns, uncast } = readScript('Anre: Here is the thing: it works.', cast);
+  const cast = [{ name: 'Sipho', voiceId: 'v1' }];
+  const { turns, uncast } = readScript('Sipho: Here is the thing: it works.', cast);
   say(turns.length === 1, 'a sentence with a colon in it was read as two turns');
   say(turns[0].text === 'Here is the thing: it works.', `the colon inside the sentence was eaten: ${JSON.stringify(turns[0]?.text)}`);
   say(uncast.length === 0, 'the words after a mid-sentence colon were reported as a speaker');

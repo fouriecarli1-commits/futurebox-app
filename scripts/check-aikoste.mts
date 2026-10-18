@@ -3,7 +3,7 @@
  *
  * ── Why this needs a check at all ────────────────────────────────────────
  *
- * Carli has asked twice for the real saving from prompt caching, and
+ * The owner has asked twice for the real saving from prompt caching, and
  * `docs/MAANDELIKSE-KOSTE.md` has refused twice to write one down:
  *
  *   *"'n Kas wat nooit tref nie lyk presies soos een wat altyd tref, behalwe
@@ -156,7 +156,7 @@ ok('  and says "nothing recorded" rather than R0,00 when there are no rows',
 if (failures) {
   console.error(
     `\ncheck:aikoste — ${failures} wrong. The saving from prompt caching goes into a cost table`
-    + ' Carli makes decisions on, and a sum that is wrong in a plausible direction is worse'
+    + ' the owner makes decisions on, and a sum that is wrong in a plausible direction is worse'
     + ' than no sum at all.\n',
   );
   process.exit(1);

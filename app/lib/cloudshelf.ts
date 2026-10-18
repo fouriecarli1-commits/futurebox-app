@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Skuif die stories en liedjies na die server
+ * The owner, 9 October 2026: *"Skuif die stories en liedjies na die server
  * toe."*
  *
  * The device shelves shipped the day before and were the right first

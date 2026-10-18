@@ -1,7 +1,7 @@
 /**
  * The vector studio, walked on a phone.
  *
- * Carli, 17 October 2026: *"Ek hou van daai vector illustration."* Read off
+ * The owner, 17 October 2026: *"Ek hou van daai vector illustration."* Read off
  * the glass: it opens from beside Bring a picture in; a rectangle is drawn by
  * dragging, a line by a finger, words by a tap; a shape is chosen, moved and
  * the move undone; the AI's drawing — answered here, so nothing is spent, and

@@ -3,7 +3,7 @@
 /**
  * The Collab Radar desk — Google's page, over the room that was here.
  *
- * Carli, 13 October 2026: *"Kyk hoe mooi lyk collab, kom ons probeer dit so
+ * The owner, 13 October 2026: *"Kyk hoe mooi lyk collab, kom ons probeer dit so
  * te hou."* The page: a bar with two modes (the radar, the live room), an
  * invite-by-handle box, a filter column, the 360° sweep in the middle, and
  * the requests and lobby beside it; the room view is the thread with the

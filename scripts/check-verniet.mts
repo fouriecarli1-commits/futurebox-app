@@ -5,7 +5,7 @@
  *
  * ── What she said ────────────────────────────────────────────────────────
  *
- * Carli, 11 October 2026, in three words: *"Niks is gratis."*
+ * The owner, 11 October 2026, in three words: *"Niks is gratis."*
  *
  * Sixty strings in this app used the word. Most of them were describing a
  * TOOL — "Free, and it happens on your own phone", "it costs nothing", "all

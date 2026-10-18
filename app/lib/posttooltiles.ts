@@ -1,7 +1,7 @@
 /**
  * The photo editor's tools, shown as pictures of what they do.
  *
- * Carli, 16 October 2026: *"Kyk asb ook hoe oulik dit is om die funksies op
+ * The owner, 16 October 2026: *"Kyk asb ook hoe oulik dit is om die funksies op
  * prentjies te wys (onthou mense is visueel)."* Each tool along the foot is a
  * small square of HER photograph with the tool's work drawn on it — the crop
  * corners on it, the photograph split into a grid, words on it, a sparkle

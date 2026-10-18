@@ -3,7 +3,7 @@
  *
  * ── The question, and the answer I got wrong first ───────────────────────
  *
- * Carli, 10 October 2026: *"But isn't there a way for an AI to listen to the
+ * The owner, 10 October 2026: *"But isn't there a way for an AI to listen to the
  * phonetic sounds of someone speaking isiXhosa?"*
  *
  * Yes. I had just written that getting phonetics out of audio means "forced
@@ -44,7 +44,7 @@
  * ordinary spelling it thinks it heard, and nothing here writes to a
  * dictionary. The write is a separate press by a person who has listened to
  * the playback. That is not caution for its own sake — it is the same loop
- * `/api/eleven/pronounce` was built around, which is that Carli can hear it
+ * `/api/eleven/pronounce` was built around, which is that the owner can hear it
  * and this desk cannot.
  *
  * ── And phoneme rules do not work everywhere ─────────────────────────────

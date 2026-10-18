@@ -255,7 +255,7 @@ ok('  and paints the join OVER the words and the mark, not under them',
 
 /* ── The transition book ───────────────────────────────────────────────
 
-   Carli, 16 October 2026, her screenshots of a toolbox. Every transition in the book is
+   The owner, 16 October 2026, her screenshots of a toolbox. Every transition in the book is
    read at the start, the middle and the end: it starts on the shot that is
    leaving, it ends on the shot that is arriving, and no number in between is
    one a canvas would choke on. */

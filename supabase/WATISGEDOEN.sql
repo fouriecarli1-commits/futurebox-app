@@ -6,7 +6,7 @@
 --
 -- ── Waarom hierdie lêer bestaan ────────────────────────────────────────────
 --
--- Carli, 15 September 2026: *"Dit lyk of ek 2 sql's moet hardloop."*
+-- the owner, 15 September 2026: *"Dit lyk of ek 2 sql's moet hardloop."*
 --
 -- Sy kon nie weet nie, en daar was geen manier om uit te vind nie. Die groot
 -- plak (ALMAL.sql) is veilig om weer te loop, maar "veilig om weer te loop"

@@ -98,7 +98,7 @@ const SKIN: Record<Provider, string> = {
   facebook: 'bg-[#1877f2] text-[#ffffff] hover:opacity-90',
   /* Each company's own colour, from its own brand page. None of these is
      drawn until the project has that provider switched on, so the row is
-     whatever Carli has configured rather than a wall of nine. */
+     whatever the owner has configured rather than a wall of nine. */
   twitter: 'bg-[#000000] text-[#ffffff] hover:opacity-90',
   spotify: 'bg-[#1db954] text-[#000000] hover:opacity-90',
   discord: 'bg-[#5865f2] text-[#ffffff] hover:opacity-90',
@@ -172,7 +172,7 @@ export default function SignInWith({
 
   /* ── We could not ask, which is not the same as "there are none" ──────
 
-     Carli, 24 September 2026: *"Die google sign in op die app het
+     The owner, 24 September 2026: *"Die google sign in op die app het
      eweskielik verdwyn."*
 
      Every failure used to become an empty list and an empty list drew

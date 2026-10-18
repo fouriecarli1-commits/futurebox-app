@@ -56,7 +56,7 @@ check('bar takes the nearest two seconds when you aim at one', near(snapped(2.2,
 
 /* ── The grid lets go ────────────────────────────────────────────────────
 
-   Carli, 21 September 2026: *"Ruler is not lose to be very precise, it jumps
+   The owner, 21 September 2026: *"Ruler is not lose to be very precise, it jumps
    from grid to grid. It needs to be loose."*
 
    Every snap here used to be an unconditional round, so half a bar in was

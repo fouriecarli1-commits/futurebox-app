@@ -5,7 +5,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 11 October 2026: *"Wat ek ook wil in sit by video desk is templates vir
+ * The owner, 11 October 2026: *"Wat ek ook wil in sit by video desk is templates vir
  * videos? ... AS mens kyk na nano banana, en veo ens. is daar templates wat help
  * om keuses te maak. Ek wil dit in die app integrate op 'n moderne stylish manier
  * vir kliente om van te kies."*
@@ -53,7 +53,7 @@ interface VideoTemplatesPickerProps {
   onSelectStart: (start: FilmStart) => void;
   piecesCount: number;
   currentShape?: string;
-  /* The four kinds of template beside the recipes — Carli, 14 October 2026:
+  /* The four kinds of template beside the recipes — the owner, 14 October 2026:
      "Dan moet ons seker maak dat die cool text templates in die photo editor
      ook hierdie kant kom. Ons kort shapes, frames, en motion templates." */
   readonly wordsMotion?: string;
@@ -80,7 +80,7 @@ const glowCss = (glow: string, px: number): string | undefined => {
 /**
  * The simulator: sample words running a motion on a loop.
  *
- * Carli, 14 October 2026: *"Die motion templates moet 'n simulator hê
+ * The owner, 14 October 2026: *"Die motion templates moet 'n simulator hê
  * wanneer mens op dit kliek."* Driven by `motionAt`, the function the film
  * is rendered with, so what plays here is what the film does.
  */
@@ -299,7 +299,7 @@ export default function VideoTemplatesPicker({
             >
               <div className="flex gap-2.5">
                 {/* The film as a picture: the meerkat photograph in the start's
-                    shape, under its look, with its title where it goes. Carli,
+                    shape, under its look, with its title where it goes. The owner,
                     17 October 2026: every template visual. */}
                 <StartThumb start={start} title={start.title ? t(start.title.says[0], start.title.says[1]) : ''} />
                 <div className="min-w-0 flex-1">
@@ -397,7 +397,7 @@ export default function VideoTemplatesPicker({
       )}
 
       {/* ── Subtitles and lower thirds ────────────────────────────────────
-          Carli, 16 October 2026, screenshots of a title library: subtitle
+          The owner, 16 October 2026, screenshots of a title library: subtitle
           looks and lower thirds, each a picture of what it does. Every one is
           settings the Words bench already has, so all of it stays editable. */}
       {tab === 'captions' && (

@@ -22,7 +22,7 @@
  * a day: a route named after a film that also charges for mixes is a name
  * that means two things, which is the fault this repository keeps undoing.
  *
- * Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
+ * The owner, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
  * krediete werd is."*
  *
  * So there is a price, charged at the one moment something is produced. That
@@ -129,7 +129,7 @@ export async function POST(request: Request): Promise<Response> {
 
   /* ── What is in the film, and who decides what it costs ────────────────
 
-     Carli, 3 October 2026: *"elke element wat op die video editing gebruik word
+     The owner, 3 October 2026: *"elke element wat op die video editing gebruik word
      [moet] krediete dra."*
 
      The browser sends COUNTS — how many pieces carry words, how many joins are

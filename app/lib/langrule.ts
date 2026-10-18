@@ -3,7 +3,7 @@
  *
  * ── Why this is its own file ─────────────────────────────────────────────
  *
- * Carli: "Wanneer ek inlog in engels, spring die blad afrikaans toe."
+ * The owner: "Wanneer ek inlog in engels, spring die blad afrikaans toe."
  *
  * She was right, and the code was doing what it was told. The rule underneath
  * it is the subtlest thing in this app — a stored choice, a browser's guess and
@@ -37,7 +37,7 @@
  *
  * ── Why signing in no longer changes the language at all ─────────────────
  *
- * Carli, three times over one day, the last of them after two separate fixes:
+ * The owner, three times over one day, the last of them after two separate fixes:
  * "wanneer ek op my mobile app van afrikaans af inlog, spring hy nogsteeds
  * engels toe."
  *
@@ -73,7 +73,7 @@
  * has just been handed a fresh browsing context — the account never got a
  * say at all, and sign-in was the first moment it could have had one.
  *
- * Carli's `/taal` screenshot on 10 September 2026 is that state exactly:
+ * The owner's `/taal` screenshot on 10 September 2026 is that state exactly:
  * nothing carried in the address, nothing in storage, nothing in the cookie,
  * the account **not asked**, and an `en-ZA` phone deciding. She had chosen
  * Afrikaans; the only place that remembers across contexts is the account,
@@ -181,7 +181,7 @@ export function onSignIn(
      the rule falls through to the device's locale. Signing in is the *first*
      moment the account can answer at all, and this line refused to ask.
 
-     Carli's screenshot of `/taal`, 10 September 2026, is that exactly:
+     The owner's screenshot of `/taal`, 10 September 2026, is that exactly:
 
          1. Carried through the sign-in   empty
          2. Stored in this browser        empty

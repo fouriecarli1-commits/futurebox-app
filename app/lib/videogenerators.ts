@@ -3,7 +3,7 @@
 /**
  * Generators: a shot made out of nothing, on the phone.
  *
- * Carli, 16 October 2026, screenshots of a desktop editor's toolbox with its
+ * The owner, 16 October 2026, screenshots of a desktop editor's toolbox with its
  * Generators open — a solid colour, a gradient, a four-colour gradient, grey
  * scale, colour bars, noise. Those are the plain ones, and they are here; so
  * are moving backgrounds of our own (a neon grid, a starfield, an aurora,

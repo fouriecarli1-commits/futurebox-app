@@ -3,7 +3,7 @@
  *
  * ── Three things she asked for, and one of them already existed ──────────
  *
- * Carli, 10 October 2026, three messages about this room:
+ * The owner, 10 October 2026, three messages about this room:
  *
  *   *"Op elke track van die probooth moet daar 'n manier wees om die track 'n
  *   naam te gee. Vir 'n professional moet hulle weet watter instrument is

@@ -1,7 +1,7 @@
 /**
  * The meerkat photograph every look and template is shown on.
  *
- * Carli, 17 October 2026, at the video editor's Looks: *"Hierdie looks in
+ * The owner, 17 October 2026, at the video editor's Looks: *"Hierdie looks in
  * video editor moet alles foto's wees vir 'n voorbeeld. Alles 'n meerkat. Al
  * die templates in al die kamers moet visual wees."*
  *

@@ -3,7 +3,7 @@
  *
  * ── Why this check is the whole feature ──────────────────────────────────
  *
- * Carli, 10 October 2026: *"Kan die studio ook nie 'n drag funksie hê, wat ook
+ * The owner, 10 October 2026: *"Kan die studio ook nie 'n drag funksie hê, wat ook
  * natuurlike oorgange detect"*.
  *
  * A detector like this is the easiest thing in the app to be wrong about

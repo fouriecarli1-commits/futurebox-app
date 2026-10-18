@@ -3,7 +3,7 @@
 /**
  * The kids room, sold to the grown-up holding the phone.
  *
- * Carli, 13 October 2026: *"Ek dink ook die kids studio moet baie duidelik en
+ * The owner, 13 October 2026: *"Ek dink ook die kids studio moet baie duidelik en
  * gefeature wees ook op die landing page. Dit moet ouers gerus stel, 'n
  * veilige ruimte vir kinders om kreatief te wees. Ek sal 'n foto stuur wat jy
  * kan gebruik as bemarking op daai page met buttons op en saam met die

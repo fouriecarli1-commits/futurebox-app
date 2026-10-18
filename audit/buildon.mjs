@@ -80,7 +80,7 @@ const ROOM = {
     {
       id: 'p1', kind: 'track', title: 'Stil water', note: '', seconds: 48,
       platform: '', link: '', startsAt: null, at: new Date().toISOString(),
-      by: 'Carli', mine: true, audio: SILENCE, sourceId: 'buildon-song',
+      by: 'Lerato', mine: true, audio: SILENCE, sourceId: 'buildon-song',
       hearts: 12, hearted: true, plays: 340, buildOn: true,
     },
     {

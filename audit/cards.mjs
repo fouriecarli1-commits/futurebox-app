@@ -65,7 +65,7 @@ const NEEDS = {
      Every line above is "this room needs data the probe deliberately runs
      without". This one is not. The cutting room has no cards because it was
      built with benches instead — a dock along the bottom with one panel open
-     at a time, which is what Carli asked for when she asked for the room to
+     at a time, which is what the owner asked for when she asked for the room to
      BE the screen. No amount of data makes a card appear here.
 
      Kept in the same list because the rule it answers is the same — a zero
@@ -261,7 +261,7 @@ try {
      pressed in the room with the most of them, and what is inside it has to
      arrive off the screen, come on, and go back off.
  
-     Shut first, and that order is the point. Carli, 12 September 2026:
+     Shut first, and that order is the point. The owner, 12 September 2026:
      "Make sure every rooms drop down menu is closed from the beginning and
      the user can open it." `check:folded` says so of the source; this says
      so of a room somebody has actually walked into, which is the half a

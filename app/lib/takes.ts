@@ -114,7 +114,7 @@ const MOST = 20_000;
  *
  * ── Why the count is clamped ─────────────────────────────────────────────
  *
- * Carli, 15 September 2026, with a photograph: the clip on her timeline was
+ * The owner, 15 September 2026, with a photograph: the clip on her timeline was
  * a white rectangle with a broken-image glyph in it, which is exactly how
  * Chrome on Android draws a `<canvas>` whose backing store it has had to
  * throw away.

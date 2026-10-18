@@ -3,7 +3,7 @@
  *
  *   npm run check:productshots
  *
- * Carli, 16 October 2026: *"Generate product photos in seconds."* What has
+ * The owner, 16 October 2026: *"Generate product photos in seconds."* What has
  * to hold is that the product is said to stay exactly as it is — first,
  * before the scene, and again last — that each scene is its own place, that
  * her extra words go in but cannot run on, that nothing is added to the

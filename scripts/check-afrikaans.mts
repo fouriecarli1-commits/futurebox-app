@@ -86,7 +86,7 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
-  /* Carli, 12 October 2026: 'Verbeter Afrikaans' on the feedback button in
+  /* The owner, 12 October 2026: 'Verbeter Afrikaans' on the feedback button in
      both English and Afrikaans sides so Afrikaans speakers using the English
      UI recognise the pronunciation feedback control immediately. */
   'Verbeter Afrikaans',
@@ -152,12 +152,12 @@ const SAME_IN_BOTH = new Set([
   /* The company's own name, on the end of a film. A registered name is not
      translated — FUTUREBOXSTUDIO (Pty) Ltd is what is on the CIPC record. */
   'FutureBox Studio',
-  /* Carli, 8 October 2026: *"Ek dink in elkgeval moet dit Background remover
+  /* The owner, 8 October 2026: *"Ek dink in elkgeval moet dit Background remover
      genoem word. As dit te lank is net BG remover."* Hers, in both
      languages — it is what people in this country call the tool, and
      "Agtergrondverwyderaar" is a word nobody has ever said out loud. */
   'BG remover',
-  /* The room's own name, hers in both languages. Carli, 4 October 2026, asked
+  /* The room's own name, hers in both languages. The owner, 4 October 2026, asked
      directly which name she meant: *"Nee, Video Editor."* "Video-redigeerder"
      is the dictionary answer and is not what anybody in this country calls it. */
   'Video Editor',
@@ -171,7 +171,7 @@ const SAME_IN_BOTH = new Set([
      "enkelkanaal" for a download button would be the kind of translation
      that makes somebody wonder whether it is the same thing. */
   'Mono', 'Stereo',
-  /* The room's own name. Carli, 15 September 2026: "Kan ons ook nie maar The
+  /* The room's own name. The owner, 15 September 2026: "Kan ons ook nie maar The
      booth se naam verander na ProBooth nie?" — one name, and a name is not
      translated. It had three in English ("The Booth", "The booth", "The booth
      — pro") and two in Afrikaans, which is how somebody ends up asking where
@@ -185,7 +185,7 @@ const SAME_IN_BOTH = new Set([
   'TikTok', 'Instagram Reels', 'YouTube Shorts', 'TikTok, Reels, Shorts',
   '9:16 Reels, 15\u201330s',
   /* An Afrikaans word used as an example OF Afrikaans. The placeholder in
-     "which word came out wrong" is the word Carli reported hearing said as
+     "which word came out wrong" is the word the owner reported hearing said as
      "voëlchie" — translating it would leave the English reader an example
      of nothing, and the control only draws in Afrikaans anyway. */
   'vo\u00ebltjie',
@@ -235,7 +235,7 @@ for (const [i, match] of starts.entries()) {
  *    gebruik en elke woord en sin moet afrikaans wees, daar kan nie foute
  *    tussen in wees nie."
  *
- * Carli had somebody read the Afrikaans. The two checks above could not have
+ * The owner had somebody read the Afrikaans. The two checks above could not have
  * found what she found: a line can have an Afrikaans entry, not be a copy of
  * the English, and still say "Post dit" or "Jou musiek en playlists". Sixty-
  * nine lines did.
@@ -303,7 +303,7 @@ const ALLOWED = new Set([
   'podcasts',
   /* "App Styl" — the button that changes how the app looks.
  
-     Carli, 20 September 2026, pointing at the screen: *"Voorkoms= App Styl."*
+     The owner, 20 September 2026, pointing at the screen: *"Voorkoms= App Styl."*
      It said "Voorkoms", which is correct Afrikaans and is also what this app
      calls the LOOK of a video, three lines away on the video desk. One word
      meaning two things on one screen is worse than a borrowed one, and "app"
@@ -311,7 +311,7 @@ const ALLOWED = new Set([
   'app',
   /* "buy-in" — the R50 that makes somebody allowed to bid.
 
-     Carli, 20 September 2026: *"elke persoon sal 'n R50 by in moet hê om
+     The owner, 20 September 2026: *"elke persoon sal 'n R50 by in moet hê om
      te mag bee … Buy in."* She wrote the Afrikaans "by in" and then named
      the English word she meant. It is hers, it is what she says, and
      "inkoop" would be a word nobody in this room uses. */

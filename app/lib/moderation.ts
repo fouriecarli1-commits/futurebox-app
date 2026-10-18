@@ -314,7 +314,7 @@ function nameAfter(text: string, cue: RegExp, knownOnly: boolean): string | null
      heard of there is a better one: the list itself.
  
      Found on 9 October 2026 while building the style translator, by running
-     the screen over Carli's own words — *"klink soos michael jackson se
+     the screen over the owner's own words — *"klink soos michael jackson se
      liedjie beat it"*. Capitalised it was refused; exactly as she typed it,
      it was allowed. Nobody capitalises on a phone, and this rule is the
      largest legal exposure this app has.

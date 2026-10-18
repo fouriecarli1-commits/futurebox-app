@@ -13,7 +13,7 @@
  * `/api/analyse` posts a WAV. At 44.1 kHz mono, sixteen bits, that is 88 kB a
  * second, so the wall is fifty-one seconds of audio — twenty-five in stereo.
  * Every song longer than that failed, always, while the route's own ceiling
- * said sixty megabytes. Carli: "die measure the mix gooi 'n 413 warning en
+ * said sixty megabytes. The owner: "die measure the mix gooi 'n 413 warning en
  * ... klank [kan] nie geseperate ... word nie."
  *
  * ── The way round it ─────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ export const POSTABLE_BYTES = 3 * 1024 * 1024;
  * Why a file could not be put in storage — and there are two answers, which
  * is the whole point of this type.
  *
- * Carli, 29 September 2026: *"Wat is die grootte van videos wat opgelaai kan
+ * The owner, 29 September 2026: *"Wat is die grootte van videos wat opgelaai kan
  * word? Noudat ons supabase en vercel betaal?"* A fair question that the app
  * could not answer, because every failure here came back as one sentence
  * ending "Sign in and try again" — including the failure of somebody who was

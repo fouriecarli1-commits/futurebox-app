@@ -3,7 +3,7 @@
  *
  * ── Why the examples are in here and not in a comment ────────────────────
  *
- * Carli, 3 October 2026, asking for every element in the cutting room to carry
+ * The owner, 3 October 2026, asking for every element in the cutting room to carry
  * credits — and in the same message setting the constraint the whole design
  * has to meet: *"Nie te hoë krediete nie, dit moet bekostigbaar wees om 'n
  * video uiteindelik te export."*
@@ -92,7 +92,7 @@ ok('a three-minute music video using all six is 96',
    five a function it was 85 against 90 and a Maker who made one film had four
    credits left for the whole month. */
 /* ── Moved with her prices, 15 October 2026 ────────────────────────────
-   Carli set Maker at R1.80 a credit — 83 credits for R149 — and a dressed
+   The owner set Maker at R1.80 a credit — 83 credits for R149 — and a dressed
    three-minute film (90) no longer fits in one Maker month; it takes a
    seven-credit top-up, and she was told so in as many words. What a Maker
    CAN still finish inside the month is a dressed minute and a half (60),
@@ -124,7 +124,7 @@ ok('  and the same for looks and transitions',
  
    This read the ceiling as the base plus `filmWords` times five, which was
    right while every function cost three credits and became wrong the hour
-   Carli priced them apart — a look at six, her own logo at fifteen. The
+   The owner priced them apart — a look at six, her own logo at fifteen. The
    ceiling is still a known number; it is just the sum of five different
    ones now. */
 const FIVE = CREDITS.filmWords + CREDITS.filmLook + CREDITS.filmJoin

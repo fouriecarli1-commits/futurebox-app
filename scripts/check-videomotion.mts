@@ -3,7 +3,7 @@
  *
  *   npm run check:videomotion
  *
- * Carli, 17 October 2026: motion effects in the video editor. What has to
+ * The owner, 17 October 2026: motion effects in the video editor. What has to
  * hold is that a still shot is untouched, that each ready-made movement does
  * what its name says and lands where it should, that keyframes arrive at the
  * pose they were given and ease between them, that a shake is the same shake

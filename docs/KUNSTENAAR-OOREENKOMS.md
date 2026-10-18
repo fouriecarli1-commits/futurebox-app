@@ -1,7 +1,7 @@
 # Kunstenaar-ooreenkoms — FUTUREBOXSTUDIO (Pty) Ltd
 
 > **Lees dit eers.** Hierdie dokument is deur die bou van die app opgestel,
-> nie deur 'n prokureur nie. Dit sê presies wat die app doen en wat Carli
+> nie deur 'n prokureur nie. Dit sê presies wat die app doen en wat die eienaar
 > onderneem om te doen, in gewone taal, en dit is 'n eerlike beginpunt — maar
 > laat 'n prokureur daarna kyk voordat die eerste kunstenaar teken. Die twee
 > plekke waar 'n fout duur is, is klousule 4 (wat die koper kry) en klousule

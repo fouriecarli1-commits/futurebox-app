@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- The room says which links are bad
 --
--- Carli, 24 September 2026, about the live room's message box: *"Dit moet
+-- the owner, 24 September 2026, about the live room's message box: *"Dit moet
 -- gescreen word om general bad videos teen te werk."*
 --
 -- The box now takes only a TikTok live address, and the handle is screened

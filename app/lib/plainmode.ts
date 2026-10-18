@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli's list, 7 October 2026: *"Simple en advances opsies."*
+ * The owner's list, 7 October 2026: *"Simple en advances opsies."*
  *
  * ── What it is NOT ───────────────────────────────────────────────────────
  *

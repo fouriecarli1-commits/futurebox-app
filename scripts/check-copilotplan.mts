@@ -168,7 +168,7 @@ check(
 
 /* ── And the case that was missing, which was the whole bug ───────────
 
-   Carli, 17 September 2026: *"It suggested I make a jingle in the music
+   The owner, 17 September 2026: *"It suggested I make a jingle in the music
    room. When I pushed the button it took me to that room, but copilot didn't
    have the description ready. Ok I see that is the problem with every
    room."*
@@ -333,7 +333,7 @@ check(
  * operations.
  *
  * A model that follows its instructions therefore never set up the room it
- * was opening, and Carli reported that about the adverts desk more than
+ * was opening, and the owner reported that about the adverts desk more than
  * once and, in her words, about "every room". Nothing was broken; the
  * capability was simply never offered.
  *

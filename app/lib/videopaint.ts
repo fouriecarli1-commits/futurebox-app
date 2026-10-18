@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 4 October 2026: *"Onthou dat die teks 'n kleur keuse ook moet hê, en
+ * The owner, 4 October 2026: *"Onthou dat die teks 'n kleur keuse ook moet hê, en
  * 'n keuse van agtergrond vir woorde, 'n square, 'n square met ronde punte, 'n
  * verfkwas. Die agtergrond moet ook kleur keuse hê. Daar moet 'n goeie variety
  * van kleur keuses wees."*
@@ -94,7 +94,7 @@ export function paintFor(id: string | undefined): Paint | null {
  * ── Four, and she asked for a variety ────────────────────────────────────
  *
  * It was `none | square | round | brush` — the three she named on 4 October
- * plus the title card. Carli, 9 October 2026: *"daar moet van alles wat
+ * plus the title card. The owner, 9 October 2026: *"daar moet van alles wat
  * opsies is, 'n verskeidenheid wees."*
  *
  * Ten now, and every one of them is a shape somebody who has watched
@@ -144,7 +144,7 @@ export const BOXES: readonly Box[] = [
   { id: 'none', name: ['box.none', 'No box'] },
   /* ── Named for its corners, not its geometry ─────────────────────
  
-     Carli, 10 October 2026: *"square word 3 keer genoem in video editor."*
+     The owner, 10 October 2026: *"square word 3 keer genoem in video editor."*
      She is right and it is a naming fault, not a duplication: the film's
      SHAPE can be square, a caption box's corners can be square, and the
      picture ratios offer a square — three controls, three different things,

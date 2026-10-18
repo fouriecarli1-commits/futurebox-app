@@ -4,7 +4,7 @@
  *
  * ── The question, and who asked it ───────────────────────────────────────
  *
- * Carli, 7 October 2026: *"Didn't Tone3000 give us permission if we add their
+ * The owner, 7 October 2026: *"Didn't Tone3000 give us permission if we add their
  * name on products? That is how I understood it."*
  *
  * Partly, and the part that is not is the part that matters. Every tone on

@@ -5,7 +5,7 @@
  *
  * ── What she asked, in two messages ──────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Let the parent give an allowance on an opening
+ * The owner, 9 October 2026: *"Let the parent give an allowance on an opening
  * page."* Then: *"Gee dan net vir die ouer 'n raamwerk van wat krediete kan
  * doen per liedjie, per video, per story mode."*
  *
@@ -114,7 +114,7 @@ export default function KidsDoor({
   /**
    * Why the last press did not take, in a sentence, or nothing.
    *
-   * Carli, 12 October 2026: *"Wel die kids room gaan nie verder as die
+   * The owner, 12 October 2026: *"Wel die kids room gaan nie verder as die
    * parental page nie."* It did not, because every failure came back as
    * `null` and `null` drew nothing. A door that does nothing when pressed is
    * indistinguishable from a door that is broken, so every way a press can
@@ -154,7 +154,7 @@ export default function KidsDoor({
 
   const give = async (allowance: number): Promise<void> => {
     /* No room without a code. The way out of the child's room is the code,
-       and with none chosen any four numbers open it — Carli, 16 October 2026,
+       and with none chosen any four numbers open it — the owner, 16 October 2026,
        found the room hard to leave, and the fix must not make it easy for a
        child to leave too. */
     if (!hasCode()) {
@@ -209,7 +209,7 @@ export default function KidsDoor({
   const bought = state?.bought ?? 0;
 
   /* ── A pack chosen on the welcome page goes on to the payment ──────────
-     Carli, 15 October 2026: *"Maak ook seker dit vat jou na die payment
+     The owner, 15 October 2026: *"Maak ook seker dit vat jou na die payment
      system toe. Huidiglik vat dit my dadelik deur na die ander page toe."*
      The welcome page's button arrives here as `?buy=kids-month`. Signed in,
      the payment opens straight away; signed out, the sign-in step below says
@@ -257,7 +257,7 @@ export default function KidsDoor({
   const chosenStep = state?.open ? state.allowance : null;
 
   /* ── The look ──────────────────────────────────────────────────────────
-     Carli, 13 October 2026: *"Hierdie op die parents room moet meer die
+     The owner, 13 October 2026: *"Hierdie op die parents room moet meer die
      futuristic tema bevat … super helder en neon … dit moet skree van
      dieselfde tema as by die kids room … redesign daai hele parents page."*
 
@@ -301,7 +301,7 @@ export default function KidsDoor({
 
       {/* ── The room could not be read ───────────────────────────────────
           Said, rather than drawing the parents' page as though nothing were
-          wrong — Carli could not tell why it would not open. */}
+          wrong — the owner could not tell why it would not open. */}
       {state?.problem && (
         <p
           data-kidsproblem
@@ -396,7 +396,7 @@ export default function KidsDoor({
       </div>
 
       {/* ── How long ───────────────────────────────────────
-          Carli, 10 October 2026: *"Dan moet die ouers die budget en screen
+          The owner, 10 October 2026: *"Dan moet die ouers die budget en screen
           time kan stel. Wanneer screen time op is moet dit die kind
           uitskop."*
           Above the money, because it is the question a parent answers first
@@ -488,7 +488,7 @@ export default function KidsDoor({
       ) : null}
 
       {/* ── Kids credits, the room's own ─────────────────────────────────
-          Carli, 14 October 2026: the kids room has its own credits and its
+          The owner, 14 October 2026: the kids room has its own credits and its
           own price. Bought here, spent only in the kids room, and spent
           before the allowance below. `lib/kidspacks.ts` has the three. */}
       <div className={`${GLASS} space-y-3 p-4 sm:p-5`} data-kidspacks style={{ boxShadow: DOOR_GLASS_RING }}>

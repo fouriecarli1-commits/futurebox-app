@@ -1,7 +1,7 @@
 /**
  * Taking a vector drawing off the device, as an SVG or a PNG.
  *
- * Carli, 17 October 2026: *"SVG PNG ook 5 krediete."* The vector studio
+ * The owner, 17 October 2026: *"SVG PNG ook 5 krediete."* The vector studio
  * draws on the phone and costs nothing to draw in; what is charged is the
  * drawing leaving it — the same rule, price and shape as a post's export
  * (`api/post/export`). Once per drawing: its id is the reference, so the SVG

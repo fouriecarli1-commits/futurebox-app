@@ -3,7 +3,7 @@
  *
  * ── The fault ────────────────────────────────────────────────────────────
  *
- * Carli, 5 October 2026, with a photograph of the cutting room: *"Wanneer ek
+ * The owner, 5 October 2026, with a photograph of the cutting room: *"Wanneer ek
  * die video wil export sê dit so. Al is ek in geteken"* — over the sentence
  * "Sign in first — credits belong to an account."
  *

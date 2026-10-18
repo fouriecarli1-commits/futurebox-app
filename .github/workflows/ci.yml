@@ -204,13 +204,13 @@ jobs:
       # `GET /v1/voices` returns every voice on the account, everything here is
       # made on one account, and every member who clones adds one — so the
       # request grew with the membership and stops working at about five
-      # hundred. Carli is planning for five to ten thousand users in month one.
+      # hundred. The owner is planning for five to ten thousand users in month one.
       - name: The voice list asks for a page, not for the whole membership
         run: npm run check:voicewall
 
       # TabBar is `fixed bottom-0 z-[95]` and every full-screen room in this app
       # is below it, so the bar is painted over the foot of each of them. The
-      # Pro Booth's "Mix it down" was underneath it, and Carli asked for a
+      # Pro Booth's "Mix it down" was underneath it, and the owner asked for a
       # feature that had been built and covered. One number, in one place.
       - name: Every room below the tab bar leaves it its own strip
         run: npm run check:belowtabs
@@ -699,7 +699,7 @@ jobs:
       # The green rule in globals.css finds buttons with [class*="border"],
       # and `border-l` contains "border". A hairline divider between two
       # controls came out as a filled, unrounded rectangle — which is what
-      # the sign-out button looked like in Carli's photograph of the header.
+      # the sign-out button looked like in the owner's photograph of the header.
       - name: No button is bordered on one side only
         run: npm run check:sideborder
 
@@ -941,7 +941,7 @@ jobs:
         run: npm run check:sqlbundle
       - name: The "what is missing in my project" query is current, and cannot write
         run: npm run check:sqlmissing
-      # Carli's storage plan: the space each plan holds is said in SQL (the
+      # The owner's storage plan: the space each plan holds is said in SQL (the
       # limit) and in TypeScript (the cards and the gauge). Two copies drift.
       - name: The cloud space on each plan is the same in the database, on the cards and at every upload
         run: npm run check:berging
@@ -1011,7 +1011,7 @@ jobs:
         run: npm run check:tempo && npm run check:mix && npm run check:tone && npm run check:listen
 
       # A song's plan, and what leaves the app for the engine. This is the
-      # room Carli says is what we actually sell.
+      # room the owner says is what we actually sell.
       - name: A song is built with a shape
         run: npm run check:makesong
 
@@ -1097,7 +1097,7 @@ jobs:
       - name: The art market's money adds up, and the share is on profit
         run: npm run check:artmarket
 
-      # And the wall the market stands behind. Carli, 6 October: a cover is
+      # And the wall the market stands behind. The owner, 6 October: a cover is
       # generated on the spot or bought, and a member's own picture is not an
       # option — otherwise nobody buys art. It held by accident until this:
       # one route writes a cover, its bytes come off the engine rather than
@@ -1730,7 +1730,7 @@ jobs:
       - name: A shape can be recoloured without losing the cut
         run: npm run check:verf
 
-      # Carli, 11 October 2026, in three words: "Niks is gratis." Sixty
+      # The owner, 11 October 2026, in three words: "Niks is gratis." Sixty
       # strings called one of her own tools free or said it costs nothing,
       # which teaches somebody paying a monthly fee that what they are
       # paying for is worth nothing. The fact underneath — this will not
@@ -1889,7 +1889,7 @@ jobs:
       # is not a comment — it is text, and React prints it. It is valid
       # JavaScript, valid TypeScript, valid JSX, and the build is happy; the
       # page just renders with a paragraph of engineering notes across it.
-      # Carli photographed eight lines of mine over her artwork.
+      # The owner photographed eight lines of mine over her artwork.
       - name: No comment is printed on a screen
         run: npm run check:jsxcomment
 

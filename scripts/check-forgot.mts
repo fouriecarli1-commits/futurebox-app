@@ -3,7 +3,7 @@
  *
  * ── Why this had to be built at all ──────────────────────────────────────
  *
- * Carli, 23 September 2026, going through the account screens before launch:
+ * The owner, 23 September 2026, going through the account screens before launch:
  * *"ek wil net seker maak dat die login 'n forget password funksie het."*
  *
  * It did not. There was no `resetPasswordForEmail` anywhere in this

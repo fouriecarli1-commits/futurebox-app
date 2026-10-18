@@ -3,7 +3,7 @@
  *
  * ── What she asked for ───────────────────────────────────────────────────
  *
- * Carli, 5 October 2026: *"By channel moet daar ook nie 'n listen to words
+ * The owner, 5 October 2026: *"By channel moet daar ook nie 'n listen to words
  * wees wat iets kos nie. Partykeer allign die woorde nie met die lied nie, dan
  * help dit om te kliek op listen to words."*
  *

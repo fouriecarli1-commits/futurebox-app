@@ -111,7 +111,7 @@ export default function PostToLive({
              its maker's own row and on its maker's own device, and everybody
              reading the room is somebody else.
 
-             Carli: *"Die play room moet die liedjie se woorde speel."* */
+             The owner: *"Die play room moet die liedjie se woorde speel."* */
           words: planOf(track),
           seconds: track.seconds,
           buildOn,
@@ -124,7 +124,7 @@ export default function PostToLive({
              somebody else. Empty strings on a generated cover, which the
              room reads as no credit rather than as a blank one.
 
-             Carli: *"Binne live moet die liedjie naam, artist naam, style
+             The owner: *"Binne live moet die liedjie naam, artist naam, style
              en dan die kunstenaar se naam en art naam appear."* */
           artTitle: track.art?.title ?? '',
           artBy: track.art?.by ?? '',

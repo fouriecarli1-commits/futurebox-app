@@ -1,7 +1,7 @@
 /**
  * Asking Google whether a Play purchase is real, and granting what it bought.
  *
- * Carli, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
+ * The owner, 14 October 2026: *"Wanneer ek die app op die playstore gaan sit gaan
  * ek paystack afhaal en werk met die playstore se paying system."*
  *
  * ── The one rule ─────────────────────────────────────────────────────────

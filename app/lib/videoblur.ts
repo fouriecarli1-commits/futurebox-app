@@ -3,7 +3,7 @@
  *
  * ── Why this exists when a blur dial already did ─────────────────────────
  *
- * Carli, 8 October 2026: *"Dit laat my dink dat video editor ook 'n blur
+ * The owner, 8 October 2026: *"Dit laat my dink dat video editor ook 'n blur
  * funksie nodig het."* So the `sharp` dial in `videoadjust.ts` was renamed
  * Blur and its ceiling raised from three pixels to twenty.
  *

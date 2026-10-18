@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
+ * The owner, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
  * kamer."*
  *
  * Story mode makes a book and the book lives in a tab. Close it and the
@@ -121,7 +121,7 @@ interface StoryBody {
 /**
  * The shelf itself: on the account.
  *
- * Carli, 9 October 2026: *"Skuif die stories en liedjies na die server
+ * The owner, 9 October 2026: *"Skuif die stories en liedjies na die server
  * toe."* A story made on a laptop was not on the phone's shelf, because it
  * was never anywhere but the laptop.
  *

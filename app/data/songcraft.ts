@@ -3,7 +3,7 @@
  *
  * ── Where this came from ─────────────────────────────────────────────────
  *
- * Carli, 19 September 2026, passing on a friend's idea and adding her own:
+ * The owner, 19 September 2026, passing on a friend's idea and adding her own:
  *
  *   "Die AI prompt moet mens deur 'n liedjie se skryf begelei en word dan ook
  *    'n prompter wat iemand leer hoe musiek werk. Om te verduidelik waarvoor
@@ -222,7 +222,7 @@ export const CRAFT: readonly Craft[] = [
    What the feeling is ABOUT
    ════════════════════════════════════════════════════════════════════════
 
-   Carli's step 4: *"Dan se hy ok jy het sad gekoes by voorbeeld Dan se hy ok
+   The owner's step 4: *"Dan se hy ok jy het sad gekoes by voorbeeld Dan se hy ok
    ... waaroor is jy sad? Boyfriend daagliksr di ge depressed etc."*
 
    This is the question that decides whether the song is hers or generic. "A
@@ -314,7 +314,7 @@ export function craftBrief(): string[] {
   const out: string[] = [
     /* ── How to run the session ──────────────────────────────────────
 
-       Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel
+       The owner, 19 September 2026: *"Die emosie goed voel ek moes als deel
        wees van copilot. Die hele room is baie besig. Ook die begeleiding
        van elke sessie."*
 
@@ -337,7 +337,7 @@ export function craftBrief(): string[] {
     '',
     /* ── One section at a time ────────────────────────────────────────
 
-       Carli, 21 September 2026: *"The copilot must guide someone in a
+       The owner, 21 September 2026: *"The copilot must guide someone in a
        song in make a song. It must work verse for verse, and before every
        new verse are written, ask questions and explain what this part in
        a song is usually for. It must not generate everything at once."*

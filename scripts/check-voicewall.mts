@@ -10,7 +10,7 @@
  * listing stops being usable past roughly five hundred voices, and their
  * answer is the paginated `GET /v2/voices`.
  *
- * Carli is planning for five to ten thousand users in the first month.
+ * The owner is planning for five to ten thousand users in the first month.
  *
  * ── The four ways ────────────────────────────────────────────────────────
  *

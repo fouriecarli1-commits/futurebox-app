@@ -3,7 +3,7 @@
 /**
  * "Your cloud space is full" — said once, plainly, wherever the upload was.
  *
- * Carli asked for the space per plan to say clearly when somebody is full
+ * The owner asked for the space per plan to say clearly when somebody is full
  * instead of failing silently. The limit is a storage policy, and a refused
  * file comes back from it as a row-level-security error that no room can
  * turn into a sentence. So the rooms do not try: each upload that fails asks

@@ -14,7 +14,7 @@
  *
  * Nothing ever told the copilot. So it wrote adverts with people talking in
  * them, in prose, and all four stayed switched off — the engine drew someone
- * mouthing nothing and the subtitle came out empty. Carli found it within an
+ * mouthing nothing and the subtitle came out empty. The owner found it within an
  * hour of the hand-off shipping: "daar is nie aanhalings vir spoken words nie."
  *
  * ── What this checks, and why that is a real constraint ──────────────────

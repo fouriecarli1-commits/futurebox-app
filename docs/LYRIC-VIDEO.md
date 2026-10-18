@@ -1,6 +1,6 @@
 # A lyric video, out of what the song already came with
 
-*Carli, 8 October 2026, on a song she had just generated:*
+*The owner, 8 October 2026, on a song she had just generated:*
 
 > "Ek het hierdie liedjie nou net op lyria gegenerate. wat dit awesome maak dat dit dadelik
 > 'n video en album art saam create wat ek vir ons engine ook sal wil hê."

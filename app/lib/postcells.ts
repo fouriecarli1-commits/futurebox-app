@@ -1,7 +1,7 @@
 /**
  * Photo grids: more than one photograph on a post, each in a frame of its own.
  *
- * Carli, 16 October 2026, with a collage open on her phone: *"Kyk ook
+ * The owner, 16 October 2026, with a collage open on her phone: *"Kyk ook
  * wanneer foto's in so grid is dan moet mens op een foto kan kliek en dit kan
  * ge-edit word."* The post she showed is four photographs in a grid with
  * words and stars over them; tapping one photograph gives that photograph

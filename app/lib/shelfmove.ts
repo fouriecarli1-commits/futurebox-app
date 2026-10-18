@@ -5,7 +5,7 @@
  *
  * ── Why this exists at all ───────────────────────────────────────────────
  *
- * The shelves were on the device for a day. Carli, 9 October 2026, as soon
+ * The shelves were on the device for a day. The owner, 9 October 2026, as soon
  * as she had seen them working: *"Skuif die stories en liedjies na die
  * server toe."*
  *

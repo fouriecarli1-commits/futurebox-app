@@ -1,7 +1,7 @@
 /**
  * The city behind the profile page.
  *
- * Carli's picture of the page, 14 October 2026, stands it on a night city:
+ * The owner's picture of the page, 14 October 2026, stands it on a night city:
  * towers with lit windows, green light down their edges. The app has no such
  * photograph, and a stock one would be somebody else's city, so it is drawn
  * here — the same skyline every time, from a fixed seed — as an SVG the page
@@ -72,7 +72,7 @@ export const PROFILE_GLASS = {
 /**
  * A card inside the glass.
  *
- * Carli, 15 October 2026: *"Daai blokke by You moet beter lyk en meer
+ * The owner, 15 October 2026: *"Daai blokke by You moet beter lyk en meer
  * rounded."* A faint top-lit gradient, a hairline of light along the top edge
  * and a soft shadow under it, so a card sits ON the glass instead of being a
  * flat dark patch cut out of it. The corners are `rounded-2xl` where it is used.

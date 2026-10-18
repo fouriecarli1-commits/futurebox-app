@@ -190,7 +190,7 @@ ok(
 ok(
   '  and that shape is the one the edit asked for, not a constant',
   /* `SHAPES[edit.shape ?? 'tall']` until 9 October 2026, when an edit became
-     able to carry its own frame — Carli: *"Die video desk en photo editor
+     able to carry its own frame — the owner: *"Die video desk en photo editor
      moet 'n opsie hê om custom sizes te kies."*
 
      Reading the table is not merely a different spelling now, it is wrong:

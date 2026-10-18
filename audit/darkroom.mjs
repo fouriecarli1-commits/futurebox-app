@@ -1,7 +1,7 @@
 /**
  * The darkroom: in from the photo editor, developed, and back out.
  *
- * Carli, 17 October 2026: *"Binne photoshop wonder ek of daar by bring a photo
+ * The owner, 17 October 2026: *"Binne photoshop wonder ek of daar by bring a photo
  * in of daar nie 'n fancy looking button moet wees wat mense na die lightroom
  * toe vat."* — with screenshots of Light, Colour, grading wheels and Detail.
  *

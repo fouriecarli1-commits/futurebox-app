@@ -3,7 +3,7 @@
  *
  *   npm run check:vector
  *
- * Carli, 17 October 2026: *"Ek hou van daai vector illustration."* What has
+ * The owner, 17 October 2026: *"Ek hou van daai vector illustration."* What has
  * to hold is that a shape is where it is drawn, that a finger's line is
  * smoothed without wandering off, that an SVG from outside — the AI's, or one
  * somebody pasted — is let in with nothing that runs or fetches, and that a

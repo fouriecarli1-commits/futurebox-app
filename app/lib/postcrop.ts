@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 7 October 2026: *"Waar edit ek 'n foto?"* — and when she found the
+ * The owner, 7 October 2026: *"Waar edit ek 'n foto?"* — and when she found the
  * screen, what it did not do was choose which part of the picture shows.
  *
  * That is not a nicety, it is the thing you hit every single time. A phone
@@ -50,7 +50,7 @@
  *
  * ── Below one, since 7 October ───────────────────────────────────────────
  *
- * Carli: *"Die foto moet ook kan shrink onder 1.00 dit moet ook gedrag kan
+ * The owner: *"Die foto moet ook kan shrink onder 1.00 dit moet ook gedrag kan
  * word soos mens die behoefte het."*
  *
  * It was 1, and 1 meant "the picture at least fills the frame" — so the
@@ -108,7 +108,7 @@ const held = (n: number, low: number, high: number): number =>
  * end was 1: the basis and the floor were the same number, so a corrupt zoom
  * drew the picture exactly covering the frame.
  *
- * On 7 October the floor became a fifth, so Carli could shrink a picture
+ * On 7 October the floor became a fifth, so the owner could shrink a picture
  * inside the frame — and `held`'s fallback silently became "draw it at a
  * fifth". `check:postcrop` caught it the same minute: 972 placements where
  * `fill` showed background through, every one of them a NaN zoom. A value
@@ -144,7 +144,7 @@ export function place(picture: Size, frame: Size, crop: Crop): Placed {
      pushed about only while it is bigger than the frame, because the thing
      being protected was the frame staying covered.
  
-     That is right for `fill` and wrong for everything else. Carli, 7 October
+     That is right for `fill` and wrong for everything else. The owner, 7 October
      2026: *"Die foto moet ook kan shrink onder 1.00 dit moet ook gedrag kan
      word soos mens die behoefte het."* A picture SMALLER than the frame has
      exactly as much room to move — it is just that moving it slides it about

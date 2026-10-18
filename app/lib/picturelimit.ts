@@ -15,7 +15,7 @@
  *
  * ── Why more than one ────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"al die spesiale funksies van google moet ook daar
+ * The owner, 9 October 2026: *"al die spesiale funksies van google moet ook daar
  * in wees."* This was the largest one not being used, and it was not being
  * used by one line: the parts array in `server/picture.ts` was built to hold
  * a list and only ever had one thing put in it.

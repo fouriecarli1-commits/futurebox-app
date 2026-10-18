@@ -3,7 +3,7 @@
  *
  * ── Why this needs a browser and nothing else will do ────────────────────
  *
- * Carli, 7 October 2026: *"grab text"*. The engine is Tesseract compiled to
+ * The owner, 7 October 2026: *"grab text"*. The engine is Tesseract compiled to
  * WebAssembly, served from `public/ocr/`, and the only question worth asking
  * about it is whether it reads. A source rule can check that the files are
  * there and that the paths point at them; it cannot tell a working OCR from
@@ -76,7 +76,7 @@ try {
   /* ── The bench with the picture row on it, opened first ───────────────
  
      The room's tools live behind a bar along the bottom since 7 October —
-     Carli: *"Die editing tools moet ook onder in 'n bar wees."* So the file
+     The owner: *"Die editing tools moet ook onder in 'n bar wees."* So the file
      input is not in the page until the bench holding it is open, and a walk
      written against the old long scroll fell over on `null.files` with no
      clue that the room had simply changed shape. */
@@ -185,7 +185,7 @@ try {
 
   /* ── And the same reading, tappable ─────────────────────────
 
-     Carli, 8 October 2026: *"dat die masjien self objekte en text
+     The owner, 8 October 2026: *"dat die masjien self objekte en text
      identifiseer wat dan highlight en dan kan die klient op die objekte of
      text click wat hulle graag wil grab, rondskuif, of delete."*
 

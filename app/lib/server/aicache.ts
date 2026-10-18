@@ -3,7 +3,7 @@
  *
  * ── Where this came from ─────────────────────────────────────────────────
  *
- * Carli, 19 September 2026, on finding out the writing help had stopped
+ * The owner, 19 September 2026, on finding out the writing help had stopped
  * because the model account was empty: *"Ek het nie geweet Copilot gaan
  * betaald moet wees nie?"*
  *

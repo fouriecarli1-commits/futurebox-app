@@ -2,7 +2,7 @@
  * The Magic Drawing Board's closed lists: the crayons, the brushes, and the
  * words a drawing is kept under.
  *
- * Carli, 13 October 2026: *"Maybe a drawing board that captures their shape
+ * The owner, 13 October 2026: *"Maybe a drawing board that captures their shape
  * and makes their drawings realistically alive, but family friendly."*
  *
  * Everything a child can choose on the board is in this file, which is the

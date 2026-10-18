@@ -5,7 +5,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 9 October 2026: *"Ek dink ook 'n story mode om geleesde stories met
+ * The owner, 9 October 2026: *"Ek dink ook 'n story mode om geleesde stories met
  * 'n video sal baie oulik wees."* Then: *"Gaan aan met story mode."*
  *
  * ── The two answers taken ────────────────────────────────────────────────
@@ -70,7 +70,7 @@ export default function StoryRoom(): React.ReactElement {
   const [film, setFilm] = useState('');
   const [at, setAt] = useState(0);
   const [onShelf, setOnShelf] = useState(false);
-  /* The story helper (Carli, 14 October 2026: "Story mode … moet ook 'n ai
+  /* The story helper (The owner, 14 October 2026: "Story mode … moet ook 'n ai
      hê"). `/api/story` carries why it writes into the box rather than past
      it: the words stay hers to change before anything is paid for. */
   const [helperOn, setHelperOn] = useState(false);
@@ -219,7 +219,7 @@ export default function StoryRoom(): React.ReactElement {
 
   /* ── Onto the shelf, so a child can be handed it ───────────────────────
  
-     Carli, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
+     The owner, 9 October 2026: *"Gaan aan met die shelf van stories in die kids
      kamer."* Until this, a book lived in a tab: close it and the pictures
      and the readings — which were paid for — stopped existing, and the kids
      room could not reach one at all.

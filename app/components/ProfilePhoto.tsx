@@ -76,7 +76,7 @@ export default function ProfilePhoto({
       try {
         /* ── A breadcrumb, before the step that can take the tab down ──
 
-           Carli, three times now: *"die wit blad met die avatar oplaai ...
+           The owner, three times now: *"die wit blad met die avatar oplaai ...
            Dit is nogsteeds net wit"*, and completely empty — which means
            this app's own code is gone too, so nothing of ours can draw a
            panel about it. That is the phone taking the tab's memory back,

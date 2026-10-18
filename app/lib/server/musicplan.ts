@@ -151,7 +151,7 @@ export function buildRequest(body: Body): Record<string, unknown> {
           // name on its own.
           /* ── The words, respelled for a model that reads English ─────
 
-             Carli's technique, 9 October 2026. `singableLines` leaves a
+             The owner's technique, 9 October 2026. `singableLines` leaves a
              line alone unless it is Afrikaans, and it is applied HERE and
              nowhere else on purpose: the section NAME is an instruction to
              the engine and `positive_styles` is a description of a sound,
@@ -198,7 +198,7 @@ export function buildRequest(body: Body): Record<string, unknown> {
  * position. Which quietly decided that a direction written seventh applies to
  * the intro and to nothing else.
  *
- * That is the bug behind Carli's report of 10 September — she chose a man's
+ * That is the bug behind the owner's report of 10 September — she chose a man's
  * or a woman's voice and "hy generate net wat hy wil". The voice picker
  * appended its words after whatever she had written, so on any style with six
  * words of its own the singer reached the first twenty seconds and was

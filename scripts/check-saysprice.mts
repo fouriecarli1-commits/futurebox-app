@@ -3,7 +3,7 @@
  *
  * ── Why this rule, on this day ───────────────────────────────────────────
  *
- * The cutting room started charging on 1 October 2026. Carli: *"Onthou dat
+ * The cutting room started charging on 1 October 2026. The owner: *"Onthou dat
  * hierdie ook 'n betaalde produk is wat krediete werd is."*
  *
  * Everything in that room is free — the trimming, the splitting, the fades,
@@ -92,7 +92,7 @@ ok('  and shows it on the button that spends it',
 
 /* ── And the press that spends is the one after the number ────────────────
 
-   Carli, 3 October 2026: *"hulle moet dan confirm of hulle wil voortgaan."*
+   The owner, 3 October 2026: *"hulle moet dan confirm of hulle wil voortgaan."*
 
    The button that used to start the render now opens the bill. That is the
    difference between a price said and a price agreed to, and it is held here

@@ -3,7 +3,7 @@
 /**
  * The photo room's faces, lent to the cutting room, and loaded before use.
  *
- * Carli, 15 October 2026: *"Die gedagte is ook om al hoe meer uit te brei oor
+ * The owner, 15 October 2026: *"Die gedagte is ook om al hoe meer uit te brei oor
  * tyd, meer text possibilities, meer templates."*
  *
  * ── Why a file of its own ────────────────────────────────────────────────

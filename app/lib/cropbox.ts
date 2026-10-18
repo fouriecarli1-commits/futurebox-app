@@ -3,7 +3,7 @@
  *
  * ── The fault this exists for ────────────────────────────────────────────
  *
- * Carli, 7 October 2026, in the photo editor: *"Ek sien nie goeie cropping en
+ * The owner, 7 October 2026, in the photo editor: *"Ek sien nie goeie cropping en
  * cutting tools nie."*
  *
  * She is right, and the thing that was there is worth naming so the

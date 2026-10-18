@@ -1,7 +1,7 @@
 /**
  * A song is never untitled.
  *
- * Carli, 12 October 2026: *"By make a song moet jy altyd seker maak in simple
+ * The owner, 12 October 2026: *"By make a song moet jy altyd seker maak in simple
  * wanneer mens met copilot prompt dat 'n liedjie nooit untitled is nie,
  * copilot moet altyd 'n titel uit dink vir 'n song."*
  *

@@ -96,7 +96,7 @@ async function tickOn(page, where) {
     await page.waitForTimeout(200);
     /* The Sound trainer, and not the Channel.
 
-       Carli: "daai woorde in make a song vat mens na die verkeerde blad toe
+       The owner: "daai woorde in make a song vat mens na die verkeerde blad toe
         ... huidiglik vat die mens na die channel toe." Training moved into
        its own room and this button kept pointing at where it used to be, so
        the one thing it promises is the one thing the screen it opened could

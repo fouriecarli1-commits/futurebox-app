@@ -118,7 +118,7 @@ export function forgetEverything(): void {
  * **ElevenLabs and Kits** money — music, stems, dubbing, every voice route,
  * video — had nothing.
  *
- * Carli, 9 September 2026: "kan een retry op enige funksie nie gestop word
+ * The owner, 9 September 2026: "kan een retry op enige funksie nie gestop word
  * nie, kan ons nie iets in bou wat dit stop nie?" It could not, and now it
  * can.
  *

@@ -1,7 +1,7 @@
 /**
  * A page emptied out draws a panel instead of being white.
  *
- * Carli, three times: *"Die add a photo in Shot gee steeds net 'n wit blad"*
+ * The owner, three times: *"Die add a photo in Shot gee steeds net 'n wit blad"*
  * and, on its own line, *"Bladsy is steeds wit."*
  *
  * Four explanations were offered and every one was beaten by the same thing:
@@ -91,7 +91,7 @@ try {
 
   /* ── The one this guard was actually failing ──────────────────────────
 
-     Carli, 18 September 2026, a photograph of the white screen: the page
+     The owner, 18 September 2026, a photograph of the white screen: the page
      has nothing on it — no header, no room — and across the bottom, drawn
      perfectly, the tab bar. *Spotlight · Live · Make · Channel · You*.
 

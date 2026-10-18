@@ -161,7 +161,7 @@ try {
 
   /* ── Hearing it before spending a cut on it ─────────────────────────
 
-     Carli, 18 September 2026: *"Daar moet 'n play knoppie wees om die
+     The owner, 18 September 2026: *"Daar moet 'n play knoppie wees om die
      stukkie wat voorgestel word te hoor."* The room recommended a moment
      by a number — "at 0:22, steady and clear" — and the only way to find
      out whether it was the right one was to cut it.

@@ -74,7 +74,7 @@ import { canMark, loadMark, markTake } from '../lib/logomark';
  * way of writing "bright label" — resolves to near-black.
  *
  * In the light theme the app actually ships, that put near-black button
- * labels on a near-black sheet. Carli, 14 September 2026, with a photograph
+ * labels on a near-black sheet. The owner, 14 September 2026, with a photograph
  * of it: *"Kyk hoe dof is die buttons in die lyrics opsie."* Both buttons on
  * the no-words screen were there, boxed, green-washed and pressable, with
  * their words very nearly invisible.
@@ -133,7 +133,7 @@ export default function FollowWords({
    *
    * ── Why this is a prop and not a second screen ───────────────────────
    *
-   * Carli: "elke liedjie [moet] ook die opsie en button het om 'n film
+   * The owner: "elke liedjie [moet] ook die opsie en button het om 'n film
    * yourself to it". The screen she is describing is this one, and it has
    * been here since #6 — behind a button labelled **Lyrics** on every song
    * that has words, which is nearly all of them. A door named after one of
@@ -157,7 +157,7 @@ export default function FollowWords({
    *
    * ── What she asked for ─────────────────────────────────────────────────
    *
-   * Carli, 5 October 2026: *"By channel moet daar ook nie 'n listen to words
+   * The owner, 5 October 2026: *"By channel moet daar ook nie 'n listen to words
    * wees wat iets kos nie. Partykeer allign die woorde nie met die lied nie,
    * dan help dit om te kliek op listen to words."*
    *
@@ -248,7 +248,7 @@ export default function FollowWords({
   /**
    * A take held where it is, rather than ended.
    *
-   * Carli, 13 September 2026: "Jy kan nie pause nie." There was Record and
+   * The owner, 13 September 2026: "Jy kan nie pause nie." There was Record and
    * Stop and nothing between them, so the only way to break off — a knock at
    * the door, a line gone wrong — was to end the take and start again.
    *
@@ -386,7 +386,7 @@ export default function FollowWords({
       // it has rather than nothing.
       /* ── Upright, because that is what the takes are for ──────────────
 
-         Carli, 14 September 2026: "Die film myself terwyl mens 'n liedjie
+         The owner, 14 September 2026: "Die film myself terwyl mens 'n liedjie
          luister neem in wide screen in plaas van in 'n long screen vir
          tick tok. Meeste mense gaan opneem vir tiktok takes."
 
@@ -452,7 +452,7 @@ export default function FollowWords({
     if (!camera || typeof MediaRecorder === 'undefined') return;
     /* ── Ask for the codecs, not just the container ────────────────────
 
-       Carli: "Die afgelaaide video kan nie die klank speel nie, dit sê
+       The owner: "Die afgelaaide video kan nie die klank speel nie, dit sê
        audio codec not supported."
 
        This asked for `video/mp4` with no codecs named, and that is the
@@ -613,7 +613,7 @@ export default function FollowWords({
        The X is the way out. */
     /* `overscroll-contain`, and nothing panning at all while a take runs.
  
-       Carli, 13 September 2026: "Jy kan na 'n volgende liedjie scroll terwyl
+       The owner, 13 September 2026: "Jy kan na 'n volgende liedjie scroll terwyl
        jy film. Dit recording van jouself moet vas wees binne in een liedjie."
  
        The page behind is locked already, but the STUDIO's own scroll
@@ -800,7 +800,7 @@ export default function FollowWords({
         <div className="flex flex-wrap items-center justify-center gap-2">
           {/* ── Listen again, on this device, for nothing ───────────────
 
-              Carli, 5 October 2026: *"Partykeer allign die woorde nie met die
+              The owner, 5 October 2026: *"Partykeer allign die woorde nie met die
               lied nie, dan help dit om te kliek op listen to words."*
 
               Beside the camera because that is where somebody standing in
@@ -965,7 +965,7 @@ export default function FollowWords({
           )}
           {/* ── And into the channel ──────────────────────────────────────
 
-              Carli, 14 September 2026: *"die video nie in die channel save
+              The owner, 14 September 2026: *"die video nie in die channel save
               nie, sodat dit later in die live channel gedeel kan word nie."*
 
               Download was the only thing offered, and a downloaded take is

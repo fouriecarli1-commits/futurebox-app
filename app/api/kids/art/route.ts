@@ -3,7 +3,7 @@
  *
  * ── What she asked ───────────────────────────────────────────────────────
  *
- * Carli, 10 October 2026: *"Kan jy asb nie op jou eie engine staat maak om
+ * The owner, 10 October 2026: *"Kan jy asb nie op jou eie engine staat maak om
  * kreatiewe idees uit te dink vir die kids room nie. Jy is nie goed daarmee
  * nie. Jy sal moet ons google engines gebruik!"*
  *

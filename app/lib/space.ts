@@ -2,7 +2,7 @@
  * Cloud space: how much a member keeps, how much the plan holds, and saying
  * so when it is full.
  *
- * Carli, 16 October 2026: *"Please impliment the storage plan as you
+ * The owner, 16 October 2026: *"Please impliment the storage plan as you
  * suggested."* — 1 GB on Free, 10 GB on Maker, 50 GB on Studio, 200 GB on
  * Label. The numbers are `spaceGb` in `lib/plans.ts`; the limit itself is a
  * policy on storage, in `supabase/berging.sql`, because most files go up

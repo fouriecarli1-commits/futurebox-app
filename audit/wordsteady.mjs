@@ -3,7 +3,7 @@
  *
  * ── The report ───────────────────────────────────────────────────────────
  *
- * Carli, 17 September 2026: *"Die record skerm in Probooth moet hard wees en
+ * The owner, 17 September 2026: *"Die record skerm in Probooth moet hard wees en
  * nie beweeg nie. Huidiglik hop alles rond."* That was answered once, by
  * taking a forty-word paragraph out of the row above the words, and
  * `check:recordroom` holds it. That check ends by saying what it does not

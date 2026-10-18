@@ -83,7 +83,7 @@ export async function GET(request: Request): Promise<Response> {
 /**
  * A page where the card can be changed.
  *
- * Carli, 23 September 2026: *"En met billing, dat hulle hul billing
+ * The owner, 23 September 2026: *"En met billing, dat hulle hul billing
  * information kon verander?"* Seeing the arrangement and stopping it were
  * both built; changing the card it is charged to was not, and a card expires
  * long before somebody wants to leave — so the ordinary end of this account

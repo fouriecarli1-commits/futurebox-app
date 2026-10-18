@@ -18,7 +18,7 @@
  *
  * ── The first heard fault, and the only one so far ───────────────────────
  *
- * Carli, 10 September 2026:
+ * The owner, 10 September 2026:
  *
  *   "elke woord tjie, soos voëltjie word verkeerd uitgespreek as chi. tjie
  *    moet uitgespreek word as kie dan is dit byvoorbeeld voëlkie."
@@ -170,7 +170,7 @@ export function asRules(): { string_to_replace: string; type: 'alias'; alias: st
 
 /* ── The words she has HEARD said ────────────────────────────────────────
 
-   Carli, 10 October 2026: *"Gaan aan met die keep button."*
+   The owner, 10 October 2026: *"Gaan aan met die keep button."*
 
    Everything above was written by a person reasoning about a language. What
    follows was heard from a speaker's mouth in the booth at `/uitspraak`, and

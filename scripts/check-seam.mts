@@ -3,7 +3,7 @@
  *
  * ── Why this check and not a convention ──────────────────────────────────
  *
- * Carli, 5 October 2026, on ElevenLabs: *"'n kwotasie en wat hulle ceiling
+ * The owner, 5 October 2026, on ElevenLabs: *"'n kwotasie en wat hulle ceiling
  * is, want ek wil groot gaan en baie kliënte aanneem."*
  *
  * The thing that makes that hard is not the unanswered email. It is that
