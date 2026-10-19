@@ -46,7 +46,7 @@ ok('  and it says what it is and in what language',
 
 /* ── The icons a store will not accept the absence of ────────────────── */
 
-for (const icon of ['public/icon-neon-192.png', 'public/icon-neon-512.png', 'public/icon-neon-512-maskable.png']) {
+for (const icon of ['public/icon-chip-192.png', 'public/icon-chip-512.png', 'public/icon-chip-512-maskable.png']) {
   ok(`${icon} is really there`, existsSync(icon),
     'the manifest names it, and a manifest naming an icon that is not served'
     + ' is a failed install with a message about nothing in particular');

@@ -314,7 +314,7 @@ export default function Greeting({
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icon-neon-192.png" alt="" aria-hidden="true" className="w-8 h-8 rounded-lg ring-1 ring-emerald-500/30" />
+            <img src="/icon-chip-192.png" alt="" aria-hidden="true" className="w-8 h-8 rounded-lg ring-1 ring-emerald-500/30" />
             <span className="text-base font-black tracking-tight text-white">FutureBox</span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />

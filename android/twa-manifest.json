@@ -14,8 +14,8 @@
   "backgroundColor": "#080c0a",
   "enableNotifications": false,
   "startUrl": "/",
-  "iconUrl": "https://futurebox.studio/icon-neon-512.png",
-  "maskableIconUrl": "https://futurebox.studio/icon-neon-512-maskable.png",
+  "iconUrl": "https://futurebox.studio/icon-chip-512.png",
+  "maskableIconUrl": "https://futurebox.studio/icon-chip-512-maskable.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",

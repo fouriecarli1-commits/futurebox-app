@@ -4,7 +4,7 @@
  *   node scripts/play-feature.mjs
  *
  * The owner, 19 October 2026: *"Maak vir my die feature graphic vir Play
- * Store."* The neon app icon, the name and the line from `docs/PLAY-STORE.md`,
+ * Store."* Her app icon, the name and the line from `docs/PLAY-STORE.md`,
  * and three real screens from `docs/play/shots/` — the song, the photo editor
  * and the video desk — so what the listing shows is what the app is.
  *
@@ -19,7 +19,9 @@ import { launchOptions } from '../audit/where.mjs';
 const OUT = 'docs/play/feature-graphic-1024x500.png';
 const data = (path, type) => `data:${type};base64,${readFileSync(path).toString('base64')}`;
 
-const icon = data('public/icon-neon-512.png', 'image/png');
+/* The board cut in from her icon, so its black square does not sit on the
+   green: `scripts/icon.mjs` cuts the same for iOS. */
+const icon = data('app/apple-icon.png', 'image/png');
 const font = data('app/fonts/jakarta-latin.woff2', 'font/woff2');
 const shot = (name) => data(`docs/play/shots/${name}.png`, 'image/png');
 
@@ -50,7 +52,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
   }
   .left { position: absolute; left: 64px; top: 0; bottom: 0; width: 470px; display: flex; flex-direction: column; justify-content: center; }
   .mark { display: flex; align-items: center; gap: 18px; }
-  .mark img { width: 92px; height: 92px; filter: drop-shadow(0 0 22px rgba(16, 255, 160, 0.55)); }
+  .mark img { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 0 26px rgba(16, 255, 160, 0.45); }
   h1 { font-size: 50px; font-weight: 800; letter-spacing: -1.2px; line-height: 1; }
   h1 span { color: #34f5a6; text-shadow: 0 0 18px rgba(52, 245, 166, 0.55); }
   .line { margin-top: 26px; font-size: 25px; font-weight: 700; line-height: 1.25; color: #ffffff; }

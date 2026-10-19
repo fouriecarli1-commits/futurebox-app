@@ -240,8 +240,8 @@ check('the studio opens on the door, not on a room',
 check('the surname is not read back at them', !/Lerato Dlamini!/.test(words));
 check('it welcomes them back rather than for the first time',
   af ? /welkom terug by FutureBox/i.test(words) : /welcome back to FutureBox/i.test(words));
-/* The icon's file was renamed to icon-neon-192.png; either name is the mark. */
-check('the mark is on it', (await door.locator('img[src="/icon-neon-192.png"], img[src="/icon-192.png"]').count()) === 1);
+/* The icon is icon-chip-192.png since 19 October 2026; an older name is the mark too. */
+check('the mark is on it', (await door.locator('img[src="/icon-chip-192.png"], img[src="/icon-neon-192.png"]').count()) === 1);
 check('and it is its own page, not a panel inside the studio',
   (await door.count()) === 1 && (await door.locator('nav button').count()) === 0,
   `${await door.count()} door(s), ${await door.locator('nav button').count()} rail rows on it`);

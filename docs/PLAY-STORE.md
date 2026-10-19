@@ -57,7 +57,7 @@ The practical consequences, said plainly:
 | App manifest with id, scope, language, categories, orientation | `app/manifest.ts` |
 | Google Play Billing in the app, Paystack on the web | `app/lib/playbilling.ts`, `app/api/play/` |
 | The Android wrapper's settings, ready for Bubblewrap | `android/twa-manifest.json`, `android/README.md` |
-| Icons at 192 and 512, one of them maskable | `public/icon-neon-192.png`, `public/icon-neon-512.png`, `public/icon-neon-512-maskable.png` |
+| Icons at 192 and 512, one of them maskable | `public/icon-chip-192.png`, `public/icon-chip-512.png`, `public/icon-chip-512-maskable.png` |
 | Asset links, read from the environment | `app/.well-known/assetlinks.json/route.ts` |
 | Public privacy page | `/privacy` |
 | In-app account deletion | `DeleteAccount.tsx` |
