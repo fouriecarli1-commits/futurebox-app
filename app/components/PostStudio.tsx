@@ -51,6 +51,7 @@ import {
   Check, ChartColumn, Circle, PenTool, Megaphone, ShoppingBag, Shirt, Columns2, FileText, Paintbrush, Copy, Sun, ClipboardPaste, Crop as CropIcon, Scissors, Download, FlipHorizontal, Image as ImageIcon, Lasso, LayoutTemplate, Loader2, Maximize2, Move, Pencil, Plus, Redo2, RotateCcw, RotateCw, ScanText, SlidersHorizontal, Sparkles, Spline, Square, Trash2, Type, Undo2, Wand2, Eraser, Eye, EyeOff, Layers, LayoutGrid, ChevronUp, ChevronDown, Replace, ZoomIn, ZoomOut, Frame, X,
   AlignLeft, AlignCenter, AlignRight,
 } from 'lucide-react';
+import CropSheet from './CropSheet';
 import { assetId, rememberAsset, thumbnailOf } from '../lib/assets';
 import { probeVideoEngine } from '../lib/videograde';
 import { GLOWS, glowOf, haloPasses, NEON_WORDS, type GlowId } from '../lib/postglow';
@@ -1374,6 +1375,8 @@ export default function PostStudio({
      the thumb while it is dragged about inside its frame. */
   const [cells, setCells] = useState<Cell[]>([]);
   const [cellOn, setCellOn] = useState<string | null>(null);
+  /** The frame whose photo is open in the crop sheet (`CropSheet.tsx`). */
+  const [cellCrop, setCellCrop] = useState<string | null>(null);
   const [gap, setGap] = useState<number>(GAPS[1]);
   const cellHeld = useRef<{ id: string; x: number; y: number; mode?: 'move' | 'size' } | null>(null);
   /* One photo of the grid opened on its own, with every tool in the room
@@ -9619,6 +9622,16 @@ export default function PostStudio({
   const here = [...ALL_BENCHES, POST_CELL].find((one) => one.id === bench) ?? null;
   const chipStyle: React.CSSProperties = { background: PHOTO.chip, border: `1px solid ${PHOTO.edge}` };
   const openBench = (next: Exclude<Bench, null>): void => {
+    /* ── Crop on a design's or a grid's photo ────────────────────────────
+       The owner, 19 October 2026, a design's photo frame chosen: *"Hierdie
+       cropping werk nie."* The crop box is for the post's own photograph;
+       with none, Crop opened the frame's settings and cut nothing. A photo
+       in a frame now opens in the crop sheet instead — the chosen frame's,
+       or the first frame with a photo in it. */
+    if (next === 'frame' && !picture) {
+      const target = cellNow?.image ? cellNow : cells.find((one) => one.image) ?? null;
+      if (target) { setCellCrop(target.id); return; }
+    }
     setBench(bench === next ? null : next);
     if (bench !== next) setAsking(false);
     /* ── Crop draws its box at once ────────────────────────────────────
@@ -10008,6 +10021,26 @@ export default function PostStudio({
           tools comes up — not a panel over the photo. Placed with flex, not
           centred by a translate (a pressed button is given a transform of
           its own, which moved the layer chip from under the thumb). */}
+      {cellCrop && (() => {
+        const frame = cells.find((one) => one.id === cellCrop);
+        if (!frame?.image) return null;
+        return (
+          <CropSheet
+            image={frame.image}
+            onClose={() => setCellCrop(null)}
+            onCut={(made) => asPicture(
+              made,
+              (one) => {
+                beforeLayers(t('post.stepCropCell', 'cropping a photo in a frame'));
+                changeCell(frame.id, { image: one, crop: MIDDLE });
+                setCellCrop(null);
+                setSaid(t('post.cellCropped', 'Cropped. Undo brings the whole photo back.'));
+              },
+              () => setSaid(t('post.cutDownFailed', 'That could not be cut down.')),
+            )}
+          />
+        );
+      })()}
       {cellNow && !editingCell && bench === null && (
         <div data-postcellbar className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex justify-center">
           <div
@@ -10019,6 +10052,7 @@ export default function PostStudio({
               ['edit', <Wand2 key="e" className="h-5 w-5" />, t('post.cellEditShort', 'Edit'), () => editCell(cellNow.id), !cellNow.image],
               ['closer', <ZoomIn key="z" className="h-5 w-5" />, t('post.cellZoom', 'Closer'), () => changeCell(cellNow.id, { crop: { ...cellNow.crop, zoom: Math.min(3, cellNow.crop.zoom + 0.25) } }), !cellNow.image],
               ['further', <ZoomOut key="o" className="h-5 w-5" />, t('post.cellFurther', 'Further'), () => changeCell(cellNow.id, { crop: { ...cellNow.crop, zoom: Math.max(1, cellNow.crop.zoom - 0.25) } }), !cellNow.image || cellNow.crop.zoom <= 1],
+              ['crop', <CropIcon key="c" className="h-5 w-5" />, t('post.cellCrop', 'Crop'), () => setCellCrop(cellNow.id), !cellNow.image],
               ['look', <Frame key="f" className="h-5 w-5" />, t('post.cellFrame', 'Frame'), () => {
                 const order: CellLook[] = ['plain', 'round', 'polaroid'];
                 changeCell(cellNow.id, { look: order[(order.indexOf(cellNow.look ?? 'plain') + 1) % order.length] });

@@ -120,6 +120,33 @@ try {
   check('  darker, as it was made', darker.r + darker.g + darker.b < mine.r + mine.g + mine.b - 30, `${JSON.stringify(mine)} → ${JSON.stringify(darker)}`);
   check('  and the rest of the post as it was', JSON.stringify(await quarter(0)) === JSON.stringify(other));
 
+  /* ── Crop a photo in its frame ────────────────────────────────────────
+     The owner, 19 October 2026, a design's photo frame chosen: "Hierdie
+     cropping werk nie." Crop in the bottom bar, with no photograph of the
+     post's own, opens the framed photo with a box to drag; pulling its right
+     side in to the red half and cutting leaves that frame red. */
+  await tool('frame');
+  const sheet = page.locator('[data-cropsheet]');
+  check('Crop with only framed photos opens the photo with a box round it', await sheet.isVisible().catch(() => false));
+  if (await sheet.isVisible().catch(() => false)) {
+    const img = await sheet.locator('img').boundingBox();
+    await page.mouse.move(img.x + img.width - 1, img.y + img.height / 2);
+    await page.mouse.down();
+    for (let n = 1; n <= 10; n += 1) await page.mouse.move(img.x + img.width * (1 - 0.055 * n), img.y + img.height / 2);
+    await page.mouse.up();
+    const kept = await sheet.locator('[data-cropbox]').boundingBox();
+    check('  and its side drags in', Boolean(kept) && kept.width < img.width * 0.6, `${kept?.width} of ${img.width}`);
+    await sheet.locator('[data-cropdo]').click();
+    await page.waitForTimeout(1200);
+    check('  and Cut it down closes it', (await page.locator('[data-cropsheet]').count()) === 0);
+    const cut = await quarter(3);
+    check('  leaving only the part inside the box in the frame', cut.b < 40 && cut.r > cut.b + 30, JSON.stringify(cut));
+  }
+  /* The framed photo's own bar has Crop too. */
+  await page.mouse.click(box.x + box.width * 0.75, box.y + box.height * 0.75);
+  await page.waitForTimeout(400);
+  check('a picked photo’s own bar has Crop', (await page.locator('[data-postcellbarbutton="crop"]').count()) === 1);
+
   await page.screenshot({ path: shot('postgrid.png') });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 400)}`);
