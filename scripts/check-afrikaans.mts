@@ -83,6 +83,8 @@ const SAME_IN_BOTH = new Set([
   /* Borrowed whole, because that is what people actually say. */
   /* Sonar is the Afrikaans word for sonar too. */
   'Sonar',
+  /* The kids' app is called by its name in both. */
+  'FutureBox Kids',
   /* The photo editor's Filters tool: the word Afrikaans phone apps use. */
   'Filters',
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',

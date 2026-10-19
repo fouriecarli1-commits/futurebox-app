@@ -4,9 +4,9 @@
  * The owner, 15 October 2026: *"Plus moet daar nie 'n grown up button binne die
  * studio wees nie want kinders gaan dit self stel."* Two "Grown-up" buttons
  * sat in the child's room, and a child presses every button. So there is no
- * button: the grown-up holds the FUTUREBOX name for three seconds and types
+ * button: the grown-up holds the FutureBox Kids logo for three seconds and types
  * a four-number code they chose on their own page. Nothing on the screen
- * says the name can be held, and a child who finds it by accident meets a
+ * says the logo can be held, and a child who finds it by accident meets a
  * code they do not know.
  *
  * The code is kept on this device, hashed — it guards a phone being handed

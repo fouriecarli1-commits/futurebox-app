@@ -1,44 +1,47 @@
 /**
- * The FutureBox Kids icons, drawn once and kept as PNGs in `public/`.
+ * The FutureBox Kids icons and logo, cut from her pictures and kept in `public/`.
  *
  *   npx tsx scripts/kids-icons.mts
  *
- * The owner, 19 October 2026: *"Gaan aan met futurebox kids"* — the kids'
- * studio as an app of its own on a child's phone or tablet. Its icon must not
- * be mistaken for the grown-up app's green chip on the same screen, so it is
- * the same chip, drawn playful: a sunny gradient, a white chip, a music note.
+ * The owner, 19 October 2026: *"hier is die app icon vir die kids, verander
+ * dit asb. En hier is die logo vir die app self."* Both are hers, kept as she
+ * sent them in `art/kids/`: the neon chip with the paintbrush is the icon, the
+ * wide "FUTUREBOX KIDS" is the logo at the top of the kids' studio.
  *
- * Not run by CI. Drawn with `sharp`, which Next brings with it; the SVG is the
- * source and the PNGs are what the manifest names.
+ * The chip sits on black with room around it, so the plain icons are cut in
+ * closer, and the maskable one — which a phone trims to a circle or a
+ * squircle — is the whole picture, so the chip stays inside the middle.
+ *
+ * Not run by CI. Drawn with `sharp`, which Next brings with it.
  */
 import sharp from 'sharp';
-import { writeFileSync } from 'node:fs';
 
-const svg = (inset: number): string => `
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fde047"/>
-      <stop offset="0.5" stop-color="#fb923c"/>
-      <stop offset="1" stop-color="#ec4899"/>
-    </linearGradient>
-  </defs>
-  ${inset > 0
-    ? '<rect width="512" height="512" fill="url(#sun)"/>'
-    : '<rect x="24" y="24" width="464" height="464" rx="112" fill="url(#sun)"/>'}
-  <g transform="translate(256 256) scale(${inset > 0 ? 0.78 : 1}) translate(-256 -256)">
-    <rect x="136" y="136" width="240" height="240" rx="44" fill="none" stroke="#ffffff" stroke-width="26"/>
-    ${[176, 256, 336].map((x) => `<line x1="${x}" y1="96" x2="${x}" y2="136" stroke="#ffffff" stroke-width="22" stroke-linecap="round"/><line x1="${x}" y1="376" x2="${x}" y2="416" stroke="#ffffff" stroke-width="22" stroke-linecap="round"/>`).join('')}
-    ${[176, 256, 336].map((y) => `<line x1="96" y1="${y}" x2="136" y2="${y}" stroke="#ffffff" stroke-width="22" stroke-linecap="round"/><line x1="376" y1="${y}" x2="416" y2="${y}" stroke="#ffffff" stroke-width="22" stroke-linecap="round"/>`).join('')}
-    <path d="M226 318 V210 L304 192 V296" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-    <ellipse cx="208" cy="320" rx="26" ry="20" fill="#ffffff"/>
-    <ellipse cx="286" cy="298" rx="26" ry="20" fill="#ffffff"/>
-  </g>
-</svg>`;
+const ICON = 'art/kids/icon.jpg';
+const LOGO = 'art/kids/logo.jpg';
+/* The chip with a little of its glow, out of the 2000 × 2000 picture. */
+const CHIP = { left: 170, top: 170, width: 1660, height: 1660 };
+const PNG = { compressionLevel: 9, palette: true, quality: 90 } as const;
 
-writeFileSync('public/kids-icon.svg', svg(0).trim());
-await sharp(Buffer.from(svg(0))).resize(512, 512).png().toFile('public/kids-icon-512.png');
-await sharp(Buffer.from(svg(0))).resize(192, 192).png().toFile('public/kids-icon-192.png');
-await sharp(Buffer.from(svg(1))).resize(512, 512).png().toFile('public/kids-icon-512-maskable.png');
-await sharp(Buffer.from(svg(0))).resize(180, 180).flatten({ background: '#fb923c' }).png().toFile('public/kids-apple-icon.png');
-console.log('kids icons written to public/');
+const chip = (size: number) => sharp(ICON).extract(CHIP).resize(size, size).png(PNG);
+
+await chip(512).toFile('public/kids-icon-512.png');
+await chip(192).toFile('public/kids-icon-192.png');
+await chip(180).toFile('public/kids-apple-icon.png');
+await sharp(ICON).resize(512, 512).png(PNG).toFile('public/kids-icon-512-maskable.png');
+/* The logo is neon on black. Over the room's own picture a black box would
+   show, so the black is taken out: each pixel keeps as much of itself as it is
+   bright, the way light adds onto a dark wall — the glow fades into the room
+   instead of ending at an edge. */
+const { data, info } = await sharp(LOGO).resize({ width: 640 }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+const out = Buffer.alloc(info.width * info.height * 4);
+for (let i = 0, o = 0; i < data.length; i += 3, o += 4) {
+  const most = Math.max(data[i], data[i + 1], data[i + 2]);
+  const lift = most > 0 ? 255 / most : 0;
+  out[o] = Math.round(data[i] * lift);
+  out[o + 1] = Math.round(data[i + 1] * lift);
+  out[o + 2] = Math.round(data[i + 2] * lift);
+  out[o + 3] = most;
+}
+await sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
+  .webp({ quality: 85, alphaQuality: 90 }).toFile('public/kids/logo.webp');
+console.log('kids icons and logo written to public/');

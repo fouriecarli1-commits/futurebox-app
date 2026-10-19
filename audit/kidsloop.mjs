@@ -7,7 +7,7 @@
  *   "Dit sal cool wees as die funksie regtig loops bou."
  *
  * So: no button in the child's room reaches the grown-up's page, and neither
- * does the studio link; holding the FUTUREBOX name opens a code pad, and only
+ * does the studio link; holding the FutureBox Kids logo opens a code pad, and only
  * the grown-up's code gets past it; the room is remembered, so the front door
  * sends a child back to it; a fresh sign-in opens on the grown-up's page even
  * with an allowance running; and a loop card builds its loop, layer by layer,

@@ -128,7 +128,7 @@ export default function KidsInstall(): React.ReactElement | null {
             ))}
             <li className="flex items-start gap-2 pt-1 text-xs text-white/80">
               <Smartphone className="mt-0.5 h-4 w-4 shrink-0" />
-              {t('kids.app.icon', 'An orange FutureBox Kids icon appears on the home screen.')}
+              {t('kids.app.icon', 'A green FutureBox Kids icon, with a paintbrush, appears on the home screen.')}
             </li>
           </ol>
         )}

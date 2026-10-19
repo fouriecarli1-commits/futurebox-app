@@ -3,7 +3,7 @@
 /**
  * The grown-up's way back in, with no button a child would press.
  *
- * `GrownUpHold` wraps something already on the screen — the FUTUREBOX name,
+ * `GrownUpHold` wraps something already on the screen — the FutureBox Kids logo,
  * the clock on the time-up page — and opens the code pad after it has been
  * held for three seconds. `CodePad` asks for the four numbers. `CodeChooser`
  * sits on the grown-up's page and is where the numbers are chosen. Why there
@@ -175,7 +175,7 @@ export function CodeChooser(): React.ReactElement {
           🔒 {have ? t('kids.codeHave', 'Your grown-up code is set') : t('kids.codeChoose', 'Choose a grown-up code')}
         </p>
         <p className="text-sm leading-relaxed text-surface-700">
-          {t('kids.codeHow', 'There is no grown-up button in the kids room, so a child cannot change any of this. To come back to this page, hold the FUTUREBOX name at the top of the kids room for three seconds and type your code.')}
+          {t('kids.codeHow', 'There is no grown-up button in the kids room, so a child cannot change any of this. To come back to this page, hold the FutureBox Kids logo at the top of the kids room for three seconds and type your code.')}
         </p>
         {(!have || open) ? (
           <div className="grid gap-2 sm:grid-cols-2">

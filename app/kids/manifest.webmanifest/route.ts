@@ -34,8 +34,8 @@ export function GET(): Response {
       scope: '/kids',
       display: 'standalone',
       orientation: 'any',
-      background_color: '#fb923c',
-      theme_color: '#fb923c',
+      background_color: '#000000',
+      theme_color: '#000000',
       categories: ['kids', 'music', 'education'],
       icons: [
         { src: '/kids-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

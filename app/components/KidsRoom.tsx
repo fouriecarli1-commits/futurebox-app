@@ -356,7 +356,7 @@ export default function KidsRoom({
   const [state, setState] = useState<KidsState | null>(null);
   /* The grown-up's page, reached on purpose rather than by going back. */
   const [atDoor, setAtDoor] = useState(false);
-  /* The code pad, opened by holding the FUTUREBOX name (`KidsLock.tsx`). */
+  /* The code pad, opened by holding the FutureBox Kids logo (`KidsLock.tsx`). */
   const [askCode, setAskCode] = useState(false);
   /** The code pad asked for by Sign out on the home screen. */
   const [askOut, setAskOut] = useState(false);
@@ -888,8 +888,18 @@ export default function KidsRoom({
                 up button binne die studio wees nie want kinders gaan dit self
                 stel." */}
             <GrownUpHold onHeld={() => setAskCode(true)}>
-              <h1 data-kidsdreamtitle className="text-xl font-black tracking-wider text-surface-950 sm:text-2xl">
-                FUTURE<span className="text-cyan-300">BOX</span>
+              {/* Her logo, 19 October 2026: *"haal die ou futurebox woorde
+                  uit, en sit hierdie logo in."* Its black is taken out in
+                  `scripts/kids-icons.mts`, so the room shows round it. */}
+              <h1 data-kidsdreamtitle className="m-0">
+                <img
+                  src="/kids/logo.webp"
+                  alt={t('kids.logoAlt', 'FutureBox Kids')}
+                  width={640}
+                  height={236}
+                  draggable={false}
+                  className="mx-auto block h-16 w-auto sm:h-20"
+                />
               </h1>
             </GrownUpHold>
             {/* ── And a small lock, for a grown-up who cannot find the hold ──
@@ -908,10 +918,6 @@ export default function KidsRoom({
             >
               <span aria-hidden>🔒</span>
             </button>
-            <p className="fb-kids-bubble text-sm">
-              <span className="text-amber-300">{t('kids.dreamKids', 'KIDS DREAM')}</span>{' '}
-              <span className="text-cyan-300">{t('kids.dreamStudio', 'STUDIO')}</span>
-            </p>
           </div>
           {/* ── Sign out, on the home screen itself ───────────────────────
               The owner, 16 October 2026: *"Daar moet 'n sign out button wees op
