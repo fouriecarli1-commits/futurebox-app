@@ -196,10 +196,14 @@ export async function makeKidSong(
  * this length and this grade, so the two cannot disagree.
  */
 export async function startKidVideo(
+  /** What the song is about, if a bubble was chosen. */
   topic: string,
+  /** The stage's scene, which is always there — so a song from the shelf,
+      or one made from a child's own words, can still become a video. */
+  scene = 'a colourful stage with friendly cartoon animals dancing',
 ): Promise<{ job: string } | { says: string }> {
   const what = choice(KID_TOPICS, topic);
-  if (!what) return { says: 'Pick something first.' };
+  const about = what ? `${what.words}, ${scene}` : scene;
 
   const token = await accessToken();
   if (!token) return { says: 'Sign in first.' };
@@ -209,7 +213,7 @@ export async function startKidVideo(
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        prompt: `A bright, friendly, child-safe animation: ${what.words}. No people's faces, no text.`,
+        prompt: `A bright, friendly, child-safe music video animation: ${about}, moving to the music. No people's faces, no text.`,
         aspect: '16:9',
         seconds: 10,
         grade: 'standard',

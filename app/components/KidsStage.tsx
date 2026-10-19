@@ -24,7 +24,7 @@ import { useLang } from '../lib/i18n';
 import { beatEngine } from '../lib/kidsbeat';
 import { confetti } from '../lib/kidsconfetti';
 
-type Scene = 'palace' | 'cosmic' | 'disco';
+export type Scene = 'palace' | 'cosmic' | 'disco';
 type Fx = 'sparkles' | 'bubbles' | 'strobe';
 
 const SCENES: readonly { readonly id: Scene; readonly icon: string; readonly says: readonly [string, string]; readonly wash: string; readonly tile: string }[] = [
@@ -57,12 +57,25 @@ export default function KidsStage({
   caption,
   onSpark,
   children,
+  pulse = 0,
+  onScene,
 }: {
   /** The line under the stage: the song's sentence, or a welcome. */
   readonly caption: string;
   readonly onSpark: (n: number) => void;
   /** The real video button and, once made, the film — drawn by the room. */
   readonly children?: React.ReactNode;
+  /**
+   * Counts up on every beat of the song playing beside the stage.
+   *
+   * The owner, 19 October 2026: *"Whats up met die music video funksie by
+   * kids? Daar gaan niks aan nie."* The dancers only ever jumped to the beat
+   * machine, which is never playing in the video door — so the stage stood
+   * still. They now jump to the child's own song too.
+   */
+  readonly pulse?: number;
+  /** Which scene is up, so the real video can be made of that place. */
+  readonly onScene?: (scene: Scene) => void;
 }): React.ReactElement {
   const { t } = useLang();
   const [scene, setScene] = useState<Scene>('palace');
@@ -86,6 +99,15 @@ export default function KidsStage({
       }
     });
   }, []);
+
+  /* And on the song's beat. */
+  useEffect(() => {
+    if (!pulse) return undefined;
+    setJump(true);
+    const down = setTimeout(() => setJump(false), 140);
+    return () => clearTimeout(down);
+  }, [pulse]);
+  useEffect(() => { onScene?.(scene); }, [scene, onScene]);
 
   /* Glitter, bubbles and strobe, drawn on a canvas over the scene. */
   useEffect(() => {

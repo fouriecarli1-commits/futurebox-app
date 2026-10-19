@@ -121,10 +121,44 @@ try {
   await page.locator('[data-kidstab="projects"], [data-kidstab="tv"]').first().click();
   await page.waitForTimeout(2500);
   check('the list is still there after a reload', /Dance party/.test(await page.locator('[data-kidsplaylists]').innerText()));
+
+  /* ── The video door, alive ─────────────────────────────────────────────
+     The owner, 19 October 2026: "Whats up met die music video funksie by
+     kids? Daar gaan niks aan nie." The stage stood still and only a song made
+     in this same visit could become a video. */
+  const filmed = [];
+  await page.route('**/api/video*', async (route) => {
+    if (route.request().method() === 'POST') {
+      filmed.push(route.request().postDataJSON());
+      return route.fulfill({ json: { id: 'job-1', state: 'running' } });
+    }
+    return route.fulfill({ json: { state: 'running' } });
+  });
+  await page.locator('[data-kidshome]').first().click().catch(() => undefined);
+  await page.locator('[data-kidsroomdoor="video"]').click();
+  await page.waitForTimeout(1500);
+  check('the video door offers the songs on the shelf',
+    (await page.locator('[data-kidsvideosong]').count()) === 3, String(await page.locator('[data-kidsvideosong]').count()));
+  await page.locator('[data-kidsvideosong="s2"]').click();
+  await page.locator('[data-kidsvideoplay]').click();
+  await page.waitForTimeout(400);
+  check('  play starts the song under the stage',
+    (await page.locator('[data-kidsvideoplay]').getAttribute('aria-pressed')) === 'true');
+  let moved = false;
+  for (let i = 0; i < 30 && !moved; i += 1) {
+    moved = await page.locator('[data-kidsdancer]').first().evaluate((el) => /scale/.test(el.style.transform));
+    if (!moved) await page.waitForTimeout(100);
+  }
+  check('  and the dancers move to it', moved);
+  await page.locator('[data-kidsscene="cosmic"]').click();
+  await page.locator('[data-kidsfilm]').click();
+  await page.waitForTimeout(800);
+  check('a shelf song can become a real video, of the scene on the stage',
+    filmed.length === 1 && filmed[0].kids === true && /space/i.test(filmed[0].prompt ?? ''), JSON.stringify(filmed[0] ?? {}).slice(0, 200));
 } finally {
   await browser.close();
   await server.stop();
 }
 
-console.log(problems.length ? `\nproblems: ${problems.join(' ;; ')}` : '\ncheck:kidsplaylistwalk — a child names a playlist from stickers, fills it, orders it, plays it, and finds it again.');
+console.log(problems.length ? `\nproblems: ${problems.join(' ;; ')}` : '\ncheck:kidsplaylistwalk — a child names a playlist from stickers, fills it, orders it, plays it, and finds it again; and any song on the shelf dances on the video stage and can become a video.');
 process.exit(problems.length ? 1 : 0);

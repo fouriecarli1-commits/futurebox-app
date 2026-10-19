@@ -97,7 +97,7 @@
  * subtracting its own guess.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell, BookOpen, Cake, Cat, CloudRain, Disc, Dog, Film, Guitar, Heart, Laugh,
   Loader2, Mic, Moon, Music, Palette, Radio, Rocket, ShieldCheck,
@@ -113,10 +113,11 @@ import { kidsNow, type KidsState } from '../lib/kidsdoor';
 import { askKidVideo, makeKidSong, startKidVideo, kidWords, KID_TOPICS, KID_SOUNDS, KID_WORDS_MOST } from '../lib/kidsong';
 import { stillWorthWaiting } from '../lib/jobwait';
 import { asClock, howMany, priceOf } from '../lib/kidsallowance';
-import { keepSong, MOST_SONGS } from '../lib/songkeep';
+import { keepSong, MOST_SONGS, type KeptSong } from '../lib/songkeep';
+import { useSongPulse } from '../lib/songpulse';
 import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
 import KidsBeatMaker from './KidsBeatMaker';
-import KidsStage from './KidsStage';
+import KidsStage, { type Scene } from './KidsStage';
 import KidsArcade from './KidsArcade';
 import { beatEngine } from '../lib/kidsbeat';
 import { confetti } from '../lib/kidsconfetti';
@@ -243,19 +244,28 @@ const DOORS: readonly Door[] = [
     ['kids.doorDraw1', 'Draw with your finger, ten crayons'],
     ['kids.doorDraw2', 'Bring it to life, or make a magic picture'],
   ] },
-  { id: 'games', icon: '🎹', says: ['kids.doorGames', 'Studio Games & Beats!'], lines: [
-    ['kids.doorGames1', 'Four drum pads, the gems and the bubbles'],
-    ['kids.doorGames2', 'Play the piano, copy a tune, keep it as a song'],
-  ] },
   { id: 'edit', icon: '✂️', says: ['kids.doorEdit', 'Easy Editing!'], lines: [
     ['kids.doorEdit1', 'Your drawings become a film, with your voice telling the story'],
     ['kids.doorEdit2', 'A song underneath, and a drawing brought to life as a frame'],
+  ] },
+  /* Below Easy Editing since 19 October 2026: "Studio games and beats moet
+     een af skuif onder easy editing." */
+  { id: 'games', icon: '🎹', says: ['kids.doorGames', 'Studio Games & Beats!'], lines: [
+    ['kids.doorGames1', 'Four drum pads, the gems and the bubbles'],
+    ['kids.doorGames2', 'Play the piano, copy a tune, keep it as a song'],
   ] },
   { id: 'quiz', icon: '🧠', says: ['kids.doorQuiz', 'Mega Quizzes & Skills!'], lines: [
     ['kids.doorQuiz1', 'Would you rather?'],
     ['kids.doorQuiz2', 'Music, story, video and picture questions'],
   ] },
 ];
+
+/** What each stage scene is, for the real video made of it. */
+const SCENE_WORDS: Readonly<Record<Scene, string>> = {
+  palace: 'a sparkling fairy-tale palace ballroom with friendly cartoon animals dancing',
+  cosmic: 'outer space with planets and stars and friendly cartoon aliens dancing',
+  disco: 'a glittering disco dance floor with coloured lights and friendly cartoon animals dancing',
+};
 
 /** The four buttons along the foot of the page. */
 const FOOT: readonly { readonly id: Tab; readonly icon: string; readonly says: readonly [string, string] }[] = [
@@ -601,6 +611,31 @@ export default function KidsRoom({
     return () => { stopped = true; window.clearInterval(every); };
   }, [job, t]);
 
+  /* ── The video door's songs: the one just made, and the shelf ───────── */
+  const [shelfSongs, setShelfSongs] = useState<KeptSong[]>([]);
+  useEffect(() => {
+    if (tab !== 'video') return;
+    void allSongs().then(setShelfSongs).catch(() => setShelfSongs([]));
+  }, [tab, shelfAgain]);
+  const videoSongs = useMemo(() => [
+    ...(song ? [{ id: 'now', title: t('kids.songJustMade', 'The song you just made') }] : []),
+    ...shelfSongs.map((one) => ({ id: one.id, title: one.title })),
+  ], [song, shelfSongs, t]);
+  const [videoPick, setVideoPick] = useState('now');
+  useEffect(() => {
+    if (videoSongs.length && !videoSongs.some((one) => one.id === videoPick)) setVideoPick(videoSongs[0].id);
+  }, [videoSongs, videoPick]);
+  const picked = shelfSongs.find((one) => one.id === videoPick) ?? null;
+  const shelfUrl = useMemo(() => (picked ? URL.createObjectURL(picked.audio) : ''), [picked]);
+  useEffect(() => () => { if (shelfUrl) URL.revokeObjectURL(shelfUrl); }, [shelfUrl]);
+  const videoUrl = videoPick === 'now' ? song : shelfUrl;
+  const shelfTopic = picked?.topic ?? '';
+  const [player, setPlayer] = useState<HTMLAudioElement | null>(null);
+  const [stagePlaying, setStagePlaying] = useState(false);
+  const pulse = useSongPulse(player, stagePlaying);
+  const [stageScene, setStageScene] = useState<Scene>('palace');
+  useEffect(() => { if (tab !== 'video') player?.pause(); }, [tab, player]);
+
   if (state === null) {
     return (
       <p className="flex items-center gap-2 p-6 text-sm text-surface-600">
@@ -682,6 +717,7 @@ export default function KidsRoom({
      for the same amount of screen time. */
   const nearlyOver = clockLeft !== null && clockLeft <= 300;
   const videoPrice = priceOf('video');
+
   const songsLeft = howMany(left, 'song');
   const picturePrice = priceOf('picture');
   const canPicture = left >= picturePrice && !busy && !job;
@@ -724,7 +760,7 @@ export default function KidsRoom({
     void took(pictureWords(what, how), null, `${t(what.says[0], what.says[1])} · ${t(how.says[0], how.says[1])}`);
   };
   const canSong = (Boolean(topic) || Boolean(kidWords(words))) && Boolean(sound) && left >= songPrice && !busy && !job;
-  const canFilm = Boolean(song) && left >= videoPrice && !busy && !job;
+  const canFilm = Boolean(videoUrl) && left >= videoPrice && !busy && !job;
 
   const make = async (): Promise<void> => {
     setBusy('song');
@@ -747,7 +783,7 @@ export default function KidsRoom({
   const film2 = async (): Promise<void> => {
     setBusy('video');
     setSays('');
-    const answer = await startKidVideo(topic);
+    const answer = await startKidVideo(videoPick === 'now' ? topic : shelfTopic, SCENE_WORDS[stageScene]);
     setBusy('');
     void kidsNow().then(setState);
     if ('says' in answer) { setSays(answer.says); return; }
@@ -1344,27 +1380,83 @@ export default function KidsRoom({
           had a door of its own: the owner, "story maker nou op 2 plekke is". */}
       {tab === 'video' && (
         <>
-          <KidsStage caption={caption} onSpark={spark}>
+          {/* ── The video door, alive (19 October 2026) ─────────────────
+              The owner: "Whats up met die music video funksie by kids? Daar
+              gaan niks aan nie." The dancers only jumped to the beat machine,
+              which never plays here, and the button only knew a song made in
+              this same visit. Now any song — just made, or off the shelf —
+              plays under the stage, the dancers jump on its beat, and the
+              video, once made, plays with the song under it. */}
+          <KidsStage caption={caption} onSpark={spark} pulse={pulse} onScene={setStageScene}>
             {film && (
               <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 p-2" data-kidsfilmframe>
                 {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <video src={film} controls className="max-h-full w-full rounded-2xl" data-kidsfilmout />
+                <video
+                  src={film}
+                  controls
+                  muted
+                  loop
+                  playsInline
+                  className="max-h-full w-full rounded-2xl"
+                  data-kidsfilmout
+                  onPlay={() => { if (player) { player.currentTime = 0; void player.play().catch(() => undefined); } }}
+                  onPause={() => player?.pause()}
+                />
               </div>
             )}
           </KidsStage>
-          <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 shadow-lg backdrop-blur-xs sm:p-5">
-            {song ? (
-              <div className="space-y-3">
-                <p className="text-sm font-bold text-surface-800">
-                  {t('kids.yourSong', 'Your Song')}: <span className="fb-kids-bubble text-amber-300">{topicSaid} · {soundSaid}</span>
-                </p>
+          <div className="space-y-3 rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 shadow-lg backdrop-blur-xs sm:p-5">
+            {videoSongs.length > 0 ? (
+              <>
+                <p className="text-sm font-black text-surface-900">{t('kids.pickVideoSong', 'Which song is the video for?')}</p>
+                <div className="flex flex-wrap gap-2" data-kidsvideosongs>
+                  {videoSongs.map((one) => (
+                    <button
+                      key={one.id}
+                      type="button"
+                      data-kidsvideosong={one.id}
+                      aria-pressed={videoPick === one.id}
+                      onClick={() => { setVideoPick(one.id); setStagePlaying(false); player?.pause(); }}
+                      className={`fb-kids-bouncy min-h-[48px] shrink-0 rounded-2xl px-4 text-sm font-black ${videoPick === one.id ? 'bg-amber-400 text-onAccent' : 'bg-surface-200/80 text-surface-800'}`}
+                    >
+                      🎵 {one.title}
+                    </button>
+                  ))}
+                </div>
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <audio
+                  ref={setPlayer}
+                  src={videoUrl}
+                  loop
+                  onPlay={() => setStagePlaying(true)}
+                  onPause={() => setStagePlaying(false)}
+                  data-kidsvideoaudio
+                />
+                <button
+                  type="button"
+                  data-kidsvideoplay
+                  aria-pressed={stagePlaying}
+                  onClick={() => {
+                    if (!player) return;
+                    if (stagePlaying) player.pause();
+                    else void player.play().catch(() => undefined);
+                  }}
+                  className={`fb-kids-bouncy flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl text-base font-black ${stagePlaying ? 'bg-purple-500 text-white' : 'bg-primary-400 text-onAccent'}`}
+                >
+                  {stagePlaying
+                    ? <>⏸ {t('kids.stageStop', 'Stop the dancing')}</>
+                    : <>💃 {t('kids.stagePlay', 'Play it and dance!')}</>}
+                </button>
                 {filmButton}
+                <p className="text-xs font-bold text-surface-700">
+                  {t('kids.filmCost', 'A real video uses {n} credits.').replace('{n}', String(videoPrice))}
+                </p>
                 {says && (
                   <p className="rounded-2xl border-2 border-surface-200 bg-surface-100/80 px-4 py-3 text-sm font-semibold text-surface-900" data-kidssays>
                     {says}
                   </p>
                 )}
-              </div>
+              </>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-bold text-surface-800">
