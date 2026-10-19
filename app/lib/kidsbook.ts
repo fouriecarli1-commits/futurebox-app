@@ -36,6 +36,8 @@ export interface BookChoices {
   readonly twist: string;
   readonly ending: string;
   readonly visual: string;
+  /** What the child said into the voice box. */
+  readonly idea?: string;
 }
 
 export type BookStep = 'write' | 'draw' | 'done';

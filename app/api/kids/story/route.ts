@@ -10,10 +10,10 @@
  * ending that lands — with characters who speak in voices of their own, a
  * scene for every page to be drawn from, and a question on every page.
  *
- * The child chooses from cards; nothing a child types reaches this. The
- * choices travel as ids and are turned into words here, from the same table
- * the cards are drawn from, so the request can only ever ask for a story the
- * room offers.
+ * The child chooses from cards, and may say an idea of their own into the
+ * voice box. The cards travel as ids and are turned into words here, from
+ * the same table the cards are drawn from; the said idea is screened as a
+ * reading would be (`guard`) before the model sees it.
  *
  * Writing is not charged, like the story helper beside it: the credits are
  * spent on the pictures and the reading, which are charged where they are
@@ -29,6 +29,8 @@ import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { tooMany } from '@/app/lib/server/brake';
 import { copilotAvailable } from '@/app/lib/server/aikey';
+import { callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 import { STORY_SECTIONS, VISUAL_STYLES } from '@/app/lib/kidsstoryboard';
 import { KID_VOICES, kidVoice, type KidVoiceId } from '@/app/lib/kidsvoices';
 import { ENGINE_PAGES, MOTIONS, PAGE_MOST_CHARS, SPARKLES, cleanStory } from '@/app/lib/kidstory';
@@ -36,6 +38,9 @@ import { ENGINE_PAGES, MOTIONS, PAGE_MOST_CHARS, SPARKLES, cleanStory } from '@/
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 90;
+
+/** The longest idea a child can say: a few sentences. */
+const IDEA_MOST = 300;
 
 const VOICE_IDS = KID_VOICES.map((one) => one.id) as [KidVoiceId, ...KidVoiceId[]];
 
@@ -100,6 +105,8 @@ interface Body {
   ending?: string;
   visual?: string;
   storyteller?: string;
+  /** What the child said into the voice box, if anything. */
+  idea?: string;
   lang?: string;
 }
 
@@ -135,6 +142,17 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'unknown_choice', message: 'Pick a card in every step first.' }, { status: 400 });
   }
 
+  /* ── The child's own idea, said aloud ────────────────────────────────
+     The owner, 19 October 2026: "Ek sien die story maker het nie 'n ai
+     voice box vir kinders om self te prompt nie." Said, not typed, and
+     screened like any reading before the model sees a word of it. */
+  const idea = String(body.idea ?? '').replace(/\s+/g, ' ').trim().slice(0, IDEA_MOST);
+  if (idea) {
+    const caller = metered() ? await callerFrom(request) : null;
+    const allowed = await guard(request, idea, 'speech', caller);
+    if (!allowed.ok) return allowed.response;
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json(
       { error: 'no_key', message: 'The story engine is not switched on, so the Story Maker writes this one itself.' },
@@ -154,6 +172,7 @@ export async function POST(request: Request): Promise<Response> {
     `The surprise: ${twist}`,
     `How it ends: ${ending}`,
     `The pictures are drawn as: ${style.stylePrompt}`,
+    ...(idea ? ['', `The child said their own idea out loud. Build the story around it, with the cards above as the frame, and leave out anything in it that would not belong in a picture book: "${idea}"`] : []),
     '',
     `The storyteller is "${teller.id}". The voices:`,
     voices,

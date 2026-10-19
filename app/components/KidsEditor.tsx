@@ -14,7 +14,7 @@ import { Circle, Film, Loader2, Pause, Play, Sparkles, Square, X } from 'lucide-
 import { useLang } from '../lib/i18n';
 import { allPieces, keepPiece, type KeptPiece } from '../lib/kidsgallery';
 import { allSongs, type KeptSong } from '../lib/songkeep';
-import { FRAMES_MOST, FRAME_SECONDS, PIECE_PAINT, VOICE_MOST_SECONDS, canFilm, makeFilm, type Frame } from '../lib/kidsfilm';
+import { FRAMES_MOST, FRAME_SECONDS, PIECE_PAINT, TUNES, VOICE_MOST_SECONDS, canFilm, makeFilm, playThrough, type Frame, type Under } from '../lib/kidsfilm';
 import { asClock } from '../lib/kidsallowance';
 
 export default function KidsEditor({
@@ -36,7 +36,9 @@ export default function KidsEditor({
   const [songs, setSongs] = useState<KeptSong[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [frames, setFrames] = useState<string[]>([]);
-  const [song, setSong] = useState<string>('');
+  /* A tune by default, so the first film already has music: '' is none,
+     'tune:<id>' one of the phone's own tunes, anything else a kept song. */
+  const [song, setSong] = useState<string>(`tune:${TUNES[0].id}`);
   const [voice, setVoice] = useState<Blob | null>(null);
   const [voiceUrl, setVoiceUrl] = useState('');
   const [recording, setRecording] = useState(false);
@@ -91,36 +93,63 @@ export default function KidsEditor({
 
   /* The preview: the real frames, each for its real seconds, on the screen
      above. A rehearsal of the film, not the film. */
+  /* What plays under the film: the chosen tune, the chosen kept song, or nothing. */
+  const under = (): Under => {
+    if (song.startsWith('tune:')) {
+      const tune = TUNES.find((one) => `tune:${one.id}` === song);
+      return tune ? { tune } : null;
+    }
+    const kept = songs.find((one) => one.id === song);
+    return kept ? { song: kept.audio } : null;
+  };
+  /* ── Played through WITH its sound ───────────────────────────────────
+     The owner, 19 October 2026: "Daar kom nie klank uit by kids easy
+     editing nie." The preview stepped through the pictures in silence. It
+     now plays the voice and the music too, for exactly as long as the film. */
+  const sounding = useRef<{ stop: () => void } | null>(null);
   const stopPreview = useCallback((): void => {
     if (previewTimer.current !== null) window.clearInterval(previewTimer.current);
     previewTimer.current = null;
+    sounding.current?.stop();
+    sounding.current = null;
     setPreviewing(false);
   }, []);
-  const preview = (): void => {
+  const preview = async (): Promise<void> => {
     if (!frames.length) return;
     stopPreview();
-    let at = 0;
+    setFilm('');
     setOnScreen(frames[0]);
     setPreviewing(true);
+    const playing = await playThrough(frames.length, voice, under());
+    sounding.current = playing;
+    const perFrame = (playing?.perFrame ?? FRAME_SECONDS) * 1000;
+    const total = (playing?.total ?? frames.length * FRAME_SECONDS) * 1000;
+    const began = Date.now();
     previewTimer.current = window.setInterval(() => {
-      at += 1;
-      if (at >= frames.length) { stopPreview(); return; }
-      setOnScreen(frames[at]);
-    }, FRAME_SECONDS * 1000);
+      const gone = Date.now() - began;
+      if (gone >= total) { stopPreview(); return; }
+      setOnScreen(frames[Math.min(frames.length - 1, Math.floor(gone / perFrame))]);
+    }, 100);
   };
-  useEffect(() => () => { if (previewTimer.current !== null) window.clearInterval(previewTimer.current); }, []);
+  useEffect(() => () => {
+    if (previewTimer.current !== null) window.clearInterval(previewTimer.current);
+    sounding.current?.stop();
+  }, []);
 
   /* The voice: the microphone, on the device, up to a minute. */
   const startVoice = useCallback(async (): Promise<void> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      const take = new MediaRecorder(stream, { mimeType: mime });
+      /* Whatever this phone records in: an iPhone has no webm, and asking for
+         it threw, which read as "the microphone could not be opened". */
+      const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac']
+        .find((one) => MediaRecorder.isTypeSupported(one));
+      const take = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
       const chunks: Blob[] = [];
       take.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
       take.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const blob = new Blob(chunks, { type: take.mimeType || 'audio/webm' });
         setVoice(blob);
         setVoiceUrl((was) => { if (was) URL.revokeObjectURL(was); return URL.createObjectURL(blob); });
         setRecording(false);
@@ -151,11 +180,11 @@ export default function KidsEditor({
       .map((id) => wall.find((one) => one.id === id))
       .filter((one): one is KeptPiece => Boolean(one))
       .map((one) => ({ id: one.id, blob: one.blob, title: one.title }));
-    const under = songs.find((one) => one.id === song)?.audio ?? null;
+    stopPreview();
     setMaking(true);
     setProgress(0);
     setSays(t('kids.filmMakingNow', 'Making your film…'));
-    const answer = await makeFilm(picked, voice, under, setProgress);
+    const answer = await makeFilm(picked, voice, under(), setProgress);
     setMaking(false);
     if ('says' in answer) { setSays(answer.says); return; }
     if (filmUrl.current) URL.revokeObjectURL(filmUrl.current);
@@ -247,7 +276,9 @@ export default function KidsEditor({
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-cyan-500/40 bg-surface-100/60 px-3.5 py-2 text-xs font-black text-cyan-300" data-kidsaudiostrip>
           <span>🎙️ {voice ? `${t('kids.editVoiceOn', 'Your voice')} · ${asClock(seconds)}` : t('kids.editVoiceOff', 'No voice yet')}</span>
           <span className="h-3 flex-1 rounded bg-[repeating-linear-gradient(90deg,rgba(52,211,153,0.9)_0,rgba(52,211,153,0.9)_4px,transparent_4px,transparent_8px)] opacity-80" aria-hidden />
-          <span>🎵 {song ? songs.find((one) => one.id === song)?.title ?? '' : t('kids.editNoSong', 'No song')}</span>
+          <span>🎵 {song.startsWith('tune:')
+            ? (() => { const tune = TUNES.find((one) => `tune:${one.id}` === song); return tune ? t(tune.says[0], tune.says[1]) : ''; })()
+            : song ? songs.find((one) => one.id === song)?.title ?? '' : t('kids.editNoSong', 'No song')}</span>
         </div>
       </div>
 
@@ -289,26 +320,30 @@ export default function KidsEditor({
         )}
       </div>
 
-      {/* 4. A song under it. */}
-      {songs.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2" data-kidseditorsongs>
-          <span className="text-xs font-black uppercase tracking-wider text-surface-700">🎵 {t('kids.editSong', 'A song underneath')}</span>
-          <button type="button" aria-pressed={song === ''} onClick={() => setSong('')} disabled={making}
-            className={`min-h-[40px] rounded-xl px-3.5 text-xs font-black ${song === '' ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200 text-surface-800'}`}>
-            {t('kids.editNoSong', 'No song')}
+      {/* 4. Music under it: the phone's own tunes, always there, and any kept song. */}
+      <div className="flex flex-wrap items-center gap-2" data-kidseditorsongs>
+        <span className="text-xs font-black uppercase tracking-wider text-surface-700">🎵 {t('kids.editSong', 'A song underneath')}</span>
+        {TUNES.map((one) => (
+          <button key={one.id} type="button" aria-pressed={song === `tune:${one.id}`} onClick={() => setSong(`tune:${one.id}`)} disabled={making} data-kidseditortune={one.id}
+            className={`min-h-[44px] rounded-xl px-3.5 text-xs font-black ${song === `tune:${one.id}` ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200 text-surface-800'}`}>
+            {one.emoji} {t(one.says[0], one.says[1])}
           </button>
-          {songs.map((one) => (
-            <button key={one.id} type="button" aria-pressed={song === one.id} onClick={() => setSong(one.id)} disabled={making} data-kidseditorsong={one.id}
-              className={`min-h-[40px] max-w-[220px] truncate rounded-xl px-3.5 text-xs font-black ${song === one.id ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200 text-surface-800'}`}>
-              {one.title}
-            </button>
-          ))}
-        </div>
-      )}
+        ))}
+        {songs.map((one) => (
+          <button key={one.id} type="button" aria-pressed={song === one.id} onClick={() => setSong(one.id)} disabled={making} data-kidseditorsong={one.id}
+            className={`min-h-[44px] max-w-[220px] truncate rounded-xl px-3.5 text-xs font-black ${song === one.id ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200 text-surface-800'}`}>
+            {one.title}
+          </button>
+        ))}
+        <button type="button" aria-pressed={song === ''} onClick={() => setSong('')} disabled={making}
+          className={`min-h-[44px] rounded-xl px-3.5 text-xs font-black ${song === '' ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200 text-surface-800'}`}>
+          {t('kids.editNoSong', 'No song')}
+        </button>
+      </div>
 
       {/* 5. The buttons along the foot of Google's page, each doing a real thing. */}
       <div className="flex flex-wrap items-center justify-center gap-3" data-kidseditoractions>
-        <button type="button" onClick={previewing ? stopPreview : preview} disabled={!frames.length || making} data-kidspreview
+        <button type="button" onClick={previewing ? stopPreview : () => void preview()} disabled={!frames.length || making} data-kidspreview
           className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-linear-to-r from-cyan-400 to-cyan-300 px-6 text-sm font-black text-onAccent disabled:opacity-40">
           {previewing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
           {previewing ? t('kids.editPreviewStop', 'Pause') : t('kids.editPreview', 'Play it through')}

@@ -23,6 +23,7 @@ import { useLang } from '../lib/i18n';
 import {
   QUICK_STORY_SEEDS,
   STORY_SECTIONS,
+  cardsNow,
   VISUAL_STYLES,
   type VisualStyle,
 } from '../lib/kidsstoryboard';
@@ -30,6 +31,10 @@ import { keepStory, type KeptStory } from '../lib/storykeep';
 import { makeBook, type BookProgress } from '../lib/kidsbook';
 import { STORYTELLERS, type KidVoiceId } from '../lib/kidsvoices';
 import { priceOf } from '../lib/kidsallowance';
+import { earLang, earMaker, finalWords, withSaid, type Ear } from '../lib/speak';
+
+/** The longest idea kept from the voice box; the server holds the same line. */
+const IDEA_MOST = 300;
 import { StyleTile } from './MeerkatTile';
 import KidsStoryPlayer from './KidsStoryPlayer';
 
@@ -37,6 +42,12 @@ import KidsStoryPlayer from './KidsStoryPlayer';
 const STORY_STYLE_TILE: Readonly<Record<string, string>> = {
   '3d-toon': 'cartoon3d', watercolor: 'watercolour', 'neon-glow': 'neon', crayon: 'crayon',
   'space-cat': 'iridescent', 'dino-key': 'soft3d', 'fairy-dragon': 'glitterpink', 'pup-cake': 'plush',
+  clay: 'clay',
+  paper: 'cutout',
+  comic: 'comic',
+  pixel: 'pixel',
+  plush: 'plush',
+  glass: 'glass',
 };
 
 export default function KidsStoryboard({
@@ -49,10 +60,12 @@ export default function KidsStoryboard({
   const { lang, t } = useLang();
 
   /* Chosen selections for the 4 sections */
-  const [hero, setHero] = useState<string>('cat');
-  const [setting, setSetting] = useState<string>('rainbow-planet');
-  const [twist, setTwist] = useState<string>('alien-ship');
-  const [ending, setEnding] = useState<string>('great-party');
+  /* The first card on show this month, so something is always chosen and
+     it is a card the child can see. */
+  const [hero, setHero] = useState<string>(() => cardsNow(STORY_SECTIONS[0])[0].id);
+  const [setting, setSetting] = useState<string>(() => cardsNow(STORY_SECTIONS[1])[0].id);
+  const [twist, setTwist] = useState<string>(() => cardsNow(STORY_SECTIONS[2])[0].id);
+  const [ending, setEnding] = useState<string>(() => cardsNow(STORY_SECTIONS[3])[0].id);
   const [visual, setVisual] = useState<string>('3d-toon');
 
   /* Current wizard step: 0..3 for sections, 4 for visual style, 5 for reader */
@@ -105,15 +118,45 @@ export default function KidsStoryboard({
     void audio.play().catch(() => setSampling(null));
   };
 
+  /* ── The voice box ─────────────────────────────────────────────────── */
+  const [idea, setIdea] = useState('');
+  const [hearing, setHearing] = useState(false);
+  const [canHear, setCanHear] = useState(false);
+  const ear = useRef<Ear | null>(null);
+  useEffect(() => { setCanHear(Boolean(earMaker())); return () => ear.current?.stop(); }, []);
+  const listen = (): void => {
+    const Maker = earMaker();
+    if (!Maker) return;
+    const listening = new Maker();
+    listening.lang = earLang(lang);
+    listening.continuous = false;
+    listening.interimResults = false;
+    listening.maxAlternatives = 1;
+    listening.onresult = (got) => {
+      const said = finalWords(got);
+      if (said) setIdea((was) => withSaid(was, said).slice(0, IDEA_MOST));
+    };
+    listening.onerror = () => setHearing(false);
+    listening.onend = () => setHearing(false);
+    ear.current = listening;
+    setHearing(true);
+    try { listening.start(); } catch { setHearing(false); }
+  };
+  const stopHearing = (): void => { ear.current?.stop(); setHearing(false); };
+
   /* Quick mystery spin across all sections */
   const spinAll = (): void => {
     setSpinning(true);
     setTimeout(() => {
-      const randHero = STORY_SECTIONS[0].choices[Math.floor(Math.random() * 4)].id;
-      const randSetting = STORY_SECTIONS[1].choices[Math.floor(Math.random() * 4)].id;
-      const randTwist = STORY_SECTIONS[2].choices[Math.floor(Math.random() * 4)].id;
-      const randEnding = STORY_SECTIONS[3].choices[Math.floor(Math.random() * 4)].id;
-      const randVisual = VISUAL_STYLES[Math.floor(Math.random() * 4)].id;
+      const any = (section: number): string => {
+        const shown = cardsNow(STORY_SECTIONS[section]);
+        return shown[Math.floor(Math.random() * shown.length)].id;
+      };
+      const randHero = any(0);
+      const randSetting = any(1);
+      const randTwist = any(2);
+      const randEnding = any(3);
+      const randVisual = VISUAL_STYLES[Math.floor(Math.random() * VISUAL_STYLES.length)].id;
       setHero(randHero);
       setSetting(randSetting);
       setTwist(randTwist);
@@ -142,7 +185,7 @@ export default function KidsStoryboard({
     setNotes([]);
     try {
       const made = await makeBook({
-        choices: { hero, setting, twist, ending, visual },
+        choices: { hero, setting, twist, ending, visual, ...(idea ? { idea } : {}) },
         storyteller,
         lang: lang === 'af' ? 'af' : 'en',
         say: (pair) => t(pair[0], pair[1]),
@@ -237,6 +280,52 @@ export default function KidsStoryboard({
             </div>
           </div>
 
+          {/* ── Say your own idea ───────────────────────────────────────
+              The owner, 19 October 2026: "Ek sien die story maker het nie
+              'n ai voice box vir kinders om self te prompt nie." Said, not
+              typed: the room keeps its one typing box for songs. The words
+              show as a bubble, can be said again or cleared, and are
+              screened on the server before the story engine sees them. */}
+          {canHear && (
+            <div className="flex flex-wrap items-center gap-3 rounded-3xl border-2 border-fuchsia-400/70 bg-surface-50/90 px-4 py-3 shadow-[0_0_18px_rgba(232,121,249,0.3)]" data-kidsstoryvoice>
+              <button
+                type="button"
+                data-kidsstorymic
+                aria-pressed={hearing}
+                onClick={hearing ? stopHearing : listen}
+                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-3xl ${hearing ? 'animate-pulse bg-rose-500' : 'bg-fuchsia-500'}`}
+                aria-label={hearing ? t('kids.storyMicStop', 'Stop listening') : t('kids.storyMic', 'Say your own story idea')}
+              >
+                <span aria-hidden>{hearing ? '⏹️' : '🎤'}</span>
+              </button>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-black text-surface-950">
+                  {hearing ? t('kids.storyMicListening', 'I am listening… tell me your idea!') : t('kids.storyMic', 'Say your own story idea')}
+                </p>
+                {idea ? (
+                  <p className="mt-1 rounded-2xl bg-surface-100 px-3 py-2 text-sm font-semibold text-surface-900" data-kidsstoryidea>
+                    “{idea}”
+                  </p>
+                ) : (
+                  <p className="text-xs font-semibold text-surface-700">
+                    {t('kids.storyMicHow', 'Like: “a dragon who is scared of the dark”. Then pick your cards.')}
+                  </p>
+                )}
+              </div>
+              {idea && !hearing && (
+                <button
+                  type="button"
+                  data-kidsstoryideaclear
+                  onClick={() => setIdea('')}
+                  aria-label={t('kids.storyMicClear', 'Clear my idea')}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-surface-300 bg-surface-100 text-surface-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
+
           {/* The worlds: one press fills every step. */}
           <div className="space-y-2" data-kidsworlds>
             <span className="text-xs font-black uppercase tracking-wider text-surface-600">
@@ -319,8 +408,8 @@ export default function KidsStoryboard({
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {section.choices.map((choice) => {
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" data-kidsstorycards>
+                      {cardsNow(section).map((choice) => {
                         const isPicked = currentPick === choice.id;
                         return (
                           <button

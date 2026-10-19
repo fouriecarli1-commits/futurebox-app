@@ -13,7 +13,7 @@ import { KID_VOICES, STORYTELLERS, bare, castVoices } from '../app/lib/kidsvoice
 import {
   ENGINE_PAGES, PAGE_MOST_CHARS, READ_MOST_CHARS, cleanStory, lineShares, pageArt, spokenLines, wordAt,
 } from '../app/lib/kidstory.ts';
-import { VISUAL_STYLES } from '../app/lib/kidsstoryboard.ts';
+import { CARDS_SHOWN, ROTATE_DAYS, STORY_SECTIONS, VISUAL_STYLES, cardsNow } from '../app/lib/kidsstoryboard.ts';
 import { STORY_PAGES, STORY_PAGE_CHARS, priceOf } from '../app/lib/kidsallowance.ts';
 import { CREDITS, readCost } from '../app/lib/credits.ts';
 
@@ -92,6 +92,24 @@ ok('  and asks for no words in the picture', /No words, letters or numbers/.test
 ok('no style sends a studio’s or an illustrator’s name to the picture engine',
   VISUAL_STYLES.every((one) => !/pixar|disney|potter|ghibli|dreamworks/i.test(one.stylePrompt)));
 
+/* ── Enough cards, and new ones every thirty days ─────────────────────── */
+
+ok('every step has twenty cards, each its own', STORY_SECTIONS.every((one) =>
+  one.choices.length >= 20 && new Set(one.choices.map((card) => card.id)).size === one.choices.length),
+  STORY_SECTIONS.map((one) => one.choices.length).join(','));
+ok('  and ten picture looks', VISUAL_STYLES.length >= 10, String(VISUAL_STYLES.length));
+const DAY = 86_400_000;
+const today = Date.UTC(2026, 9, 19);
+const shown = cardsNow(STORY_SECTIONS[0], today);
+ok('ten cards show at a time', shown.length === CARDS_SHOWN && new Set(shown.map((one) => one.id)).size === CARDS_SHOWN);
+const sameMonth = Math.floor(today / (ROTATE_DAYS * DAY)) * ROTATE_DAYS * DAY;
+ok('  the same ten all through a thirty-day window',
+  cardsNow(STORY_SECTIONS[0], sameMonth).map((one) => one.id).join() === cardsNow(STORY_SECTIONS[0], sameMonth + (ROTATE_DAYS - 1) * DAY).map((one) => one.id).join());
+ok('  and a different ten in the next one',
+  STORY_SECTIONS.every((one) => cardsNow(one, today).map((card) => card.id).join() !== cardsNow(one, today + ROTATE_DAYS * DAY).map((card) => card.id).join()));
+ok('the note on adding new cards every thirty days is written down',
+  /every 30 days/i.test(readFileSync('docs/KIDS-STORY-CARDS.md', 'utf8')));
+
 /* ── What it costs ────────────────────────────────────────────────────── */
 
 ok('the parent’s price list counts the book the engine makes',
@@ -101,8 +119,9 @@ ok('  and the price is every page’s picture and its longest reading',
 ok('  and the button shows it', /priceOf\('story'\)/.test(code('app/components/KidsStoryboard.tsx')));
 
 const story = code('app/api/kids/story/route.ts');
-ok('the engine writes from the cards, not from anything typed',
-  /STORY_SECTIONS\[section\]/.test(story) && !/body\.(idea|words|prompt)/.test(story));
+ok('the engine writes from the cards, and a said idea is screened before the model sees it',
+  /STORY_SECTIONS\[section\]/.test(story) && /body\.idea/.test(story) && /guard\(request, idea/.test(story)
+  && !/body\.(words|prompt)/.test(story));
 ok('a book played again costs nothing: the player and the shelf ask no route',
   !/fetch\(/.test(code('app/components/KidsStoryPlayer.tsx')) && !/fetch\(/.test(code('app/components/StoryShelf.tsx')));
 

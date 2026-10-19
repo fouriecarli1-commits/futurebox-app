@@ -53,7 +53,19 @@ export interface VisualStyle {
   readonly bgGradient: string;
 }
 
-/** 4 Storyline Sections with 4 curated choices each. */
+/**
+ * The four storyline steps, twenty cards each.
+ *
+ * The owner, 19 October 2026: *"Daar is heeltemal te min storielyne. Ons
+ * moet seker 10 verskillendes van elke opsie hê, dan moet jy 'n nota maak
+ * dat ons elke 30 dae nuwe storielyn opsies shuffle."* Four a step was too
+ * few. Each step now holds twenty, and `cardsNow` shows ten of them, a
+ * different ten every thirty days — see `ROTATE_DAYS` and
+ * `docs/KIDS-STORY-CARDS.md` for the note on adding new ones.
+ *
+ * Every card stays valid for the story engine whether it is showing or not,
+ * so a world or a kept choice from last month still writes a story.
+ */
 export const STORY_SECTIONS: readonly StorySection[] = [
   {
     id: 'hero',
@@ -92,6 +104,134 @@ export const STORY_SECTIONS: readonly StorySection[] = [
         blurb: ['kids.heroPupBlurb', 'Sniffs out secret treasure and lost toys'],
         paint: { from: '#3b82f6', to: '#1d4ed8', ink: '#ffffff' },
         visualScene: 'A joyful floppy-eared puppy detective with a magnifying glass and a little cape',
+      },
+      {
+        id: 'robot',
+        emoji: '🤖',
+        title: ['kids.card.robot', 'Bolt the Little Robot'],
+        blurb: ['kids.card.robot.b', 'A tiny robot who beeps a happy tune'],
+        paint: { from: '#64748b', to: '#334155', ink: '#ffffff' },
+        visualScene: 'a small round friendly robot with glowing blue eyes and a little antenna',
+      },
+      {
+        id: 'unicorn',
+        emoji: '🦄',
+        title: ['kids.card.unicorn', 'Sparkle the Unicorn'],
+        blurb: ['kids.card.unicorn.b', 'Leaves a trail of rainbow glitter'],
+        paint: { from: '#e879f9', to: '#a855f7', ink: '#ffffff' },
+        visualScene: 'a gentle white unicorn with a pastel rainbow mane and a shiny horn',
+      },
+      {
+        id: 'turtle',
+        emoji: '🐢',
+        title: ['kids.card.turtle', 'Shelly the Sea Turtle'],
+        blurb: ['kids.card.turtle.b', 'Slow, wise and always kind'],
+        paint: { from: '#2dd4bf', to: '#0f766e', ink: '#ffffff' },
+        visualScene: 'a smiling green sea turtle with a patterned shell and a little backpack',
+      },
+      {
+        id: 'lion',
+        emoji: '🦁',
+        title: ['kids.card.lion', 'Leo the Lion Cub'],
+        blurb: ['kids.card.lion.b', 'Practising his very first roar'],
+        paint: { from: '#f59e0b', to: '#b45309', ink: '#ffffff' },
+        visualScene: 'a fluffy golden lion cub with a tiny mane and big curious eyes',
+      },
+      {
+        id: 'bunny',
+        emoji: '🐰',
+        title: ['kids.card.bunny', 'Bella the Ballet Bunny'],
+        blurb: ['kids.card.bunny.b', 'Twirls on her tippy toes'],
+        paint: { from: '#f9a8d4', to: '#db2777', ink: '#ffffff' },
+        visualScene: 'a white bunny in a pink tutu twirling on her toes',
+      },
+      {
+        id: 'penguin',
+        emoji: '🐧',
+        title: ['kids.card.penguin', 'Pingo the Penguin'],
+        blurb: ['kids.card.penguin.b', 'Slides everywhere on his tummy'],
+        paint: { from: '#38bdf8', to: '#1e40af', ink: '#ffffff' },
+        visualScene: 'a cheerful little penguin with a red scarf sliding on ice',
+      },
+      {
+        id: 'monkey',
+        emoji: '🐵',
+        title: ['kids.card.monkey', 'Milo the Monkey'],
+        blurb: ['kids.card.monkey.b', 'Swings, jokes and loves bananas'],
+        paint: { from: '#d97706', to: '#92400e', ink: '#ffffff' },
+        visualScene: 'a playful brown monkey hanging from a vine with a big grin',
+      },
+      {
+        id: 'mermaid',
+        emoji: '🧜',
+        title: ['kids.card.mermaid', 'Marina the Mermaid'],
+        blurb: ['kids.card.mermaid.b', 'Sings with the dolphins'],
+        paint: { from: '#06b6d4', to: '#0e7490', ink: '#ffffff' },
+        visualScene: 'a young mermaid with a turquoise tail and shells in her hair',
+      },
+      {
+        id: 'knight',
+        emoji: '🛡️',
+        title: ['kids.card.knight', 'Sir Sam the Tiny Knight'],
+        blurb: ['kids.card.knight.b', 'Brave, polite and a little bit small'],
+        paint: { from: '#94a3b8', to: '#475569', ink: '#ffffff' },
+        visualScene: 'a tiny brave knight in shiny cardboard armour with a wooden sword',
+      },
+      {
+        id: 'elephant',
+        emoji: '🐘',
+        title: ['kids.card.elephant', 'Ellie the Elephant'],
+        blurb: ['kids.card.elephant.b', 'Never forgets a friend'],
+        paint: { from: '#a8a29e', to: '#57534e', ink: '#ffffff' },
+        visualScene: 'a cuddly grey baby elephant with big floppy ears and a flower',
+      },
+      {
+        id: 'fox',
+        emoji: '🦊',
+        title: ['kids.card.fox', 'Fynn the Fox'],
+        blurb: ['kids.card.fox.b', 'Clever and full of ideas'],
+        paint: { from: '#fb923c', to: '#c2410c', ink: '#ffffff' },
+        visualScene: 'a clever little orange fox with a bushy tail and a satchel',
+      },
+      {
+        id: 'ladybird',
+        emoji: '🐞',
+        title: ['kids.card.ladybird', 'Lulu the Ladybird'],
+        blurb: ['kids.card.ladybird.b', 'Counts her spots for luck'],
+        paint: { from: '#ef4444', to: '#b91c1c', ink: '#ffffff' },
+        visualScene: 'a tiny red ladybird with black spots and big friendly eyes',
+      },
+      {
+        id: 'meerkat',
+        emoji: '🐾',
+        title: ['kids.card.meerkat', 'Max the Meerkat'],
+        blurb: ['kids.card.meerkat.b', 'Stands up tall to look out for friends'],
+        paint: { from: '#d6a76c', to: '#8a5a2b', ink: '#ffffff' },
+        visualScene: 'a little meerkat standing up tall on a sand dune, looking out',
+      },
+      {
+        id: 'giraffe',
+        emoji: '🦒',
+        title: ['kids.card.giraffe', 'Gina the Giraffe'],
+        blurb: ['kids.card.giraffe.b', 'Can see over every tree'],
+        paint: { from: '#facc15', to: '#a16207', ink: '#ffffff' },
+        visualScene: 'a tall spotty giraffe with a long neck and a sun hat',
+      },
+      {
+        id: 'astronaut',
+        emoji: '🧑‍🚀',
+        title: ['kids.card.astronaut', 'Zara the Young Astronaut'],
+        blurb: ['kids.card.astronaut.b', 'Dreams of visiting every planet'],
+        paint: { from: '#818cf8', to: '#4338ca', ink: '#ffffff' },
+        visualScene: 'a cheerful young astronaut child in a white space suit with a sparkly patch',
+      },
+      {
+        id: 'owl',
+        emoji: '🦉',
+        title: ['kids.card.owl', 'Ollie the Night Owl'],
+        blurb: ['kids.card.owl.b', 'Knows every star by name'],
+        paint: { from: '#a78bfa', to: '#5b21b6', ink: '#ffffff' },
+        visualScene: 'a round little owl with big glasses sitting on a branch at night',
       },
     ],
   },
@@ -133,6 +273,134 @@ export const STORY_SECTIONS: readonly StorySection[] = [
         paint: { from: '#f43f5e', to: '#e11d48', ink: '#ffffff' },
         visualScene: 'in an enchanted forest made of giant candy canes, jellybean stepping stones, and glow mushrooms',
       },
+      {
+        id: 'savanna',
+        emoji: '🌅',
+        title: ['kids.card.savanna', 'The Golden Savanna'],
+        blurb: ['kids.card.savanna.b', 'Acacia trees and a big orange sunset'],
+        paint: { from: '#f59e0b', to: '#c2410c', ink: '#ffffff' },
+        visualScene: 'on a warm African savanna with acacia trees, zebras and a big orange sunset',
+      },
+      {
+        id: 'moon-base',
+        emoji: '🌙',
+        title: ['kids.card.moon-base', 'The Moon Base'],
+        blurb: ['kids.card.moon-base.b', 'Bouncy craters and a view of Earth'],
+        paint: { from: '#94a3b8', to: '#334155', ink: '#ffffff' },
+        visualScene: 'on the moon with bouncy grey craters, a little dome base and the blue Earth in the sky',
+      },
+      {
+        id: 'jungle',
+        emoji: '🌴',
+        title: ['kids.card.jungle', 'The Whispering Jungle'],
+        blurb: ['kids.card.jungle.b', 'Giant leaves and singing parrots'],
+        paint: { from: '#22c55e', to: '#15803d', ink: '#ffffff' },
+        visualScene: 'in a lush green jungle with giant leaves, waterfalls and colourful parrots',
+      },
+      {
+        id: 'snow-mountain',
+        emoji: '🏔️',
+        title: ['kids.card.snow-mountain', 'The Snowy Mountain'],
+        blurb: ['kids.card.snow-mountain.b', 'Sledges, snowflakes and hot chocolate'],
+        paint: { from: '#bae6fd', to: '#0369a1', ink: '#ffffff' },
+        visualScene: 'on a snowy mountain with sparkling snowflakes, pine trees and a cosy cabin',
+      },
+      {
+        id: 'toy-shop',
+        emoji: '🧸',
+        title: ['kids.card.toy-shop', 'The Midnight Toy Shop'],
+        blurb: ['kids.card.toy-shop.b', 'Where the toys wake up at night'],
+        paint: { from: '#f472b6', to: '#9d174d', ink: '#ffffff' },
+        visualScene: 'inside a cosy toy shop at midnight where teddies and toy trains come alive',
+      },
+      {
+        id: 'volcano-island',
+        emoji: '🌋',
+        title: ['kids.card.volcano-island', 'Volcano Island'],
+        blurb: ['kids.card.volcano-island.b', 'A friendly volcano that puffs bubbles'],
+        paint: { from: '#f97316', to: '#9a3412', ink: '#ffffff' },
+        visualScene: 'on a tropical island with a friendly smiling volcano puffing rainbow bubbles',
+      },
+      {
+        id: 'treehouse-city',
+        emoji: '🌳',
+        title: ['kids.card.treehouse-city', 'The Treehouse City'],
+        blurb: ['kids.card.treehouse-city.b', 'Rope bridges between the treetops'],
+        paint: { from: '#84cc16', to: '#3f6212', ink: '#ffffff' },
+        visualScene: 'in a city of treehouses joined by rope bridges high in giant trees',
+      },
+      {
+        id: 'desert-oasis',
+        emoji: '🏜️',
+        title: ['kids.card.desert-oasis', 'The Desert Oasis'],
+        blurb: ['kids.card.desert-oasis.b', 'Palm trees around a shimmering pool'],
+        paint: { from: '#fbbf24', to: '#b45309', ink: '#ffffff' },
+        visualScene: 'at a peaceful desert oasis with palm trees, camels and a shimmering blue pool',
+      },
+      {
+        id: 'dino-valley',
+        emoji: '🦖',
+        title: ['kids.card.dino-valley', 'Dinosaur Valley'],
+        blurb: ['kids.card.dino-valley.b', 'Where gentle dinosaurs still roam'],
+        paint: { from: '#4ade80', to: '#166534', ink: '#ffffff' },
+        visualScene: 'in a green valley full of gentle dinosaurs, ferns and a misty waterfall',
+      },
+      {
+        id: 'music-city',
+        emoji: '🎺',
+        title: ['kids.card.music-city', 'The City of Music'],
+        blurb: ['kids.card.music-city.b', 'Houses shaped like instruments'],
+        paint: { from: '#c084fc', to: '#7e22ce', ink: '#ffffff' },
+        visualScene: 'in a bright city where the houses are shaped like guitars, drums and trumpets',
+      },
+      {
+        id: 'pirate-ship',
+        emoji: '🏴‍☠️',
+        title: ['kids.card.pirate-ship', 'The Friendly Pirate Ship'],
+        blurb: ['kids.card.pirate-ship.b', 'Sails, parrots and a treasure deck'],
+        paint: { from: '#0ea5e9', to: '#075985', ink: '#ffffff' },
+        visualScene: 'aboard a colourful friendly pirate ship sailing on sparkling waves',
+      },
+      {
+        id: 'robot-factory',
+        emoji: '🏭',
+        title: ['kids.card.robot-factory', 'The Robot Workshop'],
+        blurb: ['kids.card.robot-factory.b', 'Gears, buttons and blinking lights'],
+        paint: { from: '#60a5fa', to: '#1d4ed8', ink: '#ffffff' },
+        visualScene: 'inside a bright robot workshop full of gears, buttons and blinking lights',
+      },
+      {
+        id: 'tiny-garden',
+        emoji: '🌼',
+        title: ['kids.card.tiny-garden', 'The Tiny Garden World'],
+        blurb: ['kids.card.tiny-garden.b', 'Where a flower is as big as a house'],
+        paint: { from: '#a3e635', to: '#4d7c0f', ink: '#ffffff' },
+        visualScene: 'in a garden seen from very small, where flowers are as tall as houses',
+      },
+      {
+        id: 'magic-library',
+        emoji: '📚',
+        title: ['kids.card.magic-library', 'The Magic Library'],
+        blurb: ['kids.card.magic-library.b', 'Books that fly and whisper stories'],
+        paint: { from: '#a78bfa', to: '#6d28d9', ink: '#ffffff' },
+        visualScene: 'in a magical library where books fly around and glow softly',
+      },
+      {
+        id: 'beach',
+        emoji: '🏖️',
+        title: ['kids.card.beach', 'The Sunny Beach'],
+        blurb: ['kids.card.beach.b', 'Sandcastles, shells and big waves'],
+        paint: { from: '#fde047', to: '#0891b2', ink: '#ffffff' },
+        visualScene: 'on a sunny beach with sandcastles, shells and gentle blue waves',
+      },
+      {
+        id: 'karoo-night',
+        emoji: '✨',
+        title: ['kids.card.karoo-night', 'The Karoo Under the Stars'],
+        blurb: ['kids.card.karoo-night.b', 'A farm night with a million stars'],
+        paint: { from: '#6366f1', to: '#1e1b4b', ink: '#ffffff' },
+        visualScene: 'on a quiet Karoo farm at night with a windmill and a sky full of stars',
+      },
     ],
   },
   {
@@ -172,6 +440,134 @@ export const STORY_SECTIONS: readonly StorySection[] = [
         blurb: ['kids.twistShipBlurb', 'Plays happy electronic beats and invites everyone to dance'],
         paint: { from: '#6366f1', to: '#4338ca', ink: '#ffffff' },
         visualScene: 'dancing with friendly little star aliens around a glowing spaceship that plays music',
+      },
+      {
+        id: 'talking-tree',
+        emoji: '🌳',
+        title: ['kids.card.talking-tree', 'A Talking Tree'],
+        blurb: ['kids.card.talking-tree.b', 'It tells jokes and knows a secret'],
+        paint: { from: '#22c55e', to: '#166534', ink: '#ffffff' },
+        visualScene: 'meeting a big friendly tree with a smiling face in its bark',
+      },
+      {
+        id: 'treasure-map',
+        emoji: '🗺️',
+        title: ['kids.card.treasure-map', 'A Treasure Map'],
+        blurb: ['kids.card.treasure-map.b', 'X marks a very surprising spot'],
+        paint: { from: '#eab308', to: '#854d0e', ink: '#ffffff' },
+        visualScene: 'finding an old treasure map with a glowing red X on it',
+      },
+      {
+        id: 'shrink-potion',
+        emoji: '🧪',
+        title: ['kids.card.shrink-potion', 'A Shrinking Potion'],
+        blurb: ['kids.card.shrink-potion.b', 'One sip and they are ant-sized'],
+        paint: { from: '#a855f7', to: '#6b21a8', ink: '#ffffff' },
+        visualScene: 'holding a bubbling purple potion bottle that makes things tiny',
+      },
+      {
+        id: 'singing-rock',
+        emoji: '🪨',
+        title: ['kids.card.singing-rock', 'A Singing Rock'],
+        blurb: ['kids.card.singing-rock.b', 'It hums a song nobody has heard'],
+        paint: { from: '#a8a29e', to: '#44403c', ink: '#ffffff' },
+        visualScene: 'finding a round smooth rock with musical notes floating out of it',
+      },
+      {
+        id: 'fallen-star',
+        emoji: '⭐',
+        title: ['kids.card.fallen-star', 'A Fallen Star'],
+        blurb: ['kids.card.fallen-star.b', 'It needs help to get back to the sky'],
+        paint: { from: '#fde047', to: '#ca8a04', ink: '#ffffff' },
+        visualScene: 'finding a small glowing star with a sleepy face that fell to the ground',
+      },
+      {
+        id: 'time-door',
+        emoji: '🚪',
+        title: ['kids.card.time-door', 'A Door to Yesterday'],
+        blurb: ['kids.card.time-door.b', 'It opens onto a different day'],
+        paint: { from: '#38bdf8', to: '#0c4a6e', ink: '#ffffff' },
+        visualScene: 'a glowing blue door standing all by itself in the middle of nowhere',
+      },
+      {
+        id: 'giant-egg',
+        emoji: '🥚',
+        title: ['kids.card.giant-egg', 'A Giant Spotty Egg'],
+        blurb: ['kids.card.giant-egg.b', 'Something inside is wiggling'],
+        paint: { from: '#fcd34d', to: '#d97706', ink: '#ffffff' },
+        visualScene: 'finding a giant spotty egg that is wiggling and cracking a little',
+      },
+      {
+        id: 'magic-brush',
+        emoji: '🖌️',
+        title: ['kids.card.magic-brush', 'A Magic Paintbrush'],
+        blurb: ['kids.card.magic-brush.b', 'Whatever it paints comes alive'],
+        paint: { from: '#f472b6', to: '#be185d', ink: '#ffffff' },
+        visualScene: 'holding a sparkly paintbrush whose paintings come to life',
+      },
+      {
+        id: 'glow-ghost',
+        emoji: '👻',
+        title: ['kids.card.glow-ghost', 'A Shy Glowing Ghost'],
+        blurb: ['kids.card.glow-ghost.b', 'It just wants a friend'],
+        paint: { from: '#e0e7ff', to: '#6366f1', ink: '#ffffff' },
+        visualScene: 'meeting a small shy smiling ghost that glows softly like a nightlight',
+      },
+      {
+        id: 'rainbow-storm',
+        emoji: '🌦️',
+        title: ['kids.card.rainbow-storm', 'A Rainbow Rainstorm'],
+        blurb: ['kids.card.rainbow-storm.b', 'The raindrops are every colour'],
+        paint: { from: '#60a5fa', to: '#7c3aed', ink: '#ffffff' },
+        visualScene: 'standing in a rainstorm where every raindrop is a different colour',
+      },
+      {
+        id: 'secret-code',
+        emoji: '🔢',
+        title: ['kids.card.secret-code', 'A Secret Code'],
+        blurb: ['kids.card.secret-code.b', 'Only a clever friend can crack it'],
+        paint: { from: '#34d399', to: '#047857', ink: '#ffffff' },
+        visualScene: 'finding a glowing panel with a secret code of shapes and colours',
+      },
+      {
+        id: 'robot-puppy',
+        emoji: '🐕‍🦺',
+        title: ['kids.card.robot-puppy', 'A Robot Puppy'],
+        blurb: ['kids.card.robot-puppy.b', 'It fetches, beeps and wags'],
+        paint: { from: '#94a3b8', to: '#475569', ink: '#ffffff' },
+        visualScene: 'meeting a shiny little robot puppy with a wagging metal tail',
+      },
+      {
+        id: 'wishing-well',
+        emoji: '🪣',
+        title: ['kids.card.wishing-well', 'A Wishing Well'],
+        blurb: ['kids.card.wishing-well.b', 'It grants one kind wish'],
+        paint: { from: '#38bdf8', to: '#1e3a8a', ink: '#ffffff' },
+        visualScene: 'finding an old stone wishing well that sparkles when you look in',
+      },
+      {
+        id: 'upside-down',
+        emoji: '🙃',
+        title: ['kids.card.upside-down', 'Everything Goes Upside Down'],
+        blurb: ['kids.card.upside-down.b', 'Now they walk on the ceiling'],
+        paint: { from: '#fb7185', to: '#be123c', ink: '#ffffff' },
+        visualScene: 'a world where everything has flipped upside down and things float',
+      },
+      {
+        id: 'golden-feather',
+        emoji: '🪶',
+        title: ['kids.card.golden-feather', 'A Golden Feather'],
+        blurb: ['kids.card.golden-feather.b', 'It lets you understand animals'],
+        paint: { from: '#facc15', to: '#a16207', ink: '#ffffff' },
+        visualScene: 'finding a shimmering golden feather that lets you talk to animals',
+      },
+      {
+        id: 'music-box',
+        emoji: '🎶',
+        title: ['kids.card.music-box', 'A Music Box That Dances'],
+        blurb: ['kids.card.music-box.b', 'Its tune makes everyone dance'],
+        paint: { from: '#c084fc', to: '#7e22ce', ink: '#ffffff' },
+        visualScene: 'opening a little music box whose tune makes everything dance',
       },
     ],
   },
@@ -213,11 +609,169 @@ export const STORY_SECTIONS: readonly StorySection[] = [
         paint: { from: '#6366f1', to: '#3730a3', ink: '#ffffff' },
         visualScene: 'fast asleep in a warm cozy bed holding a stuffed toy while gentle stars glow through the window',
       },
+      {
+        id: 'new-friends',
+        emoji: '🤝',
+        title: ['kids.card.new-friends', 'Best Friends Forever'],
+        blurb: ['kids.card.new-friends.b', 'A new friend for always'],
+        paint: { from: '#f472b6', to: '#be185d', ink: '#ffffff' },
+        visualScene: 'new best friends holding hands and smiling together',
+      },
+      {
+        id: 'concert',
+        emoji: '🎤',
+        title: ['kids.card.concert', 'The Big Concert'],
+        blurb: ['kids.card.concert.b', 'Everyone sings the song they made'],
+        paint: { from: '#a855f7', to: '#6b21a8', ink: '#ffffff' },
+        visualScene: 'a happy concert on a stage with lights where all the friends sing together',
+      },
+      {
+        id: 'picnic',
+        emoji: '🧺',
+        title: ['kids.card.picnic', 'The Sunny Picnic'],
+        blurb: ['kids.card.picnic.b', 'Sandwiches, juice and giggles'],
+        paint: { from: '#84cc16', to: '#4d7c0f', ink: '#ffffff' },
+        visualScene: 'a happy picnic on a blanket in the sun with all the friends',
+      },
+      {
+        id: 'fireworks',
+        emoji: '🎆',
+        title: ['kids.card.fireworks', 'Fireworks in the Sky'],
+        blurb: ['kids.card.fireworks.b', 'Colours that spell THANK YOU'],
+        paint: { from: '#f43f5e', to: '#7c2d12', ink: '#ffffff' },
+        visualScene: 'colourful fireworks bursting in the night sky above the happy friends',
+      },
+      {
+        id: 'family-hug',
+        emoji: '🤗',
+        title: ['kids.card.family-hug', 'A Big Family Hug'],
+        blurb: ['kids.card.family-hug.b', 'Home safe and warm'],
+        paint: { from: '#fb923c', to: '#c2410c', ink: '#ffffff' },
+        visualScene: 'a big warm family hug at the front door of a cosy home',
+      },
+      {
+        id: 'garden-grows',
+        emoji: '🌻',
+        title: ['kids.card.garden-grows', 'A Garden That Grows'],
+        blurb: ['kids.card.garden-grows.b', 'They plant seeds of the adventure'],
+        paint: { from: '#facc15', to: '#65a30d', ink: '#ffffff' },
+        visualScene: 'planting seeds together and sunflowers growing tall and happy',
+      },
+      {
+        id: 'star-named',
+        emoji: '🌟',
+        title: ['kids.card.star-named', 'A Star Named After Them'],
+        blurb: ['kids.card.star-named.b', 'Look up and you will see it'],
+        paint: { from: '#fde047', to: '#4338ca', ink: '#ffffff' },
+        visualScene: 'a new bright star in the night sky shaped like the hero',
+      },
+      {
+        id: 'parade',
+        emoji: '🎊',
+        title: ['kids.card.parade', 'The Thank-You Parade'],
+        blurb: ['kids.card.parade.b', 'Floats, balloons and music'],
+        paint: { from: '#22d3ee', to: '#0e7490', ink: '#ffffff' },
+        visualScene: 'a colourful parade with balloons and music down the main street',
+      },
+      {
+        id: 'ice-cream',
+        emoji: '🍦',
+        title: ['kids.card.ice-cream', 'Ice Cream for Everyone'],
+        blurb: ['kids.card.ice-cream.b', 'Every flavour, even rainbow'],
+        paint: { from: '#f9a8d4', to: '#db2777', ink: '#ffffff' },
+        visualScene: 'everyone sharing huge colourful ice creams in the sunshine',
+      },
+      {
+        id: 'rocket-home',
+        emoji: '🚀',
+        title: ['kids.card.rocket-home', 'A Rocket Ride Home'],
+        blurb: ['kids.card.rocket-home.b', 'Zoom past the stars to bed'],
+        paint: { from: '#818cf8', to: '#3730a3', ink: '#ffffff' },
+        visualScene: 'riding a little rocket home past the stars and the moon',
+      },
+      {
+        id: 'share-treasure',
+        emoji: '💎',
+        title: ['kids.card.share-treasure', 'Sharing the Treasure'],
+        blurb: ['kids.card.share-treasure.b', 'Everyone gets something special'],
+        paint: { from: '#2dd4bf', to: '#0f766e', ink: '#ffffff' },
+        visualScene: 'sharing a sparkling treasure chest with all the friends',
+      },
+      {
+        id: 'dance-off',
+        emoji: '💃',
+        title: ['kids.card.dance-off', 'The Happy Dance-Off'],
+        blurb: ['kids.card.dance-off.b', 'Nobody loses, everybody dances'],
+        paint: { from: '#e879f9', to: '#a21caf', ink: '#ffffff' },
+        visualScene: 'all the friends having a silly dance-off under disco lights',
+      },
+      {
+        id: 'storybook',
+        emoji: '📖',
+        title: ['kids.card.storybook', 'Into a Storybook'],
+        blurb: ['kids.card.storybook.b', 'Their adventure becomes a book'],
+        paint: { from: '#a78bfa', to: '#5b21b6', ink: '#ffffff' },
+        visualScene: 'the adventure being written into a glowing storybook',
+      },
+      {
+        id: 'sunrise',
+        emoji: '🌄',
+        title: ['kids.card.sunrise', 'Watching the Sunrise'],
+        blurb: ['kids.card.sunrise.b', 'A brand new day to play'],
+        paint: { from: '#fb923c', to: '#be123c', ink: '#ffffff' },
+        visualScene: 'watching a beautiful golden sunrise together from a hill',
+      },
+      {
+        id: 'helping',
+        emoji: '💖',
+        title: ['kids.card.helping', 'Everyone Helps Everyone'],
+        blurb: ['kids.card.helping.b', 'Kindness wins the day'],
+        paint: { from: '#fb7185', to: '#be123c', ink: '#ffffff' },
+        visualScene: 'all the friends helping each other and smiling',
+      },
+      {
+        id: 'medal-dance',
+        emoji: '🏅',
+        title: ['kids.card.medal-dance', 'A Medal and a Song'],
+        blurb: ['kids.card.medal-dance.b', 'A medal for being brave and kind'],
+        paint: { from: '#fbbf24', to: '#92400e', ink: '#ffffff' },
+        visualScene: 'receiving a shiny medal while everyone sings a happy song',
+      },
     ],
   },
 ];
 
-/** 4 Visual Style Suggestions. */
+/* ── Ten at a time, a new ten every thirty days ────────────────────────── */
+
+/** How many cards a step shows. */
+export const CARDS_SHOWN = 10;
+/** How often the cards on show change. */
+export const ROTATE_DAYS = 30;
+
+/** Which thirty-day window a moment is in. */
+export const windowOf = (now: number): number => Math.floor(now / (ROTATE_DAYS * 86_400_000));
+
+/**
+ * The cards a step shows right now: ten of its twenty, shuffled by the
+ * window and the step, so a month always looks the same all month and the
+ * next month looks different. Pure — the same moment gives the same ten.
+ */
+export function cardsNow(section: StorySection, now: number = Date.now()): StoryChoice[] {
+  let seed = (windowOf(now) + 1) * 2654435761 + section.number * 97;
+  const next = (): number => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  const pool = [...section.choices];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, CARDS_SHOWN);
+}
+
+
+/** Ten looks for the pictures. */
 export const VISUAL_STYLES: readonly VisualStyle[] = [
   {
     id: '3d-toon',
@@ -254,6 +808,60 @@ export const VISUAL_STYLES: readonly VisualStyle[] = [
     badge: ['kids.visualCrayonBadge', 'Handmade Cozy'],
     stylePrompt: 'hand-drawn colorful children picture book illustration, soft wax crayon and colored pencil texture, charming naive storybook art, bright cheerful',
     bgGradient: 'from-emerald-400 via-yellow-400 to-orange-400',
+  },
+  {
+    id: 'clay',
+    emoji: '🧸',
+    name: ['kids.style.clay', "Clay Friends"],
+    desc: ['kids.style.clay.d', "Squishy clay characters, like a stop-motion film"],
+    badge: ['kids.style.clay.b', "Plasticine"],
+    stylePrompt: "cute claymation stop-motion characters made of soft colourful clay, handmade textures, warm studio light",
+    bgGradient: 'from-orange-400 via-amber-300 to-rose-400',
+  },
+  {
+    id: 'paper',
+    emoji: '✂️',
+    name: ['kids.style.paper', "Paper Cut-Out"],
+    desc: ['kids.style.paper.d', "Layers of bright paper, cut and stacked"],
+    badge: ['kids.style.paper.b', "Papercraft"],
+    stylePrompt: "layered paper cut-out collage illustration, bright coloured craft paper, soft shadows between layers",
+    bgGradient: 'from-lime-300 via-emerald-400 to-teal-500',
+  },
+  {
+    id: 'comic',
+    emoji: '💥',
+    name: ['kids.style.comic', "Comic Book"],
+    desc: ['kids.style.comic.d', "Bold lines, big colours, POW!"],
+    badge: ['kids.style.comic.b', "Comic Pop"],
+    stylePrompt: "bright friendly comic book illustration for children, bold outlines, halftone dots, vivid colours",
+    bgGradient: 'from-yellow-300 via-red-400 to-sky-500',
+  },
+  {
+    id: 'pixel',
+    emoji: '👾',
+    name: ['kids.style.pixel', "Pixel Game"],
+    desc: ['kids.style.pixel.d', "Like a happy video game world"],
+    badge: ['kids.style.pixel.b', "8-bit"],
+    stylePrompt: "cheerful pixel art video game scene for kids, crisp pixels, bright retro palette",
+    bgGradient: 'from-fuchsia-400 via-violet-500 to-cyan-400',
+  },
+  {
+    id: 'plush',
+    emoji: '🧶',
+    name: ['kids.style.plush', "Soft Toy World"],
+    desc: ['kids.style.plush.d', "Everything is cuddly felt and wool"],
+    badge: ['kids.style.plush.b', "Plushie"],
+    stylePrompt: "everything made of soft plush felt and knitted wool like cuddly toys, cosy stitched details",
+    bgGradient: 'from-pink-300 via-rose-300 to-amber-200',
+  },
+  {
+    id: 'glass',
+    emoji: '🔮',
+    name: ['kids.style.glass', "Glowing Glass"],
+    desc: ['kids.style.glass.d', "Shiny, see-through and full of light"],
+    badge: ['kids.style.glass.b', "Crystal"],
+    stylePrompt: "shiny glowing glass and crystal figures for children, colourful light shining through, magical sparkle",
+    bgGradient: 'from-cyan-300 via-sky-400 to-indigo-500',
   },
 ];
 

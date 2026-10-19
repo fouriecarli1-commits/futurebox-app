@@ -62,6 +62,18 @@ const browser = await chromium.launch(launchOptions());
 
 async function room(engine) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  /* A stand-in microphone: whatever is started hears one sentence. */
+  await page.addInitScript(() => {
+    window.SpeechRecognition = class {
+      start() {
+        setTimeout(() => {
+          this.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: 'a dragon who is scared of the dark' }], { isFinal: true })] });
+          this.onend?.();
+        }, 50);
+      }
+      stop() { this.onend?.(); }
+    };
+  });
   const thrown = [];
   page.on('pageerror', (error) => thrown.push(String(error).slice(0, 160)));
   const sent = { story: [], read: [], pictures: [] };
@@ -101,6 +113,7 @@ async function room(engine) {
   await page.locator('[data-kidsroomdoor="story"]').click();
   await page.waitForTimeout(500);
   await page.locator('[data-kidsworld]').first().click();
+  sent.cards = await page.locator('[data-kidsstorycards] > button').count();
   for (let i = 0; i < 6 && (await page.locator('[data-kidsstorybuild]').count()) === 0; i += 1) {
     await page.locator('[data-kidsstorynext]').first().click();
     await page.waitForTimeout(250);
@@ -111,11 +124,21 @@ async function room(engine) {
 try {
   /* ── With the engine on ──────────────────────────────────────────────── */
   const { page, sent, thrown } = await room(true);
+  check('ten cards to choose from on a step', sent.cards === 10, String(sent.cards));
   check('four storytellers to choose from', (await page.locator('[data-kidsstoryteller]').count()) === 4);
   await page.locator('[data-kidsstoryteller="fairy"]').click();
   check('  and the one pressed is the one chosen',
     (await page.locator('[data-kidsstoryteller="fairy"]').getAttribute('aria-pressed')) === 'true');
   check('  and each can be heard first', (await page.locator('[data-kidsvoicesample]').count()) === 4);
+  await page.locator('[data-kidsstorymic]').scrollIntoViewIfNeeded().catch(() => undefined);
+  const mic = page.locator('[data-kidsstorymic]');
+  check('the Story Maker has a voice box for the child’s own idea', (await mic.count()) === 1);
+  if (await mic.count()) {
+    await mic.click();
+    await page.waitForTimeout(300);
+    check('  and what is said shows as the idea',
+      /scared of the dark/.test(await page.locator('[data-kidsstoryidea]').innerText().catch(() => '')));
+  }
   const price = await page.locator('[data-kidsstoryprice]').innerText().catch(() => '');
   check('the price is on the button', /\d+/.test(price), price);
 
@@ -126,6 +149,7 @@ try {
   const asked = sent.story[0] ?? {};
   check('the engine is asked with the cards and the storyteller', asked.storyteller === 'fairy' && Boolean(asked.hero && asked.visual),
     JSON.stringify(asked));
+  check('  and the idea the child said', asked.idea === 'A dragon who is scared of the dark', String(asked.idea));
   check('every page is drawn, on the storybook brake', sent.pictures.length === 6 && sent.pictures.every((one) => /book=1/.test(one.url)),
     `${sent.pictures.length}`);
   check('  the later pages from the first, so they match',
