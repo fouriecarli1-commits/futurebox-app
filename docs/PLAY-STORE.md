@@ -443,15 +443,18 @@ user interaction.
 - [ ] The attorney has answered the Play Billing question
 - [ ] A business contact email, not a personal one
 - [x] Screenshots: at least 2, phone size, 16:9 or 9:16, between 320 and
-      3840 pixels on the long side. Eight real screens at 1080 x 1920 are in
-      `docs/play/shots/`. Six were retaken on 15 October 2026 in the default
-      Pro Studio look by `npm run play:shots` (`audit/storeshots.mjs`) off the
-      built app: the welcome, the studio, Make a song (the song box with its
-      plus open), the video desk, the photo editor with a photograph in it
-      (new), and the advert desk. The kids room and Cubed keep their own looks
-      and their 12 October shots. **Before submitting, run
-      `npm run build && npm run play:shots` once more**, so the shots are of
-      the app as it is that day.
+      3840 pixels on the long side. **The ones to upload are in
+      `docs/play/store/`**: five at 1080 x 1920, each a real screen in a phone
+      under one line — the studio, Make a song, the video desk, the photo
+      editor and the advert desk — made on 19 October 2026 by
+      `node scripts/play-screens.mjs` from the raw screens in
+      `docs/play/shots/`, which `npm run play:shots` (`audit/storeshots.mjs`)
+      takes off the built app. Left out on purpose: the kids room (the
+      grown-up app must not read as made for children, or the Families rules
+      apply to all of it) and the welcome page (it names the engines' makers,
+      and other companies' trademarks in a listing can get it taken down).
+      **Before submitting, run `npm run build && npm run play:shots && node
+      scripts/play-screens.mjs`**, so the shots are of the app as it is that day.
 - [x] Feature graphic: 1024 x 500 — `docs/play/feature-graphic-1024x500.png`,
       redrawn 19 October 2026 by `node scripts/play-feature.mjs` from the neon
       icon, the listing line and three real screens in `docs/play/shots/`.

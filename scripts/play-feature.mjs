@@ -8,6 +8,9 @@
  * and three real screens from `docs/play/shots/` — the song, the photo editor
  * and the video desk — so what the listing shows is what the app is.
  *
+ * "Adverts" and not "Kids" among the five: the grown-up app's listing should
+ * not read as made for children (see `scripts/play-screens.mjs`).
+ *
  * Play wants a JPEG or a 24-bit PNG with no transparency, so the page is
  * photographed and its alpha taken off. Not run by CI.
  */
@@ -71,7 +74,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
     <div class="mark"><img src="${icon}" alt=""><h1>FutureBox<br><span>Studio</span></h1></div>
     <p class="line">Make a song, make the video,<br>and put it out.</p>
     <div class="chips">
-      <span class="chip">Songs</span><span class="chip">Videos</span><span class="chip">Photos</span><span class="chip">Podcasts</span><span class="chip">Kids</span>
+      <span class="chip">Songs</span><span class="chip">Videos</span><span class="chip">Photos</span><span class="chip">Podcasts</span><span class="chip">Adverts</span>
     </div>
     <p class="lang">In English and Afrikaans · Made in South Africa</p>
   </div>
