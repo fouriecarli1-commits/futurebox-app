@@ -1838,6 +1838,11 @@ jobs:
       - name: Smart crop stands over the part worth keeping
         run: npm run check:smartcrop
 
+      # The file Google reads to verify the website for the Play Console. It
+      # must stay for as long as the developer account does.
+      - name: Google can still find the website verification file
+        run: npm run check:googlesite
+
       # The price list she sets prices off is generated from the code, and
       # this fails when the file on disk is not what the code says today. A
       # price list goes stale silently, because nothing in a build reads
