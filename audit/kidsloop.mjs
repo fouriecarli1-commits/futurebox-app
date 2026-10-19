@@ -127,6 +127,11 @@ try {
   /* ── A loop that really builds ──────────────────────────────────────── */
   await page.locator('[data-kidstab="music"]').first().click();
   await page.waitForTimeout(600);
+  /* The real song opens first since 19 October 2026; the loops are a press. */
+  check('the music door opens on making a real song', (await page.locator('[data-kidsmake]').count()) > 0
+    && (await page.locator('[data-kidsmusicpick="song"]').getAttribute('aria-pressed')) === 'true');
+  await page.locator('[data-kidsmusicpick="loops"]').click();
+  await page.waitForTimeout(400);
   await page.locator('[data-kidsloop="dino"]').click();
   await page.waitForTimeout(400);
   const first = await page.locator('[data-kidsloopsays]').getAttribute('data-kidsloopsays').catch(() => null);

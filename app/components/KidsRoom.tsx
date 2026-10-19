@@ -394,7 +394,7 @@ export default function KidsRoom({
   const [counts, setCounts] = useState<Counts | null>(null);
   /* Inside Music Maker: the real song, or the free beat machine. The real
      one first, because it is the thing the room exists for. */
-  const [music, setMusic] = useState<'song' | 'beat'>('song');
+  const [music, setMusic] = useState<'song' | 'loops' | 'beat'>('song');
   const [tv, setTv] = useState<'all' | 'songs' | 'stories'>('all');
   /**
    * Star sparks. Earned by doing anything at all, and kept on the device so
@@ -1069,35 +1069,39 @@ export default function KidsRoom({
       {/* ── 3. Music Maker ───────────────────────────────────────────────── */}
       {tab === 'music' && (
         <>
-          {/* Google's "Create Music Studio", 13 October 2026: four loop
-              cards for the little ones first, the big kids' deck under. */}
-          <KidsLoops onSpark={spark} onToBeat={() => setMusic('beat')} />
-          <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400 bg-cyan-400/15 px-3.5 py-1.5 text-sm font-black text-cyan-300">
-            🎙️ {t('kids.bigKidsDeck', 'Make a real song (type or say your idea, big kids!)')}
-          </p>
-          <div className="flex flex-wrap gap-2" data-kidsmusicmode>
-            <button
-              type="button"
-              aria-pressed={music === 'song'}
-              onClick={() => setMusic('song')}
-              className={`fb-kids-bouncy flex min-h-[44px] items-center gap-2 rounded-2xl px-4 text-sm font-bold ${
-                music === 'song' ? 'bg-primary-400 text-onAccent' : 'bg-surface-200/80 text-surface-800'
-              }`}
-            >
-              <span aria-hidden>🎤</span> {t('kids.subSong', 'Make a real song')}
-            </button>
-            <button
-              type="button"
-              data-kidstobeat
-              aria-pressed={music === 'beat'}
-              onClick={() => setMusic('beat')}
-              className={`fb-kids-bouncy flex min-h-[44px] items-center gap-2 rounded-2xl px-4 text-sm font-bold ${
-                music === 'beat' ? 'bg-cyan-400 text-onAccent' : 'bg-surface-200/80 text-surface-800'
-              }`}
-            >
-              <span aria-hidden>🥁</span> {t('kids.subBeat', 'Beat machine')}
-            </button>
+          {/* ── Three doors in the music door, the song first ────────────
+              The owner, 19 October 2026: *"Die music generation by die kids
+              app het ook weggeval toe jy die looping in gesit het."* It had
+              not gone — the four loop cards came first and pushed it below
+              the fold of a phone, under a line nobody scrolls past. The
+              three are choices of the same size now, the real song open. */}
+          <div className="grid grid-cols-3 gap-2" data-kidsmusicmode>
+            {([
+              ['song', '🎤', 'kids.subSong', 'Make a real song', 'bg-primary-400 text-onAccent'],
+              ['loops', '🔁', 'kids.subLoops', 'Loops', 'bg-amber-400 text-onAccent'],
+              ['beat', '🥁', 'kids.subBeat', 'Beat machine', 'bg-cyan-400 text-onAccent'],
+            ] as const).map(([id, icon, key, en, lit]) => (
+              <button
+                key={id}
+                type="button"
+                data-kidsmusicpick={id}
+                {...(id === 'beat' ? { 'data-kidstobeat': '' } : {})}
+                aria-pressed={music === id}
+                onClick={() => setMusic(id)}
+                className={`fb-kids-bouncy flex min-h-[64px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-sm font-black leading-tight ${
+                  music === id ? lit : 'bg-surface-200/80 text-surface-800'
+                }`}
+              >
+                <span className="text-2xl" aria-hidden>{icon}</span> {t(key, en)}
+              </button>
+            ))}
           </div>
+
+          {music === 'loops' && (
+            /* Google's "Create Music Studio", 13 October 2026: four loop
+               cards for the little ones. */
+            <KidsLoops onSpark={spark} onToBeat={() => setMusic('beat')} />
+          )}
 
           {music === 'beat' && (
             <KidsBeatMaker onSpark={spark} onToStage={() => setTab('video')} />
