@@ -118,6 +118,7 @@ import { useSongPulse } from '../lib/songpulse';
 import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
 import KidsBeatMaker from './KidsBeatMaker';
 import KidsStage, { type Scene } from './KidsStage';
+import KidsDrumGame from './KidsDrumGame';
 import KidsArcade from './KidsArcade';
 import { beatEngine } from '../lib/kidsbeat';
 import { confetti } from '../lib/kidsconfetti';
@@ -1496,6 +1497,10 @@ export default function KidsRoom({
               piano… and creating their own songs on a childs way with
               guidance." The piano and its copy-me game; a kept tune lands
               on the song shelf, so it plays at bedtime with the rest. */}
+          {/* Be the drummer: the band plays, the pads are the drums
+              (the owner, 19 October 2026 — `KidsDrumGame.tsx`). First,
+              because it is the game she asked for by name. */}
+          <KidsDrumGame onSpark={spark} />
           <KidsPads onSpark={spark} />
           <KidsPiano onSpark={spark} onKept={() => setShelfAgain((n) => n + 1)} />
           <KidsArcade onSpark={spark} />
