@@ -20,6 +20,7 @@ import { noteSpend } from './elevencost.ts';
 import { watchEleven } from './spendwatch';
 import { joinPcm } from '../pcmwav.ts';
 import { liveLocators, sayItRightNow } from './sayit';
+import { bare } from '../kidsvoices.ts';
 
 /* The path, not the host. Where this call goes and which key it carries now
    belong to `suppliers.ts`, because twenty-one calls each building their own
@@ -763,7 +764,13 @@ async function sayTurns(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      inputs: turns.map((turn) => ({ text: turn.text, voice_id: turn.voiceId })),
+      /* `[giggles]` is performed by eleven_v3 and read out loud by every
+         model before it — so the fallback hears the direction, not the
+         word. See `lib/kidsvoices.ts`. */
+      inputs: turns.map((turn) => ({
+        text: modelId === 'eleven_v3' ? turn.text : bare(turn.text),
+        voice_id: turn.voiceId,
+      })),
       model_id: modelId,
       ...(languageCode ? { language_code: languageCode } : {}),
       apply_text_normalization: 'auto',

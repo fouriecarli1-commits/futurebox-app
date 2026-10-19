@@ -82,6 +82,10 @@ for (const file of walk('app/components')) {
      `presenterCost`, `readCost`, `perMinute`, `billForEdit` — so importing
      from it is the one thing every honest price here has in common. */
   if (/from '\.\.\/lib\/credits'/.test(text)) continue;
+  /* The kids room's prices come from `kidsallowance.ts`, which builds every
+     one of them out of the same table — and `check:toelaag` holds each row
+     to it — so a room reading its price there reads the table too. */
+  if (/from '\.\.\/lib\/kidsallowance'/.test(text) && /priceOf\(/.test(text)) continue;
   silent.push(file.replace('app/components/', ''));
 }
 

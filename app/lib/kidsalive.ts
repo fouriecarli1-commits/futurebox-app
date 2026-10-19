@@ -118,6 +118,8 @@ export async function packDrawing(drawing: Blob): Promise<{ data: string; mime: 
 export async function makeKidPicture(
   words: string,
   from?: { data: string; mime: string } | null,
+  /** A storybook page: wider, and on the book's own brake (`?book=1`). */
+  book = false,
 ): Promise<{ picture: Blob } | { says: string }> {
   /* The header only when there is a session: `callerFrom` on the route
      reads it and answers "Sign in first" itself, in its own words, which
@@ -126,13 +128,13 @@ export async function makeKidPicture(
   const abort = new AbortController();
   const bell = setTimeout(() => abort.abort(), 120_000);
   try {
-    const answer = await fetch('/api/google/picture', {
+    const answer = await fetch(book ? '/api/google/picture?book=1' : '/api/google/picture', {
       signal: abort.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       /* Marked as the kids room's, so the route lets it through on a kids
          pack without a plan (`kidsCovers`). */
-      body: JSON.stringify({ words, aspect: '1:1', kids: true, ...(from ? { from } : {}) }),
+      body: JSON.stringify({ words, aspect: book ? '4:3' : '1:1', kids: true, ...(from ? { from } : {}) }),
     });
     if (!answer.ok) {
       const detail = (await answer.json().catch(() => ({}))) as { message?: string };

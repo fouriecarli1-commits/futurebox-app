@@ -223,9 +223,9 @@ export const VISUAL_STYLES: readonly VisualStyle[] = [
     id: '3d-toon',
     emoji: '🎨',
     name: ['kids.visual3dName', '3D Animation Style'],
-    desc: ['kids.visual3dDesc', 'Bright Pixar-like 3D characters with vibrant colors and warmth'],
-    badge: ['kids.visual3dBadge', '3D Pixar Pop'],
-    stylePrompt: '3D Pixar and Disney animation render, vibrant playful lighting, rich smooth textures, family friendly, bright cheerful colors, high detail CGI',
+    desc: ['kids.visual3dDesc', 'Bright 3D cartoon characters with vibrant colors and warmth'],
+    badge: ['kids.visual3dBadge', '3D Pop'],
+    stylePrompt: 'polished 3D animated-film render, vibrant playful lighting, rich smooth textures, family friendly, bright cheerful colors, high detail CGI',
     bgGradient: 'from-amber-400 via-orange-500 to-rose-500',
   },
   {
@@ -234,7 +234,7 @@ export const VISUAL_STYLES: readonly VisualStyle[] = [
     name: ['kids.visualWaterName', 'Fairy Tale Watercolor'],
     desc: ['kids.visualWaterDesc', 'Soft dreaming pastels, gentle brush strokes and fairy dust'],
     badge: ['kids.visualWaterBadge', 'Storybook Glow'],
-    stylePrompt: 'gentle children fairy tale watercolor illustration, soft glowing edges, magical sparkles, warm pastel wash, Beatrix Potter storybook art style',
+    stylePrompt: 'gentle children fairy tale watercolor illustration, soft glowing edges, magical sparkles, warm pastel wash, classic English storybook art style',
     bgGradient: 'from-teal-300 via-sky-400 to-indigo-500',
   },
   {
@@ -321,46 +321,42 @@ export function createSceneSvg(
 </svg>`;
 }
 
-/** Generates synthetic audio blob containing spoken or cheerful musical tones. */
-export async function createKidAudioBlob(seconds = 6): Promise<Blob> {
-  const sampleRate = 22050;
-  const numSamples = sampleRate * seconds;
-  const buffer = new ArrayBuffer(44 + numSamples * 2);
+/**
+ * A tenth of a second of nothing, as a WAV.
+ *
+ * The shelf keeps a sound with every page, and a page the phone reads has
+ * none of its own. This used to be six seconds of harp chimes, which is what
+ * "Read to me" played instead of reading (15 October 2026). Silence, with the
+ * page marked `phone`, is honest: the player reads it aloud itself.
+ */
+export function silentWav(): Blob {
+  const rate = 8000;
+  const samples = rate / 10;
+  const buffer = new ArrayBuffer(44 + samples * 2);
   const view = new DataView(buffer);
-
-  /* Write WAV Header */
-  const writeString = (offset: number, string: string): void => {
-    for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+  const write = (at: number, text: string): void => {
+    for (let i = 0; i < text.length; i += 1) view.setUint8(at + i, text.charCodeAt(i));
   };
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + numSamples * 2, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
+  write(0, 'RIFF');
+  view.setUint32(4, 36 + samples * 2, true);
+  write(8, 'WAVE');
+  write(12, 'fmt ');
   view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // Mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * 2, true);
   view.setUint16(32, 2, true);
   view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, numSamples * 2, true);
-
-  /* Cheerful child harp music chimes */
-  const melody = [261.63, 329.63, 392.00, 523.25, 440.00, 392.00, 329.63, 261.63];
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    const note = melody[Math.floor((t * 2) % melody.length)] ?? 261.63;
-    const env = Math.exp(-((t % 0.5) * 5));
-    const sample = Math.sin(2 * Math.PI * note * t) * 0.4 * env;
-    const intSample = Math.max(-32768, Math.min(32767, Math.floor(sample * 32767)));
-    view.setInt16(44 + i * 2, intSample, true);
-  }
-
+  write(36, 'data');
+  view.setUint32(40, samples * 2, true);
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
-/** Generates a complete illustrated 4-page KeptStory. */
+/**
+ * The Story Maker's own four-page book, for when the story engine is not
+ * there to write one. Read by the phone, drawn by the browser.
+ */
 export async function buildStoryboardStory({
   heroId,
   settingId,
@@ -420,7 +416,7 @@ export async function buildStoryboardStory({
   ];
 
   const pages: KeptPage[] = [];
-  const audioBlob = await createKidAudioBlob(6);
+  const audioBlob = silentWav();
 
   for (let i = 0; i < pageTexts.length; i++) {
     const textPair = pageTexts[i];
@@ -433,7 +429,8 @@ export async function buildStoryboardStory({
       text: pageText,
       picture: picBlob,
       audio: audioBlob,
-      seconds: 6,
+      seconds: Math.ceil(pageText.length / 13),
+      phone: true,
     });
   }
 

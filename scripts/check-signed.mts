@@ -52,6 +52,8 @@ const ALLOWED: Record<string, string> = {
     'reading an invite link, which is handed to strangers by definition — the whole point is that somebody with no account can see who sent it',
   'app/lib/signal.ts:events':
     'counting what happened, for signed-out visitors as much as signed-in ones — the route takes the caller as optional and writes a null owner when there is none. It stays unsigned for a second reason worth being explicit about: it is a `keepalive` beacon fired as the page is closing, and putting an async token read in front of it trades a number that is always counted for an `owner` column that is only sometimes useful',
+  'app/components/KidsStoryboard.tsx:kids/read':
+    'a capability probe — "are the story voices switched on, and which stock voice is each storyteller", the same answer for everybody, asked so a child can hear a storyteller before anything is spent. The POSTs that read a page are signed, in lib/kidsbook.ts',
   'app/components/Presenter.tsx:presenter':
     'a capability probe — "is the presenter engine switched on", which is the same answer for everybody and is asked before the panel draws anything. The POST below it, which makes a presenter and is charged for, is signed. This entry exists because the GET was never signed and was passing by reading the header of the fetch underneath it; the window that allowed that is fixed below',
 };

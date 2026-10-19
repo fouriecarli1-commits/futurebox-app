@@ -2158,3 +2158,69 @@ button:has(.animate-spin) {
   button:has(.animate-spin) { animation: none; }
   .fb-workbar::after { animation-duration: 3s; }
 }
+
+/* ── The kids story player (19 October 2026) ─────────────────────────────
+   The owner: "storie generasie moet meer motion en meer visual wees." Every
+   picture moves the way the story engine said (`lib/kidstory.ts` MOTIONS),
+   things float over it, the page turns in like paper, whoever is talking
+   bobs, and a tap throws sparkles. `KidsStoryPlayer.tsx`. */
+@keyframes fb-story-zoom-in { from { transform: scale(1.02); } to { transform: scale(1.18); } }
+@keyframes fb-story-zoom-out { from { transform: scale(1.2); } to { transform: scale(1.03); } }
+@keyframes fb-story-pan-left { from { transform: scale(1.18) translateX(5%); } to { transform: scale(1.18) translateX(-5%); } }
+@keyframes fb-story-pan-right { from { transform: scale(1.18) translateX(-5%); } to { transform: scale(1.18) translateX(5%); } }
+@keyframes fb-story-float { 0%, 100% { transform: scale(1.1) translateY(2.5%); } 50% { transform: scale(1.12) translateY(-2.5%); } }
+@keyframes fb-story-tilt { 0%, 100% { transform: scale(1.15) rotate(-1.4deg); } 50% { transform: scale(1.15) rotate(1.4deg); } }
+.fb-story-move {
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-fill-mode: both;
+  will-change: transform;
+}
+.fb-story-zoom-in { animation-name: fb-story-zoom-in; }
+.fb-story-zoom-out { animation-name: fb-story-zoom-out; }
+.fb-story-pan-left { animation-name: fb-story-pan-left; }
+.fb-story-pan-right { animation-name: fb-story-pan-right; }
+.fb-story-float { animation-name: fb-story-float; }
+.fb-story-tilt { animation-name: fb-story-tilt; }
+
+@keyframes fb-story-turn {
+  from { transform: rotateY(-70deg) scale(0.94); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.fb-story-turn { transform-origin: left center; animation: fb-story-turn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@keyframes fb-story-rise {
+  0% { transform: translateY(0) scale(0.6) rotate(0deg); opacity: 0; }
+  15% { opacity: 0.95; }
+  100% { transform: translateY(-140px) scale(1.1) rotate(25deg); opacity: 0; }
+}
+.fb-story-floater { opacity: 0; animation: fb-story-rise 5s ease-in infinite; text-shadow: 0 0 10px rgb(255 255 255 / 0.8); }
+
+@keyframes fb-story-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.fb-story-pop { animation: fb-story-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+
+@keyframes fb-story-talk {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(-7deg); }
+  75% { transform: translateY(-1px) rotate(7deg); }
+}
+.fb-story-talk { display: inline-block; animation: fb-story-talk 0.55s ease-in-out infinite; }
+
+@keyframes fb-story-burst {
+  from { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.25); opacity: 0; }
+}
+.fb-story-burst { width: 0; height: 0; }
+.fb-story-burst > span { position: absolute; left: 0; top: 0; font-size: 22px; animation: fb-story-burst 0.85s ease-out forwards; }
+
+.fb-story-lit { box-shadow: 0 0 14px rgb(251 191 36 / 0.75); transition: background-color 0.15s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-story-move, .fb-story-floater, .fb-story-talk, .fb-story-turn, .fb-story-pop, .fb-story-burst > span { animation: none !important; }
+  .fb-story-floater { opacity: 0.8; }
+}

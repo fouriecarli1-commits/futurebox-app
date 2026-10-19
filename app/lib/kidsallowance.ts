@@ -38,6 +38,7 @@
  */
 
 import { CREDITS, readCost, videoCost } from './credits';
+import { ENGINE_PAGES, READ_MOST_CHARS } from './kidstory';
 
 /** The three things she named on 9 October, and the picture of 13 October. */
 export type KidThing = 'song' | 'video' | 'story' | 'picture';
@@ -50,9 +51,15 @@ export type KidThing = 'song' | 'video' | 'story' | 'picture';
  */
 export const VIDEO_SECONDS = 10;
 
-/** A story, in pages and in characters a page. Eight pages of a few lines. */
-export const STORY_PAGES = 8;
-export const STORY_PAGE_CHARS = 400;
+/**
+ * A story, in pages and in characters a page: what the story engine writes
+ * and the most one page's reading may be, question included
+ * (`lib/kidstory.ts`). Six pages since 19 October 2026, when the engine took
+ * over from the template — six pictures drawn to match is a book a child
+ * sits through, and the price below follows it.
+ */
+export const STORY_PAGES = ENGINE_PAGES;
+export const STORY_PAGE_CHARS = READ_MOST_CHARS;
 
 export interface Priced {
   readonly id: KidThing;
@@ -104,7 +111,7 @@ export const KID_PRICES: readonly Priced[] = [
        there. The price is what MAKING one costs — hearing a kept one costs
        nothing, which is the point of the shelf and is said on the page. */
     ready: true,
-    says: ['kids.priceStory', 'A story read out loud, eight pages with a picture each'],
+    says: ['kids.priceStory', 'A story read out loud in story voices, six pages with a picture each'],
   },
   {
     id: 'picture',

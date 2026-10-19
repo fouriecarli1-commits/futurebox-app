@@ -90,8 +90,18 @@ const MIMES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const ASPECTS = new Set(['1:1', '16:9', '9:16', '4:3', '3:4']);
 type Aspect = '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
 
+/** One storybook's pages, a few at a time, and a few books an hour. */
+const BOOK_PAGES = { perMinute: 8, perHour: 40 };
+
 export async function POST(request: Request): Promise<Response> {
-  const flood = refuseIfTooMany('google-picture', request, GENERATION);
+  /* A child's storybook draws six pages in a row, and `GENERATION` lets
+     three through a minute — so page four of every book was refused. The
+     book's pages come on a brake of their own, still braked, still charged
+     page by page and still under the spend ceiling below. */
+  const book = new URL(request.url).searchParams.get('book') === '1';
+  const flood = book
+    ? refuseIfTooMany('google-picture-book', request, BOOK_PAGES)
+    : refuseIfTooMany('google-picture', request, GENERATION);
   if (flood) return flood;
 
   if (!configured()) {

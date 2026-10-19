@@ -32,13 +32,14 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BookOpen, Loader2, Pause, Play, Printer, Trash2 } from 'lucide-react';
+import { BookOpen, Loader2, Printer, Trash2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import {
   allStories, forgetStory, onAccount, onDevice, type KeptStory,
 } from '../lib/storykeep';
 import { moveShelf } from '../lib/shelfmove';
 import StoryBook from './StoryBook';
+import KidsStoryPlayer from './KidsStoryPlayer';
 
 export default function StoryShelf({
   grownUp = false,
@@ -64,13 +65,10 @@ export default function StoryShelf({
   }).replace(/\s{2,}/g, ' ');
   const [shelf, setShelf] = useState<KeptStory[] | null>(null);
   const [open, setOpen] = useState<KeptStory | null>(null);
-  const [page, setPage] = useState(0);
-  const [playing, setPlaying] = useState(false);
   /* The story being looked at on paper. Separate from `open`, which plays a
      reading aloud: printing is silent and does not turn pages. */
   const [onPaper, setOnPaper] = useState<KeptStory | null>(null);
 
-  const audio = useRef<HTMLAudioElement | null>(null);
   /* Every object URL handed out, revoked when the story is closed. A shelf
      of twelve books opened one after another is otherwise a few hundred
      megabytes held for as long as the tab is. */
@@ -89,8 +87,6 @@ export default function StoryShelf({
   useEffect(look, [look]);
 
   const letGo = useCallback(() => {
-    audio.current?.pause();
-    audio.current = null;
     urls.current.forEach((one) => URL.revokeObjectURL(one));
     urls.current = [];
   }, []);
@@ -103,34 +99,9 @@ export default function StoryShelf({
   }, []);
 
   /** Read one page, and turn to the next when it ends. */
-  const read = useCallback((story: KeptStory, at: number): void => {
-    audio.current?.pause();
-    const sound = new Audio(url(story.pages[at].audio));
-    audio.current = sound;
-    sound.onended = () => {
-      if (at + 1 < story.pages.length) {
-        setPage(at + 1);
-        read(story, at + 1);
-      } else {
-        setPlaying(false);
-      }
-    };
-    void sound.play();
-    setPlaying(true);
-  }, [url]);
+  const openStory = (story: KeptStory): void => setOpen(story);
 
-  const openStory = (story: KeptStory): void => {
-    letGo();
-    setOpen(story);
-    setPage(0);
-    read(story, 0);
-  };
-
-  const shut = (): void => {
-    letGo();
-    setOpen(null);
-    setPlaying(false);
-  };
+  const shut = (): void => setOpen(null);
 
   if (shelf === null) {
     return (
@@ -141,43 +112,28 @@ export default function StoryShelf({
     );
   }
 
-  /* ── A story, open ─────────────────────────────────────────────────── */
+  /* ── A story, open ───────────────────────────────────────────────────
+     In the story player since 19 October 2026 (`KidsStoryPlayer`): the
+     picture moves and sparkles, the page turns, the speaker pops up and the
+     words light as they are read. A book from before then plays the same
+     way, without the speakers and questions it was never given. */
   if (open) {
-    const here = open.pages[page];
     return (
-      <div className="space-y-3" data-shelfopen>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url(here.picture)}
-          alt=""
-          className="w-full rounded-2xl border border-zinc-800 bg-black object-cover"
+      <div data-shelfopen>
+        <KidsStoryPlayer
+          story={open}
+          say={named}
+          actions={(
+            <button
+              type="button"
+              onClick={shut}
+              data-shelfshut
+              className="min-h-[44px] w-full rounded-xl border border-surface-300 px-4 text-sm font-bold text-surface-800"
+            >
+              {t('shelf.done', 'Done')}
+            </button>
+          )}
         />
-        <p className="text-base leading-relaxed text-zinc-200">{named(here.text)}</p>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => (playing ? (audio.current?.pause(), setPlaying(false)) : read(open, page))}
-            data-shelfplay
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-onAccent"
-            aria-label={playing ? t('shelf.pause', 'Pause') : t('shelf.play', 'Play')}
-          >
-            {playing ? <Pause className="h-6 w-6" fill="currentColor" /> : <Play className="h-6 w-6 translate-x-0.5" fill="currentColor" />}
-          </button>
-          <span className="flex-1 text-sm font-bold text-zinc-400">
-            {t('shelf.pageOf', 'Page {n} of {all}')
-              .replace('{n}', String(page + 1))
-              .replace('{all}', String(open.pages.length))}
-          </span>
-          <button
-            type="button"
-            onClick={shut}
-            data-shelfshut
-            className="min-h-[44px] shrink-0 rounded-xl border border-zinc-700 px-4 text-sm font-bold text-zinc-300"
-          >
-            {t('shelf.done', 'Done')}
-          </button>
-        </div>
       </div>
     );
   }

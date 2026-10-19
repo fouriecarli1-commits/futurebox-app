@@ -14,22 +14,24 @@
  * gaan hulle engaged hou."*
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft, ArrowRight, BookOpen, Check, Dices, Heart, Loader2,
-  Palette, Play, RotateCcw, Sparkles, Volume2, X,
+  ArrowLeft, ArrowRight, Check, Dices, Heart, Loader2,
+  RotateCcw, Sparkles, Volume2, X,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import {
-  buildStoryboardStory,
   QUICK_STORY_SEEDS,
   STORY_SECTIONS,
   VISUAL_STYLES,
   type VisualStyle,
 } from '../lib/kidsstoryboard';
 import { keepStory, type KeptStory } from '../lib/storykeep';
-import { readAloud, stopReading } from '../lib/kidspip';
+import { makeBook, type BookProgress } from '../lib/kidsbook';
+import { STORYTELLERS, type KidVoiceId } from '../lib/kidsvoices';
+import { priceOf } from '../lib/kidsallowance';
 import { StyleTile } from './MeerkatTile';
+import KidsStoryPlayer from './KidsStoryPlayer';
 
 /** Which drawn meerkat shows each storybook style. */
 const STORY_STYLE_TILE: Readonly<Record<string, string>> = {
@@ -58,10 +60,50 @@ export default function KidsStoryboard({
   const [spinning, setSpinning] = useState(false);
   const [building, setBuilding] = useState(false);
   const [story, setStory] = useState<KeptStory | null>(null);
-  const [readerPage, setReaderPage] = useState(0);
   const [kept, setKept] = useState(false);
-  const [playingAudio, setPlayingAudio] = useState(false);
-  const [noVoice, setNoVoice] = useState(false);
+  /* ── The story engine (19 October 2026) ─────────────────────────────
+     The owner: "Die story mode moet 'n ander AI engine gebruik, die
+     voorlesing moet so mooi wees soos die podcast. Dalk 'n paar avatar
+     stemme opstel." Who reads it is the child's choice; the characters'
+     voices are the engine's. */
+  const [storyteller, setStoryteller] = useState<KidVoiceId>('owl');
+  const [making, setMaking] = useState<BookProgress | null>(null);
+  const [notes, setNotes] = useState<string[]>([]);
+  const [engineOn, setEngineOn] = useState<boolean | null>(null);
+  const [samples, setSamples] = useState<Record<string, string>>({});
+  const sample = useRef<HTMLAudioElement | null>(null);
+  const [sampling, setSampling] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void Promise.all([
+      fetch('/api/kids/story').then((one) => one.json()).catch(() => ({ available: false })),
+      fetch('/api/kids/read').then((one) => one.json()).catch(() => ({ available: false, samples: {} })),
+    ]).then(([words, voices]: [{ available?: boolean }, { available?: boolean; samples?: Record<string, string> }]) => {
+      if (!live) return;
+      setEngineOn(Boolean(words.available));
+      setSamples(voices.available ? voices.samples ?? {} : {});
+    });
+    return () => {
+      live = false;
+      sample.current?.pause();
+    };
+  }, []);
+
+  /* A storyteller's voice, heard before anything is spent: their stock
+     sample, through the same-origin preview route. */
+  const hear = (id: KidVoiceId): void => {
+    sample.current?.pause();
+    if (sampling === id) { setSampling(null); return; }
+    const voice = samples[id];
+    if (!voice) return;
+    const audio = new Audio(`/api/voice/preview?id=${encodeURIComponent(voice)}`);
+    sample.current = audio;
+    setSampling(id);
+    audio.onended = () => setSampling(null);
+    audio.onerror = () => setSampling(null);
+    void audio.play().catch(() => setSampling(null));
+  };
 
   /* Quick mystery spin across all sections */
   const spinAll = (): void => {
@@ -92,25 +134,27 @@ export default function KidsStoryboard({
     setVisual(found.visual);
   };
 
-  /* Build story */
+  /* Make the book: written, drawn and voiced, or the Story Maker's own. */
   const generateStory = async (): Promise<void> => {
+    if (building) return;
+    sample.current?.pause();
     setBuilding(true);
+    setNotes([]);
     try {
-      const made = await buildStoryboardStory({
-        heroId: hero,
-        settingId: setting,
-        twistId: twist,
-        endingId: ending,
-        visualStyleId: visual,
+      const made = await makeBook({
+        choices: { hero, setting, twist, ending, visual },
+        storyteller,
         lang: lang === 'af' ? 'af' : 'en',
         say: (pair) => t(pair[0], pair[1]),
+        onProgress: setMaking,
       });
-      setStory(made);
+      setStory(made.story);
+      setNotes(made.engine ? made.notes : []);
       setActiveStep(5);
-      setReaderPage(0);
       setKept(false);
     } finally {
       setBuilding(false);
+      setMaking(null);
     }
   };
 
@@ -122,43 +166,13 @@ export default function KidsStoryboard({
     onStoryKept?.();
   };
 
-  /* ── Read to me: the page aloud, then the next, to the end ──────────
-     The owner, 15 October 2026: "Read to me werk nie." It played six seconds of
-     chimes. Now the phone reads the page in its own voice and turns to the
-     next page when it is done, so one press reads the whole book; another
-     press stops it. Free: nothing leaves the phone. */
-  const reading = useRef(false);
-  const readFrom = (at: number): void => {
-    if (!story || !reading.current) return;
-    setReaderPage(at);
-    const started = readAloud(story.pages[at].text, lang === 'af' ? 'af' : 'en', () => {
-      if (!reading.current) return;
-      if (at + 1 < story.pages.length) readFrom(at + 1);
-      else { reading.current = false; setPlayingAudio(false); }
-    });
-    if (!started) { reading.current = false; setPlayingAudio(false); setNoVoice(true); }
-  };
-  const playPageSound = (): void => {
-    if (!story) return;
-    if (playingAudio) { reading.current = false; stopReading(); setPlayingAudio(false); return; }
-    reading.current = true;
-    setPlayingAudio(true);
-    readFrom(readerPage);
-  };
-  const turnTo = (at: number): void => {
-    reading.current = false;
-    stopReading();
-    setPlayingAudio(false);
-    setReaderPage(at);
-  };
-  useEffect(() => () => { reading.current = false; stopReading(); }, []);
-  /* One address per page picture, made once and let go of, instead of a new
-     one on every draw. */
-  const pictureUrl = useMemo(() => {
-    const picture = story?.pages[readerPage]?.picture;
-    return picture ? URL.createObjectURL(picture) : '';
-  }, [story, readerPage]);
-  useEffect(() => () => { if (pictureUrl) URL.revokeObjectURL(pictureUrl); }, [pictureUrl]);
+  /* While the book is being made, its pages appear as they are drawn. */
+  const [thumbs, setThumbs] = useState<string[]>([]);
+  useEffect(() => {
+    const made = (making?.drawn ?? []).map((one) => (one ? URL.createObjectURL(one) : ''));
+    setThumbs(made);
+    return () => made.forEach((one) => one && URL.revokeObjectURL(one));
+  }, [making]);
 
   return (
     <div
@@ -191,7 +205,7 @@ export default function KidsStoryboard({
       </div>
 
       {/* ── Wizard Step Navigation (Steps 0..4) ────────────────────── */}
-      {activeStep < 5 && (
+      {activeStep < 5 && !building && (
         <div className="pt-4 space-y-4">
           {/* ── Google's "Drone Director", 13 October 2026 ──────────────
               A guide bar with the drone and the three steps, and the quick
@@ -426,6 +440,54 @@ export default function KidsStoryboard({
                 })}
               </div>
 
+              {/* ── Who reads it ─────────────────────────────────────────
+                  The owner, 19 October 2026: "Dalk 'n paar avatar stemme
+                  opstel." Four storytellers to pick from, each one heard
+                  before a credit is spent. */}
+              <div className="space-y-2 pt-2" data-kidsstorytellers>
+                <h3 className="text-base sm:text-lg font-black text-surface-950">
+                  {t('kids.whoReads', 'Who reads your story?')}
+                </h3>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {STORYTELLERS.map((one) => {
+                    const picked = storyteller === one.id;
+                    return (
+                      <div
+                        key={one.id}
+                        className={`relative flex flex-col items-center gap-1 rounded-2xl p-3 text-center transition-all ${
+                          picked ? 'border-4 border-primary-500 bg-surface-50 shadow-lg' : 'border-2 border-surface-200 bg-surface-100/80'
+                        }`}
+                        style={picked ? { boxShadow: `0 0 18px ${one.glow}` } : undefined}
+                      >
+                        <button
+                          type="button"
+                          data-kidsstoryteller={one.id}
+                          aria-pressed={picked}
+                          onClick={() => setStoryteller(one.id)}
+                          className="flex w-full flex-col items-center gap-1"
+                        >
+                          <span className={`text-4xl ${picked ? 'fb-story-talk' : ''}`} aria-hidden>{one.emoji}</span>
+                          <span className="text-sm font-black text-surface-950">{t(one.name[0], one.name[1])}</span>
+                          <span className="text-[11px] font-semibold leading-tight text-surface-600">{t(one.about[0], one.about[1])}</span>
+                        </button>
+                        {samples[one.id] && (
+                          <button
+                            type="button"
+                            data-kidsvoicesample={one.id}
+                            aria-pressed={sampling === one.id}
+                            onClick={() => hear(one.id)}
+                            aria-label={t('kids.hearVoice', 'Hear this voice')}
+                            className="absolute right-1.5 top-1.5 flex h-9 w-9 items-center justify-center rounded-full border border-surface-300 bg-surface-50 text-surface-800"
+                          >
+                            <Volume2 className={`h-4 w-4 ${sampling === one.id ? 'animate-pulse' : ''}`} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Generate Story Button */}
               <div className="flex items-center justify-between pt-4">
                 <button
@@ -452,6 +514,15 @@ export default function KidsStoryboard({
                     <>
                       <Sparkles className="h-5 w-5" />
                       <span>{t('kids.makeMyStory', 'Create My Illustrated Story! ✨')}</span>
+                      {/* What it costs, on the button: the pictures and the
+                          voices, from the kids room's credits. The Story
+                          Maker's own book, when the engine is off, costs
+                          nothing to make and says no price. */}
+                      {engineOn && (
+                        <span data-kidsstoryprice className="rounded-full bg-surface-50/25 px-2 py-0.5 text-xs">
+                          {t('kids.storyPrice', '{n} credits').replace('{n}', String(priceOf('story')))}
+                        </span>
+                      )}
                     </>
                   )}
                 </button>
@@ -461,116 +532,82 @@ export default function KidsStoryboard({
         </div>
       )}
 
-      {/* ── Step 5: Illustrated Storybook Viewer ───────────────────── */}
-      {activeStep === 5 && story && (
-        <div className="space-y-5 pt-4" data-kidsreader>
-          {/* Story Title & Action header */}
-          <div className="space-y-2 bg-surface-100/90 rounded-2xl p-3 border border-surface-200">
-            <div className="min-w-0">
-              <span className="text-[11px] font-black uppercase tracking-wider text-surface-600">
-                {t('kids.pageCount', 'Page {current} of {total}')
-                  .replace('{current}', String(readerPage + 1))
-                  .replace('{total}', String(story.pages.length))}
-              </span>
-              <h3 className="text-base font-black leading-snug text-surface-950">
-                {story.title}
-              </h3>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                data-kidsreadtome
-                aria-pressed={playingAudio}
-                onClick={playPageSound}
-                className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-black transition-colors ${
-                  playingAudio
-                    ? 'border-purple-400 bg-purple-500 text-white animate-pulse'
-                    : 'border-surface-300 bg-surface-50 text-surface-800'
-                }`}
-              >
-                <Volume2 className="h-4 w-4" />
-                <span>{playingAudio ? t('kids.readStop', 'Stop reading') : t('kids.readToMe', 'Read to me')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleKeep()}
-                disabled={kept}
-                className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-black transition-colors ${
-                  kept
-                    ? 'bg-rose-500 text-white shadow-xs'
-                    : 'border border-surface-300 bg-surface-50 text-surface-800'
-                }`}
-              >
-                <Heart className="h-4 w-4" fill={kept ? 'currentColor' : 'none'} />
-                <span>{kept ? t('kids.keptIt', 'Kept') : t('kids.keepToShelf', 'Keep to shelf')}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Book Page Card with SVG Illustration */}
-          <div className="rounded-3xl border-4 border-surface-200 bg-surface-50 p-4 sm:p-6 shadow-xl">
-            {/* Illustration */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-inner bg-surface-100 flex items-center justify-center">
-              {pictureUrl && (
-                <img
-                  src={pictureUrl}
-                  alt={story.title}
-                  className="w-full h-full object-cover rounded-2xl"
-                />
+      {/* ── The book being made ─────────────────────────────────────── */}
+      {building && (
+        <div className="space-y-4 pt-4" data-kidsmaking role="status" aria-live="polite">
+          <div className="flex items-center gap-3 rounded-3xl border-2 border-amber-300 bg-surface-100/90 px-4 py-3">
+            <span className="fb-kids-float text-4xl" aria-hidden>{making?.step === 'draw' ? '🎨' : '✍️'}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-black text-surface-950">
+                {making?.step === 'draw'
+                  ? t('kids.makingDraw', 'Drawing the pages and recording the voices…')
+                  : t('kids.makingWrite', 'Writing your story…')}
+              </p>
+              {making?.step === 'draw' && making.pages > 0 && (
+                <p className="text-xs font-bold text-surface-700">
+                  {t('kids.makingCount', '{drawn} of {pages} pictures · {voiced} of {pages} voices')
+                    .replace('{drawn}', String(making.drawn.filter(Boolean).length))
+                    .replace('{voiced}', String(making.voiced))
+                    .replaceAll('{pages}', String(making.pages))}
+                </p>
               )}
             </div>
-
-            {/* Page Prose */}
-            {/* On the room's own paper, not amber-50: on the dark kids theme
-                the text colour is light, and light on pale cream was the
-                unreadable page in the owner's screenshot. */}
-            <div className="mt-5 rounded-2xl bg-surface-100 p-4 sm:p-5 border-2 border-amber-300/80">
-              <p data-kidspagetext className="text-base sm:text-lg font-bold leading-relaxed text-surface-950">
-                {story.pages[readerPage]?.text}
-              </p>
-            </div>
           </div>
+          <div className="fb-workbar relative h-2 overflow-hidden rounded-full bg-surface-200" aria-hidden />
+          {making && making.pages > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {Array.from({ length: making.pages }, (_, i) => (
+                <div key={i} data-kidsmakingpage={i} className="relative aspect-[4/3] overflow-hidden rounded-2xl border-2 border-surface-200 bg-surface-100">
+                  {thumbs[i] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={thumbs[i]} alt="" className="fb-story-pop h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full items-center justify-center text-2xl" aria-hidden>
+                      <span className="fb-kids-float">✨</span>
+                    </span>
+                  )}
+                  <span className="absolute left-1.5 top-1.5 rounded-full bg-surface-50/90 px-1.5 text-[11px] font-black text-surface-900">{i + 1}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-          {/* Pagination Controls */}
-          {noVoice && (
-            <p className="rounded-2xl border-2 border-surface-200 bg-surface-100 px-4 py-3 text-sm font-semibold text-surface-900">
-              {t('kids.noVoice', 'This phone has no reading voice switched on. A grown-up can turn on text-to-speech in the phone\u2019s settings.')}
+      {/* ── Step 5: the storybook, played ─────────────────────────────── */}
+      {activeStep === 5 && story && !building && (
+        <div className="space-y-4 pt-4" data-kidsreader>
+          {notes.length > 0 && (
+            <p data-kidsstorynote className="rounded-2xl border-2 border-amber-300/80 bg-surface-100 px-4 py-3 text-sm font-semibold text-surface-900">
+              {notes[0]}
             </p>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => turnTo(Math.max(0, readerPage - 1))}
-              disabled={readerPage === 0}
-              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border-2 border-surface-300 bg-surface-50 px-3 text-sm font-black text-surface-800 disabled:opacity-30"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>{t('kids.prevPage', 'Previous Page')}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => turnTo(Math.min(story.pages.length - 1, readerPage + 1))}
-              disabled={readerPage === story.pages.length - 1}
-              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-primary-500 px-3 text-sm font-black text-white shadow-md hover:bg-primary-600 disabled:opacity-30"
-            >
-              <span>{t('kids.nextPage', 'Next Page')}</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                turnTo(0);
-                setActiveStep(0);
-                setStory(null);
-              }}
-              className="col-span-2 inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-2xl border-2 border-surface-200 bg-surface-100/90 px-3.5 text-sm font-black text-surface-700 hover:bg-surface-200"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>{t('kids.makeAnother', 'Make Another Story')}</span>
-            </button>
-          </div>
+          <KidsStoryPlayer
+            story={story}
+            actions={(
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleKeep()}
+                  disabled={kept}
+                  className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-black transition-colors ${
+                    kept ? 'bg-rose-500 text-white shadow-xs' : 'border border-surface-300 bg-surface-50 text-surface-800'
+                  }`}
+                >
+                  <Heart className="h-4 w-4" fill={kept ? 'currentColor' : 'none'} />
+                  <span>{kept ? t('kids.keptIt', 'Kept') : t('kids.keepToShelf', 'Keep to shelf')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setActiveStep(0); setStory(null); setNotes([]); }}
+                  className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-surface-300 bg-surface-50 px-3 text-sm font-black text-surface-800"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  <span>{t('kids.makeAnother', 'Make Another Story')}</span>
+                </button>
+              </div>
+            )}
+          />
         </div>
       )}
     </div>

@@ -54,6 +54,8 @@
  */
 
 import { cloudShelfOf } from './cloudshelf';
+import { MOTIONS, SPARKLES, type Motion, type Sparkle, type StoryLine } from './kidstory';
+import { kidVoice } from './kidsvoices';
 import { shelfOf, type Put, type Shelf } from './ondevice';
 
 /* The device shelf these were kept on before 9 October. Not written to any
@@ -81,6 +83,22 @@ export interface KeptPage {
   readonly audio: Blob;
   /** How long the reading is, so the shelf can turn pages without decoding. */
   readonly seconds: number;
+  /* ── What the story engine adds (19 October 2026) ──────────────────────
+     All optional: a book kept before then, or made in the grown-up's Story
+     mode, has none of them and plays as it always has. */
+  /** Who says what, so the player shows the speaker and lights the words. */
+  readonly lines?: readonly StoryLine[];
+  /** How the picture moves. */
+  readonly motion?: Motion;
+  /** What floats over it. */
+  readonly sparkle?: Sparkle;
+  /** The question asked when the page has been read. */
+  readonly wonder?: string;
+  /**
+   * Read by the phone's own voice: there was no story voice to be had, so
+   * `audio` is a moment of silence and the player says the words itself.
+   */
+  readonly phone?: boolean;
 }
 
 export interface KeptStory {
@@ -115,6 +133,11 @@ interface StoryBody {
     readonly picture: string;
     readonly audio: string;
     readonly seconds: number;
+    readonly lines?: readonly StoryLine[];
+    readonly motion?: string;
+    readonly sparkle?: string;
+    readonly wonder?: string;
+    readonly phone?: boolean;
   }[];
 }
 
@@ -143,6 +166,11 @@ const shelf = cloudShelfOf<KeptStory, StoryBody>({
       picture: at(`page-${i}-picture`),
       audio: at(`page-${i}-audio`),
       seconds: page.seconds,
+      ...(page.lines ? { lines: page.lines } : {}),
+      ...(page.motion ? { motion: page.motion } : {}),
+      ...(page.sparkle ? { sparkle: page.sparkle } : {}),
+      ...(page.wonder ? { wonder: page.wonder } : {}),
+      ...(page.phone ? { phone: true } : {}),
     })),
   }),
   back: async (row, file) => {
@@ -155,7 +183,23 @@ const shelf = cloudShelfOf<KeptStory, StoryBody>({
          or turns in silence. The whole story is skipped rather than shown
          with a hole in it. */
       if (!picture || !audio) return null;
-      pages.push({ text: page.text, picture, audio, seconds: Number(page.seconds) || 0 });
+      /* What came back from storage is checked like anything else read
+         off a row: a voice that is not a story voice, or a motion that is
+         not a motion, is left off rather than handed to the player. */
+      const lines = Array.isArray(page.lines)
+        ? page.lines.filter((one) => kidVoice(one?.who) && typeof one?.text === 'string')
+        : [];
+      pages.push({
+        text: page.text,
+        picture,
+        audio,
+        seconds: Number(page.seconds) || 0,
+        ...(lines.length ? { lines } : {}),
+        ...((MOTIONS as readonly string[]).includes(String(page.motion)) ? { motion: page.motion as Motion } : {}),
+        ...((SPARKLES as readonly string[]).includes(String(page.sparkle)) ? { sparkle: page.sparkle as Sparkle } : {}),
+        ...(typeof page.wonder === 'string' && page.wonder ? { wonder: page.wonder.slice(0, 160) } : {}),
+        ...(page.phone === true ? { phone: true } : {}),
+      });
     }
     return { id: row.id, title: row.title, made: row.made, pages };
   },
