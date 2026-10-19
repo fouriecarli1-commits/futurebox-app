@@ -32,7 +32,7 @@
  * signing in is counted, welcome, and told which of the two they are.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Flag, Headphones, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users, Video } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
@@ -49,6 +49,9 @@ import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
 import Card from './Card';
 import LiveJam from './LiveJam';
+import { ReportFlag } from './ReportSheet';
+import { useBlocked } from '../lib/blocked';
+import { withoutBlocked } from '../lib/reports';
 
 /** Often enough that the room never blinks out, rare enough to be polite. */
 const HELLO_EVERY = 30_000;
@@ -69,6 +72,8 @@ const playable = (post: Post): boolean =>
 
 interface Post {
   id: string;
+  /** Which member, as a key that is not their account — for blocking (`server/who.ts`). */
+  who?: string;
   kind: 'track' | 'episode' | 'elsewhere' | 'video';
   title: string;
   note: string;
@@ -140,6 +145,7 @@ interface Said {
   at: string;
   by: string;
   mine: boolean;
+  who?: string;
 }
 
 interface Room {
@@ -479,6 +485,15 @@ function RoomPanel({
             <Eye className="h-5 w-5" />
           </a>
         )}
+        {/* Report it, or block whoever posted it — without leaving the
+            room (Google Play's rule for what members post; `lib/reports.ts`). */}
+        {!post.mine && (
+          <ReportFlag
+            target={{ kind: 'post', ref: post.id, about: post.who ?? null, name: post.by, post: post.id, where: 'live' }}
+            className="h-10 w-10 backdrop-blur-sm"
+            style={{ background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.75)' }}
+          />
+        )}
         {post.mine && (
           <button
             type="button"
@@ -531,6 +546,14 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [room, setRoom] = useState<Room>(EMPTY);
+  /* The room as this reader sees it: without the members they have blocked,
+     the moment they block them (`lib/blocked.ts`). The server leaves them out
+     too, on the next read, for somebody signed in. */
+  const blocked = useBlocked();
+  const shown = useMemo(() => ({
+    posts: withoutBlocked(room.posts, (post) => post.who, blocked),
+    says: withoutBlocked(room.says, (said) => said.who, blocked),
+  }), [room, blocked]);
   const [tracks, setTracks] = useState<Track[]>([]);
   /**
    * Your videos, from the account rather than from this device.
@@ -1113,7 +1136,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
           )}
         </p>
         <div className="space-y-1 max-h-64 overflow-y-auto">
-          {room.says.length === 0 && (
+          {shown.says.length === 0 && (
             <p className="text-sm text-zinc-600">
               {room.livesUnchecked
                 ? t(
@@ -1123,7 +1146,7 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
                 : t('live.noLives', 'Nobody is live in here right now.')}
             </p>
           )}
-          {room.says.map((said) => (
+          {shown.says.map((said) => (
             <div key={said.id} className="flex items-start gap-2 text-sm leading-snug">
               <span className={said.mine ? 'text-emerald-300 font-semibold shrink-0' : 'text-zinc-400 font-semibold shrink-0'}>
                 {said.by}
@@ -1206,11 +1229,11 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
       {/* A video counts as something to play. The same miss as the badge:
           this asked for `audio` and meant "anything with a medium", so a
           room holding nothing but videos offered no way to start it. */}
-      {room.posts.some(playable) && (
+      {shown.posts.some(playable) && (
         <button
           type="button"
           onClick={() => {
-            const first = room.posts.find(playable);
+            const first = shown.posts.find(playable);
             if (first) setOpenAt(first.id);
           }}
           className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 text-onAccent font-bold"
@@ -1220,11 +1243,11 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
         </button>
       )}
 
-      {room.posts.length === 0 ? (
+      {shown.posts.length === 0 ? (
         <Note>{t('live.quiet', 'Nothing in the room yet. Put a song in and it is the first thing anybody hears.')}</Note>
       ) : (
         <div className="-mx-1 space-y-3 px-1">
-          {room.posts.map((post) => (
+          {shown.posts.map((post) => (
             <RoomPanel
               key={post.id}
               post={post}
@@ -1251,10 +1274,13 @@ export default function LiveChannel({ onGoToMake, onGoToBooth }: {
 
       {openAt && (
         <RoomScreen
-          posts={room.posts.map((one) => ({
+          posts={shown.posts.map((one) => ({
             id: one.id,
             title: one.title,
             by: one.by,
+            /* Somebody else's, so the panel can offer to report or block
+               them. Not sent on your own posts. */
+            who: one.mine ? undefined : one.who,
             note: one.note,
             seconds: one.seconds,
             audio: one.audio,

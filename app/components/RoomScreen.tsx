@@ -43,6 +43,7 @@ import { useBackLayer } from '../lib/backstack';
 import { countWhenPlayed } from '../lib/played';
 import { lineAt, timelineOf, type Part } from '../lib/timeline';
 import Cover from './Cover';
+import { ReportFlag } from './ReportSheet';
 
 /** Literal, because the theme remaps `white` and `black` onto its own tokens. */
 const INK = '#ffffff';
@@ -54,6 +55,8 @@ export interface RoomPost {
   readonly id: string;
   readonly title: string;
   readonly by: string;
+  /** Somebody else's: their key for reporting and blocking. Absent on your own. */
+  readonly who?: string;
   readonly note: string;
   readonly seconds: number;
   /** A signed URL, or null once it has expired or the file is gone. */
@@ -748,6 +751,19 @@ export default function RoomScreen({
                     {one.plays ?? '–'}
                   </span>
                 </span>
+
+                {/* Report it, or block whoever posted it, without leaving
+                    the room — Google Play's rule for what members post
+                    (`lib/reports.ts`). A block closes the room: what is
+                    playing is theirs. */}
+                {one.who && (
+                  <ReportFlag
+                    target={{ kind: 'post', ref: one.id, about: one.who, name: one.by, post: one.id, where: 'live-room' }}
+                    onBlocked={() => onClose()}
+                    className="h-12 w-12"
+                    style={{ background: GLASS, color: INK }}
+                  />
+                )}
               </div>
             )}
 

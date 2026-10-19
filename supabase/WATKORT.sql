@@ -7,8 +7,8 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 62 tabelle, 34 kolomme wat later
--- bygekom het, 8 stoor-emmers en 60 beleide, en gee 'n ry
+-- Dit kyk na 64 tabelle, 34 kolomme wat later
+-- bygekom het, 8 stoor-emmers en 61 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
 -- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
@@ -39,6 +39,7 @@ with verwag (l_eer, soort, naam) as (
     ('addons.sql', 'beleid', 'public.addons: read own addons'),
     ('afrikaans.sql', 'beleid', 'public.afrikaans_reports: add your own report'),
     ('afrikaans.sql', 'beleid', 'public.afrikaans_reports: read your own reports'),
+    ('reports.sql', 'beleid', 'public.blocks: read own blocks'),
     ('cast.sql', 'beleid', 'public.cast_members: change own cast'),
     ('cast.sql', 'beleid', 'public.cast_members: read own cast'),
     ('cast.sql', 'beleid', 'public.cast_members: remove own cast'),
@@ -150,6 +151,7 @@ with verwag (l_eer, soort, naam) as (
     ('albumart.sql', 'tabel', 'public.art_offers'),
     ('albumart.sql', 'tabel', 'public.art_requests'),
     ('albumart.sql', 'tabel', 'public.art_works'),
+    ('reports.sql', 'tabel', 'public.blocks'),
     ('cast.sql', 'tabel', 'public.cast_members'),
     ('invites.sql', 'tabel', 'public.collab_invites'),
     ('collab.sql', 'tabel', 'public.collab_messages'),
@@ -186,6 +188,7 @@ with verwag (l_eer, soort, naam) as (
     ('designs.sql', 'tabel', 'public.post_designs'),
     ('presence.sql', 'tabel', 'public.presence'),
     ('usage.sql', 'tabel', 'public.purchases'),
+    ('reports.sql', 'tabel', 'public.reports'),
     ('uitspraak.sql', 'tabel', 'public.said_dictionary'),
     ('uitspraak.sql', 'tabel', 'public.said_words'),
     ('posting.sql', 'tabel', 'public.scheduled_posts'),

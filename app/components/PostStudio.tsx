@@ -162,6 +162,7 @@ import SpeakButton from './SpeakButton';
 import { accessToken, getStorageClient } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
 import { FEED_PLATFORMS, cutOff, nearestKind, type FeedKind, type FeedPlatform } from '../lib/feedshapes';
+import { ReportFlag } from './ReportSheet';
 
 const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500';
 
@@ -9810,6 +9811,9 @@ export default function PostStudio({
           <span className="hidden sm:inline">{t('post.ask', 'Ask')}</span>
         </button>
       ) : null}
+      {/* Report what the AI made, from where it was made — the studio's bar,
+          which has the same flag, is hidden over this room (`lib/reports.ts`). */}
+      <ReportFlag target={{ kind: 'ai', ref: 'photo', where: 'photo' }} className="!h-9 !w-9 rounded-lg" style={chipStyle} />
       <button
         type="button"
         data-postexportopen

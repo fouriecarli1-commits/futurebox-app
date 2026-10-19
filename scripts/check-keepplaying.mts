@@ -77,7 +77,9 @@ ok(
    archaeology. */
 ok(
   'the live room really does hand down a fresh list',
-  /posts=\{room\.posts\.map\(/.test(room),
+  /* `shown` is the room without the members this reader blocked
+     (`lib/blocked.ts`), rebuilt from `room` on every read. */
+  /posts=\{(room|shown)\.posts\.map\(/.test(room),
   'if this changed, the note in RoomScreen about why is now history',
 );
 ok('and it really does refresh on a timer', /setInterval\(\(\) => void ask\(\)/.test(room));

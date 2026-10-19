@@ -233,6 +233,7 @@ const KNOWN: readonly string[] = [
   'app/components/ProductShots.tsx',
   /* The crop sheet for a framed photo, 19 October 2026, over the photo editor. */
   'app/components/CropSheet.tsx',
+  'app/components/ReportSheet.tsx',
   /* Clothes on a model, 17 October 2026, over the photo editor. */
   'app/components/TryOn.tsx',
   'app/components/StudioTemplatesModal.tsx',

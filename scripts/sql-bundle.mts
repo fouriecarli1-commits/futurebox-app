@@ -86,6 +86,8 @@ export const ORDER = [
   'hearts',
   'livevideo',
   'liveflags',
+  /* Reports and blocks: their own two tables, needing only `auth.users`. */
+  'reports',
   'pairs',
   'tone3000',
   /* Last, because it depends on nothing but `auth.users`: one row per
@@ -233,6 +235,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Video\u2019s in die speelkamer, en \u2019n opname wat jy self gefilm het wat in jou kanaal bly. Sonder dit is daar geen knoppie om \u2019n video te plaas nie.',
   liveflags:
     'Wie in die speelkamer s\u00ea \u2019n TikTok-lewendige skakel is sleg. Die boks vat nou net daardie skakels, en niks hier kan sien wat op die ander kant loop nie \u2014 dus is die mense in die kamer die sif. Sonder hierdie tabel kan niemand \u2019n skakel rapporteer nie en bly \u2019n slegte een staan.',
+  reports:
+    'Verslae van aanstootlike goed — wat die KI gemaak het of wat ’n lid geplaas het — en wie wie geblokkeer het. Google Play vereis albei. Sonder dit kom ’n verslag net per e-pos en geld ’n blok net op daardie foon.',
   pairs:
     'Twee mense in een maak-kamer, en wie die pen hou. Sonder dit kan \u2019n paar wat ooreengekom het nie \u2019n kamer oopmaak nie, en is die knoppie stil.',
   albumart:

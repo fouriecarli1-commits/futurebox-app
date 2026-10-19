@@ -475,6 +475,37 @@ No. (Answer no. It is the honest answer and nothing turns on it.)
 
 ---
 
+## Reporting and blocking — what Google checks for
+
+Added 19 October 2026, because it was missing and Google refuses or removes
+apps over it. FutureBox makes things with AI and shows members each other's
+work, so two Play policies apply:
+
+* **AI-generated content:** a member must be able to report or flag
+  offensive AI output **without leaving the app**. Every room that makes
+  something has a small flag in its top bar ("Report what the AI made").
+* **User-generated content:** members must be able to report other members'
+  posts and **block** the member. Every post in Spotlight has the flag, and
+  the report sheet has "Block this member", which hides their work at once,
+  on this phone and (signed in) on every phone.
+
+Where reports go: each one is kept in the `reports` table **and** mailed to
+you — urgent ones (a child's safety, self-harm, sexual content) with
+"URGENT" in the subject. **Run `supabase/reports.sql` once** in the Supabase
+SQL editor so the table exists; until then the email is the only copy.
+
+When the Play Console asks:
+
+* *"Does your app contain AI-generated content?"* — **Yes.** Then say members
+  can report AI output from inside every room that makes it.
+* *"Does it contain user-generated content?"* — **Yes**, moderated, with
+  in-app reporting and blocking.
+* Promise only what you will do: read reports within a day, take down what
+  breaks the terms, close accounts that keep breaking them. That is what the
+  sheet tells the person who reports.
+
+---
+
 ## Content rating questionnaire — the answers
 
 Category: **Utility, Productivity, Communication or Other**
@@ -487,7 +518,8 @@ Category: **Utility, Productivity, Communication or Other**
 * **Does it allow users to share their location?** No
 * **Does it allow the purchase of digital goods?** Yes
 * **Does it contain user-generated content?** Yes — and say that it is
-  moderated, because it is: see the abuse ceilings and the safety route.
+  moderated, because it is: see the abuse ceilings, the safety route, and
+  **Reporting and blocking** above.
 
 That set normally produces **PEGI 3 / ESRB Everyone**, with a note about
 user interaction.

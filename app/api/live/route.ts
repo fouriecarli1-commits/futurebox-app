@@ -37,6 +37,7 @@ import { guard } from '@/app/lib/server/safety';
 import { episodeAudioUrl } from '@/app/lib/episodeaudio';
 import { storageId } from '@/app/lib/server/ownedpath';
 import { creditFrom } from '@/app/lib/artcredit';
+import { blockedBy, whoOf } from '@/app/lib/server/who';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -389,9 +390,13 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
+  /* Members this reader has blocked are left out of the room for them —
+     posts and links both (`lib/reports.ts`). */
+  const hidden = caller ? await blockedBy(client, caller.id) : new Set<string>();
+
   // The signing. Only for posts that exist, and only for as long as a listen.
   const listed = await Promise.all(
-    ((posts ?? []) as PostRow[]).map(async (post) => {
+    ((posts ?? []) as PostRow[]).filter((post) => !hidden.has(post.owner)).map(async (post) => {
       let audio: string | null = null;
       /* A moving picture with its own sound, which is a different shape from
          everything else in this room — a still with audio under it. It is
@@ -466,6 +471,9 @@ export async function GET(request: Request): Promise<Response> {
         at: post.created_at,
         by: names.get(post.owner) || 'someone',
         mine: caller ? post.owner === caller.id : false,
+        /* Which member, as a key that is not their account (`server/who.ts`),
+           so a block on this phone hides all their posts at once. */
+        who: whoOf(post.owner),
         audio,
         video,
         /* Why there is no picture, when a video post has none. Null on
@@ -532,12 +540,14 @@ export async function GET(request: Request): Promise<Response> {
     livesUnchecked: couldNotCheck,
     says: ((says ?? []) as { id: string; owner: string; body: string; created_at: string }[])
       .filter((one) => !flagged.has(one.id))
+      .filter((one) => !hidden.has(one.owner))
       .map((one) => ({
         id: one.id,
         body: one.body,
         at: one.created_at,
         by: names.get(one.owner) || 'someone',
         mine: caller ? one.owner === caller.id : false,
+        who: whoOf(one.owner),
       }))
       .reverse(),
   });

@@ -38,7 +38,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, Clock, Loader2, Lock, Sparkles, Unlock } from 'lucide-react';
+import { Check, Clock, Flag, Loader2, Lock, Sparkles, Unlock } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import {
   ALLOWANCE_STEPS, KID_PRICES, MINUTE_STEPS, asClock, howMany, type KidThing,
@@ -55,6 +55,7 @@ import KidsSignIn from './KidsSignIn';
 import SongShelf from './SongShelf';
 import { inPlayApp } from '../lib/playbilling';
 import { hasCode } from '../lib/kidslock';
+import ReportSheet from './ReportSheet';
 
 /** What one of each thing is called in a sentence about how many. */
 const MANY: Record<KidThing, readonly [string, string, string]> = {
@@ -98,6 +99,7 @@ export default function KidsDoor({
   const { t, lang } = useLang();
   const [state, setState] = useState<KidsState | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reporting, setReporting] = useState(false);
   /**
    * The clock the parent has picked but not yet handed over.
    *
@@ -707,6 +709,22 @@ export default function KidsDoor({
           </p>
         )}
       </div>
+
+      {/* For the grown-up, not the child: something the AI made in the kids
+          room that should not have been made. Here rather than in the room,
+          because the room has no forms in it (`check:kinderkleur`). */}
+      <button
+        type="button"
+        data-kidsreport
+        onClick={() => setReporting(true)}
+        className="inline-flex min-h-[44px] items-center gap-2 self-start rounded-xl px-3 text-sm font-bold text-surface-800 underline underline-offset-4"
+      >
+        <Flag className="h-4 w-4" />
+        {t('kids.reportAi', 'Report something the AI made in the kids room')}
+      </button>
+      {reporting && (
+        <ReportSheet target={{ kind: 'ai', ref: 'kids', where: 'kids' }} onClose={() => setReporting(false)} />
+      )}
     </div>
   );
 }

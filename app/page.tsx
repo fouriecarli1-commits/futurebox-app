@@ -102,6 +102,7 @@ import LanguagePicker from './components/LanguagePicker';
 import Balance from './components/Balance';
 import OutOfCredits from './components/OutOfCredits';
 import LanguageSwitched from './components/LanguageSwitched';
+import { ReportFlag } from './components/ReportSheet';
 import { PACKS } from './lib/credits';
 import type { Short } from './lib/wallet';
 import type { Pack } from './lib/credits';
@@ -4308,6 +4309,15 @@ export default function FutureBoxHome() {
                     ⌘K
                   </kbd>
                 </button>
+                {/* Report what the AI made, from inside the room it was made
+                    in — Google Play's rule for apps that make things with AI
+                    (`lib/reports.ts`). In every making room, in one place. */}
+                {!atDoor && (
+                  <ReportFlag
+                    target={{ kind: 'ai', ref: studioTab, where: studioTab }}
+                    className="border border-zinc-800 bg-zinc-900 rounded-xl"
+                  />
+                )}
                 {/* The handle on a phone, the whole address on a screen with
                     room for it. Wrapped over two lines it was the largest
                     thing in the header and the least useful — an address
