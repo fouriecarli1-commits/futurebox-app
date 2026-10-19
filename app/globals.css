@@ -919,6 +919,17 @@ body:has([data-kidsdoor]) main {
   animation: fb-kids-bob 4s ease-in-out infinite;
 }
 
+/* The playlist's equaliser while a song plays (`KidsPlaylists.tsx`). */
+@keyframes fb-kids-eq {
+  from { transform: scaleY(0.25); }
+  to { transform: scaleY(1); }
+}
+
+[data-kidseq] {
+  transform-origin: bottom;
+  animation: fb-kids-eq 0.9s ease-in-out infinite alternate;
+}
+
 /* ── Mascot & Wheel in the kids room ─────────────────────────────────── */
 [data-kidsmascot] {
   background: linear-gradient(145deg, rgb(var(--fb-primary-400)), rgb(var(--fb-primary-600)));

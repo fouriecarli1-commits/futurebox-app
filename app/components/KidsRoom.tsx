@@ -121,6 +121,7 @@ import KidsArcade from './KidsArcade';
 import { beatEngine } from '../lib/kidsbeat';
 import { confetti } from '../lib/kidsconfetti';
 import { PIP_ASKS, pipLine, sayAloud, type PipAsk } from '../lib/kidspip';
+import KidsPlaylists from './KidsPlaylists';
 import KidsSleep from './KidsSleep';
 import KidsGallery from './KidsGallery';
 import KidsDrawBoard from './KidsDrawBoard';
@@ -1458,6 +1459,9 @@ export default function KidsRoom({
                 {t('kids.mySongs', 'My songs')}
               </h3>
               <SongShelf again={shelfAgain} />
+              {/* The owner, 19 October 2026: "Mens moet in kids room ook
+                  playlists kan create." */}
+              <KidsPlaylists again={shelfAgain} onSpark={spark} />
               {/* The owner, 13 October 2026: "'n playlist funksie sodat kinders
                   letterlik aan die slaap kan raak op hulle playlist." */}
               <KidsSleep again={shelfAgain} onSpark={spark} />
