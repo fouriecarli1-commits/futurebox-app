@@ -2,6 +2,7 @@
  * The Google Play feature graphic, 1024 × 500, drawn from the app itself.
  *
  *   node scripts/play-feature.mjs
+ *   node scripts/play-feature.mjs af   (the Afrikaans listing's, over the Afrikaans screens)
  *
  * The owner, 19 October 2026: *"Maak vir my die feature graphic vir Play
  * Store."* Her app icon, the name and the line from `docs/PLAY-STORE.md`,
@@ -19,14 +20,18 @@ import { readFileSync } from 'node:fs';
 import sharp from 'sharp';
 import { launchOptions } from '../audit/where.mjs';
 
-const OUT = 'docs/play/feature-graphic-1024x500.png';
+const AF = process.argv[2] === 'af';
+const OUT = AF ? 'docs/play/feature-graphic-1024x500-af.png' : 'docs/play/feature-graphic-1024x500.png';
+const WORDS = AF
+  ? { line: 'Maak ’n liedjie, maak die video,<br>en sit dit uit.', chips: ['Liedjies', 'Video’s', 'Foto’s', 'Potgooie', 'Advertensies'], lang: 'In Afrikaans en Engels · Gemaak in Suid-Afrika' }
+  : { line: 'Make a song, make the video,<br>and put it out.', chips: ['Songs', 'Videos', 'Photos', 'Podcasts', 'Adverts'], lang: 'In English and Afrikaans · Made in South Africa' };
 const data = (path, type) => `data:${type};base64,${readFileSync(path).toString('base64')}`;
 
 /* The board cut in from her icon, so its black square does not sit on the
    green: `scripts/icon.mjs` cuts the same for iOS. */
 const icon = data('app/apple-icon.png', 'image/png');
 const font = data('app/fonts/jakarta-latin.woff2', 'font/woff2');
-const shot = (name) => data(`docs/play/shots/${name}.png`, 'image/png');
+const shot = (name) => data(`docs/play/shots/${AF ? 'af/' : ''}${name}.png`, 'image/png');
 
 const phone = (src, { left, top, width, turn, z, dim = 0 }) => `
   <div class="phone" style="left:${left}px;top:${top}px;width:${width}px;transform:rotate(${turn}deg);z-index:${z}">
@@ -72,11 +77,9 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
   <div class="grid"></div>
   <div class="left">
     <div class="mark"><img src="${icon}" alt=""><h1>FutureBox<br><span>Studio</span></h1></div>
-    <p class="line">Make a song, make the video,<br>and put it out.</p>
-    <div class="chips">
-      <span class="chip">Songs</span><span class="chip">Videos</span><span class="chip">Photos</span><span class="chip">Podcasts</span><span class="chip">Adverts</span>
-    </div>
-    <p class="lang">In English and Afrikaans · Made in South Africa</p>
+    <p class="line">${WORDS.line}</p>
+    <div class="chips">${WORDS.chips.map((one) => `<span class="chip">${one}</span>`).join('')}</div>
+    <p class="lang">${WORDS.lang}</p>
   </div>
   ${phone(shot('05-photo-editor'), { left: 560, top: 70, width: 170, turn: -9, z: 1, dim: 0.25 })}
   ${phone(shot('04-video-desk'), { left: 832, top: 70, width: 170, turn: 9, z: 1, dim: 0.25 })}

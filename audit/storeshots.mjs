@@ -15,11 +15,18 @@
  * own looks and are not retaken here; their shots stay as they are.
  */
 import { chromium } from 'playwright';
+import { mkdirSync } from 'node:fs';
 import { enter, studio, toRoom } from './enter.mjs';
 import { launchOptions, serve } from './where.mjs';
 
-const OUT = 'docs/play/shots';
-const PHONE = { width: 360, height: 640, touch: true, scale: 3, email: 'thandi@futurebox.test' };
+/* `af` as the second argument takes the same screens in Afrikaans, for the
+   Afrikaans store listing (`scripts/play-screens.mjs af`). */
+const AF = process.argv[3] === 'af';
+const OUT = AF ? 'docs/play/shots/af' : 'docs/play/shots';
+const PHONE = { width: 360, height: 640, touch: true, scale: 3, email: 'thandi@futurebox.test', lang: AF ? 'af' : null };
+const ROOM = AF
+  ? { make: 'Maak ’n liedjie', video: 'Videolessenaar', ads: 'Advertensies', photo: 'Foto Editor' }
+  : { make: 'Make', video: 'Video desk', ads: 'Adverts', photo: 'Photo Editor' };
 /* Placeholder keys, so each room's own "is the engine there?" asks answer
    yes, as they do on the live site — a store shot of a desk saying "no key
    reached this app" shows a fault that only exists on this machine. Nothing
@@ -27,6 +34,7 @@ const PHONE = { width: 360, height: 640, touch: true, scale: 3, email: 'thandi@f
 const server = await serve(process.argv[2] || '3394', {
   env: { ELEVENLABS_API_KEY: 'placeholder-for-screenshots', ANTHROPIC_API_KEY: 'placeholder-for-screenshots' },
 });
+mkdirSync(OUT, { recursive: true });
 const taken = [];
 
 /** Puts an element near the top of whatever scrolls it, with room above. */
@@ -54,6 +62,7 @@ try {
   {
     const browser = await chromium.launch(launchOptions());
     const page = await browser.newPage({ viewport: { width: 360, height: 640 }, deviceScaleFactor: 3, hasTouch: true });
+    if (AF) await page.addInitScript(() => { try { window.localStorage.setItem('futurebox.lang.v1', 'af'); } catch { /* none */ } });
     await page.goto(server.url, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1200);
     await shoot(page, '01-welcome');
@@ -67,7 +76,7 @@ try {
     await page.waitForTimeout(1200);
     await shoot(page, '02-studio');
 
-    await toRoom(page, 'Make');
+    await toRoom(page, ROOM.make);
     await page.waitForTimeout(1500);
     const box = page.locator('[data-makebox]');
     await box.locator('[data-makeplus]').click();
@@ -93,11 +102,11 @@ try {
     const { browser, page } = await enter({ ...PHONE, at: server.url });
     await studio(page);
     /* Folded, and from the top: the room as somebody arriving meets it. */
-    await toRoom(page, 'Video desk', { folded: true });
+    await toRoom(page, ROOM.video, { folded: true });
     await page.waitForTimeout(1500);
     await bringUp(page, 'h4', 24);
     await shoot(page, '04-video-desk');
-    await toRoom(page, 'Adverts', { folded: true });
+    await toRoom(page, ROOM.ads, { folded: true });
     await page.waitForTimeout(1500);
     await bringUp(page, 'h4', 24);
     await shoot(page, '06-adverts');
@@ -108,7 +117,7 @@ try {
   {
     const { browser, page } = await enter({ ...PHONE, at: server.url });
     await studio(page);
-    await toRoom(page, 'Photo Editor');
+    await toRoom(page, ROOM.photo);
     await page.waitForTimeout(1200);
     const bench = page.locator('[data-cutbench="pic"]').first();
     if (await bench.count()) {

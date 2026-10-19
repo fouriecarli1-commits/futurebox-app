@@ -363,17 +363,78 @@ WHAT IS INSIDE
 • Podcast, adverts, album art, live rooms and Collab Radar
 
 HOW IT COSTS
-Credits. A free allowance every month, and plans from there. Everything
-that runs on your own phone is free and says so; everything that costs
-money to make says its price before you press it, never after.
+Credits, on a plan. Everything that costs money to make says its price
+before you press it, never after.
 
 FutureBox is made by FUTUREBOXSTUDIO (Pty) Ltd, registered in South Africa.
 ```
 
+*19 October 2026: "HOW IT COSTS" said "a free allowance every month" — not
+true since the free plan stopped carrying credits — and called the on-phone
+tools free, which the app itself is held never to say (`check:verniet`).
+Both are out.*
+
+### The same listing in Afrikaans
+
+Play Console → **Main store listing → Manage translations → Add your own
+translation → Afrikaans**, then paste these. The screenshots for it are in
+`docs/play/store/af/` and its feature graphic is
+`docs/play/feature-graphic-1024x500-af.png` — the app itself in Afrikaans,
+taken by `node audit/storeshots.mjs 3394 af` and captioned by
+`node scripts/play-screens.mjs af`.
+
+**Naam**
+
+```
+FutureBox Studio
+```
+
+**Kort beskrywing**
+
+```
+Skryf, sing, verfilm en plaas — een ateljee, in Afrikaans en Engels.
+```
+
+**Volle beskrywing**
+
+```
+FutureBox is ’n kreatiewe ateljee in jou foon, in Suid-Afrika gebou vir
+mense wat dinge op hul eie maak.
+
+Skryf ’n liedjie en hoor dit. Sing dit self in die ProBooth, oor die
+agtergrond, met die woorde op die skerm en regte bane om te meng. Kloon jou
+eie stem een keer en elke kamer kan daarmee lees.
+
+Sny ’n video op die tydlyn sonder om iets op te laai — die hele redigeerder
+loop op jou eie foon, so daar is geen tou en geen wag nie. Redigeer die foto
+vir die plasing: haal die agtergrond uit, trek om iets en hou dit, gryp die
+woorde uit ’n plakkaat, sit die kamer agter jou uit fokus.
+
+Skryf dan die advertensie, beplan die week en plaas dit op jou eie kanaal.
+
+Alles in Afrikaans en Engels, van die eerste skerm tot die laaste knoppie.
+
+WAT IS BINNE
+• Maak ’n liedjie — skryf dit, hoor dit, hou dit
+• ProBooth — sing self daarop, met bane, ’n metronoom en ’n mengtafel
+• Jou stem — kloon dit een keer, gebruik dit oral
+• Video-redigeerder — knip, titels, voorkoms en musiek, alles op jou foon
+• Foto-redigeerder — agtergrond weg, vryhand-sny, oes, teks gryp
+• Kanaal — jou eie plek vir wat jy gemaak het
+• Potgooi, advertensies, albumkuns, regstreekse kamers en Collab Radar
+
+WAT DIT KOS
+Krediete, op ’n plan. Alles wat geld kos om te maak, sê sy prys voordat jy
+druk, nooit daarna nie.
+
+FutureBox word gemaak deur FUTUREBOXSTUDIO (Pty) Ltd, in Suid-Afrika
+geregistreer.
+```
+
 **Category**: Music & Audio
 **Tags**: music creation, video editing, photo editing
-**Contact email**: **yours** — use a business address, not a personal one.
-Whatever you put here is published on the listing.
+**Contact email**: `hallo@futurebox.studio` — the business address, which
+is published on the listing.
 **Website**: `https://futurebox.studio`
 **Privacy policy**: `https://futurebox.studio/privacy`
 

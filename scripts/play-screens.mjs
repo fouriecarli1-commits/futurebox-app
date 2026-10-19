@@ -2,6 +2,7 @@
  * The Play Store phone screenshots: a line on top, the real screen below.
  *
  *   npm run build && npm run play:shots && node scripts/play-screens.mjs
+ *   node audit/storeshots.mjs 3394 af && node scripts/play-screens.mjs af   (the Afrikaans listing)
  *
  * The owner, 19 October 2026: *"Maak nou die screenshots vir die Play
  * Store."* Each one is a screen `audit/storeshots.mjs` took off the built app,
@@ -22,7 +23,9 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import sharp from 'sharp';
 import { launchOptions } from '../audit/where.mjs';
 
-const OUT = 'docs/play/store';
+const AF = process.argv[2] === 'af';
+const OUT = AF ? 'docs/play/store/af' : 'docs/play/store';
+const SHOTS = AF ? 'docs/play/shots/af' : 'docs/play/shots';
 const data = (path, type) => `data:${type};base64,${readFileSync(path).toString('base64')}`;
 const font = data('app/fonts/jakarta-latin.woff2', 'font/woff2');
 
@@ -33,6 +36,14 @@ const SCREENS = [
   ['04-video-desk', 'Describe a shot. *Get the video.*', 'Start from a kind of video and make it yours'],
   ['05-photo-editor', 'Edit photos *like a pro*', 'Crop, filters, magic touch, text and designs'],
   ['06-adverts', 'Adverts for *your business*', 'Say what you sell — it writes, films and posts'],
+];
+/* The same lines for the Afrikaans listing, over the app in Afrikaans. */
+const SCREENS_AF = [
+  ['02-studio', 'Jou kreatiewe ateljee, *in jou sak*', 'Liedjies, video’s, foto’s en potgooie — in Afrikaans en Engels'],
+  ['03-make-a-song', 'Maak ’n liedjie *uit ’n gevoel*', 'Kies ’n gevoel, of sê die klank in jou eie woorde'],
+  ['04-video-desk', 'Beskryf ’n skoot. *Kry die video.*', 'Begin by ’n soort video en maak dit joune'],
+  ['05-photo-editor', 'Redigeer foto’s *soos ’n pro*', 'Sny, filters, towerkuns, teks en ontwerpe'],
+  ['06-adverts', 'Advertensies vir *jou besigheid*', 'Sê wat jy verkoop — dit skryf, verfilm en plaas'],
 ];
 
 const page = (shot, head, line) => `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -60,14 +71,14 @@ const page = (shot, head, line) => `<!doctype html><html><head><meta charset="ut
 </style></head><body>
   <div class="grid"></div>
   <div class="words"><h1>${head.replace(/\*(.+?)\*/g, '<em>$1</em>')}</h1><p>${line}</p></div>
-  <div class="phone"><img src="${data(`docs/play/shots/${shot}.png`, 'image/png')}" alt=""></div>
+  <div class="phone"><img src="${data(`${SHOTS}/${shot}.png`, 'image/png')}" alt=""></div>
 </body></html>`;
 
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch(launchOptions());
 const tab = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
 let at = 0;
-for (const [shot, head, line] of SCREENS) {
+for (const [shot, head, line] of AF ? SCREENS_AF : SCREENS) {
   at += 1;
   await tab.setContent(page(shot, head, line), { waitUntil: 'load' });
   await tab.evaluate(() => document.fonts.ready);
