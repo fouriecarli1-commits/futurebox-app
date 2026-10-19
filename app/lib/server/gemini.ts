@@ -69,6 +69,14 @@ export interface GeminiGenerateOptions {
    * combined with a tool, so `jsonOutput` is then read out of the text.
    */
   urlContext?: boolean;
+  /**
+   * No thinking before the answer, where the model allows it to be switched
+   * off (2.5 Flash). For a long, mechanical answer — a whole SVG drawing —
+   * thinking first only spends the time and the output allowance: the
+   * vector studio's drawing ran past the function's minute with it on, and
+   * nothing came back (19 October 2026).
+   */
+  noThinking?: boolean;
 }
 
 export interface GeminiResponse {
@@ -134,7 +142,11 @@ export async function askGemini(options: GeminiGenerateOptions): Promise<GeminiR
         'Content-Type': 'application/json',
         'x-goog-api-key': key,
       },
-      body: JSON.stringify(bodyPayload),
+      /* Thinking off is a 2.5 setting; a later Flash keeps its own default
+         rather than being sent a number it may refuse. */
+      body: JSON.stringify(options.noThinking && one.startsWith('gemini-2.5')
+        ? { ...bodyPayload, generationConfig: { ...(bodyPayload.generationConfig as object), thinkingConfig: { thinkingBudget: 0 } } }
+        : bodyPayload),
     }), model);
 
     const raw = await res.text().catch(() => '');

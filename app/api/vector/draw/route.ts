@@ -28,7 +28,15 @@ import { cleanTree, nodeToSvg, parseSvg, vectorAsk } from '@/app/lib/vectordoc';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /** One drawing. A long SVG takes a while to write. */
-export const maxDuration = 60;
+export const maxDuration = 120;
+
+/**
+ * How long the AI is waited for before the credits go back and the screen
+ * is told — inside `maxDuration`, so the answer is ours and not the
+ * platform's. Cut off by the platform, the function stopped after charging
+ * and before refunding, and the studio was handed a page that was not JSON.
+ */
+const WAIT_MS = 100_000;
 
 /**
  * What one drawing costs Google, in millionths of a dollar: a short question
@@ -71,7 +79,17 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, CREDITS.vector, 'vector');
   if (!paid.ok) return paid.response;
 
-  const answer = await askGemini({ prompt: vectorAsk(words), temperature: 0.6, maxOutputTokens: 16384 });
+  const answer = await Promise.race([
+    askGemini({ prompt: vectorAsk(words), temperature: 0.6, maxOutputTokens: 16384, noThinking: true }),
+    new Promise<null>((done) => setTimeout(() => done(null), WAIT_MS)),
+  ]);
+  if (!answer) {
+    await paid.refund();
+    return Response.json(
+      { message: 'The AI took too long to draw that. Try something simpler. Nothing was charged.' },
+      { status: 504 },
+    );
+  }
   const parsed = answer.ok ? parseSvg(answer.text) : null;
   const clean = parsed ? cleanTree(parsed) : null;
   if (!clean || clean.children.length === 0) {

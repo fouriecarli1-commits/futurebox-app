@@ -123,40 +123,67 @@ export function drawnSize(
   };
 }
 
+/** The smallest longest edge a picture is shrunk to so that it fits. */
+export const MIN_EDGE = 384;
+
 /**
  * One picture, shrunk and encoded to fit `most` base64 characters.
  *
- * `null` where even the bottom of the ladder does not fit, which the caller
- * has to handle rather than send anyway: sending it anyway is the 413 this
- * file exists to avoid.
+ * `null` only where even `MIN_EDGE` at the bottom of the ladder does not
+ * fit, which the caller has to handle rather than send anyway: sending it
+ * anyway is the 413 this file exists to avoid.
  */
 export function packOne(image: Measured, side: number, most: number): Packed | null {
   const from = {
     width: image.naturalWidth || image.width,
     height: image.naturalHeight || image.height,
   };
-  const size = drawnSize(from.width, from.height, side);
-  const canvas = document.createElement('canvas');
-  canvas.width = size.width;
-  canvas.height = size.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  /* White underneath, because a reference may have a see-through background
-     from the remover in the photo room and JPEG has no transparency — left
-     alone it fills with black, and a model shown a black-backed cut-out
-     draws the black. */
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size.width, size.height);
-  ctx.drawImage(image as unknown as CanvasImageSource, 0, 0, size.width, size.height);
+  const draw = (edge: number): HTMLCanvasElement | null => {
+    const size = drawnSize(from.width, from.height, edge);
+    const canvas = document.createElement('canvas');
+    canvas.width = size.width;
+    canvas.height = size.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    /* White underneath, because a reference may have a see-through background
+       from the remover in the photo room and JPEG has no transparency — left
+       alone it fills with black, and a model shown a black-backed cut-out
+       draws the black. */
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size.width, size.height);
+    ctx.drawImage(image as unknown as CanvasImageSource, 0, 0, size.width, size.height);
+    return canvas;
+  };
 
-  for (const quality of side ? LADDER : [1]) {
-    /* PNG where nothing is being shrunk, which is the edit case: a photograph
-       going up to be changed must not arrive already JPEG-damaged. */
-    const url = side
-      ? canvas.toDataURL('image/jpeg', quality)
-      : canvas.toDataURL('image/png');
+  /* PNG where nothing is being shrunk, which is the edit case: a photograph
+     going up to be changed must not arrive already JPEG-damaged — when it
+     fits. */
+  if (!side) {
+    const whole = draw(0);
+    if (!whole) return null;
+    const url = whole.toDataURL('image/png');
     const data = url.slice(url.indexOf(',') + 1);
-    if (data.length <= most) return { data, mime: side ? 'image/jpeg' : 'image/png' };
+    if (data.length <= most) return { data, mime: 'image/png' };
+  }
+
+  /* ── Never "too big to send" ─────────────────────────────────────────
+     The owner, 19 October 2026, with Product photos saying "That photo is
+     too big to send. Try a smaller one": *"Mense moenie sukkel met sulke
+     goed nie."* A phone photo is routinely past the budget as a PNG, and the
+     ladder alone stopped at the edge it was given. So the edge comes down
+     too, a quarter at a time, until the picture fits — down to a size that
+     is still plainly the same picture. Nobody is asked to go and make their
+     own photo smaller. */
+  let edge = side || Math.max(from.width, from.height);
+  for (let round = 0; round < 8 && edge >= MIN_EDGE; round += 1) {
+    const canvas = draw(edge);
+    if (!canvas) return null;
+    for (const quality of LADDER) {
+      const url = canvas.toDataURL('image/jpeg', quality);
+      const data = url.slice(url.indexOf(',') + 1);
+      if (data.length <= most) return { data, mime: 'image/jpeg' };
+    }
+    edge = Math.round(edge * 0.75);
   }
   return null;
 }

@@ -170,7 +170,8 @@ export default function VectorStudio({
 
   useEffect(() => {
     if (!said) return undefined;
-    const gone = window.setTimeout(() => setSaid(''), 6000);
+    /* Long enough to read a sentence about what went wrong, on a phone. */
+    const gone = window.setTimeout(() => setSaid(''), 12000);
     return () => window.clearTimeout(gone);
   }, [said]);
 
