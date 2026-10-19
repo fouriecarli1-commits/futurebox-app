@@ -453,7 +453,8 @@ user interaction.
       `npm run build && npm run play:shots` once more**, so the shots are of
       the app as it is that day.
 - [x] Feature graphic: 1024 x 500 — `docs/play/feature-graphic-1024x500.png`,
-      drawn 12 October 2026 from the brand mark and `APP_LINE`. Redraw it the
-      day either changes.
+      redrawn 19 October 2026 by `node scripts/play-feature.mjs` from the neon
+      icon, the listing line and three real screens in `docs/play/shots/`.
+      Run it again the day any of those change.
 - [ ] A test on a real Android phone, installed from the internal testing
       track, before anything goes public
