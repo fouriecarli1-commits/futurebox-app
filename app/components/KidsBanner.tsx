@@ -87,6 +87,16 @@ export default function KidsBanner({
             <Baby className="h-4 w-4" />
             {t('kidsbanner.setUp', 'Set up the kids room')}
           </a>
+          {/* The kids' own app, on every banner a parent passes — the owner,
+              19 October 2026: *"It has to be very visible for every parent."* */}
+          <a
+            href="/kids#kids-app"
+            data-kidsbannerapp
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full border-2 border-amber-300/80 bg-zinc-950/80 px-5 text-sm font-black text-amber-200 transition-transform hover:scale-[1.02]"
+          >
+            <img src="/kids-icon-192.png" alt="" width={192} height={192} className="h-7 w-7 rounded-lg" />
+            {t('kidsbanner.getApp', 'Get the FutureBox Kids app')}
+          </a>
           {onPlans && (
             <button
               type="button"

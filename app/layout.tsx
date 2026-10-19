@@ -83,11 +83,12 @@ export const metadata: Metadata = {
    */
   metadataBase: new URL(SITE_URL),
   /* Google Search Console's ownership tag, for Google Play's website check
-     (the owner, 18 October 2026). Read from the deployment, so verifying is
-     a setting in Vercel and a redeploy rather than a commit. Absent, no tag. */
-  ...(process.env.GOOGLE_SITE_VERIFICATION?.trim()
-    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION.trim() } }
-    : {}),
+     (the owner, 18 October 2026). Hers, sent 19 October with Google's note
+     "to stay verified, don't remove the meta tag, even after verification
+     succeeds" — so it is written here and `check:googlesite` holds it. Not a
+     secret: Google reads it off the public page. A setting in Vercel can
+     still put another in its place. */
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION?.trim() || 'an-qhR7QCq85bGt34BF5QZQaY06FuyQt_86quoCfkp0' },
   /* ── The name, read from one place ───────────────────────────────────
 
      This said "FutureBox — Digital Learning & Creative AI Platform", and the
