@@ -35,6 +35,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, LogOut } from 'lucide-react';
 import KidsRoom from '../components/KidsRoom';
+import KidsInstall from '../components/KidsInstall';
 import { useLang } from '../lib/i18n';
 import { signOut } from '../lib/cloud';
 import { childIn } from '../lib/kidslock';
@@ -73,6 +74,9 @@ export default function KidsPage(): React.ReactElement {
         </button>
       </div>
       )}
+      {/* FutureBox Kids as an app of its own on the child's device — on the
+          grown-up's page only, because installing it is the grown-up's job. */}
+      {grownUp && <KidsInstall />}
       <KidsRoom
         onGrownUp={setGrownUp}
         /* The home screen's own Sign out, once a grown-up has typed the code. */

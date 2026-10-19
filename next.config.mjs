@@ -106,9 +106,30 @@ const stamp = {
   NEXT_PUBLIC_BUILT_AT: new Date().toISOString().slice(0, 10),
 };
 
+/* ── kids.futurebox.studio ────────────────────────────────────────────────
+   The owner, 19 October 2026: FutureBox Kids as an app of its own. The kids'
+   address goes to the kids' studio on the main address rather than serving a
+   second copy of the site there: a sign-in belongs to an address, so a
+   parent signed in on the main one would otherwise have to sign in again,
+   and the installed app belongs to one address too. The address itself is
+   added to the project in Vercel (Settings → Domains). */
+const MAIN_HOST = process.env.NEXT_PUBLIC_SITE_HOST || 'futurebox.studio';
+
 const nextConfig = {
   env: stamp,
   pageExtensions,
+  async redirects() {
+    return MAIN_HOST.startsWith('kids.')
+      ? []
+      : [
+          {
+            source: '/:path*',
+            has: [{ type: 'host', value: 'kids\\..*' }],
+            destination: `https://${MAIN_HOST}/kids`,
+            permanent: false,
+          },
+        ];
+  },
   async headers() {
     return [
       {

@@ -673,6 +673,23 @@ You process personal data of South Africans, so it applies.
 
 ---
 
+## FutureBox Kids on its own address (optional)
+
+FutureBox Kids is the kids' studio installed as an app of its own on a child's
+phone or tablet — its own icon and name, opening straight into `/kids` and kept
+there. It needs nothing switched on: the kids' pages carry their own manifest
+(`app/kids/manifest.webmanifest/route.ts`), and the grown-up's page says how to
+put it on the device.
+
+If you want the short address **kids.futurebox.studio** as well:
+
+1. Vercel → the project → **Settings → Domains** → **Add** → `kids.futurebox.studio`.
+2. Vercel shows the DNS record it needs. The DNS is on Vercel already, so it is
+   usually added for you; if not, add it under **Domains → futurebox.studio →
+   DNS Records**.
+3. Nothing else. Any visit to `kids.` is sent to `https://futurebox.studio/kids`
+   (`next.config.mjs`), so there is one sign-in and one installed app, not two.
+
 ## The rest of the variables
 
 Everything above is something to do. This is the remainder of what the code

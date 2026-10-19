@@ -136,6 +136,24 @@ async function stubKids(page, onPost) {
   check("the grown-up's page is the first thing there", await door.isVisible().catch(() => false));
   check('  with no sign-in step, because somebody is signed in', (await page.locator('[data-kidssignin]').count()) === 0);
 
+  /* ── FutureBox Kids, as an app of its own ──────────────────────────────
+     The owner, 19 October 2026: *"Gaan aan met futurebox kids."* The kids'
+     pages point at their own manifest — its own id, name, icon, and a scope
+     held to /kids — and the grown-up's page says how to put it on the
+     child's device. */
+  const kidsManifest = await page.locator('link[rel="manifest"]').getAttribute('href').catch(() => null);
+  check('the kids page wears FutureBox Kids’ own manifest', kidsManifest === '/kids/manifest.webmanifest', String(kidsManifest));
+  const app = await page.evaluate(async (href) => (href ? (await fetch(href)).json() : null), kidsManifest).catch(() => null);
+  check('  which is an app of its own, opening on the kids’ studio and kept to it',
+    app?.id === '/kids' && app?.name === 'FutureBox Kids' && app?.scope === '/kids' && String(app?.start_url).startsWith('/kids')
+      && Array.isArray(app?.icons) && app.icons.some((one) => one.purpose === 'maskable'),
+    JSON.stringify(app)?.slice(0, 200));
+  check('  and the grown-up’s page says how to put it on the child’s device',
+    await page.locator('[data-kidsinstall]').isVisible().catch(() => false));
+  await page.locator('[data-kidsinstall]').scrollIntoViewIfNeeded().catch(() => {});
+  await page.screenshot({ path: shot('kids-install.png'), fullPage: false });
+  await page.evaluate(() => window.scrollTo(0, 0));
+
   /* No room without a grown-up code: it is the way out again (The owner, 16
      October 2026, "Ek sukkel om daar uit te kom"). */
   await page.locator('[data-kidsstep]').first().click();
