@@ -112,8 +112,8 @@ ok('one line can be typed into, for the song, and nothing else',
   `${typed.join(', ')} — that is a child typing into a prompt that reaches a`
   + ' music model and a video model, and a moderation gate is not a design');
 ok('  and the typed words never reach the video',
-  !/startKidVideo\([^)]*words/.test(room) && /makeKidSong\(topic, sound, words\)/.test(room),
-  'a child\u2019s free text is a song prompt read by guard(); the video still takes only the bubbles\u2019 ids');
+  !/startKidVideo\([^)]*words/.test(room) && /makeKidSong\(songPrompt\(\{ \.\.\.plan, own: words \}\)\)/.test(room),
+  'a child\u2019s free text is a song prompt read by guard(); the video still takes only the Song Lab\u2019s ids');
 
 ok('  and every choice is a closed list somebody wrote',
   KID_TOPICS.length >= 4 && KID_SOUNDS.length >= 3

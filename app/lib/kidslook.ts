@@ -120,28 +120,16 @@ export const SOUND_PAINTS: Record<string, Paint> = {
   country: paint('#e0a86b', '#b07434'),
   kwaito: paint('#6ee7f5', '#17a2bd'),
   musicbox: paint('#cdb4ff', '#8b6ae0'),
+  spacesynth: paint('#7df9ff', '#2fb8ff'),
+  rap: paint('#ffb347', '#ff7a00'),
+  marimba: paint('#c8f25c', '#86c232'),
+  reggae: paint('#5ee08a', '#e0c43a'),
+  disco: paint('#ff6fd8', '#b44cff'),
 };
 
 /** Whatever colour is asked for, or a plain one, so nothing ever renders bare. */
 export const paintOf = (which: Record<string, Paint>, id: string | null): Paint =>
   (id && which[id]) || paint('#d9d2c5', '#a8a090');
-
-/**
- * How big a bubble is, so the sheet is not a grid.
- *
- * Her words: *"selfs die uitleg moet anders en uniek wees as die status
- * quo."* A grid of equal squares is the status quo — it is what every app
- * does and what this room did. Three sizes in a repeating-but-not-obvious
- * run give a sheet that reads as scattered stickers while still being an
- * ordinary wrapping row underneath, which is what keeps it working on a
- * phone and keeps every bubble a real button.
- *
- * The run is 14 long and prime-ish on purpose: a 3-step cycle against 14
- * items means the second row does not line up with the first.
- */
-export const SIZES = [2, 1, 3, 1, 2, 1, 1, 3, 2, 1, 1, 2, 3, 1] as const;
-
-export const sizeAt = (at: number): number => SIZES[at % SIZES.length];
 
 /**
  * The magic wheel, and the mascot — both of them Google's ideas, not mine.

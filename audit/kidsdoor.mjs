@@ -191,6 +191,7 @@ async function stubKids(page, onPost) {
   check('  and in the sentence', ((await page.locator('[data-kidssentencetopic]').textContent().catch(() => '')) ?? '').includes('a cat in a hat'));
   check('  and listening stops by itself', (await page.locator('[data-kidslistening]').count()) === 0);
   /* Words and a sound are enough: the make button comes on without a topic bubble. */
+  await page.locator('[data-kidssongstep="sound"]').click();
   await page.locator('[data-kidssounds] button').first().click();
   await page.waitForTimeout(200);
   check('  and words plus a sound are enough to make a song', await page.locator('[data-kidsmake]').isEnabled());

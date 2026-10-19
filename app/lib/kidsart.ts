@@ -92,8 +92,8 @@ const TOPIC_SUBJECTS: Record<string, string> = {
  * What to draw for each sound.
  *
  * A sound is not a thing, so "draw kwaito" gets a picture of a word. Each one
- * is given an OBJECT a child would recognise instead, chosen so the nine do
- * not collide: nine different instruments and objects, not nine happy faces.
+ * is given an OBJECT a child would recognise instead, chosen so they do not
+ * collide: different instruments and objects, not a row of happy faces.
  */
 const SOUND_SUBJECTS: Record<string, string> = {
   happy: 'a smiling yellow sun wearing headphones',
@@ -105,6 +105,11 @@ const SOUND_SUBJECTS: Record<string, string> = {
   country: 'an acoustic guitar leaning on a wooden fence post',
   kwaito: 'a pair of bold street speakers stacked up',
   musicbox: 'an open wind-up music box with a tiny dancer on it',
+  spacesynth: 'a glowing keyboard synthesizer floating among the stars',
+  rap: 'a shiny microphone on a stand with a cap hung on it',
+  marimba: 'a wooden marimba with two soft mallets',
+  reggae: 'a steel drum on the sand under a palm tree',
+  disco: 'a sparkling mirror ball hanging over a dance floor',
 };
 
 /** Every picture the room wants, in the order it shows them. */

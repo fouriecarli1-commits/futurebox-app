@@ -30,9 +30,9 @@ import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import { KID_SOUNDS, KID_TOPICS } from '../app/lib/kidsong.ts';
 import {
-  MASCOT_SAYS, PAINTS, SIZES, SOUND_PAINTS, contrastOf, inkOn, paintOf,
-  sizeAt, spin,
+  MASCOT_SAYS, PAINTS, SOUND_PAINTS, contrastOf, inkOn, paintOf, spin,
 } from '../app/lib/kidslook.ts';
+import { EMPTY_PLAN, KID_PLACES, MOST_TOPICS, SONG_PARTS, songPrompt, toggled } from '../app/lib/kidsongplan.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -108,35 +108,32 @@ ok('  and a choice that does not exist still draws something',
   'the sentence at the top is drawn before anything is chosen, so a missing'
   + ' colour there is a crash on the first paint of the room');
 
-/* ── 3. The layout is not the status quo ──────────────────────────────── */
+/* ── 3. The Song Lab, not bubbles ─────────────────────────────────────── */
+/* The owner, 19 October 2026: "Die music box vir kids se bubbles is vir my
+   crap … wat van multiple keuses, wat van style? Dalk ook wat van setting?
+   … verse, chorus, brug … Die bubbles moet weg … very cool and futuristic."
+   (On 12 October the bubbles were what replaced a grid she called dead and
+   boring; now the Song Lab replaces both.) */
 
-ok('the bubbles come in more than one size',
-  new Set(SIZES).size >= 3,
-  'her words: "selfs die uitleg moet anders en uniek wees as die status'
-  + ' quo". A grid of equal squares is the status quo');
-
-ok('  and the sizes do not line up row to row',
-  (() => {
-    /* Six to a row on a wide screen, so a run that repeats every 6 would
-       stack the same size in a column and read as a grid again. */
-    const row = 6;
-    const first = [0, 1, 2, 3, 4, 5].map((at) => sizeAt(at));
-    const next = [0, 1, 2, 3, 4, 5].map((at) => sizeAt(at + row));
-    return first.join() !== next.join();
-  })(),
-  'a run that repeats every row is a grid wearing circles');
-
-ok('  and the room says the choices as a sentence, not as headings',
-  /data-kidssentence/.test(room)
-  && /kids\.aSongAbout/.test(room) && /kids\.thatSounds/.test(room)
-  && !/kids\.pickTopic/.test(room) && !/kids\.pickSound/.test(room),
-  'a heading tells you what a section is for; a sentence tells you what you'
-  + ' are about to get, which is the thing a child is deciding');
-
-ok('  and the choices really are drawn as bubbles',
-  /data-kidsbubble/.test(room) && /data-kidstopics/.test(room)
-  && /data-kidssounds/.test(room) && !/grid-cols-3/.test(room),
-  'the grid is what she called dead and boring');
+const lab = readFileSync('app/components/KidsSongLab.tsx', 'utf8');
+ok('the bubbles are gone, and the Song Lab is in their place',
+  !/data-kidsbubble/.test(room) && /<KidsSongLab/.test(room) && /data-kidssonglab/.test(lab),
+  'her words: "Die bubbles moet weg"');
+ok('  a child can pick more than one thing to sing about',
+  MOST_TOPICS >= 2 && toggled(toggled([], 'dog'), 'cat').length === 2
+  && toggled(['dog', 'cat', 'sea'], 'rain').length === MOST_TOPICS);
+ok('  and a style, and a place',
+  /data-kidssounds/.test(lab) && /data-kidsplaces/.test(lab) && KID_PLACES.length >= 8 && KID_SOUNDS.length >= 12);
+ok('  and the song in its parts — verse, chorus, bridge — each saying what it is for',
+  SONG_PARTS.map((one) => one.id).join() === 'verse,chorus,bridge'
+  && SONG_PARTS.every((one) => one.what[1].length > 30 && one.choices.length >= 4)
+  && /data-kidssongshape/.test(lab));
+ok('  and the parts chosen reach the music engine',
+  /chorus/.test(songPrompt({ ...EMPTY_PLAN, topics: ['dog'], sound: 'happy', chorus: 'brave' })?.prompt ?? '')
+  && /we can do it/i.test(songPrompt({ ...EMPTY_PLAN, topics: ['dog'], sound: 'happy', chorus: 'brave' })?.prompt ?? ''));
+ok('  and the room says the choices as a sentence', /data-kidssentence/.test(lab));
+ok('  and it is drawn futuristic: glass, neon edges, a glow on what is chosen',
+  /\.fb-holo-panel/.test(css) && /\.fb-holo\[aria-pressed='true'\]/.test(css) && /className="fb-holo /.test(lab));
 
 /* ── 4. The room is lit, and so is the footer under it ────────────────── */
 

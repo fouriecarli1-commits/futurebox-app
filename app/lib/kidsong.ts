@@ -116,6 +116,12 @@ export const KID_SOUNDS: readonly Choice[] = [
   { id: 'country', says: ['kids.soundCountry', 'Country'], words: 'easy country with acoustic guitar, a fiddle and a sing-along chorus' },
   { id: 'kwaito', says: ['kids.soundKwaito', 'Kwaito'], words: 'slow South African kwaito groove, warm bass, simple chanted chorus' },
   { id: 'musicbox', says: ['kids.soundMusicbox', 'Music box'], words: 'a music box melody with soft bells and a slow gentle vocal' },
+  /* More styles, 19 October 2026: "wat van style?" */
+  { id: 'spacesynth', says: ['kids.soundSpacesynth', 'Space synth'], words: 'shiny futuristic electronic pop with sparkly synths and a robot-style hook' },
+  { id: 'rap', says: ['kids.soundRap', 'Rap'], words: 'friendly kids hip hop with a bouncy beat and a fun rap, clean and positive' },
+  { id: 'marimba', says: ['kids.soundMarimba', 'Marimba'], words: 'joyful African marimba pop with hand drums and a sing-along chorus' },
+  { id: 'reggae', says: ['kids.soundReggae', 'Reggae'], words: 'sunny relaxed reggae with an easy offbeat and happy vocals' },
+  { id: 'disco', says: ['kids.soundDisco', 'Disco'], words: 'sparkly disco with funky bass, strings and a dance-floor chorus' },
 ];
 
 const choice = (list: readonly Choice[], id: string): Choice | undefined =>
@@ -138,19 +144,15 @@ export const kidWords = (words: string | null | undefined): string =>
   (words ?? '').replace(/\s+/g, ' ').trim().slice(0, KID_WORDS_MOST);
 
 export async function makeKidSong(
-  topic: string,
-  sound: string,
-  words = '',
+  /** The Song Lab's plan, as `kidsongplan.ts` writes it for the engine. */
+  plan: { readonly prompt: string; readonly style: string } | null,
 ): Promise<{ audio: Blob } | { says: string }> {
-  const what = choice(KID_TOPICS, topic);
-  const how = choice(KID_SOUNDS, sound);
-  const own = kidWords(words);
   /* A bubble OR the child's own words say what it is about; a bubble says
      how it sounds. The owner, 12 October 2026: "daar is kinders wat kan tik".
      The words go to /api/music exactly like a grown-up's prompt, which is
      where `guard` reads every prompt before anything is made — the room
      does not get a softer door for being a child's. */
-  if ((!what && !own) || !how) return { says: 'Pick something to sing about, and how it should sound.' };
+  if (!plan) return { says: 'Pick something to sing about, and how it should sound.' };
 
   const token = await accessToken();
   if (!token) return { says: 'Sign in first.' };
@@ -166,8 +168,8 @@ export async function makeKidSong(
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        prompt: [what?.words, own].filter(Boolean).join('. '),
-        style: how.words,
+        prompt: plan.prompt,
+        style: plan.style,
         seconds: KID_SECONDS,
         /* The kids room's own price, the same whichever engine sings it. */
         kids: true,

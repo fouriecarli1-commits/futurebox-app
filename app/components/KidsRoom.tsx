@@ -99,9 +99,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Bell, BookOpen, Cake, Cat, CloudRain, Disc, Dog, Film, Guitar, Heart, Laugh,
-  Loader2, Mic, Moon, Music, Palette, Radio, Rocket, ShieldCheck,
-  Smile, Sparkles, Square, Sun, Volume2, Waves, X,
+  Film, Heart, Loader2, Mic, Music, Sparkles, Square, X,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
@@ -115,10 +113,12 @@ import { stillWorthWaiting } from '../lib/jobwait';
 import { asClock, howMany, priceOf } from '../lib/kidsallowance';
 import { keepSong, MOST_SONGS, type KeptSong } from '../lib/songkeep';
 import { useSongPulse } from '../lib/songpulse';
-import { MASCOT_SAYS, PAINTS, SOUND_PAINTS, paintOf, sizeAt, spin } from '../lib/kidslook';
+import { MASCOT_SAYS, spin } from '../lib/kidslook';
 import KidsBeatMaker from './KidsBeatMaker';
 import KidsStage, { type Scene } from './KidsStage';
 import KidsDrumGame from './KidsDrumGame';
+import KidsSongLab from './KidsSongLab';
+import { EMPTY_PLAN, KID_PLACES, SONG_PARTS, ready, songPrompt, type SongPlan } from '../lib/kidsongplan';
 import KidsArcade from './KidsArcade';
 import { beatEngine } from '../lib/kidsbeat';
 import { confetti } from '../lib/kidsconfetti';
@@ -142,38 +142,6 @@ import { BADGES, levelOf, towardNext, type Counts } from '../lib/kidslevel';
 import { allSongs } from '../lib/songkeep';
 import { allStories } from '../lib/storykeep';
 import { allPieces } from '../lib/kidsgallery';
-/** A picture a child can tell apart at a glance, per choice. */
-const FACES: Record<string, React.ReactNode> = {
-  dog: <Dog className="h-7 w-7" />,
-  space: <Rocket className="h-7 w-7" />,
-  birthday: <Cake className="h-7 w-7" />,
-  sea: <Waves className="h-7 w-7" />,
-  rain: <CloudRain className="h-7 w-7" />,
-  brave: <ShieldCheck className="h-7 w-7" />,
-  cat: <Cat className="h-7 w-7" />,
-  dino: <span className="text-2xl select-none" role="img" aria-label="dino">🦖</span>,
-  dinos: <span className="text-2xl select-none" role="img" aria-label="dino">🦖</span>,
-  farm: <Sun className="h-7 w-7" />,
-  sleep: <Moon className="h-7 w-7" />,
-  bedtime: <Moon className="h-7 w-7" />,
-  friends: <Heart className="h-7 w-7" />,
-  count: <span className="text-xl font-black select-none tracking-tight">123</span>,
-  counting: <span className="text-xl font-black select-none tracking-tight">123</span>,
-  colors: <Palette className="h-7 w-7" />,
-  colours: <Palette className="h-7 w-7" />,
-  school: <BookOpen className="h-7 w-7" />,
-  happy: <Smile className="h-7 w-7" />,
-  quiet: <Moon className="h-7 w-7" />,
-  loud: <Volume2 className="h-7 w-7" />,
-  dance: <Music className="h-7 w-7" />,
-  rock: <Guitar className="h-7 w-7" />,
-  march: <Radio className="h-7 w-7" />,
-  silly: <Laugh className="h-7 w-7" />,
-  funny: <Laugh className="h-7 w-7" />,
-  country: <Guitar className="h-7 w-7" />,
-  kwaito: <Disc className="h-7 w-7" />,
-  musicbox: <Bell className="h-7 w-7" />,
-};
 
 /**
  * The browser's own speech recogniser, or nothing.
@@ -281,75 +249,6 @@ const DOOR_OF: Partial<Record<Tab, Tab>> = {};
 
 const STARS_KEY = 'futurebox.kids.stars.v1';
 
-/**
- * One choice, as a bubble in its own colour.
- *
- * ── Why a bubble and not a tile ──────────────────────────────────────────
- *
- * Her words: *"selfs die uitleg moet anders en uniek wees as die status
- * quo."* A grid of equal grey tiles is the status quo. These are round, they
- * come in three sizes that do not line up row to row, and each carries the
- * colour its topic owns — so the sheet reads as stickers scattered on paper
- * while remaining, underneath, an ordinary wrapping row of real buttons.
- *
- * ── Why the size is passed in and not decided here ───────────────────────
- *
- * Because it belongs to the SHEET, not to the bubble: "no two rows line up"
- * is a fact about fourteen of them together, and a bubble choosing its own
- * size at random would look different on every render and be impossible to
- * check. `sizeAt` in `lib/kidslook.ts` holds the run.
- */
-function Bubble({
-  on,
-  face,
-  label,
-  onPick,
-  paint,
-  size = 1,
-  off = false,
-}: {
-  readonly on: boolean;
-  readonly face: React.ReactNode;
-  readonly label: string;
-  readonly onPick: () => void;
-  readonly paint: { readonly from: string; readonly to: string; readonly ink: string };
-  readonly size?: number;
-  readonly off?: boolean;
-}): React.ReactElement {
-  /* 96, 112 and 132. The smallest is still well above the app's 44, because
-     these are pressed by a small hand that is not aiming carefully. */
-  const across = size === 3 ? 132 : size === 2 ? 112 : 96;
-  return (
-    <button
-      type="button"
-      onClick={onPick}
-      disabled={off}
-      aria-pressed={on}
-      data-kidsbubble
-      style={{
-        width: across,
-        height: across,
-        background: `linear-gradient(145deg, ${paint.from}, ${paint.to})`,
-        color: paint.ink,
-        /* The chosen one lifts off the paper rather than changing colour:
-           changing it would lose the one thing the bubble is for, and a
-           child tracks "the big one that moved" more easily than a border. */
-        transform: on ? 'scale(1.08)' : undefined,
-        boxShadow: on
-          ? '0 10px 0 rgba(0,0,0,0.22), 0 0 0 5px rgba(255,255,255,0.95), 0 16px 24px -4px rgba(0,0,0,0.25)'
-          : '0 5px 0 rgba(0,0,0,0.14), 0 8px 14px -3px rgba(0,0,0,0.1)',
-      }}
-      className="relative flex shrink-0 flex-col items-center justify-center gap-1 rounded-full px-2 transition-transform duration-150 disabled:opacity-40"
-    >
-      <div className="transition-transform duration-150">
-        {face}
-      </div>
-      <span className="w-full px-1 text-center text-[11px] font-black leading-tight select-none">
-        {label}
-      </span>
-    </button>
-  );
-}
 
 export default function KidsRoom({
   onGrownUp,
@@ -381,8 +280,12 @@ export default function KidsRoom({
   /* Which line the mascot is on. A number and not a sentence, so the room
      can change language without the mascot changing its mind. */
   const [mascot, setMascot] = useState(0);
-  const [topic, setTopic] = useState('');
-  const [sound, setSound] = useState('');
+  /* The Song Lab's plan. `topic` and `sound` are read off it for the rooms
+     that still speak of one topic and one sound: the stage, the shelf, the
+     video. */
+  const [plan, setPlan] = useState<SongPlan>(EMPTY_PLAN);
+  const topic = plan.topics[0] ?? '';
+  const sound = plan.sound;
   /**
    * The child's own words, typed or spoken.
    *
@@ -760,14 +663,14 @@ export default function KidsRoom({
     if (!what || !how) return;
     void took(pictureWords(what, how), null, `${t(what.says[0], what.says[1])} · ${t(how.says[0], how.says[1])}`);
   };
-  const canSong = (Boolean(topic) || Boolean(kidWords(words))) && Boolean(sound) && left >= songPrice && !busy && !job;
+  const canSong = ready({ ...plan, own: words }) && left >= songPrice && !busy && !job;
   const canFilm = Boolean(videoUrl) && left >= videoPrice && !busy && !job;
 
   const make = async (): Promise<void> => {
     setBusy('song');
     setSays('');
     setFilm('');
-    const answer = await makeKidSong(topic, sound, words);
+    const answer = await makeKidSong(songPrompt({ ...plan, own: words }));
     setBusy('');
     void kidsNow().then(setState);
     if ('says' in answer) { setSays(answer.says); return; }
@@ -828,18 +731,21 @@ export default function KidsRoom({
     }
   };
 
-  /* What the sentence at the top is wearing. `paintOf` answers with a plain
-     colour when nothing is chosen, so the sentence is never a bare word. */
-  const topicPaint = paintOf(PAINTS, topic || null);
-  const soundPaint = paintOf(SOUND_PAINTS, sound || null);
-
   /* The wheel and the mascot are Google's two ideas from the room she had it
      draw. `lib/kidslook.ts` carries what was taken from that and what was
      deliberately left in it. */
   const wheel = (): void => {
     const got = spin(KID_TOPICS, KID_SOUNDS);
-    setTopic(got.topic);
-    setSound(got.sound);
+    const one = <T extends { readonly id: string }>(list: readonly T[]): string => list[Math.floor(Math.random() * list.length)].id;
+    setPlan({
+      ...EMPTY_PLAN,
+      topics: [got.topic],
+      sound: got.sound,
+      place: one(KID_PLACES),
+      verse: one(SONG_PARTS[0].choices),
+      chorus: one(SONG_PARTS[1].choices),
+      bridge: one(SONG_PARTS[2].choices),
+    });
     setMascot((n) => (n + 3) % MASCOT_SAYS.length);
   };
 
@@ -1178,41 +1084,6 @@ export default function KidsRoom({
                 </button>
               </div>
 
-              {/* ── The sentence, which is what the headings used to be ─────
-                  Two headings reading "What should the song be about?" and
-                  "How should it sound?" are a form. This is the same two
-                  choices said as the thing a child is about to get, filling
-                  in as they press. */}
-              <div className="rounded-3xl border-2 border-cyan-500/40 bg-surface-50/80 p-4 text-center shadow-lg backdrop-blur-xs sm:p-5">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-surface-700">
-                  {t('kids.realSongWhy', 'Pick what it is about and how it sounds, and a real song is made for you.')}
-                </p>
-                <p data-kidssentence className="fb-kids-bubble text-xl leading-snug text-surface-900 sm:text-2xl">
-                  {t('kids.aSongAbout', 'A song about')}{' '}
-                  <span
-                    data-kidssentencetopic
-                    className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base font-black shadow-xs sm:text-lg"
-                    style={{
-                      background: `linear-gradient(145deg, ${topicPaint.from}, ${topicPaint.to})`,
-                      color: topicPaint.ink,
-                    }}
-                  >
-                    {topicSaid || t('kids.something', 'something')}
-                  </span>{' '}
-                  {t('kids.thatSounds', 'that sounds')}{' '}
-                  <span
-                    data-kidssentencesound
-                    className="inline-block rounded-2xl px-3.5 py-1 align-middle text-base font-black shadow-xs sm:text-lg"
-                    style={{
-                      background: `linear-gradient(145deg, ${soundPaint.from}, ${soundPaint.to})`,
-                      color: soundPaint.ink,
-                    }}
-                  >
-                    {soundSaid || t('kids.anyway', 'any way')}
-                  </span>
-                </p>
-              </div>
-
               {/* ── The child's own words ────────────────────────────────────
                   A box for the ones who can type, and a button for the ones
                   who would rather say it. What is said lands in the box. */}
@@ -1265,62 +1136,22 @@ export default function KidsRoom({
                 </p>
               )}
 
-              {/* The sheet of topics: bubbles of three sizes, in their own
-                  colours from `lib/kidslook.ts`. */}
-              <div data-kidstopics className="flex flex-wrap justify-center gap-2.5">
-                {KID_TOPICS.map((one, at) => (
-                  <Bubble
-                    key={one.id}
-                    on={topic === one.id}
-                    face={FACES[one.id] ?? <Music className="h-7 w-7" />}
-                    label={t(one.says[0], one.says[1])}
-                    onPick={() => setTopic(one.id)}
-                    paint={paintOf(PAINTS, one.id)}
-                    size={sizeAt(at)}
-                    off={Boolean(busy) || Boolean(job)}
-                  />
-                ))}
-              </div>
-
-              {/* And the sounds, all one size: a row, not a scatter. */}
-              <div data-kidssounds className="flex flex-wrap justify-center gap-2.5">
-                {KID_SOUNDS.map((one) => (
-                  <Bubble
-                    key={one.id}
-                    on={sound === one.id}
-                    face={FACES[one.id] ?? <Music className="h-7 w-7" />}
-                    label={t(one.says[0], one.says[1])}
-                    onPick={() => setSound(one.id)}
-                    paint={paintOf(SOUND_PAINTS, one.id)}
-                    size={2}
-                    off={Boolean(busy) || Boolean(job)}
-                  />
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => void make()}
-                disabled={!canSong}
-                data-kidsmake
-                /* Round, hot pink, and the biggest thing on the page. Every
-                   free thing in this room is emerald or gold, so the one
-                   button that spends the allowance is a colour none of them
-                   are. */
-                className="mx-auto flex h-[92px] w-[92px] flex-col items-center justify-center gap-0.5 rounded-full text-[13px] font-black leading-tight text-white disabled:opacity-40 sm:h-[104px] sm:w-[104px]"
-              >
-                {busy === 'song' ? (
-                  <>
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                    {t('kids.making', 'Making your song…')}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-6 w-6" />
-                    {t('kids.make', 'Make my song')}
-                  </>
-                )}
-              </button>
+              {/* ── The Song Lab ──────────────────────────────────────────
+                  The owner, 19 October 2026: "Die bubbles moet weg, gebruik
+                  ander kreatiewe maniere. Onthou very cool and futuristic vir
+                  kids." Several things to sing about, a style, a place, and
+                  the song's parts — verse, chorus, bridge — each with a line
+                  saying what that part is for. `KidsSongLab.tsx`. */}
+              <KidsSongLab
+                plan={plan}
+                own={kidWords(words)}
+                onPlan={setPlan}
+                off={Boolean(busy) || Boolean(job)}
+                making={busy === 'song'}
+                canMake={canSong}
+                price={songPrice}
+                onMake={() => void make()}
+              />
 
               {says && (
                 <p className="rounded-2xl border-2 border-surface-200 bg-surface-50/80 px-4 py-3 text-sm font-semibold text-surface-900 shadow-xs" data-kidssays>

@@ -186,16 +186,18 @@ for (const one of [...KID_TOPICS, ...KID_SOUNDS]) {
   ok('the room has a box for the child\u2019s own words',
     /data-kidstype/.test(room) && /maxLength=\{KID_WORDS_MOST\}/.test(room),
     'typed words with no cap are a prompt with no cap');
-  ok('  and the words go to the song with the bubbles',
-    /makeKidSong\(topic, sound, words\)/.test(room) && /words = ''/.test(made)
-    && /prompt: \[what\?\.words, own\]\.filter\(Boolean\)\.join/.test(made),
+  const plan = withoutComments(readFileSync('app/lib/kidsongplan.ts', 'utf8'));
+  ok('  and the words go to the song with the Song Lab\u2019s choices',
+    /makeKidSong\(songPrompt\(\{ \.\.\.plan, own: words \}\)\)/.test(room)
+    && /const own = kidWords\(plan\.own\)/.test(plan) && /prompt: plan\.prompt/.test(made),
     'a box whose words go nowhere is decoration');
   ok('  through the same door every grown-up\u2019s prompt goes through',
     /fetch\('\/api\/music'/.test(made) && !/\/api\/kids\/song/.test(made),
     '/api/music is where guard() reads every prompt; a route of its own would be a softer door');
   ok('  and the words are enough on their own, with a sound',
-    /\(Boolean\(topic\) \|\| Boolean\(kidWords\(words\)\)\) && Boolean\(sound\)/.test(room),
-    'a child who typed should not also have to press a bubble');
+    /ready\(\{ \.\.\.plan, own: words \}\)/.test(room)
+    && /\(plan\.topics\.length > 0 \|\| Boolean\(kidWords\(plan\.own\)\)\) && Boolean\(find\(KID_SOUNDS, plan\.sound\)\)/.test(plan),
+    'a child who typed should not also have to pick a topic');
   ok('  and trimmed to one line of the length the room allows',
     /KID_WORDS_MOST = 120/.test(made) && /slice\(0, KID_WORDS_MOST\)/.test(made));
   ok('saying it uses the browser\u2019s own recogniser, not a paid transcription',

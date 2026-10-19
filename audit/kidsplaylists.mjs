@@ -155,10 +155,56 @@ try {
   await page.waitForTimeout(800);
   check('a shelf song can become a real video, of the scene on the stage',
     filmed.length === 1 && filmed[0].kids === true && /space/i.test(filmed[0].prompt ?? ''), JSON.stringify(filmed[0] ?? {}).slice(0, 200));
+
+  /* ── The Song Lab ──────────────────────────────────────────────────────
+     The owner, 19 October 2026: "Die bubbles moet weg … wat van multiple
+     keuses, wat van style? Dalk ook wat van setting? … verse, chorus, brug …
+     very cool and futuristic vir kids." */
+  const asked = [];
+  await page.route('**/api/music', (route) => {
+    asked.push(route.request().postDataJSON());
+    return route.fulfill({ status: 200, contentType: 'audio/wav', body: wav() });
+  });
+  /* A fresh page: the video still being made above rightly holds every
+     paid button in the room until it lands. */
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.locator('[data-kidsroom]').waitFor({ timeout: 40000 });
+  await page.locator('[data-kidshome]').first().click().catch(() => undefined);
+  await page.locator('[data-kidsroomdoor="music"]').click();
+  const lab = page.locator('[data-kidssonglab]');
+  await lab.waitFor({ timeout: 10000 });
+  check('the Song Lab is there, and no bubbles', (await page.locator('[data-kidsbubble]').count()) === 0);
+  check('  with the song’s shape drawn as blocks', (await lab.locator('[data-kidsshapeblock]').count()) === 5);
+  await lab.locator('[data-kidssongtile="dog"]').click();
+  await lab.locator('[data-kidssongtile="space"]').click();
+  check('two things to sing about can be picked', (await lab.locator('[data-kidstopics] [aria-pressed="true"]').count()) === 2);
+  await lab.locator('[data-kidssongstep="sound"]').click();
+  await lab.locator('[data-kidssongtile="rock"]').click();
+  await lab.locator('[data-kidssongstep="place"]').click();
+  await lab.locator('[data-kidssongtile="jungle"]').click();
+  await lab.locator('[data-kidssongstep="chorus"]').click();
+  check('a part says what it is for', /everybody sings/i.test(await lab.locator('[data-kidssongpart="chorus"]').innerText()));
+  await lab.locator('[data-kidssongtile="chorus-brave"]').click();
+  await lab.locator('[data-kidssongstep="verse"]').click();
+  await lab.locator('[data-kidssongtile="verse-friend"]').click();
+  await lab.locator('[data-kidssongstep="bridge"]').click();
+  await lab.locator('[data-kidssongtile="bridge-countdown"]').click();
+  check('  and the blocks light up as the parts are chosen', (await lab.locator('[data-kidsshapeblock].is-lit').count()) === 5);
+  const said = await lab.locator('[data-kidssentence]').innerText();
+  check('the sentence says the whole song', /Loud|Rock/i.test(said) && /dog/i.test(said) && /Space/i.test(said) && /jungle/i.test(said), said);
+  check('the make button says its price', /\d+/.test(await lab.locator('[data-kidssongprice]').innerText().catch(() => '')));
+  await page.screenshot({ path: shot('kids-songlab.png'), fullPage: false });
+  await lab.locator('[data-kidsmake]').click();
+  await page.waitForTimeout(2500);
+  const sent = asked[0] ?? {};
+  check('every choice reaches the music engine',
+    /dog/.test(sent.prompt ?? '') && /rocket|planets/.test(sent.prompt ?? '') && /jungle/.test(sent.prompt ?? '')
+    && /we can do it/i.test(sent.prompt ?? '') && /new friend/.test(sent.prompt ?? '') && /three, two, one/.test(sent.prompt ?? '')
+    && /rock/.test(sent.style ?? '') && sent.kids === true, JSON.stringify(sent).slice(0, 300));
 } finally {
   await browser.close();
   await server.stop();
 }
 
-console.log(problems.length ? `\nproblems: ${problems.join(' ;; ')}` : '\ncheck:kidsplaylistwalk — a child names a playlist from stickers, fills it, orders it, plays it, and finds it again; and any song on the shelf dances on the video stage and can become a video.');
+console.log(problems.length ? `\nproblems: ${problems.join(' ;; ')}` : '\ncheck:kidsplaylistwalk — a child names a playlist from stickers, fills it, orders it, plays it, and finds it again; any song on the shelf dances on the video stage and can become a video; and the Song Lab builds a song from several topics, a style, a place and its parts.');
 process.exit(problems.length ? 1 : 0);
