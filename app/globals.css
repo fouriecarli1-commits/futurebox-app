@@ -847,7 +847,10 @@ body:has([data-kidsdoor]) {
      drawn — green lightning, a city through the window, two children at a
      console — is the ground now, under a green-black wash so the glass
      panels on it stay readable (audit/contrast.mjs walks this page). The
-     radial wash is the fallback for the moment before the picture lands. */
+     radial wash is the fallback for the moment before the picture lands.
+     On 19 October she sent the room again, with the FUTUREBOX KIDS sign over
+     the window — "background vir kids app" — and it took the old one's place;
+     the picture as she sent it is in `art/kids/room.jpg`. */
   background-image:
     linear-gradient(180deg, rgba(2, 44, 34, 0.55) 0%, rgba(2, 30, 24, 0.7) 60%, rgba(1, 18, 14, 0.9) 100%),
     url('/kids/room.jpg'),
