@@ -892,14 +892,17 @@ export default function KidsRoom({
                   uit, en sit hierdie logo in."* Its black is taken out in
                   `scripts/kids-icons.mts`, so the room shows round it. */}
               <h1 data-kidsdreamtitle className="m-0">
-                <img
-                  src="/kids/logo.webp"
-                  alt={t('kids.logoAlt', 'FutureBox Kids')}
-                  width={640}
-                  height={236}
-                  draggable={false}
-                  className="mx-auto block h-16 w-auto sm:h-20"
-                />
+                {/* And the long one where the screen is wide: *"Sit hierdie
+                    langer logo op die web app waar die skerm wyer strek."* */}
+                <picture>
+                  <source media="(min-width: 1024px)" srcSet="/kids/logo-wide.webp" />
+                  <img
+                    src="/kids/logo.webp"
+                    alt={t('kids.logoAlt', 'FutureBox Kids')}
+                    draggable={false}
+                    className="mx-auto block h-16 w-auto sm:h-20 lg:h-28"
+                  />
+                </picture>
               </h1>
             </GrownUpHold>
             {/* ── And a small lock, for a grown-up who cannot find the hold ──
