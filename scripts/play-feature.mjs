@@ -23,8 +23,8 @@ import { launchOptions } from '../audit/where.mjs';
 const AF = process.argv[2] === 'af';
 const OUT = AF ? 'docs/play/feature-graphic-1024x500-af.png' : 'docs/play/feature-graphic-1024x500.png';
 const WORDS = AF
-  ? { line: 'Maak ’n liedjie, maak die video,<br>en sit dit uit.', chips: ['Liedjies', 'Video’s', 'Foto’s', 'Potgooie', 'Advertensies'], lang: 'In Afrikaans en Engels · Gemaak in Suid-Afrika' }
-  : { line: 'Make a song, make the video,<br>and put it out.', chips: ['Songs', 'Videos', 'Photos', 'Podcasts', 'Adverts'], lang: 'In English and Afrikaans · Made in South Africa' };
+  ? { line: 'Maak ’n liedjie, maak die video,<br>en publiseer dit.', chips: ['Liedjies', 'Video’s', 'Foto’s', 'Potgooie', 'Advertensies'], lang: 'In Afrikaans en Engels · Gemaak in Suid-Afrika' }
+  : { line: 'Make a song, make the video,<br>and publish it.', chips: ['Songs', 'Videos', 'Photos', 'Podcasts', 'Adverts'], lang: 'In English and Afrikaans · Made in South Africa' };
 const data = (path, type) => `data:${type};base64,${readFileSync(path).toString('base64')}`;
 
 /* The board cut in from her icon, so its black square does not sit on the

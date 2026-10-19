@@ -141,8 +141,8 @@ const STEPS: readonly Step[] = [
     noteAf: 'Oorhandig aan die videolessenaar en die stemstudio.',
   },
   {
-    en: 'Put it out',
-    af: 'Sit dit uit',
+    en: 'Publish it',
+    af: 'Publiseer dit',
     noteEn: 'Caption and hashtags ready, one composer per platform.',
     noteAf: 'Byskrif en hutsmerke gereed, een komponeerder per platform.',
   },

@@ -43,7 +43,7 @@ const SCREENS_AF = [
   ['03-make-a-song', 'Maak ’n liedjie *uit ’n gevoel*', 'Kies ’n gevoel, of sê die klank in jou eie woorde'],
   ['04-video-desk', 'Beskryf ’n skoot. *Kry die video.*', 'Begin by ’n soort video en maak dit joune'],
   ['05-photo-editor', 'Redigeer foto’s *soos ’n pro*', 'Sny, filters, towerkuns, teks en ontwerpe'],
-  ['06-adverts', 'Advertensies vir *jou besigheid*', 'Sê wat jy verkoop — dit skryf, verfilm en plaas'],
+  ['06-adverts', 'Advertensies vir *jou besigheid*', 'Vertel wat jy verkoop, en dit maak jou advertensie'],
 ];
 
 const page = (shot, head, line) => `<!doctype html><html><head><meta charset="utf-8"><style>

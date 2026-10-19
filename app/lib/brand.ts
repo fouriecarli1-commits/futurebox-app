@@ -103,7 +103,7 @@ export const APP_SHORT = 'FutureBox';
  * actually does. Two descriptions of one product in one file, and the stale one
  * was the one on the tab.
  */
-export const APP_LINE = 'Make a song, make the video, and put it out. In English or Afrikaans.';
+export const APP_LINE = 'Make a song, make the video, and publish it. In English or Afrikaans.';
 
 /** A creator's public address, as it is shown to them. */
 export function profileAddress(handle: string): string {

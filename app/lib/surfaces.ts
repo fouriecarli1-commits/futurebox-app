@@ -33,7 +33,7 @@ import { CREDITS } from './credits';
 export const STAGES = [
   { id: "make", en: "Make it", af: "Maak dit" },
   { id: "show", en: "Show it", af: "Wys dit" },
-  { id: "release", en: "Put it out", af: "Sit dit uit" },
+  { id: "release", en: "Publish it", af: "Publiseer dit" },
   { id: "sell", en: "Sell it", af: "Verkoop dit" },
 ] as const;
 
@@ -687,7 +687,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   },
   collab: {
     id: "collab",
-    /* Under "Put it out", not adrift after the advert desk.
+    /* Under "Publish it", not adrift after the advert desk.
  
        It had no stage, so it fell to the end of the front door, below
        Adverts — which reads as an afterthought and is the wrong place for

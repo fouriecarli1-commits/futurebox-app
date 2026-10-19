@@ -23,7 +23,7 @@ import { launchOptions, serve } from './where.mjs';
    Afrikaans store listing (`scripts/play-screens.mjs af`). */
 const AF = process.argv[3] === 'af';
 const OUT = AF ? 'docs/play/shots/af' : 'docs/play/shots';
-const PHONE = { width: 360, height: 640, touch: true, scale: 3, email: 'thandi@futurebox.test', lang: AF ? 'af' : null };
+const PHONE = { width: 360, height: 640, touch: true, scale: 3, email: 'lily@futurebox.test', lang: AF ? 'af' : null };
 const ROOM = AF
   ? { make: 'Maak ’n liedjie', video: 'Videolessenaar', ads: 'Advertensies', photo: 'Foto Editor' }
   : { make: 'Make', video: 'Video desk', ads: 'Adverts', photo: 'Photo Editor' };

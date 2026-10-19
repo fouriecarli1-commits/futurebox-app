@@ -157,8 +157,12 @@ export default function Greeting({
       /* Their channel name first, because it is the one they chose. The
          account's name behind it, because a greeting with no name is worse
          than one using the name they signed up with. */
+      /* A channel name that is only the sign-up email's front half — "lily" —
+         is said the way the account says it, with a capital: "Hello, Lily!" */
+      const channel = creator?.name ?? '';
+      const said = fromAccount && channel.toLowerCase() === fromAccount.toLowerCase() ? fromAccount : channel;
       setHabit(
-        habitOf(loadTracks(), loadMakes(), creator?.name || fromAccount || '', taste.lines),
+        habitOf(loadTracks(), loadMakes(), said || fromAccount || '', taste.lines),
       );
       setHandle(creator?.handle ?? '');
       setPhoto(creator?.avatar_path ? publicUrl(creator.avatar_path) : null);

@@ -1075,7 +1075,7 @@ export default function KidsRoom({
               not gone — the four loop cards came first and pushed it below
               the fold of a phone, under a line nobody scrolls past. The
               three are choices of the same size now, the real song open. */}
-          <div className="grid grid-cols-3 gap-2" data-kidsmusicmode>
+          <div className="flex gap-2" data-kidsmusicmode>
             {([
               ['song', '🎤', 'kids.subSong', 'Make a real song', 'bg-primary-400 text-onAccent'],
               ['loops', '🔁', 'kids.subLoops', 'Loops', 'bg-amber-400 text-onAccent'],
@@ -1088,7 +1088,7 @@ export default function KidsRoom({
                 {...(id === 'beat' ? { 'data-kidstobeat': '' } : {})}
                 aria-pressed={music === id}
                 onClick={() => setMusic(id)}
-                className={`fb-kids-bouncy flex min-h-[64px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-sm font-black leading-tight ${
+                className={`fb-kids-bouncy flex min-h-[64px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[2rem] px-2 text-sm font-black leading-tight ${
                   music === id ? lit : 'bg-surface-200/80 text-surface-800'
                 }`}
               >

@@ -142,7 +142,7 @@ const WANT = [
   ['step 1',         /Sê wat jy verkoop|Sê wat jy verkoop/],
   ['step 2',         /Dit skryf die advertensies/],
   ['step 3',         /Verfilm dit|Verfilm/],
-  ['step 4',         /Sit dit uit/],
+  ['step 4',         /Publiseer dit/],
   /* `kit.title` — the card is "Jou handelsmerkpak" now; the sentence this
      asked for was its old heading. */
   ['brand kit',      /Jou handelsmerkpak/],
