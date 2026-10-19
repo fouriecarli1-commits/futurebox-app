@@ -3665,6 +3665,8 @@ export const STRINGS: Dict = {
   "canvas.note.marketing": { en: "An advert with a line that is spoken", af: "\u2019n Advertensie met \u2019n sin wat ges\u00ea word" },
   "canvas.scene.podcast": { en: "Podcast", af: "Potgooi" },
   "canvas.note.podcast": { en: "A host talking, for a clip or a trailer", af: "\u2019n Aanbieder wat praat, vir \u2019n knipsel of lokprent" },
+  "canvas.scene.dialogue": { en: "Dialogue", af: "Gesprek" },
+  "canvas.note.dialogue": { en: "Two people talking, a line each", af: "Twee mense wat praat, elkeen \u2019n re\u00ebl" },
   "canvas.scene.social": { en: "Reel", af: "Reel" },
   "canvas.note.social": { en: "Vertical, made to stop a thumb", af: "Regop, gemaak om \u2019n duim te stop" },
   "canvas.scene.product": { en: "Product", af: "Produk" },

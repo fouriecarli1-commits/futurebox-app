@@ -219,6 +219,7 @@ export function meerkatPhotoUrl(mood: MeerkatMood = 'day', w = 192, h = 192): st
 export const PICTURED: Readonly<Record<string, { readonly mood: MeerkatMood; readonly look?: string }>> = {
   /* The video desk's kinds. */
   music: { mood: 'neon' }, marketing: { mood: 'studio', look: 'bright' }, podcast: { mood: 'studio', look: 'warm' },
+  dialogue: { mood: 'golden', look: 'warm' },
   social: { mood: 'day', look: 'punch' }, product: { mood: 'studio' }, atmosphere: { mood: 'mist' },
   /* Its genres. */
   amapiano: { mood: 'golden' }, gqom: { mood: 'neon', look: 'punch' }, sokkie: { mood: 'day', look: 'warm' },

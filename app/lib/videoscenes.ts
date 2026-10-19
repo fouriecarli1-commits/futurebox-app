@@ -29,6 +29,7 @@ export type SceneId =
   | 'music'
   | 'marketing'
   | 'podcast'
+  | 'dialogue'
   | 'social'
   | 'product'
   | 'atmosphere';
@@ -117,6 +118,40 @@ export const SCENES: readonly Scene[] = [
         'laughing. Medium two-shot, slight handheld. Warm practical lamps, ' +
         'dark corners. Easy and unrehearsed.\n\n' +
         'She says, "You are not going to believe how this one ended."',
+    ],
+  },
+  /* ── Two people, each with a line ────────────────────────────────────
+     The owner's AI-tool screenshots, 16 October 2026: a "dialogue scene" —
+     characters in one shot, talking to each other. The engines on the
+     Better grade say every quoted line aloud and give each line to the
+     person it is written against, so a scene is two people described
+     apart and a line each, in the order they speak. Eight seconds holds
+     two short lines; a longer argument is several clips. */
+  {
+    id: 'dialogue',
+    label: 'Dialogue',
+    note: 'Two people talking, a line each',
+    aspect: '16:9',
+    seconds: 8,
+    speaks: true,
+    scaffolds: [
+      'An older woman in a green cardigan and a young man in a hoodie at a ' +
+        'kitchen table, a pot of tea between them. Medium two-shot, static, ' +
+        'eye level. Warm late-afternoon light from the window. Fond and a ' +
+        'little teasing.\n\n' +
+        'The woman says, "You only phone when you want something."\n' +
+        'The young man laughs and says, "I am here, am I not?"',
+      'Two friends in a parked car at night, rain on the windscreen, the ' +
+        'driver a woman with braids, the passenger a man in a denim jacket. ' +
+        'Two-shot through the windscreen, slow push in. Streetlight orange ' +
+        'and dashboard blue. Quiet and serious.\n\n' +
+        'The driver says, "If we do this, there is no going back."\n' +
+        'The passenger says, "There was never any going back."',
+      'A shopkeeper behind a counter and a customer holding up a small ' +
+        'radio. Over-the-shoulder shot from behind the customer. Bright ' +
+        'fluorescent light, shelves of tins behind. Comic and deadpan.\n\n' +
+        'The customer says, "It only plays one station."\n' +
+        'The shopkeeper says, "That is the good station."',
     ],
   },
   {
