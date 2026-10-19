@@ -1843,6 +1843,11 @@ jobs:
       - name: Google can still find the website verification file
         run: npm run check:googlesite
 
+      # A booth mixdown or a kids' reading is kept in the cloud as a 320 kbps
+      # MP3 of the WAV, and nothing that is not a WAV is touched.
+      - name: The cloud keeps a small copy of a WAV
+        run: npm run check:cloudcopy
+
       # The price list she sets prices off is generated from the code, and
       # this fails when the file on disk is not what the code says today. A
       # price list goes stale silently, because nothing in a build reads

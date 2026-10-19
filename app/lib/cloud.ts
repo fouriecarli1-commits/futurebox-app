@@ -23,6 +23,7 @@
  * read or write. Never put the service-role key here.
  */
 
+import { cloudCopyOf } from './cloudcopy';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Track } from './library';
 import { refusedForSpace } from './space';
@@ -1060,6 +1061,10 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
     };
   }
 
+  /* A booth mixdown is a WAV; the account keeps an MP3 of it at 320 kbps,
+     a fifth the size and the same to the ear (`lib/cloudcopy.ts`). The
+     device keeps the WAV. */
+  const kept = await cloudCopyOf(audio);
   const upload = await supabase.storage
     .from(BUCKET)
     /* The blob's own type, not a constant.
@@ -1071,8 +1076,8 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
        is how one wrong constant went on looking right.
  
        `lib/workfile.ts` has always done it this way; this was the odd one out. */
-    .upload(audioPath(account.id, track.id), audio, {
-      contentType: audio.type || 'audio/wav',
+    .upload(audioPath(account.id, track.id), kept, {
+      contentType: kept.type || 'audio/wav',
       upsert: true,
     });
   if (upload.error) {

@@ -46,6 +46,7 @@
  */
 
 import { currentAccount, getClient } from './cloud';
+import { cloudCopyOf } from './cloudcopy';
 import type { Put, Shelf } from './ondevice';
 import { refusedForSpace } from './space';
 
@@ -117,9 +118,12 @@ export function cloudShelfOf<T extends { id: string; made: number; title: string
       const where = new Map<string, string>();
       for (const file of files(one)) {
         const path = pathFor(account.id, one.id, file.name);
-        const { error } = await supabase.storage.from(BUCKET).upload(path, file.blob, {
+        /* A reading is a WAV on the device; the account keeps it as a
+           320 kbps MP3, a fifth the size (`lib/cloudcopy.ts`). */
+        const blob = await cloudCopyOf(file.blob);
+        const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
           upsert: true,
-          contentType: file.blob.type || 'application/octet-stream',
+          contentType: blob.type || 'application/octet-stream',
         });
         if (error) {
           /* Anything already up is left there. The row is never written, so
