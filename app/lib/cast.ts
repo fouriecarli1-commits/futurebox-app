@@ -178,6 +178,29 @@ export type Added =
  * ever sees.
  */
 /**
+ * A data URL's bytes, read here rather than fetched.
+ *
+ * This was `fetch(dataUrl)`, and the site's Content-Security-Policy lets the
+ * page connect to itself and to Supabase only — `data:` is not on the list —
+ * so the fetch was refused, the blob was null, and every picture moved from
+ * the device shelf into the cast came back as "That is not a picture." Found
+ * on 19 October 2026 by the host rack's probe, which goes through the same
+ * door. Reading the base64 needs no connection at all.
+ */
+export function blobOfDataUrl(dataUrl: string): Blob | null {
+  const match = /^data:([^;,]+)(;base64)?,([\s\S]*)$/.exec(dataUrl);
+  if (!match) return null;
+  try {
+    const text = match[2] ? atob(match[3]) : decodeURIComponent(match[3]);
+    const bytes = new Uint8Array(text.length);
+    for (let i = 0; i < text.length; i += 1) bytes[i] = text.charCodeAt(i);
+    return new Blob([bytes], { type: match[1] });
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Put somebody in the cast from a picture this device already has.
  *
  * ── Why there are two doors ──────────────────────────────────────────────
@@ -206,8 +229,7 @@ export type Added =
  * and there is one place that knows the shelf's shape.
  */
 export async function addToCastFromKept(dataUrl: string, name: string): Promise<Added> {
-  const answer = await fetch(dataUrl).catch(() => null);
-  const blob = answer ? await answer.blob().catch(() => null) : null;
+  const blob = blobOfDataUrl(dataUrl);
   if (!blob || !blob.type.startsWith('image/')) return { ok: false, why: 'not_an_image' };
   /* Named after the shelf entry, with a type the rest of the path can read.
      `File` rather than `Blob` because that is what `addToCast` takes, and

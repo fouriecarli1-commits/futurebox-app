@@ -88,7 +88,7 @@ import Note from './Note';
  * Same lesson as the sheet handles and the artist inbox, in the same week:
  * two copies of one answer is how half of an answer ships.
  */
-function whySaid(
+export function whySaid(
   why: Exclude<Added, { ok: true }>['why'],
   missing: readonly string[] | undefined,
   t: (key: string, fallback: string) => string,

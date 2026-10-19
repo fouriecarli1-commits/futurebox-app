@@ -88,12 +88,28 @@ const PIXEL = Buffer.from(
   'base64',
 );
 let castAsked = 0;
-await p.route('**/api/cast*', async (route) => (castAsked += 1, route.fulfill({
-  status: 200, contentType: 'application/json',
-  body: JSON.stringify({ cast: [{ id: 'm1', name: 'Sarel', note: '', path: `${WHO.id}/1700000000000.webp`, created_at: new Date().toISOString() }] }),
-})));
-await p.route('**/storage/v1/object/**', async (route) =>
-  route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }));
+/* The cast grows when a host is made (`HostRack`): newest first, as the
+   table answers. */
+const castRows = [{ id: 'm1', name: 'Sarel', note: '', path: `${WHO.id}/1700000000000.webp`, created_at: new Date().toISOString() }];
+await p.route('**/api/cast*', async (route) => {
+  castAsked += 1;
+  if (route.request().method() === 'POST') {
+    const asked = JSON.parse(route.request().postData() || '{}');
+    const member = { id: `m${castRows.length + 1}`, name: asked.name, note: '', path: asked.path, created_at: new Date().toISOString() };
+    castRows.unshift(member);
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ member }) });
+  }
+  return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cast: castRows }) });
+});
+await p.route('**/storage/v1/object/**', async (route) => (route.request().method() === 'GET'
+  ? route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL })
+  : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ Key: 'cast/x', Id: 'x' }) })));
+/* The picture engine, for the host rack: what it was asked is kept. */
+let hostAsked = null;
+await p.route('**/api/google/picture', async (route) => {
+  hostAsked = JSON.parse(route.request().postData() || '{}');
+  return route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL });
+});
 
 // The video engine, so the desk draws at all.
 await p.route('**/api/video*', async (route) => {
@@ -296,6 +312,31 @@ check('an audio file reached the route', typeof sent?.audio === 'string' && sent
 check('the script went with it, for the screen', /Sarel/.test(sent?.script ?? ''), sent?.script);
 check('the length sent is the length of the reading', sent?.seconds === 2, String(sent?.seconds));
 check('the confirmation was sent, not assumed', sent?.consent === true, String(sent?.consent));
+
+/* ── The avatar rack: a host made here, into the cast and chosen ─────────
+
+   The owner, 11 and 16 October 2026: host looks to choose from, made in the
+   app. Pressing a look and Make draws the picture with the picture engine,
+   at the price on the button, keeps it in the cast, and the presenter is
+   then that new host — not Sarel. */
+const fold = room.locator('[data-hostfold] summary').first();
+check('a new host can be made beside the cast', (await fold.count()) > 0);
+await fold.click();
+await p.waitForTimeout(300);
+await room.locator('[data-hostlook="avatar-storyteller"]').first().click();
+await room.locator('[data-hostwho]').first().fill('a man in his fifties with a grey beard');
+const makeHost = room.locator('[data-hostmake]').first();
+check('the host button says what it costs', /\b6\b/.test(await makeHost.innerText()), await makeHost.innerText());
+await makeHost.click();
+await p.waitForTimeout(3000);
+check('the look went to the picture engine', /wood slat acoustic panels/.test(hostAsked?.words ?? ''), String(hostAsked?.words).slice(0, 80));
+check('  with who they are', /grey beard/.test(hostAsked?.words ?? ''));
+check('  asked for a face a mouth can be moved in', /mouth closed/.test(hostAsked?.words ?? '') && /looking straight into the lens/.test(hostAsked?.words ?? ''));
+check('the new host is in the cast', castRows.length === 2 && /Storyteller|verteller/i.test(castRows[0].name),
+  `${castRows.map((one) => one.name).join(', ')} — the rack said "${await room.locator('[data-hostsaid]').first().innerText().catch(() => '')}"`);
+/* The cast strip's own buttons; the look tiles are pressed buttons too. */
+const chosen = room.locator('button[aria-pressed="true"]:not([data-hostlook])').filter({ hasText: /Storyteller|verteller/i });
+check('  and is who says it now', (await chosen.count()) > 0);
 
 await p.screenshot({ path: shot(`presenter-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');

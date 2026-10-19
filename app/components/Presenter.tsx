@@ -44,7 +44,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SpokenWord } from '../lib/spokenwords';
 import { AlertTriangle, Check, Loader2, Mic, Play, UserRound, Video as VideoIcon } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
-import { loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
+import { CAST_LIMIT, loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
+import HostRack from './HostRack';
 import { presenterCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { withSaid } from '../lib/speak';
@@ -124,6 +125,7 @@ export default function Presenter({
   const [made, setMade] = useState<string | null>(null);
   const player = useRef<HTMLAudioElement | null>(null);
   const heard = useRef<string | null>(null);
+  const made_ = useRef<string | null>(null);
 
   useEffect(() => {
     void fetch('/api/presenter')
@@ -268,9 +270,22 @@ export default function Presenter({
      the engine is sent are the same value and cannot drift apart. */
   useEffect(() => {
     if (!cast.length) return;
-    if (cast.some((one) => one.id === who)) return;
+    if (cast.some((one) => one.id === who)) {
+      if (made_.current === who) made_.current = null;
+      return;
+    }
+    /* A host just made in the rack is chosen before the cast has been read
+       again with them in it. Waited for, not overruled — otherwise this
+       effect moves the choice to whoever was first in the old rows. */
+    if (made_.current === who) return;
     setWho(cast[0].id);
   }, [cast, who]);
+
+  /* The host the rack has just made, until the cast arrives with them in it. */
+  const chooseMade = useCallback((id: string) => {
+    made_.current = id;
+    setWho(id);
+  }, []);
 
   const read = useCallback(async () => {
     if (busy || script.trim().length < 2 || !voiceId) return;
@@ -495,14 +510,20 @@ export default function Presenter({
               'It is built for a spoken script. Whether it holds up on singing has never been tested \u2014 one clip would answer it, and until somebody makes that clip this is a presenter and not a music video.',
             )}</Note>
 
+      {/* The avatar rack: a host made here, straight into the cast and
+          chosen — `HostRack.tsx`. Open on its own when the cast is empty,
+          folded under the strip once there is somebody to choose. */}
       {cast.length === 0 ? (
-        <p className="text-sm text-amber-400 leading-relaxed flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          {t(
-            'pres.noCast',
-            'Put somebody in your cast first — the picture above is who the presenter will be.',
-          )}
-        </p>
+        <>
+          <p className="text-sm text-amber-400 leading-relaxed flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            {t(
+              'pres.noCastOrMake',
+              'Put somebody in your cast first — the picture above is who the presenter will be. Or make a host here.',
+            )}
+          </p>
+          <HostRack onMade={chooseMade} />
+        </>
       ) : (
         <>
           <div className="space-y-1.5">
@@ -534,6 +555,14 @@ export default function Presenter({
                 );
               })}
             </div>
+            <details data-hostfold className="group">
+              <summary className="inline-flex min-h-[44px] cursor-pointer list-none items-center gap-2 text-sm font-semibold text-emerald-300">
+                + {t('host.another', 'Make a new host')}
+              </summary>
+              <div className="pt-2">
+                <HostRack onMade={chooseMade} full={cast.length >= CAST_LIMIT} />
+              </div>
+            </details>
           </div>
 
           <div className="space-y-1.5">
