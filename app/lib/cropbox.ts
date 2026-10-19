@@ -76,7 +76,7 @@ export interface Size {
 }
 
 /** Which part of the box a finger has taken hold of. */
-export type Grip = 'nw' | 'ne' | 'sw' | 'se' | 'inside' | null;
+export type Grip = 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's' | 'e' | 'w' | 'inside' | null;
 
 const hold = (n: number): number => Math.min(1, Math.max(0, n));
 
@@ -134,6 +134,28 @@ export function gripAt(box: Box, atX: number, atY: number, reach: number): Grip 
     }
   }
   if (nearest) return nearest;
+  /* ── Then the sides ──────────────────────────────────────────────────
+     The owner, 19 October 2026: *"'n resizeble box om die prent … dat mens
+     self kan crop."* A side taken anywhere along it moves only that side,
+     which is how one strip is cut off a photograph without touching the
+     other three — the thing a corner cannot do. Checked after the corners,
+     so a finger at a corner still takes the corner. */
+  const along = (a: number, low: number, high: number): boolean => a >= low - reach && a <= high + reach;
+  const sides: readonly (readonly [Grip, number, boolean])[] = [
+    ['n', Math.abs(atY - box.top), along(atX, box.left, box.right)],
+    ['s', Math.abs(atY - box.bottom), along(atX, box.left, box.right)],
+    ['w', Math.abs(atX - box.left), along(atY, box.top, box.bottom)],
+    ['e', Math.abs(atX - box.right), along(atY, box.top, box.bottom)],
+  ];
+  let side: Grip = null;
+  let close = reach;
+  for (const [which, away, within] of sides) {
+    if (within && away <= close) {
+      close = away;
+      side = which;
+    }
+  }
+  if (side) return side;
   return atX >= box.left && atX <= box.right && atY >= box.top && atY <= box.bottom
     ? 'inside'
     : null;
@@ -172,6 +194,12 @@ export function pullCorner(box: Box, grip: Grip, toX: number, toY: number): Box 
     case 'nw': return sane({ left: x, top: y, right: box.right, bottom: box.bottom });
     case 'ne': return sane({ left: box.left, top: y, right: x, bottom: box.bottom });
     case 'sw': return sane({ left: x, top: box.top, right: box.right, bottom: y });
+    /* A side moves on its own axis only; the finger's other coordinate is
+       ignored, so a drag that wanders does not drag the box sideways. */
+    case 'n': return sane({ ...box, top: y });
+    case 's': return sane({ ...box, bottom: y });
+    case 'w': return sane({ ...box, left: x });
+    case 'e': return sane({ ...box, right: x });
     default: return sane({ left: box.left, top: box.top, right: x, bottom: y });
   }
 }

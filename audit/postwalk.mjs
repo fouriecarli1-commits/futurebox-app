@@ -144,6 +144,16 @@ try {
     await tab.click();
     openBench = which;
     await page.waitForTimeout(500);
+    /* The frame tool draws its crop box at once now (19 October 2026), with
+       the frame's own tools one press away — which is where a walk asking for
+       the frame bench means to be. */
+    if (which === 'frame') {
+      const framing = page.locator('[data-postcropframing]:visible').first();
+      if ((await framing.count()) > 0) {
+        await framing.click();
+        await page.waitForTimeout(400);
+      }
+    }
     return true;
   };
 
@@ -1379,6 +1389,18 @@ try {
      Cut really replaces the photograph with the part inside it. The third is
      the one that matters — a crop tool that looks right and leaves the
      picture alone is the exact failure the pan had in September. */
+  /* The owner, 19 October 2026: *"Die crop … moet ook dadelik 'n resizeble
+     box om die prent trek."* The tool itself, pressed with a photo in: the
+     box and the bar to cut with are there at once, before anything else. */
+  await shut();
+  await page.locator('[data-cutbench="frame"]').first().click();
+  await page.waitForTimeout(600);
+  check('pressing the crop tool draws the box round the photo at once',
+    (await page.locator('[data-postcropbar]:visible').count()) > 0,
+    'the box waited behind a "Start cutting" press inside the frame\u2019s tools');
+  await page.locator('[data-cutbench="frame"]').first().click();
+  await page.waitForTimeout(400);
+  openBench = null;
   await bench('frame');
   const before = await sizeOfPicture();
   check('the room offers to cut the photograph down, where the shapes are',

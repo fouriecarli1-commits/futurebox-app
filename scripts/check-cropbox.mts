@@ -146,6 +146,25 @@ ok('  and snapping never brings in anything the box did not hold',
   && smaller.right <= 0.75 + 1e-9 && smaller.bottom <= 0.75 + 1e-9,
   `${says(smaller)} — a snap that grows the box undoes the crop somebody just set`);
 
+/* ── The sides ───────────────────────────────────────────────────────
+   The owner, 19 October 2026: a box she can resize herself. A side taken
+   anywhere along it moves that side alone. */
+{
+  const box = { left: 0.2, top: 0.2, right: 0.8, bottom: 0.8 };
+  ok('a finger on the middle of the top side takes the top side', gripAt(box, 0.5, 0.205, 0.03) === 'n');
+  ok('  and on the right side, the right side', gripAt(box, 0.79, 0.5, 0.03) === 'e');
+  ok('  and at a corner, still the corner', gripAt(box, 0.21, 0.21, 0.03) === 'nw');
+  ok('  and well inside, the whole box', gripAt(box, 0.5, 0.5, 0.03) === 'inside');
+  const top = pullCorner(box, 'n', 0.9, 0.05);
+  ok('pulling the top side moves the top alone, whatever the finger does sideways',
+    top.top === 0.05 && top.left === 0.2 && top.right === 0.8 && top.bottom === 0.8, JSON.stringify(top));
+  const right = pullCorner(box, 'e', 0.95, 0.99);
+  ok('  and the right side, the right alone', right.right === 0.95 && right.top === 0.2 && right.bottom === 0.8, JSON.stringify(right));
+  const past = pullCorner(box, 'w', 0.9, 0.5);
+  ok('  and a side pulled past its opposite turns the box round rather than inside out',
+    past.left < past.right && past.left >= 0.8 - 1e-9, JSON.stringify(past));
+}
+
 if (bad) {
   console.error(`\ncheck:cropbox — ${bad} assertion(s) failed.\n`);
   process.exit(1);

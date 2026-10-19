@@ -2455,6 +2455,20 @@ export default function PostStudio({
         ctx.lineTo(x + (dx * thick) / 2, y + dy * arm);
         ctx.stroke();
       }
+      /* And a short bar at the middle of each side, because each side can be
+         taken on its own now (`gripAt`) and a handle nobody can see is a
+         handle nobody uses. */
+      const bar = Math.max(12, Math.min(box.width, box.height) / 6);
+      ctx.beginPath();
+      ctx.moveTo(box.left + box.width / 2 - bar / 2, box.top + thick / 2);
+      ctx.lineTo(box.left + box.width / 2 + bar / 2, box.top + thick / 2);
+      ctx.moveTo(box.left + box.width / 2 - bar / 2, box.top + box.height - thick / 2);
+      ctx.lineTo(box.left + box.width / 2 + bar / 2, box.top + box.height - thick / 2);
+      ctx.moveTo(box.left + thick / 2, box.top + box.height / 2 - bar / 2);
+      ctx.lineTo(box.left + thick / 2, box.top + box.height / 2 + bar / 2);
+      ctx.moveTo(box.left + box.width - thick / 2, box.top + box.height / 2 - bar / 2);
+      ctx.lineTo(box.left + box.width - thick / 2, box.top + box.height / 2 + bar / 2);
+      ctx.stroke();
     }
 
     /* ── The traced path, over everything, and never on the file ───────
@@ -3796,6 +3810,7 @@ export default function PostStudio({
       (one) => {
         setPicture(one);
         setCropBox(null);
+        if (bench === 'frame') setBench(null);
         setCrop(MIDDLE);
         lastMask.current = null;
         setSaid(t('post.cutDownDone', 'Cut down. The rest of the photograph is gone — bring it in again to start over.'));
@@ -5946,7 +5961,7 @@ export default function PostStudio({
       <button
         type="button"
         data-postcropstart
-        onClick={() => { setCropBox(ALL_OF_IT); setBench(null); }}
+        onClick={() => setCropBox(ALL_OF_IT)}
         className={LEEG}
       >
         <CropIcon className="h-3.5 w-3.5" />
@@ -5980,7 +5995,7 @@ export default function PostStudio({
       <p className="text-[12px] leading-relaxed" style={asRoom ? { color: INK_DIM } : { color: 'rgb(161,161,170)' }}>
         {t(
           'post.cutDownHow',
-          'Drag the corners on the picture to say how much you are keeping. Everything shaded is thrown away.',
+          'Drag the corners or the sides of the box to say how much you are keeping. Everything shaded is cut away.',
         )}
       </p>
       {/* The three shapes a post actually goes out in, so somebody who knows
@@ -6017,12 +6032,23 @@ export default function PostStudio({
         <button
           type="button"
           data-postcropstop
-          onClick={() => setCropBox(null)}
+          onClick={() => { setCropBox(null); if (bench === 'frame') setBench(null); }}
           className={LEEG}
         >
           {t('post.cutDownStop', 'Leave it')}
         </button>
       </div>
+      {/* The rest of the frame — the post's shape, smart crop, the photo's
+          own size, fill or fit — without cutting anything off the photo. */}
+      <button
+        type="button"
+        data-postcropframing
+        onClick={() => { setCropBox(null); setBench('frame'); }}
+        className={LEEG}
+      >
+        <Frame className="h-3.5 w-3.5" />
+        {t('post.cutFraming', 'Shape & framing instead')}
+      </button>
     </div>
   ) : null;
 
@@ -9595,6 +9621,15 @@ export default function PostStudio({
   const openBench = (next: Exclude<Bench, null>): void => {
     setBench(bench === next ? null : next);
     if (bench !== next) setAsking(false);
+    /* ── Crop draws its box at once ────────────────────────────────────
+       The owner, 19 October 2026: *"Die crop op photo editor moet ook dadelik
+       'n resizeble box om die prent trek dat mens self kan crop en gedeeltes
+       uit 'n foto kan sny."* It used to open the frame's tools and wait for
+       "Start cutting". Now the box is round the photograph the moment the
+       tool is pressed — corners and sides to drag — and the frame's tools
+       are one press away in the same strip. Pressed again, it goes. */
+    if (next === 'frame') setCropBox(bench !== 'frame' && picture ? ALL_OF_IT : null);
+    else if (cropBox) setCropBox(null);
   };
   const stripsUp = Boolean((picture && (cropBox || traced)) || picking || movingWords);
   /* The magic brush paints ON the photograph, so its panel keeps to the space

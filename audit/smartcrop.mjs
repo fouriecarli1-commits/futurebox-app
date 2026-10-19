@@ -62,6 +62,11 @@ try {
   await page.waitForTimeout(300);
   await page.locator('[data-cutbench="frame"]').first().click();
   await page.waitForTimeout(600);
+  /* The crop box comes first now; the frame's own tools are one press on. */
+  check('the crop tool opens with the box round the photo', (await page.locator('[data-postcropbar]:visible').count()) > 0);
+  await page.screenshot({ path: shot('cropbox.png') });
+  await page.locator('[data-postcropframing]').first().click();
+  await page.waitForTimeout(500);
   const blocks = await page.locator('[data-postsmartcrop]').count();
   check('the frame offers every shape as a block over the photo', blocks === 4, `${blocks} blocks`);
   await page.screenshot({ path: shot('smartcrop.png') });
