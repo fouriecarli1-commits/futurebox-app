@@ -8663,6 +8663,11 @@ export default function PostStudio({
         The owner, 18 October 2026: *"menend 1mb ens."* */}
     <FileSize limit={limit} onLimit={setLimit} estimate={estimate} busy={estimating} kind="picture" />
 
+    {/* Report what the AI made, from where the finished picture is seen —
+        the studio's bar, which has the same flag, is hidden over this room
+        and this room's own bar is full on a small phone (`lib/reports.ts`). */}
+    <ReportFlag target={{ kind: 'ai', ref: 'photo', where: 'photo' }} label />
+
     <div className="space-y-2">
       <button type="button" onClick={() => void take()} disabled={busy} data-postexport className={VUL}>
         {busy
@@ -9811,9 +9816,6 @@ export default function PostStudio({
           <span className="hidden sm:inline">{t('post.ask', 'Ask')}</span>
         </button>
       ) : null}
-      {/* Report what the AI made, from where it was made — the studio's bar,
-          which has the same flag, is hidden over this room (`lib/reports.ts`). */}
-      <ReportFlag target={{ kind: 'ai', ref: 'photo', where: 'photo' }} className="!h-9 !w-9 rounded-lg" style={chipStyle} />
       <button
         type="button"
         data-postexportopen

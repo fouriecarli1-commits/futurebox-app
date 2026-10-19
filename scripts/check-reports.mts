@@ -41,7 +41,7 @@ ok('a block needs an account and cannot be of yourself', /callerFrom\(/.test(blo
 ok('the tables exist, and members cannot read the reports',
   existsSync('supabase/reports.sql') && !/policy[^;]*on public\.reports/i.test(readFileSync('supabase/reports.sql', 'utf8')));
 
-ok('the flag is in every making room’s bar, the photo editor’s, and the parents’ page',
+ok('the flag is in every making room’s bar, the photo editor’s export, and the parents’ page',
   /ReportFlag[\s\S]{0,120}kind: 'ai'/.test(code('app/page.tsx'))
   && /ReportFlag[\s\S]{0,120}kind: 'ai'/.test(code('app/components/PostStudio.tsx'))
   && /ReportSheet[\s\S]{0,120}kind: 'ai'/.test(code('app/components/KidsDoor.tsx')));

@@ -206,15 +206,38 @@ export function ReportFlag({
   onBlocked,
   className = '',
   style,
+  compact = false,
+  label = false,
 }: {
   readonly target: ReportTarget;
   readonly onBlocked?: (owner: string) => void;
   readonly className?: string;
   /** For a flag on a picture, drawn on the same dark glass as its neighbours. */
   readonly style?: React.CSSProperties;
+  /** For a bar that is already full on a small phone: the size of its other chips. */
+  readonly compact?: boolean;
+  /** Words beside the flag, where there is room for them. */
+  readonly label?: boolean;
 }): React.ReactElement {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
+  const says = target.kind === 'ai' ? t('flag.titleAi', 'Report what the AI made') : t('flag.title', 'Report this');
+  if (label) {
+    return (
+      <>
+        <button
+          type="button"
+          data-reportflag={target.kind}
+          onClick={(event) => { event.stopPropagation(); setOpen(true); }}
+          className={`inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-zinc-400 hover:text-rose-300 ${className}`}
+          style={style}
+        >
+          <Flag className="h-4 w-4" /> {says}
+        </button>
+        {open && <ReportSheet target={target} onClose={() => setOpen(false)} onBlocked={onBlocked} />}
+      </>
+    );
+  }
   return (
     <>
       <button
@@ -223,7 +246,7 @@ export function ReportFlag({
         onClick={(event) => { event.stopPropagation(); setOpen(true); }}
         aria-label={target.kind === 'ai' ? t('flag.titleAi', 'Report what the AI made') : t('flag.title', 'Report this')}
         title={target.kind === 'ai' ? t('flag.titleAi', 'Report what the AI made') : t('flag.title', 'Report this')}
-        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-400 hover:text-rose-300 ${className}`}
+        className={`inline-flex ${compact ? 'h-9 w-8' : 'h-11 w-11'} shrink-0 items-center justify-center rounded-full text-zinc-400 hover:text-rose-300 ${className}`}
         style={style}
       >
         <Flag className="h-4 w-4" />
