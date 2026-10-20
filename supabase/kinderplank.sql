@@ -123,3 +123,16 @@ exception
     raise warning 'The kidshelf bucket was made, but its policies were refused: %. Add them by hand under Storage → kidshelf → Policies: select, insert, update and delete where (storage.foldername(name))[1] = auth.uid()::text, and no public read.', sqlerrm;
 end
 $$;
+
+-- ── Who may reach this table through the API ──────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself. (Their
+-- e-mail to the owner, 20 October 2026.)
+--
+-- The child's own signed-in session, and nobody else — not even our server.
+-- That is the rule this whole file is built on (check:plankserver): a server
+-- that CAN read a child's songs is a server that one day does. Row level
+-- security above still keys every row on its owner; these lines only let the
+-- child's session ask.
+grant select, insert, update, delete on public.kid_shelf to authenticated;

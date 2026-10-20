@@ -53,7 +53,7 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 export interface Expected {
   readonly file: string;
-  readonly kind: 'tabel' | 'kolom' | 'emmer' | 'beleid';
+  readonly kind: 'tabel' | 'kolom' | 'emmer' | 'beleid' | 'toegang';
   readonly name: string;
 }
 
@@ -75,6 +75,15 @@ export function expected(): Expected[] {
 
     for (const found of text.matchAll(/create table (?:if not exists )?(?:public\.)?(\w+)/gi)) {
       out.push({ file, kind: 'tabel', name: `public.${found[1]}` });
+      /* And whether the server may reach it at all. From 30 October 2026
+         Supabase opens no new table to the API by itself, so a table made
+         without its grant exists, has its policies, and answers "permission
+         denied" to every request — the same "there and not working" the
+         policies below were added to catch. */
+      /* Not for the one table the server is deliberately kept out of: a
+         child's songs are the child's session's alone (check:plankserver,
+         and NOT_THE_SERVERS in check:sqlgrants). */
+      if (found[1] !== 'kid_shelf') out.push({ file, kind: 'toegang', name: `public.${found[1]}` });
     }
     /* The whole `alter table` statement, then every `add column` inside it —
        a multi-column alter has one `alter table` and several columns, and
@@ -137,7 +146,7 @@ export function report(): string {
     .map((one) => `    ('${one.file}', '${one.kind}', '${one.name}')`)
     .join(',\n');
 
-  const counts = { tabel: 0, kolom: 0, emmer: 0, beleid: 0 };
+  const counts = { tabel: 0, kolom: 0, emmer: 0, beleid: 0, toegang: 0 };
   for (const one of expected()) counts[one.kind] += 1;
 
   return `${RULE}
@@ -152,6 +161,10 @@ ${RULE}
 -- Dit kyk na ${counts.tabel} tabelle, ${counts.kolom} kolomme wat later
 -- bygekom het, ${counts.emmer} stoor-emmers en ${counts.beleid} beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
+--
+-- En of die bediener elke tabel mag bereik ("toegang"). Vanaf 30 Oktober 2026
+-- maak Supabase 'n nuwe tabel nie meer vanself vir die API oop nie; een wat
+-- sonder sy GRANT gemaak is, bestaan en antwoord tog "permission denied".
 --
 -- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
 -- niemand mag raak nie, lyk presies soos 'n tabel wat werk. 'n Gefilmde video
@@ -198,6 +211,8 @@ where (soort = 'tabel' and to_regclass(naam) is null)
            and column_name  = split_part(naam, '.', 3)))
    or (soort = 'emmer' and not exists (
          select 1 from storage.buckets where id = naam))
+   or (soort = 'toegang' and to_regclass(naam) is not null
+         and not has_table_privilege('service_role', naam, 'select'))
 order by 1, 2, 3;
 `;
 }
@@ -213,6 +228,7 @@ if (process.argv[1] && process.argv[1].endsWith('sql-missing.mts')) {
     + ` (${all.filter((o) => o.kind === 'tabel').length} tables,`
     + ` ${all.filter((o) => o.kind === 'kolom').length} added columns,`
     + ` ${all.filter((o) => o.kind === 'emmer').length} buckets,`
-    + ` ${all.filter((o) => o.kind === 'beleid').length} policies).`,
+    + ` ${all.filter((o) => o.kind === 'beleid').length} policies,`
+    + ` and API access to each table).`,
   );
 }

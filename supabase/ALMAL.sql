@@ -304,6 +304,19 @@ create policy "delete own audio" on storage.objects
     bucket_id = 'tracks' and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.tracks to service_role;
+grant select, insert, update, delete on public.tracks to authenticated;
+grant select on public.tracks to anon;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/addons.sql
@@ -441,6 +454,21 @@ $$;
 
 revoke all on function public.grant_addon(uuid, text, integer, text) from public, anon, authenticated;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.addons to service_role;
+grant select, insert, update, delete on public.addons to authenticated;
+grant select on public.addons to anon;
+grant select, insert, update, delete on public.addon_grants to service_role;
+grant select, insert, update, delete on public.addon_customers to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/afrikaans.sql
@@ -570,6 +598,19 @@ create unique index if not exists afrikaans_reports_one_a_day
 alter table public.afrikaans_reports
   add column if not exists heard text not null default '' check (length(heard) <= 120);
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.afrikaans_reports to service_role;
+grant select, insert, update, delete on public.afrikaans_reports to authenticated;
+grant select on public.afrikaans_reports to anon;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/aikoste.sql
@@ -657,6 +698,18 @@ create or replace view public.ai_cache_check as
    where at > now() - interval '30 days'
    group by what
    order by sum(cache_read) + sum(input_tokens) desc;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.ai_costs to service_role;
+grant usage, select on all sequences in schema public to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -793,6 +846,25 @@ as $$
   group by e.competition_id;
 $$;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.competitions to service_role;
+grant select, insert, update, delete on public.competitions to authenticated;
+grant select on public.competitions to anon;
+grant select, insert, update, delete on public.entries to service_role;
+grant select, insert, update, delete on public.entries to authenticated;
+grant select on public.entries to anon;
+grant select, insert, update, delete on public.winners to service_role;
+grant select, insert, update, delete on public.winners to authenticated;
+grant select on public.winners to anon;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/cast.sql
@@ -925,6 +997,19 @@ exception
 end
 $$;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.cast_members to service_role;
+grant select, insert, update, delete on public.cast_members to authenticated;
+grant select on public.cast_members to anon;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/collab.sql
@@ -1022,6 +1107,23 @@ create policy "read collab messages" on public.collab_messages
         and (auth.uid() = c.asked_by or auth.uid() = c.asked_of)
     )
   );
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.collabs to service_role;
+grant select, insert, update, delete on public.collabs to authenticated;
+grant select on public.collabs to anon;
+grant select, insert, update, delete on public.collab_messages to service_role;
+grant select, insert, update, delete on public.collab_messages to authenticated;
+grant select on public.collab_messages to anon;
+grant usage, select on all sequences in schema public to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -1285,6 +1387,20 @@ begin
   return p_amount;
 end;
 $$;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.credit_entries to service_role;
+grant select, insert, update, delete on public.credit_entries to authenticated;
+grant select on public.credit_entries to anon;
+grant usage, select on all sequences in schema public to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -1597,6 +1713,18 @@ create or replace view public.eleven_price_check as
 revoke all on public.eleven_price_check from public, anon, authenticated;
 grant select on public.eleven_price_check to service_role;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.eleven_costs to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/elevenrem.sql
@@ -1710,6 +1838,19 @@ alter table public.finetunes enable row level security;
 drop policy if exists "read own finetunes" on public.finetunes;
 create policy "read own finetunes" on public.finetunes
   for select using (auth.uid() = owner);
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.finetunes to service_role;
+grant select, insert, update, delete on public.finetunes to authenticated;
+grant select on public.finetunes to anon;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -1852,6 +1993,19 @@ $$;
 
 revoke all on function public.redeem_collab_invite(text, uuid) from public;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.collab_invites to service_role;
+grant select, insert, update, delete on public.collab_invites to authenticated;
+grant select on public.collab_invites to anon;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/kits.sql
@@ -1976,6 +2130,18 @@ grant execute on function public.kits_seconds_this_month_for(uuid) to service_ro
 create index if not exists kits_minutes_owner_month_idx
   on public.kits_minutes (owner, at desc);
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.kits_minutes to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/kitsvoices.sql
@@ -2046,6 +2212,19 @@ alter table public.voice_owners enable row level security;
 drop policy if exists voice_owners_own_read on public.voice_owners;
 create policy voice_owners_own_read on public.voice_owners
   for select using (auth.uid() = owner);
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.voice_owners to service_role;
+grant select, insert, update, delete on public.voice_owners to authenticated;
+grant select on public.voice_owners to anon;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -2152,6 +2331,18 @@ $$;
 
 revoke all on function public.google_micros_this_month_for(text, uuid) from public, anon, authenticated;
 grant execute on function public.google_micros_this_month_for(text, uuid) to service_role;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.google_spend to service_role;
+grant usage, select on all sequences in schema public to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -2313,6 +2504,26 @@ as $$
   group by g.kind;
 $$;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.generations to service_role;
+grant select, insert, update, delete on public.generations to authenticated;
+grant select on public.generations to anon;
+grant select, insert, update, delete on public.purchases to service_role;
+grant select, insert, update, delete on public.purchases to authenticated;
+grant select on public.purchases to anon;
+grant select, insert, update, delete on public.memberships to service_role;
+grant select, insert, update, delete on public.memberships to authenticated;
+grant select on public.memberships to anon;
+grant usage, select on all sequences in schema public to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/events.sql
@@ -2451,6 +2662,18 @@ $$;
 -- uncallable than left returning zeros for a confusing reason.
 revoke all on function public.stats_board() from public, anon, authenticated;
 grant execute on function public.stats_board() to service_role;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.events to service_role;
+grant usage, select on all sequences in schema public to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -2926,6 +3149,17 @@ grant execute on function public.moderation_strikes(uuid, text, integer) to serv
 -- reaches into another one's table is a migration with an order nobody was
 -- told about.
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.moderation_events to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/podcast.sql
@@ -3112,6 +3346,29 @@ as $$
     and created_at >= date_trunc('day', now());
 $$;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.voices to service_role;
+grant select, insert, update, delete on public.voices to authenticated;
+grant select on public.voices to anon;
+grant select, insert, update, delete on public.shows to service_role;
+grant select, insert, update, delete on public.shows to authenticated;
+grant select on public.shows to anon;
+grant select, insert, update, delete on public.episodes to service_role;
+grant select, insert, update, delete on public.episodes to authenticated;
+grant select on public.episodes to anon;
+grant select, insert, update, delete on public.speech_runs to service_role;
+grant select, insert, update, delete on public.speech_runs to authenticated;
+grant select on public.speech_runs to anon;
+grant usage, select on all sequences in schema public to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/posting.sql
@@ -3276,6 +3533,19 @@ $$;
 
 revoke all on function public.release_stuck_posts() from public, anon, authenticated;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.scheduled_posts to service_role;
+grant select, insert, update, delete on public.scheduled_posts to authenticated;
+grant select on public.scheduled_posts to anon;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/presence.sql
@@ -3334,6 +3604,17 @@ volatile
 as $$
   delete from public.presence where seen_at < now() - interval '1 hour';
 $$;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.presence to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -3395,6 +3676,19 @@ alter table public.creators enable row level security;
 -- and the server does that with the service role after checking the token.
 drop policy if exists "read creators" on public.creators;
 create policy "read creators" on public.creators for select using (true);
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.creators to service_role;
+grant select, insert, update, delete on public.creators to authenticated;
+grant select on public.creators to anon;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -3504,6 +3798,19 @@ drop policy if exists "read own subscription" on public.subscriptions;
 create policy "read own subscription" on public.subscriptions
   for select using (auth.uid() = owner);
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.subscriptions to service_role;
+grant select, insert, update, delete on public.subscriptions to authenticated;
+grant select on public.subscriptions to anon;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/taste.sql
@@ -3611,6 +3918,19 @@ $$;
 
 revoke all on function public.note_taste(uuid, text, text) from public, anon, authenticated;
 revoke all on function public.forget_taste(uuid) from public, anon, authenticated;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.taste to service_role;
+grant select, insert, update, delete on public.taste to authenticated;
+grant select on public.taste to anon;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -3720,6 +4040,19 @@ create policy "delete own videos file" on storage.objects
 
 -- Nothing writes here from a browser. The file arrives from Kling, through the
 -- server, which is the only party that has ever seen it.
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.videos to service_role;
+grant select, insert, update, delete on public.videos to authenticated;
+grant select on public.videos to anon;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -4339,6 +4672,23 @@ alter table public.art_bidders
 alter table public.art_bidders
   add constraint art_bidders_pkey primary key (owner, work);
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.art_artists to service_role;
+grant select, insert, update, delete on public.art_works to service_role;
+grant select, insert, update, delete on public.art_requests to service_role;
+grant select, insert, update, delete on public.art_offers to service_role;
+grant select, insert, update, delete on public.art_bids to service_role;
+grant select, insert, update, delete on public.art_bidders to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/avatars.sql
@@ -4834,6 +5184,21 @@ drop policy if exists "read own blocks" on public.blocks;
 create policy "read own blocks" on public.blocks
   for select using (auth.uid() = blocker);
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.reports to service_role;
+grant select, insert, update, delete on public.blocks to service_role;
+grant select, insert, update, delete on public.blocks to authenticated;
+grant select on public.blocks to anon;
+grant usage, select on all sequences in schema public to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/pairs.sql
@@ -5091,6 +5456,18 @@ $$;
 
 revoke all on function public.tone3000_sweep() from public, anon, authenticated;
 grant execute on function public.tone3000_sweep() to service_role;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.tone3000_pending to service_role;
+grant select, insert, update, delete on public.tone3000_tokens to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -5737,6 +6114,19 @@ exception
 end
 $$;
 
+-- ── Who may reach this table through the API ──────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself. (Their
+-- e-mail to the owner, 20 October 2026.)
+--
+-- The child's own signed-in session, and nobody else — not even our server.
+-- That is the rule this whole file is built on (check:plankserver): a server
+-- that CAN read a child's songs is a server that one day does. Row level
+-- security above still keys every row on its owner; these lines only let the
+-- child's session ask.
+grant select, insert, update, delete on public.kid_shelf to authenticated;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/uitspraak.sql
@@ -5850,6 +6240,18 @@ alter table public.said_dictionary enable row level security;
 
 -- Same again: no policy, so only the service key touches it.
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.said_words to service_role;
+grant select, insert, update, delete on public.said_dictionary to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/amps.sql
@@ -5923,6 +6325,17 @@ create index if not exists amp_catalogue_created_idx
 
 alter table public.amp_catalogue enable row level security;
 
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.amp_catalogue to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/playbilling.sql
@@ -5974,6 +6387,17 @@ create index if not exists play_purchases_linked on public.play_purchases (linke
 -- No policy at all: only the service key reads or writes this. The account
 -- screen asks `/api/subscription`, which reads it on the member's behalf.
 alter table public.play_purchases enable row level security;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.play_purchases to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -6166,6 +6590,17 @@ exception
     raise warning 'The designs bucket was made, but its read policy was refused: %. Add it by hand under Storage → designs → Policies: read for everyone, nothing else.', sqlerrm;
 end
 $$;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.post_designs to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════

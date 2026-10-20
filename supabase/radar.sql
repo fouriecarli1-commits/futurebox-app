@@ -53,3 +53,16 @@ alter table public.creators enable row level security;
 -- and the server does that with the service role after checking the token.
 drop policy if exists "read creators" on public.creators;
 create policy "read creators" on public.creators for select using (true);
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.creators to service_role;
+grant select, insert, update, delete on public.creators to authenticated;
+grant select on public.creators to anon;

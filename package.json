@@ -46,6 +46,7 @@
     "check:dubpath": "tsx scripts/check-dubpath.mts",
     "check:pixelguard": "tsx scripts/check-pixelguard.mts",
     "check:applechart": "tsx scripts/check-applechart.mts",
+    "check:sqlgrants": "tsx scripts/check-sqlgrants.mts",
     "check:covermaker": "tsx scripts/check-covermaker.mts",
     "check:coverkeep": "tsx scripts/check-coverkeep.mts",
     "check:onedoor": "tsx scripts/check-onedoor.mts",

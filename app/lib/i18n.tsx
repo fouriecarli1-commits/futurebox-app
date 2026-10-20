@@ -217,6 +217,8 @@ export const STRINGS: Dict = {
   "chan.recName": { en: "Your recording name", af: "Jou opnamenaam" },
   "chan.recNameWhy": { en: "The name your work goes out under. It is shown beside every song and video you post, in the live room and on the collab radar, in place of your handle.", af: "Die naam waaronder jou werk uitgaan. Dit wys langs elke liedjie en video wat jy plaas — in die lewendige kamer en op die collab radar — in plaas van jou @naam." },
   "chan.recNamePlaceholder": { en: "What you release under", af: "Waaronder jy vrystel" },
+  "chan.recHandleWillBe": { en: "It will be", af: "Dit sal wees" },
+  "chan.recHandleNone": { en: "Use letters, numbers, dots or underscores.", af: "Gebruik letters, syfers, punte of onderstrepe." },
   "chan.recNameSave": { en: "Save", af: "Stoor" },
   "chan.recHandle": { en: "Your handle", af: "Jou @gebruikersnaam" },
   "chan.recHandleWhy": { en: "The address somebody writes to on the collab radar. Letters, numbers, dots and underscores, and it has to be one nobody else has taken.", af: "Die adres waarheen iemand op die collab radar skryf. Letters, syfers, punte en onderstrepe — kies ’n unieke naam." },

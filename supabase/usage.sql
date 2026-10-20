@@ -105,3 +105,23 @@ as $$
     and g.created_at >= date_trunc('day', now())
   group by g.kind;
 $$;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.generations to service_role;
+grant select, insert, update, delete on public.generations to authenticated;
+grant select on public.generations to anon;
+grant select, insert, update, delete on public.purchases to service_role;
+grant select, insert, update, delete on public.purchases to authenticated;
+grant select on public.purchases to anon;
+grant select, insert, update, delete on public.memberships to service_role;
+grant select, insert, update, delete on public.memberships to authenticated;
+grant select on public.memberships to anon;
+grant usage, select on all sequences in schema public to service_role;

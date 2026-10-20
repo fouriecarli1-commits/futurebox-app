@@ -11,6 +11,10 @@
 -- bygekom het, 8 stoor-emmers en 61 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
+-- En of die bediener elke tabel mag bereik ("toegang"). Vanaf 30 Oktober 2026
+-- maak Supabase 'n nuwe tabel nie meer vanself vir die API oop nie; een wat
+-- sonder sy GRANT gemaak is, bestaan en antwoord tog "permission denied".
+--
 -- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
 -- niemand mag raak nie, lyk presies soos 'n tabel wat werk. 'n Gefilmde video
 -- kom deur 'n storage-beleid by Live uit, en hierdie navraag het niks daarvan
@@ -202,7 +206,70 @@ with verwag (l_eer, soort, naam) as (
     ('video.sql', 'tabel', 'public.videos'),
     ('kitsvoices.sql', 'tabel', 'public.voice_owners'),
     ('podcast.sql', 'tabel', 'public.voices'),
-    ('arena.sql', 'tabel', 'public.winners')
+    ('arena.sql', 'tabel', 'public.winners'),
+    ('addons.sql', 'toegang', 'public.addon_customers'),
+    ('addons.sql', 'toegang', 'public.addon_grants'),
+    ('addons.sql', 'toegang', 'public.addons'),
+    ('afrikaans.sql', 'toegang', 'public.afrikaans_reports'),
+    ('aikoste.sql', 'toegang', 'public.ai_costs'),
+    ('amps.sql', 'toegang', 'public.amp_catalogue'),
+    ('albumart.sql', 'toegang', 'public.art_artists'),
+    ('albumart.sql', 'toegang', 'public.art_bidders'),
+    ('albumart.sql', 'toegang', 'public.art_bids'),
+    ('albumart.sql', 'toegang', 'public.art_offers'),
+    ('albumart.sql', 'toegang', 'public.art_requests'),
+    ('albumart.sql', 'toegang', 'public.art_works'),
+    ('reports.sql', 'toegang', 'public.blocks'),
+    ('cast.sql', 'toegang', 'public.cast_members'),
+    ('invites.sql', 'toegang', 'public.collab_invites'),
+    ('collab.sql', 'toegang', 'public.collab_messages'),
+    ('collab.sql', 'toegang', 'public.collabs'),
+    ('arena.sql', 'toegang', 'public.competitions'),
+    ('coverkeep.sql', 'toegang', 'public.cover_jobs'),
+    ('radar.sql', 'toegang', 'public.creators'),
+    ('credits.sql', 'toegang', 'public.credit_entries'),
+    ('dubs.sql', 'toegang', 'public.dubs'),
+    ('eleven.sql', 'toegang', 'public.eleven_costs'),
+    ('arena.sql', 'toegang', 'public.entries'),
+    ('podcast.sql', 'toegang', 'public.episodes'),
+    ('events.sql', 'toegang', 'public.events'),
+    ('finetunes.sql', 'toegang', 'public.finetunes'),
+    ('usage.sql', 'toegang', 'public.generations'),
+    ('googlespend.sql', 'toegang', 'public.google_spend'),
+    ('kinders.sql', 'toegang', 'public.kids_mode'),
+    ('kinderkrediete.sql', 'toegang', 'public.kids_wallet'),
+    ('kinderkrediete.sql', 'toegang', 'public.kids_wallet_entries'),
+    ('kits.sql', 'toegang', 'public.kits_minutes'),
+    ('liveflags.sql', 'toegang', 'public.live_flags'),
+    ('hearts.sql', 'toegang', 'public.live_hearts'),
+    ('live.sql', 'toegang', 'public.live_here'),
+    ('liveloops.sql', 'toegang', 'public.live_loops'),
+    ('live.sql', 'toegang', 'public.live_posts'),
+    ('live.sql', 'toegang', 'public.live_says'),
+    ('mail.sql', 'toegang', 'public.mail_log'),
+    ('usage.sql', 'toegang', 'public.memberships'),
+    ('moderation.sql', 'toegang', 'public.moderation_events'),
+    ('pairs.sql', 'toegang', 'public.pair_links'),
+    ('pairs.sql', 'toegang', 'public.pairs'),
+    ('playbilling.sql', 'toegang', 'public.play_purchases'),
+    ('designs.sql', 'toegang', 'public.post_designs'),
+    ('presence.sql', 'toegang', 'public.presence'),
+    ('usage.sql', 'toegang', 'public.purchases'),
+    ('reports.sql', 'toegang', 'public.reports'),
+    ('uitspraak.sql', 'toegang', 'public.said_dictionary'),
+    ('uitspraak.sql', 'toegang', 'public.said_words'),
+    ('posting.sql', 'toegang', 'public.scheduled_posts'),
+    ('podcast.sql', 'toegang', 'public.shows'),
+    ('podcast.sql', 'toegang', 'public.speech_runs'),
+    ('subscriptions.sql', 'toegang', 'public.subscriptions'),
+    ('taste.sql', 'toegang', 'public.taste'),
+    ('tone3000.sql', 'toegang', 'public.tone3000_pending'),
+    ('tone3000.sql', 'toegang', 'public.tone3000_tokens'),
+    ('schema.sql', 'toegang', 'public.tracks'),
+    ('video.sql', 'toegang', 'public.videos'),
+    ('kitsvoices.sql', 'toegang', 'public.voice_owners'),
+    ('podcast.sql', 'toegang', 'public.voices'),
+    ('arena.sql', 'toegang', 'public.winners')
 )
 select
   l_eer as "loop hierdie lêer",
@@ -222,4 +289,6 @@ where (soort = 'tabel' and to_regclass(naam) is null)
            and column_name  = split_part(naam, '.', 3)))
    or (soort = 'emmer' and not exists (
          select 1 from storage.buckets where id = naam))
+   or (soort = 'toegang' and to_regclass(naam) is not null
+         and not has_table_privilege('service_role', naam, 'select'))
 order by 1, 2, 3;

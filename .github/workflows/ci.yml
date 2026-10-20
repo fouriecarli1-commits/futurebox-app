@@ -733,6 +733,12 @@ jobs:
       - name: Apple Music's chart is read as Apple write it
         run: npm run check:applechart
 
+      # From 30 October 2026 Supabase opens no new table in "public" to the
+      # API by itself; a table created without a GRANT answers "permission
+      # denied" to the server too. Every table in supabase/ names its roles.
+      - name: Every table says who may reach it through the API
+        run: npm run check:sqlgrants
+
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing
       # may sit over the artwork, there must be a way to take it off, and a

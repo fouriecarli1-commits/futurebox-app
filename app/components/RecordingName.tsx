@@ -233,6 +233,16 @@ export default function RecordingName({
           {t('chan.recNameSave', 'Save')}
         </button>
       </div>
+      {/* What it will really be, before it is kept. Typed "Jo Soap!!" was
+          kept as @josoap with nothing on the screen to say so (20 October
+          2026). */}
+      {handle && wantedHandle !== handle ? (
+        <p className="text-xs text-zinc-400" data-handlewillbe>
+          {wantedHandle
+            ? `${t('chan.recHandleWillBe', 'It will be')} @${wantedHandle}`
+            : t('chan.recHandleNone', 'Use letters, numbers, dots or underscores.')}
+        </p>
+      ) : null}
 
       {/* Two different problems, and they must not read the same.
 

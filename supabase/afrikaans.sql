@@ -121,3 +121,16 @@ create unique index if not exists afrikaans_reports_one_a_day
 -- oorskryf nie, is steeds die nuttigste ding wat ons kon gehoor het.
 alter table public.afrikaans_reports
   add column if not exists heard text not null default '' check (length(heard) <= 120);
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.afrikaans_reports to service_role;
+grant select, insert, update, delete on public.afrikaans_reports to authenticated;
+grant select on public.afrikaans_reports to anon;

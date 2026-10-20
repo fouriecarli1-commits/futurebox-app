@@ -68,3 +68,14 @@ exception
     raise warning 'The designs bucket was made, but its read policy was refused: %. Add it by hand under Storage → designs → Policies: read for everyone, nothing else.', sqlerrm;
 end
 $$;
+
+-- ── Who may reach these tables through the API ────────────────────────────
+--
+-- Written out rather than left to Supabase. From 30 October 2026 a table
+-- created in "public" is no longer opened to the API roles by itself: without
+-- these lines every read and write answers "permission denied", on a new
+-- project, a preview branch or a fresh run of this file. (Their e-mail to the
+-- owner, 20 October 2026.) Row level security still decides WHICH rows each
+-- role sees: these lines only let the role ask. A table no member is given
+-- rows of is the server's alone, and only the server is named for it.
+grant select, insert, update, delete on public.post_designs to service_role;
