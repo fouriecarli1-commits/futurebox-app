@@ -326,6 +326,12 @@ html,
 body {
   overflow-x: clip;
 }
+/* A list box is as wide as its longest choice. One holding a member's own
+   long song name pushed the Video desk 190 pixels past a phone's edge; no
+   list box is ever wider than the space it is given. */
+select {
+  max-width: 100%;
+}
 }
 
 /* Thumbs.
@@ -1228,11 +1234,16 @@ body:has([data-cubed]) {
      what moves. The ramp keeps the shape the blue one had — dark at the
      ends, brightest at 500 — so every class in the booth keeps its weight
      and only its colour changes. */
-  --fb-primary-50: 2 30 22;
-  --fb-primary-100: 3 46 34;
-  --fb-primary-200: 4 66 48;
-  --fb-primary-300: 5 86 62;
-  --fb-primary-400: 6 110 80;
+  /* The light end is light. It was dark at both ends, and the booth's words
+     are written in `text-emerald-200/300/400` — so a chosen WAV, "Every lane
+     in one .zip" and "Generate a part" were dark green on near-black, which
+     is what the owner photographed on 20 October 2026 as buttons that look
+     switched off. The 500 and the dark end are as they were. */
+  --fb-primary-50: 222 252 240;
+  --fb-primary-100: 196 248 226;
+  --fb-primary-200: 160 240 208;
+  --fb-primary-300: 118 228 184;
+  --fb-primary-400: 62 210 156;
   --fb-primary-500: 16 185 129;
   --fb-primary-600: 15 157 110;
   --fb-primary-700: 12 132 92;
@@ -2545,4 +2556,65 @@ button[class*="border"]:not([data-kidsroom] *):not([data-booth] *):not(:disabled
 
 @media (prefers-reduced-motion: reduce) {
   .fb-fx-shine { animation: none; transform: translateX(52%); }
+}
+
+/* ── The futuristic look, inside the rooms ───────────────────────────────
+
+   The second step of the 20 October 2026 look: the controls a member uses
+   in every room, written once here rather than in two hundred files. Each
+   rule reads the app's own conventions — `aria-pressed` for a chosen
+   option, `role="dialog"` for a sheet, `data-speak` for the mic — so a new
+   room gets the look by being written the way the others are. Not in the
+   kids room nor the booth, which keep their own. */
+
+/* The tile you are on: the rail's open room, the door when it is open. */
+.fb-fx-on {
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--fb-secondary-400) / 0.6),
+    0 0 18px -4px rgb(var(--fb-secondary-500) / 0.6) !important;
+}
+
+/* A chosen option lights up: a ring of the second colour and a soft glow,
+   over whatever colour it already wears. */
+button[aria-pressed='true']:not(.fb-fx-go):not([data-kidsroom] *):not([data-booth] *):not(:disabled) {
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--fb-secondary-400) / 0.55),
+    inset 0 1px 0 rgb(var(--fb-secondary-300) / 0.3),
+    0 0 16px -4px rgb(var(--fb-secondary-500) / 0.6);
+}
+
+/* A sheet — Export, Share, Report, the pickers — is the panel's glass, kept
+   nearly solid because there is a room behind it. Matched on the panel
+   itself or the panel straight inside the dimmed backdrop, which is how
+   every sheet here is built; a sheet that already wears a warning colour
+   keeps it. */
+:is([role='dialog'][class*='rounded'][class*='border'], [role='dialog'] > div[class*='rounded'][class*='border']):not([class*='bg-amber']):not([class*='bg-rose']):not([class*='bg-red']):not([class*='bg-surface-50']):not([data-kidsroom] *):not([data-booth] *) {
+  border-color: transparent !important;
+  background:
+    linear-gradient(170deg, rgb(var(--fb-surface-900) / 0.97), rgb(var(--fb-surface-950) / 0.99)) padding-box,
+    linear-gradient(140deg, rgb(var(--fb-primary-400) / 0.55), rgb(var(--fb-secondary-400) / 0.08) 45%, rgb(var(--fb-secondary-400) / 0.45)) border-box !important;
+  box-shadow: 0 30px 80px -30px rgb(var(--fb-secondary-500) / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.06) !important;
+}
+
+/* A box being typed in glows at its edge. The focus outline the browser
+   draws is left as it is. */
+:is(textarea, input[type='text'], input[type='search'], input[type='email'], input[type='url'], input[type='number'], input:not([type])):focus:not([data-kidsroom] *):not([data-booth] *) {
+  border-color: rgb(var(--fb-secondary-400) / 0.7) !important;
+  box-shadow: 0 0 0 1px rgb(var(--fb-secondary-400) / 0.4), 0 0 18px -4px rgb(var(--fb-secondary-500) / 0.55);
+}
+
+/* The mic, while it listens: a ring that breathes. */
+[data-speak][data-speakon='yes']:not([data-kidsroom] *) {
+  animation: fb-fx-listen 1.4s ease-in-out infinite;
+}
+@keyframes fb-fx-listen {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--fb-secondary-400) / 0.55), 0 0 12px rgb(var(--fb-secondary-500) / 0.5); }
+  50% { box-shadow: 0 0 0 7px rgb(var(--fb-secondary-400) / 0), 0 0 22px rgb(var(--fb-secondary-500) / 0.7); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-speak][data-speakon='yes']:not([data-kidsroom] *) {
+    animation: none;
+    box-shadow: 0 0 0 3px rgb(var(--fb-secondary-400) / 0.55);
+  }
 }

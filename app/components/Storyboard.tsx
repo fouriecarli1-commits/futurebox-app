@@ -914,7 +914,11 @@ export default function Storyboard({
               onChange={(event) =>
                 setBoard((was) => ({ ...was, songId: event.target.value || undefined }))
               }
-              className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
+              /* Never wider than the row: a select is as wide as its longest
+                 option, and a saved song with a long name made it 553 pixels
+                 on a 390-pixel phone, so the whole Video desk slid sideways
+                 (found by `check:notcut`'s phone rule, 20 October 2026). */
+              className="min-h-[44px] min-w-0 max-w-full flex-1 truncate rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
             >
               <option value="">{t('board.noSong', 'No song — silent')}</option>
               {tracks.length > 0 && (

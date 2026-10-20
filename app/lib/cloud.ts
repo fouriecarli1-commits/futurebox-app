@@ -766,6 +766,41 @@ export function backAfterSignIn(): string | null {
   }
 }
 
+const KIDS_APP_KEY = 'fb-kids-app-window';
+
+/** The FutureBox Kids app opened this window (`/kids?app=kids`). */
+export function markKidsApp(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (new URL(window.location.href).searchParams.get('app') === 'kids') window.sessionStorage.setItem(KIDS_APP_KEY, '1');
+  } catch {
+    /* No storage: the window is treated as a browser tab, which goes back. */
+  }
+}
+
+/**
+ * Whether this window should follow the return address to the kids room.
+ *
+ * The owner, 20 October 2026: *"Wanneer ek by die kids studio met sy eie icon
+ * in gelog het, wanneer ek by die normale futurebox in gaan dan maak dit by
+ * die kids studio oop."* Google sends every sign-in back to the front door,
+ * and on a phone with both apps installed the front door opens in the
+ * FutureBox app — which then went on to /kids and stayed there. So an
+ * installed app's window goes on only if it is the kids app's own (it marks
+ * itself, `markKidsApp`); the FutureBox app keeps its studio, and the kids
+ * app finds the sign-in waiting, since both read the same account. A browser
+ * tab goes on as before.
+ */
+export function backBelongsHere(to: string): boolean {
+  if (!to.startsWith('/kids')) return true;
+  try {
+    if (window.sessionStorage.getItem(KIDS_APP_KEY) === '1') return true;
+    return !window.matchMedia('(display-mode: standalone)').matches;
+  } catch {
+    return true;
+  }
+}
+
 /**
  * Was this page load the return leg of a sign-in?
  *

@@ -219,8 +219,8 @@ ok('  and from nowhere inside the app',
   'a door to /kids inside the app is the one thing she asked to be gone');
 
 /* The owner, 15 October 2026: no grown-up button in the kids room, "want kinders
-   gaan dit self stel". So a child who reaches the studio — by Back, or by
-   closing and opening the app — is sent back to the room. That is not a door:
+   gaan dit self stel". So a child who reaches the studio in the kids
+   room's window — by Back — is sent back to the room. That is not a door:
    nothing is pressed or shown, and it fires only while the device remembers a
    child in the room. Held here so it cannot grow into one. */
 ok('  the one way back is for a child already in the kids room, and nothing else',

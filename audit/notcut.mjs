@@ -85,7 +85,12 @@ const check = (label, ok, detail = '') => {
  */
 const WHERE = 'div.fixed.inset-0.z-50, div.fixed.inset-0.z-\\[55\\], nav[aria-label]';
 
-const CUT = () => {
+/** A member's own long song name, seeded below. It ends in an ellipsis by
+    design — a name somebody typed is theirs to make long — so it is not one
+    of the app's names that must fit. */
+const LONG_SONG = 'Somer in die Karoo met my mense en die honde op die stoep teen sononder';
+
+const CUT = (theirs) => {
   const out = [];
   const roots = [...document.querySelectorAll('div.fixed.inset-0.z-50, div.fixed.inset-0.z-\\[55\\], nav[aria-label]')];
   const root = roots.length ? { querySelectorAll: (sel) => roots.flatMap((r) => [...r.querySelectorAll(sel)]) } : document.body;
@@ -100,7 +105,37 @@ const CUT = () => {
     /* An input reports a scrollWidth against its placeholder, which is not
        a name and is not being cut off — it scrolls when you type in it. */
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') continue;
+    if ((el.textContent || '').includes(theirs)) continue;
     out.push(`${(el.textContent || '').trim().slice(0, 34)} (${el.scrollWidth - el.clientWidth}px short)`);
+  }
+  return out;
+};
+
+/**
+ * A pane that scrolls down and is wider than itself, on either shape.
+ *
+ * The desk rule below carries the same question; this one runs on the phone
+ * too, because that is where Make a song slid sideways under a saved song
+ * with a long name (the owner, 20 October 2026: "Die gestoorde liedjies in
+ * die make a song room veroorsaak dat die kamer links en regs ook scroll").
+ * A strip meant to scroll sideways scrolls in x and not in y, so it is not
+ * caught.
+ */
+const ACROSS = () => {
+  const out = [];
+  for (const el of document.querySelectorAll('*')) {
+    /* A strip that says it scrolls sideways — `overflow-x-auto` on a row of
+       cards — means to. The browser computes its y as auto too, which is
+       why this reads the class rather than only the computed style. */
+    const own = typeof el.className === 'string' ? el.className : '';
+    if (/(^|\s)overflow-x-(auto|scroll)(\s|$)/.test(own)) continue;
+    const cs = getComputedStyle(el);
+    const scrollsDown = cs.overflowY === 'auto' || cs.overflowY === 'scroll';
+    const canScrollAcross = cs.overflowX !== 'visible' && cs.overflowX !== 'clip';
+    if (scrollsDown && canScrollAcross && el.scrollWidth > el.clientWidth + 1) {
+      const cls = typeof el.className === 'string' ? el.className.split(' ').slice(0, 4).join(' ') : '';
+      out.push(`${el.tagName}.${cls} holds ${el.scrollWidth}px in ${el.clientWidth}px`);
+    }
   }
   return out;
 };
@@ -186,12 +221,28 @@ try {
   ]) {
   for (const lang of ['en', 'af']) {
     console.log(`\n— ${shape} · ${lang}`);
-    const opened = await enter({ at: server.url, width, height, touch, lang });
+    /* A saved song with a long name, because that is how Make a song came
+       to scroll sideways: the owner, 20 October 2026, "Die gestoorde
+       liedjies in die make a song room veroorsaak dat die kamer links en
+       regs ook scroll." A walk with no saved songs never drew the card. */
+    const opened = await enter({
+      at: server.url, width, height, touch, lang,
+      before: (page) => page.addInitScript((song) => {
+        try {
+          window.localStorage.setItem('futurebox.tracks.v1', JSON.stringify([{
+            id: 'notcut-song', title: song,
+            genre: 'Afrikaans', bpm: 96, key: 'Am', lyrics: 'la la la', style: 'warm', models: [],
+            source: 'engine', seconds: 184, createdAt: new Date().toISOString(), seed: 1,
+          }]));
+        } catch { /* none */ }
+      }, LONG_SONG),
+    });
     browser = opened.browser;
     const page = opened.page;
     await studio(page);
 
     const cut = [];
+    const across = [];
     const squeezed = [];
     const missed = [];
     for (const english of ROOMS) {
@@ -208,7 +259,8 @@ try {
       }
       await page.waitForTimeout(600);
       await unfold(page);
-      for (const one of await page.evaluate(CUT)) cut.push(`${english}: ${one}`);
+      for (const one of await page.evaluate(CUT, LONG_SONG)) cut.push(`${english}: ${one}`);
+      for (const one of await page.evaluate(ACROSS)) across.push(`${english}: ${one}`);
       if (shape === 'desk') {
         /* With a side bench open, because that is the layout the fault
            showed up in: the dock takes the width, the heading beside it is
@@ -226,6 +278,8 @@ try {
     check(`${shape} · ${lang} · every room on the door was found`, missed.length === 0, missed.join(', '));
     check(`${shape} · ${lang} · no name or heading is cut off`, cut.length === 0,
       cut.slice(0, 6).join(' · ') + (cut.length > 6 ? ` (+${cut.length - 6} more)` : ''));
+    check(`${shape} · ${lang} · no pane can slide sideways`, across.length === 0,
+      across.slice(0, 6).join(' · ') + (across.length > 6 ? ` (+${across.length - 6} more)` : ''));
     if (shape === 'desk') {
       check(`${shape} · ${lang} · nothing is scrolled sideways or squeezed`, squeezed.length === 0,
         squeezed.slice(0, 6).join(' · ') + (squeezed.length > 6 ? ` (+${squeezed.length - 6} more)` : ''));

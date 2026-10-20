@@ -317,6 +317,28 @@ try {
         check(`${room} · ${which} opens`, false, 'the bench has no sheet');
         continue;
       }
+
+      /* Nothing in the sheet slides sideways. The owner, 20 October 2026,
+         with a photograph of the Pro Booth's Track controls pushed off the
+         left of the phone and "Take this lane away" hanging out of its card:
+         "Hier is 'n hele button uit plek uit." A box that scrolls down and is
+         also wider than itself slides as soon as anything is scrolled into
+         view. */
+      const across = await page.evaluate(() => {
+        const sheet = document.querySelector('[data-desk]');
+        const out = [];
+        for (const el of [sheet, ...Array.from(sheet?.querySelectorAll('*') ?? [])]) {
+          if (!el) continue;
+          const cs = getComputedStyle(el);
+          const down = cs.overflowY === 'auto' || cs.overflowY === 'scroll';
+          const sideways = cs.overflowX !== 'visible' && cs.overflowX !== 'clip';
+          if (down && sideways && el.scrollWidth > el.clientWidth + 1) {
+            out.push(`${el.tagName.toLowerCase()} ${el.scrollWidth}px in ${el.clientWidth}px`);
+          }
+        }
+        return out;
+      });
+      check(`${room} · ${which}: nothing in it scrolls sideways`, across.length === 0, across.join(' | '));
       if (seen.length === 0) continue;
 
       /* `PEEK=1 npm run check:tidybars` prints every control it measured, so

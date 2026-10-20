@@ -38,9 +38,10 @@ import {
   Sparkles, Wand2, Activity, Zap, Radio, RefreshCw, Eye, Waves, Sliders, Volume2,
 } from 'lucide-react';
 import {
-  curveOf, responseOf, FX_DEFAULTS,
-  type Fx, type EqSettings,
+  curveOf, responseOf, gateOpen, FX_DEFAULTS, VOCODER_CHORDS,
+  type Fx, type EqSettings, type VocoderChord,
 } from '../lib/fx';
+import { TUNE_DEFAULT, type TuneHow, type TuneScale } from '../lib/tuner';
 import { useLang } from '../lib/i18n';
 
 const PANEL = '#0b0d14';
@@ -61,7 +62,16 @@ const HUES: Record<string, number> = {
   chorus: 230,
   delay: 175,
   reverb: 205,
+  gate: 120,
+  vocoder: 280,
+  tuner: 45,
 };
+
+const NOTE_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'] as const;
+/** A MIDI number as a note a musician reads: 48 is C3. */
+function noteName(midi: number): string {
+  return `${NOTE_NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+}
 
 function lit(hue: number, alpha = 1): string {
   return `hsl(${hue} 85% 62% / ${alpha})`;
@@ -570,7 +580,10 @@ function Dial({
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
           aria-label={label}
-          className="h-7 w-full cursor-pointer opacity-90 transition-opacity hover:opacity-100"
+          /* 44 tall, the app's floor for a thumb. It was 28, and nobody had
+             measured it because every dial sat inside an effect that starts
+             switched off; the voice tuner's is always on the screen. */
+          className="h-11 w-full cursor-pointer opacity-90 transition-opacity hover:opacity-100"
           style={{ accentColor: lit(hue) }}
         />
       </div>
@@ -786,9 +799,18 @@ export default function BoothFx({
   fx,
   onChange,
   onWhole,
+  onTune,
+  tuning = null,
+  keyRoot = 0,
 }: {
   readonly fx: Fx;
   readonly onChange: (next: Fx) => void;
+  /** Tune this lane's voice — a press that rewrites the lane (`lib/tuner.ts`). */
+  readonly onTune?: (how: TuneHow) => void;
+  /** How far a tuning has got, 0 to 1, or null when none is running. */
+  readonly tuning?: number | null;
+  /** The song's key, 0 for C, so the tuner starts in it. */
+  readonly keyRoot?: number;
   /**
    * Told before a press that replaces the whole rack — a preset, or Reset.
    *
@@ -828,6 +850,7 @@ export default function BoothFx({
   }, [asking, fx.eq]);
 
   const eq: EqSettings = fx.eq ?? FX_DEFAULTS.eq;
+  const [tuneHow, setTuneHow] = useState<TuneHow>({ ...TUNE_DEFAULT, root: keyRoot, scale: 'major' });
 
   return (
     <div className="space-y-3 px-4 pb-4" style={{ background: PANEL }}>
@@ -889,9 +912,28 @@ export default function BoothFx({
       <p className="pt-1 text-[11px] leading-snug" style={{ color: INK_DIM }}>
         {t(
           'fx.whatIsHere',
-          'Everything here is in the file as well as in your ears — the mixdown renders the same chain. The gate, the voice tuner and the vocoder are not built yet. The amp modeler is on the lane itself, under Track controls.',
+          'Everything here is in the file as well as in your ears — the mixdown renders the same chain. The voice tuner rewrites the lane itself when you press it, and Undo puts it back. The amp modeler is on the lane itself, under Track controls.',
         )}
       </p>
+
+      {/* 0. Gate — first on the desk, as on any desk. */}
+      <Unit
+        id="gate"
+        name={t('fx.gate', 'Gate')}
+        what={t('fx.gateWhat', 'Shuts the lane when it goes quiet, so the hiss, the breathing and the room between the lines are gone. The line is how much of each level gets through.')}
+        on={Boolean(fx.gate)}
+        onToggle={() => toggle('gate', FX_DEFAULTS.gate)}
+      >
+        <Bend points={gateLine((fx.gate ?? FX_DEFAULTS.gate).threshold)} hue={HUES.gate} unitId="Gate" />
+        <div className="flex flex-wrap gap-2.5 pt-1">
+          <Dial label={t('fx.gateBelow', 'Shut below')} value={(fx.gate ?? FX_DEFAULTS.gate).threshold}
+            min={-70} max={-10} step={1} unit=" dB" hue={HUES.gate}
+            onChange={(threshold) => set('gate', { ...(fx.gate ?? FX_DEFAULTS.gate), threshold })} />
+          <Dial label={t('fx.gateSpeed', 'How fast')} value={(fx.gate ?? FX_DEFAULTS.gate).speed}
+            min={0.005} max={0.2} step={0.005} unit=" s" hue={HUES.gate}
+            onChange={(speed) => set('gate', { ...(fx.gate ?? FX_DEFAULTS.gate), speed })} />
+        </div>
+      </Unit>
 
       {/* 1. EQ */}
       <Unit
@@ -1060,7 +1102,113 @@ export default function BoothFx({
         );
       })}
 
-      {/* 9. Utility */}
+      {/* 9. Vocoder */}
+      <Unit
+        id="vocoder"
+        name={t('fx.vocoder', 'Vocoder')}
+        what={t('fx.vocoderWhat', 'Your voice speaks through a synth chord — the robot voice. The voice shapes the words and the chord sings the notes.')}
+        on={Boolean(fx.vocoder)}
+        onToggle={() => toggle('vocoder', FX_DEFAULTS.vocoder)}
+      >
+        <Bend points={sawLine()} hue={HUES.vocoder} diagonal={false} unitId="Vocoder" />
+        <div className="flex flex-wrap gap-2 pt-1" data-vocoderchords>
+          {(Object.keys(VOCODER_CHORDS) as VocoderChord[]).map((chord) => {
+            const now = fx.vocoder ?? FX_DEFAULTS.vocoder;
+            const says = {
+              one: t('fx.chordOne', 'One note'),
+              fifth: t('fx.chordFifth', 'Power'),
+              triad: t('fx.chordMajor', 'Major'),
+              minor: t('fx.chordMinor', 'Minor'),
+            }[chord];
+            return (
+              <button
+                key={chord}
+                type="button"
+                aria-pressed={now.chord === chord}
+                onClick={() => set('vocoder', { ...now, chord })}
+                className="min-h-[44px] flex-1 rounded-xl border px-3 text-xs font-bold"
+                style={now.chord === chord
+                  ? { borderColor: lit(HUES.vocoder), background: lit(HUES.vocoder, 0.18), color: INK }
+                  : { borderColor: EDGE, color: INK_DIM }}
+              >
+                {says}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap gap-2.5 pt-1">
+          <Dial label={`${t('fx.vocoderNote', 'On the note')} · ${noteName((fx.vocoder ?? FX_DEFAULTS.vocoder).note)}`}
+            value={(fx.vocoder ?? FX_DEFAULTS.vocoder).note}
+            min={36} max={72} step={1} hue={HUES.vocoder}
+            onChange={(note) => set('vocoder', { ...(fx.vocoder ?? FX_DEFAULTS.vocoder), note })} />
+          <Dial label={t('fx.mix', 'How much')} value={(fx.vocoder ?? FX_DEFAULTS.vocoder).mix}
+            min={0} max={1} step={0.01} hue={HUES.vocoder}
+            onChange={(mix) => set('vocoder', { ...(fx.vocoder ?? FX_DEFAULTS.vocoder), mix })} />
+        </div>
+      </Unit>
+
+      {/* 10. Voice tuner — a press, not a switch: it rewrites the lane. */}
+      {onTune && (
+        <div
+          data-voicetuner
+          className="rounded-2xl p-3.5"
+          style={{ background: 'rgba(255,255,255,0.025)', border: `1px solid ${lit(HUES.tuner, 0.35)}` }}
+        >
+          <p className="text-sm font-black" style={{ color: INK }}>{t('fx.tuner', 'Voice tuner')}</p>
+          <p className="pt-0.5 text-xs leading-snug" style={{ color: INK_DIM }}>
+            {t('fx.tunerWhat', 'Pulls every sung note onto the notes of the key. Done on this phone, no credits. It rewrites the lane, so press Undo to hear it as it was.')}
+          </p>
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <label className="flex flex-col gap-1 text-[11px]" style={{ color: INK_DIM }}>
+              {t('fx.tunerKey', 'Key')}
+              <select
+                data-tunerkey
+                value={tuneHow.root}
+                onChange={(event) => setTuneHow((was) => ({ ...was, root: Number(event.target.value) }))}
+                disabled={tuneHow.scale === 'chromatic'}
+                className="min-h-[44px] rounded-xl border bg-zinc-950 px-2 text-sm font-bold disabled:opacity-40"
+                style={{ borderColor: EDGE, color: INK }}
+              >
+                {NOTE_NAMES.map((name, at) => <option key={name} value={at}>{name}</option>)}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-[11px]" style={{ color: INK_DIM }}>
+              {t('fx.tunerScale', 'Notes')}
+              <select
+                data-tunerscale
+                value={tuneHow.scale}
+                onChange={(event) => setTuneHow((was) => ({ ...was, scale: event.target.value as TuneScale }))}
+                className="min-h-[44px] rounded-xl border bg-zinc-950 px-2 text-sm font-bold"
+                style={{ borderColor: EDGE, color: INK }}
+              >
+                <option value="major">{t('fx.scaleMajor', 'Major')}</option>
+                <option value="minor">{t('fx.scaleMinor', 'Minor')}</option>
+                <option value="chromatic">{t('fx.scaleAll', 'Every note')}</option>
+              </select>
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-2.5 pt-2">
+            <Dial label={t('fx.tunerStrength', 'How hard')} value={tuneHow.strength}
+              min={0.1} max={1} step={0.05} hue={HUES.tuner}
+              onChange={(strength) => setTuneHow((was) => ({ ...was, strength }))} />
+          </div>
+          <button
+            type="button"
+            data-tunelane
+            disabled={tuning !== null}
+            onClick={() => onTune(tuneHow)}
+            className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border text-sm font-black disabled:opacity-60"
+            style={{ borderColor: lit(HUES.tuner), background: lit(HUES.tuner, 0.16), color: INK }}
+          >
+            <Wand2 className="h-4 w-4" />
+            {tuning !== null
+              ? `${t('fx.tuning', 'Tuning')}… ${Math.round(tuning * 100)}%`
+              : t('fx.tuneLane', 'Tune this lane')}
+          </button>
+        </div>
+      )}
+
+      {/* 11. Utility */}
       <Unit
         id="utility"
         name={t('fx.utility', 'Utility')}
@@ -1111,6 +1259,29 @@ function squashLine(settings: { threshold: number; ratio: number }): number[] {
     const outDb = over > 0 ? settings.threshold + over / settings.ratio : inDb;
     out.push((outDb + 60) / 60 * 2 - 1);
   }
+  return out;
+}
+
+/**
+ * The gate's line: what goes in against what comes out, in decibels, drawn
+ * from `gateOpen` — the same numbers the gate's curve is made of.
+ */
+function gateLine(threshold: number): number[] {
+  const out: number[] = [];
+  const level = Math.pow(10, threshold / 20);
+  for (let i = 0; i < 128; i += 1) {
+    const inDb = -80 + (i / 127) * 80;
+    const open = gateOpen(Math.pow(10, inDb / 20), level);
+    const outDb = open > 0 ? Math.max(-80, inDb + 20 * Math.log10(open)) : -80;
+    out.push(((outDb + 80) / 80) * 2 - 1);
+  }
+  return out;
+}
+
+/** Three cycles of the sawtooth the vocoder's chord is made of. */
+function sawLine(): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < 128; i += 1) out.push(((i * 3) / 127 % 1) * 1.6 - 0.8);
   return out;
 }
 

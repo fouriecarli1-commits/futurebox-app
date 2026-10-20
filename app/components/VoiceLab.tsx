@@ -76,6 +76,13 @@ export interface VoiceState {
       readonly demo?: string | null;
       readonly tags?: readonly string[];
     }[];
+    /** Kits' instrument models, offered on the Stems desk rather than as voices. */
+    readonly instruments?: readonly {
+      readonly id: string;
+      readonly name: string;
+      readonly demo?: string | null;
+      readonly tags?: readonly string[];
+    }[];
   };
 }
 

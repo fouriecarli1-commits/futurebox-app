@@ -1065,14 +1065,14 @@ function rememberFace(id: string, url: string | null): boolean {
  * app is empty and the room is dead, and the empty-list-on-failure rule above
  * means it fails quietly. Worth knowing before somebody "simplifies" it away.
  */
-export async function listModels(mine = true): Promise<Model[]> {
+export async function listModels(mine = true, instruments = false): Promise<Model[]> {
   if (!configured()) return [];
   /* `perPage`, because their lists are paged at ten. Without it a picker
      silently shows the first ten and looks like a complete list — the worst
      kind of wrong. A hundred is past what any account has and still one
      request; the catalogue is longer than that and one page of it is plenty
      to choose from. */
-  const query = `perPage=100${mine ? '&myModels=true' : ''}`;
+  const query = `perPage=100${mine ? '&myModels=true' : ''}${instruments ? '&instruments=true' : ''}`;
   let response: Response;
   try {
     response = await fetch(`${BASE}/voice-models?${query}`, {
@@ -1157,6 +1157,35 @@ export async function catalogue(): Promise<Model[]> {
     catalogueAt = Date.now();
   }
   return found;
+}
+
+/**
+ * Kits' instrument models — a sung or hummed line played as a saxophone.
+ *
+ * The catalogue above holds them beside the voices, and they were offered
+ * under "Singing model": the owner, 20 October 2026, *"Hier is 'n
+ * fantastiese lys van instrumente maar moet dit nie by stems wees nie. Ek
+ * sien geen singing models nie."* So they are asked for on their own
+ * (`instruments=true`, which `instrumentsExist` confirmed is a real filter)
+ * and kept apart: the voice picker shows singers, the Stems desk shows
+ * instruments. Cached for an hour, like the catalogue.
+ */
+let instrumentsAt = 0;
+let instrumented: Model[] = [];
+
+export async function instrumentCatalogue(): Promise<Model[]> {
+  if (instrumented.length > 0 && Date.now() - instrumentsAt < AN_HOUR) return instrumented;
+  const found = await listModels(false, true);
+  if (found.length > 0) {
+    instrumented = found;
+    instrumentsAt = Date.now();
+  }
+  return found;
+}
+
+/** Whether a model is an instrument rather than a voice: on the instrument list, or tagged as one. */
+export function isInstrument(model: Pick<Model, 'id' | 'tags'>, instruments: readonly Pick<Model, 'id'>[]): boolean {
+  return instruments.some((one) => one.id === model.id) || model.tags.some((tag) => /instrument/i.test(tag));
 }
 
 /* ── The two requests ────────────────────────────────────────────────────── */

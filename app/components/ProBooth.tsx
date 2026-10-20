@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, ChevronDown, Circle, Clock, Download, Gauge, Grid3x3, Guitar, HelpCircle, KeyRound, Layers, Link2, Link2Off, Loader2, Menu, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Settings, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Sparkles, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, MOST_REPEATS, audible, carveLane, dbOf, fadedCopy, smoothedCopy, lengthOf, mixSession, monoOf, passesOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
@@ -77,6 +77,7 @@ import BoothAsk from './BoothAsk';
 import { applyMove, type LaneNow, type Move } from '../lib/mixplan';
 import { canMove, move } from '../lib/laneorder';
 import { NO_FX, type Fx } from '../lib/fx';
+import { trackPitchSoftly, tune, type TuneHow } from '../lib/tuner';
 import { useOwnScreen } from '../lib/fullroom';
 import { useSideways } from '../lib/sideways';
 import { useAtDesk } from '../lib/atdesk';
@@ -405,6 +406,13 @@ export default function ProBooth({
   useEffect(() => {
     if (canSing) setEngine('singing');
   }, [canSing]);
+  /* The same sheet, asked to play the lane as an instrument rather than sing
+     it in a voice: Kits' instrument models, chosen on the Stems desk. The
+     instrument is kept apart from the remembered voice, so playing a lane as
+     a saxophone does not leave the saxophone chosen the next time somebody
+     wants a singer. */
+  const [asInstrument, setAsInstrument] = useState(false);
+  const [instrumentId, setInstrumentId] = useState('');
   const chooseModel = useCallback((value: string) => {
     const digits = value.replace(/[^0-9]/g, '').slice(0, 20);
     setModelId(digits);
@@ -418,7 +426,7 @@ export default function ProBooth({
   /* And the voice panel over it, so Back dismisses the panel rather than the
      whole booth. Registered after the booth's own layer, so it is the
      innermost and closes first. */
-  useBackLayer(changing !== null, () => setChanging(null));
+  useBackLayer(changing !== null, () => { setChanging(null); setAsInstrument(false); });
 
   /* ── What a lane actually is ────────────────────────────────────────────
      Chords, key, tempo and sections, read by a service rather than guessed
@@ -1678,7 +1686,7 @@ export default function ProBooth({
    * they cannot repeat.
    */
   const changeVoice = useCallback(
-    async (lane: Lane) => {
+    async (lane: Lane, instrument?: { readonly id: string; readonly name: string }) => {
       setProblem(null);
       setBusy(true);
       try {
@@ -1696,8 +1704,8 @@ export default function ProBooth({
         }
         /* Which engine, and what each one needs told about it: a voice id at
            ElevenLabs, a trained model number at Kits. */
-        const sings = engine === 'singing' && canSing;
-        if (sings) form.append('voiceModelId', modelId);
+        const sings = Boolean(instrument) || (engine === 'singing' && canSing);
+        if (sings) form.append('voiceModelId', instrument?.id ?? modelId);
         else if (voiceId) form.append('voiceId', voiceId);
         form.append('seconds', String(Math.round(piece.duration)));
         /* The desk, and only on the engine it belongs to. Untouched it puts
@@ -1723,11 +1731,12 @@ export default function ProBooth({
         }
         setStale(true);
         setChanging(null);
+        setAsInstrument(false);
         setLanes((was) => [
           ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
           {
             id: `${lane.id}-voice-${Date.now()}`,
-            name: `${lane.name} · ${sings ? t('pro.sungReally', 'sung') : t('pro.sungBy', 'another voice')}`,
+            name: `${lane.name} · ${instrument ? instrument.name : sings ? t('pro.sungReally', 'sung') : t('pro.sungBy', 'another voice')}`,
             audio: sung,
             at: lane.at,
             gain: lane.gain,
@@ -1744,6 +1753,11 @@ export default function ProBooth({
     },
     [canSing, context, engine, modelId, rate, t, voiceId],
   );
+  const instruments = voices?.singing?.instruments ?? [];
+  const playAs = (lane: Lane): void => {
+    setAsInstrument(true);
+    setChanging(lane);
+  };
 
   /**
    * Ask what a lane is, and offer to set the session to match.
@@ -1907,6 +1921,45 @@ export default function ProBooth({
       }
     },
     [context, rate, t],
+  );
+
+  /* ── The voice tuner ───────────────────────────────────────────────
+     The owner, 20 October 2026: the tuner was named on the effects desk as
+     not built. It hears the lane here, on the phone, and writes the tuned
+     sound back as the lane's — the same way "Clean with AI" does, and with
+     the same Undo. No credits: nothing leaves the device. */
+  const [tuning, setTuning] = useState<number | null>(null);
+  const tuneLane = useCallback(
+    async (lane: Lane, how: TuneHow) => {
+      const ctx = context();
+      if (!ctx || tuning !== null) return;
+      setProblem(null);
+      setTuning(0);
+      try {
+        const piece = pieceOf(lane, ctx);
+        const channels = Array.from({ length: piece.numberOfChannels }, (_, c) => piece.getChannelData(c));
+        const heard = await trackPitchSoftly(channels, piece.sampleRate, (share) => setTuning(share * 0.95));
+        if (!heard.hz.some((one) => one > 0)) {
+          setProblem(t('fx.tunerNothing', 'No sung notes were heard on that lane, so there is nothing to tune.'));
+          return;
+        }
+        const tuned = tune(channels, piece.sampleRate, how, heard);
+        const out = ctx.createBuffer(tuned.length, piece.length, piece.sampleRate);
+        tuned.forEach((data, c) => out.copyToChannel(data, c));
+        remember(t('undo.tune', 'the tuning'));
+        /* Like the clean: what comes back is already the piece that played. */
+        setLanes((was) => was.map((one) => (
+          one.id === lane.id
+            ? { ...one, audio: out, from: undefined, to: undefined, amped: undefined }
+            : one
+        )));
+      } catch {
+        setProblem(t('fx.tunerFailed', 'That lane could not be tuned.'));
+      } finally {
+        setTuning(null);
+      }
+    },
+    [context, remember, t, tuning],
   );
 
   const intoParts = useCallback(
@@ -4001,11 +4054,13 @@ export default function ProBooth({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-base font-bold text-white">
-                  {t('pro.sing', 'Sing this in another voice')}
+                  {asInstrument
+                    ? t('pro.playAs', 'Play this as an instrument')
+                    : t('pro.sing', 'Sing this in another voice')}
                 </p>
                 <p className="text-sm text-zinc-500 leading-snug truncate">{changing.name}</p>
               </div>
-              <button type="button" onClick={() => setChanging(null)} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white">
+              <button type="button" onClick={() => { setChanging(null); setAsInstrument(false); }} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -4022,7 +4077,7 @@ export default function ProBooth({
                 Only drawn when there are two of them: a chooser with one
                 option is furniture. The singing model is first and selected,
                 because it is the one that does what the panel's title says. */}
-            {canSing && (
+            {canSing && !asInstrument && (
               <div
                 className="grid grid-cols-2 gap-2"
                 role="group"
@@ -4074,7 +4129,12 @@ export default function ProBooth({
                 What it cannot do is different — it needs a model trained on a
                 voice, and it is not a spoken-word tool — and silence there
                 would read as "this one is perfect". */}
-            {engine === 'speech' || !canSing ? (
+            {asInstrument ? (
+              <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+                  'pro.playAsWhat',
+                  'The notes and the rhythm of this lane, played by the instrument you pick, on a lane of its own. A sung or hummed line works best; a whole mix does not.',
+                )}</Note>
+            ) : engine === 'speech' || !canSing ? (
               <Note className="text-sm text-amber-300/90 leading-relaxed">{t(
                   'pro.singBuilt',
                   'The model behind it is built for speech. On a spoken lane it is reliable; on a sung one it is a gamble \u2014 the melody is what it handles worst. A model built for singing is the one thing this app still cannot do.',
@@ -4088,11 +4148,32 @@ export default function ProBooth({
             <Cost
               credits={perMinute(
                 pieceSeconds(changing),
-                engine === 'singing' && canSing ? CREDITS.sing : CREDITS.voiceChange,
+                asInstrument || (engine === 'singing' && canSing) ? CREDITS.sing : CREDITS.voiceChange,
               )}
             />
 
-            {engine === 'singing' && canSing ? (
+            {asInstrument ? (
+              <div className="space-y-2" data-instrumentpicker>
+                <p className="text-sm font-bold text-white">
+                  {t('pro.whichInstrument', 'Which instrument')}
+                </p>
+                {instruments.length ? (
+                  <SingVoices
+                    mine={[]}
+                    stock={instruments}
+                    value={instrumentId}
+                    onChange={setInstrumentId}
+                    idPrefix="play"
+                  />
+                ) : (
+                  <p className="text-sm text-zinc-500">
+                    {voices
+                      ? t('pro.noInstruments', 'No instruments are on offer right now.')
+                      : t('pro.voicesLoading', 'Fetching the voices\u2026')}
+                  </p>
+                )}
+              </div>
+            ) : engine === 'singing' && canSing ? (
               /* Her trained voices and Kits' own catalogue, in one picker.
 
                  This used to say "no voice list to show" and ask for a number,
@@ -4144,12 +4225,21 @@ export default function ProBooth({
 
             <button
               type="button"
-              onClick={() => void changeVoice(changing)}
-              disabled={busy || (engine === 'singing' && canSing ? !modelId : !voiceId)}
+              onClick={() => {
+                if (!asInstrument) {
+                  void changeVoice(changing);
+                  return;
+                }
+                const picked = instruments.find((one) => one.id === instrumentId);
+                if (picked) void changeVoice(changing, { id: picked.id, name: picked.name });
+              }}
+              disabled={busy || (asInstrument
+                ? !instruments.some((one) => one.id === instrumentId)
+                : engine === 'singing' && canSing ? !modelId : !voiceId)}
               className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-40"
             >
               {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-              {t('pro.singGo', 'Sing it')}
+              {asInstrument ? t('pro.playGo', 'Play it') : t('pro.singGo', 'Sing it')}
             </button>
           </div>
         </div>
@@ -4299,7 +4389,12 @@ export default function ProBooth({
           its own WAV, and each lane has its AI clean beside its name, with
           the price on it. */}
       {lanes.length > 0 && (
+        /* Each card the full width of the sheet. Two columns made this the
+           tall narrow strip the owner called "langwerpige piesang kolomme"
+           (20 October 2026): a list of lanes with two buttons each does not
+           fit in 166 pixels. */
         <Card
+          wide
           icon={<Layers className="h-4 w-4" />}
           title={t('pro.stemsAway', 'Every lane, as its own file')}
           what={t(
@@ -4351,6 +4446,7 @@ export default function ProBooth({
         </Card>
       )}
       <Card
+        wide
         icon={<Music2 className="h-4 w-4" />}
         title={t('part.title', 'Generate a part')}
         paid
@@ -4371,11 +4467,49 @@ export default function ProBooth({
         </button>
       </Card>
 
+      {/* ── A lane played as an instrument ─────────────────────────────
+          The owner, 20 October 2026, of Kits' instrument models offered as
+          voices: *"Hier is 'n fantastiese lys van instrumente maar moet dit
+          nie by stems wees nie."* So they are here, where instruments are:
+          one press per lane opens the picker, and the price is on the sheet
+          before anything is spent. */}
+      {lanes.length > 0 && (
+        <Card
+          wide
+          icon={<Guitar className="h-4 w-4" />}
+          title={t('pro.playAs', 'Play this as an instrument')}
+          paid
+          paidSays={t('dock.paidSays', 'Some of this costs credits.')}
+          what={t(
+            'pro.playAsWhat',
+            'The notes and the rhythm of this lane, played by the instrument you pick, on a lane of its own. A sung or hummed line works best; a whole mix does not.',
+          )}
+        >
+          <ul className="space-y-1.5" data-playaslanes>
+            {lanes.map((lane) => (
+              <li key={lane.id}>
+                <button
+                  type="button"
+                  data-playas={lane.id}
+                  disabled={busy}
+                  onClick={() => playAs(lane)}
+                  className="inline-flex h-[44px] w-full min-w-0 items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 px-3 text-sm font-bold text-emerald-200 disabled:opacity-50"
+                >
+                  <Guitar className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate text-left">{lane.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       {/* ── Hum it instead ───────────────────────────────────────────────
           Free, and said so plainly: it is the only thing on this desk that
           is, and the reason is worth knowing rather than guessing at — none
           of it leaves the phone. */}
       <Card
+        wide
         icon={<Mic2 className="h-4 w-4" />}
         title={t('hum.title', 'Hum it, and have it played')}
         what={t(
@@ -4966,6 +5100,9 @@ export default function ProBooth({
                 ? t('undo.rackReset', 'resetting the rack')
                 : t('undo.preset', 'the preset'),
             )}
+            onTune={(how) => { void tuneLane(fxLane, how); }}
+            tuning={tuning}
+            keyRoot={Math.max(0, (KEYS as readonly string[]).indexOf(meter.key))}
           />
         </Card>
       ) : (
@@ -5824,7 +5961,7 @@ function LaneRow({
 
           The row around it already wraps. Letting these blocks be as wide as
           they need means the wrap can do its job. */}
-      <div className="shrink-0 flex flex-wrap items-center gap-1.5">
+      <div className="min-w-0 max-w-full flex flex-wrap items-center gap-1.5">
         <span className="text-[11px] text-zinc-600">L</span>
         <input
           type="range"
@@ -5860,7 +5997,12 @@ function LaneRow({
 
           "ek moes die bar links skuif om daai opname mic te sien. niemand
            gaan weet dit is daar nie." Nobody was going to. */}
-      <div className="shrink-0 flex flex-wrap items-center gap-1">
+      {/* Allowed to wrap within the card. `shrink-0` sized this row to all of
+          its buttons on one line, so on a phone it ran past the card and the
+          whole Track controls panel slid sideways with "Take this lane away"
+          hanging off it — the owner's photograph, 20 October 2026: "Hier is
+          'n hele button uit plek uit." */}
+      <div className="min-w-0 max-w-full flex flex-wrap items-center gap-1">
         <input
           type="number"
           step={0.05}

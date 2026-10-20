@@ -1858,6 +1858,11 @@ jobs:
       - name: A child's storybook keeps its rules
         run: npm run check:kidstory
 
+      # The voice tuner: a sung note a little off is pulled onto the key,
+      # keeping its length and level, and a note already on is left alone.
+      - name: The voice tuner tunes
+        run: npm run check:tuner
+
       # Google Play: offensive content can be reported from where it is seen,
       # and a member can be blocked. Only the owner reads the reports.
       - name: Reporting and blocking keep their rules

@@ -181,7 +181,7 @@ ok('it says so plainly when the key is not set', /Singing in your own voice is n
 
 /* ── 4. The room: two engines, each honest about itself ─────────────────── */
 
-ok('the panel offers the singing engine only when it is switched on', /canSing && \(/.test(booth));
+ok('the panel offers the singing engine only when it is switched on', /canSing && (!asInstrument && )?\(/.test(booth));
 ok('and chooses it when it is there', /if \(canSing\) setEngine\('singing'\)/.test(booth));
 ok(
   'the speech model keeps its warning',
@@ -208,7 +208,7 @@ for (const key of ['pro.singBuilt', 'pro.singReal']) {
 
 ok(
   'the price is the engine’s own, not the other one’s',
-  /engine === 'singing' && canSing \? CREDITS\.sing : CREDITS\.voiceChange/.test(booth),
+  /(asInstrument \|\| \()?engine === 'singing' && canSing\)? \? CREDITS\.sing : CREDITS\.voiceChange/.test(booth),
 );
 ok(
   'and the better engine is not the cheaper one',

@@ -31,13 +31,13 @@
  * page that needs a key typed on a phone is a page nobody opens.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, LogOut } from 'lucide-react';
 import KidsRoom from '../components/KidsRoom';
 import KidsInstall from '../components/KidsInstall';
 import { useLang } from '../lib/i18n';
-import { signOut } from '../lib/cloud';
+import { markKidsApp, signOut } from '../lib/cloud';
 import { childIn } from '../lib/kidslock';
 
 export default function KidsPage(): React.ReactElement {
@@ -45,6 +45,9 @@ export default function KidsPage(): React.ReactElement {
   /* The way back to the studio is the grown-up's, so it shows only on the
      grown-up's page — never over the child's room (`lib/kidslock.ts`). */
   const [grownUp, setGrownUp] = useState(true);
+  /* Before a sign-in leaves for Google: this window is the kids app's, so
+     the front door sends it back here (`backBelongsHere`). */
+  useEffect(() => { markKidsApp(); }, []);
   return (
     <main className="min-h-screen bg-transparent text-white">
       {grownUp && (

@@ -31,12 +31,14 @@
  * they do. A second, hand-drawn approximation would be a picture of
  * something the app is not doing, which is worse than no picture.
  *
- * ── And what is NOT built ───────────────────────────────────────────────
+ * ── And the three that came later ───────────────────────────────────────
  *
- * The gate, the voice tuner and the vocoder. All three were on her list and
- * none can be made from these nodes. Naming them in the panel is the
- * difference between "not yet" and "we quietly dropped it", so the naming is
- * checked too.
+ * The gate, the voice tuner and the vocoder were on her list and were named in
+ * the panel as not built, so "not yet" and "quietly dropped" looked different.
+ * On 20 October 2026 she asked for them: *"Kan ons werk maak daarvan."* The
+ * gate and the vocoder turned out to be makeable from these nodes after all,
+ * and are held here like the rest; the tuner is a press that rewrites the
+ * lane, held by `check:tuner`.
  *
  *   npm run check:boothfx
  */
@@ -102,13 +104,20 @@ ok(
 );
 
 /* ── The ones that are real, and the ones that are named ──────────────── */
-for (const unit of ['eq', 'compressor', 'limiter', 'utility', 'saturator', 'folder', 'crusher', 'tremolo', 'chorus', 'delay', 'reverb']) {
+for (const unit of ['gate', 'eq', 'compressor', 'limiter', 'utility', 'saturator', 'folder', 'crusher', 'vocoder', 'tremolo', 'chorus', 'delay', 'reverb']) {
   ok(`the rack really has a ${unit}`, new RegExp(`if \\(fx\\.${unit}\\)|'${unit}',`).test(fx));
 }
 ok(
-  'the gate, the voice tuner and the vocoder are named as not built',
-  /gate, the voice tuner and the vocoder are not built yet/.test(panel),
-  'she asked for them; "not yet" and "quietly dropped" have to look different',
+  'the gate and the vocoder are on the panel, and nothing still says they are not built',
+  /id="gate"/.test(panel) && /id="vocoder"/.test(panel) && !/not built yet/.test(panel),
+);
+ok(
+  '  and the gate opens by its own level, through the gain of the sound',
+  /levelOf\(into, fx\.gate\.speed\)\.connect\(open\)\.connect\(door\.gain\)/.test(fx),
+);
+ok(
+  '  and the voice tuner is a press that tunes the lane, heard a slice at a time',
+  /data-voicetuner/.test(panel) && /trackPitchSoftly\(/.test(booth) && /onTune=\{/.test(booth),
 );
 ok(
   '  and the limiter does not claim to be a brickwall',

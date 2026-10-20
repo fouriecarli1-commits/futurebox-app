@@ -14,10 +14,18 @@
  * grown-up's own sign-in. Forgotten, it is reset by signing in again, which
  * is the grown-up's door and not the child's.
  *
- * And the room stays the room. While a child is in it the device remembers
- * that, and the studio's front door sends anybody who reaches it — by the
- * back button, or by closing the app and opening it again — straight back
- * to /kids. Only the grown-up's page lets go of it.
+ * And the room stays the room. While a child is in it the window remembers
+ * that, and the studio's front door sends anybody who reaches it in that
+ * window — by the back button — straight back to /kids. Only the grown-up's
+ * page lets go of it.
+ *
+ * The window, not the device. It was the device until 20 October 2026, and
+ * the owner, who had signed in through the FutureBox Kids icon: *"wanneer ek
+ * by die normale futurebox in gaan dan maak dit by die kids studio oop. Dit
+ * is nie ideaal nie."* The two apps share one address, so a mark kept for
+ * the whole device sent the grown-up's own FutureBox icon into the kids
+ * room. Kept in the window instead, it holds the child's window (the kids
+ * app opens at /kids every time anyway) and leaves the other icon alone.
  */
 
 const CODE_KEY = 'fb-kids-code';
@@ -32,6 +40,15 @@ export const CODE_LENGTH = 4;
 const store = (): Storage | null => {
   try {
     return typeof window === 'undefined' ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+};
+
+/** The window the child's room is open in. */
+const windowStore = (): Storage | null => {
+  try {
+    return typeof window === 'undefined' ? null : window.sessionStorage;
   } catch {
     return null;
   }
@@ -75,14 +92,17 @@ export function forgetCode(): void {
 
 /** The child's room is on the screen: the front door sends anybody back to it. */
 export function childIn(on: boolean): void {
-  const kept = store();
+  const kept = windowStore();
   if (!kept) return;
   if (on) kept.setItem(CHILD_KEY, '1');
   else kept.removeItem(CHILD_KEY);
 }
 
 export function childIsIn(): boolean {
-  return store()?.getItem(CHILD_KEY) === '1';
+  /* The device-wide mark the room used to leave, wiped so a phone that has
+     one stops opening the studio in the kids room. */
+  store()?.removeItem(CHILD_KEY);
+  return windowStore()?.getItem(CHILD_KEY) === '1';
 }
 
 /**

@@ -60,8 +60,24 @@ try {
     !buttons.some((one) => /grown-?up|grootmens/i.test(one)), buttons.filter((one) => /grown/i.test(one)).join(' | '));
   check('  and the studio link is not over the child’s room',
     (await page.getByText(/Back to the studio|Terug na die ateljee/i).count()) === 0);
-  check('  and the device remembers a child is in the room',
-    (await page.evaluate(() => localStorage.getItem('fb-kids-child-on'))) === '1');
+  check('  and the window remembers a child is in the room',
+    (await page.evaluate(() => sessionStorage.getItem('fb-kids-child-on'))) === '1');
+  /* Another window on the same device — the FutureBox app's own icon — is
+     not held by it. The owner, 20 October 2026: "wanneer ek by die normale
+     futurebox in gaan dan maak dit by die kids studio oop." */
+  {
+    /* A window of its own: `noopener`, so it starts with its own session
+       store the way a second app on the phone does, while sharing the
+       device's local store. */
+    const [other] = await Promise.all([
+      page.waitForEvent('popup'),
+      page.evaluate((url) => { window.open(url, '_blank', 'noopener'); }, server.url),
+    ]);
+    await other.waitForLoadState('domcontentloaded');
+    await other.waitForTimeout(2500);
+    check('  but FutureBox opened in another window stays FutureBox', !/\/kids/.test(other.url()), other.url());
+    await other.close();
+  }
   await page.goto(server.url, { waitUntil: 'domcontentloaded' });
   await page.waitForURL(/\/kids/, { timeout: 10000 }).catch(() => undefined);
   check('  so the studio’s front door sends a child straight back', /\/kids/.test(page.url()), page.url());
@@ -77,7 +93,7 @@ try {
     (await page.locator('[data-kidscodechooser]').count()) === 1);
   check('  and the studio link is there for the grown-up',
     (await page.getByText(/Back to the studio|Terug na die ateljee/i).count()) > 0);
-  check('  and the room lets go of the device', (await page.evaluate(() => localStorage.getItem('fb-kids-child-on'))) === null);
+  check('  and the room lets go of the window', (await page.evaluate(() => sessionStorage.getItem('fb-kids-child-on'))) === null);
 
   await page.locator('#kids-code-new').fill('2468');
   await page.locator('#kids-code-again').fill('2468');
@@ -252,7 +268,7 @@ try {
   if (await page.locator('[data-kidscodepad]').count()) await typeCode('2468');
   await page.waitForURL((url) => !/\/kids/.test(String(url)), { timeout: 10000 }).catch(() => undefined);
   check('Sign out leaves the kids room and the account', !/\/kids/.test(page.url())
-    && (await page.evaluate(() => localStorage.getItem('fb-kids-child-on'))) === null, page.url());
+    && (await page.evaluate(() => sessionStorage.getItem('fb-kids-child-on'))) === null, page.url());
   check('and nothing throws', thrown.length === 0, thrown.slice(0, 2).join(' · '));
   await page.screenshot({ path: shot('kidsloop.png') });
 } catch (problem) {

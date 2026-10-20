@@ -2260,7 +2260,10 @@ export default function VocalBooth({
               type="button"
               onClick={() => void stop()}
               disabled={listening}
-              className={`${BAR} w-auto shrink-0 px-6 bg-red-500/20 border-red-500 text-red-300 disabled:opacity-50`}
+              /* Without the bar's `w-full`: `w-auto` beside it lost, so Stop
+                 took the whole row and ran off the right of the phone
+                 (the owner's photograph, 20 October 2026). */
+              className={`${BAR.replace(' w-full', '')} shrink-0 px-6 bg-red-500/20 border-red-500 text-red-300 disabled:opacity-50`}
             >
               <Square className="h-4 w-4 fill-current" />
               {t('take.stop', 'Stop')}

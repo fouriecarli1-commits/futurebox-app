@@ -1667,10 +1667,33 @@ export default function VideoEditor({
    */
   const wandFrame = useCallback(async () => {
     const node = viewer.current;
-    if (!node || !piece) return;
-    const shot = await frameFrom(node, shape.width, shape.height, piece.fill ?? false);
+    if (!piece) return;
+    /* A clip that has not drawn its first frame yet has nothing to read:
+       wait a moment for it rather than give up on the first try. */
+    if (node && node.readyState < 2) {
+      await new Promise<void>((done) => {
+        const go = (): void => done();
+        node.addEventListener('loadeddata', go, { once: true });
+        window.setTimeout(go, 1500);
+      });
+    }
+    const shot = node ? await frameFrom(node, shape.width, shape.height, piece.fill ?? false) : null;
     if (!shot) {
-      setProblem(t('edit.coverNoFrame', 'That frame could not be read.'));
+      /* Open anyway. The owner, 20 October 2026: *"Daai AI wand in video
+         editor maak niks oop nie. Dit moet seker iets oop maak en AI
+         voorstelle maak."* It returned in silence when the frame could not
+         be read — a photo clip, a video still loading — and a press that
+         does nothing is a broken button. Without a frame the sheet offers
+         its starting ideas and draws the shot from words. */
+      setShotPic(null);
+      setDrawInto('start');
+      setShotReady(null);
+      setShotSaid(t(
+        'edit.wandNoFrame',
+        'Say what this shot should become, or pick an idea below, and the AI draws it. Then Make it move puts it on the clock.',
+      ));
+      setWandOpen(true);
+      requestAnimationFrame(() => wandRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
       return;
     }
     const reader = new FileReader();
@@ -6420,7 +6443,7 @@ async function smallerFrame(url: string): Promise<string> {
               `filterCss` the render uses, so the preview swatch and the
               finished film cannot disagree. */}
           <div className="space-y-1.5">
-            <span className="text-sm text-zinc-400">{t('edit.look', 'Look')}</span>
+            <span className="text-sm text-zinc-400">{t('edit.look', 'Colour filters')}</span>
             {/* Wrapped, not scrolled. Seven looks at `shrink-0` came to 644
                 pixels in a 334 pixel strip, so this was the second thing on
                 this desk that moved under a thumb. Three rows of buttons
@@ -6438,6 +6461,9 @@ async function smallerFrame(url: string): Promise<string> {
                   on={(piece.look ?? 'none') === one.id}
                   onPick={() => tweak({ look: one.id })}
                   filter={filterCss(one.id)}
+                  /* 56 rather than 68, so more of them fit in the third of the
+                     phone the Filters bench now takes (`low` in CutDock). */
+                  size={56}
                   data={{ 'data-editorlook': one.id }}
                 />
               ))}
@@ -6549,7 +6575,7 @@ async function smallerFrame(url: string): Promise<string> {
           </div>
           {/* ── Filters: the second shelf, that restyle the picture itself ── */}
           <div className="space-y-2" data-editorfilterbench>
-            <span className="text-sm text-zinc-400">{t('edit.filtersTitle', 'Filters')}</span>
+            <span className="text-sm text-zinc-400">{t('edit.filtersTitle', 'Effect filters')}</span>
             <EffectToolbox
               value={piece.fx ?? []}
               onChange={(next) => tweak({ fx: next })}
@@ -7325,10 +7351,18 @@ async function smallerFrame(url: string): Promise<string> {
             </label>
 
             {/* ── Sound effects on the song ── */}
-            <details className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2" data-editorsongfxbench>
-              <summary className="flex h-11 cursor-pointer list-none items-center px-1 text-sm font-bold text-zinc-200">
-                {t('edit.songFxTitle', 'Sound effects on the song')}
-                {(edit.underFx?.length ?? 0) > 0 ? ` · ${edit.underFx?.length}` : ''}
+            {/* The heading is the button that opens it, and it is drawn as
+                one: an edge, a mark and an arrow. It was dark words on a dark
+                box — the owner, 20 October 2026: "Daai button in video editor
+                moet lyk soos 'n button. Dis nou swart." */}
+            <details className="group space-y-2 rounded-xl" data-editorsongfxbench>
+              <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-3 text-sm font-bold text-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <Sparkles className="h-4 w-4 shrink-0 text-emerald-300" />
+                <span className="min-w-0 flex-1">
+                  {t('edit.songFxTitle', 'Sound effects on the song')}
+                  {(edit.underFx?.length ?? 0) > 0 ? ` · ${edit.underFx?.length}` : ''}
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
               </summary>
               <AudioFxToolbox
                 mark="editorsongfx"

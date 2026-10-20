@@ -1917,7 +1917,14 @@ export default function MakeMusic({
             {t('make.empty')}
           </p>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
+          /* `grid-cols-1` rather than no columns: Tailwind's is `minmax(0, 1fr)`,
+             where an unnamed column sizes itself to its longest content. A
+             saved song with a long name made its card 944 pixels wide on a
+             390-pixel phone and the whole room scrolled sideways — the
+             owner, 20 October 2026: "Die gestoorde liedjies in die make a
+             song room veroorsaak dat die kamer links en regs ook scroll."
+             Now the name is cut with an ellipsis, as `truncate` meant. */
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {tracks.map((track) => (
               /* The one that is playing takes the whole row. A waveform is
                  there to find the chorus with, and you cannot do that in half
@@ -1925,7 +1932,7 @@ export default function MakeMusic({
                  other card stays small, because a list of songs is a list. */
               <div
                 key={track.id}
-                className={`rounded-2xl border bg-zinc-900/60 p-4 space-y-3 ${
+                className={`min-w-0 rounded-2xl border bg-zinc-900/60 p-4 space-y-3 ${
                   playing === track.id
                     ? 'sm:col-span-2 border-emerald-500/60 bg-emerald-500/[0.04]'
                     : 'border-zinc-800'
@@ -1940,7 +1947,7 @@ export default function MakeMusic({
                   >
                     {playing === track.id ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                   </button>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-base font-bold text-white leading-snug truncate">{track.title}</p>
                     <p className="text-sm text-zinc-500">
                       {track.genre} · {track.bpm} BPM · {Math.floor(track.seconds / 60)}:
@@ -1954,7 +1961,7 @@ export default function MakeMusic({
                     because a record is a picture and a shape together, and
                     neither is much use in half a column on its own. */}
                 {(playing === track.id || sleeveFor === track.id) && (
-                  <div className="grid sm:grid-cols-[220px_1fr] gap-4 items-start">
+                  <div className="grid grid-cols-1 sm:grid-cols-[220px_minmax(0,1fr)] gap-4 items-start">
                     <Sleeve
                       trackId={track.id}
                       title={track.title}

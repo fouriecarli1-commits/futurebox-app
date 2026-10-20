@@ -84,11 +84,25 @@ import { SWEEP_DONE, SWEEP_GLOW, SWEEP_REST } from '../lib/sunglook';
  * Exported because the slot's height is derived from it and the probe
  * asserts the relationship. Two numbers that must agree, written once.
  */
-export const SUNG_SIZE = 'clamp(1.35rem, 5.2vh, 3rem)';
-/** While a take is running the words have the whole phone, so they grow. */
-export const SUNG_SIZE_FULL = 'clamp(1.7rem, 6.6vh, 3.6rem)';
+/** Held to the width as well as the height, for the same reason as the full
+    screen's below: a tall phone made it nearly fifty pixels, and the line
+    was cut off after three words. */
+export const SUNG_SIZE = 'clamp(1.2rem, min(4.4vh, 5.6vw), 3rem)';
+/**
+ * While a take is running the words have the whole phone.
+ *
+ * They grew with the screen's height (6.6vh) and a phone is tall and narrow,
+ * so the line being sung was nearly sixty pixels high and a whole line never
+ * fit: the owner, 20 October 2026, *"die woorde wat gehighlight word se size
+ * moet kleiner sodat mens die hele sin mooi kan lees. Huidiglik sny dit die
+ * sin en woorde af."* Now the width decides too, and the line has three rows
+ * rather than two, so a whole sung line is read at once.
+ */
+export const SUNG_SIZE_FULL = 'clamp(1.25rem, min(5.2vh, 6.4vw), 3rem)';
 /** `leading-tight` × two lines. */
 export const SUNG_LINES = 2.5;
+/** `leading-tight` × three lines, on the full screen. */
+export const SUNG_LINES_FULL = 3.75;
 
 /** So an empty slot is exactly as tall as a full one. */
 const BLANK = ' ';
@@ -201,12 +215,13 @@ export default function SungWords({
       style={{ ['--sung' as string]: full ? SUNG_SIZE_FULL : SUNG_SIZE }}
     >
       {full && (
-        <p data-slot="earlier" className="h-7 w-full max-w-3xl truncate text-lg leading-7 text-zinc-700">
+        <p data-slot="earlier" className="h-10 w-full max-w-3xl line-clamp-2 break-words text-sm leading-5 text-zinc-700">
           {earlier}
         </p>
       )}
-      {/* The line before. One line, always. */}
-      <p data-slot="before" className={`w-full max-w-3xl truncate text-zinc-600 ${full ? 'h-8 text-xl leading-8' : 'h-6 text-base leading-6'}`}>
+      {/* The line before. One line, always — two on the full screen, where
+          there is room to read the whole of it. */}
+      <p data-slot="before" className={`w-full max-w-3xl text-zinc-600 ${full ? 'h-12 line-clamp-2 break-words text-base leading-6' : 'h-6 truncate text-base leading-6'}`}>
         {before}
       </p>
 
@@ -214,26 +229,26 @@ export default function SungWords({
       <div
         data-slot="sung"
         className="flex w-full max-w-4xl items-center justify-center overflow-hidden"
-        style={{ height: `calc(var(--sung) * ${SUNG_LINES})` }}
+        style={{ height: `calc(var(--sung) * ${full ? SUNG_LINES_FULL : SUNG_LINES})` }}
       >
         {counting ? (
           <span className="text-5xl font-black leading-none text-emerald-400 tabular-nums">{count}</span>
         ) : (
-          <p className="line-clamp-2 font-black leading-tight text-white" style={{ fontSize: 'var(--sung)' }}>
+          <p className={`${full ? 'line-clamp-3' : 'line-clamp-2'} break-words font-black leading-tight text-white`} style={{ fontSize: 'var(--sung)' }}>
             {at !== undefined && sungLine ? <Swept line={sungLine} at={at} /> : sung}
           </p>
         )}
       </div>
 
-      {/* The line after. One line, always. */}
-      <p data-slot="after" className={`w-full max-w-3xl truncate text-zinc-400 ${full ? 'h-10 text-2xl font-bold leading-10' : 'h-7 text-lg leading-7'}`}>
+      {/* The line after. One line, always — two on the full screen. */}
+      <p data-slot="after" className={`w-full max-w-3xl text-zinc-400 ${full ? 'h-14 line-clamp-2 break-words text-lg font-bold leading-7' : 'h-7 truncate text-lg leading-7'}`}>
         {after}
       </p>
       {later.map((text, index) => (
         <p
           key={index}
           data-slot="later"
-          className={`w-full max-w-3xl truncate ${index ? 'text-zinc-700' : 'text-zinc-600'} ${full ? 'h-8 text-xl leading-8' : 'h-6 text-base leading-6'}`}
+          className={`w-full max-w-3xl ${index ? 'text-zinc-700' : 'text-zinc-600'} ${full ? 'h-12 line-clamp-2 break-words text-base leading-6' : 'h-6 truncate text-base leading-6'}`}
         >
           {text}
         </p>

@@ -48,13 +48,24 @@
  *   delay       a delay with feedback and a wet level
  *   reverb      a convolver over a generated impulse
  *
- * NOT built, and named so nobody goes looking:
+ * And, since 20 October 2026 (the owner: *"Ek sien die woorde sê, die gate,
+ * vocoder ens. Is nog nie gebou nie. Kan ons werk maak daarvan."*), two that
+ * this file once said could not be made from these nodes. They can:
  *
- *   gate        a downward expander cannot be made from these nodes. Doing it
- *               properly means a worklet, which means a second code path for
- *               the offline render — the one thing this file exists to avoid
- *   voice tuner and vocoder — both are real signal processing, not a graph of
- *               nodes, and both deserve their own build
+ *   gate        the sound's own level, measured by nodes: a WaveShaper that
+ *               takes the size of every sample, a low-pass that smooths that
+ *               into a level, and a second WaveShaper that turns the level
+ *               into "open" or "shut" — driving the gain of the sound itself
+ *               through an AudioParam. Five milliseconds of delay on the sound
+ *               lets the door open before the first syllable arrives
+ *   vocoder     sixteen bands. In each, the voice's level (measured the same
+ *               way) drives the gain of the same band of a chord of sawtooth
+ *               oscillators, so the chord speaks with the voice's mouth
+ *
+ * Still not in this file:
+ *
+ *   voice tuner it has to hear a pitch before it can move it, and no node
+ *               hears. It is a press that rewrites the lane (`lib/tuner.ts`)
  *   amp modeler already exists, in `lib/nam.ts`, and runs before this chain
  *
  * ── The visualizers ──────────────────────────────────────────────────────
@@ -124,6 +135,23 @@ export interface DelaySettings {
   readonly mix: number;
 }
 
+export interface GateSettings {
+  /** Below this level the lane is shut, in dB. */
+  readonly threshold: number;
+  /** How quickly the door follows the sound, in seconds. */
+  readonly speed: number;
+}
+
+export type VocoderChord = 'one' | 'fifth' | 'triad' | 'minor';
+
+export interface VocoderSettings {
+  /** The note the chord is built on, as a MIDI number (48 is the C below middle C). */
+  readonly note: number;
+  readonly chord: VocoderChord;
+  /** How much robot against how much voice, 0 to 1. */
+  readonly mix: number;
+}
+
 export interface ReverbSettings {
   /** Seconds the tail takes to die away. */
   readonly size: number;
@@ -138,6 +166,8 @@ export interface ReverbSettings {
  * rounds the sound.
  */
 export interface Fx {
+  readonly gate?: GateSettings;
+  readonly vocoder?: VocoderSettings;
   readonly eq?: EqSettings;
   readonly compressor?: CompressorSettings;
   readonly limiter?: { readonly ceiling: number };
@@ -168,7 +198,50 @@ export const FX_DEFAULTS = {
   chorus: { rate: 0.8, depth: 0.5 } as WobbleSettings,
   delay: { time: 0.32, feedback: 0.35, mix: 0.3 } as DelaySettings,
   reverb: { size: 1.8, mix: 0.25 } as ReverbSettings,
+  gate: { threshold: -42, speed: 0.03 } as GateSettings,
+  vocoder: { note: 48, chord: 'triad', mix: 0.85 } as VocoderSettings,
 } as const;
+
+/** The notes of each vocoder chord, in semitones above its root. */
+export const VOCODER_CHORDS: Readonly<Record<VocoderChord, readonly number[]>> = {
+  one: [0],
+  fifth: [0, 7, 12],
+  triad: [0, 4, 7],
+  minor: [0, 3, 7],
+};
+
+/** Finer than the shapers' curve: a gate works near silence, where 1024
+    steps across −1…1 leave only a handful below −40 dB. */
+const GATE_CURVE = 8192;
+
+/** The size of every sample: |x|. What a level is measured from. */
+export function sizeCurve(): Float32Array<ArrayBuffer> {
+  const out = new Float32Array(new ArrayBuffer(GATE_CURVE * 4));
+  for (let i = 0; i < GATE_CURVE; i += 1) out[i] = Math.abs((i / (GATE_CURVE - 1)) * 2 - 1);
+  return out;
+}
+
+/**
+ * Level in, how open the door is out: shut under half the threshold, open
+ * over it, and an S-curve between so it does not click. The picture of the
+ * gate is drawn from the same numbers.
+ */
+export function gateCurve(threshold: number): Float32Array<ArrayBuffer> {
+  const level = Math.pow(10, threshold / 20);
+  const out = new Float32Array(new ArrayBuffer(GATE_CURVE * 4));
+  for (let i = 0; i < GATE_CURVE; i += 1) out[i] = gateOpen((i / (GATE_CURVE - 1)) * 2 - 1, level);
+  return out;
+}
+
+/** How open the gate is at one level, 0 to 1. */
+export function gateOpen(x: number, level: number): number {
+  if (x <= 0) return 0;
+  const share = x / level;
+  if (share <= 0.5) return 0;
+  if (share >= 1) return 1;
+  const s = (share - 0.5) / 0.5;
+  return s * s * (3 - 2 * s);
+}
 
 /** Whether anything at all is switched on. */
 export function anyFx(fx: Fx | undefined): boolean {
@@ -314,12 +387,43 @@ export interface Chain {
 export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null {
   if (!anyFx(fx) || !fx) return null;
 
-  const nodes: AudioNode[] = [];
+  /* In series: each stage's way out into the next one's way in. Most
+     stages are one node; the gate and the vocoder are a few, with a way in
+     and a way out of their own. */
+  const stages: { readonly into: AudioNode; readonly out: AudioNode }[] = [];
   const running: AudioScheduledSourceNode[] = [];
   /** Add a node in series. */
   const add = (node: AudioNode): void => {
-    nodes.push(node);
+    stages.push({ into: node, out: node });
   };
+  /** The level of whatever goes into `from`, smoothed over `seconds`. */
+  const levelOf = (from: AudioNode, seconds: number): AudioNode => {
+    const size = ctx.createWaveShaper();
+    size.curve = sizeCurve();
+    const smooth = ctx.createBiquadFilter();
+    smooth.type = 'lowpass';
+    smooth.frequency.value = Math.max(2, Math.min(80, 1 / (2 * Math.PI * Math.max(0.002, seconds))));
+    smooth.Q.value = 0.5;
+    from.connect(size).connect(smooth);
+    return smooth;
+  };
+
+  if (fx.gate) {
+    /* First on the desk, as on any desk: a gate that comes after a
+       compressor is listening to a sound whose quiet parts were brought up. */
+    const into = ctx.createGain();
+    const late = ctx.createDelay(0.05);
+    late.delayTime.value = 0.005;
+    const door = ctx.createGain();
+    /* Shut on its own; the level opens it. A gain param adds what is
+       connected to it to its own value. */
+    door.gain.value = 0;
+    const open = ctx.createWaveShaper();
+    open.curve = gateCurve(fx.gate.threshold);
+    levelOf(into, fx.gate.speed).connect(open).connect(door.gain);
+    into.connect(late).connect(door);
+    stages.push({ into, out: door });
+  }
 
   if (fx.utility) {
     const trim = ctx.createGain();
@@ -394,6 +498,52 @@ export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null 
     add(stop);
   }
 
+  if (fx.vocoder) {
+    const into = ctx.createGain();
+    const out = ctx.createGain();
+    const mix = Math.max(0, Math.min(1, fx.vocoder.mix));
+    const dryPart = ctx.createGain();
+    dryPart.gain.value = 1 - mix;
+    into.connect(dryPart).connect(out);
+    /* The chord the voice will speak through: sawtooths, because a sawtooth
+       has every overtone and so something in every band. */
+    const notes = VOCODER_CHORDS[fx.vocoder.chord] ?? VOCODER_CHORDS.one;
+    const chord = ctx.createGain();
+    chord.gain.value = 0.6 / notes.length;
+    for (const step of notes) {
+      const saw = ctx.createOscillator();
+      saw.type = 'sawtooth';
+      saw.frequency.value = 440 * Math.pow(2, (fx.vocoder.note + step - 69) / 12);
+      saw.connect(chord);
+      running.push(saw);
+    }
+    const robot = ctx.createGain();
+    /* Sixteen narrow bands each let a sixteenth of the sound through, and a
+       band's level is a fraction of its peak: made up here so the robot
+       stands about as loud as the voice did. */
+    robot.gain.value = mix * 18;
+    const BANDS = 16;
+    for (let band = 0; band < BANDS; band += 1) {
+      const hz = 120 * Math.pow(7000 / 120, band / (BANDS - 1));
+      const ear = ctx.createBiquadFilter();
+      ear.type = 'bandpass';
+      ear.frequency.value = hz;
+      ear.Q.value = 5;
+      into.connect(ear);
+      const mouth = ctx.createBiquadFilter();
+      mouth.type = 'bandpass';
+      mouth.frequency.value = hz;
+      mouth.Q.value = 5;
+      chord.connect(mouth);
+      const say = ctx.createGain();
+      say.gain.value = 0;
+      levelOf(ear, 0.012).connect(say.gain);
+      mouth.connect(say).connect(robot);
+    }
+    robot.connect(out);
+    stages.push({ into, out });
+  }
+
   if (fx.tremolo) {
     const wobble = ctx.createGain();
     /* The gain rides between 1 and 1 − depth, so at full depth it reaches
@@ -415,10 +565,10 @@ export function wireFx(ctx: BaseAudioContext, fx: Fx | undefined): Chain | null 
      because that is what a send is: the dry sound goes on to the output and a
      copy of it goes through the effect and is mixed back in. Putting a reverb
      in series would mean turning it up turned the dry sound down. */
-  const input: AudioNode = nodes[0] ?? ctx.createGain();
-  if (!nodes.length) nodes.push(input);
-  for (let i = 0; i < nodes.length - 1; i += 1) nodes[i].connect(nodes[i + 1]);
-  const dry = nodes[nodes.length - 1];
+  if (!stages.length) add(ctx.createGain());
+  const input: AudioNode = stages[0].into;
+  for (let i = 0; i < stages.length - 1; i += 1) stages[i].out.connect(stages[i + 1].into);
+  const dry = stages[stages.length - 1].out;
   dry.connect(output);
 
   if (fx.chorus) {

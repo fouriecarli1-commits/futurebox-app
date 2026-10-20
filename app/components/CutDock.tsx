@@ -82,6 +82,14 @@ export interface BenchSpec {
   readonly what: readonly [string, string];
   /** Something behind this bench spends credits. */
   readonly paid?: boolean;
+  /**
+   * A bench whose whole point is the picture changing: on a phone it takes a
+   * third of the screen rather than half, so the film and the ruler stay in
+   * sight while it is used. The owner, 20 October 2026, of the filters:
+   * *"Hierdie filter bar maak dit moeilik om die filters op die video te
+   * kyk. Selfs die ruler kan nie links en regs geskuif word nie."*
+   */
+  readonly low?: boolean;
 }
 
 function BenchButton({
@@ -215,8 +223,12 @@ const LOWER: readonly BenchSpec[] = [
   {
     id: 'looks',
     icon: <Wand2 className="h-5 w-5" />,
-    label: ['cut.looks', 'Looks'],
-    what: ['cut.looksWhat', 'Thirteen looks, applied in your own browser, on the shot you have picked.'],
+    /* "Filters", not "Looks": the owner, 20 October 2026, "Looks moet
+       eintlik filters wees." The id stays `looks` — the probes and the
+       bench are keyed on it. */
+    label: ['cut.looks', 'Filters'],
+    low: true,
+    what: ['cut.looksWhat', 'Colour filters and effect filters, applied in your own browser, on the shot you have picked.'],
   },
   /* The owner, 17 October 2026, about another program's motion effects: *"Die
      effects … kan ook cool wees."* `lib/videomotion.ts`. */
@@ -359,7 +371,9 @@ export default function CutDock({
       className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[46dvh]'} ${
         atDesk ? 'w-[400px] shrink-0 2xl:w-[520px]' : ''
       }`}
-      style={atDesk ? { borderLeft: `1px solid ${EDGE}` } : undefined}
+      style={atDesk
+        ? { borderLeft: `1px solid ${EDGE}` }
+        : here.low && !edge ? { maxHeight: '32dvh' } : undefined}
     >
     <DeskSheet
       icon={here.icon}

@@ -28,7 +28,11 @@ ok('  drawn on the page, not inside the strip that scrolls and would clip it',
 ok('  and it shuts when she taps elsewhere or the strip moves',
   /addEventListener\('pointerdown', away\)/.test(editor) && /addEventListener\('scroll', shut, true\)/.test(editor));
 ok('the wand takes the frame she is looking at onto the shot bench',
-  /const wandFrame[\s\S]{0,400}frameFrom\(node/.test(editor) && /setShotPic\(String\(reader\.result\)\)/.test(editor));
+  /const wandFrame[\s\S]{0,900}frameFrom\(node/.test(editor) && /setShotPic\(String\(reader\.result\)\)/.test(editor));
+/* The owner, 20 October 2026: "Daai AI wand in video editor maak niks oop
+   nie." When no frame can be read it still opens, with the starting ideas. */
+ok('  and opens even when no frame can be read, rather than doing nothing',
+  /if \(!shot\) \{[\s\S]{0,1200}?setShotPic\(null\)[\s\S]{0,800}?setWandOpen\(true\)/.test(editor));
 ok('  and the shot bench is one panel in two places, not a copy',
   (editor.match(/\{shotPanel\}/g) ?? []).length === 2 && (editor.match(/data-editorshot /g) ?? []).length === 1);
 

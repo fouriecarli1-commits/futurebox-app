@@ -49,7 +49,7 @@ await page.addInitScript((who) => {
       expires_at: Math.floor(Date.now() / 1000) + 86400, expires_in: 86400,
       user: { id: who.id, email: who.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} },
     }));
-    window.localStorage.setItem('fb-kids-child-on', '1');
+    window.sessionStorage.setItem('fb-kids-child-on', '1');
   } catch { /* none */ }
 }, WHO);
 

@@ -122,57 +122,97 @@ export function styleAsk(style: MagicStyle, whole: boolean): string {
     : `Restyle the main thing in this part of the photograph as ${style.ask}. Keep its shape, size, position and angle so it fits back into the photograph. Keep the edges of the picture as they are.`;
 }
 
-/* ── The meerkat on every tile ───────────────────────────────────────── */
+/* ── The rocket on every tile ────────────────────────────────────────
+
+   It was a meerkat. The owner, 20 October 2026, with a photograph of the
+   video desk's kinds: *"Hierdie meerkat prent lyk nie goed nie. Kan ons iets
+   anders gebruik wat eenvoudig vir jou is. Dalk 'n space rocket?"* A rocket
+   is a handful of clean shapes, so it reads at 68 pixels and every style
+   below has something definite to redraw: a hull, a trim, a window and a
+   flame. The parts keep the roles the animal's had — the hull is what the
+   styles once called fur, the trim the belly, the window's rim the mask and
+   the nozzle the nose — so every style draws the rocket the way it drew the
+   animal. */
 
 export interface Part {
   readonly path: Path2D;
   readonly ink: string;
-  /** Part of the outline (the fur), not a mark inside it. */
+  /** Part of the outline (the hull), not a mark inside it. */
   readonly shape: boolean;
 }
 
-const FUR = '#c9a06a';
-const BELLY = '#ecd6aa';
-const MASK = '#4a3220';
-const DARK = '#22160c';
+const HULL = '#e6eaf2';
+const TRIM = '#ef4b3c';
+const RIM = '#2b3550';
+const NOZZLE = '#1b2233';
+const GLINT = '#f5efe2';
 
-/** The meerkat's upper body and face on an `s`-pixel square, back to front. */
-export function meerkat(s: number): Part[] {
-  const e = (x: number, y: number, rx: number, ry: number, turn = 0): Path2D => {
+/** The rocket on an `s`-pixel square, back to front: flame, fins, hull, marks. */
+export function rocket(s: number): Part[] {
+  const at = (x: number, y: number): [number, number] => [s * x, s * y];
+  const shape = (points: readonly (readonly [number, number])[]): Path2D => {
     const p = new Path2D();
-    p.ellipse(s * x, s * y, s * rx, s * ry, turn, 0, Math.PI * 2);
+    points.forEach(([x, y], i) => (i ? p.lineTo(...at(x, y)) : p.moveTo(...at(x, y))));
+    p.closePath();
     return p;
   };
+  const round = (x: number, y: number, r: number): Path2D => {
+    const p = new Path2D();
+    p.arc(s * x, s * y, s * r, 0, Math.PI * 2);
+    return p;
+  };
+  const flame = new Path2D();
+  flame.moveTo(...at(0.445, 0.81));
+  flame.quadraticCurveTo(...at(0.44, 0.9), ...at(0.5, 0.99));
+  flame.quadraticCurveTo(...at(0.56, 0.9), ...at(0.555, 0.81));
+  flame.closePath();
+  const core = new Path2D();
+  core.moveTo(...at(0.47, 0.81));
+  core.quadraticCurveTo(...at(0.47, 0.87), ...at(0.5, 0.92));
+  core.quadraticCurveTo(...at(0.53, 0.87), ...at(0.53, 0.81));
+  core.closePath();
+  const hull = new Path2D();
+  hull.moveTo(...at(0.5, 0.12));
+  hull.bezierCurveTo(...at(0.42, 0.18), ...at(0.395, 0.3), ...at(0.395, 0.42));
+  hull.lineTo(...at(0.4, 0.78));
+  hull.lineTo(...at(0.6, 0.78));
+  hull.lineTo(...at(0.605, 0.42));
+  hull.bezierCurveTo(...at(0.605, 0.3), ...at(0.58, 0.18), ...at(0.5, 0.12));
+  hull.closePath();
+  const cone = new Path2D();
+  cone.moveTo(...at(0.5, 0.12));
+  cone.bezierCurveTo(...at(0.448, 0.16), ...at(0.42, 0.2), ...at(0.413, 0.25));
+  cone.lineTo(...at(0.587, 0.25));
+  cone.bezierCurveTo(...at(0.58, 0.2), ...at(0.552, 0.16), ...at(0.5, 0.12));
+  cone.closePath();
   return [
-    { path: e(0.5, 0.97, 0.2, 0.34), ink: FUR, shape: true },
-    { path: e(0.5, 1.0, 0.11, 0.27), ink: BELLY, shape: false },
-    { path: e(0.5, 0.58, 0.095, 0.11), ink: FUR, shape: true },
-    { path: e(0.395, 0.305, 0.028, 0.034, -0.3), ink: '#8f6a3e', shape: true },
-    { path: e(0.605, 0.305, 0.028, 0.034, 0.3), ink: '#8f6a3e', shape: true },
-    { path: e(0.5, 0.35, 0.115, 0.15), ink: FUR, shape: true },
-    { path: e(0.5, 0.465, 0.06, 0.07), ink: BELLY, shape: true },
-    { path: e(0.452, 0.345, 0.042, 0.03, 0.45), ink: MASK, shape: false },
-    { path: e(0.548, 0.345, 0.042, 0.03, -0.45), ink: MASK, shape: false },
-    { path: e(0.455, 0.342, 0.013, 0.013), ink: '#f5efe2', shape: false },
-    { path: e(0.545, 0.342, 0.013, 0.013), ink: '#f5efe2', shape: false },
-    { path: e(0.5, 0.515, 0.022, 0.016), ink: DARK, shape: false },
-    { path: e(0.445, 0.7, 0.042, 0.03, 0.4), ink: '#b8905c', shape: true },
-    { path: e(0.555, 0.7, 0.042, 0.03, -0.4), ink: '#b8905c', shape: true },
+    { path: flame, ink: '#ffb02e', shape: true },
+    { path: core, ink: '#fff1a8', shape: false },
+    { path: shape([[0.402, 0.6], [0.29, 0.79], [0.402, 0.76]]), ink: TRIM, shape: true },
+    { path: shape([[0.598, 0.6], [0.71, 0.79], [0.598, 0.76]]), ink: TRIM, shape: true },
+    { path: hull, ink: HULL, shape: true },
+    { path: cone, ink: TRIM, shape: false },
+    { path: shape([[0.399, 0.66], [0.601, 0.66], [0.601, 0.7], [0.399, 0.7]]), ink: TRIM, shape: false },
+    { path: round(0.5, 0.42, 0.058), ink: RIM, shape: false },
+    { path: round(0.5, 0.42, 0.04), ink: '#6fc8f5', shape: false },
+    { path: round(0.486, 0.405, 0.012), ink: GLINT, shape: false },
+    { path: shape([[0.494, 0.66], [0.506, 0.66], [0.506, 0.8], [0.494, 0.8]]), ink: TRIM, shape: true },
+    { path: shape([[0.44, 0.78], [0.56, 0.78], [0.58, 0.82], [0.42, 0.82]]), ink: NOZZLE, shape: true },
   ];
 }
 
-/** The nose, which a few styles draw on their own. */
-const noseOf = (s: number): Path2D => meerkat(s).find((one) => one.ink === DARK)?.path ?? new Path2D();
+/** The nozzle, which a few styles draw on their own. */
+const noseOf = (s: number): Path2D => rocket(s).find((one) => one.ink === NOZZLE)?.path ?? new Path2D();
 
 /** The whole animal as one outline, for styles that fill it as one thing. */
 function outline(s: number): Path2D {
   const all = new Path2D();
-  for (const part of meerkat(s)) if (part.shape) all.addPath(part.path);
+  for (const part of rocket(s)) if (part.shape) all.addPath(part.path);
   return all;
 }
 
 const flat = (ctx: CanvasRenderingContext2D, s: number, recolour?: (ink: string) => string): void => {
-  for (const part of meerkat(s)) {
+  for (const part of rocket(s)) {
     ctx.fillStyle = recolour ? recolour(part.ink) : part.ink;
     ctx.fill(part.path);
   }
@@ -183,7 +223,7 @@ const inked = (ctx: CanvasRenderingContext2D, s: number, ink: string, width: num
   ctx.strokeStyle = ink;
   ctx.lineWidth = width * 2;
   ctx.lineJoin = 'round';
-  for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path);
+  for (const part of rocket(s)) if (part.shape) ctx.stroke(part.path);
 };
 
 /** Only the lines: an outer outline, and the face marks drawn as lines. */
@@ -192,10 +232,10 @@ const linesOnly = (ctx: CanvasRenderingContext2D, s: number, width: number, inne
   ctx.fill(outline(s));
   inked(ctx, s, '#111', width);
   ctx.fillStyle = '#ffffff';
-  for (const part of meerkat(s)) if (part.shape) ctx.fill(part.path);
+  for (const part of rocket(s)) if (part.shape) ctx.fill(part.path);
   ctx.strokeStyle = '#111';
   ctx.lineWidth = width * 0.7;
-  if (inner) for (const part of meerkat(s)) if (!part.shape && part.ink !== '#f5efe2') ctx.stroke(part.path);
+  if (inner) for (const part of rocket(s)) if (!part.shape && part.ink !== GLINT) ctx.stroke(part.path);
   ctx.fillStyle = '#111';
   ctx.fill(noseOf(s));
 };
@@ -229,7 +269,7 @@ function material(ctx: CanvasRenderingContext2D, s: number, stops: readonly stri
   ctx.fillStyle = g;
   ctx.fill(outline(s));
   ctx.fillStyle = marks;
-  for (const part of meerkat(s)) if (part.ink === MASK || part.ink === DARK) ctx.fill(part.path);
+  for (const part of rocket(s)) if (part.ink === RIM || part.ink === NOZZLE) ctx.fill(part.path);
 }
 
 /** Sparkles over the outline, for glitter. */
@@ -359,14 +399,14 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
           }
         }
       }
-      if (id !== 'dither') { ctx.lineWidth = line * 0.6; for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path); }
+      if (id !== 'dither') { ctx.lineWidth = line * 0.6; for (const part of rocket(s)) if (part.shape) ctx.stroke(part.path); }
       break;
     }
     case 'soft3d':
     case 'clay':
     case 'cartoon3d':
     case 'glossy': {
-      for (const part of meerkat(s)) {
+      for (const part of rocket(s)) {
         const g = ctx.createRadialGradient(s * 0.42, s * 0.3, s * 0.02, s * 0.5, s * 0.55, s * 0.6);
         g.addColorStop(0, '#ffffff');
         g.addColorStop(id === 'glossy' ? 0.12 : 0.28, part.ink);
@@ -447,7 +487,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       ctx.fillRect(0, 0, s, s);
       ctx.lineWidth = line;
       ctx.shadowBlur = s / 10;
-      meerkat(s).forEach((part, k) => {
+      rocket(s).forEach((part, k) => {
         const ink = part.shape ? (k < 2 ? '#ff3dc8' : '#22d3ee') : '#fde047';
         ctx.strokeStyle = ink;
         ctx.shadowColor = ink;
@@ -457,7 +497,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
     }
     case 'pencil':
     case 'noir': {
-      if (id === 'noir') { ctx.fillStyle = '#d9d9d9'; ctx.fillRect(0, 0, s, s); flat(ctx, s, (ink) => (ink === DARK || ink === MASK ? '#000' : grey(ink))); }
+      if (id === 'noir') { ctx.fillStyle = '#d9d9d9'; ctx.fillRect(0, 0, s, s); flat(ctx, s, (ink) => (ink === NOZZLE || ink === RIM ? '#000' : grey(ink))); }
       ctx.save();
       ctx.clip(outline(s));
       ctx.strokeStyle = id === 'noir' ? 'rgba(0,0,0,0.8)' : 'rgba(60,60,60,0.5)';
@@ -471,7 +511,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       ctx.restore();
       ctx.strokeStyle = '#3a3a3a';
       ctx.lineWidth = Math.max(1, line * 0.6);
-      for (const part of meerkat(s)) if (part.ink !== '#f5efe2') ctx.stroke(part.path);
+      for (const part of rocket(s)) if (part.ink !== GLINT) ctx.stroke(part.path);
       break;
     }
     case 'watercolour':
@@ -504,9 +544,9 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
         ctx.restore();
         ctx.strokeStyle = id === 'crayon' ? '#6a4520' : '#5a4030';
         ctx.lineWidth = id === 'crayon' ? line * 0.9 : line * 0.5;
-        for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path);
+        for (const part of rocket(s)) if (part.shape) ctx.stroke(part.path);
       }
-      ctx.fillStyle = DARK;
+      ctx.fillStyle = NOZZLE;
       ctx.fill(noseOf(s));
       break;
     }
@@ -532,11 +572,11 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       ctx.save();
       ctx.globalCompositeOperation = 'multiply';
       ctx.translate(s * 0.012, s * 0.01);
-      flat(ctx, s, (ink) => (ink === DARK || ink === MASK ? '#ff4fa3' : '#ffd23f'));
+      flat(ctx, s, (ink) => (ink === NOZZLE || ink === RIM ? '#ff4fa3' : '#ffd23f'));
       ctx.translate(-s * 0.024, -s * 0.02);
       ctx.strokeStyle = '#2e86de';
       ctx.lineWidth = line * 0.8;
-      for (const part of meerkat(s)) ctx.stroke(part.path);
+      for (const part of rocket(s)) ctx.stroke(part.path);
       ctx.restore();
       break;
     }
@@ -552,7 +592,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
         ctx.fill();
       }
       inked(ctx, s, '#111', line * (id === 'moderncomic' ? 1.1 : 1.4));
-      flat(ctx, s, id === 'pop' ? (ink) => (ink === FUR ? '#ff7a1a' : ink === BELLY ? '#ffd0a8' : ink) : undefined);
+      flat(ctx, s, id === 'pop' ? (ink) => (ink === HULL ? '#ff7a1a' : ink === TRIM ? '#ffd0a8' : ink) : undefined);
       if (id !== 'comic') {
         ctx.save();
         ctx.clip(outline(s));
@@ -589,7 +629,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       break;
     case 'doodle': {
       inked(ctx, s, '#111', line * 0.8);
-      flat(ctx, s, (ink) => (ink === FUR ? '#ffb347' : ink === BELLY ? '#fff1c1' : ink));
+      flat(ctx, s, (ink) => (ink === HULL ? '#ffb347' : ink === TRIM ? '#fff1c1' : ink));
       const colours = ['#ff3dc8', '#22d3ee', '#34d399', '#8b5cf6'];
       ctx.lineWidth = line * 0.7;
       colours.forEach((one, k) => {
@@ -628,7 +668,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       }
       ctx.restore();
       ctx.fillStyle = '#111';
-      for (const part of meerkat(s)) if (part.ink === MASK || part.ink === DARK) ctx.fill(part.path);
+      for (const part of rocket(s)) if (part.ink === RIM || part.ink === NOZZLE) ctx.fill(part.path);
       break;
     }
     case 'crochet':
@@ -636,7 +676,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
     case 'stitched':
     case 'scrapbook': {
       if (id === 'stitched' || id === 'scrapbook') { ctx.fillStyle = '#e9e1d0'; ctx.fillRect(0, 0, s, s); }
-      for (const part of meerkat(s)) {
+      for (const part of rocket(s)) {
         ctx.save();
         ctx.clip(part.path);
         ctx.fillStyle = part.ink;
@@ -682,7 +722,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
         ctx.strokeStyle = id === 'plush' ? 'rgba(120,80,40,0.5)' : 'rgba(255,255,255,0.9)';
         ctx.lineWidth = line * 0.5;
         ctx.setLineDash([line, line * 0.7]);
-        for (const part of meerkat(s)) if (part.shape) ctx.stroke(part.path);
+        for (const part of rocket(s)) if (part.shape) ctx.stroke(part.path);
         ctx.setLineDash([]);
       }
       break;
@@ -690,7 +730,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
     case 'cutout': {
       ctx.fillStyle = '#cfe8f5';
       ctx.fillRect(0, 0, s, s);
-      for (const part of meerkat(s)) {
+      for (const part of rocket(s)) {
         ctx.shadowColor = 'rgba(0,0,0,0.28)';
         ctx.shadowBlur = s / 30;
         ctx.shadowOffsetY = s / 70;
@@ -701,7 +741,7 @@ export function drawStyleTile(canvas: HTMLCanvasElement, id: string): void {
       break;
     }
     case 'vintage': {
-      flat(ctx, s, (ink) => (ink === DARK || ink === MASK ? '#3b2a1a' : '#b08a5a'));
+      flat(ctx, s, (ink) => (ink === NOZZLE || ink === RIM ? '#3b2a1a' : '#b08a5a'));
       const v = ctx.createRadialGradient(s / 2, s / 2, s * 0.25, s / 2, s / 2, s * 0.72);
       v.addColorStop(0, 'rgba(112,66,20,0.05)');
       v.addColorStop(1, 'rgba(60,35,10,0.55)');

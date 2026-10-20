@@ -10,6 +10,8 @@ import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { configured, stockVoices } from '@/app/lib/server/eleven';
 import {
   catalogue as singCatalogue,
+  instrumentCatalogue,
+  isInstrument,
   configured as singConfigured,
   models as singModels,
 } from '@/app/lib/server/kits';
@@ -35,6 +37,8 @@ async function singing(owner?: string | null, runsThePlace = false): Promise<{
   configured: boolean;
   models: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
   stock: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
+  /** Kits' instrument models, kept apart from the voices — see `instrumentCatalogue`. */
+  instruments: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
   /**
    * Whether who-owns-what could be read at all.
    *
@@ -84,13 +88,14 @@ async function singing(owner?: string | null, runsThePlace = false): Promise<{
      top of a list labelled "your trained voices". */
   if (!singConfigured()) {
     return {
-      configured: false, models: [], stock: [], voicesKnown: true,
+      configured: false, models: [], stock: [], instruments: [], voicesKnown: true,
       minutesLeft: null, minutesEach: minutesEach(),
     };
   }
-  const [trained, theirs, used, held] = await Promise.all([
+  const [trained, theirs, played, used, held] = await Promise.all([
     singModels(),
     singCatalogue(),
+    instrumentCatalogue(),
     owner ? mineSeconds(owner) : Promise.resolve(null),
     owner ? myVoices(owner) : Promise.resolve([] as const),
   ]);
@@ -130,7 +135,9 @@ async function singing(owner?: string | null, runsThePlace = false): Promise<{
   return {
     configured: true,
     models: [...yours, ...toGive],
-    stock: theirs,
+    /* Singers here, instruments in their own list: the catalogue holds both. */
+    stock: theirs.filter((one) => !isInstrument(one, played)),
+    instruments: played,
     /* Null when the table could not be read, so a screen can say "could not
        check" instead of drawing an empty list that looks like "you have
        none". `ownvoices.ts` has the note on why a failed read closes. */

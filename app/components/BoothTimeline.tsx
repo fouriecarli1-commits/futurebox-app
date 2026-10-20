@@ -62,6 +62,7 @@ import { shapeOf } from '../lib/takes';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
 import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
+import { Pencil } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 
 /* ── The booth's own palette ──────────────────────────────────────────── */
@@ -132,6 +133,79 @@ export interface TimelineLane {
   readonly lane: Lane;
   /** Its sections, where the song has been read. Drawn on the ruler. */
   readonly spans?: readonly Span[];
+}
+
+/**
+ * The lane's name on its clip, and the way to rename it.
+ *
+ * The owner, 20 October 2026: *"Die naam wat op die track wys is oulik. Dit
+ * sal gaaf wees as ek daarop kan click en die track name op elke lane kan
+ * verander."* A tap on the name opens a box in its place; Enter or tapping
+ * away keeps it, Escape leaves it as it was. The press is kept from the clip
+ * under it, so tapping the name never drags the clip. It sits clear of the
+ * fade grip in the corner.
+ */
+function ClipName({ name, roomy, onRename }: {
+  readonly name: string;
+  /** Wide enough for a 44-pixel press beside the fade grip. A narrow clip
+      shows its name and is renamed once it is zoomed in, or from Track
+      controls — a press narrower than a thumb is not a press. */
+  readonly roomy: boolean;
+  readonly onRename: (name: string) => void;
+}): React.ReactElement {
+  const { t } = useLang();
+  const [draft, setDraft] = useState<string | null>(null);
+  const label = (
+    <span className="flex max-w-full items-center gap-1 overflow-hidden rounded bg-cyan-950/80 px-2 py-0.5 text-[9px] font-black tracking-widest text-cyan-300 border border-cyan-400/40 shadow-[0_0_8px_rgba(6,182,212,0.3)] uppercase select-none">
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400 animate-pulse" />
+      <span className="truncate">{name}</span>
+      {roomy && <Pencil className="h-2.5 w-2.5 shrink-0 opacity-70" aria-hidden />}
+    </span>
+  );
+  if (!roomy) {
+    return <span className="pointer-events-none absolute left-2 top-1.5 z-10 flex max-w-[calc(100%-1rem)]">{label}</span>;
+  }
+  const keep = (yes: boolean): void => {
+    const next = (draft ?? '').trim().slice(0, 60);
+    if (yes && next && next !== name) onRename(next);
+    setDraft(null);
+  };
+  if (draft !== null) {
+    return (
+      <input
+        data-cliprename
+        autoFocus
+        value={draft}
+        maxLength={60}
+        aria-label={t('pro.renameLane', 'Rename this lane')}
+        onChange={(event) => setDraft(event.target.value)}
+        onPointerDown={(event) => event.stopPropagation()}
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === 'Enter') keep(true);
+          if (event.key === 'Escape') keep(false);
+        }}
+        onBlur={() => keep(true)}
+        className="absolute left-6 top-1 z-20 h-9 w-[min(16rem,calc(100%-2rem))] rounded-md border border-cyan-400/70 px-2 text-xs font-bold text-cyan-100 outline-hidden"
+        style={{ background: '#05060a' }}
+      />
+    );
+  }
+  return (
+    <button
+      type="button"
+      data-clipname
+      title={t('pro.renameLane', 'Rename this lane')}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        setDraft(name);
+      }}
+      className="absolute left-6 top-0 z-10 flex h-11 min-w-11 max-w-[calc(100%-2rem)] items-start pt-1.5"
+    >
+      {label}
+    </button>
+  );
 }
 
 export default function BoothTimeline({
@@ -1636,10 +1710,11 @@ export default function BoothTimeline({
                       onSlide(moving.map((one) => ({ id: one.id, at: one.at + shift })));
                     }}
                   >
-                    <span className="pointer-events-none absolute left-2 top-1.5 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 overflow-hidden rounded bg-cyan-950/80 px-2 py-0.5 text-[9px] font-black tracking-widest text-cyan-300 border border-cyan-400/40 shadow-[0_0_8px_rgba(6,182,212,0.3)] uppercase select-none">
-                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                      <span className="truncate">{lane.name}</span>
-                    </span>
+                    <ClipName
+                      name={lane.name}
+                      roomy={wide > 0 && (plays / Math.max(0.001, scaleTotal)) * wide >= 84}
+                      onRename={(name) => onChange(lane.id, { name })}
+                    />
                     <Wave lane={lane} />
                     {/* ── Where it goes round ────────────────────────
 
@@ -1713,20 +1788,9 @@ export default function BoothTimeline({
                         ));
                       })}
 
-                    {/* The lane's name, on the clip.
-
-                        A block of colour with a wave in it says which lane
-                        it is only if you read the gutter at the same time,
-                        and on a phone the gutter truncates at about twelve
-                        characters. It is also what is left when the wave
-                        cannot draw — which is how the owner found the canvas
-                        fault above, looking at a clip that said nothing. */}
-                    <span
-                      className="pointer-events-none absolute left-1.5 top-1 max-w-[calc(100%-1rem)] truncate text-[10px] font-bold"
-                      style={{ color: 'rgba(5,6,10,0.75)' }}
-                    >
-                      {lane.name}
-                    </span>
+{/* The lane's name is the chip at the top of the clip (`ClipName`).
+                        A second, plain label used to sit under it here; with
+                        the chip there it was drawn and never seen. */}
                     {/* ── That this one is locked to another ──────────────
 
                         On the clip rather than in the gutter, and numbered.

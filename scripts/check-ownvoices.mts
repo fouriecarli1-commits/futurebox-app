@@ -190,7 +190,7 @@ ok('the picker lists only the voices this member has been given',
   + ' shared account every member’s voice is one of "ours"');
 
 ok('  and the stock catalogue still goes to everybody',
-  /stock: theirs,/.test(list),
+  /stock: theirs(\.filter\(\(one\) => !isInstrument\(one, played\)\))?,/.test(list),
   'somebody with no voice of their own has to have something to sing in');
 
 ok('  while the owner of the place also sees the ones not yet given out',
