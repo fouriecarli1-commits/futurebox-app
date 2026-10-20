@@ -1759,7 +1759,10 @@ export default function MakeMusic({
                 value={canvas.style}
                 onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
                 placeholder={t('make.soundPlaceholder')}
-                rows={2}
+                /* Three lines: at two, a phone cut the example through the
+                   middle of its third ("…or paste something the copilot
+                   wrote"), and a style worth writing is longer than that. */
+                rows={3}
                 className="mt-1.5 w-full resize-y rounded-xl border border-zinc-800 bg-black/60 px-4 py-3 pr-11 text-base leading-relaxed text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
               />
               <SpeakButton onHeard={(said) => setCanvas((was) => ({ ...was, style: withSaid(was.style, said) }))} className="absolute bottom-2 right-2" />
