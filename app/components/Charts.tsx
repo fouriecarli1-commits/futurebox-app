@@ -153,7 +153,7 @@ export default function Charts({
         <span className="block truncate text-sm text-zinc-500">{row.by}</span>
       </span>
       <span className="shrink-0 text-sm tabular-nums text-emerald-400">
-        {row.count} {t('chart.plays', 'plays')}
+        {row.count} {row.count === 1 ? t('chart.play', 'play') : t('chart.plays', 'plays')}
       </span>
     </button>
   );

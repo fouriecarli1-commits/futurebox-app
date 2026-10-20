@@ -609,7 +609,7 @@ export default function SongSections({
               ))}
             </select>
             <span className="hidden shrink-0 rounded border border-emerald-800/60 bg-emerald-950/80 px-2 py-0.5 font-mono text-[9px] text-emerald-400 sm:inline">
-              {clock(duration)} • {parts.length} {t('sec.sections', 'sections')}
+              {clock(duration)} • {parts.length} {parts.length === 1 ? t('sec.section', 'section') : t('sec.sections', 'sections')}
             </span>
           </div>
           <div className="flex w-full flex-col text-[11px] sm:w-48">

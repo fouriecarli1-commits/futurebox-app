@@ -287,7 +287,7 @@ export async function charge(
       ok: false,
       response: Response.json(
         {
-          message: `That needs ${amount} credits and you have ${balance}.`,
+          message: `That needs ${amount} ${amount === 1 ? 'credit' : 'credits'} and you have ${balance}.`,
           needsCredits: true,
           need: amount,
           balance,

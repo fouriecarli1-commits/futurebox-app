@@ -1124,7 +1124,7 @@ export default function Storyboard({
           </p>
 
           <p className="text-sm text-zinc-400 tabular-nums">
-            {board.shots.length} {t('board.shots', 'shots')} · {clock(total)}
+            {board.shots.length} {board.shots.length === 1 ? t('board.shotOne', 'shot') : t('board.shots', 'shots')} · {clock(total)}
             {song ? ` · ${t('board.songIs', 'the song is')} ${clock(song.seconds)}` : ''}
             {short > 0 ? ` · ${short} ${t('board.stillToMake', 'still to make')}` : ''}
           </p>

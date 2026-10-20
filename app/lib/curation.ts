@@ -161,7 +161,7 @@ function substanceSignal(summary: string): Signal {
 function depthSignal(kind: ItemKind, minutes: number): Signal {
   if (kind === 'paper') return { label: 'Primary research', delta: 12, detail: 'A paper, not a summary of one.' };
   if (minutes < 4) {
-    return { label: 'Very short', delta: -8, detail: `${minutes} minutes cannot carry an argument, only a claim.` };
+    return { label: 'Very short', delta: -8, detail: `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} cannot carry an argument, only a claim.` };
   }
   if (minutes >= 40) {
     return { label: 'Long form', delta: 8, detail: `${minutes} minutes — room to be wrong in public and get corrected.` };

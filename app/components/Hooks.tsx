@@ -1018,7 +1018,7 @@ export default function Hooks({
               </h2>
               <p className="text-[11px] text-emerald-300 font-mono">
                 {peaks
-                  ? `${formatMoment(peaks.seconds)} · ${hooks.length} ${t('hooks.regionsFound', 'moments found in the sound')}`
+                  ? `${formatMoment(peaks.seconds)} · ${hooks.length} ${hooks.length === 1 ? t('hooks.regionFound', 'moment found in the sound') : t('hooks.regionsFound', 'moments found in the sound')}`
                   : t('hooks.pickToDraw', 'Pick one of your songs and it is drawn here.')}
               </p>
             </div>

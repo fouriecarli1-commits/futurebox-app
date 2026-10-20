@@ -1520,9 +1520,12 @@ export function buys(credits: number): string {
   const songs = Math.floor(credits / CREDITS.song);
   // A video means the commonest one: ten seconds at the base grade.
   const videos = Math.floor(credits / videoCost('standard', 10));
-  if (songs < 1) return `${Math.floor(credits / CREDITS.halfSong)} half songs`;
+  if (songs < 1) {
+    const halves = Math.floor(credits / CREDITS.halfSong);
+    return `${halves} ${halves === 1 ? 'half song' : 'half songs'}`;
+  }
   if (videos < 1) return `${songs} ${songs === 1 ? 'song' : 'songs'}`;
-  return `${songs} songs or ${videos} videos`;
+  return `${songs} ${songs === 1 ? 'song' : 'songs'} or ${videos} ${videos === 1 ? 'video' : 'videos'}`;
 }
 
 /** The period key a monthly grant is written under, e.g. 'maker-2026-08'. */

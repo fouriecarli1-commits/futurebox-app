@@ -262,9 +262,9 @@ const REACH_WEIGHT: Record<PodcastTarget['reach'], number> = {
 const VERDICT = {
   aspirational: {
     en: (followers: string) =>
-      `Strong topic fit, but ${followers} followers is not yet the pitch. Bank a few releases first.`,
+      `Strong topic fit, but ${followers} ${followers === '1' ? 'follower' : 'followers'} is not yet the pitch. Bank a few releases first.`,
     af: (followers: string) =>
-      `Sterk pas op die onderwerp, maar ${followers} volgelinge is nog nie die vra werd nie. Kry eers ’n paar vrystellings agter die rug.`,
+      `Sterk pas op die onderwerp, maar ${followers} ${followers === '1' ? 'volgeling' : 'volgelinge'} is nog nie die vra werd nie. Kry eers ’n paar vrystellings agter die rug.`,
   },
   real: {
     en: (many: number) =>

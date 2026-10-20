@@ -730,7 +730,7 @@ export default function Channel({
                 </h2>
                 <p className="text-xs font-mono text-emerald-300 mt-0.5">
                   {handle ? `${handle} · ` : ''}{tracks.length} {tracks.length === 1 ? t('make.song', 'song') : t('make.songs', 'songs')}
-                  {lists.length > 0 && ` · ${lists.length} ${t('chan.lists', 'playlists')}`}
+                  {lists.length > 0 && ` · ${lists.length} ${lists.length === 1 ? t('chan.list', 'playlist') : t('chan.lists', 'playlists')}`}
                 </p>
                 <p className="text-[11px] text-zinc-300 mt-2 max-w-md">
                   {t('chan.hubNote', 'Everything you make in this app arrives here by itself, and stays on this device until you post it.')}

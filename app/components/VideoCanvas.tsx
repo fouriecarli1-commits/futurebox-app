@@ -1364,7 +1364,7 @@ export default function VideoCanvas({
                 <span className="block text-[11px] text-zinc-600 pt-1">
                   {active
                     ? `${t('canvas.another', 'Press again for another')} · ${variant + 1}/${one.scaffolds.length}`
-                    : `${one.scaffolds.length} ${t('canvas.ideas', 'ideas')}`}
+                    : `${one.scaffolds.length} ${one.scaffolds.length === 1 ? t('canvas.idea', 'idea') : t('canvas.ideas', 'ideas')}`}
                 </span>
               )}
               {one.speaks && (
