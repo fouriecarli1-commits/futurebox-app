@@ -86,6 +86,11 @@ try {
       const hidden = [];
       for (const el of Array.from(document.querySelectorAll('button, input, select, textarea, a'))) {
         if (bar.contains(el)) continue;
+        /* Not drawn at all: the page under the full-screen studio skips
+           rendering while the studio is open (`[data-pageunder]`, 20 October
+           2026), so its buttons still have boxes but nobody can see or press
+           them. `checkVisibility` is the browser's own answer to that. */
+        if (typeof el.checkVisibility === 'function' && !el.checkVisibility()) continue;
         const r = el.getBoundingClientRect();
         if (r.width < 8 || r.height < 8) continue;
         if (r.bottom <= over.top || r.top >= over.bottom) continue;

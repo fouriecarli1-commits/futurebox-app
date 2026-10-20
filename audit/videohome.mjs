@@ -171,13 +171,18 @@ try {
       return {
         border: style.borderTopWidth,
         radius: style.borderTopLeftRadius,
-        filled: alpha(style.backgroundColor) > 0.05 && style.backgroundColor !== behind,
+        /* A gradient is a fill — the rule `buttonlook.mjs` has had since the
+           light bars, and the one this file said it shared. The facelift
+           (20 October 2026) paints boxed buttons as a glass gradient with a
+           transparent background-colour, and this read only the colour. */
+        filled: style.backgroundImage !== 'none'
+          || (alpha(style.backgroundColor) > 0.05 && style.backgroundColor !== behind),
         height: one.getBoundingClientRect().height,
         /* Named, not just measured. "filled: false" is a fact nobody can act
            on; the colour it actually computed to and the classes it was asked
            for are what say whether the button lost its background or the
            probe is looking at the wrong button. */
-        paint: style.backgroundColor,
+        paint: style.backgroundImage !== 'none' ? 'gradient' : style.backgroundColor,
         behind,
         asked: String(one.className).slice(0, 90),
       };
