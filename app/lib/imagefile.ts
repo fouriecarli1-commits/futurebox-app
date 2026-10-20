@@ -132,7 +132,7 @@ function exifOrientation(view: DataView, tiff: number): number {
   return 1;
 }
 
-export async function measure(file: Blob): Promise<{ width: number; height: number } | null> {
+async function header(file: Blob): Promise<{ width: number; height: number; orientation: number } | null> {
   const head = new DataView(await file.slice(0, 256 * 1024).arrayBuffer());
   const byte = (at: number): number => (at < head.byteLength ? head.getUint8(at) : -1);
 
@@ -140,7 +140,7 @@ export async function measure(file: Blob): Promise<{ width: number; height: numb
      dimensions as big-endian 32-bit. Always at 16 and 20. */
   if (byte(0) === 0x89 && byte(1) === 0x50 && byte(2) === 0x4e && byte(3) === 0x47) {
     if (head.byteLength < 24) return null;
-    return { width: head.getUint32(16), height: head.getUint32(20) };
+    return { width: head.getUint32(16), height: head.getUint32(20), orientation: 1 };
   }
 
   /* WebP: 'RIFF' ... 'WEBP', then one of three chunk types, each of which
@@ -149,17 +149,17 @@ export async function measure(file: Blob): Promise<{ width: number; height: numb
       && byte(8) === 0x57 && byte(9) === 0x45 && byte(10) === 0x42 && byte(11) === 0x50) {
     const kind = String.fromCharCode(byte(12), byte(13), byte(14), byte(15));
     if (kind === 'VP8 ' && head.byteLength > 30) {
-      return { width: head.getUint16(26, true) & 0x3fff, height: head.getUint16(28, true) & 0x3fff };
+      return { width: head.getUint16(26, true) & 0x3fff, height: head.getUint16(28, true) & 0x3fff, orientation: 1 };
     }
     if (kind === 'VP8L' && head.byteLength > 25) {
       const bits = head.getUint32(21, true);
-      return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+      return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1, orientation: 1 };
     }
     if (kind === 'VP8X' && head.byteLength > 30) {
       /* Three bytes each, little-endian, and stored one less than they are. */
       const w = byte(24) | (byte(25) << 8) | (byte(26) << 16);
       const h = byte(27) | (byte(28) << 8) | (byte(29) << 16);
-      return { width: w + 1, height: h + 1 };
+      return { width: w + 1, height: h + 1, orientation: 1 };
     }
     return null;
   }
@@ -180,7 +180,7 @@ export async function measure(file: Blob): Promise<{ width: number; height: numb
        portrait phone photo came out squashed into the wrong shape. So the
        note is read on the way past, and an orientation of 5 to 8 (a quarter
        turn either way) swaps the two sides. */
-    let turned = false;
+    let orientation = 1;
     while (at + 9 < head.byteLength) {
       if (byte(at) !== 0xff) { at += 1; continue; }
       const marker = byte(at + 1);
@@ -188,8 +188,7 @@ export async function measure(file: Blob): Promise<{ width: number; height: numb
       if (marker === 0xff || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) { at += 2; continue; }
       const length = head.getUint16(at + 2);
       if (marker === 0xe1 && byte(at + 4) === 0x45 && byte(at + 5) === 0x78 && byte(at + 6) === 0x69 && byte(at + 7) === 0x66) {
-        const orientation = exifOrientation(head, at + 10);
-        turned = orientation >= 5 && orientation <= 8;
+        orientation = exifOrientation(head, at + 10);
       }
       /* Any start-of-frame: baseline, progressive, lossless, arithmetic — but
          not DHT (c4), DAC (cc) or the restart markers, which sit in the same
@@ -198,7 +197,7 @@ export async function measure(file: Blob): Promise<{ width: number; height: numb
       if (frame) {
         const height = head.getUint16(at + 5);
         const width = head.getUint16(at + 7);
-        return turned ? { width: height, height: width } : { width, height };
+        return { width, height, orientation };
       }
       if (length < 2) return null;
       at += 2 + length;
@@ -209,6 +208,115 @@ export async function measure(file: Blob): Promise<{ width: number; height: numb
   return null;
 }
 
+/**
+ * How big the picture is as it is SHOWN, read out of its own first bytes —
+ * the two sides swapped for a photo whose EXIF says to turn it a quarter.
+ */
+export async function measure(file: Blob): Promise<{ width: number; height: number } | null> {
+  const seen = await header(file);
+  if (!seen) return null;
+  return seen.orientation >= 5 && seen.orientation <= 8
+    ? { width: seen.height, height: seen.width }
+    : { width: seen.width, height: seen.height };
+}
+
+/* ── How this browser turns a photo while it shrinks it ──────────────────
+
+   The owner, 20 October 2026, a day of photographs coming out wrong: first
+   squashed (*"daai foto het 'n dadelike stretch"*), then *"Wanneer hy
+   foto's in bring gooi hy die foto's plat asof hulle val en gaan lê."*
+
+   A phone writes a portrait photo as a landscape frame and an EXIF note to
+   turn it, and browsers have not agreed on what `createImageBitmap` does
+   when it is asked both to turn a picture and to shrink it: the current
+   standard turns it first and then shrinks it to the size given; older
+   engines shrank the raw frame first and turned the result; some never
+   turn it at all. Each of those wants a different size asked for, and the
+   wrong guess squashes the photo or lays it on its side.
+
+   So the browser is asked once, with a picture small enough to cost
+   nothing — forty by twenty, red down its left edge, marked to be turned a
+   quarter clockwise — and what comes back says which kind it is. */
+type Turning = 'turns-first' | 'shrinks-first' | 'never-turns';
+let turning: Promise<Turning> | null = null;
+
+function howItTurns(): Promise<Turning> {
+  turning ??= (async (): Promise<Turning> => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 40;
+      canvas.height = 20;
+      const c = canvas.getContext('2d');
+      if (!c) return 'turns-first';
+      c.fillStyle = '#ffffff';
+      c.fillRect(0, 0, 40, 20);
+      c.fillStyle = '#ff0000';
+      c.fillRect(0, 0, 10, 20);
+      const plain = await new Promise<Blob | null>((done) => canvas.toBlob(done, 'image/jpeg', 0.95));
+      if (!plain) return 'turns-first';
+      const raw = new Uint8Array(await plain.arrayBuffer());
+      /* The smallest EXIF that says "turn a quarter clockwise" (6). */
+      const tiff = [0x49, 0x49, 0x2a, 0x00, 0x08, 0, 0, 0, 1, 0, 0x12, 0x01, 3, 0, 1, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0];
+      const body = [0x45, 0x78, 0x69, 0x66, 0, 0, ...tiff];
+      const app1 = [0xff, 0xe1, ((body.length + 2) >> 8) & 255, (body.length + 2) & 255, ...body];
+      const marked = new Uint8Array(raw.length + app1.length);
+      marked.set(raw.subarray(0, 2), 0);
+      marked.set(app1, 2);
+      marked.set(raw.subarray(2), 2 + app1.length);
+      /* Asked for the TURNED size, 20 by 40. */
+      const back = await createImageBitmap(new Blob([marked], { type: 'image/jpeg' }), {
+        imageOrientation: 'from-image', resizeWidth: 20, resizeHeight: 40,
+      });
+      if (back.width !== 20) { back.close(); return 'shrinks-first'; }
+      const look = document.createElement('canvas');
+      look.width = 20;
+      look.height = 40;
+      const l = look.getContext('2d', { willReadFrequently: true });
+      if (!l) { back.close(); return 'turns-first'; }
+      l.drawImage(back, 0, 0);
+      back.close();
+      const red = (x: number, y: number): boolean => {
+        const [r, g] = l.getImageData(x, y, 1, 1).data;
+        return r > 180 && g < 90;
+      };
+      /* Turned, the red is along the top; never turned, it is still down the left. */
+      if (red(10, 2) && !red(2, 30)) return 'turns-first';
+      if (red(2, 30)) return 'never-turns';
+      return 'turns-first';
+    } catch {
+      return 'turns-first';
+    }
+  })();
+  return turning;
+}
+
+/** Draw a raw frame upright, as its EXIF orientation (2–8) says. */
+async function upright(bitmap: ImageBitmap, orientation: number): Promise<ImageBitmap> {
+  const w = bitmap.width;
+  const h = bitmap.height;
+  const quarter = orientation >= 5 && orientation <= 8;
+  const canvas = document.createElement('canvas');
+  canvas.width = quarter ? h : w;
+  canvas.height = quarter ? w : h;
+  const c = canvas.getContext('2d');
+  if (!c) return bitmap;
+  const turns: Record<number, [number, number, number, number, number, number]> = {
+    2: [-1, 0, 0, 1, w, 0],
+    3: [-1, 0, 0, -1, w, h],
+    4: [1, 0, 0, -1, 0, h],
+    5: [0, 1, 1, 0, 0, 0],
+    6: [0, 1, -1, 0, h, 0],
+    7: [0, -1, -1, 0, h, w],
+    8: [0, -1, 1, 0, 0, w],
+  };
+  const turn = turns[orientation];
+  if (!turn) return bitmap;
+  c.setTransform(...turn);
+  c.drawImage(bitmap, 0, 0);
+  bitmap.close();
+  return createImageBitmap(canvas);
+}
+
 async function decode(file: File): Promise<ImageBitmap | Why> {
   if (!file.type.startsWith('image/')) return 'not_an_image';
   if (file.size > MAX_BYTES) return 'too_big';
@@ -216,28 +324,36 @@ async function decode(file: File): Promise<ImageBitmap | Why> {
   /* Before any decoder is asked for anything. A tab that is killed here does
      not throw, so there is no catch that helps — the only defence is not
      making the request. */
-  const size = await measure(file).catch(() => null);
-  if (size && size.width * size.height > MAX_PIXELS) return 'too_many_pixels';
+  const seen = await header(file).catch(() => null);
+  if (seen && seen.width * seen.height > MAX_PIXELS) return 'too_many_pixels';
 
   try {
     /* The resize goes INTO the decode. Where a browser honours it — Chrome
        does for JPEG — the full-size bitmap is never allocated at all, which
        is the difference between a scaled decode and a decode followed by a
        scale. Asked for only when the size is known, because both edges have
-       to be given for the aspect to survive. */
-    const scaled = size
+       to be given for the aspect to survive — and in the orientation this
+       browser expects them (`howItTurns`). */
+    const turnedPhoto = Boolean(seen && seen.orientation !== 1);
+    const how: Turning = turnedPhoto ? await howItTurns() : 'turns-first';
+    const quarter = Boolean(seen && seen.orientation >= 5 && seen.orientation <= 8);
+    const scaled = seen
       ? (() => {
-          const shrink = Math.min(1, BIGGEST_EDGE / Math.max(size.width, size.height));
-          return shrink < 1
-            ? {
-                resizeWidth: Math.max(1, Math.round(size.width * shrink)),
-                resizeHeight: Math.max(1, Math.round(size.height * shrink)),
-                resizeQuality: 'high' as const,
-              }
-            : {};
+          const shrink = Math.min(1, BIGGEST_EDGE / Math.max(seen.width, seen.height));
+          if (shrink >= 1) return {};
+          const rawW = Math.max(1, Math.round(seen.width * shrink));
+          const rawH = Math.max(1, Math.round(seen.height * shrink));
+          /* The standard: turned first, so the size asked for is the turned
+             one. The other two shrink the raw frame, so they are asked for
+             the raw size. */
+          const [resizeWidth, resizeHeight] = how === 'turns-first' && quarter ? [rawH, rawW] : [rawW, rawH];
+          return { resizeWidth, resizeHeight, resizeQuality: 'high' as const };
         })()
       : {};
-    return await createImageBitmap(file, { imageOrientation: 'from-image', ...scaled });
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image', ...scaled });
+    /* A browser that never turns a photo has handed back the raw frame: it
+       is turned here instead. */
+    return how === 'never-turns' && seen && seen.orientation !== 1 ? upright(bitmap, seen.orientation) : bitmap;
   } catch {
     // HEIC on a browser that cannot decode it lands here, which is the common
     // case on an iPhone talking to something other than Safari.

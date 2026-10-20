@@ -42,6 +42,15 @@ export default function CropSheet({
   useBackLayer(true, onClose);
   const [box, setBox] = useState<Box>(WHOLE);
   const [shape, setShape] = useState('any');
+  /* ── Typed dimensions ───────────────────────────────────────────────
+     The owner, 20 October 2026: *"Die crop werk uiteindelik, maar om
+     dimensies in 'n bar in te vul is ook belangrik."* A width and a height
+     in pixels: the box takes that shape, and the cut comes out at exactly
+     that size — 1080 × 1350 for a feed post, whatever the photo was. While
+     nothing is typed the bar shows the size of the box as it is dragged. */
+  const [exact, setExact] = useState<{ w: number; h: number } | null>(null);
+  const [typing, setTyping] = useState(false);
+  const [draft, setDraft] = useState({ w: '', h: '' });
   const shown = useRef<HTMLImageElement | null>(null);
   const grip = useRef<Grip>(null);
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -77,7 +86,7 @@ export default function CropSheet({
     if (grip.current === 'inside') {
       setBox((was) => moveBox(was, at.x - last.current!.x, at.y - last.current!.y));
     } else {
-      const want = SHAPES.find(([id]) => id === shape)?.[1] ?? null;
+      const want = exact ? exact.w / exact.h : SHAPES.find(([id]) => id === shape)?.[1] ?? null;
       setBox((was) => {
         const pulled = pullCorner(was, grip.current, at.x, at.y);
         return want ? toShape(pulled, size, want) : pulled;
@@ -93,15 +102,28 @@ export default function CropSheet({
   }, [shape, size]);
 
   const cut = (): void => {
-    if (!cropped(box)) { onClose(); return; }
+    if (!cropped(box) && !exact) { onClose(); return; }
     const part = cutTo(box, size);
     const made = document.createElement('canvas');
-    made.width = part.width;
-    made.height = part.height;
+    made.width = exact ? exact.w : part.width;
+    made.height = exact ? exact.h : part.height;
     const ctx = made.getContext('2d');
     if (!ctx) return;
-    ctx.drawImage(image, part.x, part.y, part.width, part.height, 0, 0, part.width, part.height);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(image, part.x, part.y, part.width, part.height, 0, 0, made.width, made.height);
     onCut(made);
+  };
+
+  /** The box as it is now, in the photo's own pixels. */
+  const boxNow = cutTo(box, size);
+  const useTyped = (): void => {
+    const w = Math.round(Number(draft.w));
+    const h = Math.round(Number(draft.h));
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w < 16 || h < 16 || w > 8000 || h > 8000) return;
+    setExact({ w, h });
+    setShape('exact');
+    setBox(toShape(WHOLE, size, w / h));
+    setTyping(false);
   };
 
   const pct = (n: number): string => `${(n * 100).toFixed(3)}%`;
@@ -148,14 +170,59 @@ export default function CropSheet({
 
       <div className="space-y-3 border-t border-zinc-800 px-4 py-3" style={{ paddingBottom: barClearance(12) }}>
         <p className="text-center text-xs text-zinc-400">{t('crop.how', 'Drag the corners and sides. Drag inside the box to move it.')}</p>
+        <form
+          data-cropsize
+          className="mx-auto grid max-w-sm grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto] items-center gap-2"
+          onSubmit={(event) => { event.preventDefault(); useTyped(); }}
+        >
+          <input
+            type="number"
+            inputMode="numeric"
+            min={16}
+            max={8000}
+            data-cropwidth
+            aria-label={t('crop.width', 'Width in pixels')}
+            value={typing ? draft.w : String(exact ? exact.w : boxNow.width)}
+            onFocus={() => { setTyping(true); setDraft({ w: String(exact ? exact.w : boxNow.width), h: String(exact ? exact.h : boxNow.height) }); }}
+            onChange={(event) => setDraft((was) => ({ ...was, w: event.target.value }))}
+            className="h-11 w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-900 px-2 text-center text-base tabular-nums text-zinc-100"
+          />
+          <span className="text-sm text-zinc-500">×</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={16}
+            max={8000}
+            data-cropheight
+            aria-label={t('crop.height', 'Height in pixels')}
+            value={typing ? draft.h : String(exact ? exact.h : boxNow.height)}
+            onFocus={() => { setTyping(true); setDraft({ w: String(exact ? exact.w : boxNow.width), h: String(exact ? exact.h : boxNow.height) }); }}
+            onChange={(event) => setDraft((was) => ({ ...was, h: event.target.value }))}
+            className="h-11 w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-900 px-2 text-center text-base tabular-nums text-zinc-100"
+          />
+          <span className="text-xs text-zinc-500">px</span>
+          <button
+            type="submit"
+            data-cropsizeuse
+            className="col-span-4 min-h-[44px] rounded-xl border border-emerald-500/60 bg-emerald-500/15 px-3 text-sm font-bold text-emerald-200"
+          >
+            {t('crop.sizeUse', 'Use this size')}
+          </button>
+        </form>
+        {exact ? (
+          <p className="text-center text-xs text-emerald-300" data-cropsizesays>
+            {`${t('crop.comesOut', 'Comes out at exactly')} ${exact.w} × ${exact.h} px`}
+            {exact.w > boxNow.width + 1 ? ` · ${t('crop.enlarged', 'larger than this part of the photo, so it is enlarged')}` : ''}
+          </p>
+        ) : null}
         <div className="flex flex-wrap justify-center gap-2">
           {SHAPES.map(([id]) => (
-            <button key={id} type="button" data-cropshape={id} aria-pressed={shape === id} onClick={() => setShape(id)}
+            <button key={id} type="button" data-cropshape={id} aria-pressed={shape === id} onClick={() => { setExact(null); setShape(id); }}
               className={`min-h-[44px] rounded-xl border px-3 text-sm font-bold ${shape === id ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200' : 'border-zinc-700 bg-zinc-900 text-zinc-300'}`}>
               {id === 'any' ? t('crop.any', 'Any shape') : id}
             </button>
           ))}
-          <button type="button" data-cropwhole onClick={() => { setShape('any'); setBox(WHOLE); }}
+          <button type="button" data-cropwhole onClick={() => { setExact(null); setShape('any'); setBox(WHOLE); }}
             className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-bold text-zinc-300">
             {t('crop.whole', 'Whole photo')}
           </button>

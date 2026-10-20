@@ -1458,6 +1458,12 @@ export default function PostStudio({
      the WHOLE photograph with the box over it — which is what every editor
      does, and the only way to drag a corner you cannot see. */
   const [cropBox, setCropBox] = useState<CropBox | null>(null);
+  /* Typed dimensions for the cut (the owner, 20 October 2026: *"om dimensies
+     in 'n bar in te vul is ook belangrik"*): the box keeps that shape while
+     it is dragged, and the cut comes out at exactly that many pixels. */
+  const [cropExact, setCropExact] = useState<{ w: number; h: number } | null>(null);
+  const [cropDraft, setCropDraft] = useState<{ w: string; h: string } | null>(null);
+  useEffect(() => { if (!cropBox) { setCropExact(null); setCropDraft(null); } }, [cropBox]);
 
   /* ── What kind of file, and how big ────────────────────────────────────
  
@@ -3082,7 +3088,13 @@ export default function PostStudio({
         setCropBox((now) => (now ? moveBox(now, put.x - was.x, put.y - was.y) : now));
         return;
       }
-      setCropBox((now) => (now ? pullCorner(now, held, put.x, put.y) : now));
+      setCropBox((now) => {
+        if (!now) return now;
+        const pulled = pullCorner(now, held, put.x, put.y);
+        return cropExact && picture
+          ? toShape(pulled, { width: picture.naturalWidth || picture.width, height: picture.naturalHeight || picture.height }, cropExact.w / cropExact.h)
+          : pulled;
+      });
       return;
     }
     const was = lastAt.current;
@@ -3802,18 +3814,22 @@ export default function PostStudio({
     const of = { width: picture.naturalWidth || picture.width, height: picture.naturalHeight || picture.height };
     const cut = cutTo(box, of);
     const made = document.createElement('canvas');
-    made.width = cut.width;
-    made.height = cut.height;
+    made.width = cropExact ? cropExact.w : cut.width;
+    made.height = cropExact ? cropExact.h : cut.height;
     const ctx = made.getContext('2d');
     if (!ctx) return;
-    /* No smoothing to set and no filter: this is a one-to-one copy of a
-       rectangle of pixels, not a resize, so there is nothing to interpolate
-       and the cut is exactly what was on the glass. */
-    ctx.drawImage(picture, cut.x, cut.y, cut.width, cut.height, 0, 0, cut.width, cut.height);
+    /* A one-to-one copy of a rectangle of pixels — unless a size was typed,
+       when it is drawn to exactly that size, smoothly. */
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(picture, cut.x, cut.y, cut.width, cut.height, 0, 0, made.width, made.height);
     before(t('post.stepCrop', 'cutting it down'));
     asPicture(
       made,
       (one) => {
+        /* A post that was the photograph's own shape stays the photograph's
+           own shape: cut to 4:5, the post becomes 4:5, rather than the new
+           picture being cropped a second time by the old frame. */
+        if (size.id.startsWith('own_')) setSize(ownSizeOf(one.naturalWidth || one.width, one.naturalHeight || one.height));
         setPicture(one);
         setCropBox(null);
         if (bench === 'frame') setBench(null);
@@ -6018,18 +6034,49 @@ export default function PostStudio({
             key={id}
             type="button"
             data-postcropshape={id}
-            onClick={() => setCropBox((now) => (now && picture
+            onClick={() => { setCropExact(null); setCropDraft(null); setCropBox((now) => (now && picture
               ? toShape(now, {
                 width: picture.naturalWidth || picture.width,
                 height: picture.naturalHeight || picture.height,
               }, want)
-              : now))}
+              : now)); }}
             className={LEEG}
           >
             {says}
           </button>
         ))}
       </div>
+      {(() => {
+        const of = { width: picture.naturalWidth || picture.width, height: picture.naturalHeight || picture.height };
+        const now = cutTo(cropBox, of);
+        const shown = cropDraft ?? { w: String(cropExact ? cropExact.w : now.width), h: String(cropExact ? cropExact.h : now.height) };
+        const use = (): void => {
+          const w = Math.round(Number(shown.w));
+          const h = Math.round(Number(shown.h));
+          if (!Number.isFinite(w) || !Number.isFinite(h) || w < 16 || h < 16 || w > 8000 || h > 8000) return;
+          setCropExact({ w, h });
+          setCropDraft(null);
+          setCropBox(toShape(ALL_OF_IT, of, w / h));
+        };
+        return (
+          <form data-postcropsize className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto] items-center gap-2" onSubmit={(event) => { event.preventDefault(); use(); }}>
+            <input type="number" inputMode="numeric" min={16} max={8000} data-postcropwidth
+              aria-label={t('crop.width', 'Width in pixels')} value={shown.w}
+              onChange={(event) => setCropDraft({ ...shown, w: event.target.value })}
+              className="h-11 w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-900 px-2 text-center text-base tabular-nums text-zinc-100" />
+            <span className="text-sm text-zinc-500">×</span>
+            <input type="number" inputMode="numeric" min={16} max={8000} data-postcropheight
+              aria-label={t('crop.height', 'Height in pixels')} value={shown.h}
+              onChange={(event) => setCropDraft({ ...shown, h: event.target.value })}
+              className="h-11 w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-900 px-2 text-center text-base tabular-nums text-zinc-100" />
+            <span className="text-xs text-zinc-500">px</span>
+            <button type="submit" data-postcropsizeuse className={`${LEEG} col-span-4`}>{t('crop.sizeUse', 'Use this size')}</button>
+          </form>
+        );
+      })()}
+      {cropExact ? (
+        <p className="text-[12px] text-emerald-300">{`${t('crop.comesOut', 'Comes out at exactly')} ${cropExact.w} × ${cropExact.h} px`}</p>
+      ) : null}
       <div className={RY}>
         <button type="button" data-postcropdo onClick={cutItDown} className={VUL}>
           <CropIcon className="h-4 w-4" />
