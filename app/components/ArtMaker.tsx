@@ -281,16 +281,18 @@ export default function ArtMaker(): React.ReactElement {
                     setLook((was) => ({ ...was, palette: one.palette }));
                   }}
                   aria-pressed={style === one.id}
-                  className={`${LEEG} !h-auto !justify-start gap-2 p-1.5 ${style === one.id ? '!border-[var(--aksent)] !text-[color:var(--aksent)]' : ''}`}
+                  className={`${LEEG} !h-auto !justify-start gap-2 !px-1.5 py-1.5 ${style === one.id ? '!border-[var(--aksent)] !text-[color:var(--aksent)]' : ''}`}
                 >
                   {/* A little cover in that style: the meerkat photo in the
                       style's light, washed in its three colours. */}
-                  <span aria-hidden className="relative block h-12 w-12 shrink-0 overflow-hidden rounded-md">
+                  <span aria-hidden className="relative block h-11 w-11 shrink-0 overflow-hidden rounded-md">
                     <MeerkatThumb className="absolute inset-0 h-full w-full !rounded-none" mood={COVER_MOOD[one.id]?.mood ?? 'day'} filter={COVER_MOOD[one.id]?.filter} />
                     <span className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${one.palette[0]}66, transparent 50%, ${one.palette[1]}66)`, mixBlendMode: 'screen' }} />
                     <span className="absolute bottom-1 left-1 h-1.5 w-5 rounded-full" style={{ background: one.palette[2] }} />
                   </span>
-                  <span className="truncate">{t(one.word, one.fallback)}</span>
+                  {/* Two lines rather than "Minim…": on a phone half of
+                      every style's name was cut off (20 October 2026). */}
+                  <span className="min-w-0 text-left leading-tight">{t(one.word, one.fallback)}</span>
                 </button>
               ))}
             </div>
