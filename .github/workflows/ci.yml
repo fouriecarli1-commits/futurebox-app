@@ -2110,9 +2110,13 @@ jobs:
   # bunched, and the group that carries three of them carries little else.
   screens:
     runs-on: ubuntu-latest
-    # Generous against a happy path of six or seven minutes. A probe that
-    # hangs waiting for a selector holds its runner until something stops it,
-    # and the neither-green-nor-red state is the worst of the three.
+    # A probe that hangs waiting for a selector holds its runner until
+    # something stops it, and the neither-green-nor-red state is the worst of
+    # the three. The groups grew past what this was set against: by 20 October
+    # 2026 "rooms" took 27 minutes and "make" 26 of these 30, so a slow runner
+    # stopped them half-way with nothing wrong in the app. They were split in
+    # two each rather than given more time, so a hang is still caught at 30
+    # and every group finishes in about half of it.
     timeout-minutes: 30
     strategy:
       # Which rooms broke is the answer worth having. Stopping at the first
@@ -2123,9 +2127,13 @@ jobs:
           - group: doors
             probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
-            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk
+            probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
+          - group: make two
+            probes: check:postround check:postlayers check:edittitles check:postgrid check:postfilters check:videofx check:postdesigns check:alltools check:kidsloop check:magicbrush check:darkroom check:pdfroom check:postcharts check:vectorstudio check:editormotion check:bestmoments check:posterwalk check:productwalk check:tryonwalk check:smartcropwalk
           - group: rooms
-            probes: check:forgotwalk check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:kidsplaylistwalk check:kidstorywalk check:reportwalk check:kidsdrumwalk check:kidseditwalk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:radarkeep check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops check:adlinkwalk check:looperwalk
+            probes: check:forgotwalk check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:kidsplaylistwalk check:kidstorywalk check:reportwalk check:kidsdrumwalk check:kidseditwalk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:radarkeep check:invite check:hookfile check:videolang
+          - group: rooms two
+            probes: check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops check:adlinkwalk check:looperwalk
           - group: whole
             probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for
