@@ -285,7 +285,7 @@ try {
     await page.waitForTimeout(900);
     for (const [what, text] of [
       ['listening back', /Listen back|Play it and follow|Luister terug|Speel dit/],
-      ['the lanes', /Lanes and mixing|Bane en meng/],
+      ['the lanes', /Pro DAW Studio|Pro DAW-ateljee|Lanes and mixing|Bane en meng/],
       ['the desk', /^Desk$|^Lessenaar$/],
     ]) {
       check(`while a take is running, ${what} is off the screen`,

@@ -951,8 +951,8 @@ export const STRINGS: Dict = {
     af: "Bane, die rooster, meng, masterklank en terugvat. Dit kom met elke betaalde plan; hierdie kamer, met die woorde op die skerm, bly ingesluit.",
   },
   "booth.proLocked": {
-    en: "Lanes and mixing \u2014 on a plan",
-    af: "Bane en meng \u2014 op \u2019n plan",
+    en: "Pro DAW Studio \u2014 on a plan",
+    af: "Pro DAW-ateljee \u2014 op \u2019n plan",
   },
 
   /* ── The video editor, 24 September 2026 ──────────────────────────────
@@ -4739,9 +4739,9 @@ export const STRINGS: Dict = {
   "pro.jamLoop": { en: "Jam loop", af: "Jam-loop" },
   "pro.jamArrived": { en: "Your loop from the jam room is in, as the lane “Jam loop”, going round from the top to the end of the song. Drag its end to make it shorter.", af: "Jou loop uit die jam-kamer is hier, as die laan “Jam-loop”, en dit loop van bo af tot aan die einde van die liedjie. Sleep sy einde om dit korter te maak." },
   "pro.jamArrivedOk": { en: "Got it", af: "Reg so" },
-  "booth.jamWaiting": { en: "Your loop from the jam room is waiting. Open “Lanes and mixing” and it is there as a lane.", af: "Jou loop uit die jam-kamer wag. Maak “Bane en meng” oop en dit is daar as ’n laan." },
-  "booth.jamWaitingPaid": { en: "Your loop from the jam room is waiting for “Lanes and mixing”, which comes with every paid plan.", af: "Jou loop uit die jam-kamer wag vir “Bane en meng”, wat by elke betaalde plan kom." },
-  "booth.jamPick": { en: "Your loop from the jam room is waiting. Pick the song it goes into, then open “Lanes and mixing”.", af: "Jou loop uit die jam-kamer wag. Kies die liedjie waarin dit gaan, en maak dan “Bane en meng” oop." },
+  "booth.jamWaiting": { en: "Your loop from the jam room is waiting. Open “Pro DAW Studio” and it is there as a lane.", af: "Jou loop uit die jam-kamer wag. Maak “Pro DAW-ateljee” oop en dit is daar as ’n laan." },
+  "booth.jamWaitingPaid": { en: "Your loop from the jam room is waiting for “Pro DAW Studio”, which comes with every paid plan.", af: "Jou loop uit die jam-kamer wag vir “Pro DAW-ateljee”, wat by elke betaalde plan kom." },
+  "booth.jamPick": { en: "Your loop from the jam room is waiting. Pick the song it goes into, then open “Pro DAW Studio”.", af: "Jou loop uit die jam-kamer wag. Kies die liedjie waarin dit gaan, en maak dan “Pro DAW-ateljee” oop." },
   "loop.toBooth": { en: "Send to ProBooth", af: "Stuur na ProBooth" },
   "loop.sending": { en: "Making it a lane…", af: "Maak dit ’n laan…" },
   "loop.toBoothWhat": { en: "It waits on this phone. Open a song in the Booth, then ProBooth, and it is there as a lane going round to the end of the song.", af: "Dit wag op hierdie foon. Maak ’n liedjie in die Booth oop, dan ProBooth, en dit is daar as ’n laan wat tot aan die einde van die liedjie loop." },
@@ -5243,7 +5243,8 @@ export const STRINGS: Dict = {
   "here.title": { en: "People on FutureBox right now", af: "Mense op FutureBox op die oomblik" },
   "here.one": { en: "here now", af: "nou hier" },
   "here.many": { en: "here now", af: "nou hier" },
-  "booth.pro": { en: "Lanes and mixing", af: "Bane en meng" },
+  "booth.pro": { en: "Pro DAW Studio", af: "Pro DAW-ateljee" },
+  "booth.proSub": { en: "lanes \u00b7 mixing \u00b7 effects", af: "bane \u00b7 meng \u00b7 effekte" },
   "booth.proWhat": { en: "Many lanes, cutting, tone and mixing. The words are not on screen there — this room is where you sing along with them.", af: "Baie bane, sny, toon en meng. Die woorde is nie daar op die skerm nie — hierdie kamer is waar jy saam met hulle sing." },
   "pro.title": { en: "ProBooth & Stem Studio", af: "ProBooth & Stem Ateljee" },
   "pro.barName": { en: "Bar", af: "Maat" },

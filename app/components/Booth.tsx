@@ -374,7 +374,7 @@ export default function Booth({
 
       {jamWaiting && (
         <p className="rounded-2xl border border-sky-400/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-100" data-jamwaiting>
-          {t('booth.jamPick', 'Your loop from the jam room is waiting. Pick the song it goes into, then open “Lanes and mixing”.')}
+          {t('booth.jamPick', 'Your loop from the jam room is waiting. Pick the song it goes into, then open “Pro DAW Studio”.')}
         </p>
       )}
 

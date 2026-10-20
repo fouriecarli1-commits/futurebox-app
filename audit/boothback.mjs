@@ -178,7 +178,7 @@ try {
     : '';
   check('coming back from TONE3000 reaches the screen that reads it',
     (await said.count()) > 0,
-    'nothing said anything — the Pro screen is behind the Lanes and mixing'
+    'nothing said anything — the Pro screen is behind the Pro DAW Studio'
     + ' button, and it cannot mount while the booth has no song in it');
   check('  and it says what happened rather than swallowing it',
     /No amp was chosen|Geen versterker is gekies/i.test(heard),

@@ -206,7 +206,7 @@ export default function VocalBooth({
  
      Their callback sends her to `/?t3k=…&room=booth`, and `booth` is this
      room. The amp row, and everything that knows what to do with a tone
-     id, is inside `ProBooth` — a screen behind the Lanes and mixing
+     id, is inside `ProBooth` — a screen behind the Pro DAW Studio
      button. So she came back, the room opened, and nothing read the
      address, because the only reader was not on the screen.
  
@@ -2356,8 +2356,8 @@ export default function VocalBooth({
           {jamWaiting && (
             <p className="col-span-full rounded-xl border border-sky-400/40 bg-sky-500/10 px-3 py-2 text-xs text-sky-100" data-jamwaiting>
               {proAllowed
-                ? t('booth.jamWaiting', 'Your loop from the jam room is waiting. Open “Lanes and mixing” and it is there as a lane.')
-                : t('booth.jamWaitingPaid', 'Your loop from the jam room is waiting for “Lanes and mixing”, which comes with every paid plan.')}
+                ? t('booth.jamWaiting', 'Your loop from the jam room is waiting. Open “Pro DAW Studio” and it is there as a lane.')
+                : t('booth.jamWaitingPaid', 'Your loop from the jam room is waiting for “Pro DAW Studio”, which comes with every paid plan.')}
             </p>
           )}
           <button
@@ -2375,8 +2375,15 @@ export default function VocalBooth({
                 : 'bg-zinc-900 border-emerald-600/50 text-emerald-300'
             }`}
           >
-            {proAllowed ? <Layers className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-            {proAllowed ? t('booth.pro', 'Lanes and mixing') : t('booth.proLocked', 'Lanes and mixing — on a plan')}
+            {proAllowed ? <Layers className="w-4 h-4 shrink-0" /> : <Lock className="w-4 h-4 shrink-0" />}
+            {/* "Pro DAW Studio", with what it is underneath for anybody who
+                does not know the word. The owner, 20 October 2026, asked
+                whether it should be named that; the room's own heading
+                already says DAW. */}
+            <span className="flex min-w-0 flex-col items-center leading-tight">
+              <span>{proAllowed ? t('booth.pro', 'Pro DAW Studio') : t('booth.proLocked', 'Pro DAW Studio — on a plan')}</span>
+              <span className="text-[11px] font-semibold opacity-70">{t('booth.proSub', 'lanes · mixing · effects')}</span>
+            </span>
           </button>
 
           <button

@@ -1,8 +1,10 @@
 /**
- * The photograph every look and template is shown on — a rocket since 20
- * October 2026, when the owner asked for one in place of the meerkat (see
- * `rocket` in `magicstyles.ts`). The names here still say meerkat because
- * the probes and the tiles are keyed on them; the picture is a rocket.
+ * The photograph every look and template is shown on — a striped hot-air
+ * balloon over the dune since 20 October 2026, when the owner asked for
+ * something simpler than the meerkat, and then for something other than a
+ * rocket (see `balloon` in `magicstyles.ts`). The names here still say
+ * meerkat because the probes and the tiles are keyed on them; the picture
+ * is a balloon.
  *
  * The owner, 17 October 2026, at the video editor's Looks: *"Hierdie looks in
  * video editor moet alles foto's wees vir 'n voorbeeld. Alles 'n meerkat. Al
@@ -22,7 +24,7 @@
  * Drawn once per mood and size and kept as a data URL: a grid of twenty
  * tiles is twenty `<img>` of one picture, not twenty paintings.
  */
-import { rocket } from './magicstyles';
+import { balloon } from './magicstyles';
 
 export type MeerkatMood = 'day' | 'golden' | 'neon' | 'noir' | 'mist' | 'film' | 'night' | 'snow' | 'studio';
 
@@ -111,25 +113,25 @@ export function drawMeerkatPhoto(ctx: CanvasRenderingContext2D, w: number, h: nu
       ctx.stroke();
     }
   }
-  /* The rocket: a soft shadow on the sand, the rocket, then its light. */
+  /* The balloon: its soft shadow far below on the sand, the balloon, then its light. */
   const s = h * 1.02;
   const left = w / 2 - s / 2;
   const top = -h * 0.02;
-  ctx.fillStyle = 'rgba(40,15,5,0.28)';
+  ctx.fillStyle = 'rgba(40,15,5,0.2)';
   ctx.beginPath();
-  ctx.ellipse(w / 2 + s * 0.08, h * 0.95, s * 0.2, s * 0.035, 0, 0, Math.PI * 2);
+  ctx.ellipse(w / 2 + s * 0.06, h * 0.95, s * 0.13, s * 0.025, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.save();
   ctx.beginPath();
   ctx.rect(0, 0, w, h * 0.95);
   ctx.clip();
   ctx.translate(left, top);
-  const parts = rocket(s);
+  const parts = balloon(s);
   for (const part of parts) {
     ctx.fillStyle = mood === 'noir' ? greyOf(part.ink) : mood === 'snow' || mood === 'studio' || mood === 'day' ? part.ink : tintFor(part.ink, mood);
     ctx.fill(part.path);
   }
-  /* Light from one side over the fur, shade on the other. */
+  /* Light from one side over the envelope, shade on the other. */
   const outline = new Path2D();
   for (const part of parts) if (part.shape) outline.addPath(part.path);
   ctx.save();

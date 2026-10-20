@@ -68,11 +68,11 @@ const ROOMS = [
     benches: ['tracks', 'mix', 'effects', 'stems', 'voice', 'ai'],
     /* The booth is a picker until a song is chosen, and the room the six
        desks belong to is one door further in than that: the tile on the rail
-       opens `VocalBooth`, and "Lanes and mixing" is what opens `ProBooth`.
+       opens `VocalBooth`, and "Pro DAW Studio" is what opens `ProBooth`.
        The first run of this check went to the tile, found no bar, and
        reported the bar missing from a room it had never been in. */
     song: true,
-    door: /Lanes and mixing|Bane en meng/i,
+    door: /Pro DAW Studio|Pro DAW-ateljee|Lanes and mixing|Bane en meng/i,
   },
 ];
 

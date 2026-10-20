@@ -318,7 +318,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
        she has already been bitten by twice. The door is real and labelled;
        what was missing was the app being able to say it exists. */
     purpose:
-      "Singing on your own track: recording takes over the backing, cleaning the room noise off a take, and lifting a vocal back out. The Pro Booth opens from a door in this room, on any paid plan: many lanes on one timeline, a grid and a click, mixing and mastering with a loudness reading, splitting a lane into its instruments, guitar tone and amp captures, and undo. Say so when somebody asks where to mix, where the lanes are, or where to master \u2014 it is behind the button that reads \"Lanes and mixing\", and the words are not on screen in there, which is what this room is for.",
+      "Singing on your own track: recording takes over the backing, cleaning the room noise off a take, and lifting a vocal back out. The Pro Booth opens from a door in this room, on any paid plan: many lanes on one timeline, a grid and a click, mixing and mastering with a loudness reading, splitting a lane into its instruments, guitar tone and amp captures, and undo. Say so when somebody asks where to mix, where the lanes are, or where to master \u2014 it is behind the button that reads \"Pro DAW Studio\", and the words are not on screen in there, which is what this room is for.",
     helps: {
       en: "I can tell you which take to keep, what to fix in it, and what to do next with the one you like \u2014 and where to go for lanes, mixing and mastering.",
       af: "Ek kan jou sê watter opname om te hou, wat daaraan te regmaak, en wat om volgende te doen met die een waarvan jy hou \u2014 en waarheen om te gaan vir bane, menging en mastering.",
