@@ -2115,8 +2115,9 @@ jobs:
     # the three. The groups grew past what this was set against: by 20 October
     # 2026 "rooms" took 27 minutes and "make" 26 of these 30, so a slow runner
     # stopped them half-way with nothing wrong in the app. They were split in
-    # two each rather than given more time, so a hang is still caught at 30
-    # and every group finishes in about half of it.
+    # two each rather than given more time, so a hang is still caught at 30.
+    # The first run after that put "whole" at 25 and "doors" at 23 on the
+    # same slow evening, so those two were split as well.
     timeout-minutes: 30
     strategy:
       # Which rooms broke is the answer worth having. Stopping at the first
@@ -2125,7 +2126,9 @@ jobs:
       matrix:
         include:
           - group: doors
-            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:boothback check:postwalk check:plainground
+          - group: doors two
+            probes: check:grabtext check:cutwalk check:tidybars check:whitescreen check:roomtop check:greeting check:langtrip check:underbar check:kidsdoor check:playwalk check:taalbladsye
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: make two
@@ -2135,7 +2138,9 @@ jobs:
           - group: rooms two
             probes: check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops check:adlinkwalk check:looperwalk
           - group: whole
-            probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
+            probes: check:boekiewalk check:firsthour check:writing check:wide check:widetablet check:widecover check:afrikaansscreen check:spotlight check:photosong check:singview
+          - group: whole two
+            probes: check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for
           # what they click: `selfie` films a take against Chromium's fake
           # camera, and `contrast` reads the computed colour of every piece of
