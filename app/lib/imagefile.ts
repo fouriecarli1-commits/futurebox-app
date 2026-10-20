@@ -111,6 +111,27 @@ const QUALITY = 0.85;
  * photo. HEIC is also the case a browser most often cannot decode at all,
  * which fails safely two lines later.
  */
+/**
+ * The EXIF orientation (1–8) from a TIFF block starting at `tiff`, or 1.
+ * Only the first directory is read: that is where a camera writes it.
+ */
+function exifOrientation(view: DataView, tiff: number): number {
+  try {
+    const little = view.getUint16(tiff) === 0x4949;
+    const u16 = (at: number): number => view.getUint16(at, little);
+    const u32 = (at: number): number => view.getUint32(at, little);
+    const first = tiff + u32(tiff + 4);
+    const count = u16(first);
+    for (let k = 0; k < count; k += 1) {
+      const entry = first + 2 + k * 12;
+      if (u16(entry) === 0x0112) return u16(entry + 8);
+    }
+  } catch {
+    // A short or broken block: shown as it is stored.
+  }
+  return 1;
+}
+
 export async function measure(file: Blob): Promise<{ width: number; height: number } | null> {
   const head = new DataView(await file.slice(0, 256 * 1024).arrayBuffer());
   const byte = (at: number): number => (at < head.byteLength ? head.getUint8(at) : -1);
@@ -148,17 +169,37 @@ export async function measure(file: Blob): Promise<{ width: number; height: numb
      its own length, which is why this cannot just look at a fixed offset. */
   if (byte(0) === 0xff && byte(1) === 0xd8) {
     let at = 2;
+    /* ── Which way up it is meant to be shown ───────────────────────────
+
+       The owner, 20 October 2026, with a selfie squeezed thin in a grid, the
+       same selfie squashed flat in the crop box and the Darkroom: *"Kyk selfs
+       daai foto het 'n dadelike stretch."* A phone writes a portrait photo as
+       a landscape frame plus an EXIF note saying "turn me". The frame header
+       below is the landscape size; `createImageBitmap` turns the picture
+       upright and THEN resizes it — to the landscape size it was given. Every
+       portrait phone photo came out squashed into the wrong shape. So the
+       note is read on the way past, and an orientation of 5 to 8 (a quarter
+       turn either way) swaps the two sides. */
+    let turned = false;
     while (at + 9 < head.byteLength) {
       if (byte(at) !== 0xff) { at += 1; continue; }
       const marker = byte(at + 1);
       /* Padding, and the two markers that carry no length. */
       if (marker === 0xff || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) { at += 2; continue; }
       const length = head.getUint16(at + 2);
+      if (marker === 0xe1 && byte(at + 4) === 0x45 && byte(at + 5) === 0x78 && byte(at + 6) === 0x69 && byte(at + 7) === 0x66) {
+        const orientation = exifOrientation(head, at + 10);
+        turned = orientation >= 5 && orientation <= 8;
+      }
       /* Any start-of-frame: baseline, progressive, lossless, arithmetic — but
          not DHT (c4), DAC (cc) or the restart markers, which sit in the same
          numeric range and are not frames. */
       const frame = (marker >= 0xc0 && marker <= 0xcf) && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
-      if (frame) return { height: head.getUint16(at + 5), width: head.getUint16(at + 7) };
+      if (frame) {
+        const height = head.getUint16(at + 5);
+        const width = head.getUint16(at + 7);
+        return turned ? { width: height, height: width } : { width, height };
+      }
       if (length < 2) return null;
       at += 2 + length;
     }

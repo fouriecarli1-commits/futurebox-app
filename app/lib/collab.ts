@@ -39,6 +39,16 @@ async function head(): Promise<Record<string, string>> {
   };
 }
 
+/**
+ * Something about the requests changed on this device — asked, answered, or
+ * both said yes. Every list of them on the screen reads itself again, so
+ * the Collab Radar room and the pop-ups never disagree about who is waiting.
+ */
+export const COLLAB_CHANGED = 'fb-collab-changed';
+function changed(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(COLLAB_CHANGED));
+}
+
 export interface Threads {
   readonly threads: Thread[];
   /**
@@ -83,7 +93,7 @@ export async function loadThreads(): Promise<Threads> {
 export async function ask(
   handle: string,
   because: string,
-): Promise<{ ok: true; id: string; existing?: boolean } | { ok: false; message: string }> {
+): Promise<{ ok: true; id: string; existing?: boolean; accepted?: boolean } | { ok: false; message: string }> {
   const response = await fetch('/api/collab', {
     method: 'POST',
     headers: await head(),
@@ -94,12 +104,14 @@ export async function ask(
   const data = (await response.json().catch(() => ({}))) as {
     id?: string;
     existing?: boolean;
+    accepted?: boolean;
     message?: string;
   };
   if (!response.ok || !data.id) {
     return { ok: false, message: data.message ?? 'That could not be sent.' };
   }
-  return { ok: true, id: data.id, existing: data.existing };
+  changed();
+  return { ok: true, id: data.id, existing: data.existing, accepted: data.accepted };
 }
 
 export async function answer(id: string, yes: boolean): Promise<string | null> {
@@ -109,7 +121,10 @@ export async function answer(id: string, yes: boolean): Promise<string | null> {
     body: JSON.stringify({ id, answer: yes ? 'accepted' : 'declined' }),
   }).catch(() => null);
   if (!response) return 'Could not reach the app.';
-  if (response.ok) return null;
+  if (response.ok) {
+    changed();
+    return null;
+  }
   const data = (await response.json().catch(() => ({}))) as { message?: string };
   return data.message ?? 'That did not work.';
 }

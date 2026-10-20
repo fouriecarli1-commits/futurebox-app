@@ -173,6 +173,12 @@ const PLAIN: Readonly<Record<string, string>> = {
      this opens the room and the room reads the rest, which also means one
      place clears the address instead of two. A handoff would be a second
      reader of the same query and a second chance to clear it wrongly. */
+  /* The pop-ups, 20 October 2026. A notice says something is ready or
+     somebody is waiting; pressing it is going to look, and the room reads
+     what it shows itself — the finished video is already kept there, the
+     request list is read again when the room opens. */
+  '*|onOpen': 'a pop-up notice: going to look at what it announced, which the room already holds',
+  'collab|onOpenRoom': 'a collab pop-up: the request was answered on the pop-up itself, and the room reads its list again on arrival',
   '*|backFromTone3000': 'back from TONE3000: it opens the room she left, and the room reads the tone off the address itself',
 };
 

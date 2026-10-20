@@ -70,6 +70,31 @@ function jpeg(width: number, height: number, padding = 0): Buffer {
   return Buffer.concat(parts.concat([sof]));
 }
 
+/**
+ * A phone's portrait photo: a landscape frame with an EXIF note saying turn
+ * it a quarter (orientation 6), little- or big-endian as cameras differ.
+ */
+function turnedJpeg(width: number, height: number, orientation: number, little: boolean): Buffer {
+  const tiff = Buffer.alloc(8 + 2 + 12 + 4);
+  tiff.write(little ? 'II' : 'MM', 0, 'latin1');
+  const u16 = (v: number, at: number): void => { if (little) tiff.writeUInt16LE(v, at); else tiff.writeUInt16BE(v, at); };
+  const u32 = (v: number, at: number): void => { if (little) tiff.writeUInt32LE(v, at); else tiff.writeUInt32BE(v, at); };
+  u16(42, 2);
+  u32(8, 4);
+  u16(1, 8);
+  u16(0x0112, 10);
+  u16(3, 12);
+  u32(1, 14);
+  u16(orientation, 18);
+  const body = Buffer.concat([Buffer.from('Exif\0\0', 'latin1'), tiff]);
+  const app1 = Buffer.alloc(4);
+  app1.writeUInt8(0xff, 0);
+  app1.writeUInt8(0xe1, 1);
+  app1.writeUInt16BE(2 + body.length, 2);
+  const bare = jpeg(width, height);
+  return Buffer.concat([bare.subarray(0, 2), app1, body, bare.subarray(2)]);
+}
+
 function webpLossy(width: number, height: number): Buffer {
   const out = Buffer.alloc(32);
   out.write('RIFF', 0);
@@ -96,6 +121,12 @@ const cases: { name: string; bytes: Buffer; width: number; height: number }[] = 
   /* The one that matters: a real camera writes EXIF and often a thumbnail
      before the frame, so a parser reading a fixed offset reads the EXIF. */
   { name: 'a JPEG behind 40KB of EXIF', bytes: jpeg(8160, 6144, 40_000), width: 8160, height: 6144 },
+  /* The owner, 20 October 2026: a selfie came out squashed everywhere it
+     was shown. The frame says 4000×3000 and the note says turn it; shown,
+     it is 3000×4000, and that is the size the picture is resized to. */
+  { name: 'a portrait phone photo (EXIF turned, little-endian)', bytes: turnedJpeg(4000, 3000, 6, true), width: 3000, height: 4000 },
+  { name: 'a portrait phone photo (EXIF turned, big-endian)', bytes: turnedJpeg(4000, 3000, 8, false), width: 3000, height: 4000 },
+  { name: 'an upright phone photo (EXIF 1)', bytes: turnedJpeg(4000, 3000, 1, true), width: 4000, height: 3000 },
   { name: 'a lossy WebP', bytes: webpLossy(1920, 1081), width: 1920, height: 1081 },
   { name: 'an extended WebP', bytes: webpExtended(3000, 2001), width: 3000, height: 2001 },
 ];

@@ -26,6 +26,7 @@
  * lyrics per section, vocals, and a commercial licence on paid plans.
  */
 
+import { notify } from './notify';
 import { accessToken, currentAccount } from './cloud';
 import { videoIsReady } from './videograde';
 import { stillWorthWaiting } from './jobwait';
@@ -617,6 +618,17 @@ async function collectVideo(job: PendingVideo, askNow: boolean): Promise<EngineR
         }
         const blob = await file.blob();
         forgetPending(job.id);
+        /* Said wherever she is (the owner, 20 October 2026: a notification
+           for videos that have finished). Not over the room that asked for
+           it while she is looking at it — `Notifier` leaves that one out. */
+        notify({
+          id: `video-${job.id}`,
+          kind: 'video',
+          room: job.surface,
+          title: 'Your video is ready',
+          titleKey: 'notice.videoReady',
+          body: (job.title || job.prompt).slice(0, 90) || undefined,
+        });
         return { blob, model: 'Video engine' };
       }
     }

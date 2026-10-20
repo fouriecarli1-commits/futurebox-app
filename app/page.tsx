@@ -61,6 +61,8 @@ import Campaign from './components/Campaign';
 import ArtMarket from './components/ArtMarket';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
+import Notifier from './components/Notifier';
+import CollabWatch from './components/CollabWatch';
 import TabBar, { aboveBar, barClearance, type TabId } from './components/TabBar';
 import { useOwnedScreen } from './lib/fullroom';
 import SearchCorner from './components/SearchCorner';
@@ -5616,6 +5618,25 @@ export default function FutureBoxHome() {
       {!(authModalOpen || pricingModalOpen || themeOpen || selectedMedia !== null || selectedBlueprint !== null || roomOwnsScreen) && (
         <TabBar active={bottomTab} onGo={goTab} />
       )}
+
+      {/* The pop-ups, over everything, and the watch that feeds the collab
+          ones. The owner, 20 October 2026: two people invited each other and
+          neither saw a thing. See `lib/notify.ts`. */}
+      <Notifier
+        here={uploadModalOpen ? studioTab : null}
+        onOpen={(room) => {
+          setUploadModalOpen(true);
+          goToRoom(room as SurfaceId);
+        }}
+      />
+      <CollabWatch
+        signedIn={Boolean(user)}
+        onOpenRoom={() => {
+          setUploadModalOpen(true);
+          goToRoom('collab');
+          setCollabSignal((n) => n + 1);
+        }}
+      />
 
     </div>
   );

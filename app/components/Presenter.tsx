@@ -54,6 +54,7 @@ import type { VoiceState } from './VoiceLab';
 import Cost from './Cost';
 import Card from './Card';
 import Note from './Note';
+import { notify } from '../lib/notify';
 
 /** How long the reading is, read off the file rather than guessed from words. */
 async function lengthOf(blob: Blob): Promise<number> {
@@ -467,6 +468,7 @@ export default function Presenter({
         };
         if (progress.state === 'done' && progress.url) {
           setMade(progress.url);
+          notify({ id: `video-${said.id}`, kind: 'video', room: 'canvas', title: t('notice.videoReady', 'Your video is ready') });
           return;
         }
         if (progress.state === 'failed') {

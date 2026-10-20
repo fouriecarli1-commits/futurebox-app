@@ -163,6 +163,7 @@ import { accessToken, getStorageClient } from '../lib/cloud';
 import { stillWorthWaiting } from '../lib/jobwait';
 import { FEED_PLATFORMS, cutOff, nearestKind, type FeedKind, type FeedPlatform } from '../lib/feedshapes';
 import { ReportFlag } from './ReportSheet';
+import { notify } from '../lib/notify';
 
 const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500';
 
@@ -1211,6 +1212,7 @@ export default function PostStudio({
           setLiveJob(null);
           liveSince.current = 0;
           setLiveSaid(t('post.liveDone', 'Ready. It loops, so it plays over and over.'));
+          notify({ id: `video-${liveJob}`, kind: 'video', room: 'photo', title: t('notice.videoReady', 'Your video is ready') });
         } else if (said.state === 'done') {
           /* Finished with no clip to show. Asking again for eight minutes
              would not make one appear, so it stops and says so. */

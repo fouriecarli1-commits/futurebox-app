@@ -147,7 +147,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const { data: already, error: lookupFailed } = await client
     .from('collabs')
-    .select('id, state')
+    .select('id, state, asked_by')
     .or(
       `and(asked_by.eq.${caller.id},asked_of.eq.${other}),` +
         `and(asked_by.eq.${other},asked_of.eq.${caller.id})`,
@@ -164,7 +164,23 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   if (already) {
-    const row = already as { id: string; state: string };
+    const row = already as { id: string; state: string; asked_by: string };
+    /* ── Asking somebody who already asked you is a yes ──────────────
+       The owner, 20 October 2026: she and a friend invited each other and
+       nothing happened — the second ask found the first and said "already
+       asked", and the first was waiting on an answer neither of them could
+       see. Two people asking each other have both said yes. */
+    if (row.state === 'asked' && row.asked_by === other) {
+      const { data: yes } = await client
+        .from('collabs')
+        .update({ state: 'accepted', answered_at: new Date().toISOString() })
+        .eq('id', row.id)
+        .eq('asked_of', caller.id)
+        .eq('state', 'asked')
+        .select('id, state')
+        .maybeSingle();
+      if (yes) return Response.json({ id: row.id, state: 'accepted', existing: true, accepted: true });
+    }
     return Response.json({ id: row.id, state: row.state, existing: true });
   }
 

@@ -29,6 +29,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import NoticeSettings from './NoticeSettings';
 import {
   X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2, BookOpen, Paintbrush, Mic, User, CheckCircle2,
 } from 'lucide-react';
@@ -606,6 +607,9 @@ export default function Account({
             )}
           </div>
         </div>
+
+        {/* ── Which pop-ups she gets (20 October 2026). ─────────────────── */}
+        <NoticeSettings />
 
         {/* ── Where the other things live ─────────────────────────────── */}
         <section className="grid grid-cols-1 gap-2 rounded-2xl p-5 md:grid-cols-2" style={panel}>

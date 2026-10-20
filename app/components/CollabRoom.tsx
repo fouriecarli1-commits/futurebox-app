@@ -21,7 +21,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Handshake, Loader2, Mic, Music, Send, X } from 'lucide-react';
-import { answer, ask, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
+import { answer, ask, COLLAB_CHANGED, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
 import { openPair, type Pair } from '../lib/pairs';
 import type { SurfaceId } from '../lib/surfaces';
 import { loadTracks, type Track } from '../lib/library';
@@ -153,6 +153,20 @@ export default function CollabRoom({
     setTracks(loadTracks());
     refresh();
   }, [refresh, reloadKey]);
+
+  /* And again whenever anything here changes, and every half minute while
+     the room is open. The list used to be read once, when the room opened —
+     so two people with it open on both phones could invite each other and
+     neither would see the other's request (the owner, 20 October 2026). */
+  useEffect(() => {
+    const again = (): void => refresh();
+    window.addEventListener(COLLAB_CHANGED, again);
+    const timer = window.setInterval(again, 30_000);
+    return () => {
+      window.removeEventListener(COLLAB_CHANGED, again);
+      window.clearInterval(timer);
+    };
+  }, [refresh]);
 
   // The open room, asked for again while it is open. Held in a ref so the
   // interval below does not restart every time a message arrives.
@@ -687,9 +701,11 @@ export function AskToCollab({
           setBusy(false);
           setNote(
             done.ok
-              ? done.existing
-                ? t('collab.already', 'Already asked')
-                : t('collab.asked', 'Asked')
+              ? done.accepted
+                ? t('collab.bothYes', 'You asked each other — your room together is open')
+                : done.existing
+                  ? t('collab.already', 'Already asked')
+                  : t('collab.asked', 'Asked')
               : done.message,
           );
           if (done.ok) onAsked();

@@ -188,6 +188,7 @@ import { recordGenerator, type GeneratorId, type GeneratorInks } from '../lib/vi
 import { FX_EFFECT_GROUPS, FX_FILTER_GROUPS } from '../lib/videofx';
 import { studioAudio } from '../lib/demoaudio';
 import { createTemplateVideoBlob, TemplateVideoUnsupported } from '../lib/templatevideo';
+import { notify } from '../lib/notify';
 
 
 /**
@@ -2270,6 +2271,7 @@ export default function VideoEditor({
           setShotJob(null);
           shotSince.current = 0;
           setShotSaid(t('edit.shotDone', 'Ready. Look at it, then put it on the clock.'));
+          notify({ id: `video-${shotJob}`, kind: 'video', room: 'videoedit', title: t('notice.videoReady', 'Your video is ready') });
         } else if (said.state === 'failed') {
           setShotJob(null);
           shotSince.current = 0;
