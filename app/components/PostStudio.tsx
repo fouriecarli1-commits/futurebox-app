@@ -2876,7 +2876,7 @@ export default function PostStudio({
             /* Its tools come up as a small bar over the foot of the photo —
                a panel would cover the very photo she just tapped. */
             if (bench !== 'layers') setBench(null);
-            if (!cell.image) { fillingCell.current = cell.id; cellInput.current?.click(); }
+            if (!cell.image) askOnLift.current = cell.id;
             return;
           }
           if (layer.kind === 'words') {
@@ -3112,7 +3112,14 @@ export default function PostStudio({
     setCrop((now) => moveBy(now, at, byX, byY));
   };
 
+  /* An empty frame asks for a photo when the finger LIFTS. A phone only
+     lets a page open its picker on a touch's end, not its start, so the
+     picker asked for on the way down never came up (20 October 2026). */
+  const askOnLift = useRef<string | null>(null);
   const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const asking = event.type === 'pointerup' ? askOnLift.current : null;
+    askOnLift.current = null;
+    if (asking) askForCell(asking);
     fingers.current.delete(event.pointerId);
     if (fingers.current.size === 0) pinch.current = null;
     brushing.current = false;
@@ -9173,7 +9180,7 @@ export default function PostStudio({
   }, [picture, layerOn]);
 
   /* ── Photo grids ─────────────────────────────────────────────────────── */
-  const tile = 'flex flex-col items-center gap-1.5 rounded-2xl border p-2 text-[11px] font-bold';
+  const tile = 'flex min-w-0 flex-col items-center gap-1.5 rounded-2xl border p-2 text-[11px] font-bold';
 
   /* ── Filters: grouped, each one shown on her own photograph ─────────── */
   const filterTile = 'flex flex-col items-center gap-1 rounded-xl border p-1 text-[10px] font-bold';
@@ -9296,7 +9303,9 @@ export default function PostStudio({
                 />
               ))}
             </span>
-            <span className="truncate">{t(layout.name[0], layout.name[1])}</span>
+            {/* Two lines rather than cut: "One big, three small" lost its
+                first letter and its last on a phone (20 October 2026). */}
+            <span className="block w-full text-center leading-tight">{t(layout.name[0], layout.name[1])}</span>
           </button>
         ))}
       </div>
@@ -10275,7 +10284,9 @@ export default function PostStudio({
           engine said no) were printed behind it. The owner, 15 October 2026:
           "Die grab funksie werk ook nie." */}
       {said && (
-        <div className={`pointer-events-none absolute inset-x-2 z-30 flex flex-col items-center gap-1 ${panelUp ? 'top-14' : 'bottom-2'}`}>
+        /* Above a tapped frame's own bar, not on it: "Cropped. Undo brings
+           the whole photo back." sat over Replace and Delete. */
+        <div className={`pointer-events-none absolute inset-x-2 z-30 flex flex-col items-center gap-1 ${panelUp ? 'top-14' : cellNow && !editingCell && bench === null ? 'bottom-[68px]' : 'bottom-2'}`}>
           {/* No warning sign for words under a platform's bars. The owner, 17
               October 2026: *"Daai groen sirkel wat elke keer by die photo
               app op kom daar onder moet weg gaan. Dit is 'n weird

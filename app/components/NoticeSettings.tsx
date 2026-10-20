@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Bell } from 'lucide-react';
+import { AlertTriangle, Bell } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import {
   askPhone, noticePrefs, NOTICE_DEFAULTS, onNoticePrefs, phoneAnswer, setNoticePrefs, type NoticePrefs,
@@ -109,7 +109,10 @@ export default function NoticeSettings(): React.ReactElement {
         what={t('notice.phoneWhat', 'While the app is open but out of sight. Your phone asks once whether FutureBox may do this.')}
       />
       {prefs.phone && phone === 'denied' ? (
-        <p className="text-xs leading-snug text-amber-300">
+        /* The words in the page's own ink, the warning in the sign beside
+           them: amber words read at 2.4 to 1 on a light theme. */
+        <p className="flex items-start gap-1.5 text-xs leading-snug text-zinc-300">
+          <AlertTriangle aria-hidden className="mt-px h-3.5 w-3.5 shrink-0 text-amber-400" />
           {t('notice.phoneDenied', 'Your phone has said no to notifications from FutureBox. You can change that in the phone’s settings for this app or browser.')}
         </p>
       ) : null}

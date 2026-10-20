@@ -52,6 +52,20 @@ export default function CropSheet({
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState({ w: '', h: '' });
   const shown = useRef<HTMLImageElement | null>(null);
+  /* The space between the header and the controls, measured: a fixed share
+     of the screen ran the photo down over the size boxes on a phone, where
+     the controls under it are taller than that share leaves. */
+  const stage = useRef<HTMLDivElement | null>(null);
+  const [room, setRoom] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = stage.current;
+    if (!el) return undefined;
+    const measure = (): void => setRoom({ w: el.clientWidth - 48, h: el.clientHeight - 48 });
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, []);
   const grip = useRef<Grip>(null);
   const last = useRef<{ x: number; y: number } | null>(null);
   const size = useMemo(
@@ -126,6 +140,15 @@ export default function CropSheet({
     setTyping(false);
   };
 
+  /* Only the first box touched fills the draft from the box. Moving on to
+     the height must not put the width back: typing 1080, then 1350, came
+     out as 810 × 1350 — the photo's own width — on 20 October 2026. */
+  const startTyping = (): void => {
+    if (typing) return;
+    setTyping(true);
+    setDraft({ w: String(exact ? exact.w : boxNow.width), h: String(exact ? exact.h : boxNow.height) });
+  };
+
   const pct = (n: number): string => `${(n * 100).toFixed(3)}%`;
   const grips: readonly (readonly [string, number, number])[] = [
     ['nw', box.left, box.top], ['n', (box.left + box.right) / 2, box.top], ['ne', box.right, box.top],
@@ -144,12 +167,13 @@ export default function CropSheet({
         <p className="flex-1 truncate text-base font-extrabold">{t('crop.title', 'Crop the photo')}</p>
       </header>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+      <div ref={stage} className="flex min-h-0 flex-1 items-center justify-center overflow-hidden p-6">
         <div className="relative max-h-full max-w-full touch-none select-none"
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img ref={shown} src={image.src} alt="" draggable={false}
-            className="block max-h-[62vh] max-w-full object-contain" />
+            className="block object-contain"
+            style={room ? { maxWidth: Math.max(80, room.w), maxHeight: Math.max(80, room.h) } : { maxWidth: '100%', maxHeight: '40vh' }} />
           {/* What is thrown away is dimmed; what is kept is lit, in neon. */}
           <div data-cropbox aria-hidden className="pointer-events-none absolute"
             style={{
@@ -183,7 +207,7 @@ export default function CropSheet({
             data-cropwidth
             aria-label={t('crop.width', 'Width in pixels')}
             value={typing ? draft.w : String(exact ? exact.w : boxNow.width)}
-            onFocus={() => { setTyping(true); setDraft({ w: String(exact ? exact.w : boxNow.width), h: String(exact ? exact.h : boxNow.height) }); }}
+            onFocus={startTyping}
             onChange={(event) => setDraft((was) => ({ ...was, w: event.target.value }))}
             className="h-11 w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-900 px-2 text-center text-base tabular-nums text-zinc-100"
           />
@@ -196,7 +220,7 @@ export default function CropSheet({
             data-cropheight
             aria-label={t('crop.height', 'Height in pixels')}
             value={typing ? draft.h : String(exact ? exact.h : boxNow.height)}
-            onFocus={() => { setTyping(true); setDraft({ w: String(exact ? exact.w : boxNow.width), h: String(exact ? exact.h : boxNow.height) }); }}
+            onFocus={startTyping}
             onChange={(event) => setDraft((was) => ({ ...was, h: event.target.value }))}
             className="h-11 w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-900 px-2 text-center text-base tabular-nums text-zinc-100"
           />
