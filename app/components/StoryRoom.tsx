@@ -254,12 +254,12 @@ export default function StoryRoom(): React.ReactElement {
       } else if (put === 'full') {
         setSays(t(
           'story.deviceFull',
-          'There is no room left on this device. Make space and try again \u2014 or make the film now, before this is lost.',
+          'There is no room left in the space on your plan. Make room and try again \u2014 or make the film now, before this is lost.',
         ));
       } else {
         setSays(t(
           'story.noKeep',
-          'This browser will not keep anything. A private window usually cannot.',
+          'It could not be put on the shelf just now. Check that the internet is on and try again.',
         ));
       }
     } finally {

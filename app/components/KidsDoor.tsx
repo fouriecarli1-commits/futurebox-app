@@ -658,7 +658,9 @@ export default function KidsDoor({
         <div className={`${GLASS} space-y-2 p-4 sm:p-5`} style={{ boxShadow: DOOR_GLASS_RING }}>
           <h3 className={HEAD} style={{ textShadow: DOOR_TEXT_GLOW.mint }}>
             <span aria-hidden>📖</span>
-            {t('kids.shelfTitle', 'Stories on this device')}
+            {/* On the account since the shelves moved there, so on every device the
+                child signs in from, like the songs beside it. */}
+            {t('kids.shelfTitle', 'Stories this child has kept')}
           </h3>
           <StoryShelf grownUp />
         </div>

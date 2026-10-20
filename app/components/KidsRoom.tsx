@@ -727,7 +727,7 @@ export default function KidsRoom({
     } else if (put === 'full') {
       setSays(t('kids.deviceFull', 'There is no room left to keep it. Ask a grown-up to make room.'));
     } else {
-      setSays(t('kids.noKeep', 'This browser will not keep anything.'));
+      setSays(t('kids.noKeep', 'It could not be put away just now. Check that the internet is on and try again.'));
     }
   };
 

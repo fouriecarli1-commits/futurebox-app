@@ -177,8 +177,12 @@ export default function KidsPiano({
       onKept?.();
     } else if (put === 'shelfFull') {
       setSays(t('kids.shelfFullShort', 'Your song shelf is full — ask a grown-up to take one off.'));
+    } else if (put === 'full') {
+      /* The plan's cloud space, not the shelf: said as the song room says
+         it, rather than falling through to "could not be put away". */
+      setSays(t('kids.deviceFull', 'There is no room left to keep it. Ask a grown-up to make room.'));
     } else {
-      setSays(t('kids.noKeep', 'This browser will not keep anything.'));
+      setSays(t('kids.noKeep', 'It could not be put away just now. Check that the internet is on and try again.'));
     }
   };
 
