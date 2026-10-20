@@ -376,7 +376,11 @@ export default function KidsStoryboard({
                   onClick={() => setActiveStep(stepIdx)}
                   className={`flex flex-col items-center justify-center gap-0.5 rounded-2xl py-2 px-1 text-center transition-all ${
                     isCurrent
-                      ? 'border-2 border-primary-500 bg-primary-500/15 shadow-xs scale-102 font-black text-primary-950'
+                      /* The kids room flips the neutral ramp for its dark
+                         look and leaves the accent alone, so `primary-950`
+                         is a dark pink on a dark tile here. The neutral
+                         `surface-950` is what reads as the light text. */
+                      ? 'border-2 border-primary-500 bg-primary-500/15 shadow-xs scale-102 font-black text-surface-950'
                       : isDone
                         ? 'border border-surface-300 bg-surface-100/90 font-bold text-surface-800'
                         : 'border border-surface-200 bg-surface-100/40 text-surface-500'
@@ -418,7 +422,12 @@ export default function KidsStoryboard({
                             onClick={() => setPick(choice.id)}
                             className={`flex items-start gap-3 rounded-2xl p-3.5 text-left transition-all ${
                               isPicked
-                                ? 'border-3 border-primary-500 bg-primary-50/90 shadow-md scale-101'
+                                /* A pink tint, not `primary-50`: the card's
+                                   words are the room's light text, and on a
+                                   pale pink they all but vanished — the
+                                   chosen hero was the one card nobody could
+                                   read (20 October 2026). */
+                                ? 'border-3 border-primary-500 bg-primary-500/20 shadow-md scale-101'
                                 : 'border-2 border-surface-200 bg-surface-50 hover:border-surface-300'
                             }`}
                           >
