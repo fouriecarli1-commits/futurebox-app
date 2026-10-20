@@ -232,7 +232,7 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
                 {t('pro.ampCatalogueOff', 'The catalogue is not set up yet.')}
               </p>
               <p className="text-[11px] text-zinc-400">
-                {t('pro.stockAmpsWhy', 'Ready-to-use valve and solid-state guitar amp models built straight into your browser — no Tone3000 connection needed.')}
+                {t('pro.stockAmpsWhy', 'Ready-made guitar tones from the room’s own drive, colour and speaker cabinet — a starting point in the spirit of classic amps, not captures of them. For a real captured amp, load a .nam file.')}
               </p>
             </div>
           )}
@@ -241,11 +241,11 @@ export default function AmpCatalogue({ onShelf }: { onShelf: () => void }): Reac
             <p className="text-[11px] text-zinc-500">{q ? t('pro.ampNone', 'Nothing in the catalogue matches that yet.') : t('pro.ampEmpty', 'The catalogue is empty for now.')}</p>
           )}
 
-          {/* 🎸 Built-in Stock Amp Modelers */}
+          {/* Built-in stock amp sounds */}
           <div className="pt-2 border-t border-zinc-800 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200">
-                {t('pro.stockAmps', 'Stock Amp Modelers (Built-in)')}
+                {t('pro.stockAmps', 'Stock amp sounds (built-in)')}
               </span>
               <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                 {t('pro.offlineReady', 'Works without internet')}

@@ -2966,7 +2966,7 @@ export default function ProBooth({
         title={t('pro.key', 'Key')}
         what={t(
           'pro.keyWhat',
-          'What the song is in. Nothing here re-tunes anything — it is what a generated part is asked for in, and what the copilot is told, so a bass line comes back in the same key as the rest.',
+          'What the song is in. A generated part is asked for in this key, so a bass line comes back in the same key as the rest, and the voice tuner pulls notes onto it.',
         )}
       >
         <select
@@ -3296,7 +3296,12 @@ export default function ProBooth({
      render and a download, here, costing nothing. The channel goes through
      the Library on purpose: one file, one name, one thing that can be
      posted, rather than a second path that could disagree with the first
-     about what the song is. */
+     about what the song is.
+
+     Both are the paid mixdown — `payFor` charges either, once per mix (see
+     `signature`) — so both say the price on the button, as every paid press
+     in this app does. This card said "costing nothing" until the capability
+     check of 20 October 2026 found it charging without a word. */
   const exportCard = (
     <Card
       wide
@@ -3368,7 +3373,7 @@ export default function ProBooth({
       <SaysDone
         disabled={busy || saving || recording || !heard.length}
         icon={<Download className="h-4 w-4" />}
-        label={t('pro.toPhone', 'Save to my phone')}
+        label={`${t('pro.toPhone', 'Save to my phone')}${bounceCost > 0 ? ` · ${bounceCost} ${t('pro.credits', 'credits')}` : ''}`}
         busyLabel={t('pro.toPhoneBusy', 'Rendering the mix\u2026')}
         doneLabel={t('pro.toPhoneDone', 'Saved to your phone')}
         again={3000}
@@ -3389,7 +3394,7 @@ export default function ProBooth({
       <SaysDone
         disabled={busy || saving || recording || !heard.length}
         icon={<Check className="h-4 w-4" />}
-        label={t('pro.toLibrary', 'Send it to my Library')}
+        label={`${t('pro.toLibrary', 'Send it to my Library')}${bounceCost > 0 ? ` · ${bounceCost} ${t('pro.credits', 'credits')}` : ''}`}
         busyLabel={t('pro.toLibraryBusy', 'Making one song of it\u2026')}
         doneLabel={t('pro.toLibraryDone', 'It is in your Library')}
         className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-onAccent disabled:opacity-40"
@@ -3397,10 +3402,15 @@ export default function ProBooth({
       />
       <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
         {heard.length
-          ? t(
-              'pro.exportSays',
-              'The phone gets a WAV and the room stays open. The Library copy closes this room, and the post button there sends it to your channel.',
-            )
+          ? soundKind === 'mp3'
+            ? t(
+                'pro.exportSaysMp3',
+                'The phone gets an MP3 and the room stays open. The Library copy is a WAV, closes this room, and the post button there sends it to your channel. One mix is paid for once, whichever you press first.',
+              )
+            : t(
+                'pro.exportSays',
+                'The phone gets a WAV and the room stays open. The Library copy closes this room, and the post button there sends it to your channel. One mix is paid for once, whichever you press first.',
+              )
           : t('pro.keepNone', 'Record a take or bring audio in, and this makes one song out of all of it.')}
       </p>
     </Card>
@@ -4040,7 +4050,7 @@ export default function ProBooth({
               <Note className="text-xs leading-snug text-zinc-500">
                 {t(
                   'pro.regionFree',
-                  'Nothing above the line is rendered and nothing is thrown away: the pieces still point at the same recording, so dragging an edge back undoes any of them. The fade is the one exception — it is written into the sound.',
+                  'Cutting, keeping and repeating render nothing and throw nothing away: the pieces still point at the same recording, so dragging an edge back undoes any of them. The fades, the smoothing and the AI changes are written into the sound.',
                 )}
               </Note>
             </div>
@@ -4137,7 +4147,7 @@ export default function ProBooth({
             ) : engine === 'speech' || !canSing ? (
               <Note className="text-sm text-amber-300/90 leading-relaxed">{t(
                   'pro.singBuilt',
-                  'The model behind it is built for speech. On a spoken lane it is reliable; on a sung one it is a gamble \u2014 the melody is what it handles worst. A model built for singing is the one thing this app still cannot do.',
+                  'The model behind it is built for speech. On a spoken lane it is reliable; on a sung one it is a gamble \u2014 the melody is what it handles worst. For singing, pick a singing model instead.',
                 )}</Note>
             ) : (
               <Note className="text-sm text-zinc-500 leading-relaxed">{t(
@@ -4681,9 +4691,44 @@ export default function ProBooth({
         paidSays={t('dock.paidSays', 'Some of this costs credits.')}
         what={t(
           'pro.takeApartWhat',
-          'Splitting belongs to one lane, so it lives on that lane\u2019s own row: open it under Track controls. The scissors lift the voice off it \u2014 singing and music become two lanes \u2014 and the layers split it into named parts: drums, bass, and the rest.',
+          'Pick a lane and split it here: lifting the voice off makes singing and music two lanes, and named parts splits it into drums, bass and the rest. The same two are on that lane\u2019s own row under Track controls.',
         )}
       >
+        {/* The two splits, right here, for the picked lane. The capability
+            check of 20 October 2026 found "Split Stems" on the timeline
+            opening this desk, and this card only sending her on to Track
+            controls — two hops to reach a split that the button had
+            promised. Each says its price, as every paid press does. */}
+        {(() => {
+          const lane = lanes.find((one) => one.id === picked);
+          if (!lane) return null;
+          return (
+            <div className="grid gap-2" data-prosplitnow>
+              <button
+                type="button"
+                onClick={() => void split(lane)}
+                disabled={busy}
+                data-prosplitvoice
+                aria-label={t('pro.split', 'Split the voice off')}
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-200 disabled:opacity-40"
+              >
+                <SquareSplitHorizontal className="h-4 w-4" />
+                {t('pro.splitShort', 'Voice off')} · {perMinute(pieceSeconds(lane), CREDITS.stems)} {t('video.credits', 'credits')}
+              </button>
+              <button
+                type="button"
+                onClick={() => void intoParts(lane)}
+                disabled={busy || looking === lane.id}
+                data-prosplitparts
+                aria-label={t('pro.parts', 'Split into named parts')}
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-200 disabled:opacity-40"
+              >
+                <Layers className="h-4 w-4" />
+                {t('pro.partsShort', 'Named parts')} · {perMinute(pieceSeconds(lane), CREDITS.parts)} {t('video.credits', 'credits')}
+              </button>
+            </div>
+          );
+        })()}
         <button
           type="button"
           onClick={() => setDeskOpen('tracks')}
@@ -6389,11 +6434,11 @@ function LaneRow({
             'A tone stack built here, not a model of a named amplifier: a soft clip, a tilt, and the band a guitar speaker passes. Turning the drive up changes the shape and not the level, so it cannot be pushed just because louder sounded better.',
           )}</Note>
 
-        {/* ── Built-in Stock Amp Modelers ── */}
+        {/* ── Built-in stock amp sounds ── */}
         <div className="pt-2 border-t border-zinc-800 space-y-1.5 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-              <span>{t('pro.stockAmps', 'Stock Amp Modelers (Built-in)')}</span>
+              <span>{t('pro.stockAmps', 'Stock amp sounds (built-in)')}</span>
             </span>
             <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
               {t('pro.offlineReady', 'Works without internet')}
@@ -6432,7 +6477,7 @@ function LaneRow({
           <p className="text-[11px] leading-snug text-zinc-500">
             {t(
               'pro.stockAmpsWhy',
-              'Ready-to-use valve and solid-state guitar amp models built straight into your browser — no Tone3000 connection needed.',
+              'Ready-made guitar tones from the room’s own drive, colour and speaker cabinet — a starting point in the spirit of classic amps, not captures of them. For a real captured amp, load a .nam file.',
             )}
           </p>
         </div>

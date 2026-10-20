@@ -854,7 +854,7 @@ export default function BoothFx({
 
   return (
     <div className="space-y-3 px-4 pb-4" style={{ background: PANEL }}>
-      {/* ── AI Sound Sculpting Presets Header ──────────────────────── */}
+      {/* ── Sound Sculptor presets: fixed settings, no AI is called ──── */}
       <div className="rounded-2xl border border-emerald-500/30 bg-linear-to-br from-emerald-950/40 via-zinc-950 to-teal-950/30 p-3.5 shadow-lg shadow-emerald-950/20">
         <div className="flex items-center justify-between gap-2 pb-2">
           <div className="flex items-center gap-2">
@@ -863,7 +863,7 @@ export default function BoothFx({
             </span>
             <div>
               <p className="text-xs font-black uppercase tracking-wider text-emerald-300">
-                {t('fx.aiSculpt', 'AI Sound Sculptor')}
+                {t('fx.aiSculpt', 'Sound Sculptor presets')}
               </p>
               <p className="text-[11px] leading-tight text-emerald-400/70">
                 {t('fx.aiSculptWhat', 'One-click studio presets to sculpt tone, warmth, dynamics and space.')}
