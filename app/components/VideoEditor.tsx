@@ -798,6 +798,33 @@ export default function VideoEditor({
       return ahead.slice(1);
     });
   }, []);
+  /** Take back and put back, as two small icons — the one pair for the room. */
+  const undoPair = (
+    <>
+              <button
+                type="button"
+                data-editorundo
+                disabled={past.length === 0}
+                onClick={stepBack}
+                title={t('edit.undo', 'Take back the last change')}
+                aria-label={t('edit.undoShort', 'Back')}
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 text-zinc-200 disabled:opacity-35"
+              >
+                <Undo2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                data-editorredo
+                disabled={future.length === 0}
+                onClick={stepForward}
+                title={t('edit.redo', 'Put the change back')}
+                aria-label={t('edit.redoShort', 'Forward')}
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 text-zinc-200 disabled:opacity-35"
+              >
+                <Redo2 className="h-4 w-4" />
+              </button>
+    </>
+  );
   const [picked, setPicked] = useState<string>('');
 
   /* ── Which lane the cutting controls are aimed at ───────────────────────
@@ -1309,6 +1336,17 @@ export default function VideoEditor({
   const [showStudioTemplatesModal, setShowStudioTemplatesModal] = useState(false);
   const [showCanvasSizeModal, setShowCanvasSizeModal] = useState(false);
   const [sizeOpen, setSizeOpen] = useState(false);
+  /* A tap anywhere else puts the shape list away. */
+  useEffect(() => {
+    if (!sizeOpen) return undefined;
+    const away = (event: PointerEvent): void => {
+      const at = event.target as Element | null;
+      if (at?.closest('[data-editorshapes], [data-editorshapepick]')) return;
+      setSizeOpen(false);
+    };
+    window.addEventListener('pointerdown', away, true);
+    return () => window.removeEventListener('pointerdown', away, true);
+  }, [sizeOpen]);
   const [sizeDraft, setSizeDraft] = useState({ width: '', height: '' });
 
   /* ── The shape the film is actually coming out in ───────────────────────
@@ -1352,6 +1390,7 @@ export default function VideoEditor({
      drawn. The buttons step in whole numbers; the slider beside them goes in
      tenths, because she asked to zoom gradually (14 October 2026). */
   const [zoom, setZoom] = useState(1);
+  const [zoomSlide, setZoomSlide] = useState(false);
 
   /* How long the track under it runs. Read once when it is chosen, because
      the lane below cannot clamp a scrub without it — and a scrub that can be
@@ -1566,6 +1605,31 @@ export default function VideoEditor({
     window.addEventListener('resize', measure);
     return () => { watch?.disconnect(); window.removeEventListener('resize', measure); };
   }, [zoomBox]);
+  /* ── The picture takes what the clock leaves ───────────────────────────
+     The owner, 20 October 2026, of the panels over the film: *"dit is
+     moeilik om die video editor te gebruik met die windows wat oor die foto
+     gaan."* On a phone the picture was a fixed 38% of the screen whatever
+     else was showing, so a bench opening under it pushed the clock off the
+     bottom and cut the picture off at the top of the scroll. Now the column
+     above the bar is measured and so is the clock, and the picture is
+     whatever height is left: with a bench out it gets smaller, and all of
+     it, the clock and the bench are on the screen together. */
+  const [scrollBox, setScrollBox] = useState<HTMLDivElement | null>(null);
+  const [clockBox, setClockBox] = useState<HTMLDivElement | null>(null);
+  const [roomTall, setRoomTall] = useState(0);
+  const [clockTall, setClockTall] = useState(0);
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const measure = (): void => {
+      setRoomTall(scrollBox?.clientHeight ?? 0);
+      setClockTall(clockBox?.offsetHeight ?? 0);
+    };
+    measure();
+    const watch = new ResizeObserver(measure);
+    if (scrollBox) watch.observe(scrollBox);
+    if (clockBox) watch.observe(clockBox);
+    return () => watch.disconnect();
+  }, [scrollBox, clockBox]);
   const [frameHeight, setFrameHeight] = useState(0);
   useEffect(() => {
     const box = frame.current;
@@ -3770,88 +3834,106 @@ async function smallerFrame(url: string): Promise<string> {
           on the rail and on the screen's own header, so the logo went; the
           shape is two small chips; Ask and the button that finishes the film
           stay, because those two are real. */}
-      <div data-editortop className="flex shrink-0 flex-wrap items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
-        <div data-editorshapes className="flex shrink-0 items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/90 p-0.5" role="group" aria-label={t('edit.shapeWhich', 'Which way up the film is')}>
-          {([
-            { id: 'tall' as const, says: '9:16', on: shape.height > shape.width },
-            { id: 'wide' as const, says: '16:9', on: shape.width > shape.height },
-          ]).map((one) => (
-            <button
-              key={one.id}
-              type="button"
-              data-editorshapechip={one.id}
-              aria-pressed={one.on}
-              /* Through `commit`, so Back takes a shape change back like any
-                 other. It was `setEdit`, which changed the film and left no
-                 step behind it. */
-              onClick={() => commit((was) => (was.shape === one.id ? was : { ...was, shape: one.id }))}
-              className={`min-h-[44px] rounded-lg border px-2.5 text-xs font-bold ${one.on ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
-            >
-              {one.says}
-            </button>
-          ))}
-          {/* Typed sizes, up here where the shape is chosen (The owner, 14
-              October 2026: "Hier bo moet ook custom sizes wees wat mense
-              self in tik"). The same `custom` shape and `size` the film
-              bench has always set; `shapeOf` holds the sides in range. */}
+      <div data-editortop className="relative z-30 flex shrink-0 flex-nowrap items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
+        {/* ── The shape, folded into one chip ─────────────────────────
+            The owner, 20 October 2026: *"Kan alles nie baie easier lyk as
+            nou al die heavy balke nie."* Three chips and a width, a height
+            and a Use button sat across the top all the time, which pushed
+            Ask and the finishing press onto rows of their own. The shape is
+            chosen once a film, so it is one chip saying what it is, and the
+            choices drop down from it. */}
+        <div className="relative shrink-0">
           <button
             type="button"
-            data-editorshapechip="custom"
-            aria-pressed={edit.shape === 'custom'}
+            data-editorshapepick
             aria-expanded={sizeOpen}
+            aria-label={t('edit.shapeWhich', 'Which way up the film is')}
             onClick={() => {
               setSizeDraft({ width: String(shape.width), height: String(shape.height) });
               setSizeOpen((was) => !was);
             }}
-            className={`min-h-[44px] rounded-lg border px-2.5 text-xs font-bold ${edit.shape === 'custom' ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
+            className="inline-flex min-h-[44px] items-center gap-1 whitespace-nowrap rounded-xl border border-emerald-400/50 bg-emerald-500/15 px-2.5 text-xs font-bold text-emerald-300"
           >
-            {edit.shape === 'custom' ? `${shape.width}×${shape.height}` : t('edit.sizeCustom', 'Custom')}
+            {edit.shape === 'custom' ? `${shape.width}×${shape.height}` : shape.height > shape.width ? '9:16' : shape.width > shape.height ? '16:9' : '1:1'}
+            <ChevronsUpDown className="h-3.5 w-3.5 opacity-70" />
           </button>
+          {sizeOpen && (
+            <div
+              data-editorshapes
+              role="group"
+              aria-label={t('edit.shapeWhich', 'Which way up the film is')}
+              className="absolute left-0 top-full z-40 mt-1.5 w-[248px] space-y-2 rounded-2xl border border-zinc-800 bg-zinc-950/95 p-2 shadow-2xl backdrop-blur-md"
+            >
+              <div className="grid grid-cols-2 gap-1.5">
+                {([
+                  { id: 'tall' as const, says: '9:16', on: edit.shape !== 'custom' && shape.height > shape.width },
+                  { id: 'wide' as const, says: '16:9', on: edit.shape !== 'custom' && shape.width > shape.height },
+                ]).map((one) => (
+                  <button
+                    key={one.id}
+                    type="button"
+                    data-editorshapechip={one.id}
+                    aria-pressed={one.on}
+                    /* Through `commit`, so Back takes a shape change back like any
+                       other. It was `setEdit`, which changed the film and left no
+                       step behind it. */
+                    onClick={() => {
+                      commit((was) => (was.shape === one.id ? was : { ...was, shape: one.id }));
+                      setSizeOpen(false);
+                    }}
+                    className={`min-h-[44px] rounded-lg border px-2.5 text-xs font-bold ${one.on ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-300' : 'border-zinc-700 text-zinc-400 hover:text-zinc-200'}`}
+                  >
+                    {one.says}
+                  </button>
+                ))}
+              </div>
+              {/* Typed sizes (The owner, 14 October 2026: "Hier bo moet ook
+                  custom sizes wees wat mense self in tik"). The same `custom`
+                  shape and `size` the film bench has always set; `shapeOf`
+                  holds the sides in range. */}
+              <form
+                data-editorsizeform
+                className="flex items-center gap-1.5"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const width = Number(sizeDraft.width);
+                  const height = Number(sizeDraft.height);
+                  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 16 || height < 16) return;
+                  commit((was) => ({ ...was, shape: 'custom', size: { width: Math.round(width), height: Math.round(height) } }));
+                  setSizeOpen(false);
+                }}
+              >
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={16}
+                  value={sizeDraft.width}
+                  onChange={(event) => setSizeDraft((was) => ({ ...was, width: event.target.value }))}
+                  aria-label={t('edit.sizeWidth', 'Width in pixels')}
+                  data-editorsizewidth
+                  className="h-11 w-[72px] min-w-0 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100"
+                />
+                <span className="text-xs text-zinc-500">×</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={16}
+                  value={sizeDraft.height}
+                  onChange={(event) => setSizeDraft((was) => ({ ...was, height: event.target.value }))}
+                  aria-label={t('edit.sizeHeight', 'Height in pixels')}
+                  data-editorsizeheight
+                  className="h-11 w-[72px] min-w-0 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100"
+                />
+                <button type="submit" data-editorsizego className="min-h-[44px] flex-1 rounded-lg border border-emerald-400 bg-emerald-500 px-2 text-xs font-bold text-onAccent">
+                  {t('edit.sizeUse', 'Use')}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
-        {sizeOpen && (
-          <form
-            data-editorsizeform
-            className="flex shrink-0 items-center gap-1.5"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const width = Number(sizeDraft.width);
-              const height = Number(sizeDraft.height);
-              if (!Number.isFinite(width) || !Number.isFinite(height) || width < 16 || height < 16) return;
-              commit((was) => ({ ...was, shape: 'custom', size: { width: Math.round(width), height: Math.round(height) } }));
-              setSizeOpen(false);
-            }}
-          >
-            <input
-              type="number"
-              inputMode="numeric"
-              min={16}
-              value={sizeDraft.width}
-              onChange={(event) => setSizeDraft((was) => ({ ...was, width: event.target.value }))}
-              aria-label={t('edit.sizeWidth', 'Width in pixels')}
-              data-editorsizewidth
-              className="h-11 w-20 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100"
-            />
-            <span className="text-xs text-zinc-500">×</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={16}
-              value={sizeDraft.height}
-              onChange={(event) => setSizeDraft((was) => ({ ...was, height: event.target.value }))}
-              aria-label={t('edit.sizeHeight', 'Height in pixels')}
-              data-editorsizeheight
-              className="h-11 w-20 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100"
-            />
-            <button type="submit" data-editorsizego className="min-h-[44px] rounded-lg border border-emerald-400 bg-emerald-500 px-3 text-xs font-bold text-onAccent">
-              {t('edit.sizeUse', 'Use')}
-            </button>
-          </form>
-        )}
         <span className="flex-1" />
 
-        {/* Right: Copilot + Glowing CTA. `ml-auto` so that on a phone, where
-            the shape chips take the first row, these two wrap to a row of
-            their own and still end on the room's right gutter. */}
+        {/* Right: Copilot + Glowing CTA, on the same one row as the shape. */}
         <div className="ml-auto flex items-center gap-2">
           {copilot ? (
             <button
@@ -3885,7 +3967,7 @@ async function smallerFrame(url: string): Promise<string> {
               setAsking(true);
               void loadWallet().then(setWallet);
             }}
-            className="min-h-[44px] rounded-xl bg-emerald-400 hover:bg-emerald-300 px-4 py-2 text-xs font-bold text-zinc-950 disabled:opacity-40 inline-flex items-center gap-2 shadow-[0_0_20px_rgba(52,211,153,0.55)] transition-all active:scale-95"
+            className="min-h-[44px] whitespace-nowrap rounded-xl bg-emerald-400 hover:bg-emerald-300 px-3 py-2 text-xs font-bold text-zinc-950 disabled:opacity-40 inline-flex items-center gap-1.5 shadow-[0_0_20px_rgba(52,211,153,0.55)] transition-all active:scale-95"
           >
             {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-zinc-950" />}
             {t('edit.make', 'Put it together')}
@@ -3899,13 +3981,9 @@ async function smallerFrame(url: string): Promise<string> {
       </div>
 
       {/* ── The picture, and the clock right under it ──────────────────── */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-3">
+      <div ref={setScrollBox} className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
         {piece ? (
-          <section data-editorpiece className="space-y-3">
-            <h3 className="text-sm font-semibold text-zinc-100 inline-flex items-center gap-2">
-              <Scissors className="w-4 h-4 text-emerald-400" />
-              {piece.name}
-            </h3>
+          <section data-editorpiece className="space-y-2 pt-2">
             {/* ── You were cutting blind ─────────────────────────────────────
 
                 The first version of this panel had two number boxes and no
@@ -3961,47 +4039,13 @@ async function smallerFrame(url: string): Promise<string> {
                 The overlays scale with the picture because they are positioned
                 in percentages inside the same box, so a logo placed at 2x is
                 still in the same place at 1x. */}
-            <div className="flex items-center justify-end gap-2">
-              <span className="w-12 text-right text-sm tabular-nums text-zinc-500" data-editorzoomnow>{`${zoom.toFixed(1)}×`}</span>
-              <button
-                type="button"
-                data-editorzoomout
-                disabled={zoom <= 1}
-                onClick={() => setZoom((was) => Math.max(1, Math.round((was - 0.25) * 4) / 4))}
-                className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
-              >
-                &minus;
-              </button>
-              {/* The owner, 14 October 2026: "Die zoom in video editor moet dalk
-                  'n slider hê dat mens gradually kan zoom." A slider beside
-                  the two buttons: the buttons still land on whole numbers,
-                  and the slider goes anywhere between in tenths. */}
-              <input
-                type="range"
-                min={1}
-                max={4}
-                step={0.1}
-                value={zoom}
-                onChange={(event) => setZoom(Math.max(1, Math.min(4, Number(event.target.value))))}
-                aria-label={t('edit.zoomSlide', 'How close the picture is')}
-                data-editorzoomslide
-                className="h-11 min-w-0 flex-1 accent-emerald-500 sm:max-w-[220px]"
-              />
-              <button
-                type="button"
-                data-editorzoomin
-                disabled={zoom >= 4}
-                onClick={() => setZoom((was) => Math.min(4, Math.round((was + 0.25) * 4) / 4))}
-                className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
-              >
-                +
-              </button>
-            </div>
-
             {/* sideways on purpose: only ever at a zoom she has chosen. At 1x
                 the inner box is exactly the outer one and there is nothing to
                 scroll; above it, panning IS the feature, and native scrolling
                 is the only panning that behaves like the phone it is on. */}
+            {/* The stage: the picture, with the magnifier standing beside it
+                rather than a row of its own above it. */}
+            <div className="relative" data-editorstage>
             <div
               ref={setZoomBox}
               data-editorzoombox
@@ -4038,7 +4082,11 @@ async function smallerFrame(url: string): Promise<string> {
                 ...(boxWide > 0 && screenTall > 0
                   ? (() => {
                     const tallShare = onEdge ? 0.62 : 0.38;
-                    const baseTall = Math.min(screenTall * tallShare, boxWide * (shape.height / shape.width));
+                    /* On a phone, the room the clock leaves (see `roomTall`). */
+                    const room = !onEdge && roomTall > 0 && clockTall > 0
+                      ? Math.max(140, roomTall - clockTall - 36)
+                      : screenTall * tallShare;
+                    const baseTall = Math.min(room, boxWide * (shape.height / shape.width));
                     const baseWide = baseTall * (shape.width / shape.height);
                     return {
                       width: `${Math.round(baseWide * zoom)}px`,
@@ -4371,24 +4419,60 @@ async function smallerFrame(url: string): Promise<string> {
               )}
             </div>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            {/* ── Zooming the picture, beside it ──────────────────────────
+                The owner, 20 October 2026: *"Alles is nou net everywhere."*
+                The zoom was a row of its own above the picture — a number,
+                two buttons and a slider, all the time. It is three small
+                buttons standing against the picture's edge now, and the
+                gradual slider (14 October: *"'n slider hê dat mens gradually
+                kan zoom"*) comes up from the number when it is tapped. */}
+            <div data-editorzoomtools className="absolute bottom-1 right-0 z-10 flex flex-col items-center gap-0.5 rounded-2xl border border-white/10 bg-zinc-950/70 p-0.5 backdrop-blur-md">
               <button
                 type="button"
-                data-editorplaypiece
-                onClick={() => {
-                  const v = viewer.current;
-                  if (!v) return;
-                  v.currentTime = piece.from;
-                  void v.play();
-                }}
-                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+                data-editorzoomin
+                disabled={zoom >= 4}
+                aria-label={t('edit.zoomIn', 'Closer')}
+                onClick={() => setZoom((was) => Math.min(4, Math.round((was + 0.25) * 4) / 4))}
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-base font-semibold text-zinc-100 disabled:opacity-35"
               >
-                <Play className="w-4 h-4" />
-                {t('edit.playPiece', 'Play this piece')}
+                +
               </button>
-              <span className="self-center text-sm text-zinc-500" data-editorpiecelen>
-                {seconds(lengthOfPiece(piece))}
-              </span>
+              <button
+                type="button"
+                data-editorzoomnow
+                aria-expanded={zoomSlide}
+                aria-label={t('edit.zoomSlide', 'How close the picture is')}
+                onClick={() => setZoomSlide((was) => !was)}
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-[11px] font-bold tabular-nums text-emerald-300"
+              >
+                {`${zoom.toFixed(1)}×`}
+              </button>
+              <button
+                type="button"
+                data-editorzoomout
+                disabled={zoom <= 1}
+                aria-label={t('edit.zoomOut', 'Further')}
+                onClick={() => setZoom((was) => Math.max(1, Math.round((was - 0.25) * 4) / 4))}
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-base font-semibold text-zinc-100 disabled:opacity-35"
+              >
+                &minus;
+              </button>
+            </div>
+            {zoomSlide && (
+              <div className="absolute bottom-1 left-0 right-14 z-10 flex items-center rounded-2xl border border-white/10 bg-zinc-950/75 px-3 backdrop-blur-md">
+                <input
+                  type="range"
+                  min={1}
+                  max={4}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(event) => setZoom(Math.max(1, Math.min(4, Number(event.target.value))))}
+                  aria-label={t('edit.zoomSlide', 'How close the picture is')}
+                  data-editorzoomslide
+                  className="h-11 min-w-0 flex-1 accent-emerald-500"
+                />
+              </div>
+            )}
             </div>
           </section>
         ) : edit.pieces.length === 0 ? null : (
@@ -4509,10 +4593,47 @@ async function smallerFrame(url: string): Promise<string> {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm text-zinc-400">{t('edit.clock', 'The clock')}</span>
-              <span className="text-sm text-zinc-500" data-editorruns>
+          <div ref={setClockBox} className="space-y-1.5" data-editorclock>
+            {/* ── One small row over the clock ─────────────────────────
+                The owner, 20 October 2026: *"Ons moet die app funksioneel,
+                modern, eenvoudig en maklik laat lyk. Alles is nou net
+                everywhere."* Taking back, putting back, back to the start
+                and playing the shot were three rows of wide buttons spread
+                above and below the clock. They are small icons on the one
+                row the clock already had for its time. Playing the whole
+                film is the play button on the bar below, so it is not here
+                a second time. */}
+            <div className="flex items-center gap-1" data-editorclockbar>
+              {undoPair}
+              <button
+                type="button"
+                data-editorrewind
+                onClick={() => { setRunning(false); scrubTo(0); }}
+                title={t('edit.rewind', 'Back to the start')}
+                aria-label={t('edit.rewind', 'Back to the start')}
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 text-zinc-200"
+              >
+                <SkipBack className="h-4 w-4" />
+              </button>
+              {piece ? (
+                <button
+                  type="button"
+                  data-editorplaypiece
+                  onClick={() => {
+                    const v = viewer.current;
+                    if (!v) return;
+                    v.currentTime = piece.from;
+                    void v.play();
+                  }}
+                  title={t('edit.playPiece', 'Play this piece')}
+                  className="inline-flex min-h-[44px] min-w-0 items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 px-2.5 text-xs font-semibold text-zinc-200"
+                >
+                  <Play className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('edit.playPieceShort', 'Play shot')}</span>
+                  <span className="shrink-0 tabular-nums text-zinc-500" data-editorpiecelen>{seconds(lengthOfPiece(piece))}</span>
+                </button>
+              ) : null}
+              <span className="ml-auto shrink-0 pl-1 text-xs tabular-nums text-zinc-500" data-editorruns>
                 {seconds(at)} / {seconds(total)}
               </span>
             </div>
@@ -4526,6 +4647,9 @@ async function smallerFrame(url: string): Promise<string> {
                  `LEAST_PER_SECOND`, where a film really is longer than a
                  phone and the alternative is blocks half a pixel wide. */
               className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950"
+              /* With a bench out on a phone the clock keeps to a slice and
+                 scrolls inside itself, so the picture above it stays whole. */
+              style={bench && !onEdge ? { maxHeight: 124, overflowY: 'auto' } : undefined}
               data-editorstrip
             >
               <div style={{ width: Math.max(stripWidth || 280, total * perSecond) }} className="relative select-none">
@@ -5075,8 +5199,8 @@ async function smallerFrame(url: string): Promise<string> {
                     window.addEventListener('pointerup', done);
                     window.addEventListener('pointercancel', done);
                   }}
-                  className="mt-1 flex h-9 cursor-ns-resize touch-none items-center justify-center gap-2 rounded-lg"
-                  style={{ background: 'rgba(52,211,153,0.10)' }}
+                  className="mt-0.5 flex h-7 cursor-ns-resize touch-none items-center justify-center gap-2 rounded-lg"
+                  style={{ background: 'rgba(52,211,153,0.06)' }}
                 >
                   {/* ── It says what it is ──────────────────────────────
 
@@ -5313,30 +5437,6 @@ async function smallerFrame(url: string): Promise<string> {
               </div>
             </div>
 
-            {/* Playing the whole film in place, rather than only on export.
-                It hops the viewer from piece to piece as the clock runs,
-                which is the one thing that makes a timeline a timeline and
-                not a list of files. */}
-            <div className="flex gap-2 flex-wrap">
-              <button
-                type="button"
-                data-editorplayall
-                onClick={() => setRunning((was) => !was)}
-                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
-              >
-                {running ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                {running ? t('edit.pause', 'Pause') : t('edit.playAll', 'Play the film')}
-              </button>
-              <button
-                type="button"
-                data-editorrewind
-                onClick={() => { setRunning(false); scrubTo(0); }}
-                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
-              >
-                <SkipBack className="w-4 h-4" />
-                {t('edit.rewind', 'Back to the start')}
-              </button>
-            </div>
           </div>
         )}
 
@@ -5360,31 +5460,12 @@ async function smallerFrame(url: string): Promise<string> {
             Disabled rather than hidden when there is nothing to take back.
             A button that appears and disappears moves everything beside it,
             and on a phone that means pressing the wrong thing. */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            data-editorundo
-            disabled={past.length === 0}
-            onClick={stepBack}
-            title={t('edit.undo', 'Take back the last change')}
-            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
-          >
-            <Undo2 className="w-4 h-4" />
-            {t('edit.undoShort', 'Back')}
-          </button>
-          <button
-            type="button"
-            data-editorredo
-            disabled={future.length === 0}
-            onClick={stepForward}
-            title={t('edit.redo', 'Put the change back')}
-            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
-          >
-            <Redo2 className="w-4 h-4" />
-            {t('edit.redoShort', 'Forward')}
-          </button>
-        </div>
-
+        {/* Undo and redo live on the row over the clock (above). With the
+            clock emptied there is no such row, and emptying it is exactly
+            the step somebody wants to take back — so they stand here then. */}
+        {edit.pieces.length === 0 && (past.length > 0 || future.length > 0) ? (
+          <div className="flex items-center gap-1">{undoPair}</div>
+        ) : null}
         {problem && (
           <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-400">
             {problem}
@@ -6444,16 +6525,16 @@ async function smallerFrame(url: string): Promise<string> {
               finished film cannot disagree. */}
           <div className="space-y-1.5">
             <span className="text-sm text-zinc-400">{t('edit.look', 'Colour filters')}</span>
-            {/* Wrapped, not scrolled. Seven looks at `shrink-0` came to 644
-                pixels in a 334 pixel strip, so this was the second thing on
-                this desk that moved under a thumb. Three rows of buttons
-                that stay still beat one row that slides — and a look nobody
-                scrolled to is a look nobody knows is there. */}
+            {/* sideways on purpose. One row that slides sideways. It was wrapped into rows that
+                filled the bench; the owner, 20 October 2026, wants the options
+                in a sliding row against the picture (*"Dit kon maklik in 'n
+                links en regs sliding bar wees"*), so the picture and the
+                clock keep the screen. */}
             {/* As pictures: the meerkat photograph with each look laid on it
                 by the same `filterCss` the render uses. The owner, 17 October
                 2026: *"Hierdie looks in video editor moet alles foto's wees
                 vir 'n voorbeeld. Alles 'n meerkat."* */}
-            <div className="flex flex-wrap gap-1 pb-1">
+            <div data-sideways className="-mx-1 flex snap-x flex-nowrap gap-1 overflow-x-auto px-1 pb-1">
               {FILTERS.map((one) => (
                 <MeerkatTile
                   key={one.id}

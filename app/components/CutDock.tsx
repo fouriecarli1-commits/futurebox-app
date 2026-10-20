@@ -98,6 +98,7 @@ function BenchButton({
   onOpen,
   t,
   tall = false,
+  slim = false,
   dim = false,
   waiting = false,
 }: {
@@ -106,6 +107,8 @@ function BenchButton({
   readonly onOpen: (which: Bench) => void;
   readonly t: (key: string, fallback: string) => string;
   readonly tall?: boolean;
+  /** A fixed width, for the strip that slides sideways on a phone. */
+  readonly slim?: boolean;
   /** Nothing to work on yet, so the panel would open empty. */
   readonly dim?: boolean;
   /**
@@ -144,7 +147,7 @@ function BenchButton({
          is twelve pixels of film back on a phone — and 46 is still above
          the 44 this app treats as the floor for a thumb. */
       className={`relative flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 disabled:opacity-35 ${
-        tall ? 'w-full' : 'flex-1'
+        tall ? 'w-full' : slim ? 'w-[64px] shrink-0 snap-start' : 'flex-1'
       }`}
       style={{
         background: on ? 'rgba(52,211,153,0.16)' : 'transparent',
@@ -368,12 +371,12 @@ export default function CutDock({
          canvas half the screen wide beside it — "kyk hoe sny alles af op die
          rekenaar se skerm". A wider column is the cheapest honest fix: the
          same controls, a third less scrolling, and nothing moved. */
-      className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[46dvh]'} ${
+      className={`flex min-h-0 flex-col ${edge ? 'h-full' : 'max-h-[34dvh]'} ${
         atDesk ? 'w-[400px] shrink-0 2xl:w-[520px]' : ''
       }`}
       style={atDesk
         ? { borderLeft: `1px solid ${EDGE}` }
-        : here.low && !edge ? { maxHeight: '32dvh' } : undefined}
+        : here.low && !edge ? { maxHeight: '30dvh' } : undefined}
     >
     <DeskSheet
       icon={here.icon}
@@ -429,7 +432,7 @@ export default function CutDock({
         onClick={onPlay}
         aria-label={playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
         data-cutplay
-        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
         style={{ background: INK, color: '#04120b' }}
       >
         {playing ? (
@@ -503,86 +506,50 @@ export default function CutDock({
     );
   }
 
+  /* ── On a phone: one slim bar that slides sideways ─────────────────────
+
+     The owner, 20 October 2026: *"Kan alles nie baie easier lyk as nou al
+     die heavy balke nie. Dit kon maklik in 'n links en regs sliding bar
+     wees … Ons moet die app funksioneel, modern, eenvoudig en maklik laat
+     lyk."*
+
+     It was two rows — the transport with a bench either side, then the five
+     — and the two rows together were the heaviest thing on the screen
+     after the picture. Now it is the photo editor's foot, which she already
+     approved there: play first, then every bench in one strip that scrolls
+     sideways. One row, so the picture and the clock get the height back. */
   return (
     <>
       {sheet}
       <div
         data-cutdock=""
-        className="shrink-0"
-        /* ── Nothing reserved here, and that is deliberate ───────────────
- 
-           This carried `paddingBottom: barClearance(0)` for an afternoon,
-           because the bottom of the icon row was sitting behind the app's tab
-           bar and `audit/underbar.mjs` named all five controls that were under
-           it. The padding fixed the symptom and the cause was a floor above:
-           the room's height was `calc(100dvh - 7.5rem)`, a guess at how much
-           sits above it, and the guess was 93 pixels short on a 390x844 phone.
- 
-           `VideoEditor.tsx` measures that now — its own top, and the bar's own
-           height — so the room already ends exactly where the bar begins. The
-           padding on top of it was 64 pixels of dead green between this bar and
-           that one, which is what the screenshot after the fix showed.
- 
-           Left as a note rather than deleted silently: a reservation removed
-           without a reason tends to come back the next time somebody sees
-           something under a bar. */
+        className="flex shrink-0 items-center gap-1 px-3"
         style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}
       >
-        {/* ── The transport, with a bench either side ──────────────────── */}
-        {/* `px-3`, which is the room's own gutter.
- 
-            It was `px-2`. Measured at 390 pixels that put the first bench's
-            left edge at 8 and the last one's right edge at 382, while the back
-            button, the Ask button, the hint and the export all sat at 12 and
-            378 — so the bar was four pixels wider than everything above it on
-            both sides, which is exactly the kind of thing the owner meant by *"Kyk
-            dan mooi dat alles mooi allign en netjies is."* Four pixels is not
-            visible as four pixels; it is visible as a bar that does not line
-            up with the room. */}
-        {/* ── The row is the box ─────────────────────────────────────
-
-            `check:buttonlook` found seven buttons here with no border and no
-            fill — these two and the five below. It is right: when the room
-            opens no bench is chosen, so nothing is lit, and seven unlit tabs
-            with no surface behind them read as captions rather than controls.
-            That check exists because exactly that drift happened once before
-            to two load-bearing buttons.
-
-            The answer is not a box each — this row replaces the app's own
-            bar, and a box per tab would be a second bar, which is why the
-            app's five tabs are exempt from that rule too. The answer is what
-            the app's bar already does: paint the row. One surface, seven
-            tabs on it, the chosen one lit. */}
+        {hasTransport ? (
+          <div className="flex shrink-0 items-center" data-cuttransport>
+            {transport}
+          </div>
+        ) : null}
+        {hasTransport ? <span aria-hidden className="h-8 w-px shrink-0" style={{ background: EDGE }} /> : null}
+        {/* sideways on purpose: the owner asked for exactly this bar. */}
         <div
           data-cutbenchrow=""
-          className={`flex gap-1 px-3 pt-2 ${hasTransport ? 'items-center justify-center' : 'items-stretch'}`}
+          data-sideways
+          className="flex min-w-0 flex-1 snap-x flex-nowrap items-stretch gap-1 overflow-x-auto py-1.5"
           style={{ background: PANEL }}
         >
-          {/* With a transport, a bench either side of it. Without one — a room
-              with nothing to play — the benches share the row evenly, like
-              the row below, so the two rows line up instead of one being
-              centred around a gap where the play button is not. */}
-          {hasTransport ? (
-            <>
-              <BenchButton spec={upper[0]} open={open} onOpen={onOpen} t={t} dim={noClip && NEEDS_A_SHOT.has(upper[0].id)} waiting={upper[0].id === waiting} />
-              {transport}
-              {upper[1] ? <BenchButton spec={upper[1]} open={open} onOpen={onOpen} t={t} waiting={upper[1].id === waiting} /> : null}
-            </>
-          ) : (
-            upper.map((spec) => (
-              <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} dim={noClip && NEEDS_A_SHOT.has(spec.id)} waiting={spec.id === waiting} />
-            ))
-          )}
-        </div>
-
-        {/* ── The five, which replace the app's own bar ─────────────────── */}
-        <div
-          data-cutbenchrow=""
-          className="flex items-stretch gap-1 px-3 pb-2 pt-1"
-          style={{ background: PANEL }}
-        >
-          {lower.map((spec) => (
-            <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} dim={noClip && NEEDS_A_SHOT.has(spec.id)} waiting={spec.id === waiting} />
+          {[...upper, ...lower].map((spec) => (
+            <BenchButton
+              key={spec.id}
+              spec={spec}
+              open={open}
+              onOpen={onOpen}
+              t={t}
+              slim
+              dim={noClip && NEEDS_A_SHOT.has(spec.id)}
+              waiting={spec.id === waiting}
+            />
           ))}
         </div>
       </div>

@@ -516,10 +516,10 @@ try {
        where it was is the same failure one layer down. */
     await p.locator('[data-editorrewind]').click();
     await p.waitForTimeout(300);
-    await p.locator('[data-editorplayall]').click();
+    await p.locator('[data-cutplay]').click();
     await p.waitForTimeout(1200);
     const ran = await playheadAt();
-    await p.locator('[data-editorplayall]').click();
+    await p.locator('[data-cutplay]').click();
     await p.waitForTimeout(300);
     check('  and playing the film moves the clock by itself',
       ran > 0.3,
@@ -1749,7 +1749,7 @@ try {
          fault. What is being asked is whether it moves while the film moves. */
       await p.locator('[data-editorrewind]').click();
       await p.waitForTimeout(400);
-      await p.locator('[data-editorplayall]').click();
+      await p.locator('[data-cutplay]').click();
       await p.waitForTimeout(300);
       const first = await p.evaluate(() => {
         const a = document.querySelector('[data-editorbedsound]');
@@ -1764,7 +1764,7 @@ try {
         `${first.at?.toFixed(2)}s then ${second?.toFixed(2)}s — an element that`
         + ' is seeked but never played is the same silence with a number on it');
 
-      await p.locator('[data-editorplayall]').click();
+      await p.locator('[data-cutplay]').click();
       await p.waitForTimeout(700);
       check('  and stops when the film stops',
         await p.evaluate(() => document.querySelector('[data-editorbedsound]')?.paused ?? false),
@@ -2985,8 +2985,12 @@ try {
         bar: at('[data-editorshapes]'),
         make: at('[data-editormake]'),
         hint: at('[data-editorempty]'),
-        first: at('[data-cutbench="folder"]'),
-        last: at('[data-cutbench="mark"]'),
+        /* The bar's own edges. Its benches are a strip that slides
+           sideways now (the owner, 20 October 2026), so the first and last
+           of them are wherever the strip has been slid to; the play
+           button starts the bar and the strip ends it. */
+        first: at('[data-cuttransport]') ?? at('[data-cutbench="clip"]'),
+        last: at('[data-cutdock] [data-cutbenchrow]'),
       };
     });
 

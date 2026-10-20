@@ -944,6 +944,9 @@ export const STRINGS: Dict = {
     en: "Play this piece",
     af: "Speel hierdie stuk",
   },
+  "edit.playPieceShort": { en: "Play shot", af: "Speel skoot" },
+  "edit.zoomIn": { en: "Closer", af: "Nader" },
+  "edit.zoomOut": { en: "Further", af: "Verder" },
 
   /* The Pro Booth door, gated 24 September 2026. */
   "booth.proPaid": {

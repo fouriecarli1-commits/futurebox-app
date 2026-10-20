@@ -717,9 +717,11 @@ export async function unfold(page) {
      second language. */
   /* Not the song box's own buttons (15 October 2026): each pops a control
      out over the box rather than unfolding the room, and opening them all in
-     turn leaves the last one lying over whatever the probe presses next. */
+     turn leaves the last one lying over whatever the probe presses next. Nor
+     the video editor's shape chip (20 October), which drops a list over the
+     picture. */
   const shutNow = () =>
-    where.locator('button[aria-expanded="false"]:visible:not([data-maketool]):not([data-pickerbring])').filter({ hasText: /\S/ });
+    where.locator('button[aria-expanded="false"]:visible:not([data-maketool]):not([data-pickerbring]):not([data-editorshapepick])').filter({ hasText: /\S/ });
 
   /* Press the first one that is still shut; if pressing it changed nothing,
      step past it and try the next.
