@@ -4914,6 +4914,7 @@ export const STRINGS: Dict = {
   "booth.sheetShut": { en: "Close", af: "Maak toe" },
   "booth.untitled": { en: "This song", af: "Hierdie liedjie" },
   "booth.playAlong": { en: "Play it and follow the words", af: "Speel dit en volg die woorde" },
+  "booth.playIt": { en: "Play it", af: "Speel dit" },
   "booth.wordsMeasured": {
     en: "The words are lined up with where the voice actually sings.",
     af: "Die woorde is belyn met waar die stem werklik sing.",

@@ -2322,7 +2322,13 @@ export default function VocalBooth({
             {/* Before there is a take this button is a rehearsal: the song
                 plays and the words move with it. Calling that "listen back"
                 describes something else. */}
-            {take ? t('booth.listen', 'Listen back') : t('booth.playAlong', 'Play it and follow the words')}
+            {/* And a song with no words on it has nothing to follow: the
+                line above already says so, and the button said the opposite. */}
+            {take
+              ? t('booth.listen', 'Listen back')
+              : lines.length
+                ? t('booth.playAlong', 'Play it and follow the words')
+                : t('booth.playIt', 'Play it')}
           </button>
 
           {/* ── The door to the multitrack, labelled ─────────────────────
