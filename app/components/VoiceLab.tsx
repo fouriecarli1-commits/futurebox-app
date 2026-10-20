@@ -815,12 +815,14 @@ export default function VoiceLab({
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
-        <div className="flex gap-2">
+        {/* Wraps for the same reason as "Change the voice" below: price and
+            "Use as an episode" beside it squeezed the button on a phone. */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => void read()}
             disabled={!script.trim() || over || busy === 'speak'}
-            className="min-h-[44px] flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[44px] flex-1 min-w-[11rem] whitespace-nowrap px-3 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {busy === 'speak' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {busy === 'speak' ? t('voice.reading', 'Reading…') : t('voice.readAloud', 'Read it aloud')}
@@ -907,12 +909,16 @@ export default function VoiceLab({
           {t('voice.changerDials', 'The dials above apply here too, apart from speed \u2014 the timing comes from your recording.')}
         </p>
 
-        <div className="flex gap-2">
+        {/* Wraps rather than squeezes: once a recording is in, the price
+            beside the button grows to "8 credits a minute — about 8 for this
+            one", and in one row it pressed "Change the voice" into a column
+            one word wide on a phone (20 October 2026). */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => void change()}
             disabled={!toChange || busy === 'change'}
-            className="min-h-[44px] flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[44px] flex-1 min-w-[11rem] whitespace-nowrap px-3 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {busy === 'change' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {busy === 'change' ? t('voice.changing', 'Changing\u2026') : t('voice.changeIt', 'Change the voice')}
