@@ -117,6 +117,10 @@ const SENDS: Record<string, Processor> = {
      a track title they are looking up, not a fact about them. */
   'api.spotify.com': { name: 'Spotify', gets: null, basis: 'nothing personal is sent' },
   'accounts.spotify.com': { name: 'Spotify', gets: null, basis: 'nothing personal is sent' },
+  /* Apple Music's public chart feed, from 20 October 2026. A plain GET of a
+     country's top 20 — no key, no account, nothing of anybody's in it. */
+  'rss.marketingtools.apple.com': { name: 'Apple', gets: null, basis: 'nothing personal is sent' },
+  'rss.applemarketingtools.com': { name: 'Apple', gets: null, basis: 'nothing personal is sent' },
   /* ── Google's AI, which this list did not have ──────────────────
 
      Added 9 October 2026, and it should have been here on 8 October when the

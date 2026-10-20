@@ -25,13 +25,15 @@
  * So the empty state is written as carefully as the full one: it says what the
  * chart is counting and how somebody gets on it, rather than "no data".
  *
- * ── And Spotify's, beside ours ───────────────────────────────────────────
+ * ── And Apple Music's, beside ours ───────────────────────────────────────
  *
- * The owner's choice, asked and answered: their public chart alongside ours. It is
- * theirs and it is labelled theirs, opening on their own pages. It is not the
- * source of the AI chart and cannot be — their API has no idea what was made
- * with AI, so a "top 10 AI music" built from it would be us deciding and
- * putting their name on it.
+ * The owner, 20 October 2026: *"Gebruik Apple Music vir die top 20 charts."*
+ * Apple Music's own most-played top 20 for South Africa, the UK and the US,
+ * one tab each, labelled as theirs and opening on their pages. It replaced
+ * Spotify's, which needed a key and a playlist Spotify stopped handing to new
+ * apps. It is not the source of the AI chart and cannot be — their data has
+ * no idea what was made with AI, so a "top 10 AI music" built from it would
+ * be us deciding and putting their name on it.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -52,11 +54,29 @@ interface Charts {
   readonly configured: boolean;
   readonly music: Row[];
   readonly podcasts: Row[];
-  readonly spotify: { name: string; url: string; rows: Row[] } | null;
   readonly days?: number;
 }
 
-const EMPTY: Charts = { configured: false, music: [], podcasts: [], spotify: null };
+const EMPTY: Charts = { configured: false, music: [], podcasts: [] };
+
+/* ── Apple Music's, as `/api/charts/apple` sends it ─────────────────────── */
+type Country = 'za' | 'gb' | 'us';
+interface AppleRow {
+  readonly ref: string;
+  readonly title: string;
+  readonly by: string;
+  readonly art: string;
+  readonly explicit: boolean;
+}
+interface AppleChart {
+  readonly country: Country;
+  readonly rows: AppleRow[];
+}
+const COUNTRIES: readonly (readonly [Country, string, string])[] = [
+  ['za', 'chart.za', 'South Africa'],
+  ['gb', 'chart.gb', 'UK'],
+  ['us', 'chart.us', 'US'],
+];
 
 export default function Charts({
   onOpenRadar,
@@ -89,6 +109,8 @@ export default function Charts({
   const { t } = useLang();
   const [charts, setCharts] = useState<Charts>(EMPTY);
   const [asked, setAsked] = useState(false);
+  const [apple, setApple] = useState<AppleChart[] | null>(null);
+  const [country, setCountry] = useState<Country>('za');
 
   useEffect(() => {
     let live = true;
@@ -100,43 +122,41 @@ export default function Charts({
         setAsked(true);
       })
       .catch(() => live && setAsked(true));
+    /* Apple's on its own: it needs no account of ours, so it shows on a
+       fresh install where ours has nothing to count yet. */
+    void fetch('/api/charts/apple')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((said: { charts?: AppleChart[] } | null) => {
+        if (live) setApple(Array.isArray(said?.charts) ? said.charts : []);
+      })
+      .catch(() => live && setApple([]));
     return () => {
       live = false;
     };
   }, []);
+  const appleNow = apple?.find((one) => one.country === country)?.rows ?? [];
 
   const days = charts.days ?? 30;
 
-  /** One row, drawn the same whether it is ours or theirs. */
-  const line = (row: Row, at: number, kind: 'ours' | 'theirs', onPress?: () => void) => {
-    const body = (
-      <>
-        <span className="w-6 shrink-0 text-sm font-black tabular-nums text-zinc-600">{at + 1}</span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-zinc-100">{row.title}</span>
-          <span className="block truncate text-sm text-zinc-500">{row.by}</span>
-        </span>
-        {kind === 'ours' ? (
-          <span className="shrink-0 text-sm tabular-nums text-emerald-400">
-            {row.count} {t('chart.plays', 'plays')}
-          </span>
-        ) : (
-          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-        )}
-      </>
-    );
-    const style =
-      'flex w-full items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-left hover:border-emerald-500/60';
-    return kind === 'theirs' && row.ref.startsWith('http') ? (
-      <a key={row.ref} href={row.ref} target="_blank" rel="noopener noreferrer" className={style}>
-        {body}
-      </a>
-    ) : (
-      <button key={row.ref} type="button" onClick={onPress} className={style} disabled={!onPress}>
-        {body}
-      </button>
-    );
-  };
+  /** One row of ours: a song or a show, and the plays behind it. */
+  const line = (row: Row, at: number, onPress?: () => void) => (
+    <button
+      key={row.ref}
+      type="button"
+      onClick={onPress}
+      disabled={!onPress}
+      className="flex w-full items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-left hover:border-emerald-500/60"
+    >
+      <span className="w-6 shrink-0 text-sm font-black tabular-nums text-zinc-600">{at + 1}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-zinc-100">{row.title}</span>
+        <span className="block truncate text-sm text-zinc-500">{row.by}</span>
+      </span>
+      <span className="shrink-0 text-sm tabular-nums text-emerald-400">
+        {row.count} {t('chart.plays', 'plays')}
+      </span>
+    </button>
+  );
 
   /* Not rendered at all until the answer is in. A bar that opens on "no songs
      yet" and then quietly fills in a second later is a bar somebody has
@@ -161,7 +181,7 @@ export default function Charts({
           <>
             <div className="space-y-1.5">
               {charts.music.map((row, at) =>
-                line(row, at, 'ours', onOpenLive),
+                line(row, at, onOpenLive),
               )}
             </div>
             <p className="text-xs text-zinc-600">
@@ -186,39 +206,88 @@ export default function Charts({
           </Note>
         ) : (
           <div className="space-y-1.5">
-            {charts.podcasts.map((row, at) => line(row, at, 'ours', onOpenLive))}
+            {charts.podcasts.map((row, at) => line(row, at, onOpenLive))}
           </div>
         )}
       </Card>
 
       {/* ── Theirs, and said to be theirs ────────────────────────────── */}
-      {charts.spotify && charts.spotify.rows.length > 0 && (
-        <Card
-          title={t('chart.spotify', 'What South Africa is playing on Spotify')}
-          icon={<TrendingUp className="h-4 w-4" />}
-        >
+      <Card
+        title={t('chart.apple', 'Top 20 on Apple Music')}
+        icon={<TrendingUp className="h-4 w-4" />}
+      >
+        <Note>
+          {t(
+            'chart.appleWhat',
+            'Apple Music’s own chart of the songs played most, read from their public feed. Every song opens on Apple Music. It is theirs, not ours, and it is not where the AI chart above comes from — nothing in their data says what was made with AI.',
+          )}
+        </Note>
+        <div role="tablist" className="grid grid-cols-3 gap-1.5" data-applecountries>
+          {COUNTRIES.map(([id, key, fallback]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={country === id}
+              data-applecountry={id}
+              onClick={() => setCountry(id)}
+              className={`min-h-[44px] whitespace-nowrap rounded-xl border px-1 text-sm font-bold ${
+                country === id
+                  ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200'
+                  : 'border-zinc-800 bg-zinc-900/60 text-zinc-300'
+              }`}
+            >
+              {t(key, fallback)}
+            </button>
+          ))}
+        </div>
+        {apple === null ? (
+          <div className="h-10" />
+        ) : appleNow.length === 0 ? (
           <Note>
             {t(
-              'chart.spotifyWhat',
-              'Spotify’s own chart, read from their public API and opening on their pages. It is theirs, not ours, and it is not where the AI chart above comes from — nothing in their data says what was made with AI.',
+              'chart.appleEmpty',
+              'Apple Music could not be reached just now. It is asked again within a minute — nothing old or invented is shown in its place.',
             )}
           </Note>
-          <div className="space-y-1.5">
-            {charts.spotify.rows.map((row, at) => line(row, at, 'theirs'))}
-          </div>
-          {charts.spotify.url && (
-            <a
-              href={charts.spotify.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-emerald-300"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              {charts.spotify.name}
-            </a>
-          )}
-        </Card>
-      )}
+        ) : (
+          <ol className="space-y-1.5" data-applechart={country}>
+            {appleNow.map((row, at) => (
+              <li key={row.ref}>
+                <a
+                  href={row.ref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-left hover:border-emerald-500/60"
+                >
+                  <span className="w-6 shrink-0 text-sm font-black tabular-nums text-zinc-600">{at + 1}</span>
+                  {row.art ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={row.art} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-md object-cover" />
+                  ) : (
+                    <span aria-hidden className="h-10 w-10 shrink-0 rounded-md bg-zinc-800" />
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-semibold text-zinc-100">{row.title}</span>
+                      {row.explicit ? (
+                        <span
+                          className="shrink-0 rounded bg-zinc-700 px-1 text-[10px] font-bold leading-4 text-zinc-100"
+                          title={t('chart.explicit', 'Explicit')}
+                        >
+                          E
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="block truncate text-sm text-zinc-500">{row.by}</span>
+                  </span>
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                </a>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Card>
 
       {/* ── And the radar, which is a whole page rather than a list ──── */}
       <Card title={t('chart.radar', 'The AI trends radar')} icon={<Radar className="h-4 w-4" />}>

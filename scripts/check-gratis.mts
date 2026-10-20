@@ -62,11 +62,12 @@ const SPENDS = [
      today is a supplier whose terms can change. Left out, the three
      TONE3000 routes would be invisible to the one rule that counts them. */
   'server/tone3000session',
-  /* Spotify, for the same reason as TONE3000 above: free today, reaching
-     out all the same. It was invisible here until 6 October because the
-     call lived inside `app/api/charts/route.ts` with no import to read —
-     a supplier with no seam is a supplier this rule cannot see. */
-  'server/spotify',
+  /* Apple Music's chart, for the same reason as TONE3000 above: free,
+     reaching out all the same. (Spotify's chart sat here until 20 October
+     2026; it was invisible to this rule until 6 October because the call
+     lived inside a route with no import to read — a supplier with no seam
+     is a supplier this rule cannot see. Apple's has its seam from day one.) */
+  'server/applemusic',
   /* ── Google, missing until 9 October 2026 ───────────────────
 
      Every one of these spends real money on the owner's own Vertex project, and

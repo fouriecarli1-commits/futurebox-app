@@ -61,7 +61,10 @@ ok(
 /* ── Every chart row goes somewhere ─────────────────────────────────────── */
 
 const charts = read('app/components/Charts.tsx');
-const rows = [...charts.matchAll(/line\(row, at, 'ours'([^)]*)\)/g)].map((m) => m[1].trim());
+/* `line` draws our rows only since Apple Music's chart took the place of
+   Spotify's (20 October 2026) — Apple's are links of their own and draw
+   themselves — so its third argument is the handler. */
+const rows = [...charts.matchAll(/line\(row, at, ([^)]*)\)/g)].map((m) => m[1].trim());
 
 ok('our charts draw rows', rows.length > 0, `${rows.length}`);
 for (const one of rows) {

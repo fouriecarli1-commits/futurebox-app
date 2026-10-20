@@ -58,7 +58,7 @@ const CSP = [
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.public.blob.vercel-storage.com https://vibefy-web-lyart.vercel.app",
+  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.mzstatic.com https://*.public.blob.vercel-storage.com https://vibefy-web-lyart.vercel.app",
   "media-src 'self' blob: data: https://*.supabase.co https://assets.mixkit.co https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",

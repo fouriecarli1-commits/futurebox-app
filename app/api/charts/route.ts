@@ -14,27 +14,14 @@
  * songs and grows is worth more than a full one nobody can check — and the
  * screen says how many plays are behind each row, so nobody has to guess.
  *
- * **Spotify's** is Spotify's. Their own editorial South African chart, read
- * through their public API, shown beside ours and labelled as theirs. It is
- * there for the reason she asked for it: so the page has something worth
- * opening on the day ours has four rows on it.
- *
- * What it is *not* is a source for the AI chart. Their API has no idea what
- * was made with AI — there is no field, no tag, nothing — so a "top 10 AI
- * music in South Africa" built from it would be us deciding and putting their
- * name on it. That is the fault that was just deleted from the masterclasses,
- * and it is not being reintroduced one screen over.
- *
- * ── Finding the playlist rather than hard-coding its id ──────────────────
- *
- * Their chart is searched for by name and owner, not pinned to an id copied
- * out of a browser. An id cannot be checked from here and would fail silently
- * the day they retire it; a search either finds a playlist that Spotify
- * themselves own or honestly finds nothing.
+ * **Apple Music's** sits beside it in its own bar and comes from its own
+ * route, `/api/charts/apple`. It replaced Spotify's on 20 October 2026; see
+ * `lib/server/applemusic.ts`. Neither is, or could be, a source for the AI
+ * chart: nothing in their data says what was made with AI, so a "top 10 AI
+ * music" built from it would be us deciding and putting their name on it.
  */
 
 import { admin, metered } from '@/app/lib/server/account';
-import { spotifyChart } from '@/app/lib/server/spotify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -72,25 +59,12 @@ const whole = (value: unknown): number => {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
 };
 
-/**
- * Spotify's own South African chart.
- *
- * Client-credentials, which is the flow for reading public things and carries
- * no user's data at all. Empty when no key is set, which is the honest answer
- * and the one the screen is written to show.
- */
-
-
 export async function GET(): Promise<Response> {
   if (!metered()) {
-    return Response.json({ configured: false, music: [], podcasts: [], spotify: null });
+    return Response.json({ configured: false, music: [], podcasts: [] });
   }
 
-  const [playRows, podcastRows, spotify] = await Promise.all([
-    topOf('play'),
-    topOf('podcast'),
-    spotifyChart(),
-  ]);
+  const [playRows, podcastRows] = await Promise.all([topOf('play'), topOf('podcast')]);
 
   const client = admin();
   const music: ChartRow[] = [];
@@ -154,7 +128,7 @@ export async function GET(): Promise<Response> {
   }
 
   return Response.json(
-    { configured: true, music, podcasts, spotify, days: WINDOW_DAYS },
+    { configured: true, music, podcasts, days: WINDOW_DAYS },
     { headers: { 'Cache-Control': `public, max-age=0, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=600` } },
   );
 }

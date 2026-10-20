@@ -725,6 +725,14 @@ jobs:
       - name: The picture ceiling is in pixels, and reads real headers
         run: npm run check:pixelguard
 
+      # Apple Music's top 20 on Spotlight is somebody else's links on a page
+      # of ours. The feed cannot be reached from where this is built, so the
+      # reader is held to Apple's published shape: twenty rows, every one
+      # opening on music.apple.com, covers only from Apple's image host, and
+      # their "Explict" spelling read as explicit.
+      - name: Apple Music's chart is read as Apple write it
+        run: npm run check:applechart
+
       # A cover is saved the moment it is drawn, so the screen has to say so —
       # one that saves in silence looks like one that did nothing. And nothing
       # may sit over the artwork, there must be a way to take it off, and a

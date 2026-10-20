@@ -294,54 +294,27 @@ Everything else in the booth works without it.
 **How to tell:** press Browse TONE3000. Either their window opens or the
 button says it is not set up; there is no half-state.
 
-### 11. Spotify, for the chart beside ours on Spotlight
+### 11. Apple Music, for the top 20 beside ours on Spotlight — nothing to set
 
-`SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`, from
-developer.spotify.com — create an app, copy the two values, no callback URL
-needed. This uses the client-credentials flow, which reads public things and
-touches nobody's account, yours included.
+Nothing. Apple publish their charts as a plain public feed: no key, no
+account, no callback, and nothing of anybody's is sent to read it. The bar
+shows Apple Music's most-played top 20 for South Africa, the UK and the US,
+one tab each, and every row opens the song on Apple Music.
 
-On their **Create app** form, leave every box under "Which API/SDKs are you
-planning to use?" unticked. Web API is greyed out because it is always
-included; the rest are a browser player, advertising and two mobile SDKs, and
-ticking one asks for something we do not use.
+It replaced Spotify's chart on 20 October 2026 (the owner: *"Gebruik Apple
+Music vir die top 20 charts"*). Spotify's needed a key pair and their own
+editorial playlist, which Spotify stopped handing to new apps — so that bar
+never reliably appeared. If the two Spotify keys from the old section 11 are
+still in Vercel, nothing reads them any more and they can be deleted.
 
-**It is the GLOBAL chart, not the South African one.** The owner, 6 October 2026:
-*"ek vra vir international playlist nie south african nie. dit is beter."*
-The reasoning is hers and it is right — the bar above it already counts what
-South Africa is playing *here*, which is the chart that is actually ours. Two
-local charts side by side is two answers to one question; the world's is the
-thing this app cannot count for itself.
-
-**Broken until then:** the "What the world is playing on Spotify" bar does
-not appear at all. Everything else on Spotlight works without it — our own
-Top 10 is counted here and needs nothing but `supabase/charts.sql`.
-
-**How to tell:** open Spotlight. The bar is either there or it is not.
-
-**And when it is not:**
-
-    https://futurebox.studio/api/charts/spotify?key=<POST_SECRET>
-
-Six different things make that bar fail to appear and from the outside they
-are one blank space. That page names which one, and what to do about it. It
-carries no song, no name and no key — only which step failed and Spotify's
-own status code — so it is safe to paste into a conversation.
-
-**The answer to watch for is `not-found`.** It means the search worked and
-nothing it returned is owned by Spotify themselves, and the page prints what
-it *did* return. Spotify have been narrowing what a newly created app may
-read, and their own editorial playlists are among the things that have moved
-behind that line. If every row under `saw` belongs to somebody else, their
-chart is simply not being handed to this app — that is a Spotify decision and
-there is nothing here to fix. The bar stays off rather than showing a
-stranger's playlist as Spotify's chart, which is the right answer to a wrong
-situation.
+**How to tell:** open Spotlight → "Top 20 on Apple Music" → press each
+country. If Apple cannot be reached for a moment the bar says so and tries
+again within a minute; it does not show an old or invented list.
 
 **One thing that could not be checked from where this was built:** the
-outbound call to Spotify is blocked in that environment, so this code path
-has never run against their real API. The first time it runs is in
-production, which is exactly why the page above exists.
+outbound call to Apple is blocked in that environment, so the reading of
+their feed was tested against a copy of its published shape, not a live
+answer. The first live answer is on the phone.
 
 ### 12. Kits.AI — the model that actually sings
 

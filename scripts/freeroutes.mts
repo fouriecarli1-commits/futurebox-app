@@ -118,14 +118,9 @@ export const FREE: Record<string, string> = {
     + ' us no invoice',
   'app/api/kits/setup/route.ts':
     'lists what is on the Kits account. A setup page on a secret',
-  'app/api/charts/route.ts':
-    "Spotify's public chart beside our own on Spotlight. Client credentials"
-    + ' against a free endpoint — no account of ours is touched and no'
-    + ' invoice exists to split. Charging a visitor to look at a chart would'
-    + ' also be the first paywall on a page whose whole job is to be looked'
-    + ' at',
-  'app/api/charts/spotify/route.ts':
-    'says which of the six ways the Spotify bar can fail to appear actually'
-    + ' happened. A setup page on a secret, and the only one of these whose'
-    + ' code path has never run where it was built',
+  'app/api/charts/apple/route.ts':
+    "Apple Music's public top 20 beside our own chart on Spotlight. A public"
+    + ' feed with no key and no account — no invoice exists to split.'
+    + ' Charging a visitor to look at a chart would also be the first paywall'
+    + ' on a page whose whole job is to be looked at',
 };
