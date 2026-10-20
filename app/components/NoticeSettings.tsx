@@ -118,7 +118,7 @@ export default function NoticeSettings(): React.ReactElement {
           type="button"
           data-noticeallow
           onClick={() => void askPhone().then(setPhone)}
-          className="min-h-[44px] w-full rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-4 text-sm font-bold text-emerald-300"
+          className="min-h-[44px] w-full rounded-xl bg-emerald-500 px-4 text-sm font-bold text-onAccent"
         >
           {t('notice.phoneAllow', 'Allow on this phone')}
         </button>
