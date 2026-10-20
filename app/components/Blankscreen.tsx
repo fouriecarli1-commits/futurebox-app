@@ -60,9 +60,25 @@ function drewSomething(): boolean {
   const body = document.body;
   if (!body) return false;
   /* Text, not elements. A page can hold a thousand empty divs and still be
-     blank, which is exactly what a half-mounted React tree looks like. */
-  const words = (body.innerText || '').trim();
-  if (words.length > 0) return true;
+     blank, which is exactly what a half-mounted React tree looks like.
+
+     Walked to the FIRST word rather than read as `innerText`. That property
+     lays the whole page out and builds one string of every word on it, and
+     this runs every second and a half for the life of the page — so while a
+     film played in the cutting room it forced a layout of the room on a
+     timer (the owner, 20 October 2026: *"The video editor has a serious
+     lag"*). The first word is enough to know the page is not blank. Script
+     and style text is not words on the screen, so it does not count. */
+  const walk = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => {
+      const tag = node.parentElement?.tagName;
+      if (!tag || tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE') {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return (node.textContent ?? '').trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    },
+  });
+  if (walk.nextNode()) return true;
   /* And a page that is all picture is not blank either — the full-screen
      song scroller is a video and a couple of icons.
 

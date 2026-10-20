@@ -3834,7 +3834,7 @@ async function smallerFrame(url: string): Promise<string> {
           on the rail and on the screen's own header, so the logo went; the
           shape is two small chips; Ask and the button that finishes the film
           stay, because those two are real. */}
-      <div data-editortop className="relative z-30 flex shrink-0 flex-nowrap items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
+      <div data-editortop className="relative z-30 flex shrink-0 flex-nowrap items-center gap-2 border-b border-emerald-950/40 bg-zinc-950/80 px-3 py-1.5">
         {/* ── The shape, folded into one chip ─────────────────────────
             The owner, 20 October 2026: *"Kan alles nie baie easier lyk as
             nou al die heavy balke nie."* Three chips and a width, a height
@@ -4426,7 +4426,7 @@ async function smallerFrame(url: string): Promise<string> {
                 buttons standing against the picture's edge now, and the
                 gradual slider (14 October: *"'n slider hê dat mens gradually
                 kan zoom"*) comes up from the number when it is tapped. */}
-            <div data-editorzoomtools className="absolute bottom-1 right-0 z-10 flex flex-col items-center gap-0.5 rounded-2xl border border-white/10 bg-zinc-950/70 p-0.5 backdrop-blur-md">
+            <div data-editorzoomtools className="absolute bottom-1 right-0 z-10 flex flex-col items-center gap-0.5 rounded-2xl border border-white/10 bg-zinc-950/85 p-0.5">
               <button
                 type="button"
                 data-editorzoomin
@@ -4459,7 +4459,7 @@ async function smallerFrame(url: string): Promise<string> {
               </button>
             </div>
             {zoomSlide && (
-              <div className="absolute bottom-1 left-0 right-14 z-10 flex items-center rounded-2xl border border-white/10 bg-zinc-950/75 px-3 backdrop-blur-md">
+              <div className="absolute bottom-1 left-0 right-14 z-10 flex items-center rounded-2xl border border-white/10 bg-zinc-950/75 px-3">
                 <input
                   type="range"
                   min={1}

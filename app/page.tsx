@@ -2861,7 +2861,7 @@ export default function FutureBoxHome() {
           Below sm it scrolls with the page. Losing a pinned header on a phone
           costs a scroll back up to reach the studio; keeping it costs a
           quarter of every screen, on every screen. */}
-      <header className="static sm:sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
+      <header data-pageunder={uploadModalOpen ? 'hidden' : undefined} className="static sm:sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
         <div className="flex items-center gap-3 min-w-0">
           {/* The mark as Google's pages draw it: a gradient hairline round
               a black squircle with the chip inside. */}
@@ -3081,7 +3081,7 @@ export default function FutureBoxHome() {
       <LanguageSwitched />
 
       {/* 🔍 SMART FILTERING SUB-BAR */}
-      <div className="relative z-30 bg-zinc-950/80 border-b border-zinc-800/80 px-6 py-2.5 backdrop-blur-md">
+      <div data-pageunder={uploadModalOpen ? 'hidden' : undefined} className="relative z-30 bg-zinc-950/80 border-b border-zinc-800/80 px-6 py-2.5 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
           
           <div className="flex flex-wrap items-center gap-3">
@@ -3165,7 +3165,7 @@ export default function FutureBoxHome() {
       </div>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-14 flex-1 w-full">
+      <main data-pageunder={uploadModalOpen ? 'hidden' : undefined} className="max-w-7xl mx-auto px-6 py-8 space-y-14 flex-1 w-full">
         
         {/*
           What this place is, before anything else on the page.
@@ -5439,7 +5439,7 @@ export default function FutureBoxHome() {
       )}
 
       {/* 📧 6. MARKETING & SPONSORSHIP CONTACT FOOTER */}
-      <footer className="border-t border-zinc-800/80 bg-zinc-950 mt-16 px-6 py-12">
+      <footer data-pageunder={uploadModalOpen ? 'hidden' : undefined} className="border-t border-zinc-800/80 bg-zinc-950 mt-16 px-6 py-12">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           
           <div className="space-y-4">

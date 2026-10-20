@@ -2700,3 +2700,18 @@ html[data-fb-mode='light'] :is(section, div, article, form, aside, details, li)[
   background: linear-gradient(90deg, transparent, rgb(125 211 252 / 0.85), transparent);
   pointer-events: none;
 }
+
+/* ── The page under the studio is not drawn ────────────────────────────
+
+   The owner, 20 October 2026: *"The video editor has a serious lag."* A
+   trace of the cutting room playing showed most of the time going to
+   painting and compositing, not to the room's own code — and a share of it
+   to the feed underneath the full-screen studio: its blurred header and two
+   pulsing dots were being repainted every frame behind a sheet that covers
+   them completely. While the studio is open the page under it skips
+   rendering (`content-visibility: hidden` keeps its state and its scroll;
+   it only stops drawing), and it comes back as it was when the studio
+   closes. */
+[data-pageunder='hidden'] {
+  content-visibility: hidden;
+}
