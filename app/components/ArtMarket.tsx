@@ -819,7 +819,9 @@ export default function ArtMarket(): React.ReactElement {
     { id: 'artists' as const, said: t('art.tab.artists'), count: market?.artists.length ?? 0 },
     /* Before Mine, not after it: the art room probe reads the LAST tab as
        the one with the panels on it. Google's page, 13 October 2026. */
-    { id: 'make' as const, said: t('art.tab.make', 'AI art, download only'), count: 0 },
+    /* Two words: "AI art, download only" stood three lines tall in a
+       phone's tab row. The tab itself says what it is for, first thing. */
+    { id: 'make' as const, said: t('art.tab.make', 'AI art'), count: 0 },
     { id: 'mine' as const, said: t('art.tab.mine'), count: market?.bought.length ?? 0 },
   ];
 

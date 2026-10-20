@@ -917,8 +917,10 @@ export default function Storyboard({
               /* Never wider than the row: a select is as wide as its longest
                  option, and a saved song with a long name made it 553 pixels
                  on a 390-pixel phone, so the whole Video desk slid sideways
-                 (found by `check:notcut`'s phone rule, 20 October 2026). */
-              className="min-h-[44px] min-w-0 max-w-full flex-1 truncate rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
+                 (found by `check:notcut`'s phone rule, 20 October 2026).
+                 And a line of its own on a phone: squeezed between the label
+                 and the button it showed "N." for "No song — silent". */
+              className="min-h-[44px] w-full min-w-0 max-w-full truncate sm:w-auto sm:flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-hidden"
             >
               <option value="">{t('board.noSong', 'No song — silent')}</option>
               {tracks.length > 0 && (

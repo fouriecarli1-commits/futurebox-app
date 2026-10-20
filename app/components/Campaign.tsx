@@ -1119,7 +1119,7 @@ export default function Campaign({
         </div>
         {ads.length === 0 && (
           <p className="text-sm text-zinc-500 leading-snug">
-            {t('ads.previewEmpty', 'Nothing written yet. Fill in what you are selling on the left and press “Write the adverts”; every format lands here with its poster.')}
+            {t('ads.previewEmpty', 'Nothing written yet. Fill in what you are selling and press “Write the adverts”; every format lands here with its poster.')}
           </p>
         )}
       {ads.length > 0 && (

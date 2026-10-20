@@ -331,7 +331,7 @@ export default function KidsDrawBoard({
             <div className="flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-cyan-300/60 p-3" style={{ minHeight: 220, background: ALIVE_GLOW }}>
               {png && strokes > 0 ? alive(png) : (
                 <p className="px-4 text-center text-sm font-bold text-surface-700">
-                  {t('kids.drawAliveEmpty', 'Draw something on the left, and the button to bring it to life appears here.')}
+                  {t('kids.drawAliveEmpty', 'Draw something first, and the button to bring it to life appears here.')}
                 </p>
               )}
             </div>
