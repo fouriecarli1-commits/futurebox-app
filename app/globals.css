@@ -2326,3 +2326,223 @@ button:has(.animate-spin) {
 [data-kidsroom] [data-kidsroomdoor]:hover {
   box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.85), 0 0 30px rgba(236, 72, 153, 0.45);
 }
+
+/* ── The futuristic look, for the grown-up app ───────────────────────────
+
+   The owner, 19 October 2026: *"Die hele app se look met 'n futuristic keuse
+   en styl vir uitleg en buttons."* She saw the studio home page drawn this
+   way beside the old one on 20 October and said go ahead.
+
+   Glass panels with a light-line edge that runs from the accent to the
+   second colour, round glowing lenses for icons, the main action as a
+   charged light bar, labels in spaced capitals. Every colour is a theme
+   token, so a member who picked Sunset or Daylight gets the same shapes in
+   their own colours, and the surface ramp is the one that flips on a light
+   theme — nothing here is written for dark only. The layout does not move:
+   these are surfaces, not positions. The kids room has its own look
+   (`.fb-holo` above) and is left out of the app-wide rules below. */
+
+/* A panel: frosted glass with a light-line edge. */
+.fb-fx-panel {
+  position: relative;
+  border: 1px solid transparent !important;
+  background:
+    linear-gradient(165deg, rgb(var(--fb-surface-900) / 0.88), rgb(var(--fb-surface-950) / 0.94)) padding-box,
+    linear-gradient(135deg, rgb(var(--fb-primary-400)), rgb(var(--fb-secondary-400) / 0.12) 35%, rgb(var(--fb-primary-400) / 0.05) 65%, rgb(var(--fb-secondary-400))) border-box !important;
+  box-shadow: 0 24px 60px -24px rgb(var(--fb-secondary-500) / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.07) !important;
+  backdrop-filter: blur(14px);
+}
+/* Its four corner marks, like a viewfinder. `HoloCorners` draws them. */
+.fb-fx-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 0 solid rgb(var(--fb-secondary-400));
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px rgb(var(--fb-secondary-400) / 0.9));
+}
+.fb-fx-corner[data-at='tl'] { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 6px; }
+.fb-fx-corner[data-at='tr'] { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 6px; }
+.fb-fx-corner[data-at='bl'] { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 6px; }
+.fb-fx-corner[data-at='br'] { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 6px; }
+
+/* A tray inside a panel: the faintest wash of the second colour. */
+.fb-fx-tray {
+  background: linear-gradient(180deg, rgb(var(--fb-secondary-500) / 0.07), rgb(var(--fb-primary-500) / 0.03)) !important;
+  border-color: rgb(var(--fb-secondary-400) / 0.3) !important;
+}
+
+/* A tile: a room door, a card that is pressed. Glass, a light-line edge,
+   and a thin line of light along its top. */
+.fb-fx-tile {
+  position: relative;
+  border-color: transparent !important;
+  background:
+    linear-gradient(160deg, rgb(var(--fb-surface-900) / 0.82), rgb(var(--fb-surface-950) / 0.88)) padding-box,
+    linear-gradient(140deg, rgb(var(--fb-primary-400) / 0.65), rgb(var(--fb-secondary-400) / 0.07) 45%, rgb(var(--fb-secondary-400) / 0.45)) border-box !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 10px 26px -14px rgb(var(--fb-secondary-500) / 0.5) !important;
+}
+.fb-fx-tile::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--fb-secondary-300) / 0.9), transparent);
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .fb-fx-tile:hover:not(:disabled) {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 24px -4px rgb(var(--fb-secondary-500) / 0.55) !important;
+  }
+}
+.fb-fx-tile:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.25) !important;
+}
+
+/* A room's card (`Card.tsx`, in twenty-eight rooms): the tile's glass and
+   edge, quieter — it holds controls rather than being one. */
+.fb-fx-card {
+  border-color: transparent !important;
+  background:
+    linear-gradient(170deg, rgb(var(--fb-surface-900) / 0.72), rgb(var(--fb-surface-950) / 0.8)) padding-box,
+    linear-gradient(140deg, rgb(var(--fb-primary-400) / 0.45), rgb(var(--fb-secondary-400) / 0.06) 45%, rgb(var(--fb-secondary-400) / 0.32)) border-box !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 10px 24px -18px rgb(var(--fb-secondary-500) / 0.45);
+}
+html[data-fb-mode='light'] .fb-fx-card { box-shadow: 0 6px 16px -12px rgb(var(--fb-secondary-700) / 0.4); }
+
+/* An icon's lens: round, lit from inside. */
+.fb-fx-lens {
+  border-radius: 9999px !important;
+  background: radial-gradient(circle at 50% 40%, rgb(var(--fb-secondary-500) / 0.35), rgb(var(--fb-primary-500) / 0.08) 70%) !important;
+  border-color: rgb(var(--fb-secondary-300) / 0.55) !important;
+  box-shadow: 0 0 16px rgb(var(--fb-secondary-500) / 0.45), inset 0 0 8px rgb(var(--fb-secondary-500) / 0.35) !important;
+}
+.fb-fx-lens svg {
+  color: rgb(var(--fb-secondary-200)) !important;
+  filter: drop-shadow(0 0 4px rgb(var(--fb-secondary-500) / 0.9));
+}
+
+/* A face: a round frame with a turning light around it. */
+.fb-fx-ring {
+  border-radius: 9999px !important;
+  border: 2px solid transparent !important;
+  background:
+    linear-gradient(rgb(var(--fb-surface-950)), rgb(var(--fb-surface-950))) padding-box,
+    conic-gradient(rgb(var(--fb-primary-400)), rgb(var(--fb-secondary-400)), rgb(var(--fb-primary-400))) border-box !important;
+  box-shadow: 0 0 22px rgb(var(--fb-secondary-500) / 0.45) !important;
+}
+
+/* The one main action: a charged light bar, with a shine that passes.
+   Both ends are the 500 step: it is the one step a light theme keeps bright
+   (the steps under it darken there, for words), so the dark ink on the bar
+   reads at either end on every theme. */
+.fb-fx-go {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgb(var(--fb-primary-500)), rgb(var(--fb-secondary-500))) !important;
+  color: rgb(var(--fb-on-accent)) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.25),
+    0 0 26px rgb(var(--fb-secondary-500) / 0.5),
+    0 8px 30px -8px rgb(var(--fb-primary-500) / 0.7) !important;
+}
+.fb-fx-go:active:not(:disabled) { transform: translateY(1px); }
+.fb-fx-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.35) 45%, transparent 60%);
+  animation: fb-fx-shine 3.6s ease-in-out infinite;
+}
+@keyframes fb-fx-shine {
+  0% { transform: translateX(-110%); }
+  45%, 100% { transform: translateX(110%); }
+}
+
+/* Labels: spaced capitals, and section tags with sharp corners. */
+.fb-fx-lead {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px !important;
+  color: rgb(var(--fb-secondary-300)) !important;
+}
+.fb-fx-chip {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgb(var(--fb-secondary-500) / 0.08) !important;
+  border-color: rgb(var(--fb-secondary-400) / 0.45) !important;
+  color: rgb(var(--fb-secondary-200)) !important;
+  box-shadow: 0 0 12px rgb(var(--fb-secondary-500) / 0.25);
+}
+.fb-fx-tag {
+  background: transparent !important;
+  border-radius: 4px !important;
+  border-color: rgb(var(--fb-secondary-400) / 0.5) !important;
+  color: rgb(var(--fb-secondary-200)) !important;
+  box-shadow: 0 0 10px rgb(var(--fb-secondary-500) / 0.2);
+}
+.fb-fx-rule {
+  background: linear-gradient(90deg, rgb(var(--fb-secondary-400) / 0.6), rgb(var(--fb-primary-400) / 0.15) 50%, transparent) !important;
+}
+
+/* The tab bar: dark glass, a line of light along its top, and the tab you
+   are on lit from above. */
+.fb-fx-bar {
+  background: rgb(var(--fb-surface-950) / 0.95) !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  border-top: 1px solid transparent !important;
+  border-image: linear-gradient(90deg, transparent, rgb(var(--fb-secondary-400) / 0.7), rgb(var(--fb-primary-400) / 0.7), transparent) 1 !important;
+}
+.fb-fx-bar button[aria-current='page'] { position: relative; color: rgb(var(--fb-secondary-200)) !important; }
+.fb-fx-bar button[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 28%;
+  right: 28%;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(var(--fb-secondary-400));
+  box-shadow: 0 0 10px rgb(var(--fb-secondary-400)), 0 0 20px rgb(var(--fb-secondary-400));
+}
+.fb-fx-pill {
+  background: linear-gradient(90deg, rgb(var(--fb-primary-500)), rgb(var(--fb-secondary-500))) !important;
+  color: rgb(var(--fb-on-accent)) !important;
+  box-shadow: 0 0 18px rgb(var(--fb-secondary-500) / 0.6);
+}
+
+/* On a light theme the light is kept and the glow is turned down: a halo
+   that reads as light on a dark page reads as a smudge on a white one. */
+html[data-fb-mode='light'] .fb-fx-panel { box-shadow: 0 18px 40px -24px rgb(var(--fb-secondary-700) / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.6) !important; }
+html[data-fb-mode='light'] .fb-fx-tile { box-shadow: 0 8px 20px -14px rgb(var(--fb-secondary-700) / 0.45) !important; }
+html[data-fb-mode='light'] :is(.fb-fx-lead, .fb-fx-chip, .fb-fx-tag) { color: rgb(var(--fb-secondary-800)) !important; }
+html[data-fb-mode='light'] .fb-fx-lens svg { color: rgb(var(--fb-secondary-700)) !important; filter: none; }
+html[data-fb-mode='light'] .fb-fx-bar button[aria-current='page'] { color: rgb(var(--fb-secondary-700)) !important; }
+
+/* Across the app: every boxed button gets the same line of light along its
+   top edge, and the solid main actions become the light bar. The class list
+   is read the way the rule further up reads it — `~=` matches the whole
+   word, so `bg-emerald-500/15` (a pale wash) and `hover:bg-emerald-400` are
+   not caught, only a button that is filled — and only one whose words are
+   the dark ink drawn for a filled button, which stays readable at the
+   gradient's lighter end. Not in the kids room, which has
+   its own look, nor in the booth, which is black and blue on every theme. */
+button[class*="border"]:not([data-kidsroom] *):not([data-booth] *):not(:disabled) {
+  box-shadow:
+    inset 0 1px 0 rgb(var(--fb-secondary-300) / 0.16),
+    0 1px 2px rgb(0 0 0 / 0.22),
+    0 4px 10px -4px rgb(0 0 0 / 0.28);
+}
+:is(button, a):is([class~="bg-emerald-500"], [class~="bg-emerald-400"]):is([class~="text-onAccent"], [class~="text-zinc-950"], [class~="text-black"]):not([data-kidsroom] *):not([data-booth] *):not(:disabled) {
+  background-image: linear-gradient(90deg, rgb(var(--fb-primary-500)), rgb(var(--fb-secondary-500)));
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.18),
+    0 0 20px -4px rgb(var(--fb-secondary-500) / 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-fx-shine { animation: none; transform: translateX(52%); }
+}

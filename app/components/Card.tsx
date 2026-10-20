@@ -168,8 +168,10 @@ export default function Card({
       className={
         warm
           ? 'rounded-2xl border border-amber-500/35 bg-amber-500/[0.08]'
-          : 'rounded-2xl border border-zinc-800 bg-zinc-900/60'
+          : 'fb-fx-card rounded-2xl border border-zinc-800 bg-zinc-900/60'
       }
+      /* The plain card wears the futuristic look's glass (`.fb-fx-card`,
+         globals.css); the amber one keeps its warning colour. */
     >
       {/* Wrapping, and the title gets first claim on the width.
 

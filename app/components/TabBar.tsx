@@ -176,7 +176,9 @@ export default function TabBar({
       data-chrome
       data-tabbar
       aria-label={t('tab.nav', 'The five parts of the app')}
-      className="fixed bottom-0 inset-x-0 z-[95] border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-xl"
+      /* Dark glass with a line of light along the top, and the tab you are on
+         lit from above — the futuristic look (`.fb-fx-bar`, globals.css). */
+      className="fb-fx-bar fixed bottom-0 inset-x-0 z-[95] border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-xl"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="mx-auto flex max-w-3xl items-stretch justify-around px-1">
@@ -208,7 +210,7 @@ export default function TabBar({
                 className={`flex h-8 w-14 max-w-full items-center justify-center rounded-full transition-colors ${
                   middle
                     ? on
-                      ? 'bg-emerald-500 text-onAccent'
+                      ? 'fb-fx-pill bg-emerald-500 text-onAccent'
                       : 'bg-zinc-800 text-zinc-300'
                     : on
                       ? 'bg-emerald-500/15'
