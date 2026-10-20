@@ -296,8 +296,15 @@ export default function Copilot({
           bare ? 'px-1 pb-1' : 'px-4 py-3 border-b border-zinc-800'
         }`}
       >
-        {!bare && <Sparkles className="w-4 h-4 text-emerald-400" />}
-        {!bare && <p className="text-sm font-bold text-white">{t('copilot.title')}</p>}
+        {/* The facelift's lens and spaced capitals, like every room's card
+            head (the owner, 20 October 2026: the copilot was the one thing
+            the facelift had not reached). */}
+        {!bare && (
+          <span className="fb-fx-lens inline-flex h-8 w-8 shrink-0 items-center justify-center border">
+            <Sparkles className="h-4 w-4" />
+          </span>
+        )}
+        {!bare && <p className="fb-fx-lead font-bold">{t('copilot.title')}</p>}
         {/* ── Start again ────────────────────────────────────────────────
 
             The owner, 21 September 2026: *"Copilot en daardie kamer moet 'n

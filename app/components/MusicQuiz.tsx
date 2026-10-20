@@ -113,7 +113,9 @@ export default function MusicQuiz(): React.ReactElement | null {
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 sm:p-5 space-y-4">
       <div className="flex items-start gap-3">
-        <GraduationCap className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+        <span className="fb-fx-lens inline-flex h-9 w-9 shrink-0 items-center justify-center border">
+          <GraduationCap className="h-5 w-5" />
+        </span>
         <div className="min-w-0">
           <h3 className="text-base font-extrabold tracking-tight text-white">
             {t('quiz.title', 'One thing about music')}

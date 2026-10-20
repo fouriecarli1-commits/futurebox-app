@@ -2618,3 +2618,85 @@ button[aria-pressed='true']:not(.fb-fx-go):not([data-kidsroom] *):not([data-boot
     box-shadow: 0 0 0 3px rgb(var(--fb-secondary-400) / 0.55);
   }
 }
+
+/* ── The futuristic look, in every corner ────────────────────────────────
+
+   The owner, 20 October 2026, with the music question under Make: *"Die make
+   studio het 'n facelift gekry behalwe die copilot. Jy gaan na elke kamer,
+   elke aspek van die hele app moet kyk sodat die facelift oor al deur gekom
+   het en dat alles dieselfde en netjies lyk."*
+
+   The rules above dressed the components that carry a class for it. Most
+   panels in the rooms do not: they are written the app's one usual way — a
+   rounded box with a neutral border on a surface fill — and so they are
+   dressed here by that shape, once, instead of in two hundred files. A box
+   with a coloured border (a warning, a chosen answer, a paid line) keeps its
+   colour; only the neutral ones change. The rooms with colours of their own
+   repaint the theme ramps (`[data-booth]`), so they get the same glass in
+   their own colour. */
+
+/* A panel: the card's glass and its light-line edge. */
+:is(section, div, article, form, aside, details, li)[class*='rounded-2xl'][class*='border-zinc-']:is([class*='bg-zinc-9'], [class*='bg-black'], [class*='bg-zinc-8']):not([data-kidsroom] *):not(.fb-fx-panel):not(.fb-fx-tile),
+:is(section, div, article, form, aside, details, li)[class*='rounded-3xl'][class*='border-zinc-']:is([class*='bg-zinc-9'], [class*='bg-black'], [class*='bg-zinc-8']):not([data-kidsroom] *):not(.fb-fx-panel):not(.fb-fx-tile) {
+  border-color: transparent !important;
+  background:
+    linear-gradient(170deg, rgb(var(--fb-surface-900) / 0.74), rgb(var(--fb-surface-950) / 0.82)) padding-box,
+    linear-gradient(140deg, rgb(var(--fb-primary-400) / 0.42), rgb(var(--fb-secondary-400) / 0.06) 45%, rgb(var(--fb-secondary-400) / 0.3)) border-box !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 10px 24px -18px rgb(var(--fb-secondary-500) / 0.45);
+}
+
+/* A choice in a list — an answer, a suggestion, a row to open — is a small
+   tile: glass, a faint edge that lights toward the second colour, and the
+   line of light along its top that every boxed button has. */
+button[class*='rounded-xl'][class*='border-zinc-']:is([class*='bg-zinc-9'], [class*='bg-black'], [class*='bg-zinc-8']):not([data-kidsroom] *):not(:disabled) {
+  border-color: transparent !important;
+  background:
+    linear-gradient(165deg, rgb(var(--fb-surface-900) / 0.85), rgb(var(--fb-surface-950) / 0.9)) padding-box,
+    linear-gradient(140deg, rgb(var(--fb-primary-400) / 0.4), rgb(var(--fb-secondary-400) / 0.08) 50%, rgb(var(--fb-secondary-400) / 0.35)) border-box !important;
+}
+
+/* A box to type in: the glass, darker, so the words stand on it. */
+:is(textarea, input[type='text'], input[type='search'], input[type='email'], input[type='url'], input[type='number'], input:not([type]))[class*='border-zinc-']:not([data-kidsroom] *) {
+  background-color: rgb(var(--fb-surface-950) / 0.78) !important;
+}
+
+/* A neutral pill or tag (`rounded-full` with a neutral border): a thin
+   edge of the second colour, so they read as the same family as the chips. */
+:is(span, button)[class*='rounded-full'][class*='border-zinc-']:not([data-kidsroom] *):not([role='switch']) {
+  border-color: rgb(var(--fb-secondary-400) / 0.32) !important;
+}
+
+html[data-fb-mode='light'] :is(section, div, article, form, aside, details, li)[class*='rounded-2xl'][class*='border-zinc-']:is([class*='bg-zinc-9'], [class*='bg-black'], [class*='bg-zinc-8']) {
+  box-shadow: 0 6px 16px -12px rgb(var(--fb-secondary-700) / 0.4);
+}
+
+/* The booth's own facelift: the same glass and light-line edge, drawn in
+   the booth's black and sky blue rather than the theme (the owner, 20
+   October 2026: *"Behalwe die unieke kamers wat unieke kleure het. Jy kan
+   dieselfde facelift vir daardie kamers gee net in daardie kleur dan."*).
+   `!important` because the booth paints its surfaces inline. */
+.fb-fx-booth-panel {
+  border-color: transparent !important;
+  background:
+    linear-gradient(165deg, #0b0d14, #05060a) padding-box,
+    linear-gradient(135deg, rgb(56 189 248 / 0.8), rgb(56 189 248 / 0.08) 38%, rgb(129 140 248 / 0.05) 65%, rgb(129 140 248 / 0.8)) border-box !important;
+  box-shadow: 0 24px 60px -26px rgb(56 189 248 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.06) !important;
+}
+.fb-fx-booth-tile {
+  position: relative;
+  border-color: transparent !important;
+  background:
+    linear-gradient(160deg, #141826, #0b0d14) padding-box,
+    linear-gradient(140deg, rgb(56 189 248 / 0.55), rgb(56 189 248 / 0.05) 45%, rgb(129 140 248 / 0.4)) border-box !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 10px 24px -16px rgb(56 189 248 / 0.45) !important;
+}
+.fb-fx-booth-tile::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(125 211 252 / 0.85), transparent);
+  pointer-events: none;
+}

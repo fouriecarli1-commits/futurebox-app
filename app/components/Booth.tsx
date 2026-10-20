@@ -114,7 +114,7 @@ function WhatItIs(): React.ReactElement {
         return (
           <div
             key={point.name}
-            className="flex items-start gap-3 rounded-2xl p-3"
+            className="fb-fx-booth-tile flex items-start gap-3 rounded-2xl p-3"
             style={{ background: PANEL, border: `1px solid ${EDGE}` }}
           >
             <span
@@ -356,7 +356,7 @@ export default function Booth({
          otherwise hand it. */
       data-booth
       data-boothdoor=""
-      className="space-y-5 rounded-3xl p-4 sm:p-6"
+      className="fb-fx-booth-panel space-y-5 rounded-3xl p-4 sm:p-6"
       style={{ background: VOID, border: `1px solid ${EDGE}`, color: INK }}
     >
       {/* Full screen and over everything: singing wants the whole window. */}
@@ -515,7 +515,7 @@ export default function Booth({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={taking || opening !== null}
-          className={BAR}
+          className={`fb-fx-booth-tile ${BAR}`}
           style={{ background: RAISED, border: `1px solid ${EDGE}`, color: INK }}
         >
           {taking ? <Loader2 className="h-5 w-5 animate-spin" style={{ color: LIT }} />
@@ -540,7 +540,7 @@ export default function Booth({
           <button
             type="button"
             onClick={onGoToMake}
-            className={BAR}
+            className={`fb-fx-booth-tile ${BAR}`}
             style={{ background: RAISED, border: `1px solid ${EDGE}`, color: INK }}
           >
             <Sparkles className="h-5 w-5" style={{ color: LIT }} />

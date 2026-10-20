@@ -453,7 +453,7 @@ export default function Greeting({
         <button
           type="button"
           onClick={onClose}
-          className="min-h-[44px] w-full sm:w-auto rounded-xl border border-emerald-500/25 bg-zinc-950/70 px-5 py-2.5 text-sm font-bold text-zinc-300 hover:border-emerald-400/60 hover:text-emerald-300 transition-all shadow-xs"
+          className="fb-fx-tile min-h-[44px] w-full sm:w-auto rounded-xl border border-emerald-500/25 bg-zinc-950/70 px-5 py-2.5 text-sm font-bold text-zinc-300 hover:border-emerald-400/60 hover:text-emerald-300 transition-all shadow-xs"
         >
           {t('hello.skip', 'Not now — take me to the feed')}
         </button>

@@ -10183,9 +10183,18 @@ export default function PostStudio({
       {!picture && words.length === 0 && marks.length === 0 && cells.length === 0 && bench === null && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center">
           <div
-            className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-2xl p-5 shadow-2xl backdrop-blur-md"
-            style={{ background: PHOTO.floorGlass, border: `1px solid ${PHOTO.accentDim}` }}
+            /* The facelift's glass in the photo room's own green and cyan
+               (the owner, 20 October 2026: the rooms with colours of their
+               own get the same look in that colour): a light-line edge from
+               the green to the cyan, and a line of light along the top. */
+            className="pointer-events-auto relative flex max-w-sm flex-col items-center gap-3 rounded-2xl p-5 shadow-2xl backdrop-blur-md"
+            style={{
+              border: '1px solid transparent',
+              background: `linear-gradient(${PHOTO.floorGlass}, ${PHOTO.floorGlass}) padding-box, linear-gradient(135deg, rgba(15,157,110,0.8), rgba(34,211,238,0.12) 40%, rgba(15,157,110,0.06) 65%, rgba(34,211,238,0.8)) border-box`,
+              boxShadow: `${PHOTO.glowCyan}, ${PHOTO.glowEmerald}`,
+            }}
           >
+            <span aria-hidden className="pointer-events-none absolute left-6 right-6 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${PHOTO.cyan}, transparent)` }} />
             <h4 className="text-sm font-bold text-white">{t('stpl.starterTitle', 'Start with a Design or Photo')}</h4>
             <p className="text-xs text-zinc-400">{t('stpl.starterDesc', 'Choose a starter pack or upload your image to begin creating.')}</p>
             <div className="flex w-full flex-col gap-2">
