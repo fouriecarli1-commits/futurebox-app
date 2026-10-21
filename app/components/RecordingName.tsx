@@ -199,7 +199,10 @@ export default function RecordingName({
           )}
         </Hint>
       </label>
-      <div className="flex gap-2">
+      {/* Wraps rather than squeezes: in the channel's narrow column on a desk
+          the box was left 70 pixels wide and showed "what p". Save goes onto
+          its own line before the box goes under seven rem. */}
+      <div className="flex flex-wrap gap-2">
         <span className="flex items-center rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 text-sm text-zinc-500">
           @
         </span>
@@ -215,7 +218,7 @@ export default function RecordingName({
             }
           }}
           placeholder={t('chan.recHandlePlaceholder', 'what people write to')}
-          className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
+          className="flex-1 min-w-[7rem] px-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm placeholder-zinc-600 focus:border-emerald-500 focus:outline-hidden"
         />
         <button
           type="button"

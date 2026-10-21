@@ -147,8 +147,12 @@ export default function ProfilePhoto({
     }
   }, [path, busy, onChanged]);
 
+  /* Side by side only where its own column has room for both. In the
+     channel's 17rem column on a desk, the words beside the picture ran one
+     or two to a line; there the picture goes on top instead. Measured by the
+     nearest `@container` (the channel's identity column), not the screen. */
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col items-start gap-4 @xs:flex-row @xs:items-center">
       <div className="relative shrink-0">
         {showing ? (
           // eslint-disable-next-line @next/next/no-img-element

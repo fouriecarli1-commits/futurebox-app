@@ -503,7 +503,7 @@ export default function Channel({
           just made has to be on the screen she lands on. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
         {/* ── Column one: who this is ──────────────────────────────── */}
-        <aside className="space-y-4 min-w-0" data-chanidentity>
+        <aside className="space-y-4 min-w-0 @container" data-chanidentity>
           <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs font-bold uppercase tracking-wider text-white">
               <span>{t('chan.identity', 'Channel identity')}</span>

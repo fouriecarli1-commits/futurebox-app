@@ -358,11 +358,11 @@ export default function CollabFinder({
 
   if (part === 'profile') {
     return (
-      <div className="space-y-4" data-radarprofile>
+      <div className="space-y-4 @container" data-radarprofile>
       {/* ── Who you are ──────────────────────────────────────────────────── */}
       <Card title={t('radar.you', 'How people find you')} icon={<Users className="w-4 h-4" />}>
         <Note>{t('radar.youNote', 'A name and somewhere to be reached. Without these a match has nobody to write to.')}</Note>
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid @sm:grid-cols-2 gap-2">
           <input
             value={creator.name}
             onChange={(event) => setCreator({ ...creator, name: event.target.value })}
@@ -376,7 +376,7 @@ export default function CollabFinder({
             className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
-        <div className="grid sm:grid-cols-3 gap-2">
+        <div className="grid @sm:grid-cols-2 @2xl:grid-cols-3 gap-2">
           {LINKS.map((key) => (
             <input
               key={key}
@@ -440,12 +440,16 @@ export default function CollabFinder({
     );
   }
 
+  /* `@container` on both, and the grids below by the panel's width rather
+     than the screen's: on a desk the profile sits in a 17rem side column, and
+     `sm:grid-cols-3` there drew six link boxes three abreast at 75 pixels
+     each — every one reading "https://" and nothing else. */
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 @container">
       {/* ── Who you are ──────────────────────────────────────────────────── */}
       <Card title={t('radar.you', 'How people find you')} icon={<Users className="w-4 h-4" />}>
         <Note>{t('radar.youNote', 'A name and somewhere to be reached. Without these a match has nobody to write to.')}</Note>
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid @sm:grid-cols-2 gap-2">
           <input
             value={creator.name}
             onChange={(event) => setCreator({ ...creator, name: event.target.value })}
@@ -459,7 +463,7 @@ export default function CollabFinder({
             className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-hidden"
           />
         </div>
-        <div className="grid sm:grid-cols-3 gap-2">
+        <div className="grid @sm:grid-cols-2 @2xl:grid-cols-3 gap-2">
           {LINKS.map((key) => (
             <input
               key={key}
