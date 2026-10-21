@@ -722,7 +722,7 @@ export default function Campaign({
           sonic logo and voice talent with stock faces are not here; the
           sentence at the foot of the preview says why. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
-      <aside className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4 min-w-0" data-adsetup>
+      <aside className="rounded-2xl border border-white/10 bg-zinc-900/80 p-4 backdrop-blur-md space-y-4 min-w-0 @container" data-adsetup>
         <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white">
           <span>{t('ads.setupTitle', 'Campaign setup')}</span>
         </div>
@@ -973,7 +973,10 @@ export default function Campaign({
           </span>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-3">
+        {/* By the setup panel's own width, not the screen's: on a desk the
+            panel is half the room beside the copilot, and three fields
+            abreast there cut "English" to "Englisl". */}
+        <div className="grid @md:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm text-zinc-400" htmlFor="ads-who">
               {t('ads.whoLabel', 'Who is it for?')}
@@ -1000,7 +1003,7 @@ export default function Campaign({
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-3">
+        <div className="grid @md:grid-cols-2 @2xl:grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm text-zinc-400" htmlFor="ads-tone">
               {t('ads.toneLabel', 'How should it sound?')}
