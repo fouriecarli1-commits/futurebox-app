@@ -43,6 +43,13 @@ export interface Motion {
   readonly strength?: number;
   /** Her own keyframes, on top of the movement. */
   readonly keys?: readonly Key[];
+  /**
+   * How solid the whole shot is, 0.1 to 1 — the owner's "transparency
+   * slider om 'n foto solied of ligter te maak" (21 October 2026). Not a
+   * movement: it is drawn by the same pose, but `moves` leaves it out, so a
+   * see-through shot is not priced as a moving one.
+   */
+  readonly solid?: number;
 }
 
 export const MOVES: readonly { readonly id: MoveId; readonly en: string; readonly af: string; readonly group: 'camera' | 'energy' | 'enter' }[] = [
@@ -146,7 +153,10 @@ export function keyPose(keys: readonly Key[] | undefined, p: number): Pose {
 
 /** Where the picture is `seconds` into a shot `length` seconds long: the movement and her keyframes together. */
 export function poseAt(motion: Motion | undefined, seconds: number, length: number): Pose {
-  if (!motion || ((!motion.move || motion.move === 'none') && !motion.keys?.length)) return STILL;
+  const solid = clamp(motion?.solid ?? 1, 0.1, 1);
+  if (!motion || ((!motion.move || motion.move === 'none') && !motion.keys?.length)) {
+    return solid < 1 ? { ...STILL, opacity: solid } : STILL;
+  }
   const len = Math.max(0.05, length);
   const s = clamp(seconds, 0, len);
   const p = s / len;
@@ -158,13 +168,17 @@ export function poseAt(motion: Motion | undefined, seconds: number, length: numb
     y: m.y + key.y,
     scale: clamp(m.scale * key.scale, 0.05, 8),
     rotate: m.rotate + key.rotate,
-    opacity: clamp(m.opacity * key.opacity, 0, 1),
+    opacity: clamp(m.opacity * key.opacity * solid, 0, 1),
   };
 }
 
 /** Whether a shot moves at all — the renderer skips the arithmetic when it does not. */
 export const moves = (motion: Motion | undefined): boolean =>
   Boolean(motion && ((motion.move && motion.move !== 'none') || motion.keys?.length));
+
+/** Whether a shot is drawn through a pose at all: it moves, or it is see-through. */
+export const shows = (motion: Motion | undefined): boolean =>
+  moves(motion) || (motion?.solid ?? 1) < 0.999;
 
 /** The pose as a CSS transform for the preview: the same numbers the renderer draws with. */
 export function poseCss(pose: Pose): string {
@@ -206,6 +220,7 @@ export function cleanMotion(raw: unknown): Motion | undefined {
     ...(move ? { move } : {}),
     ...(r.strength !== undefined ? { strength: num(r.strength, 0.25, 2, 1) } : {}),
     ...(keys?.length ? { keys } : {}),
+    ...(r.solid !== undefined && num(r.solid, 0.1, 1, 1) < 0.999 ? { solid: num(r.solid, 0.1, 1, 1) } : {}),
   };
-  return moves(motion) ? motion : undefined;
+  return shows(motion) ? motion : undefined;
 }

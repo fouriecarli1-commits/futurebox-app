@@ -83,7 +83,7 @@ import {
   MOST_PATCHES, PATCH_LARGEST, PATCH_SMALLEST, STRENGTHS, blurRadius, newPatch,
   type Patch, type StrengthId,
 } from '../lib/videoblur';
-import { EASES, MOVES, STILL, keyPose, moves, poseAt, poseCss, type Ease, type Key, type Motion, type MoveId } from '../lib/videomotion';
+import { EASES, MOVES, STILL, keyPose, moves, poseAt, poseCss, shows, type Ease, type Key, type Motion, type MoveId } from '../lib/videomotion';
 import CutDock, { type Bench } from './CutDock';
 import { useSideways } from '../lib/sideways';
 import { imageFrom, packLed, roomForRefs } from '../lib/packpicture';
@@ -6512,7 +6512,7 @@ async function smallerFrame(url: string): Promise<string> {
                 )}
               </div>
               {moves(motion) && (
-                <button type="button" data-editormotionclear onClick={() => tweak({ motion: undefined })} className="min-h-[44px] w-full rounded-xl border border-zinc-700 text-xs font-bold text-zinc-300">
+                <button type="button" data-editormotionclear onClick={() => tweak({ motion: motion.solid !== undefined ? { solid: motion.solid } : undefined })} className="min-h-[44px] w-full rounded-xl border border-zinc-700 text-xs font-bold text-zinc-300">
                   {t('edit.motionClear', 'Keep the picture still')}
                 </button>
               )}
@@ -6522,6 +6522,40 @@ async function smallerFrame(url: string): Promise<string> {
 
         {bench === 'looks' && piece && (
           <div className="space-y-4">
+          {/* ── Solid, or see-through ──────────────────────────────────
+              The owner, 21 October 2026: "video en photo editor kort 'n
+              transparency slider om 'n foto solied of ligter te maak." The
+              whole shot, through the same pose the renderer draws with
+              (`solid` in `videomotion.ts`), and not priced as movement. */}
+          <label data-editorsolid className="block space-y-1.5 rounded-xl border border-zinc-800 p-3">
+            <span className="flex items-center justify-between text-xs font-bold text-zinc-200">
+              {t('edit.solid', 'Transparency')}
+              <span className="tabular-nums text-zinc-400">
+                {(piece.motion?.solid ?? 1) >= 0.995
+                  ? t('post.photoSolid', 'Solid')
+                  : `${Math.round((1 - (piece.motion?.solid ?? 1)) * 100)}% ${t('post.photoSeeThrough', 'see-through')}`}
+              </span>
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={90}
+              step={5}
+              value={Math.round((1 - (piece.motion?.solid ?? 1)) * 100)}
+              onChange={(event) => {
+                const solid = 1 - Number(event.target.value) / 100;
+                const { solid: _was, ...rest } = piece.motion ?? {};
+                const next: Motion = solid < 0.999 ? { ...rest, solid } : rest;
+                slide({ motion: shows(next) ? next : undefined });
+              }}
+              aria-label={t('edit.solid', 'Transparency')}
+              className="h-9 w-full accent-emerald-400"
+            />
+            <span className="flex justify-between text-[11px] text-zinc-500">
+              <span>{t('post.photoSolid', 'Solid')}</span>
+              <span>{t('edit.solidFaded', 'Faded')}</span>
+            </span>
+          </label>
           {/* The looks. Seven, free, and applied in the browser — the same
               `filterCss` the render uses, so the preview swatch and the
               finished film cannot disagree. */}
@@ -8740,7 +8774,7 @@ function MotionDriver({ video, motion, from, speed, length }: {
   useEffect(() => {
     const el = video.current;
     if (!el) return undefined;
-    if (!moves(motion)) {
+    if (!shows(motion)) {
       el.style.transform = '';
       el.style.opacity = '';
       return undefined;

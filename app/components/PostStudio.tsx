@@ -7438,6 +7438,36 @@ export default function PostStudio({
 
   const toneBench = (
     <div className="space-y-4">
+    {/* ── Solid, or see-through ──────────────────────────────────────
+        The owner, 21 October 2026: "video en photo editor kort 'n
+        transparency slider om 'n foto solied of ligter te maak." The photo's
+        opacity was already there — in Layers, once the photo layer was
+        picked — which is two presses from where anybody looks for it. The
+        same value, here at the top of Adjust. */}
+    {picture && (
+      <label data-postphotoalpha className="block space-y-1.5 rounded-xl border border-zinc-800 p-3">
+        <span className="flex items-center justify-between text-xs font-bold text-zinc-200">
+          {t('post.photoAlpha', 'Transparency')}
+          <span className="tabular-nums text-zinc-400">
+            {photoAlpha >= 0.995 ? t('post.photoSolid', 'Solid') : `${Math.round((1 - photoAlpha) * 100)}% ${t('post.photoSeeThrough', 'see-through')}`}
+          </span>
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={90}
+          step={5}
+          value={Math.round((1 - photoAlpha) * 100)}
+          onChange={(event) => setPhotoAlpha(1 - Number(event.target.value) / 100)}
+          aria-label={t('post.photoAlpha', 'Transparency')}
+          className="h-9 w-full accent-emerald-400"
+        />
+        <span className="flex justify-between text-[11px] text-zinc-500">
+          <span>{t('post.photoSolid', 'Solid')}</span>
+          <span>{t('post.photoLighter', 'Lighter')}</span>
+        </span>
+      </label>
+    )}
     {/* ── How it reads ───────────────────────────────────────────────
  
         The owner, 7 October 2026, listing what a modern editor has: *"auto

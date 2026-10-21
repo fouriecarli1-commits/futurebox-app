@@ -73,7 +73,7 @@ import { stretches, wordsUp } from './videospan';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 import { paintJoin } from './joinpaint';
 import { paintFx, type FxOn } from './videofx';
-import { applyPose, moves, poseAt, type Motion } from './videomotion';
+import { applyPose, poseAt, shows, type Motion } from './videomotion';
 import { chainAudioFx, fadeLevel, type AudioFxOn, type SoundJoin } from './audiofx';
 import { paintedFor, type EdgeId } from './wordsedge';
 import { drawFrame, motionAt, revealed, scrambled } from './videoextras';
@@ -1474,7 +1474,7 @@ export async function stitch(cut: Cut): Promise<Made> {
              black where it leaves the frame; the words, the mark and the
              effects stay still on top. */
           const motion = cut.scenes[index].motion;
-          const pose = moves(motion) ? poseAt(motion, (video.currentTime - view.from) / fast, (window.to - window.from) / fast) : null;
+          const pose = shows(motion) ? poseAt(motion, (video.currentTime - view.from) / fast, (window.to - window.from) / fast) : null;
           const grade = cut.scenes[index].grade ?? '';
           if (grade) context.filter = grade;
           if (wantsBlur && fills < 0.995) backdrop(context, scratch, video, cut.width, cut.height);
