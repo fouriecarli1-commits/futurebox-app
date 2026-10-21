@@ -62,7 +62,7 @@ import { phrasesOf } from './phrases';
 import { attach } from './workfile';
 import type { Track } from './library';
 
-export type Timing = 'aligned' | 'heard' | 'phrases' | 'sung' | 'spread' | 'none';
+export type Timing = 'aligned' | 'heard' | 'anchored' | 'phrases' | 'sung' | 'spread' | 'none';
 
 export interface Timed {
   readonly lines: readonly TimedLine[];
@@ -161,6 +161,19 @@ export async function timeFor(track: Track, audio: Blob | null): Promise<Timed> 
   }
 
   const phrases = phrasesOf(buffer.getChannelData(0), buffer.sampleRate);
+
+  /* ── What the engine said ──────────────────────────────────────────
+     Lyria says the second each section starts (`track.sungAt`). That is a
+     measurement of this recording, so it goes above anything this device
+     can work out: each section's lines are laid inside the window the
+     engine gave it, on the phrases measured there when there are some. */
+  const anchored = anchorLines(even, track.sungAt ?? [], buffer.duration, phrases);
+  if (anchored) {
+    const timed: Timed = { lines: anchored, how: 'anchored' };
+    keep(track.id, timed);
+    return timed;
+  }
+
   if (phrases.length) {
     const timed: Timed = { lines: alignTo(even, phrases), how: 'phrases' };
     keep(track.id, timed);
@@ -178,6 +191,57 @@ export async function timeFor(track: Track, audio: Blob | null): Promise<Timed> 
     return timed;
   }
   return { lines: even, how: 'spread' };
+}
+
+/** A line as words only, so "Ry ek die vrede tegemoet." finds "ry ek die vrede tegemoet". */
+const bare = (line: string): string => line.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+/**
+ * The lines placed by the seconds the engine said its sections start at.
+ *
+ * Each anchor is matched to a line of the sheet by its words. The lines from
+ * one anchor up to the next are that section, and they are laid inside the
+ * window from its start to the next one's — on the phrases measured in that
+ * window when there are any, evenly otherwise. Lines before the first anchor
+ * (a sung intro the engine did not time) fit between the start and it.
+ *
+ * Null when no anchor matches a line: then this knows nothing the rungs
+ * below do not, and saying "anchored" would be a label on a guess.
+ */
+export function anchorLines(
+  even: readonly TimedLine[],
+  anchors: readonly { readonly line: string; readonly at: number }[],
+  length: number,
+  phrases: readonly { from: number; to: number }[],
+): TimedLine[] | null {
+  if (!even.length || !anchors.length || !(length > 0)) return null;
+  const marks: { index: number; at: number }[] = [];
+  let from = 0;
+  for (const anchor of [...anchors].sort((a, b) => a.at - b.at)) {
+    const want = bare(anchor.line);
+    if (!want || !(anchor.at >= 0) || anchor.at >= length) continue;
+    const index = even.findIndex((one, i) => i >= from && bare(one.text) === want);
+    if (index < 0) continue;
+    marks.push({ index, at: anchor.at });
+    from = index + 1;
+  }
+  if (!marks.length) return null;
+
+  const out: TimedLine[] = [];
+  const place = (lines: readonly TimedLine[], start: number, end: number): void => {
+    if (!lines.length) return;
+    const inside = phrases.filter((one) => one.from >= start - 0.25 && one.to <= end + 0.25);
+    /* Shifted to the window first, so the phrases inside it are what the
+       lines are matched against rather than the whole song's. */
+    const fitted = fitInto(lines, start, end);
+    out.push(...(inside.length ? alignTo(fitted, inside) : fitted));
+  };
+  place(even.slice(0, marks[0].index), 0, marks[0].at);
+  marks.forEach((mark, k) => {
+    const next = marks[k + 1];
+    place(even.slice(mark.index, next ? next.index : even.length), mark.at, next ? next.at : length);
+  });
+  return out.length === even.length ? out : null;
 }
 
 /* ── The top of the ladder, which nothing used to build ───────────────────

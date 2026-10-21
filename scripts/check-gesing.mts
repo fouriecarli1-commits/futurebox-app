@@ -40,7 +40,9 @@
 
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
-import { ENOUGH, lyriaSheet, readingOf, rowsFrom, sungWordsIn } from '../app/lib/sungwords.ts';
+import { ENOUGH, lyriaSheet, readingOf, rowsFrom, sungAnchorsIn, sungWordsIn } from '../app/lib/sungwords.ts';
+import { anchorLines } from '../app/lib/lyrictime.ts';
+import { partsOf, timelineOf } from '../app/lib/timeline.ts';
 
 let bad = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -172,6 +174,21 @@ ok('  and the description is never taken for the words, even on its own', sungWo
 const realTimed = lyriaSheet(REAL_WORDS).timed;
 ok('  and when each section starts is kept for the lyric video',
   realTimed.length === 8 && realTimed[0].at === 12 && realTimed[4].at === 36 && realTimed[1].at === null);
+/* And what those seconds are for: the first real song opens on twelve
+   seconds of guitar. Spread evenly, its first line lit up at 0.0 and its
+   second verse came in at 31.2; Lyria said 12.0 and 36.0. */
+const realEven = timelineOf(partsOf(realSung), 62.4);
+const realAnchors = sungAnchorsIn([REAL_WORDS, REAL_ABOUT]);
+const placed = anchorLines(realEven, realAnchors, 62.4, []) ?? [];
+ok('the section starts the engine said are read off its words', realAnchors.length === 2 && realAnchors[0].at === 12 && realAnchors[1].at === 36);
+ok('  and the first line waits for the singing — not lit during the intro', placed.length === 8 && Math.abs(placed[0].start - 12) < 0.01,
+  `first line at ${placed[0]?.start}`);
+ok('  and the second verse starts where it was sung', Math.abs((placed[4]?.start ?? 0) - 36) < 0.01, `verse 2 at ${placed[4]?.start}`);
+ok('  and the last line ends with the song', Math.abs((placed[7]?.end ?? 0) - 62.4) < 0.01);
+ok('  and phrases heard inside a section still place its lines',
+  Math.abs((anchorLines(realEven, realAnchors, 62.4, [{ from: 12.3, to: 17 }, { from: 18, to: 23 }, { from: 24, to: 29 }, { from: 30, to: 34 }, { from: 36.2, to: 41 }, { from: 42, to: 47 }, { from: 48, to: 53 }, { from: 54, to: 59 }])?.[0].start ?? 0) - 12.3) < 0.01);
+ok('anchors that match no line say nothing, rather than label a guess', anchorLines(realEven, [{ line: 'not in this song', at: 5 }], 62.4, []) === null);
+
 ok('words from any other engine come back untouched', lyriaSheet('[Verse]\nOne line\nTwo line').sheet === '[Verse]\nOne line\nTwo line');
 
 console.log(bad === 0 ? '\nAll good.\n' : `\n${bad} wrong.\n`);

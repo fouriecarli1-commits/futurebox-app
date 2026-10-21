@@ -31,7 +31,7 @@ import { accessToken, currentAccount } from './cloud';
 import { videoIsReady } from './videograde';
 import { stillWorthWaiting } from './jobwait';
 import { shapeSong } from './songshape';
-import { rowsFrom, sungWordsIn } from './sungwords';
+import { rowsFrom, sungAnchorsIn, sungWordsIn } from './sungwords';
 
 /**
  * A refusal from a route, with whether there is another way round it.
@@ -158,6 +158,8 @@ export interface EngineResult {
    * on it, so `lib/sungwords.ts` says no rather than guessing.
    */
   readonly sung?: string;
+  /** When the engine said each section starts, where it said (`sungAnchorsIn`). */
+  readonly sungAt?: readonly { readonly line: string; readonly at: number }[];
 }
 
 export interface Engines {
@@ -389,8 +391,15 @@ export const engines: Engines = {
        no words shown is unhelpful, and the wrong words shown is a release
        with a description printed on it. `lib/sungwords.ts` carries the
        reasoning and `check:gesing` drives the reading. */
-    const sung = sungWordsIn(rowsFrom(response.headers));
-    return { blob: await collect(response, request), model, ...(sung ? { sung } : {}) };
+    const rows = rowsFrom(response.headers);
+    const sung = sungWordsIn(rows);
+    const sungAt = sungAnchorsIn(rows);
+    return {
+      blob: await collect(response, request),
+      model,
+      ...(sung ? { sung } : {}),
+      ...(sungAt.length ? { sungAt } : {}),
+    };
   },
 
   /**

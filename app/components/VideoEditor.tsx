@@ -7002,7 +7002,9 @@ async function smallerFrame(url: string): Promise<string> {
                   ? t('edit.songAligned', 'The words were placed against the singing itself, so they are as exact as we can get.')
                   : sung.how === 'heard'
                     ? t('edit.songHeard', 'The singing was listened to word by word, so these are the moments they were actually sung.')
-                    : sung.how === 'phrases'
+                    : sung.how === 'anchored'
+                      ? t('edit.songAnchored', 'The music engine said when each part of the song starts, so every part lands on time and its lines are laid inside it.')
+                      : sung.how === 'phrases'
                       ? t('edit.songPhrases', 'The gaps between the phrases were measured in the track, so the lines land on the singing rather than being spread out.')
                       : t('edit.songSung', 'We can hear roughly where the singing starts and the lines are laid into that part. Check a few and move them if they drift.')}
               </p>

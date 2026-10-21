@@ -103,14 +103,39 @@ export const ENOUGH = 0.45;
  * and the wrong words shown is a release with a description printed on it.
  */
 export function sungWordsIn(rows: readonly string[]): string | null {
-  let best: { text: string; score: number } | null = null;
+  const row = sungRow(rows);
+  return row === null ? null : lyriaSheet(row).sheet;
+}
+
+/** The row that is the lyric sheet, as it came, or null. */
+function sungRow(rows: readonly string[]): string | null {
+  let best: { row: string; score: number } | null = null;
   for (const row of rows) {
     if (DESCRIBES.test(row)) continue;
     const reading = readingOf(lyriaSheet(row).sheet);
     if (reading.score < ENOUGH) continue;
-    if (!best || reading.score > best.score) best = { text: lyriaSheet(row).sheet, score: reading.score };
+    if (!best || reading.score > best.score) best = { row, score: reading.score };
   }
-  return best?.text ?? null;
+  return best?.row ?? null;
+}
+
+/** A line the engine said it starts singing at a given second. */
+export interface Anchor {
+  readonly line: string;
+  readonly at: number;
+}
+
+/**
+ * The seconds the engine said its sections start at, for the lines that
+ * carry one — `[12.0:]` on the first line of each section in Lyria's sheet.
+ * Empty for any engine that does not say.
+ */
+export function sungAnchorsIn(rows: readonly string[]): Anchor[] {
+  const row = sungRow(rows);
+  if (row === null) return [];
+  return lyriaSheet(row).timed
+    .filter((one): one is TimedLine & { at: number } => one.at !== null && Number.isFinite(one.at))
+    .map((one) => ({ line: one.line, at: one.at }));
 }
 
 /**

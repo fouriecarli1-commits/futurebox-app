@@ -66,6 +66,13 @@ export interface Track {
    */
   readonly givenBy?: string;
   /**
+   * The seconds the music engine said each section starts at, by its first
+   * line. Lyria sends these with its words (`[12.0:]`, see `lyriaSheet`);
+   * other engines send none. A measurement of this recording, so the
+   * timing ladder places the words by it before it guesses.
+   */
+  readonly sungAt?: readonly { readonly line: string; readonly at: number }[];
+  /**
    * Who the song is by, where that is not the person holding the account.
    *
    * Only brought-in songs carry it. Everything made here is by whoever made

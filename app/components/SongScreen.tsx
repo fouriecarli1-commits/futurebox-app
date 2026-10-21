@@ -415,7 +415,9 @@ export default function SongScreen({
                     is the guesses that have to be labelled. */}
                 {here && its.lines.length > 0 && its.how !== 'heard' && its.how !== 'aligned' && (
                   <p className={`pt-1.5 text-xs leading-snug ${INK_SOFT}`}>
-                    {its.how === 'phrases'
+                    {its.how === 'anchored'
+                      ? t('song.byEngine', 'The words are laid on the moments the music engine said each part starts.')
+                      : its.how === 'phrases'
                       ? t('song.byEar', 'The words are laid on the singing this app measured in the song.')
                       : its.how === 'sung'
                         ? t('song.bySpan', 'The words are laid across the part of the file that is sung.')

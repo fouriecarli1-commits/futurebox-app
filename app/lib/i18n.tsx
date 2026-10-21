@@ -1355,6 +1355,7 @@ export const STRINGS: Dict = {
     en: "The singing was listened to word by word, so these are the moments they were actually sung.",
     af: "Daar is woord vir woord na die sang geluister, so dit is die oomblikke waarop hulle werklik gesing is.",
   },
+  "edit.songAnchored": { en: "The music engine said when each part of the song starts, so every part lands on time and its lines are laid inside it.", af: "Die musiekenjin het gesê wanneer elke deel van die liedjie begin, so elke deel land betyds en sy reëls word daarbinne gelê." },
   "edit.songPhrases": {
     en: "The gaps between the phrases were measured in the track, so the lines land on the singing rather than being spread out.",
     af: "Die gapings tussen die frases is in die liedjie gemeet, so die re\u00eble land op die sang eerder as om net uitgesprei te word.",
@@ -3911,6 +3912,7 @@ export const STRINGS: Dict = {
   "song.pause": { en: "Pause", af: "Wag" },
   "song.words": { en: "The words", af: "Die woorde" },
   "song.evenly": { en: "The words are spread evenly over the length \u2014 this one has not been listened to yet, so they can drift.", af: "Die woorde word gelykop oor die lengte versprei \u2014 daar is nog nie na hierdie een geluister nie, so hulle kan wegdryf." },
+  "song.byEngine": { en: "The words are laid on the moments the music engine said each part starts.", af: "Die woorde lê op die oomblikke wat die musiekenjin gesê het elke deel begin." },
   "song.byEar": { en: "The words are laid on the singing this app measured in the song.", af: "Die woorde l\u00ea op die sang wat hierdie toep in die liedjie gemeet het." },
   "song.bySpan": { en: "The words are laid across the part of the file that is sung.", af: "Die woorde l\u00ea oor die deel van die l\u00eaer waarop gesing word." },
   /* The front page’s own drop-downs. The owner: everything folded except the

@@ -873,6 +873,7 @@ export default function MakeMusic({
         let blob: Blob;
         /** What the engine says it sang, where the room had no words of its own. */
         let sungBack = '';
+        let sungAt: Track['sungAt'];
         let source: Track['source'] = 'sketch';
         let models: string[] = ['FutureBox sketch'];
         if (engines.available('audio')) {
@@ -913,6 +914,10 @@ export default function MakeMusic({
              a song asked for by prompt, which until now came back with its
              words and dropped them. */
           if (result.sung && !lyrics.trim()) sungBack = result.sung;
+          /* When the engine said each section starts — kept whoever wrote the
+             words, because it is about the recording, not the sheet. The
+             timing ladder matches it to the lines (`lib/lyrictime.ts`). */
+          if (result.sungAt?.length) sungAt = result.sungAt;
         } else {
           blob = encodeWav(renderSketch(spec));
         }
@@ -949,6 +954,7 @@ export default function MakeMusic({
              itself so the release carries them, the sleeve can read them,
              and a lyric video has something to put on the screen. */
           lyrics: lyrics.trim() || sungBack,
+          ...(sungAt ? { sungAt } : {}),
           style: styleText,
           models,
           source,

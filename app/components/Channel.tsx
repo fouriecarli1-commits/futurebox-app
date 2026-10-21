@@ -1474,7 +1474,7 @@ export default function Channel({
             setLyricsFor((was) =>
               was && was.track.id === lyricsFor.track.id ? { ...was, lines: found.lines } : was,
             );
-            return found.how === 'phrases' || found.how === 'sung'
+            return found.how === 'phrases' || found.how === 'sung' || found.how === 'anchored'
               ? t('play.listenedOk', 'Listened to the song and laid the words back on the singing.')
               : t(
                   'play.listenedFlat',
