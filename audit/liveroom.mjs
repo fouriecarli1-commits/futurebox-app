@@ -58,6 +58,7 @@ function wav() {
    case that caught the fault: `Cover` draws from its seed, so a cover seeded
    on the post gave one song two different pictures, and neither of them was
    the picture that song has in Make a song. */
+const STYLE = 'warm female vocals, slow afro house with deep log drums and a Pretoria sunset feel';
 const POSTS = [
   { title: 'Karoo Wind', by: 'Zoë', note: 'First thing I made here.', song: 't-1700000000001' },
   { title: 'Second Song', by: 'Someone Else', note: '', song: 't-1700000000002' },
@@ -84,6 +85,9 @@ const POSTS = [
   hearts: [7, 12, null, 3][i],
   hearted: i === 1,
   plays: [41, 5, null, 88][i],
+  /* The second song's style is a sentence, the way Make a song writes one:
+     longer than any chip has room for. See the style checks below. */
+  genre: i === 1 ? STYLE : '',
 }));
 
 /* ── And one that is not a song ──────────────────────────────────────────
@@ -629,6 +633,43 @@ let signed = 0;
     Array.from(document.querySelectorAll('audio')).some((one) => !one.paused));
   check('pressing the heart does not pause the song underneath it',
     wasPlaying === afterPress, `playing ${wasPlaying} before, ${afterPress} after`);
+
+  /* ── A song's style ──────────────────────────────────────────────────
+
+     The owner, 21 October 2026, with a photograph: the chip beside the name
+     read "warm female voca", with the listen count printed over it. *"Die
+     styl van die liedjie moet mens op kan kliek dan pop die hele styl uit."* */
+  const chip = p.locator('[data-at="1"] [data-genrechip]').first();
+  const chipAt = await chip.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const rail = el.closest('[data-at]')?.querySelector('button[aria-pressed]')?.parentElement?.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + Math.min(20, box.width / 2), box.top + box.height / 2);
+    return {
+      right: Math.round(box.right),
+      railLeft: rail ? Math.round(rail.left) : null,
+      inside: box.left >= 0 && box.right <= window.innerWidth,
+      cut: el.scrollWidth > el.clientWidth,
+      reaches: hit ? hit.closest('[data-genrechip]') === el : false,
+    };
+  }).catch(() => null);
+  check('a song\u2019s style is on its panel, inside the screen', chipAt?.inside === true, JSON.stringify(chipAt));
+  check('  clear of the heart and listen rail', chipAt != null && chipAt.railLeft != null && chipAt.right <= chipAt.railLeft,
+    JSON.stringify(chipAt));
+  check('  with nothing painted over it', chipAt?.reaches === true, JSON.stringify(chipAt));
+  check('  and a long one is cut short there rather than running off', chipAt?.cut === true, JSON.stringify(chipAt));
+  const beforeStyle = await p.evaluate(() =>
+    Array.from(document.querySelectorAll('audio')).some((one) => !one.paused));
+  await chip.click();
+  await p.waitForTimeout(400);
+  const sheet = p.locator('[data-genresheet]');
+  check('pressing it pops the whole style out', (await sheet.count()) === 1
+    && ((await sheet.textContent()) ?? '').includes(STYLE), ((await sheet.textContent().catch(() => '')) ?? '').slice(0, 90));
+  const afterStyle = await p.evaluate(() =>
+    Array.from(document.querySelectorAll('audio')).some((one) => !one.paused));
+  check('  without pausing the song', beforeStyle === afterStyle, `playing ${beforeStyle} before, ${afterStyle} after`);
+  await sheet.locator('button[aria-label]').first().click();
+  await p.waitForTimeout(300);
+  check('  and it closes again', (await sheet.count()) === 0);
 
   /* The way out, and whether anything is sitting on top of it.
 

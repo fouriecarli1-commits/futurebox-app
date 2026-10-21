@@ -225,6 +225,12 @@ export default function RoomScreen({
   const [along, setAlong] = useState(0);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  /* The whole style of a song, popped out. The owner, 21 October 2026: "Die
+     styl van die liedjie moet mens op kan kliek dan pop die hele styl uit."
+     A style is often a sentence ("warm female vocals, slow afro house…") and
+     the chip has room for three words. */
+  const [styleOf, setStyleOf] = useState<string | null>(null);
+  useBackLayer(styleOf !== null, () => setStyleOf(null));
   useEffect(() => setMounted(true), []);
 
   const post = playable[at];
@@ -518,6 +524,41 @@ export default function RoomScreen({
         <X className="h-5 w-5" />
       </button>
 
+      {/* A song's whole style, popped out over the room. A press anywhere
+          off the card, the back button, or the X puts it away; the song
+          keeps playing underneath. */}
+      {styleOf !== null && (
+        <div
+          data-genresheet
+          className="absolute inset-0 z-30 flex items-end justify-center p-4 pb-24"
+          style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => setStyleOf(null)}
+        >
+          <div
+            role="dialog"
+            aria-label={t('room.style', 'Style')}
+            className="fb-live-chip relative w-full max-w-md rounded-3xl p-5 pr-14"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: INK_DIM }}>
+              {t('room.style', 'Style')}
+            </p>
+            <p className="mt-1.5 break-words text-base font-bold leading-snug" style={{ color: INK }}>
+              {styleOf}
+            </p>
+            <button
+              type="button"
+              onClick={() => setStyleOf(null)}
+              aria-label={t('room.close', 'Close')}
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full"
+              style={{ background: GLASS, color: INK }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div
         ref={scroller}
         className="h-full w-full overflow-y-auto"
@@ -804,7 +845,8 @@ export default function RoomScreen({
               </div>
             )}
 
-            <div className="relative flex items-center gap-3 pb-2">
+            {/* Clear of the rail on the right, which stands over this row. */}
+            <div className="relative flex items-center gap-3 pb-2 pr-16">
               <span
                 data-roomplay
                 className="fb-fx-go flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
@@ -821,7 +863,7 @@ export default function RoomScreen({
               {/* The title in light — *"moet die skrif op die album ook
                   amazing lyk"* — with five bars beside the maker's name
                   that move while the song plays. */}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="fb-live-title line-clamp-2 text-[1.9rem]">
                   {one.title}
                 </p>
@@ -834,18 +876,31 @@ export default function RoomScreen({
                     </span>
                   )}
                 </p>
-              </div>
-              {/* The genre, beside the name rather than under the note.
+                {/* The genre, as a chip under the name: a fact about the song,
+                    not more of the sentence about who made it. Absent where
+                    there is none — a chip reading "—" is worse than no chip.
 
-                  Drawn as a chip for the same reason as on the list: it is a
-                  fact about the song, not more of the sentence about who made
-                  it. Absent where there is none — a chip reading "—" is worse
-                  than no chip. */}
-              {one.genre && (
-                <span className="fb-live-chip ml-auto shrink-0 self-start rounded-full px-3 py-1 text-xs font-bold">
-                  {one.genre}
-                </span>
-              )}
+                    It was beside the name, `shrink-0`, and a style written as
+                    a sentence ran under the rail, cut off with the play count
+                    printed over it (the owner's photograph, 21 October 2026).
+                    Now it is cut to the column with an ellipsis, and a press
+                    pops the whole of it out. */}
+                {one.genre && (
+                  <button
+                    type="button"
+                    data-genrechip
+                    onClick={(event) => {
+                      /* The panel underneath is the pause control. */
+                      event.stopPropagation();
+                      setStyleOf(one.genre ?? null);
+                    }}
+                    aria-label={`${t('room.styleAll', 'Show the whole style')}: ${one.genre}`}
+                    className="fb-live-chip mt-2 block max-w-full truncate rounded-full px-3 py-1 text-left text-xs font-bold"
+                  >
+                    {one.genre}
+                  </button>
+                )}
+              </div>
             </div>
 
             {one.note && (

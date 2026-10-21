@@ -6172,6 +6172,8 @@ export const STRINGS: Dict = {
   "room.close": { en: "Close", af: "Maak toe" },
   "room.play": { en: "Play", af: "Speel" },
   "room.pause": { en: "Pause", af: "Wag" },
+  "room.style": { en: "Style", af: "Styl" },
+  "room.styleAll": { en: "Show the whole style", af: "Wys die hele styl" },
   "room.empty": { en: "Nothing in the room can be played right now.", af: "Niks in die kamer kan nou gespeel word nie." },
   "starts.open": { en: "Give me a song to start from", af: "Gee my ’n liedjie om mee te begin" },
   "starts.title": { en: "Fifty songs to start from", af: "Vyftig liedjies om mee te begin" },
