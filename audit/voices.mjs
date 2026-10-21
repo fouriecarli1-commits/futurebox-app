@@ -26,7 +26,7 @@ await page.route('**/api/voice', async (route) => {
 });
 
 const room = await studio(page);
-await room.locator('button').filter({ hasText: /^Your voice/i }).first().click();
+await room.locator('button').filter({ hasText: /^Voice cloning/i }).first().click();
 await page.waitForTimeout(1800);
 const text = await room.innerText();
 console.log('picker present:', /Rachel/.test(text) && /American, young, narration/.test(text));

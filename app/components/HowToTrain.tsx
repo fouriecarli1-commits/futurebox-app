@@ -98,7 +98,7 @@ export default function HowToTrain({
       {/* Where the training itself happens, said plainly rather than left for
           somebody to discover after they have recorded six takes. */}
       <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">
-        {t('train.where', 'Training a singing voice is what Kits.AI is for, and your plan pays for it. This app cannot hand your takes over yet — that part is still to be built here — so for now the takes go up at kits.ai and you bring the model’s number back.')}{' '}
+        {t('train.where', 'A SINGING voice is trained on kits.ai, on their own site — it cannot be made from inside this app. Train it there, then enter the model’s number where you pick a singing voice in ProBooth.')}{' '}
         <a
           href={KITS}
           target="_blank"

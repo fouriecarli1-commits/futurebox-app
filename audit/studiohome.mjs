@@ -65,7 +65,7 @@ names.forEach((n) => console.log('   · ' + n));
    all lived in the Video desk beside it. Removing the room is what this list
    is for — it failed the moment the room did, which is the whole point of
    naming the doors rather than counting them. */
-for (const room of ['Make a song', 'Studio', 'ProBooth', 'Your voice', 'Sound trainer',
+for (const room of ['Make a song', 'Studio', 'ProBooth', 'Voice cloning', 'Sound trainer',
                     'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar']) {
   check(`${room} has a button of its own`, names.some((n) => n.toLowerCase().startsWith(room.toLowerCase())));
 }

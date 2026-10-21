@@ -61,7 +61,7 @@ export const TOOLS: readonly Tool[] = [
   { id: 'tryon', group: 'ai', en: 'Clothes on a model', af: 'Klere op ’n model', room: 'photo', panel: 'tryon', icon: 'tryon', paid: true },
   { id: 'albumart', group: 'ai', en: 'Album art', af: 'Albumkuns', room: 'albumart', icon: 'art', paid: true },
   { id: 'ads', group: 'ai', en: 'Adverts', af: 'Advertensies', room: 'campaign', icon: 'ads', paid: true },
-  { id: 'voice', group: 'ai', en: 'Your voice', af: 'Jou stem', room: 'voice_studio', icon: 'voice', paid: true },
+  { id: 'voice', group: 'ai', en: 'Voice cloning', af: 'Stemkloning', room: 'voice_studio', icon: 'voice', paid: true },
 
   { id: 'videoeditor', group: 'video', en: 'Video editor', af: 'Video-redigeerder', room: 'videoedit', icon: 'scissors' },
   { id: 'moments', group: 'video', en: 'Best moments', af: 'Beste oomblikke', room: 'videoedit', panel: 'clip', icon: 'scissors' },

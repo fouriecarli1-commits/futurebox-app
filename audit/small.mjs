@@ -2,7 +2,7 @@ import { enter, studio } from './enter.mjs';
 const { browser, page } = await enter({ width: 390, height: 844 });
 page.on('response', (r) => { if (r.status() === 404) console.log('404 →', r.url()); });
 const room = await studio(page);
-await room.locator('button').filter({ hasText: /^Your voice/i }).first().click();
+await room.locator('button').filter({ hasText: /^Voice cloning/i }).first().click();
 await page.waitForTimeout(1200);
 const list = await page.evaluate(() => {
   const out = [];

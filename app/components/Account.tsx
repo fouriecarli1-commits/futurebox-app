@@ -85,7 +85,7 @@ export default function Account({
   readonly onNamed?: (creator: Creator) => void;
   /** Open the Theme / Style customizer. */
   readonly onAppearance?: () => void;
-  /** The Your voice room, where cloned voices are made and kept. */
+  /** The Voice cloning room, where cloned voices are made and kept. */
   readonly onGoToVoices?: () => void;
 }): React.ReactElement | null {
   const { t, lang } = useLang();
@@ -409,7 +409,7 @@ export default function Account({
                   <p className="text-sm font-semibold text-white">{t('account.voicesNone', 'No cloned voices yet')}</p>
                   <p className="mt-1 text-xs text-zinc-400">
                     {voices.room > 0
-                      ? t('account.voicesRoom', 'Your plan keeps up to {n}. Clone yours once in the Your voice room and use it everywhere.').replace('{n}', String(voices.room))
+                      ? t('account.voicesRoom', 'Your plan keeps up to {n}. Clone yours once in the Voice cloning room and use it everywhere.').replace('{n}', String(voices.room))
                       : t('account.voicesPlan', 'Cloning a voice comes with a paid plan.')}
                   </p>
                 </div>
@@ -435,7 +435,7 @@ export default function Account({
                   style={{ border: `1px solid ${PHOTO.accent}`, color: PHOTO.accent, background: PHOTO.accentWash }}
                 >
                   <Mic className="mr-1 inline h-3.5 w-3.5" />
-                  {t('account.goVoices', 'Manage in Your voice')}
+                  {t('account.goVoices', 'Manage in Voice cloning')}
                 </button>
               )}
             </section>

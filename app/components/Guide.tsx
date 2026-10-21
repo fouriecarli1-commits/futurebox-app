@@ -37,7 +37,7 @@ const ROOMS: readonly { readonly id: SurfaceId; readonly rail: string; readonly 
   { id: 'make', rail: 'rail.make', name: 'Make a song' },
   { id: 'studio', rail: 'rail.studio', name: 'Studio' },
   { id: 'booth', rail: 'rail.booth', name: 'ProBooth' },
-  { id: 'voice_studio', rail: 'rail.voice', name: 'Your voice' },
+  { id: 'voice_studio', rail: 'rail.voice', name: 'Voice cloning' },
   { id: 'sound', rail: 'rail.sound', name: 'Sound trainer' },
   { id: 'canvas', rail: 'rail.canvas', name: 'Video desk' },
   { id: 'videoedit', rail: 'rail.videoedit', name: 'Video Editor' },

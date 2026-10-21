@@ -219,7 +219,7 @@ work is read off.
 | ✅ | The price is on the button that spends it, read from `credits.ts` at both ends. `check:priceonit` holds every room that reaches a charging route — 19 routes, 13 rooms |
 | ✖ | No caption written for the clip, though the copilot's own seeds offer it — an operation that does not exist |
 
-### Your voice
+### Voice cloning
 
 | | |
 |---|---|

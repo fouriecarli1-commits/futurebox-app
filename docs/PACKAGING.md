@@ -43,7 +43,7 @@ inside the tab they belong to**.
 |---|---|---|
 | **Listen** | play | Live, Hooks — as one vertical full-screen slider |
 | **Find** | search | Search, Collab Radar, Masterclasses, the picks |
-| **Make** | sparkle note (centre) | Make a song, and every other making room as a chip: Studio, Booth, Your voice, Soundboard, Music video, Video desk, Hooks, Podcast, Adverts |
+| **Make** | sparkle note (centre) | Make a song, and every other making room as a chip: Studio, Booth, Voice cloning, Soundboard, Music video, Video desk, Hooks, Podcast, Adverts |
 | **Library** | bars | Your channel: songs, playlists, liked, videos, episodes |
 | **You** | avatar | Profile, brand name, credits, plan, settings |
 

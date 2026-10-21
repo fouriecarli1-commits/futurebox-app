@@ -36,7 +36,7 @@ export const DOORS = {
   make: 'Make a song',
   studio: 'Studio',
   booth: 'ProBooth',
-  voice_studio: 'Your voice',
+  voice_studio: 'Voice cloning',
   sound: 'Sound trainer',
   canvas: 'Video desk',
   videoedit: 'Video Editor',
@@ -57,7 +57,7 @@ export const DOORS = {
  * reads as a changed result when nothing changed.
  */
 export const ROOMS = [
-  'Make a song', 'Studio', 'ProBooth', 'Your voice', 'Sound trainer', 'Video desk',
+  'Make a song', 'Studio', 'ProBooth', 'Voice cloning', 'Sound trainer', 'Video desk',
   'Video Editor',
   /* Added 7 October 2026, the day it was asked to be as tidy as the other
      two. It had a `DOORS` entry from the day it was built and no entry here,
@@ -85,7 +85,7 @@ export const ROOMS_AF = {
   'Make a song': 'Maak ’n liedjie',
   Studio: 'Studio',
   'ProBooth': 'ProBooth',
-  'Your voice': 'Jou stem',
+  'Voice cloning': 'Stemkloning',
   'Sound trainer': 'Klankafrigter',
   'Video desk': 'Videolessenaar',
   'Video Editor': 'Video-redigeerder',

@@ -38,7 +38,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowRight, BookOpen, ChevronLeft, ChevronRight, Compass, Film, Mic, Music, Paintbrush,
+  ArrowRight, BookOpen, ChevronLeft, ChevronRight, Compass, Film, Mic, Mic2, Music, Paintbrush,
   Pause, Play, Radio, Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -80,7 +80,7 @@ export default function Spotlight({
   onOpenLive,
 }: {
   /** Open the studio on one of its screens. */
-  onGo: (tab: 'make' | 'voice_studio' | 'podcast') => void;
+  onGo: (tab: 'make' | 'videoedit' | 'booth' | 'voice_studio' | 'podcast') => void;
   onAppearance: () => void;
   /** The radar bar is a door to the radar tab, which is a page of its own. */
   onOpenRadar: () => void;
@@ -144,8 +144,14 @@ export default function Spotlight({
   };
 
   const rooms: readonly { icon: React.ReactNode; name: string; sub: string; tone: string; go: () => void; href?: string }[] = [
-    { icon: <Film className="h-5 w-5" />, name: t('spot.editorName', 'VideoEditor NLE'), sub: t('spot.editorSub', 'Multi-track timeline, captions, Veo scenes'), tone: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/40', go: () => onGo('make') },
-    { icon: <Mic className="h-5 w-5" />, name: t('spot.boothName', 'ProBooth DAW'), sub: t('spot.boothSub', 'Record, clone, separate stems'), tone: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/40', go: () => onGo('voice_studio') },
+    { icon: <Film className="h-5 w-5" />, name: t('spot.editorName', 'VideoEditor NLE'), sub: t('spot.editorSub', 'Multi-track timeline, captions, Veo scenes'), tone: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/40', go: () => onGo('videoedit') },
+    { icon: <Mic className="h-5 w-5" />, name: t('spot.boothName', 'ProBooth DAW'), sub: t('spot.boothSub', 'Record, mix, separate stems'), tone: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/40', go: () => onGo('booth') },
+    /* The owner, 21 October 2026: *"Ek sien nerens in die app die voice cloning
+       nie."* The ProBooth card above said "clone" and opened the voice room,
+       and the video editor's card opened Make a song — so the one card that
+       mentioned cloning led somewhere called something else. Each card now
+       opens its own room, and cloning has a card of its own. */
+    { icon: <Mic2 className="h-5 w-5" />, name: t('spot.cloneName', 'Voice cloning'), sub: t('spot.cloneSub', 'Clone your voice once, read anything in it'), tone: 'text-fuchsia-400 bg-fuchsia-500/15 border-fuchsia-500/40', go: () => onGo('voice_studio') },
     { icon: <Music className="h-5 w-5" />, name: t('spot.makeName', 'Make a Song'), sub: t('spot.makeSub', 'Afrikaans or English, every genre'), tone: 'text-amber-400 bg-amber-500/15 border-amber-500/40', go: () => onGo('make') },
   ];
 

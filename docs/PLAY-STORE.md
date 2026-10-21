@@ -356,7 +356,7 @@ button.
 WHAT IS INSIDE
 • Make a song — write it, hear it, keep it
 • ProBooth — sing on it yourself, with lanes, a metronome and a desk
-• Your voice — clone it once, use it everywhere
+• Voice cloning — clone your voice once, use it everywhere
 • Video editor — trims, titles, looks and music, all on your phone
 • Photo editor — background remover, free-hand cut, crop, text grabbing
 • Channel — your own place for what you have made
