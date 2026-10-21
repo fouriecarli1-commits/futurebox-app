@@ -1983,24 +1983,44 @@ html[data-singing] [data-tabbar] { display: none !important; }
 
 /* ── The photo editor's tool controls, floating over the photograph ─────
    The owner, 14 October 2026: "sonder 'n background en very bright neon en
-   highlighted dat mens dit bo op die prent kan sien". No panel behind
-   them: every control is drawn in neon with a glow, and every letter gets
-   a dark edge so it reads over a white sky and a black shirt alike. */
-[data-postpop][data-neon] { background: transparent !important; padding: 6px 8px; }
-[data-postpop][data-neon] * { text-shadow: 0 0 2px #000, 0 0 4px #000, 0 1px 2px #000; }
+   highlighted dat mens dit bo op die prent kan sien" — and then, 21 October
+   2026, looking at what that became: "die background weg is, die
+   deurskynende buttons". Controls with nothing behind them read over a
+   plain sky and are lost over a busy photo, and a see-through button is a
+   button the photograph shows through. So the panel is frosted dark glass —
+   the photograph still shows through it, blurred, so nothing jumps — and
+   every button is solid, with the neon kept as its edge. */
+[data-postpop][data-neon] {
+  background: rgba(8, 11, 16, 0.76) !important;
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  border-top: 1px solid rgba(57, 255, 20, 0.35);
+  border-radius: 18px 18px 0 0;
+  padding: 6px 8px;
+}
 [data-postpop][data-neon] :is(div, section, aside, header, fieldset) { background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
 [data-postpop][data-neon] :is(p, span, label, h3, h4) { color: #eafff4 !important; }
 [data-postpop][data-neon] :is(button, select, textarea, input[type="text"], input[type="number"]) {
-  background: rgba(0, 0, 0, 0.32) !important;
-  border: 1.5px solid #39ff14 !important;
+  background: #131a22 !important;
+  border: 1.5px solid rgba(57, 255, 20, 0.6) !important;
   color: #eafff4 !important;
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.55), inset 0 0 6px rgba(57, 255, 20, 0.18) !important;
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.28) !important;
 }
 [data-postpop][data-neon] :is(button[aria-pressed="true"], button[data-picked="true"]) {
-  background: rgba(57, 255, 20, 0.28) !important;
+  background: #1d4a22 !important;
   border-color: #b9ff9e !important;
-  box-shadow: 0 0 16px rgba(57, 255, 20, 0.9) !important;
+  box-shadow: 0 0 14px rgba(57, 255, 20, 0.7) !important;
 }
+/* The magic touch and the strips are aimed by tapping the photograph
+   through the panel, so there the panel stays clear and the letters keep
+   their dark edge to read over the picture. */
+[data-postpop][data-neon][data-passthrough="yes"] {
+  background: transparent !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: 0;
+}
+[data-postpop][data-neon][data-passthrough="yes"] * { text-shadow: 0 0 2px #000, 0 0 4px #000, 0 1px 2px #000; }
 [data-postpop][data-neon] input[type="range"] { accent-color: #39ff14; filter: drop-shadow(0 0 4px rgba(57, 255, 20, 0.8)); }
 /* The way into the darkroom keeps its own colours wherever the bench is
    drawn — neon over the photo or glass under it. The owner, 17 October 2026:
