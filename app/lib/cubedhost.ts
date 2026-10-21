@@ -38,7 +38,7 @@
 import { CLASSES_IN_A_SERIES } from './cubed';
 
 /** The terms' version, stored with every signature. Change it when the words change. */
-export const TERMS_VERSION = '2026-10-21';
+export const TERMS_VERSION = '2026-10-21.2';
 
 /** The longest any one answer may be. */
 const SHORT = 160;
@@ -261,6 +261,52 @@ export const cleanLink = (raw: unknown): string => {
   }
 };
 
+/* ── Every way a file can reach FutureBox ───────────────────────────── */
+
+/*
+ * The owner, 21 October 2026: *"kom ons werk met enige manier van transfer wat
+ * vir die presenter moontlik is."* Uploading here is the first way, not the
+ * only one: a class video can be gigabytes, a presenter may have it in a
+ * cloud folder already, or only on a phone, or on a camera's card. So every
+ * block also takes links — as many as the files — and a plain statement of
+ * how else it will arrive. FutureBox's own phone number or address is never
+ * on this page: the presenter says how, and FutureBox makes contact.
+ */
+export const WAYS = [
+  { id: 'whatsapp', label: 'On WhatsApp', hint: 'Sent as a document, not as a video — WhatsApp shrinks videos otherwise.' },
+  { id: 'email', label: 'By email', hint: 'The file, or a link to it.' },
+  { id: 'usb', label: 'On a USB stick or hard drive', hint: 'Handed over or couriered.' },
+  { id: 'together', label: 'FutureBox records it with me', hint: 'Nothing to send: we record it together.' },
+] as const;
+export type WayId = (typeof WAYS)[number]['id'];
+
+/** The most links one block keeps. */
+export const MOST_LINKS = 12;
+
+export interface Transfer {
+  readonly links: readonly string[];
+  readonly way: WayId | '';
+  readonly note: string;
+}
+
+export const NO_TRANSFER: Transfer = { links: [], way: '', note: '' };
+
+/** One block's other ways, cleaned: https links only, no repeats, a known way, a short note. */
+export function cleanTransfer(raw: unknown): Transfer {
+  /* A single link, as the first version of this page kept it. */
+  if (typeof raw === 'string') {
+    const one = cleanLink(raw);
+    return { links: one ? [one] : [], way: '', note: '' };
+  }
+  const given = (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>;
+  const links = [...new Set((Array.isArray(given.links) ? given.links : []).map(cleanLink).filter(Boolean))].slice(0, MOST_LINKS);
+  const way = WAYS.some((one) => one.id === given.way) ? given.way as WayId : '';
+  return { links, way, note: text(given.note, 300).trim() };
+}
+
+/** Whether a block has anything on its way, by any route. */
+export const transferSaid = (one: Transfer): boolean => one.links.length > 0 || Boolean(one.way) || Boolean(one.note);
+
 /* ── How it works ────────────────────────────────────────────────────── */
 
 export const PROCESS: readonly { readonly title: string; readonly body: string }[] = [
@@ -268,7 +314,7 @@ export const PROCESS: readonly { readonly title: string; readonly body: string }
   { title: 'We confirm in writing', body: 'FutureBox sends you a written offer with your fee and the dates we agree on. Nothing is recorded before you have it.' },
   { title: 'Plan your recording', body: 'Choose below whether you record yourself and whether you edit yourself. If not, we arrange the recording and editing with you.' },
   { title: 'Record the five steps', body: 'Welcome, ice breaker, the three sessions, your favourite feature and your closing words — each laid out below with a script or the questions to answer.' },
-  { title: 'Upload', body: 'Every step has its own upload block on this page. Upload as you go; nothing has to be done in one sitting.' },
+  { title: 'Send your files', body: 'Every step has its own block on this page. Upload straight into it, paste links (Google Drive, Dropbox, WeTransfer, OneDrive, iCloud — any link that opens), or tell us it is coming on WhatsApp, by email or on a USB stick. Send as you go; nothing has to be done in one sitting.' },
   { title: 'Review', body: 'You see the finished class before it goes live, and you have five working days to ask for changes.' },
   { title: 'Teasers and photos', body: 'Three short teaser videos and six photographs, so the class can be announced before it opens.' },
   { title: 'Launch', body: `Your Cubed³ class opens on FutureBox: ${CLASSES_IN_A_SERIES} sessions, one masterclass.` },
@@ -457,7 +503,7 @@ export const TERMS: readonly Clause[] = [
   {
     title: '5. Delivery',
     body: [
-      'You deliver the Recordings, the three teaser videos and the six photographs by the dates in the written offer, by uploading them on this page or as otherwise agreed in writing.',
+      'You deliver the Recordings, the three teaser videos and the six photographs by the dates in the written offer: by uploading them on this page, by a link to them, or by WhatsApp, email or a USB stick or hard drive as you indicate on this page — or as otherwise agreed in writing. Files sent by link stay available until FutureBox confirms it has them.',
     ],
   },
   {

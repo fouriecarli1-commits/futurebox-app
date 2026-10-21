@@ -25,7 +25,7 @@
 import { readFileSync } from 'node:fs';
 import { withoutComments } from './prose.mts';
 import {
-  PHOTO_USES, PROCESS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION, cleanDetails, problemsWith, saIdOk,
+  PHOTO_USES, PROCESS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION, cleanDetails, cleanTransfer, problemsWith, saIdOk,
 } from '../app/lib/cubedhost.ts';
 import { CLASSES_IN_A_SERIES } from '../app/lib/cubed.ts';
 
@@ -100,6 +100,13 @@ ok('the terms box has to be read to the end before it can be agreed to', /setRea
 ok('the presenter ticks whether they record and edit themselves', /choice\('recordSelf'/.test(page) && /choice\('editSelf'/.test(page));
 ok('the class page itself is always among the places a photograph may be used', PHOTO_USES[0]?.id === 'app' && PHOTO_USES[0]?.required === true
   && cleanDetails({ photoUses: [] }).photoUses.includes('app'));
+
+ok('every block can be sent another way: links, WhatsApp, email, a USB stick, or recorded together',
+  /data-hosttransfer/.test(page) && /data-hostway/.test(page) && /data-hostlinkadd/.test(page));
+const cleaned = cleanTransfer({ links: ['https://drive.google.com/a', 'http://x.co', 'https://drive.google.com/a', 'javascript:alert(1)'], way: 'whatsapp', note: 'Friday' });
+ok('  a link has to be https, is kept once, and the way is one of the known ones',
+  cleaned.links.length === 1 && cleaned.way === 'whatsapp' && cleanTransfer({ way: 'pigeon' }).way === '');
+ok('  and no FutureBox phone number or address is put on the page for it', !/\+27\s?\d{2}|wa\.me\/\d|@futurebox|@gmail/i.test(page));
 
 /* ── 6. Identity and age ── */
 ok('a real South African identity number passes', saIdOk('8001015009087'));

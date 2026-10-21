@@ -17,7 +17,7 @@
 
 import crypto from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { SLOTS, type SlotId } from '@/app/lib/cubedhost';
+import { SLOTS, cleanTransfer, type SlotId, type Transfer } from '@/app/lib/cubedhost';
 import { addressKey } from '@/app/lib/server/identity';
 
 export const BUCKET = 'cubed';
@@ -52,7 +52,8 @@ export interface HostRow {
   readonly signature: string | null;
   readonly signed_ip_hash: string | null;
   readonly signed_agent: string | null;
-  readonly links: Record<string, string> | null;
+  /** Per block: links to its files and how else they are coming — see `cleanTransfer`. */
+  readonly links: Record<string, unknown> | null;
   readonly revoked_at: string | null;
 }
 
@@ -113,6 +114,10 @@ export async function allFiles(client: SupabaseClient, id: string): Promise<{ fi
     unread: lists.some((one) => one === null),
   };
 }
+
+/** Every block's other ways, cleaned, whatever shape the row kept them in. */
+export const transfersOf = (raw: HostRow['links']): Record<string, Transfer> =>
+  Object.fromEntries(Object.entries(raw ?? {}).map(([slot, one]) => [slot, cleanTransfer(one)]));
 
 /**
  * Where a signature came from: a salted hash of the first forwarded address

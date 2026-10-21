@@ -41,7 +41,7 @@ import {
 import SignaturePad, { type Signed } from './SignaturePad';
 import {
   COMPANY, EMPTY_DETAILS, PHOTO_USES, PROCESS, RECORDING_TIPS, SLOTS, STEPS, TEASERS, TERMS, TERMS_VERSION,
-  problemsWith, slotOf, type HostDetails, type PhotoUse, type SlotId,
+  MOST_LINKS, NO_TRANSFER, WAYS, problemsWith, slotOf, transferSaid, type HostDetails, type PhotoUse, type SlotId, type Transfer,
 } from '../lib/cubedhost';
 
 interface Kept { readonly name: string; readonly path: string; readonly bytes: number; readonly at: string | null }
@@ -51,7 +51,7 @@ interface State {
   readonly savedAt: string | null;
   readonly signedAt: string | null;
   readonly signature: string | null;
-  readonly links: Record<string, string>;
+  readonly links: Record<string, Transfer>;
   readonly files: Record<string, Kept[]>;
   readonly filesUnread?: boolean;
 }
@@ -638,8 +638,9 @@ function Tips(): React.ReactElement {
 }
 
 /**
- * One upload block: what is in it, a button to add, and a link for a file
- * too big to send.
+ * One block: what is in it, a button to upload, and every other way the
+ * files can come — links, as many as there are files, and WhatsApp, email,
+ * a USB stick or recording together, with a note.
  */
 function Upload({ slot: id, signed, state, ask, reload }: {
   readonly slot: SlotId;
@@ -652,7 +653,10 @@ function Upload({ slot: id, signed, state, ask, reload }: {
   const picker = useRef<HTMLInputElement | null>(null);
   const [going, setGoing] = useState<{ name: string; part: number } | null>(null);
   const [said, setSaid] = useState('');
-  const [link, setLink] = useState(state.links[id] ?? '');
+  const kept = state.links[id] ?? NO_TRANSFER;
+  const [typed, setTyped] = useState('');
+  const [note, setNote] = useState(kept.note);
+  const [wayOpen, setWayOpen] = useState(transferSaid(kept));
   const [linkSaid, setLinkSaid] = useState('');
   const files = useMemo(() => state.files[id] ?? [], [state.files, id]);
   if (!slot) return null;
@@ -674,7 +678,7 @@ function Upload({ slot: id, signed, state, ask, reload }: {
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) { done(true); return; }
         setSaid(xhr.status === 413 || /maximum|too large/i.test(xhr.responseText)
-          ? `“${file.name}” is larger than uploads here accept. Put it in Google Drive, Dropbox or WeTransfer and paste the link below instead.`
+          ? `“${file.name}” is larger than uploads here accept. Send it another way below — a Google Drive, Dropbox or WeTransfer link, WhatsApp, email or a USB stick.`
           : `“${file.name}” could not be uploaded. Try again.`);
         done(false);
       };
@@ -700,19 +704,27 @@ function Upload({ slot: id, signed, state, ask, reload }: {
     await reload();
   };
 
-  const keepLink = async (): Promise<void> => {
+  /** Keep this block's other ways: the whole of it at once, so nothing half-saved. */
+  const keep = async (next: Transfer, done: string): Promise<boolean> => {
     setLinkSaid('');
-    const answer = await ask('PUT', { link: { slot: id, url: link } });
+    const answer = await ask('PUT', { transfer: { slot: id, ...next } });
     const got = await answer.json() as { message?: string };
-    setLinkSaid(answer.ok ? (link ? 'Link kept.' : 'Link removed.') : got.message ?? 'That could not be kept.');
+    setLinkSaid(answer.ok ? done : got.message ?? 'That could not be kept.');
     if (answer.ok) await reload();
+    return answer.ok;
+  };
+  const addLink = async (): Promise<void> => {
+    const url = typed.trim();
+    if (!url) return;
+    if (!/^https:\/\//i.test(url)) { setLinkSaid('Paste the whole link, starting with https://'); return; }
+    if (await keep({ ...kept, links: [...kept.links, url] }, 'Link added.')) setTyped('');
   };
 
   const Icon = slot.kind === 'photo' ? Camera : FileVideo;
   return (
     <div className={`mt-5 rounded-2xl border border-dashed p-4 ${signed ? 'border-sky-400/40 bg-sky-500/[0.04]' : 'border-zinc-700 bg-zinc-950/40'}`} data-hostupload={id}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="flex items-center gap-2 text-sm font-bold text-zinc-100"><Icon className="h-4 w-4 text-sky-300" /> Upload: {slot.title}</p>
+        <p className="flex items-center gap-2 text-sm font-bold text-zinc-100"><Icon className="h-4 w-4 text-sky-300" /> Files: {slot.title}</p>
         <p className="text-xs text-zinc-500">{files.length} of {slot.most}</p>
       </div>
       {!signed ? (
@@ -742,17 +754,55 @@ function Upload({ slot: id, signed, state, ask, reload }: {
             {going ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
             {slot.kind === 'photo' ? 'Choose photographs' : 'Choose videos'}
           </button>
+          <p className="mt-1.5 text-center text-xs text-zinc-500">From your phone or computer — or straight from iCloud Drive, Google Drive, OneDrive or Dropbox, which your phone’s file picker opens too.</p>
           {said && <p className="mt-2 text-sm font-semibold text-rose-300" role="alert">{said}</p>}
-          {slot.kind === 'video' && (
-            <div className="mt-3">
-              <p className="flex items-center gap-1.5 text-xs text-zinc-500"><Link2 className="h-3.5 w-3.5" /> Too big to upload? Paste a link to it (Google Drive, Dropbox, WeTransfer):</p>
-              <div className="mt-1 flex gap-2">
-                <input value={link} onChange={(event) => setLink(event.target.value)} placeholder="https://…" className="h-11 min-w-0 flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100" aria-label={`A link for ${slot.title}`} />
-                <button type="button" onClick={() => { void keepLink(); }} className="h-11 shrink-0 rounded-xl border border-zinc-600 px-4 text-sm font-bold text-zinc-200">Keep</button>
+          {/* ── Every other way ── */}
+          <div className="mt-4 border-t border-white/10 pt-3" data-hosttransfer={id}>
+            <button type="button" aria-expanded={wayOpen} onClick={() => setWayOpen((was) => !was)} className="flex min-h-[44px] w-full items-center justify-between gap-2 text-left text-sm font-bold text-zinc-200">
+              <span className="flex items-center gap-2"><Link2 className="h-4 w-4 text-sky-300" /> Send it another way{transferSaid(kept) ? ' — noted' : ''}</span>
+              <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-400 transition ${wayOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {wayOpen && (
+              <div className="mt-2 space-y-4">
+                <div>
+                  <p className="text-xs leading-relaxed text-zinc-400">A link to the file — Google Drive, Dropbox, WeTransfer, OneDrive, iCloud, Box, MEGA, or an unlisted YouTube or Vimeo video. Any link that opens; set it so anyone with the link can view. One per file, or one to a folder.</p>
+                  {kept.links.length > 0 && (
+                    <ul className="mt-2 space-y-1.5">
+                      {kept.links.map((one) => (
+                        <li key={one} className="flex items-center gap-2 rounded-xl bg-zinc-900 px-3 py-2 text-sm">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+                          <a href={one} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-sky-200 underline">{one}</a>
+                          <button type="button" aria-label="Remove this link" onClick={() => { void keep({ ...kept, links: kept.links.filter((link) => link !== one) }, 'Link removed.'); }} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-zinc-400 hover:text-rose-300"><Trash2 className="h-4 w-4" /></button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {kept.links.length < MOST_LINKS && (
+                    <div className="mt-2 flex gap-2">
+                      <input value={typed} onChange={(event) => setTyped(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void addLink(); }} placeholder="https://…" inputMode="url" className="h-11 min-w-0 flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100" aria-label={`A link for ${slot.title}`} data-hostlinkinput />
+                      <button type="button" onClick={() => { void addLink(); }} className="h-11 shrink-0 rounded-xl border border-zinc-600 px-4 text-sm font-bold text-zinc-200" data-hostlinkadd>Add</button>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs leading-relaxed text-zinc-400">Or tell us how it will reach us, and FutureBox will contact you to arrange it:</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {WAYS.map((way) => {
+                      const on = kept.way === way.id;
+                      return (
+                        <button key={way.id} type="button" aria-pressed={on} data-hostway={way.id} onClick={() => { void keep({ ...kept, way: on ? '' : way.id }, on ? 'Taken off.' : 'Noted — we will be in touch.'); }} className={`flex min-h-[52px] items-start gap-3 rounded-2xl border px-3 py-2.5 text-left ${on ? 'border-sky-400 bg-sky-500/15' : 'border-zinc-700'}`}>
+                          <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border ${on ? 'border-sky-300 bg-sky-400 text-zinc-950' : 'border-zinc-600'}`}>{on && <Check className="h-3.5 w-3.5" />}</span>
+                          <span><span className="block text-sm font-semibold text-zinc-100">{way.label}</span><span className="block text-xs text-zinc-400">{way.hint}</span></span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <textarea value={note} onChange={(event) => setNote(event.target.value.slice(0, 300))} onBlur={() => { if (note !== kept.note) void keep({ ...kept, note }, 'Note kept.'); }} rows={2} placeholder="Anything we should know — for example “Sending on Friday”, or “the file is 4 GB”." className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100" aria-label={`A note about ${slot.title}`} />
+                </div>
+                {linkSaid && <p className="text-xs font-semibold text-zinc-300" role="status">{linkSaid}</p>}
               </div>
-              {linkSaid && <p className="mt-1 text-xs text-zinc-400">{linkSaid}</p>}
-            </div>
-          )}
+            )}
+          </div>
         </>
       )}
     </div>

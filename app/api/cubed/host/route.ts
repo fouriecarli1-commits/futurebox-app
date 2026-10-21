@@ -5,7 +5,7 @@
  *   PUT    { details }                      keep what they have typed (until signed)
  *   POST   { sign: { details, signature, agreed, terms } }   sign the agreement
  *   POST   { upload: { slot, name, type, size } }           a signed upload, once signed
- *   PUT    { link: { slot, url } }          a link to a file too big to upload
+ *   PUT    { transfer: { slot, links, way, note } }  links to files, or how else they come
  *   DELETE ?path=…                          take back one of their own files
  *
  * No account: the key is the access (see `lib/server/cubedhost.ts`). Every
@@ -16,10 +16,10 @@
 import { admin, metered } from '@/app/lib/server/account';
 import { configured, OWNER, send } from '@/app/lib/server/email';
 import {
-  BUCKET, allFiles, cleanSignature, filesIn, hostFrom, siteOf, whereFrom, type HostRow,
+  BUCKET, allFiles, cleanSignature, filesIn, hostFrom, siteOf, transfersOf, whereFrom, type HostRow,
 } from '@/app/lib/server/cubedhost';
 import {
-  TERMS_VERSION, cleanDetails, cleanLink, fits, problemsWith, safeName, slotOf,
+  TERMS_VERSION, cleanDetails, cleanLink, cleanTransfer, fits, problemsWith, safeName, slotOf, transferSaid,
 } from '@/app/lib/cubedhost';
 
 export const runtime = 'nodejs';
@@ -50,7 +50,7 @@ const shown = (row: HostRow, kept: { files: Record<string, unknown>; unread: boo
   signedAt: row.signed_at,
   termsVersion: row.terms_version,
   signature: row.signature,
-  links: row.links ?? {},
+  links: transfersOf(row.links),
   files: kept.files,
   /* Said apart from an empty block: "nothing uploaded" would be a lie the day storage is slow. */
   filesUnread: kept.unread,
@@ -80,20 +80,25 @@ export async function PUT(request: Request): Promise<Response> {
   const got = await body(request);
   if (!got) return Response.json({ error: 'bad_request' }, { status: 400 });
 
-  /* A link to a file kept elsewhere — a video too big for the upload. */
-  if (got.link && typeof got.link === 'object') {
-    const ask = got.link as { slot?: unknown; url?: unknown };
+  /* Every other way a block's files reach FutureBox: links to them, and
+     how else they are coming (WhatsApp, email, a USB stick, recorded
+     together) with a note. See `cleanTransfer`. */
+  if (got.transfer && typeof got.transfer === 'object') {
+    const ask = got.transfer as { slot?: unknown };
     const slot = slotOf(ask.slot);
     if (!slot) return Response.json({ error: 'bad_slot' }, { status: 400 });
-    if (!row.signed_at) return Response.json({ error: 'sign_first', message: 'Sign the agreement first, then the upload blocks open.' }, { status: 409 });
-    const url = cleanLink(ask.url);
-    if (ask.url && !url) return Response.json({ error: 'bad_link', message: 'That has to be a full https:// link.' }, { status: 422 });
-    const links = { ...(row.links ?? {}) } as Record<string, string>;
-    if (url) links[slot.id] = url;
+    if (!row.signed_at) return Response.json({ error: 'sign_first', message: 'Sign the agreement first, then the blocks open.' }, { status: 409 });
+    const raw = got.transfer as { links?: unknown };
+    if (Array.isArray(raw.links) && raw.links.some((one) => typeof one === 'string' && one.trim() && !cleanLink(one))) {
+      return Response.json({ error: 'bad_link', message: 'A link has to be a full address starting with https://.' }, { status: 422 });
+    }
+    const transfer = cleanTransfer(got.transfer);
+    const links: Record<string, unknown> = { ...transfersOf(row.links) };
+    if (transferSaid(transfer)) links[slot.id] = transfer;
     else delete links[slot.id];
     const { error } = await client.from('cubed_hosts').update({ links }).eq('id', row.id);
     if (error) return Response.json({ error: 'failed', message: 'That could not be kept just now.' }, { status: 500 });
-    return Response.json({ ok: true, links });
+    return Response.json({ ok: true, transfer });
   }
 
   /* What they have typed, kept as they go — until they sign. */

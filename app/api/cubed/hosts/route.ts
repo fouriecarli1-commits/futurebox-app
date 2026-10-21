@@ -18,7 +18,7 @@ import { admin, callerFrom } from '@/app/lib/server/account';
 import { opened } from '@/app/lib/server/ownerdoor';
 import { configured, send } from '@/app/lib/server/email';
 import {
-  BUCKET, ROW, allFiles, hashKey, linkFor, newKey, siteOf, type HostRow,
+  BUCKET, ROW, allFiles, hashKey, linkFor, newKey, siteOf, transfersOf, type HostRow,
 } from '@/app/lib/server/cubedhost';
 import { cleanDetails } from '@/app/lib/cubedhost';
 
@@ -73,7 +73,7 @@ export async function GET(request: Request): Promise<Response> {
     if (!data) return Response.json({ error: 'gone' }, { status: 404 });
     const row = data as HostRow;
     const kept = await allFiles(client, row.id);
-    return Response.json({ ...row, details: cleanDetails(row.details), files: kept.files, filesUnread: kept.unread });
+    return Response.json({ ...row, links: transfersOf(row.links), details: cleanDetails(row.details), files: kept.files, filesUnread: kept.unread });
   }
 
   /* Every invitation, a line each. */

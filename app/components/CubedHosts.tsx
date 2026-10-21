@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import {
-  COMPANY, PHOTO_USES, SLOTS, TERMS, type HostDetails,
+  COMPANY, PHOTO_USES, SLOTS, TERMS, WAYS, type HostDetails, type Transfer,
 } from '../lib/cubedhost';
 
 interface Line {
@@ -37,7 +37,7 @@ interface Full {
   readonly id: string; readonly email: string; readonly note: string; readonly created_at: string;
   readonly opened_at: string | null; readonly signed_at: string | null; readonly terms_version: string | null;
   readonly signature: string | null; readonly signed_ip_hash: string | null; readonly signed_agent: string | null;
-  readonly revoked_at: string | null; readonly links: Record<string, string>; readonly details: HostDetails;
+  readonly revoked_at: string | null; readonly links: Record<string, Transfer>; readonly details: HostDetails;
   readonly files: Record<string, Kept[]>;
   readonly filesUnread?: boolean;
 }
@@ -256,7 +256,8 @@ export default function CubedHosts(): React.ReactElement {
             <ul className="mt-2 space-y-3">
               {SLOTS.map((slot) => {
                 const files = open.files[slot.id] ?? [];
-                const link = open.links?.[slot.id];
+                const sent = open.links?.[slot.id];
+                const way = WAYS.find((one) => one.id === sent?.way);
                 return (
                   <li key={slot.id} className="rounded-2xl border border-white/10 p-3">
                     <p className="text-sm font-bold text-zinc-200">{slot.title} <span className="font-normal text-zinc-500">· {files.length} file{files.length === 1 ? '' : 's'}</span></p>
@@ -265,7 +266,11 @@ export default function CubedHosts(): React.ReactElement {
                         <Download className="h-4 w-4 shrink-0 text-sky-300" /><span className="min-w-0 flex-1 truncate">{one.name}</span><span className="text-xs text-zinc-500">{sizeSaid(one.bytes)}</span>
                       </button>
                     ))}
-                    {link && <a href={link} target="_blank" rel="noopener noreferrer" className="mt-2 flex items-center gap-2 break-all text-sm text-sky-300 underline"><ExternalLink className="h-4 w-4 shrink-0" />{link}</a>}
+                    {(sent?.links ?? []).map((link) => (
+                      <a key={link} href={link} target="_blank" rel="noopener noreferrer" className="mt-2 flex items-center gap-2 break-all text-sm text-sky-300 underline"><ExternalLink className="h-4 w-4 shrink-0" />{link}</a>
+                    ))}
+                    {way && <p className="mt-2 rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100">Coming another way: {way.label}. Contact them to arrange it.</p>}
+                    {sent?.note && <p className="mt-1 text-sm text-zinc-300">“{sent.note}”</p>}
                   </li>
                 );
               })}
