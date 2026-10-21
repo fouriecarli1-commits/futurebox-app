@@ -50,7 +50,7 @@ ok('the other side takes each new version once, never its own back',
   /draftAt === draftMine\.current/.test(page) && /setCanvas\(\(was\) => \(\{ \.\.\.was, \.\.\.came \}\)\)/.test(page));
 
 const strip = read('app/components/PairStrip.tsx');
-ok('the turn is handed over with the song', /movePen\(pair\.id, 'give', song\)/.test(strip));
+ok('the turn is handed over with the song', /movePen\(pair\.id, 'give', song,/.test(strip));
 ok('the strip shows their handle', /data-pairhandle/.test(strip));
 ok('  and says what happens to the words', /data-pairdraftnote/.test(strip));
 
@@ -73,20 +73,25 @@ ok('  and says plainly when the other person has none', (collab.match(/collab\.n
    — and, of her own newest song showing in the shared room, "Hierdie moet
    nie in die colab room wees nie". */
 const make = read('app/components/MakeMusic.tsx');
-ok('beside the words, one press sends your part and hands the turn over',
-  /data-pairsubmit/.test(make) && /onPairSubmit=\{makeGate \? async \(note: string\) => \{[\s\S]{0,400}movePen\(makeGate\.id, 'give', songDraft, note\)/.test(page));
+ok('one press sends your part and hands the turn over — in the strip at the top, where the turn is',
+  /data-pairsubmit/.test(strip) && /movePen\(pair\.id, 'give', song, songRoom \? note : ''\)/.test(strip)
+  && !/data-pairsubmit/.test(make),
+  'the submit sat beside the Make button, three screens below the strip, and the owner did not find it');
 /* The owner: "Gee asb 'n notabalk waar iemand 'n nota kan los. Ons moet dalk
    ons eie blokkers in sit, om te sien as harmful musiekwoorde en notas gepos
    word dan moet dit geblok word." */
 ok('there is a note bar beside "Submit my part", and the note goes with the turn',
-  /data-pairnote/.test(make) && /onPairSubmit\(pairNote\)/.test(make) && /noteBy: caller\.id/.test(route));
-ok('  and the other side sees it as a note from them, not their own', /data-pairnotein/.test(make) && /pairGate\.note && !pairGate\.noteMine/.test(make));
+  /data-pairnote/.test(strip) && /noteBy: caller\.id/.test(route));
+ok('  and the other side sees it as a note from them, not their own', /data-pairnotein/.test(strip) && /pair\.note && !pair\.noteMine/.test(strip));
 ok('  and a note is a line or two, not a letter', /NOTE_MOST = 300/.test(read('app/lib/pairdraft.ts')));
 ok('the song and the note go past the whole gate before they reach the other person',
   /const allowed = await guard\(request, draftText\(draft, note\), 'room', caller\);\s*if \(!allowed\.ok\) return allowed\.response;/.test(route));
 ok('  and every save of the song as it is typed goes past the fixed rules',
   /const ruled = screen\(draftText\(draft\), 'room'\);\s*if \(ruled\) return/.test(route));
-ok('  and the side waiting is told the turn comes back when they submit', /data-pairwaiting/.test(make));
+/* The owner: "collab moet ook 'n tip gee, copy and keep lyrics that you like
+   somewhere else to keep the lyrics safe, collaborations can change lyrics." */
+ok('the song room tips you to keep your own copy, with one press to copy the words',
+  /data-pairkeeptip/.test(strip) && /data-paircopy/.test(strip) && /navigator\.clipboard\?\.writeText\(words\)/.test(strip));
 ok('your own newest song is not shown in a shared room', /tracks\.length > 0 && !pairGate && /.test(make));
 const verses = read('app/components/VerseWriter.tsx');
 ok('words arriving from the other person show in Extensive too', /\}, \[lyrics\]\);/.test(verses) && /compiledRef/.test(verses));

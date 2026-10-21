@@ -26,7 +26,7 @@ import CollabFinder from './components/CollabFinder';
 import CollabRoom from './components/CollabRoom';
 import CollabDesk from './components/CollabDesk';
 import PairStrip from './components/PairStrip';
-import { loadPairs, pen as movePen, readyToMake, saveDraft, type Pair } from './lib/pairs';
+import { loadPairs, readyToMake, saveDraft, type Pair } from './lib/pairs';
 import { draftFor, sameDraft, type SongDraft } from './lib/pairdraft';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
@@ -879,11 +879,7 @@ export default function FutureBoxHome() {
   const makeGate = pairHere?.surface === 'make'
     ? (() => {
       const said = readyToMake(pairHere);
-      return {
-        id: pairHere.id, ready: said.ready, why: said.whyKey ? t(said.whyKey, said.why) : said.why, mine: pairHere.mine,
-        /* The note left with the last turn, and whose — shown by the words. */
-        note: pairHere.note ?? '', noteMine: Boolean(pairHere.noteMine), withName: pairHere.withName,
-      };
+      return { id: pairHere.id, ready: said.ready, why: said.whyKey ? t(said.whyKey, said.why) : said.why };
     })()
     : null;
 
@@ -4981,17 +4977,6 @@ export default function FutureBoxHome() {
                 engineReady={engineReady}
                 pairGate={makeGate}
                 onPairMade={() => setPairSignal((n) => n + 1)}
-                onPairSubmit={makeGate ? async (note: string) => {
-                  /* Submit my part: the song as it stands goes with the
-                     turn, and the room is read again so this side shows
-                     it is their go at once. */
-                  const said = await movePen(makeGate.id, 'give', songDraft, note);
-                  if (!said) {
-                    draftSent.current = songDraft;
-                    setPairSignal((n) => n + 1);
-                  }
-                  return said;
-                } : undefined}
                 onMade={(track) => {
                   setMadeTrack(track);
                   setTrackCount((count) => count + 1);

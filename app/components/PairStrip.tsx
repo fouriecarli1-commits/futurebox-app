@@ -27,7 +27,7 @@
  */
 
 import React, { useCallback, useState } from 'react';
-import { Check, Handshake, Link2, Loader2, PenLine, Send } from 'lucide-react';
+import { Check, Copy, Handshake, Link2, Loader2, PenLine, Send } from 'lucide-react';
 import { approve, pen as movePen, shareLink, type Pair } from '../lib/pairs';
 import type { SongDraft } from '../lib/pairdraft';
 import { HANDLE_PLATFORMS, CARRIES_A_NUMBER } from '../lib/sociallink';
@@ -54,6 +54,10 @@ export default function PairStrip({
   const [draft, setDraft] = useState('');
   const [platform, setPlatform] = useState(HANDLE_PLATFORMS[0]);
   const [handle, setHandle] = useState('');
+  /** The note bar: a line for the other person, sent with the turn. */
+  const [note, setNote] = useState('');
+  const [copied, setCopied] = useState(false);
+  const songRoom = pair.surface === 'make';
 
   const act = useCallback(async (run: () => Promise<string | null>) => {
     setBusy(true);
@@ -106,19 +110,59 @@ export default function PairStrip({
         </p>
       )}
 
+      {/* Their note, at the top where the turn is shown. */}
+      {songRoom && pair.note && !pair.noteMine && (
+        <div data-pairnotein className="rounded-xl border border-sky-500/30 bg-sky-500/[0.07] px-3 py-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-sky-300">
+            {t('pair.noteFrom', 'Note from')} {pair.withName}
+          </p>
+          <p className="whitespace-pre-line pt-0.5 text-sm text-zinc-100">{pair.note}</p>
+        </div>
+      )}
+
+      {/* ── Submit my part ───────────────────────────────────────────────
+          Up here, where the turn is. It sat beside the Make button, three
+          screens down, and the owner tested the room and did not find it
+          (21 October 2026: "Die submit lyrics and handover sien ek nog
+          nie"). In a song room handing over IS submitting: the words and
+          the note go with the turn. */}
+      {songRoom && pair.mine && (
+        <label className="block">
+          <span className="sr-only">{t('pair.noteLabel', 'A note for them')}</span>
+          <textarea
+            data-pairnote
+            rows={2}
+            maxLength={300}
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder={t('pair.notePlaceholder', 'A note for them (optional) — e.g. "I wrote verse 2, see if the chorus still fits"')}
+            className="w-full resize-y rounded-xl border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-sky-400 focus:outline-hidden"
+          />
+        </label>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         {pair.mine ? (
           <button
             type="button"
             data-pairgive
+            {...(songRoom ? { 'data-pairsubmit': '' } : {})}
             disabled={busy}
-            onClick={() => void act(() => movePen(pair.id, 'give', song))}
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white disabled:opacity-50"
+            onClick={() => void act(async () => {
+              const said = await movePen(pair.id, 'give', song, songRoom ? note : '');
+              if (!said) setNote('');
+              return said;
+            })}
+            className={songRoom
+              ? 'inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-sky-400/50 bg-sky-500/15 px-4 py-2 text-sm font-bold text-sky-100 hover:bg-sky-500/25 disabled:opacity-50'
+              : 'inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white disabled:opacity-50'}
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <PenLine className="h-4 w-4" />}
-            {pair.wanted
-              ? t('pair.giveAsked', 'Hand it over — they asked')
-              : t('pair.give', 'Hand over the turn')}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : songRoom ? <Send className="h-4 w-4" /> : <PenLine className="h-4 w-4" />}
+            {songRoom
+              ? t('pair.submit', 'Submit my part — their turn')
+              : pair.wanted
+                ? t('pair.giveAsked', 'Hand it over — they asked')
+                : t('pair.give', 'Hand over the turn')}
           </button>
         ) : (
           <button
@@ -143,6 +187,36 @@ export default function PairStrip({
           {pair.myLink ? t('pair.changeLink', 'Change where they reach you') : t('pair.addLink', 'Where they can reach you')}
         </button>
       </div>
+
+      {/* ── Keep your own copy ────────────────────────────────────────
+          The owner, 21 October 2026: "collab moet ook 'n tip gee, copy and
+          keep lyrics that you like somewhere else to keep the lyrics safe,
+          collaborations can change lyrics." Two people take turns at one
+          sheet, so a line one of them loved can be gone on the next turn.
+          The copy is one press, of exactly what is on the sheet now. */}
+      {songRoom && (
+        <div data-pairkeeptip className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2">
+          <p className="min-w-0 flex-1 basis-56 text-xs leading-snug text-amber-100/90">
+            {t('pair.keepTip', 'Tip: the two of you can change the words on every turn. Copy the lines you love and keep them somewhere safe.')}
+          </p>
+          <button
+            type="button"
+            data-paircopy
+            disabled={!song?.lyrics?.trim()}
+            onClick={() => {
+              const words = [song?.title, song?.lyrics].filter(Boolean).join('\n\n');
+              void navigator.clipboard?.writeText(words).then(() => {
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 2500);
+              }).catch(() => setProblem(t('pair.copyFailed', 'This browser would not copy. Select the words and copy them by hand.')));
+            }}
+            className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-amber-400/40 px-3 text-xs font-bold text-amber-100 disabled:opacity-40"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? t('pair.copied', 'Copied') : t('pair.copyWords', 'Copy the words')}
+          </button>
+        </div>
+      )}
 
       {/* ── Both say yes before the song is made ───────────────────────
           The owner, 21 October 2026: "Beide moet kan goedkeuring gee om
