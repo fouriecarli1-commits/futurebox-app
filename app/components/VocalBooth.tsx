@@ -1265,8 +1265,13 @@ export default function VocalBooth({
             <span className="hidden text-base font-extrabold text-white sm:inline">
               FUTURE<span className="text-emerald-500">BOX</span>
             </span>
-            <span className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-extrabold uppercase text-emerald-500">
-              {t('booth.title', 'ProBooth')} · {t('booth.badge', 'DAW & vocal studio')}
+            {/* One line on a phone. The owner's screenshot, 21 October 2026:
+                "PROBOOTH · DAW & VOCAL STUDIO" broke onto three lines in a
+                box taller than the Back button beside it. The badge says the
+                room; what kind of room it is waits for a screen with space. */}
+            <span className="whitespace-nowrap rounded-lg border border-sky-400/45 bg-sky-500/10 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]">
+              {t('booth.title', 'ProBooth')}
+              <span className="hidden sm:inline"> · {t('booth.badge', 'DAW & vocal studio')}</span>
             </span>
           </div>
           <p className="truncate pt-0.5 text-xs text-zinc-400">{track.title}</p>
@@ -2301,22 +2306,26 @@ export default function VocalBooth({
             type="button"
             onClick={() => void start(region ? Math.max(0, region.from - PRE_ROLL) : 0)}
             disabled={busy || !backing}
-            className={`${BAR} sm:col-span-2 bg-emerald-500 border-emerald-400 text-onAccent disabled:opacity-50`}
+            className={`${BAR} fb-fx-go sm:col-span-2 border-transparent text-onAccent disabled:opacity-50`}
           >
-            {region ? <Scissors className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
-            {region ? t('booth.punch', 'Sing just this part') : t('booth.record', 'Record from the top')}
-            {willListen && (
-              <span className="text-xs font-semibold opacity-80" data-boothrecordcost>
-                · {creditsSaid(perMinute(duration || track.seconds || 0, CREDITS.transcribe), t)} {t('booth.toTime', 'to time the words')}
-              </span>
-            )}
+            {region ? <Scissors className="w-4 h-4 shrink-0" /> : <Circle className="w-4 h-4 shrink-0 fill-current" />}
+            {/* The words and the price as one block: side by side, on a
+                phone, they broke into two columns of two lines each. */}
+            <span className="flex min-w-0 flex-col items-center leading-tight">
+              <span>{region ? t('booth.punch', 'Sing just this part') : t('booth.record', 'Record from the top')}</span>
+              {willListen && (
+                <span className="text-[11px] font-semibold opacity-80" data-boothrecordcost>
+                  {creditsSaid(perMinute(duration || track.seconds || 0, CREDITS.transcribe), t)} {t('booth.toTime', 'to time the words')}
+                </span>
+              )}
+            </span>
           </button>
 
           <button
             type="button"
             onClick={play}
             disabled={busyOrLive || !backing}
-            className={`${BAR} bg-zinc-900 border-zinc-700 text-zinc-200 disabled:opacity-50`}
+            className={`${BAR} fb-fx-booth-tile text-sky-50 disabled:opacity-50`}
           >
             {phase === 'playing' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {/* Before there is a take this button is a rehearsal: the song
@@ -2375,11 +2384,7 @@ export default function VocalBooth({
                 ? t('booth.proWhat', 'Many lanes, cutting, tone and mixing. The words are not on screen there — this room is where you sing along with them.')
                 : t('booth.proPaid', 'Lanes, the grid, mixing, mastering and undo. It comes with every paid plan; this room, with the words on screen, stays included.')
             }
-            className={`${BAR} ${
-              proAllowed
-                ? 'bg-zinc-900 border-zinc-700 text-zinc-200'
-                : 'bg-zinc-900 border-emerald-600/50 text-emerald-300'
-            }`}
+            className={`${BAR} fb-fx-booth-tile ${proAllowed ? 'text-sky-50' : 'text-sky-200'}`}
           >
             {proAllowed ? <Layers className="w-4 h-4 shrink-0" /> : <Lock className="w-4 h-4 shrink-0" />}
             {/* "Pro DAW Studio", with what it is underneath for anybody who
@@ -2395,9 +2400,8 @@ export default function VocalBooth({
           <button
             type="button"
             onClick={() => setDeskOpen((open) => !open)}
-            className={`${BAR} sm:col-span-2 ${
-              deskOpen ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-900 border-zinc-700 text-zinc-200'
-            }`}
+            aria-pressed={deskOpen}
+            className={`${BAR} fb-fx-booth-tile sm:col-span-2 ${deskOpen ? 'text-white' : 'text-sky-50'}`}
           >
             <Sliders className="w-4 h-4" />
             {t('booth.desk', 'Desk')}
@@ -2407,7 +2411,7 @@ export default function VocalBooth({
             type="button"
             onClick={() => void keep()}
             disabled={!take || busy}
-            className={`${BAR} sm:col-span-2 bg-emerald-500 border-emerald-400 text-onAccent disabled:opacity-40`}
+            className={`${BAR} sm:col-span-2 ${take ? 'fb-fx-go border-transparent' : 'fb-fx-booth-tile'} text-onAccent disabled:text-sky-200/60 disabled:opacity-60`}
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             {t('take.keep', 'Keep this take')}

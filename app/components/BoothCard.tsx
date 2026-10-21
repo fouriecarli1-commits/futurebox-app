@@ -89,7 +89,9 @@ export function Card({
   return (
     <section
       data-card
-      className={`flex min-w-0 flex-col gap-2 rounded-2xl border p-2.5 ${wide ? 'col-span-2' : ''}`}
+      /* The booth's facelift: glass and a sky-blue light-line edge
+         (`.fb-fx-booth-tile`), over the inline colours below. */
+      className={`fb-fx-booth-tile flex min-w-0 flex-col gap-2 rounded-2xl border p-2.5 ${wide ? 'col-span-2' : ''}`}
       style={{ borderColor: EDGE, background: PANEL }}
     >
       {/* ── The name wraps; it does not vanish ─────────────────────
@@ -272,7 +274,9 @@ export default function DeskSheet({
          benches sit over the film. `RAISED` everywhere else, so the booth is
          untouched. See `GLASS` in `lib/cutlook.ts`. */
       data-glass={paint.GLASS ? 'yes' : undefined}
-      className="flex min-h-0 flex-1 flex-col"
+      /* The booth's own desks get its facelift; a room that passed its own
+         `look` keeps exactly the colours it asked for. */
+      className={`flex min-h-0 flex-1 flex-col ${look ? '' : 'fb-fx-booth-panel border-t'}`}
       style={{
         background: paint.GLASS ?? paint.RAISED,
         ...(paint.GLASS_BLUR
@@ -286,7 +290,7 @@ export default function DeskSheet({
       >
       <div className="flex items-center gap-2">
         {icon && (
-          <span className="shrink-0" style={{ color: paint.LIT }} aria-hidden>
+          <span className={`shrink-0 ${look ? '' : 'fb-fx-booth-lens'}`} style={{ color: paint.LIT }} aria-hidden>
             {icon}
           </span>
         )}

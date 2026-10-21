@@ -5434,11 +5434,18 @@ export default function ProBooth({
               timeline above was left two pixels (`check:probooth`). The rail
               beside it opens the same three desks. */}
           {lanes.length <= 2 && !sideways && (
-            <div className="mx-3 my-3 flex flex-wrap items-center gap-2 rounded-2xl border border-white/5 bg-zinc-950/60 p-3 backdrop-blur-md">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/80">
+            /* One row that slides sideways, not three that wrap.
+               The owner, 21 October 2026, from her phone: functions sat
+               behind the button bar. The room is a column that does not
+               scroll; the timeline keeps a floor of 40vh, and these three
+               wrapped onto three rows a card's height under it — so on a
+               phone the card was cut off at the dock with two buttons out
+               of reach. As one row it is 70 pixels and always whole. */
+            <div data-quickslots className="fb-fx-booth-panel mx-3 my-2 shrink-0 rounded-2xl border px-3 pb-2 pt-2">
+              <span className="block text-[10px] font-bold uppercase tracking-[0.22em] text-sky-300/80">
                 {t('pro.quickSlots', 'Studio Track Slots')}
               </span>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="-mx-1 mt-1.5 flex items-center gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&>button]:shrink-0 [&>button]:whitespace-nowrap">
                 <button
                   type="button"
                   onClick={() => setDeskOpen('stems')}

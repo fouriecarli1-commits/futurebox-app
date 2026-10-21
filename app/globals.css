@@ -2719,6 +2719,34 @@ html[data-fb-mode='light'] :is(section, div, article, form, aside, details, li)[
   pointer-events: none;
 }
 
+/* In the booth, chosen and pressed are lit in the booth's own blue, and
+   quieter. The app-wide rule above rings every pressed toggle in the
+   theme's accent with a 2px band — in the lanes that is the selected lane's
+   name, every muted M and the magnet, and on a phone (the owner, 21 October
+   2026, with screenshots) it read as a column of green boxes drawn over
+   a sky-blue room. One fine line and a soft glow says "on" without boxing. */
+[data-booth] button[aria-pressed="true"]:not(:disabled),
+[data-booth] [role="tab"][aria-selected="true"] {
+  box-shadow: 0 0 0 1px rgb(125 211 252 / 0.55), 0 0 12px 1px rgb(56 189 248 / 0.3);
+}
+[data-booth] button:not(:disabled):active,
+[data-booth] [role="button"]:active {
+  box-shadow: 0 0 0 1px rgb(125 211 252 / 0.9), 0 0 18px 4px rgb(56 189 248 / 0.45);
+}
+/* A desk's name in a lit lens, the way every room's headings are. */
+.fb-fx-booth-lens {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 50% 40%, rgb(56 189 248 / 0.32), rgb(129 140 248 / 0.08) 70%);
+  border: 1px solid rgb(125 211 252 / 0.5);
+  box-shadow: 0 0 14px rgb(56 189 248 / 0.4), inset 0 0 8px rgb(56 189 248 / 0.3);
+}
+.fb-fx-booth-lens svg { filter: drop-shadow(0 0 4px rgb(56 189 248 / 0.9)); }
+
 /* ── The page under the studio is not drawn ────────────────────────────
 
    The owner, 20 October 2026: *"The video editor has a serious lag."* A
