@@ -50,6 +50,11 @@ create or replace function auth.jwt() returns jsonb language sql stable as $$
 create table if not exists storage.buckets (
   id text primary key, name text, public boolean default false
 );
+-- The two limits Supabase keeps on a bucket, as its own table has them: a
+-- file that sets which kinds of file a private bucket takes (cubedhosts.sql)
+-- has to run here as it runs there.
+alter table storage.buckets add column if not exists allowed_mime_types text[];
+alter table storage.buckets add column if not exists file_size_limit bigint;
 create table if not exists storage.objects (
   id         uuid primary key default gen_random_uuid(),
   bucket_id  text references storage.buckets (id),

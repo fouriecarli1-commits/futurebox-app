@@ -167,7 +167,10 @@ export default function Spotlight({
         </div>
       </>
     );
-    const look = `group min-w-[220px] max-w-[220px] cursor-pointer rounded-2xl border border-white/10 bg-zinc-900/80 p-4 text-left transition-all hover:border-emerald-500/60 hover:shadow-[0_0_30px_rgba(15,157,110,0.35)]`;
+    /* Shares the row rather than taking a fixed 220px each: with the fourth
+       card (voice cloning) four fixed cards were 928px in an 813px shelf on
+       a computer, and the row scrolled sideways under its own heading. */
+    const look = `group min-w-[180px] max-w-[220px] flex-1 cursor-pointer rounded-2xl border border-white/10 bg-zinc-900/80 p-4 text-left transition-all hover:border-emerald-500/60 hover:shadow-[0_0_30px_rgba(15,157,110,0.35)]`;
     return room.href
       ? <Link key={room.name} href={room.href} className={look}>{inside}</Link>
       : <button key={room.name} type="button" onClick={room.go} className={look}>{inside}</button>;
