@@ -1139,10 +1139,13 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
     created_at: track.createdAt,
     remix_of: track.remixOf ?? null,
     seed: track.seed,
-    /* Only when this copy knows of a piece. A copy that does not — a song
-       saved on this phone before the piece was put on it somewhere else —
-       must not write "no piece" over the row and take the cover off. */
-    ...(track.art ? { art_title: track.art.title, art_by: track.art.by, art_work: track.art.work ?? null } : {}),
+    /* No art fields, ever. Which bought piece a song wears is written by one
+       place only — the art market's `wear`, after it has checked the piece
+       was bought and the song is theirs — and read back from the row. A
+       phone's copy that carried an OLDER piece wrote it back over the new
+       one on its next save, and the cover she had just put on came off
+       again (the owner, 21 October 2026: "Ek het 'n nuwe kunswerk vir
+       hierdie liedjie gekoop en nou wys dit nie"). */
   };
   const { error } = await supabase.from('tracks').upsert(row);
   if (error) return { saved: false, reason: 'row', message: `Song did not save: ${error.message}` };

@@ -128,7 +128,7 @@ export default function SongScreen({
   const opening = Math.max(0, tracks.findIndex((one) => one.id === startAt));
   /* The sleeves for everything in the scroller, asked once. A song with none
      falls back to its drawing, which is the ordinary case. */
-  const sleeves = useSleeves(tracks.map((one) => one.id));
+  const { photos: sleeves, credits } = useSleeves(tracks.map((one) => one.id));
   const [at, setAt] = useState(opening);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -304,7 +304,7 @@ export default function SongScreen({
                   where it is needed. */}
               <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0.45)_45%,rgba(0,0,0,0.88))]" />
               {/* The bought piece's credit, over the shade so it reads. */}
-              {sleeves[one.id] && <ArtTag credit={one.art} />}
+              {sleeves[one.id] && <ArtTag credit={credits[one.id] ?? one.art} />}
 
               {/* Tap anywhere to stop and start. The whole panel, because a
                   small button is the wrong target on a screen somebody is

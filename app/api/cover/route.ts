@@ -216,8 +216,11 @@ export async function GET(request: Request): Promise<Response> {
        it is the one that was paid for, and putting it on is the later act. */
     const bought = await boughtSleeves(client, ids.map((one) => ({ owner: caller.id, track: one })), LINK_SECONDS);
     Object.assign(covers, bought.urls);
-    if (bought.unread) return Response.json({ covers, asked: false });
-    return Response.json({ covers, asked: true });
+    /* And whose it is, from the row: the phone's own copy of the credit can
+       be missing or a piece behind, and the picture must not be drawn with
+       somebody else's name on it. */
+    if (bought.unread) return Response.json({ covers, credits: bought.credits, asked: false });
+    return Response.json({ covers, credits: bought.credits, asked: true });
   }
 
   /* Asking about a track: is there one already, and — new — is one owed.

@@ -150,7 +150,7 @@ export default function Channel({
      next load, and the comment below said the asking WAS the button.
  
      One request for the lot. It generates nothing and spends nothing. */
-  const sleeves = useSleeves(tracks.map((one) => one.id));
+  const { photos: sleeves, credits: sleeveCredits } = useSleeves(tracks.map((one) => one.id));
   /** A file being taken in, and what was wrong with it if it was refused. */
   const [taking, setTaking] = useState(false);
   const [tookBadly, setTookBadly] = useState<string | null>(null);
@@ -877,7 +877,9 @@ export default function Channel({
                     seed={track.id}
                     label={track.title}
                     photo={sleeves[track.id]}
-                    credit={track.art}
+                    /* The row's credit first: this copy of the song can be a
+                       piece behind the one the picture is. */
+                    credit={sleeveCredits[track.id] ?? track.art}
                     className="aspect-video"
                   />
                 )}

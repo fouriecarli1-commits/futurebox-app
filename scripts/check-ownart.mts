@@ -132,6 +132,19 @@ ok(`the bought-art credit is written in exactly one route (${setsCredit.length})
   setsCredit.length === 1 && setsCredit[0] === join('app', 'api', 'artmarket', 'route.ts'),
   setsCredit.join(', ') || 'nothing writes art_work, so no sale ever puts a piece on a song');
 
+/* Nor does a phone's copy of the song carry it back. The push used to write
+   the credit it held whenever it held one, so a copy a piece behind put the
+   OLD piece back over the new one on its next save — the owner, 21 October
+   2026: *"Ek het 'n nuwe kunswerk vir hierdie liedjie gekoop en nou wys dit
+   nie."* The row is the truth; the phone learns from it (`lib/sleeves.ts`). */
+ok('  and a phone\u2019s copy of a song never writes it back',
+  !/art_work\s*:|art_title\s*:|art_by\s*:/.test(read(join('app', 'lib', 'cloud.ts'))),
+  'cloud.ts writes the bought-art credit from the phone again');
+ok('  the grid reads the credit from the row, and the phone learns it',
+  /credits: bought\.credits/.test(read(join('app', 'api', 'cover', 'route.ts')))
+  && /rememberArt\(/.test(read(join('app', 'lib', 'sleeves.ts'))),
+  'the sleeve answer no longer carries whose piece it is');
+
 /* ── The cover panel takes no picture ──────────────────────────────────── */
 
 const panel = read(COVER_PANEL);
@@ -160,10 +173,12 @@ const cover = read(join('app', 'components', 'Cover.tsx'));
 ok('a bought sleeve is drawn with its title and artist on it',
   /export function ArtTag/.test(cover) && /\{shown && <ArtTag credit=\{credit\} \/>\}/.test(cover));
 for (const [file, sign] of [
-  ['Channel.tsx', /credit=\{track\.art\}/],
+  /* The row's credit first, where the server gave one: the phone's copy can
+     be a piece behind the picture. */
+  ['Channel.tsx', /credit=\{sleeveCredits\[track\.id\] \?\? track\.art\}/],
   ['LiveChannel.tsx', /credit=\{post\.kind === 'track' \? post\.art : null\}/],
   ['RoomScreen.tsx', /<ArtTag credit=\{one\.art\} \/>/],
-  ['SongScreen.tsx', /<ArtTag credit=\{one\.art\} \/>/],
+  ['SongScreen.tsx', /<ArtTag credit=\{credits\[one\.id\] \?\? one\.art\} \/>/],
 ] as const) {
   ok(`  and ${file} hands it the credit`, sign.test(read(join('app', 'components', file))));
 }
